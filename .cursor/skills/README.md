@@ -1,0 +1,16 @@
+# Project skills (from SourceControl)
+
+Copied from [makemoney2023/SourceControl](https://github.com/makemoney2023/SourceControl) (`skills/`) for this repo.
+
+**Excluded:** the team/org structure (`skills/org` — virtual company seats, orchestrator, OCC packs, and related agent templates). Those stay in SourceControl only.
+
+Cursor discovers every `SKILL.md` under this tree recursively.
+
+| Category | What it is |
+| --- | --- |
+| `cursor-managed/` | Built-in Cursor workflow skills |
+| `user/` | Generic user skills |
+| `plugins/` | Figma, Vercel, Superpowers, Supabase, Stripe, Parallel, Firecrawl, Context7 |
+| `community/` | Third-party packs (marketing, SEO, video, UI, research, CAD, …) |
+| `integrations/` | API/MCP worker skills |
+| `context-engineering/` | Agent context-engineering patterns |

@@ -1,0 +1,1523 @@
+{
+  "header": {
+    "guide": "Guide",
+    "github": "GitHub",
+    "editor": "Go to editor",
+    "donate": "Donate",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "loggingOut": "Signing out...",
+    "menu": "Menu",
+    "screen": "Record",
+    "close": "Close"
+  },
+  "footer": {
+    "description": "Modern application for <recording>screen recording</recording> and <editing>video editing</editing>. Designed for the web. No installations, no waiting, directly in your browser.",
+    "recording": "screen recording",
+    "editing": "video editing",
+    "product": "Product",
+    "contact": "Contact",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "rights": "All rights reserved.",
+    "guide": "Guide",
+    "editor": "Go to editor",
+    "donate": "Donate",
+    "github": "GitHub",
+    "email": "Email"
+  },
+  "privacy": {
+    "backToHome": "Back to home",
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {date}",
+    "intro": {
+      "title": "Introduction",
+      "content": "At openvid, we respect your privacy and are committed to protecting your personal information. This policy describes how we collect, use, and protect your data when you use our platform."
+    },
+    "collection": {
+      "title": "Information We Collect",
+      "content": "We collect the following information when you use openvid:",
+      "items": [
+        "Account information (email, name) if you register via Google",
+        "Usage and analytics data to improve the experience",
+        "Technical information such as browser type and operating system",
+        "Videos and content you process (only temporarily, never stored on servers)"
+      ]
+    },
+    "usage": {
+      "title": "How We Use Your Information",
+      "content": "We use your information to:",
+      "items": [
+        "Provide and maintain our services",
+        "Improve user experience",
+        "Send important service updates",
+        "Analyze platform usage",
+        "Protect against fraudulent activities"
+      ]
+    },
+    "processing": {
+      "title": "Video Processing",
+      "badge": "All video processing happens entirely in your browser using modern web technologies (WebAssembly, FFmpeg.wasm). Your videos are never uploaded to our servers. The entire process is local and private."
+    },
+    "cookies": {
+      "title": "Cookies and Similar Technologies",
+      "content": "We use cookies and similar technologies to:",
+      "items": [
+        "Keep your session active",
+        "Remember your preferences",
+        "Analyze site performance",
+        "Improve security"
+      ],
+      "note": "You can configure your browser to reject cookies, but this may affect the application's functionality."
+    },
+    "sharing": {
+      "title": "Sharing Information",
+      "content": "We do not sell or share your personal information with third parties, except in the following cases:",
+      "items": [
+        "With your explicit consent",
+        "To comply with legal obligations",
+        "To protect our rights and security"
+      ]
+    },
+    "security": {
+      "title": "Security",
+      "content": "We implement technical and organizational security measures to protect your information:",
+      "items": [
+        "Data encryption in transit (HTTPS)",
+        "Secure authentication through trusted providers",
+        "Limited access to personal information",
+        "Regular security audits"
+      ]
+    },
+    "rights": {
+      "title": "Your Rights",
+      "content": "You have the right to:",
+      "items": [
+        "Access your personal information",
+        "Correct inaccurate data",
+        "Request deletion of your account",
+        "Object to data processing",
+        "Export your data"
+      ]
+    },
+    "children": {
+      "title": "Children's Privacy",
+      "content": "Our service is not directed to children under 13. We do not knowingly collect information from minors."
+    },
+    "changes": {
+      "title": "Changes to This Policy",
+      "content": "We may update this policy occasionally. We will notify you of significant changes by posting the new policy on this page."
+    },
+    "contact": {
+      "title": "Contact",
+      "content": "If you have questions about this privacy policy, you can contact us through our GitHub repository."
+    },
+    "acceptance": {
+      "title": "Acceptance",
+      "content": "By using openvid, you also accept our <terms>Terms of Service</terms>.",
+      "termsLink": "Terms of Service"
+    }
+  },
+  "terms": {
+    "backToHome": "Back to home",
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: {date}",
+    "acceptance": {
+      "title": "Acceptance of Terms",
+      "content": "By accessing and using openvid, you agree to be legally bound by these terms of service. If you do not agree with any part of these terms, you should not use our platform."
+    },
+    "description": {
+      "title": "Service Description",
+      "content": "Openvid is a web application for video editing that allows users to:",
+      "items": [
+        "Record the screen directly from the browser",
+        "Edit videos with professional tools",
+        "Export in multiple formats and qualities",
+        "Process everything locally without servers"
+      ]
+    },
+    "account": {
+      "title": "User Account",
+      "content": "To access certain features, you may need to create an account through:",
+      "items": [
+        "Google authentication",
+        "GitHub authentication"
+      ],
+      "note": "You are responsible for maintaining the confidentiality of your account."
+    },
+    "acceptable": {
+      "title": "Acceptable Use",
+      "content": "By using openvid, you agree to:",
+      "items": [
+        "Not upload illegal, offensive, or copyright-infringing content",
+        "Not attempt to compromise the service's security",
+        "Not use the platform for fraudulent activities",
+        "Respect the rights of other users"
+      ]
+    },
+    "intellectual": {
+      "title": "Intellectual Property",
+      "content": "You retain all rights to the content you upload to openvid. We only process your videos temporarily to provide the editing service. We do not store or share your content without your explicit consent."
+    },
+    "limitation": {
+      "title": "Limitation of Liability",
+      "content": "Openvid is provided \"as is\" without warranties of any kind. We are not responsible for:",
+      "items": [
+        "Loss of data or content",
+        "Service interruptions",
+        "Indirect or consequential damages",
+        "Browser compatibility issues"
+      ]
+    },
+    "modifications": {
+      "title": "Service Modifications",
+      "content": "We reserve the right to modify, suspend, or discontinue the service at any time without prior notice. We may also update these terms periodically."
+    },
+    "law": {
+      "title": "Applicable Law",
+      "content": "These terms are governed by the applicable laws in your jurisdiction. Any disputes will be resolved in the competent courts."
+    },
+    "contact": {
+      "title": "Contact",
+      "content": "If you have questions about these terms, you can contact us through our GitHub repository."
+    },
+    "acceptance2": {
+      "content": "By using openvid, you also accept our <privacy>Privacy Policy</privacy>.",
+      "privacyLink": "Privacy Policy"
+    }
+  },
+  "hero": {
+    "title": "Create demos and <screen>screen</screen>",
+    "titleHighlight": "in 4K quality  ",
+    "description": "Add smooth zooms, mockups, customize backgrounds, camera, audio, elements, and export professional demos.",
+    "uploadButton": "Upload video",
+    "uploadButtonDragging": "Drop your video here",
+    "uploadButtonUploading": "Uploading...",
+    "recordButton": "Record screen",
+    "uploadHint": "Drag a video or click to select",
+    "goToVideoEditor": "Go to video editor",
+    "uploadPhotoButton": "Upload photo",
+    "uploadPhotoDragging": "Drop your photo here",
+    "uploadPhotoUploading": "Uploading...",
+    "goToPhotoEditor": "Go to photo editor"
+  },
+  "recording": {
+    "steps": {
+      "title": "Create your shot in",
+      "title2": "four easy steps",
+      "subtitle": "Follow these instructions to capture your screen. The whole process happens in your browser, no installation required.",
+      "step1": {
+        "title": "Start capturing",
+        "description": "Click the button below. Your browser will ask you what you want to share. For optimal performance and cleaner shots, we recommend selecting a <tab>Tab</tab> or <window>Specific window</window>.",
+        "startButton": "Start recording",
+        "stopButton": "Stop recording",
+        "countdownButton": "Preparing...",
+        "recordingButton": "Recording...",
+        "processingButton": "Processing...",
+        "mobileAlert": "Screen recording is not available on mobile devices. Please use a desktop computer.",
+        "permissionRequired": "Permission required",
+        "visual": {
+          "browserTab": "Brave Tab",
+          "window": "Window",
+          "fullscreen": "Entire screen",
+          "tabTitle": "openvid - Create shots...",
+          "codeTitle": "RecordingSteps.tsx",
+          "shareAudio": "Also share system audio",
+          "share": "Share",
+          "cancel": "Cancel"
+        }
+      },
+      "step2": {
+        "title": "Hide distractions",
+        "description": "When sharing your screen, your browser will automatically show a floating bar notifying that the capture is active. Click <hide>Hide</hide> to make sure it doesn't appear in your final video.",
+        "visual": {
+          "barText": "https://openvid.dev is sharing a window.",
+          "stop": "Stop sharing",
+          "hide": "Hide"
+        }
+      },
+      "step3": {
+        "title": "Get ready for action",
+        "description": "No rush. Once you approve the permissions in step 1, we will start a <countdown>3-second</countdown> countdown. You will see the indicator in the browser tab so you know exactly when to start speaking or moving the mouse.",
+        "visual": {
+          "title": "Switch tabs!",
+          "subtitle": "The recording will start on the screen you selected."
+        }
+      },
+      "step4": {
+        "title": "Cut and to the editor",
+        "description": "When you finish your explanation, simply stop the recording. The file will not be downloaded immediately; it will magically move to our web editor so you can apply zooms, backgrounds, and crops.",
+        "visual": {
+          "recording": "Grabando",
+          "stop": "Stop"
+        }
+      }
+    },
+    "overlay": {
+      "countdown": {
+        "title": "Switch tabs now!",
+        "subtitle": "Recording will start on the screen you selected."
+      },
+      "recording": {
+        "status": "Recording",
+        "stop": "Stop"
+      },
+      "processing": {
+        "title": "Processing your recording",
+        "subtitle": "Preparing your video for the editor..."
+      }
+    }
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Choose your preferred method to continue",
+    "backToHome": "Back to home",
+    "disclaimer": "By continuing, you accept our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "providers": {
+      "google": "Continue with Google",
+      "github": "Continue with GitHub",
+      "twitch": "Continue with Twitch",
+      "groupLabel": "Sign in options",
+      "loading": "Connecting..."
+    },
+    "errors": {
+      "generic": "Error signing in. Please try again.",
+      "signIn": "Error signing in with {provider}"
+    }
+  },
+  "placeholder": {
+    "browserBar": {
+      "newTab": "New tab",
+      "search": "Search or type a URL"
+    },
+    "upload": {
+      "title": "Click to upload",
+      "subtitle": "or drag your video",
+      "dragging": "Drop the video here!",
+      "button": "Select file",
+      "uploading": "Uploading...",
+      "formats": "MP4, WebM, MOV or MKV",
+      "titleImage": "Click to upload",
+      "subtitleImage": "or drag your image",
+      "draggingImage": "Drop the image here!",
+      "formatsImage": "JPG, PNG, WebP or GIF"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The route you are looking for does not exist in our editor.",
+    "backHome": "Back to Home"
+  },
+  "userMenu": {
+    "login": "Sign in",
+    "connectedWith": "Connected with {provider}",
+    "home": "Home",
+    "editor": "Editor",
+    "videoEditor": "Go to video editor",
+    "photoEditor": "Go to photo editor",
+    "logout": "Sign out",
+    "loggingOut": "Signing out...",
+    "ariaLabel": "User menu",
+    "defaultUser": "User",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
+  "donation": {
+    "title": "Buy me a coffee",
+    "description": "Support the openvid project",
+    "page": {
+      "title": "Support the development",
+      "description": "Openvid is an open-source tool. Your contribution allows us to keep the servers running and continue developing new features.",
+      "backHome": "Back to Home",
+      "methods": "Methods",
+      "copy": "Copy",
+      "copied": "Copied",
+      "scanQR": "Scan QR Code",
+      "close": "Close",
+      "alternative": "or alternatively",
+      "openLink": "Open direct payment link",
+      "yape": {
+        "tagline": "Local transfer",
+        "detail": "Scan the QR or use the phone number",
+        "phone": "Phone number"
+      },
+      "visa": {
+        "tagline": "National network",
+        "detail": "Direct deposit to BCP account (Soles)",
+        "account": "BCP Account (Soles)",
+        "cci": "CCI"
+      },
+      "paypal": {
+        "tagline": "International transfer",
+        "detail": "Send via email or direct link",
+        "email": "PayPal email",
+        "link": "https://www.paypal.com/ncp/payment/AZ3LS98LJ9SM2"
+      }
+    }
+  },
+  "demo": {
+    "title": "Flawless demos",
+    "subtitle": "designed in seconds"
+  },
+  "recordingSetup": {
+    "title": "Recording Setup",
+    "description": "Choose your camera, microphone, and how you want your bubble to look.",
+    "close": "Close",
+    "preview": {
+      "initialPosition": "Initial position"
+    },
+    "camera": {
+      "title": "Camera",
+      "description": "Add a bubble with your webcam.",
+      "permissionDenied": "Camera access denied. Hover here to see how to fix it.",
+      "errorGeneric": "Could not access the camera. Check your connection.",
+      "selectPlaceholder": "Select camera",
+      "default": "Default camera",
+      "shape": "Shape",
+      "size": "Size",
+      "mirror": "Mirror horizontally"
+    },
+    "mic": {
+      "title": "Microphone",
+      "description": "Record your voice on the same track.",
+      "errorGeneric": "Could not access the microphone.",
+      "selectPlaceholder": "Select microphone",
+      "default": " microphone"
+    },
+    "systemAudio": {
+      "title": "System Audio",
+      "description": "Capture audio from the shared tab or window."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "shareScreen": "Share screen"
+    },
+    "shapes": {
+      "circle": "Circle",
+      "squircle": "Squircle",
+      "square": "Square"
+    },
+    "corners": {
+      "top-left": "Top left",
+      "top-right": "Top right",
+      "bottom-left": "Bottom left",
+      "bottom-right": "Bottom right"
+    },
+    "drag": "Drag"
+  },
+  "controlPanel": {
+    "header": {
+      "close": "Close control panel"
+    },
+    "screenshot": {
+      "background": "Background",
+      "tabs": {
+        "wallpaper": "Wallpaper",
+        "color": "Color",
+        "image": "Image"
+      },
+      "options": "Options",
+      "settings": "Settings",
+      "sliders": {
+        "blur": "Background blur",
+        "padding": "Padding",
+        "rounded": "Rounded corners",
+        "shadows": "Shadows"
+      }
+    },
+    "tools": {
+      "mockup": "Mockup",
+      "videos": "Video",
+      "elements": "Elements",
+      "audio": "Audio",
+      "zoom": "Zoom",
+      "cursor": "Cursor",
+      "camera": "Camera"
+    }
+  },
+  "toolsSidebar": {
+    "tools": {
+      "background": "Background",
+      "mockup": "Mockup",
+      "videos": "Video",
+      "elements": "Elements",
+      "audio": "Audio",
+      "zoom": "Zoom",
+      "camera": "Camera",
+      "cursor": "Cursor",
+      "toolbar": "Tools toolbar",
+      "soon": "Soon",
+      "motion": "Motion",
+      "newTool": "New"
+    },
+    "popovers": {
+      "background": {
+        "title": "Backgrounds & Canvas",
+        "description": "Add gradients, colors, or images"
+      },
+      "mockup": {
+        "title": "Mockup Generator",
+        "description": "Wrap your captures in browsers, mobile devices, or IDEs"
+      },
+      "videos": {
+        "title": "Import Videos",
+        "description": "Upload your screen recordings or clips"
+      },
+      "elements": {
+        "title": "Elements & Annotations",
+        "description": "Add arrows, geometric shapes, text, or highlighters"
+      },
+      "audio": {
+        "title": "Tracks & Effects",
+        "description": "Sync background music tracks or sound effects"
+      },
+      "zoom": {
+        "title": "Dynamic Zoom",
+        "description": "Create smooth close-ups on specific parts of the screen to guide the viewer's attention."
+      },
+      "camera": {
+        "title": "On-screen Camera",
+        "description": "Overlay your webcam recording with circular crops"
+      },
+      "history": {
+        "title": "Image History",
+        "description": "Access your previous captures to reuse or edit them."
+      },
+      "motion": {
+        "title": "Motion Effects",
+        "description": "Apply smooth transitions and animations to your elements."
+      }
+    },
+    "recording": {
+      "idle": "Record screen",
+      "inProgress": "Recording in progress...",
+      "preparing": "Preparing...",
+      "recording": "Recording...",
+      "processing": "Processing...",
+      "start": "Record"
+    },
+    "upload": {
+      "tooltip": "Upload custom video",
+      "tooltipUploading": "Uploading video...",
+      "button": "Upload",
+      "buttonUploading": "Uploading...",
+      "dropHere": "Drop here"
+    },
+    "alerts": {
+      "mobile": "Screen capture is not supported on mobile. Use your computer."
+    },
+    "photo": {
+      "captureTooltip": "Capture image",
+      "capturing": "Capturing image...",
+      "capture": "Capture",
+      "uploadTooltip": "Upload custom image",
+      "upload": "Upload",
+      "libraryTooltip": "Your images",
+      "library": "Library",
+      "dropHere": "Drop hereks"
+    },
+    "imagesLibrary": {
+      "title": "My Images",
+      "project": "project",
+      "projects": "projects",
+      "loading": "Loading library...",
+      "current": "Current",
+      "delete": "Delete",
+      "confirmDelete": "Confirm?",
+      "empty": {
+        "title": "Library empty",
+        "description": "Your image projects will appear here once you save them."
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "{count, plural, =1 {1 minute ago} other {# minutes ago}}",
+        "hoursAgo": "{count, plural, =1 {1 hour ago} other {# hours ago}}",
+        "daysAgo": "{count, plural, =1 {1 day ago} other {# days ago}}"
+      }
+    }
+  },
+  "historyMenu": {
+    "title": "Image History",
+    "items": "images",
+    "loading": "Loading history...",
+    "upload": {
+      "drop": "Drop image here",
+      "dragOrClick": "Drag or click to upload"
+    },
+    "empty": {
+      "title": "No images yet",
+      "description": "Upload or capture images to see them here"
+    },
+    "time": {
+      "justNow": "Just now",
+      "hoursAgo": "{hours, plural, =1 {1 hour ago} other {# hours ago}}",
+      "yesterday": "Yesterday",
+      "daysAgo": "{days, plural, =1 {1 day ago} other {# days ago}}"
+    },
+    "actions": {
+      "delete": "Delete from history"
+    }
+  },
+  "wallpapers": {
+    "categories": {
+      "desktop": "Desktop",
+      "gradient": "Gradients",
+      "pattern": "Patterns",
+      "minimal": "Minimalist"
+    },
+    "options": {
+      "none": "No background",
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "upload": "Upload image"
+    },
+    "popover": {
+      "seeMore": "See more from {name}",
+      "moreCount": "+{count} more"
+    }
+  },
+  "colorEditor": {
+    "modes": {
+      "gradient": "Gradient",
+      "solid": "Solid"
+    },
+    "sections": {
+      "presets": "Presets",
+      "customize": "Customize",
+      "moreColors": "More colors",
+      "moreGradients": "More {type} gradients",
+      "type": "Type",
+      "angle": "Angle",
+      "originX": "Origin X",
+      "originY": "Origin Y",
+      "stops": "Colors ({count})",
+      "add": "Add"
+    },
+    "tooltips": {
+      "moreColors": "See more colors",
+      "moreGradients": "See more gradients"
+    },
+    "types": {
+      "linear": "Linear",
+      "radial": "Radial",
+      "conic": "Conic"
+    }
+  },
+  "imageRecentGrid": {
+    "upload": {
+      "instruction": "Drag an image here or",
+      "action": "upload a file"
+    },
+    "sections": {
+      "recent": "Recent"
+    },
+    "alt": {
+      "recent": "Recent {index}"
+    }
+  },
+  "mockupMenu": {
+    "title": "Mockup",
+    "windowType": "Window type",
+    "none": "None",
+    "suggested": "Suggested",
+    "count": "{count} mockups",
+    "remove": "Remove mockup",
+    "frames2D": "2D Frames",
+    "devices3D": "3D Devices",
+    "device3DTitle": "3D Device",
+    "configuration": "Configuration",
+    "reset": "Reset",
+    "scale": "Scale",
+    "laptopOpening": "Laptop opening",
+    "shadow": "Shadow",
+    "position": "Position",
+    "removeFrame": "Remove frame",
+    "darkMode": {
+      "label": "Dark mode",
+      "dark": "Dark",
+      "light": "Light"
+    },
+    "frameColor": {
+      "label": "Frame color",
+      "ariaLabel": "Select color {color}"
+    },
+    "url": {
+      "label": "Page URL",
+      "placeholder": "https://your-site.com"
+    },
+    "sliders": {
+      "headerScale": "Header scale",
+      "headerOpacity": "Header opacity"
+    },
+    "categories": {
+      "all": "All",
+      "browser": "Browser",
+      "device": "Mobile",
+      "ide": "Code Editor"
+    },
+    "mockups": {
+      "none": "None",
+      "macos": "MacOS",
+      "macos-glass": "MacOS Glass",
+      "outline": "Outline",
+      "glass-ui-container": "Glass UI Container",
+      "macos-ghost": "MacOS Ghost",
+      "macos-ghost-glass": "MacOS Ghost Glass",
+      "macos-container-glass": "MacOS Container Glass",
+      "brave": "Brave",
+      "brave-glass": "Brave Glass",
+      "browser-tab-glass": "Browser Tab Glass",
+      "chrome": "Chrome",
+      "chrome-glass": "Chrome Glass",
+      "iphone-slim": "iPhone Slim",
+      "glass-curve": "Glass Curve",
+      "glass-full": "Glass Full",
+      "hard-shell": "Hard Shell",
+      "s24-ultra": "S24 Ultra",
+      "vscode": "VS Code",
+      "macos-dark-ide": "VS Code MacOS",
+      "macos-ghost-ide": "MacOS Ghost IDE",
+      "macbook-photo": "MacBook"
+    },
+    "devices": {
+      "iphone-13-pro-max": "iPhone 13 Pro",
+      "double_iphone_13_pro": "Double iPhone 13 Pro",
+      "iphone-17-pro-max": "iPhone 17 Pro",
+      "iphone": "iPhone 15 Pro",
+      "phone": "Generic phone",
+      "laptop": "macOS Laptop",
+      "ipad_mini_6_2021": "iPad mini 6 (2021)"
+    },
+    "positionPresets": {
+      "tooltip": "Default positions",
+      "trigger": "Perspective",
+      "title": "3D Positions",
+      "resetDefault": "Reset to default",
+      "tabs": {
+        "presets": "Presets",
+        "custom": "Custom"
+      },
+      "custom": {
+        "perspective": "Perspective",
+        "scale": "Scale",
+        "rotationXY": "Rotation X/Y",
+        "rotationZ": "Rotation Z",
+        "vertical": "Vertical",
+        "reset": "Reset"
+      }
+    },
+    "viewer3d": "3D Viewer",
+    "autoRotate": "Auto-rotate",
+    "rotationSpeed": "Rotation speed",
+    "glow": "Glow",
+    "environment": "Environment",
+    "environments": {
+      "sunset": "Sunset",
+      "dawn": "Dawn",
+      "night": "Night",
+      "warehouse": "Warehouse",
+      "forest": "Forest",
+      "apartment": "Apartment",
+      "studio": "Studio",
+      "city": "City",
+      "park": "Park",
+      "lobby": "Lobby"
+    },
+    "modelProperties": "Model Properties",
+    "lightingAndEnvironment": "Lighting & Environment",
+    "presentation": "Animation & Display"
+  },
+  "videosMenu": {
+    "title": "Videos",
+    "speed": "Speed",
+    "dropzone": "Drop your video here!",
+    "emptyState": {
+      "title": "Upload video",
+      "instruction": "Click or drag a file here"
+    },
+    "upload": {
+      "button": "Upload video",
+      "action": "Select file",
+      "status": "Uploading..."
+    },
+    "actions": {
+      "add": "Add",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "delete": "Delete video"
+    },
+    "footer": "Videos are stored locally in your browser"
+  },
+  "elementsMenu": {
+    "title": "Elements",
+    "tabs": {
+      "elements": "Elements",
+      "text": "Text",
+      "uploads": "Uploads"
+    },
+    "sections": {
+      "shapes": "Shapes",
+      "images": "Images",
+      "hierarchy": "Hierarchy"
+    },
+    "filters": {
+      "all": "All"
+    },
+    "counts": {
+      "shapes": "{count} shapes",
+      "images": "{count} images"
+    },
+    "tooltips": {
+      "allShapes": "View all shapes",
+      "allImages": "View all images"
+    },
+    "properties": {
+      "color": "Color",
+      "size": "Size",
+      "opacity": "Opacity"
+    },
+    "actions": {
+      "delete": "Delete",
+      "bringToFront": "Bring to front",
+      "sendToBack": "Send to back",
+      "deleteMultiple": "Delete selected ({count})"
+    },
+    "text": {
+      "content": "Content",
+      "placeholder": "Type your text...",
+      "presets": "Presets",
+      "size": "Size",
+      "font": "Font",
+      "weight": "Weight",
+      "addButton": "Add text"
+    },
+    "uploads": {
+      "title": "Upload images",
+      "instruction": "Click or drag a file here",
+      "uploading": "Uploading...",
+      "processing": "Processing images",
+      "selectFile": "Select file",
+      "gallery": "Your images ({count})",
+      "clearAll": "Clear all",
+      "emptyTitle": "No images yet",
+      "emptySubtitle": "Images you upload will appear here"
+    }
+  },
+  "zoomFragmentEditor": {
+    "title": "Zoom Fragment",
+    "deleteTooltip": "Delete fragment (Delete)",
+    "actions": {
+      "delete": "Delete"
+    },
+    "focusPoints": {
+      "single": "Focus point",
+      "multiple": "Focus points",
+      "start": "Start",
+      "end": "End"
+    },
+    "preview": {
+      "alt": "Video preview",
+      "dragAB": "Drag A and B",
+      "dragOrClick": "Drag or click",
+      "orbitalPath": "Autozoom cursor path"
+    },
+    "movement": {
+      "title": "Camera Movement",
+      "subtitle": "Panning during zoom",
+      "orbitalDescription": "Cursor trajectory generated by Autozoom. It is preserved during preview and export.",
+      "tooShort": "Fragment too short for movement. Increase duration.",
+      "defaultName": "Movement {number}",
+      "timeline": {
+        "title": "Movement Timeline",
+        "active": "{seconds}s active",
+        "startLabel": "START",
+        "endLabel": "END"
+      },
+      "addMovement": "Add point",
+      "deleteMovement": "Delete point"
+    },
+    "sliders": {
+      "zoomLevel": "Zoom level",
+      "transitionSpeed": "Transition speed"
+    },
+    "info": {
+      "fragmentDuration": "Fragment duration",
+      "zoomFactor": "Zoom factor",
+      "transitionDuration": "Transition duration"
+    }
+  },
+  "zoomGlobalConfig": {
+    "title": "Zoom",
+    "fragments": {
+      "title": "Fragments ({count})",
+      "label": "Zoom {index}",
+      "add": "Add fragment"
+    },
+    "shortcuts": {
+      "keys": {
+        "delete": "Delete",
+        "esc": "Esc",
+        "click": "Click"
+      },
+      "delete": "Delete selected fragment",
+      "esc": "Deselect fragment",
+      "clickTrack": "Add fragment at position"
+    }
+  },
+  "cameraMenu": {
+    "title": "Camera",
+    "noCamera": {
+      "title": "This recording does not include a camera.",
+      "description": "Enable the camera when starting a new recording to see it here."
+    },
+    "shape": "Shape",
+    "position": "Position",
+    "customPosition": "Custom position (drag the camera on the canvas).",
+    "size": "Size",
+    "mirror": "Mirror (reflection)",
+    "shapes": {
+      "squircle": "Squircle",
+      "circle": "Circle",
+      "square": "Square"
+    },
+    "corners": {
+      "top-left": "Top left",
+      "top-right": "Top right",
+      "bottom-left": "Bottom left",
+      "bottom-right": "Bottom right"
+    }
+  },
+  "editor": {
+    "topBar": {
+      "exportError": {
+        "title": "Error exporting",
+        "tip": "Try playing the entire video length before exporting.",
+        "close": "Close alert"
+      },
+      "history": {
+        "undo": "Undo (Ctrl+Z)",
+        "noUndo": "No actions to undo",
+        "redo": "Redo (Ctrl+Y)",
+        "noRedo": "No actions to redo"
+      },
+      "auth": {
+        "defaultUser": "User",
+        "signIn": "Sign In",
+        "userMenu": "User Menu",
+        "connectedWith": "Connected with {provider}",
+        "home": "Home",
+        "editor": "Editor",
+        "signOut": "Sign Out",
+        "signingOut": "Signing out...",
+        "access": "Access"
+      }
+    },
+    "export": {
+      "button": "Export",
+      "title": "Export Quality",
+      "recommended": "RECOMMENDED",
+      "noBackground": "transparent",
+      "solidBackground": "SOLID BACKGROUND",
+      "gifNotice": "Solid black background",
+      "qualities": {
+        "4k": {
+          "label": "4K Ultra HD",
+          "desc": "3840 × 2160 • Max fidelity"
+        },
+        "2k": {
+          "label": "2K Quad HD",
+          "desc": "2560 × 1440 • Ideal balance"
+        },
+        "1080p": {
+          "label": "1080p Full HD",
+          "desc": "1920 × 1080 • Web standard"
+        },
+        "720p": {
+          "label": "720p HD",
+          "desc": "1280 × 720 • Small file"
+        },
+        "480p": {
+          "label": "480p SD",
+          "desc": "854 × 480 • Draft quality"
+        },
+        "gif": {
+          "label": "Animated GIF",
+          "desc": "1280 × 720 • Loop without audio"
+        }
+      }
+    },
+    "photoMode": {
+      "title": "Image Editing Mode",
+      "description": "Adjust background, mockups and elements to customize your image",
+      "previewLabel": "3D Previews",
+      "views": "views"
+    },
+    "imagesLibrary": {
+      "title": "My Images",
+      "project": "project",
+      "projects": "projects",
+      "loading": "Loading library...",
+      "current": "Current",
+      "delete": "Delete",
+      "confirmDelete": "Confirm?",
+      "empty": {
+        "title": "Empty library",
+        "description": "Your image projects will appear here once saved."
+      },
+      "time": {
+        "justNow": "Just now",
+        "minutesAgo": "{count, plural, =1 {1 minute ago} other {# minutes ago}}",
+        "hoursAgo": "{count, plural, =1 {1 hour ago} other {# hours ago}}",
+        "daysAgo": "{count, plural, =1 {1 day ago} other {# days ago}}"
+      }
+    },
+    "exportImage": {
+      "button": "Export",
+      "title": "Export Image",
+      "transparent": "Transparent",
+      "recommended": "Recommended",
+      "noTransparency": "No transparency",
+      "transparentInfo": "Transparent background is only kept in PNG and WebP formats.",
+      "presets": {
+        "png4x": {
+          "label": "PNG 4x (Ultra)"
+        },
+        "png2x": {
+          "label": "PNG 2x (Retina)"
+        },
+        "pngOriginal": {
+          "label": "Original PNG"
+        },
+        "webpHigh": {
+          "label": "WebP High",
+          "description": "95% Quality — Best compression"
+        },
+        "jpegHigh": {
+          "label": "JPEG High",
+          "description": "95% Quality — Balanced size"
+        },
+        "webpMedium": {
+          "label": "WebP Medium",
+          "description": "80% Quality — Web optimized"
+        },
+        "jpegMedium": {
+          "label": "JPEG Medium",
+          "description": "80% Quality — Reduced size"
+        }
+      },
+      "exporting": "Exporting..."
+    },
+    "effect3d": {
+      "title": "3D Effect",
+      "subtitle": "Perspective with depth",
+      "intensity": "Intensity",
+      "direction": "Perspective direction",
+      "directionHint": "Click to choose tilt direction",
+      "perspective": "Perspective",
+      "scale": "Scale",
+      "rotation": "3D Rotation",
+      "clickToAdjust": "Click to adjust",
+      "rotationHint": "Use panel to define angles",
+      "rotateZ": "Twist (Z Axis)",
+      "verticalPosition": "Vertical Offset",
+      "reset": "Reset values"
+    },
+    "cropper": {
+      "button": "Crop image",
+      "tooltip": "Adjust dimensions and crop"
+    },
+    "photoPreview": {
+      "custom": {
+        "label": "Custom",
+        "customize": "Customize",
+        "title": "3D Settings",
+        "perspective": "Perspective",
+        "scale": "Scale",
+        "rotationXY": "Rotation (X/Y)",
+        "rotationZ": "Z Rotation",
+        "vertical": "Vertical",
+        "reset": "Reset"
+      },
+      "settings": "Settings",
+      "apply3D": "Apply 3D Effect",
+      "mockup3D": "3D: Mockup",
+      "resetDefaults": "Reset Defaults",
+      "reset": "Reset",
+      "configs": {
+        "front": "Front",
+        "tilt-up": "Tilt Up",
+        "tilt-down": "Tilt Down",
+        "top-left-angle": "Top Left Angle",
+        "top-right-angle": "Top Right Angle",
+        "bottom-left-angle": "Bottom Left Angle",
+        "bottom-right-angle": "Bottom Right Angle",
+        "isometric": "Isometric"
+      }
+    },
+    "imageMask": {
+      "trigger": "Mask",
+      "tooltip": "Image mask effect",
+      "title": "Mask Effects",
+      "tabs": {
+        "presets": "Presets",
+        "custom": "Custom"
+      },
+      "presets": {
+        "none": "No Mask",
+        "fade-top": "Fade Top",
+        "fade-bottom": "Fade Bottom",
+        "fade-sides": "Fade Sides",
+        "vignette": "Vignette",
+        "angle-45": "Diagonal 45°"
+      },
+      "controls": {
+        "top": "Top",
+        "bottom": "Bottom",
+        "left": "Left",
+        "right": "Right",
+        "add": "Add",
+        "remove": "Remove",
+        "from": "From",
+        "to": "To"
+      }
+    },
+    "hoverTooltip": {
+      "zoom": "Zoom",
+      "paste": "Paste",
+      "ctrl": "Ctrl",
+      "scroll": "Scroll",
+      "keyV": "V"
+    },
+    "layerPanel": {
+      "tooltips": {
+        "show": "Show",
+        "hide": "Hide",
+        "lock": "Lock",
+        "unlock": "Unlock",
+        "delete": "Delete",
+        "deleteGroup": "Delete group",
+        "showLayers": "Show layers panel",
+        "hideLayers": "Hide layers panel",
+        "groupSelected": "Group selected",
+        "ungroup": "Ungroup"
+      },
+      "layers": "Layers",
+      "noLayers": "No layers",
+      "group": "Group",
+      "selected": "selected",
+      "groupAction": "Group",
+      "ungroupAction": "Ungroup",
+      "videoLayer": "Video",
+      "imageLayer": "Image"
+    }
+  },
+  "playerControls": {
+    "toolbar": "Playback controls",
+    "fullscreen": {
+      "enter": "Full screen (F)",
+      "exit": "Exit full screen (F)"
+    },
+    "zoom": {
+      "group": "Timeline zoom",
+      "out": "Zoom out (↓)",
+      "in": "Zoom in (↑)",
+      "label": "Timeline zoom: {level}×"
+    },
+    "split": {
+      "clip": "Split clip"
+    },
+    "transport": {
+      "group": "Transport controls",
+      "currentTime": "Current time: {time}",
+      "totalTime": "Total duration: {time}",
+      "backward": "Backward 5s (← or J)",
+      "forward": "Forward 5s (→ or L)",
+      "play": "Play (Space or K)",
+      "pause": "Pause (Space or K)"
+    },
+    "cropper": {
+      "tooltip": "Open video cropper",
+      "button": "Crop"
+    }
+  },
+  "aspectRatioSelect": {
+    "tooltip": "Select aspect ratio",
+    "labels": {
+      "auto": "Auto",
+      "custom": "Custom",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "instagram": "Instagram",
+      "portrait": "Portrait",
+      "standard": "Standard"
+    },
+    "customSection": {
+      "title": "Custom",
+      "width": "Width",
+      "height": "Height",
+      "apply": "Apply dimensions"
+    }
+  },
+  "videoCropper": {
+    "title": "Crop video",
+    "noVideo": "No video",
+    "sections": {
+      "ratio": "Aspect Ratio",
+      "area": "Area"
+    },
+    "labels": {
+      "x": "X",
+      "y": "Y",
+      "width": "W",
+      "height": "H"
+    },
+    "buttons": {
+      "reset": "Reset",
+      "apply": "Apply crop"
+    },
+    "close": "Close",
+    "freeRatio": "Free"
+  },
+  "timeline": {
+    "noSpace": "No space"
+  },
+  "audioMenu": {
+    "title": "Audio",
+    "originalAudio": "Original audio",
+    "muted": "Muted",
+    "active": "Active",
+    "masterVolume": "Master volume",
+    "uploadButton": "Upload audio",
+    "uploadHint": "MP3, WAV, OGG, AAC, M4A (max 10MB)",
+    "timelineTracks": "TIMELINE TRACKS ({count})",
+    "start": "Start",
+    "duration": "Duration",
+    "exceedsDuration": "Exceeds video duration",
+    "trimAction": "Trim audio",
+    "deleteAction": "Delete audio",
+    "noTracks": "No audio tracks",
+    "noTracksHint": "Upload an audio file to automatically add it to the timeline",
+    "errors": {
+      "unsupportedFormat": "Unsupported audio format. Please use MP3, WAV, OGG, AAC, or M4A.",
+      "fileTooLarge": "File is too large. Maximum size is 10MB."
+    },
+    "defaultSounds": "Default sounds",
+    "categories": {
+      "confirmation": "Confirmation",
+      "alert": "Alert",
+      "ui": "Interface",
+      "transition": "Transition",
+      "ambient": "Ambient",
+      "system": "System"
+    }
+  },
+  "exportOverlay": {
+    "processing": "Processing Video",
+    "status": {
+      "preparing": "Preparing rendering environment",
+      "capturing": "Capturing PNG frames (Step 1 of 2)",
+      "encoding": "Encoding video sequence",
+      "encodingWebM": "Encoding WebM video (Step 2 of 2)",
+      "finalizing": "Packaging final files"
+    },
+    "warnings": {
+      "performance": "To optimize GPU and CPU resources, <highlight>avoid minimizing this window</highlight>. The process is intensive and requires system priority.",
+      "transparency": "This process may take longer than usual. <highlight>WebM export with transparency</highlight> requires additional CPU processing."
+    },
+    "actions": {
+      "cancel": "Stop export"
+    }
+  },
+  "photoPicker": {
+    "tooltip": "Search backgrounds (Unsplash, Pexels, Pixabay)",
+    "title": "Backgrounds",
+    "statusDiscovering": "Discovering",
+    "searchPlaceholder": "Search backgrounds...",
+    "noResults": "No results",
+    "footerPhotosBy": "Photos by",
+    "footerAnd": " and ",
+    "badges": {
+      "blur_gradient": "Blur gradient",
+      "dark_wallpaper": "Dark wallpaper",
+      "minimal_abstract": "Minimal abstract",
+      "neon_city": "Neon city",
+      "nature_landscape": "Nature landscape",
+      "aurora_borealis": "Aurora borealis",
+      "gradient_wallpaper": "Gradient wallpaper"
+    }
+  },
+  "featuresShowcase": {
+    "common": {
+      "videoThumbnail": "Video thumbnail"
+    },
+    "videos": {
+      "titleLine1": "Polished video",
+      "titleLine2": "demos created.",
+      "description": "Watch high-fidelity screen recordings and cinematic clips generated by our community."
+    },
+    "images": {
+      "titleLine1": "Polished image",
+      "titleLine2": "static exports.",
+      "description": "Perfect for your landing pages, social media, or changelogs. Export ultra-crisp mockups in one click."
+    },
+    "alts": {
+      "laptop": "Laptop",
+      "iphone": "iPhone",
+      "browser": "Browser"
+    }
+  },
+  "featuresGrid": {
+    "ariaLabel": "Product features",
+    "titleLine1": "Everything you need to ship",
+    "titleLine2": "stunning demos.",
+    "description": "Record, enhance, and export - cinematic results directly in your browser, no installs required.",
+    "cards": {
+      "deviceMockups": {
+        "title": "3D Device Mockups",
+        "description": "Wrap your screen recordings in hyper-realistic 3D device frames."
+      },
+      "transparency": {
+        "title": "Transparency"
+      },
+      "backgrounds": {
+        "title": "Backgrounds"
+      },
+      "cinematicZoom": {
+        "title": "Cinematic Zoom"
+      },
+      "elementsLayers": {
+        "title": "Elements & Layers"
+      },
+      "multiTrackTimeline": {
+        "title": "Multi-track Timeline",
+        "description": "Layer multiple videos, audio tracks, and zoom the canvas."
+      }
+    },
+    "alts": {
+      "abstract3dRendering": "Abstract 3D rendering",
+      "backgroundLayer3": "Background layer 3",
+      "backgroundLayer2": "Background layer 2",
+      "transparentPreview": "Transparent preview",
+      "backgroundPattern": "Background pattern",
+      "bottomRightAsset": "Bottom right asset",
+      "rightAsset": "Right asset"
+    },
+    "tags": {
+      "textOverlay": "Text Overlay",
+      "svgShapes": "SVG Shapes",
+      "blurEffects": "Blur Effects"
+    }
+  },
+  "socialReactions": {
+    "titleLine1": "Don't just take",
+    "titleLine2": "our word for it",
+    "description": "See how founders and creators are transforming their demos with Openvid.",
+    "views": "Views",
+    "watchReel": "Watch Reel",
+    "originalAudio": "Original audio",
+    "sparklesAlt": "Sparkles decorator",
+    "posts": {
+      "post1": {
+        "text": "Openvid is an open-source browser-based video editor for recording and editing screen captures with cinematic effects, no uploads required.\n\n- 4K export with H.264, WebM, GIF, and image formats\n- 3D camera movement, zoom, and perspective adjustments\n- Device mockups for Safari, Chrome, Arc, and Samsung\n- Multi-track audio with per-track and master volume control\n\nExplore it here:",
+        "timestamp": "5:30 PM · May 26, 2026"
+      },
+      "post2": {
+        "text": "🚨 SCREENSHOT ➔ POLISHED PRODUCT WALKTHROUGH VIDEO INSTANTLY\n\nThis guy built a tool that turns any app..."
+      },
+      "post3": {
+        "text": "🎥 A free and open-source tool for creating professional product demos directly from the browser.\n\nRecord the screen, add zoom effects, device frames, and 3D effects, then export the video in high quality.\n\nIf you're making tutorials or showcasing apps, this is worth trying out.\n\n🐱 GitHub: CristianOlivera1/openvid",
+        "timestamp": "4:09 AM · Jul 5, 2026"
+      },
+      "post4": {
+        "text": "🚨 SCREENSHOT ➔ POLISHED PRODUCT WALKTHROUGH VIDEO INSTANTLY\n\nThis guy built a tool that turns any app screenshot into a clean, professional motion demo video.\n\nShips with:\n- One-click screenshot ➔ full animated walkthrough\n- Smooth UI animations & feature highlights\n- No After Effects, no Premiere, no designer needed\n- Perfect for landing pages & social media launches\n\n👉 https://github.com/CristianOlivera1/openvid\n\nWho's turning screenshots into pro videos today? Drop a 🔥"
+      },
+      "post5": {
+        "text": "Openvid Hero is an open-source, in-browser tool that converts app screenshots into professional, 4K-enabled motion demo videos without requiring external editing software. The tool features local rendering, 3D camera motions, and device mockups, offering a fast, private alternative for creating high-end product demos. Explore the project on GitHub: https://github.com/CristianOlivera1/openvid."
+      }
+    }
+  },
+  "dropMedia": {
+    "titleImage": "Drop the image",
+    "titleVideo": "Drop your video here"
+  },
+  "audioTrimModal": {
+    "title": "Trim audio",
+    "subtitle": "Drag the handles or the blue area to adjust",
+    "totalDuration": "Total duration:",
+    "start": "Start",
+    "end": "End",
+    "duration": "Duration",
+    "cancel": "Cancel",
+    "apply": "Apply trim"
+  },
+  "motionMenu": {
+    "title": "Motion",
+    "globalMotionLabel": "Animate all",
+    "empty2D": {
+      "title": "Requires 2D Mockup",
+      "description": "Apply a 2D mockup first (browser, macOS, etc.) to animate it."
+    },
+    "categories": {
+      "Entrance": "Entrance",
+      "Continue": "Continuous",
+      "Exit": "Exit"
+    },
+    "presets": {
+      "focus-in": "Progressive Focus",
+      "depth-emerge": "Depth Emergence",
+      "z-spin-reveal": "3D Spin Reveal",
+      "isometric-lift": "Isometric Liftoff",
+      "cinematic-showcase": "Cinematic Showcase",
+      "macro-track": "Diagonal Macro Track",
+      "exit-fade-down": "Fade Down Exit",
+      "exit-scale-blur": "Blur Scale Exit",
+      "whip-showcase": "Whip Pan Showcase",
+      "spatial-roam": "Spatial Roam",
+      "rise-crash": "Rise and Crash",
+      "crane-sweep": "Crane Sweep",
+      "orbit-entrance": "Orbit Entrance",
+      "flick-exit": "Flick Exit",
+      "hero-reveal": "Hero Reveal",
+      "macro-pan": "Macro Pan",
+      "screen-glide": "Screen Glide",
+      "float-hold": "Floating Hold",
+      "spiral-drop": "Spiral Drop"
+    },
+    "controls": {
+      "intensity": "Intensity",
+      "speed": "Speed"
+    },
+    "deleteTooltip": "Delete motion",
+    "actions": {
+      "delete": "Delete"
+    },
+    "customize": {
+      "title": "Customize motion",
+      "subtitle": "Manually adjust position, zoom, rotation",
+      "positionLabel": "Position",
+      "positionHint": "Drag the mockup to adjust its position",
+      "tiltLabel": "Tilt (X / Y)",
+      "tiltHint": "Click or drag to tilt",
+      "zoomLabel": "Zoom",
+      "rotateZLabel": "Z rotation",
+      "reverseLabel": "Reverse direction",
+      "resetButton": "Reset customization",
+      "blurLabel": "Motion blur"
+    },
+    "customize3D": {
+      "rotationTitle": "Rotation offsets",
+      "rotationSubtitle": "Added to the preset's base rotation (degrees)",
+      "rotateXLabel": "Rotate X (pitch)",
+      "rotateYLabel": "Rotate Y (yaw)",
+      "rotateZLabel": "Rotate Z (roll)",
+      "positionTitle": "Position offsets",
+      "positionSubtitle": "Added to the preset's base position (scene units)",
+      "positionLabel": "Position",
+      "positionHint": "Drag to set X / Y position",
+      "scaleTitle": "Scale",
+      "scaleSubtitle": "Uniform multiplier applied to the model",
+      "scaleLabel": "Scale"
+    }
+  },
+  "MobileTools": {
+    "openMenu": "Open tools menu",
+    "title": "Tools",
+    "close": "Close",
+    "background": "Background",
+    "mockup": "Mockup",
+    "motion": "Motion",
+    "zoom": "Zoom",
+    "videos": "Videos",
+    "elements": "Elements",
+    "audio": "Audio",
+    "uploading": "Uploading...",
+    "uploadVideo": "Upload video"
+  },
+  "feedback": {
+    "tooltip": "Send feedback",
+    "title": "Send feedback",
+    "close": "Close",
+    "types": {
+      "bug": "Bug",
+      "idea": "Idea",
+      "other": "Other"
+    },
+    "messagePlaceholder": "Tell us what happened or what you'd like to see...",
+    "emailPlaceholder": "Your email (optional, so we can reply)",
+    "emailInvalid": "Please enter a valid email address.",
+    "submit": "Send",
+    "successMessage": "Thanks! We got your feedback.",
+    "errorMessage": "Couldn't send it. Please try again."
+  },
+  "tour": {
+    "nextBtn": "Next",
+    "prevBtn": "Previous",
+    "doneBtn": "Got it!",
+    "step1": {
+      "title": "Record your screen!",
+      "description": "Click here to start recording your screen. If you need more information or help, you can check our",
+      "guideLinkText": "User Guide"
+    },
+    "step2": {
+      "title": "Upload a custom video",
+      "description": "Already have a video? You can also upload it directly from your device to edit it."
+    },
+    "step3": {
+      "title": "Create mockups from photos",
+      "description": "Not just for video! Upload an image and create amazing mockups from your photos."
+    }
+  },
+  "labelSidebar": {
+    "video": "Video",
+    "zoom": "Zoom",
+    "elements": "Object",
+    "audio": "Audio",
+    "motion": "Motion",
+    "movement": "Mov."
+  },
+  "heroPreview": {
+    "sidebar": {
+      "record": "Record",
+      "upload": "Upload",
+      "new": "New"
+    },
+    "background": {
+      "title": "Background",
+      "tabWallpaper": "Wallpaper",
+      "tabColor": "Color",
+      "options": "Options",
+      "desktopLabel": "Desktop",
+      "gradientsLabel": "Gradients",
+      "showMore": "SHOW MORE",
+      "settings": "Settings",
+      "blur": "Blur",
+      "padding": "Padding",
+      "rounded": "Corners",
+      "shadow": "Shadow"
+    },
+    "timeline": {
+      "video": "Video",
+      "zoom": "Zoom"
+    },
+    "transport": {
+      "rewind": "Rewind 5 seconds",
+      "forward": "Forward 5 seconds",
+      "play": "Play",
+      "pause": "Pause",
+      "mask": "Mask",
+      "crop": "Crop",
+      "auto": "Auto"
+    }
+  },
+  "exportSuccess": {
+    "title": "Export completed!",
+    "photoSuccess": "Your image was exported successfully.",
+    "videoSuccess": "Your video was exported successfully.",
+    "supportCoffee": "Support us with a coffee",
+    "starGithub": "Give us a star on GitHub",
+    "close": "Close"
+  }
+}

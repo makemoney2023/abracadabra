@@ -1,0 +1,28 @@
+# Openvid
+> Free, AI-powered online video editor for crafting cinematic product demos and 3D device mockups entirely in the browser.
+
+## Overview
+Openvid transforms standard screen recordings into highly polished, professional product demos without the need for complex software like After Effects. By leveraging WebAssembly and WebGL, it ensures 100% privacy and local processing—your videos never leave your device. Users can add smooth zooms, interactive 3D device mockups (Rotato-style), cinematic camera tilts, and custom backgrounds to export a high-fidelity demo ready for launch.
+
+## Key Capabilities
+
+*   **Local Video Processing:** Zero-cloud screen recording and drag-and-drop video upload (MP4, WebM, MKV). Everything runs locally in the browser.
+*   **Advanced 3D Device Mockups:** Wrap UI/UX workflows in realistic 3D smartphones, laptops, and monitors with full multi-axis rotational and perspective control.
+*   **2D Contextual Frames:** Add clean, customizable shells to your media, including Safari, Chrome, Arc, and Samsung frames.
+*   **Cinematic Camera Engine:** Dynamic focal zooms, smooth panning, tilt, and advanced 3D camera movements based on points of interest.
+*   **Rich Layering System:** Customize aesthetics with dynamic backgrounds, image masking (cutouts), drop shadows, typography, and SVG overlays.
+*   **High-Fidelity Export Engine:** Render locally at up to 4K resolution (3840×2160) @ 30fps. Supported export formats include MP4 (H.264), WebM (VP9 with alpha transparency support), and GIF.
+
+## Technical Architecture
+
+*   **Core Framework & UI:** Next.js 16, TypeScript, Tailwind CSS 4, Radix UI.
+*   **Video & Render Pipeline:** FFmpeg.wasm (in-browser rendering), MediaBunny, Three.js (3D effects), WebGL, HTML5 Canvas API.
+*   **Authentication:** Supabase Auth (OAuth support for Google, GitHub, and Twitch).
+
+## Target Audience & Use Cases
+Designed for indie hackers, founders, developer relations (DevRel) teams, and content creators who need to turn static screenshots or raw recordings into professional, launch-ready motion videos instantly.
+
+## Resources & Links
+*   **Official Website:** https://openvid.dev
+*   **Discord Community:** https://discord.gg/kM5FtydGQ
+*   **GitHub Repository:** https://github.com/CristianOlivera1/openvid

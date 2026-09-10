@@ -1,0 +1,1523 @@
+{
+  "header": {
+    "guide": "가이드",
+    "github": "GitHub",
+    "editor": "에디터로 이동",
+    "donate": "후원하기",
+    "login": "로그인",
+    "logout": "로그아웃",
+    "loggingOut": "로그아웃 중...",
+    "menu": "메뉴",
+    "screen": "녹화",
+    "close": "닫기"
+  },
+  "footer": {
+    "description": "<recording>화면 녹화</recording>와 <editing>동영상 편집</editing>을 위한 최신 애플리케이션. 웹을 위해 설계되었습니다. 설치도, 기다림도 없이 브라우저에서 바로 사용하세요.",
+    "recording": "화면 녹화",
+    "editing": "동영상 편집",
+    "product": "제품",
+    "contact": "문의",
+    "legal": "법적 고지",
+    "privacy": "개인정보 처리방침",
+    "terms": "이용약관",
+    "rights": "모든 권리 보유.",
+    "guide": "가이드",
+    "editor": "에디터로 이동",
+    "donate": "후원하기",
+    "github": "GitHub",
+    "email": "이메일"
+  },
+  "privacy": {
+    "backToHome": "홈으로 돌아가기",
+    "title": "개인정보 처리방침",
+    "lastUpdated": "최종 업데이트: {date}",
+    "intro": {
+      "title": "소개",
+      "content": "openvid는 사용자의 개인정보를 존중하며 이를 보호하기 위해 최선을 다하고 있습니다. 이 정책은 사용자가 저희 플랫폼을 이용할 때 데이터를 수집, 사용, 보호하는 방법을 설명합니다."
+    },
+    "collection": {
+      "title": "수집하는 정보",
+      "content": "openvid를 이용할 때 다음과 같은 정보를 수집합니다:",
+      "items": [
+        "Google로 가입한 경우 계정 정보(이메일, 이름)",
+        "경험 개선을 위한 사용 및 분석 데이터",
+        "브라우저 종류, 운영체제 등 기술 정보",
+        "처리하는 동영상 및 콘텐츠(서버에 저장되지 않고 일시적으로만 처리됨)"
+      ]
+    },
+    "usage": {
+      "title": "정보 이용 방법",
+      "content": "저희는 다음 목적으로 정보를 이용합니다:",
+      "items": [
+        "서비스 제공 및 유지",
+        "사용자 경험 개선",
+        "중요한 서비스 업데이트 전송",
+        "플랫폼 이용 현황 분석",
+        "부정 이용 방지"
+      ]
+    },
+    "processing": {
+      "title": "동영상 처리",
+      "badge": "모든 동영상 처리는 최신 웹 기술(WebAssembly, FFmpeg.wasm)을 이용해 전적으로 브라우저 내에서 이루어집니다. 사용자의 동영상은 절대 서버에 업로드되지 않습니다. 모든 과정은 로컬에서 비공개로 처리됩니다."
+    },
+    "cookies": {
+      "title": "쿠키 및 유사 기술",
+      "content": "저희는 다음 목적으로 쿠키 및 유사 기술을 사용합니다:",
+      "items": [
+        "세션 유지",
+        "환경설정 기억",
+        "사이트 성능 분석",
+        "보안 강화"
+      ],
+      "note": "브라우저에서 쿠키를 거부하도록 설정할 수 있지만, 이 경우 애플리케이션 기능에 영향을 줄 수 있습니다."
+    },
+    "sharing": {
+      "title": "정보 공유",
+      "content": "다음 경우를 제외하고는 사용자의 개인정보를 제3자에게 판매하거나 공유하지 않습니다:",
+      "items": [
+        "사용자의 명시적 동의가 있는 경우",
+        "법적 의무를 준수하기 위한 경우",
+        "저희의 권리와 보안을 보호하기 위한 경우"
+      ]
+    },
+    "security": {
+      "title": "보안",
+      "content": "사용자의 정보를 보호하기 위해 기술적·조직적 보안 조치를 시행합니다:",
+      "items": [
+        "전송 중 데이터 암호화(HTTPS)",
+        "신뢰할 수 있는 제공업체를 통한 안전한 인증",
+        "개인정보에 대한 제한적 접근",
+        "정기적인 보안 감사"
+      ]
+    },
+    "rights": {
+      "title": "사용자의 권리",
+      "content": "사용자는 다음 권리를 가집니다:",
+      "items": [
+        "개인정보 열람",
+        "부정확한 데이터 수정",
+        "계정 삭제 요청",
+        "데이터 처리에 대한 이의 제기",
+        "데이터 내보내기"
+      ]
+    },
+    "children": {
+      "title": "아동의 개인정보",
+      "content": "저희 서비스는 13세 미만 아동을 대상으로 하지 않습니다. 미성년자로부터 알면서 정보를 수집하지 않습니다."
+    },
+    "changes": {
+      "title": "정책 변경",
+      "content": "이 정책은 수시로 업데이트될 수 있습니다. 중요한 변경 사항은 이 페이지에 새 정책을 게시하여 알려드립니다."
+    },
+    "contact": {
+      "title": "문의",
+      "content": "이 개인정보 처리방침에 대해 궁금한 점이 있으면 GitHub 저장소를 통해 문의해 주세요."
+    },
+    "acceptance": {
+      "title": "동의",
+      "content": "openvid를 이용함으로써 저희 <terms>이용약관</terms>에도 동의하게 됩니다.",
+      "termsLink": "이용약관"
+    }
+  },
+  "terms": {
+    "backToHome": "홈으로 돌아가기",
+    "title": "이용약관",
+    "lastUpdated": "최종 업데이트: {date}",
+    "acceptance": {
+      "title": "약관 동의",
+      "content": "openvid에 접속하여 이용함으로써 사용자는 본 이용약관에 법적으로 구속되는 것에 동의합니다. 본 약관의 어느 부분에라도 동의하지 않는 경우 저희 플랫폼을 이용해서는 안 됩니다."
+    },
+    "description": {
+      "title": "서비스 설명",
+      "content": "openvid는 다음과 같은 기능을 제공하는 동영상 편집 웹 애플리케이션입니다:",
+      "items": [
+        "브라우저에서 직접 화면 녹화",
+        "전문 도구로 동영상 편집",
+        "다양한 형식과 화질로 내보내기",
+        "서버 없이 모든 것을 로컬에서 처리"
+      ]
+    },
+    "account": {
+      "title": "사용자 계정",
+      "content": "일부 기능을 이용하려면 다음 방법으로 계정을 생성해야 할 수 있습니다:",
+      "items": [
+        "Google 인증",
+        "GitHub 인증"
+      ],
+      "note": "계정의 기밀 유지에 대한 책임은 사용자 본인에게 있습니다."
+    },
+    "acceptable": {
+      "title": "허용되는 이용",
+      "content": "openvid를 이용함으로써 사용자는 다음 사항에 동의합니다:",
+      "items": [
+        "불법적이거나 불쾌감을 주거나 저작권을 침해하는 콘텐츠를 업로드하지 않음",
+        "서비스 보안을 침해하려는 시도를 하지 않음",
+        "부정 이용을 위해 플랫폼을 사용하지 않음",
+        "다른 사용자의 권리를 존중함"
+      ]
+    },
+    "intellectual": {
+      "title": "지적재산권",
+      "content": "사용자는 openvid에 업로드한 콘텐츠에 대한 모든 권리를 보유합니다. 저희는 편집 서비스를 제공하기 위해 동영상을 일시적으로만 처리합니다. 사용자의 명시적 동의 없이는 콘텐츠를 저장하거나 공유하지 않습니다."
+    },
+    "limitation": {
+      "title": "책임의 제한",
+      "content": "openvid는 어떠한 보증도 없이 \"있는 그대로\" 제공됩니다. 저희는 다음 사항에 대해 책임을 지지 않습니다:",
+      "items": [
+        "데이터 또는 콘텐츠의 손실",
+        "서비스 중단",
+        "간접적 또는 결과적 손해",
+        "브라우저 호환성 문제"
+      ]
+    },
+    "modifications": {
+      "title": "서비스 변경",
+      "content": "저희는 사전 통지 없이 언제든지 서비스를 변경, 중단 또는 종료할 권리를 보유합니다. 또한 본 약관을 주기적으로 업데이트할 수 있습니다."
+    },
+    "law": {
+      "title": "준거법",
+      "content": "본 약관은 사용자가 속한 관할지역의 관련 법률에 따라 적용됩니다. 모든 분쟁은 관할 법원에서 해결됩니다."
+    },
+    "contact": {
+      "title": "문의",
+      "content": "본 약관에 대해 궁금한 점이 있으면 GitHub 저장소를 통해 문의해 주세요."
+    },
+    "acceptance2": {
+      "content": "openvid를 이용함으로써 저희 <privacy>개인정보 처리방침</privacy>에도 동의하게 됩니다.",
+      "privacyLink": "개인정보 처리방침"
+    }
+  },
+  "hero": {
+    "title": "데모와 <screen>화면</screen>을 만드세요",
+    "titleHighlight": "4K 화질로  ",
+    "description": "부드러운 확대, 목업, 배경 커스터마이징, 카메라, 오디오, 요소를 추가하고 전문적인 데모를 내보내세요.",
+    "uploadButton": "동영상 업로드",
+    "uploadButtonDragging": "여기에 동영상을 놓으세요",
+    "uploadButtonUploading": "업로드 중...",
+    "recordButton": "화면 녹화",
+    "uploadHint": "동영상을 드래그하거나 클릭하여 선택하세요",
+    "goToVideoEditor": "동영상 에디터로 이동",
+    "uploadPhotoButton": "사진 업로드",
+    "uploadPhotoDragging": "여기에 사진을 놓으세요",
+    "uploadPhotoUploading": "업로드 중...",
+    "goToPhotoEditor": "사진 에디터로 이동"
+  },
+  "recording": {
+    "steps": {
+      "title": "간단한 네 단계로",
+      "title2": "촬영을 완성하세요",
+      "subtitle": "화면을 캡처하려면 아래 안내를 따르세요. 전체 과정은 브라우저에서 이루어지며 설치가 필요 없습니다.",
+      "step1": {
+        "title": "캡처 시작하기",
+        "description": "아래 버튼을 클릭하세요. 브라우저에서 공유할 항목을 물어봅니다. 더 나은 성능과 깔끔한 촬영을 위해 <tab>탭</tab> 또는 <window>특정 창</window>을 선택하는 것을 권장합니다.",
+        "startButton": "녹화 시작",
+        "stopButton": "녹화 중지",
+        "countdownButton": "준비 중...",
+        "recordingButton": "녹화 중...",
+        "processingButton": "처리 중...",
+        "mobileAlert": "모바일 기기에서는 화면 녹화를 사용할 수 없습니다. 데스크톱 컴퓨터를 이용해 주세요.",
+        "permissionRequired": "권한이 필요합니다",
+        "visual": {
+          "browserTab": "Brave 탭",
+          "window": "창",
+          "fullscreen": "전체 화면",
+          "tabTitle": "openvid - 촬영 만들기...",
+          "codeTitle": "RecordingSteps.tsx",
+          "shareAudio": "시스템 오디오도 함께 공유",
+          "share": "공유",
+          "cancel": "취소"
+        }
+      },
+      "step2": {
+        "title": "방해 요소 숨기기",
+        "description": "화면을 공유하면 브라우저에서 캡처가 진행 중임을 알리는 플로팅 바가 자동으로 표시됩니다. 최종 영상에 나오지 않도록 <hide>숨기기</hide>를 클릭하세요.",
+        "visual": {
+          "barText": "https://openvid.dev이(가) 창을 공유하고 있습니다.",
+          "stop": "공유 중지",
+          "hide": "숨기기"
+        }
+      },
+      "step3": {
+        "title": "촬영 준비하기",
+        "description": "서두를 필요 없습니다. 1단계에서 권한을 승인하면 <countdown>3초</countdown> 카운트다운이 시작됩니다. 브라우저 탭에 표시되는 표시기를 보고 정확히 언제 말하거나 마우스를 움직이면 되는지 알 수 있습니다.",
+        "visual": {
+          "title": "탭을 전환하세요!",
+          "subtitle": "선택한 화면에서 녹화가 시작됩니다."
+        }
+      },
+      "step4": {
+        "title": "컷 하고 에디터로",
+        "description": "설명이 끝나면 녹화를 중지하기만 하면 됩니다. 파일은 바로 다운로드되지 않고, 마법처럼 웹 에디터로 이동해 확대, 배경, 자르기를 적용할 수 있습니다.",
+        "visual": {
+          "recording": "녹화 중",
+          "stop": "중지"
+        }
+      }
+    },
+    "overlay": {
+      "countdown": {
+        "title": "지금 탭을 전환하세요!",
+        "subtitle": "선택한 화면에서 녹화가 시작됩니다."
+      },
+      "recording": {
+        "status": "녹화 중",
+        "stop": "중지"
+      },
+      "processing": {
+        "title": "녹화 영상 처리 중",
+        "subtitle": "에디터에서 사용할 동영상을 준비하고 있습니다..."
+      }
+    }
+  },
+  "login": {
+    "title": "로그인",
+    "subtitle": "계속하려면 원하는 방법을 선택하세요",
+    "backToHome": "홈으로 돌아가기",
+    "disclaimer": "계속 진행하면 저희 <terms>이용약관</terms> 및 <privacy>개인정보 처리방침</privacy>에 동의하게 됩니다.",
+    "providers": {
+      "google": "Google로 계속하기",
+      "github": "GitHub로 계속하기",
+      "twitch": "Twitch로 계속하기",
+      "groupLabel": "로그인 옵션",
+      "loading": "연결 중..."
+    },
+    "errors": {
+      "generic": "로그인 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      "signIn": "{provider}로 로그인하는 중 오류가 발생했습니다"
+    }
+  },
+  "placeholder": {
+    "browserBar": {
+      "newTab": "새 탭",
+      "search": "검색어 또는 URL 입력"
+    },
+    "upload": {
+      "title": "클릭하여 업로드",
+      "subtitle": "또는 동영상을 드래그하세요",
+      "dragging": "여기에 동영상을 놓으세요!",
+      "button": "파일 선택",
+      "uploading": "업로드 중...",
+      "formats": "MP4, WebM, MOV 또는 MKV",
+      "titleImage": "클릭하여 업로드",
+      "subtitleImage": "또는 이미지를 드래그하세요",
+      "draggingImage": "여기에 이미지를 놓으세요!",
+      "formatsImage": "JPG, PNG, WebP 또는 GIF"
+    }
+  },
+  "notFound": {
+    "title": "페이지를 찾을 수 없습니다",
+    "description": "찾으시는 경로가 저희 에디터에 존재하지 않습니다.",
+    "backHome": "홈으로 돌아가기"
+  },
+  "userMenu": {
+    "login": "로그인",
+    "connectedWith": "{provider}(으)로 연결됨",
+    "home": "홈",
+    "editor": "에디터",
+    "videoEditor": "동영상 에디터로 이동",
+    "photoEditor": "사진 에디터로 이동",
+    "logout": "로그아웃",
+    "loggingOut": "로그아웃 중...",
+    "ariaLabel": "사용자 메뉴",
+    "defaultUser": "사용자",
+    "theme": "테마",
+    "themeLight": "라이트",
+    "themeDark": "다크",
+    "themeSystem": "시스템"
+  },
+  "donation": {
+    "title": "커피 한 잔 후원하기",
+    "description": "Openvid 프로젝트를 후원해 주세요",
+    "page": {
+      "title": "개발 후원하기",
+      "description": "openvid는 오픈소스 도구입니다. 여러분의 후원 덕분에 서버를 유지하고 새로운 기능을 계속 개발할 수 있습니다.",
+      "backHome": "홈으로 돌아가기",
+      "methods": "후원 방법",
+      "copy": "복사",
+      "copied": "복사됨",
+      "scanQR": "QR 코드 스캔",
+      "close": "닫기",
+      "alternative": "또는",
+      "openLink": "직접 결제 링크 열기",
+      "yape": {
+        "tagline": "국내 송금",
+        "detail": "QR 코드를 스캔하거나 전화번호를 이용하세요",
+        "phone": "전화번호"
+      },
+      "visa": {
+        "tagline": "국내 결제망",
+        "detail": "BCP 계좌로 직접 입금(솔 화폐)",
+        "account": "BCP 계좌(솔 화폐)",
+        "cci": "CCI"
+      },
+      "paypal": {
+        "tagline": "해외 송금",
+        "detail": "이메일 또는 직접 링크로 전송",
+        "email": "PayPal 이메일",
+        "link": "https://www.paypal.com/ncp/payment/AZ3LS98LJ9SM2"
+      }
+    }
+  },
+  "demo": {
+    "title": "완벽한 데모",
+    "subtitle": "몇 초 만에 완성"
+  },
+  "recordingSetup": {
+    "title": "녹화 설정",
+    "description": "카메라, 마이크, 그리고 버블 모양을 원하는 대로 선택하세요.",
+    "close": "닫기",
+    "preview": {
+      "initialPosition": "초기 위치"
+    },
+    "camera": {
+      "title": "카메라",
+      "description": "웹캠으로 버블을 추가하세요.",
+      "permissionDenied": "카메라 접근이 거부되었습니다. 여기에 마우스를 올려 해결 방법을 확인하세요.",
+      "errorGeneric": "카메라에 접근할 수 없습니다. 연결 상태를 확인하세요.",
+      "selectPlaceholder": "카메라 선택",
+      "default": "기본 카메라",
+      "shape": "모양",
+      "size": "크기",
+      "mirror": "좌우 반전"
+    },
+    "mic": {
+      "title": "마이크",
+      "description": "동일한 트랙에 음성을 녹음합니다.",
+      "errorGeneric": "마이크에 접근할 수 없습니다.",
+      "selectPlaceholder": "마이크 선택",
+      "default": " 마이크"
+    },
+    "systemAudio": {
+      "title": "시스템 오디오",
+      "description": "공유한 탭 또는 창의 오디오를 캡처합니다."
+    },
+    "actions": {
+      "cancel": "취소",
+      "shareScreen": "화면 공유"
+    },
+    "shapes": {
+      "circle": "원형",
+      "squircle": "스퀴클",
+      "square": "정사각형"
+    },
+    "corners": {
+      "top-left": "왼쪽 위",
+      "top-right": "오른쪽 위",
+      "bottom-left": "왼쪽 아래",
+      "bottom-right": "오른쪽 아래"
+    },
+    "drag": "드래그"
+  },
+  "controlPanel": {
+    "header": {
+      "close": "제어판 닫기"
+    },
+    "screenshot": {
+      "background": "배경",
+      "tabs": {
+        "wallpaper": "배경화면",
+        "color": "색상",
+        "image": "이미지"
+      },
+      "options": "옵션",
+      "settings": "설정",
+      "sliders": {
+        "blur": "배경 흐림",
+        "padding": "여백",
+        "rounded": "모서리 둥글기",
+        "shadows": "그림자"
+      }
+    },
+    "tools": {
+      "mockup": "목업",
+      "videos": "동영상",
+      "elements": "요소",
+      "audio": "오디오",
+      "zoom": "확대",
+      "cursor": "커서",
+      "camera": "카메라"
+    }
+  },
+  "toolsSidebar": {
+    "tools": {
+      "background": "배경",
+      "mockup": "목업",
+      "videos": "동영상",
+      "elements": "요소",
+      "audio": "오디오",
+      "zoom": "확대",
+      "camera": "카메라",
+      "cursor": "커서",
+      "toolbar": "도구 모음",
+      "soon": "출시 예정",
+      "motion": "모션",
+      "newTool": "신규"
+    },
+    "popovers": {
+      "background": {
+        "title": "배경 및 캔버스",
+        "description": "그라디언트, 색상 또는 이미지를 추가하세요"
+      },
+      "mockup": {
+        "title": "목업 생성기",
+        "description": "브라우저, 모바일 기기 또는 IDE 프레임으로 캡처를 감싸세요"
+      },
+      "videos": {
+        "title": "동영상 가져오기",
+        "description": "화면 녹화나 클립을 업로드하세요"
+      },
+      "elements": {
+        "title": "요소 및 주석",
+        "description": "화살표, 도형, 텍스트, 하이라이터를 추가하세요"
+      },
+      "audio": {
+        "title": "트랙 및 효과",
+        "description": "배경 음악 트랙이나 효과음을 동기화하세요"
+      },
+      "zoom": {
+        "title": "다이내믹 줌",
+        "description": "화면의 특정 부분을 부드럽게 확대해 시청자의 시선을 유도하세요."
+      },
+      "camera": {
+        "title": "화면 내 카메라",
+        "description": "웹캠 녹화 영상을 원형으로 잘라 오버레이하세요"
+      },
+      "history": {
+        "title": "이미지 히스토리",
+        "description": "이전에 캡처한 항목에 접근해 재사용하거나 편집하세요."
+      },
+      "motion": {
+        "title": "모션 효과",
+        "description": "요소에 부드러운 전환과 애니메이션을 적용하세요."
+      }
+    },
+    "recording": {
+      "idle": "화면 녹화",
+      "inProgress": "녹화 진행 중...",
+      "preparing": "준비 중...",
+      "recording": "녹화 중...",
+      "processing": "처리 중...",
+      "start": "녹화"
+    },
+    "upload": {
+      "tooltip": "직접 동영상 업로드",
+      "tooltipUploading": "동영상 업로드 중...",
+      "button": "업로드",
+      "buttonUploading": "업로드 중...",
+      "dropHere": "여기에 놓기"
+    },
+    "alerts": {
+      "mobile": "모바일에서는 화면 캡처를 지원하지 않습니다. 컴퓨터를 이용해 주세요."
+    },
+    "photo": {
+      "captureTooltip": "이미지 캡처",
+      "capturing": "이미지 캡처 중...",
+      "capture": "캡처",
+      "uploadTooltip": "직접 이미지 업로드",
+      "upload": "업로드",
+      "libraryTooltip": "내 이미지",
+      "library": "라이브러리",
+      "dropHere": "여기에 놓기"
+    },
+    "imagesLibrary": {
+      "title": "내 이미지",
+      "project": "프로젝트",
+      "projects": "프로젝트",
+      "loading": "라이브러리 불러오는 중...",
+      "current": "현재",
+      "delete": "삭제",
+      "confirmDelete": "확인하시겠습니까?",
+      "empty": {
+        "title": "라이브러리가 비어 있습니다",
+        "description": "저장한 이미지 프로젝트가 여기에 표시됩니다."
+      },
+      "time": {
+        "justNow": "방금 전",
+        "minutesAgo": "{count, plural, =1 {1분 전} other {#분 전}}",
+        "hoursAgo": "{count, plural, =1 {1시간 전} other {#시간 전}}",
+        "daysAgo": "{count, plural, =1 {1일 전} other {#일 전}}"
+      }
+    }
+  },
+  "historyMenu": {
+    "title": "이미지 히스토리",
+    "items": "이미지",
+    "loading": "히스토리 불러오는 중...",
+    "upload": {
+      "drop": "여기에 이미지를 놓으세요",
+      "dragOrClick": "드래그하거나 클릭하여 업로드"
+    },
+    "empty": {
+      "title": "아직 이미지가 없습니다",
+      "description": "이미지를 업로드하거나 캡처하면 여기에 표시됩니다"
+    },
+    "time": {
+      "justNow": "방금 전",
+      "hoursAgo": "{hours, plural, =1 {1시간 전} other {#시간 전}}",
+      "yesterday": "어제",
+      "daysAgo": "{days, plural, =1 {1일 전} other {#일 전}}"
+    },
+    "actions": {
+      "delete": "히스토리에서 삭제"
+    }
+  },
+  "wallpapers": {
+    "categories": {
+      "desktop": "데스크톱",
+      "gradient": "그라디언트",
+      "pattern": "패턴",
+      "minimal": "미니멀"
+    },
+    "options": {
+      "none": "배경 없음",
+      "showMore": "더 보기",
+      "showLess": "간략히 보기",
+      "upload": "이미지 업로드"
+    },
+    "popover": {
+      "seeMore": "{name}의 다른 작품 더 보기",
+      "moreCount": "+{count}개 더보기"
+    }
+  },
+  "colorEditor": {
+    "modes": {
+      "gradient": "그라디언트",
+      "solid": "단색"
+    },
+    "sections": {
+      "presets": "프리셋",
+      "customize": "커스터마이즈",
+      "moreColors": "색상 더 보기",
+      "moreGradients": "{type} 그라디언트 더 보기",
+      "type": "유형",
+      "angle": "각도",
+      "originX": "원점 X",
+      "originY": "원점 Y",
+      "stops": "색상 ({count})",
+      "add": "추가"
+    },
+    "tooltips": {
+      "moreColors": "색상 더 보기",
+      "moreGradients": "그라디언트 더 보기"
+    },
+    "types": {
+      "linear": "선형",
+      "radial": "방사형",
+      "conic": "원뿔형"
+    }
+  },
+  "imageRecentGrid": {
+    "upload": {
+      "instruction": "이미지를 여기로 드래그하거나",
+      "action": "파일 업로드"
+    },
+    "sections": {
+      "recent": "최근"
+    },
+    "alt": {
+      "recent": "최근 {index}"
+    }
+  },
+  "mockupMenu": {
+    "title": "목업",
+    "windowType": "창 유형",
+    "none": "없음",
+    "suggested": "추천",
+    "count": "목업 {count}개",
+    "remove": "목업 제거",
+    "frames2D": "2D 프레임",
+    "devices3D": "3D 기기",
+    "device3DTitle": "3D 기기",
+    "configuration": "설정",
+    "reset": "초기화",
+    "scale": "크기",
+    "laptopOpening": "노트북 열림 정도",
+    "shadow": "그림자",
+    "position": "위치",
+    "removeFrame": "프레임 제거",
+    "darkMode": {
+      "label": "다크 모드",
+      "dark": "다크",
+      "light": "라이트"
+    },
+    "frameColor": {
+      "label": "프레임 색상",
+      "ariaLabel": "색상 {color} 선택"
+    },
+    "url": {
+      "label": "페이지 URL",
+      "placeholder": "https://your-site.com"
+    },
+    "sliders": {
+      "headerScale": "헤더 크기",
+      "headerOpacity": "헤더 불투명도"
+    },
+    "categories": {
+      "all": "전체",
+      "browser": "브라우저",
+      "device": "디바이스",
+      "ide": "코드 에디터"
+    },
+    "mockups": {
+      "none": "없음",
+      "macos": "MacOS",
+      "macos-glass": "MacOS 글래스",
+      "outline": "아웃라인",
+      "glass-ui-container": "글래스 UI 컨테이너",
+      "macos-ghost": "MacOS 고스트",
+      "macos-ghost-glass": "MacOS 고스트 글래스",
+      "macos-container-glass": "MacOS 컨테이너 글래스",
+      "brave": "Brave",
+      "brave-glass": "Brave 글래스",
+      "browser-tab-glass": "브라우저 탭 글래스",
+      "chrome": "Chrome",
+      "chrome-glass": "Chrome 글래스",
+      "iphone-slim": "iPhone Slim",
+      "glass-curve": "글래스 커브",
+      "glass-full": "풀 글래스",
+      "hard-shell": "하드 쉘",
+      "s24-ultra": "S24 Ultra",
+      "vscode": "VS Code",
+      "macos-dark-ide": "VS Code MacOS",
+      "macos-ghost-ide": "MacOS 고스트 IDE",
+      "macbook-photo": "MacBook 사진"
+    },
+    "devices": {
+      "iphone-13-pro-max": "iPhone 13 Pro",
+      "double_iphone_13_pro": "iPhone 13 Pro (2대)",
+      "iphone-17-pro-max": "iPhone 17 Pro",
+      "iphone": "iPhone 15 Pro",
+      "phone": "일반 휴대폰",
+      "laptop": "macOS 노트북",
+      "ipad_mini_6_2021": "iPad mini 6 (2021)"
+    },
+    "positionPresets": {
+      "tooltip": "기본 위치",
+      "trigger": "원근감",
+      "title": "3D 위치",
+      "resetDefault": "기본값으로 초기화",
+      "tabs": {
+        "presets": "프리셋",
+        "custom": "커스텀"
+      },
+      "custom": {
+        "perspective": "원근감",
+        "scale": "크기",
+        "rotationXY": "회전 X/Y",
+        "rotationZ": "회전 Z",
+        "vertical": "수직 위치",
+        "reset": "초기화"
+      }
+    },
+    "viewer3d": "3D 뷰어",
+    "autoRotate": "자동 회전",
+    "rotationSpeed": "회전 속도",
+    "glow": "글로우 효과",
+    "environment": "환경",
+    "environments": {
+      "sunset": "일몰",
+      "dawn": "새벽",
+      "night": "야경",
+      "warehouse": "창고",
+      "forest": "숲",
+      "apartment": "아파트",
+      "studio": "스튜디오",
+      "city": "도시",
+      "park": "공원",
+      "lobby": "로비"
+    },
+    "modelProperties": "모델 속성",
+    "lightingAndEnvironment": "조명 및 환경",
+    "presentation": "애니메이션 및 디스플레이"
+  },
+  "videosMenu": {
+    "title": "동영상",
+    "speed": "속도",
+    "dropzone": "여기에 동영상을 놓으세요!",
+    "emptyState": {
+      "title": "동영상 업로드",
+      "instruction": "클릭하거나 파일을 여기로 드래그하세요"
+    },
+    "upload": {
+      "button": "동영상 업로드",
+      "action": "파일 선택",
+      "status": "업로드 중..."
+    },
+    "actions": {
+      "add": "추가",
+      "mute": "음소거",
+      "unmute": "음소거 해제",
+      "delete": "동영상 삭제"
+    },
+    "footer": "동영상은 브라우저에 로컬로 저장됩니다"
+  },
+  "elementsMenu": {
+    "title": "요소",
+    "tabs": {
+      "elements": "요소",
+      "text": "텍스트",
+      "uploads": "업로드"
+    },
+    "sections": {
+      "shapes": "도형",
+      "images": "이미지",
+      "hierarchy": "계층 구조"
+    },
+    "filters": {
+      "all": "전체"
+    },
+    "counts": {
+      "shapes": "도형 {count}개",
+      "images": "이미지 {count}개"
+    },
+    "tooltips": {
+      "allShapes": "전체 도형 보기",
+      "allImages": "전체 이미지 보기"
+    },
+    "properties": {
+      "color": "색상",
+      "size": "크기",
+      "opacity": "불투명도"
+    },
+    "actions": {
+      "delete": "삭제",
+      "bringToFront": "맨 앞으로 가져오기",
+      "sendToBack": "맨 뒤로 보내기",
+      "deleteMultiple": "선택 항목 삭제 ({count})"
+    },
+    "text": {
+      "content": "내용",
+      "placeholder": "텍스트를 입력하세요...",
+      "presets": "프리셋",
+      "size": "크기",
+      "font": "글꼴",
+      "weight": "굵기",
+      "addButton": "텍스트 추가"
+    },
+    "uploads": {
+      "title": "이미지 업로드",
+      "instruction": "클릭하거나 파일을 여기로 드래그하세요",
+      "uploading": "업로드 중...",
+      "processing": "이미지 처리 중",
+      "selectFile": "파일 선택",
+      "gallery": "내 이미지 ({count})",
+      "clearAll": "전체 삭제",
+      "emptyTitle": "아직 이미지가 없습니다",
+      "emptySubtitle": "업로드한 이미지가 여기에 표시됩니다"
+    }
+  },
+  "zoomFragmentEditor": {
+    "title": "확대 구간",
+    "deleteTooltip": "구간 삭제 (Delete)",
+    "actions": {
+      "delete": "삭제"
+    },
+    "focusPoints": {
+      "single": "포커스 지점",
+      "multiple": "포커스 지점",
+      "start": "시작",
+      "end": "종료"
+    },
+    "preview": {
+      "alt": "동영상 미리보기",
+      "dragAB": "A와 B를 드래그하세요",
+      "dragOrClick": "드래그 또는 클릭",
+      "orbitalPath": "Autozoom 커서 경로"
+    },
+    "movement": {
+      "title": "카메라 이동",
+      "subtitle": "확대 중 화면 이동",
+      "orbitalDescription": "Autozoom이 생성한 커서 경로입니다. 미리보기와 내보내기에서 그대로 유지됩니다.",
+      "tooShort": "움직임을 기르기에는 조각이 너무 짧습니다. 지속 시간을 늘려주세요.",
+      "defaultName": "이동 {number}",
+      "timeline": {
+        "title": "이동 타임라인",
+        "active": "{seconds}초 동안 활성",
+        "startLabel": "시작",
+        "endLabel": "종료"
+      },
+      "addMovement": "포인트 추가",
+      "deleteMovement": "포인트 삭제"
+    },
+    "sliders": {
+      "zoomLevel": "확대 배율",
+      "transitionSpeed": "전환 속도"
+    },
+    "info": {
+      "fragmentDuration": "구간 길이",
+      "zoomFactor": "확대 배율",
+      "transitionDuration": "전환 시간"
+    }
+  },
+  "zoomGlobalConfig": {
+    "title": "확대",
+    "fragments": {
+      "title": "구간 ({count})",
+      "label": "확대 {index}",
+      "add": "구간 추가"
+    },
+    "shortcuts": {
+      "keys": {
+        "delete": "Delete",
+        "esc": "Esc",
+        "click": "클릭"
+      },
+      "delete": "선택한 구간 삭제",
+      "esc": "구간 선택 해제",
+      "clickTrack": "해당 위치에 구간 추가"
+    }
+  },
+  "cameraMenu": {
+    "title": "카메라",
+    "noCamera": {
+      "title": "이 녹화에는 카메라가 포함되어 있지 않습니다.",
+      "description": "새 녹화를 시작할 때 카메라를 활성화하면 여기에 표시됩니다."
+    },
+    "shape": "모양",
+    "position": "위치",
+    "customPosition": "사용자 지정 위치(캔버스에서 카메라를 드래그하세요).",
+    "size": "크기",
+    "mirror": "미러(좌우 반전)",
+    "shapes": {
+      "squircle": "스퀴클",
+      "circle": "원형",
+      "square": "정사각형"
+    },
+    "corners": {
+      "top-left": "왼쪽 위",
+      "top-right": "오른쪽 위",
+      "bottom-left": "왼쪽 아래",
+      "bottom-right": "오른쪽 아래"
+    }
+  },
+  "editor": {
+    "topBar": {
+      "exportError": {
+        "title": "내보내기 오류",
+        "tip": "내보내기 전에 동영상 전체를 재생해 보세요.",
+        "close": "알림 닫기"
+      },
+      "history": {
+        "undo": "실행 취소 (Ctrl+Z)",
+        "noUndo": "실행 취소할 작업이 없습니다",
+        "redo": "다시 실행 (Ctrl+Y)",
+        "noRedo": "다시 실행할 작업이 없습니다"
+      },
+      "auth": {
+        "defaultUser": "사용자",
+        "signIn": "로그인",
+        "userMenu": "사용자 메뉴",
+        "connectedWith": "{provider}(으)로 연결됨",
+        "home": "홈",
+        "editor": "에디터",
+        "signOut": "로그아웃",
+        "signingOut": "로그아웃 중...",
+        "access": "접근"
+      }
+    },
+    "export": {
+      "button": "내보내기",
+      "title": "내보내기 화질",
+      "recommended": "추천",
+      "noBackground": "투명",
+      "solidBackground": "단색 배경",
+      "gifNotice": "단색 검은색 배경",
+      "qualities": {
+        "4k": {
+          "label": "4K 울트라 HD",
+          "desc": "3840 × 2160 • 최고 화질"
+        },
+        "2k": {
+          "label": "2K 쿼드 HD",
+          "desc": "2560 × 1440 • 이상적인 균형"
+        },
+        "1080p": {
+          "label": "1080p 풀 HD",
+          "desc": "1920 × 1080 • 웹 표준"
+        },
+        "720p": {
+          "label": "720p HD",
+          "desc": "1280 × 720 • 작은 용량"
+        },
+        "480p": {
+          "label": "480p SD",
+          "desc": "854 × 480 • 초안 화질"
+        },
+        "gif": {
+          "label": "움직이는 GIF",
+          "desc": "1280 × 720 • 오디오 없이 반복 재생"
+        }
+      }
+    },
+    "photoMode": {
+      "title": "이미지 편집 모드",
+      "description": "배경, 목업, 요소를 조정해 이미지를 원하는 대로 꾸며보세요",
+      "previewLabel": "3D 미리보기",
+      "views": "보기"
+    },
+    "imagesLibrary": {
+      "title": "내 이미지",
+      "project": "프로젝트",
+      "projects": "프로젝트",
+      "loading": "라이브러리 불러오는 중...",
+      "current": "현재",
+      "delete": "삭제",
+      "confirmDelete": "확인하시겠습니까?",
+      "empty": {
+        "title": "라이브러리가 비어 있습니다",
+        "description": "저장한 이미지 프로젝트가 여기에 표시됩니다."
+      },
+      "time": {
+        "justNow": "방금 전",
+        "minutesAgo": "{count, plural, =1 {1분 전} other {#분 전}}",
+        "hoursAgo": "{count, plural, =1 {1시간 전} other {#시간 전}}",
+        "daysAgo": "{count, plural, =1 {1일 전} other {#일 전}}"
+      }
+    },
+    "exportImage": {
+      "button": "내보내기",
+      "title": "이미지 내보내기",
+      "transparent": "투명",
+      "recommended": "추천",
+      "noTransparency": "투명 없음",
+      "transparentInfo": "투명 배경은 PNG와 WebP 형식에서만 유지됩니다.",
+      "presets": {
+        "png4x": {
+          "label": "PNG 4x (울트라)"
+        },
+        "png2x": {
+          "label": "PNG 2x (레티나)"
+        },
+        "pngOriginal": {
+          "label": "원본 PNG"
+        },
+        "webpHigh": {
+          "label": "WebP 고화질",
+          "description": "95% 화질 — 최상의 압축률"
+        },
+        "jpegHigh": {
+          "label": "JPEG 고화질",
+          "description": "95% 화질 — 균형 잡힌 용량"
+        },
+        "webpMedium": {
+          "label": "WebP 중간 화질",
+          "description": "80% 화질 — 웹 최적화"
+        },
+        "jpegMedium": {
+          "label": "JPEG 중간 화질",
+          "description": "80% 화질 — 축소된 용량"
+        }
+      },
+      "exporting": "내보내는 중..."
+    },
+    "effect3d": {
+      "title": "3D 효과",
+      "subtitle": "깊이감 있는 원근감",
+      "intensity": "강도",
+      "direction": "원근 방향",
+      "directionHint": "클릭하여 기울기 방향을 선택하세요",
+      "perspective": "원근감",
+      "scale": "크기",
+      "rotation": "3D 회전",
+      "clickToAdjust": "클릭하여 조정",
+      "rotationHint": "패널을 이용해 각도를 지정하세요",
+      "rotateZ": "비틀기(Z축)",
+      "verticalPosition": "수직 오프셋",
+      "reset": "값 초기화"
+    },
+    "cropper": {
+      "button": "이미지 자르기",
+      "tooltip": "크기 조정 및 자르기"
+    },
+    "photoPreview": {
+      "custom": {
+        "label": "사용자 지정",
+        "customize": "커스터마이즈",
+        "title": "3D 설정",
+        "perspective": "원근감",
+        "scale": "크기",
+        "rotationXY": "회전 (X/Y)",
+        "rotationZ": "Z축 회전",
+        "vertical": "수직",
+        "reset": "초기화"
+      },
+      "settings": "설정",
+      "apply3D": "3D 효과 적용",
+      "mockup3D": "3D: 목업",
+      "resetDefaults": "기본값으로 초기화",
+      "reset": "초기화",
+      "configs": {
+        "front": "정면",
+        "tilt-up": "위로 기울임",
+        "tilt-down": "아래로 기울임",
+        "top-left-angle": "왼쪽 위 각도",
+        "top-right-angle": "오른쪽 위 각도",
+        "bottom-left-angle": "왼쪽 아래 각도",
+        "bottom-right-angle": "오른쪽 아래 각도",
+        "isometric": "아이소메트릭"
+      }
+    },
+    "imageMask": {
+      "trigger": "마스크",
+      "tooltip": "이미지 마스크 효과",
+      "title": "마스크 효과",
+      "tabs": {
+        "presets": "프리셋",
+        "custom": "사용자 지정"
+      },
+      "presets": {
+        "none": "마스크 없음",
+        "fade-top": "위쪽 페이드",
+        "fade-bottom": "아래쪽 페이드",
+        "fade-sides": "양옆 페이드",
+        "vignette": "비네트",
+        "angle-45": "45° 대각선"
+      },
+      "controls": {
+        "top": "위",
+        "bottom": "아래",
+        "left": "왼쪽",
+        "right": "오른쪽",
+        "add": "추가",
+        "remove": "제거",
+        "from": "시작",
+        "to": "끝"
+      }
+    },
+    "hoverTooltip": {
+      "zoom": "줌",
+      "paste": "붙여넣기",
+      "ctrl": "Ctrl",
+      "scroll": "스크롤",
+      "keyV": "V"
+    },
+    "layerPanel": {
+      "tooltips": {
+        "show": "표시",
+        "hide": "숨기기",
+        "lock": "잠금",
+        "unlock": "잠금 해제",
+        "delete": "삭제",
+        "deleteGroup": "그룹 삭제",
+        "showLayers": "레이어 패널 표시",
+        "hideLayers": "레이어 패널 숨기기",
+        "groupSelected": "선택 항목 그룹화",
+        "ungroup": "그룹 해제"
+      },
+      "layers": "레이어",
+      "noLayers": "레이어 없음",
+      "group": "그룹",
+      "selected": "선택됨",
+      "groupAction": "그룹화",
+      "ungroupAction": "그룹 해제",
+      "videoLayer": "동영상",
+      "imageLayer": "이미지"
+    }
+  },
+  "playerControls": {
+    "toolbar": "재생 컨트롤",
+    "fullscreen": {
+      "enter": "전체 화면 (F)",
+      "exit": "전체 화면 종료 (F)"
+    },
+    "zoom": {
+      "group": "타임라인 확대",
+      "out": "축소 (↓)",
+      "in": "확대 (↑)",
+      "label": "타임라인 확대: {level}×"
+    },
+    "split": {
+      "clip": "클립 분할"
+    },
+    "transport": {
+      "group": "재생 컨트롤",
+      "currentTime": "현재 시간: {time}",
+      "totalTime": "전체 길이: {time}",
+      "backward": "5초 뒤로 (← 또는 J)",
+      "forward": "5초 앞으로 (→ 또는 L)",
+      "play": "재생 (Space 또는 K)",
+      "pause": "일시정지 (Space 또는 K)"
+    },
+    "cropper": {
+      "tooltip": "동영상 자르기 도구 열기",
+      "button": "자르기"
+    }
+  },
+  "aspectRatioSelect": {
+    "tooltip": "화면 비율 선택",
+    "labels": {
+      "auto": "자동",
+      "custom": "사용자 지정",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "instagram": "Instagram",
+      "portrait": "세로형",
+      "standard": "표준"
+    },
+    "customSection": {
+      "title": "사용자 지정",
+      "width": "너비",
+      "height": "높이",
+      "apply": "크기 적용"
+    }
+  },
+  "videoCropper": {
+    "title": "동영상 자르기",
+    "noVideo": "동영상 없음",
+    "sections": {
+      "ratio": "화면 비율",
+      "area": "영역"
+    },
+    "labels": {
+      "x": "X",
+      "y": "Y",
+      "width": "W",
+      "height": "H"
+    },
+    "buttons": {
+      "reset": "초기화",
+      "apply": "자르기 적용"
+    },
+    "close": "닫기",
+    "freeRatio": "자유"
+  },
+  "timeline": {
+    "noSpace": "공간 없음"
+  },
+  "audioMenu": {
+    "title": "오디오",
+    "originalAudio": "원본 오디오",
+    "muted": "음소거됨",
+    "active": "활성",
+    "masterVolume": "마스터 볼륨",
+    "uploadButton": "오디오 업로드",
+    "uploadHint": "MP3, WAV, OGG, AAC, M4A (최대 10MB)",
+    "timelineTracks": "타임라인 트랙 ({count})",
+    "start": "시작",
+    "duration": "길이",
+    "exceedsDuration": "동영상 길이를 초과함",
+    "trimAction": "오디오 다듬기",
+    "deleteAction": "오디오 삭제",
+    "noTracks": "오디오 트랙 없음",
+    "noTracksHint": "오디오 파일을 업로드하면 타임라인에 자동으로 추가됩니다",
+    "errors": {
+      "unsupportedFormat": "지원하지 않는 오디오 형식입니다. MP3, WAV, OGG, AAC 또는 M4A를 사용하세요.",
+      "fileTooLarge": "파일이 너무 큽니다. 최대 용량은 10MB입니다."
+    },
+    "defaultSounds": "기본 사운드",
+    "categories": {
+      "confirmation": "확인",
+      "alert": "경고",
+      "ui": "인터페이스",
+      "transition": "전환",
+      "ambient": "분위기",
+      "system": "시스템"
+    }
+  },
+  "exportOverlay": {
+    "processing": "동영상 처리 중",
+    "status": {
+      "preparing": "렌더링 환경 준비 중",
+      "capturing": "PNG 프레임 캡처 중 (1/2단계)",
+      "encoding": "동영상 시퀀스 인코딩 중",
+      "encodingWebM": "WebM 동영상 인코딩 중 (2/2단계)",
+      "finalizing": "최종 파일 패키징 중"
+    },
+    "warnings": {
+      "performance": "GPU와 CPU 리소스를 최적화하기 위해 <highlight>이 창을 최소화하지 마세요</highlight>. 이 작업은 부하가 크며 시스템 우선순위가 필요합니다.",
+      "transparency": "이 작업은 평소보다 시간이 더 걸릴 수 있습니다. <highlight>투명도가 있는 WebM 내보내기</highlight>는 추가적인 CPU 처리가 필요합니다."
+    },
+    "actions": {
+      "cancel": "내보내기 중지"
+    }
+  },
+  "photoPicker": {
+    "tooltip": "배경 검색 (Unsplash, Pexels, Pixabay)",
+    "title": "배경",
+    "statusDiscovering": "탐색 중",
+    "searchPlaceholder": "배경 검색...",
+    "noResults": "결과 없음",
+    "footerPhotosBy": "사진 제공:",
+    "footerAnd": " 및 ",
+    "badges": {
+      "blur_gradient": "블러 그라디언트",
+      "dark_wallpaper": "다크 배경화면",
+      "minimal_abstract": "미니멀 추상",
+      "neon_city": "네온 도시",
+      "nature_landscape": "자연 풍경",
+      "aurora_borealis": "오로라",
+      "gradient_wallpaper": "그라디언트 배경화면"
+    }
+  },
+  "featuresShowcase": {
+    "common": {
+      "videoThumbnail": "동영상 썸네일"
+    },
+    "videos": {
+      "titleLine1": "완성도 높은 동영상",
+      "titleLine2": "데모가 완성되었습니다.",
+      "description": "커뮤니티가 제작한 고화질 화면 녹화와 시네마틱 클립을 감상하세요."
+    },
+    "images": {
+      "titleLine1": "완성도 높은 이미지",
+      "titleLine2": "정적 이미지가 완성되었습니다.",
+      "description": "랜딩 페이지, 소셜 미디어, 체인지로그에 완벽합니다. 클릭 한 번으로 초고화질 목업을 내보내세요."
+    },
+    "alts": {
+      "laptop": "노트북",
+      "iphone": "iPhone",
+      "browser": "브라우저"
+    }
+  },
+  "featuresGrid": {
+    "ariaLabel": "제품 기능",
+    "titleLine1": "출시에 필요한 모든 것",
+    "titleLine2": "놀라운 데모를 만드세요.",
+    "description": "녹화하고, 개선하고, 내보내세요 - 설치 없이 브라우저에서 바로 시네마틱한 결과물을 만들 수 있습니다.",
+    "cards": {
+      "deviceMockups": {
+        "title": "3D 기기 목업",
+        "description": "초실감 3D 기기 프레임으로 화면 녹화를 감싸보세요."
+      },
+      "transparency": {
+        "title": "투명도"
+      },
+      "backgrounds": {
+        "title": "배경"
+      },
+      "cinematicZoom": {
+        "title": "시네마틱 줌"
+      },
+      "elementsLayers": {
+        "title": "요소 및 레이어"
+      },
+      "multiTrackTimeline": {
+        "title": "멀티트랙 타임라인",
+        "description": "여러 동영상과 오디오 트랙을 겹치고 캔버스를 확대해 보세요."
+      }
+    },
+    "alts": {
+      "abstract3dRendering": "추상 3D 렌더링",
+      "backgroundLayer3": "배경 레이어 3",
+      "backgroundLayer2": "배경 레이어 2",
+      "transparentPreview": "투명 미리보기",
+      "backgroundPattern": "배경 패턴",
+      "bottomRightAsset": "오른쪽 아래 에셋",
+      "rightAsset": "오른쪽 에셋"
+    },
+    "tags": {
+      "textOverlay": "텍스트 오버레이",
+      "svgShapes": "SVG 도형",
+      "blurEffects": "블러 효과"
+    }
+  },
+  "socialReactions": {
+    "titleLine1": "저희 말만 믿지 말고",
+    "titleLine2": "직접 확인해 보세요",
+    "description": "창업가와 크리에이터들이 Openvid로 데모를 어떻게 변화시키고 있는지 확인해 보세요.",
+    "views": "조회수",
+    "watchReel": "릴 보기",
+    "originalAudio": "원본 오디오",
+    "sparklesAlt": "반짝이 장식",
+    "posts": {
+      "post1": {
+        "text": "openvid는 화면 녹화를 시네마틱 효과로 녹화하고 편집할 수 있는 오픈소스 브라우저 기반 동영상 에디터입니다. 업로드가 필요 없습니다.\n\n- H.264, WebM, GIF, 이미지 형식으로 4K 내보내기\n- 3D 카메라 이동, 확대, 원근감 조정\n- Safari, Chrome, Arc, Samsung용 기기 목업\n- 트랙별·마스터 볼륨 조절이 가능한 멀티트랙 오디오\n\n지금 확인해 보세요:",
+        "timestamp": "오후 5:30 · 2026년 5월 26일"
+      },
+      "post2": {
+        "text": "🚨 스크린샷 ➔ 완성도 높은 제품 워크스루 영상 즉시 제작\n\n이 사람은 어떤 앱이든..."
+      },
+      "post3": {
+        "text": "🎥 브라우저에서 직접 전문적인 제품 데모를 만들 수 있는 무료 오픈소스 도구입니다.\n\n화면을 녹화하고, 확대 효과와 기기 프레임, 3D 효과를 추가한 뒤 고화질로 동영상을 내보내세요.\n\n튜토리얼을 제작하거나 앱을 소개한다면 한 번 써볼 만합니다.\n\n🐱 GitHub: CristianOlivera1/openvid",
+        "timestamp": "오전 4:09 · 2026년 7월 5일"
+      },
+      "post4": {
+        "text": "🚨 스크린샷 ➔ 완성도 높은 제품 워크스루 영상 즉시 제작\n\n이 사람은 앱 스크린샷을 깔끔하고 전문적인 모션 데모 영상으로 바꿔주는 도구를 만들었습니다.\n\n제공 기능:\n- 원클릭 스크린샷 ➔ 완전한 애니메이션 워크스루\n- 부드러운 UI 애니메이션과 기능 강조\n- After Effects, Premiere, 디자이너 불필요\n- 랜딩 페이지와 소셜 미디어 런칭에 완벽\n\n👉 https://github.com/CristianOlivera1/openvid\n\n오늘 스크린샷을 프로 영상으로 바꿔볼 사람? 🔥 남겨주세요"
+      },
+      "post5": {
+        "text": "Openvid Hero는 외부 편집 소프트웨어 없이도 앱 스크린샷을 전문적인 4K 모션 데모 영상으로 변환해 주는 오픈소스 브라우저 도구입니다. 로컬 렌더링, 3D 카메라 이동, 기기 목업을 제공하여 고급 제품 데모를 빠르고 비공개로 제작할 수 있는 대안을 제시합니다. GitHub에서 프로젝트를 확인해 보세요: https://github.com/CristianOlivera1/openvid."
+      }
+    }
+  },
+  "dropMedia": {
+    "titleImage": "이미지를 여기에 놓으세요",
+    "titleVideo": "여기에 비디오를 놓으세요"
+  },
+  "audioTrimModal": {
+    "title": "오디오 자르기",
+    "subtitle": "핸들이나 파란색 영역을 드래그하여 조정하세요",
+    "totalDuration": "총 길이:",
+    "start": "시작",
+    "end": "끝",
+    "duration": "길이",
+    "cancel": "취소",
+    "apply": "자르기 적용"
+  },
+  "motionMenu": {
+    "title": "모션",
+    "globalMotionLabel": "모두 애니메이션",
+    "empty2D": {
+      "title": "2D 목업 필요",
+      "description": "애니메이션을 적용하려면 먼저 2D 목업(브라우저, macOS 등)을 적용하세요."
+    },
+    "categories": {
+      "Entrance": "등장",
+      "Continue": "지속",
+      "Exit": "퇴장"
+    },
+    "presets": {
+      "focus-in": "점진적 포커스",
+      "depth-emerge": "깊이감 출현",
+      "z-spin-reveal": "3D 회전 공개",
+      "isometric-lift": "아이소메트릭 리프트",
+      "cinematic-showcase": "시네마틱 쇼케이스",
+      "macro-track": "대각선 매크로 트래킹",
+      "exit-fade-down": "아래로 사라짐",
+      "exit-scale-blur": "블러 축소 퇴장",
+      "whip-showcase": "훽팬 쇼케이스",
+      "spatial-roam": "공간 자유 이동",
+      "rise-crash": "상승 및 추락",
+      "crane-sweep": "크레인 스윕",
+      "orbit-entrance": "오빗 입장",
+      "flick-exit": "플릭 퇴장",
+      "hero-reveal": "히어로 리빌",
+      "macro-pan": "매크로 팬",
+      "screen-glide": "화면 슬라이드",
+      "float-hold": "플로팅 홀드",
+      "spiral-drop": "스파이럴 드롭"
+    },
+    "controls": {
+      "intensity": "강도",
+      "speed": "속도"
+    },
+    "deleteTooltip": "모션 삭제",
+    "actions": {
+      "delete": "삭제"
+    },
+    "customize": {
+      "title": "모션 커스터마이즈",
+      "subtitle": "위치, 줌, 회전, 블러를 수동으로",
+      "positionLabel": "위치",
+      "positionHint": "목업을 드래그하여 위치를 조정하세요",
+      "tiltLabel": "기울기 (X / Y)",
+      "tiltHint": "클릭하거나 드래그하여 기울이세요",
+      "zoomLabel": "줌",
+      "rotateZLabel": "Z축 회전",
+      "reverseLabel": "방향 반전",
+      "resetButton": "커스터마이즈 초기화",
+      "blurLabel": "모션 블러"
+    },
+    "customize3D": {
+      "rotationTitle": "회전 오프셋",
+      "rotationSubtitle": "프리셋 기본 회전에 추가됨 (도)",
+      "rotateXLabel": "X 회전 (피치)",
+      "rotateYLabel": "Y 회전 (요)",
+      "rotateZLabel": "Z 회전 (롤)",
+      "positionTitle": "위치 오프셋",
+      "positionSubtitle": "프리셋 기본 위치에 추가됨 (씬 단위)",
+      "positionLabel": "위치",
+      "positionHint": "드래그하여 X / Y 위치 설정",
+      "scaleTitle": "크기",
+      "scaleSubtitle": "모델에 적용되는 균일 승수",
+      "scaleLabel": "크기"
+    }
+  },
+  "MobileTools": {
+    "openMenu": "도구 메뉴 열기",
+    "title": "도구",
+    "close": "닫기",
+    "background": "배경",
+    "mockup": "목업",
+    "motion": "모션",
+    "zoom": "확대",
+    "videos": "비디오",
+    "elements": "요소",
+    "audio": "오디오",
+    "uploading": "업로드 중...",
+    "uploadVideo": "비디오 업로드"
+  },
+  "feedback": {
+    "tooltip": "피드백 보내기",
+    "title": "피드백 보내기",
+    "close": "닫기",
+    "types": {
+      "bug": "버그",
+      "idea": "아이디어",
+      "other": "기타"
+    },
+    "messagePlaceholder": "발생한 문제나 보고 싶으신 기능을 알려주세요...",
+    "emailPlaceholder": "이메일 주소 (선택 사항, 답변용)",
+    "emailInvalid": "올바른 이메일 주소를 입력해 주세요.",
+    "submit": "보내기",
+    "successMessage": "감사합니다! 피드백이 정상적으로 접수되었습니다.",
+    "errorMessage": "전송에 실패했습니다. 다시 시도해 주세요."
+  },
+  "tour": {
+    "nextBtn": "다음",
+    "prevBtn": "이전",
+    "doneBtn": "확인!",
+    "step1": {
+      "title": "화면을 녹화하세요!",
+      "description": "여기를 클릭하여 화면 녹화를 시작하세요. 더 많은 정보나 도움이 필요하면",
+      "guideLinkText": "사용자 가이드"
+    },
+    "step2": {
+      "title": "맞춤형 비디오 업로드",
+      "description": "이미 비디오가 있나요? 기기에서 직접 업로드하여 편집할 수도 있습니다."
+    },
+    "step3": {
+      "title": "사진으로 목업 만들기",
+      "description": "비디오뿐만이 아닙니다! 이미지를 업로드하고 사진으로 멋진 목업을 만들어보세요."
+    }
+  },
+  "labelSidebar": {
+    "video": "비디오",
+    "zoom": "줌",
+    "elements": "오브젝트",
+    "audio": "오디오",
+    "motion": "모션",
+    "movement": "이동"
+  },
+  "heroPreview": {
+    "sidebar": {
+      "record": "녹화",
+      "upload": "업로드",
+      "new": "새로운 기능"
+    },
+    "background": {
+      "title": "배경",
+      "tabWallpaper": "배경화면",
+      "tabColor": "색상",
+      "options": "옵션",
+      "desktopLabel": "데스크톱",
+      "gradientsLabel": "그라디언트",
+      "showMore": "더 보기",
+      "settings": "설정",
+      "blur": "블러",
+      "padding": "여백",
+      "rounded": "모서리",
+      "shadow": "그림자"
+    },
+    "timeline": {
+      "video": "비디오",
+      "zoom": "줌"
+    },
+    "transport": {
+      "rewind": "5초 되감기",
+      "forward": "5초 앞으로",
+      "play": "재생",
+      "pause": "일시정지",
+      "mask": "마스크",
+      "crop": "자르기",
+      "auto": "자동"
+    }
+  },
+  "exportSuccess": {
+    "title": "내보내기 완료!",
+    "photoSuccess": "이미지가 성공적으로 내보내졌습니다.",
+    "videoSuccess": "비디오가 성공적으로 내보내졌습니다.",
+    "supportCoffee": "커피로 후원하기",
+    "starGithub": "GitHub에서 별표 주기",
+    "close": "닫기"
+  }
+}

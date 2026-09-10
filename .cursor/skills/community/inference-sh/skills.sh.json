@@ -1,0 +1,169 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Image Generation",
+      "description": "generate and edit images with AI models.",
+      "skills": [
+        "ai-image-generation",
+        "gpt-image",
+        "flux-image",
+        "p-image",
+        "qwen-image-2",
+        "qwen-image-2-pro",
+        "nano-banana",
+        "nano-banana-2",
+        "image-upscaling",
+        "background-removal"
+      ]
+    },
+    {
+      "title": "Video Generation",
+      "description": "generate and edit videos with AI models.",
+      "skills": [
+        "ai-video-generation",
+        "seedance",
+        "google-veo",
+        "p-video",
+        "image-to-video",
+        "ai-avatar-video",
+        "p-video-avatar",
+        "happyhorse",
+        "remotion-render"
+      ]
+    },
+    {
+      "title": "Audio & Speech",
+      "description": "text-to-speech, voice cloning, music generation, and audio tools.",
+      "skills": [
+        "text-to-speech",
+        "speech-to-text",
+        "elevenlabs-tts",
+        "elevenlabs-stt",
+        "elevenlabs-dialogue",
+        "dialogue-audio",
+        "elevenlabs-voice-changer",
+        "elevenlabs-voice-isolator",
+        "ai-voice-cloning",
+        "elevenlabs-music",
+        "elevenlabs-sound-effects",
+        "elevenlabs-dubbing",
+        "ai-music-generation"
+      ]
+    },
+    {
+      "title": "LLM & Search",
+      "description": "language models, RAG pipelines, and web search.",
+      "skills": [
+        "llm-models",
+        "ai-rag-pipeline",
+        "web-search"
+      ]
+    },
+    {
+      "title": "Platform & SDK",
+      "description": "build and deploy apps on inference.sh.",
+      "skills": [
+        "building-apps",
+        "python-sdk",
+        "javascript-sdk",
+        "infsh-cli",
+        "agent-tools",
+        "agent-browser",
+        "python-executor",
+        "related-skill"
+      ]
+    },
+    {
+      "title": "UI Components",
+      "description": "embed AI-powered interfaces in your app.",
+      "skills": [
+        "agent-ui",
+        "chat-ui",
+        "tools-ui",
+        "widgets-ui"
+      ]
+    },
+    {
+      "title": "Design",
+      "description": "guides for creating visual assets with AI.",
+      "skills": [
+        "logo-design-guide",
+        "landing-page-design",
+        "og-image-design",
+        "youtube-thumbnail-design",
+        "app-store-screenshots",
+        "pitch-deck-visuals",
+        "book-cover-design",
+        "character-design-sheet",
+        "email-design",
+        "data-visualization",
+        "ai-product-photography",
+        "product-photography"
+      ]
+    },
+    {
+      "title": "Content & Writing",
+      "description": "guides for written content, blogs, and newsletters.",
+      "skills": [
+        "technical-blog-writing",
+        "seo-content-brief",
+        "case-study-writing",
+        "press-release-writing",
+        "newsletter-curation",
+        "ai-content-pipeline",
+        "content-repurposing",
+        "ai-automation-workflows"
+      ]
+    },
+    {
+      "title": "Social Media",
+      "description": "guides and tools for social media content.",
+      "skills": [
+        "twitter-automation",
+        "ai-social-media-content",
+        "twitter-thread-creation",
+        "linkedin-content",
+        "social-media-carousel"
+      ]
+    },
+    {
+      "title": "Video Production",
+      "description": "guides for planning and producing video content.",
+      "skills": [
+        "ai-marketing-videos",
+        "explainer-video-guide",
+        "storyboard-creation",
+        "talking-head-production",
+        "video-ad-specs"
+      ]
+    },
+    {
+      "title": "Podcasts",
+      "description": "guides for creating AI-powered podcasts.",
+      "skills": [
+        "ai-podcast-creation",
+        "ai-podcast"
+      ]
+    },
+    {
+      "title": "Product & Strategy",
+      "description": "guides for product launches, personas, and competitive analysis.",
+      "skills": [
+        "product-hunt-launch",
+        "product-changelog",
+        "customer-persona",
+        "competitor-teardown"
+      ]
+    },
+    {
+      "title": "Prompting",
+      "description": "guides for writing better prompts.",
+      "skills": [
+        "prompt-engineering",
+        "video-prompting-guide"
+      ]
+    }
+  ]
+}
