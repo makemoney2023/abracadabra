@@ -1,0 +1,11 @@
+{
+  "name": "abracadabra-outputs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capture": "node capture/record-live.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}

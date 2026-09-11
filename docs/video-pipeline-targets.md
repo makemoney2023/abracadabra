@@ -24,11 +24,11 @@ Two cuts per product when both apply:
 
 | # | Target | Repo / live | Status | Story / segments |
 | --- | --- | --- | --- | --- |
-| 1 | Showdesk | [makemoney2023/showdesk](https://github.com/makemoney2023/showdesk) · [showdesk-app.com](https://www.showdesk-app.com/) | **Done** (reference) | Ringside (phone + STT) → review → placements → reports |
-| 2 | Canadian Discount Appliances | [makemoney2023/canadiandiscountappliances](https://github.com/makemoney2023/canadiandiscountappliances) (private) · [cdastore.ca](https://www.cdastore.ca/) · Vercel `cdastore` | Not started — private repo access required | Warehouse/home → product + price → visit/delivery (phone) → reviews |
-| 3 | Schema | [makemoney2023/schema](https://github.com/makemoney2023/schema) | Not started — public, no `promo/` yet | URL scan → score / gaps → generate fix → ops inbox |
-| 4 | LLMCourse | [makemoney2023/LLMCourse](https://github.com/makemoney2023/LLMCourse) · [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app) | Not started — has curriculum Remotion, not a product-tour `promo/` | Home / preview → lesson steps → practice + quiz → workshops / try-it |
-| 5 | Sales enablement | Skill in this repo (not a standalone product) | Not started — cross-cut of #1–#4 | Rep-facing demo cuts, talk tracks, objection clips, one-pager / playbook leave-behinds |
+| 1 | Showdesk | [makemoney2023/showdesk](https://github.com/makemoney2023/showdesk) · [showdesk-app.com](https://www.showdesk-app.com/) | **Stored** in `outputs/videos/showdesk/` (official promo + live home capture) | Ringside (phone + STT) → review → placements → reports |
+| 2 | Canadian Discount Appliances | [makemoney2023/canadiandiscountappliances](https://github.com/makemoney2023/canadiandiscountappliances) (private) · [cdastore.ca](https://www.cdastore.ca/) · Vercel `cdastore` | **Live home stored**; seeded PDP capture still needs private-repo access | Warehouse/home → product + price → visit/delivery (phone) → reviews |
+| 3 | Schema | [makemoney2023/schema](https://github.com/makemoney2023/schema) · [schema-two.vercel.app](https://schema-two.vercel.app/) | **Live home stored**; seeded `/scan/[token]` walkthrough still open | URL scan → score / gaps → generate fix → ops inbox |
+| 4 | LLMCourse | [makemoney2023/LLMCourse](https://github.com/makemoney2023/LLMCourse) · [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app) | **Home + workshops stored**; in-module lesson path still thin | Home / preview → lesson steps → practice + quiz → workshops / try-it |
+| 5 | Sales enablement | Skill in this repo (not a standalone product) | **Scripts + one-pagers stored** in `outputs/sales-enablement/` | Rep-facing demo cuts, talk tracks, objection clips, one-pager / playbook leave-behinds |
 
 ---
 

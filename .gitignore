@@ -1,0 +1,6 @@
+node_modules
+outputs/node_modules
+scrollcraft/lab
+scrollcraft/builds/*/node_modules
+scrollcraft/builds/*/lab
+.DS_Store

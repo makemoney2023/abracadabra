@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abracadabra AI · a catalog of shipped work</title>
+<meta name="description" content="A walkable catalog of live products Abracadabra AI designed, shipped, and filmed.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230B0A08'/><text x='8' y='23' fill='%23E23B2F' font-size='16' font-family='serif'>A</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="scrollcraft.css">
+<style>
+  :root {
+    --sc-canvas:     #0B0A08;
+    --sc-surface:    #161310;
+    --sc-ink:        #F3EEE4;
+    --sc-ink-soft:   #A89F93;
+    --sc-accent:     #E23B2F;
+    --sc-accent-ink: #F3EEE4;
+    --sc-font-display: "Outfit", system-ui, sans-serif;
+    --sc-font-text:    "IBM Plex Sans", system-ui, sans-serif;
+  }
+
+  .index {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+    display: flex;
+    gap: 1.25rem;
+    align-items: baseline;
+    padding: 0.85rem var(--sc-gutter);
+    font-family: var(--sc-font-mono);
+    font-size: var(--sc-t-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sc-ink-soft);
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+  .index a {
+    pointer-events: auto;
+    color: inherit;
+    text-decoration: none;
+  }
+  .index a[aria-current="true"] {
+    color: var(--sc-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+  }
+
+  .utterance {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 21;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.7rem var(--sc-gutter) calc(0.7rem + env(safe-area-inset-bottom));
+    background: color-mix(in oklab, var(--sc-canvas) 88%, transparent);
+    border-top: 1px solid var(--sc-hairline);
+    font-family: var(--sc-font-display);
+    font-size: clamp(0.95rem, 2.2vw, 1.35rem);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .utterance span {
+    flex: 1;
+    text-align: center;
+    color: color-mix(in oklab, var(--sc-ink) 18%, transparent);
+    transition: color 280ms ease, text-shadow 280ms ease;
+  }
+  .utterance span.is-inked {
+    color: var(--sc-accent);
+  }
+
+  .plate {
+    position: relative;
+    width: min(72vw, 920px);
+    height: min(62vh, 620px);
+    margin: 12vh auto 0;
+    overflow: hidden;
+    background: var(--sc-surface);
+    box-shadow: 0 24px 80px color-mix(in oklab, #000 55%, transparent);
+  }
+  .plate img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+  .label {
+    position: absolute;
+    left: var(--sc-gutter);
+    bottom: 5.5rem;
+    width: min(34ch, 78vw);
+    padding: 1rem 1.1rem 1.05rem;
+    background: color-mix(in oklab, var(--sc-canvas) 82%, transparent);
+    border: 1px solid var(--sc-hairline);
+  }
+  .label dl {
+    display: grid;
+    grid-template-columns: 7.5ch 1fr;
+    gap: 0.28rem 0.8rem;
+    margin: 0.55rem 0 0;
+    font-size: var(--sc-t-sm);
+  }
+  .label dt { color: var(--sc-ink-soft); margin: 0; }
+  .label dd { margin: 0; color: var(--sc-ink); }
+  .label a { color: inherit; }
+
+  .spread {
+    display: grid;
+    grid-template-columns: minmax(18rem, 34ch) minmax(0, 1fr);
+    gap: var(--sc-7);
+    align-items: end;
+  }
+  .spread figure {
+    margin: 0;
+    overflow: hidden;
+    background: var(--sc-surface);
+  }
+  .spread img { width: 100%; height: auto; display: block; }
+
+  .rail {
+    display: flex;
+    align-items: stretch;
+    gap: 2.4rem;
+    padding: 18vh var(--sc-gutter) 8vh;
+    width: max-content;
+  }
+  .rail__lead { width: min(28vw, 22rem); align-self: center; }
+  .rail .item {
+    width: min(42vw, 34rem);
+  }
+  .rail .item figure {
+    margin: 0 0 0.9rem;
+    overflow: hidden;
+    background: var(--sc-surface);
+    height: 54vh;
+  }
+  .rail .item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+  .rail .note {
+    width: min(28vw, 20rem);
+    align-self: center;
+    color: var(--sc-ink-soft);
+  }
+
+  .plinth {
+    min-height: 70vh;
+    display: grid;
+    place-items: center;
+    padding: var(--sc-section) var(--sc-gutter);
+  }
+  .plinth__box {
+    width: min(36rem, 80vw);
+    height: 38vh;
+    border: 1px solid var(--sc-hairline);
+  }
+
+  .enable {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sc-8);
+  }
+  .enable ol {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: var(--sc-ink-soft);
+  }
+  .enable li + li { margin-top: 0.55rem; }
+
+  .inquiry {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    padding: 0 var(--sc-gutter);
+  }
+  .inquiry .label {
+    position: static;
+    width: min(42ch, 88vw);
+  }
+  .inquiry h2 {
+    font-size: var(--sc-t-xl);
+    letter-spacing: var(--sc-track-tight);
+    margin: 0 0 0.6rem;
+  }
+  .foot {
+    position: absolute;
+    left: var(--sc-gutter);
+    right: var(--sc-gutter);
+    bottom: 3.6rem;
+    font-size: var(--sc-t-xs);
+    color: var(--sc-ink-soft);
+  }
+
+  @media (max-width: 700px) {
+    .spread, .enable { grid-template-columns: 1fr; }
+    .plate { width: 88vw; height: 48vh; margin-top: 18vh; }
+    .label { width: min(88vw, 34ch); bottom: 6.2rem; }
+    .rail .item { width: 78vw; }
+    .rail .item figure { height: 42vh; }
+    .sc-display--xl { font-size: var(--sc-t-2xl); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="index" aria-label="Catalog index">
+  <a href="#i" data-index="i">I</a>
+  <a href="#ii" data-index="ii">II</a>
+  <a href="#iii" data-index="iii">III</a>
+  <a href="#iv" data-index="iv">IV</a>
+  <a href="#v" data-index="v">V</a>
+  <a href="#brief" data-index="brief">ST</a>
+</nav>
+
+<p class="utterance" data-utterance aria-hidden="true">
+  <span data-syl="i">A</span>
+  <span data-syl="ii">BRA</span>
+  <span data-syl="iii">CA</span>
+  <span data-syl="iv">DA</span>
+  <span data-syl="v">BRA</span>
+</p>
+
+<main id="top">
+
+  <!-- 1 · Object I already in the room -->
+  <section id="i" data-specimen="i" data-sc-act="pin" data-sc-span="1.7" data-sc-drift="#0B0A08">
+    <div data-sc-stage>
+      <div class="plate">
+        <img src="assets/showdesk-home.webp" width="1600" height="1000" alt="Showdesk marketing home with a critique certificate card.">
+      </div>
+      <div class="label" data-sc-cue="0 0.92 0">
+        <p class="sc-label">Specimen I</p>
+        <h1 class="sc-display sc-display--md">Showdesk</h1>
+        <dl>
+          <dt>Kind</dt><dd>Live-event desk</dd>
+          <dt>Surface</dt><dd>Ringside phone, review, report</dd>
+          <dt>Film</dt><dd>44s promo plus three loops</dd>
+          <dt>Live</dt><dd><a href="https://www.showdesk-app.com/">showdesk-app.com</a></dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · Object II -->
+  <section id="ii" class="sc-section" data-specimen="ii" data-sc-act="flow" data-sc-drift="#100E0C">
+    <div class="sc-wrap spread">
+      <div class="label" data-sc-in>
+        <p class="sc-label">Specimen II</p>
+        <h2 class="sc-display sc-display--md">Schema</h2>
+        <dl>
+          <dt>Kind</dt><dd>AI-visibility scanner</dd>
+          <dt>Surface</dt><dd>URL, score, gaps, fix package</dd>
+          <dt>Sell</dt><dd>Visibility, not markup</dd>
+          <dt>Live</dt><dd><a href="https://schema-two.vercel.app/">schema-two.vercel.app</a></dd>
+        </dl>
+      </div>
+      <figure data-sc-reveal="left" data-sc-reveal-at="0.12 0.72">
+        <img src="assets/schema-home.webp" width="1600" height="1000" alt="Schema home with a URL field and an AI visibility check.">
+      </figure>
+    </div>
+  </section>
+
+  <!-- 3 · Objects III and IV walk sideways -->
+  <section id="iii" data-sc-act="pan" data-sc-span="2.5" data-sc-drift="#0B0A08">
+    <div data-sc-stage>
+      <div class="rail" data-sc-pan="0.06">
+        <div class="rail__lead sc-stack">
+          <p class="sc-label">The rest of the room</p>
+          <p class="sc-body">Two more live surfaces. Same label schema. Walk them sideways.</p>
+        </div>
+        <article class="item" data-specimen="iii" id="obj-iii">
+          <figure>
+            <img src="assets/llmcourse-home.webp" width="1600" height="1000" alt="LLM Leverage course home with a preview and rollout path.">
+          </figure>
+          <p class="sc-label">Specimen III</p>
+          <h2 class="sc-display sc-display--md">LLMCourse</h2>
+          <p class="sc-body">12 modules. Quiz gated at 75 percent. Workshops share the same curriculum.</p>
+          <p class="sc-body"><a href="https://llm-leverage-course.vercel.app/">llm-leverage-course.vercel.app</a></p>
+        </article>
+        <article class="item" data-specimen="iv" id="iv">
+          <figure>
+            <img src="assets/cda-home.webp" width="1600" height="1000" alt="Canadian Discount Appliances warehouse home with a product lineup.">
+          </figure>
+          <p class="sc-label">Specimen IV</p>
+          <h2 class="sc-display sc-display--md">CDA store</h2>
+          <p class="sc-body">New, unboxed, and used appliances. Price on the product. Phone as a close.</p>
+          <p class="sc-body"><a href="https://www.cdastore.ca/">cdastore.ca</a></p>
+        </article>
+        <p class="note">The empty plinth is next. The film after that.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Authored silence -->
+  <section class="plinth" data-sc-act="flow" data-sc-drift="#0B0A08" aria-label="Empty plinth">
+    <div class="plinth__box" aria-hidden="true"></div>
+  </section>
+
+  <!-- 5 · Peak: the only scrub -->
+  <section data-sc-act="scrub" data-sc-span="2.8" data-sc-dwell="0.38" data-sc-drift="#0B0A08">
+    <div data-sc-stage>
+      <img class="sc-stage__poster" src="assets/showdesk-promo.webp" alt="">
+      <video data-sc-scrub data-sc-src="assets/showdesk-promo.mp4"
+             data-sc-src-mobile="assets/showdesk-promo-m.mp4" muted playsinline></video>
+      <div class="sc-scrim sc-scrim--lead" aria-hidden="true"></div>
+      <div class="label" data-sc-cue="0.16 0.88">
+        <p class="sc-label">Working proof</p>
+        <h2 class="sc-display sc-display--md">Showdesk on film</h2>
+        <dl>
+          <dt>Cut</dt><dd>Promo, 44 seconds</dd>
+          <dt>Chapters</dt><dd>Ringside, review, placements, reports</dd>
+          <dt>Hand</dt><dd>The wheel is the playhead</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Object V enablement -->
+  <section id="v" class="sc-section" data-specimen="v" data-sc-act="flow" data-sc-drift="#120F0C">
+    <div class="sc-wrap enable">
+      <div class="label" data-sc-in>
+        <p class="sc-label">Specimen V</p>
+        <h2 class="sc-display sc-display--md">Sales enablement</h2>
+        <dl>
+          <dt>Kind</dt><dd>Rep pack, not a product</dd>
+          <dt>Contains</dt><dd>Demo script plus one-pager per specimen</dd>
+          <dt>Rule</dt><dd>Same footage as the marketing cut</dd>
+          <dt>Path</dt><dd>outputs/sales-enablement/</dd>
+        </dl>
+      </div>
+      <ol data-sc-in data-sc-stagger="70">
+        <li>Showdesk. Ringside, review, reports. 30 minutes.</li>
+        <li>Schema. Their URL, their score. 20 minutes.</li>
+        <li>LLMCourse. Preview, workshop, rollout. 25 minutes.</li>
+        <li>CDA. Grid, price, phone close. 20 minutes.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 7 · Inquiry plate. Last act. Hold. -->
+  <section id="brief" data-sc-act="pin" data-sc-span="1.4" data-sc-drift="#0B0A08">
+    <div data-sc-stage>
+      <div class="inquiry">
+        <div class="label" data-sc-cue="0.08">
+          <p class="sc-label">Specimen ST</p>
+          <h2>Open a brief</h2>
+          <dl>
+            <dt>Ask</dt><dd>Name the surface and the buyer</dd>
+            <dt>Leave with</dt><dd>A script, a one-pager, a 40s cut</dd>
+            <dt>Write</dt><dd><a href="mailto:dev@pirx.ca">dev@pirx.ca</a></dd>
+          </dl>
+        </div>
+      </div>
+      <footer class="foot">Abracadabra AI. Catalog of shipped work. Footage stored in this repo under outputs/.</footer>
+    </div>
+  </section>
+
+</main>
+
+<script src="scrollcraft.js"></script>
+<script>
+  ScrollCraft.mount(document.body);
+
+  const uttered = new Set();
+  const marks = document.querySelectorAll("[data-index]");
+  const syllables = document.querySelectorAll("[data-utterance] [data-syl]");
+
+  function ink(id) {
+    if (!id || uttered.has(id)) return;
+    uttered.add(id);
+    document.querySelector("[data-utterance] [data-syl='" + id + "']")?.classList.add("is-inked");
+  }
+
+  const specimens = [
+    { id: "i", el: document.getElementById("i") },
+    { id: "ii", el: document.getElementById("ii") },
+    { id: "iii", el: document.getElementById("iii") },
+    { id: "iv", el: document.getElementById("iv") },
+    { id: "v", el: document.getElementById("v") },
+  ];
+
+  const io = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const id = entry.target.getAttribute("data-specimen")
+        || specimens.find((s) => s.el === entry.target)?.id;
+      if (id) ink(id);
+    }
+  }, { threshold: 0.35 });
+
+  document.querySelectorAll("[data-specimen]").forEach((n) => io.observe(n));
+
+  function spy() {
+    const mid = scrollY + innerHeight * 0.42;
+    let current = "i";
+    for (const node of document.querySelectorAll("section[id]")) {
+      if (node.offsetTop <= mid) current = node.id;
+    }
+    if (current === "obj-iii") current = "iii";
+    marks.forEach((a) => {
+      a.setAttribute("aria-current", a.dataset.index === current ? "true" : "false");
+    });
+  }
+  addEventListener("scroll", spy, { passive: true });
+  spy();
+</script>
+</body>
+</html>
