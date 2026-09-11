@@ -14,6 +14,8 @@ Stored here for the Abracadabra AI Scrollcraft catalog (`scrollcraft/builds/abra
 
 Raw WebMs live in `footage/`. Recapture with `npm run capture` from this folder (needs `playwright-core` and Playwright ffmpeg).
 
+Scrub-encoded legs for the scroll-world walkthrough are derived from these files and live in `scrollcraft/builds/abracadabra-ai/assets/world/` (see that folder's README for the encode settings).
+
 ## Sales enablement
 
 One-pagers and first-demo scripts, chapter-aligned with the footage:
@@ -26,6 +28,7 @@ One-pagers and first-demo scripts, chapter-aligned with the footage:
 
 ## Not yet
 
+- One continuous Playwright take per product so walkthrough seams match by pixel (see `docs/scroll-world-review.md`)
 - CDA private-repo demo-mode capture (catalog + seeded PDP)
 - Schema seeded `/scan/[token]` report walkthrough
 - Remotion compose packs inside Schema, LLMCourse, and CDA (Showdesk remains the reference implementation)

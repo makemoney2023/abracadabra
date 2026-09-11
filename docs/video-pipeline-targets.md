@@ -12,6 +12,7 @@ This list is the implementation queue. Add a product here before building its `p
 | Compose | `promo/src/` Remotion 4 | Intro → 3–4 workflows → CTA; footage sped ~1.3–1.85× |
 | Render | `promo` scripts → `public/videos/` | H.264 MP4 + JPEG posters; raw `footage/` and `out/` stay gitignored |
 | Embed | marketing `#demo` section | Featured play-overlay promo + intersection-observer autoplay loops |
+| Walkthrough | `scrollcraft/builds/abracadabra-ai/walkthrough.html` | Cross-product walkthroughs are one scroll-scrubbed flight on the scroll-world engine, not a grid of players. Re-encode legs with `-g 8` and a poster still. See `docs/scroll-world-review.md`. |
 
 Do **not** reuse Showdesk’s gold/Fraunces look on other products. Keep the *pipeline*; restyle frames, type, and stage to that product’s brand.
 
