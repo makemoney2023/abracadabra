@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abracadabra AI · stored cuts</title>
+<meta name="description" content="The captured films stored for the Abracadabra AI catalog.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230B0A08'/><text x='8' y='23' fill='%23E23B2F' font-size='16' font-family='serif'>A</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="scrollcraft.css">
+<style>
+  :root {
+    --sc-canvas:     #0B0A08;
+    --sc-surface:    #161310;
+    --sc-ink:        #F3EEE4;
+    --sc-ink-soft:   #A89F93;
+    --sc-accent:     #E23B2F;
+    --sc-accent-ink: #F3EEE4;
+    --sc-font-display: "Outfit", system-ui, sans-serif;
+    --sc-font-text:    "IBM Plex Sans", system-ui, sans-serif;
+  }
+  body { background: var(--sc-canvas); color: var(--sc-ink); }
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem var(--sc-gutter);
+    font-family: var(--sc-font-mono);
+    font-size: var(--sc-t-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sc-ink-soft);
+  }
+  .bar a { color: inherit; }
+  .wrap { width: min(72rem, calc(100% - 2 * var(--sc-gutter))); margin: 0 auto 4rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 1.6rem;
+  }
+  figure {
+    margin: 0;
+    background: var(--sc-surface);
+    border: 1px solid var(--sc-hairline);
+  }
+  video, img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+    background: #000;
+  }
+  figcaption { padding: 0.85rem 1rem 1rem; }
+  figcaption p { margin: 0.2rem 0 0; color: var(--sc-ink-soft); }
+  h1 { margin: 0 0 0.4rem; }
+</style>
+</head>
+<body>
+  <p class="bar">
+    <a href="./">Back to the catalog</a>
+    <span>Stored cuts</span>
+  </p>
+  <main class="wrap">
+    <p class="sc-label">Screening room</p>
+    <h1 class="sc-display sc-display--md">The films on file</h1>
+    <p class="sc-body">Official Showdesk promo, three loops, and the live captures taken for Schema, LLMCourse, and CDA.</p>
+    <div class="grid">
+      <figure>
+        <video controls playsinline poster="assets/showdesk-promo.webp" src="assets/showdesk-promo.mp4"></video>
+        <figcaption>
+          <p class="sc-label">Showdesk</p>
+          <h2 class="sc-display sc-display--md">Promo, 44s</h2>
+          <p class="sc-body">Official marketing cut. Ringside, review, placements, reports.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/showdesk-ringside.webp" src="assets/films/demo-ringside.mp4"></video>
+        <figcaption>
+          <p class="sc-label">Showdesk</p>
+          <h2 class="sc-display sc-display--md">Ringside loop</h2>
+          <p class="sc-body">Phone plus live transcription.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/showdesk-review.webp" src="assets/films/demo-review.mp4"></video>
+        <figcaption>
+          <p class="sc-label">Showdesk</p>
+          <h2 class="sc-display sc-display--md">Review loop</h2>
+          <p class="sc-body">Critique on the desk.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/showdesk-desk.webp" src="assets/films/demo-desk.mp4"></video>
+        <figcaption>
+          <p class="sc-label">Showdesk</p>
+          <h2 class="sc-display sc-display--md">Desk loop</h2>
+          <p class="sc-body">Leave-behind loop.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/showdesk-home.webp" src="assets/films/showdesk-home.mp4"></video>
+        <figcaption>
+          <p class="sc-label">Showdesk</p>
+          <h2 class="sc-display sc-display--md">Live home</h2>
+          <p class="sc-body">Playwright capture of showdesk-app.com.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/schema-home.webp" src="assets/films/schema-home-scan.mp4"></video>
+        <figcaption>
+          <p class="sc-label">Schema</p>
+          <h2 class="sc-display sc-display--md">Live home</h2>
+          <p class="sc-body">Playwright capture of schema-two.vercel.app.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/llmcourse-home.webp" src="assets/films/llmcourse-home-lesson.mp4"></video>
+        <figcaption>
+          <p class="sc-label">LLMCourse</p>
+          <h2 class="sc-display sc-display--md">Home and lesson</h2>
+          <p class="sc-body">Playwright capture of the course home.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/llmcourse-workshops.webp" src="assets/films/llmcourse-workshops.mp4"></video>
+        <figcaption>
+          <p class="sc-label">LLMCourse</p>
+          <h2 class="sc-display sc-display--md">Workshops</h2>
+          <p class="sc-body">Playwright capture of the workshops path.</p>
+        </figcaption>
+      </figure>
+      <figure>
+        <video controls playsinline poster="assets/cda-home.webp" src="assets/films/cda-home-pdp.mp4"></video>
+        <figcaption>
+          <p class="sc-label">CDA</p>
+          <h2 class="sc-display sc-display--md">Live home</h2>
+          <p class="sc-body">Playwright capture of cdastore.ca. PDP click did not land.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </main>
+</body>
+</html>
