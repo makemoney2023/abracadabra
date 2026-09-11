@@ -1,0 +1,8 @@
+{
+  "name": "abracadabra-ai-catalog",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "playwright-core": "^1.63.0"
+  }
+}

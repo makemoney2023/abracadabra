@@ -90,13 +90,16 @@
     display: block;
   }
   .label {
-    position: absolute;
-    left: var(--sc-gutter);
-    bottom: 5.5rem;
+    position: relative;
     width: min(34ch, 78vw);
     padding: 1rem 1.1rem 1.05rem;
     background: color-mix(in oklab, var(--sc-canvas) 82%, transparent);
     border: 1px solid var(--sc-hairline);
+  }
+  [data-sc-stage] > .label {
+    position: absolute;
+    left: var(--sc-gutter);
+    bottom: 6.4rem;
   }
   .label dl {
     display: grid;
@@ -113,14 +116,23 @@
     display: grid;
     grid-template-columns: minmax(18rem, 34ch) minmax(0, 1fr);
     gap: var(--sc-7);
-    align-items: end;
+    align-items: center;
+    min-height: 78vh;
+    padding-bottom: 3rem;
   }
   .spread figure {
     margin: 0;
     overflow: hidden;
     background: var(--sc-surface);
+    min-height: 54vh;
   }
-  .spread img { width: 100%; height: auto; display: block; }
+  .spread img {
+    width: 100%;
+    height: 54vh;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
 
   .rail {
     display: flex;
@@ -166,6 +178,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--sc-8);
+    align-items: center;
+    min-height: 68vh;
+    padding-bottom: 3rem;
   }
   .enable ol {
     margin: 0;
@@ -193,7 +208,7 @@
     position: absolute;
     left: var(--sc-gutter);
     right: var(--sc-gutter);
-    bottom: 3.6rem;
+    bottom: 5.8rem;
     font-size: var(--sc-t-xs);
     color: var(--sc-ink-soft);
   }
@@ -325,7 +340,7 @@
   <!-- 6 · Object V enablement -->
   <section id="v" class="sc-section" data-specimen="v" data-sc-act="flow" data-sc-drift="#120F0C">
     <div class="sc-wrap enable">
-      <div class="label" data-sc-in>
+      <div class="label">
         <p class="sc-label">Specimen V</p>
         <h2 class="sc-display sc-display--md">Sales enablement</h2>
         <dl>
@@ -400,10 +415,20 @@
   function spy() {
     const mid = scrollY + innerHeight * 0.42;
     let current = "i";
-    for (const node of document.querySelectorAll("section[id]")) {
-      if (node.offsetTop <= mid) current = node.id;
+    const nodes = [
+      document.getElementById("i"),
+      document.getElementById("ii"),
+      document.getElementById("obj-iii"),
+      document.getElementById("iv"),
+      document.getElementById("v"),
+      document.getElementById("brief"),
+    ].filter(Boolean);
+    for (const node of nodes) {
+      const top = node.getBoundingClientRect().top + scrollY;
+      if (top <= mid) {
+        current = node.id === "obj-iii" ? "iii" : node.id;
+      }
     }
-    if (current === "obj-iii") current = "iii";
     marks.forEach((a) => {
       a.setAttribute("aria-current", a.dataset.index === current ? "true" : "false");
     });
