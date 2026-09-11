@@ -78,26 +78,33 @@ const jobs = [
     },
   },
   {
-    id: "cda-home-pdp",
-    url: "https://www.cdastore.ca/",
+    id: "cda-home-path",
+    url: "https://cdastore.vercel.app/",
     async play(page) {
-      await page.waitForTimeout(2500);
-      for (const name of [/accept/i, /agree/i, /got it/i, /close/i]) {
-        const btn = page.getByRole("button", { name }).first();
-        if (await btn.count()) await btn.click({ timeout: 1500 }).catch(() => {});
+      // Scrollcraft home: hero, three conditions, "Will it fit the door?",
+      // $99 next-day delivery, Google reviews, then the warehouse films.
+      await page.waitForTimeout(2200);
+      for (let i = 0; i < 9; i++) {
+        await page.mouse.wheel(0, 640);
+        await page.waitForTimeout(1050);
       }
-      await page.mouse.wheel(0, 700);
       await page.waitForTimeout(1200);
-      const product = page.locator('a[href*="/product"], a[href*="/products"]').first();
-      if (await product.count()) {
-        await product.click({ timeout: 5000 }).catch(() => {});
-        await page.waitForTimeout(2500);
-        await page.mouse.wheel(0, 800);
-        await page.waitForTimeout(2000);
-      } else {
-        await page.mouse.wheel(0, 1200);
-        await page.waitForTimeout(2500);
+      // Prefer a path-check link already in view so the take stays continuous.
+      let clicked = false;
+      for (const link of await page.locator('a[href="/path-check"]').all()) {
+        const box = await link.boundingBox().catch(() => null);
+        if (box && box.y >= 0 && box.y + box.height <= VIEW.height) {
+          await link.click({ timeout: 5000 }).catch(() => {});
+          clicked = true;
+          break;
+        }
       }
+      if (!clicked) {
+        await page.goto("https://cdastore.vercel.app/path-check", { waitUntil: "domcontentloaded" });
+      }
+      await page.waitForTimeout(2200);
+      await page.mouse.wheel(0, 600);
+      await page.waitForTimeout(2200);
     },
   },
   {
@@ -108,7 +115,7 @@ const jobs = [
       await page.mouse.wheel(0, 400);
       const input = page.locator('input[type="url"], input[name="url"], input[placeholder*="http" i]').first();
       if (await input.count()) {
-        await input.fill("https://www.cdastore.ca/");
+        await input.fill("https://cdastore.vercel.app/");
         await page.waitForTimeout(400);
         const go = page.getByRole("button", { name: /scan|check|analyze|run/i }).first();
         if (await go.count()) await go.click().catch(() => {});

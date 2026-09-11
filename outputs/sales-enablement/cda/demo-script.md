@@ -1,29 +1,35 @@
-# Canadian Discount Appliances · store demo script (20 min)
+# Canadian Discount Appliances · warehouse site demo script (20 min)
 
-Tied to `outputs/footage/cda-home-pdp.webm` and https://www.cdastore.ca/.
+Tied to `outputs/footage/cda-home-path.webm` and https://cdastore.vercel.app/.
 
-**Buyer:** the store owner or a partner who needs a store that can sell on the phone.
+**Buyer:** the store owner or a partner who needs the site to answer the questions the floor answers out loud.
 
 ## Opening (3 min)
 
-Ask how a customer finds a price today (phone, walk-in, marketplace). Confirm delivery vs pickup.
+Ask what the customer asks first today: the price, the warranty on a used machine, or whether it fits. Confirm the delivery zone and the $99 next-business-day promise.
 
-## Workflow 1. Warehouse / home (5 min)
+## Workflow 1. Hero and price (4 min)
 
-Home grid. Filter or scroll to a category they actually stock.  
-**Talk track:** “This is the floor, not a brochure. The first job is finding the machine.”
+Home. "The appliance warehouse, not the outlet game." Scroll to "The sale price that was the price last month."  
+**Talk track:** "The price is on the tag and the tag is on the machine. The site says the same thing the floor says."
 
-## Workflow 2. Product and price (6 min)
+## Workflow 2. Three conditions, three warranties (5 min)
 
-Open a PDP. Read price, availability, and the visit or delivery path.  
-**Talk track:** “If the price is wrong here, the phone call is already lost.”  
-**Ask:** “Who updates this after a supplier change?”
+New, Unboxed, Used. Read each warranty line aloud.  
+**Talk track:** "Plain words. A used fridge with a written warranty beats a mystery outlet deal."  
+**Ask:** "Who updates the warranty wording when a supplier changes terms?"
 
-## Workflow 3. Phone close (4 min)
+## Workflow 3. Path Check (5 min)
 
-Use the phone viewport recording (or pinch the same PDP). Reviews if present.  
-**Talk track:** “The customer is in the parking lot or on the couch. This page has to close without a salesperson standing next to it.”
+Click "Check my path". Walk the five verdicts and the 36-inch fridge / 32-inch door FAQ.  
+**Talk track:** "This is the question before you drive. The customer measures the door on the couch, not in the parking lot."  
+**Ask:** "How many deliveries came back last quarter because it did not fit?"
 
-## Close (2 min)
+## Workflow 4. Delivery, visit, reviews (2 min)
 
-Agree which three SKUs must be correct before any ad spend. Send the PDP links, not a deck.
+"Ninety-nine dollars. Next business day." Then the visit page: address, phone, how the floor works, 137 Google reviews.  
+**Talk track:** "Address, phone, reviews, and the delivery zone on one screen. The close is a phone call or a drive, and both start here."
+
+## Close (1 min)
+
+Agree the three delivery cities and two door widths that must be right before ad spend. Send the Path Check link, not a deck.

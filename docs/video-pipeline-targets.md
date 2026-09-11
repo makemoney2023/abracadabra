@@ -26,7 +26,7 @@ Two cuts per product when both apply:
 | # | Target | Repo / live | Status | Story / segments |
 | --- | --- | --- | --- | --- |
 | 1 | Showdesk | [makemoney2023/showdesk](https://github.com/makemoney2023/showdesk) · [showdesk-app.com](https://www.showdesk-app.com/) | **Stored** in `outputs/videos/showdesk/` (official promo + live home capture) | Ringside (phone + STT) → review → placements → reports |
-| 2 | Canadian Discount Appliances | [makemoney2023/canadiandiscountappliances](https://github.com/makemoney2023/canadiandiscountappliances) (private) · [cdastore.ca](https://www.cdastore.ca/) · Vercel `cdastore` | **Live home stored**; seeded PDP capture still needs private-repo access | Warehouse/home → product + price → visit/delivery (phone) → reviews |
+| 2 | Canadian Discount Appliances | [makemoney2023/canadiandiscountappliances](https://github.com/makemoney2023/canadiandiscountappliances) (private) · [cdastore.vercel.app](https://cdastore.vercel.app/) · Vercel `cdastore` | **Home → Path Check take stored** in `outputs/videos/cda/`; warehouse film sections and `/visit` still uncaptured | Hero → three conditions / warranties → Path Check → $99 delivery / visit → reviews |
 | 3 | Schema | [makemoney2023/schema](https://github.com/makemoney2023/schema) · [schema-two.vercel.app](https://schema-two.vercel.app/) | **Live home stored**; seeded `/scan/[token]` walkthrough still open | URL scan → score / gaps → generate fix → ops inbox |
 | 4 | LLMCourse | [makemoney2023/LLMCourse](https://github.com/makemoney2023/LLMCourse) · [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app) | **Home + workshops stored**; in-module lesson path still thin | Home / preview → lesson steps → practice + quiz → workshops / try-it |
 | 5 | Sales enablement | Skill in this repo (not a standalone product) | **Scripts + one-pagers stored** in `outputs/sales-enablement/` | Rep-facing demo cuts, talk tracks, objection clips, one-pager / playbook leave-behinds |
@@ -41,11 +41,11 @@ Reuse: Playwright seed + gold cursor + Remotion `Promo` / loop compositions / `D
 
 ### 2. Canadian Discount Appliances
 
-Appliance retail store. Capture against a seeded catalog, not live inventory.
+Kitchener appliance warehouse site at [cdastore.vercel.app](https://cdastore.vercel.app/) (not the older cdastore.ca storefront). A Scrollcraft page: hero, price-on-the-tag, three conditions with plain-word warranties, "Will it fit the door?", $99 next-business-day delivery, Google reviews, warehouse films, guides. `/path-check` is the door-fit verdict tool; `/visit` carries address, phone, and the delivery zone.
 
-Suggested clips: home/warehouse grid → PDP with price → visit or delivery on phone → reviews.
+Captured: `cda-home-path` (home scroll → click "Check my path" → Path Check). Still open: the four warehouse film sections at full play, `/visit`, and a Path Check run with real door numbers.
 
-Blocker: this agent’s GitHub token does not see the private repo until access is granted.
+The private repo is only needed for a seeded Path Check verdict; the public site is enough for the capture above.
 
 ### 3. Schema
 
@@ -95,7 +95,7 @@ Not a Vercel/GitHub product. It is the B2B collateral motion: decks, one-pagers,
 | Product | Enablement notes |
 | --- | --- |
 | Showdesk | Recut existing ringside → review → placements/reports with AE talk track; desk loop as leave-behind |
-| CDA | Rep script: price/visit/delivery objections; phone clip for in-store / delivery close |
+| CDA | Rep script: warranty-by-condition and "will it fit" objections; Path Check as the pre-drive close, $99 delivery / visit as the follow-through |
 | Schema | Already specified: 2-min walkthrough of *their* `/scan/[token]`; playbook + nurture + proposal tiers in `schema/docs/sales/` |
 | LLMCourse | Team-rollout motion: home `#rollout` / `#contact`, workshop slides, certificate as proof of completion |
 
@@ -105,7 +105,7 @@ When implementing a product `promo/`, ship marketing and sales-enablement compos
 
 1. Schema (public, sales docs already ask for the 2-min walkthrough)
 2. LLMCourse (public, e2e is a ready capture script; keep `content-studio` for shorts)
-3. CDA (after private-repo access)
+3. CDA (public site captured; warehouse films, `/visit`, and a real Path Check run next)
 4. Sales enablement packs for each, starting with Schema’s existing playbook
 
 Showdesk stays the reference; do not rebuild it unless the pipeline itself changes.
