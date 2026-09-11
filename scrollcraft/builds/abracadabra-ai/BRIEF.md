@@ -25,7 +25,7 @@ Self-authored, not interviewed. Cloud-agent run. Source answers inferred from th
    Editorial catalog, not brutalist, not maximalist. Dark room, one red stamp, museum labels. Closer to a print catalog than to a SaaS landing page.
 
 7. **One unbroken world, or distinct scenes?**  
-   Distinct scenes. Four products and an enablement pack are separate objects in one room, not one camera flight. World-craft here means the room is crafted, not worldflight mode.
+   Two pages, two answers. The catalog (`index.html`) is distinct scenes: four products and an enablement pack are separate objects in one room. The walkthrough (`walkthrough.html`) is one unbroken world: eight legs of real product footage chained as a single scroll-scrubbed camera flight on the scroll-world engine. The first draft answered "distinct scenes" for both and shipped the walkthroughs as a screening-room grid of separate players; that was the wrong call for the walkthrough and was corrected.
 
 8. **What assets do they already have?**  
    Showdesk composed MP4s and posters (copied from the public repo). Live Playwright recordings of Showdesk, Schema, LLMCourse, and CDA. Sales-enablement one-pagers and demo scripts written in this repo. No brand kit, no logo file.

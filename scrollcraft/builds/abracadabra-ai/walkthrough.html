@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abracadabra AI · the walkthrough</title>
+<meta name="description" content="One continuous flight through four shipped products. The wheel drives the camera.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230B0A08'/><text x='8' y='23' fill='%23E23B2F' font-size='16' font-family='serif'>A</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Theme tokens. Unlayered, so they win over the engine's @layer sw defaults. */
+  :root, .sw-root {
+    --sw-bg: #0B0A08;
+    --sw-ink: #F3EEE4;
+    --sw-ink-soft: #A89F93;
+    --sw-accent: #E23B2F;
+    --sw-font-display: "Outfit", system-ui, sans-serif;
+    --sw-font-body: "IBM Plex Sans", system-ui, sans-serif;
+  }
+  html, body { margin: 0; background: var(--sw-bg); color: var(--sw-ink); }
+
+  /* The footage is product UI, not a diorama. Frame it as a screen on the right
+     of a dark stage so the copy on the left never sits over the product's own text. */
+  .sw-scene__video, .sw-scene__still {
+    left: auto; right: 3vw; top: 50%; width: 56vw; height: min(80vh, 56vw * 0.625);
+    transform: translateY(-50%);
+    object-fit: contain; object-position: center;
+    border-radius: 10px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(243,238,228,.08);
+    background: #000;
+  }
+  .sw-scene__still { transform: translateY(-50%) !important; }
+  .sw-copylayer::before { display: none; }
+  .sw-copy { width: min(34vw, 420px); }
+
+  /* Scrollcraft house rules: no counters, no scroll cue. */
+  .sw-copy__num, .sw-hint { display: none; }
+
+  /* Dark overrides for engine chrome that assumes a light page. */
+  .sw-sky__glow { background: radial-gradient(60% 42% at 74% 16%, color-mix(in srgb, var(--sw-accent) 10%, transparent), transparent 70%); }
+  .sw-pt { display: none; }
+  .sw-nav { background: color-mix(in srgb, #fff 6%, transparent); border-color: rgba(243,238,228,.12); }
+  .sw-nav__item.is-active { color: var(--sw-bg); }
+  .sw-topcta, .sw-btn--primary { color: var(--sw-bg); background: var(--sw-ink); }
+  .sw-btn--ghost { color: var(--sw-ink); border-color: rgba(243,238,228,.3); }
+  .sw-copy__tags li { color: var(--sw-ink); background: color-mix(in srgb, var(--sw-accent) 18%, var(--sw-bg)); border-color: color-mix(in srgb, var(--sw-accent) 40%, transparent); }
+  .sw-route__label { color: var(--sw-ink); background: color-mix(in srgb, #fff 10%, var(--sw-bg)); }
+  .sw-copy__title { font-size: clamp(1.8rem, 3.1vw, 2.7rem); }
+  .sw-copy__eyebrow { font-family: ui-monospace, Menlo, monospace; font-weight: 500; }
+  .sw-copy__body { color: var(--sw-ink-soft); }
+
+  @media (max-width: 860px) {
+    .sw-scene__video, .sw-scene__still {
+      left: 4vw; right: 4vw; top: calc(60px + env(safe-area-inset-top)); width: 92vw; height: 57.5vw;
+      transform: none; border-radius: 8px;
+    }
+    .sw-scene__still { transform: none !important; }
+    .sw-copy { width: auto; }
+  }
+</style>
+</head>
+<body>
+<div id="top"></div>
+<div id="world"></div>
+
+<script src="scroll-world.js"></script>
+<script>
+  mountScrollWorld(document.getElementById('world'), {
+    brand: { name: 'Abracadabra AI', href: './' },
+    cta: { label: 'Open a brief', href: 'mailto:dev@pirx.ca' },
+    hint: '',
+    nav: true,
+    atmosphere: true,
+    diveScroll: 1.5,
+    connScroll: 0.9,
+    crossfade: 0.1,
+    sections: [
+      {
+        id: 'showdesk', label: 'Showdesk',
+        still: 'assets/world/showdesk-home.webp', stillMobile: 'assets/world/showdesk-home-m.webp',
+        clip: 'assets/world/showdesk-home.mp4', clipMobile: 'assets/world/showdesk-home-m.mp4',
+        accent: '#C9A24A', linger: 0.3,
+        eyebrow: 'Showdesk. showdesk-app.com',
+        title: 'The judge speaks. The certificate arrives the same day.',
+        body: 'Livestock show software for the people running the ring. Placings, review, and paperwork in one desk.',
+        tags: ['Next.js', 'Supabase', 'Live'],
+      },
+      {
+        id: 'ringside', label: 'Ringside',
+        still: 'assets/world/showdesk-ringside.webp', stillMobile: 'assets/world/showdesk-ringside-m.webp',
+        clip: 'assets/world/showdesk-ringside.mp4', clipMobile: 'assets/world/showdesk-ringside-m.mp4',
+        accent: '#C9A24A', scroll: 1.9, linger: 0.35,
+        eyebrow: 'Showdesk. Ringside',
+        title: 'Placings entered from the rail, on a phone.',
+        body: 'The ring steward taps the order as the judge calls it. Nothing is transcribed later.',
+        tags: ['Phone first', 'Offline tolerant'],
+      },
+      {
+        id: 'review', label: 'Review',
+        still: 'assets/world/showdesk-review.webp', stillMobile: 'assets/world/showdesk-review-m.webp',
+        clip: 'assets/world/showdesk-review.mp4', clipMobile: 'assets/world/showdesk-review-m.mp4',
+        accent: '#C9A24A', linger: 0.3,
+        eyebrow: 'Showdesk. Review',
+        title: 'Every placing checked before it is published.',
+        body: 'A second pair of eyes confirms the class. Corrections happen here, not after the results board is up.',
+        tags: ['Approval step', 'Audit trail'],
+      },
+      {
+        id: 'desk', label: 'Desk',
+        still: 'assets/world/showdesk-desk.webp', stillMobile: 'assets/world/showdesk-desk-m.webp',
+        clip: 'assets/world/showdesk-desk.mp4', clipMobile: 'assets/world/showdesk-desk-m.mp4',
+        accent: '#C9A24A', scroll: 1.7, linger: 0.35,
+        eyebrow: 'Showdesk. Desk',
+        title: 'Certificates and results rendered from the desk.',
+        body: 'The show office prints what the ring recorded. Same data, no retyping, out the door before the exhibitors leave.',
+        tags: ['PDF render', 'Results board'],
+      },
+      {
+        id: 'schema', label: 'Schema',
+        still: 'assets/world/schema-scan.webp', stillMobile: 'assets/world/schema-scan-m.webp',
+        clip: 'assets/world/schema-scan.mp4', clipMobile: 'assets/world/schema-scan-m.mp4',
+        accent: '#3E7FA6', linger: 0.3,
+        eyebrow: 'Schema. schema-two.vercel.app',
+        title: 'Can ChatGPT read your site? One scan answers it.',
+        body: 'Paste a URL. Schema checks whether AI engines can confidently cite the page and shows the machine-readable layer that is missing.',
+        tags: ['AI readiness', 'Structured data'],
+      },
+      {
+        id: 'llmcourse', label: 'LLM Leverage',
+        still: 'assets/world/llmcourse-lesson.webp', stillMobile: 'assets/world/llmcourse-lesson-m.webp',
+        clip: 'assets/world/llmcourse-lesson.mp4', clipMobile: 'assets/world/llmcourse-lesson-m.mp4',
+        accent: '#2F8C7A', scroll: 1.6, linger: 0.3,
+        eyebrow: 'LLM Leverage. llm-leverage-course.vercel.app',
+        title: 'Lessons built as mental models, not prompt lists.',
+        body: 'A course platform that trains teams to get reliable AI output. Each lesson pairs the model with a practice block.',
+        tags: ['Course platform', 'Lesson engine'],
+      },
+      {
+        id: 'workshops', label: 'Workshops',
+        still: 'assets/world/llmcourse-workshops.webp', stillMobile: 'assets/world/llmcourse-workshops-m.webp',
+        clip: 'assets/world/llmcourse-workshops.mp4', clipMobile: 'assets/world/llmcourse-workshops-m.mp4',
+        accent: '#2F8C7A', linger: 0.25,
+        eyebrow: 'LLM Leverage. Workshop series',
+        title: 'A workshop series a team can actually run.',
+        body: 'Agenda, takeaways, and materials for each session live on one page. The facilitator opens it and starts.',
+        tags: ['Agenda', 'Materials'],
+      },
+      {
+        id: 'cda', label: 'CDA store',
+        still: 'assets/world/cda-pdp.webp', stillMobile: 'assets/world/cda-pdp-m.webp',
+        clip: 'assets/world/cda-pdp.mp4', clipMobile: 'assets/world/cda-pdp-m.mp4',
+        accent: '#E23B2F', linger: 0.25,
+        eyebrow: 'Canadian Discount Appliance. cdastore.ca',
+        title: 'A storefront for inventory that changes every day.',
+        body: 'New, unboxed, and used appliances at outlet prices. The catalog is the floor, updated as units come and go.',
+        tags: ['Storefront', 'Live inventory'],
+        cta: {
+          primary: { label: 'Open a brief', href: 'mailto:dev@pirx.ca' },
+          secondary: { label: 'Back to the catalog', href: './' },
+        },
+      },
+    ],
+    // No generated fly-overs: real captures crossfade directly at each seam.
+    connectors: [null, null, null, null, null, null, null],
+  });
+</script>
+</body>
+</html>
