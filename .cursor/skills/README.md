@@ -14,3 +14,9 @@ Cursor discovers every `SKILL.md` under this tree recursively.
 | `community/` | Third-party packs (marketing, SEO, video, UI, research, CAD, …) |
 | `integrations/` | API/MCP worker skills |
 | `context-engineering/` | Agent context-engineering patterns |
+
+## Added in this repo (not from SourceControl)
+
+| Skill | Source | Used by |
+| --- | --- | --- |
+| `community/scroll-world/` | [oso95/scroll-world](https://github.com/oso95/scroll-world) v0.8.0, MIT, verbatim (see its `PROVENANCE.md`) | `scrollcraft/builds/abracadabra-ai/walkthrough.html` |
