@@ -28,7 +28,7 @@ changes only grammar and world will fail it.
 
 | Build | Grammar | Nav treatment | Hero device | Act-sequence shape | Close pattern | Signature move | World | Port |
 |---|---|---|---|---|---|---|---|---|
-| abracadabra-ai | gallery / catalog | Object index I–V + ST, jumps | Object one already in the room, labelled, pin not scrub | pin → flow → pan → flow → scrub → flow → pin. 7 acts, ~11vh | Inquiry plate typeset as the last specimen label | The utterance: A BRA CA DA BRA inks as each specimen is passed | Night-closed auction house. Photographic live-product stills, one red stamp | 4500 |
+| abracadabra-ai | gallery / catalog | Object index I–V + ST, jumps | Argument headline beside object one, already in the room, labelled, pin not scrub | pin → flow → pin → flow → pan → pin → flow → scrub → flow → pin. 10 acts, ~16vh | Inquiry plate typeset as the last specimen label | The utterance: A BRA CA DA BRA inks as each specimen is passed | Night-closed auction house. Photographic live-product stills, one red stamp | 4500 |
 
 ---
 
@@ -39,7 +39,7 @@ reusing: a grammar, a nav treatment, a close pattern, a signature move, an
 act-count-and-length band. The shared columns are what the next build inherits
 as a constraint, so writing them down is the whole point.
 
-- **abracadabra-ai** took gallery / catalog, an object index that jumps, a pin-first object hero (no opening scrub), an inquiry-plate close, the utterance strip, and the 7-act ~11vh band.
+- **abracadabra-ai** took gallery / catalog, an object index that jumps, a pin-first object hero (no opening scrub), an inquiry-plate close, the utterance strip, and the 10-act ~16vh band (revised 2026-09-23 from 7 acts ~11vh when the page took on the full source-of-truth copy and an FAQ).
 
 ---
 

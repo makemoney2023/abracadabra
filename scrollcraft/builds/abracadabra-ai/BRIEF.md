@@ -30,13 +30,23 @@ Self-authored, not interviewed. Cloud-agent run. Source answers inferred from th
 8. **What assets do they already have?**  
    Showdesk composed MP4s and posters (copied from the public repo). Live Playwright recordings of Showdesk, Schema, LLMCourse, and CDA. Sales-enablement one-pagers and demo scripts written in this repo. No brand kit, no logo file.
 
+## Revision (2026-09-23): the source-of-truth copy
+
+The catalog was rebuilt against `docs/source-of-truth.md` after the positioning rewrite. The room, the labels, the utterance strip, the empty plinth, and the single scrub all stay. What changed:
+
+- **The argument comes first.** The hero now opens with the source-of-truth headline ("Software built around how you already run the business.") beside Specimen I, instead of letting the object speak alone. The catalog is still the proof; the sentence tells the operator what the proof is for.
+- **Three new beats between the objects.** The name (Aramaic root, said plainly), the receipt (the pirx.ca Search Console figures with source and pull date printed under them), and the benefits pin (the six operator-facing changes from the file). Then a FAQ in the operator's words before the close, because those are the questions answer engines get asked.
+- **The shape grew.** pin → flow → pin → flow → pan → pin → flow → scrub → flow → pin. Ten acts. The scrub is still the only scrub, still the largest span, still the peak.
+- **CTAs follow the file.** `Describe how you work` (primary), `Watch the work` (secondary), `Open a brief` (the close). The inquiry plate keeps the last label.
+- **Held out.** No counters on the receipt. No invented durations. No metrics beyond the pirx.ca set. Nothing from the file's off-site list.
+
 ## What this is, and who it is for
 
-Abracadabra AI is a product studio. The page is for operators who want to hire the studio after seeing real shipped work, not a capability list.
+Abracadabra AI is a product studio. The page is for operators who want to hire the studio after seeing real shipped work, not a capability list. The copy says so in the file's words: the range is the point, the four named specimens are examples, and the skill underneath is reading intent and context correctly, then shipping it as running software.
 
-**Believe by the end:** this studio ships working product surfaces, then films them.
+**Believe by the end:** this studio ships working product surfaces built around how the operation already runs, then films them.
 
-**One action, one label:** `Open a brief`
+**One action, one label:** `Describe how you work` on the page, `Open a brief` at the close.
 
 ## Feeling curve (written before acts)
 

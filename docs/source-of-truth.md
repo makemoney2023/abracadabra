@@ -182,8 +182,13 @@ Bring the workflow, the words, and the outcome you want on the other side — no
 
 ### Meta
 
-- **Title:** Abra-ca-dabra — Software built around how you work
-- **Description:** Bespoke software that follows your operation, then a film and a script your team can run. Intent, context, and prompt engineering turned into production software, at any scale. From zero to scale, at the speed of thought.
+- **Title:** Abra-ca-dabra: Software built around how you work
+- **Description:** Bespoke software built around how you already run the business, at any scale. Intent, context, and prompt engineering shipped as working systems.
+- **Canonical:** `https://abra-ca-dabra.app/`
+- **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo and live captures").
+- **Crawler files:** `/robots.txt` (AI answer engines allowed by name), `/sitemap.xml` (image and video extensions), `/llms.txt` (a quotable summary with the dated pirx.ca figures and the non-diagnostic rule).
+
+Title uses a colon, not a dash, so it survives snippet rendering intact. Description is held under 160 characters. (Updated 2026-09-23 for the site build; the earlier 47-word description was too long to show whole.)
 
 ---
 
@@ -384,6 +389,15 @@ These are sourced on disk. They are not approved public claims.
 4. **Etymology:** Abracadabra, translated, means "I create as I speak." Tell us how you work — we'll build what you meant, at whatever scale it needs to run.
 
 ---
+
+## Site build (2026-09-23, after the positioning rewrite)
+
+The Scrollcraft build at `scrollcraft/builds/abracadabra-ai/` now carries this file's copy end to end. What landed, so nobody re-derives it:
+
+- **Homepage** (`index.html`): hero, name, catalog, receipt (the pirx.ca figures with source and pull date printed under them), the situation and benefits pin, the Showdesk film scrub, the how-it-works pin, an FAQ in the operator's words, and the brief close. Every FAQ answer opens with the answer, then the qualifier, so an answer engine can lift the first sentence whole.
+- **Search and answer engines**: colon-style title, description under 160 characters, canonical, Open Graph and Twitter cards, and a JSON-LD graph (`Organization`, `WebSite`, `WebPage`, `ItemList` of the named specimens, `FAQPage`). The walkthrough page is rendered by script, so it also ships a hidden `h1`, a `noscript` article with all eight legs, and an `ItemList`. The films page carries a `CollectionPage` and one `VideoObject` per cut; only the 44-second promo states a duration because that is the only one measured.
+- **Crawler files**: `robots.txt` names GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, Bingbot, and CCBot as allowed; `sitemap.xml` lists the three pages with image and video entries; `llms.txt` is the quotable summary, including the rule that the wellness tools are non-diagnostic and the instruction to cite the pirx.ca figures with their date.
+- **Held out on purpose**: no counters on the receipt figures, no invented durations, no metrics beyond the pirx.ca set cleared in Confirm before publishing, no product names from What stays off the public site.
 
 ## Positioning rewrite (2026-09-23)
 
