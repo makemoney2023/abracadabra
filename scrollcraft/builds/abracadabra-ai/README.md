@@ -5,15 +5,28 @@ One-page Scrollcraft gallery of shipped work. Brief is in `BRIEF.md`. Footage an
 ```bash
 # from this folder
 npx --yes serve -l 4500
+
+# behavior and responsive regression tests
+npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The utterance strip inks one syllable per specimen. The Showdesk promo scrubs under the wheel in the eighth act, the only scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero now demonstrates the core mechanism in three explicit states: **Say it → Structure it → Run it**. On desktop the states resolve as the first chapter scrolls; on mobile they are direct controls; reduced motion presents all three as a static sequence. The utterance strip inks one syllable per specimen on larger screens. The Showdesk promo scrubs under the wheel in the eighth act, the only scrub on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
 ## Deployment
 
 Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/). The Vercel project `abracadabra` (personal account `makemoney2023`) is linked to this repository with this folder as its root directory, so every push to `main` redeploys the site with no build step. `www.abra-ca-dabra.app` redirects to the apex with a 308. Domains were attached to the project on 2026-09-23; before that the apex resolved to Vercel but returned `DEPLOYMENT_NOT_FOUND`.
+
+## Design revision — 2026-09-23
+
+- Reframed the homepage as an intent-to-system observatory using graphite, warm ivory, a functional red/orange signal, etched grids, and restrained phosphor status.
+- Replaced the static hero specimen with an accessible operator-sentence → workflow blueprint → live Showdesk sequence.
+- Reduced the hero and close to one primary action (**Describe how you work**) and one secondary action (**Watch the work**); the Readiness Check is now tertiary.
+- Added labeled 44px chapter targets and a compact mobile current-chapter readout.
+- Replaced the mobile horizontal work rail with complete vertical cards and removed narrow-screen overflow at the required 320–1920px test widths.
+- Added a mobile film-details toggle and a text sequence fallback; the minimized state leaves more than 85% of the viewport available to the product footage.
+- Added browser behavior tests for navigation, state controls, responsive containment, film details, and reduced-motion loading.
 
 ## Search, answer engines, and AI surfaces
 
