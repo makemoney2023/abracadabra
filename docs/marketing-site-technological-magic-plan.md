@@ -1,28 +1,81 @@
 # Abracadabra marketing site — technological magic redesign plan
 
-**Status:** Homepage core implemented 2026-09-23; media recapture, supporting-page P2 work, and analytics-platform integration remain
+**Status:** Phase-two redesign in implementation 2026-09-23; the earlier observatory pass was rejected as too visually conservative and too copy-heavy
 **Prepared:** 2026-09-23
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
 **Related media plan:** [`docs/scroll-world-review.md`](scroll-world-review.md)
 
-## Decision summary
+## Phase-two decision summary
 
-The redesign should evolve the current proof-first, dark editorial showroom into an **intent-to-system observatory**: visitors describe an operation in ordinary language and watch that intent resolve into a workflow, a schema, and finally a working product surface.
+The homepage will become **The Operation Compiler**: visitors state an operation in ordinary language and watch it compile into actors, inputs, handoffs, approval gates, exceptions, outputs, and finally a working product surface. The page should behave like the software it sells, not like a brochure describing that software.
 
-The recommended art direction is **Intent Signal with Living Blueprint mechanics**:
+The art direction is **computational theatre with proof in the foreground**:
 
-- A restrained red/orange signal carries intent through the page.
-- Plain-language phrases become structured steps, nodes, constraints, and connections.
-- Those structures resolve into real product footage rather than abstract AI imagery.
-- The material vocabulary stays credible: graphite, warm ivory, signal red, optical glass, etched grids, and restrained phosphor traces.
+- A bright red/orange signal physically carries the visitor's intent through every chapter.
+- Conversational text detaches into structured tokens, then locks into an executable workflow.
+- Full-viewport optical surfaces, refractive edges, scan texture, and controlled perspective create the sense of advanced machinery.
+- Real product UI takes over from the abstraction at every proof point.
+- A dedicated Answer Engine Optimization sequence turns a buyer question into an answer block, entity graph, schema, source signals, and measured proof.
 - The experience avoids generic AI styling: purple gradients, decorative particles, fake terminals, mystical symbols, and unexplained glow.
 
-This direction keeps the current promise intact: the technology may feel magical, but every claim is explained as intent, context, architecture, and working software.
+The new copy is deliberately shorter. The hero says **“Your operation, turned into software.”** Every following viewport makes one claim, demonstrates it, and places proof beside it.
 
-## Implementation status — 2026-09-23
+## Detailed execution gameplan
 
-The homepage P0/P1 core is implemented in `scrollcraft/builds/abracadabra-ai/index.html`:
+### 1. Reframe the first viewport
+
+- Replace the long positioning paragraph with the six-word category claim.
+- Keep only **Show us how it works** and **See what we've built**.
+- Make the compiler surface the dominant object, spanning the viewport instead of sitting in a museum card beside the copy.
+- Keep a visible “jump to product” control for visitors who do not want the sequence.
+
+### 2. Build the Operation Compiler sequence
+
+The desktop hero uses one pinned scene with four scroll states:
+
+1. **Describe** — a real Showdesk operation appears as one operator sentence.
+2. **Parse** — the sentence separates into actor, input, action, approval, exception, output, and timing.
+3. **Connect** — the extracted parts assemble into a workflow; the signal shows ownership and decision gates.
+4. **Run** — the workflow geometry aligns with the real Showdesk interface and yields to the product.
+
+Mobile uses explicit state buttons and normal document flow. Reduced motion presents all four states at once.
+
+### 3. Add a dedicated Answer Engine Optimization chapter
+
+The AEO chapter is not a generic service card. It is a second pinned instrument:
+
+1. A buyer asks a high-intent question.
+2. The question fans out across the answer surfaces buyers use.
+3. The page exposes the assets an answer can verify: direct answer, entity, schema, evidence, and source.
+4. The sequence resolves into the measured pirx.ca proof.
+
+The copy uses the approved claim **“Be the answer AI can verify.”** It presents AEO, GEO, and SEO as one discipline and links to both the Readiness Check and Schema. It never promises placement, claims a universal LLM retrieval mechanism, or mixes generated recommendations with measured scan output.
+
+### 4. Make the signal continuous
+
+- Add a fixed progress rail that advances with the page.
+- Carry the same signal into compiler links, the AEO answer path, selected work, the film timeline, and the open final node.
+- Change the signal's role by chapter—parse, connect, route, verify, transfer—so continuity does not become repetition.
+
+### 5. Tighten the rest of the story
+
+- Replace multi-paragraph explanations with one claim per viewport.
+- Group proof as a small network of working systems rather than a list of capabilities.
+- Keep the real Showdesk film as the interaction peak.
+- Move the name origin below product and AEO proof.
+- End with an unfinished workflow node representing the visitor's operation.
+
+### 6. Verification gates
+
+- Browser tests for hero copy, four compiler states, the AEO section and both CTAs, scroll-driven state changes, mobile controls, reduced-motion parity, and horizontal containment.
+- Visual checks at 320, 390, 430, 768, 1280, 1440, and 1920 pixels.
+- Keyboard, focus, console, lazy-media, and reduced-motion checks.
+- Screenshot readback for the hero, AEO proof state, selected work, film, and close.
+
+## Earlier implementation status — 2026-09-23
+
+The earlier P0/P1 core remains the functional baseline in `scrollcraft/builds/abracadabra-ai/index.html` while phase two is implemented:
 
 - the two-level CTA hierarchy, with the Readiness Check moved to a tertiary role;
 - the three-state **Say it → Structure it → Run it** signature interaction, ending on the real Showdesk interface;
@@ -80,7 +133,6 @@ The review also identified practical UX problems:
 
 ### Non-goals
 
-- Rewriting the approved positioning in `docs/source-of-truth.md`.
 - Replacing the proof-first showroom with a fantasy theme.
 - Inventing product functionality, clients, metrics, or AI capabilities.
 - Building a heavy 3D/WebGL experience solely for atmosphere.

@@ -32,7 +32,7 @@ That's the business, minus the theatrics. Say the process, the exceptions, the w
 
 ## Brand
 
-**One line.** Software built around how you already run the business — no matter how big or unusual the process is.
+**One line.** Your operation, turned into software.
 
 **Promise.** We go deep on the intent behind the request, the context underneath it, and the words your people already use, then we ship the system, the film, and the script your team runs. We shrink the gap between what's in your head and what's actually running in production. From zero to scale, at the speed of thought.
 
@@ -42,9 +42,9 @@ That's the business, minus the theatrics. Say the process, the exceptions, the w
 
 **Atmosphere.** Where thought becomes a working system. The grasp of the technology should feel like magic. The page should still read like an operator: a live product, a film, a next step.
 
-**Primary action.** Describe how you work.
+**Primary action.** Show us how it works.
 
-**Secondary action.** Watch the work. On the existing catalog, the close label remains **Open a brief**.
+**Secondary action.** See what we've built.
 
 **Voice.**
 
@@ -82,21 +82,21 @@ Paste-ready. Section order is the page.
 
 ### 1. Hero
 
-**Eyebrow:** Where thought becomes a working system
+**Eyebrow:** Bespoke operational software
 
-**Headline:** Software built around how you already run the business.
+**Headline:** Your operation, turned into software.
 
-**Subhead:** We learn the steps, the exceptions, and the words your people already use — however big or unusual the operation is. Then we ship the system, the film, and the script your team runs on Monday. From zero to scale, at the speed of thought.
+**Subhead:** Show us the handoffs, exceptions, and approvals. We build the system around them — not the other way around.
 
-**Primary CTA:** Describe how you work
-**Secondary CTA:** Watch the work
+**Primary CTA:** Show us how it works
+**Secondary CTA:** See what we've built
 
 **Headline alternatives**
 
 | Option | Line | Why it exists |
 |---|---|---|
-| A (use this) | Software built around how you already run the business. | Names the difference in the first line. |
-| B | Your operation, running as software. | Shorter. Less specific about fit. |
+| A (use this) | Your operation, turned into software. | Names the input and output in six words. |
+| B | Software for the way your company actually works. | More literal alternative for acquisition pages. |
 | C | From a blank page to a system your team can demo. | Strong on the leave-behind. Weaker on fit. |
 | D | We shrink the gap between what you meant and what's running. | Leads with the mechanism, not the product. Test against A. |
 
@@ -116,6 +116,28 @@ Four live lines. No client logos until permission exists.
 **Body:** pirx.ca launched with no search history and no answer-engine presence. In the twelve weeks before this was written: 201K search impressions, 1.1K clicks — and 21.8K of those impressions came from Google's Generative AI / AI Overviews surface alone, climbing from almost nothing in June to a daily peak north of 1,600 by September. One post carried over 5,400 of those AI-surface impressions on its own. That's AEO, GEO, and SEO run as one discipline instead of three separate vendors: a brand-new domain answering real questions inside the AI layer of search, inside a single season.
 
 **Small print (internal, not for the page):** figures pulled from Google Search Console on the date above. These are live, climbing numbers — re-pull before locking them into paid media or an investor deck. The shape of the curve is the durable claim; the exact digit will be higher by the time anyone reads this.
+
+### 3A. Answer Engine Optimization
+
+**Eyebrow:** Answer Engine Optimization
+
+**Headline:** Be the answer AI can verify.
+
+**Body:** We turn buyer questions into direct answers, clear entities, structured data, and evidence that answer engines can understand. Then we measure what changed. AEO, GEO, and SEO run as one discipline.
+
+**Four moves:**
+
+1. **Map the questions.** Start with what buyers actually ask when they compare, evaluate, and decide.
+2. **Build the answer.** Publish a direct response with the supporting detail and proof beside it.
+3. **Make it legible to machines.** Connect the page, entity, schema, and source signals without inventing a score or claim.
+4. **Measure the surface.** Track indexed demand, clicks, and observed AI-search visibility; revise where the evidence is weak.
+
+**Proof:** pirx.ca began with no search history and no answer-engine presence. In twelve weeks it earned 201K search impressions, 1.1K clicks, and 21.8K impressions on Google's Generative AI / AI Overviews surface. One article generated more than 5,400 AI-surface impressions. Source: Google Search Console, pulled 2026-09-23.
+
+**Primary CTA:** Run the Readiness Check
+**Secondary CTA:** Open Schema
+
+**Claim boundary:** We do not promise placement or imply that every answer engine uses the same retrieval method. The Readiness Check reports measured scan output separately from generated recommendations. Public proof names the exact surface and source that were measured.
 
 ### 4. The situation
 

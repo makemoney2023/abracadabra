@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Abra-ca-dabra: Software built around how you work</title>
-<meta name="description" content="Bespoke software built around how you already run the business, at any scale. Intent, context, and prompt engineering shipped as working systems.">
+<title>Abra-ca-dabra: Your operation, turned into software</title>
+<meta name="description" content="Bespoke software built around your handoffs, exceptions, and approvals—plus answer-engine optimization grounded in measured proof.">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 <meta name="author" content="Abracadabra AI">
 <meta name="theme-color" content="#0B0A08">
@@ -15,22 +15,22 @@
 <meta property="og:site_name" content="Abracadabra AI">
 <meta property="og:locale" content="en_CA">
 <meta property="og:url" content="https://abra-ca-dabra.app/">
-<meta property="og:title" content="Abra-ca-dabra: Software built around how you already run the business">
-<meta property="og:description" content="We learn the steps, the exceptions, and the words your people already use. Then we ship the system, the film, and the script your team runs on Monday. From zero to scale.">
+<meta property="og:title" content="Abra-ca-dabra: Your operation, turned into software">
+<meta property="og:description" content="Show us the handoffs, exceptions, and approvals. We build the system around them—not the other way around.">
 <meta property="og:image" content="https://abra-ca-dabra.app/assets/showdesk-home.webp">
 <meta property="og:image:width" content="1600">
 <meta property="og:image:height" content="1000">
 <meta property="og:image:alt" content="Showdesk, a live-event operations app, shown as the first specimen in the Abracadabra AI catalog.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Abra-ca-dabra: Software built around how you already run the business">
-<meta name="twitter:description" content="Bespoke software built around how you already run the business, at any scale. The system, the film, and the script your team runs.">
+<meta name="twitter:title" content="Abra-ca-dabra: Your operation, turned into software">
+<meta name="twitter:description" content="Bespoke operational software and answer-engine optimization grounded in real product proof.">
 <meta name="twitter:image" content="https://abra-ca-dabra.app/assets/showdesk-home.webp">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230B0A08'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23E23B2F'%3EA%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="assets/showdesk-home.webp" fetchpriority="high">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Tektur:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="scrollcraft.css">
 
 <script type="application/ld+json">
@@ -45,7 +45,7 @@
       "url": "https://abra-ca-dabra.app/",
       "email": "dev@pirx.ca",
       "description": "A software studio that builds bespoke systems around how a business already runs, at any scale. The work is reading intent and context correctly, then turning that read into prompts, architecture, and production software, delivered with a film and a script the team runs.",
-      "slogan": "Where thought becomes a working system",
+      "slogan": "Your operation, turned into software",
       "knowsAbout": [
         "Bespoke software development",
         "Prompt engineering",
@@ -78,9 +78,9 @@
       "@type": "WebPage",
       "@id": "https://abra-ca-dabra.app/#webpage",
       "url": "https://abra-ca-dabra.app/",
-      "name": "Abra-ca-dabra: Software built around how you work",
-      "headline": "Software built around how you already run the business.",
-      "description": "Bespoke software built around how you already run the business, at any scale. Intent, context, and prompt engineering shipped as working systems.",
+      "name": "Abra-ca-dabra: Your operation, turned into software",
+      "headline": "Your operation, turned into software.",
+      "description": "Bespoke software built around your handoffs, exceptions, and approvals, plus answer-engine optimization grounded in measured proof.",
       "isPartOf": { "@id": "https://abra-ca-dabra.app/#website" },
       "about": { "@id": "https://abra-ca-dabra.app/#org" },
       "author": { "@id": "https://abra-ca-dabra.app/#org" },
@@ -235,31 +235,57 @@
 
 <style>
   :root {
-    --sc-canvas: #0B0A08;
-    --sc-surface: #161310;
-    --sc-ink: #F3EEE4;
-    --sc-ink-soft: #A89F93;
-    --sc-accent: #E23B2F;
-    --sc-signal: #FF4D2E;
-    --sc-phosphor: #B9FFC9;
+    --sc-canvas: #070706;
+    --sc-surface: #11110F;
+    --sc-ink: #F5F0E8;
+    --sc-ink-soft: #AAA49A;
+    --sc-accent: #FF4B24;
+    --sc-signal: #FF6B3D;
+    --sc-optic: #8DEBF2;
+    --sc-phosphor: #C6FFB3;
     --sc-glass: color-mix(in oklab, var(--sc-surface) 72%, transparent);
     --sc-accent-ink: #F3EEE4;
-    --sc-font-display: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
+    --sc-font-display: "Tektur", "IBM Plex Sans", system-ui, sans-serif;
     --sc-font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --page-progress: 0;
   }
   body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background-image:
+      radial-gradient(circle at 72% 12%, color-mix(in oklab, var(--sc-optic) 8%, transparent), transparent 28rem),
+      radial-gradient(circle at 18% 48%, color-mix(in oklab, var(--sc-signal) 8%, transparent), transparent 34rem),
       linear-gradient(color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px),
       linear-gradient(90deg, color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px);
-    background-size: 4rem 4rem;
-    mask-image: linear-gradient(to bottom, black, transparent 82%);
+    background-size: auto, auto, 4rem 4rem, 4rem 4rem;
+    mask-image: linear-gradient(to bottom, black, black 76%, transparent);
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.14;
+    background: repeating-linear-gradient(to bottom, transparent 0 3px, color-mix(in oklab, var(--sc-ink) 7%, transparent) 4px);
+    mix-blend-mode: soft-light;
   }
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   a { color: var(--sc-ink); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
   a:hover { color: var(--sc-accent); }
   a:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 3px; }
+
+  .signal-rail {
+    position: fixed; z-index: 50; left: max(0.55rem, env(safe-area-inset-left)); top: 5rem; bottom: 4rem;
+    width: 2px; background: color-mix(in oklab, var(--sc-ink) 10%, transparent); pointer-events: none;
+  }
+  .signal-rail span {
+    display: block; width: 100%; height: calc(var(--page-progress) * 100%);
+    background: linear-gradient(to bottom, var(--sc-optic), var(--sc-signal));
+    box-shadow: 0 0 1rem color-mix(in oklab, var(--sc-signal) 75%, transparent);
+    transition: height 80ms linear;
+  }
+  .signal-rail span::after {
+    content: ""; position: absolute; left: 50%; top: calc(var(--page-progress) * 100%);
+    width: 9px; height: 9px; border: 1px solid var(--sc-signal); background: var(--sc-canvas);
+    transform: translate(-50%, -50%) rotate(45deg);
+    box-shadow: 0 0 1.5rem var(--sc-signal);
+  }
 
   /* object index */
   .index {
@@ -313,59 +339,70 @@
   .cta .cta--primary { background: var(--sc-accent); border-color: var(--sc-accent); color: var(--sc-accent-ink); }
   .cta .cta--primary:hover { background: color-mix(in oklab, var(--sc-accent) 86%, var(--sc-ink)); border-color: transparent; }
 
-  /* the hero: copy and the first object in the room */
+  /* the hero behaves like a compiler, not a brochure */
   .hero {
     position: relative; height: 100%;
-    display: grid; grid-template-columns: minmax(20rem, 0.86fr) minmax(32rem, 1.14fr);
-    align-items: center; gap: clamp(2rem, 4vw, 4rem);
-    padding: 5.5rem var(--sc-gutter) 5rem;
+    display: grid; grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch; gap: clamp(1.4rem, 3vh, 2.5rem);
+    padding: 5.8rem var(--sc-gutter) 4.6rem;
     max-width: var(--sc-maxw); margin-inline: auto;
   }
-  .hero__copy { max-width: 40rem; }
-  .hero__copy > * + * { margin-top: var(--sc-4); }
+  .hero__copy {
+    display: grid; grid-template-columns: minmax(8rem, 0.34fr) minmax(24rem, 1.2fr) minmax(18rem, 0.7fr);
+    gap: clamp(1.25rem, 3vw, 3.5rem); align-items: end; max-width: none;
+  }
   .hero__eyebrow { color: var(--sc-accent); }
   .hero__copy h1 {
     font-family: var(--sc-font-display); font-weight: 600;
-    font-size: clamp(2.2rem, 1.4rem + 3vw, 4.1rem); line-height: 1.04;
-    letter-spacing: var(--sc-track-tight); margin: 0; text-wrap: balance;
+    font-size: clamp(3rem, 1.2rem + 4.8vw, 6.8rem); line-height: 0.9;
+    letter-spacing: -0.055em; margin: 0; text-wrap: balance;
   }
-  .hero__copy .sc-lede { max-width: 36rem; }
-  .hero__copy .cta { margin-top: var(--sc-6); }
+  .hero__support { align-self: end; }
+  .hero__support .sc-lede { max-width: 32rem; margin: 0; }
+  .hero__copy .cta { margin-top: var(--sc-5); }
   .hero__tag { display: none; }
 
-  /* signature mechanism: plain intent resolves into structure, then product */
+  /* signature mechanism: plain intent compiles into structure, workflow, then product */
   .intent-demo {
-    position: relative; min-height: min(70vh, 43rem); overflow: hidden;
-    border: 1px solid var(--sc-hairline-strong);
+    position: relative; min-height: min(58vh, 40rem); overflow: hidden;
+    border: 1px solid color-mix(in oklab, var(--sc-ink) 26%, transparent);
+    clip-path: polygon(0 0, calc(100% - 1.15rem) 0, 100% 1.15rem, 100% 100%, 1.15rem 100%, 0 calc(100% - 1.15rem));
     background:
-      linear-gradient(135deg, color-mix(in oklab, var(--sc-surface) 92%, transparent), color-mix(in oklab, var(--sc-canvas) 82%, transparent)),
+      linear-gradient(115deg, color-mix(in oklab, var(--sc-surface) 96%, transparent), color-mix(in oklab, var(--sc-optic) 5%, var(--sc-canvas))),
       var(--sc-canvas);
-    box-shadow: var(--sc-e2), inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 10%, transparent);
+    box-shadow: 0 2.5rem 8rem color-mix(in oklab, black 60%, transparent), inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 13%, transparent);
     isolation: isolate;
+  }
+  .intent-demo::after {
+    content: ""; position: absolute; z-index: 2; inset: -30% auto -30% 54%; width: 1px; pointer-events: none;
+    background: linear-gradient(transparent, var(--sc-optic), var(--sc-signal), transparent);
+    box-shadow: 0 0 2.5rem color-mix(in oklab, var(--sc-optic) 65%, transparent);
+    transform: rotate(17deg); opacity: 0.48;
   }
   .intent-demo::before {
     content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
     background:
-      linear-gradient(color-mix(in oklab, var(--sc-ink) 6%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklab, var(--sc-ink) 6%, transparent) 1px, transparent 1px);
-    background-size: 2.5rem 2.5rem;
-    mask-image: radial-gradient(circle at 50% 45%, black, transparent 76%);
+      linear-gradient(color-mix(in oklab, var(--sc-optic) 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--sc-optic) 7%, transparent) 1px, transparent 1px);
+    background-size: 2rem 2rem;
+    mask-image: linear-gradient(120deg, transparent 5%, black 35%, black 72%, transparent 96%);
   }
   .intent-demo__chrome {
     min-height: 3rem; padding: 0 var(--sc-4); display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
-    border-bottom: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 72%, transparent);
+    border-bottom: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 82%, transparent);
   }
   .intent-demo__chrome p { margin: 0; }
   .intent-demo__status { color: var(--sc-phosphor); }
-  .intent-demo__viewport { position: relative; min-height: calc(min(70vh, 43rem) - 7.5rem); }
+  .intent-demo__viewport { position: relative; min-height: calc(min(58vh, 40rem) - 7.5rem); }
   .intent-demo__state {
     position: absolute; inset: 0; padding: clamp(1.25rem, 3vw, 2.2rem);
     opacity: 0; visibility: hidden; transform: translate3d(0, 1rem, 0);
     transition: opacity 420ms var(--sc-ease-out), transform 520ms var(--sc-ease-out), visibility 0s linear 520ms;
   }
-  .intent-demo[data-active-state="say"] [data-state-panel="say"],
-  .intent-demo[data-active-state="structure"] [data-state-panel="structure"],
-  .intent-demo[data-active-state="run"] [data-state-panel="run"] {
+  .intent-demo[data-active-state="describe"] [data-compiler-panel="describe"],
+  .intent-demo[data-active-state="parse"] [data-compiler-panel="parse"],
+  .intent-demo[data-active-state="connect"] [data-compiler-panel="connect"],
+  .intent-demo[data-active-state="run"] [data-compiler-panel="run"] {
     opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
   }
   .intent-demo__phase { color: var(--sc-accent); margin: 0 0 var(--sc-4); }
@@ -377,6 +414,21 @@
     color: var(--sc-ink); background: transparent; border-bottom: 2px solid var(--sc-signal);
   }
   .intent-demo__reading { margin: var(--sc-6) 0 0; max-width: 48ch; color: var(--sc-ink-soft); }
+  .token-field {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--sc-2);
+    align-items: stretch; min-height: 15rem; perspective: 900px;
+  }
+  .token {
+    position: relative; padding: var(--sc-3); border: 1px solid var(--sc-hairline-strong);
+    background: color-mix(in oklab, var(--sc-surface) 80%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 8%, transparent);
+    transform: translateY(calc(var(--token-index) * 0.3rem)) rotateX(calc((var(--token-index) - 3) * -1deg));
+  }
+  .token::before {
+    content: attr(data-kind); display: block; margin-bottom: var(--sc-5);
+    font-family: var(--sc-font-mono); font-size: 0.62rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .token strong { font-family: var(--sc-font-display); font-size: clamp(0.78rem, 1vw, 1rem); line-height: 1.15; }
   .blueprint { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-3); }
   .blueprint li {
     min-height: 7rem; padding: var(--sc-3); position: relative;
@@ -389,6 +441,23 @@
   .blueprint span { display: block; color: var(--sc-ink-soft); font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; }
   .blueprint strong { display: block; margin-top: var(--sc-2); font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.2; }
   .blueprint .blueprint__gate { border-color: color-mix(in oklab, var(--sc-signal) 60%, var(--sc-hairline)); }
+  .workflow-map {
+    position: relative; min-height: 17rem; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: var(--sc-6);
+  }
+  .workflow-map::before {
+    content: ""; position: absolute; left: 8%; right: 8%; top: 50%; height: 2px;
+    background: linear-gradient(90deg, var(--sc-optic), var(--sc-signal));
+    box-shadow: 0 0 1.8rem color-mix(in oklab, var(--sc-signal) 65%, transparent);
+  }
+  .workflow-node {
+    position: relative; z-index: 1; min-height: 8rem; display: grid; align-content: space-between;
+    padding: var(--sc-3); border: 1px solid var(--sc-hairline-strong);
+    background: color-mix(in oklab, var(--sc-canvas) 92%, transparent);
+  }
+  .workflow-node small { font-family: var(--sc-font-mono); color: var(--sc-optic); text-transform: uppercase; letter-spacing: var(--sc-track-wide); }
+  .workflow-node strong { font-family: var(--sc-font-display); font-size: var(--sc-t-lg); line-height: 1.1; }
+  .workflow-node--gate { border-color: var(--sc-signal); transform: translateY(-2rem); }
+  .workflow-node--exception { border-style: dashed; transform: translateY(2rem); }
   .intent-demo__product { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100%; padding: 0; }
   .intent-demo__product figure { margin: 0; overflow: hidden; min-height: 0; }
   .intent-demo__product img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
@@ -464,6 +533,105 @@
   .proofbar strong { font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-base); color: var(--sc-ink); }
   .proofbar span { color: var(--sc-ink-soft); }
   .proofbar a { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: lowercase; margin-top: var(--sc-1); }
+
+  /* answer engine: a buyer question becomes a verifiable answer surface */
+  .aeo-shell {
+    height: 100%; max-width: var(--sc-maxw); margin-inline: auto; padding: 5.8rem var(--sc-gutter) 4.6rem;
+    display: grid; grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 6rem); align-items: stretch;
+  }
+  .aeo-copy { align-self: center; max-width: 31rem; }
+  .aeo-copy h2 {
+    margin: var(--sc-3) 0 var(--sc-4); font-family: var(--sc-font-display); font-size: clamp(2.5rem, 5vw, 5.8rem);
+    line-height: 0.92; letter-spacing: -0.05em; text-wrap: balance;
+  }
+  .aeo-copy .sc-label { color: var(--sc-optic); }
+  .aeo-copy .cta { margin-top: var(--sc-5); }
+  .aeo-copy .cta a { padding-inline: 1rem; }
+  .aeo-engine {
+    position: relative; min-height: 35rem; overflow: hidden; isolation: isolate;
+    border: 1px solid color-mix(in oklab, var(--sc-optic) 35%, var(--sc-hairline));
+    clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
+    background:
+      radial-gradient(circle at 70% 20%, color-mix(in oklab, var(--sc-optic) 11%, transparent), transparent 40%),
+      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
+  }
+  .aeo-engine::before {
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    background-image:
+      linear-gradient(color-mix(in oklab, var(--sc-optic) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--sc-optic) 6%, transparent) 1px, transparent 1px);
+    background-size: 2.25rem 2.25rem;
+  }
+  .aeo-engine__chrome {
+    min-height: 3rem; display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
+    padding: 0 var(--sc-4); border-bottom: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
+  }
+  .aeo-engine__chrome p { margin: 0; }
+  .aeo-engine__status { color: var(--sc-optic); }
+  .aeo-engine__viewport { position: relative; min-height: 27.5rem; }
+  .aeo-panel {
+    position: absolute; inset: 0; padding: clamp(1.25rem, 3vw, 2.5rem);
+    opacity: 0; visibility: hidden; transform: translate3d(1.25rem, 0, 0) scale(0.985);
+    transition: opacity 420ms var(--sc-ease-out), transform 560ms var(--sc-ease-out), visibility 0s linear 560ms;
+  }
+  .aeo-engine[data-active-state="question"] [data-aeo-panel="question"],
+  .aeo-engine[data-active-state="answer"] [data-aeo-panel="answer"],
+  .aeo-engine[data-active-state="verify"] [data-aeo-panel="verify"],
+  .aeo-engine[data-active-state="measure"] [data-aeo-panel="measure"] {
+    opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
+  }
+  .aeo-prompt {
+    display: grid; min-height: 20rem; align-content: center; max-width: 40rem; margin-inline: auto;
+  }
+  .aeo-prompt blockquote {
+    margin: 0; font-family: var(--sc-font-display); font-size: clamp(1.8rem, 4vw, 4.4rem);
+    line-height: 1.02; letter-spacing: -0.04em; text-wrap: balance;
+  }
+  .surface-list { list-style: none; padding: 0; margin: var(--sc-6) 0 0; display: flex; flex-wrap: wrap; gap: var(--sc-2); }
+  .surface-list li {
+    padding: 0.6rem 0.8rem; border: 1px solid var(--sc-hairline-strong);
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft);
+  }
+  .answer-stack { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: var(--sc-3); }
+  .answer-block, .answer-asset {
+    padding: var(--sc-4); border: 1px solid var(--sc-hairline-strong); background: color-mix(in oklab, var(--sc-canvas) 82%, transparent);
+  }
+  .answer-block { grid-row: span 3; }
+  .answer-block p:last-child { font-family: var(--sc-font-display); font-size: clamp(1.35rem, 2.1vw, 2.2rem); line-height: 1.18; }
+  .answer-asset strong { display: block; margin-top: var(--sc-2); font-family: var(--sc-font-display); font-size: var(--sc-t-base); }
+  .answer-path {
+    position: relative; min-height: 20rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-5); align-items: center;
+  }
+  .answer-path::before {
+    content: ""; position: absolute; left: 12%; right: 12%; top: 50%; height: 1px;
+    background: linear-gradient(90deg, var(--sc-signal), var(--sc-optic));
+  }
+  .answer-path article {
+    position: relative; z-index: 1; min-height: 9rem; padding: var(--sc-4);
+    border: 1px solid var(--sc-hairline-strong); background: var(--sc-canvas);
+  }
+  .answer-path article:nth-child(2) { transform: translateY(-2.5rem); }
+  .answer-path article:nth-child(3) { transform: translateY(1.5rem); }
+  .answer-path strong { display: block; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); }
+  .answer-path p { margin: var(--sc-2) 0 0; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); }
+  .aeo-proof {
+    min-height: 20rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-5); align-content: center;
+  }
+  .aeo-proof__metric { border-top: 1px solid var(--sc-hairline-strong); padding-top: var(--sc-3); }
+  .aeo-proof__metric strong {
+    display: block; font-family: var(--sc-font-display); font-size: clamp(2.7rem, 5vw, 5.5rem); line-height: 0.95; letter-spacing: -0.05em;
+  }
+  .aeo-proof__metric span { display: block; margin-top: var(--sc-2); color: var(--sc-ink-soft); }
+  .aeo-proof__source { grid-column: 1 / -1; margin: 0; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); }
+  .aeo-controls {
+    min-height: 4.5rem; display: flex; align-items: center; gap: var(--sc-2); padding: var(--sc-3) var(--sc-4);
+    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 86%, transparent);
+  }
+  .aeo-controls button {
+    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; background: transparent; color: var(--sc-ink-soft); cursor: pointer;
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide);
+  }
+  .aeo-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
 
   /* spread */
   .spread { display: grid; grid-template-columns: 34ch minmax(0, 1fr); gap: var(--sc-7); align-items: center; min-height: 78vh; }
@@ -571,9 +739,10 @@
     #i { height: auto !important; }
     #i > .sc-stage { position: relative; top: auto; height: auto; }
     .hero {
-      height: auto; grid-template-columns: 1fr; align-content: start; gap: var(--sc-5);
+      height: auto; grid-template-rows: auto auto; align-content: start; gap: var(--sc-5);
       padding: 5rem var(--sc-gutter) 4.6rem; overflow: visible;
     }
+    .hero__copy { grid-template-columns: 1fr; gap: var(--sc-4); }
     .hero__copy h1 { font-size: clamp(2rem, 1.2rem + 4.6vw, 2.8rem); }
     .hero__copy .sc-lede { font-size: var(--sc-t-base); }
     .hero__copy .cta { margin-top: var(--sc-5); }
@@ -584,6 +753,13 @@
     .intent-demo__state { padding: var(--sc-4); }
     .intent-demo__quote { font-size: clamp(1.25rem, 6vw, 1.65rem); }
     .intent-demo__reading { margin-top: var(--sc-4); font-size: var(--sc-t-sm); }
+    .token-field { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 0; }
+    .token { transform: none; min-height: 5rem; }
+    .token:last-child { grid-column: 1 / -1; }
+    .workflow-map { min-height: 22rem; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-3); }
+    .workflow-map::before { display: none; }
+    .workflow-node { min-height: 6rem; }
+    .workflow-node--gate, .workflow-node--exception { transform: none; }
     .blueprint { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-2); }
     .blueprint li { min-height: 5.5rem; padding: var(--sc-2); }
     .blueprint li::after { display: none; }
@@ -593,6 +769,26 @@
     .intent-demo__controls button { white-space: nowrap; padding-inline: var(--sc-2); }
     .intent-demo__skip { font-size: 0 !important; min-width: 44px; }
     .intent-demo__skip::after { content: "Run"; font-size: var(--sc-t-xs); }
+    #aeo { height: auto !important; }
+    #aeo > .sc-stage { position: relative; top: auto; height: auto; }
+    .aeo-shell { height: auto; grid-template-columns: 1fr; padding: 4.6rem var(--sc-gutter); gap: var(--sc-5); }
+    .aeo-copy h2 { font-size: clamp(2.3rem, 12vw, 4rem); }
+    .aeo-engine { min-height: 33rem; }
+    .aeo-engine__viewport { min-height: 25.5rem; }
+    .aeo-panel { padding: var(--sc-4); }
+    .aeo-prompt { min-height: 18rem; }
+    .aeo-prompt blockquote { font-size: clamp(1.5rem, 8vw, 2.5rem); }
+    .answer-stack { grid-template-columns: 1fr; max-height: 23rem; overflow: auto; }
+    .answer-block { grid-row: auto; }
+    .answer-block p:last-child { font-size: var(--sc-t-base); }
+    .answer-path { min-height: 22rem; grid-template-columns: 1fr; gap: var(--sc-2); align-content: center; }
+    .answer-path::before { left: 1.5rem; right: auto; top: 12%; bottom: 12%; width: 1px; height: auto; }
+    .answer-path article { min-height: 5rem; margin-left: var(--sc-5); padding: var(--sc-3); }
+    .answer-path article:nth-child(2), .answer-path article:nth-child(3) { transform: none; }
+    .aeo-proof { min-height: 22rem; gap: var(--sc-3); }
+    .aeo-proof__metric strong { font-size: clamp(2.2rem, 12vw, 3.7rem); }
+    .aeo-controls { overflow-x: auto; padding-inline: var(--sc-2); }
+    .aeo-controls button { white-space: nowrap; padding-inline: var(--sc-2); }
     .receipt { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-5); }
     .receipt .sc-display--md { font-size: var(--sc-t-xl); }
     .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-4); }
@@ -653,20 +849,31 @@
     }
     .intent-demo__product { min-height: 24rem; }
     .intent-demo__controls { display: none; }
+    .aeo-engine { min-height: 0; clip-path: none; }
+    .aeo-engine__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
+    .aeo-panel {
+      position: relative; inset: auto; padding: var(--sc-4); opacity: 1; visibility: visible; transform: none;
+      border: 1px solid var(--sc-hairline); transition: none;
+    }
+    .aeo-controls { display: none; }
+    .answer-path article:nth-child(2), .answer-path article:nth-child(3) { transform: none; }
+    .signal-rail span { transition: none; }
   }
 </style>
 </head>
 <body>
 
-<nav class="index" aria-label="Object index">
+<div class="signal-rail" aria-hidden="true"><span></span></div>
+
+<nav class="index" aria-label="Page chapters">
   <a class="index__home" href="#top">Abracadabra AI</a>
-  <a href="#i" data-index="i" aria-label="I — Promise"><span aria-hidden="true">I</span><span class="index__label">Promise</span></a>
-  <a href="#ii" data-index="ii" aria-label="II — Proof"><span aria-hidden="true">II</span><span class="index__label">Proof</span></a>
-  <a href="#iii" data-index="iii" aria-label="III — Systems"><span aria-hidden="true">III</span><span class="index__label">Systems</span></a>
-  <a href="#film" data-index="iv" aria-label="IV — Film"><span aria-hidden="true">IV</span><span class="index__label">Film</span></a>
-  <a href="#v" data-index="v" aria-label="V — Process"><span aria-hidden="true">V</span><span class="index__label">Process</span></a>
+  <a href="#i" data-index="i" aria-label="I — Compile"><span aria-hidden="true">I</span><span class="index__label">Compile</span></a>
+  <a href="#aeo" data-index="aeo" aria-label="II — Answer"><span aria-hidden="true">II</span><span class="index__label">Answer</span></a>
+  <a href="#iii" data-index="iii" aria-label="III — Proof"><span aria-hidden="true">III</span><span class="index__label">Proof</span></a>
+  <a href="#film" data-index="iv" aria-label="IV — Watch"><span aria-hidden="true">IV</span><span class="index__label">Watch</span></a>
+  <a href="#v" data-index="v" aria-label="V — Build"><span aria-hidden="true">V</span><span class="index__label">Build</span></a>
   <a href="#brief" data-index="brief" aria-label="ST — Start"><span aria-hidden="true">ST</span><span class="index__label">Start</span></a>
-  <p class="index__current" aria-live="polite">I — Promise</p>
+  <p class="index__current" aria-live="polite">I — Compile</p>
 </nav>
 
 <p class="utterance" data-utterance aria-hidden="true">
@@ -675,58 +882,72 @@
 
 <main id="top">
 
-  <!-- Act 1: the argument, with the first object already in the room -->
-  <section id="i" data-sc-act="pin" data-sc-span="1.4" data-specimen="i" aria-labelledby="hero-title">
+  <!-- Act 1: the operation compiler -->
+  <section id="i" data-sc-act="pin" data-sc-span="2.35" data-specimen="i" aria-labelledby="hero-title">
     <div data-sc-stage>
       <div class="hero">
         <div class="hero__copy" data-sc-cue="0 0.94 0">
-          <p class="sc-label hero__eyebrow">Where thought becomes a working system</p>
-          <h1 id="hero-title">Software built around how you already run the business.</h1>
-          <p class="sc-lede">We learn the steps, the exceptions, and the words your people already use, however big or unusual the operation is. Then we ship the system, the film, and the script your team runs on Monday. From zero to scale, at the speed of thought.</p>
-          <p class="cta">
-            <a class="cta--primary" href="mailto:dev@pirx.ca?subject=How%20we%20work">Describe how you work</a>
-            <a href="#film">Watch the work</a>
-          </p>
-          <p class="hero__tag">Behind this page: Specimen I, Showdesk, live at showdesk-app.com</p>
+          <p class="sc-label hero__eyebrow">Bespoke operational software</p>
+          <h1 id="hero-title">Your operation, turned into software.</h1>
+          <div class="hero__support">
+            <p class="sc-lede">Show us the handoffs, exceptions, and approvals. We build the system around them—not the other way around.</p>
+            <p class="cta">
+              <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Show%20you%20how%20it%20works">Show us how it works</a>
+              <a href="#iii">See what we've built</a>
+            </p>
+            <p class="hero__tag">The compiler below resolves into Showdesk, a live product.</p>
+          </div>
         </div>
-        <div class="intent-demo" data-active-state="say" data-sc-cue="0 0.94 0" aria-label="How an operator's words become a working system">
+        <div class="intent-demo compiler" data-active-state="describe" data-sc-cue="0 0.94 0" aria-label="The operation compiler: how an operator's words become a working system">
           <div class="intent-demo__chrome" aria-hidden="true">
-            <p class="sc-label">Intent signal / Showdesk</p>
-            <p class="sc-label intent-demo__status" data-intent-status>Listening</p>
+            <p class="sc-label">Operation compiler / Showdesk</p>
+            <p class="sc-label intent-demo__status" data-compiler-status>Listening</p>
           </div>
           <div class="intent-demo__viewport">
-            <section class="intent-demo__state" data-state-panel="say" aria-labelledby="intent-say-title">
-              <p class="sc-label intent-demo__phase" id="intent-say-title">01 / Say it</p>
-              <p class="intent-demo__quote">“The <mark>secretary</mark> <mark>reviews</mark> the judge's <mark>recording</mark>, fixes the <mark>draft</mark>, and releases the <mark>certificate</mark> <mark>before the team leaves</mark>.”</p>
-              <p class="intent-demo__reading">Ordinary language already contains the actors, actions, gates, and timing the software must carry.</p>
+            <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
+              <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Describe</p>
+              <p class="intent-demo__quote">“A <mark>judge records a critique</mark>. The <mark>secretary checks it</mark>. Nothing is released until the <mark>result is approved</mark>.”</p>
+              <p class="intent-demo__reading">Start with the operation as your team says it. No feature list. No software vocabulary required.</p>
             </section>
-            <section class="intent-demo__state" data-state-panel="structure" aria-labelledby="intent-structure-title">
-              <p class="sc-label intent-demo__phase" id="intent-structure-title">02 / Structure it</p>
-              <ol class="blueprint" aria-label="Workflow extracted from the operator statement">
-                <li><span>Actor</span><strong>Secretary</strong></li>
-                <li><span>Input</span><strong>Judge's recording</strong></li>
-                <li><span>Action</span><strong>Review draft</strong></li>
-                <li class="blueprint__gate"><span>Approval gate</span><strong>Fix or release</strong></li>
-                <li><span>Output</span><strong>Certificate</strong></li>
-                <li><span>Timing</span><strong>Before departure</strong></li>
-              </ol>
-              <p class="intent-demo__reading">The signal connects what must happen, who owns it, and where a human decision stays in the loop.</p>
+            <section class="intent-demo__state" data-compiler-panel="parse" aria-labelledby="compiler-parse-title">
+              <p class="sc-label intent-demo__phase" id="compiler-parse-title">02 / Parse</p>
+              <div class="token-field" aria-label="Operational elements extracted from the statement">
+                <div class="token" data-kind="Actor" style="--token-index:0"><strong>Judge</strong></div>
+                <div class="token" data-kind="Input" style="--token-index:1"><strong>Recording</strong></div>
+                <div class="token" data-kind="Handoff" style="--token-index:2"><strong>Secretary</strong></div>
+                <div class="token" data-kind="Action" style="--token-index:3"><strong>Check draft</strong></div>
+                <div class="token" data-kind="Approval" style="--token-index:4"><strong>Result accepted</strong></div>
+                <div class="token" data-kind="Exception" style="--token-index:5"><strong>Return for fix</strong></div>
+                <div class="token" data-kind="Output" style="--token-index:6"><strong>Release record</strong></div>
+              </div>
+              <p class="intent-demo__reading">The words already contain the people, data, gates, and exceptions the system must preserve.</p>
             </section>
-            <section class="intent-demo__state intent-demo__product" data-state-panel="run" aria-labelledby="intent-run-title">
+            <section class="intent-demo__state" data-compiler-panel="connect" aria-labelledby="compiler-connect-title">
+              <p class="sc-label intent-demo__phase" id="compiler-connect-title">03 / Connect</p>
+              <div class="workflow-map" aria-label="Connected Showdesk workflow">
+                <div class="workflow-node"><small>Capture</small><strong>Judge records</strong></div>
+                <div class="workflow-node"><small>Handoff</small><strong>Draft arrives</strong></div>
+                <div class="workflow-node workflow-node--gate"><small>Human gate</small><strong>Approve result</strong></div>
+                <div class="workflow-node workflow-node--exception"><small>Exception</small><strong>Return or release</strong></div>
+              </div>
+              <p class="intent-demo__reading">Ownership stays visible. Human judgment stays where it matters. The software carries everything between.</p>
+            </section>
+            <section class="intent-demo__state intent-demo__product" data-compiler-panel="run" aria-labelledby="compiler-run-title">
               <figure>
                 <img src="assets/showdesk-home.webp" width="1600" height="1000" fetchpriority="high" decoding="async" alt="Showdesk home page: a live-event operations app for horse and livestock shows, showing a critique certificate card and the ringside entry flow.">
               </figure>
               <div class="intent-demo__proof">
-                <p><span class="sc-label" id="intent-run-title">03 / Run it</span><strong>Showdesk carries the operation.</strong></p>
+                <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong>The operation becomes the interface.</strong></p>
                 <p><a href="https://www.showdesk-app.com/">Open the live product</a></p>
               </div>
             </section>
           </div>
-          <div class="intent-demo__controls" aria-label="Intent demonstration states">
-            <button type="button" data-intent-state="say" aria-pressed="true">Say it</button>
-            <button type="button" data-intent-state="structure" aria-pressed="false">Structure it</button>
-            <button type="button" data-intent-state="run" aria-pressed="false">Run it</button>
-            <button class="intent-demo__skip" type="button" data-intent-skip>Skip to working product</button>
+          <div class="intent-demo__controls" aria-label="Operation compiler states">
+            <button type="button" data-compiler-state="describe" aria-pressed="true">Describe</button>
+            <button type="button" data-compiler-state="parse" aria-pressed="false">Parse</button>
+            <button type="button" data-compiler-state="connect" aria-pressed="false">Connect</button>
+            <button type="button" data-compiler-state="run" aria-pressed="false">Run it</button>
+            <button class="intent-demo__skip" type="button" data-compiler-skip>Skip to working product</button>
           </div>
         </div>
       </div>
@@ -738,15 +959,14 @@
     <div class="sc-wrap">
       <div class="situation">
         <div data-sc-in>
-          <h2 id="situation-title" class="sc-display sc-display--md">The business already has a way of working.</h2>
-          <p class="sc-body">Most software arrives with its own. People learn the tool, route around it, and keep the real process in their heads, their inboxes, and a spreadsheet nobody owns. The cost is the distance between the sale you know how to make and the screen you were given, and that distance doesn't close on its own, no matter how complicated the workaround gets.</p>
-          <p class="sc-body">We close it. The steps stay yours. The software is built to carry them, at whatever scale or complexity they actually run at.</p>
-          <p class="sc-body">Want a read on whether AI can do real work here? <a href="https://check.abra-ca-dabra.app/check">Take the Readiness Check</a>.</p>
+          <h2 id="situation-title" class="sc-display sc-display--md">Most software makes your operation adapt.</h2>
+          <p class="sc-body">The real process survives in inboxes, spreadsheets, and the exceptions experienced people remember.</p>
+          <p class="sc-body">We build around that reality. Your steps stay intact. The system carries them.</p>
         </div>
-        <aside class="name" data-sc-in aria-label="The name">
-          <p class="name__word">Abracadabra, traced back far enough, is Aramaic. Roughly <em>avra kadavra</em>: “I will create as I speak.”</p>
-          <p class="sc-body">Not a spell. A description of the actual mechanism: you say what you mean, and something real comes into being. That's the business, minus the theatrics. Say the process, the exceptions, the words your team already uses. We turn that description into a running system.</p>
-          <p class="sc-body">The “speech” is the brief: the intent, the context, the constraints nobody wrote down. The “creation” is production software, not a mockup. Everything after the name is systems, intent, context, and prompt engineering.</p>
+        <aside class="name" data-sc-in aria-label="The operating rule">
+          <p class="sc-label">The operating rule</p>
+          <p class="name__word">The software follows the operation.</p>
+          <p class="sc-body">AI removes a task. People keep the relationship. Human approvals remain visible instead of disappearing into automation.</p>
         </aside>
       </div>
       <ul class="proofbar" data-sc-in data-sc-stagger="70" aria-label="Four live systems">
@@ -758,33 +978,92 @@
     </div>
   </section>
 
-  <!-- Act 3: the receipt -->
-  <section id="receipt" data-sc-act="pin" data-sc-span="1.6" data-sc-drift="#0E0C0A" aria-labelledby="receipt-title">
+  <!-- Act 3: answer engine optimization as an observable system -->
+  <section id="aeo" data-sc-act="pin" data-sc-span="2.35" data-sc-drift="#071012" data-specimen="ii" aria-labelledby="aeo-title">
     <div data-sc-stage>
-      <div class="receipt">
-        <h2 id="receipt-title" class="sc-display sc-display--md" data-sc-cue="0 1 0 0">“From zero to scale” isn't a slogan. Here's the receipt.</h2>
-        <dl class="figures sc-nums">
-          <div data-sc-cue="0.06 1 0.3 0"><dt>Search impressions, twelve weeks</dt><dd>201K</dd></div>
-          <div data-sc-cue="0.16 1 0.3 0"><dt>Impressions on Google's Generative AI surface</dt><dd>21.8K</dd></div>
-          <div data-sc-cue="0.26 1 0.3 0"><dt>Clicks, twelve weeks</dt><dd>1.1K</dd></div>
-          <div data-sc-cue="0.36 1 0.3 0"><dt>Daily AI-surface peak by September</dt><dd>1,600<small>+</small></dd></div>
-        </dl>
-        <p class="sc-body" data-sc-cue="0.44 1 0.3 0">pirx.ca launched with no search history and no answer-engine presence. In the twelve weeks before this was written: 201K search impressions, 1.1K clicks, and 21.8K of those impressions came from Google's Generative AI and AI Overviews surface alone, climbing from almost nothing in June to a daily peak north of 1,600 by September. One post carried over 5,400 of those AI-surface impressions on its own. That's AEO, GEO, and SEO run as one discipline instead of three separate vendors: a brand-new domain answering real questions inside the AI layer of search, inside a single season.</p>
-        <p class="receipt__source" data-sc-cue="0.5 1 0.3 0">Source: Google Search Console, pirx.ca, pulled 2026-09-23</p>
+      <div class="aeo-shell">
+        <div class="aeo-copy" data-sc-cue="0 0.96 0">
+          <p class="sc-label">Answer Engine Optimization</p>
+          <h2 id="aeo-title">Be the answer AI can verify.</h2>
+          <p class="sc-body">We turn buyer questions into direct answers, clear entities, structured data, and evidence that answer engines can understand. Then we measure what changed.</p>
+          <p class="sc-body"><strong>AEO, GEO, and SEO. One discipline.</strong></p>
+          <p class="cta">
+            <a class="cta--primary" href="https://check.abra-ca-dabra.app/check">Run the Readiness Check</a>
+            <a href="https://schema-two.vercel.app/">Open Schema</a>
+          </p>
+        </div>
+        <div class="aeo-engine" data-active-state="question" aria-label="How a buyer question becomes a verifiable answer">
+          <div class="aeo-engine__chrome" aria-hidden="true">
+            <p class="sc-label">Answer surface / live model</p>
+            <p class="sc-label aeo-engine__status" data-aeo-status>Question mapped</p>
+          </div>
+          <div class="aeo-engine__viewport">
+            <section class="aeo-panel" data-aeo-panel="question" aria-labelledby="aeo-question-title">
+              <div class="aeo-prompt">
+                <p class="sc-label" id="aeo-question-title">01 / Map the question</p>
+                <blockquote>“Which system can run our live event from ringside to final report?”</blockquote>
+                <ul class="surface-list" aria-label="Answer surfaces buyers use">
+                  <li>AI Overviews</li>
+                  <li>ChatGPT</li>
+                  <li>Perplexity</li>
+                  <li>Claude</li>
+                  <li>Search</li>
+                </ul>
+              </div>
+            </section>
+            <section class="aeo-panel" data-aeo-panel="answer" aria-labelledby="aeo-answer-title">
+              <p class="sc-label" id="aeo-answer-title">02 / Build the answer</p>
+              <div class="answer-stack">
+                <article class="answer-block">
+                  <p class="sc-label">Direct answer</p>
+                  <p>Showdesk connects ringside entry, judge recordings, secretary review, placements, and reports in one live-event workflow.</p>
+                </article>
+                <article class="answer-asset"><span class="sc-label">Entity</span><strong>Showdesk / business application</strong></article>
+                <article class="answer-asset"><span class="sc-label">Evidence</span><strong>Live product + workflow film</strong></article>
+                <article class="answer-asset"><span class="sc-label">Supporting detail</span><strong>Roles, actions, outputs</strong></article>
+              </div>
+            </section>
+            <section class="aeo-panel" data-aeo-panel="verify" aria-labelledby="aeo-verify-title">
+              <p class="sc-label" id="aeo-verify-title">03 / Make it verifiable</p>
+              <div class="answer-path">
+                <article><strong>Answer</strong><p>Clear response to one buyer question.</p></article>
+                <article><strong>Structure</strong><p>Page, entity, schema, and relationships agree.</p></article>
+                <article><strong>Evidence</strong><p>Product, source, and dated proof sit beside the claim.</p></article>
+              </div>
+              <p class="intent-demo__reading">No guarantee of placement. No invented visibility score. Measured scan output stays separate from generated recommendations.</p>
+            </section>
+            <section class="aeo-panel" data-aeo-panel="measure" aria-labelledby="aeo-measure-title">
+              <p class="sc-label" id="aeo-measure-title">04 / Measure the surface</p>
+              <div class="aeo-proof">
+                <div class="aeo-proof__metric"><strong>201K</strong><span>search impressions in twelve weeks</span></div>
+                <div class="aeo-proof__metric"><strong>21.8K</strong><span>Google Generative AI / AI Overviews impressions</span></div>
+                <div class="aeo-proof__metric"><strong>1.1K</strong><span>clicks in the same period</span></div>
+                <div class="aeo-proof__metric"><strong>5,400+</strong><span>AI-surface impressions from one article</span></div>
+                <p class="aeo-proof__source">pirx.ca began with no search history or answer-engine presence. Source: Google Search Console, pulled 2026-09-23.</p>
+              </div>
+            </section>
+          </div>
+          <div class="aeo-controls" aria-label="Answer Engine Optimization sequence">
+            <button type="button" data-aeo-state="question" aria-pressed="true">Question</button>
+            <button type="button" data-aeo-state="answer" aria-pressed="false">Answer</button>
+            <button type="button" data-aeo-state="verify" aria-pressed="false">Verify</button>
+            <button type="button" data-aeo-state="measure" aria-pressed="false">Measure</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Act 4: specimen II -->
+  <!-- Act 4: the real AEO product -->
   <section id="ii" class="sc-section" data-specimen="ii" aria-labelledby="ii-title">
     <div class="sc-wrap spread">
       <div class="label" data-sc-in>
         <p class="sc-label">Specimen II</p>
         <h2 id="ii-title" class="sc-display sc-display--md">Schema</h2>
-        <p class="sc-body">See the gap, then the fix. Schema scores how visible you are to answer engines and generates the repair. The same discipline that took pirx.ca from nothing to 201K impressions, packaged as a product.</p>
+        <p class="sc-body">See the gap, then the repair plan. Schema keeps measured scan output separate from generated recommendations, so the result never claims more than the scan observed.</p>
         <dl>
           <dt>Kind</dt><dd>AI-search visibility scorer</dd>
-          <dt>Output</dt><dd>A score, the gap, and the generated fix</dd>
+          <dt>Output</dt><dd>Measured findings, then generated recommendations</dd>
           <dt>Live</dt><dd><a href="https://schema-two.vercel.app/">schema-two.vercel.app</a></dd>
         </dl>
       </div>
@@ -801,7 +1080,7 @@
         <div class="rail__lead sc-stack">
           <p class="sc-label">Selected work</p>
           <h2 id="work-title" class="sc-display sc-display--md">Working systems, already in the world.</h2>
-          <p class="sc-body">Run the event from the floor. See the gap, then the fix. Teach the team once. Answer the question that makes the sale. Two more specimens to the right, then the range.</p>
+          <p class="sc-body">Real interfaces. Live links. Each one began as an operation somebody could explain but could not buy off the shelf.</p>
         </div>
         <article class="item" data-specimen="iii" id="obj-iii">
           <figure>
@@ -836,7 +1115,7 @@
       <div class="benefits">
         <div class="benefits__head" data-sc-cue="0 1 0 0">
           <h2 id="benefits-title" class="sc-display sc-display--md">What changes when the software fits.</h2>
-          <p class="cta"><a class="cta--primary" href="mailto:dev@pirx.ca?subject=How%20we%20work">Describe how you work</a></p>
+          <p class="cta"><a class="cta--primary" href="mailto:dev@pirx.ca?subject=Show%20you%20how%20it%20works">Show us how it works</a></p>
         </div>
         <ol class="benefits__set" data-sc-cue="0 0.5 0">
           <li><strong>Your experts stop being the bottleneck.</strong><p>Customers and new hires get a grounded answer from your science, your product, and your plan, on text or voice, any hour.</p></li>
@@ -911,7 +1190,7 @@
             <li><strong>We build the software around those steps.</strong><p class="sc-body">We read the intent, hold the context, and write the prompts and the architecture that carry it. AI where it removes a task, a person where the relationship matters.</p></li>
             <li><strong>You leave with the live system, the film, and the script.</strong><p class="sc-body">Your team can demo it without us in the room.</p></li>
           </ol>
-          <p class="cta"><a class="cta--primary" href="mailto:dev@pirx.ca?subject=How%20we%20work">Describe how you work</a></p>
+          <p class="cta"><a class="cta--primary" href="mailto:dev@pirx.ca?subject=Show%20you%20how%20it%20works">Show us how it works</a></p>
         </div>
       </div>
 
@@ -961,18 +1240,16 @@
       <div class="inquiry">
         <div class="label" data-sc-cue="0.06">
           <p class="sc-label">Specimen ST</p>
-          <h2 id="brief-title">Say what you want built. We'll build it.</h2>
-          <p class="sc-body">Bring one operation, however complex. We will map it to something already in the catalog, or record the version that should exist. You leave knowing what ships, what your team will demo, and how fast zero becomes scale.</p>
-          <p class="sc-body">A good brief sounds like your Tuesday: the workflow, the words, and the outcome you want on the other side. We will tell you if a product you can buy already does that job. When it does not, we build the one that does.</p>
+          <h2 id="brief-title">Show us one operation.</h2>
+          <p class="sc-body">Bring the handoffs, exceptions, approvals, and outcome. We will show you the system they imply—or tell you when an existing product already fits.</p>
           <dl>
-            <dt>Ask</dt><dd>Describe one operation, in the words your team uses</dd>
-            <dt>Leave</dt><dd>The matching specimen, or the plan to build one</dd>
+            <dt>Bring</dt><dd>One operation, in the words your team uses</dd>
+            <dt>Leave</dt><dd>A clear system shape and the next decision</dd>
             <dt>Write</dt><dd><a href="mailto:dev@pirx.ca?subject=Open%20a%20brief">dev@pirx.ca</a></dd>
           </dl>
-          <p class="sc-body">Not ready to describe the operation yet? <a href="https://check.abra-ca-dabra.app/check">Take the Readiness Check</a>.</p>
           <p class="cta">
-            <a class="cta--primary" href="mailto:dev@pirx.ca?subject=How%20we%20work">Describe how you work</a>
-            <a href="walkthrough.html">Watch the work</a>
+            <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Show%20you%20how%20it%20works">Show us how it works</a>
+            <a href="walkthrough.html">See what we've built</a>
           </p>
         </div>
       </div>
@@ -989,7 +1266,7 @@
 <script src="scrollcraft.js"></script>
 <script>
   if (matchMedia('(max-width: 860px)').matches) {
-    ['i', 'iii'].forEach(function (id) {
+    ['i', 'aeo', 'iii'].forEach(function (id) {
       var section = document.getElementById(id);
       if (section) section.setAttribute('data-sc-act', 'flow');
     });
@@ -1011,7 +1288,7 @@
 
   // the object index follows the reader
   var links = Array.prototype.slice.call(document.querySelectorAll('.index a[data-index]'));
-  var nodes = ['i', 'ii', 'obj-iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
+  var nodes = ['i', 'aeo', 'iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
   var currentLabel = document.querySelector('.index__current');
   function spy() {
     var y = window.scrollY + window.innerHeight * 0.42, current = 0;
@@ -1023,41 +1300,102 @@
   addEventListener('scroll', spy, { passive: true });
   addEventListener('resize', spy);
 
-  // One understandable mechanism: spoken intent becomes structure, then product.
-  var intentDemo = document.querySelector('.intent-demo');
-  var intentButtons = Array.prototype.slice.call(document.querySelectorAll('[data-intent-state]'));
-  var intentStatus = document.querySelector('[data-intent-status]');
-  var intentStates = ['say', 'structure', 'run'];
-  var intentStatuses = { say: 'Listening', structure: 'Resolving', run: 'System live' };
-  var intentWasChosen = false;
   var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function setIntentState(state, chosen) {
-    if (!intentDemo || intentStates.indexOf(state) < 0) return;
-    intentDemo.setAttribute('data-active-state', state);
-    intentButtons.forEach(function (button) {
-      button.setAttribute('aria-pressed', button.getAttribute('data-intent-state') === state ? 'true' : 'false');
+  // One understandable mechanism: an operation compiles into a running product.
+  var compiler = document.querySelector('.compiler');
+  var compilerButtons = Array.prototype.slice.call(document.querySelectorAll('[data-compiler-state]'));
+  var compilerStatus = document.querySelector('[data-compiler-status]');
+  var compilerStates = ['describe', 'parse', 'connect', 'run'];
+  var compilerStatuses = {
+    describe: 'Listening',
+    parse: 'Elements found',
+    connect: 'Workflow connected',
+    run: 'System live'
+  };
+  var compilerWasChosen = false;
+
+  function setCompilerState(state, chosen) {
+    if (!compiler || compilerStates.indexOf(state) < 0) return;
+    compiler.setAttribute('data-active-state', state);
+    compilerButtons.forEach(function (button) {
+      button.setAttribute('aria-pressed', button.getAttribute('data-compiler-state') === state ? 'true' : 'false');
     });
-    if (intentStatus) intentStatus.textContent = intentStatuses[state];
-    if (chosen) intentWasChosen = true;
+    if (compilerStatus) compilerStatus.textContent = compilerStatuses[state];
+    if (chosen) compilerWasChosen = true;
   }
 
-  intentButtons.forEach(function (button) {
-    button.addEventListener('click', function () { setIntentState(button.getAttribute('data-intent-state'), true); });
+  compilerButtons.forEach(function (button) {
+    button.addEventListener('click', function () { setCompilerState(button.getAttribute('data-compiler-state'), true); });
   });
-  var intentSkip = document.querySelector('[data-intent-skip]');
-  if (intentSkip) intentSkip.addEventListener('click', function () { setIntentState('run', true); });
+  var compilerSkip = document.querySelector('[data-compiler-skip]');
+  if (compilerSkip) compilerSkip.addEventListener('click', function () { setCompilerState('run', true); });
 
-  function resolveIntentFromScroll() {
-    if (!intentDemo || reduceMotion || intentWasChosen || innerWidth <= 860) return;
+  function resolveCompilerFromScroll() {
+    if (!compiler || reduceMotion || compilerWasChosen || innerWidth <= 860) return;
     var act = document.getElementById('i');
     var travel = Math.max(1, act.offsetHeight - innerHeight);
     var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
-    setIntentState(progress < 0.3 ? 'say' : progress < 0.64 ? 'structure' : 'run', false);
+    setCompilerState(
+      progress < 0.24 ? 'describe' : progress < 0.49 ? 'parse' : progress < 0.74 ? 'connect' : 'run',
+      false
+    );
   }
-  resolveIntentFromScroll();
-  addEventListener('scroll', resolveIntentFromScroll, { passive: true });
-  addEventListener('resize', resolveIntentFromScroll);
+
+  // A buyer question resolves into an answer, evidence path, and measured surface.
+  var aeoEngine = document.querySelector('.aeo-engine');
+  var aeoButtons = Array.prototype.slice.call(document.querySelectorAll('[data-aeo-state]'));
+  var aeoStatus = document.querySelector('[data-aeo-status]');
+  var aeoStates = ['question', 'answer', 'verify', 'measure'];
+  var aeoStatuses = {
+    question: 'Question mapped',
+    answer: 'Answer assembled',
+    verify: 'Evidence connected',
+    measure: 'Surface measured'
+  };
+  var aeoWasChosen = false;
+
+  function setAeoState(state, chosen) {
+    if (!aeoEngine || aeoStates.indexOf(state) < 0) return;
+    aeoEngine.setAttribute('data-active-state', state);
+    aeoButtons.forEach(function (button) {
+      button.setAttribute('aria-pressed', button.getAttribute('data-aeo-state') === state ? 'true' : 'false');
+    });
+    if (aeoStatus) aeoStatus.textContent = aeoStatuses[state];
+    if (chosen) aeoWasChosen = true;
+  }
+
+  aeoButtons.forEach(function (button) {
+    button.addEventListener('click', function () { setAeoState(button.getAttribute('data-aeo-state'), true); });
+  });
+
+  function resolveAeoFromScroll() {
+    if (!aeoEngine || reduceMotion || aeoWasChosen || innerWidth <= 860) return;
+    var act = document.getElementById('aeo');
+    var travel = Math.max(1, act.offsetHeight - innerHeight);
+    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
+    setAeoState(
+      progress < 0.24 ? 'question' : progress < 0.49 ? 'answer' : progress < 0.74 ? 'verify' : 'measure',
+      false
+    );
+  }
+
+  function updatePageProgress() {
+    var root = document.documentElement;
+    var travel = Math.max(1, root.scrollHeight - innerHeight);
+    var progress = Math.min(1, Math.max(0, scrollY / travel));
+    root.style.setProperty('--page-progress', progress.toFixed(4));
+  }
+
+  function updateScrollStates() {
+    resolveCompilerFromScroll();
+    resolveAeoFromScroll();
+    updatePageProgress();
+  }
+
+  updateScrollStates();
+  addEventListener('scroll', updateScrollStates, { passive: true });
+  addEventListener('resize', updateScrollStates);
 
   // The mobile film label yields the product view without removing its explanation.
   var filmToggle = document.querySelector('.film-toggle');

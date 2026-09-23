@@ -63,13 +63,14 @@ async function openPage({ width = 1280, height = 800, reducedMotion = 'no-prefer
   return { context, page };
 }
 
-test('hero has one primary and one secondary action', async () => {
+test('hero states the operation compiler promise with two clear actions', async () => {
   const { context, page } = await openPage();
   const actions = await page.locator('#i .hero__copy .cta a').allTextContents();
 
+  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Your operation, turned into software.');
   assert.deepEqual(actions.map((action) => action.trim()), [
-    'Describe how you work',
-    'Watch the work',
+    'Show us how it works',
+    "See what we've built",
   ]);
   assert.equal(await page.locator('#i .hero__copy .cta .cta--primary').count(), 1);
   await context.close();
@@ -139,17 +140,39 @@ test('required responsive widths do not create horizontal page overflow', async 
   }
 });
 
-test('hero intent demonstration has accessible states and a skip control', async () => {
+test('operation compiler has four accessible states and a skip control', async () => {
   const { context, page } = await openPage();
-  const stateLabels = await page.locator('[data-intent-state]').allTextContents();
+  const stateLabels = await page.locator('[data-compiler-state]').allTextContents();
 
   assert.deepEqual(stateLabels.map((label) => label.trim()), [
-    'Say it',
-    'Structure it',
+    'Describe',
+    'Parse',
+    'Connect',
     'Run it',
   ]);
   await page.getByRole('button', { name: 'Skip to working product' }).click();
-  assert.equal(await page.locator('.intent-demo').getAttribute('data-active-state'), 'run');
+  assert.equal(await page.locator('.compiler').getAttribute('data-active-state'), 'run');
+  assert.equal((await page.locator('[data-compiler-status]').textContent()).trim(), 'System live');
+  await context.close();
+});
+
+test('dedicated AEO chapter explains the mechanism, proof, and next steps', async () => {
+  const { context, page } = await openPage();
+  const aeo = page.locator('#aeo');
+
+  assert.equal((await aeo.getByRole('heading', { level: 2 }).first().textContent()).trim(), 'Be the answer AI can verify.');
+  assert.deepEqual(
+    (await aeo.locator('[data-aeo-state]').allTextContents()).map((label) => label.trim()),
+    ['Question', 'Answer', 'Verify', 'Measure'],
+  );
+  assert.equal(await aeo.getByRole('link', { name: 'Run the Readiness Check' }).getAttribute('href'), 'https://check.abra-ca-dabra.app/check');
+  assert.equal(await aeo.getByRole('link', { name: 'Open Schema' }).getAttribute('href'), 'https://schema-two.vercel.app/');
+  assert.match(await aeo.textContent(), /201K/);
+  assert.match(await aeo.textContent(), /21\.8K/);
+  assert.match(await aeo.textContent(), /Google Search Console/);
+
+  await aeo.getByRole('button', { name: 'Measure' }).click();
+  assert.equal(await aeo.locator('.aeo-engine').getAttribute('data-active-state'), 'measure');
   await context.close();
 });
 
@@ -165,16 +188,22 @@ test('film caption minimizes on mobile without hiding its explanation', async ()
   await context.close();
 });
 
-test('reduced motion exposes all three intent states and keeps film unloaded', async () => {
+test('reduced motion exposes every compiler and AEO state and keeps film unloaded', async () => {
   const { context, page } = await openPage({
     width: 390,
     height: 844,
     reducedMotion: 'reduce',
   });
-  const states = page.locator('[data-state-panel]');
+  const states = page.locator('[data-compiler-panel]');
 
-  assert.equal(await states.count(), 3);
+  assert.equal(await states.count(), 4);
   for (const state of await states.all()) {
+    assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
+    assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
+  }
+  const aeoStates = page.locator('[data-aeo-panel]');
+  assert.equal(await aeoStates.count(), 4);
+  for (const state of await aeoStates.all()) {
     assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
     assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
   }
