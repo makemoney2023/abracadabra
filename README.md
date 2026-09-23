@@ -6,4 +6,4 @@ The Showdesk-style product video queue — including LLMCourse and sales enablem
 
 Captured films, posters, and sales packs live in [`outputs/`](outputs/README.md). The one-page catalog for Abracadabra AI is [`scrollcraft/builds/abracadabra-ai/`](scrollcraft/builds/abracadabra-ai/); its product walkthrough is a scroll-world flight (`walkthrough.html`). Review and improvement plan: [docs/scroll-world-review.md](docs/scroll-world-review.md).
 
-The plan for the Readiness Check — the lead-generation survey that scores problems, AI readiness, and website structure (via the Schema repo) and ends in a booked session — is [docs/lead-survey-gameplan.md](docs/lead-survey-gameplan.md).
+The plan for the Readiness Check — the lead-generation survey that scores problems, AI readiness, and website structure (via the Schema repo) and ends in a booked session — is [docs/lead-survey-gameplan.md](docs/lead-survey-gameplan.md); its design spec and implementation plan are in [docs/readiness-check/](docs/readiness-check/).

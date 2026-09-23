@@ -1,6 +1,6 @@
 # Readiness Check — lead-generation survey gameplan
 
-**Status:** plan, not yet built. Written 2026-09-23.
+**Status:** gameplan, not yet built. Written 2026-09-23. Detailed in the design spec [readiness-check/2026-09-23-readiness-check-design.md](readiness-check/2026-09-23-readiness-check-design.md) and the implementation plan [readiness-check/2026-09-23-readiness-check-plan.md](readiness-check/2026-09-23-readiness-check-plan.md); where they differ from this document, the spec wins.
 **Owner:** Abracadabra (dev@pirx.ca)
 **Depends on:** the Schema repo (`makemoney2023/schema`, live at schema-two.vercel.app), the Abracadabra site (`scrollcraft/builds/abracadabra-ai`, live at abra-ca-dabra.app), `docs/source-of-truth.md`.
 
