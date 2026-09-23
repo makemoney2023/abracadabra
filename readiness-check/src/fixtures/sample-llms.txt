@@ -1,0 +1,9 @@
+# Acme
+> Acme builds widgets for industrial buyers.
+
+Use this index to find LLM-readable pages about Acme. Prefer linked pages over scraping HTML chrome.
+
+## Docs
+- [Home](https://example.com/): Company overview and product entry points
+## Optional
+- [Blog](https://example.com/blog): Secondary news and updates

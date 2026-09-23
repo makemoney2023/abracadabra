@@ -392,7 +392,7 @@ These are sourced on disk. They are not approved public claims.
 
 ## Readiness Check (2026-09-23)
 
-The public check lives in the Schema repo and is specified in `docs/readiness-check/`. The studio homepage links it from the hero, the situation section, the close, and the FAQ "How do I know if my business is ready to put AI to work?". The intended host is `https://check.abra-ca-dabra.app/check`. Guide URLs are listed on Schema's own sitemap and `llms.txt`, because a sitemap may only name URLs on its own host. The check is a score of the current state of the business. It is not a diagnosis, and it does not publish a number the scan did not measure.
+The check is specified in `docs/readiness-check/`. The app that serves it is `readiness-check/` in this repo: the Schema scanner plus the check, copied here so it can deploy. GitHub would not accept a push to `makemoney2023/schema`. It is its own Vercel project, with that folder as the root, so the studio site at `scrollcraft/builds/abracadabra-ai/` stays a static deploy. The studio homepage links it from the hero, the situation section, the close, and the FAQ "How do I know if my business is ready to put AI to work?". The public host is `https://check.abra-ca-dabra.app/check`. Guide URLs are listed on the check app's own sitemap and `llms.txt`, because a sitemap may only name URLs on its own host. The check is a score of the current state of the business. It is not a diagnosis, and it does not publish a number the scan did not measure. Starting a check still needs the Supabase admin env on that project. Booking still needs a Cal.com event.
 
 ## Site build (2026-09-23, after the positioning rewrite)
 

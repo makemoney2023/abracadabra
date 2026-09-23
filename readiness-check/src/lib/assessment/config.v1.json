@@ -1,0 +1,874 @@
+{
+  "meta": {
+    "name": "Readiness Check",
+    "version": "v1"
+  },
+  "gate": {
+    "mode": "before_results"
+  },
+  "weights": {
+    "readiness": 0.5,
+    "visibility": 0.3,
+    "growth": 0.2,
+    "fallbackWithoutVisibility": {
+      "readiness": 0.7,
+      "growth": 0.3
+    }
+  },
+  "bands": [
+    {
+      "id": "early",
+      "min": 0,
+      "max": 39,
+      "label": "Early",
+      "sentence": "The work that matters still lives in people's heads. The first useful move is to write one workflow down and name who owns it."
+    },
+    {
+      "id": "forming",
+      "min": 40,
+      "max": 59,
+      "label": "Forming",
+      "sentence": "Pieces of the work are written down. A named owner and one system of record are what turn that into something a team can run."
+    },
+    {
+      "id": "ready",
+      "min": 60,
+      "max": 79,
+      "label": "Ready",
+      "sentence": "The business can put a new system to work. The open question is which workflow to start with, and who owns it day to day."
+    },
+    {
+      "id": "running",
+      "min": 80,
+      "max": 100,
+      "label": "Running",
+      "sentence": "A real workflow already uses the tools. The next gain is the job that still waits on one person."
+    }
+  ],
+  "severity": [
+    {
+      "score": 1,
+      "label": "It's a nuisance"
+    },
+    {
+      "score": 2,
+      "label": "It costs us time or money every week"
+    },
+    {
+      "score": 3,
+      "label": "It caps how far we can grow"
+    }
+  ],
+  "questions": [
+    {
+      "id": "pressure",
+      "sectionId": "pressure",
+      "type": "multi_select",
+      "prompt": "Where does the work slow down?",
+      "options": [
+        {
+          "value": "P01",
+          "label": "Our process is real, but no software fits exactly how we run it.",
+          "offerRow": "custom_fit"
+        },
+        {
+          "value": "P02",
+          "label": "Our experts are the queue. Answers wait on two or three people.",
+          "offerRow": "experts_queue"
+        },
+        {
+          "value": "P03",
+          "label": "New people don't sound like our best people.",
+          "offerRow": "rep_standard"
+        },
+        {
+          "value": "P04",
+          "label": "Leads arrive with no story attached.",
+          "offerRow": "lead_story"
+        },
+        {
+          "value": "P05",
+          "label": "We don't know if AI answer engines can even find us.",
+          "offerRow": "ai_visibility"
+        },
+        {
+          "value": "P06",
+          "label": "Decisions wait on last month's numbers.",
+          "offerRow": "decisions_wait"
+        },
+        {
+          "value": "P07",
+          "label": "A new channel or market feels like it needs a whole department.",
+          "offerRow": "new_channel"
+        },
+        {
+          "value": "P08",
+          "label": "The sale still needs a visit or a specialist's hour before anyone says yes.",
+          "offerRow": "sale_visit"
+        },
+        {
+          "value": "P09",
+          "label": "The vendor bill grows as we grow.",
+          "offerRow": "vendor_bill"
+        },
+        {
+          "value": "P10",
+          "label": "One person knows how the important thing works.",
+          "offerRow": "one_person"
+        },
+        {
+          "value": "P11",
+          "label": "Fraud or order review eats someone's morning.",
+          "offerRow": "fraud_review"
+        },
+        {
+          "value": "P12",
+          "label": "Our claims drift the moment someone new writes for us.",
+          "offerRow": "claims_drift"
+        }
+      ]
+    },
+    {
+      "id": "R01",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "data",
+      "prompt": "Where does the knowledge that runs the business live?",
+      "options": [
+        {
+          "value": "0",
+          "label": "In people's heads",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "In documents and chats, spread around",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "In a few systems we can export from",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "In systems we can connect to",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "R02",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "data",
+      "prompt": "Customer, product, and process records \u2014 where are they?",
+      "options": [
+        {
+          "value": "0",
+          "label": "Many places, and they don't match",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "Several places, reconciled by hand",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "Mostly one place",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "One system of record",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "R03",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "process",
+      "prompt": "Is the core workflow written down?",
+      "options": [
+        {
+          "value": "0",
+          "label": "No",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "Partly, and it's out of date",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "Documented, followed most of the time",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "Documented, followed, and someone owns it",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "R04",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "process",
+      "prompt": "Same job twice \u2014 same result?",
+      "options": [
+        {
+          "value": "0",
+          "label": "Depends who does it",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "Usually, with exceptions",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "Yes, with a checklist",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "Yes, and we measure it",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "R05",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "people",
+      "prompt": "Who would own a new system day to day?",
+      "options": [
+        {
+          "value": "0",
+          "label": "Nobody has the time",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "We'd work it out",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "A named person, part time",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "A named person \u2014 it's already part of their role",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "R06",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "people",
+      "prompt": "Has the team used AI tools?",
+      "options": [
+        {
+          "value": "0",
+          "label": "Not really",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "A few people, on their own",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "We tried something together, mixed results",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "It's in a real workflow today",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "R07",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "decision",
+      "prompt": "Who decides, and how long does it take?",
+      "options": [
+        {
+          "value": "0",
+          "label": "Unclear",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "The owner, over months",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "The owner, over weeks",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "A named person, within the month",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "R08",
+      "sectionId": "readiness",
+      "type": "single_select",
+      "dim": "decision",
+      "prompt": "Timeline and budget?",
+      "options": [
+        {
+          "value": "0",
+          "label": "No timeline",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "Exploring, no budget",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "Budget exists, timeline open",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "We want to start this quarter",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "G01",
+      "sectionId": "growth",
+      "type": "single_select",
+      "prompt": "Where do new customers come from today?",
+      "options": [
+        {
+          "value": "0",
+          "label": "Referrals only, or we're not sure",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "Mostly one channel",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "Two or three channels",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "Several channels we can measure",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "G02",
+      "sectionId": "growth",
+      "type": "single_select",
+      "prompt": "Have you checked how your business shows up in ChatGPT, Perplexity, or Google AI Overviews?",
+      "options": [
+        {
+          "value": "0",
+          "label": "No",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "Once \u2014 didn't like it",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "Yes, now and then",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "Yes, and we act on what we see",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "G03",
+      "sectionId": "growth",
+      "type": "single_select",
+      "prompt": "Who looks after the website?",
+      "options": [
+        {
+          "value": "0",
+          "label": "Nobody, really",
+          "score": 0
+        },
+        {
+          "value": "1",
+          "label": "A vendor; changes take weeks",
+          "score": 1
+        },
+        {
+          "value": "2",
+          "label": "A vendor; changes take days",
+          "score": 2
+        },
+        {
+          "value": "3",
+          "label": "In-house; we ship changes ourselves",
+          "score": 3
+        }
+      ]
+    },
+    {
+      "id": "G04",
+      "sectionId": "growth",
+      "type": "url",
+      "prompt": "Your website"
+    },
+    {
+      "id": "Q01",
+      "sectionId": "about",
+      "type": "single_select",
+      "prompt": "Your role",
+      "options": [
+        {
+          "value": "owner",
+          "label": "Owner or executive"
+        },
+        {
+          "value": "operations",
+          "label": "Operations"
+        },
+        {
+          "value": "marketing",
+          "label": "Marketing or sales"
+        },
+        {
+          "value": "engineering",
+          "label": "IT or engineering"
+        },
+        {
+          "value": "other",
+          "label": "Other"
+        }
+      ]
+    },
+    {
+      "id": "Q02",
+      "sectionId": "about",
+      "type": "single_select",
+      "prompt": "Team size",
+      "options": [
+        {
+          "value": "1\u201310",
+          "label": "1\u201310"
+        },
+        {
+          "value": "11\u201350",
+          "label": "11\u201350"
+        },
+        {
+          "value": "51\u2013200",
+          "label": "51\u2013200"
+        },
+        {
+          "value": "200+",
+          "label": "200+"
+        }
+      ]
+    },
+    {
+      "id": "Q03",
+      "sectionId": "about",
+      "type": "text",
+      "prompt": "Industry",
+      "maxLength": 80,
+      "suggestions": [
+        "Retail",
+        "Professional services",
+        "Health",
+        "Trades",
+        "Manufacturing",
+        "Software"
+      ]
+    },
+    {
+      "id": "Q04",
+      "sectionId": "about",
+      "type": "text",
+      "prompt": "If one thing were fixed by tomorrow, what would it be?",
+      "maxLength": 240
+    }
+  ],
+  "suggestions": [
+    {
+      "code": "READY_DATA_LOW",
+      "section": "readiness",
+      "severity": "critical",
+      "title": "Start with where the knowledge lives",
+      "body": "Where the knowledge lives is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "guideSlug": "fix/ready-data-low"
+    },
+    {
+      "code": "READY_DATA_MID",
+      "section": "readiness",
+      "severity": "warn",
+      "title": "Tighten where the knowledge lives",
+      "body": "Where the knowledge lives is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "guideSlug": "fix/ready-data-mid"
+    },
+    {
+      "code": "READY_PROCESS_LOW",
+      "section": "readiness",
+      "severity": "critical",
+      "title": "Start with whether the work is written down",
+      "body": "Whether the work is written down is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "guideSlug": "fix/ready-process-low"
+    },
+    {
+      "code": "READY_PROCESS_MID",
+      "section": "readiness",
+      "severity": "warn",
+      "title": "Tighten whether the work is written down",
+      "body": "Whether the work is written down is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "guideSlug": "fix/ready-process-mid"
+    },
+    {
+      "code": "READY_PEOPLE_LOW",
+      "section": "readiness",
+      "severity": "critical",
+      "title": "Start with who would own a new system",
+      "body": "Who would own a new system is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "guideSlug": "fix/ready-people-low"
+    },
+    {
+      "code": "READY_PEOPLE_MID",
+      "section": "readiness",
+      "severity": "warn",
+      "title": "Tighten who would own a new system",
+      "body": "Who would own a new system is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "guideSlug": "fix/ready-people-mid"
+    },
+    {
+      "code": "READY_DECISION_LOW",
+      "section": "readiness",
+      "severity": "critical",
+      "title": "Start with who decides and how fast",
+      "body": "Who decides and how fast is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "guideSlug": "fix/ready-decision-low"
+    },
+    {
+      "code": "READY_DECISION_MID",
+      "section": "readiness",
+      "severity": "warn",
+      "title": "Tighten who decides and how fast",
+      "body": "Who decides and how fast is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "guideSlug": "fix/ready-decision-mid"
+    },
+    {
+      "code": "READY_STRONG",
+      "section": "readiness",
+      "severity": "info",
+      "title": "You can put a system to work",
+      "body": "Data, process, people, and the decision are far enough along. The useful next step is one workflow, with a named owner, running this quarter.",
+      "guideSlug": "fix/ready-strong"
+    },
+    {
+      "code": "GROWTH_ONE_CHANNEL",
+      "section": "growth",
+      "severity": "warn",
+      "title": "New customers come from one place",
+      "body": "When referrals are the whole pipeline, a quiet month is a quiet quarter. Write down the one other place buyers already look, and put a page there that answers their question.",
+      "guideSlug": "fix/growth-one-channel"
+    },
+    {
+      "code": "GROWTH_AI_UNCHECKED",
+      "section": "growth",
+      "severity": "warn",
+      "title": "AI answer engines are unchecked",
+      "body": "Ask ChatGPT, Perplexity, and Google the question a buyer would ask, using your product words. Save what comes back. That is the baseline the site scan is measuring.",
+      "guideSlug": "fix/growth-ai-unchecked"
+    },
+    {
+      "code": "GROWTH_SITE_STUCK",
+      "section": "growth",
+      "severity": "warn",
+      "title": "The site cannot keep up with the work",
+      "body": "If a change takes weeks, the pages that should answer buyers stay stale. List the three pages a buyer hits first and who can publish a change to them.",
+      "guideSlug": "fix/growth-site-stuck"
+    },
+    {
+      "code": "VIS_PENDING",
+      "section": "visibility",
+      "severity": "info",
+      "title": "Still reading your site",
+      "body": "The scan is still running. Open the full scan when it finishes. The rest of this check does not wait on it.",
+      "guideSlug": "fix/vis-pending"
+    },
+    {
+      "code": "VIS_UNAVAILABLE",
+      "section": "visibility",
+      "severity": "info",
+      "title": "The site scan did not finish",
+      "body": "We could not score the site this time. Run the scan directly and the visibility section will fill in.",
+      "guideSlug": "fix/vis-unavailable"
+    },
+    {
+      "code": "NO_JSON_LD_HOME",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "No json ld home",
+      "body": "The home page has no structured data, so answer engines have to guess what the business is. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/no-json-ld-home"
+    },
+    {
+      "code": "NO_ORG_SCHEMA",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "No org schema",
+      "body": "There is no Organization or LocalBusiness markup naming who you are, where you are, and how to reach you. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/no-org-schema"
+    },
+    {
+      "code": "MISSING_FAQ_SCHEMA",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Missing faq schema",
+      "body": "The questions buyers ask are not marked up as answers a machine can quote. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/missing-faq-schema"
+    },
+    {
+      "code": "MISSING_LLMS_TXT",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Missing llms txt",
+      "body": "There is no llms.txt file telling an answer engine which pages matter. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/missing-llms-txt"
+    },
+    {
+      "code": "EMPTY_LLMS_TXT",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Empty llms txt",
+      "body": "llms.txt exists but says nothing useful. Name the pages a buyer should read. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/empty-llms-txt"
+    },
+    {
+      "code": "MISSING_LLMS_FULL",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Missing llms full",
+      "body": "A short llms.txt is present. A fuller llms-full.txt gives answer engines the longer context. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/missing-llms-full"
+    },
+    {
+      "code": "SITEMAP_MISSING",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Sitemap missing",
+      "body": "No sitemap was found, so crawlers have to discover pages by links alone. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/sitemap-missing"
+    },
+    {
+      "code": "SITEMAP_UNPARSEABLE",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Sitemap unparseable",
+      "body": "A sitemap was found but could not be read. Publish a valid XML sitemap. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/sitemap-unparseable"
+    },
+    {
+      "code": "ROBOTS_BLOCKS_GPTBOT",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Robots blocks gptbot",
+      "body": "robots.txt blocks GPTBot, so that answer engine is told to stay out. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/robots-blocks-gptbot"
+    },
+    {
+      "code": "ROBOTS_BLOCKS_AI_BOTS",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Robots blocks ai bots",
+      "body": "robots.txt blocks one or more AI crawlers. Decide which ones you want reading the site. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/robots-blocks-ai-bots"
+    },
+    {
+      "code": "LOW_JSON_LD_COVERAGE",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Low json ld coverage",
+      "body": "Most pages have no structured data, so the site looks thin to a machine. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/low-json-ld-coverage"
+    },
+    {
+      "code": "PAGES_FETCH_FAILED",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Pages fetch failed",
+      "body": "Some important pages could not be fetched. If a buyer cannot load them, neither can a crawler. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/pages-fetch-failed"
+    },
+    {
+      "code": "MISSING_BREADCRUMB",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Missing breadcrumb",
+      "body": "Pages do not say where they sit in the site, which makes the structure harder to quote. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/missing-breadcrumb"
+    },
+    {
+      "code": "MISSING_HOWTO_SCHEMA",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Missing howto schema",
+      "body": "Step-by-step pages are not marked as HowTo, so the steps are harder to cite. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/missing-howto-schema"
+    },
+    {
+      "code": "MISSING_PRODUCT_SCHEMA",
+      "section": "visibility",
+      "severity": "warn",
+      "title": "Missing product schema",
+      "body": "Product pages do not carry Product markup for price, availability, and name. Fix that page first, then rerun the scan.",
+      "guideSlug": "fix/missing-product-schema"
+    }
+  ],
+  "offers": [
+    {
+      "row": "custom_fit",
+      "said": "Your process is real, and off-the-shelf software does not fit it.",
+      "build": "A system shaped by the way you already work, including the exceptions.",
+      "specimens": []
+    },
+    {
+      "row": "experts_queue",
+      "said": "Answers wait on two or three people.",
+      "build": "A correct answer from knowledge you own, on text or voice, without growing the team in proportion to the questions.",
+      "specimens": []
+    },
+    {
+      "row": "rep_standard",
+      "said": "New people do not sound like your best people.",
+      "build": "The talk track, the booking, and a coach on the live book of business, so a new person sells to the standard.",
+      "specimens": []
+    },
+    {
+      "row": "lead_story",
+      "said": "Leads arrive with no story attached.",
+      "build": "An assessment a person finishes, a result they can read, and a path to a conversation.",
+      "specimens": [
+        {
+          "name": "Readiness Check",
+          "url": "https://check.abra-ca-dabra.app/check"
+        }
+      ]
+    },
+    {
+      "row": "ai_visibility",
+      "said": "You do not know if AI answer engines can find you.",
+      "build": "A scan of how readable the site is to answer engines, and the fixes that move the score. pirx.ca went from near-zero to 201K search impressions, 1.1K clicks, and 21.8K impressions on Google's Generative AI surface in about twelve weeks.",
+      "specimens": [
+        {
+          "name": "Schema",
+          "url": "https://schema-two.vercel.app"
+        },
+        {
+          "name": "pirx.ca",
+          "url": "https://pirx.ca"
+        }
+      ]
+    },
+    {
+      "row": "decisions_wait",
+      "said": "Decisions wait on last month's numbers.",
+      "build": "The number you need while the decision is still open, from the record you already keep.",
+      "specimens": []
+    },
+    {
+      "row": "new_channel",
+      "said": "A new channel feels like it needs a department.",
+      "build": "Creative, language, and the claims you allow, produced from a system that already knows them.",
+      "specimens": []
+    },
+    {
+      "row": "sale_visit",
+      "said": "The sale still needs a visit before anyone says yes.",
+      "build": "Fit, price, booking, and trust on the screen, before anyone gets in a car.",
+      "specimens": [
+        {
+          "name": "Canadian Discount Appliances",
+          "url": "https://cdastore.vercel.app"
+        },
+        {
+          "name": "Showdesk",
+          "url": "https://www.showdesk-app.com"
+        }
+      ]
+    },
+    {
+      "row": "vendor_bill",
+      "said": "The vendor bill grows as you grow.",
+      "build": "Answers, agreements, and the customer record on your side of the wall.",
+      "specimens": []
+    },
+    {
+      "row": "one_person",
+      "said": "One person knows how the important thing works.",
+      "build": "The knowledge becomes something a customer can finish and a team can teach.",
+      "specimens": [
+        {
+          "name": "LLM Leverage",
+          "url": "https://llm-leverage-course.vercel.app"
+        }
+      ]
+    },
+    {
+      "row": "fraud_review",
+      "said": "Fraud or order review eats someone's morning.",
+      "build": "Low-risk orders clear themselves. High-risk orders reach a person with the history already assembled.",
+      "specimens": []
+    },
+    {
+      "row": "claims_drift",
+      "said": "Claims drift the moment someone new writes.",
+      "build": "Writing fenced by the claims, the voice, and the product rules you already approved.",
+      "specimens": []
+    }
+  ],
+  "copy": {
+    "landingTitle": "Is your business ready to put AI to work?",
+    "landingDeck": "A five-to-seven-minute check. You get a score for readiness, growth, and how readable your website is to AI answer engines, plus three things to do in each.",
+    "start": "Start the check",
+    "gateHeadline": "Your check is scored.",
+    "gatePrompt": "Where should we send it?",
+    "consent": "We'll send this report and, if you book, the notes from your session. Nothing else.",
+    "bookingTitle": "Book a working session \u2014 thirty minutes, bring the workflow, we leave with a brief.",
+    "mailtoSubject": "Working session"
+  }
+}
