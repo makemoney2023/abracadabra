@@ -440,9 +440,13 @@
     .hero { grid-template-columns: 1fr; align-content: end; padding: 4.5rem var(--sc-gutter) 4.6rem; }
     .hero__copy h1 { font-size: clamp(2rem, 1.2rem + 4.6vw, 2.8rem); }
     .hero__copy .sc-lede { font-size: var(--sc-t-base); }
-    .hero__plate { position: absolute; inset: 0; z-index: -1; opacity: 0.22; overflow: hidden; }
+    .hero__plate { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
     .hero__plate figure, .hero__plate img { height: 100%; }
-    .hero__plate img { object-fit: cover; object-position: top; border: 0; }
+    .hero__plate img { object-fit: cover; object-position: top; border: 0; opacity: 0.12; filter: saturate(0.5); }
+    .hero__plate::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(11, 10, 8, 0) 0%, rgba(11, 10, 8, 0.55) 34%, var(--sc-bg) 68%);
+    }
     .hero__plate .label { display: none; }
     .hero__tag { display: block; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-ink-soft); }
     .receipt { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-5); }
@@ -550,7 +554,7 @@
   </section>
 
   <!-- Act 3: the receipt -->
-  <section id="receipt" data-sc-act="pin" data-sc-span="1.8" data-sc-drift="#0E0C0A" aria-labelledby="receipt-title">
+  <section id="receipt" data-sc-act="pin" data-sc-span="1.6" data-sc-drift="#0E0C0A" aria-labelledby="receipt-title">
     <div data-sc-stage>
       <div class="receipt">
         <h2 id="receipt-title" class="sc-display sc-display--md" data-sc-cue="0 1 0 0">“From zero to scale” isn't a slogan. Here's the receipt.</h2>
@@ -622,7 +626,7 @@
   </section>
 
   <!-- Act 6: what changes when the software fits -->
-  <section id="benefits" data-sc-act="pin" data-sc-span="2.2" data-sc-drift="#0E0C0A" aria-labelledby="benefits-title">
+  <section id="benefits" data-sc-act="pin" data-sc-span="2.0" data-sc-drift="#0E0C0A" aria-labelledby="benefits-title">
     <div data-sc-stage>
       <div class="benefits">
         <div class="benefits__head" data-sc-cue="0 1 0 0">
@@ -655,7 +659,7 @@
   </section>
 
   <!-- Act 8: the film, the only scrub on the page -->
-  <section id="film" data-sc-act="scrub" data-sc-span="2.8" data-sc-dwell="0.38" data-sc-drift="#07060A" aria-label="The Showdesk film">
+  <section id="film" data-sc-act="scrub" data-sc-span="2.4" data-sc-dwell="0.38" data-sc-drift="#07060A" aria-label="The Showdesk film">
     <div data-sc-stage>
       <img class="sc-stage__poster" src="assets/showdesk-promo.webp" width="1920" height="1080" loading="lazy" decoding="async" alt="">
       <video data-sc-scrub data-sc-src="assets/showdesk-promo.mp4"
