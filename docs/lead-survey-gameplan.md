@@ -1,6 +1,6 @@
 # Readiness Check — lead-generation survey gameplan
 
-**Status:** gameplan, not yet built. Written 2026-09-23. Detailed in the design spec [readiness-check/2026-09-23-readiness-check-design.md](readiness-check/2026-09-23-readiness-check-design.md) and the implementation plan [readiness-check/2026-09-23-readiness-check-plan.md](readiness-check/2026-09-23-readiness-check-plan.md); where they differ from this document, the spec wins.
+**Status:** built in the Schema repo (branch `cursor/readiness-check-27a7`, local commit `c170a2b`). Written 2026-09-23. Detailed in the design spec [readiness-check/2026-09-23-readiness-check-design.md](readiness-check/2026-09-23-readiness-check-design.md) and the implementation plan [readiness-check/2026-09-23-readiness-check-plan.md](readiness-check/2026-09-23-readiness-check-plan.md); where they differ from this document, the spec wins. The studio site links to `https://check.abra-ca-dabra.app/check`. Still open before that URL answers: push access to `makemoney2023/schema`, Supabase admin env on the Schema Vercel project, a Cal.com working-session event, and DNS for the subdomain.
 **Owner:** Abracadabra (dev@pirx.ca)
 **Depends on:** the Schema repo (`makemoney2023/schema`, live at schema-two.vercel.app), the Abracadabra site (`scrollcraft/builds/abracadabra-ai`, live at abra-ca-dabra.app), `docs/source-of-truth.md`.
 
