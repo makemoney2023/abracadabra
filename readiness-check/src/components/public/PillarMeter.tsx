@@ -4,6 +4,7 @@ import { Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HEAT_STOPS, scoreBand, scoreBandLabel, scoreColorCss, scorePercent, scoreRatio } from "@/lib/scoring/score-color";
@@ -45,20 +46,22 @@ export function PillarMeter({
       <div className="flex items-baseline justify-between gap-3">
         <div className="flex min-w-0 items-center gap-1.5">
           <p className="truncate text-sm font-medium text-foreground">{label}</p>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                aria-label={`About ${label}`}
-              >
-                <Info className="size-3.5" aria-hidden="true" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs text-pretty leading-relaxed">
-              {description}
-            </TooltipContent>
-          </Tooltip>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  aria-label={`About ${label}`}
+                >
+                  <Info className="size-3.5" aria-hidden="true" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-pretty leading-relaxed">
+                {description}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <p className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
           <span className="text-foreground">{display}</span>/{max}
