@@ -1,0 +1,69 @@
+---
+description: Mandatory end-to-end deep-dive code review after executing any multi-step plan
+alwaysApply: true
+---
+
+# Post-Plan Deep-Dive Review
+
+After executing any multi-step plan, perform a comprehensive end-to-end code review before claiming the work is complete.
+
+## When This Rule Triggers
+
+Mandatory after:
+
+- Completing all tasks in a written implementation plan
+- Finishing a multi-step feature that spans frontend and backend
+- Executing a plan created by planning skills
+
+## The Review Process
+
+### 1. Reload the Original Plan
+
+Re-read the plan document or requirements. Do not rely on memory.
+
+### 2. Plan-vs-Implementation Audit
+
+| Check | How to verify |
+|-------|---------------|
+| Every plan task has corresponding code changes | `git diff` against base |
+| No plan items were silently dropped | Compare plan checklist against completed todos |
+| Scope was not accidentally expanded | Review all changed files |
+| Edge cases mentioned in the plan are handled | Search for error/empty/loading states |
+
+### 3. Cross-Cutting Integration Review
+
+- **Data flow continuity**: Trace at least one critical path end-to-end.
+- **Shared state consistency**: Verify no conflicts or stale reads.
+- **API contract alignment**: Frontend and backend agree on shapes.
+- **Auth and permissions**: New routes protected, UI respects auth state.
+- **Error propagation**: Errors reach the frontend as meaningful messages.
+- **Migration consistency**: Queries and API responses reflect schema changes.
+
+### 4. Quality Sweep
+
+- Dead code: unused imports, unreachable functions, orphaned components.
+- Banned patterns: `TODO`, `FIXME`, `pass`, empty catch blocks, hardcoded mock data.
+- Test coverage: every new public function/endpoint has at least one test.
+- Linter: zero new errors on changed files.
+- Documentation: READMEs updated if behavior changed.
+
+### 5. Gap Report
+
+```
+## Post-Plan Review Summary
+
+**Plan**: [description]
+**Scope**: [N files changed]
+
+### Gaps Found
+- [ ] [gap and fix]
+
+### Verified Clean
+- [x] All plan items implemented
+- [x] Cross-boundary contracts match
+- [x] Tests pass
+- [x] Linter clean
+- [x] Docs updated
+```
+
+Do not proceed to commit/PR until this review is complete and all gaps are resolved.

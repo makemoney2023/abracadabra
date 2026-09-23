@@ -1,0 +1,623 @@
+---
+description: General business-idea runbook for any project — intake, then phases through strategy, funding, product, hiring, build, brand, web, content, SEO, channels, launch, and an operating loop. One agent applies the skill packs. Org seat files are not used. Use for startup ideas, new products, ventures, or "execute this business."
+alwaysApply: false
+---
+
+# Business Idea Execution Runbook (Continuous)
+
+When someone brings a **business idea to execute**, run this runbook **start to finish without stopping between phases** unless blocked. Each phase loads skills from `~/.cursor/skills/` — **read each `SKILL.md` before applying it**.
+
+**Library root:** `~/.cursor/skills/community/` · **Active venture:** `docs/projects/<slug>/business-idea/` (create the slug in Phase 0 if `projects/registry.json` is absent) · **Memory:** `docs/projects/<active>/MEMORY/` · **Tracker:** `docs/projects/<active>/business-idea/RUNBOOK-TRACKER.md`
+
+**Templates:** copy `~/Desktop/ClaudeSkills/templates/business-idea/` into `docs/projects/<slug>/business-idea/` when that template tree is on disk. Otherwise create the tracker and phase files as you go.
+
+**ChromaDB:** not used for venture state or backlog (filesystem SSOT). Optional later for semantic MEMORY search only.
+
+**Sister rules:** [startup-session.mdc](mdc:.cursor/rules/startup-session.mdc) · [engineering-workflow.mdc](mdc:.cursor/rules/engineering-workflow.mdc) · [post-plan-deep-review.mdc](mdc:.cursor/rules/post-plan-deep-review.mdc)
+
+---
+
+## Continuous execution model
+
+This is a **long-running process**. Do not treat phases as optional menu items.
+
+### On every session start
+
+1. Read `projects/registry.json` — note active slug; all artifact paths use that venture.
+2. Skim `docs/projects/<active>/MEMORY/README.md` (and recent session notes if present).
+3. Read `docs/projects/<active>/business-idea/RUNBOOK-TRACKER.md` (create from template if missing).
+4. If Phase 0 incomplete → run intake questions (batched), then continue.
+5. Find the **first phase** marked ⬜ or 🔄 → execute it fully.
+6. Write/update artifacts → mark phase ✅ in tracker → **immediately start next phase**.
+7. Repeat until Phase 21 is ✅ or user explicitly says STOP.
+8. Once Phase 21 is ✅, every later session runs the Phase 22 operating cadence instead.
+
+### When to pause (only these)
+
+| Pause | Action |
+|-------|--------|
+| Phase 0 not done | Ask intake questions (1–2 per turn until Batch C complete) |
+| Phase 2 pivot/stop | Present evidence; get user decision before continuing |
+| Blocking ambiguity | Ask **one** question; then continue |
+| User says stop/pause | Halt; tracker preserves resume point |
+| Code build (Phase 9) | Follow baseline-verification before edits |
+
+### Do NOT pause for
+
+- "Does this look good?" between phases — keep going
+- Optional skill completion — skip with logged reason, continue
+- Perfectionism on drafts — ship phase artifact, refine in Phase 21
+
+### Progress tracking
+
+- Update `RUNBOOK-TRACKER.md` after **every** phase
+- Use `TodoWrite` for phases 0–21 in long sessions
+- Log skills used in tracker's "Skills completed" table
+
+---
+
+## Operating principles
+
+1. **Clarify once (Phase 0), then execute** — intake is the only extended Q&A phase.
+2. **Load the skill** — read `SKILL.md`, follow procedure; never improvise from memory.
+3. **Persist everything** — every phase writes to `docs/projects/<active>/business-idea/`; later phases read prior artifacts.
+4. **Skip with reason** — log `⏭️ SKIPPED: <reason>` in tracker; do not stall.
+5. **Facts vs assumptions** — label clearly in every deliverable.
+6. **Run to completion** — Phase 21 executive summary is the finish line; Phase 22 is the ongoing operating loop.
+7. **One agent, whole company** — there is no org roster and no seat files. You perform every phase yourself. Role names in older notes (CEO, CMO, designer) are lenses, not subagents to spawn.
+8. **Visual generation**
+   - **Images** (heroes, product, ads stills, storyboards): run `~/.cursor/skills/community/visual-skills/image` for the production prompt, then render with `inference-sh` (`nano-banana-2`, `gpt-image`, `ai-image-generation`, etc.). Persist prompts + asset paths in the phase artifact folder.
+   - **Video** (explainers, ads, trailers, clips, talking-head, montage): use **OpenMontage** at `~/.cursor/skills/community/openmontage/` — read `AGENT_GUIDE.md`, select a `pipeline_defs/` pipeline. Do **not** improvise full productions with ad-hoc Remotion/API calls. Optional prompt craft: `~/.cursor/skills/community/visual-skills/video`. Recorded product demos: `~/.cursor/skills/community/openvid/`. Stock cinematic heroes: `~/.cursor/skills/openhero/`. Scroll pages: `scroll-craft` or `scroll-world`.
+9. **No org dispatch** — do not load `skills/org`, position skills, orchestrator, or `.cursor/agents` seat files. They are not installed. Write phase artifacts directly. A short `HANDOFFS/<phase>.md` note is optional, not a gate.
+10. **Models** — use the model already in this session. Image and video models are separate from the chat model: render them through the skill named in the phase table (`inference-sh`, OpenMontage, fal). Do not consult an org model registry.
+
+---
+
+## How to execute a phase
+
+1. Read this phase's skill table. Paths are relative to `~/.cursor/skills/community/` unless they start with `~/`.
+2. Read each `SKILL.md` before applying it. Skip a skill only with a logged reason.
+3. Write the phase output file, then mark the tracker ✅ and start the next phase.
+4. Tracks may run in parallel only when their inputs already exist (build needs Phase 5; brand needs Phase 3; content needs voice + page list). Otherwise stay sequential.
+5. Do not spawn a virtual-company seat. If subagents are useful, spawn them for a skill task, not for an org title.
+
+## Phase 0: Intake & clarification
+
+
+Emit tracker. Ask questions **1–2 at a time** until all batches complete, then classify and write `00-intake.md`. **Do not wait for approval** — proceed to Phase 1 unless user interrupts.
+
+### Questions
+
+**Batch A:** (1) One-sentence idea (2) Trigger — problem lived / market gap / bet (3) 12-month success (4) explore | build | scale
+
+**Batch B:** (5) Target customer (6) Budget/timeline/team — and: bootstrapped or raising? hiring planned? (7) Non-negotiables (8) What exists already
+
+**Batch C:** (9) Required outputs (10) Depth: light | standard | investor-ready | **full-execution** (11) Phases to skip
+
+### Classification
+
+| Type | Emphasize | Often skip |
+|------|-----------|------------|
+| SaaS/software | 5, 9, 11–18 | 19 if no ad budget |
+| Service/agency | 3, 6, 7, 13–14 | 9 |
+| E-commerce | 4, 6, 14, 16 | 9 |
+| Content/media | 13–17, 15 | 9 |
+| Marketplace | 4, 5, 7 | — |
+| Hardware / robotics | 5, 9B, 11–18 | 9 if no software companion |
+
+**Output:** `00-intake.md` · tracker Phase 0 → ✅ · **continue to Phase 1**
+
+---
+
+## Phase 1: Frame the opportunity
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `business-problem-framing` | `business-analysis-skills/skills/business-problem-framing/` |
+| 2 | `problem-statement-refiner` | `business-analysis-skills/skills/problem-statement-refiner/` |
+| 3 | `assumption-extractor` | `business-analysis-skills/skills/assumption-extractor/` |
+| 4 | `constraint-detector` | `business-analysis-skills/skills/constraint-detector/` |
+
+**Output:** `01-problem-framing.md` → ✅ → Phase 2
+
+---
+
+## Phase 2: Market & customer intelligence
+
+
+**Start with deep research.** Run `deep-research` first — it produces a rigorous, source-verified evidence report on the problem domain that every later phase cites instead of unverified claims. Mode by depth: light → *quick brief*; standard → *full research*; investor-ready/full-execution → *full research + three-way literature scan*.
+
+| # | Skill | Path |
+|---|-------|------|
+| 0 | `deep-research` | `academic-research-skills/deep-research/` — evidence report → `02-evidence-base.md` |
+| 1 | `customer-research` | `marketingskills/customer-research/` |
+| 1b | `avatar-extraction` | `advertising-skills/skills/foundations/avatar-extraction/` |
+| 2 | `market-research` | `awesome-claude-corporate-skills/04-marketing/market-research/` |
+| 3 | `competitor-profiling` | `marketingskills/competitor-profiling/` |
+| 4 | `competitive-analysis` | `awesome-claude-corporate-skills/01-executive-leadership/competitive-analysis/` |
+| 5 | `pestle-analysis` | `business-analysis-skills/skills/pestle-analysis/` |
+| 6 | `porters-five-forces` | `business-analysis-skills/skills/porters-five-forces/` |
+| 7 | `keyword-research` | `notfair-seo/keyword-research/` |
+| 8 | `evidence-gap-review` | `business-analysis-skills/skills/evidence-gap-review/` |
+
+**Output:** `02-evidence-base.md` (deep-research report) + `02-market-research.md` · **Only pause here if STOP/pivot warranted** → else ✅ → Phase 3
+
+---
+
+## Phase 3: Strategy & positioning
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `strategy-analysis` | `business-analysis-skills/skills/strategy-analysis/` |
+| 2 | `swot-prioritisation` | `business-analysis-skills/skills/swot-prioritisation/` |
+| 3 | `value-proposition-analysis` | `business-analysis-skills/skills/value-proposition-analysis/` |
+| 4 | `product-marketing` | `marketingskills/product-marketing/` → `.agents/product-marketing.md` |
+| 5 | `strategic-planning` | `awesome-claude-corporate-skills/01-executive-leadership/strategic-planning/` |
+| 6 | `marketing-psychology` | `marketingskills/marketing-psychology/` |
+
+**Output:** `03-strategy.md` + `.agents/product-marketing.md` → ✅ → Phase 4
+
+---
+
+## Phase 4: Business model & economics
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `stakeholder-analysis` | `business-analysis-skills/skills/stakeholder-analysis/` |
+| 2 | `pricing` | `marketingskills/pricing/` |
+| 3 | `offers` | `marketingskills/offers/` |
+| 3b | `offer-extraction` | `advertising-skills/skills/foundations/offer-extraction/` |
+| 4 | `unit-economics` | `awesome-claude-corporate-skills/02-finance-accounting/unit-economics/` |
+| 5 | `financial-plan` | `awesome-claude-corporate-skills/02-finance-accounting/financial-plan/` |
+| 6 | `business-case-builder` | `awesome-claude-corporate-skills/07-operations/business-case-builder/` |
+
+**Output:** `04-business-model.md` → ✅ → Phase 4B (if raising) or Phase 5
+
+---
+
+## Phase 4B: Funding & investor materials (skip if bootstrapped)
+
+
+Run when depth = **investor-ready** or intake says funding is needed. Owned by the CFO.
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `3-statements` | `awesome-claude-corporate-skills/02-finance-accounting/3-statements/` |
+| 2 | `dcf-model` | `awesome-claude-corporate-skills/02-finance-accounting/dcf-model/` |
+| 3 | `investment-proposal` | `awesome-claude-corporate-skills/02-finance-accounting/investment-proposal/` |
+| 4 | `pitch-deck` | `awesome-claude-corporate-skills/02-finance-accounting/pitch-deck/` |
+| 5 | `pptx` | `awesome-claude-corporate-skills/13-document-processing/pptx/` (deck file) |
+| 6 | `xlsx` | `awesome-claude-corporate-skills/13-document-processing/xlsx/` (model file) |
+
+**Output:** `04b-funding.md` + deck/model files → ✅ → Phase 5
+
+---
+
+## Phase 5: Product definition
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `requirements-elicitation` | `business-analysis-skills/skills/requirements-elicitation/` |
+| 2 | `moscow-prioritisation` | `business-analysis-skills/skills/moscow-prioritisation/` |
+| 3 | `requirements-packager` | `business-analysis-skills/skills/requirements-packager/` |
+| 4 | `prd-writer` | `awesome-claude-corporate-skills/09-product-management/prd-writer/` |
+| 5 | `feature-spec` | `awesome-claude-corporate-skills/09-product-management/feature-spec/` |
+| 6 | `roadmap-builder` | `awesome-claude-corporate-skills/09-product-management/roadmap-builder/` |
+| 7 | `acceptance-criteria-writer` | `business-analysis-skills/skills/acceptance-criteria-writer/` |
+
+**Output:** `05-prd.md` → ✅ → Phase 6
+
+---
+
+## Phase 6: GTM strategy
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `marketing-plan` | `marketingskills/marketing-plan/` |
+| 2 | `content-strategy` | `marketingskills/content-strategy/` |
+| 3 | `marketing-loops` | `marketingskills/marketing-loops/` |
+| 4 | `launch` | `marketingskills/launch/` |
+| 5 | `campaign-planner` | `awesome-claude-corporate-skills/04-marketing/campaign-planner/` |
+| 6 | `lead-magnets` | `marketingskills/lead-magnets/` |
+| 7 | `free-tools` | `marketingskills/free-tools/` |
+| 8 | `referrals` | `marketingskills/referrals/` |
+| 9 | `public-relations` | `marketingskills/public-relations/` |
+
+**Output:** `06-gtm-plan.md` → ✅ → Phase 7
+
+---
+
+## Phase 7: Sales & customer success
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `sales-enablement` | `marketingskills/sales-enablement/` |
+| 2 | `compose-outreach` | `awesome-claude-corporate-skills/05-sales/compose-outreach/` |
+| 3 | `call-prep` | `awesome-claude-corporate-skills/05-sales/call-prep/` |
+| 4 | `prospecting` | `marketingskills/prospecting/` |
+| 5 | `onboarding-playbook` | `awesome-claude-corporate-skills/11-customer-success/onboarding-playbook/` |
+| 6 | `qbr-builder` | `awesome-claude-corporate-skills/11-customer-success/qbr-builder/` |
+
+**Output:** `07-sales-playbook.md` → ✅ → Phase 8 (skip if B2C self-serve only)
+
+---
+
+## Phase 8: Operations & legal
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `sop-builder` | `awesome-claude-corporate-skills/07-operations/sop-builder/` |
+| 2 | `resource-planning` | `awesome-claude-corporate-skills/07-operations/resource-planning/` |
+| 3 | `risk-assessment` | `awesome-claude-corporate-skills/01-executive-leadership/risk-assessment/` |
+| 4 | `legal-risk-assessment` | `awesome-claude-corporate-skills/06-legal-compliance/legal-risk-assessment/` |
+| 5 | `compliance-tracking` | `awesome-claude-corporate-skills/06-legal-compliance/compliance-tracking/` |
+| 6 | `contract-review` | `awesome-claude-corporate-skills/06-legal-compliance/contract-review/` (vendor/customer templates) |
+| 7 | `vendor-management` | `awesome-claude-corporate-skills/07-operations/vendor-management/` |
+
+**Output:** `08-operations.md` → ✅ → Phase 8B (if hiring) or Phase 9
+
+---
+
+## Phase 8B: People & hiring plan (skip if solo/no hires planned)
+
+
+Run when the resource plan (Phase 8) or intake identifies roles to hire. Owned by the Head of People.
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `job-description-writer` | `awesome-claude-corporate-skills/03-human-resources/job-description-writer/` |
+| 2 | `interview-kit-builder` | `awesome-claude-corporate-skills/03-human-resources/interview-kit-builder/` |
+| 3 | `compensation-benchmarking` | `awesome-claude-corporate-skills/03-human-resources/compensation-benchmarking/` |
+| 4 | `onboarding-planner` | `awesome-claude-corporate-skills/03-human-resources/onboarding-planner/` |
+| 5 | `employee-handbook-builder` | `awesome-claude-corporate-skills/03-human-resources/employee-handbook-builder/` (if >3 hires) |
+
+**Output:** `08b-people-plan.md` — org chart, first 3 hires with JDs, interview kits, comp bands, 30-day onboarding → ✅ → Phase 9
+
+---
+
+## Phase 9: Build MVP (software)
+
+
+Skip if no software in scope. Follow engineering-workflow + baseline-verification.
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `software-architecture` | `awesome-claude-corporate-skills/08-it-engineering/software-architecture/` |
+| 2 | `system-design` | `awesome-claude-corporate-skills/08-it-engineering/system-design/` |
+| 3 | `test-driven-development` | `awesome-claude-corporate-skills/08-it-engineering/test-driven-development/` |
+| 4 | `nextjs` | `skills/plugins/vercel/nextjs/` |
+| 5 | `shadcn` | `skills/plugins/vercel/shadcn/` |
+| 6 | `supabase` | `skills/plugins/supabase/supabase/` |
+
+**Output:** working MVP + `09-build-log.md` → ✅ → Phase 9B (if hardware) or Phase 10
+
+---
+
+## Phase 9B: Hardware & CAD prototyping (skip if no physical product)
+
+
+Run when intake classifies **hardware, robotics, or physical product**. Read `05-prd.md` dimensional and material requirements first. Persist all artifacts under `docs/projects/<active>/business-idea/09b-hardware/`. Always preview with `cad-viewer` before marking done.
+
+| # | Skill | Path | When |
+|---|-------|------|------|
+| 1 | `step-parts` | `text-to-cad/step-parts/` | Always — source off-the-shelf fasteners, bearings, motors |
+| 2 | `cad` | `text-to-cad/cad/` | Always — STEP-first parametric models from PRD specs |
+| 3 | `cad-viewer` | `text-to-cad/cad-viewer/` | Always — preview STEP, STL, G-code, URDF in browser |
+| 4 | `dxf` | `text-to-cad/dxf/` | Sheet metal, laser cut, 2D fabrication layouts |
+| 5 | `urdf` | `text-to-cad/urdf/` | Robotics — links, joints, limits, meshes |
+| 6 | `srdf` | `text-to-cad/srdf/` | Robotics + MoveIt — planning groups, collision rules |
+| 7 | `sdf` | `text-to-cad/sdf/` | Simulation — physics models and worlds |
+| 8 | `gcode` | `text-to-cad/gcode/` | FDM 3D-print prototype |
+| 9 | `sendcutsend` | `text-to-cad/sendcutsend/` | CNC / sheet-metal upload prep |
+| 10 | `bambu-labs` | `text-to-cad/bambu-labs/` | Bambu Lab printer — upload and dry-run print |
+| 11 | `implicit-cad` | `text-to-cad/implicit-cad/` | Experimental implicit SDF models (optional) |
+
+**Output:** `09b-hardware-build.md` + `09b-hardware/` (STEP, DXF, URDF/SDF, gcode as applicable) → ✅ → Phase 10
+
+---
+
+## Phase 10: Strategy quality pass
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `requirements-quality-check` | `business-analysis-skills/skills/requirements-quality-check/` |
+| 2 | `deliverable-consistency-check` | `business-analysis-skills/skills/deliverable-consistency-check/` |
+| 3 | `critical-thinking-bias-check` | `business-analysis-skills/skills/critical-thinking-bias-check/` |
+| 4 | `deep-research` (fact-check mode) | `academic-research-skills/deep-research/` — verify the load-bearing claims in Phases 1–8 against `02-evidence-base.md` |
+
+**Output:** `10-strategy-review.md` → ✅ → Phase 11
+
+---
+
+## Phase 11: Brand & design system
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `discover-brand` | `awesome-claude-corporate-skills/04-marketing/discover-brand/` |
+| 2 | `brand-guidelines` | `awesome-claude-corporate-skills/04-marketing/brand-guidelines/` |
+| 3 | `brand-voice-enforcement` | `awesome-claude-corporate-skills/04-marketing/brand-voice-enforcement/` |
+| 4 | `brand` | `ui-ux-pro-max-skill/brand/` |
+| 5 | `design-system` | `ui-ux-pro-max-skill/design-system/` |
+| 6 | `theme-factory` | `awesome-claude-corporate-skills/04-marketing/theme-factory/` |
+| 7 | `guideline-generation` | `awesome-claude-corporate-skills/04-marketing/guideline-generation/` |
+| 8 | `domain-name-brainstormer` | `awesome-claude-corporate-skills/04-marketing/domain-name-brainstormer/` |
+| 9 | `image` (visual prompts) | `visual-skills/image/` — brand marks, mood boards, key visual prompts → render via `inference-sh` or OpenMontage/fal (`FAL_KEY` / `INFSH_API_KEY`) |
+
+**Output:** `11-brand-system.md` (+ visual prompts/assets as needed) → ✅ → Phase 12
+
+---
+
+## Phase 12: Web design & information architecture
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `ui-ux-pro-max` | `ui-ux-pro-max-skill/ui-ux-pro-max/` — run `--design-system --persist --output-dir <project-root>` |
+| 2 | `site-architecture` | `marketingskills/site-architecture/` |
+| 3 | `frontend-design` | `awesome-claude-corporate-skills/08-it-engineering/frontend-design/` |
+| 4 | `canvas-design` | `awesome-claude-corporate-skills/04-marketing/canvas-design/` |
+| 5 | `figma-implement-design` | `skills/user/figma-implement-design/` |
+| 6 | `design` | `ui-ux-pro-max-skill/design/` |
+| 7 | `ui-styling` | `ui-ux-pro-max-skill/ui-styling/` |
+
+**Persist:** `design-system/<project-slug>/MASTER.md` + page overrides in `pages/`
+
+**Output:** `12-web-design.md` + design system files → ✅ → Phase 13
+
+---
+
+## Phase 13: Copy foundation
+
+
+Read `.agents/product-marketing.md` before every skill in Phases 13–17.
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `copywriting` | `marketingskills/copywriting/` |
+| 2 | `copy-editing` | `marketingskills/copy-editing/` |
+| 3 | `content-research-writer` | `awesome-claude-corporate-skills/04-marketing/content-research-writer/` |
+| 4 | `natural-human-voice` | `skills/user/natural-human-voice/` |
+| 5 | `content-planner` | `notfair-seo/content-planner/` |
+| 6 | `schwartz-awareness-mapper` | `advertising-skills/skills/copy-chief/schwartz-awareness-mapper/` |
+| 7 | `mechanism-builder` | `advertising-skills/skills/copy-chief/mechanism-builder/` |
+| 8 | `headline-matrix` | `advertising-skills/skills/copy-chief/headline-matrix/` |
+| 9 | `objection-crusher` | `advertising-skills/skills/copy-chief/objection-crusher/` |
+| 10 | `generic-language-killer` | `advertising-skills/skills/qa/generic-language-killer/` (QA pass) |
+
+**Output:** `13-copy-foundation.md` (voice, messaging hierarchy, awareness level, mechanism, key headlines, objections) → ✅ → Phase 14
+
+---
+
+## Phase 14: Page & asset content (produce all pages)
+
+
+For **each page** in site architecture (homepage, pricing, about, features, blog pillar, etc.):
+
+| Step | Skill | Path |
+|------|-------|------|
+| A | `seo-page` | `notfair-seo/seo-page/` |
+| B | `content-writer` | `notfair-seo/content-writer/` |
+| C | `seo-content-optimizer` | `awesome-claude-corporate-skills/04-marketing/seo-content-optimizer/` |
+| D | `meta-tags-optimizer` | `notfair-seo/meta-tags-optimizer/` |
+| E | `schema-markup-generator` | `notfair-seo/schema-markup-generator/` |
+| F | `schema` | `marketingskills/schema/` |
+| G | `copy-editing` | `marketingskills/copy-editing/` (final pass) |
+
+Write each page to `docs/projects/<active>/business-idea/14-pages/<page-name>.md` with: URL, H1, meta title/description, body copy, schema JSON-LD, internal links.
+
+**Blog posts are pages too:** take the Phase 13 `content-planner` calendar and draft the **first 5–10 blog posts** in full through the same A–G pipeline, written to `14-pages/blog/<slug>.md`. Do not stop at the pillar page.
+
+**Also run (visuals):**
+1. `image` — `visual-skills/image/` (production prompts for heroes, product, editorial)
+2. Render via `inference-sh` (`nano-banana-2` / `gpt-image` / `ai-image-generation` / `ai-product-photography` as fits)
+3. `banner-design` — `ui-ux-pro-max-skill/banner-design/`
+4. Optional strategy pass: `image` — `marketingskills/image/`
+
+**Output:** `14-pages/` complete (all site pages + first blog posts + image prompts/assets) → ✅ → Phase 15
+
+---
+
+## Phase 15: Video & rich media
+
+**Plane B default:** video **Veo 3.1** via fal (`FAL_KEY`); audio ElevenLabs (`ELEVENLABS_API_KEY`). Scorecard: profile used or skip reason.
+
+**Primary path — OpenMontage** (`~/.cursor/skills/community/openmontage/`). Requires `make setup` once (Python 3.10+, FFmpeg, Node 18+). AGPL-3.0 — see pack LICENSE.
+
+| # | Step | Path / action |
+|---|------|----------------|
+| 0 | Read agent contract | `openmontage/AGENT_GUIDE.md` (+ `skills/meta/onboarding.md` if brief is vague) |
+| 1 | Select pipeline | `openmontage/pipeline_defs/` — e.g. `animated-explainer`, `cinematic`, `talking-head`, `documentary-montage`, `clip-factory`, `hybrid`, `screen-demo` |
+| 2 | Preflight | Tool registry discover / capability menu (see AGENT_GUIDE); confirm `FAL_KEY` + Veo 3.1 path |
+| 3 | Execute stages | For each stage: read `openmontage/skills/pipelines/<pipeline>/<stage>-director.md` before work; load Layer-3 skills from `openmontage/.agents/skills/` when tools declare them |
+| 4 | Optional prompt craft | `visual-skills/video/` (shot lists / model-specific prompt polish — Veo syntax) |
+| 5 | Channel strategy | `marketingskills/video/` |
+| 6 | Remotion helpers (if not using OpenMontage composer) | `remotion/video/remotion-create/` · `remotion-markup` · `remotion-interactivity` · `remotion-captions` · `remotion-render` |
+| 7 | Slides | `ui-ux-pro-max-skill/slides/` |
+
+**Output:** `15-media/` — OpenMontage project artifacts + finals under `15-media/openmontage/`, plus scripts/storyboards; handoff notes `generation_used` (e.g. `fal/veo-3.1`) → ✅ → Phase 16
+
+---
+
+## Phase 16: SEO implementation
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `seo-audit` | `marketingskills/seo-audit/` |
+| 2 | `seo-analysis` | `notfair-seo/seo-analysis/` |
+| 3 | `programmatic-seo` | `marketingskills/programmatic-seo/` |
+| 4 | `ai-seo` | `marketingskills/ai-seo/` |
+| 5 | `geo-optimizer` | `notfair-seo/geo-optimizer/` |
+| 6 | `broken-link-checker` | `notfair-seo/broken-link-checker/` |
+| 7 | `setup-cms` | `notfair-seo/setup-cms/` |
+| 8 | `directory-submissions` | `marketingskills/directory-submissions/` |
+
+**Output:** `16-seo.md` — technical checklist, keyword map, submission list → ✅ → Phase 17
+
+---
+
+## Phase 17: Email, social & SMS channels
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `emails` | `marketingskills/emails/` |
+| 2 | `email-marketing` | `awesome-claude-corporate-skills/04-marketing/email-marketing/` |
+| 3 | `social` | `marketingskills/social/` |
+| 4 | `social-media-strategy` | `awesome-claude-corporate-skills/04-marketing/social-media-strategy/` |
+| 5 | `twitter-algorithm-optimizer` | `awesome-claude-corporate-skills/04-marketing/twitter-algorithm-optimizer/` |
+| 6 | `sms` | `marketingskills/sms/` |
+| 7 | `cold-email` | `marketingskills/cold-email/` |
+| 8 | `community-marketing` | `marketingskills/community-marketing/` |
+
+Write **every email in every journey in full** (subject, preview text, body, CTA) — not outlines. Minimum journeys, each to `17-channels/emails/<journey>.md`:
+
+- Welcome/onboarding series (5–7 emails)
+- Launch announcement sequence (3–4 emails)
+- Nurture/education drip (5+ emails from Phase 14 blog content)
+- Win-back or abandoned-signup sequence (3 emails)
+- Cold outreach sequences (if B2B — from `cold-email`)
+
+**Output:** `17-channels/` — full email journeys, launch week calendar, 30-day social calendar with drafted posts, SMS templates → ✅ → Phase 18
+
+---
+
+## Phase 18: Conversion optimization
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `cro` | `marketingskills/cro/` |
+| 2 | `signup` | `marketingskills/signup/` |
+| 3 | `popups` | `marketingskills/popups/` |
+| 4 | `paywalls` | `marketingskills/paywalls/` |
+| 5 | `onboarding` | `marketingskills/onboarding/` |
+| 6 | `ab-testing` | `marketingskills/ab-testing/` |
+| 7 | `competitive-ads-extractor` | `awesome-claude-corporate-skills/04-marketing/competitive-ads-extractor/` |
+| 8 | `conversion-path-builder` | `advertising-skills/skills/operator-os/conversion-path-builder/` |
+
+**Output:** `18-conversion.md` — funnel map, CTA audit, conversion path, test hypotheses → ✅ → Phase 19
+
+---
+
+## Phase 19: Paid acquisition (skip if no budget)
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `ads` | `marketingskills/ads/` |
+| 2 | `ad-creative` | `marketingskills/ad-creative/` |
+| 3 | `ad-angle-multiplier` | `advertising-skills/skills/operator-os/ad-angle-multiplier/` |
+| 4 | `scroll-stopping-creative` | `advertising-skills/skills/operator-os/scroll-stopping-creative/` |
+| 5 | `image` (ad visuals) | `visual-skills/image/` — ad creative prompts → render via `inference-sh` or fal |
+| 6 | OpenMontage (video ads) | `openmontage/` — when paid needs video/UGC/trailer creatives: pipeline e.g. `clip-factory`, `hybrid`, `cinematic`, `talking-head` → finals also in `19-paid/openmontage/` (default video Veo 3.1) |
+| 7 | `full-funnel-campaign-orchestrator` | `advertising-skills/skills/orchestrators/full-funnel-campaign-orchestrator/` |
+| 8 | `aso` | `marketingskills/aso/` (if mobile app) |
+
+**Output:** `19-paid.md` — channel plan, ad angles, creative briefs, visual prompts/assets, video creatives, orchestrated funnel campaign → ✅ → Phase 20
+
+---
+
+## Phase 20: Analytics & iteration
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `analytics` | `marketingskills/analytics/` |
+| 2 | `kpi-dashboard` | `awesome-claude-corporate-skills/01-executive-leadership/kpi-dashboard/` |
+| 3 | `data-visualization` | `awesome-claude-corporate-skills/10-data-analytics/data-visualization/` |
+| 4 | `interactive-dashboard-builder` | `awesome-claude-corporate-skills/10-data-analytics/interactive-dashboard-builder/` |
+| 5 | `marketing-ideas` | `marketingskills/marketing-ideas/` |
+| 6 | `churn-prevention` | `marketingskills/churn-prevention/` |
+| 7 | `revops` | `marketingskills/revops/` |
+| 8 | `marketing-council` | `marketingskills/marketing-council/` |
+
+**Output:** `20-analytics.md` — KPI dashboard spec, event tracking plan → ✅ → Phase 21
+
+---
+
+## Phase 21: Launch & final QA (FINISH LINE)
+
+
+| # | Skill | Path |
+|---|-------|------|
+| 1 | `launch` | `marketingskills/launch/` (final checklist) |
+| 2 | `seo-audit` | `marketingskills/seo-audit/` (final pass) |
+| 3 | `cro` | `marketingskills/cro/` (final pass) |
+| 4 | `requirements-quality-check` | `business-analysis-skills/skills/requirements-quality-check/` |
+| 5 | `deliverable-consistency-check` | `business-analysis-skills/skills/deliverable-consistency-check/` |
+| 6 | `post-plan-deep-review` | rule: `post-plan-deep-review.mdc` |
+
+**Output:** `21-executive-summary.md` — one-pager: idea, market, product, GTM, what's built, launch checklist, next 90 days.
+
+**Mark RUNBOOK-TRACKER Phase 21 → ✅. Runbook complete. Phase 22 begins the operating loop.**
+
+---
+
+## Phase 22: Operate (ongoing, post-launch)
+
+
+The runbook finishes at 21; the business doesn't. When the user returns after launch, run this recurring cadence instead of restarting phases. Owned by the CEO role.
+
+| Cadence | Skill | Path |
+|---------|-------|------|
+| Weekly | `project-status-report` | `awesome-claude-corporate-skills/07-operations/project-status-report/` |
+| Weekly | `analytics` review vs Phase 20 KPIs | `marketingskills/analytics/` |
+| Monthly | `marketing-council` (critique live funnel) | `marketingskills/marketing-council/` |
+| Monthly | `kaizen` / `process-optimization` | `awesome-claude-corporate-skills/07-operations/` |
+| Quarterly | `board-meeting-prep` + `executive-communication` | `awesome-claude-corporate-skills/01-executive-leadership/` |
+| On incident | `incident-postmortem` | `awesome-claude-corporate-skills/07-operations/incident-postmortem/` |
+| On paid underperformance | `performance-diagnosis` | `advertising-skills/skills/operator-os/performance-diagnosis/` |
+
+Each cycle: read `20-analytics.md` KPIs → report actuals vs targets → propose top 3 actions → on approval, re-open the relevant phase (e.g. weak conversion → re-run Phase 18) and log it in the tracker's decisions log.
+
+**Output:** `22-operating-cadence.md` — living log, newest entry on top.
+
+---
+
+## Phase flow diagram
+
+```
+0 Intake → 1 Frame → 2 Market → 3 Strategy → 4 Model → 4B Funding* → 5 Product
+    → 6 GTM → 7 Sales → 8 Ops → 8B People* → 9 Build → 9B Hardware* → 10 QA
+    → 11 Brand → 12 Web Design → 13 Copy → 14 Pages
+    → 15 Video → 16 SEO → 17 Channels → 18 CRO → 19 Paid → 20 Analytics → 21 Launch ✅
+    → 22 Operate (recurring loop)          * = conditional
+```
+
+---
+
+## Fast paths (still continuous within path)
+
+| User says | Phases to run (in order, no stops) |
+|-----------|-------------------------------------|
+| Full execution (default) | 0 → 21 all applicable (4B/8B if triggered), then 22 |
+| Validate only | 0 → 1 → 2 → 4 → 10 → 21 |
+| Fundraise | 0 → 1 → 2 → 3 → 4 → 4B → 21 |
+| Marketing & content only | 0 → 3 → 11 → 12 → 13 → 14 → 16 → 17 → 18 → 21 |
+| Web + content | 0 → 3 → 11 → 12 → 13 → 14 → 16 → 21 |
+| Build + launch | 0 → 5 → 9 → 11 → 12 → 14 → 17 → 21 |
+| Hardware prototype | 0 → 5 → 9B → 21 |
+| Hiring plan only | 0 → 8 → 8B → 21 |
+| Post-launch check-in | 22 only (recurring) |
+
+---
+
+## Rationalization prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "I'll stop after the strategy phases" | User asked for execution. Phases 11–21 are the deliverables. Keep going. |
+| "Content can be a follow-up session" | Write Phase 14 pages now. Tracker enables resume, not deferral. |
+| "Design system is overkill" | Phase 12 output prevents rework in 14–18. Run ui-ux-pro-max. |
+| "I'll skip SEO until after launch" | Phase 16 is pre-launch SEO. Launch without it wastes Phase 14 content. |
+| "Phase 19 needs client budget approval" | Skip with reason, continue to 20. Do not halt the runbook. |

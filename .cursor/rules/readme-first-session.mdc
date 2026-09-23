@@ -1,0 +1,48 @@
+---
+description: Doc-reading checklist for session startup — invoked by startup-session, not a standalone ritual
+alwaysApply: true
+---
+
+# README-First (Documentation Loading)
+
+**Invoked by** [startup-session.mdc](mdc:.cursor/rules/startup-session.mdc) step 1. This rule defines **what to read** before coding. It does not replace the full startup ritual (scope, git, baseline, plan).
+
+For project-specific facts (stack, commands, gaps), prefer [project-context.mdc](mdc:.cursor/rules/project-context.mdc) when the project has filled it in.
+
+## Required Reads
+
+| Priority | Document | When |
+|----------|----------|------|
+| 1 | Root `README.md` | Always |
+| 2 | `ARCHITECTURE.md` or equivalent | If it exists |
+| 3 | Service README (`frontend/`, `backend/`, etc.) | When that service is in scope |
+
+## On-Demand Reads
+
+Read when the task touches the area — do not load everything upfront:
+
+| Task touches | Also read |
+|--------------|-----------|
+| Frontend routes, components, API calls | Frontend README + relevant `docs/` |
+| Backend API, services, DB | Backend README + schema/migrations |
+| Schema, migrations | Recent migration files + schema docs |
+| Auth, permissions, multi-tenancy | Auth docs + middleware |
+| Deployment, env, CI | Deploy docs + `.env.example` |
+
+## While Working (not just at startup)
+
+- **Code vs docs conflict** → verify code behavior first, update docs same session
+- **Major changes** → trace impacted path across full data flow before editing
+- **Terminology** → keep docs and code aligned
+- **Completion** → don't mark done until docs reflect implemented behavior (see [documentation-maintenance.mdc](mdc:.cursor/rules/documentation-maintenance.mdc))
+
+## README Delta Template
+
+When recording changes in a changelog:
+
+- **What changed** — one-line behavior description
+- **Why** — bug fix / feature / refactor
+- **Code touchpoints** — changed file paths
+- **Data-flow impact** — which stages changed (or "none")
+- **API / schema impact** — contract or migration changes (or "none")
+- **Verification** — commands run + result

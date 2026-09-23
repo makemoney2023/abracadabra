@@ -1,0 +1,42 @@
+---
+description: Doc-drift decision matrix — what to update when code changes
+alwaysApply: true
+---
+
+# Documentation Maintenance
+
+Docs stay truthful or they lie. Update docs in the same session as code changes.
+
+## Decision Matrix
+
+| Change kind | Must update |
+|---|---|
+| API endpoint added / removed / behavior changed | API docs + README + changelog |
+| Database migration (table / index / RLS / function) | Migration file + schema docs + types |
+| New env var / renamed env var | `.env.example` + README + changelog |
+| Auth flow or permissions changed | Auth docs + README |
+| Frontend route or component behavior changed | Frontend README + changelog |
+| Dependency bump affecting behavior | README stack section + changelog |
+| Architecture or data flow changed | `ARCHITECTURE.md` + changelog |
+
+## Changelog Policy
+
+- Newest entries at the top of changelog files.
+- Never append deltas to hub READMEs — hubs stay as stable references.
+- If a hub fact is wrong, fix the hub and record the fix in the changelog.
+
+## Verification
+
+Before marking any doc update complete:
+
+- [ ] Every file listed in the decision matrix for the change kind has been updated.
+- [ ] Code and docs agree (no stale examples, env vars, or IDs).
+- [ ] Changelog delta is present with a date and touchpoints.
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|---|---|
+| "The code is self-documenting" | Code does not tell operators how to deploy it. Update the doc. |
+| "I'll update docs in a follow-up" | Follow-ups never come. Update in the same commit. |
+| "The changelog is noisy" | The changelog is the audit trail. Add the entry. |

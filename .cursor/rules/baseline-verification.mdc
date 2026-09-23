@@ -1,0 +1,56 @@
+---
+description: Discover and run test/lint baseline before editing code — applies when code files are in context
+globs: "**/*.{ts,tsx,js,jsx,mjs,cjs,py,go,rs,java,kt,swift,rb,php,vue,svelte,cs,cpp,c,h,hpp,sql,sh}"
+alwaysApply: false
+---
+
+# Baseline Verification
+
+Run **before the first code edit** in a session when this rule is active (code files in context). Invoked by [startup-session.mdc](mdc:.cursor/rules/startup-session.mdc) steps 4–5.
+
+**Skip entirely** for pure Q&A, doc-only edits, or planning conversations with no code changes.
+
+## 1. Discover verification commands
+
+Do not assume `npm test` or `pytest`.
+
+**Priority order for discovery:**
+
+1. [project-context.mdc](mdc:.cursor/rules/project-context.mdc) — if the project filled in the Verification Commands table, use it
+2. Service `README.md` — look for "Development", "Testing", "Scripts"
+3. `package.json` / `pyproject.toml` / `Makefile` / `justfile` / CI workflow files
+
+Record what you will run:
+
+| Check | Command | CWD |
+|-------|---------|-----|
+| Tests | | |
+| Lint / types | | |
+| Build (non-trivial changes only) | | |
+
+If no harness exists, state that explicitly in the startup output — do not fake a green baseline.
+
+## 2. Run baseline (before first edit)
+
+Execute commands for the **affected service only** (don't run the full monorepo suite unless the change is cross-cutting).
+
+- **Green baseline** → later failures are attributable to your changes
+- **Red baseline** → report output, ask whether to fix first or proceed knowingly
+- Never claim "tests pass" without running them and reading the output
+
+## 3. Re-verify when scope shifts
+
+Re-run baseline when:
+
+- Switching from frontend to backend (or vice versa) mid-session
+- Pulling new commits or switching branches
+- A previous red baseline was "accepted" and you haven't fixed it yet
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "I'm only changing one file" | One file on a red baseline wastes debug time. Run the affected suite. |
+| "Lint is slow" | Slow lint is cheaper than shipping a type error. Run it. |
+| "CI will catch it" | CI runs after you push. Catch it before the first edit. |
+| "The glob triggered but this is a question" | Skip baseline; answer the question. Don't edit code without baseline. |

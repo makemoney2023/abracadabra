@@ -1,0 +1,118 @@
+---
+description: Mandatory start-of-session ritual — orient, confirm scope, plan; baseline runs via globs when editing code
+alwaysApply: true
+---
+
+# Startup Session
+
+Run at the **start of every working session** before writing or changing code. This rule **orchestrates** the ritual; sister rules carry the detail:
+
+| Rule | Role |
+|------|------|
+| [readme-first-session.mdc](mdc:.cursor/rules/readme-first-session.mdc) | What docs to read (step 1) |
+| [project-context.mdc](mdc:.cursor/rules/project-context.mdc) | Stack, layout, commands — if the project copied the template |
+| [baseline-verification.mdc](mdc:.cursor/rules/baseline-verification.mdc) | Test/lint baseline before code edits (globs-triggered) |
+| [engineering-workflow.mdc](mdc:.cursor/rules/engineering-workflow.mdc) | Dev loop after startup |
+| [testing-tdd.mdc](mdc:.cursor/rules/testing-tdd.mdc) / [no-scaffold-code.mdc](mdc:.cursor/rules/no-scaffold-code.mdc) | Quality gates during execution |
+
+## When to Run
+
+**Full ritual** when:
+
+- A new chat/session starts
+- You switch branches or return after a long gap
+- Task scope changes materially (frontend → backend, feature → infra)
+- The user gives a multi-step or architectural request
+
+**Abbreviated** (steps 1–2 only) for:
+
+- Pure Q&A with no code changes
+- Doc-only edits
+- Single trivial follow-up in the same session (typo, one-line clarification)
+
+When abbreviated, skip git baseline and baseline verification; still confirm scope.
+
+## 1. Orient (read, don't guess)
+
+Execute the checklist in [readme-first-session.mdc](mdc:.cursor/rules/readme-first-session.mdc).
+
+Additionally:
+
+- Read [project-context.mdc](mdc:.cursor/rules/project-context.mdc) if present and filled in
+- Scan `.cursor/skills/` — load any skill matching the task domain
+- Glance at open terminals before starting new dev servers
+- Note which docs MCP / search you'll use for library questions (step 6)
+
+## 2. Confirm scope (before touching code)
+
+Restate in 1–3 sentences:
+
+- **Goal** — what the user wants done
+- **Surfaces** — apps/packages/dirs in scope
+- **Out of scope** — what you will not change unless asked
+
+If ambiguous or multiple valid approaches exist, ask **one** clarifying question before proceeding.
+
+## 3. Establish git baseline
+
+If the project is a git repo:
+
+```bash
+git status
+git branch --show-current
+git log --oneline -5
+```
+
+- Flag unrelated uncommitted changes before starting new work
+- Note behind/ahead of remote when it matters
+- Do not stack new work on unrelated dirty state without telling the user
+
+If not a git repo, note that and proceed.
+
+## 4. Baseline verification (code changes only)
+
+When you will edit code, follow [baseline-verification.mdc](mdc:.cursor/rules/baseline-verification.mdc) — discover commands, run tests/lint **before** the first edit.
+
+That rule activates via globs when code files are in context. For Q&A-only sessions, write `Baseline: skipped — no code changes` in the startup output.
+
+## 5. Plan before editing
+
+For non-trivial work:
+
+- Outline the approach or use task tracking
+- Identify affected files and trace data paths before changing them
+- Search for existing patterns; reuse before new abstractions
+- Multi-step work: implement directly or plan first — see [post-plan-deep-review.mdc](mdc:.cursor/rules/post-plan-deep-review.mdc)
+
+## 6. Research before coding
+
+- Consult up-to-date docs for libraries/frameworks/APIs — training data may be stale
+- Retrieve secrets from the configured source; never hardcode
+- Check `.env.example` when touching config or integrations
+
+## Startup Output (required)
+
+Emit before the first code edit (or before answering, for abbreviated Q&A):
+
+```
+## Session startup
+- **Goal**: …
+- **Scope**: …
+- **Docs read**: …
+- **Git**: branch / clean or dirty (or "not a git repo")
+- **Baseline**: commands + pass/fail | skipped — no code changes | see baseline-verification
+- **Plan**: one-line approach
+- **Blockers**: none / list
+```
+
+Keep it short — evidence of orientation, not a report for its own sake.
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "The task is small, I'll skip startup" | Run steps 2 + 4 minimum for any code change. |
+| "I remember this project" | Memory drifts. Read project-context and README. |
+| "Tests were passing last session" | Re-run per baseline-verification. State changes. |
+| "Pure question, but I'll tweak one line" | Scope changed — run baseline before that line. |
+| "The user wants it fast" | Fast wrong is slower. Orient, then move with confidence. |

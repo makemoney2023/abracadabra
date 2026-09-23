@@ -1,0 +1,68 @@
+---
+description: Engineering workflow — task-driven, test-first, fully wired, verified before done
+alwaysApply: true
+---
+
+# Engineering Workflow
+
+Every change follows the same loop. Do not skip steps.
+
+## The Loop
+
+```
+1. Pick a task                         →  what & why
+2. Write a failing test (TDD)          →  prove the gap
+3. Implement the minimal code to pass  →  behavior
+4. Wire it end-to-end (no scaffold)    →  reachable
+5. Run tests + lint (verification)     →  evidence
+6. Update docs (README)                →  truth
+7. Mark task done / commit when asked  →  close out
+```
+
+## Task-Driven Development
+
+- Begin from a defined task. Read requirements before coding.
+- Break down complex tasks into subtasks.
+- Mark complete only after verification.
+- Add tasks discovered mid-implementation rather than silently expanding scope.
+
+## Test-Driven Development (required)
+
+- **Write the test first**, watch it fail, then implement.
+- Mock external services in tests. New tests must run offline where possible.
+- New function → happy path + edge case tests.
+- New API route → request/response shape test.
+- New tool/integration → happy path + error path tests.
+
+## End-to-End Completeness
+
+Code that compiles but isn't wired is a defect. Confirm:
+
+- **Called** — every new function has a real call site.
+- **Connected** — every backend route has a real consumer.
+- **Wired** — components receive real data, not placeholders.
+- **Handled** — every error path has real handling.
+- **Typed** — request/response shapes match across boundaries.
+- **Configured** — new env vars added to `.env.example` and deployment config.
+
+### Banned patterns
+
+`TODO`/`FIXME` without tracking · placeholder `pass`/empty bodies · `throw new Error("not implemented")` · hardcoded mock data in real components · unused imports · tools with no consumer · frontend calls to nonexistent endpoints.
+
+## Verification Before "Done"
+
+Never claim success without running the command and reading the output.
+
+- Tests → zero failures.
+- Linter → clean on changed files.
+- If you cannot run a check, say so explicitly — do not assume it passes.
+
+## Git & Commits
+
+- Only commit when the user asks. Write clear messages focused on the "why".
+- Never commit secrets. Do not update git config or force-push without explicit instruction.
+
+## Research Before Coding
+
+- Consult up-to-date docs via documentation MCP / web search before writing code.
+- Training data may be stale — verify against current docs.

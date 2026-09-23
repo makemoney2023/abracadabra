@@ -1,0 +1,43 @@
+---
+description: Test-driven development and verification policy
+alwaysApply: true
+---
+
+# Testing & TDD Policy
+
+TDD is the default for new behavior. Write the test first, implement the minimum to pass, refactor with tests green.
+
+## TDD Flow
+
+1. Write the failing test first. Confirm it fails for the intended reason.
+2. Write the minimum code to pass.
+3. Refactor with tests still green.
+4. Wire the change end-to-end (see `no-scaffold-code.mdc`).
+5. Update docs if behavior changed.
+
+Skip TDD only for: trivial stylistic tweaks, pure docs changes, or when the user explicitly says "no TDD".
+
+## Required Tests for New Code
+
+- Every new pure function gets at least one happy-path + one edge-case test.
+- Every new API route handler gets a request/response shape test.
+- Every new component with logic gets a behavior test.
+- Mock external APIs and services. Do not hit real APIs in unit tests.
+
+## Pre-Merge Verification
+
+Before marking work complete:
+
+- [ ] Full test suite passes
+- [ ] Type checker passes (if applicable)
+- [ ] Linter clean on all changed files
+- [ ] Integration traced end-to-end
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "It's a one-line fix" | One-line fixes regress. Add the test. |
+| "The behavior is obvious" | If it is obvious, the test is easy. Write it. |
+| "I'll add tests in a follow-up" | Follow-ups never come. Test now. |
+| "I ran it manually" | Manual runs are not reproducible. Automate. |

@@ -1,0 +1,112 @@
+---
+description: Project context template — copy to your project, fill in placeholders, set alwaysApply true
+alwaysApply: false
+---
+
+# Project Context
+
+> **Template rule.** Copy this file to `.cursor/rules/project-context.mdc`, replace every `<!-- ... -->` placeholder with real project facts, then set `alwaysApply: true` in the frontmatter. Delete this banner.
+
+Loaded during [startup-session.mdc](mdc:.cursor/rules/startup-session.mdc) step 1. Keeps the agent oriented without re-deriving architecture every session.
+
+## Stack
+
+| Layer | Technology | Notes |
+|-------|------------|-------|
+| Frontend | <!-- e.g. Next.js 15, App Router --> | <!-- package manager, deploy target --> |
+| Backend | <!-- e.g. FastAPI, Supabase Edge Functions --> | <!-- runtime, hosting --> |
+| Database | <!-- e.g. Supabase Postgres --> | <!-- ORM/client, migration tool --> |
+| Auth | <!-- e.g. Supabase Auth, Clerk --> | |
+| Testing | <!-- e.g. Vitest, pytest --> | |
+| CI/CD | <!-- e.g. GitHub Actions, Vercel --> | |
+
+## Repository Layout
+
+```
+<!-- Paste your top-level tree. Example: -->
+project-root/
+├── frontend/          # <!-- one-line purpose -->
+├── backend/           # <!-- one-line purpose -->
+├── docs/              # <!-- architecture, ADRs, runbooks -->
+└── .cursor/
+    ├── rules/         # project rules
+    └── skills/        # project skills
+```
+
+## Key Entry Points
+
+| Area | Path | Purpose |
+|------|------|---------|
+| App entry | <!-- e.g. frontend/src/app/page.tsx --> | |
+| API layer | <!-- e.g. backend/main.py --> | |
+| DB schema | <!-- e.g. supabase/migrations/ --> | |
+| Shared types | <!-- e.g. frontend/src/lib/types.ts --> | |
+| Env template | <!-- e.g. .env.example --> | |
+
+## Data Flow (critical paths)
+
+Trace these before cross-cutting changes:
+
+```
+<!-- Example: -->
+User action → frontend component → API route → service → DB
+                                    ↓
+                              external API (if any)
+```
+
+**Paths to know:**
+
+1. <!-- e.g. Auth: login → session → protected routes -->
+2. <!-- e.g. Core feature: … -->
+3. <!-- e.g. Background jobs: … -->
+
+## Verification Commands
+
+Canonical commands for [baseline-verification.mdc](mdc:.cursor/rules/baseline-verification.mdc):
+
+| Check | Command | Working directory |
+|-------|---------|-------------------|
+| Tests | <!-- e.g. pnpm test --> | <!-- e.g. frontend/ --> |
+| Lint | <!-- e.g. pnpm lint --> | <!-- e.g. frontend/ --> |
+| Types | <!-- e.g. pnpm tsc --noEmit --> | <!-- e.g. frontend/ --> |
+| Backend tests | <!-- e.g. pytest -q --> | <!-- e.g. backend/ --> |
+| Build | <!-- e.g. pnpm build --> | <!-- only when needed --> |
+
+## Conventions (project-specific)
+
+- <!-- Package manager: pnpm / npm / yarn / uv -->
+- <!-- Commit style: conventional commits / task IDs -->
+- <!-- Branch strategy: main + feature branches -->
+- <!-- File creation: only in frontend/ and backend/ (example) -->
+- <!-- Design system: shadcn, Tailwind tokens, etc. -->
+
+## Known Gaps & Caveats
+
+Things the agent must not assume exist:
+
+| Gap | Impact | Workaround |
+|-----|--------|------------|
+| <!-- e.g. Missing shared config from monorepo --> | <!-- builds fail locally --> | <!-- vendor or stub --> |
+| <!-- e.g. RAG index not wired --> | <!-- search returns empty --> | <!-- document in README --> |
+
+## Secrets & Config
+
+- **Env template:** <!-- path to .env.example -->
+- **Secrets source:** <!-- Obsidian MCP / 1Password / team vault — never hardcode -->
+- **Required for local dev:** <!-- list keys by name only, not values -->
+
+## Terminology
+
+| Term | Meaning in this project |
+|------|-------------------------|
+| <!-- e.g. practitioner --> | <!-- domain definition --> |
+| <!-- e.g. pathway --> | <!-- domain definition --> |
+
+## Maintenance
+
+Update this file when:
+
+- Stack or deploy target changes
+- New top-level package or service is added
+- Verification commands change
+- A known gap is fixed or a new one is discovered

@@ -1,0 +1,83 @@
+---
+description: Enforce end-to-end code completeness -- no scaffolding, dead code, or broken wiring
+alwaysApply: true
+---
+
+# No-Scaffold / End-to-End Completeness Rule
+
+Every piece of code must be fully wired, integrated, and functional. Scaffolding that compiles but does nothing real is a defect.
+
+## Definition of Complete Code
+
+Every unit of code written in a session must satisfy ALL of these properties:
+
+- **Called**: Every function/method is invoked from at least one real code path (not just tests).
+- **Connected**: Every API endpoint has a corresponding frontend call; every frontend call hits a real backend endpoint.
+- **Wired**: Every component receives real data from actual state/API -- not hardcoded placeholders or dummy values.
+- **Handled**: Every error path has real handling -- not empty catch blocks, not `pass`, not `TODO`, not `console.log` alone.
+- **Imported**: Every import is used; every used symbol is imported.
+- **Routed**: Every route is reachable from navigation; every navigation target exists as a real route.
+- **Typed**: Request/response shapes match across the frontend-backend boundary.
+- **Configured**: Any new env var is added to `.env.example` / `.env.local.example` and documented for deployment.
+
+If ANY property is missing, the code is incomplete. Do not move on.
+
+## Banned Patterns
+
+| Pattern | Why it fails |
+|---------|-------------|
+| `TODO`, `FIXME`, `HACK`, `XXX` without a tracked issue | Deferred work with no tracking is forgotten work |
+| `pass` or empty function/method bodies as placeholders | Dead code that silently does nothing |
+| `throw new Error("not implemented")` or equivalent | Runtime bomb waiting to explode |
+| `console.log` / `print()` as the only error handling | Errors swallowed in production |
+| Hardcoded mock data in production components | UI lies about system state |
+| Unused imports, variables, or functions | Dead code that obscures real logic |
+| API routes with no frontend consumer | Backend work that cannot be reached |
+| Frontend calls to endpoints that do not exist yet | UI that will crash on interaction |
+| Components that accept props but are rendered with hardcoded values | Wiring that looks connected but is not |
+| State slices or hooks defined but never read or dispatched | Infrastructure with no consumers |
+
+## Integration Tracing Checklist
+
+### Backend path
+1. DB query/mutation executes correctly
+2. Service/utility function transforms data as expected
+3. API route calls the service and returns the correct response shape
+4. Auth middleware protects the route if required
+5. Error cases return proper HTTP status codes and messages
+
+### Frontend path
+1. API client function calls the correct endpoint with correct params
+2. State management calls the API client and stores the result
+3. Component reads from state and renders real data
+4. User interactions dispatch real actions that trigger real API calls
+5. Loading, error, and empty states are handled
+
+### Cross-boundary verification
+1. Request body/params sent by frontend match what the backend expects
+2. Response shape returned by backend matches what the frontend destructures
+3. Auth tokens are attached to requests and validated on the backend
+
+### Environment and config
+1. New env vars added to `.env.example` / `.env.local.example`
+2. New vars documented for deployment platform
+3. No secrets hardcoded in source
+
+## Verification Protocol
+
+1. **Trace callers**: For every new function, find at least one real call site.
+2. **Trace endpoints**: For every new API route, find the frontend fetch/call that hits it.
+3. **Trace props**: For every new component prop, find where real data is passed in.
+4. **Trace state**: For every new state variable/hook, find where it is read AND written.
+5. **Run tests**: Execute the relevant test suite. Zero failures required.
+6. **Run linter**: Execute linter on changed files. Zero new errors required.
+7. **Cross-stack check**: If the change touches both frontend and backend, verify the integration works as a pair.
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "I'll wire it up in the next PR" | Unwired code in main is dead code. Wire it now or don't merge it. |
+| "The frontend isn't ready yet" | Build both together or don't build either yet. |
+| "It compiles and the tests pass" | Compiling proves syntax. Tests prove behavior. Neither proves wiring. |
+| "This is just scaffolding for now" | Scaffolding is not shippable. Either finish it or don't commit it. |
