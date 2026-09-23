@@ -32,7 +32,7 @@ That's the business, minus the theatrics. Say the process, the exceptions, the w
 
 ## Brand
 
-**One line.** Your operation, turned into software.
+**One line.** From thought to working software.
 
 **Promise.** We go deep on the intent behind the request, the context underneath it, and the words your people already use, then we ship the system, the film, and the script your team runs. We shrink the gap between what's in your head and what's actually running in production. From zero to scale, at the speed of thought.
 
@@ -82,11 +82,15 @@ Paste-ready. Section order is the page.
 
 ### 1. Hero
 
-**Eyebrow:** Bespoke operational software
+**Eyebrow:** Software at the speed of thought
 
-**Headline:** Your operation, turned into software.
+**Headline:** From thought to working software.
 
-**Subhead:** Show us the handoffs, exceptions, and approvals. We build the system around them — not the other way around.
+**Subhead:** Tell us how your business works. Our AI agents map the operation, design the experience, build the system, and test it in parallel — while experienced people direct every decision.
+
+**Demonstration:** A general customer request resolves through **Describe → Map → Build → Run it**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from one shared brief. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example.
+
+**Claim boundary:** “At the speed of thought” describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence.
 
 **Primary CTA:** Show us how it works
 **Secondary CTA:** See what we've built
@@ -95,7 +99,7 @@ Paste-ready. Section order is the page.
 
 | Option | Line | Why it exists |
 |---|---|---|
-| A (use this) | Your operation, turned into software. | Names the input and output in six words. |
+| A (use this) | From thought to working software. | Restores the brand premise and names the transformation plainly. |
 | B | Software for the way your company actually works. | More literal alternative for acquisition pages. |
 | C | From a blank page to a system your team can demo. | Strong on the leave-behind. Weaker on fit. |
 | D | We shrink the gap between what you meant and what's running. | Leads with the mechanism, not the product. Test against A. |
@@ -204,8 +208,8 @@ Bring the workflow, the words, and the outcome you want on the other side — no
 
 ### Meta
 
-- **Title:** Abra-ca-dabra: Software built around how you work
-- **Description:** Bespoke software built around how you already run the business, at any scale. Intent, context, and prompt engineering shipped as working systems.
+- **Title:** Abra-ca-dabra: From thought to working software
+- **Description:** AI agents map, design, build, and test bespoke software in parallel—directed by experienced people and grounded in working product proof.
 - **Canonical:** `https://abra-ca-dabra.app/`
 - **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo and live captures").
 - **Crawler files:** `/robots.txt` (AI answer engines allowed by name), `/sitemap.xml` (image and video extensions), `/llms.txt` (a quotable summary with the dated pirx.ca figures and the non-diagnostic rule).

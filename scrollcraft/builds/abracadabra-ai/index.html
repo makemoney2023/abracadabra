@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Abra-ca-dabra: Your operation, turned into software</title>
-<meta name="description" content="Bespoke software built around your handoffs, exceptions, and approvals—plus answer-engine optimization grounded in measured proof.">
+<title>Abra-ca-dabra: From thought to working software</title>
+<meta name="description" content="AI agents map, design, build, and test bespoke software in parallel—directed by experienced people and grounded in working product proof.">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 <meta name="author" content="Abracadabra AI">
 <meta name="theme-color" content="#0B0A08">
@@ -15,15 +15,15 @@
 <meta property="og:site_name" content="Abracadabra AI">
 <meta property="og:locale" content="en_CA">
 <meta property="og:url" content="https://abra-ca-dabra.app/">
-<meta property="og:title" content="Abra-ca-dabra: Your operation, turned into software">
-<meta property="og:description" content="Show us the handoffs, exceptions, and approvals. We build the system around them—not the other way around.">
+<meta property="og:title" content="Abra-ca-dabra: From thought to working software">
+<meta property="og:description" content="Tell us how the business works. Coordinated AI agents turn that operation into tested software while experienced people direct every decision.">
 <meta property="og:image" content="https://abra-ca-dabra.app/assets/showdesk-home.webp">
 <meta property="og:image:width" content="1600">
 <meta property="og:image:height" content="1000">
 <meta property="og:image:alt" content="Showdesk, a live-event operations app, shown as the first specimen in the Abracadabra AI catalog.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Abra-ca-dabra: Your operation, turned into software">
-<meta name="twitter:description" content="Bespoke operational software and answer-engine optimization grounded in real product proof.">
+<meta name="twitter:title" content="Abra-ca-dabra: From thought to working software">
+<meta name="twitter:description" content="From zero to scale at the speed of thought: coordinated AI agents, experienced direction, and working software.">
 <meta name="twitter:image" content="https://abra-ca-dabra.app/assets/showdesk-home.webp">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230B0A08'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23E23B2F'%3EA%3C/text%3E%3C/svg%3E">
@@ -45,7 +45,7 @@
       "url": "https://abra-ca-dabra.app/",
       "email": "dev@pirx.ca",
       "description": "A software studio that builds bespoke systems around how a business already runs, at any scale. The work is reading intent and context correctly, then turning that read into prompts, architecture, and production software, delivered with a film and a script the team runs.",
-      "slogan": "Your operation, turned into software",
+      "slogan": "From thought to working software",
       "knowsAbout": [
         "Bespoke software development",
         "Prompt engineering",
@@ -78,9 +78,9 @@
       "@type": "WebPage",
       "@id": "https://abra-ca-dabra.app/#webpage",
       "url": "https://abra-ca-dabra.app/",
-      "name": "Abra-ca-dabra: Your operation, turned into software",
-      "headline": "Your operation, turned into software.",
-      "description": "Bespoke software built around your handoffs, exceptions, and approvals, plus answer-engine optimization grounded in measured proof.",
+      "name": "Abra-ca-dabra: From thought to working software",
+      "headline": "From thought to working software.",
+      "description": "Coordinated AI agents map, design, build, and test bespoke software in parallel while experienced people direct every decision.",
       "isPartOf": { "@id": "https://abra-ca-dabra.app/#website" },
       "about": { "@id": "https://abra-ca-dabra.app/#org" },
       "author": { "@id": "https://abra-ca-dabra.app/#org" },
@@ -362,7 +362,7 @@
   .hero__copy .cta { margin-top: var(--sc-5); }
   .hero__tag { display: none; }
 
-  /* signature mechanism: plain intent compiles into structure, workflow, then product */
+  /* signature mechanism: plain intent becomes a mapped operation, a parallel build, then product */
   .intent-demo {
     position: relative; min-height: min(58vh, 40rem); overflow: hidden;
     border: 1px solid color-mix(in oklab, var(--sc-ink) 26%, transparent);
@@ -400,8 +400,8 @@
     transition: opacity 420ms var(--sc-ease-out), transform 520ms var(--sc-ease-out), visibility 0s linear 520ms;
   }
   .intent-demo[data-active-state="describe"] [data-compiler-panel="describe"],
-  .intent-demo[data-active-state="parse"] [data-compiler-panel="parse"],
-  .intent-demo[data-active-state="connect"] [data-compiler-panel="connect"],
+  .intent-demo[data-active-state="map"] [data-compiler-panel="map"],
+  .intent-demo[data-active-state="build"] [data-compiler-panel="build"],
   .intent-demo[data-active-state="run"] [data-compiler-panel="run"] {
     opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
   }
@@ -441,23 +441,66 @@
   .blueprint span { display: block; color: var(--sc-ink-soft); font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; }
   .blueprint strong { display: block; margin-top: var(--sc-2); font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.2; }
   .blueprint .blueprint__gate { border-color: color-mix(in oklab, var(--sc-signal) 60%, var(--sc-hairline)); }
-  .workflow-map {
-    position: relative; min-height: 17rem; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; gap: var(--sc-6);
+  .agent-orchestration {
+    min-height: 17rem; display: grid;
+    grid-template-columns: minmax(8rem, 0.72fr) minmax(24rem, 2.2fr) minmax(8rem, 0.8fr);
+    gap: var(--sc-3); align-items: stretch;
   }
-  .workflow-map::before {
-    content: ""; position: absolute; left: 8%; right: 8%; top: 50%; height: 2px;
-    background: linear-gradient(90deg, var(--sc-optic), var(--sc-signal));
-    box-shadow: 0 0 1.8rem color-mix(in oklab, var(--sc-signal) 65%, transparent);
+  .agent-brief, .agent-convergence {
+    position: relative; display: grid; align-content: center; gap: var(--sc-2); padding: var(--sc-3);
+    border: 1px solid var(--sc-hairline-strong); background: color-mix(in oklab, var(--sc-canvas) 90%, transparent);
   }
-  .workflow-node {
-    position: relative; z-index: 1; min-height: 8rem; display: grid; align-content: space-between;
-    padding: var(--sc-3); border: 1px solid var(--sc-hairline-strong);
-    background: color-mix(in oklab, var(--sc-canvas) 92%, transparent);
+  .agent-brief::after, .agent-convergence::before {
+    content: ""; position: absolute; top: 50%; width: var(--sc-3); height: 1px;
+    background: var(--sc-signal); box-shadow: 0 0 1.25rem color-mix(in oklab, var(--sc-signal) 70%, transparent);
   }
-  .workflow-node small { font-family: var(--sc-font-mono); color: var(--sc-optic); text-transform: uppercase; letter-spacing: var(--sc-track-wide); }
-  .workflow-node strong { font-family: var(--sc-font-display); font-size: var(--sc-t-lg); line-height: 1.1; }
-  .workflow-node--gate { border-color: var(--sc-signal); transform: translateY(-2rem); }
-  .workflow-node--exception { border-style: dashed; transform: translateY(2rem); }
+  .agent-brief::after { left: 100%; }
+  .agent-convergence::before { right: 100%; }
+  .agent-brief span, .agent-convergence span {
+    font-family: var(--sc-font-mono); font-size: 0.62rem; color: var(--sc-optic);
+    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .agent-brief strong, .agent-convergence strong {
+    font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15;
+  }
+  .agent-convergence { border-color: var(--sc-signal); }
+  .agent-convergence::after {
+    content: ""; width: 0.55rem; aspect-ratio: 1; position: absolute; left: -0.3rem; top: calc(50% - 0.275rem);
+    border-radius: 50%; background: var(--sc-signal); box-shadow: 0 0 1.5rem var(--sc-signal);
+  }
+  .agent-tracks { display: grid; gap: 0.42rem; align-content: center; }
+  .agent-track {
+    --agent-delay: calc(var(--agent-index) * 90ms);
+    --agent-duration: calc(1.5s + (var(--agent-index) * 90ms));
+    position: relative; min-height: 2.75rem; overflow: hidden;
+    display: grid; grid-template-columns: minmax(6rem, 0.65fr) minmax(7rem, 1fr) minmax(7.5rem, 0.8fr);
+    gap: var(--sc-3); align-items: center; padding: 0.45rem var(--sc-3);
+    border: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-surface) 74%, transparent);
+  }
+  .agent-track::before {
+    content: ""; position: absolute; z-index: 0; inset: 0 auto 0 -35%; width: 28%;
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--sc-optic) 24%, transparent), transparent);
+    transform: skewX(-16deg); opacity: 0;
+  }
+  .intent-demo[data-active-state="build"] .agent-track::before {
+    animation: agent-sweep var(--agent-duration) var(--sc-ease-out) var(--agent-delay) infinite;
+  }
+  .agent-track > * { position: relative; z-index: 1; }
+  .agent-track__role {
+    display: grid; gap: 0.1rem; font-family: var(--sc-font-mono); font-size: 0.62rem;
+    letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-optic);
+  }
+  .agent-track__role small { color: var(--sc-ink-soft); letter-spacing: 0; text-transform: none; }
+  .agent-track__activity { color: var(--sc-ink-soft); font-size: var(--sc-t-xs); }
+  .agent-track [data-agent-output] {
+    justify-self: end; font-family: var(--sc-font-display); font-size: var(--sc-t-sm); line-height: 1.1; text-align: right;
+  }
+  @keyframes agent-sweep {
+    0% { left: -35%; opacity: 0; }
+    16% { opacity: 1; }
+    70% { opacity: 0.8; }
+    100% { left: 112%; opacity: 0; }
+  }
   .intent-demo__product { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100%; padding: 0; }
   .intent-demo__product figure { margin: 0; overflow: hidden; min-height: 0; }
   .intent-demo__product img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
@@ -469,6 +512,7 @@
   .intent-demo__proof strong { display: block; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); line-height: 1.15; }
   .intent-demo__proof a { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); }
   .intent-demo__controls {
+    position: relative; z-index: 4;
     min-height: 4.5rem; padding: var(--sc-3) var(--sc-4); display: flex; align-items: center; gap: var(--sc-2);
     border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 88%, transparent);
   }
@@ -756,10 +800,19 @@
     .token-field { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 0; }
     .token { transform: none; min-height: 5rem; }
     .token:last-child { grid-column: 1 / -1; }
-    .workflow-map { min-height: 22rem; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-3); }
-    .workflow-map::before { display: none; }
-    .workflow-node { min-height: 6rem; }
-    .workflow-node--gate, .workflow-node--exception { transform: none; }
+    .intent-demo[data-active-state="build"] { min-height: 44rem; }
+    .intent-demo[data-active-state="build"] .intent-demo__viewport { min-height: 35.5rem; }
+    .agent-orchestration { min-height: 0; grid-template-columns: 1fr; gap: var(--sc-2); }
+    .agent-brief, .agent-convergence { min-height: 3.6rem; padding: var(--sc-2) var(--sc-3); }
+    .agent-brief::after, .agent-convergence::before { display: none; }
+    .agent-convergence::after { left: calc(50% - 0.275rem); top: -0.3rem; }
+    .agent-tracks { gap: 0.3rem; }
+    .agent-track {
+      min-height: 2.55rem; grid-template-columns: minmax(5.5rem, 0.7fr) minmax(0, 1fr);
+      gap: var(--sc-2); padding: 0.35rem var(--sc-2);
+    }
+    .agent-track__activity { display: none; }
+    .agent-track [data-agent-output] { font-size: var(--sc-t-xs); }
     .blueprint { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-2); }
     .blueprint li { min-height: 5.5rem; padding: var(--sc-2); }
     .blueprint li::after { display: none; }
@@ -849,6 +902,9 @@
     }
     .intent-demo__product { min-height: 24rem; }
     .intent-demo__controls { display: none; }
+    .intent-demo[data-active-state="build"] { min-height: 0; }
+    .intent-demo[data-active-state="build"] .intent-demo__viewport { min-height: 0; }
+    .agent-track::before { animation: none !important; opacity: 0; }
     .aeo-engine { min-height: 0; clip-path: none; }
     .aeo-engine__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
     .aeo-panel {
@@ -887,65 +943,96 @@
     <div data-sc-stage>
       <div class="hero">
         <div class="hero__copy" data-sc-cue="0 0.94 0">
-          <p class="sc-label hero__eyebrow">Bespoke operational software</p>
-          <h1 id="hero-title">Your operation, turned into software.</h1>
+          <p class="sc-label hero__eyebrow">Software at the speed of thought</p>
+          <h1 id="hero-title">From thought to working software.</h1>
           <div class="hero__support">
-            <p class="sc-lede">Show us the handoffs, exceptions, and approvals. We build the system around them—not the other way around.</p>
+            <p class="sc-lede">Tell us how your business works. Our AI agents map the operation, design the experience, build the system, and test it in parallel—while experienced people direct every decision.</p>
             <p class="cta">
               <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Show%20you%20how%20it%20works">Show us how it works</a>
               <a href="#iii">See what we've built</a>
             </p>
-            <p class="hero__tag">The compiler below resolves into Showdesk, a live product.</p>
+            <p class="hero__tag">One brief. Five coordinated workstreams. One running system.</p>
           </div>
         </div>
-        <div class="intent-demo compiler" data-active-state="describe" data-sc-cue="0 0.94 0" aria-label="The operation compiler: how an operator's words become a working system">
-          <div class="intent-demo__chrome" aria-hidden="true">
-            <p class="sc-label">Operation compiler / Showdesk</p>
-            <p class="sc-label intent-demo__status" data-compiler-status>Listening</p>
+        <div class="intent-demo compiler" data-active-state="describe" data-sc-cue="0 0.94 0" aria-label="How a business operation becomes working software">
+          <div class="intent-demo__chrome">
+            <p class="sc-label">Thought → working software</p>
+            <p class="sc-label intent-demo__status" data-compiler-status aria-live="polite">Listening</p>
           </div>
           <div class="intent-demo__viewport">
             <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
               <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Describe</p>
-              <p class="intent-demo__quote">“A <mark>judge records a critique</mark>. The <mark>secretary checks it</mark>. Nothing is released until the <mark>result is approved</mark>.”</p>
+              <p class="intent-demo__quote">“A <mark>customer makes a request</mark>. The right person reviews it. If something is missing, it comes back. Once approved, the customer gets the result.”</p>
               <p class="intent-demo__reading">Start with the operation as your team says it. No feature list. No software vocabulary required.</p>
             </section>
-            <section class="intent-demo__state" data-compiler-panel="parse" aria-labelledby="compiler-parse-title">
-              <p class="sc-label intent-demo__phase" id="compiler-parse-title">02 / Parse</p>
+            <section class="intent-demo__state" data-compiler-panel="map" aria-labelledby="compiler-map-title">
+              <p class="sc-label intent-demo__phase" id="compiler-map-title">02 / Map</p>
               <div class="token-field" aria-label="Operational elements extracted from the statement">
-                <div class="token" data-kind="Actor" style="--token-index:0"><strong>Judge</strong></div>
-                <div class="token" data-kind="Input" style="--token-index:1"><strong>Recording</strong></div>
-                <div class="token" data-kind="Handoff" style="--token-index:2"><strong>Secretary</strong></div>
-                <div class="token" data-kind="Action" style="--token-index:3"><strong>Check draft</strong></div>
-                <div class="token" data-kind="Approval" style="--token-index:4"><strong>Result accepted</strong></div>
-                <div class="token" data-kind="Exception" style="--token-index:5"><strong>Return for fix</strong></div>
-                <div class="token" data-kind="Output" style="--token-index:6"><strong>Release record</strong></div>
+                <div class="token" data-kind="Customer" style="--token-index:0"><strong>Person asking</strong></div>
+                <div class="token" data-kind="Request" style="--token-index:1"><strong>Work to begin</strong></div>
+                <div class="token" data-kind="Owner" style="--token-index:2"><strong>Right person</strong></div>
+                <div class="token" data-kind="Review" style="--token-index:3"><strong>Check the work</strong></div>
+                <div class="token" data-kind="Approval" style="--token-index:4"><strong>Decision made</strong></div>
+                <div class="token" data-kind="Exception" style="--token-index:5"><strong>Return missing info</strong></div>
+                <div class="token" data-kind="Outcome" style="--token-index:6"><strong>Deliver result</strong></div>
               </div>
-              <p class="intent-demo__reading">The words already contain the people, data, gates, and exceptions the system must preserve.</p>
+              <p class="intent-demo__reading">Your words already contain the people, rules, decisions, and exceptions the software must preserve.</p>
             </section>
-            <section class="intent-demo__state" data-compiler-panel="connect" aria-labelledby="compiler-connect-title">
-              <p class="sc-label intent-demo__phase" id="compiler-connect-title">03 / Connect</p>
-              <div class="workflow-map" aria-label="Connected Showdesk workflow">
-                <div class="workflow-node"><small>Capture</small><strong>Judge records</strong></div>
-                <div class="workflow-node"><small>Handoff</small><strong>Draft arrives</strong></div>
-                <div class="workflow-node workflow-node--gate"><small>Human gate</small><strong>Approve result</strong></div>
-                <div class="workflow-node workflow-node--exception"><small>Exception</small><strong>Return or release</strong></div>
+            <section class="intent-demo__state" data-compiler-panel="build" aria-labelledby="compiler-build-title">
+              <p class="sc-label intent-demo__phase" id="compiler-build-title">03 / Build in parallel</p>
+              <div class="agent-orchestration" aria-label="Five coordinated AI agent workstreams build the system in parallel">
+                <div class="agent-brief">
+                  <span>Shared brief</span>
+                  <strong>Request → approved outcome</strong>
+                </div>
+                <div class="agent-tracks">
+                  <article class="agent-track" data-agent-track style="--agent-index:0">
+                    <span class="agent-track__role"><span data-agent-role>Workflow</span><small>Agent 01</small></span>
+                    <span class="agent-track__activity">Rules · owners · handoffs</span>
+                    <strong data-agent-output>Rules mapped</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:1">
+                    <span class="agent-track__role"><span data-agent-role>Experience</span><small>Agent 02</small></span>
+                    <span class="agent-track__activity">Screens · actions · states</span>
+                    <strong data-agent-output>Interface shaped</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:2">
+                    <span class="agent-track__role"><span data-agent-role>Engineering</span><small>Agent 03</small></span>
+                    <span class="agent-track__activity">Data · logic · integrations</span>
+                    <strong data-agent-output>System assembled</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:3">
+                    <span class="agent-track__role"><span data-agent-role>Quality</span><small>Agent 04</small></span>
+                    <span class="agent-track__activity">Main path · edge cases</span>
+                    <strong data-agent-output>Exceptions tested</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:4">
+                    <span class="agent-track__role"><span data-agent-role>Launch</span><small>Agent 05</small></span>
+                    <span class="agent-track__activity">Demo · operating script</span>
+                    <strong data-agent-output>Demo prepared</strong>
+                  </article>
+                </div>
+                <div class="agent-convergence">
+                  <span>Human directed</span>
+                  <strong>One coordinated build</strong>
+                </div>
               </div>
-              <p class="intent-demo__reading">Ownership stays visible. Human judgment stays where it matters. The software carries everything between.</p>
+              <p class="intent-demo__reading">Agents work in parallel. Experienced people hold the intent, direct the decisions, and approve what ships.</p>
             </section>
             <section class="intent-demo__state intent-demo__product" data-compiler-panel="run" aria-labelledby="compiler-run-title">
               <figure>
                 <img src="assets/showdesk-home.webp" width="1600" height="1000" fetchpriority="high" decoding="async" alt="Showdesk home page: a live-event operations app for horse and livestock shows, showing a critique certificate card and the ringside entry flow.">
               </figure>
               <div class="intent-demo__proof">
-                <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong>The operation becomes the interface.</strong></p>
+                <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong>One real example: this operation became Showdesk.</strong></p>
                 <p><a href="https://www.showdesk-app.com/">Open the live product</a></p>
               </div>
             </section>
           </div>
           <div class="intent-demo__controls" aria-label="Operation compiler states">
             <button type="button" data-compiler-state="describe" aria-pressed="true">Describe</button>
-            <button type="button" data-compiler-state="parse" aria-pressed="false">Parse</button>
-            <button type="button" data-compiler-state="connect" aria-pressed="false">Connect</button>
+            <button type="button" data-compiler-state="map" aria-pressed="false">Map</button>
+            <button type="button" data-compiler-state="build" aria-pressed="false">Build</button>
             <button type="button" data-compiler-state="run" aria-pressed="false">Run it</button>
             <button class="intent-demo__skip" type="button" data-compiler-skip>Skip to working product</button>
           </div>
@@ -1306,11 +1393,11 @@
   var compiler = document.querySelector('.compiler');
   var compilerButtons = Array.prototype.slice.call(document.querySelectorAll('[data-compiler-state]'));
   var compilerStatus = document.querySelector('[data-compiler-status]');
-  var compilerStates = ['describe', 'parse', 'connect', 'run'];
+  var compilerStates = ['describe', 'map', 'build', 'run'];
   var compilerStatuses = {
     describe: 'Listening',
-    parse: 'Elements found',
-    connect: 'Workflow connected',
+    map: 'Operation mapped',
+    build: 'Agents building in parallel',
     run: 'System live'
   };
   var compilerWasChosen = false;
@@ -1337,7 +1424,7 @@
     var travel = Math.max(1, act.offsetHeight - innerHeight);
     var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
     setCompilerState(
-      progress < 0.24 ? 'describe' : progress < 0.49 ? 'parse' : progress < 0.74 ? 'connect' : 'run',
+      progress < 0.24 ? 'describe' : progress < 0.49 ? 'map' : progress < 0.74 ? 'build' : 'run',
       false
     );
   }

@@ -1,6 +1,6 @@
 # Abracadabra AI
 
-> Your operation, turned into software. Abracadabra AI builds bespoke systems around the handoffs, exceptions, and approvals a business already uses. Every delivery ships as the live system, a film cut from the real screens, and the script the team says out loud.
+> From thought to working software. Abracadabra AI uses coordinated AI agents to map, design, build, and test bespoke systems in parallel while experienced people direct every decision. Every delivery ships as the live system, a film cut from the real screens, and the script the team says out loud.
 
 Site: https://abra-ca-dabra.app/
 Contact: dev@pirx.ca
@@ -9,6 +9,7 @@ Last updated: 2026-09-23
 ## What we do
 
 - Bespoke software built around the steps, the exceptions, and the words a team already uses. AI takes a task; people keep the relationship.
+- Five coordinated workstreams—Workflow, Experience, Engineering, Quality, and Launch—compress the path from one shared brief to working software. “At the speed of thought” is the operating premise, not an elapsed-time guarantee.
 - Intent, context, and prompt engineering shipped as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
 - Delivery per project: the live system, the film, and the script. The client's team can demo it without us in the room.

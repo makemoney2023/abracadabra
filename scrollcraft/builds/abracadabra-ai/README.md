@@ -10,9 +10,17 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Parse → Connect → Run it**. The dedicated AEO chapter follows the same interaction model: **Question → Answer → Verify → Measure**. On desktop both sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Map → Build → Run it**. Its Build state dispatches five coordinated AI-agent workstreams from one shared brief and converges their outputs into a working system. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. On desktop both sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+
+## Design revision — 2026-09-23: Thought-to-software agent build
+
+- Restored the source-of-truth promise **From thought to working software** and the “zero to scale, at the speed of thought” premise.
+- Replaced the Showdesk-specific opening workflow with a universal request, review, exception, approval, and outcome sequence.
+- Added a semantic, animated parallel build: Workflow, Experience, Engineering, Quality, and Launch agents work from one shared brief and converge into one human-directed delivery.
+- Moved Showdesk to the Run state, where it works as proof rather than prerequisite context.
+- Communicates speed through parallel choreography without inventing a delivery-time guarantee, commits, test counts, or progress metrics.
 
 ## Deployment
 

@@ -52,6 +52,19 @@ The homepage now makes the studio's mechanism visible instead of relying on copy
 
 This revision completes the homepage's core visual and interaction redesign. Media recapture, supporting-page alignment, analytics-platform wiring, and post-release measurement remain separate follow-up work.
 
+## Revision (2026-09-23): thought-to-software agent build
+
+The hero looked strong but asked a broad business audience to decode a specialized Showdesk workflow before understanding the studio. The revised opening restores the original brand premise and makes the proof arrive in the right order:
+
+- The headline is **From thought to working software.**
+- A universal customer request resolves through **Describe → Map → Build → Run it**.
+- The Build state shows five coordinated AI-agent workstreams—Workflow, Experience, Engineering, Quality, and Launch—moving in parallel from one shared brief.
+- Experienced people hold the intent, direct the decisions, and approve what ships. The agents compress delivery; they are not presented as unsupervised replacements.
+- Showdesk appears only in the Run state as one real example of the general mechanism.
+- Motion conveys “at the speed of thought” through parallel construction and convergence. No fabricated elapsed-time promise, completion percentage, commits, or test count appears.
+
+Desktop scroll drives the sequence, mobile uses direct controls and a compact agent ledger, and reduced-motion mode exposes all four states and all five workstreams as static semantic content.
+
 ## Revision (2026-09-23): Operation Compiler and answer surface
 
 The observatory treatment was too conservative and its copy asked visitors to decode too much. The next pass keeps the proof-first discipline but makes the transformation itself the visual event:

@@ -63,11 +63,14 @@ async function openPage({ width = 1280, height = 800, reducedMotion = 'no-prefer
   return { context, page };
 }
 
-test('hero states the operation compiler promise with two clear actions', async () => {
+test('hero states the speed-of-thought promise with two clear actions', async () => {
   const { context, page } = await openPage();
   const actions = await page.locator('#i .hero__copy .cta a').allTextContents();
 
-  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Your operation, turned into software.');
+  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'From thought to working software.');
+  assert.match(await page.locator('#i .hero__copy').textContent(), /speed of thought/i);
+  assert.match(await page.locator('#i .hero__copy').textContent(), /AI agents/i);
+  assert.match(await page.locator('#i .hero__copy').textContent(), /experienced people direct every decision/i);
   assert.deepEqual(actions.map((action) => action.trim()), [
     'Show us how it works',
     "See what we've built",
@@ -140,16 +143,33 @@ test('required responsive widths do not create horizontal page overflow', async 
   }
 });
 
-test('operation compiler has four accessible states and a skip control', async () => {
+test('operation compiler generalizes the workflow and exposes the parallel agent build', async () => {
   const { context, page } = await openPage();
   const stateLabels = await page.locator('[data-compiler-state]').allTextContents();
 
   assert.deepEqual(stateLabels.map((label) => label.trim()), [
     'Describe',
-    'Parse',
-    'Connect',
+    'Map',
+    'Build',
     'Run it',
   ]);
+  assert.match(await page.locator('[data-compiler-panel="describe"]').textContent(), /customer makes a request/i);
+  assert.equal(await page.locator('[data-agent-track]').count(), 5);
+  assert.deepEqual(
+    (await page.locator('[data-agent-track] [data-agent-role]').allTextContents()).map((label) => label.trim()),
+    ['Workflow', 'Experience', 'Engineering', 'Quality', 'Launch'],
+  );
+  assert.deepEqual(
+    (await page.locator('[data-agent-track] [data-agent-output]').allTextContents()).map((label) => label.trim()),
+    ['Rules mapped', 'Interface shaped', 'System assembled', 'Exceptions tested', 'Demo prepared'],
+  );
+  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /one real example/i);
+  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /became Showdesk/i);
+
+  await page.getByRole('button', { name: 'Build' }).click();
+  assert.equal(await page.locator('.compiler').getAttribute('data-active-state'), 'build');
+  assert.equal((await page.locator('[data-compiler-status]').textContent()).trim(), 'Agents building in parallel');
+
   await page.getByRole('button', { name: 'Skip to working product' }).click();
   assert.equal(await page.locator('.compiler').getAttribute('data-active-state'), 'run');
   assert.equal((await page.locator('[data-compiler-status]').textContent()).trim(), 'System live');

@@ -1,10 +1,65 @@
 # Abracadabra marketing site — technological magic redesign plan
 
-**Status:** Phase-two homepage redesign implemented and verified 2026-09-23; supporting-page alignment, production analytics, and post-release measurement remain follow-up work
+**Status:** Phase-three generalized hero and parallel-agent build sequence implemented and verified 2026-09-23; supporting-page alignment, production analytics, and post-release measurement remain follow-up work
 **Prepared:** 2026-09-23
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
 **Related media plan:** [`docs/scroll-world-review.md`](scroll-world-review.md)
+
+## Phase-three plan: from thought to running software
+
+The phase-two hero proved the mechanism with Showdesk, but it asked a broad business audience to understand judges, secretaries, critiques, and certificates before they understood the studio. Phase three keeps Showdesk as proof while making the transformation legible to any operator.
+
+The hero promise returns to the source-of-truth premise: **Abracadabra shrinks the gap between what is in an operator's head and what is running in production—from zero to scale, at the speed of thought.** The page demonstrates speed through coordinated parallel work. It does not publish an unsupported delivery duration or depict autonomous agents replacing human direction.
+
+### Narrative sequence
+
+The desktop hero remains one pinned scene with four scroll states:
+
+1. **Describe** — a universal operation appears in ordinary business language: a customer request is routed, reviewed, returned when information is missing, approved, and delivered.
+2. **Map** — the sentence resolves into customer, request, owner, review, approval, exception, and outcome.
+3. **Build** — one shared brief dispatches five coordinated workstreams in parallel:
+   - **Workflow** maps rules and handoffs;
+   - **Experience** turns the operation into screens and actions;
+   - **Engineering** assembles the production system;
+   - **Quality** tests the normal path and exceptions;
+   - **Launch** prepares the working demo and operating script.
+4. **Run** — the workstreams converge into a live product. Showdesk is introduced here as one real example, not as prerequisite vocabulary.
+
+The controls read **Describe → Map → Build → Run it**. The visible status progresses through **Listening → Operation mapped → Agents building in parallel → System live**.
+
+### Motion direction
+
+- The Build state is a construction lattice, not cartoon robots, decorative particles, or a fake terminal.
+- A single illuminated brief enters from the left and splits into five named horizontal tracks.
+- Each track advances through small, readable artifact states such as `rules`, `interface`, `system`, `tests`, and `demo`.
+- Track signals move at slightly different rates and then synchronize at one convergence gate. The convergence supplies the transition into the live product.
+- The choreography communicates speed by showing dependent work happening concurrently. It must not display fabricated elapsed times, completion percentages, commits, or test counts.
+- Text, labels, and outputs remain semantic HTML. Motion enhances the explanation; it is not the only carrier of meaning.
+
+### Responsive and accessibility behavior
+
+- Desktop scroll position drives the four states.
+- Mobile uses the four direct controls in normal document flow; the Build state becomes a compact five-row agent ledger without horizontal overflow.
+- Reduced motion displays all four states as a static sequence and shows every agent workstream with its output.
+- The skip control remains available and lands directly on the working-product state.
+- Focus states, 44px targets, text contrast, and screen-reader labels remain intact.
+
+### Copy direction
+
+- **Eyebrow:** Software at the speed of thought
+- **Headline:** From thought to working software.
+- **Support:** Tell us how your business works. Our AI agents map the operation, design the experience, build the system, and test it in parallel—while experienced people direct every decision.
+- **Proof bridge:** One real example: this operation became Showdesk.
+
+### Verification gates
+
+- Browser assertions for the new headline, generalized operation, four revised labels, five agent workstreams, convergence output, Showdesk proof bridge, skip behavior, and statuses.
+- Scroll-driven desktop transition and direct mobile controls.
+- Reduced-motion information parity for all states and workstreams.
+- Horizontal-containment checks at 320, 390, 430, 768, 1280, 1440, and 1920 pixels.
+- Visual checks of desktop Describe, Map, Build, and Run states plus the mobile Build ledger.
+- Browser console, keyboard focus, and direct-navigation regression checks.
 
 ## Phase-two decision summary
 
