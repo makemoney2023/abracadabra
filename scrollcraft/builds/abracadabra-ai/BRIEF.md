@@ -52,6 +52,19 @@ The homepage now makes the studio's mechanism visible instead of relying on copy
 
 This revision completes the homepage's core visual and interaction redesign. Media recapture, supporting-page alignment, analytics-platform wiring, and post-release measurement remain separate follow-up work.
 
+## Revision (2026-09-23): Operation Compiler and answer surface
+
+The observatory treatment was too conservative and its copy asked visitors to decode too much. The next pass keeps the proof-first discipline but makes the transformation itself the visual event:
+
+- The headline is now **Your operation, turned into software.**
+- A real Showdesk statement compiles through **Describe → Parse → Connect → Run it**. The output is the live product, not a conceptual mockup.
+- A dedicated Answer Engine Optimization instrument follows **Question → Answer → Verify → Measure** and resolves into dated pirx.ca proof from Google Search Console.
+- The fixed signal rail, optical grid, perspective tokens, connected workflow, and clipped computational surfaces provide the technological character. Real product UI remains the final proof.
+- Desktop uses pinned scroll states. Mobile uses direct state controls in normal flow. Reduced motion exposes every state at once.
+- AEO copy keeps the public claim boundary explicit: observed surfaces are named, placement is not guaranteed, retrieval behavior is not generalized across models, and measured scan output remains separate from generated recommendations.
+
+The Showdesk film remains the interaction peak. The compiler and AEO sequence create anticipation; the film proves the studio can ship and demonstrate the resulting system.
+
 ## What this is, and who it is for
 
 Abracadabra AI is a product studio. The page is for operators who want to hire the studio after seeing real shipped work, not a capability list. The copy says so in the file's words: the range is the point, the four named specimens are examples, and the skill underneath is reading intent and context correctly, then shipping it as running software.

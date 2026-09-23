@@ -1,6 +1,6 @@
 # Abracadabra marketing site — technological magic redesign plan
 
-**Status:** Phase-two redesign in implementation 2026-09-23; the earlier observatory pass was rejected as too visually conservative and too copy-heavy
+**Status:** Phase-two homepage redesign implemented and verified 2026-09-23; supporting-page alignment, production analytics, and post-release measurement remain follow-up work
 **Prepared:** 2026-09-23
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
@@ -20,6 +20,16 @@ The art direction is **computational theatre with proof in the foreground**:
 - The experience avoids generic AI styling: purple gradients, decorative particles, fake terminals, mystical symbols, and unexplained glow.
 
 The new copy is deliberately shorter. The hero says **“Your operation, turned into software.”** Every following viewport makes one claim, demonstrates it, and places proof beside it.
+
+## Phase-two implementation record
+
+- Shipped the four-state **Describe → Parse → Connect → Run it** Operation Compiler using a real Showdesk workflow and product surface.
+- Shipped the dedicated **Question → Answer → Verify → Measure** Answer Engine Optimization chapter with Readiness Check and Schema paths, dated Google Search Console proof, and explicit claim boundaries.
+- Added the continuous signal rail, labeled chapter navigation, mobile direct controls, reduced-motion parity, complete mobile work cards, and a minimizable mobile film explanation.
+- Added regression coverage for the required responsive widths, both state machines, film behavior, reduced motion, and direct navigation to the closing brief.
+- Verified the desktop close and the mobile hero, AEO proof, selected work, film, minimized film, and close with saved screenshot readback; browser console and keyboard focus were also checked.
+
+The homepage scope above is complete. The broader program remains open where this document explicitly calls for media recapture, supporting-page redesign, analytics-platform wiring, production Web Vitals, and post-release conversion measurement.
 
 ## Detailed execution gameplan
 

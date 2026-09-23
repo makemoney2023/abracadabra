@@ -10,7 +10,7 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero now demonstrates the core mechanism in three explicit states: **Say it → Structure it → Run it**. On desktop the states resolve as the first chapter scrolls; on mobile they are direct controls; reduced motion presents all three as a static sequence. The utterance strip inks one syllable per specimen on larger screens. The Showdesk promo scrubs under the wheel in the eighth act, the only scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Parse → Connect → Run it**. The dedicated AEO chapter follows the same interaction model: **Question → Answer → Verify → Measure**. On desktop both sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
@@ -18,7 +18,16 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/). The Vercel project `abracadabra` (personal account `makemoney2023`) is linked to this repository with this folder as its root directory, so every push to `main` redeploys the site with no build step. `www.abra-ca-dabra.app` redirects to the apex with a 308. Domains were attached to the project on 2026-09-23; before that the apex resolved to Vercel but returned `DEPLOYMENT_NOT_FOUND`.
 
-## Design revision — 2026-09-23
+## Design revision — 2026-09-23: Operation Compiler and AEO
+
+- Reframed the first viewport around **Your operation, turned into software.**
+- Expanded the hero into an Operation Compiler that transforms a real Showdesk statement into operational tokens, a connected workflow, and the live interface.
+- Added a dedicated Answer Engine Optimization chapter that turns a buyer question into a direct answer, machine-legible evidence path, and dated Google Search Console proof.
+- Added scroll-driven desktop states, explicit mobile controls, reduced-motion information parity, and a continuous page-progress signal.
+- Kept claim boundaries visible: no placement guarantee, no universal retrieval claim, and measured scan findings remain separate from generated recommendations.
+- Updated browser tests to cover both four-state sequences, CTAs, proof, responsive containment, and reduced-motion behavior.
+
+## Earlier design revision — 2026-09-23
 
 - Reframed the homepage as an intent-to-system observatory using graphite, warm ivory, a functional red/orange signal, etched grids, and restrained phosphor status.
 - Replaced the static hero specimen with an accessible operator-sentence → workflow blueprint → live Showdesk sequence.

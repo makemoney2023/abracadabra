@@ -156,6 +156,34 @@ test('operation compiler has four accessible states and a skip control', async (
   await context.close();
 });
 
+test('desktop scroll drives both four-state sequences and page progress', async () => {
+  const { context, page } = await openPage({ width: 1440, height: 1000 });
+
+  for (const [selector, expectedState] of [
+    ['#i', 'run'],
+    ['#aeo', 'measure'],
+  ]) {
+    await page.evaluate(({ selector }) => {
+      const section = document.querySelector(selector);
+      const travel = section.offsetHeight - innerHeight;
+      scrollTo({
+        top: section.offsetTop + travel * 0.86,
+        behavior: 'instant',
+      });
+    }, { selector });
+    await page.waitForTimeout(80);
+
+    const engine = selector === '#i' ? '.compiler' : '.aeo-engine';
+    assert.equal(await page.locator(engine).getAttribute('data-active-state'), expectedState);
+  }
+
+  const progress = await page.evaluate(() =>
+    Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-progress')),
+  );
+  assert.ok(progress > 0 && progress < 1);
+  await context.close();
+});
+
 test('dedicated AEO chapter explains the mechanism, proof, and next steps', async () => {
   const { context, page } = await openPage();
   const aeo = page.locator('#aeo');
@@ -173,6 +201,28 @@ test('dedicated AEO chapter explains the mechanism, proof, and next steps', asyn
 
   await aeo.getByRole('button', { name: 'Measure' }).click();
   assert.equal(await aeo.locator('.aeo-engine').getAttribute('data-active-state'), 'measure');
+  await context.close();
+});
+
+test('direct navigation keeps the closing brief visible', async () => {
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+  });
+  const page = await context.newPage();
+
+  await page.goto(`${origin}/#brief`, { waitUntil: 'networkidle' });
+  const brief = page.locator('#brief .label');
+  const visibility = await brief.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      bottom: rect.bottom,
+      opacity: Number.parseFloat(getComputedStyle(element).opacity),
+      top: rect.top,
+    };
+  });
+
+  assert.ok(visibility.opacity > 0.85);
+  assert.ok(visibility.top < 800 && visibility.bottom > 0);
   await context.close();
 });
 

@@ -1,6 +1,6 @@
 # Abracadabra AI
 
-> A software studio that builds bespoke systems around how a business already runs, at any scale. The work is reading intent and context correctly, then turning that read into prompts, architecture, and production software. Every delivery ships as the live system, a film cut from the real screens, and the script the team says out loud.
+> Your operation, turned into software. Abracadabra AI builds bespoke systems around the handoffs, exceptions, and approvals a business already uses. Every delivery ships as the live system, a film cut from the real screens, and the script the team says out loud.
 
 Site: https://abra-ca-dabra.app/
 Contact: dev@pirx.ca
@@ -12,6 +12,10 @@ Last updated: 2026-09-23
 - Intent, context, and prompt engineering shipped as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
 - Delivery per project: the live system, the film, and the script. The client's team can demo it without us in the room.
+
+## Answer Engine Optimization
+
+Abracadabra AI maps the questions buyers ask, publishes direct answers with supporting evidence, connects the page, entity, schema, and source signals, then measures indexed demand, clicks, and observed AI-search visibility. The studio does not guarantee placement or claim that every answer engine retrieves information the same way. Measured scan output stays separate from generated recommendations.
 
 ## Who it is for
 
@@ -53,4 +57,4 @@ If a product you can buy already does the job, we say so and send you there.
 
 - Use the figures above with the date they were pulled (2026-09-23). Do not extrapolate them.
 - Wellness and clinical-style tools built by the studio are non-diagnostic.
-- Primary action: "Describe how you work" (mailto:dev@pirx.ca). Secondary: "Take the Readiness Check" (https://check.abra-ca-dabra.app/check). Also: "Watch the work".
+- Primary action: "Show us how it works" (mailto:dev@pirx.ca). Secondary: "See what we've built". The AEO chapter links to "Run the Readiness Check" (https://check.abra-ca-dabra.app/check) and "Open Schema" (https://schema-two.vercel.app/).
