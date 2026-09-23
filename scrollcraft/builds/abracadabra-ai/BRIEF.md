@@ -40,6 +40,18 @@ The catalog was rebuilt against `docs/source-of-truth.md` after the positioning 
 - **CTAs follow the file.** `Describe how you work` (primary), `Watch the work` (secondary), `Open a brief` (the close). The inquiry plate keeps the last label.
 - **Held out.** No counters on the receipt. No invented durations. No metrics beyond the pirx.ca set. Nothing from the file's off-site list.
 
+## Revision (2026-09-23): intent-to-system observatory
+
+The homepage now makes the studio's mechanism visible instead of relying on copy alone:
+
+- A real Showdesk operator sentence resolves through **Say it → Structure it → Run it** into workflow fields and the working product interface.
+- **Describe how you work** is the primary action, **Watch the work** is secondary, and the Readiness Check is tertiary.
+- Graphite, warm ivory, signal red, etched grids, and restrained phosphor states replace generic AI-neon styling while preserving the editorial showroom.
+- Chapter navigation is labeled and keyboard legible; mobile uses complete vertical work cards, normal document flow in the hero, and collapsible film details.
+- Reduced-motion mode presents the same argument as explicit static states and does not fetch the deep film.
+
+This revision completes the homepage's core visual and interaction redesign. Media recapture, supporting-page alignment, analytics-platform wiring, and post-release measurement remain separate follow-up work.
+
 ## What this is, and who it is for
 
 Abracadabra AI is a product studio. The page is for operators who want to hire the studio after seeing real shipped work, not a capability list. The copy says so in the file's words: the range is the point, the four named specimens are examples, and the skill underneath is reading intent and context correctly, then shipping it as running software.

@@ -240,9 +240,20 @@
     --sc-ink: #F3EEE4;
     --sc-ink-soft: #A89F93;
     --sc-accent: #E23B2F;
+    --sc-signal: #FF4D2E;
+    --sc-phosphor: #B9FFC9;
+    --sc-glass: color-mix(in oklab, var(--sc-surface) 72%, transparent);
     --sc-accent-ink: #F3EEE4;
     --sc-font-display: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
     --sc-font-body: "IBM Plex Sans", system-ui, sans-serif;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      linear-gradient(color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px);
+    background-size: 4rem 4rem;
+    mask-image: linear-gradient(to bottom, black, transparent 82%);
   }
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
@@ -253,16 +264,29 @@
   /* object index */
   .index {
     position: fixed; inset: 0 0 auto 0; z-index: 40;
-    display: flex; gap: var(--sc-4); justify-content: flex-end;
-    padding: var(--sc-4) var(--sc-gutter);
+    display: flex; gap: var(--sc-1); justify-content: flex-end;
+    padding: var(--sc-3) var(--sc-gutter);
     font-family: var(--sc-font-mono); font-size: var(--sc-t-xs);
     letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-    mix-blend-mode: difference; pointer-events: none;
+    pointer-events: none;
+    background: linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 94%, transparent), transparent);
   }
-  .index a { pointer-events: auto; text-decoration: none; color: var(--sc-ink); opacity: 0.55; }
-  .index a[aria-current="true"] { opacity: 1; text-decoration: underline; text-decoration-color: var(--sc-accent); }
-  .index a:hover { opacity: 1; }
-  .index .index__home { margin-right: auto; opacity: 0.9; }
+  .index a {
+    min-width: 44px; min-height: 44px; padding: 0 var(--sc-3);
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--sc-2);
+    pointer-events: auto; text-decoration: none; color: var(--sc-ink); opacity: 0.58;
+    border: 1px solid transparent; background: transparent;
+    transition: opacity 180ms var(--sc-ease-out), border-color 180ms var(--sc-ease-out), background-color 180ms var(--sc-ease-out);
+  }
+  .index a[aria-current="location"] {
+    opacity: 1; border-color: var(--sc-hairline-strong);
+    background: color-mix(in oklab, var(--sc-surface) 78%, transparent);
+  }
+  .index a:hover, .index a:focus-visible { opacity: 1; border-color: var(--sc-hairline-strong); }
+  .index .index__home { margin-right: auto; opacity: 0.9; justify-content: flex-start; padding-inline: 0; border: 0; }
+  .index__label { max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width 260ms var(--sc-ease-out), opacity 180ms var(--sc-ease-out); }
+  .index a:hover .index__label, .index a:focus-visible .index__label, .index a[aria-current="location"] .index__label { max-width: 8rem; opacity: 1; }
+  .index__current { display: none; }
 
   /* the utterance */
   .utterance {
@@ -280,7 +304,7 @@
   /* actions */
   .cta { display: flex; flex-wrap: wrap; gap: var(--sc-3); margin: 0; }
   .cta a {
-    display: inline-block; text-decoration: none;
+    min-height: 44px; display: inline-flex; align-items: center; text-decoration: none;
     font-family: var(--sc-font-body); font-weight: 500; font-size: var(--sc-t-sm);
     padding: 0.78em 1.3em; border: 1px solid var(--sc-hairline); border-radius: 2px;
     transition: border-color 200ms var(--sc-ease-out), background-color 200ms var(--sc-ease-out), color 200ms var(--sc-ease-out);
@@ -292,8 +316,8 @@
   /* the hero: copy and the first object in the room */
   .hero {
     position: relative; height: 100%;
-    display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    align-items: center; gap: clamp(2rem, 5vw, 5rem);
+    display: grid; grid-template-columns: minmax(20rem, 0.86fr) minmax(32rem, 1.14fr);
+    align-items: center; gap: clamp(2rem, 4vw, 4rem);
     padding: 5.5rem var(--sc-gutter) 5rem;
     max-width: var(--sc-maxw); margin-inline: auto;
   }
@@ -308,12 +332,83 @@
   .hero__copy .sc-lede { max-width: 36rem; }
   .hero__copy .cta { margin-top: var(--sc-6); }
   .hero__tag { display: none; }
-  .hero__plate figure { margin: 0; }
-  .hero__plate img {
-    display: block; width: 100%; height: auto;
-    border: 1px solid var(--sc-hairline); background: var(--sc-surface);
+
+  /* signature mechanism: plain intent resolves into structure, then product */
+  .intent-demo {
+    position: relative; min-height: min(70vh, 43rem); overflow: hidden;
+    border: 1px solid var(--sc-hairline-strong);
+    background:
+      linear-gradient(135deg, color-mix(in oklab, var(--sc-surface) 92%, transparent), color-mix(in oklab, var(--sc-canvas) 82%, transparent)),
+      var(--sc-canvas);
+    box-shadow: var(--sc-e2), inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 10%, transparent);
+    isolation: isolate;
   }
-  .hero__plate .label { margin-top: var(--sc-4); }
+  .intent-demo::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      linear-gradient(color-mix(in oklab, var(--sc-ink) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--sc-ink) 6%, transparent) 1px, transparent 1px);
+    background-size: 2.5rem 2.5rem;
+    mask-image: radial-gradient(circle at 50% 45%, black, transparent 76%);
+  }
+  .intent-demo__chrome {
+    min-height: 3rem; padding: 0 var(--sc-4); display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
+    border-bottom: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 72%, transparent);
+  }
+  .intent-demo__chrome p { margin: 0; }
+  .intent-demo__status { color: var(--sc-phosphor); }
+  .intent-demo__viewport { position: relative; min-height: calc(min(70vh, 43rem) - 7.5rem); }
+  .intent-demo__state {
+    position: absolute; inset: 0; padding: clamp(1.25rem, 3vw, 2.2rem);
+    opacity: 0; visibility: hidden; transform: translate3d(0, 1rem, 0);
+    transition: opacity 420ms var(--sc-ease-out), transform 520ms var(--sc-ease-out), visibility 0s linear 520ms;
+  }
+  .intent-demo[data-active-state="say"] [data-state-panel="say"],
+  .intent-demo[data-active-state="structure"] [data-state-panel="structure"],
+  .intent-demo[data-active-state="run"] [data-state-panel="run"] {
+    opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
+  }
+  .intent-demo__phase { color: var(--sc-accent); margin: 0 0 var(--sc-4); }
+  .intent-demo__quote {
+    margin: 0; max-width: 24ch; font-family: var(--sc-font-display); font-size: clamp(1.5rem, 2.6vw, 2.65rem);
+    line-height: 1.16; letter-spacing: var(--sc-track-snug); text-wrap: balance;
+  }
+  .intent-demo__quote mark {
+    color: var(--sc-ink); background: transparent; border-bottom: 2px solid var(--sc-signal);
+  }
+  .intent-demo__reading { margin: var(--sc-6) 0 0; max-width: 48ch; color: var(--sc-ink-soft); }
+  .blueprint { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-3); }
+  .blueprint li {
+    min-height: 7rem; padding: var(--sc-3); position: relative;
+    border: 1px solid var(--sc-hairline-strong); background: var(--sc-glass);
+  }
+  .blueprint li::after {
+    content: ""; position: absolute; top: 50%; left: 100%; width: var(--sc-3); height: 1px; background: var(--sc-signal);
+  }
+  .blueprint li:nth-child(3n)::after, .blueprint li:last-child::after { display: none; }
+  .blueprint span { display: block; color: var(--sc-ink-soft); font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; }
+  .blueprint strong { display: block; margin-top: var(--sc-2); font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.2; }
+  .blueprint .blueprint__gate { border-color: color-mix(in oklab, var(--sc-signal) 60%, var(--sc-hairline)); }
+  .intent-demo__product { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100%; padding: 0; }
+  .intent-demo__product figure { margin: 0; overflow: hidden; min-height: 0; }
+  .intent-demo__product img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+  .intent-demo__proof {
+    display: grid; grid-template-columns: 1fr auto; gap: var(--sc-4); align-items: end;
+    padding: var(--sc-4); border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 91%, transparent);
+  }
+  .intent-demo__proof p { margin: 0; }
+  .intent-demo__proof strong { display: block; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); line-height: 1.15; }
+  .intent-demo__proof a { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); }
+  .intent-demo__controls {
+    min-height: 4.5rem; padding: var(--sc-3) var(--sc-4); display: flex; align-items: center; gap: var(--sc-2);
+    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 88%, transparent);
+  }
+  .intent-demo__controls button {
+    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; color: var(--sc-ink-soft); background: transparent; cursor: pointer;
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .intent-demo__controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
+  .intent-demo__skip { margin-left: auto; color: var(--sc-ink) !important; text-transform: none !important; letter-spacing: 0 !important; }
 
   /* labels */
   .label {
@@ -409,8 +504,30 @@
 
   /* the plinth */
   .plinth { min-height: 70vh; display: grid; place-items: center; }
-  .plinth__box { width: min(36rem, 80vw); height: 38vh; border: 1px solid var(--sc-hairline); display: grid; place-items: end start; padding: var(--sc-4); }
+  .plinth__box {
+    position: relative; width: min(36rem, 80vw); height: 38vh; border: 1px solid var(--sc-hairline);
+    display: grid; place-items: end start; padding: var(--sc-4);
+  }
+  .plinth__box::before {
+    content: ""; position: absolute; left: -1px; top: 50%; width: 22%; height: 1px; background: var(--sc-signal);
+  }
+  .plinth__box::after {
+    content: ""; position: absolute; left: calc(22% - 1px); top: calc(50% - 4px); width: 8px; height: 8px;
+    border: 1px solid var(--sc-signal); background: var(--sc-canvas);
+  }
   .plinth__box p { margin: 0; }
+
+  /* film controls remain semantic even though the wheel is the cinematic input */
+  .film-toggle {
+    min-width: 44px; min-height: 44px; margin: 0 0 var(--sc-3); padding: 0 var(--sc-3);
+    display: none; align-items: center; justify-content: center;
+    border: 1px solid var(--sc-hairline-strong); background: var(--sc-glass); color: var(--sc-ink); cursor: pointer;
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .film-details > * + * { margin-top: var(--sc-3); }
+  .film-details[hidden] { display: none; }
+  .film-transcript { margin-top: var(--sc-3); border-top: 1px solid var(--sc-hairline); padding-top: var(--sc-3); }
+  .film-transcript summary { cursor: pointer; color: var(--sc-ink); }
 
   /* specimen v: moves, the deliverable, the questions */
   .enable { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; min-height: 68vh; }
@@ -445,18 +562,37 @@
   .foot a:hover { color: var(--sc-accent); }
 
   @media (max-width: 860px) {
-    .hero { grid-template-columns: 1fr; align-content: end; padding: 4.5rem var(--sc-gutter) 4.6rem; }
+    .index { padding: var(--sc-2) var(--sc-gutter); align-items: center; }
+    .index a[data-index] { display: none; }
+    .index .index__home { min-width: 44px; font-size: 0; }
+    .index .index__home::before { content: "A"; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); color: var(--sc-accent); }
+    .index__current { display: block; margin: 0 0 0 auto; color: var(--sc-ink-soft); }
+    .utterance { display: none; }
+    #i { height: auto !important; }
+    #i > .sc-stage { position: relative; top: auto; height: auto; }
+    .hero {
+      height: auto; grid-template-columns: 1fr; align-content: start; gap: var(--sc-5);
+      padding: 5rem var(--sc-gutter) 4.6rem; overflow: visible;
+    }
     .hero__copy h1 { font-size: clamp(2rem, 1.2rem + 4.6vw, 2.8rem); }
     .hero__copy .sc-lede { font-size: var(--sc-t-base); }
-    .hero__plate { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
-    .hero__plate figure, .hero__plate img { height: 100%; }
-    .hero__plate img { object-fit: cover; object-position: top; border: 0; opacity: 0.12; filter: saturate(0.5); }
-    .hero__plate::after {
-      content: ""; position: absolute; inset: 0;
-      background: linear-gradient(to bottom, rgba(11, 10, 8, 0) 0%, rgba(11, 10, 8, 0.55) 34%, var(--sc-bg) 68%);
-    }
-    .hero__plate .label { display: none; }
+    .hero__copy .cta { margin-top: var(--sc-5); }
     .hero__tag { display: block; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-ink-soft); }
+    .intent-demo { min-height: 31rem; }
+    .intent-demo__viewport { min-height: 22.5rem; }
+    .intent-demo__chrome { min-height: 2.75rem; }
+    .intent-demo__state { padding: var(--sc-4); }
+    .intent-demo__quote { font-size: clamp(1.25rem, 6vw, 1.65rem); }
+    .intent-demo__reading { margin-top: var(--sc-4); font-size: var(--sc-t-sm); }
+    .blueprint { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-2); }
+    .blueprint li { min-height: 5.5rem; padding: var(--sc-2); }
+    .blueprint li::after { display: none; }
+    .intent-demo__proof { grid-template-columns: 1fr; gap: var(--sc-2); }
+    .intent-demo__proof strong { font-size: var(--sc-t-base); }
+    .intent-demo__controls { overflow-x: auto; padding-inline: var(--sc-2); }
+    .intent-demo__controls button { white-space: nowrap; padding-inline: var(--sc-2); }
+    .intent-demo__skip { font-size: 0 !important; min-width: 44px; }
+    .intent-demo__skip::after { content: "Run"; font-size: var(--sc-t-xs); }
     .receipt { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-5); }
     .receipt .sc-display--md { font-size: var(--sc-t-xl); }
     .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-4); }
@@ -466,11 +602,21 @@
     .proofbar { grid-template-columns: 1fr 1fr; }
     .spread { grid-template-columns: 1fr; min-height: 0; }
     .spread img, .item img { height: 42vh; }
-    .rail { padding: 10vh var(--sc-gutter) 8vh; gap: 1.6rem; }
-    .rail__lead { width: 70vw; }
-    .item { width: 76vw; }
+    #iii { height: auto !important; }
+    #iii > .sc-stage {
+      position: relative; top: auto; height: auto; overflow: visible;
+    }
+    #iii .rail {
+      width: 100%; padding: var(--sc-section) var(--sc-gutter); gap: var(--sc-8);
+      display: grid; grid-template-columns: minmax(0, 1fr); transform: none !important;
+      will-change: auto;
+    }
+    .rail__lead { width: auto; }
+    .item { width: auto; }
+    .item figure { margin-bottom: var(--sc-4); }
+    .item img { height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
     .item--range { padding: var(--sc-5); }
-    .note { width: 60vw; }
+    .note { width: auto; padding-bottom: 0; }
     .benefits { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-4); }
     .benefits__head h2 { font-size: var(--sc-t-xl); }
     .benefits__set { grid-template-columns: 1fr; gap: var(--sc-3); }
@@ -479,10 +625,34 @@
     .benefits__set p { font-size: var(--sc-t-sm); }
     .label { width: min(34ch, 86vw); }
     [data-sc-stage] > .label, [data-sc-stage] > .label--trail { left: var(--sc-gutter); right: auto; bottom: 5.4rem; }
+    #film [data-sc-stage] > .label {
+      width: auto; max-width: calc(100vw - 2 * var(--sc-gutter)); bottom: var(--sc-4);
+      padding: var(--sc-3) var(--sc-4);
+    }
+    #film .label > .sc-label, #film .label > h2 { display: inline; }
+    #film .label > h2 { margin-left: var(--sc-2); font-size: var(--sc-t-base); }
+    .film-toggle { display: inline-flex; float: right; margin: 0 0 var(--sc-2) var(--sc-3); }
+    .film-details { clear: both; max-height: 36vh; overflow: auto; }
+    #film .film-details .sc-body { font-size: var(--sc-t-sm); }
     .inquiry { padding: 4rem var(--sc-gutter) 6rem; }
     .inquiry .label { padding: var(--sc-5); }
     .inquiry h2 { font-size: var(--sc-t-xl); }
     .foot { bottom: 3rem; }
+  }
+
+  @media (max-width: 360px) {
+    .proofbar { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .intent-demo { min-height: 0; }
+    .intent-demo__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
+    .intent-demo__state {
+      position: relative; inset: auto; padding: var(--sc-4); opacity: 1; visibility: visible; transform: none;
+      border: 1px solid var(--sc-hairline); transition: none;
+    }
+    .intent-demo__product { min-height: 24rem; }
+    .intent-demo__controls { display: none; }
   }
 </style>
 </head>
@@ -490,12 +660,13 @@
 
 <nav class="index" aria-label="Object index">
   <a class="index__home" href="#top">Abracadabra AI</a>
-  <a href="#i" data-index="i">I</a>
-  <a href="#ii" data-index="ii">II</a>
-  <a href="#iii" data-index="iii">III</a>
-  <a href="#iv" data-index="iv">IV</a>
-  <a href="#v" data-index="v">V</a>
-  <a href="#brief" data-index="brief">ST</a>
+  <a href="#i" data-index="i" aria-label="I — Promise"><span aria-hidden="true">I</span><span class="index__label">Promise</span></a>
+  <a href="#ii" data-index="ii" aria-label="II — Proof"><span aria-hidden="true">II</span><span class="index__label">Proof</span></a>
+  <a href="#iii" data-index="iii" aria-label="III — Systems"><span aria-hidden="true">III</span><span class="index__label">Systems</span></a>
+  <a href="#film" data-index="iv" aria-label="IV — Film"><span aria-hidden="true">IV</span><span class="index__label">Film</span></a>
+  <a href="#v" data-index="v" aria-label="V — Process"><span aria-hidden="true">V</span><span class="index__label">Process</span></a>
+  <a href="#brief" data-index="brief" aria-label="ST — Start"><span aria-hidden="true">ST</span><span class="index__label">Start</span></a>
+  <p class="index__current" aria-live="polite">I — Promise</p>
 </nav>
 
 <p class="utterance" data-utterance aria-hidden="true">
@@ -514,24 +685,48 @@
           <p class="sc-lede">We learn the steps, the exceptions, and the words your people already use, however big or unusual the operation is. Then we ship the system, the film, and the script your team runs on Monday. From zero to scale, at the speed of thought.</p>
           <p class="cta">
             <a class="cta--primary" href="mailto:dev@pirx.ca?subject=How%20we%20work">Describe how you work</a>
-            <a href="https://check.abra-ca-dabra.app/check">Take the Readiness Check</a>
             <a href="#film">Watch the work</a>
           </p>
           <p class="hero__tag">Behind this page: Specimen I, Showdesk, live at showdesk-app.com</p>
         </div>
-        <div class="hero__plate" data-sc-cue="0 0.94 0">
-          <figure>
-            <img src="assets/showdesk-home.webp" width="1600" height="1000" fetchpriority="high" decoding="async" alt="Showdesk home page: a live-event operations app for horse and livestock shows, showing a critique certificate card and the ringside entry flow.">
-          </figure>
-          <div class="label">
-            <p class="sc-label">Specimen I</p>
-            <h2 class="sc-display sc-display--md">Showdesk</h2>
-            <dl>
-              <dt>Kind</dt><dd>Live-event operations, run from the ringside phone</dd>
-              <dt>Surface</dt><dd>Entry to review to placements and reports</dd>
-              <dt>Film</dt><dd>Promo, 44 seconds, further down this page</dd>
-              <dt>Live</dt><dd><a href="https://www.showdesk-app.com/">showdesk-app.com</a></dd>
-            </dl>
+        <div class="intent-demo" data-active-state="say" data-sc-cue="0 0.94 0" aria-label="How an operator's words become a working system">
+          <div class="intent-demo__chrome" aria-hidden="true">
+            <p class="sc-label">Intent signal / Showdesk</p>
+            <p class="sc-label intent-demo__status" data-intent-status>Listening</p>
+          </div>
+          <div class="intent-demo__viewport">
+            <section class="intent-demo__state" data-state-panel="say" aria-labelledby="intent-say-title">
+              <p class="sc-label intent-demo__phase" id="intent-say-title">01 / Say it</p>
+              <p class="intent-demo__quote">“The <mark>secretary</mark> <mark>reviews</mark> the judge's <mark>recording</mark>, fixes the <mark>draft</mark>, and releases the <mark>certificate</mark> <mark>before the team leaves</mark>.”</p>
+              <p class="intent-demo__reading">Ordinary language already contains the actors, actions, gates, and timing the software must carry.</p>
+            </section>
+            <section class="intent-demo__state" data-state-panel="structure" aria-labelledby="intent-structure-title">
+              <p class="sc-label intent-demo__phase" id="intent-structure-title">02 / Structure it</p>
+              <ol class="blueprint" aria-label="Workflow extracted from the operator statement">
+                <li><span>Actor</span><strong>Secretary</strong></li>
+                <li><span>Input</span><strong>Judge's recording</strong></li>
+                <li><span>Action</span><strong>Review draft</strong></li>
+                <li class="blueprint__gate"><span>Approval gate</span><strong>Fix or release</strong></li>
+                <li><span>Output</span><strong>Certificate</strong></li>
+                <li><span>Timing</span><strong>Before departure</strong></li>
+              </ol>
+              <p class="intent-demo__reading">The signal connects what must happen, who owns it, and where a human decision stays in the loop.</p>
+            </section>
+            <section class="intent-demo__state intent-demo__product" data-state-panel="run" aria-labelledby="intent-run-title">
+              <figure>
+                <img src="assets/showdesk-home.webp" width="1600" height="1000" fetchpriority="high" decoding="async" alt="Showdesk home page: a live-event operations app for horse and livestock shows, showing a critique certificate card and the ringside entry flow.">
+              </figure>
+              <div class="intent-demo__proof">
+                <p><span class="sc-label" id="intent-run-title">03 / Run it</span><strong>Showdesk carries the operation.</strong></p>
+                <p><a href="https://www.showdesk-app.com/">Open the live product</a></p>
+              </div>
+            </section>
+          </div>
+          <div class="intent-demo__controls" aria-label="Intent demonstration states">
+            <button type="button" data-intent-state="say" aria-pressed="true">Say it</button>
+            <button type="button" data-intent-state="structure" aria-pressed="false">Structure it</button>
+            <button type="button" data-intent-state="run" aria-pressed="false">Run it</button>
+            <button class="intent-demo__skip" type="button" data-intent-skip>Skip to working product</button>
           </div>
         </div>
       </div>
@@ -679,12 +874,19 @@
       <div class="label label--trail" data-sc-cue="0.16 0.88">
         <p class="sc-label">Specimen I, on film</p>
         <h2 class="sc-display sc-display--md">Showdesk, in 44 seconds</h2>
-        <p class="sc-body">Ringside entry, review, placements, reports. This is the same footage the sales pack uses. Your team leaves with one of these.</p>
-        <dl>
-          <dt>Runtime</dt><dd>44 seconds</dd>
-          <dt>Drive</dt><dd>The wheel. Scroll slow, it slows.</dd>
-          <dt>More</dt><dd><a href="films.html">The films on file</a></dd>
-        </dl>
+        <button class="film-toggle" type="button" aria-expanded="true" aria-controls="film-details">Minimize film details</button>
+        <div class="film-details" id="film-details">
+          <p class="sc-body">Ringside entry, review, placements, reports. This is the same footage the sales pack uses. Your team leaves with one of these.</p>
+          <dl>
+            <dt>Runtime</dt><dd>44 seconds</dd>
+            <dt>Drive</dt><dd>The wheel. Scroll slow, it slows.</dd>
+            <dt>More</dt><dd><a href="films.html">The films on file</a></dd>
+          </dl>
+          <details class="film-transcript">
+            <summary>Read the film sequence</summary>
+            <p class="sc-body">A ringside entry becomes a judge's recording, a secretary's review, final placements, and a report ready for the show team.</p>
+          </details>
+        </div>
       </div>
     </div>
   </section>
@@ -767,10 +969,10 @@
             <dt>Leave</dt><dd>The matching specimen, or the plan to build one</dd>
             <dt>Write</dt><dd><a href="mailto:dev@pirx.ca?subject=Open%20a%20brief">dev@pirx.ca</a></dd>
           </dl>
+          <p class="sc-body">Not ready to describe the operation yet? <a href="https://check.abra-ca-dabra.app/check">Take the Readiness Check</a>.</p>
           <p class="cta">
-            <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Open%20a%20brief">Open a brief</a>
-            <a href="https://check.abra-ca-dabra.app/check">Take the Readiness Check</a>
-            <a href="walkthrough.html">Watch the catalog</a>
+            <a class="cta--primary" href="mailto:dev@pirx.ca?subject=How%20we%20work">Describe how you work</a>
+            <a href="walkthrough.html">Watch the work</a>
           </p>
         </div>
       </div>
@@ -786,6 +988,12 @@
 
 <script src="scrollcraft.js"></script>
 <script>
+  if (matchMedia('(max-width: 860px)').matches) {
+    ['i', 'iii'].forEach(function (id) {
+      var section = document.getElementById(id);
+      if (section) section.setAttribute('data-sc-act', 'flow');
+    });
+  }
   ScrollCraft.mount(document.body);
 
   // the utterance inks one syllable per specimen as the reader passes it
@@ -803,15 +1011,65 @@
 
   // the object index follows the reader
   var links = Array.prototype.slice.call(document.querySelectorAll('.index a[data-index]'));
-  var nodes = ['i', 'ii', 'obj-iii', 'iv', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
+  var nodes = ['i', 'ii', 'obj-iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
+  var currentLabel = document.querySelector('.index__current');
   function spy() {
     var y = window.scrollY + window.innerHeight * 0.42, current = 0;
     nodes.forEach(function (n, k) { if (n && n.getBoundingClientRect().top + window.scrollY <= y) current = k; });
-    links.forEach(function (a, k) { if (k === current) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+    links.forEach(function (a, k) { if (k === current) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+    if (currentLabel && links[current]) currentLabel.textContent = links[current].getAttribute('aria-label');
   }
   spy();
   addEventListener('scroll', spy, { passive: true });
   addEventListener('resize', spy);
+
+  // One understandable mechanism: spoken intent becomes structure, then product.
+  var intentDemo = document.querySelector('.intent-demo');
+  var intentButtons = Array.prototype.slice.call(document.querySelectorAll('[data-intent-state]'));
+  var intentStatus = document.querySelector('[data-intent-status]');
+  var intentStates = ['say', 'structure', 'run'];
+  var intentStatuses = { say: 'Listening', structure: 'Resolving', run: 'System live' };
+  var intentWasChosen = false;
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function setIntentState(state, chosen) {
+    if (!intentDemo || intentStates.indexOf(state) < 0) return;
+    intentDemo.setAttribute('data-active-state', state);
+    intentButtons.forEach(function (button) {
+      button.setAttribute('aria-pressed', button.getAttribute('data-intent-state') === state ? 'true' : 'false');
+    });
+    if (intentStatus) intentStatus.textContent = intentStatuses[state];
+    if (chosen) intentWasChosen = true;
+  }
+
+  intentButtons.forEach(function (button) {
+    button.addEventListener('click', function () { setIntentState(button.getAttribute('data-intent-state'), true); });
+  });
+  var intentSkip = document.querySelector('[data-intent-skip]');
+  if (intentSkip) intentSkip.addEventListener('click', function () { setIntentState('run', true); });
+
+  function resolveIntentFromScroll() {
+    if (!intentDemo || reduceMotion || intentWasChosen || innerWidth <= 860) return;
+    var act = document.getElementById('i');
+    var travel = Math.max(1, act.offsetHeight - innerHeight);
+    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
+    setIntentState(progress < 0.3 ? 'say' : progress < 0.64 ? 'structure' : 'run', false);
+  }
+  resolveIntentFromScroll();
+  addEventListener('scroll', resolveIntentFromScroll, { passive: true });
+  addEventListener('resize', resolveIntentFromScroll);
+
+  // The mobile film label yields the product view without removing its explanation.
+  var filmToggle = document.querySelector('.film-toggle');
+  var filmDetails = document.getElementById('film-details');
+  if (filmToggle && filmDetails) {
+    filmToggle.addEventListener('click', function () {
+      var isOpen = filmToggle.getAttribute('aria-expanded') === 'true';
+      filmToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      filmToggle.textContent = isOpen ? 'Show film details' : 'Minimize film details';
+      filmDetails.hidden = isOpen;
+    });
+  }
 </script>
 </body>
 </html>

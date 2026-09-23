@@ -1,6 +1,6 @@
 # Abracadabra marketing site — technological magic redesign plan
 
-**Status:** Proposed
+**Status:** Homepage core implemented 2026-09-23; media recapture, supporting-page P2 work, and analytics-platform integration remain
 **Prepared:** 2026-09-23
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
@@ -19,6 +19,22 @@ The recommended art direction is **Intent Signal with Living Blueprint mechanics
 - The experience avoids generic AI styling: purple gradients, decorative particles, fake terminals, mystical symbols, and unexplained glow.
 
 This direction keeps the current promise intact: the technology may feel magical, but every claim is explained as intent, context, architecture, and working software.
+
+## Implementation status — 2026-09-23
+
+The homepage P0/P1 core is implemented in `scrollcraft/builds/abracadabra-ai/index.html`:
+
+- the two-level CTA hierarchy, with the Readiness Check moved to a tertiary role;
+- the three-state **Say it → Structure it → Run it** signature interaction, ending on the real Showdesk interface;
+- labeled 44px chapter navigation and a compact mobile chapter readout;
+- complete vertical selected-work cards on mobile;
+- mobile-specific hero flow, collapsible film details, and a text-sequence fallback;
+- reduced-motion information parity and responsive containment across the required viewport widths;
+- a documented graphite, warm-ivory, signal-red, etched-grid visual system.
+
+Automated browser behavior tests cover CTA hierarchy, navigation, responsive overflow, intent-state controls, mobile film behavior, and reduced-motion media loading.
+
+The broader definition of done is intentionally not marked complete. Remaining work includes media recapture and re-encoding, captions/transcript hardening, supporting-page P2 alignment for `walkthrough.html` and `films.html`, production analytics-platform wiring, and post-release Web Vitals/conversion measurement.
 
 ## Why change
 
