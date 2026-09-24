@@ -96,7 +96,7 @@ test('orbital horizon video covers the full hero stage behind the compiler', asy
     assert.equal(await video.getAttribute('playsinline'), '');
     assert.equal(await video.evaluate((element) => element.muted), true);
 
-    const coverage = await page.locator('#i > .sc-stage').evaluate((stage) => {
+    const coverage = await page.locator('#i > [data-sc-stage]').evaluate((stage) => {
       const stageRect = stage.getBoundingClientRect();
       const videoRect = stage.querySelector('.hero-backdrop__video').getBoundingClientRect();
       const hero = stage.querySelector('.hero');
