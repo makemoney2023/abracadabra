@@ -33,7 +33,7 @@ export function GateForm({
         return;
       }
       router.refresh();
-      window.location.assign(`/check/${token}`);
+      router.push(`/check/${token}`);
     } catch {
       setError("Could not send the report. Try again.");
     } finally {
@@ -43,15 +43,16 @@ export function GateForm({
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-lg space-y-5">
-      <div className="space-y-2">
-        <h1 className="font-heading text-4xl tracking-tight">{config.copy.gateHeadline}</h1>
+      <div className="space-y-3">
+        <p className="studio-kicker">Readiness Check</p>
+        <h1 className="font-heading text-4xl">{config.copy.gateHeadline}</h1>
         <p className="text-muted-foreground">{config.copy.gatePrompt}</p>
-        <p className="text-sm text-muted-foreground" aria-hidden>
+        <p className="studio-kicker" aria-hidden>
           {bandLabel}
         </p>
       </div>
       <div className="space-y-2">
-        <label htmlFor="gate-email" className="text-sm font-medium">
+        <label htmlFor="gate-email" className="studio-kicker">
           Email
         </label>
         <input
@@ -61,12 +62,12 @@ export function GateForm({
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="border-input bg-background min-h-11 w-full rounded-md border px-3 text-sm"
+          className="studio-field text-sm"
         />
       </div>
       <div className="space-y-2">
-        <label htmlFor="gate-name" className="text-sm font-medium">
-          Name <span className="text-muted-foreground">(optional)</span>
+        <label htmlFor="gate-name" className="studio-kicker">
+          Name <span className="normal-case tracking-normal text-muted-foreground">(optional)</span>
         </label>
         <input
           id="gate-name"
@@ -74,14 +75,10 @@ export function GateForm({
           autoComplete="name"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className="border-input bg-background min-h-11 w-full rounded-md border px-3 text-sm"
+          className="studio-field text-sm"
         />
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="bg-primary text-primary-foreground min-h-11 w-full cursor-pointer rounded-md px-4 text-sm font-medium disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className="studio-cta-primary w-full">
         {pending ? "Sending…" : "Show my results"}
       </button>
       <p className="text-xs text-muted-foreground">{config.copy.consent}</p>

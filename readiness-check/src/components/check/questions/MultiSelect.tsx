@@ -16,9 +16,7 @@ export function MultiSelect({
             key={option.value}
             type="button"
             aria-pressed={selected}
-            className={`min-h-11 cursor-pointer rounded-full border px-4 py-2 text-left text-sm ${
-              selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"
-            }`}
+            className="studio-chip text-sm"
             onClick={() =>
               onChange(selected ? value.filter((item) => item !== option.value) : [...value, option.value])
             }

@@ -30,7 +30,7 @@ export function UrlField({
         autoComplete="url"
         value={value}
         aria-describedby={`${id}-note`}
-        className="border-input bg-background min-h-11 w-full rounded-md border px-3 text-sm"
+        className="studio-field text-sm"
         onChange={(event) => onChange(event.target.value)}
       />
       <p id={`${id}-note`} className="text-sm text-muted-foreground">

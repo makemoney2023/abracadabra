@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { config } from "@/lib/assessment/config";
 import type { AssessmentPayload } from "@/lib/assessment/present";
@@ -28,29 +29,36 @@ export function CheckSession({ token }: { token: string }) {
   const [payload, setPayload] = useState<AssessmentPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [draft, setDraft] = useState<unknown>(null);
+  const [draftOverride, setDraftOverride] = useState<{ id: string; value: unknown } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
-  async function load() {
-    const res = await fetch(`/api/assessments/${token}`);
-    if (res.status === 404) {
-      setError("This check link isn't valid.");
-      setLoaded(true);
-      return;
-    }
-    const data = (await res.json()) as AssessmentPayload & { error?: string };
-    if (!res.ok) {
-      setError(data.error ?? "Could not load this check.");
-      setLoaded(true);
-      return;
-    }
-    setPayload(data);
-    setLoaded(true);
-  }
-
   useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false;
+    fetch(`/api/assessments/${token}`)
+      .then(async (res) => {
+        if (cancelled) return;
+        if (res.status === 404) {
+          setError("This check link isn't valid.");
+          setLoaded(true);
+          return;
+        }
+        const data = (await res.json()) as AssessmentPayload & { error?: string };
+        if (!res.ok) {
+          setError(data.error ?? "Could not load this check.");
+          setLoaded(true);
+          return;
+        }
+        setPayload(data);
+        setLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Could not load this check.");
+        setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   const steps = useMemo(
@@ -59,20 +67,22 @@ export function CheckSession({ token }: { token: string }) {
   );
   const currentId = payload?.currentStep && payload.currentStep !== "gate" ? payload.currentStep : steps[0]?.id;
   const step = steps.find((item) => item.id === currentId) ?? steps[0];
+  const serverDraft = payload && step ? draftFor(step, payload.answers, payload.qualifiers) : null;
+  const draft = draftOverride && step && draftOverride.id === step.id ? draftOverride.value : serverDraft;
 
-  useEffect(() => {
-    if (!payload || !step) return;
-    setDraft(draftFor(step, payload.answers, payload.qualifiers));
-  }, [payload, step]);
+  function setDraft(value: unknown) {
+    if (!step) return;
+    setDraftOverride({ id: step.id, value });
+  }
 
-  if (!loaded) return <p className="text-sm text-muted-foreground">Loading your check…</p>;
+  if (!loaded) return <p className="studio-kicker">Loading your check…</p>;
   if (error) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <p role="alert">{error}</p>
-        <a className="underline" href="/check">
+        <Link className="studio-cta" href="/check">
           Start a new one
-        </a>
+        </Link>
       </div>
     );
   }
@@ -88,6 +98,17 @@ export function CheckSession({ token }: { token: string }) {
     step.kind === "severity"
       ? (question?.options?.find((option) => option.value === step.id.slice("severity:".length))?.label ?? "How costly is this?")
       : (question?.prompt ?? "");
+
+  async function reload() {
+    const res = await fetch(`/api/assessments/${token}`);
+    const data = (await res.json()) as AssessmentPayload & { error?: string };
+    if (!res.ok) {
+      setError(data.error ?? "Could not load this check.");
+      return;
+    }
+    setError(null);
+    setPayload(data);
+  }
 
   async function save(nextDraft = draft) {
     if (!step) return;
@@ -107,7 +128,7 @@ export function CheckSession({ token }: { token: string }) {
       if (data.nextStep === "gate") {
         await fetch(`/api/assessments/${token}/complete`, { method: "POST" });
       }
-      await load();
+      await reload();
     } catch {
       setError("Could not save that answer. Try again.");
     } finally {
@@ -123,10 +144,10 @@ export function CheckSession({ token }: { token: string }) {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-xl space-y-8">
       <ProgressSegments active={sectionIndex(step.sectionId)} />
-      <div className="space-y-4">
-        <h1 className="font-heading text-3xl tracking-tight">{prompt}</h1>
+      <div className="space-y-5">
+        <h1 className="font-heading text-3xl">{prompt}</h1>
         {step.kind === "multi_select" ? (
           <MultiSelect
             options={question?.options ?? []}
@@ -168,15 +189,10 @@ export function CheckSession({ token }: { token: string }) {
           </p>
         ) : null}
         <div className="flex gap-2">
-          <button type="button" className="min-h-11 cursor-pointer rounded-md border px-4 text-sm" onClick={goBack}>
+          <button type="button" className="studio-cta" onClick={goBack}>
             Back
           </button>
-          <button
-            type="button"
-            disabled={pending}
-            className="bg-primary text-primary-foreground min-h-11 cursor-pointer rounded-md px-4 text-sm font-medium disabled:opacity-60"
-            onClick={() => void save()}
-          >
+          <button type="button" disabled={pending} className="studio-cta-primary" onClick={() => void save()}>
             {pending ? "Saving…" : "Next"}
           </button>
         </div>

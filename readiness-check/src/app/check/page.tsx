@@ -21,7 +21,7 @@ const MEASURE = [
 export default function CheckLandingPage() {
   const url = checkCanonical("/check");
   return (
-    <div className="space-y-12">
+    <div className="space-y-16">
       <JsonLd data={faqPage(CHECK_FAQ)} />
       <JsonLd
         data={webApplicationLd({
@@ -30,9 +30,10 @@ export default function CheckLandingPage() {
           description: config.copy.landingDeck,
         })}
       />
-      <section className="max-w-2xl space-y-4">
-        <h1 className="font-heading text-5xl tracking-tight">{config.copy.landingTitle}</h1>
-        <p className="text-lg text-muted-foreground">{config.copy.landingDeck}</p>
+      <section className="max-w-2xl space-y-5">
+        <p className="studio-kicker">Abracadabra</p>
+        <h1 className="font-heading text-5xl sm:text-6xl">{config.copy.landingTitle}</h1>
+        <p className="max-w-[46ch] text-lg text-muted-foreground">{config.copy.landingDeck}</p>
         <StartCheck />
       </section>
       <section className="grid gap-4 sm:grid-cols-2" aria-labelledby="measure-heading">
@@ -40,17 +41,17 @@ export default function CheckLandingPage() {
           What we measure
         </h2>
         {MEASURE.map((item) => (
-          <article key={item.title} className="rounded-lg border border-border p-4">
-            <h3 className="font-heading text-2xl">{item.title}</h3>
+          <article key={item.title} className="studio-panel space-y-2 p-5">
+            <p className="studio-kicker">{item.title}</p>
             <p className="text-sm text-muted-foreground">{item.body}</p>
           </article>
         ))}
       </section>
-      <section className="max-w-2xl space-y-2">
-        <h2 className="font-heading text-3xl">What you get</h2>
+      <section className="studio-panel max-w-2xl space-y-3 p-5">
+        <p className="studio-kicker">What you get</p>
+        <h2 className="font-heading text-3xl">A band, four scores, and a next step</h2>
         <p className="text-sm text-muted-foreground">
-          A band, four scores, three suggestions in each section, and a thirty-minute working session if you want one.
-          Five to seven minutes.
+          Three suggestions in each section, and a thirty-minute working session if you want one. Five to seven minutes.
         </p>
       </section>
       <CheckFaq />

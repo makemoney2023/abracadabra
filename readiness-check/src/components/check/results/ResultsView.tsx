@@ -21,8 +21,8 @@ function SuggestionList({ items }: { items: ResultsPayload["suggestions"]["readi
   return (
     <ul className="divide-y divide-border border-y border-border">
       {items.map((item) => (
-        <li key={item.code} className="py-3">
-          <Link href={`/check/guide/${item.guideSlug}`} className="font-medium underline-offset-4 hover:underline">
+        <li key={item.code} className="space-y-1 py-4">
+          <Link href={`/check/guide/${item.guideSlug}`} className="font-medium no-underline hover:underline">
             {item.title}
           </Link>
           <p className="text-sm text-muted-foreground">{item.body}</p>
@@ -63,18 +63,18 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
   const breakdown = scores.visibility.breakdown;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <header className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Readiness Check</p>
-        <h1 className="font-heading text-4xl tracking-tight">{results.bandLabel}</h1>
-        <p className="text-lg text-muted-foreground">
+    <div className="mx-auto max-w-3xl space-y-10">
+      <header className="space-y-3">
+        <p className="studio-kicker">Readiness Check</p>
+        <h1 className="font-heading text-5xl">{results.bandLabel}</h1>
+        <p className="max-w-[46ch] text-lg text-muted-foreground">
           {results.bandSentence}
           {results.topPressureLabel ? ` The job that costs the most right now: ${results.topPressureLabel}.` : ""}
         </p>
       </header>
 
-      <section className="space-y-4" aria-labelledby="readiness-heading">
-        <h2 id="readiness-heading" className="font-heading text-2xl">
+      <section className="studio-panel space-y-5 p-5" aria-labelledby="readiness-heading">
+        <h2 id="readiness-heading" className="font-heading text-3xl">
           Readiness
         </h2>
         <ScoreRing score={scores.readiness.total} label="Readiness" />
@@ -87,8 +87,8 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
         <SuggestionList items={results.suggestions.readiness} />
       </section>
 
-      <section className="space-y-4" aria-labelledby="visibility-heading">
-        <h2 id="visibility-heading" className="font-heading text-2xl">
+      <section className="studio-panel space-y-5 p-5" aria-labelledby="visibility-heading">
+        <h2 id="visibility-heading" className="font-heading text-3xl">
           Website visibility
         </h2>
         {scores.visibility.status === "complete" && scores.visibility.total != null ? (
@@ -114,23 +114,23 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
           </div>
         ) : null}
         {results.scan ? (
-          <Link href={`/scan/${results.scan.token}`} className="text-sm underline">
+          <Link href={`/scan/${results.scan.token}`} className="studio-cta w-fit">
             Open the full site scan
           </Link>
         ) : null}
         <SuggestionList items={results.suggestions.visibility} />
       </section>
 
-      <section className="space-y-4" aria-labelledby="growth-heading">
-        <h2 id="growth-heading" className="font-heading text-2xl">
+      <section className="studio-panel space-y-5 p-5" aria-labelledby="growth-heading">
+        <h2 id="growth-heading" className="font-heading text-3xl">
           Growth
         </h2>
         <ScoreRing score={scores.growth.total} label="Growth" />
         <SuggestionList items={results.suggestions.growth} />
       </section>
 
-      <section className="space-y-3" aria-labelledby="pressure-heading">
-        <h2 id="pressure-heading" className="font-heading text-2xl">
+      <section className="studio-panel space-y-4 p-5" aria-labelledby="pressure-heading">
+        <h2 id="pressure-heading" className="font-heading text-3xl">
           Pressure
         </h2>
         {scores.pressures.length === 0 ? (
@@ -140,7 +140,9 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
             {scores.pressures.map((item) => (
               <li key={item.code} className="flex items-center justify-between gap-3 text-sm">
                 <span>{item.code}</span>
-                <span className="rounded-full border px-2 py-0.5 text-xs">Severity {item.severity}</span>
+                <span className="studio-kicker border border-[var(--sc-hairline-strong)] px-2 py-1">
+                  Severity {item.severity}
+                </span>
               </li>
             ))}
           </ul>
@@ -148,11 +150,11 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
       </section>
 
       <section className="space-y-4" aria-labelledby="help-heading">
-        <h2 id="help-heading" className="font-heading text-2xl">
+        <h2 id="help-heading" className="font-heading text-3xl">
           How we can help
         </h2>
         {results.offers.map((offer) => (
-          <article key={offer.row} className="space-y-2 rounded-lg border border-border p-4">
+          <article key={offer.row} className="studio-panel space-y-2 p-5">
             <h3 className="font-medium">{offer.said}</h3>
             <p className="text-sm text-muted-foreground">{offer.build}</p>
             {offer.specimens.length > 0 ? (
@@ -175,7 +177,7 @@ export function ResultsView({ token, initial }: { token: string; initial: Result
       <div className="flex flex-wrap gap-3">
         <a
           href={`/api/assessments/${token}/pdf`}
-          className="inline-flex min-h-11 items-center rounded-md border px-4 text-sm"
+          className="studio-cta"
           onClick={() => {
             void fetch(`/api/assessments/${token}/events`, {
               method: "POST",

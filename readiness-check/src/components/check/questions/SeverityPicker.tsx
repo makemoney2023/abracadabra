@@ -17,9 +17,7 @@ export function SeverityPicker({
             type="button"
             role="radio"
             aria-checked={selected}
-            className={`min-h-11 cursor-pointer rounded-md border px-4 py-3 text-left text-sm ${
-              selected ? "border-primary bg-primary/10" : "border-border"
-            }`}
+            className="studio-choice text-sm"
             onClick={() => onChange(option.score)}
           >
             {option.label}

@@ -28,12 +28,12 @@ export const CHECK_FAQ = [
 export function CheckFaq() {
   return (
     <section className="space-y-4" aria-labelledby="check-faq">
-      <h2 id="check-faq" className="font-heading text-3xl tracking-tight">
+      <h2 id="check-faq" className="font-heading text-3xl">
         Questions
       </h2>
-      <dl className="space-y-4">
+      <dl className="divide-y divide-[var(--sc-hairline)] border-y border-[var(--sc-hairline)]">
         {CHECK_FAQ.map((item) => (
-          <div key={item.q}>
+          <div key={item.q} className="space-y-1 py-4">
             <dt className="font-medium">{item.q}</dt>
             <dd className="text-sm text-muted-foreground">{item.a}</dd>
           </div>

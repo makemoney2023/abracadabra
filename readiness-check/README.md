@@ -94,6 +94,15 @@ v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Pa
 
 ## Changelog
 
+### 2026-09-24 — Readiness Check studio design
+
+- **What changed** — The `/check` surface and the assessment PDF follow the Abracadabra marketing design system (canvas, Tektur, clipped panels, accent CTAs). Button labels use canvas ink on the accent fill so the axe contrast gate passes. Schema scan and ops keep the editorial theme. Score heat colors stay.
+- **Why** — The check was visually the Schema scanner, not the studio site it is linked from.
+- **Code touchpoints** — `src/lib/brand/studio.ts`, `src/app/globals.css` (`.check-studio`), `src/app/check/layout.tsx`, `src/components/check/**`, `src/lib/pdf/assessment-report.tsx`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npm test`; `npm run lint`
+
 ### 2026-08-13 — JSON-LD fix templates upgraded (fuller graphs)
 
 - **What changed** — Fix-package JSON-LD builders emit richer Schema.org graphs when facts exist: Organization `image` + `areaServed` + `geo` + `openingHoursSpecification` + richer `contactPoint`; WebSite `about`/`description`; Product `image`/`Offer` (price only when known); Event `location`/`endDate`/`image`; JobPosting `datePosted`/`jobLocation`/expanded `hiringOrganization`; BlogPosting `ImageObject` + org `@id` author; Service `areaServed`; About/Contact/WebPage `description`/`primaryImageOfPage`/`inLanguage`. Still omits unknowns (zero-TODO; no invented ratings/prices).

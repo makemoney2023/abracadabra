@@ -152,6 +152,218 @@
   }
 }
 
+/* Readiness Check — same colour and type roles as the marketing site. */
+.check-studio {
+  --sc-canvas: #070706;
+  --sc-surface: #11110F;
+  --sc-ink: #F5F0E8;
+  --sc-ink-soft: #AAA49A;
+  --sc-accent: #FF4B24;
+  --sc-signal: #FF6B3D;
+  --sc-optic: #8DEBF2;
+  --sc-phosphor: #C6FFB3;
+  --sc-accent-ink: #F3EEE4;
+  --sc-hairline: color-mix(in oklab, var(--sc-ink) 12%, transparent);
+  --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 22%, transparent);
+  --sc-glass: color-mix(in oklab, var(--sc-surface) 72%, transparent);
+  --background: var(--sc-canvas);
+  --foreground: var(--sc-ink);
+  --card: var(--sc-surface);
+  --card-foreground: var(--sc-ink);
+  --popover: var(--sc-surface);
+  --popover-foreground: var(--sc-ink);
+  --primary: var(--sc-accent);
+  --primary-foreground: var(--sc-canvas);
+  --secondary: var(--sc-surface);
+  --secondary-foreground: var(--sc-ink);
+  --muted: #1a1a17;
+  --muted-foreground: var(--sc-ink-soft);
+  --accent: var(--sc-signal);
+  --accent-foreground: var(--sc-canvas);
+  --destructive: #ff8a7a;
+  --border: var(--sc-hairline);
+  --input: color-mix(in oklab, var(--sc-ink) 22%, transparent);
+  --ring: var(--sc-accent);
+  --radius: 2px;
+  --font-heading: var(--font-tektur), "Tektur", "IBM Plex Sans", system-ui, sans-serif;
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  background: var(--sc-canvas);
+  color: var(--sc-ink);
+  font-family: var(--font-plex-sans), "IBM Plex Sans", system-ui, sans-serif;
+  caret-color: var(--sc-accent);
+}
+
+.check-studio::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 72% 12%, color-mix(in oklab, var(--sc-optic) 8%, transparent), transparent 28rem),
+    radial-gradient(circle at 18% 48%, color-mix(in oklab, var(--sc-signal) 8%, transparent), transparent 34rem),
+    linear-gradient(color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px);
+  background-size: auto, auto, 4rem 4rem, 4rem 4rem;
+  mask-image: linear-gradient(to bottom, black, black 76%, transparent);
+}
+
+.check-studio::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.1;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 3px,
+    color-mix(in oklab, var(--sc-ink) 7%, transparent) 4px
+  );
+  mix-blend-mode: soft-light;
+}
+
+.check-studio > * {
+  position: relative;
+  z-index: 2;
+}
+
+.check-studio ::selection {
+  background: var(--sc-accent);
+  color: var(--sc-canvas);
+}
+
+.check-studio :focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 3px;
+}
+
+.check-studio a:hover {
+  color: var(--sc-accent);
+}
+
+.check-studio .font-heading {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+}
+
+.check-studio .studio-kicker {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sc-accent);
+}
+
+.check-studio .studio-panel {
+  border: 1px solid color-mix(in oklab, var(--sc-ink) 26%, transparent);
+  background:
+    linear-gradient(115deg, color-mix(in oklab, var(--sc-surface) 96%, transparent), color-mix(in oklab, var(--sc-optic) 5%, var(--sc-canvas))),
+    var(--sc-canvas);
+  clip-path: polygon(0 0, calc(100% - 0.85rem) 0, 100% 0.85rem, 100% 100%, 0.85rem 100%, 0 calc(100% - 0.85rem));
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 13%, transparent);
+}
+
+.check-studio .studio-cta,
+.check-studio .studio-cta-primary {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.78em 1.3em;
+  border: 1px solid var(--sc-hairline);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--sc-ink);
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 200ms cubic-bezier(0.23, 1, 0.32, 1), background-color 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.check-studio .studio-cta:hover {
+  border-color: var(--sc-ink);
+  color: var(--sc-ink);
+}
+
+.check-studio .studio-cta-primary {
+  background: var(--sc-accent);
+  border-color: var(--sc-accent);
+  color: var(--sc-canvas);
+}
+
+.check-studio .studio-cta-primary:hover {
+  background: color-mix(in oklab, var(--sc-accent) 86%, var(--sc-ink));
+  border-color: transparent;
+  color: var(--sc-canvas);
+}
+
+.check-studio .studio-cta:disabled,
+.check-studio .studio-cta-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.check-studio .studio-choice,
+.check-studio .studio-field {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid var(--sc-hairline-strong);
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--sc-surface) 80%, transparent);
+  color: var(--sc-ink);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.check-studio .studio-field {
+  cursor: text;
+}
+
+.check-studio .studio-choice[aria-checked="true"],
+.check-studio .studio-choice[aria-pressed="true"] {
+  border-color: var(--sc-signal);
+  background: var(--sc-glass);
+  box-shadow: inset 3px 0 0 var(--sc-signal);
+}
+
+.check-studio .studio-chip {
+  min-height: 44px;
+  border: 1px solid var(--sc-hairline-strong);
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+
+.check-studio .studio-chip[aria-pressed="true"] {
+  border-color: var(--sc-signal);
+  color: var(--sc-ink);
+  background: color-mix(in oklab, var(--sc-signal) 16%, var(--sc-canvas));
+}
+
+.check-studio .studio-meter {
+  height: 2px;
+  background: var(--sc-hairline);
+}
+
+.check-studio .studio-meter[data-state="current"],
+.check-studio .studio-meter[data-state="done"] {
+  background: linear-gradient(to right, var(--sc-optic), var(--sc-signal));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check-studio::after {
+    display: none;
+  }
+}
+
 @media print {
   .no-print {
     display: none !important;

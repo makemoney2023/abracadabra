@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { config } from "@/lib/assessment/config";
 
 export function StartCheck() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -26,7 +28,7 @@ export function StartCheck() {
         setError(data.message ?? data.error ?? "Could not start the check.");
         return;
       }
-      window.location.assign(`/check/${data.token}`);
+      router.push(`/check/${data.token}`);
     } catch {
       setError("Could not start the check.");
     } finally {
@@ -40,7 +42,7 @@ export function StartCheck() {
         type="button"
         onClick={() => void start()}
         disabled={pending}
-        className="bg-primary text-primary-foreground min-h-11 cursor-pointer rounded-md px-5 text-sm font-medium disabled:opacity-60"
+        className="studio-cta-primary"
       >
         {pending ? "Starting…" : config.copy.start}
       </button>

@@ -82,6 +82,8 @@ Do **not** replace with purple gradients, Space Grotesk, or cream/terracotta AI 
 | Code / labels | IBM Plex Mono |
 | Atmosphere | Soft radial washes + light grid; editorial, not glassmorphic dark cinema |
 
+The Schema scanner (`/`, `/scan`) and ops stay on this system. The Readiness Check (`/check`, guides, and the assessment PDF) uses the Abracadabra marketing studio: canvas `#070706`, surface `#11110F`, ink `#F5F0E8`, accent `#FF4B24`, Tektur headings, IBM Plex Sans body. Tokens live in `src/lib/brand/studio.ts` and `.check-studio` in `globals.css`. Primary button labels use canvas ink on the accent fill so the check’s contrast gate passes; the marketing site’s cream accent-ink stays a named token only.
+
 ### Logo / wordmark
 
 Wordmark **Schema** in heading font is the brand signal. On public surfaces it must read as hero-level identity (not only nav chrome).

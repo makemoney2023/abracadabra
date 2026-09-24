@@ -21,8 +21,9 @@ export function BookingCard({ token, booking }: { token: string; booking: Bookin
   }
 
   return (
-    <section className="space-y-4 rounded-lg border border-border p-5">
-      <h2 className="font-heading text-2xl tracking-tight">{config.copy.bookingTitle}</h2>
+    <section className="studio-panel space-y-4 p-5">
+      <p className="studio-kicker">Next</p>
+      <h2 className="font-heading text-3xl">{config.copy.bookingTitle}</h2>
       {booking.calLink ? (
         <div onFocus={markOpened} onMouseDown={markOpened}>
           <Cal
@@ -42,7 +43,7 @@ export function BookingCard({ token, booking }: { token: string; booking: Bookin
         <a
           href={booking.mailto}
           onClick={markOpened}
-          className="bg-primary text-primary-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium"
+          className="studio-cta-primary"
         >
           Open a brief
         </a>

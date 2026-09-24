@@ -25,7 +25,7 @@ export function TextField({
         maxLength={maxLength}
         rows={4}
         aria-describedby={`${id}-count`}
-        className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+        className="studio-field min-h-28 py-2 text-sm"
         onChange={(event) => onChange(event.target.value)}
       />
       {suggestions?.length ? (
@@ -34,7 +34,7 @@ export function TextField({
             <button
               key={item}
               type="button"
-              className="border-border cursor-pointer rounded-md border px-2 py-1 text-xs"
+              className="studio-chip min-h-9 px-2 py-1 text-xs"
               onClick={() => onChange(item)}
             >
               {item}

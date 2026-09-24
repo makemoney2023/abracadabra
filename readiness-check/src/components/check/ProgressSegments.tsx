@@ -12,11 +12,8 @@ export function ProgressSegments({ active }: { active: number }) {
         const state = index < active ? "done" : index === active ? "current" : "upcoming";
         return (
           <li key={section.id} className="space-y-1">
-            <div
-              className={`h-1.5 rounded-full ${state === "upcoming" ? "bg-muted" : "bg-primary"}`}
-              aria-hidden
-            />
-            <span className={`block text-xs ${state === "current" ? "font-medium" : "text-muted-foreground"}`}>
+            <div className="studio-meter" data-state={state} aria-hidden />
+            <span className={`studio-kicker block ${state === "current" ? "" : "opacity-60"}`}>
               {section.label}
               {state === "current" ? <span className="sr-only">, current section</span> : null}
             </span>

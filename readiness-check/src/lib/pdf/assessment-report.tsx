@@ -1,12 +1,27 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ResultsPayload } from "@/lib/assessment/present";
+import { STUDIO } from "@/lib/brand/studio";
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 11, fontFamily: "Helvetica", color: "#1c1917" },
-  title: { fontSize: 22, marginBottom: 6, fontFamily: "Helvetica-Bold" },
-  muted: { color: "#57534e", marginBottom: 12 },
-  section: { marginTop: 14, marginBottom: 4, fontSize: 14, fontFamily: "Helvetica-Bold" },
-  row: { marginBottom: 4 },
+  page: {
+    padding: 40,
+    fontSize: 11,
+    fontFamily: "Helvetica",
+    color: STUDIO.ink,
+    backgroundColor: STUDIO.canvas,
+  },
+  kicker: {
+    fontSize: 9,
+    color: STUDIO.accent,
+    letterSpacing: 1.6,
+    marginBottom: 10,
+    textTransform: "uppercase",
+  },
+  title: { fontSize: 22, marginBottom: 6, color: STUDIO.ink, fontFamily: "Helvetica-Bold" },
+  muted: { color: STUDIO.inkSoft, marginBottom: 12 },
+  section: { marginTop: 14, marginBottom: 4, fontSize: 14, color: STUDIO.accent, fontFamily: "Helvetica-Bold" },
+  row: { marginBottom: 4, color: STUDIO.ink },
+  rule: { marginTop: 8, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: STUDIO.signal },
 });
 
 export function AssessmentReportDocument({ results }: { results: ResultsPayload }) {
@@ -14,7 +29,9 @@ export function AssessmentReportDocument({ results }: { results: ResultsPayload 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Readiness Check — {results.bandLabel}</Text>
+        <Text style={styles.kicker}>Readiness Check</Text>
+        <Text style={styles.title}>{results.bandLabel}</Text>
+        <View style={styles.rule} />
         <Text style={styles.muted}>{results.bandSentence}</Text>
         <Text style={styles.row}>Site: {results.domain ?? "not provided"}</Text>
         <Text style={styles.row}>Overall {scores.overall.total}</Text>
