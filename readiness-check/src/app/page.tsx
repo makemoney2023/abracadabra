@@ -1,3 +1,4 @@
+import { OrbitalHorizonHero } from "@/components/public/OrbitalHorizonHero";
 import { ScanForm } from "@/components/public/ScanForm";
 import {
   LandingAnalogy,
@@ -28,22 +29,7 @@ export default function Home() {
       </header>
 
       <main className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col px-5 pb-24 pt-6 sm:px-8 sm:pb-32">
-        <div className="flex min-h-[70vh] flex-col justify-center">
-          <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-            <div className="space-y-4">
-              <h1 className="font-heading text-4xl leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-                {LANDING_COPY.brand}
-              </h1>
-              <p className="max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
-                {LANDING_COPY.heroSubhead}
-              </p>
-            </div>
-
-            <div className="max-w-xl animate-in fade-in duration-700 delay-150">
-              <ScanForm />
-            </div>
-          </div>
-        </div>
+        <OrbitalHorizonHero />
 
         <div className="mt-8 space-y-12 sm:mt-12 sm:space-y-16">
           <LandingProblem />

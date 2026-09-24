@@ -20,6 +20,7 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
 - **Ops:** Parallel FindAll → enrich contacts → auto-scan → inbox queue
 - **Fetch layer:** Parallel only (`search`, `extract`/`fetch`, `findall`, `enrich`) — no Firecrawl in v1
 - **Stack:** Next.js + Supabase + Inngest + shadcn + Vitest/Playwright
+- **Landing hero:** OpenHero `orbital-horizon` video treatment, adapted to the Schema scan copy and form; decorative playback pauses when reduced motion is requested.
 
 ## Local setup
 
@@ -93,6 +94,15 @@ On every coding session, follow `startup-session` → read INTENT + design + `pr
 v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Parallel-only). Deploy/CI polish still open.
 
 ## Changelog
+
+### 2026-09-24 — Orbital Horizon landing hero
+
+- **What changed** — Replaced the static opening block with a responsive orbital video hero while preserving the Schema headline, AI-visibility positioning, and scan form.
+- **Why** — Give the primary conversion a cinematic visual anchor without replacing the product’s real action.
+- **Code touchpoints** — `src/components/public/{OrbitalHorizonHero,OrbitalVideo}.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `public/orbital-horizon/video.mp4`, `tests/e2e/hero.spec.ts`
+- **Data-flow impact** — none; the existing scan form still posts to `POST /api/scans`.
+- **API / schema impact** — none.
+- **Verification** — Playwright hero behavior and reduced-motion checks, unit tests, changed-file lint, typecheck, and production build.
 
 ### 2026-08-13 — JSON-LD fix templates upgraded (fuller graphs)
 
