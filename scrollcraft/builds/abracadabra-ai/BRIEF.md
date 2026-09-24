@@ -66,6 +66,15 @@ The hero looked strong but asked a broad business audience to decode a specializ
 
 Desktop scroll drives the sequence, mobile uses direct controls and a compact agent ledger, and reduced-motion mode exposes all four states and all five workstreams as static semantic content.
 
+## Revision (2026-09-24): orbital horizon background
+
+The thought-to-software sequence remains the hero's argument and interaction. OpenHero's `orbital-horizon` film now supplies the atmospheric layer behind it:
+
+- The orbital sphere fills the complete pinned stage on desktop and the full normal-flow hero on mobile.
+- A dark optical scrim protects the existing hierarchy instead of turning the film into a competing foreground object.
+- The film is decorative, silent, inline, and looping. Reduced-motion mode pauses on the opening frame while preserving the same visual context.
+- The headline, CTAs, compiler states, and human-directed positioning are unchanged.
+
 ## Revision (2026-09-24): time travel chapter
 
 The hero shows the mechanism. It did not yet show what the mechanism does to a calendar, which is the part that feels like magic to an operator who has lived through a conventional software project. A pinned chapter, `#time`, now follows the hero:
