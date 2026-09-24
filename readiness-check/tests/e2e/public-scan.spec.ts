@@ -127,7 +127,7 @@ test("soft gate unlocks page matrix", async ({ page }) => {
   await hero.getByLabel("Website URL").fill("https://example.com");
   await hero.getByRole("button", { name: "Check your AI visibility" }).click();
   await expect(page.getByText("42", { exact: true })).toBeVisible();
-  await page.getByLabel(/email/i).fill("buyer@example.com");
+  await page.getByRole("textbox", { name: "Work email" }).fill("buyer@example.com");
   await page.getByRole("button", { name: /unlock/i }).click();
   await expect(page.getByRole("heading", { name: /page matrix/i })).toBeVisible();
   await expect(page.getByText("https://example.com/")).toBeVisible();
