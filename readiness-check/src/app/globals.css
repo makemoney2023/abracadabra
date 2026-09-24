@@ -133,46 +133,6 @@
   }
 }
 
-.orbital-hero {
-  position: relative;
-}
-
-.orbital-hero__grid {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(ellipse at 30% 45%, black 10%, transparent 75%);
-  pointer-events: none;
-}
-
-.orbital-hero__glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 72%;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  background: rgb(165 243 252 / 0.16);
-  filter: blur(80px);
-  transform: translate(-50%, -50%);
-  z-index: 10;
-  animation: orbital-pulse 12s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes orbital-pulse {
-  from {
-    opacity: 0.55;
-    transform: translate(-50%, -50%) scale(0.95);
-  }
-  to {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -14,6 +14,13 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Design revision — 2026-09-24: Orbital horizon hero
+
+- Added OpenHero's `orbital-horizon` film as the full-stage background behind the existing **From thought to working software** hero and operation compiler.
+- Preserved the complete Describe → Engineer → Build → Run it interaction, with a layered scrim keeping the headline, actions, and compiler legible over the moving image.
+- The decorative video is muted, loops inline, and pauses on the opening frame when reduced motion is requested. Desktop and normal-flow mobile layouts both cover the full hero stage.
+- Verification: `npm test` 13/13, desktop/mobile/reduced-motion visual review, and production media smoke check.
+
 ## Design revision — 2026-09-24: Time travel chapter
 
 - Added a pinned chapter, `#time` (**Delivery that feels like time travel.**), directly after the hero. It carries `data-sc-span="2.35"` and drifts the canvas to `#0A0912`.

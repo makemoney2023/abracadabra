@@ -340,8 +340,26 @@
   .cta .cta--primary:hover { background: color-mix(in oklab, var(--sc-accent) 86%, var(--sc-ink)); border-color: transparent; }
 
   /* the hero behaves like a compiler, not a brochure */
+  #i > .sc-stage {
+    isolation: isolate;
+    background: var(--sc-canvas);
+  }
+  .hero-backdrop {
+    position: absolute; inset: 0; z-index: 0; overflow: hidden;
+    pointer-events: none; background: var(--sc-canvas);
+  }
+  .hero-backdrop__video {
+    display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%;
+    opacity: 0.7; filter: saturate(0.88) contrast(1.08);
+  }
+  .hero-backdrop__scrim {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 56%, transparent) 0%, color-mix(in oklab, var(--sc-canvas) 30%, transparent) 44%, color-mix(in oklab, var(--sc-canvas) 78%, transparent) 100%),
+      radial-gradient(circle at 50% 45%, transparent 0 18%, color-mix(in oklab, var(--sc-canvas) 42%, transparent) 72%);
+  }
   .hero {
-    position: relative; height: 100%;
+    position: relative; z-index: 1; height: 100%;
     display: grid; grid-template-rows: auto minmax(0, 1fr);
     align-items: stretch; gap: clamp(1.4rem, 3vh, 2.5rem);
     padding: 5.8rem var(--sc-gutter) 4.6rem;
@@ -949,7 +967,7 @@
     .index__current { display: block; margin: 0 0 0 auto; color: var(--sc-ink-soft); }
     .utterance { display: none; }
     #i { height: auto !important; }
-    #i > .sc-stage { position: relative; top: auto; height: auto; }
+    #i > [data-sc-stage] { position: relative; top: auto; height: auto; }
     .hero {
       height: auto; grid-template-rows: auto auto; align-content: start; gap: var(--sc-5);
       padding: 5rem var(--sc-gutter) 4.6rem; overflow: visible;
@@ -1077,6 +1095,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .hero-backdrop__video { opacity: 0.56; }
     .intent-demo { min-height: 0; }
     .intent-demo__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
     .intent-demo__state {
@@ -1137,6 +1156,12 @@
   <!-- Act 1: the operation compiler -->
   <section id="i" data-sc-act="pin" data-sc-span="2.35" data-specimen="i" aria-labelledby="hero-title">
     <div data-sc-stage>
+      <div class="hero-backdrop" aria-hidden="true">
+        <video class="hero-backdrop__video" autoplay muted loop playsinline preload="metadata">
+          <source src="assets/orbital-horizon.mp4" type="video/mp4">
+        </video>
+        <div class="hero-backdrop__scrim"></div>
+      </div>
       <div class="hero">
         <div class="hero__copy" data-sc-cue="0 0.94 0">
           <p class="sc-label hero__eyebrow">Software at the speed of thought</p>
@@ -1667,6 +1692,17 @@
   addEventListener('resize', spy);
 
   var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var orbitalVideo = document.querySelector('.hero-backdrop__video');
+  if (orbitalVideo) {
+    if (reduceMotion) {
+      orbitalVideo.pause();
+    } else {
+      orbitalVideo.play().catch(function () {
+        // The first frame remains a useful backdrop when autoplay is blocked.
+        orbitalVideo.pause();
+      });
+    }
+  }
 
   // One understandable mechanism: an operation compiles into a running product.
   var compiler = document.querySelector('.compiler');
