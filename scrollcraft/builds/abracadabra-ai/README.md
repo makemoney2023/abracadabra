@@ -10,9 +10,16 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Map → Build → Run it**. Its Build state dispatches five coordinated AI-agent workstreams from one shared brief and converges their outputs into a working system. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. On desktop both sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. On desktop both sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+
+## Design revision — 2026-09-24: Intent and context engineered before the build
+
+- Replaced the hero's **Map** state with **Engineer**: the sequence now reads **Describe → Engineer → Build → Run it**.
+- The Engineer state shows an **Intent** stream (what must be true when it ships) and a **Context** stream (how the business already works) converging into one **Engineered build brief**; the Build state dispatches its five agent workstreams from that brief.
+- Rewrote the hero lede and tag so intent and context engineering is stated before the parallel build; statuses now read Listening → Intent and context engineered → Agents building in parallel → System live.
+- Synced `docs/source-of-truth.md`, `BRIEF.md`, `llms.txt`, and the plan document; added a browser test for the Engineer state.
 
 ## Design revision — 2026-09-23: Thought-to-software agent build
 

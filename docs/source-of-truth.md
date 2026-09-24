@@ -86,9 +86,11 @@ Paste-ready. Section order is the page.
 
 **Headline:** From thought to working software.
 
-**Subhead:** Tell us how your business works. Our AI agents map the operation, design the experience, build the system, and test it in parallel — while experienced people direct every decision.
+**Subhead:** Tell us what should exist. We engineer the intent and context behind it—then coordinated AI agents design, build, and test the system in parallel, while experienced people direct every decision.
 
-**Demonstration:** A general customer request resolves through **Describe → Map → Build → Run it**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from one shared brief. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example.
+**Tag:** Intent and context engineered first. Five coordinated workstreams. One running system.
+
+**Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build brief**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered brief. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example.
 
 **Claim boundary:** “At the speed of thought” describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence.
 

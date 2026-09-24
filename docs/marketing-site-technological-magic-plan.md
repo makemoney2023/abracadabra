@@ -1,6 +1,6 @@
 # Abracadabra marketing site — technological magic redesign plan
 
-**Status:** Phase-three generalized hero and parallel-agent build sequence implemented and verified 2026-09-23; supporting-page alignment, production analytics, and post-release measurement remain follow-up work
+**Status:** Phase-three generalized hero, intent-and-context engineering state, and parallel-agent build sequence implemented and verified 2026-09-24; supporting-page alignment, production analytics, and post-release measurement remain follow-up work
 **Prepared:** 2026-09-23
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
@@ -17,8 +17,11 @@ The hero promise returns to the source-of-truth premise: **Abracadabra shrinks t
 The desktop hero remains one pinned scene with four scroll states:
 
 1. **Describe** — a universal operation appears in ordinary business language: a customer request is routed, reviewed, returned when information is missing, approved, and delivered.
-2. **Map** — the sentence resolves into customer, request, owner, review, approval, exception, and outcome.
-3. **Build** — one shared brief dispatches five coordinated workstreams in parallel:
+2. **Engineer** — before anything is built, two streams are engineered and converge:
+   - **Intent** — what must be true when it ships: the request, the approved outcome, the review and exception rules, the owner.
+   - **Context** — how the business already works: existing systems, data, roles, vocabulary, and constraints.
+   - The streams resolve into one **Engineered build brief**: one precise model of the operation. This is the artifact every agent works from.
+3. **Build** — the engineered brief dispatches five coordinated workstreams in parallel:
    - **Workflow** maps rules and handoffs;
    - **Experience** turns the operation into screens and actions;
    - **Engineering** assembles the production system;
@@ -26,12 +29,15 @@ The desktop hero remains one pinned scene with four scroll states:
    - **Launch** prepares the working demo and operating script.
 4. **Run** — the workstreams converge into a live product. Showdesk is introduced here as one real example, not as prerequisite vocabulary.
 
-The controls read **Describe → Map → Build → Run it**. The visible status progresses through **Listening → Operation mapped → Agents building in parallel → System live**.
+The controls read **Describe → Engineer → Build → Run it**. The visible status progresses through **Listening → Intent and context engineered → Agents building in parallel → System live**.
+
+Why the Engineer state exists: the most credible AI-delivery claims are not "the model wrote the code" but "the intent and context were engineered so the code was right the first time." Showing that step before the build tells operators their business knowledge is the input, not an afterthought, and it explains why five agents can work in parallel without drifting—they share one engineered brief.
 
 ### Motion direction
 
 - The Build state is a construction lattice, not cartoon robots, decorative particles, or a fake terminal.
-- A single illuminated brief enters from the left and splits into five named horizontal tracks.
+- The Engineer state shows two staggered streams—Intent and Context—each with a short label and its one-line meaning, joined by a connector into a single Engineered build brief. The connector is hidden on mobile, where the streams stack in one column above the brief.
+- In the Build state the engineered brief enters from the left and splits into five named horizontal tracks.
 - Each track advances through small, readable artifact states such as `rules`, `interface`, `system`, `tests`, and `demo`.
 - Track signals move at slightly different rates and then synchronize at one convergence gate. The convergence supplies the transition into the live product.
 - The choreography communicates speed by showing dependent work happening concurrently. It must not display fabricated elapsed times, completion percentages, commits, or test counts.
@@ -49,16 +55,18 @@ The controls read **Describe → Map → Build → Run it**. The visible status 
 
 - **Eyebrow:** Software at the speed of thought
 - **Headline:** From thought to working software.
-- **Support:** Tell us how your business works. Our AI agents map the operation, design the experience, build the system, and test it in parallel—while experienced people direct every decision.
+- **Support:** Tell us what should exist. We engineer the intent and context behind it—then coordinated AI agents design, build, and test the system in parallel, while experienced people direct every decision.
+- **Tag:** Intent and context engineered first. Five coordinated workstreams. One running system.
+- **Engineer state labels:** Intent — What must be true when it ships; Context — How the business already works; Engineered build brief — One precise model of the operation.
 - **Proof bridge:** One real example: this operation became Showdesk.
 
 ### Verification gates
 
-- Browser assertions for the new headline, generalized operation, four revised labels, five agent workstreams, convergence output, Showdesk proof bridge, skip behavior, and statuses.
+- Browser assertions for the new headline, generalized operation, four revised labels, the Intent and Context streams converging into the Engineered build brief, five agent workstreams, convergence output, Showdesk proof bridge, skip behavior, and statuses.
 - Scroll-driven desktop transition and direct mobile controls.
 - Reduced-motion information parity for all states and workstreams.
 - Horizontal-containment checks at 320, 390, 430, 768, 1280, 1440, and 1920 pixels.
-- Visual checks of desktop Describe, Map, Build, and Run states plus the mobile Build ledger.
+- Visual checks of desktop Describe, Engineer, Build, and Run states plus the mobile Engineer stack and Build ledger.
 - Browser console, keyboard focus, and direct-navigation regression checks.
 
 ## Phase-two decision summary

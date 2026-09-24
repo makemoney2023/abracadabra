@@ -57,8 +57,9 @@ This revision completes the homepage's core visual and interaction redesign. Med
 The hero looked strong but asked a broad business audience to decode a specialized Showdesk workflow before understanding the studio. The revised opening restores the original brand premise and makes the proof arrive in the right order:
 
 - The headline is **From thought to working software.**
-- A universal customer request resolves through **Describe → Map → Build → Run it**.
-- The Build state shows five coordinated AI-agent workstreams—Workflow, Experience, Engineering, Quality, and Launch—moving in parallel from one shared brief.
+- A universal customer request resolves through **Describe → Engineer → Build → Run it**.
+- The Engineer state shows intent and context being engineered before any build: an **Intent** stream (what must be true when it ships) and a **Context** stream (how the business already works) converge into one **Engineered build brief**.
+- The Build state shows five coordinated AI-agent workstreams—Workflow, Experience, Engineering, Quality, and Launch—moving in parallel from that engineered brief.
 - Experienced people hold the intent, direct the decisions, and approve what ships. The agents compress delivery; they are not presented as unsupervised replacements.
 - Showdesk appears only in the Run state as one real example of the general mechanism.
 - Motion conveys “at the speed of thought” through parallel construction and convergence. No fabricated elapsed-time promise, completion percentage, commits, or test count appears.

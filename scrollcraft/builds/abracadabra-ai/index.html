@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Abra-ca-dabra: From thought to working software</title>
-<meta name="description" content="AI agents map, design, build, and test bespoke software in parallel—directed by experienced people and grounded in working product proof.">
+<meta name="description" content="We engineer the intent and context behind your software first, then AI agents design, build, and test it in parallel—directed by experienced people and grounded in working product proof.">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 <meta name="author" content="Abracadabra AI">
 <meta name="theme-color" content="#0B0A08">
@@ -80,7 +80,7 @@
       "url": "https://abra-ca-dabra.app/",
       "name": "Abra-ca-dabra: From thought to working software",
       "headline": "From thought to working software.",
-      "description": "Coordinated AI agents map, design, build, and test bespoke software in parallel while experienced people direct every decision.",
+      "description": "Intent and context are engineered first, then coordinated AI agents design, build, and test bespoke software in parallel while experienced people direct every decision.",
       "isPartOf": { "@id": "https://abra-ca-dabra.app/#website" },
       "about": { "@id": "https://abra-ca-dabra.app/#org" },
       "author": { "@id": "https://abra-ca-dabra.app/#org" },
@@ -362,7 +362,7 @@
   .hero__copy .cta { margin-top: var(--sc-5); }
   .hero__tag { display: none; }
 
-  /* signature mechanism: plain intent becomes a mapped operation, a parallel build, then product */
+  /* signature mechanism: plain intent is engineered into a precise brief, then a parallel build, then product */
   .intent-demo {
     position: relative; min-height: min(58vh, 40rem); overflow: hidden;
     border: 1px solid color-mix(in oklab, var(--sc-ink) 26%, transparent);
@@ -400,7 +400,7 @@
     transition: opacity 420ms var(--sc-ease-out), transform 520ms var(--sc-ease-out), visibility 0s linear 520ms;
   }
   .intent-demo[data-active-state="describe"] [data-compiler-panel="describe"],
-  .intent-demo[data-active-state="map"] [data-compiler-panel="map"],
+  .intent-demo[data-active-state="engineer"] [data-compiler-panel="engineer"],
   .intent-demo[data-active-state="build"] [data-compiler-panel="build"],
   .intent-demo[data-active-state="run"] [data-compiler-panel="run"] {
     opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
@@ -414,21 +414,61 @@
     color: var(--sc-ink); background: transparent; border-bottom: 2px solid var(--sc-signal);
   }
   .intent-demo__reading { margin: var(--sc-6) 0 0; max-width: 48ch; color: var(--sc-ink-soft); }
-  .token-field {
-    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--sc-2);
-    align-items: stretch; min-height: 15rem; perspective: 900px;
+  /* intent and context are engineered into one brief before any agent builds */
+  .context-engineering {
+    display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(11rem, 0.8fr); grid-auto-rows: minmax(0, 1fr);
+    gap: var(--sc-3); align-items: stretch; min-height: 15rem;
   }
-  .token {
-    position: relative; padding: var(--sc-3); border: 1px solid var(--sc-hairline-strong);
+  .context-stream {
+    --stream-delay: 0ms;
+    position: relative; display: grid; grid-template-columns: minmax(9rem, 0.9fr) minmax(0, 1.5fr); gap: var(--sc-3);
+    align-items: center; padding: var(--sc-3); border: 1px solid var(--sc-hairline-strong);
     background: color-mix(in oklab, var(--sc-surface) 80%, transparent);
     box-shadow: inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 8%, transparent);
-    transform: translateY(calc(var(--token-index) * 0.3rem)) rotateX(calc((var(--token-index) - 3) * -1deg));
+    opacity: 0; transform: translate3d(-0.75rem, 0, 0);
+    transition: opacity 460ms var(--sc-ease-out) var(--stream-delay), transform 560ms var(--sc-ease-out) var(--stream-delay);
   }
-  .token::before {
-    content: attr(data-kind); display: block; margin-bottom: var(--sc-5);
+  .context-stream[data-context-stream="context"] { --stream-delay: 160ms; }
+  .context-stream::after {
+    content: ""; position: absolute; top: 50%; left: 100%; width: var(--sc-3); height: 1px;
+    background: var(--sc-signal); box-shadow: 0 0 1.25rem color-mix(in oklab, var(--sc-signal) 70%, transparent);
+    transform: scaleX(0); transform-origin: left; transition: transform 420ms var(--sc-ease-out) calc(var(--stream-delay) + 320ms);
+  }
+  .context-stream__head { display: grid; gap: var(--sc-2); }
+  .context-stream__head [data-stream-name] {
     font-family: var(--sc-font-mono); font-size: 0.62rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
   }
-  .token strong { font-family: var(--sc-font-display); font-size: clamp(0.78rem, 1vw, 1rem); line-height: 1.15; }
+  .context-stream__head strong { font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15; text-wrap: balance; }
+  .context-stream ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-2); }
+  .context-stream li {
+    padding: var(--sc-2) var(--sc-3); border: 1px solid var(--sc-hairline);
+    background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
+  }
+  .context-stream li::before {
+    content: attr(data-kind); display: block; margin-bottom: var(--sc-2);
+    font-family: var(--sc-font-mono); font-size: 0.58rem; color: var(--sc-ink-soft); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .context-stream li strong { font-family: var(--sc-font-display); font-size: clamp(0.78rem, 0.95vw, 0.95rem); line-height: 1.15; }
+  .build-brief {
+    position: relative; grid-column: 2; grid-row: 1 / span 2;
+    display: grid; align-content: center; gap: var(--sc-2); padding: var(--sc-3);
+    border: 1px solid var(--sc-signal); background: color-mix(in oklab, var(--sc-canvas) 90%, transparent);
+    box-shadow: 0 0 2.5rem color-mix(in oklab, var(--sc-signal) 18%, transparent);
+    opacity: 0; transform: translate3d(0.75rem, 0, 0);
+    transition: opacity 460ms var(--sc-ease-out) 380ms, transform 560ms var(--sc-ease-out) 380ms;
+  }
+  .build-brief::before {
+    content: ""; width: 0.55rem; aspect-ratio: 1; position: absolute; left: -0.3rem; top: calc(50% - 0.275rem);
+    border-radius: 50%; background: var(--sc-signal); box-shadow: 0 0 1.5rem var(--sc-signal);
+  }
+  .build-brief span {
+    font-family: var(--sc-font-mono); font-size: 0.62rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .build-brief strong { font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15; text-wrap: balance; }
+  .build-brief p { margin: 0; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); line-height: 1.4; }
+  .intent-demo[data-active-state="engineer"] .context-stream,
+  .intent-demo[data-active-state="engineer"] .build-brief { opacity: 1; transform: none; }
+  .intent-demo[data-active-state="engineer"] .context-stream::after { transform: scaleX(1); }
   .blueprint { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-3); }
   .blueprint li {
     min-height: 7rem; padding: var(--sc-3); position: relative;
@@ -797,9 +837,13 @@
     .intent-demo__state { padding: var(--sc-4); }
     .intent-demo__quote { font-size: clamp(1.25rem, 6vw, 1.65rem); }
     .intent-demo__reading { margin-top: var(--sc-4); font-size: var(--sc-t-sm); }
-    .token-field { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 0; }
-    .token { transform: none; min-height: 5rem; }
-    .token:last-child { grid-column: 1 / -1; }
+    .context-engineering { grid-template-columns: 1fr; grid-auto-rows: auto; min-height: 0; gap: var(--sc-2); }
+    .context-stream { grid-template-columns: 1fr; gap: var(--sc-2); }
+    .context-stream::after { display: none; }
+    .build-brief { grid-column: auto; grid-row: auto; }
+    .build-brief::before { left: calc(50% - 0.275rem); top: -0.3rem; }
+    .intent-demo[data-active-state="engineer"] { min-height: 42rem; }
+    .intent-demo[data-active-state="engineer"] .intent-demo__viewport { min-height: 33.5rem; }
     .intent-demo[data-active-state="build"] { min-height: 44rem; }
     .intent-demo[data-active-state="build"] .intent-demo__viewport { min-height: 35.5rem; }
     .agent-orchestration { min-height: 0; grid-template-columns: 1fr; gap: var(--sc-2); }
@@ -902,8 +946,12 @@
     }
     .intent-demo__product { min-height: 24rem; }
     .intent-demo__controls { display: none; }
+    .intent-demo[data-active-state="engineer"],
     .intent-demo[data-active-state="build"] { min-height: 0; }
+    .intent-demo[data-active-state="engineer"] .intent-demo__viewport,
     .intent-demo[data-active-state="build"] .intent-demo__viewport { min-height: 0; }
+    .context-stream, .build-brief { opacity: 1; transform: none; transition: none; }
+    .context-stream::after { transform: none; transition: none; }
     .agent-track::before { animation: none !important; opacity: 0; }
     .aeo-engine { min-height: 0; clip-path: none; }
     .aeo-engine__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
@@ -946,12 +994,12 @@
           <p class="sc-label hero__eyebrow">Software at the speed of thought</p>
           <h1 id="hero-title">From thought to working software.</h1>
           <div class="hero__support">
-            <p class="sc-lede">Tell us how your business works. Our AI agents map the operation, design the experience, build the system, and test it in parallel—while experienced people direct every decision.</p>
+            <p class="sc-lede">Tell us what should exist. We engineer the intent and context behind it—then coordinated AI agents design, build, and test the system in parallel, while experienced people direct every decision.</p>
             <p class="cta">
               <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Show%20you%20how%20it%20works">Show us how it works</a>
               <a href="#iii">See what we've built</a>
             </p>
-            <p class="hero__tag">One brief. Five coordinated workstreams. One running system.</p>
+            <p class="hero__tag">Intent and context engineered first. Five coordinated workstreams. One running system.</p>
           </div>
         </div>
         <div class="intent-demo compiler" data-active-state="describe" data-sc-cue="0 0.94 0" aria-label="How a business operation becomes working software">
@@ -965,24 +1013,44 @@
               <p class="intent-demo__quote">“A <mark>customer makes a request</mark>. The right person reviews it. If something is missing, it comes back. Once approved, the customer gets the result.”</p>
               <p class="intent-demo__reading">Start with the operation as your team says it. No feature list. No software vocabulary required.</p>
             </section>
-            <section class="intent-demo__state" data-compiler-panel="map" aria-labelledby="compiler-map-title">
-              <p class="sc-label intent-demo__phase" id="compiler-map-title">02 / Map</p>
-              <div class="token-field" aria-label="Operational elements extracted from the statement">
-                <div class="token" data-kind="Customer" style="--token-index:0"><strong>Person asking</strong></div>
-                <div class="token" data-kind="Request" style="--token-index:1"><strong>Work to begin</strong></div>
-                <div class="token" data-kind="Owner" style="--token-index:2"><strong>Right person</strong></div>
-                <div class="token" data-kind="Review" style="--token-index:3"><strong>Check the work</strong></div>
-                <div class="token" data-kind="Approval" style="--token-index:4"><strong>Decision made</strong></div>
-                <div class="token" data-kind="Exception" style="--token-index:5"><strong>Return missing info</strong></div>
-                <div class="token" data-kind="Outcome" style="--token-index:6"><strong>Deliver result</strong></div>
+            <section class="intent-demo__state" data-compiler-panel="engineer" aria-labelledby="compiler-engineer-title">
+              <p class="sc-label intent-demo__phase" id="compiler-engineer-title">02 / Engineer intent and context</p>
+              <div class="context-engineering" aria-label="Intent and context engineered into one build brief">
+                <div class="context-stream" data-context-stream="intent">
+                  <div class="context-stream__head">
+                    <span data-stream-name>Intent</span>
+                    <strong>What must be true when it ships</strong>
+                  </div>
+                  <ul>
+                    <li data-kind="Outcome"><strong>Approved result delivered</strong></li>
+                    <li data-kind="Authority"><strong>Right person decides</strong></li>
+                    <li data-kind="Trade-off"><strong>Speed without skipping review</strong></li>
+                  </ul>
+                </div>
+                <div class="context-stream" data-context-stream="context">
+                  <div class="context-stream__head">
+                    <span data-stream-name>Context</span>
+                    <strong>How the business already works</strong>
+                  </div>
+                  <ul>
+                    <li data-kind="People"><strong>Customer · reviewer · owner</strong></li>
+                    <li data-kind="Words"><strong>Your terms, not ours</strong></li>
+                    <li data-kind="Exceptions"><strong>Missing info comes back</strong></li>
+                  </ul>
+                </div>
+                <div class="build-brief" data-build-brief>
+                  <span>Engineered build brief</span>
+                  <strong>One precise model of the operation</strong>
+                  <p>Shared by every agent. Reviewed by people before anything is built.</p>
+                </div>
               </div>
-              <p class="intent-demo__reading">Your words already contain the people, rules, decisions, and exceptions the software must preserve.</p>
+              <p class="intent-demo__reading">We don't build from a prompt. We engineer the intent and the context first, so every agent works from the same precise model of your business.</p>
             </section>
             <section class="intent-demo__state" data-compiler-panel="build" aria-labelledby="compiler-build-title">
               <p class="sc-label intent-demo__phase" id="compiler-build-title">03 / Build in parallel</p>
               <div class="agent-orchestration" aria-label="Five coordinated AI agent workstreams build the system in parallel">
                 <div class="agent-brief">
-                  <span>Shared brief</span>
+                  <span>Engineered brief</span>
                   <strong>Request → approved outcome</strong>
                 </div>
                 <div class="agent-tracks">
@@ -1031,7 +1099,7 @@
           </div>
           <div class="intent-demo__controls" aria-label="Operation compiler states">
             <button type="button" data-compiler-state="describe" aria-pressed="true">Describe</button>
-            <button type="button" data-compiler-state="map" aria-pressed="false">Map</button>
+            <button type="button" data-compiler-state="engineer" aria-pressed="false">Engineer</button>
             <button type="button" data-compiler-state="build" aria-pressed="false">Build</button>
             <button type="button" data-compiler-state="run" aria-pressed="false">Run it</button>
             <button class="intent-demo__skip" type="button" data-compiler-skip>Skip to working product</button>
@@ -1393,10 +1461,10 @@
   var compiler = document.querySelector('.compiler');
   var compilerButtons = Array.prototype.slice.call(document.querySelectorAll('[data-compiler-state]'));
   var compilerStatus = document.querySelector('[data-compiler-status]');
-  var compilerStates = ['describe', 'map', 'build', 'run'];
+  var compilerStates = ['describe', 'engineer', 'build', 'run'];
   var compilerStatuses = {
     describe: 'Listening',
-    map: 'Operation mapped',
+    engineer: 'Intent and context engineered',
     build: 'Agents building in parallel',
     run: 'System live'
   };
@@ -1424,7 +1492,7 @@
     var travel = Math.max(1, act.offsetHeight - innerHeight);
     var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
     setCompilerState(
-      progress < 0.24 ? 'describe' : progress < 0.49 ? 'map' : progress < 0.74 ? 'build' : 'run',
+      progress < 0.24 ? 'describe' : progress < 0.49 ? 'engineer' : progress < 0.74 ? 'build' : 'run',
       false
     );
   }

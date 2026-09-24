@@ -70,6 +70,7 @@ test('hero states the speed-of-thought promise with two clear actions', async ()
   assert.equal((await page.locator('#hero-title').textContent()).trim(), 'From thought to working software.');
   assert.match(await page.locator('#i .hero__copy').textContent(), /speed of thought/i);
   assert.match(await page.locator('#i .hero__copy').textContent(), /AI agents/i);
+  assert.match(await page.locator('#i .hero__copy').textContent(), /engineer the intent and context/i);
   assert.match(await page.locator('#i .hero__copy').textContent(), /experienced people direct every decision/i);
   assert.deepEqual(actions.map((action) => action.trim()), [
     'Show us how it works',
@@ -143,17 +144,27 @@ test('required responsive widths do not create horizontal page overflow', async 
   }
 });
 
-test('operation compiler generalizes the workflow and exposes the parallel agent build', async () => {
+test('operation compiler engineers intent and context before the parallel agent build', async () => {
   const { context, page } = await openPage();
   const stateLabels = await page.locator('[data-compiler-state]').allTextContents();
+  const engineer = page.locator('[data-compiler-panel="engineer"]');
 
   assert.deepEqual(stateLabels.map((label) => label.trim()), [
     'Describe',
-    'Map',
+    'Engineer',
     'Build',
     'Run it',
   ]);
   assert.match(await page.locator('[data-compiler-panel="describe"]').textContent(), /customer makes a request/i);
+  assert.deepEqual(
+    (await engineer.locator('[data-context-stream] [data-stream-name]').allTextContents()).map((label) => label.trim()),
+    ['Intent', 'Context'],
+  );
+  assert.equal(await engineer.locator('[data-context-stream="intent"] li').count(), 3);
+  assert.equal(await engineer.locator('[data-context-stream="context"] li').count(), 3);
+  assert.match(await engineer.locator('[data-build-brief]').textContent(), /build brief/i);
+  assert.match(await engineer.textContent(), /before anything is built/i);
+  assert.match(await page.locator('[data-compiler-panel="build"]').textContent(), /engineered brief/i);
   assert.equal(await page.locator('[data-agent-track]').count(), 5);
   assert.deepEqual(
     (await page.locator('[data-agent-track] [data-agent-role]').allTextContents()).map((label) => label.trim()),
