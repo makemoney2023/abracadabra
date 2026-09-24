@@ -618,6 +618,11 @@
   .receipt .sc-body { max-width: 66ch; }
   .receipt .receipt__source { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); letter-spacing: var(--sc-track-wide); text-transform: uppercase; margin: 0; }
 
+  .origin { max-width: 46rem; }
+  .origin h2 { margin: var(--sc-3) 0 var(--sc-5); max-width: 16ch; text-wrap: balance; }
+  .origin .sc-body + .sc-body { margin-top: var(--sc-4); }
+  .origin em { font-style: italic; color: var(--sc-accent); }
+
   /* the situation, the name, the proof bar */
   .situation { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
   .situation h2 { margin: 0 0 var(--sc-5); max-width: 22ch; text-wrap: balance; }
@@ -1282,6 +1287,17 @@
     </div>
   </section>
 
+  <section id="name" class="sc-section" aria-labelledby="name-title">
+    <div class="sc-wrap">
+      <div class="origin" data-sc-in>
+        <p class="sc-label">The name</p>
+        <h2 id="name-title" class="sc-display sc-display--md">I will create as I speak.</h2>
+        <p class="sc-body">Abracadabra, traced back far enough, is Aramaic — roughly <em>avra kadavra</em>. Not a spell. A description of the actual mechanism: you say what you mean, and something real comes into being.</p>
+        <p class="sc-body">That's the business, minus the theatrics. Say the process, the exceptions, the words your team already uses, and we turn that description into a running system. The speech is the brief: the intent, the context, the constraints nobody wrote down. The creation is production software, not a mockup.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Act 2: the situation, the name, four live lines -->
   <section class="sc-section" aria-labelledby="situation-title">
     <div class="sc-wrap">
@@ -1312,7 +1328,7 @@
       <div class="time-shell">
         <div class="time-copy" data-sc-cue="0 0.96 0">
     <p class="sc-label">Time travel</p>
-        <h2 id="time-title">Delivery that feels like time travel.</h2>
+        <h2 id="time-title">It feels like magic.</h2>
         <p class="sc-body">A conventional software calendar is mostly waiting: for the brief to be understood, for a handoff to land, for one team to finish before the next can start. Remove the waiting and the calendar folds in on itself.</p>
         <p class="sc-body"><strong>There is no sleight of hand.</strong> We front-load the thinking into an engineered brief, then run every downstream workstream at once. The work does not shrink. The gaps between the work disappear.</p>
         </div>
@@ -1352,7 +1368,7 @@
             </section>
             <section class="time-panel" data-time-panel="arrive" aria-labelledby="time-panel-arrive">
               <h3 id="time-panel-arrive">Arrive before you were due</h3>
-              <p>The same scope ships while the conventional plan is still in review. Nothing was skipped. The waiting was removed, and from the outside that <strong>feels like time travel</strong>.</p>
+              <p>The same scope ships while the conventional plan is still in review. Nothing was skipped. The waiting was removed, and from the outside that <strong>feels like magic</strong>.</p>
             </section>
           </div>
           <div class="time-controls" aria-label="Time travel sequence">

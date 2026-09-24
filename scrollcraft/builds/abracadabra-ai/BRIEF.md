@@ -79,7 +79,7 @@ The thought-to-software sequence remains the hero's argument and interaction. Op
 
 The hero shows the mechanism. It did not yet show what the mechanism does to a calendar, which is the part that feels like magic to an operator who has lived through a conventional software project. A pinned chapter, `#time`, now follows the hero:
 
-- The headline is **Delivery that feels like time travel.**
+- The headline is **It feels like magic.** The Aramaic origin of the name sits in its own section directly under the hero, so the feeling is named before the calendar shows why.
 - The engine is a delivery calendar with six lanes—Discover, Specify, Design, Build, Test, Release—from Kickoff to a Conventional ship date.
 - Four states: **Conventional** (the serial calendar, mostly waiting), **Engineer** (front-load the thinking into one engineered brief), **Parallel** (run every downstream workstream at once), **Arrive** (arrive before you were due, with the remaining span labeled "Time returned to you").
 - The copy names the trick honestly: there is no sleight of hand. The work does not shrink; the gaps between the work disappear.

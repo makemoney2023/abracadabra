@@ -287,6 +287,22 @@ test('dedicated AEO chapter explains the mechanism, proof, and next steps', asyn
   await context.close();
 });
 
+test('Aramaic origin sits directly under the hero', async () => {
+  const { context, page } = await openPage();
+  const order = await page.locator('main > section').evaluateAll((sections) =>
+    sections.slice(0, 3).map((section) => section.id || section.getAttribute('aria-labelledby')),
+  );
+  assert.deepEqual(order, ['i', 'name', 'situation-title']);
+
+  const origin = page.locator('#name');
+  assert.equal((await origin.getByRole('heading', { level: 2 }).textContent()).trim(), 'I will create as I speak.');
+  assert.match(await origin.textContent(), /Aramaic/i);
+  assert.match(await origin.textContent(), /avra kadavra/i);
+  assert.match(await origin.textContent(), /not a spell/i);
+  assert.match(await origin.textContent(), /production software/i);
+  await context.close();
+});
+
 test('time travel chapter compresses the delivery calendar without inventing durations', async () => {
   const { context, page } = await openPage();
   const time = page.locator('#time');
@@ -295,7 +311,7 @@ test('time travel chapter compresses the delivery calendar without inventing dur
   assert.equal(await time.getAttribute('data-sc-act'), 'pin');
   assert.equal(
     (await time.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'Delivery that feels like time travel.',
+    'It feels like magic.',
   );
   assert.match(await time.locator('.time-copy').textContent(), /mostly waiting/i);
   assert.match(await time.locator('.time-copy').textContent(), /no sleight of hand/i);
@@ -311,7 +327,7 @@ test('time travel chapter compresses the delivery calendar without inventing dur
   assert.match(await time.locator('[data-time-panel="conventional"]').textContent(), /handoff/i);
   assert.match(await time.locator('[data-time-panel="engineer"]').textContent(), /one engineered brief/i);
   assert.match(await time.locator('[data-time-panel="parallel"]').textContent(), /five workstreams/i);
-  assert.match(await time.locator('[data-time-panel="arrive"]').textContent(), /feels like time travel/i);
+  assert.match(await time.locator('[data-time-panel="arrive"]').textContent(), /feels like magic/i);
   assert.equal(await engine.getAttribute('data-active-state'), 'conventional');
   assert.doesNotMatch(await engine.textContent(), /\d+\s*(weeks?|months?|days?|hours?|%)/i);
 

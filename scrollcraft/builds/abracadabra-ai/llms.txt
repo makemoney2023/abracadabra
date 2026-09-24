@@ -25,7 +25,7 @@ Operators and founders whose real process does not fit a product built for someo
 
 ## The name
 
-Abracadabra, traced back far enough, is Aramaic, roughly "avra kadavra": I will create as I speak. The speech is the brief. The creation is production software, not a mockup. The name is the only magic reference; everything after it is systems, intent, context, and prompt engineering.
+Abracadabra, traced back far enough, is Aramaic, roughly "avra kadavra": I will create as I speak. The speech is the brief. The creation is production software, not a mockup. The delivery calendar can feel like magic because the waiting is removed; there is a system behind it. Intent, context, and prompt engineering do the work.
 
 ## Proof: from zero to scale
 
