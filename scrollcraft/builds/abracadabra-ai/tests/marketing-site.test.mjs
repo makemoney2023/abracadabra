@@ -80,6 +80,56 @@ test('hero states the speed-of-thought promise with two clear actions', async ()
   await context.close();
 });
 
+test('orbital horizon video covers the full hero stage behind the compiler', async () => {
+  for (const viewport of [
+    { width: 1440, height: 1000 },
+    { width: 390, height: 844 },
+  ]) {
+    const { context, page } = await openPage(viewport);
+    const video = page.locator('#i .hero-backdrop__video');
+    const source = video.locator('source');
+
+    assert.equal(await source.getAttribute('src'), 'assets/orbital-horizon.mp4');
+    assert.equal(await source.getAttribute('type'), 'video/mp4');
+    assert.equal(await video.getAttribute('autoplay'), '');
+    assert.equal(await video.getAttribute('loop'), '');
+    assert.equal(await video.getAttribute('playsinline'), '');
+    assert.equal(await video.evaluate((element) => element.muted), true);
+
+    const coverage = await page.locator('#i > .sc-stage').evaluate((stage) => {
+      const stageRect = stage.getBoundingClientRect();
+      const videoRect = stage.querySelector('.hero-backdrop__video').getBoundingClientRect();
+      const hero = stage.querySelector('.hero');
+      const backdrop = stage.querySelector('.hero-backdrop');
+
+      return {
+        backdropBehindHero: Number.parseInt(getComputedStyle(backdrop).zIndex, 10)
+          < Number.parseInt(getComputedStyle(hero).zIndex, 10),
+        bottomGap: Math.abs(stageRect.bottom - videoRect.bottom),
+        leftGap: Math.abs(stageRect.left - videoRect.left),
+        rightGap: Math.abs(stageRect.right - videoRect.right),
+        topGap: Math.abs(stageRect.top - videoRect.top),
+      };
+    });
+
+    assert.equal(coverage.backdropBehindHero, true);
+    assert.ok(coverage.topGap <= 1);
+    assert.ok(coverage.rightGap <= 1);
+    assert.ok(coverage.bottomGap <= 1);
+    assert.ok(coverage.leftGap <= 1);
+    await context.close();
+  }
+});
+
+test('orbital horizon video pauses when reduced motion is requested', async () => {
+  const { context, page } = await openPage({ reducedMotion: 'reduce' });
+  const video = page.locator('#i .hero-backdrop__video');
+
+  await page.waitForTimeout(100);
+  assert.equal(await video.evaluate((element) => element.paused), true);
+  await context.close();
+});
+
 test('chapter navigation exposes labels and 44px targets', async () => {
   const { context, page } = await openPage();
   const targets = await page.locator('.index a[data-index]').evaluateAll((links) =>
