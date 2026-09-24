@@ -130,5 +130,7 @@ test("soft gate unlocks page matrix", async ({ page }) => {
   await page.getByRole("textbox", { name: "Work email" }).fill("buyer@example.com");
   await page.getByRole("button", { name: /unlock/i }).click();
   await expect(page.getByRole("heading", { name: /page matrix/i })).toBeVisible();
-  await expect(page.getByText("https://example.com/")).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "https://example.com/", exact: true }),
+  ).toBeVisible();
 });
