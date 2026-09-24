@@ -3,6 +3,7 @@
 ## 2026-09-24 — Orbital Horizon landing hero
 
 - Replaced the static landing intro with OpenHero’s `orbital-horizon` video treatment, adapted to the existing Schema copy and URL scan form.
+- Positioned the video as a full-bleed background behind the marketing hero content, with responsive contrast overlays for legibility.
 - Kept the scan flow unchanged and retained a dark visual fallback for browsers that block autoplay.
 - Decorative video playback pauses when `prefers-reduced-motion: reduce` is active.
 - Added Playwright coverage for the hero contract and reduced-motion behavior.

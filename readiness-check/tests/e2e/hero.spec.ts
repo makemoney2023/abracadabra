@@ -13,6 +13,17 @@ test("landing page opens with the orbital video hero and scan action", async ({ 
   await expect(video).toHaveAttribute("muted", "");
   await expect(video).toHaveAttribute("loop", "");
   await expect(video).toHaveAttribute("playsinline", "");
+
+  const [heroBox, videoBox] = await Promise.all([
+    hero.boundingBox(),
+    video.boundingBox(),
+  ]);
+  expect(heroBox).not.toBeNull();
+  expect(videoBox).not.toBeNull();
+  expect(videoBox!.x).toBeLessThanOrEqual(heroBox!.x + 2);
+  expect(videoBox!.y).toBeLessThanOrEqual(heroBox!.y + 2);
+  expect(videoBox!.width).toBeGreaterThanOrEqual(heroBox!.width - 4);
+  expect(videoBox!.height).toBeGreaterThanOrEqual(heroBox!.height - 4);
 });
 
 test("orbital hero stops decorative motion when reduced motion is requested", async ({ page }) => {

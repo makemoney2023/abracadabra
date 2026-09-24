@@ -140,6 +140,7 @@
 .orbital-hero__grid {
   position: absolute;
   inset: 0;
+  z-index: 10;
   background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px);
   background-size: 40px 40px;
   mask-image: radial-gradient(ellipse at 30% 45%, black 10%, transparent 75%);
@@ -156,13 +157,9 @@
   background: rgb(165 243 252 / 0.16);
   filter: blur(80px);
   transform: translate(-50%, -50%);
+  z-index: 10;
   animation: orbital-pulse 12s ease-in-out infinite alternate;
   pointer-events: none;
-}
-
-.orbital-hero__portal {
-  mask-image: radial-gradient(circle at center, black 35%, transparent 76%);
-  -webkit-mask-image: radial-gradient(circle at center, black 35%, transparent 76%);
 }
 
 @keyframes orbital-pulse {

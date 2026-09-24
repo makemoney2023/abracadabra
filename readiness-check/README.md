@@ -20,7 +20,7 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
 - **Ops:** Parallel FindAll → enrich contacts → auto-scan → inbox queue
 - **Fetch layer:** Parallel only (`search`, `extract`/`fetch`, `findall`, `enrich`) — no Firecrawl in v1
 - **Stack:** Next.js + Supabase + Inngest + shadcn + Vitest/Playwright
-- **Landing hero:** OpenHero `orbital-horizon` video treatment, adapted to the Schema scan copy and form; decorative playback pauses when reduced motion is requested.
+- **Landing hero:** OpenHero `orbital-horizon` runs as the full hero background behind the Schema scan copy and form; decorative playback pauses when reduced motion is requested.
 
 ## Local setup
 

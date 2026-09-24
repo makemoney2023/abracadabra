@@ -9,9 +9,21 @@ export function OrbitalHorizonHero() {
       aria-label="AI visibility check"
       className="orbital-hero isolate overflow-hidden rounded-[2rem] border border-white/10 bg-[#08140f] text-white shadow-2xl shadow-slate-950/20"
     >
+      <div className="absolute inset-0 z-0">
+        <OrbitalVideo />
+      </div>
+      <div
+        aria-hidden
+        className="absolute inset-0 z-10 bg-[rgba(8,20,15,0.72)] lg:bg-[linear-gradient(90deg,rgba(8,20,15,0.96)_0%,rgba(8,20,15,0.88)_44%,rgba(8,20,15,0.42)_72%,rgba(8,20,15,0.22)_100%)]"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 z-10 bg-gradient-to-t from-[#08140f]/75 via-transparent to-[#08140f]/20"
+      />
+      <div aria-hidden className="orbital-hero__glow" />
       <div aria-hidden className="orbital-hero__grid" />
-      <div className="relative grid min-h-[70vh] items-center lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="relative z-20 px-6 py-16 sm:px-10 lg:px-14 lg:py-24">
+      <div className="relative z-20 flex min-h-[70vh] items-center px-6 py-16 sm:px-10 lg:px-14 lg:py-24">
+        <div className="w-full max-w-2xl">
           <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.3em] text-cyan-200/70">
             {LANDING_COPY.eyebrow}
           </p>
@@ -30,18 +42,6 @@ export function OrbitalHorizonHero() {
             <span className="h-2 w-2 rounded-full bg-cyan-200 shadow-[0_0_18px_rgba(165,243,252,0.8)]" />
             Structured data · discovery · answer readiness
           </div>
-        </div>
-
-        <div className="relative min-h-[22rem] self-stretch lg:min-h-[44rem]">
-          <div aria-hidden className="orbital-hero__glow" />
-          <div className="orbital-hero__portal absolute inset-0">
-            <OrbitalVideo />
-            <div className="absolute inset-0 bg-[#08140f]/25 mix-blend-overlay" />
-          </div>
-          <div
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#08140f] to-transparent lg:inset-y-0 lg:left-0 lg:h-auto lg:w-28 lg:bg-gradient-to-r"
-          />
         </div>
       </div>
     </section>

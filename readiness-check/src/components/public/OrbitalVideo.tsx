@@ -33,7 +33,7 @@ export function OrbitalVideo() {
       playsInline
       preload="metadata"
       aria-hidden="true"
-      className="h-full w-full scale-110 object-cover opacity-90 contrast-125 saturate-150"
+      className="h-full w-full object-cover opacity-90 contrast-125 saturate-150"
     >
       <source src="/orbital-horizon/video.mp4" type="video/mp4" />
     </video>
