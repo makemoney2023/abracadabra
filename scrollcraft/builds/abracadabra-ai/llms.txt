@@ -10,6 +10,7 @@ Last updated: 2026-09-24
 
 - Bespoke software built around the steps, the exceptions, and the words a team already uses. AI takes a task; people keep the relationship.
 - Five coordinated workstreams—Workflow, Experience, Engineering, Quality, and Launch—compress the path from one engineered build brief—intent and context engineered first—to working software. “At the speed of thought” is the operating premise, not an elapsed-time guarantee.
+- The delivery calendar compresses because the thinking is front-loaded into one engineered brief and the downstream workstreams run at once instead of in sequence. The work does not shrink; the waiting between the work disappears. Abracadabra AI does not publish a duration or percentage for this.
 - Intent, context, and prompt engineering shipped as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
 - Delivery per project: the live system, the film, and the script. The client's team can demo it without us in the room.

@@ -66,6 +66,18 @@ The hero looked strong but asked a broad business audience to decode a specializ
 
 Desktop scroll drives the sequence, mobile uses direct controls and a compact agent ledger, and reduced-motion mode exposes all four states and all five workstreams as static semantic content.
 
+## Revision (2026-09-24): time travel chapter
+
+The hero shows the mechanism. It did not yet show what the mechanism does to a calendar, which is the part that feels like magic to an operator who has lived through a conventional software project. A pinned chapter, `#time`, now follows the hero:
+
+- The headline is **Delivery that feels like time travel.**
+- The engine is a delivery calendar with six lanes—Discover, Specify, Design, Build, Test, Release—from Kickoff to a Conventional ship date.
+- Four states: **Conventional** (the serial calendar, mostly waiting), **Engineer** (front-load the thinking into one engineered brief), **Parallel** (run every downstream workstream at once), **Arrive** (arrive before you were due, with the remaining span labeled "Time returned to you").
+- The copy names the trick honestly: there is no sleight of hand. The work does not shrink; the gaps between the work disappear.
+- Boundary held: no invented durations, percentages, or calendar math anywhere in the chapter. The compression is shown by the geometry and stated qualitatively. "At the speed of thought" stays an operating premise, not an elapsed-time guarantee.
+
+Desktop scroll drives the states, mobile uses direct controls in normal flow, and reduced-motion mode un-pins the section and presents all four panels with the engine in its final state.
+
 ## Revision (2026-09-23): Operation Compiler and answer surface
 
 The observatory treatment was too conservative and its copy asked visitors to decode too much. The next pass keeps the proof-first discipline but makes the transformation itself the visual event:

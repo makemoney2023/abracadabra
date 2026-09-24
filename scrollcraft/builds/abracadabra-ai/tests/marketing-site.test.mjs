@@ -187,11 +187,13 @@ test('operation compiler engineers intent and context before the parallel agent 
   await context.close();
 });
 
-test('desktop scroll drives both four-state sequences and page progress', async () => {
+test('desktop scroll drives every four-state sequence and page progress', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000 });
+  const engines = { '#i': '.compiler', '#aeo': '.aeo-engine', '#time': '.time-engine' };
 
   for (const [selector, expectedState] of [
     ['#i', 'run'],
+    ['#time', 'arrive'],
     ['#aeo', 'measure'],
   ]) {
     await page.evaluate(({ selector }) => {
@@ -204,7 +206,7 @@ test('desktop scroll drives both four-state sequences and page progress', async 
     }, { selector });
     await page.waitForTimeout(80);
 
-    const engine = selector === '#i' ? '.compiler' : '.aeo-engine';
+    const engine = engines[selector];
     assert.equal(await page.locator(engine).getAttribute('data-active-state'), expectedState);
   }
 
@@ -232,6 +234,41 @@ test('dedicated AEO chapter explains the mechanism, proof, and next steps', asyn
 
   await aeo.getByRole('button', { name: 'Measure' }).click();
   assert.equal(await aeo.locator('.aeo-engine').getAttribute('data-active-state'), 'measure');
+  await context.close();
+});
+
+test('time travel chapter compresses the delivery calendar without inventing durations', async () => {
+  const { context, page } = await openPage();
+  const time = page.locator('#time');
+  const engine = time.locator('.time-engine');
+
+  assert.equal(await time.getAttribute('data-sc-act'), 'pin');
+  assert.equal(
+    (await time.getByRole('heading', { level: 2 }).first().textContent()).trim(),
+    'Delivery that feels like time travel.',
+  );
+  assert.match(await time.locator('.time-copy').textContent(), /mostly waiting/i);
+  assert.match(await time.locator('.time-copy').textContent(), /no sleight of hand/i);
+  assert.deepEqual(
+    (await time.locator('[data-time-state]').allTextContents()).map((label) => label.trim()),
+    ['Conventional', 'Engineer', 'Parallel', 'Arrive'],
+  );
+  assert.deepEqual(
+    (await time.locator('[data-time-phase]').allTextContents()).map((label) => label.trim()),
+    ['Discover', 'Specify', 'Design', 'Build', 'Test', 'Release'],
+  );
+  assert.equal(await time.locator('[data-time-panel]').count(), 4);
+  assert.match(await time.locator('[data-time-panel="conventional"]').textContent(), /handoff/i);
+  assert.match(await time.locator('[data-time-panel="engineer"]').textContent(), /one engineered brief/i);
+  assert.match(await time.locator('[data-time-panel="parallel"]').textContent(), /five workstreams/i);
+  assert.match(await time.locator('[data-time-panel="arrive"]').textContent(), /feels like time travel/i);
+  assert.equal(await engine.getAttribute('data-active-state'), 'conventional');
+  assert.doesNotMatch(await engine.textContent(), /\d+\s*(weeks?|months?|days?|hours?|%)/i);
+
+  await time.getByRole('button', { name: 'Arrive' }).click();
+  assert.equal(await engine.getAttribute('data-active-state'), 'arrive');
+  assert.equal((await time.locator('[data-time-status]').textContent()).trim(), 'Arrived early');
+  assert.equal(await time.locator('[data-time-state="arrive"]').getAttribute('aria-pressed'), 'true');
   await context.close();
 });
 
@@ -269,7 +306,7 @@ test('film caption minimizes on mobile without hiding its explanation', async ()
   await context.close();
 });
 
-test('reduced motion exposes every compiler and AEO state and keeps film unloaded', async () => {
+test('reduced motion exposes every compiler, time travel, and AEO state and keeps film unloaded', async () => {
   const { context, page } = await openPage({
     width: 390,
     height: 844,
@@ -285,6 +322,12 @@ test('reduced motion exposes every compiler and AEO state and keeps film unloade
   const aeoStates = page.locator('[data-aeo-panel]');
   assert.equal(await aeoStates.count(), 4);
   for (const state of await aeoStates.all()) {
+    assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
+    assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
+  }
+  const timeStates = page.locator('[data-time-panel]');
+  assert.equal(await timeStates.count(), 4);
+  for (const state of await timeStates.all()) {
     assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
     assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
   }

@@ -10,9 +10,18 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. On desktop both sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The time travel chapter that follows the hero moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+
+## Design revision — 2026-09-24: Time travel chapter
+
+- Added a pinned chapter, `#time` (**Delivery that feels like time travel.**), directly after the hero. It carries `data-sc-span="2.35"` and drifts the canvas to `#0A0912`.
+- The engine is a six-lane delivery calendar (Discover, Specify, Design, Build, Test, Release) from Kickoff to a Conventional ship date. Four states, **Conventional → Engineer → Parallel → Arrive**, animate lane position and width, the Arrives marker, and a "Time returned to you" band via `--start`, `--span`, and `--arrive` custom properties.
+- Panels beside the engine: "The serial calendar", "Front-load the thinking", "Run everything at once", "Arrive before you were due". The status element moves from "Serial calendar" to "Arrived early".
+- Desktop scroll selects the state at fixed thresholds; clicking a control holds a manual choice. On mobile the section runs in normal flow with direct controls. Under reduced motion the section is un-pinned and the four panels stack statically with the engine in its final state.
+- Copy is qualitative only. Test 8 asserts that no duration or percentage appears in the engine text; Test 11 asserts reduced-motion parity.
+- Verification: `npm test` 11/11, `git diff --check` clean, desktop, mobile, and reduced-motion screenshots reviewed.
 
 ## Design revision — 2026-09-24: Intent and context engineered before the build
 

@@ -717,6 +717,134 @@
   }
   .aeo-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
 
+  /* time travel: the delivery calendar compressing */
+  .time-shell {
+    height: 100%; max-width: var(--sc-maxw); margin-inline: auto; padding: 5.8rem var(--sc-gutter) 4.6rem;
+    display: grid; grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 6rem); align-items: stretch;
+  }
+  .time-copy { align-self: center; max-width: 31rem; min-height: 0; }
+  .time-copy h2 {
+    margin: var(--sc-3) 0 var(--sc-4); font-family: var(--sc-font-display); font-size: clamp(2.5rem, 5vw, 5.8rem);
+    line-height: 0.92; letter-spacing: -0.05em; text-wrap: balance;
+  }
+  .time-copy .sc-label { color: var(--sc-signal); }
+  .time-engine {
+    position: relative; min-height: 0; max-height: calc(100vh - 10.4rem); overflow: hidden; isolation: isolate;
+    border: 1px solid color-mix(in oklab, var(--sc-signal) 32%, var(--sc-hairline));
+    clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
+    background:
+      radial-gradient(circle at 20% 15%, color-mix(in oklab, var(--sc-signal) 10%, transparent), transparent 42%),
+      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
+    display: flex; flex-direction: column;
+  }
+  .time-engine::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
+    background:
+      linear-gradient(90deg, var(--sc-hairline) 1px, transparent 1px) 0 0 / 2.25rem 100%,
+      linear-gradient(0deg, var(--sc-hairline) 1px, transparent 1px) 0 0 / 100% 2.25rem;
+    mask-image: linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
+  }
+  .time-engine__chrome {
+    min-height: 3rem; display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
+    padding: 0 var(--sc-4); border-bottom: 1px solid var(--sc-hairline);
+    background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
+  }
+  .time-engine__status { color: var(--sc-signal); }
+  .time-track { position: relative; padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.5rem) 0.75rem; }
+  .time-axis {
+    display: flex; justify-content: space-between; margin: 0 0 var(--sc-3) 7.5rem; color: var(--sc-ink-soft);
+  }
+  .time-lanes { position: relative; display: grid; gap: 0.8rem; margin: 0; padding: 0; list-style: none; }
+  .time-lane { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: center; gap: var(--sc-3); }
+  .time-lane .sc-label { color: var(--sc-ink-soft); }
+  .time-lane__rail { position: relative; height: 1.15rem; }
+  .time-lane__wait {
+    position: absolute; inset: 50% auto auto 0; width: calc(var(--start) * 100%); height: 0; transform: translateY(-50%);
+    border-top: 1px dashed color-mix(in oklab, var(--sc-ink-soft) 55%, transparent);
+    transition: width 900ms var(--sc-ease-out), opacity 600ms var(--sc-ease-out);
+  }
+  .time-lane__bar {
+    position: absolute; inset: 0 auto 0 calc(var(--start) * 100%); width: calc(var(--span) * 100%);
+    background: linear-gradient(90deg, color-mix(in oklab, var(--sc-signal) 70%, var(--sc-accent)), var(--sc-signal));
+    box-shadow: 0 0 0.9rem color-mix(in oklab, var(--sc-signal) 30%, transparent);
+    transition: left 900ms var(--sc-ease-out), width 900ms var(--sc-ease-out), background 600ms var(--sc-ease-out);
+  }
+  .time-lanes::after {
+    content: ""; position: absolute; top: -1.75rem; bottom: -0.5rem; left: calc(7.5rem + var(--sc-3) + (100% - 7.5rem - var(--sc-3)) * var(--arrive));
+    width: 1px; background: var(--sc-optic);
+    box-shadow: 0 0 1rem color-mix(in oklab, var(--sc-optic) 70%, transparent);
+    transition: left 900ms var(--sc-ease-out);
+  }
+  .time-arrival {
+    position: absolute; top: -1.75rem; left: calc(7.5rem + var(--sc-3) + (100% - 7.5rem - var(--sc-3)) * var(--arrive));
+    transform: translate(0.6rem, -100%); color: var(--sc-optic); white-space: nowrap;
+    transition: left 900ms var(--sc-ease-out);
+  }
+  .time-returned {
+    position: absolute; top: -0.35rem; bottom: -0.5rem; right: 0;
+    left: calc(7.5rem + var(--sc-3) + (100% - 7.5rem - var(--sc-3)) * var(--arrive));
+    background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--sc-optic) 22%, transparent) 0 2px, transparent 2px 9px);
+    opacity: 0; transition: opacity 700ms var(--sc-ease-out), left 900ms var(--sc-ease-out); pointer-events: none;
+  }
+  .time-returned .sc-label { position: absolute; right: 0; bottom: -1.7rem; color: var(--sc-optic); white-space: nowrap; }
+  .time-engine[data-active-state="arrive"] .time-returned { opacity: 1; }
+  .time-engine[data-active-state="arrive"] .time-lane__bar { background: var(--sc-optic); box-shadow: 0 0 1rem color-mix(in oklab, var(--sc-optic) 40%, transparent); }
+  .time-engine[data-active-state="arrive"] .time-lane__wait { opacity: 0; }
+
+  /* per-state geometry: start / span are fractions of the calendar */
+  .time-engine { --arrive: 1; }
+  .time-lane[data-time-phase="Discover"] { --start: 0; --span: 0.12; }
+  .time-lane[data-time-phase="Specify"] { --start: 0.16; --span: 0.11; }
+  .time-lane[data-time-phase="Design"] { --start: 0.31; --span: 0.13; }
+  .time-lane[data-time-phase="Build"] { --start: 0.48; --span: 0.22; }
+  .time-lane[data-time-phase="Test"] { --start: 0.74; --span: 0.12; }
+  .time-lane[data-time-phase="Release"] { --start: 0.9; --span: 0.1; }
+  .time-engine[data-active-state="engineer"] { --arrive: 0.58; }
+  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Discover"],
+  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Specify"],
+  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Design"] { --start: 0; --span: 0.08; }
+  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Build"] { --start: 0.1; --span: 0.22; }
+  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Test"] { --start: 0.34; --span: 0.12; }
+  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Release"] { --start: 0.48; --span: 0.1; }
+  .time-engine[data-active-state="parallel"], .time-engine[data-active-state="arrive"] { --arrive: 0.33; }
+  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Discover"],
+  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Discover"],
+  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Specify"],
+  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Specify"],
+  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Design"],
+  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Design"] { --start: 0; --span: 0.07; }
+  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Build"],
+  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Build"] { --start: 0.08; --span: 0.18; }
+  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Test"],
+  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Test"] { --start: 0.1; --span: 0.17; }
+  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Release"],
+  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Release"] { --start: 0.27; --span: 0.06; }
+
+  .time-captions { position: relative; flex: 1; min-height: 7rem; margin-top: var(--sc-3); }
+  .time-panel {
+    position: absolute; inset: 0; padding: 0 clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 3vw, 2rem);
+    display: grid; align-content: end; gap: var(--sc-2);
+    opacity: 0; visibility: hidden; transform: translate3d(0, 0.75rem, 0);
+    transition: opacity 420ms var(--sc-ease-out), transform 560ms var(--sc-ease-out), visibility 0s linear 560ms;
+  }
+  .time-panel h3 { margin: 0; font-family: var(--sc-font-display); font-size: clamp(1.4rem, 2.2vw, 2rem); line-height: 1.05; letter-spacing: -0.03em; }
+  .time-panel p { margin: 0; max-width: 46ch; color: var(--sc-ink-soft); }
+  .time-panel strong { color: var(--sc-ink); font-weight: 500; }
+  .time-engine[data-active-state="conventional"] [data-time-panel="conventional"],
+  .time-engine[data-active-state="engineer"] [data-time-panel="engineer"],
+  .time-engine[data-active-state="parallel"] [data-time-panel="parallel"],
+  .time-engine[data-active-state="arrive"] [data-time-panel="arrive"] { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .time-controls {
+    min-height: 4.5rem; display: flex; align-items: center; gap: var(--sc-2); padding: var(--sc-3) var(--sc-4);
+    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 86%, transparent);
+  }
+  .time-controls button {
+    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; background: transparent; color: var(--sc-ink-soft); cursor: pointer;
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide);
+  }
+  .time-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
+
   /* spread */
   .spread { display: grid; grid-template-columns: 34ch minmax(0, 1fr); gap: var(--sc-7); align-items: center; min-height: 78vh; }
   .spread figure { margin: 0; }
@@ -886,6 +1014,17 @@
     .aeo-proof__metric strong { font-size: clamp(2.2rem, 12vw, 3.7rem); }
     .aeo-controls { overflow-x: auto; padding-inline: var(--sc-2); }
     .aeo-controls button { white-space: nowrap; padding-inline: var(--sc-2); }
+    #time { height: auto !important; }
+    #time > .sc-stage { position: relative; top: auto; height: auto; }
+    .time-shell { height: auto; grid-template-columns: 1fr; padding: 4.6rem var(--sc-gutter); gap: var(--sc-5); }
+    .time-copy h2 { font-size: clamp(2.3rem, 12vw, 4rem); }
+    .time-engine { min-height: 31rem; max-height: none; }
+    .time-axis { margin-left: 5rem; }
+    .time-lane { grid-template-columns: 5rem minmax(0, 1fr); gap: var(--sc-2); }
+    .time-lanes::after, .time-arrival, .time-returned { left: calc(5rem + var(--sc-2) + (100% - 5rem - var(--sc-2)) * var(--arrive)); }
+    .time-captions { min-height: 11rem; }
+    .time-controls { overflow-x: auto; padding-inline: var(--sc-2); }
+    .time-controls button { white-space: nowrap; padding-inline: var(--sc-2); }
     .receipt { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-5); }
     .receipt .sc-display--md { font-size: var(--sc-t-xl); }
     .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-4); }
@@ -962,6 +1101,14 @@
     .aeo-controls { display: none; }
     .answer-path article:nth-child(2), .answer-path article:nth-child(3) { transform: none; }
     .signal-rail span { transition: none; }
+    #time { height: auto !important; }
+    #time > .sc-stage { position: relative; top: auto; height: auto; }
+    .time-shell { height: auto; grid-template-rows: auto; }
+    .time-engine { min-height: 0; max-height: none; overflow: visible; clip-path: none; }
+    .time-captions { position: relative; inset: auto; display: grid; gap: var(--sc-4); padding: var(--sc-4); min-height: 0; }
+    .time-panel { position: relative; inset: auto; padding: var(--sc-4); opacity: 1; visibility: visible; transform: none; border: 1px solid var(--sc-hairline); transition: none; }
+    .time-controls { display: none; }
+    .time-lane__wait, .time-lane__bar, .time-lanes::after, .time-arrival, .time-returned { transition: none; }
   }
 </style>
 </head>
@@ -972,10 +1119,11 @@
 <nav class="index" aria-label="Page chapters">
   <a class="index__home" href="#top">Abracadabra AI</a>
   <a href="#i" data-index="i" aria-label="I — Compile"><span aria-hidden="true">I</span><span class="index__label">Compile</span></a>
-  <a href="#aeo" data-index="aeo" aria-label="II — Answer"><span aria-hidden="true">II</span><span class="index__label">Answer</span></a>
-  <a href="#iii" data-index="iii" aria-label="III — Proof"><span aria-hidden="true">III</span><span class="index__label">Proof</span></a>
-  <a href="#film" data-index="iv" aria-label="IV — Watch"><span aria-hidden="true">IV</span><span class="index__label">Watch</span></a>
-  <a href="#v" data-index="v" aria-label="V — Build"><span aria-hidden="true">V</span><span class="index__label">Build</span></a>
+  <a href="#time" data-index="time" aria-label="II — Time"><span aria-hidden="true">II</span><span class="index__label">Time</span></a>
+  <a href="#aeo" data-index="aeo" aria-label="III — Answer"><span aria-hidden="true">III</span><span class="index__label">Answer</span></a>
+  <a href="#iii" data-index="iii" aria-label="IV — Proof"><span aria-hidden="true">IV</span><span class="index__label">Proof</span></a>
+  <a href="#film" data-index="iv" aria-label="V — Watch"><span aria-hidden="true">V</span><span class="index__label">Watch</span></a>
+  <a href="#v" data-index="v" aria-label="VI — Build"><span aria-hidden="true">VI</span><span class="index__label">Build</span></a>
   <a href="#brief" data-index="brief" aria-label="ST — Start"><span aria-hidden="true">ST</span><span class="index__label">Start</span></a>
   <p class="index__current" aria-live="polite">I — Compile</p>
 </nav>
@@ -1130,6 +1278,66 @@
         <li><strong>LLM Leverage</strong><span>A team trained on any model.</span><a href="https://llm-leverage-course.vercel.app">llm-leverage-course.vercel.app</a></li>
         <li><strong>A Kitchener appliance warehouse</strong><span>“Will it fit?” before the drive.</span><a href="https://cdastore.vercel.app/">cdastore.vercel.app</a></li>
       </ul>
+    </div>
+  </section>
+
+  <!-- Act 2: time travel — the delivery calendar compressing -->
+  <section id="time" data-sc-act="pin" data-sc-span="2.35" data-sc-drift="#0A0912" aria-labelledby="time-title">
+    <div data-sc-stage>
+      <div class="time-shell">
+        <div class="time-copy" data-sc-cue="0 0.96 0">
+    <p class="sc-label">Time travel</p>
+        <h2 id="time-title">Delivery that feels like time travel.</h2>
+        <p class="sc-body">A conventional software calendar is mostly waiting: for the brief to be understood, for a handoff to land, for one team to finish before the next can start. Remove the waiting and the calendar folds in on itself.</p>
+        <p class="sc-body"><strong>There is no sleight of hand.</strong> We front-load the thinking into an engineered brief, then run every downstream workstream at once. The work does not shrink. The gaps between the work disappear.</p>
+        </div>
+        <div class="time-engine" data-active-state="conventional" aria-label="How Abracadabra compresses a software delivery calendar">
+          <div class="time-engine__chrome" aria-hidden="true">
+            <p class="sc-label">Delivery calendar / same scope</p>
+            <p class="sc-label time-engine__status" data-time-status>Serial calendar</p>
+          </div>
+          <div class="time-track">
+            <div class="time-axis" aria-hidden="true">
+              <span class="sc-label">Kickoff</span>
+              <span class="sc-label">Conventional ship date</span>
+            </div>
+            <div class="time-lanes" role="list" aria-label="Delivery phases">
+              <div class="time-lane" role="listitem" data-time-phase="Discover"><span class="sc-label">Discover</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+              <div class="time-lane" role="listitem" data-time-phase="Specify"><span class="sc-label">Specify</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+              <div class="time-lane" role="listitem" data-time-phase="Design"><span class="sc-label">Design</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+              <div class="time-lane" role="listitem" data-time-phase="Build"><span class="sc-label">Build</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+              <div class="time-lane" role="listitem" data-time-phase="Test"><span class="sc-label">Test</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+              <div class="time-lane" role="listitem" data-time-phase="Release"><span class="sc-label">Release</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+              <div class="time-arrival" aria-hidden="true"><span class="sc-label">Arrives</span></div>
+              <div class="time-returned" aria-hidden="true"><span class="sc-label">Time returned to you</span></div>
+            </div>
+          </div>
+          <div class="time-captions">
+            <section class="time-panel" data-time-panel="conventional" aria-labelledby="time-panel-conventional">
+              <h3 id="time-panel-conventional">The serial calendar</h3>
+              <p>Each phase waits for the previous one to finish, then waits again for the <strong>handoff</strong> to be understood. Most of the calendar is dead air between people.</p>
+            </section>
+            <section class="time-panel" data-time-panel="engineer" aria-labelledby="time-panel-engineer">
+              <h3 id="time-panel-engineer">Front-load the thinking</h3>
+              <p>Discovery and specification collapse into <strong>one engineered brief</strong>: intent, constraints, acceptance criteria, and the context every agent needs before a single file is written.</p>
+            </section>
+            <section class="time-panel" data-time-panel="parallel" aria-labelledby="time-panel-parallel">
+              <h3 id="time-panel-parallel">Run everything at once</h3>
+              <p>With the brief settled, design, build, test, and release stop queueing behind each other. <strong>Five workstreams</strong> move in parallel against the same specification, and the handoff gaps vanish.</p>
+            </section>
+            <section class="time-panel" data-time-panel="arrive" aria-labelledby="time-panel-arrive">
+              <h3 id="time-panel-arrive">Arrive before you were due</h3>
+              <p>The same scope ships while the conventional plan is still in review. Nothing was skipped. The waiting was removed, and from the outside that <strong>feels like time travel</strong>.</p>
+            </section>
+          </div>
+          <div class="time-controls" aria-label="Time travel sequence">
+            <button type="button" data-time-state="conventional" aria-pressed="true">Conventional</button>
+            <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
+            <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
+            <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1420,12 +1628,15 @@
 
 <script src="scrollcraft.js"></script>
 <script>
-  if (matchMedia('(max-width: 860px)').matches) {
-    ['i', 'aeo', 'iii'].forEach(function (id) {
-      var section = document.getElementById(id);
-      if (section) section.setAttribute('data-sc-act', 'flow');
-    });
-  }
+  // small screens unpin the staged sections; reduced motion also unpins the
+  // time engine so its stacked panels are never clipped by a fixed-height stage
+  var flowIds = matchMedia('(max-width: 860px)').matches
+    ? ['i', 'time', 'aeo', 'iii']
+    : (matchMedia('(prefers-reduced-motion: reduce)').matches ? ['time'] : []);
+  flowIds.forEach(function (id) {
+    var section = document.getElementById(id);
+    if (section) section.setAttribute('data-sc-act', 'flow');
+  });
   ScrollCraft.mount(document.body);
 
   // the utterance inks one syllable per specimen as the reader passes it
@@ -1443,7 +1654,7 @@
 
   // the object index follows the reader
   var links = Array.prototype.slice.call(document.querySelectorAll('.index a[data-index]'));
-  var nodes = ['i', 'aeo', 'iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
+  var nodes = ['i', 'time', 'aeo', 'iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
   var currentLabel = document.querySelector('.index__current');
   function spy() {
     var y = window.scrollY + window.innerHeight * 0.42, current = 0;
@@ -1535,6 +1746,44 @@
     );
   }
 
+  var timeEngine = document.querySelector('.time-engine');
+  var timeButtons = Array.prototype.slice.call(document.querySelectorAll('[data-time-state]'));
+  var timeStatus = document.querySelector('[data-time-status]');
+  var timeStates = ['conventional', 'engineer', 'parallel', 'arrive'];
+  var timeStatuses = {
+    conventional: 'Serial calendar',
+    engineer: 'Front-loaded',
+    parallel: 'Workstreams overlapping',
+    arrive: 'Arrived early'
+  };
+  var timeWasChosen = false;
+
+  function setTimeState(state, chosen) {
+    if (!timeEngine || timeStates.indexOf(state) === -1) return;
+    if (chosen) timeWasChosen = true;
+    if (timeEngine.getAttribute('data-active-state') === state) return;
+    timeEngine.setAttribute('data-active-state', state);
+    timeButtons.forEach(function (button) {
+      button.setAttribute('aria-pressed', button.getAttribute('data-time-state') === state ? 'true' : 'false');
+    });
+    if (timeStatus) timeStatus.textContent = timeStatuses[state];
+  }
+
+  timeButtons.forEach(function (button) {
+    button.addEventListener('click', function () { setTimeState(button.getAttribute('data-time-state'), true); });
+  });
+
+  function resolveTimeFromScroll() {
+    if (!timeEngine || reduceMotion || timeWasChosen || innerWidth <= 860) return;
+    var act = document.getElementById('time');
+    var travel = Math.max(1, act.offsetHeight - innerHeight);
+    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
+    setTimeState(
+      progress < 0.22 ? 'conventional' : progress < 0.47 ? 'engineer' : progress < 0.72 ? 'parallel' : 'arrive',
+      false
+    );
+  }
+
   function updatePageProgress() {
     var root = document.documentElement;
     var travel = Math.max(1, root.scrollHeight - innerHeight);
@@ -1545,6 +1794,7 @@
   function updateScrollStates() {
     resolveCompilerFromScroll();
     resolveAeoFromScroll();
+    resolveTimeFromScroll();
     updatePageProgress();
   }
 

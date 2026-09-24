@@ -1,10 +1,50 @@
 # Abracadabra marketing site — technological magic redesign plan
 
-**Status:** Phase-three generalized hero, intent-and-context engineering state, and parallel-agent build sequence implemented and verified 2026-09-24; supporting-page alignment, production analytics, and post-release measurement remain follow-up work
+**Status:** Phase-four time travel chapter (`#time`) implemented and verified 2026-09-24 on top of the phase-three generalized hero, intent-and-context engineering state, and parallel-agent build sequence; supporting-page alignment, production analytics, and post-release measurement remain follow-up work
 **Prepared:** 2026-09-23
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
 **Related media plan:** [`docs/scroll-world-review.md`](scroll-world-review.md)
+
+## Phase-four plan: time travel chapter
+
+The phase-three hero shows the mechanism; it does not show what the mechanism does to a calendar. Phase four adds one pinned chapter directly after the hero, `#time` ("Delivery that feels like time travel."), that makes the compression of a software delivery calendar legible without inventing a number for it.
+
+### Narrative sequence
+
+Four states, driven by scroll on desktop and by controls elsewhere: **Conventional → Engineer → Parallel → Arrive**.
+
+- **Conventional** ("The serial calendar"): six lanes, Discover, Specify, Design, Build, Test, Release, laid end to end from Kickoff to a Conventional ship date. The gaps between lanes are the point: a conventional calendar is mostly waiting.
+- **Engineer** ("Front-load the thinking"): the Discover and Specify lanes compress as intent and context are engineered into one brief before anything is built.
+- **Parallel** ("Run everything at once"): Design, Build, Test, and Release stack in parallel from that brief instead of queueing behind one another.
+- **Arrive** ("Arrive before you were due"): the Arrives marker lands well before the Conventional ship date and the remaining span is labeled "Time returned to you". The status reads "Arrived early".
+
+The copy states the premise plainly: there is no sleight of hand, the work does not shrink, the gaps between the work disappear.
+
+### Motion direction
+
+- The `.time-engine` is a delivery calendar with a shared axis. Each lane carries `--start` and `--span`; the engine carries `--arrive` (1 in Conventional, shortened in Engineer, shortest in Parallel and Arrive). State changes animate lane position and width, the arrival marker, and the returned-time band, so the calendar visibly folds in on itself rather than cutting between static images.
+- Panels cross-fade beside the engine; the active panel's title and body describe the state the engine is showing.
+- The section pins with `data-sc-span="2.35"` and drifts the canvas to `#0A0912`, a slightly deeper, cooler tone than the hero so the chapter reads as its own room.
+
+### Responsive and accessibility behavior
+
+- Desktop (over 860px): scroll progress selects the state at fixed thresholds; clicking a control makes a manual choice that holds.
+- Mobile (860px and under): the section runs in normal document flow (`data-sc-act` switched to `flow`), the engine sits above the copy, and the four controls drive the state directly.
+- Reduced motion: the section is un-pinned, the four panels stack as static content, controls hide, and the engine renders its final Arrive state so the whole argument is readable without any scroll-driven change.
+- Controls use `aria-pressed`; the engine has an `aria-label` describing what it compresses; the status element announces the current state.
+
+### Copy direction
+
+- Qualitative only. No durations, percentages, or calendar math appear anywhere in the chapter. The compression is shown by the geometry, not asserted by a figure.
+- "At the speed of thought" remains the operating premise; the chapter never converts it into an elapsed-time promise.
+- The Engineer state ties back to the hero's Engineer state so the two chapters read as one mechanism seen twice: once as what happens, once as what it does to time.
+
+### Verification gates
+
+- Playwright: the time travel chapter reaches all four states via controls, the arrival marker moves earlier through the sequence, engine text contains no numeric duration or percentage, and reduced motion exposes all four panels with the engine un-clipped.
+- Visual: desktop Conventional and Arrive, mobile flow, and reduced motion captured and reviewed before merge.
+- `npm test` green and `git diff --check` clean.
 
 ## Phase-three plan: from thought to running software
 
