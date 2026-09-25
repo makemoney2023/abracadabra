@@ -13,7 +13,7 @@ Last updated: 2026-09-25
 - The delivery calendar compresses because the thinking is front-loaded into one engineered brief and the downstream workstreams run at once instead of in sequence. The work does not shrink; the waiting between the work disappears. Abracadabra AI does not publish a duration or percentage for this.
 - Intent, context, and prompt engineering shipped as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
-- The studio's range is marketing, applications, machine-learning products, systems of record, and stores. The work named on the site is a sample, not the edge of what the studio will take on. Measured visibility proof stays in the pirx.ca block below.
+- Software for the way a company already works: the product, the way the team sells it, and the record that replaces a pile of tools, in one delivery. That range is marketing, applications, machine-learning products, systems of record, and stores. The work named on the site is a sample, not the edge of what the studio will take on. Measured visibility proof stays in the pirx.ca block below.
 - Delivery per project: the live system, the film, and the script. The client's team can demo it without us in the room.
 
 ## Answer Engine Optimization

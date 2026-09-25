@@ -8,6 +8,6 @@ Captured films, posters, and sales packs live in [`outputs/`](outputs/README.md)
 
 The detailed UX and visual redesign plan for making the marketing site feel technologically magical — while preserving its proof-first operator voice — is [docs/marketing-site-technological-magic-plan.md](docs/marketing-site-technological-magic-plan.md).
 
-The homepage chapter that leads into Answer Engine Optimization — marketing, applications, machine learning with PIRX, systems of record, and commerce — is on the page between Time and Answer. The spec is [docs/anything-digital-lead-in-plan.md](docs/anything-digital-lead-in-plan.md).
+The homepage chapter that leads into Answer Engine Optimization speaks to operators whose process does not fit an off-the-shelf product: marketing, applications, machine learning with PIRX, the customer record, and the sale, in one delivery. It sits between Time and Answer. The spec is [docs/anything-digital-lead-in-plan.md](docs/anything-digital-lead-in-plan.md).
 
 The plan for the Readiness Check — the lead-generation survey that scores problems, AI readiness, and website structure (via the Schema repo) and ends in a booked session — is [docs/lead-survey-gameplan.md](docs/lead-survey-gameplan.md); its design spec and implementation plan are in [docs/readiness-check/](docs/readiness-check/).

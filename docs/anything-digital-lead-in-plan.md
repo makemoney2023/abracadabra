@@ -1,6 +1,6 @@
 # Anything digital — lead-in to the AEO chapter
 
-**Status:** Shipped 2026-09-25. `#range` is on the homepage between `#time` and `#aeo`.
+**Status:** Shipped 2026-09-25. `#range` is on the homepage between `#time` and `#aeo`. Copy revised the same day so the chapter speaks to the operator: headline **Software for the way your company actually works.**
 **Prepared:** 2026-09-25
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
@@ -41,11 +41,11 @@ The left column stays put. The right column is one instrument, the same pattern 
 
 | State | Plate title | What it claims | What may be named |
 |---|---|---|---|
-| `market` | Marketing | Campaigns, films, pages, and the words a brand is allowed to say. The brief that builds the product can build the thing that sells it. | The films on file. No client content-studio names. |
-| `product` | Applications | The workflow a team already runs, turned into software they can demo. | Showdesk, as one shape. The next shape is whatever the operator can describe. |
-| `model` | Machine learning | A model is another surface of the same brief, not a separate lab. PIRX reads training and wearable data and says what the work can support right now. | PIRX. Qualitative only: wearable ingestion, projections, chat, mobile. No accuracy, latency, or lift figures. |
-| `record` | The record | Pipeline, agreement, order, and customer history in one system shaped to the operation. This is the CRM and ERP work: the off-the-shelf product asks the business to change shape, so the system follows the operation instead. | Nothing by product name. One line: named when the client allows it. |
-| `commerce` | The sale | A store that answers the question that closes the sale. An intake that arrives with a reason and a next step. | Canadian Discount Appliances. The Readiness Check may be mentioned as the studio's own door, without stealing the AEO calls to action. |
+| `market` | Marketing | The words the team is already allowed to say, and the film, page, or campaign that sells the same thing the software is. | The films on file. No client content-studio names. |
+| `product` | Applications | The workflow the team already runs, as software they can demo. | Showdesk, as one shape. The next is the way they work, when nothing off the shelf was drawn for it. |
+| `model` | Machine learning | When the answer depends on the work itself — training, what the body can support right now — PIRX is that surface. | PIRX. Qualitative only: wearable ingestion, projections, chat, mobile. No accuracy, latency, or lift figures. |
+| `record` | The record | Pipeline, agreement, order, and customer history in one place, instead of a pile of tools that each hold a piece of the customer. Off-the-shelf asks the business to change shape. | Nothing by product name. One line: named when the client allows it. |
+| `commerce` | The sale | Fit, price, and the next step, before anyone gets in a car. | Canadian Discount Appliances. The Readiness Check may be mentioned as the studio's own door, without stealing the AEO calls to action. |
 
 The commerce plate closes the pin. Its last sentence is the handoff, and it is the only place this chapter points forward:
 
@@ -56,13 +56,13 @@ That sentence is the bridge into "Be the answer AI can verify." Do not preview 2
 ### Copy
 
 - **Eyebrow:** The range
-- **Headline:** If it runs on a screen, we build it.
-- **Support:** Marketing, the application, the model, the customer record, the store. These are not five vendors. They are one operation, read the same way: what must be true, how the work already happens, then a system that ships.
-- **Qualifier:** The work named on this page is a sample. It is not the edge of what we will take on.
+- **Headline:** Software for the way your company actually works.
+- **Support:** You already have customers and a way of working that no off-the-shelf product was drawn for. The tools each hold a piece of that customer. You need the product and the way your team sells it, in the same delivery.
+- **Qualifier:** The work named on this page is a sample. It is not the edge of what we will take on. A problem nobody else wanted is still in range.
 - **Quiet link, under the qualifier:** The answer is next → `#aeo`
 - **No primary button.** "Show us how it works" stays on the hero, the benefits pin, and the close. This chapter should release the reader into AEO, not start a second conversion path.
 
-Status line as the plates advance: `Campaigns and pages` → `The operation, as software` → `PIRX, on the work itself` → `One record for the operation` → `The question that makes the sale`.
+Status line as the plates advance: `How your team sells` → `The way you already work` → `What the work can support` → `One place for the customer` → `Before anyone gets in a car`. PIRX is not in the status line. It stays on the model plate.
 
 ### PIRX, said once and split in two
 
@@ -155,7 +155,7 @@ Held out of this chapter:
 In `scrollcraft/builds/abracadabra-ai/tests/marketing-site.test.mjs`:
 
 1. **Order.** `main > section` ids put `time` immediately before `range` and `range` immediately before `aeo`.
-2. **Copy.** The level-2 heading is "If it runs on a screen, we build it." The five control labels are Marketing, Applications, Machine learning, The record, The sale.
+2. **Copy.** The level-2 heading is "Software for the way your company actually works." The left column names off-the-shelf, a piece of that customer, and the way the team sells it. The five control labels are Marketing, Applications, Machine learning, The record, The sale.
 3. **Plates.** The model plate is the only plate whose text includes `PIRX`. The product plate names Showdesk. The commerce plate names Canadian Discount Appliances and contains the handoff "the next room is the receipt."
 4. **Boundary.** `#range` text does not match `201K`, `21.8K`, `SuperPatch`, `SPSign`, `S.T.A.R.`, or a percent sign used as a metric.
 5. **Interaction.** Clicking "The record" sets `.range-engine` to `data-active-state="record"` and `aria-pressed="true"` on that button only.

@@ -14,10 +14,15 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Design revision — 2026-09-25: Range copy in the operator's voice
+
+- `#range` headline is now **Software for the way your company actually works.** The left column names the three arrivals: a way of working no off-the-shelf product was drawn for, a pile of tools that each hold a piece of the customer, and the product plus the way the team sells it in one delivery.
+- Plate status moves from "How your team sells" to "Before anyone gets in a car." PIRX stays only on the machine-learning plate. The handoff sentence is unchanged.
+
 ## Design revision — 2026-09-25: Range chapter before the answer receipt
 
-- Added a pinned chapter, `#range` (**If it runs on a screen, we build it.**), between `#time` and `#aeo`. Span `2.6`, drift `#0C0B10`. It is not a specimen, so the utterance strip stays five syllables.
-- Five job-ticket states: **Marketing → Applications → Machine learning → The record → The sale**. The active ticket comes forward; the plate body cross-fades. Status moves from "Campaigns and pages" to "The question that makes the sale."
+- Added a pinned chapter, `#range`, between `#time` and `#aeo`. Span `2.6`, drift `#0C0B10`. It is not a specimen, so the utterance strip stays five syllables.
+- Five job-ticket states: **Marketing → Applications → Machine learning → The record → The sale**. The active ticket comes forward; the plate body cross-fades.
 - PIRX is named only on the machine-learning plate, and only qualitatively. The pirx.ca Search Console figures stay in `#aeo`. The record plate names no product. Commerce names Canadian Discount Appliances and ends on the handoff into the receipt.
 - Chapter index inserts III — Range and shifts Answer through Build. Mobile puts the instrument above the copy. Reduced motion unpins the section, hides the controls and ticket stack, and stacks all five plate bodies.
 - FAQ and JSON-LD add "Do you only build software?" The first sentence is "No."

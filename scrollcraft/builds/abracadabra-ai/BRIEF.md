@@ -66,11 +66,15 @@ The hero looked strong but asked a broad business audience to decode a specializ
 
 Desktop scroll drives the sequence, mobile uses direct controls and a compact agent ledger, and reduced-motion mode exposes all four states and all five workstreams as static semantic content.
 
+## Revision (2026-09-25): the range, in the operator's voice
+
+The chapter still sits between the calendar and the receipt. The headline is now **Software for the way your company actually works.** The left column speaks to the three arrivals in the source of truth: a way of working no off-the-shelf product was drawn for, tools that each hold a piece of the customer, and the product plus the way the team sells it in the same delivery. Five plates stay Marketing, Applications, Machine learning, The record, The sale. PIRX stays on the model plate only. The commerce handoff is still "The next room is the receipt."
+
 ## Revision (2026-09-25): the range, before the receipt
 
 The calendar says the delivery folds. It did not yet say what that calendar covers. A pinned chapter, `#range`, now sits between `#time` and `#aeo`:
 
-- The headline is **If it runs on a screen, we build it.** Five plates: Marketing, Applications, Machine learning, The record, The sale.
+- Five plates: Marketing, Applications, Machine learning, The record, The sale. The headline was later rewritten for the operator (see the revision above).
 - Named proof on the plates is a sample: the films on file, Showdesk, PIRX as a qualitative model, and Canadian Discount Appliances. The record plate names nothing. The commerce plate's last sentence hands the reader to the answer receipt.
 - PIRX and the pirx.ca Search Console figures stay separate claims. The figures remain in `#aeo`.
 - Desktop scroll drives Market → Product → Model → Record → Commerce. Mobile uses direct controls with the instrument above the copy. Reduced motion unpins the section, hides the controls and the ticket stack, and shows all five plate bodies.

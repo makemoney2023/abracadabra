@@ -420,8 +420,12 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.equal(await range.getAttribute('data-specimen'), null);
   assert.equal(
     (await range.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'If it runs on a screen, we build it.',
+    'Software for the way your company actually works.',
   );
+  const rangeCopy = await range.locator('.range-copy').innerText();
+  assert.match(rangeCopy, /off-the-shelf/);
+  assert.match(rangeCopy, /piece of that customer/);
+  assert.match(rangeCopy, /the way your team sells it/);
   assert.deepEqual(
     (await range.locator('[data-range-state]').allTextContents()).map((label) => label.trim()),
     ['Marketing', 'Applications', 'Machine learning', 'The record', 'The sale'],
@@ -441,9 +445,12 @@ test('range chapter sits between time and the answer receipt', async () => {
     plates.filter((plate) => plate.text.includes('PIRX')).map((plate) => plate.state),
     ['model'],
   );
+  assert.match(plates.find((plate) => plate.state === 'market').text, /allowed to say/);
   assert.match(plates.find((plate) => plate.state === 'product').text, /Showdesk/);
+  assert.match(plates.find((plate) => plate.state === 'record').text, /pile of tools/);
   const commerce = plates.find((plate) => plate.state === 'commerce').text;
   assert.match(commerce, /Canadian Discount Appliances/);
+  assert.match(commerce, /before anyone gets in a car/);
   assert.match(commerce, /the next room is the receipt/i);
 
   const chapterText = await range.textContent();
