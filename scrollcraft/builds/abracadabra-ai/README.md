@@ -21,6 +21,7 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 - PIRX is named only on the machine-learning plate, and only qualitatively. The pirx.ca Search Console figures stay in `#aeo`. The record plate names no product. Commerce names Canadian Discount Appliances and ends on the handoff into the receipt.
 - Chapter index inserts III — Range and shifts Answer through Build. Mobile puts the instrument above the copy. Reduced motion unpins the section, hides the controls and ticket stack, and stacks all five plate bodies.
 - FAQ and JSON-LD add "Do you only build software?" The first sentence is "No."
+- A direct visit to a chapter hash lands on that chapter immediately. In-page links keep the smooth glide.
 
 ## Design revision — 2026-09-24: Magic, and the name under the hero
 

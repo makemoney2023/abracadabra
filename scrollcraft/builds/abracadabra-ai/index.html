@@ -1840,6 +1840,19 @@
 
 <script src="scrollcraft.js"></script>
 <script>
+  // A cold visit to a chapter hash must land on that chapter. The stylesheet
+  // glides with scroll-behavior:smooth, and the range pin makes that glide
+  // long enough that the target is still below the fold when the document is
+  // ready. Hold an instant scroll until load, then return the glide to
+  // in-page links.
+  function placeHash() {
+    var id = location.hash.slice(1);
+    if (!id) return;
+    var target = document.getElementById(id);
+    if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }
+  if (location.hash) document.documentElement.style.scrollBehavior = 'auto';
+
   // small screens unpin the staged sections; reduced motion also unpins the
   // time engine so its stacked panels are never clipped by a fixed-height stage
   var flowIds = matchMedia('(max-width: 860px)').matches
@@ -1850,6 +1863,14 @@
     if (section) section.setAttribute('data-sc-act', 'flow');
   });
   ScrollCraft.mount(document.body);
+  placeHash();
+  if (location.hash) {
+    addEventListener('load', function () {
+      placeHash();
+      document.documentElement.style.scrollBehavior = '';
+    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeHash);
+  }
 
   // the utterance inks one syllable per specimen as the reader passes it
   var syl = {};
