@@ -41,15 +41,15 @@ The left column stays put. The right column is one instrument, the same pattern 
 
 | State | Plate title | What it claims | What may be named |
 |---|---|---|---|
-| `market` | Marketing | The words the team is already allowed to say, and the film, page, or campaign that sells the same thing the software is. | The films on file. No client content-studio names. |
-| `product` | Applications | The workflow the team already runs, as software they can demo. | Showdesk, as one shape. The next is the way they work, when nothing off the shelf was drawn for it. |
-| `model` | Machine learning | When the answer depends on the work itself — training, what the body can support right now — PIRX is that surface. | PIRX. Qualitative only: wearable ingestion, projections, chat, mobile. No accuracy, latency, or lift figures. |
-| `record` | The record | Pipeline, agreement, order, and customer history in one place, instead of a pile of tools that each hold a piece of the customer. Off-the-shelf asks the business to change shape. | Nothing by product name. One line: named when the client allows it. |
-| `commerce` | The sale | Fit, price, and the next step, before anyone gets in a car. | Canadian Discount Appliances. The Readiness Check may be mentioned as the studio's own door, without stealing the AEO calls to action. |
+| `market` | Marketing | Campaigns, films, and pages, in the words the team already uses. They sell what the software does. | The films on file. No client content-studio names. |
+| `product` | Applications | The steps the team already runs, as software they can demo. | Showdesk runs a live event from the ringside phone. |
+| `model` | Machine learning | PIRX reads the training and says what the work can support right now. | PIRX. Qualitative only: wearable ingestion, projections, chat, mobile. No accuracy, latency, or lift figures. |
+| `record` | The record | The pipeline, the agreement, the order, and the customer history, in one place. | Nothing by product name. One line: we name it when you allow it. |
+| `commerce` | The sale | Canadian Discount Appliances answers fit, price, and the next step before anyone gets in a car. | Canadian Discount Appliances. The Readiness Check may be mentioned as the studio's own door, without stealing the AEO calls to action. |
 
 The commerce plate closes the pin. Its last sentence is the handoff, and it is the only place this chapter points forward:
 
-> Being found is the same kind of system. The next room is the receipt.
+> Getting found works the same way. The next room is the receipt.
 
 That sentence is the bridge into "Be the answer AI can verify." Do not preview 201K, 21.8K, clicks, or the pull date here. Do not add a sixth "Answer" state. AEO already is that state, at full length.
 
@@ -57,12 +57,12 @@ That sentence is the bridge into "Be the answer AI can verify." Do not preview 2
 
 - **Eyebrow:** The range
 - **Headline:** Software for the way your company actually works.
-- **Support:** You already have customers and a way of working that no off-the-shelf product was drawn for. The tools each hold a piece of that customer. You need the product and the way your team sells it, in the same delivery.
-- **Qualifier:** The work named on this page is a sample. It is not the edge of what we will take on. A problem nobody else wanted is still in range.
+- **Support:** Your people keep the order of work they already trust. The screen follows that order: the product, the way you sell it, and one record of the customer.
+- **Qualifier:** The names here are work we have shipped. They are not a limit.
 - **Quiet link, under the qualifier:** The answer is next → `#aeo`
 - **No primary button.** "Show us how it works" stays on the hero, the benefits pin, and the close. This chapter should release the reader into AEO, not start a second conversion path.
 
-Status line as the plates advance: `How your team sells` → `The way you already work` → `What the work can support` → `One place for the customer` → `Before anyone gets in a car`. PIRX is not in the status line. It stays on the model plate.
+Status line as the plates advance: `In the words you already use` → `Software they can demo` → `What the work can support` → `One place for the customer` → `Before anyone gets in a car`. PIRX is not in the status line. It stays on the model plate.
 
 ### PIRX, said once and split in two
 
@@ -155,7 +155,7 @@ Held out of this chapter:
 In `scrollcraft/builds/abracadabra-ai/tests/marketing-site.test.mjs`:
 
 1. **Order.** `main > section` ids put `time` immediately before `range` and `range` immediately before `aeo`.
-2. **Copy.** The level-2 heading is "Software for the way your company actually works." The left column names off-the-shelf, a piece of that customer, and the way the team sells it. The five control labels are Marketing, Applications, Machine learning, The record, The sale.
+2. **Copy.** The level-2 heading is "Software for the way your company actually works." The left column says the screen follows the order of work the team already trusts. The five control labels are Marketing, Applications, Machine learning, The record, The sale. Showdesk is named as the ringside-phone product, not as "one shape."
 3. **Plates.** The model plate is the only plate whose text includes `PIRX`. The product plate names Showdesk. The commerce plate names Canadian Discount Appliances and contains the handoff "the next room is the receipt."
 4. **Boundary.** `#range` text does not match `201K`, `21.8K`, `SuperPatch`, `SPSign`, `S.T.A.R.`, or a percent sign used as a metric.
 5. **Interaction.** Clicking "The record" sets `.range-engine` to `data-active-state="record"` and `aria-pressed="true"` on that button only.

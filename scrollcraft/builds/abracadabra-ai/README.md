@@ -16,8 +16,8 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 ## Design revision — 2026-09-25: Range copy in the operator's voice
 
-- `#range` headline is now **Software for the way your company actually works.** The left column names the three arrivals: a way of working no off-the-shelf product was drawn for, a pile of tools that each hold a piece of the customer, and the product plus the way the team sells it in one delivery.
-- Plate status moves from "How your team sells" to "Before anyone gets in a car." PIRX stays only on the machine-learning plate. The handoff sentence is unchanged.
+- `#range` headline is **Software for the way your company actually works.** The left column says the screen follows the order of work the team already trusts.
+- Showdesk is the live event run from the ringside phone. Canadian Discount Appliances answers fit, price, and the next step before anyone gets in a car. PIRX stays only on the machine-learning plate. The handoff is still "The next room is the receipt."
 
 ## Design revision — 2026-09-25: Range chapter before the answer receipt
 

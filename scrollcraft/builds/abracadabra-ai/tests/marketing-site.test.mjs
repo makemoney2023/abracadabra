@@ -423,9 +423,9 @@ test('range chapter sits between time and the answer receipt', async () => {
     'Software for the way your company actually works.',
   );
   const rangeCopy = await range.locator('.range-copy').innerText();
-  assert.match(rangeCopy, /off-the-shelf/);
-  assert.match(rangeCopy, /piece of that customer/);
-  assert.match(rangeCopy, /the way your team sells it/);
+  assert.match(rangeCopy, /order of work they already trust/);
+  assert.match(rangeCopy, /The screen follows that order/);
+  assert.doesNotMatch(rangeCopy, /one shape|still in range/);
   assert.deepEqual(
     (await range.locator('[data-range-state]').allTextContents()).map((label) => label.trim()),
     ['Marketing', 'Applications', 'Machine learning', 'The record', 'The sale'],
@@ -445,12 +445,17 @@ test('range chapter sits between time and the answer receipt', async () => {
     plates.filter((plate) => plate.text.includes('PIRX')).map((plate) => plate.state),
     ['model'],
   );
-  assert.match(plates.find((plate) => plate.state === 'market').text, /allowed to say/);
-  assert.match(plates.find((plate) => plate.state === 'product').text, /Showdesk/);
-  assert.match(plates.find((plate) => plate.state === 'record').text, /pile of tools/);
+  assert.match(plates.find((plate) => plate.state === 'market').text, /words your team already uses/);
+  const product = plates.find((plate) => plate.state === 'product').text;
+  assert.match(product, /Showdesk/);
+  assert.match(product, /ringside phone/);
+  assert.doesNotMatch(product, /one shape/);
+  assert.match(plates.find((plate) => plate.state === 'record').text, /when you allow it/);
+  assert.doesNotMatch(plates.find((plate) => plate.state === 'record').text, /change shape/);
   const commerce = plates.find((plate) => plate.state === 'commerce').text;
   assert.match(commerce, /Canadian Discount Appliances/);
   assert.match(commerce, /before anyone gets in a car/);
+  assert.doesNotMatch(commerce, /one store/);
   assert.match(commerce, /the next room is the receipt/i);
 
   const chapterText = await range.textContent();
