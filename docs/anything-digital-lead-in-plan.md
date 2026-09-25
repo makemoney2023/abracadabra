@@ -1,6 +1,6 @@
 # Anything digital — lead-in to the AEO chapter
 
-**Status:** Planned. Not on the page yet.
+**Status:** Shipped 2026-09-25. `#range` is on the homepage between `#time` and `#aeo`.
 **Prepared:** 2026-09-25
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)

@@ -1,6 +1,6 @@
 # Abracadabra marketing site — technological magic redesign plan
 
-**Status:** Phase-four time travel chapter (`#time`) implemented and verified 2026-09-24 on top of the phase-three generalized hero, intent-and-context engineering state, and parallel-agent build sequence; supporting-page alignment, production analytics, and post-release measurement remain follow-up work. The next narrative chapter, a range lead-in before `#aeo`, is specified separately in [anything-digital-lead-in-plan.md](anything-digital-lead-in-plan.md) and is not built yet.
+**Status:** Phase-four time travel chapter (`#time`) implemented and verified 2026-09-24 on top of the phase-three generalized hero, intent-and-context engineering state, and parallel-agent build sequence; supporting-page alignment, production analytics, and post-release measurement remain follow-up work. The range lead-in before `#aeo` is built: `#range` sits between `#time` and `#aeo`, specified in [anything-digital-lead-in-plan.md](anything-digital-lead-in-plan.md).
 **Prepared:** 2026-09-23
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)

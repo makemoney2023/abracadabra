@@ -66,6 +66,15 @@ The hero looked strong but asked a broad business audience to decode a specializ
 
 Desktop scroll drives the sequence, mobile uses direct controls and a compact agent ledger, and reduced-motion mode exposes all four states and all five workstreams as static semantic content.
 
+## Revision (2026-09-25): the range, before the receipt
+
+The calendar says the delivery folds. It did not yet say what that calendar covers. A pinned chapter, `#range`, now sits between `#time` and `#aeo`:
+
+- The headline is **If it runs on a screen, we build it.** Five plates: Marketing, Applications, Machine learning, The record, The sale.
+- Named proof on the plates is a sample: the films on file, Showdesk, PIRX as a qualitative model, and Canadian Discount Appliances. The record plate names nothing. The commerce plate's last sentence hands the reader to the answer receipt.
+- PIRX and the pirx.ca Search Console figures stay separate claims. The figures remain in `#aeo`.
+- Desktop scroll drives Market → Product → Model → Record → Commerce. Mobile uses direct controls with the instrument above the copy. Reduced motion unpins the section, hides the controls and the ticket stack, and shows all five plate bodies.
+
 ## Revision (2026-09-24): orbital horizon background
 
 The thought-to-software sequence remains the hero's argument and interaction. OpenHero's `orbital-horizon` film now supplies the atmospheric layer behind it:

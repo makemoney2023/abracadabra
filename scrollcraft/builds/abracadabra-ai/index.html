@@ -173,6 +173,14 @@
         },
         {
           "@type": "Question",
+          "name": "Do you only build software?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. The same studio ships marketing, applications, machine-learning products, systems of record, stores, and the work that gets a brand found. Software is the method. The surface changes with the operation. Public examples on this page include Showdesk, Schema, LLM Leverage, Canadian Discount Appliances, and PIRX. Other work is named when the client allows it."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "What does the name Abracadabra mean?",
           "acceptedAnswer": {
             "@type": "Answer",
@@ -868,6 +876,81 @@
   }
   .time-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
 
+  /* range: five surfaces of one digital operation */
+  .range-shell {
+    height: 100%; max-width: var(--sc-maxw); margin-inline: auto; padding: 5.8rem var(--sc-gutter) 4.6rem;
+    display: grid; grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 6rem); align-items: stretch;
+  }
+  .range-copy { align-self: center; max-width: 31rem; min-height: 0; }
+  .range-copy h2 {
+    margin: var(--sc-3) 0 var(--sc-4); font-family: var(--sc-font-display); font-size: clamp(2.5rem, 5vw, 5.8rem);
+    line-height: 0.92; letter-spacing: -0.05em; text-wrap: balance;
+  }
+  .range-copy .sc-label { color: var(--sc-signal); }
+  .range-next {
+    margin: var(--sc-4) 0 0; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs);
+    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .range-next a { min-height: 44px; display: inline-flex; align-items: center; color: var(--sc-ink-soft); text-decoration: none; border-bottom: 1px solid var(--sc-hairline); }
+  .range-next a:hover, .range-next a:focus-visible { color: var(--sc-ink); border-color: var(--sc-signal); }
+  .range-engine {
+    position: relative; min-height: 0; max-height: calc(100vh - 10.4rem); overflow: hidden; isolation: isolate;
+    border: 1px solid color-mix(in oklab, var(--sc-signal) 32%, var(--sc-hairline));
+    clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
+    background:
+      radial-gradient(circle at 18% 12%, color-mix(in oklab, var(--sc-signal) 10%, transparent), transparent 42%),
+      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
+    display: flex; flex-direction: column;
+  }
+  .range-engine__chrome {
+    min-height: 3rem; display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
+    padding: 0 var(--sc-4); border-bottom: 1px solid var(--sc-hairline);
+    background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
+  }
+  .range-engine__status { color: var(--sc-signal); margin: 0; }
+  .range-body {
+    flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(8.5rem, 0.34fr) minmax(0, 1fr);
+    gap: var(--sc-4); padding: clamp(1.1rem, 2.4vw, 1.8rem) clamp(1.1rem, 2.4vw, 1.8rem) 0.4rem;
+  }
+  .range-stack { display: flex; flex-direction: column; gap: 0.45rem; margin: 0; padding: 0; list-style: none; }
+  .range-stack li {
+    order: 1; margin: 0; padding: 0.7rem 0.75rem; color: var(--sc-ink-soft);
+    border: 1px solid var(--sc-hairline); background: transparent;
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .range-engine[data-active-state="market"] [data-range-ticket="market"],
+  .range-engine[data-active-state="product"] [data-range-ticket="product"],
+  .range-engine[data-active-state="model"] [data-range-ticket="model"],
+  .range-engine[data-active-state="record"] [data-range-ticket="record"],
+  .range-engine[data-active-state="commerce"] [data-range-ticket="commerce"] {
+    order: 0; color: var(--sc-ink); border-color: var(--sc-signal); border-left-width: 3px;
+    background: color-mix(in oklab, var(--sc-signal) 12%, transparent);
+  }
+  .range-viewport { position: relative; min-height: 12rem; }
+  .range-panel {
+    position: absolute; inset: 0; display: grid; align-content: end; gap: var(--sc-3);
+    opacity: 0; visibility: hidden; transform: translate3d(0, 0.75rem, 0);
+    transition: opacity 420ms var(--sc-ease-out), transform 560ms var(--sc-ease-out), visibility 0s linear 560ms;
+  }
+  .range-panel h3 { margin: 0; font-family: var(--sc-font-display); font-size: clamp(1.4rem, 2.2vw, 2rem); line-height: 1.05; letter-spacing: -0.03em; }
+  .range-panel p { margin: 0; max-width: 46ch; color: var(--sc-ink-soft); }
+  .range-panel a { color: var(--sc-ink); }
+  .range-engine[data-active-state="market"] [data-range-panel="market"],
+  .range-engine[data-active-state="product"] [data-range-panel="product"],
+  .range-engine[data-active-state="model"] [data-range-panel="model"],
+  .range-engine[data-active-state="record"] [data-range-panel="record"],
+  .range-engine[data-active-state="commerce"] [data-range-panel="commerce"] { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .range-controls {
+    min-height: 4.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sc-2); padding: var(--sc-3) var(--sc-4);
+    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 86%, transparent);
+  }
+  .range-controls button {
+    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; background: transparent; color: var(--sc-ink-soft); cursor: pointer;
+    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide);
+  }
+  .range-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
+
   /* spread */
   .spread { display: grid; grid-template-columns: 34ch minmax(0, 1fr); gap: var(--sc-7); align-items: center; min-height: 78vh; }
   .spread figure { margin: 0; }
@@ -1048,6 +1131,16 @@
     .time-captions { min-height: 11rem; }
     .time-controls { overflow-x: auto; padding-inline: var(--sc-2); }
     .time-controls button { white-space: nowrap; padding-inline: var(--sc-2); }
+    #range { height: auto !important; }
+    #range > .sc-stage { position: relative; top: auto; height: auto; }
+    .range-shell { height: auto; grid-template-columns: 1fr; padding: 4.6rem var(--sc-gutter); gap: var(--sc-5); }
+    .range-engine { order: -1; min-height: 28rem; max-height: none; }
+    .range-copy h2 { font-size: clamp(2.3rem, 12vw, 4rem); }
+    .range-body { grid-template-columns: 1fr; }
+    .range-stack { display: none; }
+    .range-viewport { min-height: 16rem; }
+    .range-controls { flex-wrap: wrap; padding-inline: var(--sc-2); }
+    .range-controls button { padding-inline: var(--sc-2); }
     .receipt { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-5); }
     .receipt .sc-display--md { font-size: var(--sc-t-xl); }
     .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-4); }
@@ -1133,6 +1226,18 @@
     .time-panel { position: relative; inset: auto; padding: var(--sc-4); opacity: 1; visibility: visible; transform: none; border: 1px solid var(--sc-hairline); transition: none; }
     .time-controls { display: none; }
     .time-lane__wait, .time-lane__bar, .time-lanes::after, .time-arrival, .time-returned { transition: none; }
+    #range { height: auto !important; }
+    #range > .sc-stage { position: relative; top: auto; height: auto; }
+    .range-shell { height: auto; grid-template-rows: auto; }
+    .range-engine { min-height: 0; max-height: none; overflow: visible; clip-path: none; }
+    .range-stack { display: none; }
+    .range-body { display: block; padding: var(--sc-4); }
+    .range-viewport { position: relative; min-height: 0; display: grid; gap: var(--sc-4); }
+    .range-panel {
+      position: relative; inset: auto; opacity: 1; visibility: visible; transform: none;
+      border: 1px solid var(--sc-hairline); padding: var(--sc-4); transition: none;
+    }
+    .range-controls { display: none; }
   }
 </style>
 </head>
@@ -1144,10 +1249,11 @@
   <a class="index__home" href="#top">Abracadabra AI</a>
   <a href="#i" data-index="i" aria-label="I — Compile"><span aria-hidden="true">I</span><span class="index__label">Compile</span></a>
   <a href="#time" data-index="time" aria-label="II — Time"><span aria-hidden="true">II</span><span class="index__label">Time</span></a>
-  <a href="#aeo" data-index="aeo" aria-label="III — Answer"><span aria-hidden="true">III</span><span class="index__label">Answer</span></a>
-  <a href="#iii" data-index="iii" aria-label="IV — Proof"><span aria-hidden="true">IV</span><span class="index__label">Proof</span></a>
-  <a href="#film" data-index="iv" aria-label="V — Watch"><span aria-hidden="true">V</span><span class="index__label">Watch</span></a>
-  <a href="#v" data-index="v" aria-label="VI — Build"><span aria-hidden="true">VI</span><span class="index__label">Build</span></a>
+  <a href="#range" data-index="range" aria-label="III — Range"><span aria-hidden="true">III</span><span class="index__label">Range</span></a>
+  <a href="#aeo" data-index="aeo" aria-label="IV — Answer"><span aria-hidden="true">IV</span><span class="index__label">Answer</span></a>
+  <a href="#iii" data-index="iii" aria-label="V — Proof"><span aria-hidden="true">V</span><span class="index__label">Proof</span></a>
+  <a href="#film" data-index="iv" aria-label="VI — Watch"><span aria-hidden="true">VI</span><span class="index__label">Watch</span></a>
+  <a href="#v" data-index="v" aria-label="VII — Build"><span aria-hidden="true">VII</span><span class="index__label">Build</span></a>
   <a href="#brief" data-index="brief" aria-label="ST — Start"><span aria-hidden="true">ST</span><span class="index__label">Start</span></a>
   <p class="index__current" aria-live="polite">I — Compile</p>
 </nav>
@@ -1382,6 +1488,67 @@
     </div>
   </section>
 
+  <!-- The range: one operation, five surfaces, then the receipt -->
+  <section id="range" data-sc-act="pin" data-sc-span="2.6" data-sc-drift="#0C0B10" aria-labelledby="range-title">
+    <div data-sc-stage>
+      <div class="range-shell">
+        <div class="range-copy" data-sc-cue="0 0.96 0">
+          <p class="sc-label">The range</p>
+          <h2 id="range-title">If it runs on a screen, we build it.</h2>
+          <p class="sc-body">Marketing, the application, the model, the customer record, the store. These are not five vendors. They are one operation, read the same way: what must be true, how the work already happens, then a system that ships.</p>
+          <p class="sc-body">The work named on this page is a sample. It is not the edge of what we will take on.</p>
+          <p class="range-next"><a href="#aeo">The answer is next</a></p>
+        </div>
+        <div class="range-engine" data-active-state="market" aria-label="The kinds of digital work Abracadabra builds.">
+          <div class="range-engine__chrome">
+            <p class="sc-label">Digital range / one operation</p>
+            <p class="sc-label range-engine__status" data-range-status aria-live="polite">Campaigns and pages</p>
+          </div>
+          <div class="range-body">
+            <ol class="range-stack" aria-hidden="true">
+              <li data-range-ticket="market">Marketing</li>
+              <li data-range-ticket="product">Applications</li>
+              <li data-range-ticket="model">Machine learning</li>
+              <li data-range-ticket="record">The record</li>
+              <li data-range-ticket="commerce">The sale</li>
+            </ol>
+            <div class="range-viewport">
+              <section class="range-panel" data-range-panel="market" aria-labelledby="range-panel-market">
+                <h3 id="range-panel-market">Marketing</h3>
+                <p>Campaigns, films, pages, and the words a brand is allowed to say. The brief that builds the product can build the thing that sells it.</p>
+                <p><a href="films.html">The films on file</a></p>
+              </section>
+              <section class="range-panel" data-range-panel="product" aria-labelledby="range-panel-product">
+                <h3 id="range-panel-product">Applications</h3>
+                <p>The workflow a team already runs, turned into software they can demo. <a href="https://www.showdesk-app.com/">Showdesk</a> is one shape. The next is whatever the operator can describe.</p>
+              </section>
+              <section class="range-panel" data-range-panel="model" aria-labelledby="range-panel-model">
+                <h3 id="range-panel-model">Machine learning</h3>
+                <p>A model is another surface of the same brief, not a separate lab. PIRX reads training and wearable data and says what the work can support right now: wearable ingestion, projections, chat, and mobile.</p>
+              </section>
+              <section class="range-panel" data-range-panel="record" aria-labelledby="range-panel-record">
+                <h3 id="range-panel-record">The record</h3>
+                <p>Pipeline, agreement, order, and customer history in one system shaped to the operation. Off-the-shelf asks the business to change shape; the system follows the operation. Named when the client allows it.</p>
+              </section>
+              <section class="range-panel" data-range-panel="commerce" aria-labelledby="range-panel-commerce">
+                <h3 id="range-panel-commerce">The sale</h3>
+                <p>A store that answers the question that closes the sale. An intake that arrives with a reason and a next step. <a href="https://cdastore.vercel.app/">Canadian Discount Appliances</a> is one store.</p>
+                <p>Being found is the same kind of system. The next room is the receipt.</p>
+              </section>
+            </div>
+          </div>
+          <div class="range-controls" aria-label="Digital range">
+            <button type="button" data-range-state="market" aria-pressed="true">Marketing</button>
+            <button type="button" data-range-state="product" aria-pressed="false">Applications</button>
+            <button type="button" data-range-state="model" aria-pressed="false">Machine learning</button>
+            <button type="button" data-range-state="record" aria-pressed="false">The record</button>
+            <button type="button" data-range-state="commerce" aria-pressed="false">The sale</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Act 3: answer engine optimization as an observable system -->
   <section id="aeo" data-sc-act="pin" data-sc-span="2.35" data-sc-drift="#071012" data-specimen="ii" aria-labelledby="aeo-title">
     <div data-sc-stage>
@@ -1606,6 +1773,10 @@
             <p class="sc-body">Bespoke software built around how a business already runs: the steps, the exceptions, and the words the team already uses. AI takes a task, people keep the relationship, and the delivery includes the live system, a film, and the script the team runs. Shipped examples include a live-event operations app (Showdesk), an AI-search visibility scorer (Schema), a self-paced LLM course (LLM Leverage), and a warehouse appliance store (Canadian Discount Appliances).</p>
           </details>
           <details>
+            <summary>Do you only build software?</summary>
+            <p class="sc-body">No. The same studio ships marketing, applications, machine-learning products, systems of record, stores, and the work that gets a brand found. Software is the method. The surface changes with the operation. Public examples on this page include Showdesk, Schema, LLM Leverage, Canadian Discount Appliances, and PIRX. Other work is named when the client allows it.</p>
+          </details>
+          <details>
             <summary>What does the name Abracadabra mean?</summary>
             <p class="sc-body">Traced back far enough, Abracadabra is Aramaic, roughly <em>avra kadavra</em>: I will create as I speak. You describe the process, the exceptions, and the words your team already uses, and that description becomes a running system. The speech is the brief. The creation is production software, not a mockup.</p>
           </details>
@@ -1672,8 +1843,8 @@
   // small screens unpin the staged sections; reduced motion also unpins the
   // time engine so its stacked panels are never clipped by a fixed-height stage
   var flowIds = matchMedia('(max-width: 860px)').matches
-    ? ['i', 'time', 'aeo', 'iii']
-    : (matchMedia('(prefers-reduced-motion: reduce)').matches ? ['time'] : []);
+    ? ['i', 'time', 'range', 'aeo', 'iii']
+    : (matchMedia('(prefers-reduced-motion: reduce)').matches ? ['time', 'range'] : []);
   flowIds.forEach(function (id) {
     var section = document.getElementById(id);
     if (section) section.setAttribute('data-sc-act', 'flow');
@@ -1695,7 +1866,7 @@
 
   // the object index follows the reader
   var links = Array.prototype.slice.call(document.querySelectorAll('.index a[data-index]'));
-  var nodes = ['i', 'time', 'aeo', 'iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
+  var nodes = ['i', 'time', 'range', 'aeo', 'iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
   var currentLabel = document.querySelector('.index__current');
   function spy() {
     var y = window.scrollY + window.innerHeight * 0.42, current = 0;
@@ -1836,6 +2007,44 @@
     );
   }
 
+  var rangeEngine = document.querySelector('.range-engine');
+  var rangeButtons = Array.prototype.slice.call(document.querySelectorAll('[data-range-state]'));
+  var rangeStatus = document.querySelector('[data-range-status]');
+  var rangeStates = ['market', 'product', 'model', 'record', 'commerce'];
+  var rangeStatuses = {
+    market: 'Campaigns and pages',
+    product: 'The operation, as software',
+    model: 'PIRX, on the work itself',
+    record: 'One record for the operation',
+    commerce: 'The question that makes the sale'
+  };
+  var rangeWasChosen = false;
+
+  function setRangeState(state, chosen) {
+    if (!rangeEngine || rangeStates.indexOf(state) < 0) return;
+    rangeEngine.setAttribute('data-active-state', state);
+    rangeButtons.forEach(function (button) {
+      button.setAttribute('aria-pressed', button.getAttribute('data-range-state') === state ? 'true' : 'false');
+    });
+    if (rangeStatus) rangeStatus.textContent = rangeStatuses[state];
+    if (chosen) rangeWasChosen = true;
+  }
+
+  rangeButtons.forEach(function (button) {
+    button.addEventListener('click', function () { setRangeState(button.getAttribute('data-range-state'), true); });
+  });
+
+  function resolveRangeFromScroll() {
+    if (!rangeEngine || reduceMotion || rangeWasChosen || innerWidth <= 860) return;
+    var act = document.getElementById('range');
+    var travel = Math.max(1, act.offsetHeight - innerHeight);
+    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
+    setRangeState(
+      progress < 0.18 ? 'market' : progress < 0.38 ? 'product' : progress < 0.58 ? 'model' : progress < 0.78 ? 'record' : 'commerce',
+      false
+    );
+  }
+
   function updatePageProgress() {
     var root = document.documentElement;
     var travel = Math.max(1, root.scrollHeight - innerHeight);
@@ -1847,6 +2056,7 @@
     resolveCompilerFromScroll();
     resolveAeoFromScroll();
     resolveTimeFromScroll();
+    resolveRangeFromScroll();
     updatePageProgress();
   }
 

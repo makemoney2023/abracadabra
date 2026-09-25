@@ -237,13 +237,19 @@ test('operation compiler engineers intent and context before the parallel agent 
   await context.close();
 });
 
-test('desktop scroll drives every four-state sequence and page progress', async () => {
+test('desktop scroll drives every pinned sequence and page progress', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000 });
-  const engines = { '#i': '.compiler', '#aeo': '.aeo-engine', '#time': '.time-engine' };
+  const engines = {
+    '#i': '.compiler',
+    '#time': '.time-engine',
+    '#range': '.range-engine',
+    '#aeo': '.aeo-engine',
+  };
 
   for (const [selector, expectedState] of [
     ['#i', 'run'],
     ['#time', 'arrive'],
+    ['#range', 'commerce'],
     ['#aeo', 'measure'],
   ]) {
     await page.evaluate(({ selector }) => {
@@ -398,5 +404,125 @@ test('reduced motion exposes every compiler, time travel, and AEO state and keep
     assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
   }
   assert.equal(await page.locator('#film video').getAttribute('src'), null);
+  await context.close();
+});
+
+test('range chapter sits between time and the answer receipt', async () => {
+  const { context, page } = await openPage();
+  const ids = await page.locator('main > section').evaluateAll((sections) => sections.map((section) => section.id));
+  const timeIndex = ids.indexOf('time');
+  const rangeIndex = ids.indexOf('range');
+  const aeoIndex = ids.indexOf('aeo');
+  assert.equal(rangeIndex, timeIndex + 1);
+  assert.equal(aeoIndex, rangeIndex + 1);
+
+  const range = page.locator('#range');
+  assert.equal(await range.getAttribute('data-specimen'), null);
+  assert.equal(
+    (await range.getByRole('heading', { level: 2 }).first().textContent()).trim(),
+    'If it runs on a screen, we build it.',
+  );
+  assert.deepEqual(
+    (await range.locator('[data-range-state]').allTextContents()).map((label) => label.trim()),
+    ['Marketing', 'Applications', 'Machine learning', 'The record', 'The sale'],
+  );
+  assert.equal(
+    await range.locator('.range-engine').getAttribute('aria-label'),
+    'The kinds of digital work Abracadabra builds.',
+  );
+
+  const plates = await range.locator('[data-range-panel]').evaluateAll((panels) =>
+    panels.map((panel) => ({
+      state: panel.getAttribute('data-range-panel'),
+      text: panel.textContent,
+    })),
+  );
+  assert.deepEqual(
+    plates.filter((plate) => plate.text.includes('PIRX')).map((plate) => plate.state),
+    ['model'],
+  );
+  assert.match(plates.find((plate) => plate.state === 'product').text, /Showdesk/);
+  const commerce = plates.find((plate) => plate.state === 'commerce').text;
+  assert.match(commerce, /Canadian Discount Appliances/);
+  assert.match(commerce, /the next room is the receipt/i);
+
+  const chapterText = await range.textContent();
+  assert.doesNotMatch(chapterText, /201K|21\.8K|SuperPatch|SPSign|S\.T\.A\.R\.|%/);
+
+  const labels = await page.locator('.index a[data-index]').evaluateAll((links) =>
+    links.map((link) => link.getAttribute('aria-label')),
+  );
+  const rangeLabel = labels.indexOf('III — Range');
+  assert.equal(labels[rangeLabel + 1], 'IV — Answer');
+
+  const answer = (await page.locator('.faq details').filter({
+    has: page.getByText('Do you only build software?', { exact: true }),
+  }).locator('p').textContent()).trim();
+  assert.match(answer, /^No\./);
+  assert.match(await page.locator('script[type="application/ld+json"]').textContent(), /Do you only build software\?/);
+
+  await range.getByRole('button', { name: 'The record' }).click();
+  assert.equal(await range.locator('.range-engine').getAttribute('data-active-state'), 'record');
+  const pressed = await range.locator('[data-range-state]').evaluateAll((buttons) =>
+    buttons.filter((button) => button.getAttribute('aria-pressed') === 'true').map((button) => button.textContent.trim()),
+  );
+  assert.deepEqual(pressed, ['The record']);
+  const controlHeights = await range.locator('[data-range-state]').evaluateAll((buttons) =>
+    buttons.map((button) => button.getBoundingClientRect().height),
+  );
+  assert.ok(controlHeights.every((height) => height >= 44));
+  await context.close();
+
+  const mobile = await openPage({ width: 390, height: 844 });
+  const stack = await mobile.page.locator('#range .range-shell > *').evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      kind: node.classList.contains('range-engine') ? 'engine' : 'copy',
+      top: node.getBoundingClientRect().top,
+    })),
+  );
+  assert.ok(stack.find((node) => node.kind === 'engine').top < stack.find((node) => node.kind === 'copy').top);
+  assert.equal(await mobile.page.locator('#range [data-range-state]').count(), 5);
+  await mobile.context.close();
+});
+
+test('reduced motion stacks every range plate and hides its controls', async () => {
+  const { context, page } = await openPage({
+    width: 1280,
+    height: 800,
+    reducedMotion: 'reduce',
+  });
+  const plates = page.locator('#range [data-range-panel]');
+
+  assert.equal(await plates.count(), 5);
+  for (const plate of await plates.all()) {
+    const box = await plate.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        display: style.display,
+        height: element.getBoundingClientRect().height,
+        opacity: Number.parseFloat(style.opacity),
+        position: style.position,
+        visibility: style.visibility,
+      };
+    });
+    assert.notEqual(box.display, 'none');
+    assert.equal(box.visibility, 'visible');
+    assert.equal(box.position, 'relative');
+    assert.ok(box.opacity > 0.9);
+    assert.ok(box.height > 24);
+  }
+
+  assert.notEqual(
+    await page.locator('#range .range-engine').evaluate((element) => getComputedStyle(element).overflow),
+    'hidden',
+  );
+  assert.equal(
+    await page.locator('#range .range-controls').evaluate((element) => getComputedStyle(element).display),
+    'none',
+  );
+  assert.match(
+    await page.locator('#range [data-range-panel="commerce"]').textContent(),
+    /the next room is the receipt/i,
+  );
   await context.close();
 });
