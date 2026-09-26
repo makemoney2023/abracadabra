@@ -1,6 +1,6 @@
 # Anything digital — lead-in to the AEO chapter
 
-**Status:** Shipped 2026-09-25. `#range` is on the homepage between `#time` and `#aeo`. Copy revised the same day so the chapter speaks to the operator: headline **Software for the way your company actually works.**
+**Status:** Shipped 2026-09-25. `#range` is on the homepage between `#time` and `#aeo`. Copy revised 2026-09-26 into a menu of services with no named work: headline **The only limit is what you can think of.**
 **Prepared:** 2026-09-25
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
@@ -30,7 +30,7 @@ By the end of the pin, before the AEO headline:
 
 1. The studio takes the digital work an operation actually needs, not a single product category.
 2. Marketing, applications, models, the customer record, and commerce are the same method: intent, context, then a system that ships.
-3. Named public proof is a sample. Other work is named when the client allows it.
+3. The menu is not fixed. If they can describe it, the studio can build it.
 4. The next room is how a brand gets found. The reader should want the receipt, not another menu.
 
 ## Narrative sequence
@@ -39,13 +39,15 @@ Five states, driven by scroll on desktop and by controls elsewhere: **Market →
 
 The left column stays put. The right column is one instrument, the same pattern as `.time-engine` and `.aeo-engine`: chrome, one active plate, a status line, and buttons.
 
-| State | Plate title | What it claims | What may be named |
-|---|---|---|---|
-| `market` | Marketing | Campaigns, films, and pages, in the words the team already uses. They sell what the software does. | The films on file. No client content-studio names. |
-| `product` | Applications | The steps the team already runs, as software they can demo. | Showdesk runs a live event from entry through review, placements, and reports. |
-| `model` | Machine learning | PIRX reads the training and says what the work can support right now. | PIRX. Qualitative only: wearable ingestion, projections, chat, mobile. No accuracy, latency, or lift figures. |
-| `record` | The record | The pipeline, the agreement, the order, and the customer history, in one place. | Nothing by product name. One line: we name it when you allow it. |
-| `commerce` | The sale | Canadian Discount Appliances answers fit, price, and the next step before anyone gets in a car. | Canadian Discount Appliances. The Readiness Check may be mentioned as the studio's own door, without stealing the AEO calls to action. |
+The plates are a menu of services. No plate names a product, client, or project, and no plate links out.
+
+| State | Plate title | What it offers |
+|---|---|---|
+| `market` | Marketing | Campaigns, films, websites, and content, written in the words your customers already use. |
+| `product` | Applications | Custom software for the steps your team already runs: web apps, mobile apps, internal tools, and portals. |
+| `model` | Machine learning | Models trained on your own data that predict, sort, and recommend, so decisions get made faster. |
+| `record` | The record | A CRM or ERP built around your business: the pipeline, agreements, orders, inventory, and customer history in one place. |
+| `commerce` | The sale | Online stores and lead generation that answer a buyer's questions and move them to the next step. |
 
 The commerce plate closes the pin. Its last sentence is the handoff, and it is the only place this chapter points forward:
 
@@ -55,20 +57,18 @@ That sentence is the bridge into "Be the answer AI can verify." Do not preview 2
 
 ### Copy
 
-- **Eyebrow:** The range
-- **Headline:** Software for the way your company actually works.
-- **Support:** Your people keep the order of work they already trust. The screen follows that order: the product, the way you sell it, and one record of the customer.
-- **Qualifier:** The names here are work we have shipped. They are not a limit.
+- **Eyebrow:** The menu
+- **Headline:** The only limit is what you can think of.
+- **Support:** Pick one service or all of them. Each is built around how your company already works.
+- **Qualifier:** Nothing on this menu is fixed. If you can describe it, we can build it.
 - **Quiet link, under the qualifier:** The answer is next → `#aeo`
 - **No primary button.** "Show us how it works" stays on the hero, the benefits pin, and the close. This chapter should release the reader into AEO, not start a second conversion path.
 
-Status line as the plates advance: `In the words you already use` → `Software they can demo` → `What the work can support` → `One place for the customer` → `Before anyone gets in a car`. PIRX is not in the status line. It stays on the model plate.
+Status line as the plates advance: `Get the word out` → `Built around your steps` → `Decisions from your data` → `One place for every customer` → `From question to sale`.
 
-### PIRX, said once and split in two
+### No named work in this chapter
 
-PIRX is public enough to name. It is a venture: what training structurally supports right now. That is the machine-learning plate.
-
-pirx.ca is also the content engine behind the search receipt. Those are the same project and they are not the same claim. This chapter may say PIRX is the model. It may not imply that the Search Console figures prove the model. The figures stay next door, attached to AEO, GEO, and SEO run as one discipline.
+The chapter is a menu, not a portfolio. Named proof lives elsewhere on the page: the pirx.ca receipt in `#aeo`, Schema, the selected-work rail, and the FAQ. Keeping names off the plates also keeps the machine-learning plate from implying that the Search Console figures prove any model.
 
 ## Motion and art direction
 
@@ -122,11 +122,10 @@ When the chapter ships, add one short paragraph to `llms.txt` under "What we do"
 
 Allowed:
 
-- The five categories, in outcome language.
-- Showdesk, the films on file, Canadian Discount Appliances, PIRX as a qualitative model, Schema only as the thing the next chapter opens.
-- "Named when the client allows it."
-- "A sample, not the edge."
-- The existing promise that if a product they can buy already does the job, the studio says so. That sentence already lives in the FAQ. Do not weaken it with "we can do anything" as an unbounded offer. The headline is the range of digital work. The fit rule still holds.
+- The five services, in outcome language.
+- "The only limit is what you can think of" and "If you can describe it, we can build it." These describe the range of digital work, not a promise to build something the client should buy off the shelf.
+- The existing promise that if a product they can buy already does the job, the studio says so. That sentence already lives in the FAQ and still holds.
+- No product, client, or project names on the plates, and no outbound links from the plates.
 
 Held out of this chapter:
 
@@ -155,8 +154,8 @@ Held out of this chapter:
 In `scrollcraft/builds/abracadabra-ai/tests/marketing-site.test.mjs`:
 
 1. **Order.** `main > section` ids put `time` immediately before `range` and `range` immediately before `aeo`.
-2. **Copy.** The level-2 heading is "Software for the way your company actually works." The left column says the screen follows the order of work the team already trusts. The five control labels are Marketing, Applications, Machine learning, The record, The sale. Showdesk is named as the live-event product that runs entry through review, placements, and reports, not as "one shape."
-3. **Plates.** The model plate is the only plate whose text includes `PIRX`. The product plate names Showdesk. The commerce plate names Canadian Discount Appliances and contains the handoff "the next room is the receipt."
+2. **Copy.** The eyebrow is "The menu" and the level-2 heading is "The only limit is what you can think of." The left column says nothing on the menu is fixed. The five control labels are Marketing, Applications, Machine learning, The record, The sale.
+3. **Plates.** No plate names Showdesk, PIRX, or Canadian Discount Appliances, and no plate contains a link. The commerce plate contains the handoff "the next room is the receipt."
 4. **Boundary.** `#range` text does not match `201K`, `21.8K`, `SuperPatch`, `SPSign`, `S.T.A.R.`, or a percent sign used as a metric.
 5. **Interaction.** Clicking "The record" sets `.range-engine` to `data-active-state="record"` and `aria-pressed="true"` on that button only.
 6. **Scroll.** Extend the existing desktop scroll test so `#range` reaches `commerce` near the end of its pin, the same way `#time` reaches `arrive` and `#aeo` reaches `measure`.

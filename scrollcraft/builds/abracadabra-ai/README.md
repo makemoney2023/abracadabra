@@ -14,6 +14,12 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Design revision — 2026-09-26: Range as a menu of services
+
+- `#range` headline is **The only limit is what you can think of.** The eyebrow reads "The menu."
+- The five plates are services only: marketing, applications, machine learning, the record (CRM/ERP), and the sale (stores and lead generation). No product names, films link, or project links appear in the chapter.
+- The handoff into `#aeo` stays: "Getting found works the same way. The next room is the receipt."
+
 ## Design revision — 2026-09-26: Showdesk in plain language
 
 - Public copy no longer says "ringside phone." Showdesk is a live event that runs from entry through review, placements, and reports.

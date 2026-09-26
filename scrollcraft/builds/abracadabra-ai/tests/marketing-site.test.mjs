@@ -420,12 +420,12 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.equal(await range.getAttribute('data-specimen'), null);
   assert.equal(
     (await range.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'Software for the way your company actually works.',
+    'The only limit is what you can think of.',
   );
   const rangeCopy = await range.locator('.range-copy').innerText();
-  assert.match(rangeCopy, /order of work they already trust/);
-  assert.match(rangeCopy, /The screen follows that order/);
-  assert.doesNotMatch(rangeCopy, /one shape|still in range/);
+  assert.match(rangeCopy, /The menu/i);
+  assert.match(rangeCopy, /If you can describe it, we can build it/);
+  assert.doesNotMatch(rangeCopy, /one shape|still in range|work we have shipped/);
   assert.deepEqual(
     (await range.locator('[data-range-state]').allTextContents()).map((label) => label.trim()),
     ['Marketing', 'Applications', 'Machine learning', 'The record', 'The sale'],
@@ -441,27 +441,21 @@ test('range chapter sits between time and the answer receipt', async () => {
       text: panel.textContent,
     })),
   );
-  assert.deepEqual(
-    plates.filter((plate) => plate.text.includes('PIRX')).map((plate) => plate.state),
-    ['model'],
-  );
-  assert.match(plates.find((plate) => plate.state === 'market').text, /words your team already uses/);
-  const product = plates.find((plate) => plate.state === 'product').text;
-  assert.match(product, /Showdesk/);
-  assert.match(product, /entry through review, placements, and reports/);
-  assert.doesNotMatch(product, /ringside/i);
-  assert.doesNotMatch(product, /one shape/);
+  const plate = (state) => plates.find((item) => item.state === state).text;
+  assert.match(plate('market'), /websites/);
+  assert.match(plate('product'), /web apps, mobile apps, internal tools/);
+  assert.match(plate('model'), /your own data/);
+  assert.match(plate('record'), /CRM or ERP/);
+  assert.match(plate('commerce'), /lead generation/);
+  assert.match(plate('commerce'), /the next room is the receipt/i);
   assert.doesNotMatch(await page.content(), /ringside/i);
-  assert.match(plates.find((plate) => plate.state === 'record').text, /when you allow it/);
-  assert.doesNotMatch(plates.find((plate) => plate.state === 'record').text, /change shape/);
-  const commerce = plates.find((plate) => plate.state === 'commerce').text;
-  assert.match(commerce, /Canadian Discount Appliances/);
-  assert.match(commerce, /before anyone gets in a car/);
-  assert.doesNotMatch(commerce, /one store/);
-  assert.match(commerce, /the next room is the receipt/i);
+  assert.equal(await range.locator('[data-range-panel] a').count(), 0);
 
   const chapterText = await range.textContent();
-  assert.doesNotMatch(chapterText, /201K|21\.8K|SuperPatch|SPSign|S\.T\.A\.R\.|%/);
+  assert.doesNotMatch(
+    chapterText,
+    /Showdesk|PIRX|Canadian Discount Appliances|Schema|LLM Leverage|201K|21\.8K|SuperPatch|SPSign|S\.T\.A\.R\.|%/,
+  );
 
   const labels = await page.locator('.index a[data-index]').evaluateAll((links) =>
     links.map((link) => link.getAttribute('aria-label')),
