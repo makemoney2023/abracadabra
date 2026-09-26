@@ -448,8 +448,10 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.match(plates.find((plate) => plate.state === 'market').text, /words your team already uses/);
   const product = plates.find((plate) => plate.state === 'product').text;
   assert.match(product, /Showdesk/);
-  assert.match(product, /ringside phone/);
+  assert.match(product, /entry through review, placements, and reports/);
+  assert.doesNotMatch(product, /ringside/i);
   assert.doesNotMatch(product, /one shape/);
+  assert.doesNotMatch(await page.content(), /ringside/i);
   assert.match(plates.find((plate) => plate.state === 'record').text, /when you allow it/);
   assert.doesNotMatch(plates.find((plate) => plate.state === 'record').text, /change shape/);
   const commerce = plates.find((plate) => plate.state === 'commerce').text;

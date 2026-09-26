@@ -14,10 +14,15 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Design revision — 2026-09-26: Showdesk in plain language
+
+- Public copy no longer says "ringside phone." Showdesk is a live event that runs from entry through review, placements, and reports.
+- The films page calls that cut the entry loop. The walkthrough scene label is Entry. File names and the scene id stay as they are.
+
 ## Design revision — 2026-09-25: Range copy in the operator's voice
 
 - `#range` headline is **Software for the way your company actually works.** The left column says the screen follows the order of work the team already trusts.
-- Showdesk is the live event run from the ringside phone. Canadian Discount Appliances answers fit, price, and the next step before anyone gets in a car. PIRX stays only on the machine-learning plate. The handoff is still "The next room is the receipt."
+- Showdesk runs a live event from entry through review, placements, and reports. Canadian Discount Appliances answers fit, price, and the next step before anyone gets in a car. PIRX stays only on the machine-learning plate. The handoff is still "The next room is the receipt."
 
 ## Design revision — 2026-09-25: Range chapter before the answer receipt
 

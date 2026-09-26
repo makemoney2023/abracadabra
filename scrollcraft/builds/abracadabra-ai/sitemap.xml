@@ -27,7 +27,7 @@
     <video:video>
       <video:thumbnail_loc>https://abra-ca-dabra.app/assets/showdesk-promo.webp</video:thumbnail_loc>
       <video:title>Showdesk, in 44 seconds</video:title>
-      <video:description>Official Showdesk promo: ringside entry, review, placements, reports.</video:description>
+      <video:description>Official Showdesk promo: entry, review, placements, reports.</video:description>
       <video:content_loc>https://abra-ca-dabra.app/assets/showdesk-promo.mp4</video:content_loc>
       <video:duration>44</video:duration>
       <video:publication_date>2026-09-11</video:publication_date>
@@ -47,7 +47,7 @@
     <video:video>
       <video:thumbnail_loc>https://abra-ca-dabra.app/assets/showdesk-promo.webp</video:thumbnail_loc>
       <video:title>Showdesk promo, 44 seconds</video:title>
-      <video:description>Official Showdesk marketing cut: ringside entry, review, placements, reports.</video:description>
+      <video:description>Official Showdesk marketing cut: entry, review, placements, reports.</video:description>
       <video:content_loc>https://abra-ca-dabra.app/assets/showdesk-promo.mp4</video:content_loc>
       <video:duration>44</video:duration>
       <video:publication_date>2026-09-11</video:publication_date>

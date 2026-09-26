@@ -328,7 +328,7 @@ The visitor lands on a clear specimen card:
 
 - **System:** Showdesk
 - **Operation:** live-event review and reporting
-- **Surface:** ringside phone to placements and reports
+- **Surface:** entry through review, placements, and reports
 - **Proof:** live product and 44-second film
 
 ### Interaction rules

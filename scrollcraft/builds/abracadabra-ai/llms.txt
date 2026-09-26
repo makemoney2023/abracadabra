@@ -34,7 +34,7 @@ pirx.ca launched with no search history and no answer-engine presence. In the tw
 
 ## Shipped systems that can be named
 
-- Showdesk, live-event operations run from the ringside phone, entry to review to placements and reports: https://www.showdesk-app.com/
+- Showdesk, live-event operations from entry through review, placements, and reports: https://www.showdesk-app.com/
 - Schema, scores how visible a site is to answer engines and generates the repair: https://schema-two.vercel.app/
 - LLM Leverage, a self-paced course for better answers from any model, plus a workshop path for a team rollout: https://llm-leverage-course.vercel.app
 - Canadian Discount Appliances, a Kitchener appliance warehouse store that answers condition, warranty, and whether it fits the door, then offers a delivery you can book: https://cdastore.vercel.app/

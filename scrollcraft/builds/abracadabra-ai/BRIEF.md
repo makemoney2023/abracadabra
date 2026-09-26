@@ -68,7 +68,7 @@ Desktop scroll drives the sequence, mobile uses direct controls and a compact ag
 
 ## Revision (2026-09-25): the range, in the operator's voice
 
-The chapter still sits between the calendar and the receipt. The headline is **Software for the way your company actually works.** The left column says your people keep the order of work they already trust, and the screen follows that order. Showdesk is named as a live event run from the ringside phone. Five plates stay Marketing, Applications, Machine learning, The record, The sale. PIRX stays on the model plate only. The commerce handoff is still "The next room is the receipt."
+The chapter still sits between the calendar and the receipt. The headline is **Software for the way your company actually works.** The left column says your people keep the order of work they already trust, and the screen follows that order. Showdesk is named as a live event that runs from entry through review, placements, and reports. Five plates stay Marketing, Applications, Machine learning, The record, The sale. PIRX stays on the model plate only. The commerce handoff is still "The next room is the receipt."
 
 ## Revision (2026-09-25): the range, before the receipt
 

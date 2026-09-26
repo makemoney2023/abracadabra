@@ -42,7 +42,7 @@ The left column stays put. The right column is one instrument, the same pattern 
 | State | Plate title | What it claims | What may be named |
 |---|---|---|---|
 | `market` | Marketing | Campaigns, films, and pages, in the words the team already uses. They sell what the software does. | The films on file. No client content-studio names. |
-| `product` | Applications | The steps the team already runs, as software they can demo. | Showdesk runs a live event from the ringside phone. |
+| `product` | Applications | The steps the team already runs, as software they can demo. | Showdesk runs a live event from entry through review, placements, and reports. |
 | `model` | Machine learning | PIRX reads the training and says what the work can support right now. | PIRX. Qualitative only: wearable ingestion, projections, chat, mobile. No accuracy, latency, or lift figures. |
 | `record` | The record | The pipeline, the agreement, the order, and the customer history, in one place. | Nothing by product name. One line: we name it when you allow it. |
 | `commerce` | The sale | Canadian Discount Appliances answers fit, price, and the next step before anyone gets in a car. | Canadian Discount Appliances. The Readiness Check may be mentioned as the studio's own door, without stealing the AEO calls to action. |
@@ -155,7 +155,7 @@ Held out of this chapter:
 In `scrollcraft/builds/abracadabra-ai/tests/marketing-site.test.mjs`:
 
 1. **Order.** `main > section` ids put `time` immediately before `range` and `range` immediately before `aeo`.
-2. **Copy.** The level-2 heading is "Software for the way your company actually works." The left column says the screen follows the order of work the team already trusts. The five control labels are Marketing, Applications, Machine learning, The record, The sale. Showdesk is named as the ringside-phone product, not as "one shape."
+2. **Copy.** The level-2 heading is "Software for the way your company actually works." The left column says the screen follows the order of work the team already trusts. The five control labels are Marketing, Applications, Machine learning, The record, The sale. Showdesk is named as the live-event product that runs entry through review, placements, and reports, not as "one shape."
 3. **Plates.** The model plate is the only plate whose text includes `PIRX`. The product plate names Showdesk. The commerce plate names Canadian Discount Appliances and contains the handoff "the next room is the receipt."
 4. **Boundary.** `#range` text does not match `201K`, `21.8K`, `SuperPatch`, `SPSign`, `S.T.A.R.`, or a percent sign used as a metric.
 5. **Interaction.** Clicking "The record" sets `.range-engine` to `data-active-state="record"` and `aria-pressed="true"` on that button only.

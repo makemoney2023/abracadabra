@@ -110,7 +110,7 @@ Paste-ready. Section order is the page.
 
 Four live lines. No client logos until permission exists.
 
-- Showdesk — live events, from the ringside phone — [showdesk-app.com](https://www.showdesk-app.com/)
+- Showdesk — live events, from entry to the report — [showdesk-app.com](https://www.showdesk-app.com/)
 - Schema — where AI search cannot find you — [schema-two.vercel.app](https://schema-two.vercel.app/)
 - LLM Leverage — a team trained on any model — [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app)
 - A Kitchener appliance warehouse — "will it fit?" before the drive — [cdastore.vercel.app](https://cdastore.vercel.app/)
@@ -182,7 +182,7 @@ We close it. The steps stay yours. The software is built to carry them, at whate
 
 **Header:** Working systems, already in the world.
 
-- **Run the event from the floor.** Showdesk takes a live show from ringside to placements and reports.
+- **Run the event from the floor.** Showdesk takes a live show from entry through placements and reports.
 - **See the gap, then the fix.** Schema scores how visible you are to answer engines and generates the repair.
 - **Teach the team once.** LLM Leverage is a self-paced course for better answers from any model, plus a workshop path for a rollout.
 - **Answer the question that makes the sale.** The appliance warehouse leads with condition, warranty, and whether it fits the door, then a delivery you can book.
@@ -261,7 +261,7 @@ These four can be named and linked today. They're the ones already cleared to na
 
 | Work | Buyer outcome | Live |
 |---|---|---|
-| Showdesk | Run a live event from the ringside phone through review, placements, and reports | https://www.showdesk-app.com/ |
+| Showdesk | Run a live event from entry through review, placements, and reports | https://www.showdesk-app.com/ |
 | Schema | See where answer engines cannot find you, then generate the fix. Internal inbox for prospecting | https://schema-two.vercel.app/ |
 | LLM Leverage | Teach a team one method for better answers from any model, with workshops and a certificate path | https://llm-leverage-course.vercel.app |
 | Canadian Discount Appliances | A warehouse store that answers condition, warranty, and "will it fit?" then offers delivery and a visit | https://cdastore.vercel.app/ |
@@ -418,6 +418,10 @@ These are sourced on disk. They are not approved public claims.
 
 ---
 
+## Public copy (2026-09-26)
+
+Showdesk, on the public site and in the lines this file gives that site, is a live event from entry through review, placements, and reports. The phrase "ringside phone" is not used. Walkthrough scene ids and media filenames are unchanged. Sales packs under `outputs/sales-enablement/showdesk/` still speak to show operators.
+
 ## Readiness Check (2026-09-23)
 
 The check is specified in `docs/readiness-check/`. Its shell and the assessment PDF use the studio homepage colour and type roles (`scrollcraft/builds/abracadabra-ai/index.html`: canvas, Tektur, IBM Plex Sans, accent `#FF4B24`). The app that serves it is `readiness-check/` in this repo: the Schema scanner plus the check, copied here so it can deploy. GitHub would not accept a push to `makemoney2023/schema`. It is its own Vercel project, with that folder as the root, so the studio site at `scrollcraft/builds/abracadabra-ai/` stays a static deploy. The studio homepage links it from the hero, the situation section, the close, and the FAQ "How do I know if my business is ready to put AI to work?". The public host is `https://check.abra-ca-dabra.app/check`. Guide URLs are listed on the check app's own sitemap and `llms.txt`, because a sitemap may only name URLs on its own host. The check is a score of the current state of the business. It is not a diagnosis, and it does not publish a number the scan did not measure. Starting a check still needs the Supabase admin env on that project. Booking still needs a Cal.com event.
@@ -426,7 +430,7 @@ The check is specified in `docs/readiness-check/`. Its shell and the assessment 
 
 The Scrollcraft build at `scrollcraft/builds/abracadabra-ai/` now carries this file's copy end to end. What landed, so nobody re-derives it:
 
-- **Homepage** (`index.html`): hero, the Aramaic origin of the name directly under the hero ("I will create as I speak."), the time travel chapter ("It feels like magic." — a pinned delivery calendar that moves through Conventional → Engineer → Parallel → Arrive to show the serial calendar folding in on itself once the thinking is front-loaded and the workstreams run at once; no duration or percentage is stated, the geometry carries the claim, and the copy says there is no sleight of hand), the range chapter (`#range`, "Software for the way your company actually works." — your people keep the order of work they already trust and the screen follows that order; marketing, applications with Showdesk named as the ringside-phone product, machine learning with PIRX named only on the model plate, the customer record with no product names, and commerce, then a handoff into the answer receipt; the pirx.ca Search Console figures stay in `#aeo`), catalog, receipt (the pirx.ca figures with source and pull date printed under them), the situation and benefits pin, the Showdesk film scrub, the how-it-works pin, an FAQ in the operator's words, and the brief close. Every FAQ answer opens with the answer, then the qualifier, so an answer engine can lift the first sentence whole. The FAQ "Do you only build software?" answers "No." and names the public examples.
+- **Homepage** (`index.html`): hero, the Aramaic origin of the name directly under the hero ("I will create as I speak."), the time travel chapter ("It feels like magic." — a pinned delivery calendar that moves through Conventional → Engineer → Parallel → Arrive to show the serial calendar folding in on itself once the thinking is front-loaded and the workstreams run at once; no duration or percentage is stated, the geometry carries the claim, and the copy says there is no sleight of hand), the range chapter (`#range`, "Software for the way your company actually works." — your people keep the order of work they already trust and the screen follows that order; marketing, applications with Showdesk named as the live-event product that runs entry through review, placements, and reports, machine learning with PIRX named only on the model plate, the customer record with no product names, and commerce, then a handoff into the answer receipt; the pirx.ca Search Console figures stay in `#aeo`), catalog, receipt (the pirx.ca figures with source and pull date printed under them), the situation and benefits pin, the Showdesk film scrub, the how-it-works pin, an FAQ in the operator's words, and the brief close. Every FAQ answer opens with the answer, then the qualifier, so an answer engine can lift the first sentence whole. The FAQ "Do you only build software?" answers "No." and names the public examples.
 - **Search and answer engines**: colon-style title, description under 160 characters, canonical, Open Graph and Twitter cards, and a JSON-LD graph (`Organization`, `WebSite`, `WebPage`, `ItemList` of the named specimens, `FAQPage`). The walkthrough page is rendered by script, so it also ships a hidden `h1`, a `noscript` article with all eight legs, and an `ItemList`. The films page carries a `CollectionPage` and one `VideoObject` per cut; only the 44-second promo states a duration because that is the only one measured.
 - **Crawler files**: `robots.txt` names GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, Bingbot, and CCBot as allowed; `sitemap.xml` lists the three pages with image and video entries; `llms.txt` is the quotable summary, including the rule that the wellness tools are non-diagnostic and the instruction to cite the pirx.ca figures with their date.
 - **Held out on purpose**: no counters on the receipt figures, no invented durations, no metrics beyond the pirx.ca set cleared in Confirm before publishing, no product names from What stays off the public site.
