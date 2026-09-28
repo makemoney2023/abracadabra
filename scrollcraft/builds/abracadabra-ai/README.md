@@ -16,7 +16,7 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 ## Design revision — 2026-09-28: Range background motifs
 
-- A decorative `<canvas class="range-bg" aria-hidden="true">` sits behind the `#range` copy. It draws one faint motif per service: signal waves for marketing, an assembling screen grid for applications, a small network for machine learning, ledger rows filling for the record, and orders flowing into a checkout for the sale.
+- A decorative `<canvas class="range-bg" aria-hidden="true">` sits behind the `#range` copy. The instrument surface is translucent so the animation remains visible through it. The canvas draws one restrained motif per service: signal waves for marketing, an assembling screen grid for applications, a small network for machine learning, ledger rows filling for the record, and orders flowing into a checkout for the sale.
 - On desktop the chapter's scroll scrub picks the motif. A tab choice on any screen also picks it. States crossfade over 600 ms.
 - The canvas pauses when offscreen or when the tab is hidden, caps pixel ratio at 1.5, and draws about 30 frames a second. Mobile draws at half density. Reduced motion draws one still frame.
 - The canvas carries `data-bg-state` and `data-bg-running` so tests can read it. It adds no copy and no claims.

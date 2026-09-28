@@ -543,12 +543,18 @@ test('range background canvas follows the active service and stays decorative', 
   assert.equal(await canvas.count(), 1);
   assert.equal(await canvas.getAttribute('aria-hidden'), 'true');
   const box = await canvas.evaluate((element) => ({
+    opacity: Number.parseFloat(getComputedStyle(element).opacity),
     pointerEvents: getComputedStyle(element).pointerEvents,
     width: element.width,
     height: element.height,
   }));
+  const engineBackground = await page.locator('#range .range-engine').evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
   assert.equal(box.pointerEvents, 'none');
+  assert.ok(box.opacity >= 0.75);
   assert.ok(box.width > 0 && box.height > 0);
+  assert.match(engineBackground, /(\/ 0\.\d+\)|rgba\([^)]*, 0\.\d+\))/);
 
   await page.locator('#range').scrollIntoViewIfNeeded();
   await page.locator('#range').getByRole('button', { name: 'The record' }).click();
