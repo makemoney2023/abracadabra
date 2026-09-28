@@ -877,7 +877,6 @@
   .time-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
 
   /* range: five surfaces of one digital operation */
-  #range > [data-sc-stage] { isolation: isolate; }
   .range-bg {
     position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
     pointer-events: none; opacity: 0.82;
@@ -907,9 +906,12 @@
     clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
     background:
       radial-gradient(circle at 18% 12%, color-mix(in oklab, var(--sc-signal) 10%, transparent), transparent 42%),
-      color-mix(in oklab, var(--sc-surface) 76%, transparent);
+      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
     display: flex; flex-direction: column;
   }
+  .range-engine__chrome,
+  .range-body,
+  .range-controls { position: relative; z-index: 1; }
   .range-engine__chrome {
     min-height: 3rem; display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
     padding: 0 var(--sc-4); border-bottom: 1px solid var(--sc-hairline);
@@ -1498,7 +1500,6 @@
   <!-- The range: a menu of services, then the receipt -->
   <section id="range" data-sc-act="pin" data-sc-span="2.6" data-sc-drift="#0C0B10" aria-labelledby="range-title">
     <div data-sc-stage>
-      <canvas class="range-bg" aria-hidden="true" data-bg-state="market"></canvas>
       <div class="range-shell">
         <div class="range-copy" data-sc-cue="0 0.96 0">
           <p class="sc-label">The menu</p>
@@ -1508,6 +1509,7 @@
           <p class="range-next"><a href="#aeo">The answer is next</a></p>
         </div>
         <div class="range-engine" data-active-state="market" aria-label="The kinds of digital work Abracadabra builds.">
+          <canvas class="range-bg" aria-hidden="true" data-bg-state="market"></canvas>
           <div class="range-engine__chrome">
             <p class="sc-label">The menu</p>
             <p class="sc-label range-engine__status" data-range-status aria-live="polite">Get the word out</p>
