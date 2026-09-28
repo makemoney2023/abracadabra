@@ -542,19 +542,28 @@ test('range background canvas follows the active service and stays decorative', 
   const canvas = page.locator('#range canvas.range-bg');
   assert.equal(await canvas.count(), 1);
   assert.equal(await canvas.getAttribute('aria-hidden'), 'true');
-  const box = await canvas.evaluate((element) => ({
-    opacity: Number.parseFloat(getComputedStyle(element).opacity),
-    pointerEvents: getComputedStyle(element).pointerEvents,
-    width: element.width,
-    height: element.height,
-  }));
-  const engineBackground = await page.locator('#range .range-engine').evaluate(
-    (element) => getComputedStyle(element).backgroundColor,
-  );
+  const box = await canvas.evaluate((element) => {
+    const canvasRect = element.getBoundingClientRect();
+    const engine = element.closest('.range-engine');
+    const engineRect = engine?.getBoundingClientRect();
+    return {
+      containedByMenu: Boolean(engine)
+        && canvasRect.left >= engineRect.left - 1
+        && canvasRect.top >= engineRect.top - 1
+        && canvasRect.right <= engineRect.right + 1
+        && canvasRect.bottom <= engineRect.bottom + 1,
+      opacity: Number.parseFloat(getComputedStyle(element).opacity),
+      parentClass: element.parentElement?.className,
+      pointerEvents: getComputedStyle(element).pointerEvents,
+      width: element.width,
+      height: element.height,
+    };
+  });
+  assert.equal(box.parentClass, 'range-engine');
+  assert.equal(box.containedByMenu, true);
   assert.equal(box.pointerEvents, 'none');
   assert.ok(box.opacity >= 0.75);
   assert.ok(box.width > 0 && box.height > 0);
-  assert.match(engineBackground, /(\/ 0\.\d+\)|rgba\([^)]*, 0\.\d+\))/);
 
   await page.locator('#range').scrollIntoViewIfNeeded();
   await page.locator('#range').getByRole('button', { name: 'The record' }).click();
