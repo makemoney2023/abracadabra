@@ -880,7 +880,7 @@
   #range > [data-sc-stage] { isolation: isolate; }
   .range-bg {
     position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
-    pointer-events: none; opacity: 0.55;
+    pointer-events: none; opacity: 0.82;
     -webkit-mask-image: radial-gradient(120% 90% at 62% 50%, #000 35%, transparent 85%);
             mask-image: radial-gradient(120% 90% at 62% 50%, #000 35%, transparent 85%);
   }
@@ -907,7 +907,7 @@
     clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
     background:
       radial-gradient(circle at 18% 12%, color-mix(in oklab, var(--sc-signal) 10%, transparent), transparent 42%),
-      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
+      color-mix(in oklab, var(--sc-surface) 76%, transparent);
     display: flex; flex-direction: column;
   }
   .range-engine__chrome {

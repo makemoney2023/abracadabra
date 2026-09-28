@@ -68,7 +68,7 @@ Desktop scroll drives the sequence, mobile uses direct controls and a compact ag
 
 ## Revision (2026-09-28): the range, with a moving background
 
-A faint canvas sits behind the menu, drawing one motif per service. It follows the same state as the plates: scroll picks it on desktop, and the tabs pick it anywhere. It is decorative only, hidden from assistive technology, paused when offscreen, and still under reduced motion. The copy is unchanged.
+A restrained but visible canvas sits behind the menu, drawing one motif per service through the translucent instrument surface. It follows the same state as the plates: scroll picks it on desktop, and the tabs pick it anywhere. It is decorative only, hidden from assistive technology, paused when offscreen, and still under reduced motion. The copy is unchanged.
 
 ## Revision (2026-09-26): the range, as a menu
 
