@@ -1,6 +1,6 @@
 # Anything digital — lead-in to the AEO chapter
 
-**Status:** Shipped 2026-09-25. `#range` is on the homepage between `#time` and `#aeo`. Copy revised 2026-09-26 into a menu of services with no named work: headline **The only limit is what you can think of.**
+**Status:** Shipped 2026-09-25. `#range` is on the homepage between `#time` and `#aeo`. Copy revised 2026-09-26 into a menu of services with no named work: headline **The only limit is what you can think of.** Background motifs added 2026-09-28: a decorative canvas behind the menu draws one motif per service, scrubbed by scroll on desktop.
 **Prepared:** 2026-09-25
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)

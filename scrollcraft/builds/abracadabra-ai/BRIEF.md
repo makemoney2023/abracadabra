@@ -66,6 +66,10 @@ The hero looked strong but asked a broad business audience to decode a specializ
 
 Desktop scroll drives the sequence, mobile uses direct controls and a compact agent ledger, and reduced-motion mode exposes all four states and all five workstreams as static semantic content.
 
+## Revision (2026-09-28): the range, with a moving background
+
+A faint canvas sits behind the menu, drawing one motif per service. It follows the same state as the plates: scroll picks it on desktop, and the tabs pick it anywhere. It is decorative only, hidden from assistive technology, paused when offscreen, and still under reduced motion. The copy is unchanged.
+
 ## Revision (2026-09-26): the range, as a menu
 
 The chapter reads as a menu of services. The eyebrow is "The menu" and the headline is **The only limit is what you can think of.** The five plates (Marketing, Applications, Machine learning, The record, The sale) describe services only. No product, project, or film is named or linked in the chapter. The handoff is still "The next room is the receipt."

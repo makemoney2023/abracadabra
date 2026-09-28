@@ -534,3 +534,32 @@ test('reduced motion stacks every range plate and hides its controls', async () 
   );
   await context.close();
 });
+
+test('range background canvas follows the active service and stays decorative', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800 });
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  const canvas = page.locator('#range canvas.range-bg');
+  assert.equal(await canvas.count(), 1);
+  assert.equal(await canvas.getAttribute('aria-hidden'), 'true');
+  const box = await canvas.evaluate((element) => ({
+    pointerEvents: getComputedStyle(element).pointerEvents,
+    width: element.width,
+    height: element.height,
+  }));
+  assert.equal(box.pointerEvents, 'none');
+  assert.ok(box.width > 0 && box.height > 0);
+
+  await page.locator('#range').scrollIntoViewIfNeeded();
+  await page.locator('#range').getByRole('button', { name: 'The record' }).click();
+  assert.equal(await canvas.getAttribute('data-bg-state'), 'record');
+  await page.waitForFunction(() => document.querySelector('.range-bg').getAttribute('data-bg-running') === 'true');
+  assert.deepEqual(errors, []);
+  await context.close();
+
+  const still = await openPage({ width: 1280, height: 800, reducedMotion: 'reduce' });
+  await still.page.locator('#range').scrollIntoViewIfNeeded();
+  await still.page.waitForTimeout(200);
+  assert.equal(await still.page.locator('#range canvas.range-bg').getAttribute('data-bg-running'), 'false');
+  await still.context.close();
+});
