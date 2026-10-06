@@ -15,10 +15,12 @@ npm test
 npm run dev
 ```
 
-`npm test` runs the unit suite and skips `tests/db`. Those isolation tests need a local Supabase stack (`npx supabase start`, then `npm run test:db`). This environment does not have Docker, so the database suite cannot run here.
+`npm test` runs the unit suite, including workspace isolation. Those tests apply `migrations/0001_handoff.sql` to Node's built-in SQLite. `npm run test:db` runs the same isolation file. No Docker or hosted database is required.
 
-Copy `.env.example` to `.env.local` for the Next app and to `.dev.vars` for Wrangler. Leave secrets out of git.
+Copy `.env.example` to `.env.local` for the Next app and to `.dev.vars` for Wrangler. Leave secrets out of git. Local runs that are not inside a Worker store records in `.data/handoff.db`.
 
 ## Cloudflare
 
-The app runs on Cloudflare Workers through OpenNext (`@opennextjs/cloudflare`). File bytes go to R2 with multipart uploads. The malware scan runs in a Cloudflare Container, because a Worker isolate cannot run `clamd`. Postgres, Auth, and row-level security stay on Supabase. Production refuses to start without `SUPABASE_SECRET_KEY`, `DATABASE_URL`, and `RESEND_API_KEY`. `HANDOFF_ALLOW_UNSCANNED=1` is refused when `NODE_ENV=production`.
+The app runs on Cloudflare Workers through OpenNext (`@opennextjs/cloudflare`). Locker records live in D1 database `handoff`, bound as `DB` in `wrangler.jsonc`. File bytes go to R2 with multipart uploads once R2 is enabled on the account. The malware scan runs in a Cloudflare Container, because a Worker isolate cannot run `clamd`. Magic links go out through Resend; the session will live in D1. Production refuses to start without `RESEND_API_KEY`. `HANDOFF_ALLOW_UNSCANNED=1` is refused when `NODE_ENV=production`.
+
+`GET /api/health` migrates a local database if needed and reports `{ database: "d1", ok, visible }` for a signed-out caller. `visible` is how many workspaces that caller can see. It does not list names or counts of hidden rows.

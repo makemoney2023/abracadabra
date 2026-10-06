@@ -403,8 +403,10 @@ file bytes, or a scan finding beyond its name.
 
 ## Records
 
-**HND-047.** Identifiers are UUIDs. Byte sizes are 64-bit integers.
-Timestamps are timezone-aware. Emails are stored lowercase.
+**HND-047.** Identifiers are UUIDs stored as text. Byte sizes are integers.
+Timestamps are unix milliseconds. Emails are stored lowercase. On Cloudflare
+these rows live in D1. There is no row-level security; record queries are the
+second isolation layer.
 
 | Table | Purpose |
 |---|---|
@@ -475,10 +477,9 @@ with the purge date, and again 7 days before purge.
 
 ## Security and deployment
 
-**HND-054.** Server and worker secrets: `SUPABASE_SECRET_KEY`,
-`DATABASE_URL`, `DIRECT_URL`, and `RESEND_API_KEY`. The browser receives only
-the project URL and the publishable key. No `NEXT_PUBLIC_` variable contains a
-secret.
+**HND-054.** The server and worker secret for mail is `RESEND_API_KEY`. Locker
+records use the D1 binding `DB`, which is Wrangler configuration and not an
+environment secret. No `NEXT_PUBLIC_` variable contains a secret.
 
 **HND-055.** Logs may include workspace id, batch id, file id, status, and
 counts. They never include object bytes, magic-link or session tokens, signed
@@ -490,19 +491,18 @@ region already chosen for its operations platform. A client whose data must
 stay elsewhere gets another deployment from the same repository, in that
 region. Workspaces never move between deployments.
 
-The same repository can deploy to Cloudflare instead of Vercel and Render.
-Workers run the Next.js app through OpenNext. R2 replaces Supabase Storage
-for file bytes, using multipart upload with 6 MiB parts and presigned
+The repository deploys to Cloudflare. Workers run the Next.js app through
+OpenNext. D1 database `handoff` stores locker records and will store sessions.
+R2 stores file bytes, using multipart upload with 6 MiB parts and presigned
 downloads at the same lifetimes. A Cloudflare Container runs `clamd` and the
-worker; a Worker isolate cannot. Queues and Cron Triggers replace the Render
-loop. Supabase keeps Postgres, Auth, and row-level security, reached through
-Hyperdrive. The R2 bucket and the Container use the same region as that
-Supabase project. File bytes still go to storage directly, through route
-handlers rather than Server Actions.
+worker; a Worker isolate cannot. Queues and Cron Triggers replace a process
+loop. The R2 bucket and the Container use the same region as the D1 database
+(ENAM). File bytes still go to storage directly, through route handlers
+rather than Server Actions. Magic links are sent by Resend.
 
 **HND-057.** Rate limits, counted in the database: 10 batches per workspace
 per hour, 30 invites per inviter per day, 20 exports per operator per hour.
-Magic-link requests are limited by Supabase Auth.
+Magic-link requests are limited in D1.
 
 **HND-058.** The drop screen states that Handoff is for brand files, photos,
 copy, exports, source, and reference files, and that passwords, key files, and
@@ -512,11 +512,6 @@ are scanned, who can see them, and when they are purged.
 ## Environment
 
 ```text
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-SUPABASE_SECRET_KEY              Server and worker only
-DATABASE_URL                     Pooled Postgres connection
-DIRECT_URL                       Migration connection
 RESEND_API_KEY                   Server and worker only
 HANDOFF_FROM_EMAIL               Product email sender address
 HANDOFF_BUCKET=handoff
@@ -550,8 +545,7 @@ are true:
 8. Removing a membership blocks the next request from that person.
 9. Archive emails the owner with a purge date, and a purge deletes every
    object while keeping the audit rows.
-10. Unit tests run with no network. Database tests run against a local
-    Supabase stack and prove row-level security and storage policies isolate
-    workspaces.
+10. Unit tests run with no network. Database tests apply the D1 migration on
+    Node's built-in SQLite and prove record queries isolate workspaces.
 11. No table, cookie, or route in the Strong Foam operations application
     changes as part of this work.

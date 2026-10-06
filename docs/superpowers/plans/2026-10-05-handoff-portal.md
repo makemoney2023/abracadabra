@@ -7,21 +7,20 @@ folders of brand, photo, copy, export, source, and reference files against a
 request checklist, and the operators assigned to that client pull the files
 that pass a malware scan.
 
-**Architecture:** A standalone Next.js app on Vercel authenticates with its
-own Supabase Auth magic links, sent through Resend SMTP. Server routes call
-one pure authorization function, then write with the server key. Row-level
-security on every table and on `storage.objects` isolates workspaces a second
-time. The browser uploads bytes with the Storage resumable protocol into a
-private bucket. One Render background worker runs `clamd` beside the Handoff
-worker process. It is the only code that marks a file clean. The same worker
-also sends notifications and runs sweeps and purges. Operators pull batches
-with an export file and a `handoff pull` command. The Strong Foam operations
-platform is not imported, linked, or migrated.
+**Architecture:** A standalone Next.js app on Cloudflare Workers authenticates
+with magic links sent through Resend. Sessions and locker records live in
+Cloudflare D1. Server routes call one pure authorization function, then read
+and write through record queries that return rows only for workspaces that
+caller can see. The browser uploads bytes with R2 multipart upload into a
+private bucket. A Cloudflare Container runs `clamd`. It is the only code that
+marks a file clean. Queues and Cron Triggers send notifications and run
+sweeps and purges. Operators pull batches with an export file and a
+`handoff pull` command. The Strong Foam operations platform is not imported,
+linked, or migrated.
 
 **Tech Stack:** Next.js App Router, React, TypeScript, Vitest, Zod, Drizzle
-ORM, Supabase Postgres, Supabase Auth, Supabase Storage resumable uploads,
-`tus-js-client`, Resend, ClamAV `clamd`, Render background worker, Docker,
-Tailwind CSS.
+ORM, Cloudflare D1, Cloudflare R2, Resend, ClamAV `clamd`, Cloudflare
+Containers, Queues, Cron Triggers, Tailwind CSS.
 
 **Design:** `docs/superpowers/specs/2026-10-05-handoff-portal-design.md`
 in the operations repository. Requirements HND-001 through HND-058.
@@ -42,9 +41,12 @@ operations cookie, and does not connect to the operations database.
 ## Cloudflare instead of Vercel and Render
 
 The product behavior in the spec does not change. A Cloudflare deployment
-replaces the host, the object store, and the scan process. Postgres, Auth,
-and row-level security stay on Supabase. Moving those to D1 would drop the
-isolation tests this plan requires.
+replaces the host, the object store, the scan process, and the records
+database. D1 database `handoff` (`b2be192c-db0d-447f-8d7c-b2c4d39df274`,
+region ENAM) is the system of record. D1 has no schemas and no row-level
+security, so `src/db/records.ts` is the second isolation layer: a caller
+sees a workspace only through a live super-admin row, a live operator row,
+or a live membership. Routes still return 404 when that lookup misses.
 
 | Plan piece | Vercel and Render | Cloudflare |
 |---|---|---|
@@ -53,27 +55,31 @@ isolation tests this plan requires.
 | Private downloads | Supabase signed URLs, same TTLs | R2 presigned GET URLs, same TTLs: 5 minutes, 60 minutes, 24 hours |
 | Scanner | Render service with `clamd` beside the worker | Cloudflare Container from `worker/Dockerfile`. A Worker cannot run `clamd` inside the isolate |
 | Sweeps, mail, purge | Render process loop | Queues for scan and mail, Cron Triggers for sweeps and purge |
-| Postgres and Auth | Supabase, reached directly | Same Supabase project, reached through Hyperdrive |
-| One region (HND-056) | Supabase region | That same Supabase region, plus an R2 location and a Container region pinned to it |
+| Records and sessions | Supabase Postgres and Auth | D1. Magic links are sent by Resend. Session rows live in D1 |
+| One region (HND-056) | One Postgres region | D1 region ENAM, with the R2 location and the Container region pinned to it |
 
 Upload routes stay route handlers. Do not accept file bytes through a Server
 Action: Cloudflare's WAF can block a `Next-Action` multipart body before the
 Worker runs.
 
-Storage policies on `storage.objects` do not exist on R2. The authorization
-function still runs before any R2 call, and the database isolation tests
-still run against local Supabase. Object isolation is tested by refusing an
-R2 operation when the caller cannot see that workspace.
+R2 has no `storage.objects` policies. The authorization function still runs
+before any R2 call. `objectWriteAllowed` allows a write only for a live
+client membership, an active batch, and a file in `pending`, `uploading`, or
+`failed` whose object key is exactly `{workspaceId}/{batchId}/{fileId}`.
+Staff cannot write objects. Isolation tests run the same SQL file on Node's
+built-in SQLite.
 
 `tus-js-client` is not the R2 client. The drop screen uses the R2 multipart
 API (create, upload part, complete) with the same retry rule: only a failed
 part is sent again.
 
-Local development stays `npx supabase start` for Postgres and Auth, plus
-`wrangler dev` for the Worker, R2, Queues, and the Container. Production
-fails closed when the R2 bucket bindings, `DATABASE_URL`, or
-`RESEND_API_KEY` are missing. Containers, R2, and Queues need a Workers
-plan that includes them.
+Local development uses `wrangler dev` for the Worker and D1, or
+`.data/handoff.db` when the Worker context is absent. `npm test` applies
+`migrations/0001_handoff.sql` in memory. Production fails closed when
+`RESEND_API_KEY` is missing. The D1 binding is Wrangler configuration, not an
+environment secret. Containers, R2, and Queues need a Workers plan that
+includes them. R2 must be enabled in the Cloudflare dashboard before buckets
+can be created.
 
 Cursor talks to the Cloudflare API through `.cursor/mcp.json`. That file
 points at `https://mcp.cloudflare.com/mcp` and sends
@@ -89,11 +95,11 @@ current guide in that project's `node_modules/next/dist/docs/`.
 ## Global constraints
 
 - One deployment serves many clients in one data region.
-- Isolation is enforced in the authorization function and again by RLS and
-  storage policies. A task that adds a table adds its policy and a database
-  isolation test in the same commit.
+- Isolation is enforced in the authorization function and again by record
+  queries scoped to the caller. A task that adds a table adds that scope and
+  a database isolation test in the same commit.
 - A route returns 404 for a workspace the caller cannot see.
-- Uploads use Storage resumable uploads, 6 MiB chunks, concurrency 3.
+- Uploads use R2 multipart uploads, 6 MiB chunks, concurrency 3.
 - The Next.js server accepts manifests and issues decisions. It does not
   accept file bodies.
 - Object keys are `{workspaceId}/{batchId}/{fileId}`.
@@ -103,9 +109,10 @@ current guide in that project's `node_modules/next/dist/docs/`.
   workspace export. All are attachments, only for `clean` files.
 - Tags never trigger an import, publish, or scan.
 - Unit tests use fakes and open no network connection. Database tests run
-  against a local Supabase stack with `npm run test:db`.
-- Production fails closed when `SUPABASE_SECRET_KEY`, `DATABASE_URL`, or
-  `RESEND_API_KEY` is missing.
+  the D1 migration on Node's built-in SQLite with `npm test` and
+  `npm run test:db`.
+- Production fails closed when `RESEND_API_KEY` is missing. The D1 database
+  is the `DB` binding in `wrangler.jsonc`.
 - No `NEXT_PUBLIC_` variable contains a secret.
 - Logs, email, and audit metadata exclude tokens, signed URLs, and bytes.
 - No product copy names a specific client except through workspace data.
@@ -117,11 +124,6 @@ current guide in that project's `node_modules/next/dist/docs/`.
 ## Environment contract
 
 ```text
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-SUPABASE_SECRET_KEY
-DATABASE_URL
-DIRECT_URL
 RESEND_API_KEY
 HANDOFF_FROM_EMAIL
 HANDOFF_BUCKET=handoff
@@ -151,10 +153,11 @@ R2_ENDPOINT
 | `src/lib/export.ts` | Export document builder |
 | `src/lib/notifications.ts` | Event-to-recipient rules and idempotency keys |
 | `src/lib/retention.ts` | Archive, purge-after, and reminder dates |
-| `src/db/schema.ts` | Drizzle tables |
-| `drizzle/` | SQL migrations, including RLS and storage policies |
-| `supabase/` | Local stack config, auth email templates |
-| `src/lib/session.ts` | Resolve caller and memberships from Supabase Auth |
+| `src/db/schema.ts` | Drizzle tables for D1 |
+| `migrations/` | D1 SQL migrations |
+| `src/db/records.ts` | Workspace-scoped reads and object-write checks |
+| `wrangler.jsonc` | Worker name and the `DB` binding |
+| `src/lib/session.ts` | Resolve caller and memberships from a D1 session |
 | `src/lib/store/*.ts` | Persistence used by routes and the worker |
 | `src/app/api/**` | Route handlers listed in the spec |
 | `src/app/**/page.tsx` | Screens listed in the spec |
@@ -164,7 +167,7 @@ R2_ENDPOINT
 | `src/worker/index.ts` | Job loop and health check |
 | `src/worker/jobs/*.ts` | Scan, window sweep, notifications, retention, purge |
 | `cli/pull.ts` | `handoff pull <export.json> <dir>` |
-| `tests/db/*.test.ts` | Isolation tests against local Supabase |
+| `src/db/isolation.test.ts` | Isolation tests on Node's built-in SQLite |
 
 ---
 
@@ -372,73 +375,78 @@ git commit -m "Decide handoff scan outcomes from signature and clamd."
 
 ## Phase 2 — Data, isolation, and identity
 
-### Task 6: Schema and policies
+### Task 6: Schema and query scope
 
 **Files:**
 - Create: `src/db/schema.ts`
-- Create: migrations for the HND-047 tables
-- Create: a migration for RLS, storage policies, and helper functions
+- Create: `migrations/0001_handoff.sql` for the HND-047 tables
+- Create: `src/db/records.ts` for scoped reads and `objectWriteAllowed`
+- Create: `wrangler.jsonc` binding `DB` to D1 database `handoff`
 
-- [ ] **Step 1: Add tables and constraints from HND-047**
+- [x] **Step 1: Add tables and constraints from HND-047**
 
-`size_bytes` and `quota_bytes` are `bigint`. Add the unique constraints and
-the `(workspace_id, sha256)` index.
+Identifiers are text. Timestamps are unix milliseconds. Booleans are 0 or 1.
+`size_bytes` and `quota_bytes` are integers. Add the unique constraints and
+the `(workspace_id, sha256)` index. Partial unique indexes cover live
+memberships, live invites, and live operator assignments.
 
-- [ ] **Step 2: Add policy helpers**
+- [x] **Step 2: Scope every read and the object write**
 
-Security-definer functions, `search_path` pinned:
-`handoff.is_member(workspace_id)`, `handoff.is_operator(workspace_id)`,
-`handoff.is_super_admin()`, `handoff.can_write_object(name)`. The last parses
-`{workspaceId}/{batchId}/{fileId}`, then requires a live membership, an active
-batch, a writable file status, and an exact key match.
+`workspacesFor` returns a workspace only when the caller's user id is a live
+super-admin, a live operator, or a live member. `workspaceById` returns
+nothing otherwise, so routes can answer 404. File, request, batch,
+membership, and operator reads return an empty list for a hidden workspace.
+`objectWriteAllowed` parses `{workspaceId}/{batchId}/{fileId}`, then requires
+a live membership, an active batch, a writable file status, and an exact key
+match. Staff cannot write objects. A signed-out caller sees nothing.
 
-- [ ] **Step 3: Enable RLS everywhere**
+- [x] **Step 3: Bind D1**
 
-Authenticated users may `select` workspaces, requests, batches, and files only
-where a helper allows it. They have no direct `insert`, `update`, or `delete`
-on any table. `staff`, `invites`, `notifications`, and `audit_events` have no
-authenticated access. On `storage.objects`, `insert` and `update` in bucket
-`handoff` require `can_write_object(name)`. There is no client `select` on
-the `handoff` bucket.
+`wrangler.jsonc` binds `DB` to database `handoff`. Apply the migration with
+`npx wrangler d1 migrations apply handoff --remote`. The Worker reads that
+binding from the OpenNext Cloudflare context. Local tests and `next dev`
+outside a Worker use Node sqlite.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
-git commit -m "Add handoff tables with workspace row and storage policies."
+git commit -m "Store handoff records in Cloudflare D1."
 ```
 
 ### Task 7: Isolation tests
 
 **Files:**
-- Create: `tests/db/isolation.test.ts`
-- Create: `tests/db/fixtures.ts`
+- Create: `src/db/isolation.test.ts`
 
-- [ ] **Step 1: Seed two workspaces, two operators, and two clients**
+- [x] **Step 1: Seed two workspaces, two operators, and two clients**
 
-Sign each fixture user in against the local stack and use their own session.
+Apply `migrations/0001_handoff.sql` to an in-memory sqlite database. Insert
+both workspaces before calling the record functions.
 
-- [ ] **Step 2: Assert**
+- [x] **Step 2: Assert**
 
-- client A selects no rows from workspace B in every table
+- raw SQL still returns workspace B, so the filter is in the query layer
+- client A selects no rows from workspace B
 - client A cannot write an object under workspace B's prefix, under their own
   prefix with a made-up file id, or over a clean file's key
 - operator A sees no workspace B rows
-- an expired batch rejects a write to a still-pending key
-- the publishable key alone reads nothing
+- an expired batch, and a batch idle for exactly six hours, reject a write to
+  a still-pending key
+- a signed-out caller reads nothing
+- a second live membership for the same user and workspace is rejected
 
-- [ ] **Step 3: Run and commit**
+- [x] **Step 3: Run and commit**
 
 ```bash
 npm run test:db
-git commit -m "Prove handoff workspaces are isolated in the database."
+git commit -m "Store handoff records in Cloudflare D1."
 ```
 
 ### Task 8: Sign-in, staff, and email
 
 **Files:**
 - Create: `src/lib/session.ts`
-- Create: `src/app/page.tsx`, `src/app/auth/callback/route.ts`
-- Create: `supabase/templates/magic-link.html`
+- Create: `src/app/auth/callback/route.ts`
 - Create: `src/lib/store/staff.ts`
 
 - [ ] **Step 1: Bootstrap super-admins**
@@ -446,16 +454,15 @@ git commit -m "Prove handoff workspaces are isolated in the database."
 When `staff` is empty, the first sign-in whose email is listed in
 `HANDOFF_SUPER_ADMIN_EMAILS` creates a super-admin row with that user id.
 
-- [ ] **Step 2: Magic link through Resend SMTP**
+- [ ] **Step 2: Magic link through Resend**
 
-Configure custom SMTP in `supabase/config.toml` for local work. Record the
-production setting in the README. The template uses Handoff wording and no
-client name.
+Send the link with Resend and store the session in D1. The message uses
+Handoff wording and no client name.
 
 - [ ] **Step 3: Resolve the caller**
 
-`getCaller()` returns the `Caller` shape from Task 3 in one query. A revoked
-row is not returned.
+`getCaller()` returns the `Caller` shape from Task 3 in one D1 query. A
+revoked row is not returned.
 
 - [ ] **Step 4: Commit**
 

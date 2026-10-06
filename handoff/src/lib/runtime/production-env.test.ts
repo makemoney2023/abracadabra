@@ -9,23 +9,19 @@ describe("missingProductionSecrets", () => {
     expect(missingProductionSecrets({ NODE_ENV: "development" })).toEqual([]);
   });
 
-  it("treats blank production secrets as missing", () => {
+  it("treats a blank production mail key as missing", () => {
     expect(
       missingProductionSecrets({
         NODE_ENV: "production",
-        SUPABASE_SECRET_KEY: "  ",
-        DATABASE_URL: "",
-        RESEND_API_KEY: undefined,
+        RESEND_API_KEY: "  ",
       }),
-    ).toEqual(["SUPABASE_SECRET_KEY", "DATABASE_URL", "RESEND_API_KEY"]);
+    ).toEqual(["RESEND_API_KEY"]);
   });
 
-  it("accepts production when the three server secrets are set", () => {
+  it("accepts production when the mail key is set", () => {
     expect(
       missingProductionSecrets({
         NODE_ENV: "production",
-        SUPABASE_SECRET_KEY: "sb_secret",
-        DATABASE_URL: "postgres://local/handoff",
         RESEND_API_KEY: "re_test",
       }),
     ).toEqual([]);
@@ -33,9 +29,9 @@ describe("missingProductionSecrets", () => {
 });
 
 describe("assertProductionEnv", () => {
-  it("names every missing production secret", () => {
+  it("names the missing production secret", () => {
     expect(() => assertProductionEnv({ NODE_ENV: "production" })).toThrow(
-      /SUPABASE_SECRET_KEY, DATABASE_URL, RESEND_API_KEY/,
+      /RESEND_API_KEY/,
     );
   });
 });

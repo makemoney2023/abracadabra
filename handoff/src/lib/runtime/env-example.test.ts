@@ -3,11 +3,6 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const CONTRACT = [
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  "SUPABASE_SECRET_KEY",
-  "DATABASE_URL",
-  "DIRECT_URL",
   "RESEND_API_KEY",
   "HANDOFF_FROM_EMAIL",
   "HANDOFF_BUCKET=handoff",
@@ -36,17 +31,14 @@ describe(".env.example", () => {
     }
   });
 
-  it("keeps secrets off NEXT_PUBLIC names", () => {
+  it("keeps the database binding and secrets off NEXT_PUBLIC names", () => {
+    expect(text).not.toContain("NEXT_PUBLIC_");
+    expect(text).not.toContain("DATABASE_URL");
+    expect(text).not.toContain("SUPABASE");
     const publicNames = text
       .split("\n")
       .map((line) => line.split("=")[0]?.trim() ?? "")
       .filter((name) => name.startsWith("NEXT_PUBLIC_"));
-    expect(publicNames).toEqual([
-      "NEXT_PUBLIC_SUPABASE_URL",
-      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-    ]);
-    for (const name of publicNames) {
-      expect(name).not.toMatch(/SECRET|SERVICE|API_KEY|DATABASE/i);
-    }
+    expect(publicNames).toEqual([]);
   });
 });
