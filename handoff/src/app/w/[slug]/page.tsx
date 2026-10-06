@@ -20,13 +20,11 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const open = requests.filter((request) => request.status === "open");
   const files = await listFolderFiles(sql, caller, workspace.id);
   const canDrop = caller.memberships.some((member) => member.workspaceId === workspace.id);
-  const owner = caller.memberships.some(
-    (member) => member.workspaceId === workspace.id && member.role === "client_owner",
-  );
+  const canShare = can(caller, "share.copy", { workspaceId: workspace.id });
   const uploadHref =
     open.length === 1 ? `/w/${workspace.slug}/drop?request=${open[0].id}` : `/w/${workspace.slug}/drop`;
   const headerList = await headers();
-  const shareUrl = owner
+  const shareUrl = canShare
     ? sharePageUrl(await ensureUploadShare(sql, workspace.id), {
         origin: process.env.HANDOFF_APP_ORIGIN,
         host: headerList.get("x-forwarded-host") ?? headerList.get("host"),
@@ -45,7 +43,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
           </Button>
         ) : null}
       </div>
-      {owner ? <ShareLink url={shareUrl} /> : null}
+      {canShare ? <ShareLink url={shareUrl} /> : null}
       {files.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border px-6 py-12">
           <p className="text-lg">This folder is empty.</p>

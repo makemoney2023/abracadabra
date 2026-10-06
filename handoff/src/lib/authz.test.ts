@@ -59,6 +59,7 @@ const matrix: { action: Action; allowed: [boolean, boolean, boolean, boolean] }[
   { action: "workspace.configure", allowed: [true, false, false, false] },
   { action: "invite.owner", allowed: [true, true, false, false] },
   { action: "invite.member", allowed: [true, true, true, false] },
+  { action: "share.copy", allowed: [true, true, true, false] },
   { action: "member.remove", allowed: [true, true, true, false] },
   { action: "request.manage", allowed: [true, true, false, false] },
   { action: "batch.create", allowed: [false, false, true, true] },
@@ -95,6 +96,7 @@ describe("can", () => {
   it("hides a workspace from an unassigned operator", () => {
     expect(can(unassigned, "workspace.view", { workspaceId: WORKSPACE })).toBe(false);
     expect(can(unassigned, "file.download", { workspaceId: WORKSPACE })).toBe(false);
+    expect(can(unassigned, "share.copy", { workspaceId: WORKSPACE })).toBe(false);
   });
 
   it("hides workspace A from a client of workspace B", () => {
@@ -120,7 +122,9 @@ describe("can", () => {
     };
     expect(can(studio, "workspace.create")).toBe(true);
     expect(can(studio, "batch.create", { workspaceId: WORKSPACE })).toBe(true);
+    expect(can(studio, "share.copy", { workspaceId: WORKSPACE })).toBe(true);
     expect(can(superAdmin, "batch.create", { workspaceId: WORKSPACE })).toBe(false);
+    expect(can(superAdmin, "share.copy", { workspaceId: WORKSPACE })).toBe(true);
   });
 
   it("treats a revoked membership as no membership", () => {

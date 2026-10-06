@@ -16,6 +16,7 @@ export type Action =
   | "workspace.purge"
   | "invite.owner"
   | "invite.member"
+  | "share.copy"
   | "member.remove"
   | "request.manage"
   | "batch.create"
@@ -82,6 +83,7 @@ export function can(caller: Caller, action: Action, target: AuthzTarget = {}): b
     case "file.tag":
       return staffOnWorkspace(caller, workspaceId);
     case "invite.member":
+    case "share.copy":
     case "member.remove":
       return staffOnWorkspace(caller, workspaceId) || owner;
     case "batch.create":
