@@ -110,7 +110,7 @@ describe("templates", () => {
     const sql = await memoryDb();
     await seedWorkspace(sql);
     const refused = await createTemplate({ sql, caller: owner, now: NOW, name: "Brand kit" });
-    expect(refused).toEqual({ ok: false, message: "You cannot do that." });
+    expect(refused).toEqual({ ok: false, message: "You can't do that." });
 
     const created = await createTemplate({ sql, caller: operator, now: NOW, name: "Brand kit" });
     expect(created.ok).toBe(true);
@@ -300,7 +300,7 @@ describe("requests", () => {
           suggestedTag: null,
           dueOn: null,
         }),
-      ).toEqual({ ok: false, message: "You cannot do that." });
+      ).toEqual({ ok: false, message: "You can't do that." });
       expect(
         await updateRequest({
           sql,
@@ -312,13 +312,13 @@ describe("requests", () => {
           suggestedTag: null,
           dueOn: null,
         }),
-      ).toEqual({ ok: false, message: "You cannot do that." });
+      ).toEqual({ ok: false, message: "You can't do that." });
       expect(
         await closeRequest({ sql, caller, workspaceId: WORKSPACE, requestId: created.value.id, now: NOW }),
-      ).toEqual({ ok: false, message: "You cannot do that." });
+      ).toEqual({ ok: false, message: "You can't do that." });
       expect(
         await reopenRequest({ sql, caller, workspaceId: WORKSPACE, requestId: created.value.id, now: NOW }),
-      ).toEqual({ ok: false, message: "You cannot do that." });
+      ).toEqual({ ok: false, message: "You can't do that." });
     }
     const title = await sql.get<{ title: string }>("SELECT title FROM requests WHERE id = ?", [created.value.id]);
     expect(title?.title).toBe("Logo");
@@ -337,7 +337,7 @@ describe("requests", () => {
         suggestedTag: null,
         dueOn: null,
       }),
-    ).toEqual({ ok: false, message: "That workspace is no longer active." });
+    ).toEqual({ ok: false, message: "This space is closed." });
 
     await sql.run("UPDATE workspaces SET status = 'active' WHERE id = ?", [WORKSPACE]);
     expect(
@@ -350,7 +350,7 @@ describe("requests", () => {
         suggestedTag: "not-a-tag",
         dueOn: null,
       }),
-    ).toEqual({ ok: false, message: "Guidance is at most 2,000 characters." });
+    ).toEqual({ ok: false, message: "The help text is too long. Keep it under 2,000 characters." });
     const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM requests");
     expect(count?.n).toBe(0);
   });

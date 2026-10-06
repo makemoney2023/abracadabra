@@ -19,14 +19,14 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   const { slug } = await context.params;
   const raw = await request.text();
   if (new TextEncoder().encode(raw).byteLength > LIMITS.maxManifestBytes) {
-    return Response.json({ message: "That manifest is too large." }, { status: 413 });
+    return Response.json({ message: "That list of files is too big." }, { status: 413 });
   }
   let body: unknown = null;
   if (raw.length > 0) {
     try {
       body = JSON.parse(raw) as unknown;
     } catch {
-      return Response.json({ message: "You cannot do that." }, { status: 400 });
+      return Response.json({ message: "You can't do that." }, { status: 400 });
     }
   }
   const sql = await openHandoffDb();

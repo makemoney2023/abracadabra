@@ -22,7 +22,7 @@ export async function sweepClosedWindows(sql: Sql, now: number): Promise<number>
       `UPDATE files
        SET status = 'failed', scan_reason = ?
        WHERE batch_id = ? AND status IN ('pending', 'uploading')`,
-      ["The batch window closed before this file finished.", batch.id],
+      ["The upload time ran out before this file finished.", batch.id],
     );
     await queueProductEvent(sql, { kind: "batch.window_failed", batchId: batch.id }, now);
     closed += 1;

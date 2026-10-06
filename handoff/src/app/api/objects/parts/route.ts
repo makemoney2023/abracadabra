@@ -18,22 +18,22 @@ function cookieValue(request: Request, name: string): string {
 
 export async function PUT(request: Request) {
   if (!localObjectBytesEnabled()) {
-    return Response.json({ message: "File storage is not configured." }, { status: 503 });
+    return Response.json({ message: "File storage isn't set up yet." }, { status: 503 });
   }
   const url = new URL(request.url);
   const uploadId = url.searchParams.get("uploadId") ?? "";
   const partRaw = url.searchParams.get("part") ?? "";
   const partNumber = Number(partRaw);
   if (!/^[0-9a-f-]{36}$/.test(uploadId)) {
-    return Response.json({ message: "Not found." }, { status: 404 });
+    return Response.json({ message: "We couldn't find that." }, { status: 404 });
   }
   if (!Number.isInteger(partNumber) || partNumber < 1 || String(partNumber) !== partRaw) {
-    return Response.json({ message: "That part is not valid." }, { status: 422 });
+    return Response.json({ message: "That piece doesn't work." }, { status: 422 });
   }
 
   const store = openObjectStore();
   const meta = await store.readUpload(uploadId);
-  if (!meta) return Response.json({ message: "Not found." }, { status: 404 });
+  if (!meta) return Response.json({ message: "We couldn't find that." }, { status: 404 });
 
   const sql = await openHandoffDb();
   await migrate(sql);
@@ -47,12 +47,12 @@ export async function PUT(request: Request) {
   });
   if (!granted.ok) return Response.json({ message: granted.message }, { status: granted.status });
   if (granted.file.objectKey !== meta.key) {
-    return Response.json({ message: "Not found." }, { status: 404 });
+    return Response.json({ message: "We couldn't find that." }, { status: 404 });
   }
 
   const bytes = new Uint8Array(await request.arrayBuffer());
   if (bytes.byteLength === 0) {
-    return Response.json({ message: "That part is empty." }, { status: 422 });
+    return Response.json({ message: "That piece is empty." }, { status: 422 });
   }
   const expectedCount = Math.ceil(granted.file.sizeBytes / LIMITS.partSizeBytes);
   const expectedSize =
@@ -60,7 +60,7 @@ export async function PUT(request: Request) {
       ? granted.file.sizeBytes - (expectedCount - 1) * LIMITS.partSizeBytes
       : LIMITS.partSizeBytes;
   if (partNumber > expectedCount || bytes.byteLength !== expectedSize) {
-    return Response.json({ message: "That part is the wrong size." }, { status: 422 });
+    return Response.json({ message: "That piece isn't the size we expected." }, { status: 422 });
   }
   await store.writePart(uploadId, partNumber, bytes);
   return new Response(null, { status: 204 });

@@ -51,7 +51,7 @@ export async function invitePersonAction(
     });
     if (!created.ok) return { message: created.message };
   } catch {
-    return { message: "Handoff could not send email. Try again shortly." };
+    return { message: "We couldn't send the email. Please try again soon." };
   }
   revalidatePath(`/w/${workspace.slug}/people`);
   return { message: "Invited." };

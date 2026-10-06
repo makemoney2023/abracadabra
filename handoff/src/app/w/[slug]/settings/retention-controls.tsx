@@ -31,13 +31,13 @@ export function RetentionControls({
       const response = await fetch(`/api/workspaces/${slug}/archive`, { method: "POST" });
       const body = (await response.json()) as { message?: string };
       if (!response.ok) {
-        setMessage(body.message ?? "You cannot do that.");
+        setMessage(body.message ?? "You can't do that.");
         return;
       }
       setMessage("Archived.");
       router.refresh();
     } catch {
-      setMessage("Handoff could not archive this workspace. Try again shortly.");
+      setMessage("We couldn't archive this space. Please try again in a bit.");
     } finally {
       setPending(false);
     }
@@ -50,7 +50,7 @@ export function RetentionControls({
       const response = await fetch(`/api/workspaces/${slug}/export`);
       if (!response.ok) {
         const body = (await response.json()) as { message?: string };
-        setMessage(body.message ?? "You cannot do that.");
+        setMessage(body.message ?? "You can't do that.");
         return;
       }
       const blob = await response.blob();
@@ -62,7 +62,7 @@ export function RetentionControls({
       URL.revokeObjectURL(url);
       setMessage("Export ready.");
     } catch {
-      setMessage("Handoff could not export this workspace. Try again shortly.");
+      setMessage("We couldn't make the export. Please try again in a bit.");
     } finally {
       setPending(false);
     }
@@ -79,13 +79,13 @@ export function RetentionControls({
       });
       const body = (await response.json()) as { message?: string };
       if (!response.ok) {
-        setMessage(body.message ?? "You cannot do that.");
+        setMessage(body.message ?? "You can't do that.");
         return;
       }
-      setMessage("Purged.");
+      setMessage("Deleted.");
       router.refresh();
     } catch {
-      setMessage("Handoff could not purge this workspace. Try again shortly.");
+      setMessage("We couldn't delete this space. Please try again in a bit.");
     } finally {
       setPending(false);
     }
@@ -94,22 +94,22 @@ export function RetentionControls({
   return (
     <div className="flex flex-col gap-3">
       {status === "archived" && purgeOn ? (
-        <p className="text-sm text-muted-foreground">Purge is scheduled for {purgeOn}. Downloads stay available until then.</p>
+        <p className="text-sm text-muted-foreground">Everything will be deleted on {purgeOn}. You can still download files until then.</p>
       ) : null}
-      {status === "purged" ? <p className="text-sm text-muted-foreground">This workspace is purged.</p> : null}
+      {status === "purged" ? <p className="text-sm text-muted-foreground">This space has been deleted.</p> : null}
       {status === "active" && canArchive ? (
         <Button type="button" disabled={pending} onClick={() => void archive()}>
-          Archive workspace
+          Archive this workspace
         </Button>
       ) : null}
       {canExport ? (
         <Button type="button" variant="outline" disabled={pending} onClick={() => void downloadExport()}>
-          Export workspace
+          Export a list of files
         </Button>
       ) : null}
       {canPurge && status === "archived" ? (
         <label className="flex flex-col gap-1 text-sm" htmlFor="purge-reason">
-          Purge reason
+          Why are you deleting it?
           <textarea
             id="purge-reason"
             className="min-h-24 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm"
@@ -118,7 +118,7 @@ export function RetentionControls({
             onChange={(event) => setReason(event.target.value)}
           />
           <Button type="button" disabled={pending} onClick={() => void purge()}>
-            Purge workspace
+            Delete everything
           </Button>
         </label>
       ) : null}

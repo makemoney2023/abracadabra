@@ -4,11 +4,11 @@ import { can, type Caller } from "@/lib/authz";
 import { markRequestReceived, queueProductEvent } from "@/lib/notifications";
 import { LIMITS } from "@/lib/policy/limits";
 
-const NOT_FOUND = "Not found.";
-const REFUSED = "You cannot do that.";
-const NOT_HELD = "That file is not held.";
-const REASON_REQUIRED = "A reason is required.";
-const REASON_LONG = "A reason is at most 2,000 characters.";
+const NOT_FOUND = "We couldn't find that.";
+const REFUSED = "You can't do that.";
+const NOT_HELD = "That file isn't on hold.";
+const REASON_REQUIRED = "Please tell us why.";
+const REASON_LONG = "Your reason is too long. Keep it under 2,000 characters.";
 
 export type HeldFile = {
   id: string;

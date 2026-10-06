@@ -13,7 +13,7 @@ export function AccessForm() {
   return (
     <form action={action} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1 text-sm" htmlFor="invite-email">
-        Invite email
+        Your email
         <Input
           id="invite-email"
           name="email"
@@ -24,7 +24,7 @@ export function AccessForm() {
         />
       </label>
       <Button type="submit" disabled={pending}>
-        {pending ? "Sending" : "Email me a link"}
+        {pending ? "Sending..." : "Send me a link"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">

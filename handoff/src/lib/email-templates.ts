@@ -54,60 +54,60 @@ function copy(
   switch (event) {
     case "batch.ready":
       return {
-        subject: `${name} has files ready`,
-        body: [name, "", `${title} finished scanning with ${count} clean file${count === 1 ? "" : "s"}.`],
+        subject: `New files are ready from ${name}`,
+        body: [name, "", `${title} is done. We checked ${count} file${count === 1 ? "" : "s"}, and ${count === 1 ? "it is" : "they are"} safe to open.`],
       };
     case "file.rejected":
     case "file.rejected_from_held":
       return {
-        subject: `${name} refused a file`,
-        body: [name, "", `${title} was refused. Scanner finding: ${finding}. ${count} file${count === 1 ? "" : "s"} counted.`],
+        subject: `A file from ${name} was turned away`,
+        body: [name, "", `We turned away a file in ${title}. Our scan found: ${finding}. That makes ${count} file${count === 1 ? "" : "s"} turned away so far.`],
       };
     case "file.held":
       return {
-        subject: `${name} held a file`,
-        body: [name, "", `${title} is held for review. Scanner finding: ${finding}.`],
+        subject: `A file from ${name} needs a look`,
+        body: [name, "", `We set aside a file in ${title} so a person can check it. Our scan found: ${finding}.`],
       };
     case "file.released":
       return {
-        subject: `${name} released a file`,
-        body: [name, "", `${title} was released and is clean.`],
+        subject: `A file from ${name} is OK`,
+        body: [name, "", `A person checked the file in ${title}. It is safe, so we let it through.`],
       };
     case "batch.window_failed":
       return {
-        subject: `${name} closed a batch with failed files`,
-        body: [name, "", `${title} closed with ${count} failed file${count === 1 ? "" : "s"}.`],
+        subject: `Some files from ${name} did not finish`,
+        body: [name, "", `${title} closed, but ${count} file${count === 1 ? "" : "s"} did not finish uploading.`],
       };
     case "request.digest":
       return {
-        subject: `${name} still has open requests`,
-        body: [name, "", `${count} request${count === 1 ? "" : "s"} ${count === 1 ? "is" : "are"} still open.`],
+        subject: `${name} is still waiting on files`,
+        body: [name, "", `${count} request${count === 1 ? " is" : "s are"} still waiting for files.`],
       };
     case "workspace.archived":
       return {
-        subject: `${name} was archived`,
+        subject: `${name} is now archived`,
         body: [
           name,
           "",
           purgeOn
-            ? `This workspace is archived. Downloads stay available until purge on ${purgeOn}.`
-            : "This workspace is archived. Downloads stay available until purge.",
+            ? `This space is archived. You can still download files until ${purgeOn}. After that, we delete them.`
+            : "This space is archived. You can still download files until we delete them.",
         ],
       };
     case "workspace.purge_scheduled":
       return {
-        subject: `${name} will be purged`,
+        subject: `${name} will be deleted soon`,
         body: [
           name,
           "",
           purgeOn
-            ? `Purge is scheduled for ${purgeOn}. Download anything you still need.`
-            : "Purge is scheduled. Download anything you still need.",
+            ? `We will delete everything on ${purgeOn}. Please download what you still need.`
+            : "We will delete everything soon. Please download what you still need.",
         ],
       };
     default:
       return {
-        subject: `${name} Handoff update`,
+        subject: `News from ${name}`,
         body: [name, "", title],
       };
   }

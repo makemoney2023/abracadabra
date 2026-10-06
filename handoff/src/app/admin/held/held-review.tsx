@@ -31,13 +31,13 @@ export function HeldReview({
       });
       const body = (await response.json()) as { message?: string; status?: string };
       if (!response.ok) {
-        setMessage(body.message ?? "You cannot do that.");
+        setMessage(body.message ?? "You can't do that.");
         return;
       }
       setMessage(body.status === "clean" ? "Released." : "Rejected.");
       router.refresh();
     } catch {
-      setMessage("Handoff could not save that review. Try again shortly.");
+      setMessage("We couldn't save that. Please try again in a bit.");
     } finally {
       setPending(false);
     }

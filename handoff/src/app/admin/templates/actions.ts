@@ -59,11 +59,11 @@ export async function moveTemplateItemAction(
   const direction = String(formData.get("direction") ?? "");
   const catalog = await templateCatalog(sql);
   const template = catalog.find((row) => row.id === templateId);
-  if (!template) return { message: "You cannot do that." };
+  if (!template) return { message: "You can't do that." };
   const ids = template.items.map((item) => item.id);
   const index = ids.indexOf(itemId);
   const swap = direction === "up" ? index - 1 : index + 1;
-  if (index < 0 || swap < 0 || swap >= ids.length) return { message: "You cannot do that." };
+  if (index < 0 || swap < 0 || swap >= ids.length) return { message: "You can't do that." };
   const orderedIds = [...ids];
   const [moved] = orderedIds.splice(index, 1);
   orderedIds.splice(swap, 0, moved);
@@ -86,7 +86,7 @@ export async function retireTemplateItemAction(
   });
   if (!result.ok) return { message: result.message };
   revalidatePath(PATH);
-  return { message: "Item retired." };
+  return { message: "Item put away." };
 }
 
 export async function retireTemplateAction(
@@ -102,5 +102,5 @@ export async function retireTemplateAction(
   });
   if (!result.ok) return { message: result.message };
   revalidatePath(PATH);
-  return { message: "Template retired." };
+  return { message: "Template put away." };
 }

@@ -48,18 +48,18 @@ export default async function InvitePage({ params }: { params: Promise<{ inviteI
           <CardDescription>
             {live
               ? `This invite is for ${invite.email}.`
-              : "That invite is no longer valid."}
+              : "That invite doesn't work anymore."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {live && sameEmail ? <AcceptForm inviteId={invite.id} /> : null}
           {live && caller.userId && !sameEmail ? (
-            <p className="text-sm text-muted-foreground">This invite is for a different email.</p>
+            <p className="text-sm text-muted-foreground">This invite was sent to a different email.</p>
           ) : null}
           {live && !caller.userId ? (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-muted-foreground">
-                Open the link in the invite email. It signs you in and brings you back here.
+                Click the link in your invite email. It signs you in and brings you back here.
               </p>
               <AccessForm />
             </div>

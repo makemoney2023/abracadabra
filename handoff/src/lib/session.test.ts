@@ -38,7 +38,7 @@ describe("requestMagicLink", () => {
       },
     });
 
-    expect(reply.message).toBe("If this address can open Handoff, a sign-in link is on its way.");
+    expect(reply.message).toBe("If we know this email, we sent you a link to sign in.");
     expect(reply.message).not.toContain("example.com");
     expect(sent).toHaveLength(1);
     expect(sent[0]?.to).toBe("owner@example.com");
@@ -65,7 +65,7 @@ describe("requestMagicLink", () => {
         sent.push(message);
       },
     });
-    expect(reply.message).toBe("If this address can open Handoff, a sign-in link is on its way.");
+    expect(reply.message).toBe("If we know this email, we sent you a link to sign in.");
     expect(sent).toHaveLength(0);
   });
 

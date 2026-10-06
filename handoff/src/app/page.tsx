@@ -26,10 +26,10 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       ) : null}
       <div className="flex flex-col gap-3">
         <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
-        <h1 className="font-heading text-4xl leading-tight">A locker for one client.</h1>
+        <h1 className="font-heading text-4xl leading-tight">A safe place to send us your files.</h1>
         <p className="text-muted-foreground">
-          Invited people drop brand, photo, copy, and reference files. Operators verify them
-          after a malware scan. Handoff is not part of any client&apos;s product.
+          Your team invites you. You drop in your logos, photos, and words. We check every file
+          for viruses before anyone opens it.
         </p>
       </div>
       {caller.userId ? null : (
@@ -37,18 +37,18 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           <CardHeader>
             <CardTitle>Open Handoff</CardTitle>
             <CardDescription>
-              Email sign-in is off. This opens the studio locker in this browser.
+              Email sign-in is paused for now. Tap the button to come on in.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {linkExpired ? (
               <p className="mb-3 text-sm text-muted-foreground" role="status">
-                That sign-in link is no longer valid. Ask for another.
+                That link has run out. Ask for a new one.
               </p>
             ) : null}
             {openFailed ? (
               <p className="mb-3 text-sm text-muted-foreground" role="status">
-                Handoff could not open. Try again shortly.
+                We couldn&apos;t open Handoff. Please try again soon.
               </p>
             ) : null}
             <EnterForm />

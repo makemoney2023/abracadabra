@@ -1,0 +1,14 @@
+- generic [active] [ref=f59e1]:
+  - main [ref=f59e2]:
+    - navigation [ref=f59e3]:
+      - link "Staff tools" [ref=f59e4] [cursor=pointer]:
+        - /url: /admin
+      - link "Request templates" [ref=f59e5] [cursor=pointer]:
+        - /url: /admin/templates
+      - link "Northwind Studio" [ref=f59e6] [cursor=pointer]:
+        - /url: /w/northwind
+    - generic [ref=f59e7]:
+      - paragraph [ref=f59e8]: Handoff
+      - heading "A locker for one client." [level=1] [ref=f59e9]
+      - paragraph [ref=f59e10]: Invited people drop brand, photo, copy, and reference files. Operators verify them after a malware scan. Handoff is not part of any client's product.
+  - alert [ref=f59e11]

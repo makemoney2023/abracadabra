@@ -38,6 +38,6 @@ export async function requestAccess(
       send: sendWithResend,
     });
   } catch {
-    return { message: "Handoff could not send email. Try again shortly." };
+    return { message: "We couldn't send the email. Please try again soon." };
   }
 }

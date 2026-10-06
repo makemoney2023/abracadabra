@@ -1,0 +1,17 @@
+- generic [active] [ref=f16e1]:
+  - main [ref=f16e2]:
+    - generic [ref=f16e3]:
+      - paragraph [ref=f16e4]: Handoff
+      - heading "A locker for one client." [level=1] [ref=f16e5]
+      - paragraph [ref=f16e6]: Invited people drop brand, photo, copy, and reference files. Operators verify them after a malware scan. Handoff is not part of any client's product.
+    - generic [ref=f16e7]:
+      - generic [ref=f16e8]:
+        - heading "Open an invite" [level=2] [ref=f16e9]
+        - paragraph [ref=f16e10]: Use the email on your invite. Handoff emails a sign-in link and does not say whether that address is on file.
+      - generic [ref=f16e12]:
+        - generic [ref=f16e13]:
+          - text: Invite email
+          - textbox "Invite email" [ref=f16e14]:
+            - /placeholder: you@client.com
+        - button "Email me a link" [ref=f16e15]
+  - button "Open Next.js Dev Tools" [ref=f16e21] [cursor=pointer]

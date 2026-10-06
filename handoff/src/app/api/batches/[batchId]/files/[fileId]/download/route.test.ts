@@ -155,7 +155,7 @@ describe("batch download and discard", () => {
       await seed(sql, status);
       const response = await callDownload("owner-token");
       expect(response.status).toBe(409);
-      await expect(response.json()).resolves.toEqual({ message: "That file is not ready to download." });
+      await expect(response.json()).resolves.toEqual({ message: "That file isn't ready to download yet." });
       const audited = await sql.get<{ n: number }>(
         "SELECT count(*) AS n FROM audit_events WHERE action = 'file.downloaded'",
       );
@@ -168,7 +168,7 @@ describe("batch download and discard", () => {
     await seed(sql, "clean");
     const response = await callDownload("out-token");
     expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ message: "Not found." });
+    await expect(response.json()).resolves.toEqual({ message: "We couldn't find that." });
   });
 
   it("lets a client discard their own batch only while no file is clean", async () => {
@@ -182,7 +182,7 @@ describe("batch download and discard", () => {
       { params: Promise.resolve({ batchId: BATCH }) },
     );
     expect(refused.status).toBe(403);
-    await expect(refused.json()).resolves.toEqual({ message: "You cannot do that." });
+    await expect(refused.json()).resolves.toEqual({ message: "You can't do that." });
 
     const response = await discard(
       new Request(`https://handoff.example/api/batches/${BATCH}/discard`, {
@@ -214,7 +214,7 @@ describe("batch download and discard", () => {
     );
     expect(blocked.status).toBe(409);
     await expect(blocked.json()).resolves.toEqual({
-      message: "A clean file is already in this batch.",
+      message: "A safe file is already in this upload.",
     });
 
     const hidden = await discard(

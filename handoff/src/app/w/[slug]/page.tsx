@@ -17,8 +17,8 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
       <h1 className="font-heading text-4xl leading-tight">{workspace.display_name}</h1>
       {requests.length === 0 ? (
         <p className="text-muted-foreground">
-          Nothing is waiting in {workspace.display_name} yet. Operators add requests when they know
-          what to collect.
+          Nothing is asked of you in {workspace.display_name} yet. When the team knows what it
+          needs, it will show up here.
         </p>
       ) : (
         <ul className="flex flex-col gap-4">
@@ -29,7 +29,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
               {request.guidance ? <p className="text-sm text-muted-foreground">{request.guidance}</p> : null}
               {request.status === "open" ? (
                 <Link href={`/w/${workspace.slug}/drop?request=${request.id}`} className="text-sm">
-                  Start a drop
+                  Send files
                 </Link>
               ) : null}
             </li>
@@ -38,12 +38,12 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
       )}
       {batches.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="font-heading text-2xl">Batches</h2>
+          <h2 className="font-heading text-2xl">Your uploads</h2>
           <ul className="flex flex-col gap-2">
             {batches.map((batch) => (
               <li key={batch.id}>
                 <Link href={`/w/${workspace.slug}/batches/${batch.id}`} className="text-sm">
-                  {batch.label ?? "Untitled drop"}
+                  {batch.label ?? "Untitled upload"}
                 </Link>
               </li>
             ))}

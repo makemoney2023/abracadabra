@@ -27,7 +27,7 @@ export function SettingsForm({
       {canConfigure ? (
         <>
           <label className="flex flex-col gap-1 text-sm" htmlFor="settings-profile">
-            File policy
+            File rules
             <select
               id="settings-profile"
               name="policyProfile"
@@ -39,13 +39,13 @@ export function SettingsForm({
             </select>
           </label>
           <label className="flex flex-col gap-1 text-sm" htmlFor="settings-quota">
-            Quota bytes
+            Storage limit (in bytes)
             <Input id="settings-quota" name="quotaBytes" type="number" min={0} required defaultValue={quotaBytes} />
           </label>
         </>
       ) : (
         <p className="text-sm text-muted-foreground">
-          {policyProfile} policy. Quota {quotaBytes} bytes.
+          File rules: {policyProfile}. Storage limit: {quotaBytes} bytes.
         </p>
       )}
       {canBrand ? (
@@ -56,7 +56,7 @@ export function SettingsForm({
       ) : null}
       {canConfigure || canBrand ? (
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving" : "Save"}
+          {pending ? "Saving..." : "Save"}
         </Button>
       ) : null}
       {state.message ? (

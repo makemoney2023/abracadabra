@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { InviteForm, RemoveForm, ResendForm } from "./people-form";
 
 function roleLabel(role: string): string {
-  return role === "client_owner" ? "Client owner" : "Client member";
+  return role === "client_owner" ? "Owner" : "Member";
 }
 
 export default async function PeoplePage({
@@ -31,9 +31,9 @@ export default async function PeoplePage({
       <h1 className="font-heading text-4xl leading-tight">People</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Invite</CardTitle>
+          <CardTitle>Invite someone</CardTitle>
           <CardDescription>
-            The email is a sign-in link that opens this invite. It expires in 14 days.
+            We&apos;ll email them a link to join. It stops working in 14 days.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -42,7 +42,7 @@ export default async function PeoplePage({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>In this workspace</CardTitle>
+          <CardTitle>Who is here</CardTitle>
           {notice === "removed" ? (
             <CardDescription>
               <span role="status">Removed.</span>
@@ -70,7 +70,7 @@ export default async function PeoplePage({
             <div key={invite.id} className="flex items-center justify-between gap-3">
               <div>
                 <p>{invite.email}</p>
-                <p className="text-sm text-muted-foreground">{roleLabel(invite.role)} invite</p>
+                <p className="text-sm text-muted-foreground">{roleLabel(invite.role)}, waiting to join</p>
               </div>
               <ResendForm slug={workspace.slug} inviteId={invite.id} />
             </div>

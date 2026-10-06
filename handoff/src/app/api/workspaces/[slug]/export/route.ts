@@ -14,7 +14,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
   const now = Date.now();
   const caller = await getCaller(sql, cookieValue(request, SESSION_COOKIE), now);
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
-  if (!workspace) return Response.json({ message: "Not found." }, { status: 404 });
+  if (!workspace) return Response.json({ message: "We couldn't find that." }, { status: 404 });
   const result = await exportWorkspace({
     sql,
     caller,

@@ -159,7 +159,7 @@ describe("batch export", () => {
       origin: "https://handoff.example",
       now,
     });
-    expect(refused).toEqual({ ok: false, status: 403, message: "You cannot do that." });
+    expect(refused).toEqual({ ok: false, status: 403, message: "You can't do that." });
 
     const outsider = await exportBatch({
       sql,
@@ -168,7 +168,7 @@ describe("batch export", () => {
       origin: "https://handoff.example",
       now,
     });
-    expect(outsider).toEqual({ ok: false, status: 404, message: "Not found." });
+    expect(outsider).toEqual({ ok: false, status: 404, message: "We couldn't find that." });
 
     for (let index = 0; index < LIMITS.exportsPerOperatorPerHour; index += 1) {
       await sql.run(
@@ -186,7 +186,7 @@ describe("batch export", () => {
       origin: "https://handoff.example",
       now,
     });
-    expect(limited).toEqual({ ok: false, status: 429, message: "Export limit reached for this hour." });
+    expect(limited).toEqual({ ok: false, status: 429, message: "You've made as many exports as you can this hour. Try again later." });
   });
 });
 

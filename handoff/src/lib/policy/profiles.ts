@@ -118,11 +118,11 @@ export function inspectFileName(
   const base = normalized.path.split("/").at(-1) ?? "";
   const lower = base.toLowerCase();
   if (REFUSED_BASENAMES.has(lower) || lower.startsWith(".env.")) {
-    return { ok: false, reason: "That file name is refused." };
+    return { ok: false, reason: "We can't take a file with that name." };
   }
   const parts = lower.split(".");
   if (parts.length < 2 || parts.at(-1) === "") {
-    return { ok: false, reason: "File has no allowed extension." };
+    return { ok: false, reason: "This file type isn't allowed." };
   }
   const suffixes = parts.slice(1);
   for (const suffix of suffixes) {

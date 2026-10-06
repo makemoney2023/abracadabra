@@ -4,11 +4,11 @@ import { workspacesFor } from "@/db/records";
 import type { Sql } from "@/db/sql";
 import type { ObjectStore } from "@/lib/store/objects";
 
-const REFUSED = "You cannot do that.";
-const INACTIVE = "That batch is no longer active.";
-const NOT_OPEN = "That file is not open for upload.";
-const NOT_STORED = "That upload is not in storage yet.";
-const SIZE_MISMATCH = "Stored size does not match the manifest.";
+const REFUSED = "You can't do that.";
+const INACTIVE = "That upload is closed.";
+const NOT_OPEN = "That file can't be uploaded right now.";
+const NOT_STORED = "That file hasn't finished uploading yet.";
+const SIZE_MISMATCH = "The saved file size doesn't match the list.";
 const WRITABLE = new Set(["pending", "uploading", "failed"]);
 
 type FileRow = {
@@ -92,10 +92,10 @@ export async function grantUpload(input: {
 }): Promise<{ ok: true; status: 200; file: UploadFile } | { ok: false; status: number; message: string }> {
   const row = await loadFile(input.sql, input.batchId, input.fileId);
   if (!row || row.object_key !== `${row.workspace_id}/${row.batch_id}/${row.id}`) {
-    return { ok: false, status: 404, message: "Not found." };
+    return { ok: false, status: 404, message: "We couldn't find that." };
   }
   const access = await memberWrite(input.sql, input.caller, row.workspace_id);
-  if (access === "missing") return { ok: false, status: 404, message: "Not found." };
+  if (access === "missing") return { ok: false, status: 404, message: "We couldn't find that." };
   if (access === "refused") return { ok: false, status: 403, message: REFUSED };
   if (!WRITABLE.has(row.status)) return { ok: false, status: 409, message: NOT_OPEN };
   if (!active(row, input.now)) return { ok: false, status: 409, message: INACTIVE };
@@ -113,7 +113,7 @@ export async function grantUpload(input: {
     throw error;
   }
   const next = await loadFile(input.sql, input.batchId, input.fileId);
-  if (!next) return { ok: false, status: 404, message: "Not found." };
+  if (!next) return { ok: false, status: 404, message: "We couldn't find that." };
   return { ok: true, status: 200, file: present(next) };
 }
 
@@ -128,10 +128,10 @@ export async function completeUpload(input: {
 }): Promise<{ ok: true; status: 200; file: UploadFile } | { ok: false; status: number; message: string }> {
   const row = await loadFile(input.sql, input.batchId, input.fileId);
   if (!row || row.object_key !== `${row.workspace_id}/${row.batch_id}/${row.id}`) {
-    return { ok: false, status: 404, message: "Not found." };
+    return { ok: false, status: 404, message: "We couldn't find that." };
   }
   const access = await memberWrite(input.sql, input.caller, row.workspace_id);
-  if (access === "missing") return { ok: false, status: 404, message: "Not found." };
+  if (access === "missing") return { ok: false, status: 404, message: "We couldn't find that." };
   if (access === "refused") return { ok: false, status: 403, message: REFUSED };
   if (row.status === "uploaded") return { ok: true, status: 200, file: present(row) };
   if (!WRITABLE.has(row.status)) return { ok: false, status: 409, message: NOT_OPEN };
@@ -146,7 +146,7 @@ export async function completeUpload(input: {
       [SIZE_MISMATCH, row.id],
     );
     const failed = await loadFile(input.sql, input.batchId, input.fileId);
-    if (!failed) return { ok: false, status: 404, message: "Not found." };
+    if (!failed) return { ok: false, status: 404, message: "We couldn't find that." };
     return { ok: true, status: 200, file: present(failed) };
   }
 
@@ -184,6 +184,6 @@ export async function completeUpload(input: {
     throw error;
   }
   const done = await loadFile(input.sql, input.batchId, input.fileId);
-  if (!done) return { ok: false, status: 404, message: "Not found." };
+  if (!done) return { ok: false, status: 404, message: "We couldn't find that." };
   return { ok: true, status: 200, file: present(done) };
 }

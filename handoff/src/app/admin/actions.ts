@@ -19,7 +19,7 @@ export async function createWorkspaceAction(_previous: FormState, formData: Form
   const retentionDays = retentionRaw.length === 0 ? undefined : Number(retentionRaw);
   const profile = profileOf(formData.get("policyProfile"));
   if (!profile || (quotaBytes !== undefined && !Number.isInteger(quotaBytes)) || (retentionDays !== undefined && !Number.isInteger(retentionDays))) {
-    return { message: "You cannot do that." };
+    return { message: "You can't do that." };
   }
   const created = await createWorkspace({
     sql,
@@ -51,7 +51,7 @@ export async function addStaffAction(_previous: FormState, formData: FormData): 
   });
   if (!added.ok) return { message: added.message };
   const workspaceId = String(formData.get("workspaceId") ?? "");
-  if (workspaceId.length === 0) return { message: "Added to staff." };
+  if (workspaceId.length === 0) return { message: "Added to the team." };
   const assigned = await assignOperator({
     sql,
     caller,

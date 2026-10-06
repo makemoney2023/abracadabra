@@ -1,0 +1,12 @@
+- generic [active] [ref=f58e1]:
+  - main [ref=f58e2]:
+    - generic [ref=f58e3]:
+      - paragraph [ref=f58e4]: Handoff
+      - heading "A locker for one client." [level=1] [ref=f58e5]
+      - paragraph [ref=f58e6]: Invited people drop brand, photo, copy, and reference files. Operators verify them after a malware scan. Handoff is not part of any client's product.
+    - generic [ref=f58e7]:
+      - generic [ref=f58e8]:
+        - heading "Open Handoff" [level=2] [ref=f58e9]
+        - paragraph [ref=f58e10]: Email sign-in is off. This opens the studio locker in this browser.
+      - button "Open Handoff" [ref=f58e13]
+  - alert [ref=f58e14]

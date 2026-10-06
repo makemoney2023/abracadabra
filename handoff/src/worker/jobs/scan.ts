@@ -126,7 +126,7 @@ export async function scanClaimedFile(input: {
   let sha256: string | null = null;
   let header = new Uint8Array();
   if (!bytes) {
-    clamd = { kind: "error", detail: "That upload is not in storage yet." };
+    clamd = { kind: "error", detail: "That file hasn't finished uploading yet." };
   } else {
     const owned = copyBytes(bytes);
     sha256 = createHash("sha256").update(owned).digest("hex");

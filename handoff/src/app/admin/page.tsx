@@ -13,7 +13,7 @@ export default async function AdminPage() {
         <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Staff tools</h1>
         <div className="flex gap-4 text-sm">
-          <Link href="/admin/workspaces/new">Open a workspace</Link>
+          <Link href="/admin/workspaces/new">Open a space</Link>
           <Link href="/admin/staff">Add staff</Link>
           <Link href="/admin/templates">Request templates</Link>
           <Link href="/admin/held">Held files</Link>
@@ -21,12 +21,12 @@ export default async function AdminPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Workspaces</CardTitle>
-          <CardDescription>Each locker has its own display name, logo, and quota.</CardDescription>
+          <CardTitle>Spaces</CardTitle>
+          <CardDescription>Each space has its own name, logo, and storage limit.</CardDescription>
         </CardHeader>
         <CardContent>
           {workspaces.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No workspaces yet.</p>
+            <p className="text-sm text-muted-foreground">No spaces yet.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {workspaces.map((workspace) => (

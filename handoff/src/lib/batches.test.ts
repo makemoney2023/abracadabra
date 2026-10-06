@@ -32,7 +32,7 @@ describe("validateManifest", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.index).toBe(1);
-      expect(result.reason).toMatch(/same path/i);
+      expect(result.reason).toMatch(/same name/i);
     }
   });
 
@@ -84,7 +84,7 @@ describe("validateManifest", () => {
       workspaceQuotaBytes: quota,
     });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toMatch(/quota/i);
+    if (!result.ok) expect(result.reason).toMatch(/too big/i);
   });
 });
 

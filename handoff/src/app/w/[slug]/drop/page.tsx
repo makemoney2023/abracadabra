@@ -20,7 +20,7 @@ export default async function DropPage({
   if (!request) notFound();
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
-      <p className="font-mono text-xs tracking-wide text-optic">Drop</p>
+      <p className="font-mono text-xs tracking-wide text-optic">Send files</p>
       <h1 className="font-heading text-4xl leading-tight">{request.title}</h1>
       {request.guidance ? <p className="text-muted-foreground">{request.guidance}</p> : null}
       {request.status === "open" ? (
@@ -32,7 +32,7 @@ export default async function DropPage({
           }
         />
       ) : (
-        <p className="text-sm text-muted-foreground">This request is not open.</p>
+        <p className="text-sm text-muted-foreground">This request is closed.</p>
       )}
     </main>
   );

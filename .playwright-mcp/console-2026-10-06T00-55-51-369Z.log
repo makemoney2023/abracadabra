@@ -1,0 +1,20 @@
+[     269ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[     347ms] [LOG] [HMR] connected @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 1196446ms] [LOG] [Fast Refresh] rebuilding @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 1196521ms] [LOG] [Fast Refresh] done in 1ms @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2302495ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_RESET @ http://127.0.0.1:3000/?_rsc=bFe_VC0g8VplWXKP:0
+[ 2302497ms] [ERROR] Failed to fetch RSC payload for http://127.0.0.1:3000/. Falling back to browser navigation. TypeError: Failed to fetch
+    at fetchInternal (http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_client_0_90u2t._.js:10831:12)
+    at createFetch (http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_client_0_90u2t._.js:4909:38)
+    at async fetchServerResponse (http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_client_0_90u2t._.js:4601:21)
+    at async fetchMissingDynamicData (http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_client_0_90u2t._.js:6190:24) @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:1052
+[ 2302519ms] [ERROR] WebSocket is already in CLOSING or CLOSED state. @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:1559
+[ 2302523ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3000/__nextjs_original-stack-frames:0
+[ 2304031ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2304077ms] [LOG] [HMR] connected @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2534054ms] [LOG] [Fast Refresh] done in 9868ms @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2534221ms] [LOG] [Fast Refresh] rebuilding @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2534257ms] [LOG] [Fast Refresh] done in 100ms @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2534294ms] [LOG] [Fast Refresh] done in 100ms @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2543898ms] [LOG] [Fast Refresh] done in 100ms @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776
+[ 2668980ms] [LOG] [Fast Refresh] done in 100ms @ http://127.0.0.1:3000/_next/static/chunks/node_modules_next_dist_1e8vcs8._.js:776

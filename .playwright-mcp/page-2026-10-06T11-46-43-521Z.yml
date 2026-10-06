@@ -1,0 +1,28 @@
+- generic [active] [ref=f59e1]:
+  - alert [ref=f59e11]
+  - main [ref=f59e12]:
+    - generic [ref=f59e13]:
+      - paragraph [ref=f59e14]: Handoff
+      - heading "Staff tools" [level=1] [ref=f59e15]
+      - generic [ref=f59e16]:
+        - link "Open a workspace" [ref=f59e17] [cursor=pointer]:
+          - /url: /admin/workspaces/new
+        - link "Add staff" [ref=f59e18] [cursor=pointer]:
+          - /url: /admin/staff
+        - link "Request templates" [ref=f59e19] [cursor=pointer]:
+          - /url: /admin/templates
+        - link "Held files" [ref=f59e20] [cursor=pointer]:
+          - /url: /admin/held
+    - generic [ref=f59e21]:
+      - generic [ref=f59e22]:
+        - heading "Workspaces" [level=2] [ref=f59e23]
+        - paragraph [ref=f59e24]: Each locker has its own display name, logo, and quota.
+      - list [ref=f59e26]:
+        - listitem [ref=f59e27]:
+          - link "Northwind Studio" [ref=f59e28] [cursor=pointer]:
+            - /url: /w/northwind
+          - text: northwind
+    - generic [ref=f59e29]:
+      - heading "Staff" [level=2] [ref=f59e31]
+      - list [ref=f59e33]:
+        - listitem [ref=f59e34]: studio@handoff.local

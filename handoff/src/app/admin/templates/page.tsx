@@ -35,7 +35,7 @@ export default async function TemplatesPage() {
           <Card key={template.id}>
             <CardHeader>
               <CardTitle>{template.name}</CardTitle>
-              <CardDescription>{template.items.length === 0 ? "No items yet." : "Items copy into a new workspace."}</CardDescription>
+              <CardDescription>{template.items.length === 0 ? "No items yet." : "These items are copied into each new space."}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
               {template.items.length > 0 ? (

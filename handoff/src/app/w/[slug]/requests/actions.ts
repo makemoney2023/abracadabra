@@ -37,7 +37,7 @@ export async function createRequestAction(
 ): Promise<RequestState> {
   const { sql, caller, workspace } = await workspaceForSlug(String(formData.get("slug") ?? ""));
   const due = dueFromForm(String(formData.get("dueOn") ?? ""));
-  if (due === undefined) return { message: "You cannot do that." };
+  if (due === undefined) return { message: "You can't do that." };
   const created = await createRequest({
     sql,
     caller,
@@ -59,7 +59,7 @@ export async function updateRequestAction(
 ): Promise<RequestState> {
   const { sql, caller, workspace } = await workspaceForSlug(String(formData.get("slug") ?? ""));
   const due = dueFromForm(String(formData.get("dueOn") ?? ""));
-  if (due === undefined) return { message: "You cannot do that." };
+  if (due === undefined) return { message: "You can't do that." };
   const updated = await updateRequest({
     sql,
     caller,

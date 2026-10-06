@@ -30,14 +30,14 @@ export async function POST(
   context: { params: Promise<{ batchId: string; fileId: string }> },
 ) {
   if (!localObjectBytesEnabled()) {
-    return Response.json({ message: "File storage is not configured." }, { status: 503 });
+    return Response.json({ message: "File storage isn't set up yet." }, { status: 503 });
   }
   const { batchId, fileId } = await context.params;
   let parsed: z.infer<typeof multipartBody>;
   try {
     parsed = multipartBody.parse(await request.json());
   } catch {
-    return Response.json({ message: "You cannot do that." }, { status: 400 });
+    return Response.json({ message: "You can't do that." }, { status: 400 });
   }
   const sql = await openHandoffDb();
   await migrate(sql);
@@ -49,7 +49,7 @@ export async function POST(
   if (parsed.action === "create") {
     const expected = Math.ceil(granted.file.sizeBytes / LIMITS.partSizeBytes);
     if (!Number.isInteger(parsed.partCount) || parsed.partCount !== expected) {
-      return Response.json({ message: "That upload is the wrong size." }, { status: 422 });
+      return Response.json({ message: "That file isn't the size we expected." }, { status: 422 });
     }
     const uploadId = await store.beginUpload(granted.file.objectKey, batchId, fileId);
     const origin = originOf(request);
@@ -65,12 +65,12 @@ export async function POST(
 
   const meta = await store.readUpload(parsed.uploadId);
   if (!meta || meta.key !== granted.file.objectKey || meta.batchId !== batchId || meta.fileId !== fileId) {
-    return Response.json({ message: "Not found." }, { status: 404 });
+    return Response.json({ message: "We couldn't find that." }, { status: 404 });
   }
   try {
     await store.finishUpload(parsed.uploadId);
   } catch {
-    return Response.json({ message: "That upload is not in storage yet." }, { status: 409 });
+    return Response.json({ message: "That file hasn't finished uploading yet." }, { status: 409 });
   }
   return Response.json({ uploadId: parsed.uploadId }, { status: 200 });
 }

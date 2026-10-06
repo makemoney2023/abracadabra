@@ -139,7 +139,7 @@ function signatureOk(extension: string, header: Uint8Array): { ok: true } | { ok
   }
   if (TEXT.has(ext)) {
     return executable(header)
-      ? { ok: false, reason: "Text and source files cannot start with an executable signature." }
+      ? { ok: false, reason: "Text and code files can't be programs in disguise." }
       : { ok: true };
   }
   if (EXTENSION_ONLY.has(ext)) return { ok: true };
@@ -171,8 +171,8 @@ export function decideScan(input: {
       return { status: "retry", delaySeconds: 2 ** input.attempts };
     case "skipped_dev":
       if (input.allowUnscanned) return { status: "clean" };
-      return { status: "held", reason: "The scanner was skipped." };
+      return { status: "held", reason: "The safety check was skipped." };
     default:
-      return { status: "held", reason: "The scanner did not return a result." };
+      return { status: "held", reason: "The safety check didn't give an answer." };
   }
 }

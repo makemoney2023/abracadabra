@@ -160,7 +160,7 @@ describe("POST /api/workspaces/[slug]/batches", () => {
     await seed(sql);
     const response = await post("operator-token", { files: [logo] });
     expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toEqual({ message: "You cannot do that." });
+    await expect(response.json()).resolves.toEqual({ message: "You can't do that." });
     const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM batches");
     expect(count?.n).toBe(0);
   });
@@ -191,7 +191,7 @@ describe("POST /api/workspaces/[slug]/batches", () => {
     const quotaResponse = await post("owner-token", { files: [logo] });
     expect(quotaResponse.status).toBe(422);
     await expect(quotaResponse.json()).resolves.toMatchObject({
-      message: "That batch would pass the workspace quota.",
+      message: "This upload is too big for the space you have left.",
     });
 
     directory = "";
@@ -200,7 +200,7 @@ describe("POST /api/workspaces/[slug]/batches", () => {
     const archivedResponse = await post("owner-token", { files: [logo] });
     expect(archivedResponse.status).toBe(409);
     await expect(archivedResponse.json()).resolves.toEqual({
-      message: "That workspace is no longer active.",
+      message: "This space is closed.",
     });
     expect((await archived.get<{ n: number }>("SELECT count(*) AS n FROM batches"))?.n).toBe(0);
   });
@@ -210,10 +210,10 @@ describe("POST /api/workspaces/[slug]/batches", () => {
     await seed(sql);
     const foreign = await post("owner-token", { requestId: FOREIGN, files: [logo] });
     expect(foreign.status).toBe(422);
-    await expect(foreign.json()).resolves.toEqual({ message: "That request is not open." });
+    await expect(foreign.json()).resolves.toEqual({ message: "That request is closed." });
     const closed = await post("owner-token", { requestId: CLOSED, files: [logo] });
     expect(closed.status).toBe(422);
-    await expect(closed.json()).resolves.toEqual({ message: "That request is not open." });
+    await expect(closed.json()).resolves.toEqual({ message: "That request is closed." });
     expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM batches"))?.n).toBe(0);
   });
 

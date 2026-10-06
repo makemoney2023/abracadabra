@@ -20,7 +20,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
       <Card>
         <CardHeader>
           <CardTitle>{workspace.display_name}</CardTitle>
-          <CardDescription>Profile and quota are set by a super-admin. Staff can replace the logo.</CardDescription>
+          <CardDescription>Only an admin can change the file rules and the storage limit. Staff can change the logo.</CardDescription>
         </CardHeader>
         <CardContent>
           <SettingsForm

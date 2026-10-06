@@ -98,7 +98,7 @@ describe("createInvite", () => {
         sent.push(message);
       },
     });
-    expect(forged).toEqual({ ok: false, message: "You cannot do that." });
+    expect(forged).toEqual({ ok: false, message: "You can't do that." });
 
     const member = await createInvite({
       sql,
@@ -146,7 +146,7 @@ describe("createInvite", () => {
         sent.push(message);
       },
     });
-    expect(ownerInvite).toEqual({ ok: false, message: "You cannot do that." });
+    expect(ownerInvite).toEqual({ ok: false, message: "You can't do that." });
     const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM invites");
     expect(count?.n).toBe(1);
   });
@@ -212,7 +212,7 @@ describe("createInvite", () => {
       allowlist: [],
       send: async () => {},
     });
-    expect(second).toEqual({ ok: false, message: "That invite is already open." });
+    expect(second).toEqual({ ok: false, message: "That invite is already out." });
 
     for (let index = 0; index < 29; index += 1) {
       const created = await createInvite({
@@ -241,7 +241,7 @@ describe("createInvite", () => {
       allowlist: [],
       send: async () => {},
     });
-    expect(limited).toEqual({ ok: false, message: "Invite limit reached for today." });
+    expect(limited).toEqual({ ok: false, message: "You've sent as many invites as you can today." });
     const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM invites");
     expect(count?.n).toBe(30);
   });
@@ -327,7 +327,7 @@ describe("acceptInvite", () => {
       inviteId,
       now: NOW + 1_000,
     });
-    expect(mismatch).toEqual({ ok: false, message: "This invite is for a different email." });
+    expect(mismatch).toEqual({ ok: false, message: "This invite was sent to a different email." });
     expect(await sql.get("SELECT id FROM memberships WHERE user_id = 'user-other'")).toBeUndefined();
 
     await sql.run("INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)", [
@@ -380,21 +380,21 @@ describe("acceptInvite", () => {
     await sql.run("UPDATE invites SET expires_at = ? WHERE id = ?", [NOW, expiredId]);
     expect(
       await acceptInvite({ sql, caller: guest, inviteId: expiredId, now: NOW }),
-    ).toEqual({ ok: false, message: "That invite is no longer valid." });
+    ).toEqual({ ok: false, message: "That invite doesn't work anymore." });
 
     await sql.run("DELETE FROM invites");
     const revokedId = await openInvite(sql);
     await sql.run("UPDATE invites SET revoked_at = ? WHERE id = ?", [NOW, revokedId]);
     expect(
       await acceptInvite({ sql, caller: guest, inviteId: revokedId, now: NOW + 1 }),
-    ).toEqual({ ok: false, message: "That invite is no longer valid." });
+    ).toEqual({ ok: false, message: "That invite doesn't work anymore." });
 
     await sql.run("DELETE FROM invites");
     const archivedId = await openInvite(sql);
     await sql.run("UPDATE workspaces SET status = 'archived' WHERE id = ?", [WORKSPACE]);
     expect(
       await acceptInvite({ sql, caller: guest, inviteId: archivedId, now: NOW + 2 }),
-    ).toEqual({ ok: false, message: "That invite is no longer valid." });
+    ).toEqual({ ok: false, message: "That invite doesn't work anymore." });
 
     const memberships = await sql.get<{ n: number }>(
       "SELECT count(*) AS n FROM memberships WHERE user_id = 'user-guest'",
@@ -434,7 +434,7 @@ describe("removeMember", () => {
       membershipId: "mem-owner",
       now: NOW + 6,
     });
-    expect(refused).toEqual({ ok: false, message: "You cannot do that." });
+    expect(refused).toEqual({ ok: false, message: "You can't do that." });
     const still = await sql.get<{ revoked_at: number | null }>(
       "SELECT revoked_at FROM memberships WHERE id = 'mem-owner'",
     );

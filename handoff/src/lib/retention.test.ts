@@ -183,7 +183,7 @@ describe("workspace retention", () => {
       workspaceId: WORKSPACE,
       now: now + 1,
     });
-    expect(again).toEqual({ ok: false, status: 409, message: "That workspace is no longer active." });
+    expect(again).toEqual({ ok: false, status: 409, message: "This space is closed." });
     const audits = await sql.all<{ action: string; metadata: string }>(
       "SELECT action, metadata FROM audit_events WHERE action = 'workspace.archived'",
     );
@@ -198,7 +198,7 @@ describe("workspace retention", () => {
       now,
       body: { files: [{ relativePath: "note.txt", sizeBytes: 1, contentType: "text/plain" }] },
     });
-    expect(batch).toMatchObject({ ok: false, status: 409, message: "That workspace is no longer active." });
+    expect(batch).toMatchObject({ ok: false, status: 409, message: "This space is closed." });
     const invite = await createInvite({
       sql,
       caller: await caller(sql, "operator-token"),
@@ -211,7 +211,7 @@ describe("workspace retention", () => {
       allowlist: [],
       send: async () => undefined,
     });
-    expect(invite).toEqual({ ok: false, message: "You cannot do that." });
+    expect(invite).toEqual({ ok: false, message: "You can't do that." });
     const request = await createRequest({
       sql,
       caller: await caller(sql, "operator-token"),
@@ -221,7 +221,7 @@ describe("workspace retention", () => {
       suggestedTag: null,
       dueOn: null,
     });
-    expect(request).toEqual({ ok: false, message: "That workspace is no longer active." });
+    expect(request).toEqual({ ok: false, message: "This space is closed." });
     const download = await issueDownload({
       sql,
       caller: await caller(sql, "owner-token"),
@@ -280,7 +280,7 @@ describe("workspace retention", () => {
       payload: { displayName: "Northwind Co", slug: "northwind", purgeOn },
       origin: ORIGIN,
     });
-    expect(rendered.subject).toContain("will be purged");
+    expect(rendered.subject).toContain("will be deleted");
     expect(rendered.text).toContain(purgeOn);
   });
 
@@ -302,8 +302,8 @@ describe("workspace retention", () => {
       origin: ORIGIN,
       now,
     });
-    expect(outsider).toEqual({ ok: false, status: 404, message: "Not found." });
-    expect(operator).toEqual({ ok: false, status: 403, message: "You cannot do that." });
+    expect(outsider).toEqual({ ok: false, status: 404, message: "We couldn't find that." });
+    expect(operator).toEqual({ ok: false, status: 403, message: "You can't do that." });
     delete process.env.HANDOFF_SIGNING_SECRET;
     const missing = await exportWorkspace({
       sql,
@@ -312,7 +312,7 @@ describe("workspace retention", () => {
       origin: ORIGIN,
       now,
     });
-    expect(missing).toEqual({ ok: false, status: 503, message: "File links are not configured." });
+    expect(missing).toEqual({ ok: false, status: 503, message: "File links aren't set up yet." });
     process.env.HANDOFF_SIGNING_SECRET = "test-signing-secret";
     const result = await exportWorkspace({
       sql,
@@ -355,7 +355,7 @@ describe("workspace retention", () => {
       reason: "too soon",
       now,
     });
-    expect(active).toEqual({ ok: false, status: 409, message: "That workspace is still active." });
+    expect(active).toEqual({ ok: false, status: 409, message: "This space is still open." });
     const archived = await archiveWorkspace({
       sql,
       caller: await caller(sql, "admin-token"),
@@ -398,7 +398,7 @@ describe("workspace retention", () => {
       reason: "again",
       now: archived.purgeAfter,
     });
-    expect(repeat).toEqual({ ok: false, status: 409, message: "That workspace is already purged." });
+    expect(repeat).toEqual({ ok: false, status: 409, message: "This space has already been deleted." });
     const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM audit_events WHERE action = 'workspace.purged'");
     expect(count?.n).toBe(1);
   });
@@ -439,9 +439,9 @@ describe("workspace retention", () => {
       reason: "  ",
       now,
     });
-    expect(operator).toEqual({ ok: false, status: 403, message: "You cannot do that." });
-    expect(outsider).toEqual({ ok: false, status: 404, message: "Not found." });
-    expect(blank).toEqual({ ok: false, status: 422, message: "A reason is required." });
+    expect(operator).toEqual({ ok: false, status: 403, message: "You can't do that." });
+    expect(outsider).toEqual({ ok: false, status: 404, message: "We couldn't find that." });
+    expect(blank).toEqual({ ok: false, status: 422, message: "Please tell us why." });
     const failed = await purgeDueWorkspaces(sql, throwingStore(), archived.purgeAfter);
     expect(failed).toBe(0);
     const still = await sql.get<{ status: string }>("SELECT status FROM workspaces WHERE id = ?", [WORKSPACE]);

@@ -117,7 +117,7 @@ describe("upload grant and completion", () => {
       await seed(sql, status, now, now - 1_000);
       const response = await call(grant, "grant");
       expect(response.status).toBe(409);
-      await expect(response.json()).resolves.toEqual({ message: "That file is not open for upload." });
+      await expect(response.json()).resolves.toEqual({ message: "That file can't be uploaded right now." });
       const batch = await sql.get<{ last_activity_at: number }>(
         "SELECT last_activity_at FROM batches WHERE id = ?",
         [BATCH],
@@ -132,7 +132,7 @@ describe("upload grant and completion", () => {
     await seed(sql, "pending", now - LIMITS.maxBatchLifeMs - 1_000, now);
     const response = await call(grant, "grant");
     expect(response.status).toBe(409);
-    await expect(response.json()).resolves.toEqual({ message: "That batch is no longer active." });
+    await expect(response.json()).resolves.toEqual({ message: "That upload is closed." });
   });
 
   it("marks a matching stored size uploaded and enqueues one scan", async () => {
@@ -174,7 +174,7 @@ describe("upload grant and completion", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as { file: { status: string; scanReason: string | null } };
     expect(body.file.status).toBe("failed");
-    expect(body.file.scanReason).toBe("Stored size does not match the manifest.");
+    expect(body.file.scanReason).toBe("The saved file size doesn't match the list.");
     expect(await store.stat(key)).toBeNull();
     const queued = await sql.get<{ n: number }>(
       "SELECT count(*) AS n FROM audit_events WHERE action = 'file.uploaded'",

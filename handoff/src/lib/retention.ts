@@ -6,14 +6,14 @@ import { queueProductEvent } from "@/lib/notifications";
 import { LIMITS } from "@/lib/policy/limits";
 import type { ObjectStore } from "@/lib/store/objects";
 
-const NOT_FOUND = "Not found.";
-const REFUSED = "You cannot do that.";
-const INACTIVE = "That workspace is no longer active.";
-const STILL_ACTIVE = "That workspace is still active.";
-const ALREADY_PURGED = "That workspace is already purged.";
-const REASON_REQUIRED = "A reason is required.";
-const REASON_LONG = "A reason is at most 2,000 characters.";
-const LINKS_OFF = "File links are not configured.";
+const NOT_FOUND = "We couldn't find that.";
+const REFUSED = "You can't do that.";
+const INACTIVE = "This space is closed.";
+const STILL_ACTIVE = "This space is still open.";
+const ALREADY_PURGED = "This space has already been deleted.";
+const REASON_REQUIRED = "Please tell us why.";
+const REASON_LONG = "Your reason is too long. Keep it under 2,000 characters.";
+const LINKS_OFF = "File links aren't set up yet.";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type WorkspaceExportFile = {

@@ -3,14 +3,15 @@ export default function HowHandoffHandlesFiles() {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
       <h1 className="font-heading text-4xl leading-tight">How Handoff handles files</h1>
       <p>
-        Handoff checks a file&apos;s signature, then a ClamAV scan marks it clean, rejected, or held.
+        First we check that each file is what it says it is. Then a virus scanner looks at it. A
+        file ends up clean, refused, or held. Held means a person on our team takes a closer look.
       </p>
       <p>
-        Invited members, assigned operators, and super-admins can see files in that workspace. People
-        in other workspaces cannot.
+        Only the people you invite, the staff who work with you, and our admins can see your files.
+        People in other workspaces can&apos;t.
       </p>
       <p>
-        An archived workspace is purged after its retention period. The default retention is 90 days.
+        When a project is done, we put it in the archive. After 90 days, we delete it for good, unless your team picks a different time.
       </p>
     </main>
   );

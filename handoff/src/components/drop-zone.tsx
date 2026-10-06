@@ -26,16 +26,16 @@ function bytesAsArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 }
 
 const NOTICE =
-  "Handoff is for brand files, photos, copy, exports, source, and reference files. Passwords, key files, and environment files are refused.";
+  "Send brand files, photos, words, and notes. We can't take passwords or key files.";
 
 async function responseMessage(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as { message?: string };
     if (body.message) return body.message;
   } catch {
-    return "That upload failed.";
+    return "That upload didn't work.";
   }
-  return "That upload failed.";
+  return "That upload didn't work.";
 }
 
 async function uploadFile(batchId: string, fileId: string, file: File): Promise<void> {
@@ -59,7 +59,7 @@ async function uploadFile(batchId: string, fileId: string, file: File): Promise<
     read: async (start, end) => new Uint8Array(await file.slice(start, end).arrayBuffer()),
     send: async (partNumber, body) => {
       const url = urlByPart.get(partNumber);
-      if (!url) throw new Error("That part is missing.");
+      if (!url) throw new Error("A piece of the file is missing.");
       const sent = await fetch(url, { method: "PUT", body: bytesAsArrayBuffer(body) });
       if (!sent.ok) throw new Error(await responseMessage(sent));
     },
@@ -73,7 +73,7 @@ async function uploadFile(batchId: string, fileId: string, file: File): Promise<
   const done = await fetch(`/api/batches/${batchId}/files/${fileId}/complete`, { method: "POST" });
   if (!done.ok) throw new Error(await responseMessage(done));
   const completed = (await done.json()) as { file?: { status: string } };
-  if (completed.file?.status !== "uploaded") throw new Error("That file did not finish.");
+  if (completed.file?.status !== "uploaded") throw new Error("That file didn't finish uploading.");
 }
 
 export function DropZone({
@@ -135,7 +135,7 @@ export function DropZone({
     await mapPool(targets, LIMITS.uploadConcurrency, async (row) => {
       const file = filesRef.current.get(row.relativePath);
       if (!file || !row.fileId) {
-        patch(row.relativePath, { state: "failed", message: "That file is no longer selected." });
+        patch(row.relativePath, { state: "failed", message: "That file isn't picked anymore." });
         return;
       }
       patch(row.relativePath, { state: "uploading", message: "" });
@@ -145,7 +145,7 @@ export function DropZone({
       } catch (error) {
         patch(row.relativePath, {
           state: "failed",
-          message: error instanceof Error ? error.message : "That upload failed.",
+          message: error instanceof Error ? error.message : "That upload didn't work.",
         });
       }
     });
@@ -206,25 +206,25 @@ export function DropZone({
     <section className="flex flex-col gap-4">
       <p className="text-sm">{NOTICE}</p>
       <a href="/how-handoff-handles-files" className="text-sm underline">
-        How Handoff handles files
+        How we keep your files safe
       </a>
       {canDrop ? (
         <>
           <label className="flex flex-col gap-1 text-sm">
-            Label
+            Name this upload
             <Input value={label} onChange={(event) => setLabel(event.target.value)} maxLength={200} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            Note
+            Add a note (if you want)
             <textarea
               value={note}
               onChange={(event) => setNote(event.target.value)}
               className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm"
             />
           </label>
-          {noteTooLong ? <p className="text-sm">A note is at most 2,000 characters.</p> : null}
+          {noteTooLong ? <p className="text-sm">Your note is too long. Keep it under 2,000 characters.</p> : null}
           <label className="flex flex-col gap-1 text-sm">
-            Folder
+            Pick a folder
             <input
               ref={folderRef}
               type="file"
@@ -233,7 +233,7 @@ export function DropZone({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            Files
+            Pick files
             <input
               type="file"
               multiple
@@ -242,7 +242,7 @@ export function DropZone({
             />
           </label>
           <p className="text-sm text-muted-foreground">
-            A phone can select several files. Use a computer to choose a whole folder.
+            On a phone, you can pick a few files. To send a whole folder, use a computer.
           </p>
           {rows.length > 0 ? (
             <>
@@ -255,29 +255,29 @@ export function DropZone({
                 ))}
               </ul>
               <p className="text-sm">
-                {finished} finished, {failed} failed, {remaining} remaining
+                {finished} done, {failed} didn&apos;t work, {remaining} to go
               </p>
             </>
           ) : null}
           {formMessage ? <p className="text-sm">{formMessage}</p> : null}
           <div className="flex gap-2">
             <Button type="button" disabled={busy || rows.length === 0 || noteTooLong} onClick={() => void startUpload()}>
-              Upload
+              Send
             </Button>
             {failed > 0 && batchId ? (
               <Button type="button" variant="outline" disabled={busy} onClick={() => void startUpload()}>
-                Try failed files again
+                Try the missed files again
               </Button>
             ) : null}
             {batchId ? (
               <Link href={`/w/${slug}/batches/${batchId}`} className="text-sm">
-                Review this batch
+                See this upload
               </Link>
             ) : null}
           </div>
         </>
       ) : (
-        <p className="text-sm text-muted-foreground">Staff do not upload files.</p>
+        <p className="text-sm text-muted-foreground">Staff can&apos;t send files.</p>
       )}
     </section>
   );

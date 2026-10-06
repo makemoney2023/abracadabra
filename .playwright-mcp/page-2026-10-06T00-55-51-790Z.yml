@@ -1,0 +1,15 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - paragraph [ref=e4]: Handoff
+    - heading "A locker for one client." [level=1] [ref=e5]
+    - paragraph [ref=e6]: Invited people drop brand, photo, copy, and reference files. Operators verify them after a malware scan. Handoff is not part of any client's product.
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - heading "Open an invite" [level=2] [ref=e9]
+      - paragraph [ref=e10]: Sign-in is the email on an invite. This check does not create an account.
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - text: Invite email
+        - textbox "Invite email" [ref=e14]:
+          - /placeholder: you@client.com
+      - button "Check invite" [ref=e15]

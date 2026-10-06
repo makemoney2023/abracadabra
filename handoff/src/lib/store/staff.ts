@@ -50,7 +50,7 @@ export async function addStaff(input: {
     return { ok: false, message: REFUSED };
   }
   const parsed = staffEmail.safeParse(input.email);
-  if (!parsed.success) return { ok: false, message: "Enter a staff email." };
+  if (!parsed.success) return { ok: false, message: "Type a team member's email." };
   const email = parsed.data.toLowerCase();
   const existingStaff = await input.sql.get<{ user_id: string }>(
     "SELECT user_id FROM staff WHERE email = ? AND revoked_at IS NULL",

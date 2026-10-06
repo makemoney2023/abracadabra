@@ -5,10 +5,10 @@ import { signFileLink } from "@/lib/downloads";
 import { LIMITS } from "@/lib/policy/limits";
 
 const HOUR_MS = 60 * 60 * 1000;
-const NOT_FOUND = "Not found.";
-const REFUSED = "You cannot do that.";
-const LIMITED = "Export limit reached for this hour.";
-const LINKS_OFF = "File links are not configured.";
+const NOT_FOUND = "We couldn't find that.";
+const REFUSED = "You can't do that.";
+const LIMITED = "You've made as many exports as you can this hour. Try again later.";
+const LINKS_OFF = "File links aren't set up yet.";
 
 export type ExportFile = {
   relativePath: string;

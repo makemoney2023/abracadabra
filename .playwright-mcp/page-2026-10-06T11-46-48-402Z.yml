@@ -1,0 +1,23 @@
+- generic [active] [ref=f60e1]:
+  - generic [ref=f60e2]:
+    - banner [ref=f60e3]:
+      - generic [ref=f60e4]:
+        - generic [ref=f60e5]:
+          - paragraph [ref=f60e6]: Handoff
+          - paragraph [ref=f60e7]: Northwind Studio
+        - link "Requests" [ref=f60e8] [cursor=pointer]:
+          - /url: /w/northwind/requests
+        - link "People" [ref=f60e9] [cursor=pointer]:
+          - /url: /w/northwind/people
+        - link "Settings" [ref=f60e10] [cursor=pointer]:
+          - /url: /w/northwind/settings
+    - main [ref=f60e11]:
+      - paragraph [ref=f60e12]: Drop
+      - heading "Logo" [level=1] [ref=f60e13]
+      - paragraph [ref=f60e14]: The mark as a PNG or SVG.
+      - generic [ref=f60e15]:
+        - paragraph [ref=f60e16]: Handoff is for brand files, photos, copy, exports, source, and reference files. Passwords, key files, and environment files are refused.
+        - link "How Handoff handles files" [ref=f60e17] [cursor=pointer]:
+          - /url: /how-handoff-handles-files
+        - paragraph [ref=f60e18]: Staff do not upload files.
+  - alert [ref=f60e19]

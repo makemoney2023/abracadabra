@@ -6,10 +6,10 @@ import { reencodeLogo } from "@/lib/store/logo";
 import { REFUSED, type StoreResult } from "@/lib/store/result";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 
-const LOGO_REFUSED = "Use a PNG or WebP logo under 512 KB.";
-const TEMPLATE_REFUSED = "Choose a live template.";
-const SLUG_TAKEN = "That slug is already in use.";
-const NOT_STAFF = "That person is not staff.";
+const LOGO_REFUSED = "Use a PNG or WebP logo smaller than 512 KB.";
+const TEMPLATE_REFUSED = "Pick a template that is still in use.";
+const SLUG_TAKEN = "That web address is already taken.";
+const NOT_STAFF = "That person isn't on the team.";
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

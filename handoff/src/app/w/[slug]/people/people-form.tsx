@@ -18,22 +18,22 @@ export function InviteForm({ slug, canInviteOwner }: { slug: string; canInviteOw
       </label>
       {canInviteOwner ? (
         <label className="flex flex-col gap-1 text-sm" htmlFor="person-role">
-          Role
+          Their role
           <select
             id="person-role"
             name="role"
             className="h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm"
             defaultValue="client_member"
           >
-            <option value="client_member">Client member</option>
-            <option value="client_owner">Client owner</option>
+            <option value="client_member">Member</option>
+            <option value="client_owner">Owner</option>
           </select>
         </label>
       ) : (
         <input type="hidden" name="role" value="client_member" />
       )}
       <Button type="submit" disabled={pending}>
-        {pending ? "Sending" : "Send invite"}
+        {pending ? "Sending..." : "Send invite"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -51,7 +51,7 @@ export function ResendForm({ slug, inviteId }: { slug: string; inviteId: string 
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="inviteId" value={inviteId} />
       <Button type="submit" variant="outline" size="sm" disabled={pending}>
-        {pending ? "Sending" : "Send again"}
+        {pending ? "Sending..." : "Send again"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -69,7 +69,7 @@ export function RemoveForm({ slug, membershipId }: { slug: string; membershipId:
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="membershipId" value={membershipId} />
       <Button type="submit" variant="outline" size="sm" disabled={pending}>
-        {pending ? "Removing" : "Remove"}
+        {pending ? "Removing..." : "Remove"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">

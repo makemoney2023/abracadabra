@@ -22,14 +22,14 @@ export default async function RequestsPage({ params }: { params: Promise<{ slug:
       <h1 className="font-heading text-4xl leading-tight">Requests</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Add a request</CardTitle>
+          <CardTitle>Ask for files</CardTitle>
         </CardHeader>
         <CardContent>
           <CreateRequestForm slug={workspace.slug} />
         </CardContent>
       </Card>
       {requests.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No requests in {workspace.display_name} yet.</p>
+        <p className="text-sm text-muted-foreground">You haven&apos;t asked for anything in {workspace.display_name} yet.</p>
       ) : (
         <ul className="flex flex-col gap-6">
           {requests.map((request) => (

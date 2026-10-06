@@ -17,14 +17,14 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   try {
     parsed = bodySchema.parse(await request.json());
   } catch {
-    return Response.json({ message: "You cannot do that." }, { status: 400 });
+    return Response.json({ message: "You can't do that." }, { status: 400 });
   }
   const sql = await openHandoffDb();
   await migrate(sql);
   const now = Date.now();
   const caller = await getCaller(sql, cookieValue(request, SESSION_COOKIE), now);
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
-  if (!workspace) return Response.json({ message: "Not found." }, { status: 404 });
+  if (!workspace) return Response.json({ message: "We couldn't find that." }, { status: 404 });
   const result = await purgeWorkspace({
     sql,
     caller,

@@ -1,0 +1,30 @@
+- generic [active] [ref=f50e1]:
+  - button "Open Next.js Dev Tools" [ref=f50e28] [cursor=pointer]
+  - alert [ref=f50e32]
+  - main [ref=f50e34]:
+    - generic [ref=f50e35]:
+      - paragraph [ref=f50e36]: Handoff
+      - heading "Staff tools" [level=1] [ref=f50e37]
+      - generic [ref=f50e38]:
+        - link "Open a workspace" [ref=f50e39] [cursor=pointer]:
+          - /url: /admin/workspaces/new
+        - link "Add staff" [ref=f50e40] [cursor=pointer]:
+          - /url: /admin/staff
+        - link "Request templates" [ref=f50e41] [cursor=pointer]:
+          - /url: /admin/templates
+        - link "Held files" [ref=f50e42] [cursor=pointer]:
+          - /url: /admin/held
+    - generic [ref=f50e43]:
+      - generic [ref=f50e44]:
+        - heading "Workspaces" [level=2] [ref=f50e45]
+        - paragraph [ref=f50e46]: Each locker has its own display name, logo, and quota.
+      - list [ref=f50e48]:
+        - listitem [ref=f50e49]:
+          - link "Northwind Studio" [ref=f50e50] [cursor=pointer]:
+            - /url: /w/northwind
+          - text: northwind
+    - generic [ref=f50e51]:
+      - heading "Staff" [level=2] [ref=f50e53]
+      - list [ref=f50e55]:
+        - listitem [ref=f50e56]: operator@example.com
+        - listitem [ref=f50e57]: studio-admin@example.com

@@ -21,6 +21,6 @@ export async function acceptInviteAction(
   const workspace = await sql.get<{ slug: string }>("SELECT slug FROM workspaces WHERE id = ?", [
     accepted.value.workspaceId,
   ]);
-  if (!workspace) return { message: "That invite is no longer valid." };
+  if (!workspace) return { message: "That invite doesn't work anymore." };
   redirect(`/w/${workspace.slug}`);
 }

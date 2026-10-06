@@ -15,7 +15,7 @@ export async function POST(
     const body = (await request.json()) as { tag?: unknown };
     tag = typeof body.tag === "string" ? body.tag : "";
   } catch {
-    return Response.json({ message: "You cannot do that." }, { status: 400 });
+    return Response.json({ message: "You can't do that." }, { status: 400 });
   }
   const sql = await openHandoffDb();
   await migrate(sql);

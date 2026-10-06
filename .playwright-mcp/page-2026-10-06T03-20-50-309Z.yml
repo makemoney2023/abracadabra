@@ -1,0 +1,10 @@
+- generic [active] [ref=f50e1]:
+  - main [ref=f50e2]:
+    - generic [ref=f50e3]:
+      - paragraph [ref=f50e4]: Handoff
+      - heading "Held files" [level=1] [ref=f50e5]
+      - link "Staff tools" [ref=f50e6] [cursor=pointer]:
+        - /url: /admin
+    - paragraph [ref=f50e33]: No held files.
+  - button "Open Next.js Dev Tools" [ref=f50e28] [cursor=pointer]
+  - alert [ref=f50e32]

@@ -4,11 +4,11 @@ import { LIMITS } from "@/lib/policy/limits";
 import { normalizeEmail, requestMagicLink, type OutboundMail } from "@/lib/session";
 import { REFUSED, type StoreResult } from "@/lib/store/result";
 
-const ALREADY_OPEN = "That invite is already open.";
-const LIMIT_REACHED = "Invite limit reached for today.";
-const MAIL_FAILED = "Handoff could not send email. Try again shortly.";
-const DIFFERENT_EMAIL = "This invite is for a different email.";
-const INVALID = "That invite is no longer valid.";
+const ALREADY_OPEN = "That invite is already out.";
+const LIMIT_REACHED = "You've sent as many invites as you can today.";
+const MAIL_FAILED = "We couldn't send the email. Please try again soon.";
+const DIFFERENT_EMAIL = "This invite was sent to a different email.";
+const INVALID = "That invite doesn't work anymore.";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

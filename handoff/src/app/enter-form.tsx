@@ -8,7 +8,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Opening" : "Open Handoff"}
+      {pending ? "Opening..." : "Open Handoff"}
     </Button>
   );
 }

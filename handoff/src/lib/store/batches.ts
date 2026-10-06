@@ -6,9 +6,9 @@ import { LIMITS, isFileTag, type FileTag } from "@/lib/policy/limits";
 import type { PolicyProfile } from "@/lib/policy/profiles";
 import { z } from "zod";
 
-const REFUSED = "You cannot do that.";
-const INACTIVE = "That workspace is no longer active.";
-const REQUEST_CLOSED = "That request is not open.";
+const REFUSED = "You can't do that.";
+const INACTIVE = "This space is closed.";
+const REQUEST_CLOSED = "That request is closed.";
 const HOUR_MS = 60 * 60 * 1000;
 
 const fileEntry = z
@@ -54,7 +54,7 @@ export async function createBatch(input: {
   body: unknown;
 }): Promise<CreateBatchResult> {
   const workspace = (await workspacesFor(input.sql, input.caller)).find((row) => row.slug === input.slug);
-  if (!workspace || !input.caller.userId) return { ok: false, status: 404, message: "Not found." };
+  if (!workspace || !input.caller.userId) return { ok: false, status: 404, message: "We couldn't find that." };
 
   const staff = await input.sql.get<{ ok: number }>(
     "SELECT 1 AS ok FROM staff WHERE user_id = ? AND revoked_at IS NULL",
@@ -75,7 +75,7 @@ export async function createBatch(input: {
     [workspace.id, input.now - HOUR_MS],
   );
   if ((started?.n ?? 0) >= LIMITS.batchesPerWorkspacePerHour) {
-    return { ok: false, status: 429, message: "Batch limit reached for this hour." };
+    return { ok: false, status: 429, message: "You've started as many uploads as you can this hour. Try again later." };
   }
 
   const parsed = batchBody.safeParse(input.body);
@@ -84,7 +84,7 @@ export async function createBatch(input: {
   }
   const note = parsed.data.note?.trim() ?? "";
   if (note.length > LIMITS.maxNoteChars) {
-    return { ok: false, status: 422, message: "A note is at most 2,000 characters." };
+    return { ok: false, status: 422, message: "Your note is too long. Keep it under 2,000 characters." };
   }
   const label = parsed.data.label?.trim() || null;
   const requestId = parsed.data.requestId?.trim() || null;

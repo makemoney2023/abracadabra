@@ -94,7 +94,7 @@ describe("createWorkspace", () => {
         policyProfile: "standard",
       },
     });
-    expect(refused).toEqual({ ok: false, message: "You cannot do that." });
+    expect(refused).toEqual({ ok: false, message: "You can't do that." });
 
     const created = await createWorkspace({
       sql,
@@ -139,7 +139,7 @@ describe("createWorkspace", () => {
         policyProfile: "standard",
       },
     });
-    expect(duplicate).toEqual({ ok: false, message: "That slug is already in use." });
+    expect(duplicate).toEqual({ ok: false, message: "That web address is already taken." });
   });
 
   it("copies a live template into requests and ignores later template edits", async () => {
@@ -167,7 +167,7 @@ describe("createWorkspace", () => {
         templateId: "missing",
       },
     });
-    expect(retired).toEqual({ ok: false, message: "Choose a live template." });
+    expect(retired).toEqual({ ok: false, message: "Pick a template that is still in use." });
 
     const created = await createWorkspace({
       sql,
@@ -229,7 +229,7 @@ describe("assignOperator and configureWorkspace", () => {
       workspaceId: created.value.id,
       userId: "user-stranger",
     });
-    expect(stranger).toEqual({ ok: false, message: "That person is not staff." });
+    expect(stranger).toEqual({ ok: false, message: "That person isn't on the team." });
 
     await sql.run("INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)", [
       "user-revoked",
@@ -247,7 +247,7 @@ describe("assignOperator and configureWorkspace", () => {
       workspaceId: created.value.id,
       userId: "user-revoked",
     });
-    expect(revoked).toEqual({ ok: false, message: "That person is not staff." });
+    expect(revoked).toEqual({ ok: false, message: "That person isn't on the team." });
 
     const added = await addStaff({
       sql,
@@ -264,7 +264,7 @@ describe("assignOperator and configureWorkspace", () => {
       workspaceId: created.value.id,
       userId: added.value.userId,
     });
-    expect(denied).toEqual({ ok: false, message: "You cannot do that." });
+    expect(denied).toEqual({ ok: false, message: "You can't do that." });
 
     const assigned = await assignOperator({
       sql,
@@ -287,7 +287,7 @@ describe("assignOperator and configureWorkspace", () => {
       policyProfile: "software",
       quotaBytes: 10,
     });
-    expect(configured).toEqual({ ok: false, message: "You cannot do that." });
+    expect(configured).toEqual({ ok: false, message: "You can't do that." });
 
     const updated = await configureWorkspace({
       sql,
@@ -331,7 +331,7 @@ describe("setWorkspaceLogo", () => {
       bytes: Uint8Array.of(0xff, 0xd8, 0xff, 0xd9),
       branding,
     });
-    expect(jpeg).toEqual({ ok: false, message: "Use a PNG or WebP logo under 512 KB." });
+    expect(jpeg).toEqual({ ok: false, message: "Use a PNG or WebP logo smaller than 512 KB." });
 
     const oversized = new Uint8Array(LIMITS.logoMaxBytes + 1);
     oversized.set(PNG_1X1.subarray(0, 8));
@@ -342,7 +342,7 @@ describe("setWorkspaceLogo", () => {
       bytes: oversized,
       branding,
     });
-    expect(tooBig).toEqual({ ok: false, message: "Use a PNG or WebP logo under 512 KB." });
+    expect(tooBig).toEqual({ ok: false, message: "Use a PNG or WebP logo smaller than 512 KB." });
 
     const trailer = new Uint8Array(PNG_1X1.length + 10);
     trailer.set(PNG_1X1);
@@ -393,6 +393,6 @@ describe("setWorkspaceLogo", () => {
       bytes: PNG_1X1,
       branding,
     });
-    expect(clientLogo).toEqual({ ok: false, message: "You cannot do that." });
+    expect(clientLogo).toEqual({ ok: false, message: "You can't do that." });
   });
 });

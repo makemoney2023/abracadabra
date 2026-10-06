@@ -19,18 +19,18 @@ describe("normalizeRelativePath", () => {
   });
 
   it.each([
-    ["/etc/passwd", "absolute"],
+    ["/etc/passwd", "slash"],
     ["a\\b.pdf", "backslash"],
     ["a/../b.pdf", "dot"],
     ["a/./b.pdf", "dot"],
     ["a//b.pdf", "empty"],
     [".github/x.yml", "dot"],
-    ["a/\u0001b.pdf", "control"],
-    [Array.from({ length: 17 }, (_, index) => (index === 16 ? "file.pdf" : "dir")).join("/"), "16"],
-    ["a/" + "b".repeat(256), "255"],
+    ["a/\u0001b.pdf", "hidden"],
+    [Array.from({ length: 17 }, (_, index) => (index === 16 ? "file.pdf" : "dir")).join("/"), "folders"],
+    ["a/" + "b".repeat(256), "too long"],
   ])("refuses %j", (input, token) => {
     const result = normalizeRelativePath(input);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason.toLowerCase()).toContain(token === "16" || token === "255" ? token : token);
+    if (!result.ok) expect(result.reason.toLowerCase()).toContain(token);
   });
 });

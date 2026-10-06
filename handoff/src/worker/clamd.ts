@@ -19,7 +19,7 @@ export function parseClamdReply(text: string): ClamdResult {
   }
   const found = line.match(/:\s*(.+)\s+FOUND\s*$/i);
   if (found) return { kind: "found", signature: found[1].trim() };
-  return { kind: "error", detail: line || "The scanner did not return a result." };
+  return { kind: "error", detail: line || "The safety check didn't give an answer." };
 }
 
 function command(host: string, port: number, write: (socket: import("node:net").Socket) => void): Promise<string> {
@@ -76,7 +76,7 @@ export async function scanInstream(bytes: Uint8Array): Promise<ClamdResult> {
     });
     return parseClamdReply(reply);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : "The scanner did not return a result.";
+    const detail = error instanceof Error ? error.message : "The safety check didn't give an answer.";
     return { kind: "error", detail };
   }
 }

@@ -24,7 +24,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Handoff",
   description:
-    "A private locker where invited people drop brand, photo, copy, and reference files for one workspace.",
+    "A private place to send files to the team you work with.",
 };
 
 export const viewport: Viewport = {

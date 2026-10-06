@@ -17,14 +17,14 @@ export default async function BatchPage({
   if (!screen) notFound();
   const clean = screen.files.some((file) => file.status === "clean");
   const discardNote = screen.discarded
-    ? "This batch was discarded."
+    ? "This upload was thrown away."
     : clean
-      ? "A clean file is already in this batch."
+      ? "This upload has a safe file in it, so you can't throw it away."
       : "";
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
-      <p className="font-mono text-xs tracking-wide text-optic">Batch</p>
-      <h1 className="font-heading text-4xl leading-tight">{screen.label ?? "Untitled drop"}</h1>
+      <p className="font-mono text-xs tracking-wide text-optic">Upload</p>
+      <h1 className="font-heading text-4xl leading-tight">{screen.label ?? "Untitled upload"}</h1>
       <BatchReview
         batchId={batchId}
         files={screen.files}

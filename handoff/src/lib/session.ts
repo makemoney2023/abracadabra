@@ -13,7 +13,7 @@ const SESSIONS = getTableName(sessions);
 
 const emailAddress = z.string().trim().email();
 
-export const SIGN_IN_MESSAGE = "If this address can open Handoff, a sign-in link is on its way.";
+export const SIGN_IN_MESSAGE = "If we know this email, we sent you a link to sign in.";
 export const SESSION_COOKIE = "handoff_session";
 
 export type OutboundMail = {
@@ -51,10 +51,10 @@ export function safeNextPath(value: string | null): string | null {
 function magicLinkText(url: string): string {
   const minutes = Math.round(LIMITS.magicLinkTtlMs / 60_000);
   return [
-    "Open Handoff with this link:",
+    "Use this link to open Handoff:",
     url,
     "",
-    `The link expires in ${minutes} minutes. If you did not ask for it, you can ignore this message.`,
+    `The link stops working in ${minutes} minutes. If you did not ask for it, just ignore this email.`,
   ].join("\n");
 }
 
@@ -93,7 +93,7 @@ export async function requestMagicLink(input: {
   send: (message: OutboundMail) => Promise<void>;
 }): Promise<{ message: string }> {
   const email = normalizeEmail(input.email);
-  if (!email) return { message: "Enter the email on your invite." };
+  if (!email) return { message: "Type the email your invite was sent to." };
   const allowed = await canRequestLink(input.sql, email, input.now, input.allowlist);
   if (!allowed) return { message: SIGN_IN_MESSAGE };
 

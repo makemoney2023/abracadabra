@@ -49,27 +49,27 @@ const IN_FLIGHT = new Set<FileStatus>(["pending", "uploading", "uploaded", "scan
 /** Whole-manifest check. The first bad entry keeps its index. */
 export function validateManifest(input: ManifestInput): ManifestResult {
   if (input.files.length > LIMITS.maxFilesPerBatch) {
-    return { ok: false, reason: "A batch can hold 2,000 files." };
+    return { ok: false, reason: "An upload can hold 2,000 files." };
   }
   const files: ValidFile[] = [];
   const seen = new Set<string>();
   let totalBytes = 0;
   for (const [index, entry] of input.files.entries()) {
     if (!Number.isInteger(entry.sizeBytes) || entry.sizeBytes <= 0) {
-      return { ok: false, reason: "Empty files are refused.", index };
+      return { ok: false, reason: "We can't take empty files.", index };
     }
     if (entry.sizeBytes > LIMITS.maxFileBytes) {
-      return { ok: false, reason: "A file can be at most 2 GB.", index };
+      return { ok: false, reason: "A file can be 2 GB at most.", index };
     }
     if (entry.tag !== undefined && !isFileTag(entry.tag)) {
-      return { ok: false, reason: "That tag is not allowed.", index };
+      return { ok: false, reason: "That label isn't allowed.", index };
     }
     const path = normalizeRelativePath(entry.relativePath);
     if (!path.ok) return { ok: false, reason: path.reason, index };
     const inspected = inspectFileName(path.path, input.profile);
     if (!inspected.ok) return { ok: false, reason: inspected.reason, index };
     if (seen.has(path.path)) {
-      return { ok: false, reason: "Two files normalize to the same path.", index };
+      return { ok: false, reason: "Two files have the same name and folder.", index };
     }
     seen.add(path.path);
     totalBytes += entry.sizeBytes;
@@ -81,11 +81,11 @@ export function validateManifest(input: ManifestInput): ManifestResult {
       tag: entry.tag,
     });
     if (totalBytes > LIMITS.maxBatchBytes) {
-      return { ok: false, reason: "A batch can hold 10 GB.", index };
+      return { ok: false, reason: "An upload can hold 10 GB.", index };
     }
   }
   if (input.workspaceUsedBytes + totalBytes > input.workspaceQuotaBytes) {
-    return { ok: false, reason: "That batch would pass the workspace quota." };
+    return { ok: false, reason: "This upload is too big for the space you have left." };
   }
   return { ok: true, files, totalBytes };
 }

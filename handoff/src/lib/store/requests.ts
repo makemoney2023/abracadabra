@@ -3,8 +3,8 @@ import { can, type Caller } from "@/lib/authz";
 import { isFileTag, LIMITS, type FileTag } from "@/lib/policy/limits";
 import { REFUSED, type StoreResult } from "@/lib/store/result";
 
-const GUIDANCE_LIMIT = "Guidance is at most 2,000 characters.";
-const INACTIVE = "That workspace is no longer active.";
+const GUIDANCE_LIMIT = "The help text is too long. Keep it under 2,000 characters.";
+const INACTIVE = "This space is closed.";
 
 export type RequestStatus = "open" | "received" | "closed";
 

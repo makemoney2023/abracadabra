@@ -152,7 +152,7 @@ describe("held file review", () => {
       reason: REASON,
       now: now + 1,
     });
-    expect(again).toEqual({ ok: false, status: 409, message: "That file is not held." });
+    expect(again).toEqual({ ok: false, status: 409, message: "That file isn't on hold." });
     const auditCount = await sql.get<{ n: number }>("SELECT count(*) AS n FROM audit_events");
     expect(auditCount?.n).toBe(1);
   });
@@ -224,10 +224,10 @@ describe("held file review", () => {
       reason: "   ",
       now,
     });
-    expect(operator).toEqual({ ok: false, status: 403, message: "You cannot do that." });
-    expect(client).toEqual({ ok: false, status: 403, message: "You cannot do that." });
-    expect(outsider).toEqual({ ok: false, status: 404, message: "Not found." });
-    expect(blank).toEqual({ ok: false, status: 422, message: "A reason is required." });
+    expect(operator).toEqual({ ok: false, status: 403, message: "You can't do that." });
+    expect(client).toEqual({ ok: false, status: 403, message: "You can't do that." });
+    expect(outsider).toEqual({ ok: false, status: 404, message: "We couldn't find that." });
+    expect(blank).toEqual({ ok: false, status: 422, message: "Please tell us why." });
     const audits = await sql.get<{ n: number }>("SELECT count(*) AS n FROM audit_events");
     expect(audits?.n).toBe(0);
     const held = await listHeldFiles(sql, await caller(sql, "admin-token"));

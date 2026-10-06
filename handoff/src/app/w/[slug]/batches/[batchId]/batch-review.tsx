@@ -11,9 +11,9 @@ async function responseMessage(response: Response): Promise<string> {
     const body = (await response.json()) as { message?: string };
     if (body.message) return body.message;
   } catch {
-    return "Handoff could not finish that.";
+    return "Something went wrong. Please try again.";
   }
-  return "Handoff could not finish that.";
+  return "Something went wrong. Please try again.";
 }
 
 export function BatchReview({
@@ -46,7 +46,7 @@ export function BatchReview({
     }
     const body = (await response.json()) as { url?: string };
     if (!body.url) {
-      setMessage("Handoff could not finish that.");
+      setMessage("Something went wrong. Please try again.");
       setPending(false);
       return;
     }
@@ -61,7 +61,7 @@ export function BatchReview({
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ tag }),
     });
-    setMessage(response.ok ? "Tag saved." : await responseMessage(response));
+    setMessage(response.ok ? "Label saved." : await responseMessage(response));
     setPending(false);
     if (response.ok) router.refresh();
   }
@@ -82,7 +82,7 @@ export function BatchReview({
     anchor.download = "handoff-export.json";
     anchor.click();
     URL.revokeObjectURL(objectUrl);
-    setMessage("Export saved.");
+    setMessage("List saved.");
     setPending(false);
   }
 
@@ -90,7 +90,7 @@ export function BatchReview({
     setPending(true);
     setMessage("");
     const response = await fetch(`/api/batches/${batchId}/discard`, { method: "POST" });
-    setMessage(response.ok ? "Batch discarded." : await responseMessage(response));
+    setMessage(response.ok ? "Upload thrown away." : await responseMessage(response));
     setPending(false);
     if (response.ok) router.refresh();
   }
@@ -98,7 +98,7 @@ export function BatchReview({
   return (
     <div className="flex flex-col gap-6">
       {files.length === 0 ? (
-        <p className="text-sm text-muted-foreground">This batch has no files.</p>
+        <p className="text-sm text-muted-foreground">There are no files in this upload.</p>
       ) : (
         <ul className="flex flex-col gap-4">
           {files.map((file) => (
@@ -114,7 +114,7 @@ export function BatchReview({
                 {file.sha256 ? ` · ${file.sha256}` : ""}
               </p>
               {file.duplicate ? (
-                <p className="text-sm">Matches an earlier file</p>
+                <p className="text-sm">Same as a file you sent before</p>
               ) : null}
               {file.status === "clean" ? (
                 <Button type="button" disabled={pending} onClick={() => void download(file.id)}>
@@ -123,11 +123,11 @@ export function BatchReview({
               ) : null}
               {canTag ? (
                 <label className="flex flex-col gap-1 text-sm">
-                  Tag
+                  Label
                   <select
                     className="h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm"
                     defaultValue={file.tag}
-                    aria-label={`Tag for ${file.relativePath}`}
+                    aria-label={`Label for ${file.relativePath}`}
                     onChange={(event) => void saveTag(file.id, event.target.value)}
                   >
                     {FILE_TAGS.map((tag) => (
@@ -138,7 +138,7 @@ export function BatchReview({
                   </select>
                 </label>
               ) : (
-                <p className="text-sm text-muted-foreground">Tag {file.tag}</p>
+                <p className="text-sm text-muted-foreground">Label: {file.tag}</p>
               )}
             </li>
           ))}
@@ -146,12 +146,12 @@ export function BatchReview({
       )}
       {canExport ? (
         <Button type="button" variant="outline" disabled={pending} onClick={() => void saveExport()}>
-          Export batch
+          Save a list of files
         </Button>
       ) : null}
       {canDiscard ? (
         <Button type="button" variant="outline" disabled={pending} onClick={() => void discard()}>
-          Discard batch
+          Throw away this upload
         </Button>
       ) : null}
       {discardNote ? <p className="text-sm text-muted-foreground">{discardNote}</p> : null}

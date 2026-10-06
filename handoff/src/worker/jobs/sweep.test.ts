@@ -112,7 +112,7 @@ describe("handoff sweeps", () => {
       [IDLE_BATCH, WORKSPACE, now, now],
     );
     await insertFile(sql, OLD_REJECTED, IDLE_BATCH, "notes/old-rejected.txt", "rejected", old, "Win.Test.EICAR_HDB-1", old);
-    await insertFile(sql, OLD_FAILED, IDLE_BATCH, "notes/old-failed.txt", "failed", old, "Stored size does not match the manifest.");
+    await insertFile(sql, OLD_FAILED, IDLE_BATCH, "notes/old-failed.txt", "failed", old, "The saved file size doesn't match the list.");
     await insertFile(sql, YOUNG_REJECTED, IDLE_BATCH, "notes/young.txt", "rejected", now, "Win.Test.EICAR_HDB-1", now);
     await insertFile(sql, CLEAN, IDLE_BATCH, "notes/clean.txt", "clean", old);
     const bytes = new TextEncoder().encode("bytes");

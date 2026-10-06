@@ -13,7 +13,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   await migrate(sql);
   const caller = await getCaller(sql, cookieValue(request, SESSION_COOKIE), Date.now());
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
-  if (!workspace) return Response.json({ message: "Not found." }, { status: 404 });
+  if (!workspace) return Response.json({ message: "We couldn't find that." }, { status: 404 });
   const result = await archiveWorkspace({ sql, caller, workspaceId: workspace.id, now: Date.now() });
   if (!result.ok) return Response.json({ message: result.message }, { status: result.status });
   return Response.json({ purgeAfter: result.purgeAfter });

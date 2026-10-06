@@ -19,7 +19,7 @@ const selectClass = "h-9 rounded-lg border border-input bg-transparent px-2.5 te
 function TagSelect({ id, defaultValue }: { id: string; defaultValue: string }) {
   return (
     <select id={id} name="suggestedTag" className={selectClass} defaultValue={defaultValue}>
-      <option value="">None</option>
+      <option value="">No label</option>
       {FILE_TAGS.map((tag) => (
         <option key={tag} value={tag}>
           {tag}
@@ -35,11 +35,11 @@ export function CreateRequestForm({ slug }: { slug: string }) {
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="slug" value={slug} />
       <label className="flex flex-col gap-1 text-sm" htmlFor="request-title">
-        Title
+        Name of the request
         <Input id="request-title" name="title" required maxLength={200} />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor="request-guidance">
-        Guidance
+        What should they send?
         <textarea
           id="request-guidance"
           name="guidance"
@@ -49,15 +49,15 @@ export function CreateRequestForm({ slug }: { slug: string }) {
         />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor="request-tag">
-        Suggested tag
+        Label to use
         <TagSelect id="request-tag" defaultValue="" />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor="request-due">
-        Due
+        Due date
         <Input id="request-due" name="dueOn" type="date" />
       </label>
       <Button type="submit" disabled={pending}>
-        {pending ? "Saving" : "Add request"}
+        {pending ? "Saving..." : "Add request"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -89,11 +89,11 @@ export function EditRequestForm({
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="requestId" value={requestId} />
       <label className="flex flex-col gap-1 text-sm" htmlFor={`title-${requestId}`}>
-        Title
+        Name of the request
         <Input id={`title-${requestId}`} name="title" required maxLength={200} defaultValue={title} />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor={`guidance-${requestId}`}>
-        Guidance
+        What should they send?
         <textarea
           id={`guidance-${requestId}`}
           name="guidance"
@@ -104,15 +104,15 @@ export function EditRequestForm({
         />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor={`tag-${requestId}`}>
-        Suggested tag
+        Label to use
         <TagSelect id={`tag-${requestId}`} defaultValue={suggestedTag} />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor={`due-${requestId}`}>
-        Due
+        Due date
         <Input id={`due-${requestId}`} name="dueOn" type="date" defaultValue={dueOn} />
       </label>
       <Button type="submit" variant="outline" disabled={pending}>
-        {pending ? "Saving" : "Save"}
+        {pending ? "Saving..." : "Save"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -130,7 +130,7 @@ export function CloseRequestForm({ slug, requestId }: { slug: string; requestId:
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="requestId" value={requestId} />
       <Button type="submit" variant="outline" size="sm" disabled={pending}>
-        {pending ? "Closing" : "Close"}
+        {pending ? "Closing..." : "Close"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -148,7 +148,7 @@ export function ReopenRequestForm({ slug, requestId }: { slug: string; requestId
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="requestId" value={requestId} />
       <Button type="submit" variant="outline" size="sm" disabled={pending}>
-        {pending ? "Reopening" : "Reopen"}
+        {pending ? "Reopening..." : "Reopen"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">

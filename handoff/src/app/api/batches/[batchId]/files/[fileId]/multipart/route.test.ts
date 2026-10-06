@@ -139,7 +139,7 @@ describe("multipart upload", () => {
     const response = await create(2);
     expect(response.status).toBe(422);
     const body = (await response.json()) as { message: string };
-    expect(body.message).toBe("That upload is the wrong size.");
+    expect(body.message).toBe("That file isn't the size we expected.");
   });
 
   it("refuses local bytes in production when no object path is set", async () => {
@@ -149,6 +149,6 @@ describe("multipart upload", () => {
     const response = await create(1);
     expect(response.status).toBe(503);
     const body = (await response.json()) as { message: string };
-    expect(body.message).toBe("File storage is not configured.");
+    expect(body.message).toBe("File storage isn't set up yet.");
   });
 });

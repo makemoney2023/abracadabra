@@ -9,7 +9,7 @@ export type AccessReply = { message: string };
 export function explainAccessRequest(email: string): AccessReply {
   const parsed = inviteEmail.safeParse(email);
   if (!parsed.success) {
-    return { message: "Enter the email on your invite." };
+    return { message: "Type the email your invite was sent to." };
   }
   return { message: SIGN_IN_MESSAGE };
 }

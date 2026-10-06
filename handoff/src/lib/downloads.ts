@@ -45,12 +45,12 @@ export type BatchScreenFile = {
   duplicate: boolean;
 };
 
-const NOT_FOUND = "Not found.";
-const NOT_READY = "That file is not ready to download.";
-const LINKS_OFF = "File links are not configured.";
-const STORAGE_OFF = "File storage is not configured.";
-const REFUSED = "You cannot do that.";
-const CLEAN_BLOCKS = "A clean file is already in this batch.";
+const NOT_FOUND = "We couldn't find that.";
+const NOT_READY = "That file isn't ready to download yet.";
+const LINKS_OFF = "File links aren't set up yet.";
+const STORAGE_OFF = "File storage isn't set up yet.";
+const REFUSED = "You can't do that.";
+const CLEAN_BLOCKS = "A safe file is already in this upload.";
 
 function stamp(file: HashFile): number {
   return file.scannedAt ?? file.createdAt;
@@ -207,14 +207,14 @@ export async function readSignedFile(input: {
   if (!secret) return { ok: false, status: 503, message: LINKS_OFF };
   const expiry = Number(input.exp);
   if (!Number.isInteger(expiry) || input.sig.length === 0) {
-    return { ok: false, status: 401, message: "That link is not valid." };
+    return { ok: false, status: 401, message: "That link doesn't work." };
   }
   const expected = await hmacHex(secret, `${input.fileId}.${expiry}`);
   if (!safeEqual(expected, input.sig)) {
-    return { ok: false, status: 401, message: "That link is not valid." };
+    return { ok: false, status: 401, message: "That link doesn't work." };
   }
   if (expiry <= Math.floor(input.now / 1000)) {
-    return { ok: false, status: 401, message: "That link has expired." };
+    return { ok: false, status: 401, message: "That link is too old." };
   }
   if (!localObjectBytesEnabled()) return { ok: false, status: 503, message: STORAGE_OFF };
   const row = await input.sql.get<FileRow>("SELECT * FROM files WHERE id = ?", [input.fileId]);
@@ -286,7 +286,7 @@ export async function retagFile(input: {
   if (!can(input.caller, "file.tag", { workspaceId: row.workspace_id })) {
     return { ok: false, status: 403, message: REFUSED };
   }
-  if (!isFileTag(input.tag)) return { ok: false, status: 422, message: "Choose a tag." };
+  if (!isFileTag(input.tag)) return { ok: false, status: 422, message: "Pick a label." };
   if (row.tag !== input.tag) {
     await input.sql.run("UPDATE files SET tag = ? WHERE id = ?", [input.tag, row.id]);
     await audit(input.sql, row.workspace_id, input.caller.userId, "file.tagged", "file", row.id, input.now, {

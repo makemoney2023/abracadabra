@@ -24,7 +24,7 @@ export async function saveSettingsAction(
       profile === "standard" || profile === "software" ? profile : undefined;
     const quotaBytes = Number(formData.get("quotaBytes"));
     if (!policyProfile || !Number.isInteger(quotaBytes)) {
-      return { message: "You cannot do that." };
+      return { message: "You can't do that." };
     }
     const configured = await configureWorkspace({
       sql,
