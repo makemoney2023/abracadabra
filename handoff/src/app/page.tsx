@@ -15,6 +15,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       {admin || workspaces.length > 0 ? (
         <nav className="flex flex-col gap-2 text-sm">
           {admin ? <Link href="/admin">Staff tools</Link> : null}
+          {caller.staff ? <Link href="/admin/templates">Request templates</Link> : null}
           {workspaces.map((workspace) => (
             <Link key={workspace.id} href={`/w/${workspace.slug}`}>
               {workspace.display_name}

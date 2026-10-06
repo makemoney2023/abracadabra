@@ -534,18 +534,18 @@ git commit -m "Invite client owners and members into a handoff workspace."
 - Create: `src/lib/store/requests.ts`
 - Test: action tests
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - staff create, reorder, and retire template items
 - editing a template does not change requests already copied
 - only staff create, edit, close, or reopen requests
 
-- [ ] **Step 2: Implement**
+- [x] **Step 2: Implement**
 
 The workspace home lists open requests first. Each request has a button to
 start a drop against it.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "Track what each client still needs to send."

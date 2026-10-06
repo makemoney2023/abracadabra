@@ -25,3 +25,15 @@ export async function requireSuperAdminPage(): Promise<{ sql: Sql; caller: Calle
   if (!(await isLiveSuperAdmin(session.sql, session.caller))) notFound();
   return session;
 }
+
+/** Operators and super-admins share the template catalog. A caller with no live staff row gets 404. */
+export async function requireStaffPage(): Promise<{ sql: Sql; caller: Caller }> {
+  const session = await openSession();
+  if (!session.caller.userId || !session.caller.staff) notFound();
+  const row = await session.sql.get<{ ok: number }>(
+    "SELECT 1 AS ok FROM staff WHERE user_id = ? AND revoked_at IS NULL",
+    [session.caller.userId],
+  );
+  if (row?.ok !== 1) notFound();
+  return session;
+}

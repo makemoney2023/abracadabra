@@ -32,6 +32,11 @@ export default async function WorkspaceLayout({
             <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
             <p className="font-heading text-xl">{workspace.display_name}</p>
           </div>
+          {can(caller, "request.manage", { workspaceId: workspace.id }) ? (
+            <Link href={`/w/${workspace.slug}/requests`} className="text-sm">
+              Requests
+            </Link>
+          ) : null}
           {can(caller, "invite.member", { workspaceId: workspace.id }) ? (
             <Link href={`/w/${workspace.slug}/people`} className="text-sm">
               People

@@ -15,6 +15,7 @@ export default async function AdminPage() {
         <div className="flex gap-4 text-sm">
           <Link href="/admin/workspaces/new">Open a workspace</Link>
           <Link href="/admin/staff">Add staff</Link>
+          <Link href="/admin/templates">Request templates</Link>
         </div>
       </div>
       <Card>
