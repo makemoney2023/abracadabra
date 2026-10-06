@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "cloudflare-api": {
+      "url": "https://mcp.cloudflare.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:CLOUDFLARE_API_TOKEN}"
+      }
+    }
+  }
+}
