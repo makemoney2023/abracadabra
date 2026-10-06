@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { adminPathForSpaces, decideHost, hqHostName, hqOrigin, isHqHost } from "@/lib/host";
+import { adminPathForSpaces, decideHost, hqHostName, hqOriginForHost, isHqHost } from "@/lib/host";
 
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
@@ -9,7 +9,7 @@ export function proxy(request: NextRequest) {
     host,
     path,
     hqHost: hqHostName(),
-    hqOrigin: hqOrigin(),
+    hqOrigin: hqOriginForHost(host),
   });
   if (decision.kind === "not-found") {
     return new NextResponse("This page is not here.", { status: 404 });

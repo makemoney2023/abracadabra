@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { adminPathForSpaces, decideHost } from "./host";
+import { adminPathForSpaces, decideHost, hqOriginForHost, isHqHost } from "./host";
+
+const STAFF_DEV = "handoff-hq.abracadabra-ai.workers.dev";
 
 const HQ = "hq.abra-ca-dabra.app";
 const ORIGIN = "https://hq.abra-ca-dabra.app";
@@ -36,6 +38,26 @@ describe("decideHost", () => {
       kind: "redirect",
       location: `${ORIGIN}/spaces/new`,
     });
+  });
+
+  it("treats the staff dev host as hq until the domain moves", () => {
+    expect(isHqHost(STAFF_DEV, HQ)).toBe(true);
+    expect(isHqHost("handoff.abracadabra-ai.workers.dev", HQ)).toBe(false);
+    expect(hqOriginForHost(STAFF_DEV)).toBe(`https://${STAFF_DEV}`);
+    expect(decideHost({ host: STAFF_DEV, path: "/clients", hqHost: HQ, hqOrigin: ORIGIN })).toEqual({
+      kind: "allow",
+    });
+    expect(decideHost({ host: STAFF_DEV, path: "/w/strongfoam", hqHost: HQ, hqOrigin: ORIGIN })).toEqual({
+      kind: "not-found",
+    });
+    expect(
+      decideHost({
+        host: STAFF_DEV,
+        path: "/admin",
+        hqHost: HQ,
+        hqOrigin: hqOriginForHost(STAFF_DEV),
+      }),
+    ).toEqual({ kind: "redirect", location: `https://${STAFF_DEV}/spaces` });
   });
 
   it("lets staff open the client list on hq and clients open folders on the other host", () => {

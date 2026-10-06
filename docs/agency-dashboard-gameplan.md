@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: steps 1 and 2 are in the Handoff app (hq host, client list, people, notes, calls, tasks, a timeline, and merge). Steps 3 to 11 are not built. Decisions D1 to D10 are all made (section 10).
+Status: steps 1 and 2 are in the Handoff app (hq host, client list, people, notes, calls, tasks, a timeline, and merge). Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 3 to 11 are not built. Decisions D1 to D10 are all made (section 10).
 
 ## 1. What it does
 
@@ -83,7 +83,7 @@ cookie is set for `hq` only, so a client page can never read it.
 | Email out | Existing Handoff email sender (status updates, invoices, reminders) |
 | Invoice PDFs | R2 |
 | Finished-work media (images, video, posters) | R2, streamed by the Worker with range requests |
-| Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker |
+| Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker. Until that zone is here, worker `handoff-hq` at `https://handoff-hq.abracadabra-ai.workers.dev` |
 | Bot check on survey | Turnstile |
 | Summaries and search | Workers AI through AI Gateway (already set up) |
 | Readiness Check | Move from Vercel + Supabase + Inngest to a Worker + D1 (section 4) |
