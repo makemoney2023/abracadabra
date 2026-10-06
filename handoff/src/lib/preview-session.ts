@@ -78,7 +78,8 @@ export async function ensureStudioAdmin(sql: Sql, now: number): Promise<void> {
   if (!staff) {
     await sql.run(
       `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at)
-       VALUES (?, ?, 1, ?, NULL)`,
+       VALUES (?, ?, 1, ?, NULL)
+       ON CONFLICT(user_id) DO UPDATE SET is_super_admin = 1, revoked_at = NULL`,
       [user.id, PREVIEW_EMAIL, now],
     );
     return;

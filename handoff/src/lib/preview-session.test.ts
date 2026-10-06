@@ -6,6 +6,7 @@ import type { Sql } from "@/db/sql";
 import { can } from "./authz";
 import { getCaller } from "./session";
 import {
+  ensureStudioAdmin,
   legacyPreviewPath,
   legacyPreviewRedirect,
   openPreviewSession,
@@ -108,6 +109,23 @@ describe("openPreviewSession", () => {
       [workspaceId],
     );
     expect(open.map((row) => row.id)).toEqual(["req-logo"]);
+  });
+
+  it("still grants staff when two checks run together", async () => {
+    const sql = await memoryDb();
+    await sql.run("INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)", [
+      "user-race",
+      PREVIEW_EMAIL,
+      NOW,
+    ]);
+
+    await Promise.all([ensureStudioAdmin(sql, NOW), ensureStudioAdmin(sql, NOW)]);
+
+    const staff = await sql.get<{ is_super_admin: number; revoked_at: number | null }>(
+      "SELECT is_super_admin, revoked_at FROM staff WHERE user_id = ?",
+      ["user-race"],
+    );
+    expect(staff).toEqual({ is_super_admin: 1, revoked_at: null });
   });
 
   it("puts a revoked studio login back on the staff page", async () => {
