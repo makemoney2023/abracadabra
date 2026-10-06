@@ -73,6 +73,8 @@ function fieldMessage(error: CrmError, field: "contact" | "note" | "call" | "tas
 function refresh(organizationId: string): void {
   revalidatePath(`/clients/${organizationId}`);
   revalidatePath("/clients");
+  revalidatePath("/work");
+  revalidatePath("/");
 }
 
 export async function createContactAction(_previous: FormState, formData: FormData): Promise<FormState> {

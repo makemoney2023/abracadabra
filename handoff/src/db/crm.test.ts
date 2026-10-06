@@ -5,17 +5,29 @@ import {
   addNote,
   completeTask,
   createContact,
+  createMilestone,
   createOrganization,
+  createProject,
   createTask,
   linkWorkspace,
   listContacts,
+  listMilestones,
   listOpenTasks,
+  listProjects,
   listDeals,
   listOrganizations,
+  listStatusUpdates,
   listTimeline,
+  listWork,
   logCall,
   mergeOrganizations,
   moveDealStage,
+  postStatusUpdate,
+  projectById,
+  publishStatusUpdate,
+  todayFor,
+  updateProject,
+  updateTask,
   normalizeDomain,
   organizationById,
   slugFromName,
@@ -549,5 +561,315 @@ describe("crm pipeline", () => {
       won.value.workspaceId,
     ]);
     expect(space?.slug).toBe("harbor-2");
+  });
+});
+
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+describe("projects and work", () => {
+  it("hides projects from people who are not staff", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    expect(await listProjects(sql, outsider)).toEqual([]);
+    expect(await createProject(sql, outsider, { organizationId: made.value.id, name: "Site" }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+    expect(await todayFor(sql, outsider, NOW)).toEqual({
+      newLeads: [],
+      calls: [],
+      tasks: [],
+      stalledDeals: [],
+      waitingSpaces: [],
+      invoices: [],
+      agentNotes: [],
+    });
+  });
+
+  it("adds a project, a milestone, and a task on that milestone", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    expect(await createProject(sql, staff, { organizationId: made.value.id, name: "  " }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    const project = await createProject(
+      sql,
+      staff,
+      { organizationId: made.value.id, name: "Site", dueAt: NOW + 10 },
+      NOW,
+    );
+    expect(project.ok).toBe(true);
+    if (!project.ok) return;
+    expect(project.value.status).toBe("planned");
+    expect(project.value.organization_id).toBe(made.value.id);
+    expect(project.value.owner_user_id).toBe("staff-1");
+    expect(await listProjects(sql, staff, made.value.id)).toEqual([project.value]);
+    const loaded = await projectById(sql, staff, project.value.id);
+    expect(loaded?.name).toBe("Site");
+    const moved = await updateProject(sql, staff, { projectId: project.value.id, status: "active" }, NOW + 1);
+    expect(moved.ok).toBe(true);
+    expect((await projectById(sql, staff, project.value.id))?.status).toBe("active");
+    const milestone = await createMilestone(sql, staff, { projectId: project.value.id, name: "Design" }, NOW);
+    expect(milestone.ok).toBe(true);
+    if (!milestone.ok) return;
+    expect(await listMilestones(sql, staff, project.value.id)).toEqual([milestone.value]);
+    const task = await createTask(
+      sql,
+      staff,
+      {
+        projectId: project.value.id,
+        milestoneId: milestone.value.id,
+        title: "Sketch the home page",
+        assigneeUserId: "staff-1",
+      },
+      NOW,
+    );
+    expect(task.ok).toBe(true);
+    if (!task.ok) return;
+    expect(
+      await sql.get(
+        "SELECT project_id, milestone_id, assignee_user_id, organization_id FROM tasks WHERE id = ?",
+        [task.value.id],
+      ),
+    ).toEqual({
+      project_id: project.value.id,
+      milestone_id: milestone.value.id,
+      assignee_user_id: "staff-1",
+      organization_id: made.value.id,
+    });
+    expect((await updateTask(sql, staff, { taskId: task.value.id, status: "blocked" }, NOW + 1)).ok).toBe(true);
+    expect((await updateTask(sql, staff, { taskId: task.value.id, status: "done" }, NOW + 2)).ok).toBe(true);
+    expect(await sql.get("SELECT status, done_at FROM tasks WHERE id = ?", [task.value.id])).toEqual({
+      status: "done",
+      done_at: NOW + 2,
+    });
+    expect((await updateTask(sql, staff, { taskId: task.value.id, status: "todo" }, NOW + 3)).ok).toBe(true);
+    expect(await sql.get("SELECT status, done_at FROM tasks WHERE id = ?", [task.value.id])).toEqual({
+      status: "todo",
+      done_at: null,
+    });
+    expect(await updateTask(sql, outsider, { taskId: task.value.id, status: "done" }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+  });
+
+  it("rejects a milestone that belongs to another project", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    const first = await createProject(sql, staff, { organizationId: made.value.id, name: "Site" }, NOW);
+    const second = await createProject(sql, staff, { organizationId: made.value.id, name: "Ads" }, NOW);
+    if (!first.ok || !second.ok) throw new Error("setup");
+    const milestone = await createMilestone(sql, staff, { projectId: first.value.id, name: "Design" }, NOW);
+    if (!milestone.ok) throw new Error("setup");
+    expect(
+      await createTask(
+        sql,
+        staff,
+        { projectId: second.value.id, milestoneId: milestone.value.id, title: "Wrong place" },
+        NOW,
+      ),
+    ).toEqual({ ok: false, error: "invalid" });
+    expect(await createMilestone(sql, staff, { projectId: "missing", name: "Design" }, NOW)).toEqual({
+      ok: false,
+      error: "missing",
+    });
+  });
+
+  it("lists open work with late, this week, and blocked filters, yours first", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at)
+       VALUES ('staff-2', 'other@example.com', 0, ?, NULL)`,
+      [NOW],
+    );
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    const project = await createProject(sql, staff, { organizationId: made.value.id, name: "Site" }, NOW);
+    if (!project.ok) throw new Error("setup");
+    const mine = await createTask(
+      sql,
+      staff,
+      { projectId: project.value.id, title: "Mine late", dueAt: NOW - 1, assigneeUserId: "staff-1" },
+      NOW,
+    );
+    const theirs = await createTask(
+      sql,
+      staff,
+      { projectId: project.value.id, title: "Theirs late", dueAt: NOW - 2, assigneeUserId: "staff-2" },
+      NOW,
+    );
+    const soon = await createTask(
+      sql,
+      staff,
+      { projectId: project.value.id, title: "This week", dueAt: NOW + WEEK - 1, assigneeUserId: "staff-2" },
+      NOW,
+    );
+    const blocked = await createTask(
+      sql,
+      staff,
+      { projectId: project.value.id, title: "Blocked", dueAt: NOW + WEEK * 2 },
+      NOW,
+    );
+    if (!mine.ok || !theirs.ok || !soon.ok || !blocked.ok) throw new Error("setup");
+    expect((await updateTask(sql, staff, { taskId: blocked.value.id, status: "blocked" }, NOW)).ok).toBe(true);
+    const all = await listWork(sql, staff, {}, NOW);
+    expect(all.map((task) => task.title)).toEqual(["Mine late", "Theirs late", "This week", "Blocked"]);
+    expect(all[0]?.organization_name).toBe("Harbor");
+    expect(all[0]?.assignee_email).toBe("staff@example.com");
+    expect((await listWork(sql, staff, { late: true }, NOW)).map((task) => task.title)).toEqual([
+      "Mine late",
+      "Theirs late",
+    ]);
+    expect((await listWork(sql, staff, { thisWeek: true }, NOW)).map((task) => task.title)).toEqual(["This week"]);
+    expect((await listWork(sql, staff, { blocked: true }, NOW)).map((task) => task.title)).toEqual(["Blocked"]);
+    expect(await listWork(sql, outsider, {}, NOW)).toEqual([]);
+  });
+
+  it("keeps a client update as a draft until staff publish it", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    const project = await createProject(sql, staff, { organizationId: made.value.id, name: "Site" }, NOW);
+    if (!project.ok) throw new Error("setup");
+    expect(
+      await postStatusUpdate(
+        sql,
+        staff,
+        { projectId: project.value.id, body: "  ", health: "on_track", audience: "client" },
+        NOW,
+      ),
+    ).toEqual({ ok: false, error: "invalid" });
+    const draft = await postStatusUpdate(
+      sql,
+      staff,
+      { projectId: project.value.id, body: "Home page is in review.", health: "on_track", audience: "client" },
+      NOW,
+    );
+    expect(draft.ok).toBe(true);
+    if (!draft.ok) return;
+    expect(draft.value.state).toBe("draft");
+    expect(draft.value.published_at).toBeNull();
+    const published = await publishStatusUpdate(sql, staff, { id: draft.value.id }, NOW + 1);
+    expect(published.ok).toBe(true);
+    if (!published.ok) return;
+    expect(published.value.state).toBe("published");
+    expect(published.value.published_at).toBe(NOW + 1);
+    expect(await sql.get("SELECT emailed_at FROM status_updates WHERE id = ?", [draft.value.id])).toEqual({
+      emailed_at: null,
+    });
+    const again = await publishStatusUpdate(sql, staff, { id: draft.value.id }, NOW + 5);
+    expect(again.ok).toBe(true);
+    if (!again.ok) return;
+    expect(again.value.published_at).toBe(NOW + 1);
+    const agentId = crypto.randomUUID();
+    await sql.run(
+      `INSERT INTO status_updates (
+         id, project_id, organization_id, health, audience, body, state, emailed_at,
+         actor_kind, actor_id, created_at, published_at
+       ) VALUES (?, ?, ?, 'on_track', 'client', 'Agent draft.', 'draft', NULL, 'agent', NULL, ?, NULL)`,
+      [agentId, project.value.id, made.value.id, NOW],
+    );
+    expect((await listStatusUpdates(sql, staff, project.value.id)).find((row) => row.id === agentId)?.state).toBe(
+      "draft",
+    );
+    const released = await publishStatusUpdate(sql, staff, { id: agentId }, NOW + 2);
+    expect(released.ok).toBe(true);
+    if (!released.ok) return;
+    expect(released.value.state).toBe("published");
+    expect(released.value.actor_kind).toBe("agent");
+    expect(
+      await postStatusUpdate(
+        sql,
+        outsider,
+        { projectId: project.value.id, body: "No.", health: "on_track", audience: "internal" },
+        NOW,
+      ),
+    ).toEqual({ ok: false, error: "forbidden" });
+    expect(await listStatusUpdates(sql, outsider, project.value.id)).toEqual([]);
+  });
+
+  it("fills the today screen from open work", async () => {
+    const sql = await database();
+    const harbor = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    const pine = await createOrganization(sql, staff, { name: "Pine" }, NOW);
+    if (!harbor.ok || !pine.ok) throw new Error("setup");
+    const newDeal = crypto.randomUUID();
+    const stalled = crypto.randomUUID();
+    const later = crypto.randomUUID();
+    const won = crypto.randomUUID();
+    await sql.run(
+      `INSERT INTO deals (
+         id, organization_id, title, stage, source, next_step, next_step_at, created_at, updated_at
+       ) VALUES
+         (?, ?, 'New site', 'new', 'manual', NULL, NULL, ?, ?),
+         (?, ?, 'Stalled site', 'proposal', 'manual', NULL, NULL, ?, ?),
+         (?, ?, 'Later site', 'contacted', 'manual', 'Send the deck', ?, ?, ?),
+         (?, ?, 'Won site', 'won', 'manual', NULL, NULL, ?, ?)`,
+      [
+        newDeal,
+        harbor.value.id,
+        NOW,
+        NOW,
+        stalled,
+        harbor.value.id,
+        NOW,
+        NOW,
+        later,
+        pine.value.id,
+        NOW + WEEK,
+        NOW,
+        NOW,
+        won,
+        pine.value.id,
+        NOW,
+        NOW,
+      ],
+    );
+    await sql.run(
+      `INSERT INTO appointments (id, provider, external_id, organization_id, starts_at, status)
+       VALUES (?, 'manual', 'booked-1', ?, ?, 'booked'),
+              (?, 'manual', 'old-1', ?, ?, 'cancelled')`,
+      [crypto.randomUUID(), harbor.value.id, NOW + 2 * 24 * 60 * 60 * 1000, crypto.randomUUID(), harbor.value.id, NOW + 1000],
+    );
+    const project = await createProject(sql, staff, { organizationId: harbor.value.id, name: "Site" }, NOW);
+    if (!project.ok) throw new Error("setup");
+    await createTask(
+      sql,
+      staff,
+      { projectId: project.value.id, title: "Late sketch", dueAt: NOW - 1, assigneeUserId: "staff-1" },
+      NOW,
+    );
+    await linkWorkspace(sql, staff, { organizationId: harbor.value.id, workspaceId: "ws-1" }, NOW);
+    await sql.run(
+      `INSERT INTO requests (id, workspace_id, position, title, status)
+       VALUES ('req-1', 'ws-1', 2, 'Logo', 'open')`,
+      [],
+    );
+    await sql.run(
+      `INSERT INTO invoices (
+         id, number, organization_id, status, currency, subtotal_cents, tax_rate_bp, tax_cents,
+         total_cents, paid_cents, due_at, created_at, updated_at
+       ) VALUES (?, 'INV-2026-0001', ?, 'sent', 'usd', 100, 0, 0, 100, 0, ?, ?, ?)`,
+      [crypto.randomUUID(), harbor.value.id, NOW - 1, NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO activities (id, organization_id, kind, actor_kind, body, created_at)
+       VALUES (?, ?, 'note', 'agent', 'Drafted a follow-up.', ?)`,
+      [crypto.randomUUID(), harbor.value.id, NOW - 1000],
+    );
+    const today = await todayFor(sql, staff, NOW);
+    expect(today.newLeads.map((row) => row.title)).toEqual(["New site"]);
+    expect(today.calls).toHaveLength(1);
+    expect(today.calls[0]?.organizationName).toBe("Harbor");
+    expect(today.tasks.map((task) => task.title)).toEqual(["Late sketch"]);
+    expect(today.stalledDeals.map((deal) => deal.title).sort()).toEqual(["New site", "Stalled site"]);
+    expect(today.waitingSpaces.map((space) => space.requestTitle)).toContain("Logo");
+    expect(today.invoices.map((invoice) => invoice.number)).toEqual(["INV-2026-0001"]);
+    expect(today.agentNotes.map((note) => note.body)).toEqual(["Drafted a follow-up."]);
   });
 });

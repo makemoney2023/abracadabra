@@ -2,15 +2,16 @@ import Link from "next/link";
 import { requireStaffPage } from "@/lib/current";
 import { templateCatalog } from "@/lib/store/requests";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StaffShell } from "../../staff-shell";
 import { AddItemForm, CreateTemplateForm, MoveItemForm, RetireItemForm, RetireTemplateForm } from "./template-forms";
 
 export default async function TemplatesPage() {
   const { sql, caller } = await requireStaffPage();
   const templates = await templateCatalog(sql);
   return (
+    <StaffShell>
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
-        <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Request templates</h1>
         <div className="flex gap-4 text-sm">
           <Link href="/">Home</Link>
@@ -67,5 +68,6 @@ export default async function TemplatesPage() {
         ))
       )}
     </main>
+    </StaffShell>
   );
 }

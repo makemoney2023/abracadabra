@@ -4,17 +4,16 @@ import { requireSuperAdminPage } from "@/lib/current";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StaffNav } from "../staff-nav";
+import { StaffShell } from "../staff-shell";
 
 export default async function AdminPage() {
   const { sql, caller } = await requireSuperAdminPage();
   const [workspaces, staff] = await Promise.all([workspacesFor(sql, caller), liveStaff(sql)]);
   return (
+    <StaffShell>
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
-        <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Staff tools</h1>
-        <StaffNav />
         <div className="flex flex-wrap gap-4 text-sm">
           <Link href="/spaces/new">New space</Link>
           <Link href="/spaces/staff">Add staff</Link>
@@ -57,5 +56,6 @@ export default async function AdminPage() {
         </CardContent>
       </Card>
     </main>
+    </StaffShell>
   );
 }

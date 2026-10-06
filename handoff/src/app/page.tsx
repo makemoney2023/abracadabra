@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { todayFor } from "@/db/crm";
 import { HqHome } from "./hq-home";
 import { SignInForm } from "./sign-in-form";
+import { StaffShell } from "./staff-shell";
+import { TodayScreen } from "./today-screen";
 import { workspacesFor } from "@/db/records";
+import { clock } from "@/lib/clock";
 import { openSession } from "@/lib/current";
 import { hqOrigin, isHqHost } from "@/lib/host";
 import { renamePreviewLocker } from "@/lib/preview-session";
@@ -16,10 +20,17 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const { sql, caller } = await openSession();
   const host = (await headers()).get("host") ?? "";
   if (isHqHost(host)) {
+    if (caller.userId && caller.staff) {
+      const board = await todayFor(sql, caller, clock());
+      return (
+        <StaffShell>
+          <TodayScreen board={board} />
+        </StaffShell>
+      );
+    }
     return (
       <HqHome
         signedIn={Boolean(caller.userId)}
-        staff={Boolean(caller.staff)}
         linkExpired={linkExpired}
         openFailed={openFailed}
         shareFailed={shareFailed}

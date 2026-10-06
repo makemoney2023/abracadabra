@@ -30,14 +30,102 @@ export type Contact = {
   is_primary: number;
 };
 
+export type TaskStatus = "todo" | "doing" | "blocked" | "done";
+
 export type TaskRow = {
   id: string;
   organization_id: string;
   title: string;
-  status: "todo" | "doing" | "blocked" | "done";
+  status: TaskStatus;
   due_at: number | null;
   done_at: number | null;
 };
+
+export const PROJECT_STATUSES = ["planned", "active", "waiting_on_client", "done", "paused", "cancelled"] as const;
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
+
+export type ProjectRow = {
+  id: string;
+  organization_id: string;
+  deal_id: string | null;
+  name: string;
+  status: ProjectStatus;
+  owner_user_id: string | null;
+  starts_at: number | null;
+  due_at: number | null;
+  created_at: number;
+  updated_at: number;
+};
+
+export type MilestoneRow = {
+  id: string;
+  project_id: string;
+  name: string;
+  due_at: number | null;
+  done_at: number | null;
+  sort: number;
+};
+
+export const TASK_STATUSES = ["todo", "doing", "blocked", "done"] as const;
+
+export type WorkTask = TaskRow & {
+  project_id: string | null;
+  milestone_id: string | null;
+  assignee_user_id: string | null;
+  organization_name: string;
+  assignee_email: string | null;
+};
+
+export const STATUS_HEALTHS = ["on_track", "at_risk", "off_track", "done"] as const;
+export const STATUS_AUDIENCES = ["internal", "client"] as const;
+export type StatusHealth = (typeof STATUS_HEALTHS)[number];
+export type StatusAudience = (typeof STATUS_AUDIENCES)[number];
+
+export type StatusUpdateRow = {
+  id: string;
+  project_id: string;
+  organization_id: string;
+  health: StatusHealth;
+  audience: StatusAudience;
+  body: string;
+  state: "draft" | "published";
+  actor_kind: string;
+  actor_id: string | null;
+  created_at: number;
+  published_at: number | null;
+};
+
+export type TodayBoard = {
+  newLeads: { id: string; title: string; organizationId: string; organizationName: string }[];
+  calls: { id: string; organizationId: string; organizationName: string; startsAt: number }[];
+  tasks: WorkTask[];
+  stalledDeals: {
+    id: string;
+    title: string;
+    organizationId: string;
+    organizationName: string;
+    nextStep: string | null;
+    nextStepAt: number | null;
+  }[];
+  waitingSpaces: { id: string; slug: string; displayName: string; requestTitle: string }[];
+  invoices: { id: string; number: string; organizationName: string; dueAt: number }[];
+  agentNotes: {
+    id: string;
+    body: string | null;
+    createdAt: number;
+    organizationId: string | null;
+    organizationName: string;
+  }[];
+};
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const PROJECT_COLUMNS =
+  "id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at";
+const MILESTONE_COLUMNS = "id, project_id, name, due_at, done_at, sort";
+const STATUS_COLUMNS =
+  "id, project_id, organization_id, health, audience, body, state, actor_kind, actor_id, created_at, published_at";
+const WORK_COLUMNS = `t.id, t.organization_id, t.title, t.status, t.due_at, t.done_at,
+  t.project_id, t.milestone_id, t.assignee_user_id, o.name AS organization_name, s.email AS assignee_email`;
 
 export type ActivityRow = {
   id: string;
@@ -230,6 +318,39 @@ function cleanEmail(raw: string | undefined): string | null | undefined {
   return trimmed;
 }
 
+function blankToNull(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function isProjectStatus(value: string): value is ProjectStatus {
+  return (PROJECT_STATUSES as readonly string[]).includes(value);
+}
+
+function isTaskStatus(value: string): value is TaskStatus {
+  return (TASK_STATUSES as readonly string[]).includes(value);
+}
+
+function isHealth(value: string): value is StatusHealth {
+  return (STATUS_HEALTHS as readonly string[]).includes(value);
+}
+
+function isAudience(value: string): value is StatusAudience {
+  return (STATUS_AUDIENCES as readonly string[]).includes(value);
+}
+
+async function openProject(
+  sql: Sql,
+  projectId: string,
+): Promise<{ id: string; organization_id: string } | undefined> {
+  return sql.get<{ id: string; organization_id: string }>(
+    `SELECT p.id, p.organization_id FROM projects p
+     JOIN organizations o ON o.id = p.organization_id
+     WHERE p.id = ? AND o.archived_at IS NULL`,
+    [projectId],
+  );
+}
+
 async function liveOrg(sql: Sql, caller: Caller, id: string): Promise<boolean> {
   if (!staffUserId(caller)) return false;
   const row = await sql.get<{ id: string }>(
@@ -362,30 +483,64 @@ export async function listOpenTasks(sql: Sql, caller: Caller, organizationId: st
 export async function createTask(
   sql: Sql,
   caller: Caller,
-  input: { organizationId: string; title: string; dueAt?: number | null },
+  input: {
+    organizationId?: string;
+    projectId?: string;
+    milestoneId?: string | null;
+    title: string;
+    dueAt?: number | null;
+    assigneeUserId?: string | null;
+  },
   now: number,
 ): Promise<CrmResult<TaskRow>> {
   const actorId = staffUserId(caller);
   if (!actorId) return { ok: false, error: "forbidden" };
-  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
   const title = cleanText(input.title, 200);
   if (!title) return { ok: false, error: "invalid" };
   const dueAt = input.dueAt ?? null;
   if (dueAt !== null && !Number.isInteger(dueAt)) return { ok: false, error: "invalid" };
+  const projectId = blankToNull(input.projectId);
+  const milestoneId = blankToNull(input.milestoneId);
+  const assigneeUserId = blankToNull(input.assigneeUserId);
+  let organizationId = blankToNull(input.organizationId);
+  if (projectId) {
+    const project = await openProject(sql, projectId);
+    if (!project) return { ok: false, error: "missing" };
+    if (organizationId && organizationId !== project.organization_id) return { ok: false, error: "invalid" };
+    organizationId = project.organization_id;
+  } else if (!organizationId || !(await liveOrg(sql, caller, organizationId))) {
+    return { ok: false, error: organizationId ? "missing" : "invalid" };
+  }
+  if (milestoneId) {
+    if (!projectId) return { ok: false, error: "invalid" };
+    const milestone = await sql.get<{ id: string }>(
+      "SELECT id FROM milestones WHERE id = ? AND project_id = ?",
+      [milestoneId, projectId],
+    );
+    if (!milestone) return { ok: false, error: "invalid" };
+  }
+  if (assigneeUserId) {
+    const person = await sql.get<{ user_id: string }>(
+      "SELECT user_id FROM staff WHERE user_id = ? AND revoked_at IS NULL",
+      [assigneeUserId],
+    );
+    if (!person) return { ok: false, error: "invalid" };
+  }
   const id = crypto.randomUUID();
   await sql.exec("BEGIN");
   try {
     await sql.run(
       `INSERT INTO tasks (
-         id, organization_id, title, status, due_at, created_at, updated_at, done_at
-       ) VALUES (?, ?, ?, 'todo', ?, ?, ?, NULL)`,
-      [id, input.organizationId, title, dueAt, now, now],
+         id, project_id, milestone_id, organization_id, title, status, assignee_user_id,
+         due_at, created_at, updated_at, done_at
+       ) VALUES (?, ?, ?, ?, ?, 'todo', ?, ?, ?, ?, NULL)`,
+      [id, projectId, milestoneId, organizationId, title, assigneeUserId, dueAt, now, now],
     );
     await sql.run(
       `INSERT INTO activities (
-         id, organization_id, kind, actor_kind, actor_id, body, created_at
-       ) VALUES (?, ?, 'task', 'staff', ?, ?, ?)`,
-      [crypto.randomUUID(), input.organizationId, actorId, title, now],
+         id, organization_id, project_id, kind, actor_kind, actor_id, body, created_at
+       ) VALUES (?, ?, ?, 'task', 'staff', ?, ?, ?)`,
+      [crypto.randomUUID(), organizationId, projectId, actorId, title, now],
     );
     await sql.exec("COMMIT");
   } catch (error) {
@@ -427,6 +582,422 @@ export async function completeTask(
     throw error;
   }
   return { ok: true };
+}
+
+export async function listProjects(
+  sql: Sql,
+  caller: Caller,
+  organizationId?: string,
+): Promise<ProjectRow[]> {
+  if (!staffUserId(caller)) return [];
+  if (organizationId) {
+    return sql.all<ProjectRow>(
+      `SELECT ${PROJECT_COLUMNS} FROM projects
+       WHERE organization_id = ?
+         AND organization_id IN (SELECT id FROM organizations WHERE archived_at IS NULL)
+       ORDER BY updated_at DESC, name`,
+      [organizationId],
+    );
+  }
+  return sql.all<ProjectRow>(
+    `SELECT p.id, p.organization_id, p.deal_id, p.name, p.status, p.owner_user_id,
+            p.starts_at, p.due_at, p.created_at, p.updated_at
+     FROM projects p
+     JOIN organizations o ON o.id = p.organization_id
+     WHERE o.archived_at IS NULL
+     ORDER BY p.updated_at DESC, p.name`,
+  );
+}
+
+export async function projectById(
+  sql: Sql,
+  caller: Caller,
+  id: string,
+): Promise<ProjectRow | undefined> {
+  if (!staffUserId(caller)) return undefined;
+  return sql.get<ProjectRow>(
+    `SELECT p.id, p.organization_id, p.deal_id, p.name, p.status, p.owner_user_id,
+            p.starts_at, p.due_at, p.created_at, p.updated_at
+     FROM projects p
+     JOIN organizations o ON o.id = p.organization_id
+     WHERE p.id = ? AND o.archived_at IS NULL`,
+    [id],
+  );
+}
+
+export async function createProject(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; name: string; dueAt?: number | null; status?: ProjectStatus },
+  now: number,
+): Promise<CrmResult<ProjectRow>> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
+  const name = cleanText(input.name, 200);
+  if (!name) return { ok: false, error: "invalid" };
+  const dueAt = input.dueAt ?? null;
+  if (dueAt !== null && !Number.isInteger(dueAt)) return { ok: false, error: "invalid" };
+  const status = input.status ?? "planned";
+  if (!isProjectStatus(status)) return { ok: false, error: "invalid" };
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO projects (
+       id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at
+     ) VALUES (?, ?, NULL, ?, ?, ?, NULL, ?, ?, ?)`,
+    [id, input.organizationId, name, status, actorId, dueAt, now, now],
+  );
+  const row = await sql.get<ProjectRow>(`SELECT ${PROJECT_COLUMNS} FROM projects WHERE id = ?`, [id]);
+  if (!row) return { ok: false, error: "missing" };
+  return { ok: true, value: row };
+}
+
+export async function updateProject(
+  sql: Sql,
+  caller: Caller,
+  input: { projectId: string; status: ProjectStatus },
+  now: number,
+): Promise<CrmResult<{ id: string }>> {
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  if (!isProjectStatus(input.status)) return { ok: false, error: "invalid" };
+  const project = await openProject(sql, input.projectId);
+  if (!project) return { ok: false, error: "missing" };
+  await sql.run("UPDATE projects SET status = ?, updated_at = ? WHERE id = ?", [input.status, now, project.id]);
+  return { ok: true, value: { id: project.id } };
+}
+
+export async function listMilestones(sql: Sql, caller: Caller, projectId: string): Promise<MilestoneRow[]> {
+  if (!staffUserId(caller) || !(await openProject(sql, projectId))) return [];
+  return sql.all<MilestoneRow>(
+    `SELECT ${MILESTONE_COLUMNS} FROM milestones WHERE project_id = ? ORDER BY sort, name`,
+    [projectId],
+  );
+}
+
+export async function createMilestone(
+  sql: Sql,
+  caller: Caller,
+  input: { projectId: string; name: string; dueAt?: number | null },
+  now: number,
+): Promise<CrmResult<MilestoneRow>> {
+  void now;
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  const project = await openProject(sql, input.projectId);
+  if (!project) return { ok: false, error: "missing" };
+  const name = cleanText(input.name, 200);
+  if (!name) return { ok: false, error: "invalid" };
+  const dueAt = input.dueAt ?? null;
+  if (dueAt !== null && !Number.isInteger(dueAt)) return { ok: false, error: "invalid" };
+  const sortRow = await sql.get<{ next: number }>(
+    "SELECT COALESCE(MAX(sort), -1) + 1 AS next FROM milestones WHERE project_id = ?",
+    [project.id],
+  );
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO milestones (id, project_id, name, due_at, done_at, sort) VALUES (?, ?, ?, ?, NULL, ?)`,
+    [id, project.id, name, dueAt, sortRow?.next ?? 0],
+  );
+  const row = await sql.get<MilestoneRow>(`SELECT ${MILESTONE_COLUMNS} FROM milestones WHERE id = ?`, [id]);
+  if (!row) return { ok: false, error: "missing" };
+  return { ok: true, value: row };
+}
+
+export async function updateTask(
+  sql: Sql,
+  caller: Caller,
+  input: { taskId: string; status: TaskStatus },
+  now: number,
+): Promise<{ ok: true } | { ok: false; error: CrmError }> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  if (!isTaskStatus(input.status)) return { ok: false, error: "invalid" };
+  const task = await sql.get<TaskRow & { project_id: string | null }>(
+    `SELECT ${TASK_COLUMNS}, project_id FROM tasks WHERE id = ?`,
+    [input.taskId],
+  );
+  if (!task?.organization_id) return { ok: false, error: "missing" };
+  if (!(await liveOrg(sql, caller, task.organization_id))) return { ok: false, error: "missing" };
+  if (task.status === input.status) return { ok: true };
+  const doneAt = input.status === "done" ? now : null;
+  await sql.exec("BEGIN");
+  try {
+    await sql.run("UPDATE tasks SET status = ?, done_at = ?, updated_at = ? WHERE id = ?", [
+      input.status,
+      doneAt,
+      now,
+      task.id,
+    ]);
+    await sql.run(
+      `INSERT INTO activities (
+         id, organization_id, project_id, kind, actor_kind, actor_id, body, created_at
+       ) VALUES (?, ?, ?, 'task_status', 'staff', ?, ?, ?)`,
+      [crypto.randomUUID(), task.organization_id, task.project_id, actorId, `Moved to ${input.status}.`, now],
+    );
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+  return { ok: true };
+}
+
+export async function listProjectTasks(sql: Sql, caller: Caller, projectId: string): Promise<WorkTask[]> {
+  if (!staffUserId(caller) || !(await openProject(sql, projectId))) return [];
+  return sql.all<WorkTask>(
+    `SELECT ${WORK_COLUMNS}
+     FROM tasks t
+     JOIN organizations o ON o.id = t.organization_id
+     LEFT JOIN staff s ON s.user_id = t.assignee_user_id
+     WHERE t.project_id = ? AND o.archived_at IS NULL
+     ORDER BY CASE WHEN t.status = 'done' THEN 1 ELSE 0 END, t.due_at, t.title`,
+    [projectId],
+  );
+}
+
+export async function listWork(
+  sql: Sql,
+  caller: Caller,
+  filter: { late?: boolean; thisWeek?: boolean; blocked?: boolean },
+  now: number,
+): Promise<WorkTask[]> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return [];
+  return sql.all<WorkTask>(
+    `SELECT ${WORK_COLUMNS}
+     FROM tasks t
+     JOIN organizations o ON o.id = t.organization_id
+     LEFT JOIN staff s ON s.user_id = t.assignee_user_id
+     WHERE o.archived_at IS NULL
+       AND t.status != 'done'
+       AND (? = 0 OR t.due_at < ?)
+       AND (? = 0 OR (t.due_at >= ? AND t.due_at <= ?))
+       AND (? = 0 OR t.status = 'blocked')
+     ORDER BY CASE WHEN t.assignee_user_id = ? THEN 0 ELSE 1 END,
+              CASE WHEN t.due_at IS NULL THEN 1 ELSE 0 END,
+              t.due_at,
+              t.title`,
+    [
+      filter.late ? 1 : 0,
+      now,
+      filter.thisWeek ? 1 : 0,
+      now,
+      now + WEEK_MS,
+      filter.blocked ? 1 : 0,
+      actorId,
+    ],
+  );
+}
+
+export async function listStatusUpdates(
+  sql: Sql,
+  caller: Caller,
+  projectId: string,
+): Promise<StatusUpdateRow[]> {
+  if (!staffUserId(caller) || !(await openProject(sql, projectId))) return [];
+  return sql.all<StatusUpdateRow>(
+    `SELECT ${STATUS_COLUMNS} FROM status_updates WHERE project_id = ? ORDER BY created_at DESC, id DESC`,
+    [projectId],
+  );
+}
+
+export async function postStatusUpdate(
+  sql: Sql,
+  caller: Caller,
+  input: { projectId: string; body: string; health: StatusHealth; audience: StatusAudience; publish?: boolean },
+  now: number,
+): Promise<CrmResult<StatusUpdateRow>> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  const project = await openProject(sql, input.projectId);
+  if (!project) return { ok: false, error: "missing" };
+  const body = cleanText(input.body, 4000);
+  if (!body || !isHealth(input.health) || !isAudience(input.audience)) return { ok: false, error: "invalid" };
+  const publish = input.publish === true;
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO status_updates (
+       id, project_id, organization_id, health, audience, body, state, emailed_at,
+       actor_kind, actor_id, created_at, published_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'staff', ?, ?, ?)`,
+    [
+      id,
+      project.id,
+      project.organization_id,
+      input.health,
+      input.audience,
+      body,
+      publish ? "published" : "draft",
+      actorId,
+      now,
+      publish ? now : null,
+    ],
+  );
+  const row = await sql.get<StatusUpdateRow>(`SELECT ${STATUS_COLUMNS} FROM status_updates WHERE id = ?`, [id]);
+  if (!row) return { ok: false, error: "missing" };
+  return { ok: true, value: row };
+}
+
+export async function publishStatusUpdate(
+  sql: Sql,
+  caller: Caller,
+  input: { id: string },
+  now: number,
+): Promise<CrmResult<StatusUpdateRow>> {
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  const current = await sql.get<StatusUpdateRow>(`SELECT ${STATUS_COLUMNS} FROM status_updates WHERE id = ?`, [
+    input.id,
+  ]);
+  if (!current) return { ok: false, error: "missing" };
+  const project = await openProject(sql, current.project_id);
+  if (!project) return { ok: false, error: "missing" };
+  if (current.state === "published") return { ok: true, value: current };
+  await sql.run("UPDATE status_updates SET state = 'published', published_at = ? WHERE id = ? AND state = 'draft'", [
+    now,
+    current.id,
+  ]);
+  const row = await sql.get<StatusUpdateRow>(`SELECT ${STATUS_COLUMNS} FROM status_updates WHERE id = ?`, [
+    current.id,
+  ]);
+  if (!row) return { ok: false, error: "missing" };
+  return { ok: true, value: row };
+}
+
+const EMPTY_TODAY: TodayBoard = {
+  newLeads: [],
+  calls: [],
+  tasks: [],
+  stalledDeals: [],
+  waitingSpaces: [],
+  invoices: [],
+  agentNotes: [],
+};
+
+export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<TodayBoard> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return EMPTY_TODAY;
+  const weekEnd = now + WEEK_MS;
+  const [newLeads, calls, tasks, stalledDeals, waitingSpaces, invoices, agentNotes] = await Promise.all([
+    sql.all<{ id: string; title: string; organization_id: string; organization_name: string }>(
+      `SELECT d.id, d.title, d.organization_id, o.name AS organization_name
+       FROM deals d
+       JOIN organizations o ON o.id = d.organization_id
+       WHERE o.archived_at IS NULL AND d.stage = 'new'
+       ORDER BY d.updated_at DESC, d.title`,
+    ),
+    sql.all<{ id: string; organization_id: string; organization_name: string; starts_at: number }>(
+      `SELECT a.id, a.organization_id, o.name AS organization_name, a.starts_at
+       FROM appointments a
+       JOIN organizations o ON o.id = a.organization_id
+       WHERE o.archived_at IS NULL
+         AND a.status IN ('booked', 'rescheduled')
+         AND a.starts_at >= ? AND a.starts_at <= ?
+       ORDER BY a.starts_at`,
+      [now, weekEnd],
+    ),
+    sql.all<WorkTask>(
+      `SELECT ${WORK_COLUMNS}
+       FROM tasks t
+       JOIN organizations o ON o.id = t.organization_id
+       LEFT JOIN staff s ON s.user_id = t.assignee_user_id
+       WHERE o.archived_at IS NULL
+         AND t.status != 'done'
+         AND t.due_at IS NOT NULL
+         AND t.due_at <= ?
+       ORDER BY CASE WHEN t.assignee_user_id = ? THEN 0 ELSE 1 END, t.due_at, t.title`,
+      [weekEnd, actorId],
+    ),
+    sql.all<{
+      id: string;
+      title: string;
+      organization_id: string;
+      organization_name: string;
+      next_step: string | null;
+      next_step_at: number | null;
+    }>(
+      `SELECT d.id, d.title, d.organization_id, o.name AS organization_name, d.next_step, d.next_step_at
+       FROM deals d
+       JOIN organizations o ON o.id = d.organization_id
+       WHERE o.archived_at IS NULL
+         AND d.stage NOT IN ('won', 'lost')
+         AND (d.next_step IS NULL OR d.next_step_at IS NULL OR d.next_step_at < ?)
+       ORDER BY d.updated_at DESC, d.title`,
+      [now],
+    ),
+    sql.all<{ id: string; slug: string; display_name: string; request_title: string }>(
+      `SELECT w.id, w.slug, w.display_name, r.title AS request_title
+       FROM requests r
+       JOIN workspaces w ON w.id = r.workspace_id
+       WHERE r.status = 'open' AND w.organization_id IS NOT NULL AND w.status != 'purged'
+       ORDER BY w.display_name, r.title`,
+    ),
+    sql.all<{ id: string; number: string; organization_name: string; due_at: number }>(
+      `SELECT i.id, i.number, o.name AS organization_name, i.due_at
+       FROM invoices i
+       JOIN organizations o ON o.id = i.organization_id
+       WHERE o.archived_at IS NULL
+         AND i.status IN ('sent', 'partly_paid')
+         AND i.due_at IS NOT NULL
+         AND i.due_at <= ?
+       ORDER BY i.due_at`,
+      [weekEnd],
+    ),
+    sql.all<{
+      id: string;
+      body: string | null;
+      created_at: number;
+      organization_id: string | null;
+      organization_name: string | null;
+    }>(
+      `SELECT a.id, a.body, a.created_at, a.organization_id, o.name AS organization_name
+       FROM activities a
+       LEFT JOIN organizations o ON o.id = a.organization_id
+       WHERE a.actor_kind = 'agent' AND a.created_at >= ?
+       ORDER BY a.created_at DESC`,
+      [now - WEEK_MS],
+    ),
+  ]);
+  return {
+    newLeads: newLeads.map((row) => ({
+      id: row.id,
+      title: row.title,
+      organizationId: row.organization_id,
+      organizationName: row.organization_name,
+    })),
+    calls: calls.map((row) => ({
+      id: row.id,
+      organizationId: row.organization_id,
+      organizationName: row.organization_name,
+      startsAt: row.starts_at,
+    })),
+    tasks,
+    stalledDeals: stalledDeals.map((row) => ({
+      id: row.id,
+      title: row.title,
+      organizationId: row.organization_id,
+      organizationName: row.organization_name,
+      nextStep: row.next_step,
+      nextStepAt: row.next_step_at,
+    })),
+    waitingSpaces: waitingSpaces.map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      displayName: row.display_name,
+      requestTitle: row.request_title,
+    })),
+    invoices: invoices.map((row) => ({
+      id: row.id,
+      number: row.number,
+      organizationName: row.organization_name,
+      dueAt: row.due_at,
+    })),
+    agentNotes: agentNotes.map((row) => ({
+      id: row.id,
+      body: row.body,
+      createdAt: row.created_at,
+      organizationId: row.organization_id,
+      organizationName: row.organization_name ?? "",
+    })),
+  };
 }
 
 export async function listTimeline(

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { listOrganizations, type OrgKind } from "@/db/crm";
 import { requireHqStaffPage } from "@/lib/current";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StaffNav } from "../staff-nav";
+import { StaffShell } from "../staff-shell";
 
 const KIND_LABEL: Record<OrgKind, string> = {
   lead: "Lead",
@@ -15,11 +15,10 @@ export default async function ClientsPage() {
   const { sql, caller } = await requireHqStaffPage();
   const clients = await listOrganizations(sql, caller);
   return (
+    <StaffShell>
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
-        <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Clients</h1>
-        <StaffNav />
         <Link href="/clients/new" className="text-sm">
           Add a client
         </Link>
@@ -45,5 +44,6 @@ export default async function ClientsPage() {
         </CardContent>
       </Card>
     </main>
+    </StaffShell>
   );
 }

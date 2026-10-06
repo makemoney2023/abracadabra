@@ -1,15 +1,16 @@
 import { requireSuperAdminPage } from "@/lib/current";
 import { liveTemplates } from "@/lib/store/workspaces";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StaffShell } from "../../../staff-shell";
 import { NewWorkspaceForm } from "../../new-workspace-form";
 
 export default async function NewWorkspacePage() {
   const { sql } = await requireSuperAdminPage();
   const templates = await liveTemplates(sql);
   return (
+    <StaffShell>
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
-        <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">New space</h1>
       </div>
       <Card>
@@ -24,5 +25,6 @@ export default async function NewWorkspacePage() {
         </CardContent>
       </Card>
     </main>
+    </StaffShell>
   );
 }

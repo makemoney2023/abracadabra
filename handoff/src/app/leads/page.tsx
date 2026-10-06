@@ -2,7 +2,7 @@ import Link from "next/link";
 import { DEAL_STAGES, DEAL_STAGE_LABEL, listDeals } from "@/db/crm";
 import { requireHqStaffPage } from "@/lib/current";
 import { Button } from "@/components/ui/button";
-import { StaffNav } from "../staff-nav";
+import { StaffShell } from "../staff-shell";
 import { DealBoard } from "./board";
 
 function queryOf(params: { view?: string; stage?: string; source?: string; owner?: string }): string {
@@ -38,11 +38,10 @@ export default async function LeadsPage({
   ]);
   const otherView = view === "list" ? "board" : "list";
   return (
+    <StaffShell>
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
-        <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Leads</h1>
-        <StaffNav />
       </div>
       <form method="get" className="flex flex-wrap items-end gap-3">
         {view === "list" ? <input type="hidden" name="view" value="list" /> : null}
@@ -98,5 +97,6 @@ export default async function LeadsPage({
       {deals.length === 0 ? <p className="text-sm text-muted-foreground">No deals yet.</p> : null}
       <DealBoard deals={deals} view={view} />
     </main>
+    </StaffShell>
   );
 }

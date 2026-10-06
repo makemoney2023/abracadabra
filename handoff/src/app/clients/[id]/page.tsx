@@ -6,6 +6,7 @@ import {
   listDeals,
   listOpenTasks,
   listOrganizations,
+  listProjects,
   listTimeline,
   organizationById,
   unlinkedWorkspaces,
@@ -15,7 +16,9 @@ import { requireHqStaffPage } from "@/lib/current";
 import { clientSpaceHref } from "@/lib/host";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StaffNav } from "../../staff-nav";
+import { StaffShell } from "../../staff-shell";
+import { ProjectForm } from "../../projects/forms";
+import { PROJECT_STATUS_LABEL } from "../../projects/labels";
 import { CallForm, MergeForm, NoteForm, PersonForm, TaskForm } from "../activity-forms";
 import { completeTaskAction } from "../actions";
 import { LinkSpaceForm } from "../link-space-form";
@@ -34,6 +37,7 @@ const ACTIVITY_LABEL: Record<string, string> = {
   request_done: "Request done",
   task: "Task",
   task_done: "Task done",
+  task_status: "Task",
   stage_change: "Stage",
 };
 
@@ -62,7 +66,7 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs, deals] = await Promise.all([
+  const [free, linked, contacts, tasks, timeline, orgs, deals, projects] = await Promise.all([
     unlinkedWorkspaces(sql, caller),
     sql.all<{ id: string; slug: string; display_name: string }>(
       `SELECT id, slug, display_name FROM workspaces
@@ -75,16 +79,16 @@ export default async function ClientPage({
     listTimeline(sql, caller, client.id, PAGE_SIZE, (page - 1) * PAGE_SIZE),
     listOrganizations(sql, caller),
     listDeals(sql, caller, { organizationId: client.id }),
+    listProjects(sql, caller, client.id),
   ]);
   const main = contacts.find((person) => person.is_primary === 1);
   const others = orgs.filter((org) => org.id !== client.id).map((org) => ({ id: org.id, name: org.name }));
   return (
+    <StaffShell>
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
-        <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">{client.name}</h1>
         {query.merged === "1" ? <p role="status" className="text-sm">These clients are now one.</p> : null}
-        <StaffNav />
         <Link href="/clients" className="text-sm">
           Clients
         </Link>
@@ -134,6 +138,27 @@ export default async function ClientPage({
               ))}
             </ul>
           )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Projects</CardTitle>
+          <CardDescription>Milestones, tasks, and status updates live on the project.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {projects.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No projects yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {projects.map((project) => (
+                <li key={project.id} className="text-sm">
+                  <Link href={`/projects/${project.id}`}>{project.name}</Link>
+                  <span className="ml-2 text-muted-foreground">{PROJECT_STATUS_LABEL[project.status]}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <ProjectForm organizationId={client.id} />
         </CardContent>
       </Card>
       <Card>
@@ -240,5 +265,6 @@ export default async function ClientPage({
         </Card>
       ) : null}
     </main>
+    </StaffShell>
   );
 }
