@@ -60,6 +60,36 @@ describe("signInWithPassword", () => {
     expect(sessions?.n).toBe(0);
   });
 
+  it("opens a session for a five character password", async () => {
+    const sql = await memoryDb();
+    const opened = await signInWithPassword({
+      sql,
+      username: ADMIN_USERNAME,
+      password: "Ab1c!",
+      now: NOW,
+      expectedPassword: "Ab1c!",
+    });
+
+    expect(opened.ok).toBe(true);
+    const sessions = await sql.get<{ n: number }>("SELECT count(*) AS n FROM sessions");
+    expect(sessions?.n).toBe(1);
+  });
+
+  it("does not open a session when the password is shorter than five characters", async () => {
+    const sql = await memoryDb();
+    const opened = await signInWithPassword({
+      sql,
+      username: ADMIN_USERNAME,
+      password: "Ab1c",
+      now: NOW,
+      expectedPassword: "Ab1c",
+    });
+
+    expect(opened).toEqual({ ok: false, reason: "unconfigured" });
+    const sessions = await sql.get<{ n: number }>("SELECT count(*) AS n FROM sessions");
+    expect(sessions?.n).toBe(0);
+  });
+
   it("does not open a session when the password is not configured", async () => {
     const sql = await memoryDb();
     const opened = await signInWithPassword({

@@ -3,7 +3,7 @@ import { openPreviewSession } from "@/lib/preview-session";
 
 export const ADMIN_USERNAME = "admin";
 
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 5;
 
 export type PasswordSignIn =
   | { ok: true; sessionToken: string; slug: string }
