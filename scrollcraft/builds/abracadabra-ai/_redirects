@@ -1,0 +1,4 @@
+# Keep the published canonicals. /walkthrough.html and /films.html stay files.
+# html_handling is none, so the apex needs an explicit rewrite to index.html.
+/index.html / 301
+/ /index.html 200
