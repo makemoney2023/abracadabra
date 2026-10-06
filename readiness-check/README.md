@@ -19,7 +19,7 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
 - **Public / internal:** URL → score + gaps + generate fixes on the fly → email unlocks full page matrix / findings + PDF (marketing soft-gate later)
 - **Ops:** Parallel FindAll → enrich contacts → auto-scan → inbox queue
 - **Fetch layer:** Parallel only (`search`, `extract`/`fetch`, `findall`, `enrich`) — no Firecrawl in v1
-- **Stack:** Next.js + Supabase + Inngest + shadcn + Vitest/Playwright
+- **Stack:** Next.js on Cloudflare Workers (OpenNext) + D1 (`rc_` tables) + Queues + shadcn + Vitest/Playwright
 
 ## Local setup
 
@@ -29,27 +29,26 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
    cp .env.example .env.local
    ```
 
-   Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PARALLEL_API_KEY`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, `NEXT_PUBLIC_APP_URL`.
+   Required for a scan: `PARALLEL_API_KEY`. Ops sign-in: `CHECK_OPS_PASSWORD`. Public host: `NEXT_PUBLIC_CHECK_URL`. Turnstile keys are optional; the email gate skips the widget when they are empty.
 
-2. Apply DB migrations (Docker + Supabase CLI, or linked remote project):
+2. The Worker stores rows in D1 database `handoff`, tables prefixed `rc_`. Apply that migration from this folder (it does not contain the Handoff CRM files):
 
    ```bash
-   npx supabase start   # local Docker stack, if using CLI
-   npx supabase db reset
+   npm run migrate
    ```
 
-   Migrations: `supabase/migrations/20260811000000_init.sql` and
-   `20260811120000_grant_service_role.sql` (table privileges for `service_role`).
+   `migrations/0006_readiness.sql` is the only file in `migrations/`. A local `npm run dev` uses Supabase only when the three Supabase env vars are set. Otherwise the admin client throws `Missing database`.
 
-3. Install and run the app + Inngest dev server (two terminals):
+3. Install and run the app:
 
    ```bash
    npm install
    npm run dev
-   npx inngest-cli@latest dev
    ```
 
-4. **Ops login:** create a Supabase Auth user, then insert a `staff_profiles` row (`user_id`, `role = 'ops'`). Sign in at `/ops/login` (email/password or magic link). Inbox: `/ops`. Prospecting: `/ops/prospect`.
+   Deploy is `npm run deploy` (OpenNext build, then Wrangler). The public host is `https://check.abra-ca-dabra.app`.
+
+4. **Ops login:** set `CHECK_OPS_PASSWORD`, then sign in at `/ops/login` with that password. Inbox: `/ops`. Prospecting: `/ops/prospect`.
 
 ## Verification
 
@@ -75,9 +74,9 @@ npm run test:e2e
 | `GET` | `/api/ops/scans/[token]` | Ops full scan detail — pages + findings (staff session) |
 | `GET` | `/api/ops/queue` | Ops inbox list (staff) — filters: `status`, `hasEmail`, `minScore`, `maxScore` |
 | `PATCH` | `/api/ops/queue/[id]` | Update status/notes + audit row (staff) |
-| `POST` | `/api/ops/rescan` | `{ leadId }` → new ops scan + Inngest `scan/requested` |
-| `POST` | `/api/ops/prospect` | `{ objective }` → Inngest `prospect/requested` (FindAll → enrich → scans) |
-| `GET/POST/PUT` | `/api/inngest` | Inngest serve (`scan/requested`, `prospect/requested`) |
+| `POST` | `/api/ops/login` | `{ password }` → httpOnly `rc_ops` cookie |
+| `POST` | `/api/ops/rescan` | `{ leadId }` → new ops scan on queue `scan-jobs` |
+| `POST` | `/api/ops/prospect` | `{ objective }` → prospect job on queue `scan-jobs` |
 
 Unlock for public detail: httpOnly cookie `scan_unlock_${token}=1` after email unlock. No query-param bypass. Ops uses `GET /api/ops/scans/[token]`.
 
@@ -93,6 +92,15 @@ On every coding session, follow `startup-session` → read INTENT + design + `pr
 v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Parallel-only). Deploy/CI polish still open.
 
 ## Changelog
+
+### 2026-10-06 — Readiness Check on Cloudflare
+
+- **What changed** — Worker `readiness-check` serves `check.abra-ca-dabra.app`. Rows live in D1 `rc_` tables. Scans and prospecting go on queue `scan-jobs`. The daily sweep is cron `0 8 * * *`. A finished assessment or a checked booking publishes `{ source, payload }` to `lead-intake`. Ops sign-in is cookie `rc_ops`. The email gate can require Turnstile.
+- **Why** — The public check should not stay on Vercel.
+- **Code touchpoints** — `cloudflare-worker.ts`, `wrangler.jsonc`, `src/lib/jobs.ts`, `src/lib/d1/admin.ts`, `migrations/0006_readiness.sql`
+- **Data-flow impact** — The check does not write CRM rows. Worker `handoff` consumes `lead-intake`.
+- **API / schema impact** — `POST /api/ops/login`. `/api/inngest` is gone. `rc_` tables in D1 `handoff`.
+- **Verification** — `npm test` (219 passed) and `npx eslint . --max-warnings 0`. Live `https://check.abra-ca-dabra.app/check` HTTP/2 200 from Cloudflare, no `x-vercel-id`. Worker version `93bdfa2e-b416-4bef-8ec7-e62baf6ab86c`.
 
 ### 2026-09-24 — Readiness Check studio design
 

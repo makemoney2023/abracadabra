@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "@/lib/assessment/config";
+import { TurnstileWidget } from "@/components/public/TurnstileWidget";
 
 export function GateForm({
   token,
@@ -16,6 +17,7 @@ export function GateForm({
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -25,7 +27,11 @@ export function GateForm({
       const res = await fetch(`/api/assessments/${token}/opt-in`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, name: name.trim() || undefined }),
+        body: JSON.stringify({
+          email,
+          name: name.trim() || undefined,
+          turnstileToken: turnstileToken || undefined,
+        }),
       });
       const data = (await res.json()) as { error?: string; message?: string };
       if (!res.ok) {
@@ -78,6 +84,7 @@ export function GateForm({
           className="studio-field text-sm"
         />
       </div>
+      <TurnstileWidget onToken={setTurnstileToken} />
       <button type="submit" disabled={pending} className="studio-cta-primary w-full">
         {pending ? "Sending…" : "Show my results"}
       </button>

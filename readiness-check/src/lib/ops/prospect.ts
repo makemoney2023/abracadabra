@@ -332,7 +332,7 @@ export async function runProspecting(
   });
 }
 
-/** Production helper: admin store + Inngest enqueue via callback. */
+/** Production helper: admin store. The caller supplies enqueueScan. */
 export function createDefaultProspectStore() {
   return createSupabaseProspectStore(createAdminClient());
 }

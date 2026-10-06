@@ -4,12 +4,14 @@ import { z } from "zod";
 import { optInAssessment } from "@/lib/assessment/actions";
 import { unlockCookieName } from "@/lib/scan/unlock";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { assertTurnstile } from "@/lib/turnstile";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
 const schema = z.object({
   email: z.email(),
   name: z.string().trim().min(1).max(200).optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export async function POST(request: Request, context: RouteContext) {
@@ -24,6 +26,11 @@ export async function POST(request: Request, context: RouteContext) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
+  const gate = await assertTurnstile(parsed.data.turnstileToken);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: 400 });
+  }
+
   try {
     const result = await optInAssessment(createAdminClient(), token, {
       email: parsed.data.email.trim().toLowerCase(),

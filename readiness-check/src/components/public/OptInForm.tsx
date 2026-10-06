@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OPT_IN_COPY } from "@/lib/marketing/copy";
+import { TurnstileWidget } from "@/components/public/TurnstileWidget";
 
 export type OptInFormProps = {
   token: string;
@@ -17,6 +18,7 @@ export function OptInForm({ token, defaultEmail = "" }: OptInFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [pending, setPending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,7 +28,11 @@ export function OptInForm({ token, defaultEmail = "" }: OptInFormProps) {
       const res = await fetch(`/api/scans/${token}/opt-in`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, name: name || undefined }),
+        body: JSON.stringify({
+          email,
+          name: name || undefined,
+          turnstileToken: turnstileToken || undefined,
+        }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {
@@ -79,6 +85,9 @@ export function OptInForm({ token, defaultEmail = "" }: OptInFormProps) {
             disabled={pending}
             className="h-11"
           />
+        </div>
+        <div className="sm:col-span-2">
+          <TurnstileWidget onToken={setTurnstileToken} />
         </div>
         <Button type="submit" disabled={pending} className="h-11 cursor-pointer sm:col-span-2 sm:w-fit">
           {pending ? OPT_IN_COPY.pending : OPT_IN_COPY.button}

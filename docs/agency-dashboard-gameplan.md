@@ -90,12 +90,11 @@ cookie is set for `hq` only, so a client page can never read it.
 | Staff host | Custom domain `hq.abra-ca-dabra.app` on worker `handoff-hq`. The workers.dev staff host still answers |
 | Bot check on survey | Turnstile |
 | Summaries and search | Workers AI through AI Gateway (already set up) |
-| Readiness Check | Move from Vercel + Supabase + Inngest to a Worker + D1 (section 4) |
+| Readiness Check | Worker `readiness-check` at `check.abra-ca-dabra.app`. `rc_` tables in D1 `handoff`. Queue `scan-jobs`. Cron sweep. Turnstile on the email gate |
 
 ## 4. Getting survey leads in
 
-Today the Readiness Check runs on Vercel, Supabase, and Inngest. "Everything on Cloudflare" means it moves.
-Do it in two steps so leads never stop flowing.
+The Readiness Check runs on Cloudflare Worker `readiness-check` at `check.abra-ca-dabra.app`. Step B is the live path. The check writes `rc_` tables in D1 `handoff` and publishes `{ source, payload }` to queue `lead-intake`. Worker `handoff` consumes that queue and writes the CRM rows. The HTTP bridge is not the production path. Step A below is how the bridge worked before the move.
 
 ### Step A: bridge (small, ships first)
 
@@ -136,8 +135,9 @@ Do it in two steps so leads never stop flowing.
   `intake_receipts`. It never reads client records.
 - Inngest jobs become Queue consumers and Cron Triggers:
   - `run-scan`, `run-prospect` → Queue consumer `scan-jobs`
-  - `assessment-completed` → writes straight to D1, no bridge needed
-  - `assessment-sweep` → Cron Trigger
+  - `assessment-completed` → the row is already in `rc_assessments`. The check publishes
+    `{ source: "assessment", payload }` to `lead-intake`. It does not write CRM rows.
+  - `assessment-sweep` → Cron Trigger `0 8 * * *`
 - Turnstile on the email gate.
 - Once Step B is live, turn off the bridge and the Vercel and Supabase projects. No data moves across
   (D7). Export the old Supabase tables to a file in R2 first, as a backup only.
@@ -703,8 +703,10 @@ Each step ships on its own and is useful on its own.
 11. **Client email.** Cloudflare Email Service on `handoff-agent`: inbound handler, address routing,
    signed replies, drafts on the client page, staff press Send. Blocked until Email Service is
    onboarded on this zone (SPF and DKIM). Handoff invite mail stays on its current sender.
-12. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
-   scans, Cron for the sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
+12. **Move the Readiness Check to Cloudflare.** Worker `readiness-check`, `rc_` tables in the same D1,
+   queue `scan-jobs`, cron `0 8 * * *`, Turnstile on the email gate, and `{ source, payload }` on
+   `lead-intake`. The public host is the Worker. The Vercel project can still rebuild on a push to
+   `main` until that project is disconnected. Old Supabase rows are not copied (D7).
 
 Each step: tests first, then code, then lint, type check, deploy, and a live check.
 
@@ -734,9 +736,9 @@ Made:
 
 ## 11. Risks
 
-- **Two homes for leads during the bridge.** Until step 12, the Readiness Check still has its own copy.
-  The dashboard is the source of truth for everything after intake. Staff should not edit leads in the
-  old `/ops` inbox once step 3 ships.
+- **Check rows and CRM rows.** The check keeps its own `rc_` copy for the scan and the ops inbox.
+  The dashboard is the source of truth after intake. The check publishes to `lead-intake` and does
+  not write client records. Staff should not treat the old Supabase project as live.
 - **D1 size and speed.** D1 is fine for an agency's volume. Keep the timeline indexed and paged.
 - **Duplicate people.** Same person, two emails. Matching by email then domain catches most. Add a
   merge button on the client page in step 2.

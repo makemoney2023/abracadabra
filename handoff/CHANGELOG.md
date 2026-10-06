@@ -2,6 +2,15 @@
 
 ## 2026-10-06
 
+- **What changed** — The Readiness Check public host is Worker `readiness-check` at `check.abra-ca-dabra.app`. Finished assessments and checked bookings publish `{ source, payload }` to `lead-intake`. The HTTP bridge is not the production path.
+- **Why** — The check leaves Vercel.
+- **Code touchpoints** — `readiness-check/`, `docs/agency-dashboard-gameplan.md`, `README.md`, `handoff/README.md`, `scrollcraft/builds/abracadabra-ai/README.md`
+- **Data-flow impact** — The check writes `rc_` tables only. Worker `handoff` still consumes `lead-intake` and writes CRM rows.
+- **API / schema impact** — D1 migration `readiness-check/migrations/0006_readiness.sql`. Queue `scan-jobs`. No Handoff schema change.
+- **Verification** — `npm test` in `readiness-check/` (219 passed) and `npx eslint . --max-warnings 0`. Worker `readiness-check` version `93bdfa2e-b416-4bef-8ec7-e62baf6ab86c`. D1 migration `0006_readiness.sql` applied on `handoff`. Queues `scan-jobs` (`52265c7ffcfd4ad9bf82f0d3bcc539bd`) and `scan-jobs-dlq`. Through Cloudflare anycast `104.21.74.23`: `https://check.abra-ca-dabra.app/check` HTTP/2 200, `server: cloudflare`, title "Readiness Check", no `x-vercel-id`. Apex HTTP/2 200. `www` `/pricing` HTTP/2 308 to the apex. Client `/api/health` HTTP/2 200 `{"database":"d1","ok":true,"visible":0}`. Staff `/spaces` HTTP/2 307 `location: /login`. `PARALLEL_API_KEY`, `CAL_WEBHOOK_SECRET`, and `CHECK_OPS_PASSWORD` were not in the deploy environment, so they were not set. Ops login stays closed until the password is set. Old Supabase tables were not exported; those credentials were not present.
+
+## 2026-10-06
+
 - **What changed** — Deployed `main` after the hostname cutover. Marketing Worker `abracadabra-marketing` is version `efc2764d-ddf2-4489-9eda-86778e21908b`. Client worker `handoff` is version `fa3dce27-fb33-4e3e-bac3-5e5aecb11b5d`. Staff worker `handoff-hq` is version `9c6d6b97-35ef-4e02-bce8-8525dc1e3d75`.
 - **Why** — The custom domains were already attached. This deploy publishes the `main` scripts onto those hosts.
 - **Code touchpoints** — none in this commit beyond the record. The scripts came from the merge of #50.

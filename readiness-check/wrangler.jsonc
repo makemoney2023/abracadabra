@@ -1,0 +1,64 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "readiness-check",
+  "main": "cloudflare-worker.ts",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "alias": {
+    "server-only": "./node_modules/server-only/empty.js"
+  },
+  "workers_dev": true,
+  "account_id": "6f6959ecba86d1de4d6cf6aa0b34528d",
+  "routes": [
+    {
+      "pattern": "check.abra-ca-dabra.app",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "readiness-check"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "handoff",
+      "database_id": "b2be192c-db0d-447f-8d7c-b2c4d39df274",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "LEAD_INTAKE",
+        "queue": "lead-intake"
+      },
+      {
+        "binding": "SCAN_JOBS",
+        "queue": "scan-jobs"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "scan-jobs",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "scan-jobs-dlq"
+      }
+    ]
+  },
+  "triggers": {
+    "crons": ["0 8 * * *"]
+  },
+  "vars": {
+    "NEXT_PUBLIC_CHECK_URL": "https://check.abra-ca-dabra.app",
+    "NEXT_PUBLIC_APP_URL": "https://abra-ca-dabra.app"
+  }
+}

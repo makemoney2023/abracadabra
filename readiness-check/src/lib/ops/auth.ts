@@ -1,38 +1,24 @@
-import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { OPS_COOKIE, verifyOpsCookie } from "@/lib/ops/session";
 
 export type OpsSession =
   | {
       ok: true;
       user: { id: string; email?: string };
-      supabase: Awaited<ReturnType<typeof createClient>>;
+      supabase: Record<string, never>;
     }
   | { ok: false; status: 401 | 403; error: string };
 
-/** Require an authenticated user with staff_profiles.role = ops. */
+/** Require the signed ops cookie. Fail closed when the password is unset. */
 export async function requireOpsSession(): Promise<OpsSession> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
+  const password = process.env.CHECK_OPS_PASSWORD ?? "";
+  if (!password) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-
-  const { data: profile, error: profileError } = await supabase
-    .from("staff_profiles")
-    .select("role")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (profileError || !profile || profile.role !== "ops") {
-    return { ok: false, status: 403, error: "Forbidden" };
+  const token = (await cookies()).get(OPS_COOKIE)?.value;
+  const valid = await verifyOpsCookie(token, password);
+  if (!valid) {
+    return { ok: false, status: 401, error: "Unauthorized" };
   }
-
-  return {
-    ok: true,
-    user: { id: user.id, email: user.email },
-    supabase,
-  };
+  return { ok: true, user: { id: "ops" }, supabase: {} };
 }

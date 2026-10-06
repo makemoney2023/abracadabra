@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { inngest } from "@/inngest/client";
+import { enqueueProspect } from "@/lib/jobs";
 import { requireOpsSession } from "@/lib/ops/auth";
 
 const bodySchema = z.object({
@@ -28,13 +28,7 @@ export async function POST(request: Request) {
     );
   }
 
-  await inngest.send({
-    name: "prospect/requested",
-    data: {
-      objective: parsed.data.objective,
-      requestedBy: session.user.id,
-    },
-  });
+  await enqueueProspect(parsed.data.objective);
 
   return NextResponse.json(
     {

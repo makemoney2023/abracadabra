@@ -18,6 +18,9 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     "supabase/.temp/**",
+    ".open-next/**",
+    ".wrangler/**",
+    "cloudflare-worker.ts",
   ]),
 ]);
 
