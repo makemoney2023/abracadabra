@@ -2,6 +2,15 @@
 
 ## 2026-10-06
 
+- **What changed** — Hub docs match the two live workers. The root README and the skill-library README say the Cloudflare agent is step 10 and that worker is not built yet. The gameplan says one codebase, two workers sharing D1 and R2, and the client and project routes include linked repos.
+- **Why** — Those pages should match the running workers: R2 bucket `handoff` is in use, staff use `handoff-hq`, and the agent worker is still the plan.
+- **Code touchpoints** — `README.md`, `.cursor/skills/README.md`, `docs/agency-dashboard-gameplan.md`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — docs only. No app code change. No deploy.
+
+## 2026-10-06
+
 - **What changed** — Staff can link a GitHub repo to a client and to a project. An admin opens `/settings/github` to see the installs this app can see. `POST /api/github/webhook` checks `X-Hub-Signature-256`, then puts the delivery on queue `github-events`. The client worker writes a timeline row for an opened or merged pull request, a release, a deploy, or a push to the default branch.
 - **Why** — Step 6 of the agency dashboard. Client repos live in our GitHub org, and the client record should show that work.
 - **Code touchpoints** — `handoff/src/lib/github/`, `handoff/src/lib/queue-dispatch.ts`, `handoff/src/app/api/github/webhook/route.ts`, `handoff/src/app/settings/github/page.tsx`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/app/clients/repo-forms.tsx`, `handoff/src/db/crm.ts`, `handoff/cloudflare-worker.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`

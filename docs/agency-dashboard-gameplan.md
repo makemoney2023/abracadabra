@@ -28,21 +28,21 @@ If it is not in the dashboard, it did not happen.
 
 ## 2. Where it lives
 
-Build the dashboard **inside the Handoff Worker** (`handoff/`). Do not start a new app (D1).
+The dashboard is the Handoff app (`handoff/`). Do not start a new app (D1).
 
-Two front doors, one Worker (D3):
+One codebase, two workers, until the zone moves. They share D1 database `handoff` and R2 bucket `handoff`.
 
-- **`hq.abra-ca-dabra.app`**: the staff dashboard. Staff only.
-- **The Handoff domain**: clients only. Client spaces (`/w/[slug]`), invites, and client login stay here.
+- **`handoff`** at `https://handoff.abracadabra-ai.workers.dev`: clients only. Client spaces (`/w/[slug]`), invites, and client login stay here. This worker consumes queues `lead-intake` and `github-events`.
+- **`handoff-hq`** at `https://handoff-hq.abracadabra-ai.workers.dev`: the staff dashboard. Staff only. This worker produces those queues and does not consume them. When `hq.abra-ca-dabra.app` is a zone on this account, staff use that host.
 
-The Worker picks pages by host name. Staff pages answer only on `hq`. Client pages answer only on the
-Handoff domain. Old `/admin` links on the Handoff domain redirect to `hq`.
+The app picks pages by host name. Staff pages answer only on the staff host. Client pages answer only on the
+Handoff host. Old `/admin` links on the Handoff host redirect to the staff origin `/spaces`.
 
 Why:
 
 - Handoff already has staff login (Magic password), admin roles, D1, R2, Workers AI, and the MCP server.
 - Clients and Handoff spaces need to join in one database. Same D1 means plain SQL joins, no sync.
-- One deploy, one login, one place to fix bugs.
+- One codebase, one login. Two deploys until the staff domain is on this account.
 
 Routes:
 
@@ -51,8 +51,8 @@ Routes:
 | `hq` `/` | staff | Today screen (what needs doing) |
 | `hq` `/leads` | staff | Pipeline board and list |
 | `hq` `/clients` | staff | Client list |
-| `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline |
-| `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files |
+| `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline, linked repos |
+| `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files, linked repos (open pull requests, last push, latest release) |
 | `hq` `/work` | staff | All open tasks across clients, by owner and due date |
 | `hq` `/deliverables/[id]` | staff | Finished work: build, preview as the client sees it, publish |
 | `hq` `/invoices` | staff | All invoices: draft, sent, late, paid |
@@ -87,7 +87,7 @@ cookie is set for `hq` only, so a client page can never read it.
 | Handoff product mail (invites, file notices) | The sender Handoff already uses. That is not the client-conversation channel. |
 | Invoice PDFs | R2 |
 | Finished-work media (images, video, posters) | R2, streamed by the Worker with range requests |
-| Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker. Until that zone is here, worker `handoff-hq` at `https://handoff-hq.abracadabra-ai.workers.dev` |
+| Staff host | Worker `handoff-hq` at `https://handoff-hq.abracadabra-ai.workers.dev` until `hq.abra-ca-dabra.app` is a zone on this account. Then that custom domain attaches to `handoff-hq`. |
 | Bot check on survey | Turnstile |
 | Summaries and search | Workers AI through AI Gateway (already set up) |
 | Readiness Check | Move from Vercel + Supabase + Inngest to a Worker + D1 (section 4) |
@@ -712,7 +712,7 @@ Each step: tests first, then code, then lint, type check, deploy, and a live che
 
 Made:
 
-- **D1. One app.** The dashboard lives in the Handoff Worker.
+- **D1. One app.** The dashboard lives in the Handoff app (`handoff/`), deployed as workers `handoff` and `handoff-hq` that share D1 and R2.
 - **D2. Same D1.** The Readiness Check uses the `handoff` D1, with `rc_` tables.
 - **D3. Two hosts.** Staff use `hq.abra-ca-dabra.app`. Clients keep the Handoff domain.
 - **D4. Stages.** `new, contacted, call_booked, proposal, won, lost`.
