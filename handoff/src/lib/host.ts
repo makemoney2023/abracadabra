@@ -1,5 +1,8 @@
 export const DEFAULT_HQ_HOST = "hq.abra-ca-dabra.app";
 
+/** Staff dashboard on workers.dev until hq.abra-ca-dabra.app is a zone on this account. */
+export const STAFF_DEV_HOST = "handoff-hq.abracadabra-ai.workers.dev";
+
 const STAFF_PREFIXES = [
   "/clients",
   "/leads",
@@ -39,6 +42,12 @@ export function hqOrigin(): string {
   return raw.replace(/\/$/, "");
 }
 
+/** Redirects on the staff dev host stay on that host, even when the configured origin is the custom domain. */
+export function hqOriginForHost(hostHeader: string): string {
+  if (hostnameOf(hostHeader) === STAFF_DEV_HOST) return `https://${STAFF_DEV_HOST}`;
+  return hqOrigin();
+}
+
 export function handoffOrigin(): string {
   return (process.env.HANDOFF_APP_ORIGIN ?? "").replace(/\/$/, "");
 }
@@ -50,7 +59,7 @@ export function clientSpaceHref(slug: string): string {
 
 export function isHqHost(hostHeader: string, hqHost = hqHostName()): boolean {
   const name = hostnameOf(hostHeader);
-  return name === hostnameOf(hqHost) || name === "hq.localhost";
+  return name === hostnameOf(hqHost) || name === "hq.localhost" || name === STAFF_DEV_HOST;
 }
 
 function cleanPath(path: string): string {
