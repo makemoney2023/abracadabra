@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: plan. Nothing here is built yet. Decisions D1 to D6 are made (section 10).
+Status: plan. Nothing here is built yet. Decisions D1 to D10 are all made (section 10).
 
 ## 1. What it does
 
@@ -17,7 +17,11 @@ Status: plan. Nothing here is built yet. Decisions D1 to D6 are made (section 10
 8. AI agents can run the work through MCP: move stages, add and close tasks, post status updates,
    and send invoices. Every change they make is on the timeline with their name on it.
 9. A client's **GitHub repos** are linked to their record (and to a project when it fits). Pull
-   requests, merges, releases, and deploys show on the client timeline.
+   requests, merges, releases, and deploys show on the client timeline. The repos live in our GitHub
+   org, and we do the work in them (D10).
+10. When work is ready, we **publish it to the client's Handoff space** as **finished work**: social
+    posts, ads, videos, pages, and files, shown the way they will look live. The client approves each
+    piece or asks for changes. Their answer lands on the timeline.
 
 If it is not in the dashboard, it did not happen.
 
@@ -41,8 +45,6 @@ Why:
 
 Routes:
 
-| Path | Who | What |
-|---|---|---|
 | Host and path | Who | What |
 |---|---|---|
 | `hq` `/` | staff | Today screen (what needs doing) |
@@ -51,6 +53,7 @@ Routes:
 | `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline |
 | `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files |
 | `hq` `/work` | staff | All open tasks across clients, by owner and due date |
+| `hq` `/deliverables/[id]` | staff | Finished work: build, preview as the client sees it, publish |
 | `hq` `/invoices` | staff | All invoices: draft, sent, late, paid |
 | `hq` `/spaces` | staff | Handoff space admin (today's `/admin`, moved) |
 | `hq` `/settings/keys` | super admin | MCP keys and their scopes |
@@ -59,6 +62,9 @@ Routes:
 | `hq` `/api/github/webhook` | GitHub only (signed) | Repo events for the timeline (section 7) |
 | `hq` `/settings/github` | super admin | GitHub App install and repo linking |
 | Handoff `/w/[slug]` | clients | Handoff space, as today |
+| Handoff `/w/[slug]/work` | clients | Finished work list, newest first |
+| Handoff `/w/[slug]/work/[id]` | clients | One piece of finished work: preview, approve, ask for changes |
+| Handoff `/w/[slug]/media/[itemId]/[file]` | clients and staff | Finished-work images and video from R2, after an access check |
 
 Clients never see CRM pages. Staff pages check the `staff` role on every request. The staff session
 cookie is set for `hq` only, so a client page can never read it.
@@ -76,6 +82,7 @@ cookie is set for `hq` only, so a client page can never read it.
 | GitHub webhook buffer | Queue `github-events` |
 | Email out | Existing Handoff email sender (status updates, invoices, reminders) |
 | Invoice PDFs | R2 |
+| Finished-work media (images, video, posters) | R2, streamed by the Worker with range requests |
 | Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker |
 | Bot check on survey | Turnstile |
 | Summaries and search | Workers AI through AI Gateway (already set up) |
@@ -99,6 +106,8 @@ Do it in two steps so leads never stop flowing.
   - New: make a lead, a contact, and an `assessment` row.
 - Same `assessment_id` sent twice does nothing the second time (unique key).
 - Cal.com bookings: point the booking webhook at `/api/intake/booking` with the same signing.
+- We start fresh (D7). Only leads that come in after the bridge ships go into the dashboard. Old
+  Supabase leads are not copied over.
 
 ### Step B: move the Readiness Check onto Cloudflare
 
@@ -111,7 +120,8 @@ Do it in two steps so leads never stop flowing.
   - `assessment-completed` → writes straight to D1, no bridge needed
   - `assessment-sweep` → Cron Trigger
 - Turnstile on the email gate.
-- Once Step B is live, turn off the bridge and the Vercel and Supabase projects.
+- Once Step B is live, turn off the bridge and the Vercel and Supabase projects. No data moves across
+  (D7). Export the old Supabase tables to a file in R2 first, as a backup only.
 
 ## 5. Data model (D1)
 
@@ -262,6 +272,7 @@ CREATE TABLE invoices (
   status TEXT NOT NULL CHECK (status IN ('draft', 'sent', 'partly_paid', 'paid', 'void')),
   currency TEXT NOT NULL DEFAULT 'usd',
   subtotal_cents INTEGER NOT NULL DEFAULT 0,
+  tax_rate_bp INTEGER NOT NULL DEFAULT 0 CHECK (tax_rate_bp >= 0),  -- basis points; 825 = 8.25%. Off (0) by default
   tax_cents INTEGER NOT NULL DEFAULT 0,
   total_cents INTEGER NOT NULL DEFAULT 0,
   paid_cents INTEGER NOT NULL DEFAULT 0,
@@ -288,13 +299,19 @@ CREATE TABLE invoice_items (
   sort INTEGER NOT NULL DEFAULT 0
 );
 
+-- Next invoice number for each year. Bumped in the same batch that makes the invoice.
+CREATE TABLE invoice_counters (
+  year INTEGER PRIMARY KEY,
+  last_number INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE payments (
   id TEXT PRIMARY KEY,
   invoice_id TEXT NOT NULL REFERENCES invoices(id),
   organization_id TEXT NOT NULL REFERENCES organizations(id),
   amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
-  method TEXT NOT NULL,            -- 'bank', 'card', 'check', 'stripe', ...
-  provider TEXT,                   -- 'stripe' or null for manual
+  method TEXT NOT NULL,            -- 'bank', 'card', 'check', 'cash', 'other'
+  provider TEXT,                   -- null for manual (D8). 'stripe' later
   external_id TEXT,                -- provider payment id
   received_at INTEGER NOT NULL,
   recorded_by TEXT,                -- actor id
@@ -319,12 +336,12 @@ CREATE TABLE status_updates (
   published_at INTEGER
 );
 
--- GitHub App installs we can read from. One per GitHub account (ours or a client's).
+-- GitHub App installs. Today there is one: our own org (D10). The table allows more later.
 CREATE TABLE github_installations (
   id INTEGER PRIMARY KEY,          -- GitHub installation id
   account_login TEXT NOT NULL,     -- GitHub user or org name
   account_type TEXT NOT NULL CHECK (account_type IN ('User', 'Organization')),
-  organization_id TEXT REFERENCES organizations(id),  -- set when the install belongs to one client
+  organization_id TEXT REFERENCES organizations(id),  -- null for our own org
   suspended_at INTEGER,
   created_at INTEGER NOT NULL
 );
@@ -339,10 +356,60 @@ CREATE TABLE repos (
   project_id TEXT REFERENCES projects(id),
   default_branch TEXT,
   is_private INTEGER NOT NULL DEFAULT 1,
-  owned_by TEXT NOT NULL CHECK (owned_by IN ('client', 'agency')),
+  owned_by TEXT NOT NULL DEFAULT 'agency' CHECK (owned_by IN ('client', 'agency')),
   linked_by TEXT,                           -- actor id
   created_at INTEGER NOT NULL,
   archived_at INTEGER
+);
+
+-- Finished work we show a client: a social pack, a web page, a document. Built in a repo,
+-- then published to the client's Handoff space.
+CREATE TABLE deliverables (
+  id TEXT PRIMARY KEY,
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  project_id TEXT REFERENCES projects(id),
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id),   -- the space the client sees it in
+  title TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('social_pack', 'website', 'document', 'other')),
+  status TEXT NOT NULL CHECK (status IN ('draft', 'in_review', 'approved', 'changes_requested', 'archived')),
+  version INTEGER NOT NULL DEFAULT 1,       -- goes up each time we publish a new round
+  source_repo_id TEXT REFERENCES repos(id),
+  source_ref TEXT,                          -- commit sha the media came from
+  published_at INTEGER,
+  actor_kind TEXT NOT NULL CHECK (actor_kind IN ('staff', 'agent', 'system')),
+  actor_id TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+-- One piece inside a deliverable: a reel, a carousel, an ad, a page.
+CREATE TABLE deliverable_items (
+  id TEXT PRIMARY KEY,
+  deliverable_id TEXT NOT NULL REFERENCES deliverables(id),
+  version INTEGER NOT NULL,                 -- which round this item belongs to
+  section TEXT,                             -- 'Organic', 'Paid', 'Week 1', ...
+  format TEXT NOT NULL CHECK (format IN ('video', 'static', 'carousel', 'story', 'ad_video',
+                                         'ad_static', 'ad_carousel', 'page', 'link', 'file')),
+  channel TEXT,                             -- 'instagram', 'facebook', 'meta_ads', 'web', ...
+  title TEXT NOT NULL,
+  copy_text TEXT,                           -- caption, headline, body
+  media_json TEXT NOT NULL DEFAULT '[]',    -- [{ r2_key, role: main|poster|square|slide, content_type, size, width, height }]
+  link_url TEXT,                            -- for 'page' and 'link' items
+  status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'changes_requested')),
+  sort INTEGER NOT NULL DEFAULT 0
+);
+
+-- What the client (or staff) said about the work. Append only.
+CREATE TABLE deliverable_feedback (
+  id TEXT PRIMARY KEY,
+  deliverable_id TEXT NOT NULL REFERENCES deliverables(id),
+  item_id TEXT REFERENCES deliverable_items(id),   -- null = about the whole deliverable
+  version INTEGER NOT NULL,                        -- the round they were looking at
+  author_kind TEXT NOT NULL CHECK (author_kind IN ('client', 'staff')),
+  author_id TEXT,                                  -- client user id or staff user id
+  decision TEXT NOT NULL CHECK (decision IN ('approve', 'changes', 'comment')),
+  body TEXT,
+  created_at INTEGER NOT NULL
 );
 
 -- Write calls we already ran, so a retried agent call does nothing twice.
@@ -366,13 +433,16 @@ CREATE TABLE intake_receipts (
 
 Plus indexes on every foreign key, `deals(stage, updated_at)`, `tasks(assignee_user_id, status, due_at)`,
 `activities(organization_id, created_at)`, `invoices(status, due_at)`,
-`status_updates(project_id, created_at)`, and `repos(organization_id)`.
+`status_updates(project_id, created_at)`, `repos(organization_id)`,
+`deliverables(workspace_id, status, published_at)`, `deliverable_items(deliverable_id, version, sort)`,
+and `deliverable_feedback(deliverable_id, created_at)`.
 
 GitHub events reuse `intake_receipts` with `source = 'github'` and the delivery id, so a redelivered
 webhook does nothing twice.
 
 `knowledge_keys` (from `0004_knowledge.sql`) gets a `scopes` column: a comma list of `read`, `work`,
-and `billing`. Old keys default to `read`.
+`billing`, and `code`. Old keys default to `read`. It also gets a `can_publish` flag (0 or 1), off by
+default.
 
 Rules:
 
@@ -383,7 +453,17 @@ Rules:
 - Existing spaces get linked by hand once, from the client page.
 - Invoice totals are worked out in code from the items, never typed in. `paid_cents` is the sum of
   payments. Status moves to `partly_paid` or `paid` on its own.
+- Invoice numbers look like `INV-2026-0001` (D9). The number comes from `invoice_counters` when the
+  invoice is made, so numbers never repeat. A voided invoice keeps its number.
+- Tax is off unless staff set a rate on that invoice (D9). `tax_cents` is the subtotal times
+  `tax_rate_bp`, rounded to the nearest cent, worked out in code.
 - A sent invoice is never edited. To change it, void it and make a new one.
+- Clients only ever see deliverables that are published (`published_at` set), in their own space, at
+  the latest version. Drafts stay on `hq`.
+- Publishing a new round bumps `version`. Old items stay for history. A client's approve or change
+  request is saved with the version they saw, so an old answer can never approve new work.
+- When every item in the latest round is approved, the deliverable moves to `approved` on its own.
+  Any change request moves it to `changes_requested`.
 - Every write, by a person, an agent, or a job, adds one `activities` row in the same D1 batch.
 
 ## 6. Screens
@@ -406,7 +486,7 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 
 **Client page (`hq /clients/[id]`)**
 - Top: name, website, owner, kind, main contact.
-- Tabs: Overview, Contacts, Deals, Projects, Spaces, Repos, Invoices, Timeline.
+- Tabs: Overview, Contacts, Deals, Projects, Spaces, Repos, Deliverables, Invoices, Timeline.
 - Repos tab: linked repos with last push, open pull requests, and latest release. "Link a repo"
   picks from repos our GitHub App can see. Each repo can be tied to one project.
 - Overview shows the latest Readiness Check scores, open tasks, and a short AI summary of the timeline
@@ -418,8 +498,29 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 - Linked Handoff space: open requests, recent files, storage used.
 - Linked repos: open pull requests and recent merges, so status updates can say what shipped.
 - Status and due date at the top.
+- Deliverables: each one with its status (draft, published, changes asked, approved) and latest
+  feedback.
 - Status updates: write one, pick internal or client, then publish. Client updates show in the
   Handoff space and can be emailed. Agent drafts wait here for a person to publish.
+
+**Deliverable builder (`hq /deliverables/[id]`)**
+- Pick the kind (social pack, website page, video, design, other) and the project.
+- Add items: upload media, or pull them from a repo (see section 7). Each item has a format (for
+  example IG video, Meta ad carousel), a title, its copy, and its media.
+- "Preview as client" shows it exactly as the client will see it.
+- Publish makes it show in the client's Handoff space and can email the main contact. A new publish
+  after changes makes a new version; feedback stays tied to the version it was about.
+
+**Finished work for clients (`/w/[slug]/work` and `/w/[slug]/work/[id]`)**
+- Lives in Handoff. Only people with access to that space can see it.
+- The list page shows every published deliverable with a cover image, status, and date.
+- The deliverable page works like the social preview in the renewimplants repo:
+  - Tabs by format (Instagram, Facebook, Stories, Meta ads, and so on).
+  - Each post shows in a phone frame, the way it will look in the feed.
+  - Videos play with a poster image first. Carousels swipe. Stills show full size.
+  - The caption, headline, and call to action show under each item.
+- Buttons on each item: "Approve" and "Ask for changes" (with a note). One "Approve all" at the top.
+- Every click writes an `activities` row, so staff see it on the timeline and the Today screen.
 
 **Work (`hq /work`)**
 - Every open task across all clients. Group by person or by client. Filter late, this week, blocked.
@@ -428,7 +529,7 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 - List by status: draft, sent, late, paid. Totals owed and paid this month.
 - Make an invoice from a project or milestone. Add lines, preview, send. Sending saves a PDF to R2
   and emails the client contact.
-- Record a payment by hand (amount, date, method). Stripe payments, if used, come in on their own.
+- Record a payment by hand (amount, date, method). Stripe comes later as an add-on (D8).
 - Clients see their invoices in their Handoff space, read only.
 
 **Agent log**
@@ -442,7 +543,8 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 
 - Creating a space from a won deal fills in name, slug, and sender from the organization.
 - The space page header shows a link back to the client for staff only.
-- Client pages in a Handoff space show published client status updates and the client's invoices.
+- Client pages in a Handoff space show published client status updates, the client's invoices, and
+  published finished work at `/w/[slug]/work` (section 6).
 
 ### MCP tools for running the work (D5)
 
@@ -454,7 +556,14 @@ A tool call with a key that lacks the scope gets a plain error.
 |---|---|
 | `read` | `get_client`, `search_crm`, `list_deals`, `list_open_work`, `get_project`, `client_timeline`, `list_invoices`, plus the file tools |
 | `work` | `create_lead`, `update_contact`, `move_deal_stage`, `add_note`, `log_call`, `create_project`, `create_milestone`, `create_task`, `update_task` (status, owner, due date), `post_status_update`, `create_space_request` |
+| `work` (finished work) | `create_deliverable`, `add_deliverable_item`, `sync_deliverable_from_repo`, `list_deliverable_feedback`, and `publish_deliverable` (needs `can_publish`) |
 | `billing` | `create_invoice` (draft), `send_invoice`, `record_payment`, `void_invoice` |
+| `code` | `open_issue`, `open_pr`, `comment_on_pr` on linked repos |
+
+`sync_deliverable_from_repo` reads a manifest file in the repo at one commit (for example
+`deliverables/social-preview/manifest.json`). It copies only the media and copy files the manifest
+lists into R2. It never copies source code. The deliverable keeps the repo, path, and commit it came
+from.
 
 Rules for every write tool:
 
@@ -463,8 +572,9 @@ Rules for every write tool:
 - Writes an `activities` row with `actor_kind = 'agent'` and the key id, in the same batch.
 - Rate limit per key (for example 60 writes a minute). Over the limit gets a plain error.
 - Returns the changed record so the agent can check its work.
-- Client-facing steps have a guard. `post_status_update` with `audience = 'client'` and `send_invoice`
-  make drafts unless the key has the `publish` flag. Staff turn that on per key once they trust it.
+- Client-facing steps have a guard. `post_status_update` with `audience = 'client'`, `send_invoice`,
+  and `publish_deliverable` make drafts unless the key has the `can_publish` flag. Staff turn that on
+  per key once they trust it.
 
 ### Automation
 
@@ -475,11 +585,13 @@ Rules for every write tool:
 
 ### GitHub repos
 
-Each client's repos link to their client record, and to a project when it fits.
+Each client's repos link to their client record, and to a project when it fits. All client repos
+live in our GitHub org and we own them (D10). We do the work in these repos, and some of it is
+finished work to show the client, like `social-preview` in the renewimplants repo.
 
-- **GitHub App.** We make one GitHub App. It asks for read-only access: metadata, contents (read),
-  pull requests, issues, deployments, and releases. A client installs it on their org and picks which
-  repos it can see. Repos we own for them live under our org's install.
+- **GitHub App.** We make one GitHub App and install it once, on our org. It has full access to the
+  repos it is installed on: metadata, contents (read and write), pull requests, issues, checks,
+  deployments, and releases.
 - **Linking.** A super admin opens `hq /settings/github` to see each install and its repos. Staff link a
   repo from the client's Repos tab. Repos are keyed by GitHub's repo id, so a rename or move keeps the
   link.
@@ -492,9 +604,13 @@ Each client's repos link to their client record, and to a project when it fits.
   to the default branch (one row per push, not per commit). Rename and transfer events update
   `full_name`. Uninstall or suspend marks the install so its repos show as disconnected.
 - **MCP.** `read` adds `list_repos` and `repo_activity`. `work` adds `link_repo` and `unlink_repo`.
-  Agents can use merged pull requests to draft the weekly status update.
+  `code` adds `open_issue`, `open_pr`, and `comment_on_pr`. Agents can use merged pull requests to
+  draft the weekly status update.
+- **Finished work from a repo.** `sync_deliverable_from_repo` (and the "Pull from repo" button in the
+  deliverable builder) turns a repo folder into a deliverable, using its manifest. See section 6.
 - **No code in our data.** We store repo names and event summaries (titles, numbers, links, authors),
-  never file contents or diffs. Code never goes into AI Gateway prompts.
+  never file contents or diffs. Code never goes into AI Gateway prompts. The one exception is
+  finished-work media and copy files a manifest lists, which go to R2 so the client can see them.
 
 ## 8. Login and safety
 
@@ -506,12 +622,17 @@ Each client's repos link to their client record, and to a project when it fits.
 - Intake endpoints only accept signed requests. No session cookie works on them.
 - MCP keys: only super admins make, scope, and revoke them. Keys are stored hashed and shown once.
   Never log a full key, only its id and last 4 characters.
-- Money: amounts are whole cents, never floats. Payment webhooks are signed and deduped by provider id.
-  No card numbers ever touch our Worker; the provider holds them.
-- Secrets added: `INTAKE_SIGNING_SECRET` (both Workers), and `STRIPE_WEBHOOK_SECRET` if we pick Stripe
-  (D8). Add to `.env.example` and the Handoff README.
-- GitHub secrets: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`. We make a
-  short-lived install token per call and never store or log it. Add to `.env.example` and the README.
+- Money: amounts are whole cents, never floats. For now staff record payments by hand. When the Stripe
+  add-on lands, its webhook is signed and deduped by provider id, and no card numbers ever touch our
+  Worker; Stripe holds them.
+- Secrets added now: `INTAKE_SIGNING_SECRET` (both Workers). `STRIPE_WEBHOOK_SECRET` is added only when
+  the Stripe add-on ships. Add each to `.env.example` and the Handoff README when it lands.
+- GitHub secrets: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`. The App has
+  write access to our org, so the private key lives in Worker secrets only. We make a short-lived
+  install token per call and never store or log it. Add to `.env.example` and the README.
+- Finished work: the media route checks that the viewer can see that space on every request, and
+  only serves published versions to clients. R2 keys are random ids, not names, so they can't be
+  guessed.
 - Survey answers can hold personal info. Keep them in D1 only, never in logs or AI Gateway prompts
   without a reason. AI summaries use notes and activity text, not raw answers.
 - Deleting a contact on request: remove their contact row and blank their email in assessments.
@@ -526,19 +647,23 @@ Each step ships on its own and is useful on its own.
 2. **Client page and timeline.** Contacts, notes, call logs, tasks. Handoff file and request events feed
    the timeline.
 3. **Lead intake bridge.** Signed `/api/intake/assessment` and `/api/intake/booking`, `lead-intake`
-   Queue, consumer with dedupe. Change the Readiness Check to POST on completion. Backfill existing
-   Supabase leads once with a script.
+   Queue, consumer with dedupe. Change the Readiness Check to POST on completion. No backfill: we
+   start fresh (D7).
 4. **Pipeline.** Deals, stage board, won flow (deal to client to project to space).
 5. **Projects and work.** Milestones, tasks, status updates, `hq /work`, Today screen.
-6. **GitHub repos.** GitHub App, `0006_github.sql`, `hq /settings/github`, signed webhook,
-   `github-events` Queue, Repos tab on the client and project pages.
-7. **Invoices and payments.** Invoice screens, PDF to R2, send by email, record payments by hand,
-   client read-only view in Handoff. Stripe webhook if D8 says so.
-8. **MCP read and write tools.** Key scopes, all tools in section 7, idempotency, rate limits, agent
-   log and undo. Client-facing tools start as drafts only.
-9. **Automation.** Cron and the `agent-actions` Queue: status-update drafts, follow-ups, invoice
+6. **GitHub repos.** One GitHub App on our org with read and write access, `0006_github.sql`,
+   `hq /settings/github`, signed webhook, `github-events` Queue, Repos tab on the client and project
+   pages.
+7. **Finished work.** `deliverables`, `deliverable_items`, and `deliverable_feedback` tables, the
+   access-checked media route, the staff builder, pull from a repo manifest (like social-preview in
+   the renewimplants repo), the client gallery at `/w/[slug]/work`, and approve or ask-for-changes.
+8. **Invoices and payments.** Invoice screens, PDF to R2, send by email, record payments by hand,
+   client read-only view in Handoff. Stripe pay links and webhook come later as an add-on (D8).
+9. **MCP read and write tools.** Key scopes, all tools in section 7 including code and finished-work
+   tools, idempotency, rate limits, agent log and undo. Client-facing tools start as drafts only.
+10. **Automation.** Cron and the `agent-actions` Queue: status-update drafts, follow-ups, invoice
    reminders, daily digest. AI client summary.
-10. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
+11. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
    scans, Cron for the sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
 
 Each step: tests first, then code, then lint, type check, deploy, and a live check.
@@ -553,21 +678,19 @@ Made:
 - **D4. Stages.** `new, contacted, call_booked, proposal, won, lost`.
 - **D5. Full MCP writes.** Agents can run the work: stages, tasks, status updates, invoices. Scoped
   keys, full audit, drafts first for anything a client sees.
-- **D6. Money.** Invoices and payments are in this plan (section 5 and step 7).
-
-Still open:
-
-- **D7. Old data.** Backfill all Supabase leads, or only ones from the last N months?
-- **D8. Payments.** Record payments by hand only, or also take card and bank payments through Stripe
-  (pay link on the invoice, signed webhook marks it paid)?
-- **D9. Invoice numbers and tax.** Number format (`INV-2026-0001`?) and whether we add sales tax.
-- **D10. GitHub access.** (a) Do clients install our GitHub App on their own org, do their repos live
-  in our org, or both? The plan supports both. (b) Read-only to start, or should agents also open
-  issues and pull requests? Write access needs more App permissions and its own MCP scope.
+- **D6. Money.** Invoices and payments are in this plan (section 5 and step 8).
+- **D7. Start fresh.** No backfill of old Supabase leads.
+- **D8. Payments by hand now.** Staff record payments. Stripe pay links and webhook come later as an
+  add-on.
+- **D9. Invoice numbers and tax.** Numbers look like `INV-2026-0001`. Tax is optional per invoice and
+  off by default. All money is in cents.
+- **D10. GitHub.** Client repos live in our org and we own them, so the App has full read and write
+  access. We do the work in those repos and publish finished work (like social-preview) to the
+  client's Handoff space.
 
 ## 11. Risks
 
-- **Two homes for leads during the bridge.** Until step 10, the Readiness Check still has its own copy.
+- **Two homes for leads during the bridge.** Until step 11, the Readiness Check still has its own copy.
   The dashboard is the source of truth for everything after intake. Staff should not edit leads in the
   old `/ops` inbox once step 3 ships.
 - **D1 size and speed.** D1 is fine for an agency's volume. Keep the timeline indexed and paged.
@@ -581,9 +704,14 @@ Still open:
   redo instead of edit.
 - **Two hosts, one app.** A bug in host routing could show a staff page on the client domain. Test
   every staff route returns 404 on the Handoff host.
-- **Client code access.** Our App can read client repos. Ask for the fewest permissions, read-only
-  first. Clients pick which repos it sees. Keep the private key in Worker secrets only, make tokens
-  per call, and never copy code into D1, logs, or AI prompts. If a client leaves, they uninstall the
-  App and we mark their repos disconnected.
+- **Repo write access.** The App can change code in every repo in our org. Keep the private key in
+  Worker secrets only, make tokens per call, and give agents the `code` scope only when needed. Never
+  copy code into D1, logs, or AI prompts. The only files we copy are the media and copy files a
+  manifest lists for finished work.
+- **Wrong client sees finished work.** Check space access on every media request, serve clients only
+  published versions, and use random R2 keys. Test that one client can't load another's media.
+- **Approving an old version.** Feedback is tied to a version. If we publish a new one, old approvals
+  don't carry over.
+- **Big videos.** Set size limits, stream with range requests, and show a poster image first.
 - **Lost intake.** If the Queue consumer fails, the message retries. Failed messages go to a dead
   letter queue and show on the Today screen.
