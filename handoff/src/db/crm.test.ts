@@ -10,12 +10,15 @@ import {
   linkWorkspace,
   listContacts,
   listOpenTasks,
+  listDeals,
   listOrganizations,
   listTimeline,
   logCall,
   mergeOrganizations,
+  moveDealStage,
   normalizeDomain,
   organizationById,
+  slugFromName,
   recordFileUploaded,
   recordRequestDone,
   unlinkedWorkspaces,
@@ -332,5 +335,219 @@ describe("crm timeline", () => {
       ok: false,
       error: "forbidden",
     });
+  });
+});
+
+async function leadDeal(
+  sql: Sql,
+  name: string,
+  source = "readiness_check",
+): Promise<{ organizationId: string; dealId: string }> {
+  const created = await createOrganization(sql, staff, { name, kind: "lead" }, NOW);
+  if (!created.ok) throw new Error(created.error);
+  const dealId = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO deals (id, organization_id, title, stage, source, created_at, updated_at)
+     VALUES (?, ?, ?, 'new', ?, ?, ?)`,
+    [dealId, created.value.id, `${name} site`, source, NOW, NOW],
+  );
+  return { organizationId: created.value.id, dealId };
+}
+
+describe("slugFromName", () => {
+  it("makes a web address from a company name", () => {
+    expect(slugFromName("Harbor & Co.")).toBe("harbor-co");
+  });
+
+  it("falls back when the name has no letters", () => {
+    expect(slugFromName("!!!")).toBe("client");
+  });
+});
+
+describe("crm pipeline", () => {
+  it("lists deals for staff and hides them from everyone else", async () => {
+    const sql = await database();
+    const harbor = await leadDeal(sql, "Harbor");
+    await sql.run(
+      `INSERT INTO assessments (
+         id, organization_id, deal_id, domain, answers_json, scores_json, total_score, completed_at, received_at
+       ) VALUES ('as-1', ?, ?, 'harbor.example', '{}', '{}', 72, ?, ?)`,
+      [harbor.organizationId, harbor.dealId, NOW, NOW],
+    );
+    const deals = await listDeals(sql, staff);
+    expect(deals).toEqual([
+      expect.objectContaining({
+        id: harbor.dealId,
+        organization_id: harbor.organizationId,
+        organization_name: "Harbor",
+        title: "Harbor site",
+        stage: "new",
+        source: "readiness_check",
+        score: 72,
+      }),
+    ]);
+    expect(await listDeals(sql, outsider)).toEqual([]);
+    expect(await listDeals(sql, staff, { stage: "proposal" })).toEqual([]);
+    expect((await listDeals(sql, staff, { source: "readiness_check" })).map((row) => row.id)).toEqual([
+      harbor.dealId,
+    ]);
+  });
+
+  it("moves a deal and writes a stage change", async () => {
+    const sql = await database();
+    const harbor = await leadDeal(sql, "Harbor");
+    const moved = await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "contacted" }, NOW + 5);
+    expect(moved.ok).toBe(true);
+    const deal = await sql.get<{ stage: string; closed_at: number | null }>(
+      "SELECT stage, closed_at FROM deals WHERE id = ?",
+      [harbor.dealId],
+    );
+    expect(deal).toEqual({ stage: "contacted", closed_at: null });
+    const activity = await sql.get<{ kind: string; body: string }>(
+      "SELECT kind, body FROM activities WHERE deal_id = ? AND kind = 'stage_change'",
+      [harbor.dealId],
+    );
+    expect(activity).toEqual({ kind: "stage_change", body: "Moved from new to contacted." });
+    const again = await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "contacted" }, NOW + 6);
+    expect(again.ok).toBe(true);
+    const changes = await sql.all("SELECT id FROM activities WHERE kind = 'stage_change'");
+    expect(changes).toHaveLength(1);
+  });
+
+  it("refuses a bad stage, a missing deal, and a lost deal with no reason", async () => {
+    const sql = await database();
+    const harbor = await leadDeal(sql, "Harbor");
+    expect(await moveDealStage(sql, outsider, { dealId: harbor.dealId, stage: "contacted" }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+    expect(await moveDealStage(sql, staff, { dealId: "missing", stage: "contacted" }, NOW)).toEqual({
+      ok: false,
+      error: "missing",
+    });
+    expect(await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "nope" as "new" }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "lost" }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    const lost = await moveDealStage(
+      sql,
+      staff,
+      { dealId: harbor.dealId, stage: "lost", lostReason: "Not a fit" },
+      NOW + 2,
+    );
+    expect(lost.ok).toBe(true);
+    const row = await sql.get<{ stage: string; lost_reason: string; closed_at: number }>(
+      "SELECT stage, lost_reason, closed_at FROM deals WHERE id = ?",
+      [harbor.dealId],
+    );
+    expect(row).toEqual({ stage: "lost", lost_reason: "Not a fit", closed_at: NOW + 2 });
+  });
+
+  it("winning a lead opens a client, a project, and a space", async () => {
+    const sql = await database();
+    const harbor = await leadDeal(sql, "Harbor & Co.");
+    const won = await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "won" }, NOW + 3);
+    expect(won.ok).toBe(true);
+    if (!won.ok) return;
+    const org = await organizationById(sql, staff, harbor.organizationId);
+    expect(org?.kind).toBe("client");
+    const project = await sql.get<{ id: string; name: string; status: string; deal_id: string }>(
+      "SELECT id, name, status, deal_id FROM projects WHERE organization_id = ?",
+      [harbor.organizationId],
+    );
+    expect(project).toEqual({
+      id: won.value.projectId,
+      name: "Harbor & Co. site",
+      status: "planned",
+      deal_id: harbor.dealId,
+    });
+    const space = await sql.get<{
+      id: string;
+      slug: string;
+      name: string;
+      display_name: string;
+      sender_name: string;
+      organization_id: string;
+      project_id: string;
+    }>(
+      `SELECT id, slug, name, display_name, sender_name, organization_id, project_id
+       FROM workspaces WHERE organization_id = ?`,
+      [harbor.organizationId],
+    );
+    expect(space).toEqual({
+      id: won.value.workspaceId,
+      slug: "harbor-co",
+      name: "Harbor & Co.",
+      display_name: "Harbor & Co.",
+      sender_name: "Harbor & Co.",
+      organization_id: harbor.organizationId,
+      project_id: won.value.projectId,
+    });
+    const request = await sql.get<{ title: string }>("SELECT title FROM requests WHERE workspace_id = ?", [
+      space?.id,
+    ]);
+    expect(request?.title).toBe("Files");
+    const operator = await sql.get<{ user_id: string }>(
+      "SELECT user_id FROM workspace_operators WHERE workspace_id = ? AND removed_at IS NULL",
+      [space?.id],
+    );
+    expect(operator?.user_id).toBe("staff-1");
+    const again = await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "won" }, NOW + 4);
+    expect(again.ok).toBe(true);
+    expect(await sql.all("SELECT id FROM projects")).toHaveLength(1);
+    expect(await sql.all("SELECT id FROM workspaces WHERE organization_id = ?", [harbor.organizationId])).toHaveLength(
+      1,
+    );
+  });
+
+  it("does not open a second space when the client already has one", async () => {
+    const sql = await database();
+    const harbor = await leadDeal(sql, "Harbor");
+    await linkWorkspace(sql, staff, { organizationId: harbor.organizationId, workspaceId: "ws-1" }, NOW);
+    const won = await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "won" }, NOW + 1);
+    expect(won.ok).toBe(true);
+    if (!won.ok) return;
+    expect(won.value.workspaceId).toBe("ws-1");
+    const space = await sql.get<{ project_id: string; organization_id: string }>(
+      "SELECT project_id, organization_id FROM workspaces WHERE id = 'ws-1'",
+    );
+    expect(space).toEqual({ project_id: won.value.projectId, organization_id: harbor.organizationId });
+    expect(await sql.all("SELECT id FROM workspaces")).toHaveLength(1);
+  });
+
+  it("turns a past client into a client and leaves a partner as a partner", async () => {
+    const sql = await database();
+    const past = await createOrganization(sql, staff, { name: "Pine", kind: "past_client" }, NOW);
+    const partner = await createOrganization(sql, staff, { name: "Oak", kind: "partner" }, NOW);
+    if (!past.ok || !partner.ok) throw new Error("setup");
+    const pastDeal = crypto.randomUUID();
+    const partnerDeal = crypto.randomUUID();
+    await sql.run(
+      `INSERT INTO deals (id, organization_id, title, stage, source, created_at, updated_at)
+       VALUES (?, ?, 'Pine site', 'proposal', 'manual', ?, ?),
+              (?, ?, 'Oak site', 'proposal', 'manual', ?, ?)`,
+      [pastDeal, past.value.id, NOW, NOW, partnerDeal, partner.value.id, NOW, NOW],
+    );
+    expect((await moveDealStage(sql, staff, { dealId: pastDeal, stage: "won" }, NOW + 1)).ok).toBe(true);
+    expect((await moveDealStage(sql, staff, { dealId: partnerDeal, stage: "won" }, NOW + 1)).ok).toBe(true);
+    expect((await organizationById(sql, staff, past.value.id))?.kind).toBe("client");
+    expect((await organizationById(sql, staff, partner.value.id))?.kind).toBe("partner");
+  });
+
+  it("picks another web address when the first one is taken", async () => {
+    const sql = await database();
+    await sql.run("UPDATE workspaces SET slug = 'harbor' WHERE id = 'ws-1'");
+    const harbor = await leadDeal(sql, "Harbor");
+    const won = await moveDealStage(sql, staff, { dealId: harbor.dealId, stage: "won" }, NOW + 1);
+    expect(won.ok).toBe(true);
+    if (!won.ok) return;
+    const space = await sql.get<{ slug: string }>("SELECT slug FROM workspaces WHERE id = ?", [
+      won.value.workspaceId,
+    ]);
+    expect(space?.slug).toBe("harbor-2");
   });
 });

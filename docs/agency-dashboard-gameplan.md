@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: steps 1, 2, and 3 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 4 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email. Sending that mail waits on the same zone move.
+Status: steps 1, 2, 3, and 4 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Step 4 is the pipeline at `/leads`: a stage board, a list with stage, source, and owner filters, and a won move that turns a lead into a client, then a project, then a space. Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 5 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email, including how `.cursor/skills` is wired in. Sending that mail waits on the same zone move. The agent worker is not built.
 
 ## 1. What it does
 
@@ -681,7 +681,7 @@ Each step ships on its own and is useful on its own.
 3. **Lead intake bridge.** Signed `/api/intake/assessment` and `/api/intake/booking`, `lead-intake`
    Queue, consumer with dedupe. Change the Readiness Check to POST on completion. No backfill: we
    start fresh (D7).
-4. **Pipeline.** Deals, stage board, won flow (deal to client to project to space).
+4. **Pipeline.** Deals, stage board, won flow (deal to client to project to space). This step is in the app at `/leads`.
 5. **Projects and work.** Milestones, tasks, status updates, `hq /work`, Today screen.
 6. **GitHub repos.** One GitHub App on our org with read and write access, `0006_github.sql`,
    `hq /settings/github`, signed webhook, `github-events` Queue, Repos tab on the client and project
@@ -903,3 +903,25 @@ CREATE TABLE client_messages (
 - A draft stays `draft` until a staff action sets `approved`.
 - The wake call refuses to send a row that is not `approved`.
 - MCP writes still go through `crm.ts`. The agent Worker has no D1 binding and no R2 binding.
+
+### Skills
+
+`.cursor/skills` is the Cursor skill catalog. Cursor reads every `SKILL.md` in that tree. The groups are `community/`, `context-engineering/`, `cursor-managed/`, `integrations/`, `plugins/`, and `user/`. Most of those files tell a laptop agent how to use a browser, ffmpeg, a design tool, or another local program. A Worker isolate cannot run that work.
+
+The agent worker does not bundle that tree, and it does not copy the files into the script.
+
+On wake, `ClientAgent` loads a short index: the skill name, one line on what it is for, when to use it, and a mode of `plan` or `complete`. When the current task matches one row, the agent reads that one `SKILL.md`. A person adds a skill to the allowlist one at a time. The agent cannot add a skill itself.
+
+A `plan` skill (video, CAD, Remotion, a local browser, a design tool) writes a plan and a staff task through `create_task`. It does not mark the work done.
+
+A `complete` skill maps to MCP tools that already exist in this plan: `move_deal_stage`, `add_note`, `create_task`, `post_status_update` saved as a draft, `save_email_draft`, and `create_invoice` saved as a draft. `can_publish` stays off. Anything a client would read stays a draft until a person sends it.
+
+The loader ships with step 10. This section is the contract. There is no skills file in the app yet, because nothing would read it.
+
+The first allowlist, when step 10 lands:
+
+- Follow up on a deal with no next step. That writes a task and an email draft.
+- Monday status draft.
+- Invoice reminder draft.
+
+Community video, CAD, and ads packs stay `plan` only, and only when a staff task asks for that kind of work.

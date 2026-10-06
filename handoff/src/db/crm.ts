@@ -1,4 +1,5 @@
 import type { Caller } from "@/lib/authz";
+import { LIMITS } from "@/lib/policy/limits";
 import type { Sql } from "./sql";
 
 export type OrgKind = "lead" | "client" | "past_client" | "partner";
@@ -560,6 +561,269 @@ export function recordFileUploaded(
     actorId: input.actorId,
     now: input.now,
   });
+}
+
+export const DEAL_STAGES = ["new", "contacted", "call_booked", "proposal", "won", "lost"] as const;
+
+export type DealStage = (typeof DEAL_STAGES)[number];
+
+const DEAL_STAGE_SET = new Set<string>(DEAL_STAGES);
+
+export const DEAL_STAGE_LABEL: Record<DealStage, string> = {
+  new: "New",
+  contacted: "Contacted",
+  call_booked: "Call booked",
+  proposal: "Proposal",
+  won: "Won",
+  lost: "Lost",
+};
+
+export type DealCard = {
+  id: string;
+  organization_id: string;
+  organization_name: string;
+  title: string;
+  stage: DealStage;
+  source: string;
+  next_step: string | null;
+  next_step_at: number | null;
+  owner_user_id: string | null;
+  score: number | null;
+  last_touch: number | null;
+};
+
+export type DealMove = {
+  id: string;
+  stage: DealStage;
+  organizationId: string;
+  projectId: string | null;
+  workspaceId: string | null;
+};
+
+/** Web address piece for a new space. Letters and numbers only. */
+export function slugFromName(name: string): string {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/g, "");
+  return slug.length > 0 ? slug : "client";
+}
+
+function dealStageOf(value: string): DealStage | null {
+  return DEAL_STAGE_SET.has(value) ? (value as DealStage) : null;
+}
+
+export async function listDeals(sql: Sql, caller: Caller, filter: {
+  stage?: string;
+  source?: string;
+  ownerUserId?: string;
+  organizationId?: string;
+} = {}): Promise<DealCard[]> {
+  if (!staffUserId(caller)) return [];
+  const where = ["o.archived_at IS NULL"];
+  const params: unknown[] = [];
+  if (filter.stage) {
+    const stage = dealStageOf(filter.stage);
+    if (!stage) return [];
+    where.push("d.stage = ?");
+    params.push(stage);
+  }
+  const source = filter.source?.trim() ?? "";
+  if (source.length > 0) {
+    where.push("d.source = ?");
+    params.push(source);
+  }
+  if (filter.ownerUserId) {
+    where.push("d.owner_user_id = ?");
+    params.push(filter.ownerUserId);
+  }
+  if (filter.organizationId) {
+    where.push("d.organization_id = ?");
+    params.push(filter.organizationId);
+  }
+  return sql.all<DealCard>(
+    `SELECT d.id, d.organization_id, o.name AS organization_name, d.title, d.stage, d.source,
+            d.next_step, d.next_step_at, d.owner_user_id,
+            (
+              SELECT total_score FROM assessments
+              WHERE deal_id = d.id
+              ORDER BY completed_at DESC
+              LIMIT 1
+            ) AS score,
+            (
+              SELECT MAX(created_at) FROM activities
+              WHERE organization_id = d.organization_id
+            ) AS last_touch
+     FROM deals d
+     JOIN organizations o ON o.id = d.organization_id
+     WHERE ${where.join(" AND ")}
+     ORDER BY d.updated_at DESC, o.name`,
+    params,
+  );
+}
+
+async function openSlug(sql: Sql, base: string): Promise<string> {
+  let candidate = base;
+  for (let n = 2; n < 50; n += 1) {
+    const taken = await sql.get<{ id: string }>("SELECT id FROM workspaces WHERE slug = ?", [candidate]);
+    if (!taken) return candidate;
+    candidate = `${base}-${n}`;
+  }
+  return `${base}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+/** Move a deal. Won turns a lead into a client, then a project, then a space when they have none. */
+export async function moveDealStage(
+  sql: Sql,
+  caller: Caller,
+  input: { dealId: string; stage: string; lostReason?: string },
+  now: number,
+): Promise<CrmResult<DealMove>> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  const deal = await sql.get<{
+    id: string;
+    organization_id: string;
+    title: string;
+    stage: string;
+    owner_user_id: string | null;
+    kind: OrgKind;
+    name: string;
+  }>(
+    `SELECT d.id, d.organization_id, d.title, d.stage, d.owner_user_id, o.kind, o.name
+     FROM deals d
+     JOIN organizations o ON o.id = d.organization_id
+     WHERE d.id = ? AND o.archived_at IS NULL`,
+    [input.dealId],
+  );
+  if (!deal) return { ok: false, error: "missing" };
+  const stage = dealStageOf(input.stage);
+  if (!stage) return { ok: false, error: "invalid" };
+  const reason = (input.lostReason ?? "").trim();
+  if (stage === "lost" && deal.stage !== "lost" && (reason.length < 1 || reason.length > 500)) {
+    return { ok: false, error: "invalid" };
+  }
+  const project = await sql.get<{ id: string }>("SELECT id FROM projects WHERE deal_id = ?", [deal.id]);
+  const spaces = await sql.all<{ id: string; project_id: string | null }>(
+    `SELECT id, project_id FROM workspaces
+     WHERE organization_id = ? AND status != 'purged'
+     ORDER BY opened_at`,
+    [deal.organization_id],
+  );
+  if (deal.stage === stage) {
+    return {
+      ok: true,
+      value: {
+        id: deal.id,
+        stage,
+        organizationId: deal.organization_id,
+        projectId: project?.id ?? null,
+        workspaceId: spaces[0]?.id ?? null,
+      },
+    };
+  }
+
+  const winning = stage === "won";
+  const projectId = winning ? (project?.id ?? crypto.randomUUID()) : (project?.id ?? null);
+  const creatingProject = winning && !project;
+  const creatingSpace = winning && spaces.length === 0;
+  const workspaceId = creatingSpace ? crypto.randomUUID() : (spaces.length === 1 ? spaces[0].id : (spaces[0]?.id ?? null));
+  const slug = creatingSpace ? await openSlug(sql, slugFromName(deal.name)) : null;
+  const linkProject = winning && spaces.length === 1 && spaces[0].project_id == null;
+  const closedAt = stage === "won" || stage === "lost" ? now : null;
+  const lostReason = stage === "lost" ? reason : null;
+
+  try {
+    await sql.exec("BEGIN");
+    await sql.run(
+      "UPDATE deals SET stage = ?, updated_at = ?, closed_at = ?, lost_reason = ? WHERE id = ?",
+      [stage, now, closedAt, lostReason, deal.id],
+    );
+    if (winning && (deal.kind === "lead" || deal.kind === "past_client")) {
+      await sql.run("UPDATE organizations SET kind = 'client', updated_at = ? WHERE id = ?", [
+        now,
+        deal.organization_id,
+      ]);
+    }
+    if (creatingProject && projectId) {
+      await sql.run(
+        `INSERT INTO projects (
+           id, organization_id, deal_id, name, status, owner_user_id, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, 'planned', ?, ?, ?)`,
+        [projectId, deal.organization_id, deal.id, deal.title, deal.owner_user_id ?? actorId, now, now],
+      );
+    }
+    if (creatingSpace && workspaceId && slug && projectId) {
+      await sql.run(
+        `INSERT INTO workspaces (
+           id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+           quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+         ) VALUES (?, ?, ?, ?, NULL, ?, 'standard', ?, ?, 0, 'active', ?, ?, ?)`,
+        [
+          workspaceId,
+          slug,
+          deal.name,
+          deal.name,
+          deal.name,
+          LIMITS.defaultQuotaBytes,
+          LIMITS.defaultRetentionDays,
+          now,
+          deal.organization_id,
+          projectId,
+        ],
+      );
+      await sql.run(
+        `INSERT INTO requests (
+           id, workspace_id, position, title, guidance, suggested_tag, due_on, status, received_at, closed_at
+         ) VALUES (?, ?, 1, 'Files', NULL, 'other', NULL, 'open', NULL, NULL)`,
+        [crypto.randomUUID(), workspaceId],
+      );
+      await sql.run(
+        `INSERT INTO workspace_operators (id, workspace_id, user_id, assigned_by, assigned_at, removed_at)
+         VALUES (?, ?, ?, ?, ?, NULL)`,
+        [crypto.randomUUID(), workspaceId, actorId, actorId, now],
+      );
+    }
+    if (linkProject && projectId) {
+      await sql.run("UPDATE workspaces SET project_id = ? WHERE id = ? AND project_id IS NULL", [
+        projectId,
+        spaces[0].id,
+      ]);
+    }
+    await sql.run(
+      `INSERT INTO activities (
+         id, organization_id, deal_id, project_id, workspace_id, kind, actor_kind, actor_id, body, created_at
+       ) VALUES (?, ?, ?, ?, ?, 'stage_change', 'staff', ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        deal.organization_id,
+        deal.id,
+        projectId,
+        workspaceId,
+        actorId,
+        `Moved from ${deal.stage} to ${stage}.`,
+        now,
+      ],
+    );
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+
+  return {
+    ok: true,
+    value: {
+      id: deal.id,
+      stage,
+      organizationId: deal.organization_id,
+      projectId,
+      workspaceId,
+    },
+  };
 }
 
 /** A request that just moved to received, on a linked space. Safe to call twice. */

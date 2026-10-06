@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  DEAL_STAGE_LABEL,
   listContacts,
+  listDeals,
   listOpenTasks,
   listOrganizations,
   listTimeline,
@@ -32,6 +34,7 @@ const ACTIVITY_LABEL: Record<string, string> = {
   request_done: "Request done",
   task: "Task",
   task_done: "Task done",
+  stage_change: "Stage",
 };
 
 const PAGE_SIZE = 20;
@@ -59,7 +62,7 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs] = await Promise.all([
+  const [free, linked, contacts, tasks, timeline, orgs, deals] = await Promise.all([
     unlinkedWorkspaces(sql, caller),
     sql.all<{ id: string; slug: string; display_name: string }>(
       `SELECT id, slug, display_name FROM workspaces
@@ -71,6 +74,7 @@ export default async function ClientPage({
     listOpenTasks(sql, caller, client.id),
     listTimeline(sql, caller, client.id, PAGE_SIZE, (page - 1) * PAGE_SIZE),
     listOrganizations(sql, caller),
+    listDeals(sql, caller, { organizationId: client.id }),
   ]);
   const main = contacts.find((person) => person.is_primary === 1);
   const others = orgs.filter((org) => org.id !== client.id).map((org) => ({ id: org.id, name: org.name }));
@@ -108,6 +112,28 @@ export default async function ClientPage({
             </ul>
           )}
           <LinkSpaceForm organizationId={client.id} spaces={free} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Deals</CardTitle>
+          <CardDescription>
+            <Link href="/leads">Open the board</Link>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {deals.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No deals yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {deals.map((deal) => (
+                <li key={deal.id} className="text-sm">
+                  <Link href="/leads">{deal.title}</Link>
+                  <span className="ml-2 text-muted-foreground">{DEAL_STAGE_LABEL[deal.stage]}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
       <Card>
