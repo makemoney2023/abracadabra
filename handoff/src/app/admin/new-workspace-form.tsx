@@ -46,7 +46,7 @@ export function NewWorkspaceForm({ templates }: { templates: { id: string; name:
         </select>
       </label>
       <Button type="submit" disabled={pending}>
-        {pending ? "Adding" : "Add client"}
+        {pending ? "Adding" : "Add space"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">

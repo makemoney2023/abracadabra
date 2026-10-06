@@ -12,7 +12,7 @@ export default async function HeldPage() {
       <div className="flex flex-col gap-3">
         <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Held files</h1>
-        <Link href="/admin" className="text-sm">
+        <Link href="/spaces" className="text-sm">
           Staff tools
         </Link>
       </div>

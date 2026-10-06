@@ -1,10 +1,11 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import type { Caller } from "@/lib/authz";
+import { isHqHost } from "@/lib/host";
 import { ensureStudioAdmin } from "@/lib/preview-session";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
@@ -38,4 +39,11 @@ export async function requireStaffPage(): Promise<{ sql: Sql; caller: Caller }> 
   );
   if (row?.ok !== 1) notFound();
   return session;
+}
+
+/** Client list and client pages. Staff only, and only on the hq host. */
+export async function requireHqStaffPage(): Promise<{ sql: Sql; caller: Caller }> {
+  const host = (await headers()).get("host") ?? "";
+  if (!isHqHost(host)) notFound();
+  return requireStaffPage();
 }
