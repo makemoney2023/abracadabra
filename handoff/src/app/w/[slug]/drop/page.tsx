@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { DropZone } from "@/components/drop-zone";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
 import { workspaceRequests } from "@/lib/store/requests";
@@ -23,7 +24,13 @@ export default async function DropPage({
       <h1 className="font-heading text-4xl leading-tight">{request.title}</h1>
       {request.guidance ? <p className="text-muted-foreground">{request.guidance}</p> : null}
       {request.status === "open" ? (
-        <p className="text-sm text-muted-foreground">This request is open. File upload is not on this page yet.</p>
+        <DropZone
+          slug={slug}
+          requestId={request.id}
+          canDrop={
+            caller.staff === null && caller.memberships.some((member) => member.workspaceId === workspace.id)
+          }
+        />
       ) : (
         <p className="text-sm text-muted-foreground">This request is not open.</p>
       )}

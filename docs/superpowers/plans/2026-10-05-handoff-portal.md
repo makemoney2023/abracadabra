@@ -608,25 +608,27 @@ git commit -m "Grant and complete direct handoff uploads."
 - Create: `src/app/w/[slug]/drop/page.tsx`
 - Test: manifest builder tests
 
-- [ ] **Step 1: Build the manifest**
+- [x] **Step 1: Build the manifest**
 
 Read `webkitRelativePath` for a folder and `name` for loose files. Accept a
 `request` search parameter and show that request's guidance.
 
-- [ ] **Step 2: Upload**
+- [x] **Step 2: Upload**
 
-Use `tus-js-client` against the Storage resumable endpoint with the user's
-access token, 6 MiB chunks, concurrency 3. Refresh the grant before each file
-and on resume. Call completion after each success.
+The Cloudflare path does not use `tus-js-client`. The drop screen posts the
+manifest, then for each file calls grant, `POST .../multipart` (`create` /
+`finish`), and `PUT /api/objects/parts` in 6 MiB parts with concurrency 3.
+Local bytes use `HANDOFF_OBJECT_PATH` until an R2 bucket exists. Completion
+runs after each success.
 
-- [ ] **Step 3: Progress and recovery**
+- [x] **Step 3: Progress and recovery**
 
 Show the tree, per-file state, and totals. Register `beforeunload` while in
 flight. Retry failed files while the batch is active. On a device without a
 directory picker, keep multi-file selection and show the computer-folder
 instruction. Show the HND-058 notice.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "Upload a folder into a handoff workspace."
