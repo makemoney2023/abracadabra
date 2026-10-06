@@ -17,7 +17,7 @@ describe("statementsFromMigration", () => {
   });
 
   it("keeps the worker copy of each migration equal to the file on disk", () => {
-    for (const file of ["0001_handoff.sql", "0002_sessions.sql", "0003_upload_shares.sql"]) {
+    for (const file of ["0001_handoff.sql", "0002_sessions.sql", "0003_upload_shares.sql", "0004_knowledge.sql"]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
     }

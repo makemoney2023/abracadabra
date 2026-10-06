@@ -25,7 +25,8 @@ export type Action =
   | "batch.export"
   | "file.download"
   | "file.tag"
-  | "file.release";
+  | "file.release"
+  | "knowledge.manage";
 
 export type AuthzTarget = {
   workspaceId?: string;
@@ -85,6 +86,7 @@ export function can(caller: Caller, action: Action, target: AuthzTarget = {}): b
     case "invite.member":
     case "share.copy":
     case "member.remove":
+    case "knowledge.manage":
       return staffOnWorkspace(caller, workspaceId) || owner;
     case "batch.create":
       return client;

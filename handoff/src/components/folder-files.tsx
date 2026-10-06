@@ -13,6 +13,7 @@ export type FolderRow = {
   sizeBytes: number;
   status: string;
   moreHref: string | null;
+  previewHref: string | null;
   deletable: boolean;
 };
 
@@ -51,6 +52,11 @@ function FileActions({
           {fileStatusLabel(file.status)} · {formatFileSize(file.sizeBytes)}
         </p>
       </div>
+      {file.previewHref ? (
+        <Link href={file.previewHref} className="text-sm">
+          Preview
+        </Link>
+      ) : null}
       {file.status === "clean" ? (
         <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => onDownload(file)}>
           Download

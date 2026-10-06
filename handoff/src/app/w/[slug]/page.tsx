@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { listFolderFiles } from "@/lib/downloads";
+import { listFileReads } from "@/lib/knowledge";
 import { openSession } from "@/lib/current";
+import { previewKind, previewableStatus } from "@/lib/preview";
 import { ensureUploadShare, sharePageUrl } from "@/lib/share-link";
 import { workspaceRequests } from "@/lib/store/requests";
+import { KnowledgeTools } from "./knowledge-tools";
 
 export default async function WorkspaceHome({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -21,6 +24,8 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const files = await listFolderFiles(sql, caller, workspace.id);
   const canDrop = caller.memberships.some((member) => member.workspaceId === workspace.id);
   const canShare = can(caller, "share.copy", { workspaceId: workspace.id });
+  const canRead = can(caller, "knowledge.manage", { workspaceId: workspace.id });
+  const reads = canRead ? await listFileReads(sql, workspace.id) : [];
   const uploadHref =
     open.length === 1 ? `/w/${workspace.slug}/drop?request=${open[0].id}` : `/w/${workspace.slug}/drop`;
   const headerList = await headers();
@@ -44,13 +49,15 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
         ) : null}
       </div>
       {canShare ? <ShareLink url={shareUrl} /> : null}
+      {canRead ? <KnowledgeTools slug={workspace.slug} reads={reads} /> : null}
       {files.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border px-6 py-12">
           <p className="text-lg">This folder is empty.</p>
           {canDrop && open.length > 0 ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Add files with Upload. People can download them after we check each one.
+                Add files with Upload. People can look at a picture, a PDF, or a text file before the check is done.
+                A download opens after the check.
               </p>
               <Button asChild>
                 <Link href={uploadHref}>Upload files</Link>
@@ -58,25 +65,35 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              People in this folder can add files. You can download them once they are ready.
+              People in this folder can add files. You can look at a picture, a PDF, or a text file here. A download
+              opens once the check is done.
             </p>
           )}
         </div>
       ) : (
-        <FolderFiles
-          slug={workspace.slug}
-          files={files.map((file) => ({
-            id: file.id,
-            batchId: file.batchId,
-            name: file.name,
-            sizeBytes: file.sizeBytes,
-            status: file.status,
-            deletable: file.createdBy === caller.userId,
-            moreHref: can(caller, "file.tag", { workspaceId: workspace.id })
-              ? `/w/${workspace.slug}/batches/${file.batchId}`
-              : null,
-          }))}
-        />
+        <>
+          <p className="text-sm text-muted-foreground">
+            Look at a picture, a PDF, or a text file here. A download opens after the check is done.
+          </p>
+          <FolderFiles
+            slug={workspace.slug}
+            files={files.map((file) => ({
+              id: file.id,
+              batchId: file.batchId,
+              name: file.name,
+              sizeBytes: file.sizeBytes,
+              status: file.status,
+              deletable: file.createdBy === caller.userId,
+              previewHref:
+                previewableStatus(file.status) && previewKind(file.name) !== "none"
+                  ? `/w/${workspace.slug}/files/${file.id}`
+                  : null,
+              moreHref: can(caller, "file.tag", { workspaceId: workspace.id })
+                ? `/w/${workspace.slug}/batches/${file.batchId}`
+                : null,
+            }))}
+          />
+        </>
       )}
     </main>
   );

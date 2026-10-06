@@ -60,6 +60,7 @@ const matrix: { action: Action; allowed: [boolean, boolean, boolean, boolean] }[
   { action: "invite.owner", allowed: [true, true, false, false] },
   { action: "invite.member", allowed: [true, true, true, false] },
   { action: "share.copy", allowed: [true, true, true, false] },
+  { action: "knowledge.manage", allowed: [true, true, true, false] },
   { action: "member.remove", allowed: [true, true, true, false] },
   { action: "request.manage", allowed: [true, true, false, false] },
   { action: "batch.create", allowed: [false, false, true, true] },
