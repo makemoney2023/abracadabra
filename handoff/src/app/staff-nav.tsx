@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/clients", label: "Clients" },
   { href: "/work", label: "Work" },
   { href: "/spaces", label: "Spaces" },
+  { href: "/settings/github", label: "Settings" },
 ] as const;
 
 export function StaffNav() {

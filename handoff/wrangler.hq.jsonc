@@ -42,6 +42,10 @@
       {
         "binding": "LEAD_INTAKE",
         "queue": "lead-intake"
+      },
+      {
+        "binding": "GITHUB_EVENTS",
+        "queue": "github-events"
       }
     ]
   },

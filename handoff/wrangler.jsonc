@@ -48,6 +48,10 @@
       {
         "binding": "LEAD_INTAKE",
         "queue": "lead-intake"
+      },
+      {
+        "binding": "GITHUB_EVENTS",
+        "queue": "github-events"
       }
     ],
     "consumers": [
@@ -57,6 +61,13 @@
         "max_batch_timeout": 5,
         "max_retries": 3,
         "dead_letter_queue": "lead-intake-dlq"
+      },
+      {
+        "queue": "github-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "github-events-dlq"
       }
     ]
   },

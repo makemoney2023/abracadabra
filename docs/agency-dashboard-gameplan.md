@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: steps 1, 2, 3, 4, and 5 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Step 4 is the pipeline at `/leads`: a stage board, a list with stage, source, and owner filters, and a won move that turns a lead into a client, then a project, then a space. Step 5 is Today at `/` on the staff host, open work at `/work`, and a project page at `/projects/[id]` with milestones, tasks, and status updates. Staff pages use a sidebar (Today, Leads, Clients, Work, Spaces). Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 6 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email, including how the skill library is wired in. Sending that mail waits on the same zone move. The agent worker is not built.
+Status: steps 1, 2, 3, 4, and 5 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Step 4 is the pipeline at `/leads`: a stage board, a list with stage, source, and owner filters, and a won move that turns a lead into a client, then a project, then a space. Step 5 is Today at `/` on the staff host, open work at `/work`, and a project page at `/projects/[id]` with milestones, tasks, and status updates. Staff pages use a sidebar (Today, Leads, Clients, Work, Spaces, Settings). Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Step 6 links GitHub repos. The tables already live in `0005_crm.sql`. `handoff-hq` produces queue `github-events` and does not consume it. The `handoff` worker consumes it. An admin opens `/settings/github`. Staff link a repo on the client page. A project page shows open pull requests, the last push, and the latest release. Steps 7 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email, including how the skill library is wired in. Sending that mail waits on the same zone move. The agent worker is not built.
 
 ## 1. What it does
 
@@ -683,9 +683,10 @@ Each step ships on its own and is useful on its own.
    start fresh (D7).
 4. **Pipeline.** Deals, stage board, won flow (deal to client to project to space). This step is in the app at `/leads`.
 5. **Projects and work.** Milestones, tasks, status updates, `hq /work`, Today screen. This step is in the app: Today at `/`, open work at `/work`, and `/projects/[id]`.
-6. **GitHub repos.** One GitHub App on our org with read and write access, `0006_github.sql`,
-   `hq /settings/github`, signed webhook, `github-events` Queue, Repos tab on the client and project
-   pages.
+6. **GitHub repos.** One GitHub App on our org with read and write access. The tables already live
+   in `0005_crm.sql` (there is no `0006_github.sql`). `hq /settings/github` is admin only. The signed
+   webhook is `hq /api/github/webhook`. `handoff-hq` produces queue `github-events`. The client worker
+   consumes it. The client page and the project page list linked repos. This step is in the app.
 7. **Finished work.** `deliverables`, `deliverable_items`, and `deliverable_feedback` tables, the
    access-checked media route, the staff builder, pull from a repo manifest (like social-preview in
    the renewimplants repo), the client gallery at `/w/[slug]/work`, and approve or ask-for-changes.

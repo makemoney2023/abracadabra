@@ -17,6 +17,8 @@ describe("decideHost", () => {
     expect(decide("localhost:3000", "/spaces")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/leads")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/api/admin/held/file-1")).toEqual({ kind: "not-found" });
+    expect(decide("handoff.example", "/api/github/webhook")).toEqual({ kind: "not-found" });
+    expect(decide("handoff.example", "/settings/github")).toEqual({ kind: "not-found" });
   });
 
   it("hides client folders on the staff host", () => {
@@ -67,6 +69,8 @@ describe("decideHost", () => {
     expect(decide("handoff.example", "/login")).toEqual({ kind: "allow" });
     expect(decide(HQ, "/api/health")).toEqual({ kind: "allow" });
     expect(decide(HQ, "/api/admin/held/file-1")).toEqual({ kind: "allow" });
+    expect(decide(HQ, "/api/github/webhook")).toEqual({ kind: "allow" });
+    expect(decide(HQ, "/settings/github")).toEqual({ kind: "allow" });
   });
 });
 

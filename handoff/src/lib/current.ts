@@ -47,3 +47,10 @@ export async function requireHqStaffPage(): Promise<{ sql: Sql; caller: Caller }
   if (!isHqHost(host)) notFound();
   return requireStaffPage();
 }
+
+/** GitHub settings. An admin only, and only on the hq host. */
+export async function requireHqSuperAdminPage(): Promise<{ sql: Sql; caller: Caller }> {
+  const session = await requireHqStaffPage();
+  if (!(await isLiveSuperAdmin(session.sql, session.caller))) notFound();
+  return session;
+}
