@@ -1,7 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { pathToFileURL } from "node:url";
 import { openHandoffDb } from "@/db/open";
-import { localObjectBytesEnabled, openObjectStore } from "@/lib/store/objects";
+import { objectStorageEnabled, openObjectStore } from "@/lib/store/objects";
 import { pingClamd, scanInstream } from "./clamd";
 import { queuePurgeReminders } from "@/lib/retention";
 import { deleteExpiredObjects } from "./jobs/delete-rejected";
@@ -66,7 +66,7 @@ async function main(): Promise<void> {
     await sweepClosedWindows(sql, now);
     await queuePurgeReminders(sql, now);
     await flushNotifications(sql, now);
-    if (!localObjectBytesEnabled() && !process.env.HANDOFF_OBJECT_PATH) {
+    if (!objectStorageEnabled()) {
       await sleep(5_000);
       continue;
     }

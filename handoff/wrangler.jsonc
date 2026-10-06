@@ -16,6 +16,16 @@
       "service": "handoff"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "handoff"
+    },
+    {
+      "binding": "BRANDING",
+      "bucket_name": "handoff"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

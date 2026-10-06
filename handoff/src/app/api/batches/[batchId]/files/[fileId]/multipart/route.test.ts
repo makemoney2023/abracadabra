@@ -6,11 +6,12 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
-import { openObjectStore } from "@/lib/store/objects";
+import { openObjectStore, type FilesBucket } from "@/lib/store/objects";
 import { POST as complete } from "../complete/route";
 import { POST as multipart } from "./route";
 import { PUT as putPart } from "@/app/api/objects/parts/route";
 
+const CLOUDFLARE_CONTEXT = Symbol.for("__cloudflare-context__");
 const WORKSPACE = "11111111-1111-4111-8111-111111111111";
 const BATCH = "22222222-2222-4222-8222-222222222222";
 const FILE = "33333333-3333-4333-8333-333333333333";
@@ -70,6 +71,7 @@ describe("multipart upload", () => {
     setNodeEnv(previousNodeEnv);
     delete process.env.HANDOFF_SQLITE_PATH;
     delete process.env.HANDOFF_OBJECT_PATH;
+    delete (globalThis as Record<symbol, unknown>)[CLOUDFLARE_CONTEXT];
     if (directory) rmSync(directory, { recursive: true, force: true });
     directory = "";
   });
@@ -140,6 +142,59 @@ describe("multipart upload", () => {
     expect(response.status).toBe(422);
     const body = (await response.json()) as { message: string };
     expect(body.message).toBe("That file isn't the size we expected.");
+  });
+
+  it("accepts a bound file bucket in production", async () => {
+    await db();
+    delete process.env.HANDOFF_OBJECT_PATH;
+    setNodeEnv("production");
+    const objects = new Map<string, Uint8Array | string>();
+    const bucket: FilesBucket = {
+      async head(key) {
+        const body = objects.get(key);
+        if (body == null) return null;
+        const bytes = typeof body === "string" ? new TextEncoder().encode(body) : body;
+        return { size: bytes.byteLength };
+      },
+      async get(key) {
+        const body = objects.get(key);
+        if (body == null) return null;
+        const bytes = typeof body === "string" ? new TextEncoder().encode(body) : body;
+        return { arrayBuffer: async () => new Uint8Array(bytes).buffer };
+      },
+      async put(key, body) {
+        objects.set(key, typeof body === "string" ? body : new Uint8Array(body));
+      },
+      async delete(keys) {
+        for (const key of Array.isArray(keys) ? keys : [keys]) objects.delete(key);
+      },
+      async list() {
+        return { objects: [], truncated: false };
+      },
+      async createMultipartUpload() {
+        return {
+          uploadId: `r2-${crypto.randomUUID()}`,
+          async uploadPart(partNumber) {
+            return { partNumber, etag: `etag-${partNumber}` };
+          },
+          async complete() {},
+        };
+      },
+      resumeMultipartUpload(_key, uploadId) {
+        return {
+          uploadId,
+          async uploadPart(partNumber) {
+            return { partNumber, etag: `etag-${partNumber}` };
+          },
+          async complete() {},
+        };
+      },
+    };
+    (globalThis as Record<symbol, unknown>)[CLOUDFLARE_CONTEXT] = { env: { FILES: bucket } };
+    const response = await create(1);
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { uploadId: string };
+    expect(body.uploadId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
   it("refuses local bytes in production when no object path is set", async () => {

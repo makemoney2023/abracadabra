@@ -1,5 +1,6 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
-// R2 is not enabled on this account, so the incremental cache stays the dummy
-// implementation. Do not add NEXT_INC_CACHE_R2_BUCKET until a bucket exists.
+// Client files use the FILES binding on bucket `handoff`. The incremental cache
+// stays the dummy implementation so Next's cache does not share that bucket.
+// Do not set NEXT_INC_CACHE_R2_BUCKET.
 export default defineCloudflareConfig();

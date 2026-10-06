@@ -53,45 +53,22 @@ function present(row: FileRow): ClaimedFile {
   };
 }
 
-/** Compare-and-set claim. D1 cannot use FOR UPDATE SKIP LOCKED. */
+/** One UPDATE so D1 does not need SQL BEGIN. A second worker updates zero rows. */
 export async function claimUploadedFile(sql: Sql, now: number): Promise<ClaimedFile | null> {
   try {
-    await sql.exec("BEGIN IMMEDIATE");
-  } catch (error) {
-    if (locked(error)) return null;
-    throw error;
-  }
-  try {
-    const row = await sql.get<FileRow>(
-      `SELECT id, batch_id, workspace_id, relative_path, extension, size_bytes, object_key, tag, scan_attempts
-       FROM files
-       WHERE status = 'uploaded' AND (next_scan_at IS NULL OR next_scan_at <= ?)
-       ORDER BY COALESCE(uploaded_at, created_at)
-       LIMIT 1`,
+    const updated = await sql.get<FileRow>(
+      `UPDATE files SET status = 'scanning', scan_attempts = scan_attempts + 1
+       WHERE id = (
+         SELECT id FROM files
+         WHERE status = 'uploaded' AND (next_scan_at IS NULL OR next_scan_at <= ?)
+         ORDER BY COALESCE(uploaded_at, created_at)
+         LIMIT 1
+       ) AND status = 'uploaded'
+       RETURNING id, batch_id, workspace_id, relative_path, extension, size_bytes, object_key, tag, scan_attempts`,
       [now],
     );
-    if (!row) {
-      await sql.exec("COMMIT");
-      return null;
-    }
-    await sql.run(
-      `UPDATE files SET status = 'scanning', scan_attempts = scan_attempts + 1
-       WHERE id = ? AND status = 'uploaded'`,
-      [row.id],
-    );
-    const updated = await sql.get<FileRow>(
-      `SELECT id, batch_id, workspace_id, relative_path, extension, size_bytes, object_key, tag, scan_attempts
-       FROM files WHERE id = ? AND status = 'scanning'`,
-      [row.id],
-    );
-    await sql.exec("COMMIT");
     return updated ? present(updated) : null;
   } catch (error) {
-    try {
-      await sql.exec("ROLLBACK");
-    } catch {
-      // The lock holder already ended the transaction.
-    }
     if (locked(error)) return null;
     throw error;
   }

@@ -2,7 +2,7 @@ import { batchesFor, filesFor } from "@/db/records";
 import type { Sql } from "@/db/sql";
 import { can, type Caller } from "@/lib/authz";
 import { isFileTag, LIMITS } from "@/lib/policy/limits";
-import { localObjectBytesEnabled, openObjectStore } from "@/lib/store/objects";
+import { objectStorageEnabled, openObjectStore } from "@/lib/store/objects";
 
 export type HashFile = {
   id: string;
@@ -216,7 +216,7 @@ export async function readSignedFile(input: {
   if (expiry <= Math.floor(input.now / 1000)) {
     return { ok: false, status: 401, message: "That link is too old." };
   }
-  if (!localObjectBytesEnabled()) return { ok: false, status: 503, message: STORAGE_OFF };
+  if (!objectStorageEnabled()) return { ok: false, status: 503, message: STORAGE_OFF };
   const row = await input.sql.get<FileRow>("SELECT * FROM files WHERE id = ?", [input.fileId]);
   if (!row || row.status !== "clean") return { ok: false, status: 404, message: NOT_FOUND };
   const bytes = await openObjectStore().read(row.object_key);

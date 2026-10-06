@@ -2,7 +2,7 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { LIMITS } from "@/lib/policy/limits";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
-import { localObjectBytesEnabled, openObjectStore } from "@/lib/store/objects";
+import { objectStorageEnabled, openObjectStore } from "@/lib/store/objects";
 import { grantUpload } from "@/lib/store/uploads";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ function cookieValue(request: Request, name: string): string {
 }
 
 export async function PUT(request: Request) {
-  if (!localObjectBytesEnabled()) {
+  if (!objectStorageEnabled()) {
     return Response.json({ message: "File storage isn't set up yet." }, { status: 503 });
   }
   const url = new URL(request.url);

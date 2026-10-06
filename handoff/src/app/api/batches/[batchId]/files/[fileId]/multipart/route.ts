@@ -2,7 +2,7 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { LIMITS } from "@/lib/policy/limits";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
-import { localObjectBytesEnabled, openObjectStore } from "@/lib/store/objects";
+import { objectStorageEnabled, openObjectStore } from "@/lib/store/objects";
 import { grantUpload } from "@/lib/store/uploads";
 import { z } from "zod";
 
@@ -29,7 +29,7 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ batchId: string; fileId: string }> },
 ) {
-  if (!localObjectBytesEnabled()) {
+  if (!objectStorageEnabled()) {
     return Response.json({ message: "File storage isn't set up yet." }, { status: 503 });
   }
   const { batchId, fileId } = await context.params;
