@@ -7,12 +7,16 @@ import {
   listOpenTasks,
   listOrganizations,
   listProjects,
+  listRepos,
   listTimeline,
   organizationById,
   unlinkedWorkspaces,
   type OrgKind,
 } from "@/db/crm";
+import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
+import { listVisibleRepos } from "@/lib/github/app";
+import { readGithubSecrets } from "@/lib/github/secrets";
 import { clientSpaceHref } from "@/lib/host";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +26,7 @@ import { PROJECT_STATUS_LABEL } from "../../projects/labels";
 import { CallForm, MergeForm, NoteForm, PersonForm, TaskForm } from "../activity-forms";
 import { completeTaskAction } from "../actions";
 import { LinkSpaceForm } from "../link-space-form";
+import { AssignRepoForm, LinkRepoForm, UnlinkRepoForm } from "../repo-forms";
 
 const KIND_LABEL: Record<OrgKind, string> = {
   lead: "Lead",
@@ -35,6 +40,11 @@ const ACTIVITY_LABEL: Record<string, string> = {
   call: "Call",
   file_uploaded: "File in",
   request_done: "Request done",
+  pr_opened: "Pull request",
+  pr_merged: "Merged",
+  release: "Release",
+  deploy: "Deploy",
+  push: "Push",
   task: "Task",
   task_done: "Task done",
   task_status: "Task",
@@ -66,7 +76,7 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs, deals, projects] = await Promise.all([
+  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos] = await Promise.all([
     unlinkedWorkspaces(sql, caller),
     sql.all<{ id: string; slug: string; display_name: string }>(
       `SELECT id, slug, display_name FROM workspaces
@@ -80,7 +90,15 @@ export default async function ClientPage({
     listOrganizations(sql, caller),
     listDeals(sql, caller, { organizationId: client.id }),
     listProjects(sql, caller, client.id),
+    listRepos(sql, caller, client.id),
   ]);
+  const secrets = readGithubSecrets();
+  const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
+  const choices = visible?.ok
+    ? visible.value.flatMap((install) =>
+        install.suspended ? [] : install.repos.map((repo) => ({ id: repo.id, fullName: repo.fullName })),
+      )
+    : [];
   const main = contacts.find((person) => person.is_primary === 1);
   const others = orgs.filter((org) => org.id !== client.id).map((org) => ({ id: org.id, name: org.name }));
   return (
@@ -159,6 +177,42 @@ export default async function ClientPage({
             </ul>
           )}
           <ProjectForm organizationId={client.id} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Repos</CardTitle>
+          <CardDescription>Repos we work in for this client.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {!secrets ? (
+            <p className="text-sm text-muted-foreground">
+              GitHub is not connected yet. An admin can connect it in Settings.
+            </p>
+          ) : null}
+          {secrets && visible && !visible.ok ? (
+            <p className="text-sm text-muted-foreground">GitHub did not answer. Try again.</p>
+          ) : null}
+          {repos.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No repos linked yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-4">
+              {repos.map((repo) => (
+                <li key={repo.id} className="flex flex-col gap-2 text-sm">
+                  <span className="font-mono">{repo.full_name}</span>
+                  {repo.suspended_at != null ? <span className="text-muted-foreground">Paused</span> : null}
+                  <AssignRepoForm
+                    organizationId={client.id}
+                    repoId={repo.id}
+                    projectId={repo.project_id}
+                    projects={projects.map((project) => ({ id: project.id, name: project.name }))}
+                  />
+                  <UnlinkRepoForm organizationId={client.id} repoId={repo.id} projectId={repo.project_id} />
+                </li>
+              ))}
+            </ul>
+          )}
+          {secrets && visible?.ok ? <LinkRepoForm organizationId={client.id} repos={choices} /> : null}
         </CardContent>
       </Card>
       <Card>

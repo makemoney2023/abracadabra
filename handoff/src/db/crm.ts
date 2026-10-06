@@ -1397,6 +1397,246 @@ export async function moveDealStage(
   };
 }
 
+const REPO_NAME = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
+export type LinkedRepo = {
+  id: string;
+  github_repo_id: number;
+  installation_id: number | null;
+  full_name: string;
+  organization_id: string;
+  project_id: string | null;
+  default_branch: string | null;
+  is_private: number;
+  suspended_at: number | null;
+};
+
+export type RepoActivitySummary = {
+  openPullRequests: { number: number; title: string; url: string }[];
+  lastPush: { at: number; url: string; author: string } | null;
+  latestRelease: { at: number; title: string; url: string } | null;
+};
+
+export function cleanRepoName(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (trimmed.length > 200 || !REPO_NAME.test(trimmed)) return null;
+  return trimmed;
+}
+
+const REPO_COLUMNS = `r.id, r.github_repo_id, r.installation_id, r.full_name, r.organization_id,
+  r.project_id, r.default_branch, r.is_private, i.suspended_at`;
+
+function repoSelect(where: string): string {
+  return `SELECT ${REPO_COLUMNS}
+    FROM repos r
+    LEFT JOIN github_installations i ON i.id = r.installation_id
+    WHERE ${where}
+    ORDER BY r.full_name`;
+}
+
+export async function listRepos(sql: Sql, caller: Caller, organizationId: string): Promise<LinkedRepo[]> {
+  if (!(await liveOrg(sql, caller, organizationId))) return [];
+  return sql.all<LinkedRepo>(repoSelect("r.organization_id = ? AND r.archived_at IS NULL"), [organizationId]);
+}
+
+export async function listProjectRepos(sql: Sql, caller: Caller, projectId: string): Promise<LinkedRepo[]> {
+  if (!staffUserId(caller)) return [];
+  const project = await openProject(sql, projectId);
+  if (!project) return [];
+  return sql.all<LinkedRepo>(
+    repoSelect("r.project_id = ? AND r.organization_id = ? AND r.archived_at IS NULL"),
+    [projectId, project.organization_id],
+  );
+}
+
+type RepoLinkInput = {
+  organizationId: string;
+  githubRepoId: number;
+  installationId: number;
+  fullName: string;
+  defaultBranch: string | null;
+  isPrivate: boolean;
+};
+
+/** Link a repo the app can see. An active repo on another client is refused. */
+export async function linkRepo(
+  sql: Sql,
+  caller: Caller,
+  input: RepoLinkInput,
+  now: number,
+): Promise<CrmResult<{ id: string }>> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
+  const fullName = cleanRepoName(input.fullName);
+  if (!fullName || !Number.isInteger(input.githubRepoId) || input.githubRepoId <= 0) {
+    return { ok: false, error: "invalid" };
+  }
+  if (!Number.isInteger(input.installationId) || input.installationId <= 0) return { ok: false, error: "invalid" };
+  const branch = input.defaultBranch?.trim() ? input.defaultBranch.trim().slice(0, 200) : null;
+  const isPrivate = input.isPrivate ? 1 : 0;
+  await sql.exec("BEGIN");
+  try {
+    const existing = await sql.get<{ id: string; organization_id: string; archived_at: number | null }>(
+      "SELECT id, organization_id, archived_at FROM repos WHERE github_repo_id = ?",
+      [input.githubRepoId],
+    );
+    if (existing && existing.archived_at == null && existing.organization_id !== input.organizationId) {
+      await sql.exec("ROLLBACK");
+      return { ok: false, error: "taken" };
+    }
+    if (existing && existing.archived_at == null) {
+      await sql.run(
+        `UPDATE repos
+         SET installation_id = ?, full_name = ?, default_branch = ?, is_private = ?, linked_by = ?
+         WHERE id = ?`,
+        [input.installationId, fullName, branch, isPrivate, actorId, existing.id],
+      );
+      await sql.exec("COMMIT");
+      return { ok: true, value: { id: existing.id } };
+    }
+    if (existing) {
+      await sql.run(
+        `UPDATE repos
+         SET organization_id = ?, installation_id = ?, full_name = ?, default_branch = ?,
+             is_private = ?, linked_by = ?, archived_at = NULL,
+             project_id = CASE WHEN organization_id = ? THEN project_id ELSE NULL END
+         WHERE id = ?`,
+        [
+          input.organizationId,
+          input.installationId,
+          fullName,
+          branch,
+          isPrivate,
+          actorId,
+          input.organizationId,
+          existing.id,
+        ],
+      );
+      await sql.exec("COMMIT");
+      return { ok: true, value: { id: existing.id } };
+    }
+    const id = crypto.randomUUID();
+    await sql.run(
+      `INSERT INTO repos (
+         id, github_repo_id, installation_id, full_name, organization_id, default_branch,
+         is_private, owned_by, linked_by, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, 'agency', ?, ?)`,
+      [id, input.githubRepoId, input.installationId, fullName, input.organizationId, branch, isPrivate, actorId, now],
+    );
+    await sql.exec("COMMIT");
+    return { ok: true, value: { id } };
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    if (isUnique(error)) return { ok: false, error: "taken" };
+    throw error;
+  }
+}
+
+export async function unlinkRepo(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; repoId: string },
+  now: number,
+): Promise<CrmResult<{ id: string }>> {
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
+  const row = await sql.get<{ id: string }>(
+    "SELECT id FROM repos WHERE id = ? AND organization_id = ? AND archived_at IS NULL",
+    [input.repoId, input.organizationId],
+  );
+  if (!row) return { ok: false, error: "missing" };
+  await sql.run("UPDATE repos SET archived_at = ? WHERE id = ?", [now, row.id]);
+  return { ok: true, value: { id: row.id } };
+}
+
+export async function assignRepoProject(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; repoId: string; projectId: string | null },
+  now: number,
+): Promise<CrmResult<{ id: string }>> {
+  void now;
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
+  const row = await sql.get<{ id: string }>(
+    "SELECT id FROM repos WHERE id = ? AND organization_id = ? AND archived_at IS NULL",
+    [input.repoId, input.organizationId],
+  );
+  if (!row) return { ok: false, error: "missing" };
+  if (input.projectId) {
+    const project = await openProject(sql, input.projectId);
+    if (!project || project.organization_id !== input.organizationId) return { ok: false, error: "invalid" };
+  }
+  await sql.run("UPDATE repos SET project_id = ? WHERE id = ?", [input.projectId, row.id]);
+  return { ok: true, value: { id: row.id } };
+}
+
+function activityData(raw: string | null): Record<string, unknown> | null {
+  if (!raw) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/** Open pull requests, the last push, and the latest release for one linked repo. */
+export async function repoActivitySummary(
+  sql: Sql,
+  caller: Caller,
+  repoId: string,
+): Promise<RepoActivitySummary | null> {
+  if (!staffUserId(caller)) return null;
+  const repo = await sql.get<{ organization_id: string; full_name: string }>(
+    "SELECT organization_id, full_name FROM repos WHERE id = ? AND archived_at IS NULL",
+    [repoId],
+  );
+  if (!repo || !(await liveOrg(sql, caller, repo.organization_id))) return null;
+  const rows = await sql.all<{ kind: string; data_json: string | null; created_at: number }>(
+    `SELECT kind, data_json, created_at FROM activities
+     WHERE organization_id = ? AND kind IN ('pr_opened', 'pr_merged', 'push', 'release')
+     ORDER BY created_at, kind`,
+    [repo.organization_id],
+  );
+  const open = new Map<number, { number: number; title: string; url: string }>();
+  let lastPush: RepoActivitySummary["lastPush"] = null;
+  let latestRelease: RepoActivitySummary["latestRelease"] = null;
+  for (const row of rows) {
+    const data = activityData(row.data_json);
+    if (!data || data.repo !== repo.full_name) continue;
+    if (row.kind === "pr_opened" && typeof data.number === "number") {
+      open.set(data.number, {
+        number: data.number,
+        title: typeof data.title === "string" ? data.title : "Untitled",
+        url: typeof data.url === "string" ? data.url : "",
+      });
+    }
+    if (row.kind === "pr_merged" && typeof data.number === "number") open.delete(data.number);
+    if (row.kind === "push") {
+      lastPush = {
+        at: row.created_at,
+        url: typeof data.url === "string" ? data.url : "",
+        author: typeof data.author === "string" ? data.author : "",
+      };
+    }
+    if (row.kind === "release") {
+      latestRelease = {
+        at: row.created_at,
+        title: typeof data.title === "string" ? data.title : "Release",
+        url: typeof data.url === "string" ? data.url : "",
+      };
+    }
+  }
+  return {
+    openPullRequests: [...open.values()],
+    lastPush,
+    latestRelease,
+  };
+}
+
 /** A request that just moved to received, on a linked space. Safe to call twice. */
 export function recordRequestDone(
   sql: Sql,

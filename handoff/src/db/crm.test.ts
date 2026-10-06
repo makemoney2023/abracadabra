@@ -33,6 +33,13 @@ import {
   slugFromName,
   recordFileUploaded,
   recordRequestDone,
+  assignRepoProject,
+  cleanRepoName,
+  linkRepo,
+  listProjectRepos,
+  listRepos,
+  repoActivitySummary,
+  unlinkRepo,
   unlinkedWorkspaces,
 } from "./crm";
 import { migrate } from "./migrate";
@@ -871,5 +878,180 @@ describe("projects and work", () => {
     expect(today.waitingSpaces.map((space) => space.requestTitle)).toContain("Logo");
     expect(today.invoices.map((invoice) => invoice.number)).toEqual(["INV-2026-0001"]);
     expect(today.agentNotes.map((note) => note.body)).toEqual(["Drafted a follow-up."]);
+  });
+});
+
+describe("cleanRepoName", () => {
+  it("keeps an owner and repo name", () => {
+    expect(cleanRepoName("  Abracadabra/renew-implants ")).toBe("Abracadabra/renew-implants");
+  });
+
+  it("rejects a blank name, a space, or a name that is too long", () => {
+    expect(cleanRepoName("")).toBeNull();
+    expect(cleanRepoName("renewimplants")).toBeNull();
+    expect(cleanRepoName("a/b c")).toBeNull();
+    expect(cleanRepoName(`${"a".repeat(100)}/${"b".repeat(100)}`)).toBeNull();
+  });
+});
+
+describe("crm repos", () => {
+  async function twoClients(sql: Sql): Promise<{ left: string; right: string; project: string }> {
+    const left = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    const right = await createOrganization(sql, staff, { name: "Pine" }, NOW);
+    if (!left.ok || !right.ok) throw new Error("setup");
+    const project = await createProject(sql, staff, { organizationId: left.value.id, name: "Site" }, NOW);
+    if (!project.ok) throw new Error("setup");
+    await sql.run(
+      `INSERT INTO github_installations (id, account_login, account_type, created_at)
+       VALUES (7, 'abracadabra', 'Organization', ?)`,
+      [NOW],
+    );
+    return { left: left.value.id, right: right.value.id, project: project.value.id };
+  }
+
+  const link = {
+    githubRepoId: 42,
+    installationId: 7,
+    fullName: "abracadabra/renew-implants",
+    defaultBranch: "main",
+    isPrivate: true,
+  };
+
+  it("refuses a person who is not staff", async () => {
+    const sql = await database();
+    const { left } = await twoClients(sql);
+    expect(await listRepos(sql, outsider, left)).toEqual([]);
+    expect(await linkRepo(sql, outsider, { ...link, organizationId: left }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+  });
+
+  it("links a repo, lists it, and refuses a bad name", async () => {
+    const sql = await database();
+    const { left } = await twoClients(sql);
+    expect(await linkRepo(sql, staff, { ...link, organizationId: left, fullName: "nope" }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(await linkRepo(sql, staff, { ...link, organizationId: left, githubRepoId: 0 }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    const linked = await linkRepo(sql, staff, { ...link, organizationId: left }, NOW);
+    expect(linked.ok).toBe(true);
+    if (!linked.ok) return;
+    const rows = await listRepos(sql, staff, left);
+    expect(rows.map((row) => row.full_name)).toEqual(["abracadabra/renew-implants"]);
+    expect(rows[0]?.github_repo_id).toBe(42);
+    expect(rows[0]?.is_private).toBe(1);
+    const again = await linkRepo(
+      sql,
+      staff,
+      { ...link, organizationId: left, fullName: "abracadabra/renew-implants", defaultBranch: "develop" },
+      NOW + 1,
+    );
+    expect(again).toEqual({ ok: true, value: { id: linked.value.id } });
+    expect((await listRepos(sql, staff, left))[0]?.default_branch).toBe("develop");
+  });
+
+  it("refuses an active repo that already belongs to another client", async () => {
+    const sql = await database();
+    const { left, right } = await twoClients(sql);
+    expect((await linkRepo(sql, staff, { ...link, organizationId: left }, NOW)).ok).toBe(true);
+    expect(await linkRepo(sql, staff, { ...link, organizationId: right }, NOW + 1)).toEqual({
+      ok: false,
+      error: "taken",
+    });
+  });
+
+  it("moves an archived repo to a new client and clears the old project", async () => {
+    const sql = await database();
+    const { left, right, project } = await twoClients(sql);
+    const linked = await linkRepo(sql, staff, { ...link, organizationId: left }, NOW);
+    if (!linked.ok) throw new Error("setup");
+    expect(
+      (await assignRepoProject(sql, staff, { organizationId: left, repoId: linked.value.id, projectId: project }, NOW)).ok,
+    ).toBe(true);
+    expect((await unlinkRepo(sql, staff, { organizationId: left, repoId: linked.value.id }, NOW + 1)).ok).toBe(true);
+    const moved = await linkRepo(sql, staff, { ...link, organizationId: right }, NOW + 2);
+    expect(moved).toEqual({ ok: true, value: { id: linked.value.id } });
+    expect(await listRepos(sql, staff, left)).toEqual([]);
+    const rows = await listRepos(sql, staff, right);
+    expect(rows.map((row) => row.id)).toEqual([linked.value.id]);
+    expect(rows[0]?.project_id).toBeNull();
+  });
+
+  it("unlinks a missing repo and refuses a project on another client", async () => {
+    const sql = await database();
+    const { left, right, project } = await twoClients(sql);
+    const linked = await linkRepo(sql, staff, { ...link, organizationId: left }, NOW);
+    if (!linked.ok) throw new Error("setup");
+    expect(await unlinkRepo(sql, staff, { organizationId: left, repoId: "missing" }, NOW)).toEqual({
+      ok: false,
+      error: "missing",
+    });
+    expect(
+      await assignRepoProject(sql, staff, { organizationId: left, repoId: linked.value.id, projectId: "missing" }, NOW),
+    ).toEqual({ ok: false, error: "invalid" });
+    const other = await createProject(sql, staff, { organizationId: right, name: "Other" }, NOW);
+    if (!other.ok) throw new Error("setup");
+    expect(
+      await assignRepoProject(
+        sql,
+        staff,
+        { organizationId: left, repoId: linked.value.id, projectId: other.value.id },
+        NOW,
+      ),
+    ).toEqual({ ok: false, error: "invalid" });
+    expect(
+      (await assignRepoProject(sql, staff, { organizationId: left, repoId: linked.value.id, projectId: project }, NOW)).ok,
+    ).toBe(true);
+    expect((await listProjectRepos(sql, staff, project)).map((row) => row.id)).toEqual([linked.value.id]);
+    expect((await listProjectRepos(sql, outsider, project))).toEqual([]);
+    expect(
+      (await assignRepoProject(sql, staff, { organizationId: left, repoId: linked.value.id, projectId: null }, NOW)).ok,
+    ).toBe(true);
+    expect(await listProjectRepos(sql, staff, project)).toEqual([]);
+  });
+
+  it("counts open pull requests, the last push, and the latest release", async () => {
+    const sql = await database();
+    const { left } = await twoClients(sql);
+    const linked = await linkRepo(sql, staff, { ...link, organizationId: left }, NOW);
+    if (!linked.ok) throw new Error("setup");
+    const other = await linkRepo(
+      sql,
+      staff,
+      { ...link, organizationId: left, githubRepoId: 43, fullName: "abracadabra/other" },
+      NOW,
+    );
+    if (!other.ok) throw new Error("setup");
+    const rows = [
+      ["pr_opened", { number: 4, title: "Home", url: "https://github.com/abracadabra/renew-implants/pull/4", repo: link.fullName }, NOW + 1],
+      ["pr_opened", { number: 5, title: "About", url: "https://github.com/abracadabra/renew-implants/pull/5", repo: link.fullName }, NOW + 2],
+      ["pr_merged", { number: 4, title: "Home", repo: link.fullName }, NOW + 3],
+      ["push", { author: "ada", url: "https://github.com/abracadabra/renew-implants/compare/a", repo: link.fullName }, NOW + 4],
+      ["release", { title: "v1", url: "https://github.com/abracadabra/renew-implants/releases/v1", repo: link.fullName }, NOW + 5],
+      ["pr_opened", { number: 9, title: "Noise", url: "https://github.com/abracadabra/other/pull/9", repo: "abracadabra/other" }, NOW + 6],
+    ] as const;
+    for (const [kind, data, at] of rows) {
+      await sql.run(
+        `INSERT INTO activities (id, organization_id, kind, actor_kind, body, data_json, created_at)
+         VALUES (?, ?, ?, 'system', ?, ?, ?)`,
+        [crypto.randomUUID(), left, kind, kind, JSON.stringify(data), at],
+      );
+    }
+    expect(await repoActivitySummary(sql, outsider, linked.value.id)).toBeNull();
+    expect(await repoActivitySummary(sql, staff, linked.value.id)).toEqual({
+      openPullRequests: [
+        { number: 5, title: "About", url: "https://github.com/abracadabra/renew-implants/pull/5" },
+      ],
+      lastPush: { at: NOW + 4, url: "https://github.com/abracadabra/renew-implants/compare/a", author: "ada" },
+      latestRelease: { at: NOW + 5, title: "v1", url: "https://github.com/abracadabra/renew-implants/releases/v1" },
+    });
+    expect((await repoActivitySummary(sql, staff, other.value.id))?.openPullRequests).toEqual([
+      { number: 9, title: "Noise", url: "https://github.com/abracadabra/other/pull/9" },
+    ]);
   });
 });

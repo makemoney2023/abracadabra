@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   listMilestones,
+  listProjectRepos,
   listProjectTasks,
   listStatusUpdates,
   organizationById,
   projectById,
+  repoActivitySummary,
 } from "@/db/crm";
 import { requireHqStaffPage } from "@/lib/current";
 import { clientSpaceHref } from "@/lib/host";
@@ -34,6 +36,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       [project.id, project.organization_id],
     ),
   ]);
+  const repos = await listProjectRepos(sql, caller, project.id);
+  const repoRows = await Promise.all(
+    repos.map(async (repo) => ({ repo, summary: await repoActivitySummary(sql, caller, repo.id) })),
+  );
   const milestoneIds = new Set(milestones.map((milestone) => milestone.id));
   const loose = tasks.filter((task) => !task.milestone_id || !milestoneIds.has(task.milestone_id));
   return (
@@ -66,6 +72,26 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   <li key={space.id}>
                     <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
                     <span className="ml-2 font-mono text-xs text-muted-foreground">{space.slug}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Repos</CardTitle>
+            <CardDescription>Code we work on for this project.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {repoRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No repos linked yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-6">
+                {repoRows.map(({ repo, summary }) => (
+                  <li key={repo.id} className="flex flex-col gap-2 text-sm">
+                    <span className="font-mono">{repo.full_name}</span>
+                    {summary ? <RepoSummary summary={summary} /> : null}
                   </li>
                 ))}
               </ul>
@@ -146,6 +172,62 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         </Card>
       </main>
     </StaffShell>
+  );
+}
+
+function GithubLink({ href, children }: { href: string; children: string }) {
+  if (!href.startsWith("https://github.com/")) return <span>{children}</span>;
+  return <a href={href}>{children}</a>;
+}
+
+function RepoSummary({
+  summary,
+}: {
+  summary: {
+    openPullRequests: { number: number; title: string; url: string }[];
+    lastPush: { at: number; url: string; author: string } | null;
+    latestRelease: { at: number; title: string; url: string } | null;
+  };
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-muted-foreground">Open pull requests</p>
+      {summary.openPullRequests.length === 0 ? (
+        <p className="text-muted-foreground">No open pull requests.</p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {summary.openPullRequests.map((pull) => (
+            <li key={pull.number}>
+              <GithubLink href={pull.url}>{`#${pull.number} ${pull.title}`}</GithubLink>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p>
+        Last push
+        {summary.lastPush ? (
+          <span className="ml-2">
+            <GithubLink href={summary.lastPush.url}>
+              {`${dayLabel(summary.lastPush.at)}${summary.lastPush.author ? ` by ${summary.lastPush.author}` : ""}`}
+            </GithubLink>
+          </span>
+        ) : (
+          <span className="ml-2 text-muted-foreground">No push yet.</span>
+        )}
+      </p>
+      <p>
+        Latest release
+        {summary.latestRelease ? (
+          <span className="ml-2">
+            <GithubLink href={summary.latestRelease.url}>
+              {`${summary.latestRelease.title} ${dayLabel(summary.latestRelease.at)}`}
+            </GithubLink>
+          </span>
+        ) : (
+          <span className="ml-2 text-muted-foreground">No release yet.</span>
+        )}
+      </p>
+    </div>
   );
 }
 

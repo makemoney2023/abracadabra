@@ -1,15 +1,15 @@
 import handler, { DOQueueHandler, DOShardedTagCache } from "./.open-next/worker.js";
-import { handleLeadIntakeBatch, type IntakeQueueMessage } from "./src/lib/intake/queue";
 import type { D1Like } from "./src/db/sql";
+import { dispatchQueue } from "./src/lib/queue-dispatch";
 
-type IntakeEnv = {
+type QueueEnv = {
   DB: D1Like;
 };
 
 export default {
   fetch: handler.fetch,
-  async queue(batch: { messages: IntakeQueueMessage[] }, env: IntakeEnv) {
-    await handleLeadIntakeBatch(batch.messages, env.DB);
+  async queue(batch: { queue: string; messages: { body: unknown; ack(): void; retry(): void }[] }, env: QueueEnv) {
+    await dispatchQueue(batch, env);
   },
 };
 

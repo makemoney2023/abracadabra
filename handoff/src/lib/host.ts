@@ -96,7 +96,7 @@ export function decideHost(input: {
   if (path === "/admin" || path.startsWith("/admin/")) {
     return { kind: "redirect", location: `${origin}${spacesPathForAdmin(path)}` };
   }
-  if (hasPrefix(path, "/api/admin")) {
+  if (hasPrefix(path, "/api/admin") || hasPrefix(path, "/api/github")) {
     return hq ? { kind: "allow" } : { kind: "not-found" };
   }
   if (STAFF_PREFIXES.some((prefix) => hasPrefix(path, prefix))) {
