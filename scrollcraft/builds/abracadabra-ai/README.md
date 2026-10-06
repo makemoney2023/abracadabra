@@ -84,7 +84,7 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 ## Deployment
 
-Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/). The Vercel project `abracadabra` (personal account `makemoney2023`) is linked to this repository with this folder as its root directory, so every push to `main` redeploys the site with no build step. `www.abra-ca-dabra.app` redirects to the apex with a 308. Domains were attached to the project on 2026-09-23; before that the apex resolved to Vercel but returned `DEPLOYMENT_NOT_FOUND`.
+Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/) on Cloudflare Worker `abracadabra-marketing`. `www.abra-ca-dabra.app` redirects to the apex with a 308 from a Cloudflare Redirect Rule. `check.abra-ca-dabra.app` stays the Readiness Check on Vercel. The Vercel project `abracadabra` (personal account `makemoney2023`) is still linked to this folder, and a push to `main` still redeploys that project. The public apex is the Worker.
 
 ### Cloudflare Workers (static assets)
 
@@ -95,7 +95,16 @@ The same folder deploys to Cloudflare as Worker `abracadabra-marketing`. There i
 npm run deploy
 ```
 
-`npm run preview` is `wrangler dev`. The token is not stored in this folder. Deploying publishes `https://abracadabra-marketing.abracadabra-ai.workers.dev`. That preview sends `X-Robots-Tag: noindex`. It does not attach `abra-ca-dabra.app`. That apex stays on Vercel until the domain is moved on purpose. `www` still redirects at the Vercel project; a Workers `_redirects` file cannot do a domain-level redirect. The account workers.dev subdomain is `abracadabra-ai`.
+`npm run preview` is `wrangler dev`. The token is not stored in this folder. Deploying publishes `https://abracadabra-marketing.abracadabra-ai.workers.dev` and attaches the apex `abra-ca-dabra.app`. That workers.dev preview sends `X-Robots-Tag: noindex`. `www` is not a Worker hostname. A Workers `_redirects` file cannot do a host redirect, so `www.abra-ca-dabra.app` is a Cloudflare Redirect Rule (308 to the apex, query preserved). The account workers.dev subdomain is `abracadabra-ai`.
+
+## Cloudflare revision — 2026-10-06 (apex)
+
+- **What changed** — The apex `abra-ca-dabra.app` is a custom domain on Worker `abracadabra-marketing`. `www` 308s to the apex. `check.abra-ca-dabra.app` stays on Vercel.
+- **Why** — Nameservers for the zone are on this Cloudflare account.
+- **Code touchpoints** — `wrangler.jsonc`.
+- **Data-flow impact** — The public apex is served by the Worker. `www` is a zone Redirect Rule, not a Worker route.
+- **API / schema impact** — none.
+- **Verification** — recorded after the live attach.
 
 ## Cloudflare revision — 2026-10-06
 

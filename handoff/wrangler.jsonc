@@ -7,7 +7,7 @@
   "workers_dev": true,
   "routes": [
     {
-      "pattern": "hq.abra-ca-dabra.app",
+      "pattern": "handoff.abra-ca-dabra.app",
       "custom_domain": true
     }
   ],
@@ -74,7 +74,6 @@
   "vars": {
     "HANDOFF_AI_GATEWAY_ID": "default",
     "HANDOFF_HQ_HOST": "hq.abra-ca-dabra.app",
-    // Temporary. Set this back to https://hq.abra-ca-dabra.app when that zone is on this account.
-    "HANDOFF_HQ_ORIGIN": "https://handoff-hq.abracadabra-ai.workers.dev"
+    "HANDOFF_HQ_ORIGIN": "https://hq.abra-ca-dabra.app"
   }
 }

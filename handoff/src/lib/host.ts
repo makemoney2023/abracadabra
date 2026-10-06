@@ -1,6 +1,6 @@
 export const DEFAULT_HQ_HOST = "hq.abra-ca-dabra.app";
 
-/** Staff dashboard on workers.dev until hq.abra-ca-dabra.app is a zone on this account. */
+/** The workers.dev staff host still counts as HQ after hq.abra-ca-dabra.app is attached. */
 export const STAFF_DEV_HOST = "handoff-hq.abracadabra-ai.workers.dev";
 
 const STAFF_PREFIXES = [
