@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: step 1 is in the Handoff app (hq host, client list, and linking a space by hand). Steps 2 to 11 are not built. Decisions D1 to D10 are all made (section 10).
+Status: steps 1 and 2 are in the Handoff app (hq host, client list, people, notes, calls, tasks, a timeline, and merge). Steps 3 to 11 are not built. Decisions D1 to D10 are all made (section 10).
 
 ## 1. What it does
 

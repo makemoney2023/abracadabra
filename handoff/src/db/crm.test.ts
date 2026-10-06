@@ -2,11 +2,22 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import type { Caller } from "@/lib/authz";
 import {
+  addNote,
+  completeTask,
+  createContact,
   createOrganization,
+  createTask,
   linkWorkspace,
+  listContacts,
+  listOpenTasks,
   listOrganizations,
+  listTimeline,
+  logCall,
+  mergeOrganizations,
   normalizeDomain,
   organizationById,
+  recordFileUploaded,
+  recordRequestDone,
   unlinkedWorkspaces,
 } from "./crm";
 import { migrate } from "./migrate";
@@ -149,5 +160,177 @@ describe("crm space links", () => {
       NOW,
     );
     expect(linked).toEqual({ ok: false, error: "forbidden" });
+  });
+});
+
+async function clientId(sql: Sql, name = "Northwind"): Promise<string> {
+  const created = await createOrganization(sql, staff, { name }, NOW);
+  if (!created.ok) throw new Error(created.error);
+  return created.value.id;
+}
+
+describe("crm contacts", () => {
+  it("adds a person and keeps one main contact", async () => {
+    const sql = await database();
+    const id = await clientId(sql);
+    const first = await createContact(
+      sql,
+      staff,
+      { organizationId: id, name: "Ada North", email: "Ada@Northwind.example", primary: true },
+      NOW,
+    );
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    expect(first.value.email).toBe("ada@northwind.example");
+    expect(first.value.is_primary).toBe(1);
+    const second = await createContact(
+      sql,
+      staff,
+      { organizationId: id, name: "Bea North", email: "bea@northwind.example", primary: true },
+      NOW + 1,
+    );
+    expect(second.ok).toBe(true);
+    const people = await listContacts(sql, staff, id);
+    expect(people.map((row) => row.name)).toEqual(["Ada North", "Bea North"]);
+    expect(people.find((row) => row.name === "Ada North")?.is_primary).toBe(0);
+    expect(people.find((row) => row.name === "Bea North")?.is_primary).toBe(1);
+    expect(await listContacts(sql, outsider, id)).toEqual([]);
+  });
+
+  it("refuses a blank name, a bad email, and a repeated email", async () => {
+    const sql = await database();
+    const id = await clientId(sql);
+    expect(await createContact(sql, staff, { organizationId: id, name: "  " }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(
+      await createContact(sql, staff, { organizationId: id, name: "Ada", email: "not-an-email" }, NOW),
+    ).toEqual({ ok: false, error: "invalid" });
+    const saved = await createContact(sql, staff, { organizationId: id, name: "Ada", email: "ada@example.com" }, NOW);
+    expect(saved.ok).toBe(true);
+    const again = await createContact(
+      sql,
+      staff,
+      { organizationId: id, name: "Ada Two", email: "ADA@example.com" },
+      NOW,
+    );
+    expect(again).toEqual({ ok: false, error: "email_taken" });
+    expect(await createContact(sql, outsider, { organizationId: id, name: "Nope" }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+  });
+});
+
+describe("crm timeline", () => {
+  it("stores a note, a call, and a task, newest first", async () => {
+    const sql = await database();
+    const id = await clientId(sql);
+    const note = await addNote(sql, staff, { organizationId: id, body: "  Sent the deck.  " }, NOW + 1);
+    expect(note.ok).toBe(true);
+    const call = await logCall(sql, staff, { organizationId: id, body: "Talked about the logo." }, NOW + 2);
+    expect(call.ok).toBe(true);
+    const task = await createTask(sql, staff, { organizationId: id, title: "Send the invoice" }, NOW + 3);
+    expect(task.ok).toBe(true);
+    if (!task.ok) return;
+    const open = await listOpenTasks(sql, staff, id);
+    expect(open.map((row) => row.title)).toEqual(["Send the invoice"]);
+    const done = await completeTask(sql, staff, { taskId: task.value.id }, NOW + 4);
+    expect(done).toEqual({ ok: true });
+    expect(await listOpenTasks(sql, staff, id)).toEqual([]);
+    const again = await completeTask(sql, staff, { taskId: task.value.id }, NOW + 5);
+    expect(again).toEqual({ ok: true });
+    const timeline = await listTimeline(sql, staff, id, 20);
+    expect(timeline.map((row) => row.kind)).toEqual(["task_done", "task", "call", "note", "note"]);
+    expect(timeline[3]?.body).toBe("Sent the deck.");
+    expect(await listTimeline(sql, outsider, id, 20)).toEqual([]);
+    expect(await addNote(sql, staff, { organizationId: id, body: "   " }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(await logCall(sql, outsider, { organizationId: id, body: "Hi" }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+  });
+
+  it("writes a file and a finished request only when the space is linked", async () => {
+    const sql = await database();
+    const id = await clientId(sql);
+    await recordFileUploaded(sql, {
+      workspaceId: "ws-1",
+      fileId: "file-1",
+      relativePath: "brand/logo.png",
+      actorId: "user-1",
+      now: NOW,
+    });
+    await recordRequestDone(sql, {
+      workspaceId: "ws-1",
+      requestId: "req-1",
+      title: "Logo",
+      now: NOW,
+    });
+    const before = await listTimeline(sql, staff, id, 20);
+    expect(before.filter((row) => row.kind === "file_uploaded" || row.kind === "request_done")).toEqual([]);
+    const linked = await linkWorkspace(sql, staff, { organizationId: id, workspaceId: "ws-1" }, NOW);
+    expect(linked.ok).toBe(true);
+    await recordFileUploaded(sql, {
+      workspaceId: "ws-1",
+      fileId: "file-1",
+      relativePath: "brand/logo.png",
+      actorId: "user-1",
+      now: NOW + 1,
+    });
+    await recordFileUploaded(sql, {
+      workspaceId: "ws-1",
+      fileId: "file-1",
+      relativePath: "brand/logo.png",
+      actorId: "user-1",
+      now: NOW + 2,
+    });
+    await recordRequestDone(sql, {
+      workspaceId: "ws-1",
+      requestId: "req-1",
+      title: "Logo",
+      now: NOW + 3,
+    });
+    await recordRequestDone(sql, {
+      workspaceId: "ws-1",
+      requestId: "req-1",
+      title: "Logo",
+      now: NOW + 4,
+    });
+    const timeline = await listTimeline(sql, staff, id, 20);
+    const kinds = timeline.filter((row) => row.kind === "file_uploaded" || row.kind === "request_done");
+    expect(kinds.map((row) => row.kind)).toEqual(["request_done", "file_uploaded"]);
+    expect(kinds.find((row) => row.kind === "file_uploaded")?.body).toBe("brand/logo.png");
+    expect(kinds.find((row) => row.kind === "request_done")?.body).toBe("Logo");
+  });
+
+  it("merges one client into another and closes the extra record", async () => {
+    const sql = await database();
+    const keep = await clientId(sql, "Northwind");
+    const drop = await clientId(sql, "Northwind Studio");
+    await createContact(sql, staff, { organizationId: drop, name: "Ada", email: "ada@northwind.example" }, NOW);
+    await linkWorkspace(sql, staff, { organizationId: drop, workspaceId: "ws-1" }, NOW);
+    const merged = await mergeOrganizations(sql, staff, { keepId: keep, dropId: drop }, NOW + 9);
+    expect(merged).toEqual({ ok: true });
+    expect(await organizationById(sql, staff, drop)).toBeUndefined();
+    expect((await listContacts(sql, staff, keep)).map((row) => row.email)).toEqual(["ada@northwind.example"]);
+    const space = await sql.get<{ organization_id: string }>(
+      "SELECT organization_id FROM workspaces WHERE id = 'ws-1'",
+    );
+    expect(space?.organization_id).toBe(keep);
+    const names = (await listOrganizations(sql, staff)).map((row) => row.name);
+    expect(names).toEqual(["Northwind"]);
+    expect(await mergeOrganizations(sql, staff, { keepId: keep, dropId: keep }, NOW)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(await mergeOrganizations(sql, outsider, { keepId: keep, dropId: drop }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
   });
 });
