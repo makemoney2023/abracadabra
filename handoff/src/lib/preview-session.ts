@@ -1,8 +1,60 @@
 import type { Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
+import { ensureUploadShare } from "@/lib/share-link";
 
 export const PREVIEW_EMAIL = "studio@handoff.local";
-export const PREVIEW_SLUG = "northwind";
+export const PREVIEW_SLUG = "strongfoam";
+export const PREVIEW_NAME = "Strongfoam";
+const LEGACY_PREVIEW_SLUG = "northwind";
+const LEGACY_PREVIEW_DISPLAY_NAME = "Northwind Studio";
+
+/** Sends /w/northwind to the renamed space only after that row itself was renamed. */
+export function legacyPreviewRedirect(slug: string, renamed: boolean): string | null {
+  if (renamed && slug === LEGACY_PREVIEW_SLUG) return `/w/${PREVIEW_SLUG}`;
+  return null;
+}
+
+/** Old address keeps working after the rename, including on a later visit. */
+export async function legacyPreviewPath(sql: Sql, slug: string): Promise<string | null> {
+  if (slug !== LEGACY_PREVIEW_SLUG) return null;
+  const stillThere = await sql.get<{ id: string }>("SELECT id FROM workspaces WHERE slug = ?", [
+    LEGACY_PREVIEW_SLUG,
+  ]);
+  if (stillThere) return null;
+  const renamed = await sql.get<{ id: string }>(
+    "SELECT id FROM workspaces WHERE slug = ? AND display_name = ?",
+    [PREVIEW_SLUG, PREVIEW_NAME],
+  );
+  if (!renamed) return null;
+  return `/w/${PREVIEW_SLUG}`;
+}
+
+/** Renames the live Northwind Studio folder. A different folder on that slug stays put. */
+export async function renamePreviewLocker(sql: Sql): Promise<boolean> {
+  const current = await sql.get<{ id: string }>("SELECT id FROM workspaces WHERE slug = ?", [
+    PREVIEW_SLUG,
+  ]);
+  const legacy = await sql.get<{ id: string }>(
+    "SELECT id FROM workspaces WHERE slug = ? AND display_name = ?",
+    [LEGACY_PREVIEW_SLUG, LEGACY_PREVIEW_DISPLAY_NAME],
+  );
+  if (legacy && !current) {
+    await sql.run("UPDATE workspaces SET slug = ?, name = ?, display_name = ? WHERE id = ?", [
+      PREVIEW_SLUG,
+      PREVIEW_NAME,
+      PREVIEW_NAME,
+      legacy.id,
+    ]);
+    return true;
+  }
+  if (current) {
+    await sql.run(
+      "UPDATE workspaces SET name = ?, display_name = ? WHERE id = ? AND display_name = ?",
+      [PREVIEW_NAME, PREVIEW_NAME, current.id, LEGACY_PREVIEW_DISPLAY_NAME],
+    );
+  }
+  return false;
+}
 
 function randomHex(size = 32): string {
   const bytes = new Uint8Array(size);
@@ -20,6 +72,8 @@ export async function openPreviewSession(input: {
   sql: Sql;
   now: number;
 }): Promise<{ sessionToken: string; userId: string; slug: string }> {
+  await renamePreviewLocker(input.sql);
+
   const existing = await input.sql.get<{ id: string }>("SELECT id FROM users WHERE email = ?", [
     PREVIEW_EMAIL,
   ]);
@@ -52,8 +106,8 @@ export async function openPreviewSession(input: {
       [
         workspaceId,
         PREVIEW_SLUG,
-        "Northwind",
-        "Northwind Studio",
+        PREVIEW_NAME,
+        PREVIEW_NAME,
         "Abracadabra",
         LIMITS.defaultQuotaBytes,
         LIMITS.defaultRetentionDays,
@@ -108,6 +162,8 @@ export async function openPreviewSession(input: {
       );
     }
   }
+
+  await ensureUploadShare(input.sql, workspaceId, input.now);
 
   const sessionToken = randomHex();
   await input.sql.run(

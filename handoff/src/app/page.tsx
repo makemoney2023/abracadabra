@@ -2,13 +2,16 @@ import Link from "next/link";
 import { EnterForm } from "./enter-form";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
+import { renamePreviewLocker } from "@/lib/preview-session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   const notice = (await searchParams).notice;
   const linkExpired = notice === "link";
   const openFailed = notice === "open";
+  const shareFailed = notice === "share";
   const { sql, caller } = await openSession();
+  await renamePreviewLocker(sql);
   const workspaces = await workspacesFor(sql, caller);
   const admin = caller.staff?.superAdmin === true;
   if (caller.userId) {
@@ -18,6 +21,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
           <h1 className="font-heading text-4xl leading-tight">Your folders</h1>
         </div>
+        {shareFailed ? (
+          <p className="text-sm text-muted-foreground" role="status">
+            That share link does not work.
+          </p>
+        ) : null}
         {workspaces.length === 0 ? (
           <p className="text-muted-foreground">You don&apos;t have a folder yet.</p>
         ) : (
@@ -72,6 +80,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           {openFailed ? (
             <p className="mb-3 text-sm text-muted-foreground" role="status">
               We couldn&apos;t open Handoff. Please try again soon.
+            </p>
+          ) : null}
+          {shareFailed ? (
+            <p className="mb-3 text-sm text-muted-foreground" role="status">
+              That share link does not work.
             </p>
           ) : null}
           <EnterForm />

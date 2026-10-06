@@ -1,11 +1,14 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FolderFiles } from "@/components/folder-files";
+import { ShareLink } from "@/components/share-link";
 import { Button } from "@/components/ui/button";
 import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { listFolderFiles } from "@/lib/downloads";
 import { openSession } from "@/lib/current";
+import { ensureUploadShare, sharePageUrl } from "@/lib/share-link";
 import { workspaceRequests } from "@/lib/store/requests";
 
 export default async function WorkspaceHome({ params }: { params: Promise<{ slug: string }> }) {
@@ -18,8 +21,19 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const files = await listFolderFiles(sql, caller, workspace.id);
   const canDrop =
     caller.staff === null && caller.memberships.some((member) => member.workspaceId === workspace.id);
+  const owner = caller.memberships.some(
+    (member) => member.workspaceId === workspace.id && member.role === "client_owner",
+  );
   const uploadHref =
     open.length === 1 ? `/w/${workspace.slug}/drop?request=${open[0].id}` : `/w/${workspace.slug}/drop`;
+  const headerList = await headers();
+  const shareUrl = owner
+    ? sharePageUrl(await ensureUploadShare(sql, workspace.id), {
+        origin: process.env.HANDOFF_APP_ORIGIN,
+        host: headerList.get("x-forwarded-host") ?? headerList.get("host"),
+        proto: headerList.get("x-forwarded-proto"),
+      })
+    : "";
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -32,6 +46,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
           </Button>
         ) : null}
       </div>
+      {owner ? <ShareLink url={shareUrl} /> : null}
       {files.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border px-6 py-12">
           <p className="text-lg">This folder is empty.</p>

@@ -5,6 +5,7 @@ import type { Sql } from "./sql";
 const STEPS = [
   { file: "0001_handoff.sql", table: "workspaces" },
   { file: "0002_sessions.sql", table: "sessions" },
+  { file: "0003_upload_shares.sql", table: "upload_shares" },
 ] as const;
 
 /** D1 rejects a script whose first line is a comment, so each statement is run on its own. */

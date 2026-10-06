@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { openSession } from "@/lib/current";
+import { legacyPreviewPath, renamePreviewLocker } from "@/lib/preview-session";
 
 export default async function WorkspaceLayout({
   children,
@@ -13,6 +14,9 @@ export default async function WorkspaceLayout({
 }) {
   const { slug } = await params;
   const { sql, caller } = await openSession();
+  await renamePreviewLocker(sql);
+  const nextPath = await legacyPreviewPath(sql, slug);
+  if (nextPath) redirect(nextPath);
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
   return (

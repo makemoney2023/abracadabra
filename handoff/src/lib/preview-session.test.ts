@@ -5,7 +5,13 @@ import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import { can } from "./authz";
 import { getCaller } from "./session";
-import { openPreviewSession, PREVIEW_EMAIL, PREVIEW_SLUG } from "./preview-session";
+import {
+  legacyPreviewPath,
+  legacyPreviewRedirect,
+  openPreviewSession,
+  PREVIEW_EMAIL,
+  PREVIEW_SLUG,
+} from "./preview-session";
 
 const NOW = 1_700_000_000_000;
 
@@ -33,7 +39,10 @@ describe("openPreviewSession", () => {
     ]);
     expect(user?.email).toBe(PREVIEW_EMAIL);
     const workspaces = await workspacesFor(sql, caller);
-    expect(workspaces.map((row) => row.display_name)).toEqual(["Northwind Studio"]);
+    expect(workspaces.map((row) => row.display_name)).toEqual(["Strongfoam"]);
+    expect(workspaces[0]?.slug).toBe("strongfoam");
+    const share = await sql.get<{ token: string }>("SELECT token FROM upload_shares");
+    expect(share?.token).toMatch(/^[0-9a-f]{64}$/);
     const workspaceId = workspaces[0]?.id ?? "";
     expect(caller.memberships).toEqual([{ workspaceId, role: "client_owner" }]);
     expect(can(caller, "batch.create", { workspaceId })).toBe(true);
@@ -83,11 +92,63 @@ describe("openPreviewSession", () => {
     const caller = await getCaller(sql, opened.sessionToken, NOW + 5);
     expect(caller.staff).toBeNull();
     expect(caller.memberships).toEqual([{ workspaceId, role: "client_owner" }]);
+    const named = await sql.get<{ slug: string; name: string; display_name: string }>(
+      "SELECT slug, name, display_name FROM workspaces WHERE id = ?",
+      [workspaceId],
+    );
+    expect(named).toEqual({ slug: "strongfoam", name: "Strongfoam", display_name: "Strongfoam" });
     const open = await sql.all<{ id: string }>(
       "SELECT id FROM requests WHERE workspace_id = ? AND status = 'open' ORDER BY position",
       [workspaceId],
     );
     expect(open.map((row) => row.id)).toEqual(["req-logo"]);
+  });
+
+  it("renames the older Northwind Studio folder in place", async () => {
+    const sql = await memoryDb();
+    const workspaceId = "ws-northwind";
+    await sql.run(
+      `INSERT INTO workspaces (
+         id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+         quota_bytes, retention_days, request_digest, status, opened_at
+       ) VALUES (?, 'northwind', 'Northwind', 'Northwind Studio', NULL, 'Abracadabra', 'standard', 1, 30, 0, 'active', ?)`,
+      [workspaceId, NOW],
+    );
+
+    const opened = await openPreviewSession({ sql, now: NOW + 1 });
+    expect(opened.slug).toBe("strongfoam");
+    expect(legacyPreviewRedirect("northwind", true)).toBe("/w/strongfoam");
+    expect(legacyPreviewRedirect("northwind", false)).toBeNull();
+    const row = await sql.get<{ id: string; slug: string; display_name: string }>(
+      "SELECT id, slug, display_name FROM workspaces WHERE id = ?",
+      [workspaceId],
+    );
+    expect(row).toEqual({ id: workspaceId, slug: "strongfoam", display_name: "Strongfoam" });
+    const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM workspaces");
+    expect(count?.n).toBe(1);
+    expect(await legacyPreviewPath(sql, "northwind")).toBe("/w/strongfoam");
+    expect(await legacyPreviewPath(sql, "strongfoam")).toBeNull();
+  });
+
+  it("leaves a different folder that still uses the old slug", async () => {
+    const sql = await memoryDb();
+    await sql.run(
+      `INSERT INTO workspaces (
+         id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+         quota_bytes, retention_days, request_digest, status, opened_at
+       ) VALUES ('ws-other', 'northwind', 'Northwind Co', 'Northwind Co', NULL, 'Abracadabra', 'standard', 1, 30, 0, 'active', ?)`,
+      [NOW],
+    );
+
+    await openPreviewSession({ sql, now: NOW + 1 });
+    const rows = await sql.all<{ slug: string; display_name: string }>(
+      "SELECT slug, display_name FROM workspaces ORDER BY slug",
+    );
+    expect(rows).toEqual([
+      { slug: "northwind", display_name: "Northwind Co" },
+      { slug: "strongfoam", display_name: "Strongfoam" },
+    ]);
+    expect(await legacyPreviewPath(sql, "northwind")).toBeNull();
   });
 
   it("reuses the same locker on a second open", async () => {
@@ -105,5 +166,10 @@ describe("openPreviewSession", () => {
     expect(workspaces?.n).toBe(1);
     expect(requests?.n).toBe(1);
     expect(sessions?.n).toBe(2);
+    const shares = await sql.get<{ n: number; token: string }>(
+      "SELECT count(*) AS n, min(token) AS token FROM upload_shares",
+    );
+    expect(shares?.n).toBe(1);
+    expect(shares?.token).toMatch(/^[0-9a-f]{64}$/);
   });
 });
