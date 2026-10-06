@@ -774,13 +774,13 @@ git commit -m "Pull a whole handoff batch with verified hashes."
 - Create: `src/app/admin/held/page.tsx`
 - Test: action tests
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - only a super-admin can release or reject a held file
 - release and reject both require a reason and write an audit event
 - release queues the uploader email and can complete a request
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Let a super-admin release or reject held files."

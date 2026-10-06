@@ -16,6 +16,7 @@ export default async function AdminPage() {
           <Link href="/admin/workspaces/new">Open a workspace</Link>
           <Link href="/admin/staff">Add staff</Link>
           <Link href="/admin/templates">Request templates</Link>
+          <Link href="/admin/held">Held files</Link>
         </div>
       </div>
       <Card>
