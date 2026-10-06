@@ -299,6 +299,7 @@ export async function optInAssessment(
     name: input.name ?? null,
     opted_in_at: row.optedInAt ?? new Date().toISOString(),
   });
+  await inngest.send({ name: "assessment/completed", data: { assessmentId: row.id } });
   await addAssessmentEvent(admin, row.id, "opted_in", {});
   const fresh = await getAssessmentByToken(admin, token);
   const findings = await loadFindings(admin, row.scanId);

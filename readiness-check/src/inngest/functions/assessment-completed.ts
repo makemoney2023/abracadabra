@@ -1,3 +1,5 @@
+import { deliverCompletedAssessment } from "@/lib/handoff-intake";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { inngest } from "../client";
 
 export const assessmentCompletedFn = inngest.createFunction(
@@ -8,7 +10,7 @@ export const assessmentCompletedFn = inngest.createFunction(
   },
   async ({ event }) => {
     const { assessmentId } = event.data as { assessmentId: string };
-    console.info("assessment completed", assessmentId);
+    await deliverCompletedAssessment(createAdminClient(), assessmentId);
     return { assessmentId };
   },
 );
