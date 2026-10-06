@@ -75,6 +75,19 @@ describe("signInWithPassword", () => {
     expect(sessions?.n).toBe(0);
   });
 
+  it("accepts the password when it has extra spaces or a long dash", async () => {
+    const sql = await memoryDb();
+    const opened = await signInWithPassword({
+      sql,
+      username: ADMIN_USERNAME,
+      password: "  correct\u2013horse\u2013battery \n",
+      now: NOW,
+      expectedPassword: PASSWORD,
+    });
+
+    expect(opened.ok).toBe(true);
+  });
+
   it("reads the password from the environment when one is not passed in", async () => {
     process.env.HANDOFF_ADMIN_PASSWORD = PASSWORD;
     const sql = await memoryDb();

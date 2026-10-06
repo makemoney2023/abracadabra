@@ -16,6 +16,11 @@ export function configuredAdminPassword(): string | null {
   return value;
 }
 
+/** Trims a pasted password and treats a long dash as a hyphen. */
+function enteredPassword(value: string): string {
+  return value.trim().replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, "-");
+}
+
 async function sameSecret(left: string, right: string): Promise<boolean> {
   const encoder = new TextEncoder();
   const [leftDigest, rightDigest] = await Promise.all([
@@ -46,7 +51,7 @@ export async function signInWithPassword(input: {
   if (!expected) return { ok: false, reason: "unconfigured" };
 
   const username = input.username.trim().toLowerCase();
-  const passwordOk = await sameSecret(input.password, expected);
+  const passwordOk = await sameSecret(enteredPassword(input.password), expected);
   if (username !== ADMIN_USERNAME || !passwordOk) return { ok: false, reason: "wrong" };
 
   const opened = await openPreviewSession({ sql: input.sql, now: input.now });
