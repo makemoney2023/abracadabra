@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { clock } from "@/lib/clock";
 import { requireHqSuperAdminPage } from "@/lib/current";
 import { listVisibleRepos } from "@/lib/github/app";
 import { rememberInstallations } from "@/lib/github/installs";
@@ -29,7 +30,8 @@ export default async function GithubSettingsPage() {
     );
   }
 
-  const listed = await listVisibleRepos({ secrets, fetch, now: Date.now() });
+  const now = clock();
+  const listed = await listVisibleRepos({ secrets, fetch, now });
   if (!listed.ok) {
     return (
       <StaffShell>
@@ -48,7 +50,7 @@ export default async function GithubSettingsPage() {
     );
   }
 
-  await rememberInstallations(sql, listed.value, Date.now());
+  await rememberInstallations(sql, listed.value, now);
 
   return (
     <StaffShell>

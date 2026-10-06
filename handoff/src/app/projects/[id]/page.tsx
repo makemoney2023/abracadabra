@@ -198,9 +198,7 @@ function RepoSummary({
         <ul className="flex flex-col gap-1">
           {summary.openPullRequests.map((pull) => (
             <li key={pull.number}>
-              <GithubLink href={pull.url}>
-                #{pull.number} {pull.title}
-              </GithubLink>
+              <GithubLink href={pull.url}>{`#${pull.number} ${pull.title}`}</GithubLink>
             </li>
           ))}
         </ul>
@@ -210,8 +208,7 @@ function RepoSummary({
         {summary.lastPush ? (
           <span className="ml-2">
             <GithubLink href={summary.lastPush.url}>
-              {dayLabel(summary.lastPush.at)}
-              {summary.lastPush.author ? ` by ${summary.lastPush.author}` : ""}
+              {`${dayLabel(summary.lastPush.at)}${summary.lastPush.author ? ` by ${summary.lastPush.author}` : ""}`}
             </GithubLink>
           </span>
         ) : (
@@ -223,7 +220,7 @@ function RepoSummary({
         {summary.latestRelease ? (
           <span className="ml-2">
             <GithubLink href={summary.latestRelease.url}>
-              {summary.latestRelease.title} {dayLabel(summary.latestRelease.at)}
+              {`${summary.latestRelease.title} ${dayLabel(summary.latestRelease.at)}`}
             </GithubLink>
           </span>
         ) : (

@@ -13,6 +13,7 @@ import {
   unlinkedWorkspaces,
   type OrgKind,
 } from "@/db/crm";
+import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
 import { listVisibleRepos } from "@/lib/github/app";
 import { readGithubSecrets } from "@/lib/github/secrets";
@@ -92,7 +93,7 @@ export default async function ClientPage({
     listRepos(sql, caller, client.id),
   ]);
   const secrets = readGithubSecrets();
-  const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: Date.now() }) : null;
+  const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
   const choices = visible?.ok
     ? visible.value.flatMap((install) =>
         install.suspended ? [] : install.repos.map((repo) => ({ id: repo.id, fullName: repo.fullName })),
