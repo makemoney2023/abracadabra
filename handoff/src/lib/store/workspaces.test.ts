@@ -142,6 +142,30 @@ describe("createWorkspace", () => {
     expect(duplicate).toEqual({ ok: false, message: "That web address is already taken." });
   });
 
+  it("opens a Files request when no file ask is chosen", async () => {
+    const sql = await memoryDb();
+    await seedSuper(sql);
+    const created = await createWorkspace({
+      sql,
+      caller: superAdmin,
+      now: NOW,
+      fields: {
+        name: "Renew Implants",
+        slug: "renew-implants",
+        displayName: "Renew Implants",
+        senderName: "Strongfoam",
+        policyProfile: "standard",
+      },
+    });
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    const requests = await sql.all<{ title: string; status: string; position: number }>(
+      "SELECT title, status, position FROM requests WHERE workspace_id = ? ORDER BY position",
+      [created.value.id],
+    );
+    expect(requests).toEqual([{ title: "Files", status: "open", position: 1 }]);
+  });
+
   it("copies a live template into requests and ignores later template edits", async () => {
     const sql = await memoryDb();
     await seedSuper(sql);

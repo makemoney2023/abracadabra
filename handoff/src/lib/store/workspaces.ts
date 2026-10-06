@@ -102,7 +102,11 @@ export async function createWorkspace(input: {
      ) VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, 0, 'active', ?)`,
     [id, slug, name, displayName, senderName, profile, quota, retention, input.now],
   );
-  for (const item of items) {
+  const requestRows =
+    items.length > 0
+      ? items
+      : [{ position: 1, title: "Files", guidance: null, suggested_tag: "other" }];
+  for (const item of requestRows) {
     await input.sql.run(
       `INSERT INTO requests (
          id, workspace_id, position, title, guidance, suggested_tag, due_on, status, received_at, closed_at
