@@ -7,6 +7,21 @@ const STEPS = [
   { file: "0002_sessions.sql", table: "sessions" },
 ] as const;
 
+/** D1 rejects a script whose first line is a comment, so each statement is run on its own. */
+export function statementsFromMigration(file: string): string[] {
+  const stripped = file
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      return trimmed.length > 0 && !trimmed.startsWith("--");
+    })
+    .join("\n");
+  return stripped
+    .split(";")
+    .map((statement) => statement.trim())
+    .filter((statement) => statement.length > 0);
+}
+
 export async function migrate(sql: Sql): Promise<void> {
   for (const step of STEPS) {
     const existing = await sql.get<{ name: string }>(
@@ -15,6 +30,8 @@ export async function migrate(sql: Sql): Promise<void> {
     );
     if (existing?.name === step.table) continue;
     const file = readFileSync(path.join(process.cwd(), "migrations", step.file), "utf8");
-    await sql.exec(file);
+    for (const statement of statementsFromMigration(file)) {
+      await sql.run(statement);
+    }
   }
 }
