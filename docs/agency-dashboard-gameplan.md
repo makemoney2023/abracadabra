@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: steps 1, 2, 3, 4, and 5 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Step 4 is the pipeline at `/leads`: a stage board, a list with stage, source, and owner filters, and a won move that turns a lead into a client, then a project, then a space. Step 5 is Today at `/` on the staff host, open work at `/work`, and a project page at `/projects/[id]` with milestones, tasks, and status updates. Staff pages use a sidebar (Today, Leads, Clients, Work, Spaces, Settings). Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Step 6 links GitHub repos. The tables already live in `0005_crm.sql`. `handoff-hq` produces queue `github-events` and does not consume it. The `handoff` worker consumes it. An admin opens `/settings/github`. Staff link a repo on the client page. A project page shows open pull requests, the last push, and the latest release. Steps 7 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email, including how the skill library is wired in. Sending that mail waits on the same zone move. The agent worker is not built.
+Status: steps 1, 2, 3, 4, and 5 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Step 4 is the pipeline at `/leads`: a stage board, a list with stage, source, and owner filters, and a won move that turns a lead into a client, then a project, then a space. Step 5 is Today at `/` on the staff host, open work at `/work`, and a project page at `/projects/[id]` with milestones, tasks, and status updates. Staff pages use a sidebar (Today, Leads, Clients, Work, Spaces, Settings). Staff use `https://hq.abra-ca-dabra.app`. The workers.dev staff host still answers. Step 6 links GitHub repos. The tables already live in `0005_crm.sql`. `handoff-hq` produces queue `github-events` and does not consume it. The `handoff` worker consumes it. An admin opens `/settings/github`. Staff link a repo on the client page. A project page shows open pull requests, the last push, and the latest release. Steps 7 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email, including how the skill library is wired in. Sending that mail waits on Email Service onboarding (SPF and DKIM). The zone is on this account. The agent worker is not built.
 
 ## 1. What it does
 
@@ -28,21 +28,21 @@ If it is not in the dashboard, it did not happen.
 
 ## 2. Where it lives
 
-Build the dashboard **inside the Handoff Worker** (`handoff/`). Do not start a new app (D1).
+The dashboard is the Handoff app (`handoff/`). Do not start a new app (D1).
 
-Two front doors, one Worker (D3):
+One codebase, two workers (D3). They share D1 database `handoff` and R2 bucket `handoff`.
 
-- **`hq.abra-ca-dabra.app`**: the staff dashboard. Staff only.
-- **The Handoff domain**: clients only. Client spaces (`/w/[slug]`), invites, and client login stay here.
+- **`handoff-hq`** at `https://hq.abra-ca-dabra.app`: the staff dashboard. Staff only. This worker produces queues `lead-intake` and `github-events` and does not consume them. The workers.dev staff host still answers.
+- **`handoff`** at `https://handoff.abra-ca-dabra.app`: clients only. Client spaces (`/w/[slug]`), invites, and client login stay here. This worker consumes those queues. The apex is the marketing site on Worker `abracadabra-marketing`.
 
-The Worker picks pages by host name. Staff pages answer only on `hq`. Client pages answer only on the
-Handoff domain. Old `/admin` links on the Handoff domain redirect to `hq`.
+The app picks pages by host name. Staff pages answer only on the staff host. Client pages answer only on the
+Handoff host. Old `/admin` links on the Handoff host redirect to the staff origin `/spaces`.
 
 Why:
 
 - Handoff already has staff login (Magic password), admin roles, D1, R2, Workers AI, and the MCP server.
 - Clients and Handoff spaces need to join in one database. Same D1 means plain SQL joins, no sync.
-- One deploy, one login, one place to fix bugs.
+- One codebase, one login. Two deploys, one for each host.
 
 Routes:
 
@@ -51,8 +51,8 @@ Routes:
 | `hq` `/` | staff | Today screen (what needs doing) |
 | `hq` `/leads` | staff | Pipeline board and list |
 | `hq` `/clients` | staff | Client list |
-| `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline |
-| `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files |
+| `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline, linked repos |
+| `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files, linked repos (open pull requests, last push, latest release) |
 | `hq` `/work` | staff | All open tasks across clients, by owner and due date |
 | `hq` `/deliverables/[id]` | staff | Finished work: build, preview as the client sees it, publish |
 | `hq` `/invoices` | staff | All invoices: draft, sent, late, paid |
@@ -62,7 +62,7 @@ Routes:
 | `hq` `/api/mcp` | MCP keys only | Agent tools (section 7) |
 | `hq` `/api/github/webhook` | GitHub only (signed) | Repo events for the timeline (section 7) |
 | `hq` client page, Email | staff | Drafts waiting, and mail already sent (section 12) |
-| `handoff-agent` email handler | Email Service | Client mail in, once the zone is here (section 12) |
+| `handoff-agent` email handler | Email Service | Client mail in, once Email Service is onboarded (section 12) |
 | `hq` `/settings/github` | super admin | GitHub App install and repo linking |
 | Handoff `/w/[slug]` | clients | Handoff space, as today |
 | Handoff `/w/[slug]/work` | clients | Finished work list, newest first |
@@ -83,11 +83,11 @@ cookie is set for `hq` only, so a client page can never read it.
 | Fixed jobs (stale leads, due tasks, late invoices, digest flags) | Cron Trigger on the Handoff Worker. It wakes the agent. It does not write client-facing copy. |
 | Agent that drafts and talks | Worker `handoff-agent` (Agents SDK). One instance per client. It calls MCP. It does not own records. |
 | GitHub webhook buffer | Queue `github-events` |
-| Client email in and out | Cloudflare Email Service on `handoff-agent`, after `abra-ca-dabra.app` is a zone on this account |
+| Client email in and out | Cloudflare Email Service on `handoff-agent`, after the domain is onboarded in Email Service (SPF and DKIM). The zone is on this account |
 | Handoff product mail (invites, file notices) | The sender Handoff already uses. That is not the client-conversation channel. |
 | Invoice PDFs | R2 |
 | Finished-work media (images, video, posters) | R2, streamed by the Worker with range requests |
-| Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker. Until that zone is here, worker `handoff-hq` at `https://handoff-hq.abracadabra-ai.workers.dev` |
+| Staff host | Custom domain `hq.abra-ca-dabra.app` on worker `handoff-hq`. The workers.dev staff host still answers |
 | Bot check on survey | Turnstile |
 | Summaries and search | Workers AI through AI Gateway (already set up) |
 | Readiness Check | Move from Vercel + Supabase + Inngest to a Worker + D1 (section 4) |
@@ -701,8 +701,8 @@ Each step ships on its own and is useful on its own.
    a staff task when a step needs a program the Worker does not run. It saves status-update drafts,
    follow-up tasks, and email drafts. It does not send mail yet. AI client summary for staff only.
 11. **Client email.** Cloudflare Email Service on `handoff-agent`: inbound handler, address routing,
-   signed replies, drafts on the client page, staff press Send. Blocked until `abra-ca-dabra.app` is
-   a zone on this account (SPF and DKIM). Handoff invite mail stays on its current sender.
+   signed replies, drafts on the client page, staff press Send. Blocked until Email Service is
+   onboarded on this zone (SPF and DKIM). Handoff invite mail stays on its current sender.
 12. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
    scans, Cron for the sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
 
@@ -712,7 +712,7 @@ Each step: tests first, then code, then lint, type check, deploy, and a live che
 
 Made:
 
-- **D1. One app.** The dashboard lives in the Handoff Worker.
+- **D1. One app.** The dashboard lives in the Handoff app (`handoff/`), deployed as workers `handoff` and `handoff-hq` that share D1 and R2.
 - **D2. Same D1.** The Readiness Check uses the `handoff` D1, with `rc_` tables.
 - **D3. Two hosts.** Staff use `hq.abra-ca-dabra.app`. Clients keep the Handoff domain.
 - **D4. Stages.** `new, contacted, call_booked, proposal, won, lost`.
@@ -729,8 +729,8 @@ Made:
   client's Handoff space.
 - **D11. Agent and email.** The agent is its own Worker (`handoff-agent`) on the Cloudflare Agents
   SDK. The dashboard stays the only app that owns records. The agent reads and writes only through
-  MCP. Client conversation mail uses Cloudflare Email Service, and only after the domain is a zone
-  on this account. Anything a client would read stays a draft until a person sends it (D5).
+  MCP. Client conversation mail uses Cloudflare Email Service, and only after the domain is
+  onboarded there (SPF and DKIM). Anything a client would read stays a draft until a person sends it (D5).
 
 ## 11. Risks
 
@@ -762,8 +762,8 @@ Made:
 - **Agent mail to the wrong person.** The agent never calls send. Staff send one approved draft.
   The From domain is the domain that received the mail. Unknown agent ids are rejected.
 - **Mail loops.** Auto-replies are logged and not answered. A thread stops at 100 References.
-- **Email before the zone moves.** `abra-ca-dabra.app` is not a zone on this account yet, so Email
-  Service cannot add SPF and DKIM. Step 10 can ship without sending. Step 11 waits.
+- **Email before Email Service is onboarded.** The zone is on this account. SPF and DKIM are not
+  added yet. Step 10 can ship without sending. Step 11 waits.
 - **Two memories.** The agent keeps a scratch pad. D1 is the source of truth. If they disagree, D1
   wins. The agent has no D1 binding.
 
@@ -797,8 +797,7 @@ is written by an MCP tool on the dashboard.
 
 On start it connects to MCP:
 
-- URL: the staff host `/api/mcp` (`https://handoff-hq.abracadabra-ai.workers.dev/api/mcp` until the
-  zone moves, then `https://hq.abra-ca-dabra.app/api/mcp`).
+- URL: the staff host `/api/mcp` (`https://hq.abra-ca-dabra.app/api/mcp`).
 - Auth: `Authorization: Bearer` with `AGENT_MCP_TOKEN`, via `addMcpServer`.
 - Tools: `this.mcp.getAITools()`, passed into Workers AI on the `AI` binding.
 - Key scopes: `read` and `work`. `can_publish` stays off. No `billing` send and no `code` until a
@@ -823,12 +822,11 @@ The agent loads the client through MCP and writes drafts back through MCP.
 
 ### Client email
 
-This waits until `abra-ca-dabra.app` is a zone on this Cloudflare account. Email Service needs the
-domain onboarded, plus SPF and DKIM. Those records cannot be added while DNS is still at Vercel.
-Do not send client mail from `workers.dev`. Do not add a second email product for this channel.
-Handoff invite and file mail keeps the sender it has now.
+The zone `abra-ca-dabra.app` is on this Cloudflare account. Email Service still needs the domain
+onboarded, plus SPF and DKIM. Do not send client mail from `workers.dev`. Do not add a second
+email product for this channel. Handoff invite and file mail keeps the sender it has now.
 
-When the zone is here:
+When Email Service is onboarded:
 
 1. Onboard the domain in Email Service. Send from `mail.abra-ca-dabra.app` so product mail and
    client conversation mail stay apart.
