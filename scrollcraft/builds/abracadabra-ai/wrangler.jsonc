@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "abracadabra-marketing",
+  "compatibility_date": "2026-10-06",
+  "account_id": "6f6959ecba86d1de4d6cf6aa0b34528d",
+  "workers_dev": true,
+  "assets": {
+    "directory": ".",
+    "html_handling": "none",
+    "not_found_handling": "404-page"
+  }
+}

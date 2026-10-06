@@ -86,6 +86,26 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/). The Vercel project `abracadabra` (personal account `makemoney2023`) is linked to this repository with this folder as its root directory, so every push to `main` redeploys the site with no build step. `www.abra-ca-dabra.app` redirects to the apex with a 308. Domains were attached to the project on 2026-09-23; before that the apex resolved to Vercel but returned `DEPLOYMENT_NOT_FOUND`.
 
+### Cloudflare Workers (static assets)
+
+The same folder deploys to Cloudflare as Worker `abracadabra-marketing`. There is no build step. `wrangler.jsonc` points `assets.directory` at this folder. `html_handling` is `none` so `/walkthrough.html` and `/films.html` stay the canonical URLs already published in the sitemap. `/` rewrites to `/index.html` (`_redirects`, status 200). A missing path serves `404.html`. `.assetsignore` keeps tests, npm metadata, the brief, and env files off the public asset set.
+
+```bash
+# from this folder, with CLOUDFLARE_API_TOKEN in the environment
+npm run deploy
+```
+
+`npm run preview` is `wrangler dev`. The token is not stored in this folder. Deploying publishes `https://abracadabra-marketing.abracadabra-ai.workers.dev`. That preview sends `X-Robots-Tag: noindex`. It does not attach `abra-ca-dabra.app`. That apex stays on Vercel until the domain is moved on purpose. `www` still redirects at the Vercel project; a Workers `_redirects` file cannot do a domain-level redirect. The account workers.dev subdomain is `abracadabra-ai`.
+
+## Cloudflare revision — 2026-10-06
+
+- **What changed** — The catalog can deploy to Cloudflare Workers static assets beside the existing Vercel project.
+- **Why** — The marketing site should live on Cloudflare the same way Handoff will.
+- **Code touchpoints** — `wrangler.jsonc`, `.assetsignore`, `_redirects`, `_headers`, `404.html`, `package.json`, `tests/cloudflare-deploy.test.mjs`.
+- **Data-flow impact** — none. Pages are still the static files in this folder.
+- **API / schema impact** — none.
+- **Verification** — `node --test tests/cloudflare-deploy.test.mjs`.
+
 ## Design revision — 2026-09-23: Operation Compiler and AEO
 
 - Reframed the first viewport around **Your operation, turned into software.**

@@ -1,0 +1,13 @@
+node_modules
+tests
+.dev.vars
+.env
+.env.*
+.git
+.wrangler
+.gitignore
+wrangler.jsonc
+README.md
+BRIEF.md
+package.json
+package-lock.json
