@@ -798,7 +798,7 @@ git commit -m "Let a super-admin release or reject held files."
 - Modify: `src/app/w/[slug]/settings/page.tsx`
 - Test: retention and purge tests
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - archive sets `purge_after` to archive date plus `retention_days`
 - archive refuses new batches, invites, and requests and keeps downloads
@@ -811,7 +811,7 @@ git commit -m "Let a super-admin release or reject held files."
 - audit rows survive purge
 - early purge requires a super-admin and a reason
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Archive, export, and purge a finished handoff workspace."

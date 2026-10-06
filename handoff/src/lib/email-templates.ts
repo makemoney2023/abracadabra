@@ -8,6 +8,7 @@ export type ProductMailPayload = {
   label?: string | null;
   finding?: string | null;
   count?: number;
+  purgeOn?: string;
 };
 
 /** One Handoff page. The body must not add a second URL, a signed URL, or file bytes. */
@@ -33,7 +34,7 @@ export function renderProductEmail(input: {
   const title = input.payload.title || input.payload.label || "this handoff";
   const finding = input.payload.finding ?? "unspecified";
   const count = input.payload.count ?? 0;
-  const lines = copy(input.event, name, title, finding, count);
+  const lines = copy(input.event, name, title, finding, count, input.payload.purgeOn ?? null);
   return {
     from: input.from,
     to: input.to,
@@ -48,6 +49,7 @@ function copy(
   title: string,
   finding: string,
   count: number,
+  purgeOn: string | null,
 ): { subject: string; body: string[] } {
   switch (event) {
     case "batch.ready":
@@ -84,12 +86,24 @@ function copy(
     case "workspace.archived":
       return {
         subject: `${name} was archived`,
-        body: [name, "", "This workspace is archived. Downloads stay available until purge."],
+        body: [
+          name,
+          "",
+          purgeOn
+            ? `This workspace is archived. Downloads stay available until purge on ${purgeOn}.`
+            : "This workspace is archived. Downloads stay available until purge.",
+        ],
       };
     case "workspace.purge_scheduled":
       return {
         subject: `${name} will be purged`,
-        body: [name, "", "Purge is scheduled. Download anything you still need."],
+        body: [
+          name,
+          "",
+          purgeOn
+            ? `Purge is scheduled for ${purgeOn}. Download anything you still need.`
+            : "Purge is scheduled. Download anything you still need.",
+        ],
       };
     default:
       return {

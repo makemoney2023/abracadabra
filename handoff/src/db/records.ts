@@ -25,6 +25,9 @@ export type WorkspaceRecord = {
   quota_bytes: number;
   retention_days: number;
   status: string;
+  archived_at: number | null;
+  purge_after: number | null;
+  purged_at: number | null;
 };
 
 export type ScopedRecord = {

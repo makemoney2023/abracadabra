@@ -3,8 +3,10 @@ import { pathToFileURL } from "node:url";
 import { openHandoffDb } from "@/db/open";
 import { localObjectBytesEnabled, openObjectStore } from "@/lib/store/objects";
 import { pingClamd, scanInstream } from "./clamd";
+import { queuePurgeReminders } from "@/lib/retention";
 import { deleteExpiredObjects } from "./jobs/delete-rejected";
 import { flushNotifications, publishScanOutcome } from "./jobs/notify";
+import { purgeDueWorkspaces } from "./jobs/purge";
 import { claimUploadedFile, scanClaimedFile } from "./jobs/scan";
 import { sweepClosedWindows } from "./jobs/sweep-windows";
 
@@ -62,11 +64,15 @@ async function main(): Promise<void> {
     const sql = await openHandoffDb();
     const now = Date.now();
     await sweepClosedWindows(sql, now);
+    await queuePurgeReminders(sql, now);
+    await flushNotifications(sql, now);
     if (!localObjectBytesEnabled() && !process.env.HANDOFF_OBJECT_PATH) {
       await sleep(5_000);
       continue;
     }
-    await deleteExpiredObjects(sql, openObjectStore(), now);
+    const store = openObjectStore();
+    await deleteExpiredObjects(sql, store, now);
+    await purgeDueWorkspaces(sql, store, now);
     const claimed = await claimUploadedFile(sql, now);
     if (!claimed) {
       await sleep(1_000);

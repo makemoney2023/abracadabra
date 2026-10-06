@@ -16,6 +16,7 @@ type WorkspaceRow = {
   display_name: string;
   slug: string;
   request_digest: number;
+  purge_after: number | null;
 };
 
 type BatchRow = WorkspaceRow & {
@@ -137,7 +138,7 @@ export async function queueProductEvent(sql: Sql, event: ProductEvent, now: numb
         workspaceId: event.workspaceId,
         event: event.kind,
         key: (email) => `${event.kind}:${event.workspaceId}:${email}`,
-        payload: payloadFor(workspace, {}),
+        payload: payloadFor(workspace, { purgeOn: purgeDate(workspace.purge_after) }),
       });
       return;
     }
@@ -256,10 +257,15 @@ async function uploaderEmail(sql: Sql, batchId: string): Promise<string | null> 
   return row?.email ?? null;
 }
 
+function purgeDate(value: number | null): string | undefined {
+  if (value === null) return undefined;
+  return new Date(value).toISOString().slice(0, 10);
+}
+
 async function loadWorkspace(sql: Sql, workspaceId: string): Promise<WorkspaceRow | null> {
   return (
     (await sql.get<WorkspaceRow>(
-      "SELECT id, display_name, slug, request_digest FROM workspaces WHERE id = ?",
+      "SELECT id, display_name, slug, request_digest, purge_after FROM workspaces WHERE id = ?",
       [workspaceId],
     )) ?? null
   );

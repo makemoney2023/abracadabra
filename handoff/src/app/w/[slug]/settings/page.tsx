@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { workspacesFor } from "@/db/records";
+import { can } from "@/lib/authz";
 import { openSession } from "@/lib/current";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RetentionControls } from "./retention-controls";
 import { SettingsForm } from "./settings-form";
 
 export default async function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -27,6 +29,14 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
             quotaBytes={workspace.quota_bytes}
             canConfigure={canConfigure}
             canBrand={canBrand}
+          />
+          <RetentionControls
+            slug={workspace.slug}
+            status={workspace.status}
+            purgeOn={workspace.purge_after === null ? null : new Date(workspace.purge_after).toISOString().slice(0, 10)}
+            canArchive={can(caller, "workspace.archive", { workspaceId: workspace.id })}
+            canExport={can(caller, "workspace.export", { workspaceId: workspace.id })}
+            canPurge={can(caller, "workspace.purge", { workspaceId: workspace.id })}
           />
         </CardContent>
       </Card>
