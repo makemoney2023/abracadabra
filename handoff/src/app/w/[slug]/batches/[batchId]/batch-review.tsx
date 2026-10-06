@@ -21,12 +21,14 @@ export function BatchReview({
   files,
   canTag,
   canDiscard,
+  canExport,
   discardNote,
 }: {
   batchId: string;
   files: BatchScreenFile[];
   canTag: boolean;
   canDiscard: boolean;
+  canExport: boolean;
   discardNote: string;
 }) {
   const router = useRouter();
@@ -62,6 +64,26 @@ export function BatchReview({
     setMessage(response.ok ? "Tag saved." : await responseMessage(response));
     setPending(false);
     if (response.ok) router.refresh();
+  }
+
+  async function saveExport() {
+    setPending(true);
+    setMessage("");
+    const response = await fetch(`/api/batches/${batchId}/export`);
+    if (!response.ok) {
+      setMessage(await responseMessage(response));
+      setPending(false);
+      return;
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = "handoff-export.json";
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+    setMessage("Export saved.");
+    setPending(false);
   }
 
   async function discard() {
@@ -122,6 +144,11 @@ export function BatchReview({
           ))}
         </ul>
       )}
+      {canExport ? (
+        <Button type="button" variant="outline" disabled={pending} onClick={() => void saveExport()}>
+          Export batch
+        </Button>
+      ) : null}
       {canDiscard ? (
         <Button type="button" variant="outline" disabled={pending} onClick={() => void discard()}>
           Discard batch

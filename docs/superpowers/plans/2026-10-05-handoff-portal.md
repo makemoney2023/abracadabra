@@ -754,7 +754,7 @@ git commit -m "Review and download clean handoff files."
 - Create: `cli/pull.ts`
 - Test: export builder and CLI tests against a temp directory
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - export lists clean files with 60-minute URLs and other files without URLs
 - a client cannot export, and the 21st export in an hour is refused
@@ -762,7 +762,7 @@ git commit -m "Review and download clean handoff files."
 - `pull` refuses a path that resolves outside the target directory
 - `pull` deletes a partial file whose hash does not match and exits non-zero
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Pull a whole handoff batch with verified hashes."

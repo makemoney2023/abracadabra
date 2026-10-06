@@ -307,6 +307,7 @@ export async function loadBatchScreen(
       discarded: boolean;
       canTag: boolean;
       canDiscard: boolean;
+      canExport: boolean;
       files: BatchScreenFile[];
     }
   | undefined
@@ -338,6 +339,7 @@ export async function loadBatchScreen(
       workspaceId: batch.workspace_id,
       batchCreatedBy: batch.created_by,
     }),
+    canExport: can(caller, "batch.export", { workspaceId: batch.workspace_id }),
     files: rows.map((row) => ({
       id: row.id,
       relativePath: row.relative_path,

@@ -30,6 +30,7 @@ export default async function BatchPage({
         files={screen.files}
         canTag={screen.canTag}
         canDiscard={screen.canDiscard && !screen.discarded && !clean}
+        canExport={screen.canExport}
         discardNote={discardNote}
       />
     </main>
