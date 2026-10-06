@@ -67,7 +67,7 @@ async function sha256Hex(value: string): Promise<string> {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-/** The Open Handoff login is the admin, so Staff tools and new client spaces open. */
+/** The password login is the admin, so Staff tools and new client spaces open. */
 export async function ensureStudioAdmin(sql: Sql, now: number): Promise<void> {
   const user = await sql.get<{ id: string }>("SELECT id FROM users WHERE email = ?", [PREVIEW_EMAIL]);
   if (!user) return;

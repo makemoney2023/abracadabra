@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EnterForm } from "./enter-form";
+import { SignInForm } from "./sign-in-form";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
 import { renamePreviewLocker } from "@/lib/preview-session";
@@ -53,6 +53,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             File asks
           </Link>
         ) : null}
+        {admin ? null : (
+          <Link href="/login" className="text-sm">
+            Sign in
+          </Link>
+        )}
       </main>
     );
   }
@@ -67,10 +72,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       </div>
       <Card id="access">
         <CardHeader>
-          <CardTitle>Open Handoff</CardTitle>
-          <CardDescription>
-            Email sign-in is paused for now. Tap the button to come on in.
-          </CardDescription>
+          <CardTitle>Sign in</CardTitle>
+          <CardDescription>Use your username and password. Email sign-in is paused for now.</CardDescription>
         </CardHeader>
         <CardContent>
           {linkExpired ? (
@@ -80,7 +83,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           ) : null}
           {openFailed ? (
             <p className="mb-3 text-sm text-muted-foreground" role="status">
-              We couldn&apos;t open Handoff. Please try again soon.
+              We could not sign you in. Please try again soon.
             </p>
           ) : null}
           {shareFailed ? (
@@ -88,7 +91,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               That share link does not work.
             </p>
           ) : null}
-          <EnterForm />
+          <SignInForm />
         </CardContent>
       </Card>
     </main>

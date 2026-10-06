@@ -5,16 +5,22 @@ import { redirect } from "next/navigation";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { LIMITS } from "@/lib/policy/limits";
-import { openPreviewSession } from "@/lib/preview-session";
+import { signInWithPassword } from "@/lib/password-login";
 import { SESSION_COOKIE } from "@/lib/session";
 
-export async function enterPreview(formData: FormData): Promise<void> {
-  void formData;
-  let slug = "";
+export async function signIn(formData: FormData): Promise<void> {
+  const username = String(formData.get("username") ?? "");
+  const password = String(formData.get("password") ?? "");
   try {
     const sql = await openHandoffDb();
     await migrate(sql);
-    const opened = await openPreviewSession({ sql, now: Date.now() });
+    const opened = await signInWithPassword({
+      sql,
+      username,
+      password,
+      now: Date.now(),
+    });
+    if (!opened.ok) redirect(`/login?notice=${opened.reason}`);
     const jar = await cookies();
     jar.set({
       name: SESSION_COOKIE,
@@ -25,9 +31,9 @@ export async function enterPreview(formData: FormData): Promise<void> {
       path: "/",
       maxAge: LIMITS.sessionTtlMs / 1000,
     });
-    slug = opened.slug;
-  } catch {
-    redirect("/?notice=open");
+  } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) throw error;
+    redirect("/login?notice=open");
   }
-  redirect(`/w/${slug}`);
+  redirect("/admin");
 }

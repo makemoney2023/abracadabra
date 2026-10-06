@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
@@ -24,7 +24,7 @@ export async function openSession(): Promise<{ sql: Sql; caller: Caller }> {
 
 export async function requireSuperAdminPage(): Promise<{ sql: Sql; caller: Caller }> {
   const session = await openSession();
-  if (!(await isLiveSuperAdmin(session.sql, session.caller))) notFound();
+  if (!(await isLiveSuperAdmin(session.sql, session.caller))) redirect("/login");
   return session;
 }
 
