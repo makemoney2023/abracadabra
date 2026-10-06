@@ -1,5 +1,4 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
+import { MIGRATION_SQL } from "./migration-sql";
 import type { Sql } from "./sql";
 
 const STEPS = [
@@ -30,7 +29,8 @@ export async function migrate(sql: Sql): Promise<void> {
       [step.table],
     );
     if (existing?.name === step.table) continue;
-    const file = readFileSync(path.join(process.cwd(), "migrations", step.file), "utf8");
+    const file = MIGRATION_SQL[step.file];
+    if (!file) throw new Error(`Missing migration ${step.file}`);
     for (const statement of statementsFromMigration(file)) {
       await sql.run(statement);
     }
