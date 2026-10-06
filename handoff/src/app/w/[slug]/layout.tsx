@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { workspacesFor } from "@/db/records";
+import { can } from "@/lib/authz";
 import { openSession } from "@/lib/current";
 
 export default async function WorkspaceLayout({
@@ -31,6 +32,11 @@ export default async function WorkspaceLayout({
             <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
             <p className="font-heading text-xl">{workspace.display_name}</p>
           </div>
+          {can(caller, "invite.member", { workspaceId: workspace.id }) ? (
+            <Link href={`/w/${workspace.slug}/people`} className="text-sm">
+              People
+            </Link>
+          ) : null}
           <Link href={`/w/${workspace.slug}/settings`} className="text-sm">
             Settings
           </Link>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { LIMITS } from "@/lib/policy/limits";
-import { consumeMagicLink, SESSION_COOKIE } from "@/lib/session";
+import { consumeMagicLink, safeNextPath, SESSION_COOKIE } from "@/lib/session";
 import { parseAllowlist } from "@/lib/store/staff";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,8 @@ export async function GET(request: Request) {
       home.searchParams.set("notice", "link");
       return NextResponse.redirect(home);
     }
-    const response = NextResponse.redirect(home);
+    const next = safeNextPath(url.searchParams.get("next"));
+    const response = NextResponse.redirect(next ? new URL(next, url.origin) : home);
     response.cookies.set({
       name: SESSION_COOKIE,
       value: session.sessionToken,

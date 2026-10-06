@@ -40,6 +40,14 @@ async function sha256Hex(value: string): Promise<string> {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+const INVITE_NEXT = /^\/invites\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** Only an invite page may be the page a magic link opens after sign-in. */
+export function safeNextPath(value: string | null): string | null {
+  if (!value || !INVITE_NEXT.test(value)) return null;
+  return value;
+}
+
 function magicLinkText(url: string): string {
   const minutes = Math.round(LIMITS.magicLinkTtlMs / 60_000);
   return [
@@ -81,6 +89,7 @@ export async function requestMagicLink(input: {
   origin: string;
   from: string;
   allowlist: readonly string[];
+  returnTo?: string;
   send: (message: OutboundMail) => Promise<void>;
 }): Promise<{ message: string }> {
   const email = normalizeEmail(input.email);
@@ -108,12 +117,14 @@ export async function requestMagicLink(input: {
     [id, email, await sha256Hex(token), input.now, input.now + LIMITS.magicLinkTtlMs],
   );
   const origin = input.origin.replace(/\/$/, "");
+  const next = safeNextPath(input.returnTo ?? null);
+  const url = `${origin}/auth/callback?token=${token}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
   try {
     await input.send({
       from: input.from,
       to: email,
       subject: "Sign in to Handoff",
-      text: magicLinkText(`${origin}/auth/callback?token=${token}`),
+      text: magicLinkText(url),
     });
   } catch (error) {
     await input.sql.run(`DELETE FROM ${MAGIC_LINKS} WHERE id = ?`, [id]);

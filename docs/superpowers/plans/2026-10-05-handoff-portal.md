@@ -505,7 +505,7 @@ git commit -m "Create branded handoff workspaces and assign operators."
 - Create: `src/lib/store/invites.ts`
 - Test: action tests
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - a client owner can invite a member and cannot invite an owner
 - an operator can invite either role
@@ -516,11 +516,11 @@ git commit -m "Create branded handoff workspaces and assign operators."
 - a second live invite for the same email and workspace is refused
 - the 31st invite by one inviter in a day is refused
 
-- [ ] **Step 2: Implement**
+- [x] **Step 2: Implement**
 
 Send the invite as a magic link that returns to `/invites/[inviteId]`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "Invite client owners and members into a handoff workspace."
