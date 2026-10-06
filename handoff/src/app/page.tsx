@@ -1,7 +1,9 @@
 import { AccessForm } from "./access-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const notice = (await searchParams).notice;
+  const linkExpired = notice === "link";
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
@@ -16,10 +18,16 @@ export default function Home() {
         <CardHeader>
           <CardTitle>Open an invite</CardTitle>
           <CardDescription>
-            Sign-in is the email on an invite. This check does not create an account.
+            Use the email on your invite. Handoff emails a sign-in link and does not say whether
+            that address is on file.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {linkExpired ? (
+            <p className="mb-3 text-sm text-muted-foreground" role="status">
+              That sign-in link is no longer valid. Ask for another.
+            </p>
+          ) : null}
           <AccessForm />
         </CardContent>
       </Card>

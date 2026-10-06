@@ -449,22 +449,22 @@ git commit -m "Store handoff records in Cloudflare D1."
 - Create: `src/app/auth/callback/route.ts`
 - Create: `src/lib/store/staff.ts`
 
-- [ ] **Step 1: Bootstrap super-admins**
+- [x] **Step 1: Bootstrap super-admins**
 
 When `staff` is empty, the first sign-in whose email is listed in
 `HANDOFF_SUPER_ADMIN_EMAILS` creates a super-admin row with that user id.
 
-- [ ] **Step 2: Magic link through Resend**
+- [x] **Step 2: Magic link through Resend**
 
 Send the link with Resend and store the session in D1. The message uses
 Handoff wording and no client name.
 
-- [ ] **Step 3: Resolve the caller**
+- [x] **Step 3: Resolve the caller**
 
 `getCaller()` returns the `Caller` shape from Task 3 in one D1 query. A
 revoked row is not returned.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "Sign in to Handoff with branded magic links."

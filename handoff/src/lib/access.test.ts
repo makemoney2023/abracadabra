@@ -11,7 +11,7 @@ describe("explainAccessRequest", () => {
   it("does not sign anyone in from a valid address", () => {
     const reply = explainAccessRequest("  client@example.com ");
     expect(reply.message).toBe(
-      "Handoff opens from an invite. This address is not signed in.",
+      "If this address can open Handoff, a sign-in link is on its way.",
     );
     expect(reply.message).not.toContain("client@example.com");
   });

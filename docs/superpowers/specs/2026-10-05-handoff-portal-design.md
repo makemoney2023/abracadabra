@@ -107,9 +107,9 @@ their software.
 
 ## Roles and access
 
-**HND-001.** A person signs in only by email magic link through Supabase
-Auth. Handoff does not accept any operations-platform session, and no other
-product accepts a Handoff session.
+**HND-001.** A person signs in only by email magic link. Resend sends the
+message and D1 stores the session. Handoff does not accept any
+operations-platform session, and no other product accepts a Handoff session.
 
 **HND-002.** The first super-admin is created from
 `HANDOFF_SUPER_ADMIN_EMAILS` when the staff table is empty. After that, staff
@@ -120,14 +120,14 @@ super-admin. Removing a row ends access on the next request.
 only assigned workspaces. A super-admin sees every workspace.
 
 **HND-004.** An invite records a workspace, an email, a role (`client_owner`
-or `client_member`), the inviter, and a 14-day expiry. The email is a Supabase
+or `client_member`), the inviter, and a 14-day expiry. The email is a Handoff
 magic link that returns to `/invites/[inviteId]`. The invite id is not a
 secret. Acceptance requires a signed-in user whose verified email equals the
 invite email, a live invite, and a workspace that is not archived. One live
 invite exists per email per workspace. Resending sends a new link and keeps
 the same invite row.
 
-**HND-005.** Accepting an invite creates a membership keyed by the Supabase
+**HND-005.** Accepting an invite creates a membership keyed by the Handoff
 user id. The email is stored for display. A later change of email address
 does not break the membership.
 
@@ -381,9 +381,9 @@ refuses a path that would leave `<dir>`.
 
 ## Notifications
 
-**HND-044.** Auth email (magic link and invite) uses custom SMTP through
-Resend, configured on the Handoff Supabase project, with Handoff templates.
-The built-in Supabase sender is not used outside local development.
+**HND-044.** Auth email (magic link and invite) is sent through the Resend
+HTTP API from `HANDOFF_FROM_EMAIL`, with Handoff wording. Supabase is not
+part of sign-in.
 
 **HND-045.** Product email is sent through Resend from a `notifications` table
 with a unique idempotency key per event and recipient.
@@ -492,7 +492,7 @@ stay elsewhere gets another deployment from the same repository, in that
 region. Workspaces never move between deployments.
 
 The repository deploys to Cloudflare. Workers run the Next.js app through
-OpenNext. D1 database `handoff` stores locker records and will store sessions.
+OpenNext. D1 database `handoff` stores locker records and sessions.
 R2 stores file bytes, using multipart upload with 6 MiB parts and presigned
 downloads at the same lifetimes. A Cloudflare Container runs `clamd` and the
 worker; a Worker isolate cannot. Queues and Cron Triggers replace a process
@@ -502,7 +502,9 @@ rather than Server Actions. Magic links are sent by Resend.
 
 **HND-057.** Rate limits, counted in the database: 10 batches per workspace
 per hour, 30 invites per inviter per day, 20 exports per operator per hour.
-Magic-link requests are limited in D1.
+Magic-link requests are limited in D1 to 5 per email per hour. A link expires
+after 15 minutes and a session expires after 12 hours. The public form uses
+the same reply whether or not the address can sign in.
 
 **HND-058.** The drop screen states that Handoff is for brand files, photos,
 copy, exports, source, and reference files, and that passwords, key files, and

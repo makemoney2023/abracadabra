@@ -24,7 +24,7 @@ export function AccessForm() {
         />
       </label>
       <Button type="submit" disabled={pending}>
-        {pending ? "Checking" : "Check invite"}
+        {pending ? "Sending" : "Email me a link"}
       </Button>
       {state.message ? (
         <p role="status" className="text-sm text-muted-foreground">
