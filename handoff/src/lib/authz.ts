@@ -85,7 +85,7 @@ export function can(caller: Caller, action: Action, target: AuthzTarget = {}): b
     case "member.remove":
       return staffOnWorkspace(caller, workspaceId) || owner;
     case "batch.create":
-      return caller.staff === null && client;
+      return client;
     case "batch.discard":
       if (staffOnWorkspace(caller, workspaceId)) return true;
       return client && caller.userId !== null && caller.userId === target.batchCreatedBy;

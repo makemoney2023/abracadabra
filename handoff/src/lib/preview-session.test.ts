@@ -33,7 +33,8 @@ describe("openPreviewSession", () => {
 
     expect(opened.slug).toBe(PREVIEW_SLUG);
     const caller = await getCaller(sql, opened.sessionToken, NOW);
-    expect(caller.staff).toBeNull();
+    expect(caller.staff).toEqual({ superAdmin: true });
+    expect(can(caller, "workspace.create")).toBe(true);
     const user = await sql.get<{ email: string }>("SELECT email FROM users WHERE id = ?", [
       caller.userId,
     ]);
@@ -90,7 +91,12 @@ describe("openPreviewSession", () => {
 
     const opened = await openPreviewSession({ sql, now: NOW + 5 });
     const caller = await getCaller(sql, opened.sessionToken, NOW + 5);
-    expect(caller.staff).toBeNull();
+    expect(caller.staff).toEqual({ superAdmin: true });
+    const staff = await sql.get<{ is_super_admin: number; revoked_at: number | null }>(
+      "SELECT is_super_admin, revoked_at FROM staff WHERE user_id = ?",
+      [userId],
+    );
+    expect(staff).toEqual({ is_super_admin: 1, revoked_at: null });
     expect(caller.memberships).toEqual([{ workspaceId, role: "client_owner" }]);
     const named = await sql.get<{ slug: string; name: string; display_name: string }>(
       "SELECT slug, name, display_name FROM workspaces WHERE id = ?",
@@ -102,6 +108,26 @@ describe("openPreviewSession", () => {
       [workspaceId],
     );
     expect(open.map((row) => row.id)).toEqual(["req-logo"]);
+  });
+
+  it("puts a revoked studio login back on the staff page", async () => {
+    const sql = await memoryDb();
+    const userId = "user-revoked";
+    await sql.run("INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)", [
+      userId,
+      PREVIEW_EMAIL,
+      NOW,
+    ]);
+    await sql.run(
+      `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at)
+       VALUES (?, ?, 1, ?, ?)`,
+      [userId, PREVIEW_EMAIL, NOW, NOW],
+    );
+
+    const opened = await openPreviewSession({ sql, now: NOW + 5 });
+    const caller = await getCaller(sql, opened.sessionToken, NOW + 5);
+    expect(caller.staff).toEqual({ superAdmin: true });
+    expect(can(caller, "workspace.create")).toBe(true);
   });
 
   it("renames the older Northwind Studio folder in place", async () => {

@@ -139,15 +139,10 @@ export async function objectWriteAllowed(
   objectKey: string,
   nowMs: number,
 ): Promise<boolean> {
-  if (!caller.userId || caller.staff !== null) return false;
+  if (!caller.userId) return false;
   const parts = objectKey.split("/");
   if (parts.length !== 3 || parts.some((part) => part.length === 0)) return false;
   const [workspaceId, batchId, fileId] = parts;
-  const staffRow = await sql.get<{ user_id: string }>(
-    "SELECT user_id FROM staff WHERE user_id = ? AND revoked_at IS NULL",
-    [caller.userId],
-  );
-  if (staffRow) return false;
   const file = await sql.get<WriteRow>(
     `SELECT f.status, b.created_at, b.last_activity_at, b.discarded_at, b.deleted_at
      FROM files f

@@ -43,11 +43,6 @@ async function memberWrite(sql: Sql, caller: Caller, workspaceId: string): Promi
   if (!caller.userId) return "missing";
   const visible = await workspacesFor(sql, caller);
   if (!visible.some((row) => row.id === workspaceId)) return "missing";
-  const staff = await sql.get<{ ok: number }>(
-    "SELECT 1 AS ok FROM staff WHERE user_id = ? AND revoked_at IS NULL",
-    [caller.userId],
-  );
-  if (staff || caller.staff !== null) return "refused";
   const member = await sql.get<{ ok: number }>(
     "SELECT 1 AS ok FROM memberships WHERE workspace_id = ? AND user_id = ? AND revoked_at IS NULL",
     [workspaceId, caller.userId],

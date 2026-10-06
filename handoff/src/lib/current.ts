@@ -5,6 +5,7 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import type { Caller } from "@/lib/authz";
+import { ensureStudioAdmin } from "@/lib/preview-session";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 
@@ -17,6 +18,7 @@ export async function currentCaller(sql: Sql): Promise<Caller> {
 export async function openSession(): Promise<{ sql: Sql; caller: Caller }> {
   const sql = await openHandoffDb();
   await migrate(sql);
+  await ensureStudioAdmin(sql, Date.now());
   return { sql, caller: await currentCaller(sql) };
 }
 

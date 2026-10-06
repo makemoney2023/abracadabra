@@ -67,6 +67,26 @@ async function sha256Hex(value: string): Promise<string> {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+/** The Open Handoff login is the admin, so Staff tools and new client spaces open. */
+export async function ensureStudioAdmin(sql: Sql, now: number): Promise<void> {
+  const user = await sql.get<{ id: string }>("SELECT id FROM users WHERE email = ?", [PREVIEW_EMAIL]);
+  if (!user) return;
+  const staff = await sql.get<{ is_super_admin: number; revoked_at: number | null }>(
+    "SELECT is_super_admin, revoked_at FROM staff WHERE user_id = ?",
+    [user.id],
+  );
+  if (!staff) {
+    await sql.run(
+      `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at)
+       VALUES (?, ?, 1, ?, NULL)`,
+      [user.id, PREVIEW_EMAIL, now],
+    );
+    return;
+  }
+  if (staff.is_super_admin === 1 && staff.revoked_at === null) return;
+  await sql.run("UPDATE staff SET is_super_admin = 1, revoked_at = NULL WHERE user_id = ?", [user.id]);
+}
+
 /** Opens the shared folder in this browser. No magic link is created or sent. */
 export async function openPreviewSession(input: {
   sql: Sql;
@@ -86,10 +106,7 @@ export async function openPreviewSession(input: {
     ]);
   }
 
-  await input.sql.run(
-    "UPDATE staff SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL",
-    [input.now, userId],
-  );
+  await ensureStudioAdmin(input.sql, input.now);
 
   const workspace = await input.sql.get<{ id: string }>(
     "SELECT id FROM workspaces WHERE slug = ?",

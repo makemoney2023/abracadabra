@@ -160,7 +160,7 @@ describe("handoff D1 isolation", () => {
         "ws-a/batch-a/file-a-pending",
         NOW,
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(await objectWriteAllowed(sql, caller("super-1"), "ws-a/batch-a/file-a-pending", NOW)).toBe(
       false,
     );

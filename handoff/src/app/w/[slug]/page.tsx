@@ -19,8 +19,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const requests = await workspaceRequests(sql, workspace.id);
   const open = requests.filter((request) => request.status === "open");
   const files = await listFolderFiles(sql, caller, workspace.id);
-  const canDrop =
-    caller.staff === null && caller.memberships.some((member) => member.workspaceId === workspace.id);
+  const canDrop = caller.memberships.some((member) => member.workspaceId === workspace.id);
   const owner = caller.memberships.some(
     (member) => member.workspaceId === workspace.id && member.role === "client_owner",
   );

@@ -22,8 +22,7 @@ export default async function DropPage({
   const asked = requestId ? requests.find((request) => request.id === requestId) : undefined;
   if (requestId && !asked) notFound();
   const request = asked ?? (open.length === 1 ? open[0] : undefined);
-  const canDrop =
-    caller.staff === null && caller.memberships.some((member) => member.workspaceId === workspace.id);
+  const canDrop = caller.memberships.some((member) => member.workspaceId === workspace.id);
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-10">
       <Link href={`/w/${workspace.slug}`} className="text-sm">

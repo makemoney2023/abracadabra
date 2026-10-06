@@ -13,7 +13,7 @@ export default async function AdminPage() {
         <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Staff tools</h1>
         <div className="flex gap-4 text-sm">
-          <Link href="/admin/workspaces/new">Open a space</Link>
+          <Link href="/admin/workspaces/new">Add a client</Link>
           <Link href="/admin/staff">Add staff</Link>
           <Link href="/admin/templates">Request templates</Link>
           <Link href="/admin/held">Held files</Link>

@@ -56,16 +56,12 @@ export async function createBatch(input: {
   const workspace = (await workspacesFor(input.sql, input.caller)).find((row) => row.slug === input.slug);
   if (!workspace || !input.caller.userId) return { ok: false, status: 404, message: "We couldn't find that." };
 
-  const staff = await input.sql.get<{ ok: number }>(
-    "SELECT 1 AS ok FROM staff WHERE user_id = ? AND revoked_at IS NULL",
-    [input.caller.userId],
-  );
   const member = await input.sql.get<{ ok: number }>(
     `SELECT 1 AS ok FROM memberships
      WHERE workspace_id = ? AND user_id = ? AND revoked_at IS NULL`,
     [workspace.id, input.caller.userId],
   );
-  if (staff || input.caller.staff !== null || !member) {
+  if (!member) {
     return { ok: false, status: 403, message: REFUSED };
   }
   if (workspace.status !== "active") return { ok: false, status: 409, message: INACTIVE };

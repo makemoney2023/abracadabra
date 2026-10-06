@@ -43,9 +43,10 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           </ul>
         )}
         {admin ? (
-          <Link href="/admin" className="text-sm">
-            Staff tools
-          </Link>
+          <div className="flex gap-4 text-sm">
+            <Link href="/admin/workspaces/new">Add a client</Link>
+            <Link href="/admin">Staff tools</Link>
+          </div>
         ) : null}
         {caller.staff && !admin ? (
           <Link href="/admin/templates" className="text-sm">

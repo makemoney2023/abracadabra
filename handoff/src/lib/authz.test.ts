@@ -111,6 +111,18 @@ describe("can", () => {
     ).toBe(true);
   });
 
+  it("lets an admin who belongs to a folder upload there", () => {
+    const studio: Caller = {
+      userId: "studio",
+      staff: { superAdmin: true },
+      operatorOf: [],
+      memberships: [{ workspaceId: WORKSPACE, role: "client_owner" }],
+    };
+    expect(can(studio, "workspace.create")).toBe(true);
+    expect(can(studio, "batch.create", { workspaceId: WORKSPACE })).toBe(true);
+    expect(can(superAdmin, "batch.create", { workspaceId: WORKSPACE })).toBe(false);
+  });
+
   it("treats a revoked membership as no membership", () => {
     expect(can(signedOut, "workspace.view", { workspaceId: WORKSPACE })).toBe(false);
   });
