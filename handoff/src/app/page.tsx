@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AccessForm } from "./access-form";
+import { EnterForm } from "./enter-form";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default async function Home({ searchParams }: PageProps<"/">) {
   const notice = (await searchParams).notice;
   const linkExpired = notice === "link";
+  const openFailed = notice === "open";
   const { sql, caller } = await openSession();
   const workspaces = await workspacesFor(sql, caller);
   const admin = caller.staff?.superAdmin === true;
@@ -31,23 +32,29 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           after a malware scan. Handoff is not part of any client&apos;s product.
         </p>
       </div>
-      <Card id="access">
-        <CardHeader>
-          <CardTitle>Open an invite</CardTitle>
-          <CardDescription>
-            Use the email on your invite. Handoff emails a sign-in link and does not say whether
-            that address is on file.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {linkExpired ? (
-            <p className="mb-3 text-sm text-muted-foreground" role="status">
-              That sign-in link is no longer valid. Ask for another.
-            </p>
-          ) : null}
-          <AccessForm />
-        </CardContent>
-      </Card>
+      {caller.userId ? null : (
+        <Card id="access">
+          <CardHeader>
+            <CardTitle>Open Handoff</CardTitle>
+            <CardDescription>
+              Email sign-in is off. This opens the studio locker in this browser.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {linkExpired ? (
+              <p className="mb-3 text-sm text-muted-foreground" role="status">
+                That sign-in link is no longer valid. Ask for another.
+              </p>
+            ) : null}
+            {openFailed ? (
+              <p className="mb-3 text-sm text-muted-foreground" role="status">
+                Handoff could not open. Try again shortly.
+              </p>
+            ) : null}
+            <EnterForm />
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }
