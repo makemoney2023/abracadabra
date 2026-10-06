@@ -646,7 +646,7 @@ git commit -m "Upload a folder into a handoff workspace."
 - Create: `src/worker/clamd.ts`
 - Test: scan job tests with a fake object stream and fake `clamd`
 
-- [ ] **Step 1: Build the image**
+- [x] **Step 1: Build the image**
 
 Install ClamAV. `start.sh` runs `freshclam` once, starts `clamd`, schedules
 `freshclam` every 4 hours, then starts the worker. Set `StreamMaxLength`,
@@ -654,7 +654,7 @@ Install ClamAV. `start.sh` runs `freshclam` once, starts `clamd`, schedules
 with `MaxRecursion`, `MaxFiles`, and `MaxScanSize` limits, and alert on
 exceeded limits so they come back as `limit`.
 
-- [ ] **Step 2: Write failing job tests**
+- [x] **Step 2: Write failing job tests**
 
 - a claimed file is marked `scanning` and read once
 - the one read yields the SHA-256, the header, and the `clamd` stream
@@ -664,12 +664,13 @@ exceeded limits so they come back as `limit`.
 - startup in production with no reachable `clamd` exits non-zero
 - `HANDOFF_ALLOW_UNSCANNED=1` with `NODE_ENV=production` exits non-zero
 
-- [ ] **Step 3: Implement the loop**
+- [x] **Step 3: Implement the loop**
 
-Claim with `FOR UPDATE SKIP LOCKED`. Expose `/health` on `$PORT`, bound to
-`0.0.0.0`, that reports `clamd` reachability.
+Claim with `BEGIN IMMEDIATE` and a compare-and-set from `uploaded` to
+`scanning`. D1 cannot use `FOR UPDATE SKIP LOCKED`. Expose `/health` on
+`$PORT`, bound to `0.0.0.0`, that reports `clamd` reachability.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git commit -m "Scan handoff objects with clamd in one pass."

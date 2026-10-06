@@ -8,6 +8,7 @@ export type UploadMeta = { key: string; batchId: string; fileId: string };
 /** Private object metadata. Completion uses size only; bytes stay in storage. */
 export type ObjectStore = {
   stat(key: string): Promise<ObjectStat | null>;
+  read(key: string): Promise<Uint8Array | null>;
   remove(key: string): Promise<void>;
   put(key: string, bytes: Uint8Array): Promise<void>;
   beginUpload(key: string, batchId: string, fileId: string): Promise<string>;
@@ -69,6 +70,15 @@ export function localObjectStore(root: string): ObjectStore {
         const info = await stat(file);
         if (!info.isFile()) return null;
         return { sizeBytes: info.size };
+      } catch {
+        return null;
+      }
+    },
+    async read(key) {
+      const file = resolveKey(root, key);
+      if (!file) return null;
+      try {
+        return new Uint8Array(await readFile(file));
       } catch {
         return null;
       }
