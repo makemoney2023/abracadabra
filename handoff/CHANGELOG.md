@@ -2,6 +2,15 @@
 
 ## 2026-10-06
 
+- **What changed** — The agency dashboard gameplan matches the two live workers and the custom domains. Staff are `handoff-hq` at `https://hq.abra-ca-dabra.app`. Clients are `handoff` at `https://handoff.abra-ca-dabra.app`. They share D1 and R2. The skill-library notes say the Cloudflare agent is step 10 and that worker is not built yet. Client and project routes include linked repos.
+- **Why** — The hostname cutover and the hub-doc pass both needed to land together. The earlier hub pass still described the workers.dev staff host as the public door.
+- **Code touchpoints** — `docs/agency-dashboard-gameplan.md`, `README.md`, `.cursor/skills/README.md`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — docs only. No app code change.
+
+## 2026-10-06
+
 - **What changed** — The client Worker custom domain is `handoff.abra-ca-dabra.app`. The staff Worker custom domain is `hq.abra-ca-dabra.app`. The apex stays on marketing Worker `abracadabra-marketing`. `check.abra-ca-dabra.app` stays the Readiness Check on Vercel. `www` 308s to the apex and is not a Worker hostname.
 - **Why** — The zone is on this Cloudflare account. The client config used to claim `hq`, so a later client deploy would steal the staff host.
 - **Code touchpoints** — `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `handoff/src/lib/host.ts`, `handoff/.env.example`, `scrollcraft/builds/abracadabra-ai/wrangler.jsonc`

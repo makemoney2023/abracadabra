@@ -28,21 +28,21 @@ If it is not in the dashboard, it did not happen.
 
 ## 2. Where it lives
 
-Build the dashboard **inside the Handoff Worker** (`handoff/`). Do not start a new app (D1).
+The dashboard is the Handoff app (`handoff/`). Do not start a new app (D1).
 
-Two front doors, one Worker (D3):
+One codebase, two workers (D3). They share D1 database `handoff` and R2 bucket `handoff`.
 
-- **`hq.abra-ca-dabra.app`**: the staff dashboard on worker `handoff-hq`. Staff only. The workers.dev staff host still answers.
-- **`handoff.abra-ca-dabra.app`**: clients only. Client spaces (`/w/[slug]`), invites, and client login stay here. The apex is the marketing site.
+- **`handoff-hq`** at `https://hq.abra-ca-dabra.app`: the staff dashboard. Staff only. This worker produces queues `lead-intake` and `github-events` and does not consume them. The workers.dev staff host still answers.
+- **`handoff`** at `https://handoff.abra-ca-dabra.app`: clients only. Client spaces (`/w/[slug]`), invites, and client login stay here. This worker consumes those queues. The apex is the marketing site on Worker `abracadabra-marketing`.
 
-The Worker picks pages by host name. Staff pages answer only on `hq`. Client pages answer only on the
-Handoff domain. Old `/admin` links on the Handoff domain redirect to `hq`.
+The app picks pages by host name. Staff pages answer only on the staff host. Client pages answer only on the
+Handoff host. Old `/admin` links on the Handoff host redirect to the staff origin `/spaces`.
 
 Why:
 
 - Handoff already has staff login (Magic password), admin roles, D1, R2, Workers AI, and the MCP server.
 - Clients and Handoff spaces need to join in one database. Same D1 means plain SQL joins, no sync.
-- One deploy, one login, one place to fix bugs.
+- One codebase, one login. Two deploys, one for each host.
 
 Routes:
 
@@ -51,8 +51,8 @@ Routes:
 | `hq` `/` | staff | Today screen (what needs doing) |
 | `hq` `/leads` | staff | Pipeline board and list |
 | `hq` `/clients` | staff | Client list |
-| `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline |
-| `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files |
+| `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline, linked repos |
+| `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files, linked repos (open pull requests, last push, latest release) |
 | `hq` `/work` | staff | All open tasks across clients, by owner and due date |
 | `hq` `/deliverables/[id]` | staff | Finished work: build, preview as the client sees it, publish |
 | `hq` `/invoices` | staff | All invoices: draft, sent, late, paid |
@@ -712,7 +712,7 @@ Each step: tests first, then code, then lint, type check, deploy, and a live che
 
 Made:
 
-- **D1. One app.** The dashboard lives in the Handoff Worker.
+- **D1. One app.** The dashboard lives in the Handoff app (`handoff/`), deployed as workers `handoff` and `handoff-hq` that share D1 and R2.
 - **D2. Same D1.** The Readiness Check uses the `handoff` D1, with `rc_` tables.
 - **D3. Two hosts.** Staff use `hq.abra-ca-dabra.app`. Clients keep the Handoff domain.
 - **D4. Stages.** `new, contacted, call_booked, proposal, won, lost`.

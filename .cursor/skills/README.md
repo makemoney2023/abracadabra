@@ -1,6 +1,6 @@
 # Project skills (from SourceControl)
 
-Copied from [makemoney2023/SourceControl](https://github.com/makemoney2023/SourceControl) (`skills/`) for this repo. This is the procedure library (724 `SKILL.md` files). The Cloudflare agent reads it to plan and complete client work. See `docs/agency-dashboard-gameplan.md`, section 12.
+Copied from [makemoney2023/SourceControl](https://github.com/makemoney2023/SourceControl) (`skills/`) for this repo. This is the procedure library (724 `SKILL.md` files). Step 10 of the agency dashboard will have the Cloudflare agent read it to plan and complete client work. That worker is not built yet. See `docs/agency-dashboard-gameplan.md`, section 12.
 
 **Excluded:** the team/org structure (`skills/org` — virtual company seats, orchestrator, OCC packs, and related agent templates). Those stay in SourceControl only.
 
