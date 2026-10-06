@@ -684,7 +684,7 @@ git commit -m "Scan handoff objects with clamd in one pass."
 - Create: email templates
 - Test: rule and job tests with a fake Resend client
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - the first clean file in a batch that names a request marks it `received`
 - each HND-045 event produces its recipients and one idempotency key
@@ -692,7 +692,7 @@ git commit -m "Scan handoff objects with clamd in one pass."
 - email bodies contain no URL other than a Handoff page link
 - the weekly digest goes only to owners of workspaces that enabled it
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Email operators and clients about handoff progress."

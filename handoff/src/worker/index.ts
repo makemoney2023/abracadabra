@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 import { openHandoffDb } from "@/db/open";
 import { localObjectBytesEnabled, openObjectStore } from "@/lib/store/objects";
 import { pingClamd, scanInstream } from "./clamd";
+import { flushNotifications, publishScanOutcome } from "./jobs/notify";
 import { claimUploadedFile, scanClaimedFile } from "./jobs/scan";
 
 /** Production refuses to run without clamd, and refuses to mark unscanned files clean. */
@@ -66,14 +67,21 @@ async function main(): Promise<void> {
       await sleep(1_000);
       continue;
     }
-    await scanClaimedFile({
+    const now = Date.now();
+    const decision = await scanClaimedFile({
       sql,
       store: openObjectStore(),
       file: claimed,
-      now: Date.now(),
+      now,
       allowUnscanned,
       scanBytes: scanInstream,
     });
+    try {
+      await publishScanOutcome(sql, claimed.id, decision, now);
+      await flushNotifications(sql, now);
+    } catch {
+      // The scan row is already written. Mail can retry on the next pass.
+    }
   }
 }
 
