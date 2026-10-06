@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { workspacesFor } from "@/db/records";
+import { batchesOnWorkspace } from "@/lib/downloads";
 import { openSession } from "@/lib/current";
 import { workspaceRequests } from "@/lib/store/requests";
 
@@ -10,6 +11,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
   const requests = await workspaceRequests(sql, workspace.id);
+  const batches = await batchesOnWorkspace(sql, caller, workspace.id);
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
       <h1 className="font-heading text-4xl leading-tight">{workspace.display_name}</h1>
@@ -34,6 +36,20 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
           ))}
         </ul>
       )}
+      {batches.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-heading text-2xl">Batches</h2>
+          <ul className="flex flex-col gap-2">
+            {batches.map((batch) => (
+              <li key={batch.id}>
+                <Link href={`/w/${workspace.slug}/batches/${batch.id}`} className="text-sm">
+                  {batch.label ?? "Untitled drop"}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   );
 }

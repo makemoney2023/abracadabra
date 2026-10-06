@@ -730,7 +730,7 @@ git commit -m "Close idle handoff batches and delete rejected objects."
 - Create: `src/app/api/batches/[batchId]/discard/route.ts`
 - Test: route tests
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - a clean file returns a 5-minute attachment URL and writes `file.downloaded`
 - a held, scanning, or rejected file returns 409
@@ -738,7 +738,7 @@ git commit -m "Close idle handoff batches and delete rejected objects."
 - a client discards their own batch only while no file is clean
 - a file whose hash matches an earlier clean file in the workspace is marked
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 Operators can change tags from this screen.
 

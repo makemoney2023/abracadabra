@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -261,6 +262,11 @@ export function DropZone({
               <Button type="button" variant="outline" disabled={busy} onClick={() => void startUpload()}>
                 Try failed files again
               </Button>
+            ) : null}
+            {batchId ? (
+              <Link href={`/w/${slug}/batches/${batchId}`} className="text-sm">
+                Review this batch
+              </Link>
             ) : null}
           </div>
         </>
