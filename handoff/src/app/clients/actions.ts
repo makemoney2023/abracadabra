@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { CRM_ERRORS, createOrganization, linkWorkspace, type OrgKind } from "@/db/crm";
 import { requireHqStaffPage } from "@/lib/current";
@@ -30,15 +31,18 @@ export async function createClientAction(_previous: FormState, formData: FormDat
 
 export async function linkSpaceAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
   const linked = await linkWorkspace(
     sql,
     caller,
     {
-      organizationId: String(formData.get("organizationId") ?? ""),
+      organizationId,
       workspaceId: String(formData.get("workspaceId") ?? ""),
     },
     Date.now(),
   );
   if (!linked.ok) return { message: CRM_ERRORS[linked.error] };
+  revalidatePath(`/clients/${organizationId}`);
+  revalidatePath("/clients");
   return { message: "This space is now linked." };
 }
