@@ -96,6 +96,30 @@ describe("handoff notifications", () => {
     await markRequestReceived(sql, FILE, now + 50);
     const second = await sql.get<{ received_at: number }>("SELECT received_at FROM requests WHERE id = ?", [REQUEST]);
     expect(second?.received_at).toBe(now);
+    const timeline = await sql.get<{ n: number }>(
+      "SELECT count(*) AS n FROM activities WHERE kind = 'request_done'",
+    );
+    expect(timeline?.n).toBe(0);
+  });
+
+  it("writes one request event when the space is linked to a client", async () => {
+    const sql = await db();
+    await seed(sql, 0);
+    const now = Date.now();
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at)
+       VALUES ('org-1', 'Northwind', 'client', ?, ?)`,
+      [now, now],
+    );
+    await sql.run("UPDATE workspaces SET organization_id = 'org-1' WHERE id = ?", [WORKSPACE]);
+    await markRequestReceived(sql, FILE, now);
+    const rows = await sql.all<{ kind: string; body: string }>(
+      "SELECT kind, body FROM activities WHERE kind = 'request_done'",
+    );
+    expect(rows).toEqual([{ kind: "request_done", body: "Logo" }]);
+    await markRequestReceived(sql, FILE, now + 50);
+    const again = await sql.get<{ n: number }>("SELECT count(*) AS n FROM activities WHERE kind = 'request_done'");
+    expect(again?.n).toBe(1);
   });
 
   it("queues each product event once per recipient", async () => {

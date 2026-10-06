@@ -1,3 +1,4 @@
+import { recordRequestDone } from "@/db/crm";
 import type { Sql } from "@/db/sql";
 import { renderProductEmail, type ProductMailPayload } from "@/lib/email-templates";
 import type { OutboundMail } from "@/lib/session";
@@ -33,6 +34,18 @@ type FileRow = BatchRow & {
 
 /** The first clean file in a named request marks that request received. Later calls keep the original time. */
 export async function markRequestReceived(sql: Sql, fileId: string, now: number): Promise<void> {
+  const pending = await sql.get<{ id: string; title: string; workspace_id: string; organization_id: string | null }>(
+    `SELECT requests.id, requests.title, requests.workspace_id, workspaces.organization_id
+     FROM files
+     JOIN batches ON batches.id = files.batch_id
+     JOIN requests ON requests.id = batches.request_id
+     JOIN workspaces ON workspaces.id = requests.workspace_id
+     WHERE files.id = ?
+       AND files.status = 'clean'
+       AND requests.status = 'open'
+       AND requests.received_at IS NULL`,
+    [fileId],
+  );
   await sql.run(
     `UPDATE requests
      SET status = 'received', received_at = ?
@@ -48,6 +61,13 @@ export async function markRequestReceived(sql: Sql, fileId: string, now: number)
      AND received_at IS NULL`,
     [now, fileId],
   );
+  if (!pending?.organization_id) return;
+  await recordRequestDone(sql, {
+    workspaceId: pending.workspace_id,
+    requestId: pending.id,
+    title: pending.title,
+    now,
+  });
 }
 
 /** Inserts one unsent row per recipient. A repeated key is ignored. */

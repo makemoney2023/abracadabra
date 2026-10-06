@@ -160,6 +160,34 @@ describe("upload grant and completion", () => {
       [FILE],
     );
     expect(still?.n).toBe(1);
+    const timeline = await sql.get<{ n: number }>(
+      "SELECT count(*) AS n FROM activities WHERE kind = 'file_uploaded'",
+    );
+    expect(timeline?.n).toBe(0);
+  });
+
+  it("writes one file event when the space is linked to a client", async () => {
+    const now = Date.now();
+    const sql = await db();
+    await seed(sql, "uploading", now, now);
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at)
+       VALUES ('org-1', 'Northwind', 'client', ?, ?)`,
+      [now, now],
+    );
+    await sql.run("UPDATE workspaces SET organization_id = 'org-1' WHERE id = ?", [WORKSPACE]);
+    const { openObjectStore } = await import("@/lib/store/objects");
+    await openObjectStore().put(`${WORKSPACE}/${BATCH}/${FILE}`, new Uint8Array([1, 2, 3, 4]));
+    const response = await call(complete, "complete");
+    expect(response.status).toBe(200);
+    const rows = await sql.all<{ kind: string; body: string }>(
+      "SELECT kind, body FROM activities WHERE kind = 'file_uploaded'",
+    );
+    expect(rows).toEqual([{ kind: "file_uploaded", body: "brand/logo.png" }]);
+    const repeat = await call(complete, "complete");
+    expect(repeat.status).toBe(200);
+    const again = await sql.get<{ n: number }>("SELECT count(*) AS n FROM activities WHERE kind = 'file_uploaded'");
+    expect(again?.n).toBe(1);
   });
 
   it("marks a size mismatch failed and deletes the object", async () => {

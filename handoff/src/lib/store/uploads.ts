@@ -1,5 +1,6 @@
 import { isBatchActive } from "@/lib/batches";
 import type { Caller } from "@/lib/authz";
+import { recordFileUploaded } from "@/db/crm";
 import { workspacesFor } from "@/db/records";
 import type { Sql } from "@/db/sql";
 import type { ObjectStore } from "@/lib/store/objects";
@@ -15,6 +16,7 @@ type FileRow = {
   id: string;
   batch_id: string;
   workspace_id: string;
+  relative_path: string;
   object_key: string;
   status: string;
   size_bytes: number;
@@ -29,7 +31,7 @@ type FileRow = {
 
 async function loadFile(sql: Sql, batchId: string, fileId: string): Promise<FileRow | undefined> {
   return sql.get<FileRow>(
-    `SELECT f.id, f.batch_id, f.workspace_id, f.object_key, f.status, f.size_bytes,
+    `SELECT f.id, f.batch_id, f.workspace_id, f.relative_path, f.object_key, f.status, f.size_bytes,
             b.created_at, b.last_activity_at, b.discarded_at, b.deleted_at,
             f.uploaded_at, f.next_scan_at, f.scan_reason
      FROM files f
@@ -173,6 +175,13 @@ export async function completeUpload(input: {
       );
     }
     await input.sql.run("UPDATE batches SET last_activity_at = ? WHERE id = ?", [input.now, row.batch_id]);
+    await recordFileUploaded(input.sql, {
+      workspaceId: row.workspace_id,
+      fileId: row.id,
+      relativePath: row.relative_path,
+      actorId: input.caller.userId,
+      now: input.now,
+    });
     await input.sql.exec("COMMIT");
   } catch (error) {
     await input.sql.exec("ROLLBACK");
