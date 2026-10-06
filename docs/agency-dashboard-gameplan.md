@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: steps 1 and 2 are in the Handoff app (hq host, client list, people, notes, calls, tasks, a timeline, and merge). Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 3 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email. Sending that mail waits on the same zone move.
+Status: steps 1, 2, and 3 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 4 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email. Sending that mail waits on the same zone move.
 
 ## 1. What it does
 
@@ -58,7 +58,7 @@ Routes:
 | `hq` `/invoices` | staff | All invoices: draft, sent, late, paid |
 | `hq` `/spaces` | staff | Handoff space admin (today's `/admin`, moved) |
 | `hq` `/settings/keys` | super admin | MCP keys and their scopes |
-| `hq` `/api/intake/*` | signed senders only | Lead, booking, and payment intake (section 4) |
+| `/api/intake/*` on the Handoff host (and on `hq`) | signed senders only | Lead and booking intake (section 4). Signing is the wall. No staff cookie. |
 | `hq` `/api/mcp` | MCP keys only | Agent tools (section 7) |
 | `hq` `/api/github/webhook` | GitHub only (signed) | Repo events for the timeline (section 7) |
 | `hq` client page, Email | staff | Drafts waiting, and mail already sent (section 12) |
@@ -101,15 +101,30 @@ Do it in two steps so leads never stop flowing.
 
 - The Readiness Check keeps running where it is.
 - When an assessment is completed (the existing `assessment-completed` Inngest function), it also POSTs to
-  `POST https://<handoff>/api/intake/assessment`.
-- The request is signed: `X-Intake-Signature = HMAC-SHA256(body, INTAKE_SIGNING_SECRET)` plus a timestamp.
-  Reject anything older than 5 minutes or with a bad signature.
-- The endpoint puts the message on the `lead-intake` Queue and returns 202 right away.
-- The Queue consumer writes to D1. It matches on email, then on domain:
+  `POST https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` (`HANDOFF_INTAKE_ORIGIN`).
+  The function skips the POST when the saved row has no email. Opting in to email sends the same event
+  again, so the address can arrive after the first completion. If `HANDOFF_INTAKE_ORIGIN` or
+  `INTAKE_SIGNING_SECRET` is unset, the check skips the POST and the person's result still saves.
+- The request is signed: `X-Intake-Signature` is hex HMAC-SHA256 of the raw body with
+  `INTAKE_SIGNING_SECRET`, plus `X-Intake-Timestamp` in unix milliseconds. Reject a bad signature or a
+  timestamp more than 5 minutes off. A missing secret rejects the request.
+- The endpoint puts the message on the `lead-intake` Queue and returns 202 right away. The `handoff`
+  worker consumes that queue. Failed writes retry up to 3 times, then go to `lead-intake-dlq`. A bad
+  payload is dropped. `handoff-hq` can produce to the same queue and does not consume it.
+- The Queue consumer writes to D1. It matches on email, then on domain. A free email host is not stored
+  as the company domain. It does not use the staff create path. New companies are kind `lead`, and the
+  timeline actor is `system`.
   - Known contact: add the assessment to their lead and timeline.
-  - New: make a lead, a contact, and an `assessment` row.
-- Same `assessment_id` sent twice does nothing the second time (unique key).
-- Cal.com bookings: point the booking webhook at `/api/intake/booking` with the same signing.
+  - Known domain, new email: same company, new person.
+  - New: make a lead, a contact, a deal at stage `new` with source `readiness_check`, and an
+    `assessment` row.
+- The same `assessment_id` sent twice does nothing the second time, except one case: if the stored
+  contact has no email and the new body has one, that email and name are filled in. Still one
+  assessment row.
+- Cal.com still posts to the Readiness Check. After that webhook checks Cal's signature, the check
+  POSTs a signed body to `/api/intake/booking`. Handoff does not take an unsigned Cal webhook. The
+  appointment provider is `calcom`. A new or moved call sets the deal to `call_booked` only when the
+  stage is `new` or `contacted`. A cancelled call updates the appointment and leaves the deal stage.
 - We start fresh (D7). Only leads that come in after the bridge ships go into the dashboard. Old
   Supabase leads are not copied over.
 
@@ -635,8 +650,10 @@ finished work to show the client, like `social-preview` in the renewimplants rep
 - Money: amounts are whole cents, never floats. For now staff record payments by hand. When the Stripe
   add-on lands, its webhook is signed and deduped by provider id, and no card numbers ever touch our
   Worker; Stripe holds them.
-- Secrets added now: `INTAKE_SIGNING_SECRET` (both Handoff Workers). `STRIPE_WEBHOOK_SECRET` is added only when
-  the Stripe add-on ships. Add each to `.env.example` and the Handoff README when it lands.
+- Secrets added now: `INTAKE_SIGNING_SECRET` (both Handoff Workers, and the Readiness Check when it
+  should post). The name is in `.env.example` and the Handoff README. The value stays a Worker secret.
+  The check also needs `HANDOFF_INTAKE_ORIGIN`. `STRIPE_WEBHOOK_SECRET` is added only when the Stripe
+  add-on ships.
 - Agent secrets, added with step 10: `AGENT_WAKE_SECRET` (the cron caller and `handoff-agent`) and
   `AGENT_MCP_TOKEN` (the agent's MCP key, on `handoff-agent` only). The dashboard stores that key
   hashed, the same as other MCP keys.

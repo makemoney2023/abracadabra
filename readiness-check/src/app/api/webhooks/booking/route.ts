@@ -3,6 +3,7 @@ import { applyBookingEvent } from "@/lib/booking/apply";
 import { parseCalPayload } from "@/lib/booking/cal-payload";
 import { verifyCalSignature } from "@/lib/booking/cal-signature";
 import { calWebhookSecret } from "@/lib/check-env";
+import { forwardBooking } from "@/lib/handoff-intake";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
@@ -28,6 +29,9 @@ export async function POST(request: Request) {
   }
   try {
     const result = await applyBookingEvent(createAdminClient(), event, body);
+    if (event.kind !== "ignored") {
+      await forwardBooking(event);
+    }
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     return NextResponse.json(
