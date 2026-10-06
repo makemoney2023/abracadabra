@@ -7,7 +7,7 @@
 - **Code touchpoints** — `cloudflare-worker.ts`, `wrangler.jsonc`, `open-next.config.ts`, `src/lib/jobs.ts`, `src/lib/d1/admin.ts`, `src/lib/ops/auth.ts`, `src/lib/turnstile.ts`, `migrations/0006_readiness.sql`
 - **Data-flow impact** — The check writes only `rc_` tables. It does not write CRM rows or `intake_receipts`. Worker `handoff` consumes `lead-intake` and writes those. Old Supabase rows are not copied.
 - **API / schema impact** — `POST /api/ops/login`. `/api/inngest` is removed. D1 migration `0006_readiness.sql`.
-- **Verification** — `npm test` in `readiness-check/`.
+- **Verification** — `npm test` (219 passed) and `npx eslint . --max-warnings 0`. Worker version `93bdfa2e-b416-4bef-8ec7-e62baf6ab86c`. `https://check.abra-ca-dabra.app/check` HTTP/2 200, `server: cloudflare`, title "Readiness Check", no `x-vercel-id`, via anycast `104.21.74.23`.
 
 ## 2026-10-06 — Finished checks and bookings can open a Handoff lead
 

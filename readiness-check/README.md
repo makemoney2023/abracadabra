@@ -100,7 +100,7 @@ v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Pa
 - **Code touchpoints** — `cloudflare-worker.ts`, `wrangler.jsonc`, `src/lib/jobs.ts`, `src/lib/d1/admin.ts`, `migrations/0006_readiness.sql`
 - **Data-flow impact** — The check does not write CRM rows. Worker `handoff` consumes `lead-intake`.
 - **API / schema impact** — `POST /api/ops/login`. `/api/inngest` is gone. `rc_` tables in D1 `handoff`.
-- **Verification** — `npm test` in this folder.
+- **Verification** — `npm test` (219 passed) and `npx eslint . --max-warnings 0`. Live `https://check.abra-ca-dabra.app/check` HTTP/2 200 from Cloudflare, no `x-vercel-id`. Worker version `93bdfa2e-b416-4bef-8ec7-e62baf6ab86c`.
 
 ### 2026-09-24 — Readiness Check studio design
 

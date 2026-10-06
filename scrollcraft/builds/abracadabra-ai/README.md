@@ -97,6 +97,15 @@ npm run deploy
 
 `npm run preview` is `wrangler dev`. The token is not stored in this folder. Deploying publishes `https://abracadabra-marketing.abracadabra-ai.workers.dev` and attaches the apex `abra-ca-dabra.app`. That workers.dev preview sends `X-Robots-Tag: noindex`. `www` is not a Worker hostname. A Workers `_redirects` file cannot do a host redirect, so `www.abra-ca-dabra.app` is a Cloudflare Redirect Rule (308 to the apex, query preserved). The account workers.dev subdomain is `abracadabra-ai`.
 
+## Cloudflare revision — 2026-10-06 (readiness check)
+
+- **What changed** — `check.abra-ca-dabra.app` is a custom domain on Worker `readiness-check`.
+- **Why** — The readiness check leaves Vercel.
+- **Code touchpoints** — `readiness-check/wrangler.jsonc`. This marketing folder did not change.
+- **Data-flow impact** — none for these static pages.
+- **API / schema impact** — none.
+- **Verification** — Through Cloudflare anycast `104.21.74.23`: `https://check.abra-ca-dabra.app/check` HTTP/2 200, `server: cloudflare`, title "Readiness Check", no `x-vercel-id`. Apex HTTP/2 200. `www` `/pricing` HTTP/2 308 to `https://abra-ca-dabra.app/pricing`.
+
 ## Cloudflare revision — 2026-10-06 (apex)
 
 - **What changed** — The apex `abra-ca-dabra.app` is a custom domain on Worker `abracadabra-marketing`. `www` 308s to the apex. `check.abra-ca-dabra.app` stays on Vercel.

@@ -4,6 +4,9 @@
   "main": "cloudflare-worker.ts",
   "compatibility_date": "2026-10-06",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "alias": {
+    "server-only": "./node_modules/server-only/empty.js"
+  },
   "workers_dev": true,
   "account_id": "6f6959ecba86d1de4d6cf6aa0b34528d",
   "routes": [
