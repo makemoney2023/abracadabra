@@ -490,6 +490,16 @@ region already chosen for its operations platform. A client whose data must
 stay elsewhere gets another deployment from the same repository, in that
 region. Workspaces never move between deployments.
 
+The same repository can deploy to Cloudflare instead of Vercel and Render.
+Workers run the Next.js app through OpenNext. R2 replaces Supabase Storage
+for file bytes, using multipart upload with 6 MiB parts and presigned
+downloads at the same lifetimes. A Cloudflare Container runs `clamd` and the
+worker; a Worker isolate cannot. Queues and Cron Triggers replace the Render
+loop. Supabase keeps Postgres, Auth, and row-level security, reached through
+Hyperdrive. The R2 bucket and the Container use the same region as that
+Supabase project. File bytes still go to storage directly, through route
+handlers rather than Server Actions.
+
 **HND-057.** Rate limits, counted in the database: 10 batches per workspace
 per hour, 30 invites per inviter per day, 20 exports per operator per hour.
 Magic-link requests are limited by Supabase Auth.

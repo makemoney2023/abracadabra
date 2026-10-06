@@ -38,6 +38,42 @@ repository. The operations repository keeps the spec and this plan only.
 The new app does not depend on the operations package, does not read any
 operations cookie, and does not connect to the operations database.
 
+## Cloudflare instead of Vercel and Render
+
+The product behavior in the spec does not change. A Cloudflare deployment
+replaces the host, the object store, and the scan process. Postgres, Auth,
+and row-level security stay on Supabase. Moving those to D1 would drop the
+isolation tests this plan requires.
+
+| Plan piece | Vercel and Render | Cloudflare |
+|---|---|---|
+| Next.js app | Vercel | Workers through OpenNext (`@opennextjs/cloudflare`) |
+| File bytes | Supabase Storage resumable uploads, 6 MiB parts | R2 multipart upload. Parts stay 6 MiB, above R2's 5 MiB minimum. The browser still does not post file bodies to the app server |
+| Private downloads | Supabase signed URLs, same TTLs | R2 presigned GET URLs, same TTLs: 5 minutes, 60 minutes, 24 hours |
+| Scanner | Render service with `clamd` beside the worker | Cloudflare Container from `worker/Dockerfile`. A Worker cannot run `clamd` inside the isolate |
+| Sweeps, mail, purge | Render process loop | Queues for scan and mail, Cron Triggers for sweeps and purge |
+| Postgres and Auth | Supabase, reached directly | Same Supabase project, reached through Hyperdrive |
+| One region (HND-056) | Supabase region | That same Supabase region, plus an R2 location and a Container region pinned to it |
+
+Upload routes stay route handlers. Do not accept file bytes through a Server
+Action: Cloudflare's WAF can block a `Next-Action` multipart body before the
+Worker runs.
+
+Storage policies on `storage.objects` do not exist on R2. The authorization
+function still runs before any R2 call, and the database isolation tests
+still run against local Supabase. Object isolation is tested by refusing an
+R2 operation when the caller cannot see that workspace.
+
+`tus-js-client` is not the R2 client. The drop screen uses the R2 multipart
+API (create, upload part, complete) with the same retry rule: only a failed
+part is sent again.
+
+Local development stays `npx supabase start` for Postgres and Auth, plus
+`wrangler dev` for the Worker, R2, Queues, and the Container. Production
+fails closed when the R2 bucket bindings, `DATABASE_URL`, or
+`RESEND_API_KEY` are missing. Containers, R2, and Queues need a Workers
+plan that includes them.
+
 Before adding App Router pages, route handlers, or server actions, read the
 current guide in that project's `node_modules/next/dist/docs/`.
 
