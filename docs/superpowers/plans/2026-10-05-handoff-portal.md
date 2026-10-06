@@ -30,10 +30,11 @@ in the operations repository. Requirements HND-001 through HND-058.
 
 ## Repository boundary
 
-Implement this plan in a new private repository,
-`https://github.com/makemoney2023/clienthandoff`. Do not add application code,
-dependencies, environment variables, or migrations to the operations
-repository. The operations repository keeps the spec and this plan only.
+The working copy of this plan is the [`handoff/`](../../../handoff/) app in
+this repository. It does not share a package, cookie, or database with the
+operations site. An earlier note pointed at a separate
+`makemoney2023/clienthandoff` repository; that checkout is not where this
+build runs.
 
 The new app does not depend on the operations package, does not read any
 operations cookie, and does not connect to the operations database.
@@ -179,12 +180,12 @@ R2_ENDPOINT
 - Create: `README.md` with local setup, the one-region rule, and the statement
   that Handoff is not part of any client's product
 
-- [ ] **Step 1: Create the app and scripts**
+- [x] **Step 1: Create the app and scripts**
 
 Add `test`, `test:db`, `build`, `worker`, and `pull` scripts. `test` excludes
 `tests/db`.
 
-- [ ] **Step 2: Confirm the empty suites and build run**
+- [x] **Step 2: Confirm the empty suites and build run**
 
 ```bash
 npm test
@@ -193,7 +194,7 @@ npx supabase start
 npm run test:db
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "Scaffold the Handoff app."
@@ -221,7 +222,7 @@ export function inspectFileName(
 ): { ok: true; extension: string } | { ok: false; reason: string };
 ```
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - `Brand/logos/primary.svg` is allowed under both profiles
 - `src/app.ts` is refused under `standard` and allowed under `software`
@@ -233,7 +234,7 @@ export function inspectFileName(
 - `photo.JPG` reports `jpg`
 - a path of 17 segments and a segment of 256 characters are refused
 
-- [ ] **Step 2: Run, implement, re-run, and commit**
+- [x] **Step 2: Run, implement, re-run, and commit**
 
 ```bash
 npx vitest run src/lib/policy
@@ -270,13 +271,13 @@ export function can(
 ): boolean;
 ```
 
-- [ ] **Step 1: Write a table-driven failing test from HND-006**
+- [x] **Step 1: Write a table-driven failing test from HND-006**
 
 Every row and column of the matrix is one case. Add cases for an unassigned
 operator, a revoked membership, a client of workspace A acting on B, and a
 client discarding someone else's batch.
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 npx vitest run src/lib/authz.test.ts
@@ -308,7 +309,7 @@ export function deriveBatchStatus(input: {
 }): BatchStatus;
 ```
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - one bad entry refuses the manifest and returns its index
 - duplicate normalized paths, an unknown tag, an empty file, 2,001 files, and
@@ -318,7 +319,7 @@ export function deriveBatchStatus(input: {
 - a batch is inactive 24 hours after creation even with recent activity
 - every row of the HND-048 status table
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Validate handoff manifests against quota and window."
@@ -350,7 +351,7 @@ export function decideScan(input: {
   | { status: "retry"; delaySeconds: number };
 ```
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - a PDF starting with `%PDF` and `ok` is clean
 - a `.png` whose header is not PNG is rejected
@@ -361,7 +362,7 @@ export function decideScan(input: {
 - `error` on attempt 1 retries with backoff, and on attempt 5 is held
 - `skipped_dev` is clean only when the caller passed the dev flag
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Decide handoff scan outcomes from signature and clamd."
