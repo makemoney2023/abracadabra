@@ -561,7 +561,7 @@ git commit -m "Track what each client still needs to send."
 - Create: `src/app/api/workspaces/[slug]/batches/route.ts`
 - Test: route tests with a fake store
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - a client's valid manifest writes `pending` rows and returns object keys
 - a staff caller cannot create a batch
@@ -570,7 +570,7 @@ git commit -m "Track what each client still needs to send."
 - a `request_id` from another workspace or a closed request refuses
 - the 11th batch in an hour receives 429
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Create a handoff batch from a validated manifest."
