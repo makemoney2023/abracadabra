@@ -74,6 +74,14 @@ fails closed when the R2 bucket bindings, `DATABASE_URL`, or
 `RESEND_API_KEY` are missing. Containers, R2, and Queues need a Workers
 plan that includes them.
 
+Cursor talks to the Cloudflare API through `.cursor/mcp.json`. That file
+points at `https://mcp.cloudflare.com/mcp` and sends
+`Authorization: Bearer ${env:CLOUDFLARE_API_TOKEN}`. The token itself stays
+in the environment or a gitignored `.dev.vars`. Do not commit it. The same
+file is where local R2 S3 credentials live (`R2_ACCESS_KEY_ID`,
+`R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT`). Wrangler still uses the bucket
+bindings, not those S3 keys, for the Worker.
+
 Before adding App Router pages, route handlers, or server actions, read the
 current guide in that project's `node_modules/next/dist/docs/`.
 
@@ -122,6 +130,11 @@ HANDOFF_REGION
 CLAMD_HOST=127.0.0.1
 CLAMD_PORT=3310
 HANDOFF_ALLOW_UNSCANNED
+CLOUDFLARE_API_TOKEN
+CLOUDFLARE_ACCOUNT_ID
+R2_ACCESS_KEY_ID
+R2_SECRET_ACCESS_KEY
+R2_ENDPOINT
 ```
 
 ## File structure
