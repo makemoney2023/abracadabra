@@ -60,10 +60,12 @@ export async function claimUploadedFile(sql: Sql, now: number): Promise<ClaimedF
       `UPDATE files SET status = 'scanning', scan_attempts = scan_attempts + 1
        WHERE id = (
          SELECT id FROM files
-         WHERE status = 'uploaded' AND (next_scan_at IS NULL OR next_scan_at <= ?)
+         WHERE status = 'uploaded'
+           AND object_deleted_at IS NULL
+           AND (next_scan_at IS NULL OR next_scan_at <= ?)
          ORDER BY COALESCE(uploaded_at, created_at)
          LIMIT 1
-       ) AND status = 'uploaded'
+       ) AND status = 'uploaded' AND object_deleted_at IS NULL
        RETURNING id, batch_id, workspace_id, relative_path, extension, size_bytes, object_key, tag, scan_attempts`,
       [now],
     );
@@ -130,14 +132,14 @@ export async function scanClaimedFile(input: {
     await input.sql.run(
       `UPDATE files
        SET status = 'uploaded', sha256 = ?, scan_reason = ?, next_scan_at = ?
-       WHERE id = ? AND status = 'scanning'`,
+       WHERE id = ? AND status = 'scanning' AND object_deleted_at IS NULL`,
       [sha256, reason, input.now + decision.delaySeconds * 1000, input.file.id],
     );
   } else {
     await input.sql.run(
       `UPDATE files
        SET status = ?, sha256 = ?, scan_reason = ?, scanned_at = ?, next_scan_at = NULL
-       WHERE id = ? AND status = 'scanning'`,
+       WHERE id = ? AND status = 'scanning' AND object_deleted_at IS NULL`,
       [decision.status, sha256, reason, input.now, input.file.id],
     );
   }

@@ -24,6 +24,7 @@ type FileRow = {
   sha256: string | null;
   created_at: number;
   scanned_at: number | null;
+  object_deleted_at: number | null;
 };
 
 type BatchRow = {
@@ -181,6 +182,7 @@ export async function issueDownload(input: {
   if (!row || !can(input.caller, "file.download", { workspaceId: row.workspace_id })) {
     return { ok: false, status: 404, message: NOT_FOUND };
   }
+  if (row.object_deleted_at !== null) return { ok: false, status: 404, message: NOT_FOUND };
   if (row.status !== "clean") return { ok: false, status: 409, message: NOT_READY };
   const secret = signingSecret();
   if (!secret) return { ok: false, status: 503, message: LINKS_OFF };
@@ -218,7 +220,9 @@ export async function readSignedFile(input: {
   }
   if (!objectStorageEnabled()) return { ok: false, status: 503, message: STORAGE_OFF };
   const row = await input.sql.get<FileRow>("SELECT * FROM files WHERE id = ?", [input.fileId]);
-  if (!row || row.status !== "clean") return { ok: false, status: 404, message: NOT_FOUND };
+  if (!row || row.status !== "clean" || row.object_deleted_at !== null) {
+    return { ok: false, status: 404, message: NOT_FOUND };
+  }
   const bytes = await openObjectStore().read(row.object_key);
   if (!bytes) return { ok: false, status: 404, message: NOT_FOUND };
   return { ok: true, bytes, disposition: attachmentDisposition(row.relative_path) };
@@ -385,6 +389,7 @@ export async function listFolderFiles(
      WHERE f.batch_id IN (${placeholders})
        AND b.discarded_at IS NULL
        AND b.deleted_at IS NULL
+       AND f.object_deleted_at IS NULL
      ORDER BY f.relative_path`,
     ids,
   );
@@ -396,6 +401,98 @@ export async function listFolderFiles(
     status: row.status,
     createdBy: row.created_by,
   }));
+}
+
+const OPEN_UPLOAD = new Set(["pending", "uploading", "uploaded", "scanning"]);
+const DELETED_REASON = "You deleted this file.";
+
+/** One folder name, with no slashes or hidden-dot names. */
+export function plainFolderName(name: string): boolean {
+  if (name.length === 0 || name.length > 200) return false;
+  if (name.startsWith(".")) return false;
+  return !/[\\/\u0000]/.test(name);
+}
+
+function likePrefix(name: string): string {
+  return `${name.replace(/[\\%_]/g, "\\$&")}/%`;
+}
+
+export async function deleteUploadedFile(input: {
+  sql: Sql;
+  caller: Caller;
+  batchId: string;
+  fileId: string;
+  now: number;
+}): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
+  const row = await visibleFile(input.sql, input.caller, input.batchId, input.fileId);
+  if (!row || !input.caller.userId) return { ok: false, status: 404, message: NOT_FOUND };
+  const batch = await input.sql.get<{ created_by: string; discarded_at: number | null; deleted_at: number | null }>(
+    "SELECT created_by, discarded_at, deleted_at FROM batches WHERE id = ? AND workspace_id = ?",
+    [row.batch_id, row.workspace_id],
+  );
+  if (!batch || batch.deleted_at !== null || batch.discarded_at !== null) {
+    return { ok: false, status: 404, message: NOT_FOUND };
+  }
+  if (batch.created_by !== input.caller.userId) return { ok: false, status: 404, message: NOT_FOUND };
+  if (row.object_deleted_at !== null) return { ok: true };
+  if (!objectStorageEnabled()) return { ok: false, status: 503, message: STORAGE_OFF };
+  await openObjectStore().remove(row.object_key);
+  if (OPEN_UPLOAD.has(row.status)) {
+    await input.sql.run(
+      `UPDATE files
+       SET object_deleted_at = ?, status = 'failed', scan_reason = ?
+       WHERE id = ? AND object_deleted_at IS NULL`,
+      [input.now, DELETED_REASON, row.id],
+    );
+  } else {
+    await input.sql.run("UPDATE files SET object_deleted_at = ? WHERE id = ? AND object_deleted_at IS NULL", [
+      input.now,
+      row.id,
+    ]);
+  }
+  await audit(input.sql, row.workspace_id, input.caller.userId, "file.deleted", "file", row.id, input.now, {
+    relativePath: row.relative_path,
+  });
+  return { ok: true };
+}
+
+export async function deleteUploadedFolder(input: {
+  sql: Sql;
+  caller: Caller;
+  workspaceId: string;
+  folderName: string;
+  now: number;
+}): Promise<{ ok: true; removed: number } | { ok: false; status: number; message: string }> {
+  if (!plainFolderName(input.folderName)) {
+    return { ok: false, status: 422, message: "That folder name doesn't work." };
+  }
+  if (!input.caller.userId || !can(input.caller, "workspace.view", { workspaceId: input.workspaceId })) {
+    return { ok: false, status: 404, message: NOT_FOUND };
+  }
+  const rows = await input.sql.all<{ id: string; batch_id: string }>(
+    `SELECT f.id, f.batch_id
+     FROM files f
+     JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
+     WHERE f.workspace_id = ?
+       AND b.created_by = ?
+       AND b.discarded_at IS NULL
+       AND b.deleted_at IS NULL
+       AND f.object_deleted_at IS NULL
+       AND f.relative_path LIKE ? ESCAPE '\\'`,
+    [input.workspaceId, input.caller.userId, likePrefix(input.folderName)],
+  );
+  if (rows.length === 0) return { ok: false, status: 404, message: "That folder is already gone." };
+  for (const row of rows) {
+    const removed = await deleteUploadedFile({
+      sql: input.sql,
+      caller: input.caller,
+      batchId: row.batch_id,
+      fileId: row.id,
+      now: input.now,
+    });
+    if (!removed.ok) return removed;
+  }
+  return { ok: true, removed: rows.length };
 }
 
 export async function batchesOnWorkspace(

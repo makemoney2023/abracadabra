@@ -67,12 +67,14 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
         </div>
       ) : (
         <FolderFiles
+          slug={workspace.slug}
           files={files.map((file) => ({
             id: file.id,
             batchId: file.batchId,
             name: file.name,
             sizeBytes: file.sizeBytes,
             status: file.status,
+            deletable: file.createdBy === caller.userId,
             moreHref: can(caller, "file.tag", { workspaceId: workspace.id })
               ? `/w/${workspace.slug}/batches/${file.batchId}`
               : null,
