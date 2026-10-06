@@ -16,6 +16,8 @@ Status: plan. Nothing here is built yet. Decisions D1 to D6 are made (section 10
 7. We send **invoices** and record **payments** against each client and project.
 8. AI agents can run the work through MCP: move stages, add and close tasks, post status updates,
    and send invoices. Every change they make is on the timeline with their name on it.
+9. A client's **GitHub repos** are linked to their record (and to a project when it fits). Pull
+   requests, merges, releases, and deploys show on the client timeline.
 
 If it is not in the dashboard, it did not happen.
 
@@ -54,6 +56,8 @@ Routes:
 | `hq` `/settings/keys` | super admin | MCP keys and their scopes |
 | `hq` `/api/intake/*` | signed senders only | Lead, booking, and payment intake (section 4) |
 | `hq` `/api/mcp` | MCP keys only | Agent tools (section 7) |
+| `hq` `/api/github/webhook` | GitHub only (signed) | Repo events for the timeline (section 7) |
+| `hq` `/settings/github` | super admin | GitHub App install and repo linking |
 | Handoff `/w/[slug]` | clients | Handoff space, as today |
 
 Clients never see CRM pages. Staff pages check the `staff` role on every request. The staff session
@@ -69,6 +73,7 @@ cookie is set for `hq` only, so a client page can never read it.
 | Lead intake buffer | Queue `lead-intake` |
 | Daily jobs (stale leads, due tasks, late invoices, digest) | Cron Trigger |
 | Agent jobs (status updates, follow-ups) | Queue `agent-actions` |
+| GitHub webhook buffer | Queue `github-events` |
 | Email out | Existing Handoff email sender (status updates, invoices, reminders) |
 | Invoice PDFs | R2 |
 | Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker |
@@ -314,6 +319,32 @@ CREATE TABLE status_updates (
   published_at INTEGER
 );
 
+-- GitHub App installs we can read from. One per GitHub account (ours or a client's).
+CREATE TABLE github_installations (
+  id INTEGER PRIMARY KEY,          -- GitHub installation id
+  account_login TEXT NOT NULL,     -- GitHub user or org name
+  account_type TEXT NOT NULL CHECK (account_type IN ('User', 'Organization')),
+  organization_id TEXT REFERENCES organizations(id),  -- set when the install belongs to one client
+  suspended_at INTEGER,
+  created_at INTEGER NOT NULL
+);
+
+-- Repos linked to a client, and to a project when it fits.
+CREATE TABLE repos (
+  id TEXT PRIMARY KEY,
+  github_repo_id INTEGER NOT NULL UNIQUE,   -- stays the same if the repo is renamed or moved
+  installation_id INTEGER REFERENCES github_installations(id),
+  full_name TEXT NOT NULL,                  -- 'owner/name', refreshed from webhooks
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  project_id TEXT REFERENCES projects(id),
+  default_branch TEXT,
+  is_private INTEGER NOT NULL DEFAULT 1,
+  owned_by TEXT NOT NULL CHECK (owned_by IN ('client', 'agency')),
+  linked_by TEXT,                           -- actor id
+  created_at INTEGER NOT NULL,
+  archived_at INTEGER
+);
+
 -- Write calls we already ran, so a retried agent call does nothing twice.
 CREATE TABLE idempotency_keys (
   key TEXT NOT NULL,
@@ -334,8 +365,11 @@ CREATE TABLE intake_receipts (
 ```
 
 Plus indexes on every foreign key, `deals(stage, updated_at)`, `tasks(assignee_user_id, status, due_at)`,
-`activities(organization_id, created_at)`, `invoices(status, due_at)`, and
-`status_updates(project_id, created_at)`.
+`activities(organization_id, created_at)`, `invoices(status, due_at)`,
+`status_updates(project_id, created_at)`, and `repos(organization_id)`.
+
+GitHub events reuse `intake_receipts` with `source = 'github'` and the delivery id, so a redelivered
+webhook does nothing twice.
 
 `knowledge_keys` (from `0004_knowledge.sql`) gets a `scopes` column: a comma list of `read`, `work`,
 and `billing`. Old keys default to `read`.
@@ -372,7 +406,9 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 
 **Client page (`hq /clients/[id]`)**
 - Top: name, website, owner, kind, main contact.
-- Tabs: Overview, Contacts, Deals, Projects, Spaces, Invoices, Timeline.
+- Tabs: Overview, Contacts, Deals, Projects, Spaces, Repos, Invoices, Timeline.
+- Repos tab: linked repos with last push, open pull requests, and latest release. "Link a repo"
+  picks from repos our GitHub App can see. Each repo can be tied to one project.
 - Overview shows the latest Readiness Check scores, open tasks, and a short AI summary of the timeline
   (Workers AI, marked "AI summary").
 - Add note, log call, add task right from the page.
@@ -380,6 +416,7 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 **Project page (`hq /projects/[id]`)**
 - Milestones with tasks under each. Check off tasks.
 - Linked Handoff space: open requests, recent files, storage used.
+- Linked repos: open pull requests and recent merges, so status updates can say what shipped.
 - Status and due date at the top.
 - Status updates: write one, pick internal or client, then publish. Client updates show in the
   Handoff space and can be emailed. Agent drafts wait here for a person to publish.
@@ -436,6 +473,29 @@ Rules for every write tool:
   after the due date, and a daily staff digest.
 - Jobs write as `actor_kind = 'system'` and follow the same rules as agents.
 
+### GitHub repos
+
+Each client's repos link to their client record, and to a project when it fits.
+
+- **GitHub App.** We make one GitHub App. It asks for read-only access: metadata, contents (read),
+  pull requests, issues, deployments, and releases. A client installs it on their org and picks which
+  repos it can see. Repos we own for them live under our org's install.
+- **Linking.** A super admin opens `hq /settings/github` to see each install and its repos. Staff link a
+  repo from the client's Repos tab. Repos are keyed by GitHub's repo id, so a rename or move keeps the
+  link.
+- **Events.** GitHub sends webhooks to `hq /api/github/webhook`. We check the `X-Hub-Signature-256`
+  header with `GITHUB_WEBHOOK_SECRET`, then put the event on the `github-events` Queue and return
+  fast. Bad signatures get a 401. Repeat deliveries are dropped using the delivery id in
+  `intake_receipts`.
+- **Timeline.** The consumer writes `activities` rows (`actor_kind = 'system'`) for linked repos only:
+  pull request opened, pull request merged, release published, deploy succeeded or failed, and pushes
+  to the default branch (one row per push, not per commit). Rename and transfer events update
+  `full_name`. Uninstall or suspend marks the install so its repos show as disconnected.
+- **MCP.** `read` adds `list_repos` and `repo_activity`. `work` adds `link_repo` and `unlink_repo`.
+  Agents can use merged pull requests to draft the weekly status update.
+- **No code in our data.** We store repo names and event summaries (titles, numbers, links, authors),
+  never file contents or diffs. Code never goes into AI Gateway prompts.
+
 ## 8. Login and safety
 
 - Staff only, using the same Magic password login and `staff` table.
@@ -450,6 +510,8 @@ Rules for every write tool:
   No card numbers ever touch our Worker; the provider holds them.
 - Secrets added: `INTAKE_SIGNING_SECRET` (both Workers), and `STRIPE_WEBHOOK_SECRET` if we pick Stripe
   (D8). Add to `.env.example` and the Handoff README.
+- GitHub secrets: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`. We make a
+  short-lived install token per call and never store or log it. Add to `.env.example` and the README.
 - Survey answers can hold personal info. Keep them in D1 only, never in logs or AI Gateway prompts
   without a reason. AI summaries use notes and activity text, not raw answers.
 - Deleting a contact on request: remove their contact row and blank their email in assessments.
@@ -468,13 +530,15 @@ Each step ships on its own and is useful on its own.
    Supabase leads once with a script.
 4. **Pipeline.** Deals, stage board, won flow (deal to client to project to space).
 5. **Projects and work.** Milestones, tasks, status updates, `hq /work`, Today screen.
-6. **Invoices and payments.** Invoice screens, PDF to R2, send by email, record payments by hand,
+6. **GitHub repos.** GitHub App, `0006_github.sql`, `hq /settings/github`, signed webhook,
+   `github-events` Queue, Repos tab on the client and project pages.
+7. **Invoices and payments.** Invoice screens, PDF to R2, send by email, record payments by hand,
    client read-only view in Handoff. Stripe webhook if D8 says so.
-7. **MCP read and write tools.** Key scopes, all tools in section 7, idempotency, rate limits, agent
+8. **MCP read and write tools.** Key scopes, all tools in section 7, idempotency, rate limits, agent
    log and undo. Client-facing tools start as drafts only.
-8. **Automation.** Cron and the `agent-actions` Queue: status-update drafts, follow-ups, invoice
+9. **Automation.** Cron and the `agent-actions` Queue: status-update drafts, follow-ups, invoice
    reminders, daily digest. AI client summary.
-9. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
+10. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
    scans, Cron for the sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
 
 Each step: tests first, then code, then lint, type check, deploy, and a live check.
@@ -489,7 +553,7 @@ Made:
 - **D4. Stages.** `new, contacted, call_booked, proposal, won, lost`.
 - **D5. Full MCP writes.** Agents can run the work: stages, tasks, status updates, invoices. Scoped
   keys, full audit, drafts first for anything a client sees.
-- **D6. Money.** Invoices and payments are in this plan (section 5 and step 6).
+- **D6. Money.** Invoices and payments are in this plan (section 5 and step 7).
 
 Still open:
 
@@ -497,10 +561,13 @@ Still open:
 - **D8. Payments.** Record payments by hand only, or also take card and bank payments through Stripe
   (pay link on the invoice, signed webhook marks it paid)?
 - **D9. Invoice numbers and tax.** Number format (`INV-2026-0001`?) and whether we add sales tax.
+- **D10. GitHub access.** (a) Do clients install our GitHub App on their own org, do their repos live
+  in our org, or both? The plan supports both. (b) Read-only to start, or should agents also open
+  issues and pull requests? Write access needs more App permissions and its own MCP scope.
 
 ## 11. Risks
 
-- **Two homes for leads during the bridge.** Until step 7, the Readiness Check still has its own copy.
+- **Two homes for leads during the bridge.** Until step 10, the Readiness Check still has its own copy.
   The dashboard is the source of truth for everything after intake. Staff should not edit leads in the
   old `/ops` inbox once step 3 ships.
 - **D1 size and speed.** D1 is fine for an agency's volume. Keep the timeline indexed and paged.
@@ -514,5 +581,9 @@ Still open:
   redo instead of edit.
 - **Two hosts, one app.** A bug in host routing could show a staff page on the client domain. Test
   every staff route returns 404 on the Handoff host.
+- **Client code access.** Our App can read client repos. Ask for the fewest permissions, read-only
+  first. Clients pick which repos it sees. Keep the private key in Worker secrets only, make tokens
+  per call, and never copy code into D1, logs, or AI prompts. If a client leaves, they uninstall the
+  App and we mark their repos disconnected.
 - **Lost intake.** If the Queue consumer fails, the message retries. Failed messages go to a dead
   letter queue and show on the Today screen.
