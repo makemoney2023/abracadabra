@@ -583,7 +583,7 @@ git commit -m "Create a handoff batch from a validated manifest."
 - Create: `src/app/api/batches/[batchId]/files/[fileId]/complete/route.ts`
 - Test: route tests
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - a grant for a `pending` or `failed` file in an active batch succeeds and
   updates `last_activity_at`
@@ -593,7 +593,7 @@ git commit -m "Create a handoff batch from a validated manifest."
 - a repeat completion returns the same row and enqueues nothing
 - a size mismatch marks `failed` and deletes the object
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 Completion reads object metadata only.
 
