@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { openSession } from "@/lib/current";
+import { isHqHost } from "@/lib/host";
 import { addStaff } from "@/lib/store/staff";
 import { assignOperator, createWorkspace, type PolicyProfile } from "@/lib/store/workspaces";
 
@@ -37,7 +39,8 @@ export async function createWorkspaceAction(_previous: FormState, formData: Form
     },
   });
   if (!created.ok) return { message: created.message };
-  redirect(`/w/${created.value.slug}`);
+  const host = (await headers()).get("host") ?? "";
+  redirect(isHqHost(host) ? "/spaces" : `/w/${created.value.slug}`);
 }
 
 export async function addStaffAction(_previous: FormState, formData: FormData): Promise<FormState> {

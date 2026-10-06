@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { HqHome } from "./hq-home";
 import { SignInForm } from "./sign-in-form";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
+import { hqOrigin, isHqHost } from "@/lib/host";
 import { renamePreviewLocker } from "@/lib/preview-session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -11,7 +14,20 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const openFailed = notice === "open";
   const shareFailed = notice === "share";
   const { sql, caller } = await openSession();
+  const host = (await headers()).get("host") ?? "";
+  if (isHqHost(host)) {
+    return (
+      <HqHome
+        signedIn={Boolean(caller.userId)}
+        staff={Boolean(caller.staff)}
+        linkExpired={linkExpired}
+        openFailed={openFailed}
+        shareFailed={shareFailed}
+      />
+    );
+  }
   await renamePreviewLocker(sql);
+  const staffHome = hqOrigin();
   const workspaces = await workspacesFor(sql, caller);
   const admin = caller.staff?.superAdmin === true;
   if (caller.userId) {
@@ -44,12 +60,12 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         )}
         {admin ? (
           <div className="flex gap-4 text-sm">
-            <Link href="/admin/workspaces/new">Add a client</Link>
-            <Link href="/admin">Staff tools</Link>
+            <Link href={`${staffHome}/spaces/new`}>New space</Link>
+            <Link href={`${staffHome}/spaces`}>Staff tools</Link>
           </div>
         ) : null}
         {caller.staff && !admin ? (
-          <Link href="/admin/templates" className="text-sm">
+          <Link href={`${staffHome}/spaces/templates`} className="text-sm">
             File asks
           </Link>
         ) : null}

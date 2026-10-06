@@ -14,7 +14,7 @@ export default async function TemplatesPage() {
         <h1 className="font-heading text-4xl leading-tight">Request templates</h1>
         <div className="flex gap-4 text-sm">
           <Link href="/">Home</Link>
-          {caller.staff?.superAdmin ? <Link href="/admin">Staff tools</Link> : null}
+          {caller.staff?.superAdmin ? <Link href="/spaces">Staff tools</Link> : null}
         </div>
       </div>
       <Card>

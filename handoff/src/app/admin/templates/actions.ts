@@ -13,7 +13,12 @@ import {
 
 export type TemplateState = { message: string };
 
-const PATH = "/admin/templates";
+const PATH = "/spaces/templates";
+
+function refreshTemplates(): void {
+  revalidatePath(PATH);
+  revalidatePath("/admin/templates");
+}
 
 export async function createTemplateAction(
   _previous: TemplateState,
@@ -27,7 +32,7 @@ export async function createTemplateAction(
     name: String(formData.get("name") ?? ""),
   });
   if (!created.ok) return { message: created.message };
-  revalidatePath(PATH);
+  refreshTemplates();
   return { message: "Template added." };
 }
 
@@ -45,7 +50,7 @@ export async function addTemplateItemAction(
     suggestedTag: String(formData.get("suggestedTag") ?? ""),
   });
   if (!created.ok) return { message: created.message };
-  revalidatePath(PATH);
+  refreshTemplates();
   return { message: "Item added." };
 }
 
@@ -69,7 +74,7 @@ export async function moveTemplateItemAction(
   orderedIds.splice(swap, 0, moved);
   const result = await reorderTemplateItems({ sql, caller, templateId, orderedIds });
   if (!result.ok) return { message: result.message };
-  revalidatePath(PATH);
+  refreshTemplates();
   return { message: "Moved." };
 }
 
@@ -85,7 +90,7 @@ export async function retireTemplateItemAction(
     itemId: String(formData.get("itemId") ?? ""),
   });
   if (!result.ok) return { message: result.message };
-  revalidatePath(PATH);
+  refreshTemplates();
   return { message: "Item put away." };
 }
 
@@ -101,6 +106,6 @@ export async function retireTemplateAction(
     now: Date.now(),
   });
   if (!result.ok) return { message: result.message };
-  revalidatePath(PATH);
+  refreshTemplates();
   return { message: "Template put away." };
 }

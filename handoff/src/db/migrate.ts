@@ -6,6 +6,7 @@ const STEPS = [
   { file: "0002_sessions.sql", table: "sessions" },
   { file: "0003_upload_shares.sql", table: "upload_shares" },
   { file: "0004_knowledge.sql", table: "file_reads" },
+  { file: "0005_crm.sql", table: "organizations" },
 ] as const;
 
 /** D1 rejects a script whose first line is a comment, so each statement is run on its own. */
