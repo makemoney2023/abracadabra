@@ -17,7 +17,13 @@ export const signedOutCaller: Caller = {
 export type WorkspaceRecord = {
   id: string;
   slug: string;
+  name: string;
   display_name: string;
+  logo_object_key: string | null;
+  sender_name: string;
+  policy_profile: string;
+  quota_bytes: number;
+  retention_days: number;
   status: string;
 };
 

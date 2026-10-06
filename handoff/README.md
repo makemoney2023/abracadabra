@@ -15,7 +15,7 @@ npm test
 npm run dev
 ```
 
-`npm test` runs the unit suite, including workspace isolation. Those tests apply `migrations/0001_handoff.sql` to Node's built-in SQLite. `npm run test:db` runs the same isolation file. No Docker or hosted database is required.
+`npm test` runs the unit suite, including workspace isolation. Those tests apply `migrations/0001_handoff.sql` and `migrations/0002_sessions.sql` to Node's built-in SQLite. `npm run test:db` runs the same isolation file. No Docker or hosted database is required.
 
 Copy `.env.example` to `.env.local` for the Next app and to `.dev.vars` for Wrangler. Leave secrets out of git. Local runs that are not inside a Worker store records in `.data/handoff.db`.
 
@@ -24,3 +24,5 @@ Copy `.env.example` to `.env.local` for the Next app and to `.dev.vars` for Wran
 The app runs on Cloudflare Workers through OpenNext (`@opennextjs/cloudflare`). Locker records live in D1 database `handoff`, bound as `DB` in `wrangler.jsonc`. File bytes go to R2 with multipart uploads once R2 is enabled on the account. The malware scan runs in a Cloudflare Container, because a Worker isolate cannot run `clamd`. Magic links go out through Resend and the session lives in D1 (`users`, `magic_links`, and `sessions` in `migrations/0002_sessions.sql`). A link is sent only for an allow-listed bootstrap address while staff is empty, or for a live staff, membership, or active-workspace invite. The form does not say which case applied. Production refuses to start without `RESEND_API_KEY`. `HANDOFF_ALLOW_UNSCANNED=1` is refused when `NODE_ENV=production`.
 
 `GET /api/health` migrates a local database if needed and reports `{ database: "d1", ok, visible }` for a signed-out caller. `visible` is how many workspaces that caller can see. It does not list names or counts of hidden rows.
+
+A super-admin opens a workspace from `/admin`, assigns operators from `/admin/staff`, and sets the file policy and quota. Creating a workspace from a template copies that template's items into `requests`. Later template edits do not change the copy. Staff upload a PNG or WebP logo of at most 512 KB. The server decodes and re-encodes it to PNG before storing it under `.data/branding` (`HANDOFF_BRANDING_PATH` overrides that directory, or the `BRANDING` R2 binding when that bucket exists). The workspace layout shows `display_name` and that logo. A workspace the caller cannot see returns 404.

@@ -479,7 +479,7 @@ git commit -m "Sign in to Handoff with branded magic links."
 - Create: `src/lib/store/workspaces.ts`
 - Test: action tests with a fake store
 
-- [ ] **Step 1: Write failing action tests**
+- [x] **Step 1: Write failing action tests**
 
 - only a super-admin creates a workspace, assigns operators, or changes
   profile and quota
@@ -487,11 +487,11 @@ git commit -m "Sign in to Handoff with branded magic links."
 - a logo that is not PNG or WebP, or over 512 KB, is refused
 - an accepted logo is re-encoded before it is stored in `branding`
 
-- [ ] **Step 2: Implement**
+- [x] **Step 2: Implement**
 
 The workspace layout reads `display_name` and the logo for every screen.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "Create branded handoff workspaces and assign operators."

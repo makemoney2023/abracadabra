@@ -58,5 +58,6 @@ describe("openHandoffDb", () => {
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'workspaces'",
     );
     expect(tables).toEqual([{ name: "workspaces" }]);
+    expect(Object.getPrototypeOf(tables[0])).toBe(Object.prototype);
   });
 });

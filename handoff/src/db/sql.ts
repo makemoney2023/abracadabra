@@ -18,6 +18,10 @@ export type D1Like = {
   exec(statement: string): Promise<unknown>;
 };
 
+function plainRow<T>(row: T): T {
+  return { ...(row as object) } as T;
+}
+
 export function sqliteSql(db: DatabaseSync): Sql {
   return {
     async exec(statement) {
@@ -27,11 +31,11 @@ export function sqliteSql(db: DatabaseSync): Sql {
       db.prepare(statement).run(...params);
     },
     async all<T>(statement: string, params: readonly unknown[] = []) {
-      return db.prepare(statement).all(...params) as T[];
+      return (db.prepare(statement).all(...params) as T[]).map((row) => plainRow(row));
     },
     async get<T>(statement: string, params: readonly unknown[] = []) {
       const row = db.prepare(statement).get(...params);
-      return (row ?? undefined) as T | undefined;
+      return row == null ? undefined : plainRow(row as T);
     },
   };
 }
