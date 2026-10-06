@@ -104,7 +104,7 @@ npm run deploy
 - **Code touchpoints** — `wrangler.jsonc`.
 - **Data-flow impact** — The public apex is served by the Worker. `www` is a zone Redirect Rule, not a Worker route.
 - **API / schema impact** — none.
-- **Verification** — recorded after the live attach.
+- **Verification** — `node --test tests/cloudflare-deploy.test.mjs` passed. Live, through Cloudflare anycast `104.21.74.23`: `https://abra-ca-dabra.app/` HTTP/2 200, `server: cloudflare`, no `x-vercel-id`, title "Abra-ca-dabra: From thought to working software". `https://www.abra-ca-dabra.app/films.html?from=www` HTTP/2 308 to `https://abra-ca-dabra.app/films.html?from=www`. `https://check.abra-ca-dabra.app/check` HTTP/2 200 with `x-vercel-id` present (still Vercel). Marketing preview `https://abracadabra-marketing.abracadabra-ai.workers.dev/` HTTP/2 200 with `x-robots-tag: noindex`.
 
 ## Cloudflare revision — 2026-10-06
 

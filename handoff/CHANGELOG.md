@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `handoff/src/lib/host.ts`, `handoff/.env.example`, `scrollcraft/builds/abracadabra-ai/wrangler.jsonc`
 - **Data-flow impact** — `HANDOFF_HQ_ORIGIN` is `https://hq.abra-ca-dabra.app`. `HANDOFF_APP_ORIGIN` is `https://handoff.abra-ca-dabra.app`. The workers.dev staff host still counts as HQ. The Readiness Check still posts to the client workers.dev origin.
 - **API / schema impact** — none.
-- **Verification** — pending the live domain attach.
+- **Verification** — `node --test tests/cloudflare-deploy.test.mjs` in the marketing folder passed. `npx vitest run src/lib/host.test.ts` in `handoff/` passed (6). Full `npm test`, lint, and `tsc` were not re-run; the host change is a comment. Live, through Cloudflare anycast `104.21.74.23`: `https://abra-ca-dabra.app/` HTTP/2 200, `server: cloudflare`, no `x-vercel-id`, title "Abra-ca-dabra: From thought to working software". `https://www.abra-ca-dabra.app/films.html?from=www` HTTP/2 308 to `https://abra-ca-dabra.app/films.html?from=www`. `https://check.abra-ca-dabra.app/check` HTTP/2 200 with `x-vercel-id` present (still Vercel). `https://handoff.abra-ca-dabra.app/api/health` HTTP/2 200 `{"database":"d1","ok":true,"visible":0}`. `https://handoff.abra-ca-dabra.app/clients` HTTP/2 404 "This page is not here." `https://hq.abra-ca-dabra.app/spaces` HTTP/2 307 `location: /login`. Marketing preview `https://abracadabra-marketing.abracadabra-ai.workers.dev/` HTTP/2 200 with `x-robots-tag: noindex`. Client worker version `f6234783-9a73-459e-87a1-25e5b916639b`. Staff worker version `6ea04373-5866-45c2-bfd9-65cb4d9ad84b`.
 
 ## 2026-10-06
 
