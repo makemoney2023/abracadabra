@@ -10,6 +10,7 @@ import { issueDownload } from "@/lib/downloads";
 import {
   chunkText,
   issueKnowledgeKey,
+  listFileReads,
   readSpaceFiles,
   searchSpace,
   wordsFromBytes,
@@ -239,6 +240,32 @@ describe("space knowledge", () => {
       readBytes,
     });
     expect(refused.ok).toBe(false);
+  });
+
+  it("hides a deleted file from the reading list and from search", async () => {
+    const sql = await db();
+    await seed(sql);
+    const bytes = new Map<string, Uint8Array>([
+      [`${WORKSPACE}/${BATCH}/${FILE}`, new TextEncoder().encode("Our brand colors are blue and gold.")],
+    ]);
+    await readSpaceFiles({
+      sql,
+      caller: owner,
+      workspaceId: WORKSPACE,
+      now: Date.now(),
+      understander: reader,
+      readBytes: async (key) => bytes.get(key) ?? null,
+    });
+    await sql.run("UPDATE files SET object_deleted_at = ? WHERE id = ?", [Date.now(), FILE]);
+    const listed = await listFileReads(sql, WORKSPACE);
+    expect(listed.map((row) => row.name)).not.toContain("brief.txt");
+    const found = await searchSpace({
+      sql,
+      workspaceId: WORKSPACE,
+      query: "blue and gold",
+      understander: null,
+    });
+    expect(found).toEqual([]);
   });
 
   it("keeps download closed while an uploaded file can still be previewed", async () => {

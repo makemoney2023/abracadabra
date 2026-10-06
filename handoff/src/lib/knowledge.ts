@@ -294,7 +294,9 @@ export async function searchSpace(input: {
   const rows = await input.sql.all<PassageRow>(
     `SELECT f.relative_path AS file_name, p.body AS passage, r.summary AS summary, p.embedding
      FROM file_passages p
-     JOIN files f ON f.id = p.file_id
+     JOIN files f ON f.id = p.file_id AND f.object_deleted_at IS NULL
+     JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
+       AND b.discarded_at IS NULL AND b.deleted_at IS NULL
      LEFT JOIN file_reads r ON r.file_id = p.file_id
      WHERE p.workspace_id = ?
      ORDER BY f.relative_path, p.position`,
@@ -338,7 +340,9 @@ export async function listFileReads(
   return sql.all<{ name: string; status: string }>(
     `SELECT f.relative_path AS name, r.status AS status
      FROM file_reads r
-     JOIN files f ON f.id = r.file_id
+     JOIN files f ON f.id = r.file_id AND f.object_deleted_at IS NULL
+     JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
+       AND b.discarded_at IS NULL AND b.deleted_at IS NULL
      WHERE r.workspace_id = ?
      ORDER BY f.relative_path`,
     [workspaceId],
