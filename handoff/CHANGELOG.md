@@ -2,6 +2,15 @@
 
 ## 2026-10-06
 
+- **What changed** — Deployed `main` after the hostname cutover. Marketing Worker `abracadabra-marketing` is version `efc2764d-ddf2-4489-9eda-86778e21908b`. Client worker `handoff` is version `fa3dce27-fb33-4e3e-bac3-5e5aecb11b5d`. Staff worker `handoff-hq` is version `9c6d6b97-35ef-4e02-bce8-8525dc1e3d75`.
+- **Why** — The custom domains were already attached. This deploy publishes the `main` scripts onto those hosts.
+- **Code touchpoints** — none in this commit beyond the record. The scripts came from the merge of #50.
+- **Data-flow impact** — none. Secrets stayed in place. Plain origins stayed `https://hq.abra-ca-dabra.app` and `https://handoff.abra-ca-dabra.app`.
+- **API / schema impact** — none.
+- **Verification** — Through Cloudflare anycast `104.21.74.23`: apex HTTP/2 200, `server: cloudflare`, no `x-vercel-id`. `www` `/films.html?from=www` HTTP/2 308 to the apex with the query. `check` `/check` HTTP/2 200 with `x-vercel-id`. Client `/api/health` HTTP/2 200 `{"database":"d1","ok":true,"visible":0}`. Client `/clients` HTTP/2 404 "This page is not here." Staff `/spaces` HTTP/2 307 `location: /login`. Marketing preview HTTP/2 200 with `x-robots-tag: noindex`.
+
+## 2026-10-06
+
 - **What changed** — The agency dashboard gameplan matches the two live workers and the custom domains. Staff are `handoff-hq` at `https://hq.abra-ca-dabra.app`. Clients are `handoff` at `https://handoff.abra-ca-dabra.app`. They share D1 and R2. The skill-library notes say the Cloudflare agent is step 10 and that worker is not built yet. Client and project routes include linked repos.
 - **Why** — The hostname cutover and the hub-doc pass both needed to land together. The earlier hub pass still described the workers.dev staff host as the public door.
 - **Code touchpoints** — `docs/agency-dashboard-gameplan.md`, `README.md`, `.cursor/skills/README.md`
