@@ -705,14 +705,14 @@ git commit -m "Email operators and clients about handoff progress."
 - Create: `src/worker/jobs/delete-rejected.ts`
 - Test: job tests
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 - files still `pending` or `uploading` in an inactive batch become `failed`
   and queue the uploader email
 - rejected and failed objects older than 14 days are deleted and the row
   records `object_deleted_at`
 
-- [ ] **Step 2: Implement, test, and commit**
+- [x] **Step 2: Implement, test, and commit**
 
 ```bash
 git commit -m "Close idle handoff batches and delete rejected objects."

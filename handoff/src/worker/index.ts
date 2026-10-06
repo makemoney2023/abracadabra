@@ -3,8 +3,10 @@ import { pathToFileURL } from "node:url";
 import { openHandoffDb } from "@/db/open";
 import { localObjectBytesEnabled, openObjectStore } from "@/lib/store/objects";
 import { pingClamd, scanInstream } from "./clamd";
+import { deleteExpiredObjects } from "./jobs/delete-rejected";
 import { flushNotifications, publishScanOutcome } from "./jobs/notify";
 import { claimUploadedFile, scanClaimedFile } from "./jobs/scan";
+import { sweepClosedWindows } from "./jobs/sweep-windows";
 
 /** Production refuses to run without clamd, and refuses to mark unscanned files clean. */
 export async function workerBoot(input: {
@@ -57,17 +59,19 @@ async function main(): Promise<void> {
   await startHealthServer(port, pingClamd);
   const allowUnscanned = process.env.NODE_ENV !== "production" && process.env.HANDOFF_ALLOW_UNSCANNED === "1";
   for (;;) {
+    const sql = await openHandoffDb();
+    const now = Date.now();
+    await sweepClosedWindows(sql, now);
     if (!localObjectBytesEnabled() && !process.env.HANDOFF_OBJECT_PATH) {
       await sleep(5_000);
       continue;
     }
-    const sql = await openHandoffDb();
-    const claimed = await claimUploadedFile(sql, Date.now());
+    await deleteExpiredObjects(sql, openObjectStore(), now);
+    const claimed = await claimUploadedFile(sql, now);
     if (!claimed) {
       await sleep(1_000);
       continue;
     }
-    const now = Date.now();
     const decision = await scanClaimedFile({
       sql,
       store: openObjectStore(),
