@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: steps 1, 2, 3, and 4 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Step 4 is the pipeline at `/leads`: a stage board, a list with stage, source, and owner filters, and a won move that turns a lead into a client, then a project, then a space. Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 5 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email, including how `.cursor/skills` is wired in. Sending that mail waits on the same zone move. The agent worker is not built.
+Status: steps 1, 2, 3, and 4 are in the apps. Step 3 is the lead intake bridge. The Readiness Check POSTs a signed body to `https://handoff.abracadabra-ai.workers.dev/api/intake/assessment` and `/api/intake/booking` when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. The `handoff` worker consumes queue `lead-intake`. `handoff-hq` can enqueue the same queue and does not consume it. Step 4 is the pipeline at `/leads`: a stage board, a list with stage, source, and owner filters, and a won move that turns a lead into a client, then a project, then a space. Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 5 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email, including how the skill library is wired in. Sending that mail waits on the same zone move. The agent worker is not built.
 
 ## 1. What it does
 
@@ -695,8 +695,10 @@ Each step ships on its own and is useful on its own.
    tools, idempotency, rate limits, agent log and undo. Client-facing tools start as drafts only.
    `log_inbound_email` and `save_email_draft` land with step 10, when `client_messages` exists.
 10. **Agent runtime.** Worker `handoff-agent` on the Agents SDK. One instance per client. It calls
-   MCP with `can_publish` off. Cron wakes it. It saves status-update drafts, follow-up tasks, and
-   email drafts. It does not send mail yet. AI client summary for staff only.
+   MCP with `can_publish` off. Cron wakes it. On wake it loads the skill library index and follows
+   one matching skill. It finishes the work when the steps fit the MCP tools. It writes a plan and
+   a staff task when a step needs a program the Worker does not run. It saves status-update drafts,
+   follow-up tasks, and email drafts. It does not send mail yet. AI client summary for staff only.
 11. **Client email.** Cloudflare Email Service on `handoff-agent`: inbound handler, address routing,
    signed replies, drafts on the client page, staff press Send. Blocked until `abra-ca-dabra.app` is
    a zone on this account (SPF and DKIM). Handoff invite mail stays on its current sender.
@@ -902,26 +904,30 @@ CREATE TABLE client_messages (
 - An auto-reply is stored and does not create a draft.
 - A draft stays `draft` until a staff action sets `approved`.
 - The wake call refuses to send a row that is not `approved`.
-- MCP writes still go through `crm.ts`. The agent Worker has no D1 binding and no R2 binding.
+- MCP writes still go through `crm.ts`. The agent Worker has no D1 binding and no binding to the client file bucket. It has one read-only R2 binding, `SKILLS`, for the skill library.
 
 ### Skills
 
-`.cursor/skills` is the Cursor skill catalog. Cursor reads every `SKILL.md` in that tree. The groups are `community/`, `context-engineering/`, `cursor-managed/`, `integrations/`, `plugins/`, and `user/`. Most of those files tell a laptop agent how to use a browser, ffmpeg, a design tool, or another local program. A Worker isolate cannot run that work.
+The skill library is the SourceControl `skills/` copy in this repo. The files sit at `.cursor/skills/` (724 `SKILL.md` files). That path is where the copy was placed. The Cloudflare agent is a reader of those same files. The org pack (`skills/org`, 46 files) stays in SourceControl and is not in this copy.
 
-The agent worker does not bundle that tree, and it does not copy the files into the script.
+Each file is a procedure: a `name`, a one-line `description`, and the steps. The packs cover sales, finance, marketing, ads, SEO, research, operations, delivery, video, and CAD. Examples already in the tree: account research, a pitch, an invoice memo, a campaign, a status note, a shot list.
 
-On wake, `ClientAgent` loads a short index: the skill name, one line on what it is for, when to use it, and a mode of `plan` or `complete`. When the current task matches one row, the agent reads that one `SKILL.md`. A person adds a skill to the allowlist one at a time. The agent cannot add a skill itself.
+The agent worker does not bundle the tree into the script.
 
-A `plan` skill (video, CAD, Remotion, a local browser, a design tool) writes a plan and a staff task through `create_task`. It does not mark the work done.
+At step 10, a publish step reads every `SKILL.md` and writes two things into R2 bucket `handoff-skills`:
 
-A `complete` skill maps to MCP tools that already exist in this plan: `move_deal_stage`, `add_note`, `create_task`, `post_status_update` saved as a draft, `save_email_draft`, and `create_invoice` saved as a draft. `can_publish` stays off. Anything a client would read stays a draft until a person sends it.
+- `skills/index.json` — one row per file: path, name, description, pack.
+- The `SKILL.md` body, under the same path.
 
-The loader ships with step 10. This section is the contract. There is no skills file in the app yet, because nothing would read it.
+`handoff-agent` binds that bucket as `SKILLS`, read only. The client file bucket stays off this worker.
 
-The first allowlist, when step 10 lands:
+On wake, `ClientAgent` loads the index (names and descriptions only). It picks the one skill whose description matches the current task: a staff task, an inbound note, or a cron wake. It then reads that one file. It does not put the whole library in the prompt. It cannot add or delete a skill. A new skill lands by updating the folder and publishing the bucket again. A person can leave a pack out of the publish step.
 
-- Follow up on a deal with no next step. That writes a task and an email draft.
-- Monday status draft.
-- Invoice reminder draft.
+After it has the file, it does one of two things:
 
-Community video, CAD, and ads packs stay `plan` only, and only when a staff task asks for that kind of work.
+- **Complete.** Every step can be done with Workers AI plus the MCP tools in this plan (`move_deal_stage`, `add_note`, `create_task`, `post_status_update`, `save_email_draft`, `create_invoice`, and the GitHub and finished-work tools). The agent follows the skill and writes the result. `can_publish` stays off. Anything a client would read stays a draft until a person sends it.
+- **Plan.** A step needs a program the isolate does not run: a browser, ffmpeg, a design app, a CAD kernel, or a local CLI. The agent follows the skill far enough to write the plan (steps, prompts, files, checks) and opens a staff task through `create_task` that names the skill path. It does not mark that task done.
+
+Sales, finance, marketing, research, and ops skills are eligible to complete when their steps fit the tools. Video, CAD, Remotion, scroll, and design-tool skills plan, and they can still complete the writing part (the brief, the shot list, the prompts) as a draft or a task.
+
+The loader ships with step 10. This section is the contract. The app does not publish the bucket yet, because the agent worker is not built.
