@@ -19,6 +19,12 @@ type DropRow = {
   message: string;
 };
 
+function bytesAsArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(copy).set(bytes);
+  return copy;
+}
+
 const NOTICE =
   "Handoff is for brand files, photos, copy, exports, source, and reference files. Passwords, key files, and environment files are refused.";
 
@@ -54,7 +60,7 @@ async function uploadFile(batchId: string, fileId: string, file: File): Promise<
     send: async (partNumber, body) => {
       const url = urlByPart.get(partNumber);
       if (!url) throw new Error("That part is missing.");
-      const sent = await fetch(url, { method: "PUT", body });
+      const sent = await fetch(url, { method: "PUT", body: bytesAsArrayBuffer(body) });
       if (!sent.ok) throw new Error(await responseMessage(sent));
     },
   });

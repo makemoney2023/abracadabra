@@ -823,31 +823,36 @@ git commit -m "Archive, export, and purge a finished handoff workspace."
 
 ### Task 22: Provision and deploy
 
-- [ ] **Step 1: Supabase**
+- [x] **Step 1: Cloudflare Worker**
 
-Create the Handoff project on a paid plan in the region recorded as
-`HANDOFF_REGION`. Confirm it matches Strong Foam's operations region before
-the first invite. Set the global file size limit and the `handoff` bucket
-limit to at least 2 GB. Create the `branding` bucket. Configure Resend SMTP
-and the auth email template. Set the site URL and redirect URLs to the
-Handoff domain. Run migrations with `DIRECT_URL`.
+Deploy the Next.js app with OpenNext (`npx opennextjs-cloudflare build`, then
+`npx opennextjs-cloudflare deploy`). Worker name `handoff`. `main` is
+`.open-next/worker.js`. D1 database `handoff`
+(`b2be192c-db0d-447f-8d7c-b2c4d39df274`) is bound as `DB`. Assets bind as
+`ASSETS`. The service binding is `WORKER_SELF_REFERENCE`. `workers_dev` is
+on. Public URL: https://handoff.abracadabra-ai.workers.dev. Do not attach
+`abra-ca-dabra.app`.
 
-- [ ] **Step 2: Resend**
+- [x] **Step 2: Worker secrets**
 
-Verify the sending domain and set `HANDOFF_FROM_EMAIL`.
+Set `HANDOFF_SIGNING_SECRET` and `HANDOFF_APP_ORIGIN`
+(`https://handoff.abracadabra-ai.workers.dev`). Do not set `RESEND_API_KEY`,
+`HANDOFF_FROM_EMAIL`, or `HANDOFF_OBJECT_PATH`. Magic links fail closed.
+Uploads, scan object reads, and object purge return 503 until object storage
+exists.
 
-- [ ] **Step 3: Vercel**
+- [x] **Step 3: R2**
 
-Create a separate Vercel project for this repository. Set the environment
-contract. Attach the Handoff domain.
+R2 is not enabled on this account (API error 10042). Do not add an R2
+binding. The OpenNext incremental cache stays the dummy cache from
+`defineCloudflareConfig()`.
 
-- [ ] **Step 4: Render**
+- [x] **Step 4: Scan container**
 
-Create a background worker from `worker/Dockerfile`. Size it for the ClamAV
-signature database plus scanning headroom. Set the worker environment. Point
-the health check at `/health`.
+`worker/Dockerfile` is not deployed. A Worker isolate cannot run `clamd`.
+Do not claim EICAR or archive-limit acceptance on this Worker.
 
-- [ ] **Step 5: Record the deployment in `README.md` and commit**
+- [x] **Step 5: Record the deployment in `README.md` and commit**
 
 ```bash
 git commit -m "Document the Handoff deployment."

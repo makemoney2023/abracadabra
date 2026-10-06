@@ -16,6 +16,12 @@ const BATCH = "22222222-2222-4222-8222-222222222222";
 const FILE = "33333333-3333-4333-8333-333333333333";
 const BYTES = new Uint8Array([1, 2, 3, 4]);
 
+function setNodeEnv(value: string | undefined) {
+  const env = process.env as Record<string, string | undefined>;
+  if (value === undefined) delete env.NODE_ENV;
+  else env.NODE_ENV = value;
+}
+
 async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -61,7 +67,7 @@ describe("multipart upload", () => {
   const previousNodeEnv = process.env.NODE_ENV;
 
   afterEach(() => {
-    process.env.NODE_ENV = previousNodeEnv;
+    setNodeEnv(previousNodeEnv);
     delete process.env.HANDOFF_SQLITE_PATH;
     delete process.env.HANDOFF_OBJECT_PATH;
     if (directory) rmSync(directory, { recursive: true, force: true });
@@ -139,7 +145,7 @@ describe("multipart upload", () => {
   it("refuses local bytes in production when no object path is set", async () => {
     await db();
     delete process.env.HANDOFF_OBJECT_PATH;
-    process.env.NODE_ENV = "production";
+    setNodeEnv("production");
     const response = await create(1);
     expect(response.status).toBe(503);
     const body = (await response.json()) as { message: string };

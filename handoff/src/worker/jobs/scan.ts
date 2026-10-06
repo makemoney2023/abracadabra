@@ -3,6 +3,13 @@ import type { Sql } from "@/db/sql";
 import { decideScan, type ClamdResult, type ScanDecision } from "@/lib/scan";
 import type { ObjectStore } from "@/lib/store/objects";
 
+function copyBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
+  const copy = new ArrayBuffer(bytes.byteLength);
+  const owned = new Uint8Array(copy);
+  owned.set(bytes);
+  return owned;
+}
+
 export type ClaimedFile = {
   id: string;
   batchId: string;
@@ -121,9 +128,10 @@ export async function scanClaimedFile(input: {
   if (!bytes) {
     clamd = { kind: "error", detail: "That upload is not in storage yet." };
   } else {
-    sha256 = createHash("sha256").update(bytes).digest("hex");
-    header = bytes.subarray(0, 16);
-    clamd = await input.scanBytes(bytes);
+    const owned = copyBytes(bytes);
+    sha256 = createHash("sha256").update(owned).digest("hex");
+    header = owned.subarray(0, 16);
+    clamd = await input.scanBytes(owned);
   }
   const decision = decideScan({
     extension: input.file.extension,
