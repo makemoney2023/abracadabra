@@ -1,7 +1,8 @@
 const CLOUDFLARE_CONTEXT = Symbol.for("__cloudflare-context__");
 
 export const EMBED_MODEL = "@cf/baai/bge-base-en-v1.5";
-export const CHAT_MODEL = "@cf/meta/llama-3.1-8b-instruct";
+/** llama-3.1-8b-instruct was retired on 2026-05-30. */
+export const CHAT_MODEL = "@cf/meta/llama-3.2-3b-instruct";
 
 export type Understander = {
   summarize(fileName: string, text: string): Promise<string>;
@@ -47,6 +48,12 @@ export function summaryFromChatBody(body: unknown): string {
   }
   if (isRecord(body.result) && typeof body.result.response === "string") {
     return body.result.response.trim();
+  }
+  if (isRecord(body.result) && Array.isArray(body.result.choices)) {
+    const first = body.result.choices[0];
+    if (isRecord(first) && isRecord(first.message) && typeof first.message.content === "string") {
+      return first.message.content.trim();
+    }
   }
   return "";
 }

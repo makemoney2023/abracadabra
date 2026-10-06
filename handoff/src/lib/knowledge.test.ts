@@ -334,6 +334,11 @@ describe("AI Gateway parsing", () => {
         choices: [{ message: { content: "The file lists blue and gold." } }],
       }),
     ).toBe("The file lists blue and gold.");
+    expect(
+      summaryFromChatBody({
+        result: { choices: [{ message: { content: "Blue and gold in note.txt." } }] },
+      }),
+    ).toBe("Blue and gold in note.txt.");
   });
 
   it("sends Workers AI calls through the gateway id header", async () => {
@@ -360,6 +365,8 @@ describe("AI Gateway parsing", () => {
     await expect(understander.embed(["hello"])).resolves.toEqual([[1, 0]]);
     expect(calls.every((call) => call.gateway === "handoff")).toBe(true);
     expect(calls.some((call) => call.url.includes("/ai/v1/chat/completions"))).toBe(true);
+    const chat = calls.find((call) => call.url.includes("/ai/v1/chat/completions"));
+    expect(chat?.body).toMatchObject({ model: "@cf/meta/llama-3.2-3b-instruct" });
     expect(calls.some((call) => call.url.includes("/ai/run/@cf/baai/bge-base-en-v1.5"))).toBe(true);
     expect(calls.some((call) => call.url.includes("api.cloudflare.com/client/v4/accounts/account-1"))).toBe(true);
   });
