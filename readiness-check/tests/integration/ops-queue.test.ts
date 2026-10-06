@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockRequireOpsSession = vi.fn();
 const mockFrom = vi.fn();
-const mockInngestSend = vi.fn();
+const mockEnqueueScan = vi.fn();
 
 vi.mock("@/lib/ops/auth", () => ({
   requireOpsSession: () => mockRequireOpsSession(),
@@ -12,15 +12,15 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from: mockFrom }),
 }));
 
-vi.mock("@/inngest/client", () => ({
-  inngest: { send: (...args: unknown[]) => mockInngestSend(...args) },
+vi.mock("@/lib/jobs", () => ({
+  enqueueScan: (...args: unknown[]) => mockEnqueueScan(...args),
 }));
 
 describe("ops queue APIs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFrom.mockReset();
-    mockInngestSend.mockResolvedValue(undefined);
+    mockEnqueueScan.mockResolvedValue(undefined);
   });
 
   it("GET /api/ops/queue returns 401 when unauthenticated", async () => {
@@ -95,7 +95,7 @@ describe("ops queue APIs", () => {
     );
   });
 
-  it("POST /api/ops/rescan creates ops scan and enqueues Inngest", async () => {
+  it("POST /api/ops/rescan creates ops scan and enqueues a scan job", async () => {
     mockRequireOpsSession.mockResolvedValue({
       ok: true,
       user: { id: "user-1" },
@@ -144,9 +144,6 @@ describe("ops queue APIs", () => {
     expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.id).toBe("scan-1");
-    expect(mockInngestSend).toHaveBeenCalledWith({
-      name: "scan/requested",
-      data: { scanId: "scan-1" },
-    });
+    expect(mockEnqueueScan).toHaveBeenCalledWith("scan-1");
   });
 });

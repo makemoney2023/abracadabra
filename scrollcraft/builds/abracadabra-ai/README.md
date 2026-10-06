@@ -84,7 +84,7 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 ## Deployment
 
-Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/) on Cloudflare Worker `abracadabra-marketing`. `www.abra-ca-dabra.app` redirects to the apex with a 308 from a Cloudflare Redirect Rule. `check.abra-ca-dabra.app` stays the Readiness Check on Vercel. The Vercel project `abracadabra` (personal account `makemoney2023`) is still linked to this folder, and a push to `main` still redeploys that project. The public apex is the Worker.
+Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/) on Cloudflare Worker `abracadabra-marketing`. `www.abra-ca-dabra.app` redirects to the apex with a 308 from a Cloudflare Redirect Rule. `check.abra-ca-dabra.app` is Cloudflare Worker `readiness-check`. The Vercel project `abracadabra` (personal account `makemoney2023`) is still linked to this folder, and a push to `main` still redeploys that project. The public apex is the Worker.
 
 ### Cloudflare Workers (static assets)
 

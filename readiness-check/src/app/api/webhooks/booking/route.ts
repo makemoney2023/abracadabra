@@ -29,9 +29,7 @@ export async function POST(request: Request) {
   }
   try {
     const result = await applyBookingEvent(createAdminClient(), event, body);
-    if (event.kind !== "ignored") {
-      await forwardBooking(event);
-    }
+    await forwardBooking(event);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     return NextResponse.json(

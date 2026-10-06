@@ -12,3 +12,9 @@ aeo-geo-readiness.json
 *.json.bak
 
 .worktrees/
+
+# Cloudflare / OpenNext
+.open-next/
+.wrangler/
+.dev.vars
+*.tsbuildinfo

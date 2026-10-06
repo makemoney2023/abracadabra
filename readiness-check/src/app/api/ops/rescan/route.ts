@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { inngest } from "@/inngest/client";
+import { enqueueScan } from "@/lib/jobs";
 import { normalizeDomain } from "@/lib/domain";
 import { requireOpsSession } from "@/lib/ops/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -85,10 +85,7 @@ export async function POST(request: Request) {
     .update({ latest_scan_id: scan.id })
     .eq("lead_id", lead.id);
 
-  await inngest.send({
-    name: "scan/requested",
-    data: { scanId: scan.id },
-  });
+  await enqueueScan(scan.id);
 
   return NextResponse.json(
     {

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const unlockEmailSchema = z.object({
   email: z.email(),
+  turnstileToken: z.string().optional(),
 });
 
 export function unlockCookieName(token: string): string {

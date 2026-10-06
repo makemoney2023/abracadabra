@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
-import { inngest } from "@/inngest/client";
 import { calLink } from "@/lib/check-env";
+import { deliverCompletedAssessment } from "@/lib/handoff-intake";
 import { computeOpsPriority } from "@/lib/ops/priority";
 import { countRecentPublicScans } from "@/lib/rate-limit";
 import { createPublicScan } from "@/lib/scan/create";
@@ -258,7 +258,7 @@ export async function completeAssessment(admin: AssessmentAdmin, token: string) 
   });
   await addAssessmentEvent(admin, row.id, "completed", { band: scores.overall.band });
   await addAssessmentEvent(admin, row.id, "gate_shown", { band: scores.overall.band });
-  await inngest.send({ name: "assessment/completed", data: { assessmentId: row.id } });
+  await deliverCompletedAssessment(admin, row.id);
   return { status: 200 as const, body: { ok: true, band: scores.overall.band } };
 }
 
@@ -299,7 +299,7 @@ export async function optInAssessment(
     name: input.name ?? null,
     opted_in_at: row.optedInAt ?? new Date().toISOString(),
   });
-  await inngest.send({ name: "assessment/completed", data: { assessmentId: row.id } });
+  await deliverCompletedAssessment(admin, row.id);
   await addAssessmentEvent(admin, row.id, "opted_in", {});
   const fresh = await getAssessmentByToken(admin, token);
   const findings = await loadFindings(admin, row.scanId);

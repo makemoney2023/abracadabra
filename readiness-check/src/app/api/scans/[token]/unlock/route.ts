@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { unlockCookieName, unlockEmailSchema } from "@/lib/scan/unlock";
+import { assertTurnstile } from "@/lib/turnstile";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -24,6 +25,11 @@ export async function POST(request: Request, context: RouteContext) {
       { error: "Invalid email", details: parsed.error.flatten() },
       { status: 400 },
     );
+  }
+
+  const gate = await assertTurnstile(parsed.data.turnstileToken);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: 400 });
   }
 
   const email = parsed.data.email.trim().toLowerCase();

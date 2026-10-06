@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { applyPublicOptIn } from "@/lib/scan/opt-in";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { assertTurnstile } from "@/lib/turnstile";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
 const optInSchema = z.object({
   email: z.email(),
   name: z.string().trim().min(1).max(200).optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export async function POST(request: Request, context: RouteContext) {
@@ -29,6 +31,11 @@ export async function POST(request: Request, context: RouteContext) {
       { error: "Invalid request", details: parsed.error.flatten() },
       { status: 400 },
     );
+  }
+
+  const gate = await assertTurnstile(parsed.data.turnstileToken);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: 400 });
   }
 
   const admin = createAdminClient();

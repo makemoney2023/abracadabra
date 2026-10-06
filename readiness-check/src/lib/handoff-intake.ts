@@ -1,4 +1,5 @@
 import { checkUrl } from "@/lib/check-env";
+import { publishLeadIntake } from "@/lib/jobs";
 import { mapAssessment, type AssessmentAdmin, type AssessmentRow } from "@/lib/assessment/repository";
 
 type IntakeRow = {
@@ -78,13 +79,6 @@ export async function postSignedIntake(
   return { ok: true };
 }
 
-function intakeEnv(): { origin: string; secret: string } {
-  return {
-    origin: process.env.HANDOFF_INTAKE_ORIGIN?.trim() ?? "",
-    secret: process.env.INTAKE_SIGNING_SECRET?.trim() ?? "",
-  };
-}
-
 export async function deliverCompletedAssessment(
   admin: AssessmentAdmin,
   assessmentId: string,
@@ -94,45 +88,42 @@ export async function deliverCompletedAssessment(
   if (error) throw new Error(error.message);
   if (!data) return { ok: true, skipped: true };
   const row = mapAssessment(data as Parameters<typeof mapAssessment>[0]);
-  return postAssessmentRow(row, now);
+  void now;
+  return postAssessmentRow(row);
 }
 
 async function postAssessmentRow(
   row: AssessmentRow,
-  now: number,
 ): Promise<{ ok: true; skipped?: boolean }> {
   const built = assessmentIntakeBody(row, checkUrl());
   if (built.skip) return { ok: true, skipped: true };
-  const { origin, secret } = intakeEnv();
-  return postSignedIntake(origin, secret, "/api/intake/assessment", built.body, now);
+  return publishLeadIntake({ source: "assessment", payload: built.body });
 }
 
 export async function forwardBooking(
   event: {
-    kind: "created" | "rescheduled" | "cancelled";
+    kind: "created" | "rescheduled" | "cancelled" | "ignored";
     externalId: string | null;
     startsAt: string | null;
     email: string | null;
     name: string | null;
   },
-  now = Date.now(),
+  _now = Date.now(),
 ): Promise<{ ok: true; skipped?: boolean }> {
-  const { origin, secret } = intakeEnv();
-  if (!origin || !secret) return { ok: true, skipped: true };
-  if (!event.externalId || !event.startsAt) return { ok: true, skipped: true };
+  void _now;
+  if (event.kind === "ignored" || !event.externalId || !event.startsAt) {
+    return { ok: true, skipped: true };
+  }
   const startsAt = Date.parse(event.startsAt);
   if (!Number.isFinite(startsAt)) return { ok: true, skipped: true };
-  return postSignedIntake(
-    origin,
-    secret,
-    "/api/intake/booking",
-    {
+  return publishLeadIntake({
+    source: "booking",
+    payload: {
       external_id: event.externalId,
       email: event.email,
       name: event.name,
       starts_at: startsAt,
       kind: event.kind,
     },
-    now,
-  );
+  });
 }

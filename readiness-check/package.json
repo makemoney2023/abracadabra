@@ -9,21 +9,22 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "migrate": "wrangler d1 migrations apply handoff --remote"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",
     "@hookform/resolvers": "^5.7.1",
+    "@opennextjs/cloudflare": "^1.20.8",
     "@react-pdf/renderer": "^4.6.0",
-    "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "inngest": "^4.18.0",
     "jszip": "^3.10.1",
     "lucide-react": "^1.31.0",
     "nanoid": "^6.0.1",
-    "next": "16.3.0",
+    "next": "16.3.8",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
@@ -47,11 +48,12 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.5",
     "eslint": "^9",
-    "eslint-config-next": "16.3.0",
+    "eslint-config-next": "16.3.8",
     "jsdom": "^29.1.1",
     "playwright": "^1.62.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.147.0"
   }
 }

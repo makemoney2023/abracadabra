@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { OPS_COOKIE, verifyOpsCookie } from "@/lib/ops/session";
 
 export default async function OpsLayout({
   children,
@@ -12,22 +12,10 @@ export default async function OpsLayout({
   const isLogin = pathname === "/ops/login" || pathname.startsWith("/ops/login/");
 
   if (!isLogin) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      redirect("/ops/login");
-    }
-
-    const { data: profile } = await supabase
-      .from("staff_profiles")
-      .select("role")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!profile || profile.role !== "ops") {
+    const password = process.env.CHECK_OPS_PASSWORD ?? "";
+    const token = (await cookies()).get(OPS_COOKIE)?.value;
+    const valid = await verifyOpsCookie(token, password);
+    if (!valid) {
       redirect("/ops/login");
     }
   }

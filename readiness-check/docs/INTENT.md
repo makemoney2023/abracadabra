@@ -32,8 +32,8 @@ Both surfaces share one scan and scoring engine.
 - **Parallel** for map / extract / scrape / prospecting (`search`, `extract`/`fetch`, `findall`, `enrich`) — no Firecrawl in v1. Direct HTML GET is used only as a schema fallback because Parallel returns markdown and strips `application/ld+json` script blocks.
 - Soft gate: overall score free; email for page matrix + PDF
 - Standard depth: site files + up to ~40 priority pages
-- In-app ops inbox only (no CRM sync in v1)
-- Next.js monolith + Supabase + Inngest jobs
+- Ops inbox stays in this app. A finished assessment or a checked booking publishes to Handoff on queue `lead-intake`. This app does not write CRM rows.
+- Next.js on Cloudflare Workers, D1 tables prefixed `rc_`, queue `scan-jobs`, daily sweep cron
 - Deterministic scoring (no LLM score subjectivity in v1)
 
 ## Value proposition

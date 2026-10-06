@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { inngest } from "@/inngest/client";
+import { enqueueScan } from "@/lib/jobs";
 
 type ScanAdmin = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,7 +13,7 @@ export type CreatedScan = {
 };
 
 /**
- * Insert a public scan and enqueue `scan/requested`.
+ * Insert a public scan and enqueue a scan job.
  * Does not check the domain rate limit — callers do that first.
  */
 export async function createPublicScan(
@@ -37,10 +37,7 @@ export async function createPublicScan(
     throw new Error(error?.message ?? "Failed to create scan");
   }
 
-  await inngest.send({
-    name: "scan/requested",
-    data: { scanId: scan.id },
-  });
+  await enqueueScan(scan.id);
 
   return { id: scan.id, token: scan.public_token, status: scan.status };
 }

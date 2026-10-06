@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UNLOCK_COPY } from "@/lib/marketing/copy";
+import { TurnstileWidget } from "@/components/public/TurnstileWidget";
 
 export type UnlockFormProps = {
   token: string;
@@ -15,6 +16,7 @@ export function UnlockForm({ token, onUnlocked }: UnlockFormProps) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,7 +26,7 @@ export function UnlockForm({ token, onUnlocked }: UnlockFormProps) {
       const res = await fetch(`/api/scans/${token}/unlock`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken: turnstileToken || undefined }),
       });
       const data = (await res.json()) as { unlocked?: boolean; error?: string };
       if (!res.ok || !data.unlocked) {
@@ -45,6 +47,7 @@ export function UnlockForm({ token, onUnlocked }: UnlockFormProps) {
         <h3 className="font-heading text-2xl tracking-tight">{UNLOCK_COPY.title}</h3>
         <p className="max-w-xl text-sm text-muted-foreground">{UNLOCK_COPY.body}</p>
       </div>
+      <TurnstileWidget onToken={setTurnstileToken} />
       <form onSubmit={onSubmit} className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1 space-y-2">
           <Label htmlFor="unlock-email">Work email</Label>
