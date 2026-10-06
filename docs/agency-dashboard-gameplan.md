@@ -3,22 +3,33 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: plan. Nothing here is built yet.
+Status: plan. Nothing here is built yet. Decisions D1 to D6 are made (section 10).
 
 ## 1. What it does
 
 1. A person takes the Readiness Check on the marketing site. They become a **lead**.
-2. We talk to them. They move through **stages** (new, talking, proposal, won, lost).
+2. We talk to them. They move through **stages** (new, contacted, call booked, proposal, won, lost).
 3. When they say yes, the lead becomes a **client**.
 4. A client has **projects**. A project has **tasks** and **milestones**.
 5. A client has one or more **Handoff spaces** for files. The dashboard links to them.
 6. Every call, email, note, file, and stage change goes on the client's **timeline**.
+7. We send **invoices** and record **payments** against each client and project.
+8. AI agents can run the work through MCP: move stages, add and close tasks, post status updates,
+   and send invoices. Every change they make is on the timeline with their name on it.
 
 If it is not in the dashboard, it did not happen.
 
 ## 2. Where it lives
 
-Build the dashboard **inside the Handoff Worker** (`handoff/`). Do not start a new app.
+Build the dashboard **inside the Handoff Worker** (`handoff/`). Do not start a new app (D1).
+
+Two front doors, one Worker (D3):
+
+- **`hq.abra-ca-dabra.app`**: the staff dashboard. Staff only.
+- **The Handoff domain**: clients only. Client spaces (`/w/[slug]`), invites, and client login stay here.
+
+The Worker picks pages by host name. Staff pages answer only on `hq`. Client pages answer only on the
+Handoff domain. Old `/admin` links on the Handoff domain redirect to `hq`.
 
 Why:
 
@@ -30,16 +41,23 @@ Routes:
 
 | Path | Who | What |
 |---|---|---|
-| `/admin` | staff | Today screen (what needs doing) |
-| `/admin/leads` | staff | Pipeline board and list |
-| `/admin/clients` | staff | Client list |
-| `/admin/clients/[id]` | staff | Client page: contacts, projects, spaces, timeline |
-| `/admin/projects/[id]` | staff | Project page: tasks, milestones, files |
-| `/admin/work` | staff | All open tasks across clients, by owner and due date |
-| `/api/intake/assessment` | Readiness Check only | Signed lead intake (see section 4) |
-| `/w/[slug]` | clients | Handoff space, as today |
+| Host and path | Who | What |
+|---|---|---|
+| `hq` `/` | staff | Today screen (what needs doing) |
+| `hq` `/leads` | staff | Pipeline board and list |
+| `hq` `/clients` | staff | Client list |
+| `hq` `/clients/[id]` | staff | Client page: contacts, deals, projects, spaces, invoices, timeline |
+| `hq` `/projects/[id]` | staff | Project page: milestones, tasks, status updates, files |
+| `hq` `/work` | staff | All open tasks across clients, by owner and due date |
+| `hq` `/invoices` | staff | All invoices: draft, sent, late, paid |
+| `hq` `/spaces` | staff | Handoff space admin (today's `/admin`, moved) |
+| `hq` `/settings/keys` | super admin | MCP keys and their scopes |
+| `hq` `/api/intake/*` | signed senders only | Lead, booking, and payment intake (section 4) |
+| `hq` `/api/mcp` | MCP keys only | Agent tools (section 7) |
+| Handoff `/w/[slug]` | clients | Handoff space, as today |
 
-Clients never see CRM pages. Staff pages check `staff` role on every request, same as `/admin` today.
+Clients never see CRM pages. Staff pages check the `staff` role on every request. The staff session
+cookie is set for `hq` only, so a client page can never read it.
 
 ## 3. Cloudflare pieces
 
@@ -49,8 +67,11 @@ Clients never see CRM pages. Staff pages check `staff` role on every request, sa
 | Records | D1 `handoff` (same database) |
 | Files | R2 (already used by Handoff) |
 | Lead intake buffer | Queue `lead-intake` |
-| Daily jobs (stale leads, due tasks, digest) | Cron Trigger |
-| Email out | Existing Handoff email sender |
+| Daily jobs (stale leads, due tasks, late invoices, digest) | Cron Trigger |
+| Agent jobs (status updates, follow-ups) | Queue `agent-actions` |
+| Email out | Existing Handoff email sender (status updates, invoices, reminders) |
+| Invoice PDFs | R2 |
+| Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker |
 | Bot check on survey | Turnstile |
 | Summaries and search | Workers AI through AI Gateway (already set up) |
 | Readiness Check | Move from Vercel + Supabase + Inngest to a Worker + D1 (section 4) |
@@ -77,8 +98,9 @@ Do it in two steps so leads never stop flowing.
 ### Step B: move the Readiness Check onto Cloudflare
 
 - Port `readiness-check/` to a Worker (OpenNext, same as Handoff) at `check.abra-ca-dabra.app`.
-- Supabase tables move to D1. Either the same `handoff` D1 (simplest) or a separate `readiness` D1
-  that only talks to the dashboard through the Queue (cleaner walls). See decision D2.
+- Supabase tables move to the same `handoff` D1 (D2). They get a `rc_` prefix so they stay apart from
+  CRM tables. The check Worker gets its own small data module that can only touch `rc_` tables and
+  `intake_receipts`. It never reads client records.
 - Inngest jobs become Queue consumers and Cron Triggers:
   - `run-scan`, `run-prospect` → Queue consumer `scan-jobs`
   - `assessment-completed` → writes straight to D1, no bridge needed
@@ -216,11 +238,90 @@ CREATE TABLE activities (
   project_id TEXT REFERENCES projects(id),
   workspace_id TEXT REFERENCES workspaces(id),
   kind TEXT NOT NULL,              -- 'note', 'call', 'email', 'stage_change', 'assessment', 'booking',
-                                   -- 'file_uploaded', 'request_done', 'task_done', ...
-  actor_user_id TEXT,              -- null = system
+                                   -- 'file_uploaded', 'request_done', 'task_done', 'status_update',
+                                   -- 'invoice_sent', 'payment_received', ...
+  actor_kind TEXT NOT NULL CHECK (actor_kind IN ('staff', 'agent', 'system')),
+  actor_id TEXT,                   -- staff user id, MCP key id, or job name
   body TEXT,
   data_json TEXT,
   created_at INTEGER NOT NULL
+);
+
+-- Money. Amounts in cents. One currency per invoice.
+CREATE TABLE invoices (
+  id TEXT PRIMARY KEY,
+  number TEXT NOT NULL UNIQUE,     -- 'INV-2026-0001', never reused
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  project_id TEXT REFERENCES projects(id),
+  contact_id TEXT REFERENCES contacts(id),   -- who it is sent to
+  status TEXT NOT NULL CHECK (status IN ('draft', 'sent', 'partly_paid', 'paid', 'void')),
+  currency TEXT NOT NULL DEFAULT 'usd',
+  subtotal_cents INTEGER NOT NULL DEFAULT 0,
+  tax_cents INTEGER NOT NULL DEFAULT 0,
+  total_cents INTEGER NOT NULL DEFAULT 0,
+  paid_cents INTEGER NOT NULL DEFAULT 0,
+  issued_at INTEGER,
+  due_at INTEGER,
+  sent_at INTEGER,
+  paid_at INTEGER,
+  pdf_r2_key TEXT,
+  external_id TEXT,                -- payment provider invoice id, if any
+  memo TEXT,
+  created_by TEXT,                 -- actor id (staff user or MCP key)
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE invoice_items (
+  id TEXT PRIMARY KEY,
+  invoice_id TEXT NOT NULL REFERENCES invoices(id),
+  milestone_id TEXT REFERENCES milestones(id),
+  description TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  unit_cents INTEGER NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  sort INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE payments (
+  id TEXT PRIMARY KEY,
+  invoice_id TEXT NOT NULL REFERENCES invoices(id),
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  method TEXT NOT NULL,            -- 'bank', 'card', 'check', 'stripe', ...
+  provider TEXT,                   -- 'stripe' or null for manual
+  external_id TEXT,                -- provider payment id
+  received_at INTEGER NOT NULL,
+  recorded_by TEXT,                -- actor id
+  note TEXT,
+  UNIQUE (provider, external_id)
+);
+
+-- Updates we post for a project. Internal ones stay on hq. Client ones also show in the
+-- Handoff space and can be emailed.
+CREATE TABLE status_updates (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id),
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  health TEXT NOT NULL CHECK (health IN ('on_track', 'at_risk', 'off_track', 'done')),
+  audience TEXT NOT NULL CHECK (audience IN ('internal', 'client')),
+  body TEXT NOT NULL,
+  state TEXT NOT NULL CHECK (state IN ('draft', 'published')),
+  emailed_at INTEGER,
+  actor_kind TEXT NOT NULL CHECK (actor_kind IN ('staff', 'agent', 'system')),
+  actor_id TEXT,
+  created_at INTEGER NOT NULL,
+  published_at INTEGER
+);
+
+-- Write calls we already ran, so a retried agent call does nothing twice.
+CREATE TABLE idempotency_keys (
+  key TEXT NOT NULL,
+  actor_id TEXT NOT NULL,
+  tool TEXT NOT NULL,
+  result_json TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (actor_id, key)
 );
 
 -- Intake messages we already handled, so retries do nothing.
@@ -233,7 +334,11 @@ CREATE TABLE intake_receipts (
 ```
 
 Plus indexes on every foreign key, `deals(stage, updated_at)`, `tasks(assignee_user_id, status, due_at)`,
-and `activities(organization_id, created_at)`.
+`activities(organization_id, created_at)`, `invoices(status, due_at)`, and
+`status_updates(project_id, created_at)`.
+
+`knowledge_keys` (from `0004_knowledge.sql`) gets a `scopes` column: a comma list of `read`, `work`,
+and `billing`. Old keys default to `read`.
 
 Rules:
 
@@ -242,37 +347,56 @@ Rules:
 - Existing Handoff events (files uploaded, requests done) also write an `activities` row when the space
   has an `organization_id`. The client timeline then shows file work with no extra effort.
 - Existing spaces get linked by hand once, from the client page.
+- Invoice totals are worked out in code from the items, never typed in. `paid_cents` is the sum of
+  payments. Status moves to `partly_paid` or `paid` on its own.
+- A sent invoice is never edited. To change it, void it and make a new one.
+- Every write, by a person, an agent, or a job, adds one `activities` row in the same D1 batch.
 
 ## 6. Screens
 
 All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 
-**Today (`/admin`)**
+**Today (`hq /`)**
 - New leads since you last looked
 - Calls booked in the next 7 days
 - Tasks due or late, yours first
 - Deals with no next step, or a next step in the past
 - Spaces waiting on the client (open requests)
+- Invoices late or due this week
+- What agents did since you last looked
 
-**Leads (`/admin/leads`)**
+**Leads (`hq /leads`)**
 - Board with one column per stage. Drag to move. Moving writes a `stage_change` activity.
 - List view with filters: stage, owner, source, score, date.
 - Lead card shows name, company, score, last touch, next step.
 
-**Client page (`/admin/clients/[id]`)**
+**Client page (`hq /clients/[id]`)**
 - Top: name, website, owner, kind, main contact.
-- Tabs: Overview, Contacts, Deals, Projects, Spaces, Timeline.
+- Tabs: Overview, Contacts, Deals, Projects, Spaces, Invoices, Timeline.
 - Overview shows the latest Readiness Check scores, open tasks, and a short AI summary of the timeline
   (Workers AI, marked "AI summary").
 - Add note, log call, add task right from the page.
 
-**Project page (`/admin/projects/[id]`)**
+**Project page (`hq /projects/[id]`)**
 - Milestones with tasks under each. Check off tasks.
 - Linked Handoff space: open requests, recent files, storage used.
 - Status and due date at the top.
+- Status updates: write one, pick internal or client, then publish. Client updates show in the
+  Handoff space and can be emailed. Agent drafts wait here for a person to publish.
 
-**Work (`/admin/work`)**
+**Work (`hq /work`)**
 - Every open task across all clients. Group by person or by client. Filter late, this week, blocked.
+
+**Invoices (`hq /invoices`)**
+- List by status: draft, sent, late, paid. Totals owed and paid this month.
+- Make an invoice from a project or milestone. Add lines, preview, send. Sending saves a PDF to R2
+  and emails the client contact.
+- Record a payment by hand (amount, date, method). Stripe payments, if used, come in on their own.
+- Clients see their invoices in their Handoff space, read only.
+
+**Agent log**
+- Timeline filter "by agents". Each row shows the key name, the tool, and what changed.
+- Undo for simple changes (stage, task status). Money changes are never undone; void and redo.
 
 **Search**
 - One box in the header. Finds organizations, contacts, deals, and projects by name, email, or domain.
@@ -281,19 +405,51 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 
 - Creating a space from a won deal fills in name, slug, and sender from the organization.
 - The space page header shows a link back to the client for staff only.
-- The MCP knowledge server gets new read tools, scoped by key:
-  - `get_client(id_or_domain)`: profile, contacts, open deals, projects
-  - `list_open_work(assignee?)`: open tasks
-  - `client_timeline(id, since?)`: recent activities
-- Writes from MCP (add note, add task) come later and only with an admin key. See decision D5.
+- Client pages in a Handoff space show published client status updates and the client's invoices.
+
+### MCP tools for running the work (D5)
+
+Agents get full read and write so they can run and automate the work. The MCP server moves to
+`hq /api/mcp` and keeps the existing file tools (`search_files`, `list_files`). Each key has scopes.
+A tool call with a key that lacks the scope gets a plain error.
+
+| Scope | Tools |
+|---|---|
+| `read` | `get_client`, `search_crm`, `list_deals`, `list_open_work`, `get_project`, `client_timeline`, `list_invoices`, plus the file tools |
+| `work` | `create_lead`, `update_contact`, `move_deal_stage`, `add_note`, `log_call`, `create_project`, `create_milestone`, `create_task`, `update_task` (status, owner, due date), `post_status_update`, `create_space_request` |
+| `billing` | `create_invoice` (draft), `send_invoice`, `record_payment`, `void_invoice` |
+
+Rules for every write tool:
+
+- Goes through the same `crm.ts` functions the screens use. No second path into the data.
+- Takes an `idempotency_key`. The same key twice returns the first result and changes nothing.
+- Writes an `activities` row with `actor_kind = 'agent'` and the key id, in the same batch.
+- Rate limit per key (for example 60 writes a minute). Over the limit gets a plain error.
+- Returns the changed record so the agent can check its work.
+- Client-facing steps have a guard. `post_status_update` with `audience = 'client'` and `send_invoice`
+  make drafts unless the key has the `publish` flag. Staff turn that on per key once they trust it.
+
+### Automation
+
+- Cron and the `agent-actions` Queue run built-in jobs: Monday status-update drafts per active
+  project, follow-up tasks for deals with no next step, invoice reminders 3 days before and 7 days
+  after the due date, and a daily staff digest.
+- Jobs write as `actor_kind = 'system'` and follow the same rules as agents.
 
 ## 8. Login and safety
 
 - Staff only, using the same Magic password login and `staff` table.
 - Every CRM read and write goes through one module (`src/db/crm.ts`) that checks the staff session,
   like `src/db/records.ts` does today. D1 has no row rules, so this is the wall.
+- Staff pages only answer on `hq`. The staff cookie is scoped to `hq`. Client pages only answer on the
+  Handoff domain.
 - Intake endpoints only accept signed requests. No session cookie works on them.
-- Secrets added: `INTAKE_SIGNING_SECRET` (set on both Workers). Add to `.env.example` and the Handoff README.
+- MCP keys: only super admins make, scope, and revoke them. Keys are stored hashed and shown once.
+  Never log a full key, only its id and last 4 characters.
+- Money: amounts are whole cents, never floats. Payment webhooks are signed and deduped by provider id.
+  No card numbers ever touch our Worker; the provider holds them.
+- Secrets added: `INTAKE_SIGNING_SECRET` (both Workers), and `STRIPE_WEBHOOK_SECRET` if we pick Stripe
+  (D8). Add to `.env.example` and the Handoff README.
 - Survey answers can hold personal info. Keep them in D1 only, never in logs or AI Gateway prompts
   without a reason. AI summaries use notes and activity text, not raw answers.
 - Deleting a contact on request: remove their contact row and blank their email in assessments.
@@ -302,35 +458,45 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 
 Each step ships on its own and is useful on its own.
 
-1. **Schema and client list.** `0005_crm.sql`, `crm.ts` module with tests, `/admin/clients` list and
-   create form. Link existing Handoff spaces to clients by hand.
+1. **`hq` host and schema.** Add the `hq` custom domain and host routing. Move today's `/admin` to
+   `hq /spaces` with a redirect. `0005_crm.sql`, `crm.ts` with tests, client list and create form.
+   Link existing Handoff spaces to clients by hand.
 2. **Client page and timeline.** Contacts, notes, call logs, tasks. Handoff file and request events feed
    the timeline.
 3. **Lead intake bridge.** Signed `/api/intake/assessment` and `/api/intake/booking`, `lead-intake`
    Queue, consumer with dedupe. Change the Readiness Check to POST on completion. Backfill existing
    Supabase leads once with a script.
 4. **Pipeline.** Deals, stage board, won flow (deal to client to project to space).
-5. **Projects and work.** Milestones, tasks, `/admin/work`, Today screen.
-6. **Cron jobs.** Daily: stale deals, late tasks, and a short staff digest email.
-7. **Move the Readiness Check to Cloudflare.** Worker port, D1 tables, Queue for scans, Cron for the
-   sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
-8. **MCP tools and AI summary.** Read tools first, then the client summary.
+5. **Projects and work.** Milestones, tasks, status updates, `hq /work`, Today screen.
+6. **Invoices and payments.** Invoice screens, PDF to R2, send by email, record payments by hand,
+   client read-only view in Handoff. Stripe webhook if D8 says so.
+7. **MCP read and write tools.** Key scopes, all tools in section 7, idempotency, rate limits, agent
+   log and undo. Client-facing tools start as drafts only.
+8. **Automation.** Cron and the `agent-actions` Queue: status-update drafts, follow-ups, invoice
+   reminders, daily digest. AI client summary.
+9. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
+   scans, Cron for the sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
 
 Each step: tests first, then code, then lint, type check, deploy, and a live check.
 
-## 10. Decisions needed
+## 10. Decisions
 
-- **D1. One app or two?** Plan says the dashboard goes inside the Handoff Worker. The other choice is a
-  separate dashboard Worker on its own domain that shares the D1. One app is less work.
-- **D2. Readiness Check database.** Same `handoff` D1, or its own D1 that sends to the dashboard by
-  Queue? Same D1 is simpler. Separate keeps public survey code away from client records.
-- **D3. Domain.** Keep the dashboard at the Handoff domain under `/admin`, or give it its own name
-  (for example `hq.abra-ca-dabra.app`)?
-- **D4. Stages.** Are `new, contacted, call_booked, proposal, won, lost` the right stages?
-- **D5. MCP writes.** Should AI tools be able to add notes and tasks, or read only?
-- **D6. Money.** Track deal value only, or also invoices and payments later? Invoices are out of scope
-  for this plan.
+Made:
+
+- **D1. One app.** The dashboard lives in the Handoff Worker.
+- **D2. Same D1.** The Readiness Check uses the `handoff` D1, with `rc_` tables.
+- **D3. Two hosts.** Staff use `hq.abra-ca-dabra.app`. Clients keep the Handoff domain.
+- **D4. Stages.** `new, contacted, call_booked, proposal, won, lost`.
+- **D5. Full MCP writes.** Agents can run the work: stages, tasks, status updates, invoices. Scoped
+  keys, full audit, drafts first for anything a client sees.
+- **D6. Money.** Invoices and payments are in this plan (section 5 and step 6).
+
+Still open:
+
 - **D7. Old data.** Backfill all Supabase leads, or only ones from the last N months?
+- **D8. Payments.** Record payments by hand only, or also take card and bank payments through Stripe
+  (pay link on the invoice, signed webhook marks it paid)?
+- **D9. Invoice numbers and tax.** Number format (`INV-2026-0001`?) and whether we add sales tax.
 
 ## 11. Risks
 
@@ -342,5 +508,11 @@ Each step: tests first, then code, then lint, type check, deploy, and a live che
   merge button on the client page in step 2.
 - **Personal data.** Survey answers and contact info sit in one place now. Keep access staff-only and
   keep it out of logs.
+- **Agent mistakes.** An agent with write access can make a mess fast. Scopes, rate limits, drafts for
+  anything a client sees, the agent log, and undo keep it small. Start new keys with `read` only.
+- **Money errors.** Totals from items, cents only, sent invoices locked, payments deduped. Void and
+  redo instead of edit.
+- **Two hosts, one app.** A bug in host routing could show a staff page on the client domain. Test
+  every staff route returns 404 on the Handoff host.
 - **Lost intake.** If the Queue consumer fails, the message retries. Failed messages go to a dead
   letter queue and show on the Today screen.
