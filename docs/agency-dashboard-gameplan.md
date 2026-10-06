@@ -3,7 +3,7 @@
 One place to see every lead, every client, and all the work. This is the source of truth.
 Everything runs on Cloudflare.
 
-Status: steps 1 and 2 are in the Handoff app (hq host, client list, people, notes, calls, tasks, a timeline, and merge). Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 3 to 11 are not built. Decisions D1 to D10 are all made (section 10).
+Status: steps 1 and 2 are in the Handoff app (hq host, client list, people, notes, calls, tasks, a timeline, and merge). Until `hq.abra-ca-dabra.app` is a zone on this account, staff use `https://handoff-hq.abracadabra-ai.workers.dev`. Steps 3 to 12 are not built. Decisions D1 to D11 are all made (section 10). Section 12 is the Cloudflare Agent and client email. Sending that mail waits on the same zone move.
 
 ## 1. What it does
 
@@ -14,8 +14,9 @@ Status: steps 1 and 2 are in the Handoff app (hq host, client list, people, note
 5. A client has one or more **Handoff spaces** for files. The dashboard links to them.
 6. Every call, email, note, file, and stage change goes on the client's **timeline**.
 7. We send **invoices** and record **payments** against each client and project.
-8. AI agents can run the work through MCP: move stages, add and close tasks, post status updates,
-   and send invoices. Every change they make is on the timeline with their name on it.
+8. A Cloudflare Agent runs the judgment work through MCP: it reads the client, drafts the next
+   email or status update, and can move stages, add tasks, and draft invoices. A person sends
+   anything the client will see. Every change is on the timeline with the agent's name on it.
 9. A client's **GitHub repos** are linked to their record (and to a project when it fits). Pull
    requests, merges, releases, and deploys show on the client timeline. The repos live in our GitHub
    org, and we do the work in them (D10).
@@ -60,6 +61,8 @@ Routes:
 | `hq` `/api/intake/*` | signed senders only | Lead, booking, and payment intake (section 4) |
 | `hq` `/api/mcp` | MCP keys only | Agent tools (section 7) |
 | `hq` `/api/github/webhook` | GitHub only (signed) | Repo events for the timeline (section 7) |
+| `hq` client page, Email | staff | Drafts waiting, and mail already sent (section 12) |
+| `handoff-agent` email handler | Email Service | Client mail in, once the zone is here (section 12) |
 | `hq` `/settings/github` | super admin | GitHub App install and repo linking |
 | Handoff `/w/[slug]` | clients | Handoff space, as today |
 | Handoff `/w/[slug]/work` | clients | Finished work list, newest first |
@@ -77,10 +80,11 @@ cookie is set for `hq` only, so a client page can never read it.
 | Records | D1 `handoff` (same database) |
 | Files | R2 (already used by Handoff) |
 | Lead intake buffer | Queue `lead-intake` |
-| Daily jobs (stale leads, due tasks, late invoices, digest) | Cron Trigger |
-| Agent jobs (status updates, follow-ups) | Queue `agent-actions` |
+| Fixed jobs (stale leads, due tasks, late invoices, digest flags) | Cron Trigger on the Handoff Worker. It wakes the agent. It does not write client-facing copy. |
+| Agent that drafts and talks | Worker `handoff-agent` (Agents SDK). One instance per client. It calls MCP. It does not own records. |
 | GitHub webhook buffer | Queue `github-events` |
-| Email out | Existing Handoff email sender (status updates, invoices, reminders) |
+| Client email in and out | Cloudflare Email Service on `handoff-agent`, after `abra-ca-dabra.app` is a zone on this account |
+| Handoff product mail (invites, file notices) | The sender Handoff already uses. That is not the client-conversation channel. |
 | Invoice PDFs | R2 |
 | Finished-work media (images, video, posters) | R2, streamed by the Worker with range requests |
 | Staff host | Custom domain `hq.abra-ca-dabra.app` on the same Worker. Until that zone is here, worker `handoff-hq` at `https://handoff-hq.abracadabra-ai.workers.dev` |
@@ -555,7 +559,7 @@ A tool call with a key that lacks the scope gets a plain error.
 | Scope | Tools |
 |---|---|
 | `read` | `get_client`, `search_crm`, `list_deals`, `list_open_work`, `get_project`, `client_timeline`, `list_invoices`, plus the file tools |
-| `work` | `create_lead`, `update_contact`, `move_deal_stage`, `add_note`, `log_call`, `create_project`, `create_milestone`, `create_task`, `update_task` (status, owner, due date), `post_status_update`, `create_space_request` |
+| `work` | `create_lead`, `update_contact`, `move_deal_stage`, `add_note`, `log_call`, `create_project`, `create_milestone`, `create_task`, `update_task` (status, owner, due date), `post_status_update`, `create_space_request`, `log_inbound_email`, `save_email_draft` |
 | `work` (finished work) | `create_deliverable`, `add_deliverable_item`, `sync_deliverable_from_repo`, `list_deliverable_feedback`, and `publish_deliverable` (needs `can_publish`) |
 | `billing` | `create_invoice` (draft), `send_invoice`, `record_payment`, `void_invoice` |
 | `code` | `open_issue`, `open_pr`, `comment_on_pr` on linked repos |
@@ -578,10 +582,16 @@ Rules for every write tool:
 
 ### Automation
 
-- Cron and the `agent-actions` Queue run built-in jobs: Monday status-update drafts per active
-  project, follow-up tasks for deals with no next step, invoice reminders 3 days before and 7 days
-  after the due date, and a daily staff digest.
-- Jobs write as `actor_kind = 'system'` and follow the same rules as agents.
+Fixed jobs stay on Cron and Queues. Judgment stays on the Cloudflare Agent (section 12).
+
+- Cron finds the work: Monday status updates for active projects, deals with no next step, invoices
+  3 days before and 7 days after the due date, and the daily staff digest. It wakes `handoff-agent`
+  with a signed request. It does not draft client copy itself.
+- There is no `agent-actions` Queue. The agent keeps its own follow-up schedule inside the instance.
+  That schedule survives sleep.
+- The digest and the flags write as `actor_kind = 'system'`. Drafts the agent saves write as
+  `actor_kind = 'agent'`.
+- Sending mail to a client is not an MCP tool. Staff send it from hq (section 12).
 
 ### GitHub repos
 
@@ -625,8 +635,13 @@ finished work to show the client, like `social-preview` in the renewimplants rep
 - Money: amounts are whole cents, never floats. For now staff record payments by hand. When the Stripe
   add-on lands, its webhook is signed and deduped by provider id, and no card numbers ever touch our
   Worker; Stripe holds them.
-- Secrets added now: `INTAKE_SIGNING_SECRET` (both Workers). `STRIPE_WEBHOOK_SECRET` is added only when
+- Secrets added now: `INTAKE_SIGNING_SECRET` (both Handoff Workers). `STRIPE_WEBHOOK_SECRET` is added only when
   the Stripe add-on ships. Add each to `.env.example` and the Handoff README when it lands.
+- Agent secrets, added with step 10: `AGENT_WAKE_SECRET` (the cron caller and `handoff-agent`) and
+  `AGENT_MCP_TOKEN` (the agent's MCP key, on `handoff-agent` only). The dashboard stores that key
+  hashed, the same as other MCP keys.
+- Email secrets, added with step 11: `EMAIL_SECRET` on `handoff-agent`, used to sign reply routing.
+  The send binding is `EMAIL`. Do not put a send key in the Next.js app.
 - GitHub secrets: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`. The App has
   write access to our org, so the private key lives in Worker secrets only. We make a short-lived
   install token per call and never store or log it. Add to `.env.example` and the README.
@@ -661,9 +676,14 @@ Each step ships on its own and is useful on its own.
    client read-only view in Handoff. Stripe pay links and webhook come later as an add-on (D8).
 9. **MCP read and write tools.** Key scopes, all tools in section 7 including code and finished-work
    tools, idempotency, rate limits, agent log and undo. Client-facing tools start as drafts only.
-10. **Automation.** Cron and the `agent-actions` Queue: status-update drafts, follow-ups, invoice
-   reminders, daily digest. AI client summary.
-11. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
+   `log_inbound_email` and `save_email_draft` land with step 10, when `client_messages` exists.
+10. **Agent runtime.** Worker `handoff-agent` on the Agents SDK. One instance per client. It calls
+   MCP with `can_publish` off. Cron wakes it. It saves status-update drafts, follow-up tasks, and
+   email drafts. It does not send mail yet. AI client summary for staff only.
+11. **Client email.** Cloudflare Email Service on `handoff-agent`: inbound handler, address routing,
+   signed replies, drafts on the client page, staff press Send. Blocked until `abra-ca-dabra.app` is
+   a zone on this account (SPF and DKIM). Handoff invite mail stays on its current sender.
+12. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
    scans, Cron for the sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
 
 Each step: tests first, then code, then lint, type check, deploy, and a live check.
@@ -687,10 +707,14 @@ Made:
 - **D10. GitHub.** Client repos live in our org and we own them, so the App has full read and write
   access. We do the work in those repos and publish finished work (like social-preview) to the
   client's Handoff space.
+- **D11. Agent and email.** The agent is its own Worker (`handoff-agent`) on the Cloudflare Agents
+  SDK. The dashboard stays the only app that owns records. The agent reads and writes only through
+  MCP. Client conversation mail uses Cloudflare Email Service, and only after the domain is a zone
+  on this account. Anything a client would read stays a draft until a person sends it (D5).
 
 ## 11. Risks
 
-- **Two homes for leads during the bridge.** Until step 11, the Readiness Check still has its own copy.
+- **Two homes for leads during the bridge.** Until step 12, the Readiness Check still has its own copy.
   The dashboard is the source of truth for everything after intake. Staff should not edit leads in the
   old `/ops` inbox once step 3 ships.
 - **D1 size and speed.** D1 is fine for an agency's volume. Keep the timeline indexed and paged.
@@ -715,3 +739,150 @@ Made:
 - **Big videos.** Set size limits, stream with range requests, and show a poster image first.
 - **Lost intake.** If the Queue consumer fails, the message retries. Failed messages go to a dead
   letter queue and show on the Today screen.
+- **Agent mail to the wrong person.** The agent never calls send. Staff send one approved draft.
+  The From domain is the domain that received the mail. Unknown agent ids are rejected.
+- **Mail loops.** Auto-replies are logged and not answered. A thread stops at 100 References.
+- **Email before the zone moves.** `abra-ca-dabra.app` is not a zone on this account yet, so Email
+  Service cannot add SPF and DKIM. Step 10 can ship without sending. Step 11 waits.
+- **Two memories.** The agent keeps a scratch pad. D1 is the source of truth. If they disagree, D1
+  wins. The agent has no D1 binding.
+
+## 12. Agents and client email
+
+Sources: [Cloudflare Agents](https://developers.cloudflare.com/agents/) and
+[Email Service email handler](https://developers.cloudflare.com/email-service/api/route-emails/email-handler/).
+
+### What each piece is for
+
+Cloudflare splits this into three kinds of work. We keep that split.
+
+- **Workflows and Queues** are fixed paths. Intake dedupe, invoice numbers, and GitHub webhook
+  dedupe stay there. They do the same thing every time.
+- **The Agent** is the judgment. It reads a client, picks a next step, and drafts the words. The
+  same input can lead to a different draft. That is expected.
+- **A person** sends anything the client will see. The agent is not a co-pilot chat box on the
+  marketing site. Clients reach it by email, once step 11 is on.
+
+The dashboard stays the source of truth (D1). The agent is a second Worker because the Agents SDK
+runs as its own Durable Object, not as a Next.js route (D11). It is not a second CRM.
+
+### The agent worker
+
+Worker name `handoff-agent`. One class, `ClientAgent`. One instance per organization id.
+
+Each instance has its own SQLite scratch pad for the conversation it is in. It sleeps when idle
+and wakes on a signed request, on its own schedule, or on inbound mail. The scratch pad is not a
+record. The worker has no D1 binding and no R2 binding. Every client record, including raw mail,
+is written by an MCP tool on the dashboard.
+
+On start it connects to MCP:
+
+- URL: the staff host `/api/mcp` (`https://handoff-hq.abracadabra-ai.workers.dev/api/mcp` until the
+  zone moves, then `https://hq.abra-ca-dabra.app/api/mcp`).
+- Auth: `Authorization: Bearer` with `AGENT_MCP_TOKEN`, via `addMcpServer`.
+- Tools: `this.mcp.getAITools()`, passed into Workers AI on the `AI` binding.
+- Key scopes: `read` and `work`. `can_publish` stays off. No `billing` send and no `code` until a
+  person turns those on for a different key. This key cannot send client mail, because send is not
+  an MCP tool.
+
+The loop is our own, on the Agents SDK. We do not use a hosted harness. The draft rule has to live
+in our code: the model may call `save_email_draft` and `post_status_update` (audience client, which
+stays a draft). It may not mark a draft approved.
+
+Cron on the Handoff Worker finds due work and POSTs to the agent with `AGENT_WAKE_SECRET`. The body
+names the organization id and the reason (`status`, `follow_up`, `invoice_reminder`, `digest`).
+The agent loads the client through MCP and writes drafts back through MCP.
+
+### What it drafts
+
+- Monday: a client status update per active project. Saved as a draft.
+- A deal with no next step: a follow-up task and an email draft. No send.
+- A client reply: a short draft answer, after the inbound rules below.
+- An invoice reminder: a draft only. `send_invoice` still needs `can_publish` on a different key.
+- A staff-only summary on the client page. Notes and timeline text only. Never raw survey answers.
+
+### Client email
+
+This waits until `abra-ca-dabra.app` is a zone on this Cloudflare account. Email Service needs the
+domain onboarded, plus SPF and DKIM. Those records cannot be added while DNS is still at Vercel.
+Do not send client mail from `workers.dev`. Do not add a second email product for this channel.
+Handoff invite and file mail keeps the sender it has now.
+
+When the zone is here:
+
+1. Onboard the domain in Email Service. Send from `mail.abra-ca-dabra.app` so product mail and
+   client conversation mail stay apart.
+2. Add a `send_email` binding named `EMAIL` on `handoff-agent`.
+3. Add a routing rule that delivers inbound mail to that Worker's `email()` handler.
+4. `email()` calls `routeAgentEmail`. Resolver order:
+   - Signed reply first (`createSecureReplyEmailResolver` with `EMAIL_SECRET`, max age 7 days).
+     `sendEmail` stamps `X-Agent-Name` and `X-Agent-ID`. A bad or expired signature does not pick
+     an instance.
+   - Then the address (`createAddressBasedEmailResolver`).
+     `client+{organizationId}@mail.abra-ca-dabra.app` wakes `ClientAgent` for that id.
+   - `studio@mail.abra-ca-dabra.app` looks up the sender with MCP `search_crm`. A known contact
+     wakes that client's agent. An unknown sender is logged for staff and gets no draft.
+   - No match: `setReject`. Do not forward unknown ids.
+
+Inbound handling, inside `onEmail`:
+
+- Parse the raw message with `postal-mime`.
+- If `isAutoReplyEmail` matches, call `log_inbound_email` and stop. Do not draft and do not answer.
+- If the thread already has 100 References, call `log_inbound_email` and stop.
+- Call `log_inbound_email`. That tool stores the raw MIME in R2 under a random key, the short text
+  in `client_messages` (state `received`), and an `activities` row, kind `email`, actor `agent`.
+- Call `save_email_draft` for the reply, state `draft`. Do not call `reply()` in this turn.
+
+`message.reply()` only works inside the inbound event, and only once. It also requires a valid
+DMARC result, a recipient that is the original sender, and a From domain that matches the domain
+that received the mail. Staff approve later, so the real send uses `sendEmail` on the `EMAIL`
+binding, with `In-Reply-To` and `References` set, From on `mail.abra-ca-dabra.app`.
+
+### Send
+
+1. The agent saves a draft through `save_email_draft`.
+2. Staff see it on the client page. They can edit the words.
+3. Staff press Send. hq marks that row approved.
+4. hq calls the agent with `AGENT_WAKE_SECRET` and the message id.
+5. The agent reads the row through MCP. If it is not approved, it does not send.
+6. It sends, then MCP marks the row sent and adds the timeline row.
+
+The agent cannot approve its own draft.
+
+### Messages table
+
+Ships with step 10, with `log_inbound_email` and `save_email_draft`, so drafts have a home before
+mail can send. Step 11 turns inbound routing and sending on. Not part of `0005_crm.sql`.
+
+```sql
+CREATE TABLE client_messages (
+  id TEXT PRIMARY KEY,
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  contact_id TEXT REFERENCES contacts(id),
+  direction TEXT NOT NULL CHECK (direction IN ('in', 'out')),
+  state TEXT NOT NULL CHECK (state IN ('draft', 'approved', 'sent', 'received', 'rejected')),
+  from_email TEXT NOT NULL,
+  to_email TEXT NOT NULL,
+  subject TEXT,
+  body TEXT,
+  message_id TEXT,
+  in_reply_to TEXT,
+  raw_r2_key TEXT,
+  agent_id TEXT,
+  created_at INTEGER NOT NULL,
+  sent_at INTEGER,
+  UNIQUE (message_id)
+);
+```
+
+`message_id` is unique so the same inbound mail stored twice does nothing the second time.
+`approved` is set only by a staff action. The agent key cannot set it.
+
+### Checks
+
+- A plus-address with a real organization id wakes that instance. A bad id is rejected.
+- A reply with a bad signature does not wake an instance.
+- An auto-reply is stored and does not create a draft.
+- A draft stays `draft` until a staff action sets `approved`.
+- The wake call refuses to send a row that is not `approved`.
+- MCP writes still go through `crm.ts`. The agent Worker has no D1 binding and no R2 binding.
