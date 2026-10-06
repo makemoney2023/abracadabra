@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { LIMITS } from "@/lib/policy/limits";
+import { cn } from "@/lib/utils";
 import { filesFromDrop } from "@/lib/upload/manifest-files";
 import { mapPool, partRanges, sendParts } from "@/lib/upload/transfer";
 
@@ -25,8 +25,12 @@ function bytesAsArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy;
 }
 
-const NOTICE =
-  "Send brand files, photos, words, and notes. We can't take passwords or key files.";
+function rowWord(state: RowState): string {
+  if (state === "uploading") return "Sending";
+  if (state === "uploaded") return "Done";
+  if (state === "failed") return "Didn't work";
+  return "Ready to send";
+}
 
 async function responseMessage(response: Response): Promise<string> {
   try {
@@ -86,12 +90,12 @@ export function DropZone({
   canDrop: boolean;
 }) {
   const folderRef = useRef<HTMLInputElement>(null);
+  const filesInputRef = useRef<HTMLInputElement>(null);
   const filesRef = useRef(new Map<string, File>());
   const [rows, setRows] = useState<DropRow[]>([]);
-  const [label, setLabel] = useState("");
-  const [note, setNote] = useState("");
   const [batchId, setBatchId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [over, setOver] = useState(false);
   const [formMessage, setFormMessage] = useState("");
 
   useEffect(() => {
@@ -153,7 +157,6 @@ export function DropZone({
 
   async function startUpload() {
     if (!canDrop || busy || rows.length === 0) return;
-    if (note.length > LIMITS.maxNoteChars) return;
     setBusy(true);
     setFormMessage("");
     try {
@@ -170,8 +173,8 @@ export function DropZone({
               contentType: row.contentType,
             })),
             requestId,
-            label: label.trim().length > 0 ? label.trim() : null,
-            note: note.trim().length > 0 ? note.trim() : null,
+            label: null,
+            note: null,
           }),
         });
         if (!response.ok) {
@@ -200,56 +203,63 @@ export function DropZone({
   const finished = rows.filter((row) => row.state === "uploaded").length;
   const failed = rows.filter((row) => row.state === "failed").length;
   const remaining = rows.length - finished - failed;
-  const noteTooLong = note.length > LIMITS.maxNoteChars;
 
   return (
     <section className="flex flex-col gap-4">
-      <p className="text-sm">{NOTICE}</p>
-      <a href="/how-handoff-handles-files" className="text-sm underline">
-        How we keep your files safe
-      </a>
       {canDrop ? (
         <>
-          <label className="flex flex-col gap-1 text-sm">
-            Name this upload
-            <Input value={label} onChange={(event) => setLabel(event.target.value)} maxLength={200} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Add a note (if you want)
-            <textarea
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              className="min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm"
+          <div
+            onDragOver={(event) => {
+              event.preventDefault();
+              setOver(true);
+            }}
+            onDragLeave={() => setOver(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setOver(false);
+              remember(event.dataTransfer.files);
+            }}
+            className={cn(
+              "flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-12 text-center",
+              over && "bg-muted",
+            )}
+          >
+            <p className="text-lg">Drop files here</p>
+            <p className="text-sm text-muted-foreground">or choose them from your computer</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button type="button" onClick={() => filesInputRef.current?.click()}>
+                Choose files
+              </Button>
+              <Button type="button" variant="outline" onClick={() => folderRef.current?.click()}>
+                Choose a folder
+              </Button>
+            </div>
+            <input
+              ref={filesInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(event) => remember(event.target.files)}
             />
-          </label>
-          {noteTooLong ? <p className="text-sm">Your note is too long. Keep it under 2,000 characters.</p> : null}
-          <label className="flex flex-col gap-1 text-sm">
-            Pick a folder
             <input
               ref={folderRef}
               type="file"
-              className="text-sm"
+              className="hidden"
               onChange={(event) => remember(event.target.files)}
             />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Pick files
-            <input
-              type="file"
-              multiple
-              className="text-sm"
-              onChange={(event) => remember(event.target.files)}
-            />
-          </label>
+          </div>
           <p className="text-sm text-muted-foreground">
-            On a phone, you can pick a few files. To send a whole folder, use a computer.
+            On a phone, pick a few files. To send a whole folder, use a computer.{" "}
+            <a href="/how-handoff-handles-files" className="underline">
+              How we keep your files safe
+            </a>
           </p>
           {rows.length > 0 ? (
             <>
-              <ul className="flex flex-col gap-1 font-mono text-xs">
+              <ul className="flex flex-col gap-1 text-sm">
                 {rows.map((row) => (
                   <li key={row.relativePath}>
-                    {row.relativePath} · {row.state}
+                    {row.relativePath} · {rowWord(row.state)}
                     {row.message ? ` · ${row.message}` : ""}
                   </li>
                 ))}
@@ -260,9 +270,9 @@ export function DropZone({
             </>
           ) : null}
           {formMessage ? <p className="text-sm">{formMessage}</p> : null}
-          <div className="flex gap-2">
-            <Button type="button" disabled={busy || rows.length === 0 || noteTooLong} onClick={() => void startUpload()}>
-              Send
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" disabled={busy || rows.length === 0} onClick={() => void startUpload()}>
+              Upload
             </Button>
             {failed > 0 && batchId ? (
               <Button type="button" variant="outline" disabled={busy} onClick={() => void startUpload()}>
@@ -270,14 +280,14 @@ export function DropZone({
               </Button>
             ) : null}
             {batchId ? (
-              <Link href={`/w/${slug}/batches/${batchId}`} className="text-sm">
-                See this upload
+              <Link href={`/w/${slug}`} className="text-sm">
+                See your files
               </Link>
             ) : null}
           </div>
         </>
       ) : (
-        <p className="text-sm text-muted-foreground">Staff can&apos;t send files.</p>
+        <p className="text-sm text-muted-foreground">You can look, but only people in the folder can upload.</p>
       )}
     </section>
   );

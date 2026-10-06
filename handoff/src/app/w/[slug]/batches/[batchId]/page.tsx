@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { workspacesFor } from "@/db/records";
 import { loadBatchScreen } from "@/lib/downloads";
@@ -23,8 +24,10 @@ export default async function BatchPage({
       : "";
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
-      <p className="font-mono text-xs tracking-wide text-optic">Upload</p>
-      <h1 className="font-heading text-4xl leading-tight">{screen.label ?? "Untitled upload"}</h1>
+      <Link href={`/w/${workspace.slug}`} className="text-sm">
+        Back to files
+      </Link>
+      <h1 className="font-heading text-4xl leading-tight">{screen.label ?? "Files"}</h1>
       <BatchReview
         batchId={batchId}
         files={screen.files}

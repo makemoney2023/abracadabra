@@ -29,12 +29,17 @@ export default async function WorkspaceLayout({
             />
           ) : null}
           <div className="flex flex-1 flex-col">
-            <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
+            <Link href="/" className="font-mono text-xs tracking-wide text-optic">
+              Handoff
+            </Link>
             <p className="font-heading text-xl">{workspace.display_name}</p>
           </div>
+          <Link href={`/w/${workspace.slug}`} className="text-sm">
+            Files
+          </Link>
           {can(caller, "request.manage", { workspaceId: workspace.id }) ? (
             <Link href={`/w/${workspace.slug}/requests`} className="text-sm">
-              Requests
+              Ask for files
             </Link>
           ) : null}
           {can(caller, "invite.member", { workspaceId: workspace.id }) ? (
@@ -42,9 +47,13 @@ export default async function WorkspaceLayout({
               People
             </Link>
           ) : null}
-          <Link href={`/w/${workspace.slug}/settings`} className="text-sm">
-            Settings
-          </Link>
+          {can(caller, "workspace.configure", { workspaceId: workspace.id }) ||
+          can(caller, "workspace.archive", { workspaceId: workspace.id }) ||
+          caller.operatorOf.includes(workspace.id) ? (
+            <Link href={`/w/${workspace.slug}/settings`} className="text-sm">
+              Settings
+            </Link>
+          ) : null}
         </div>
       </header>
       {children}

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FolderFiles } from "@/components/folder-files";
+import { Button } from "@/components/ui/button";
 import { workspacesFor } from "@/db/records";
-import { batchesOnWorkspace } from "@/lib/downloads";
+import { can } from "@/lib/authz";
+import { listFolderFiles } from "@/lib/downloads";
 import { openSession } from "@/lib/current";
 import { workspaceRequests } from "@/lib/store/requests";
 
@@ -11,45 +14,56 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
   const requests = await workspaceRequests(sql, workspace.id);
-  const batches = await batchesOnWorkspace(sql, caller, workspace.id);
+  const open = requests.filter((request) => request.status === "open");
+  const files = await listFolderFiles(sql, caller, workspace.id);
+  const canDrop =
+    caller.staff === null && caller.memberships.some((member) => member.workspaceId === workspace.id);
+  const uploadHref =
+    open.length === 1 ? `/w/${workspace.slug}/drop?request=${open[0].id}` : `/w/${workspace.slug}/drop`;
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
-      <h1 className="font-heading text-4xl leading-tight">{workspace.display_name}</h1>
-      {requests.length === 0 ? (
-        <p className="text-muted-foreground">
-          Nothing is asked of you in {workspace.display_name} yet. When the team knows what it
-          needs, it will show up here.
-        </p>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-4xl leading-tight">{workspace.display_name}</h1>
+        </div>
+        {canDrop && open.length > 0 ? (
+          <Button asChild>
+            <Link href={uploadHref}>Upload</Link>
+          </Button>
+        ) : null}
+      </div>
+      {files.length === 0 ? (
+        <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border px-6 py-12">
+          <p className="text-lg">This folder is empty.</p>
+          {canDrop && open.length > 0 ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Add files with Upload. People can download them after we check each one.
+              </p>
+              <Button asChild>
+                <Link href={uploadHref}>Upload files</Link>
+              </Button>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              People in this folder can add files. You can download them once they are ready.
+            </p>
+          )}
+        </div>
       ) : (
-        <ul className="flex flex-col gap-4">
-          {requests.map((request) => (
-            <li key={request.id} className="flex flex-col gap-1 border-b border-border pb-4">
-              <p className="text-sm font-medium">{request.title}</p>
-              <p className="font-mono text-xs text-muted-foreground">{request.status}</p>
-              {request.guidance ? <p className="text-sm text-muted-foreground">{request.guidance}</p> : null}
-              {request.status === "open" ? (
-                <Link href={`/w/${workspace.slug}/drop?request=${request.id}`} className="text-sm">
-                  Send files
-                </Link>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <FolderFiles
+          files={files.map((file) => ({
+            id: file.id,
+            batchId: file.batchId,
+            name: file.name,
+            sizeBytes: file.sizeBytes,
+            status: file.status,
+            moreHref: can(caller, "file.tag", { workspaceId: workspace.id })
+              ? `/w/${workspace.slug}/batches/${file.batchId}`
+              : null,
+          }))}
+        />
       )}
-      {batches.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="font-heading text-2xl">Your uploads</h2>
-          <ul className="flex flex-col gap-2">
-            {batches.map((batch) => (
-              <li key={batch.id}>
-                <Link href={`/w/${workspace.slug}/batches/${batch.id}`} className="text-sm">
-                  {batch.label ?? "Untitled upload"}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
     </main>
   );
 }

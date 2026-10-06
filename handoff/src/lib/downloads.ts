@@ -352,6 +352,52 @@ export async function loadBatchScreen(
   };
 }
 
+export type FolderFile = {
+  id: string;
+  batchId: string;
+  name: string;
+  sizeBytes: number;
+  status: string;
+  createdBy: string;
+};
+
+/** Files still in the folder. Thrown-away uploads stay out of the list. */
+export async function listFolderFiles(
+  sql: Sql,
+  caller: Caller,
+  workspaceId: string,
+): Promise<FolderFile[]> {
+  const visible = await batchesFor(sql, caller, workspaceId);
+  if (visible.length === 0) return [];
+  const ids = visible.map((row) => row.id);
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = await sql.all<{
+    id: string;
+    batch_id: string;
+    relative_path: string;
+    size_bytes: number;
+    status: string;
+    created_by: string;
+  }>(
+    `SELECT f.id, f.batch_id, f.relative_path, f.size_bytes, f.status, b.created_by
+     FROM files f
+     JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
+     WHERE f.batch_id IN (${placeholders})
+       AND b.discarded_at IS NULL
+       AND b.deleted_at IS NULL
+     ORDER BY f.relative_path`,
+    ids,
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    batchId: row.batch_id,
+    name: row.relative_path,
+    sizeBytes: row.size_bytes,
+    status: row.status,
+    createdBy: row.created_by,
+  }));
+}
+
 export async function batchesOnWorkspace(
   sql: Sql,
   caller: Caller,

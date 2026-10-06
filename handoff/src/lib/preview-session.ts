@@ -4,21 +4,6 @@ import { LIMITS } from "@/lib/policy/limits";
 export const PREVIEW_EMAIL = "studio@handoff.local";
 export const PREVIEW_SLUG = "northwind";
 
-const PREVIEW_REQUESTS = [
-  {
-    position: 1,
-    title: "Logo",
-    guidance: "The mark as a PNG or SVG.",
-    tag: "brand",
-  },
-  {
-    position: 2,
-    title: "Wordmark",
-    guidance: "The name set in the brand type.",
-    tag: "brand",
-  },
-] as const;
-
 function randomHex(size = 32): string {
   const bytes = new Uint8Array(size);
   crypto.getRandomValues(bytes);
@@ -30,7 +15,7 @@ async function sha256Hex(value: string): Promise<string> {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-/** Opens the studio locker in this browser. No magic link is created or sent. */
+/** Opens the shared folder in this browser. No magic link is created or sent. */
 export async function openPreviewSession(input: {
   sql: Sql;
   now: number;
@@ -47,29 +32,18 @@ export async function openPreviewSession(input: {
     ]);
   }
 
-  const staff = await input.sql.get<{ user_id: string }>(
-    "SELECT user_id FROM staff WHERE user_id = ?",
-    [userId],
+  await input.sql.run(
+    "UPDATE staff SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL",
+    [input.now, userId],
   );
-  if (!staff) {
-    await input.sql.run(
-      `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at)
-       VALUES (?, ?, 1, ?, NULL)`,
-      [userId, PREVIEW_EMAIL, input.now],
-    );
-  } else {
-    await input.sql.run(
-      "UPDATE staff SET is_super_admin = 1, revoked_at = NULL, email = ? WHERE user_id = ?",
-      [PREVIEW_EMAIL, userId],
-    );
-  }
 
   const workspace = await input.sql.get<{ id: string }>(
     "SELECT id FROM workspaces WHERE slug = ?",
     [PREVIEW_SLUG],
   );
-  if (!workspace) {
-    const workspaceId = crypto.randomUUID();
+  let workspaceId = workspace?.id;
+  if (!workspaceId) {
+    workspaceId = crypto.randomUUID();
     await input.sql.run(
       `INSERT INTO workspaces (
          id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
@@ -86,12 +60,51 @@ export async function openPreviewSession(input: {
         input.now,
       ],
     );
-    for (const item of PREVIEW_REQUESTS) {
+    await input.sql.run(
+      `INSERT INTO requests (
+         id, workspace_id, position, title, guidance, suggested_tag, due_on, status, received_at, closed_at
+       ) VALUES (?, ?, 1, 'Files', NULL, 'other', NULL, 'open', NULL, NULL)`,
+      [crypto.randomUUID(), workspaceId],
+    );
+  }
+
+  const member = await input.sql.get<{ id: string; role: string }>(
+    `SELECT id, role FROM memberships
+     WHERE workspace_id = ? AND user_id = ? AND revoked_at IS NULL`,
+    [workspaceId, userId],
+  );
+  if (!member) {
+    await input.sql.run(
+      `INSERT INTO memberships (id, workspace_id, user_id, email, role, created_at, revoked_at)
+       VALUES (?, ?, ?, ?, 'client_owner', ?, NULL)`,
+      [crypto.randomUUID(), workspaceId, userId, PREVIEW_EMAIL, input.now],
+    );
+  } else if (member.role !== "client_owner") {
+    await input.sql.run("UPDATE memberships SET role = 'client_owner' WHERE id = ?", [member.id]);
+  }
+
+  const openRequests = await input.sql.all<{ id: string }>(
+    `SELECT id FROM requests
+     WHERE workspace_id = ? AND status = 'open'
+     ORDER BY position`,
+    [workspaceId],
+  );
+  if (openRequests.length === 0) {
+    const next = await input.sql.get<{ position: number }>(
+      "SELECT COALESCE(MAX(position), 0) + 1 AS position FROM requests WHERE workspace_id = ?",
+      [workspaceId],
+    );
+    await input.sql.run(
+      `INSERT INTO requests (
+         id, workspace_id, position, title, guidance, suggested_tag, due_on, status, received_at, closed_at
+       ) VALUES (?, ?, ?, 'Files', NULL, 'other', NULL, 'open', NULL, NULL)`,
+      [crypto.randomUUID(), workspaceId, next?.position ?? 1],
+    );
+  } else {
+    for (const extra of openRequests.slice(1)) {
       await input.sql.run(
-        `INSERT INTO requests (
-           id, workspace_id, position, title, guidance, suggested_tag, due_on, status, received_at, closed_at
-         ) VALUES (?, ?, ?, ?, ?, ?, NULL, 'open', NULL, NULL)`,
-        [crypto.randomUUID(), workspaceId, item.position, item.title, item.guidance, item.tag],
+        "UPDATE requests SET status = 'closed', closed_at = ? WHERE id = ?",
+        [input.now, extra.id],
       );
     }
   }
