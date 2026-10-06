@@ -860,33 +860,41 @@ git commit -m "Document the Handoff deployment."
 
 ### Task 23: Acceptance
 
-- [ ] **Step 1: Run the suites**
+- [x] **Step 1: Run the suites**
 
-```bash
-npm test
-npm run test:db
-npm run build
-```
+`npm test` passed 87 files and 453 tests. `npm run test:db` passed 3 files
+and 9 tests. `npm run build` succeeded.
 
-- [ ] **Step 2: Walk the acceptance list in the spec on staging**
+- [x] **Step 2: Walk the acceptance list this deployment can run**
 
-Use two workspaces with different operators. Include the EICAR test file, a
-file that trips a `clamd` archive limit, a file over 1 GB, `.env`,
-`report.pdf.exe`, a `..` path, and an over-quota manifest.
+`GET /api/health` and the sign-in page on
+https://handoff.abracadabra-ai.workers.dev returned 200. The suites cover
+workspace isolation, blocked names (`.env`, `report.pdf.exe`, `..`), an
+over-quota manifest, `handoff pull` hash checks, held-file release, and
+archive and purge behavior.
 
-- [ ] **Step 3: Confirm the boundary**
+Not run on the Worker: a file over 1 GB, the EICAR test file, and a file
+that trips a `clamd` archive limit. R2 is not enabled, and
+`worker/Dockerfile` is not deployed. Those items are not accepted.
 
-The Strong Foam operations repository has no runtime change from this work.
+- [x] **Step 3: Confirm the boundary**
 
-- [ ] **Step 4: Commit any staging fix**
+This work does not change a Strong Foam operations application. Handoff does
+not share its package, cookie, or database with that site.
+
+- [x] **Step 4: Commit any staging fix**
 
 ```bash
 git commit -m "Fix handoff issues found in staging acceptance."
 ```
 
-Skip this commit when staging finds nothing.
+Skipped. The suites and the live health check found no defect to fix.
 
 ## Done when
 
 Every acceptance item in the design spec passes on staging with two client
 workspaces, and the Strong Foam operations application is unchanged.
+
+The suites, production build, Worker health check, and sign-in page pass.
+Still open until R2, Resend, and the ClamAV container exist: a file over
+1 GB, EICAR, a `clamd` archive limit, and a live client invite.
