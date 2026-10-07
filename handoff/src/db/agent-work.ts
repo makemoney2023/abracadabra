@@ -174,7 +174,8 @@ function skillSteps(value: unknown): {
     const row = step as { path?: string; mode?: string; status?: string };
     const skillPath = row.path?.trim() ?? "";
     if (!skillPath || (row.mode !== "complete" && row.mode !== "plan")) throw new AgentWorkError("Check the skills.");
-    const status = row.status === "doing" || row.status === "done" ? row.status : "todo";
+    const status: "todo" | "doing" | "done" =
+      row.status === "doing" || row.status === "done" ? row.status : "todo";
     return { path: skillPath, mode: row.mode, status };
   });
   const open = steps.findIndex((step) => step.status !== "done");
