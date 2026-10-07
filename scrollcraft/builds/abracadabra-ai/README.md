@@ -14,6 +14,12 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Films archive — 2026-10-07: Super Funnel tours
+
+- Eight finished Super Funnel associate walkthroughs are plain `<video controls>` players on `films.html`, with WebP title-card posters and measured durations in JSON-LD and `sitemap.xml`.
+- They are not scroll-scrub legs. `walkthrough.html` stays one flight through Showdesk, Schema, LLM Leverage, and Canadian Discount Appliances.
+- Assets: `assets/films/superfunnel-*.mp4` (faststart remux of `outputs/videos/superfunnel/`) and `assets/superfunnel-*.webp`.
+
 ## Design revision — 2026-09-28: Range background motifs
 
 - A decorative `<canvas class="range-bg" aria-hidden="true">` sits inside the bordered `#range` menu instrument, clipped to that surface and layered behind its controls and copy. The canvas draws one restrained motif per service: signal waves for marketing, an assembling screen grid for applications, a small network for machine learning, ledger rows filling for the record, and orders flowing into a checkout for the sale.
@@ -140,7 +146,7 @@ npm run deploy
 - The walkthrough is rendered by script, so it also ships a visually hidden `h1` and a `<noscript>` article with the full copy of all eight legs for crawlers that do not execute JavaScript.
 - FAQ answers lead with the answer. Figures on the receipt act carry their source and pull date in the markup, not only in the design.
 - `robots.txt` allows the AI answer-engine crawlers by name and points at `sitemap.xml`, which lists the three pages with image and video entries. `llms.txt` is the quotable summary for language models, including the non-diagnostic rule for the wellness tools and the instruction to cite the pirx.ca figures with their date.
-- Only the 44-second promo states a `duration`; the other cuts were not measured, so they do not claim one.
+- The 44-second promo and the eight Super Funnel tours state a `duration` because those lengths were measured. The other cuts were not measured, so they do not claim one.
 
 ## Pages
 

@@ -30,6 +30,7 @@ Two cuts per product when both apply:
 | 3 | Schema | [makemoney2023/schema](https://github.com/makemoney2023/schema) · [schema-two.vercel.app](https://schema-two.vercel.app/) | **Live home stored**; seeded `/scan/[token]` walkthrough still open | URL scan → score / gaps → generate fix → ops inbox |
 | 4 | LLMCourse | [makemoney2023/LLMCourse](https://github.com/makemoney2023/LLMCourse) · [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app) | **Home + workshops stored**; in-module lesson path still thin | Home / preview → lesson steps → practice + quiz → workshops / try-it |
 | 5 | Sales enablement | Skill in this repo (not a standalone product) | **Scripts + one-pagers stored** in `outputs/sales-enablement/` | Rep-facing demo cuts, talk tracks, objection clips, one-pager / playbook leave-behinds |
+| 6 | Super Funnel | `Desktop/superfunnelsystem` · `public/walkthroughs/` | **Eight associate walkthroughs on the films page** (`scrollcraft/builds/abracadabra-ai/films.html`) and in `outputs/videos/superfunnel/` | Getting started → working a lead → quiz lead (samples / no samples) → follow-ups and activity → My Page, card, and funnels → social → team and settings |
 
 ---
 
@@ -109,3 +110,20 @@ When implementing a product `promo/`, ship marketing and sales-enablement compos
 4. Sales enablement packs for each, starting with Schema’s existing playbook
 
 Showdesk stays the reference; do not rebuild it unless the pipeline itself changes.
+
+## Super Funnel walkthroughs (on the films page, 2026-10-07)
+
+Copied from `Desktop/superfunnelsystem` `public/walkthroughs/` into `outputs/videos/superfunnel/`, then published as plain players on `scrollcraft/builds/abracadabra-ai/films.html` (`assets/films/superfunnel-*.mp4`, WebP title-card posters). These are the finished associate tours (captions and music burned in), not scroll-scrub legs. The walkthrough flight stays the four shipped systems. Create still has no video.
+
+| File | Length | What it shows |
+| --- | --- | --- |
+| `getting-started.mp4` | 66.0s | Home dashboard, setup, pipeline, nav |
+| `working-a-lead.mp4` | 44.4s | Contacts, contact sheet, Rapport, share, Discovery |
+| `quiz-lead-samples.mp4` | 61.9s | Quiz lead who wants samples, ship, follow-up, sample requests |
+| `quiz-lead-no-samples.mp4` | 56.0s | Quiz lead with no samples, Rapport, prefilled Discovery |
+| `follow-ups-activity.mp4` | 56.1s | Follow-ups due, calendar, Activity |
+| `my-page-card-funnels.mp4` | 86.0s | Share card, landing page, public page, funnels |
+| `social.mp4` | 70.3s | Social calendar, inbox, analytics |
+| `team-settings.mp4` | 63.9s | Team, settings, compliance |
+
+Each source file has a matching `*-poster.jpg` grabbed from the title card. The site uses WebP copies of those stills. Do not scrub-encode these cuts; they are finished films, not raw screen captures.

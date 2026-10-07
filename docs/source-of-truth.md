@@ -213,7 +213,7 @@ Bring the workflow, the words, and the outcome you want on the other side — no
 - **Title:** Abra-ca-dabra: From thought to working software
 - **Description:** AI agents map, design, build, and test bespoke software in parallel—directed by experienced people and grounded in working product proof.
 - **Canonical:** `https://abra-ca-dabra.app/`
-- **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo and live captures").
+- **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo, live captures, and Super Funnel").
 - **Crawler files:** `/robots.txt` (AI answer engines allowed by name), `/sitemap.xml` (image and video extensions), `/llms.txt` (a quotable summary with the dated pirx.ca figures and the non-diagnostic rule).
 
 Title uses a colon, not a dash, so it survives snippet rendering intact. Description is held under 160 characters. (Updated 2026-09-23 for the site build; the earlier 47-word description was too long to show whole.)
@@ -286,7 +286,7 @@ Repo brief for that catalog: quiet conjure, museum of working software, physical
 | Practitioner word tracks and sell sheets | `Desktop/Practioiner Wordtracks`, `Desktop/Patch Sell Sheets` | The sentence for each buyer and each product, reused by people, voice agents, and the field app | Ops |
 | S.T.A.R. | `Desktop/superpatch-d2c` | Sample, track, align, recruit. Guided multi-product conversations, contacts, team view, digital cards, several languages. Live signal: `star-seven-sigma.vercel.app` | Proving ground |
 | J.Ai | `Desktop/jai` | Sales coach on the rep's real pipeline, scripts, objections, and team | Proving ground |
-| Super Funnel System | `Desktop/superfunnelsystem` | One associate application: field sales, content studio, and landing pages with referral identity | Proving ground |
+| Super Funnel System | `Desktop/superfunnelsystem` | One associate application: field sales, content studio, and landing pages with referral identity. Eight walkthrough films (2026-09-29 renders) are on the public films page as plain players as of 2026-10-07, and stored in `outputs/videos/superfunnel/` | Proving ground |
 | SPSign | `Desktop/SPSign` | In-house agreements for a global associate base, with a signer ceremony and a privacy-request path. Replaces a per-seat signature vendor at network scale | Proving ground |
 | IDecide notes | `Desktop/SuperPatch/IDecide.md` | Buying notes on presentation software: close rate observed, fear of another login and a silo. Evidence for "one record, not another tool" | Ops |
 
@@ -390,7 +390,7 @@ These are sourced on disk. They are not approved public claims.
 ## What stays off the public site
 
 - Unconfirmed metrics in the table above.
-- SuperPatch internal system names, until naming is cleared. Use the outcome sentences.
+- SuperPatch internal system names, until naming is cleared. Use the outcome sentences. Exception, 2026-10-07: the eight Super Funnel associate walkthroughs are on `/films.html` under that name. They are not a leg of the four-system walkthrough flight, and they are not on the homepage.
 - Vendor ROI calculators inside `Intercom` as if they were our measured savings.
 - Medical outcomes. Assessments educate and route. They do not diagnose.
 - `ai-toolkit`, `Agent-Skills-for-Context-Engineering`, and the tutorial clones under `Desktop/Development/` (`langgraph-cua-py`, `pydantic-ai`, `trustcall`, `langmem`, `elevenlabs-cookbook` / `langsmith-cookbook`, `elevenlabs-examples`, `ai-chatbot`, `gen-ui-computer-use`, `executive-ai-assistant`, `msgraph-sample-pythondjangoapp`, upstream `translation-agent`).
@@ -431,7 +431,7 @@ The check is specified in `docs/readiness-check/`. Its shell and the assessment 
 The Scrollcraft build at `scrollcraft/builds/abracadabra-ai/` now carries this file's copy end to end. What landed, so nobody re-derives it:
 
 - **Homepage** (`index.html`): hero, the Aramaic origin of the name directly under the hero ("I will create as I speak."), the time travel chapter ("It feels like magic." — a pinned delivery calendar that moves through Conventional → Engineer → Parallel → Arrive to show the serial calendar folding in on itself once the thinking is front-loaded and the workstreams run at once; no duration or percentage is stated, the geometry carries the claim, and the copy says there is no sleight of hand), the range chapter (`#range`, "The only limit is what you can think of." — a menu of services with no named work: marketing, applications, machine learning, the customer record (CRM/ERP), and the sale (stores and lead generation); nothing on the menu is fixed, and the chapter hands off into the answer receipt; since 2026-09-28 a faint decorative canvas behind the menu draws one motif per service and adds no copy; the pirx.ca Search Console figures stay in `#aeo`), catalog, receipt (the pirx.ca figures with source and pull date printed under them), the situation and benefits pin, the Showdesk film scrub, the how-it-works pin, an FAQ in the operator's words, and the brief close. Every FAQ answer opens with the answer, then the qualifier, so an answer engine can lift the first sentence whole. The FAQ "Do you only build software?" answers "No." and names the public examples.
-- **Search and answer engines**: colon-style title, description under 160 characters, canonical, Open Graph and Twitter cards, and a JSON-LD graph (`Organization`, `WebSite`, `WebPage`, `ItemList` of the named specimens, `FAQPage`). The walkthrough page is rendered by script, so it also ships a hidden `h1`, a `noscript` article with all eight legs, and an `ItemList`. The films page carries a `CollectionPage` and one `VideoObject` per cut; only the 44-second promo states a duration because that is the only one measured.
+- **Search and answer engines**: colon-style title, description under 160 characters, canonical, Open Graph and Twitter cards, and a JSON-LD graph (`Organization`, `WebSite`, `WebPage`, `ItemList` of the named specimens, `FAQPage`). The walkthrough page is rendered by script, so it also ships a hidden `h1`, a `noscript` article with all eight legs, and an `ItemList`. The films page carries a `CollectionPage` and one `VideoObject` per cut. The 44-second Showdesk promo and the eight Super Funnel tours state a duration because those lengths were measured. The other captures do not.
 - **Crawler files**: `robots.txt` names GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, Bingbot, and CCBot as allowed; `sitemap.xml` lists the three pages with image and video entries; `llms.txt` is the quotable summary, including the rule that the wellness tools are non-diagnostic and the instruction to cite the pirx.ca figures with their date.
 - **Held out on purpose**: no counters on the receipt figures, no invented durations, no metrics beyond the pirx.ca set cleared in Confirm before publishing, no product names from What stays off the public site.
 
