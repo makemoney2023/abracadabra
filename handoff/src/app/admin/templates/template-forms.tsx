@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { FILE_TAGS } from "@/lib/policy/limits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   addTemplateItemAction,
   createTemplateAction,
@@ -48,12 +49,11 @@ export function AddItemForm({ templateId }: { templateId: string }) {
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor={`item-guidance-${templateId}`}>
         Guidance
-        <textarea
+        <Textarea
           id={`item-guidance-${templateId}`}
           name="guidance"
           maxLength={2000}
           rows={3}
-          className="rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm"
         />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor={`item-tag-${templateId}`}>

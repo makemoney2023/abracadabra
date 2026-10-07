@@ -11,10 +11,9 @@ import {
 } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const initial: FormState = { message: "" };
-
-const fieldClass = "min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 function Status({ message }: { message: string }) {
   if (!message) return null;
@@ -65,7 +64,7 @@ export function NoteForm({ organizationId }: { organizationId: string }) {
       <input type="hidden" name="organizationId" value={organizationId} />
       <label className="flex flex-col gap-1 text-sm" htmlFor="note-body">
         Add a note
-        <textarea id="note-body" name="body" required maxLength={2000} className={fieldClass} />
+        <Textarea id="note-body" name="body" required maxLength={2000} />
       </label>
       <Button type="submit" disabled={pending}>
         {pending ? "Adding" : "Add a note"}
@@ -82,7 +81,7 @@ export function CallForm({ organizationId }: { organizationId: string }) {
       <input type="hidden" name="organizationId" value={organizationId} />
       <label className="flex flex-col gap-1 text-sm" htmlFor="call-body">
         What happened
-        <textarea id="call-body" name="body" required maxLength={2000} className={fieldClass} />
+        <Textarea id="call-body" name="body" required maxLength={2000} />
       </label>
       <Button type="submit" disabled={pending}>
         {pending ? "Saving" : "Log a call"}

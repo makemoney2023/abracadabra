@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export function HeldReview({
   file,
@@ -58,7 +59,7 @@ export function HeldReview({
       {file.scanReason ? <p className="text-sm text-muted-foreground">{file.scanReason}</p> : null}
       <label className="flex flex-col gap-1 text-sm" htmlFor={`reason-${file.id}`}>
         Reason
-        <textarea
+        <Textarea
           id={`reason-${file.id}`}
           name="reason"
           required
@@ -66,7 +67,6 @@ export function HeldReview({
           rows={3}
           value={reason}
           onChange={(event) => setReason(event.target.value)}
-          className="rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm"
         />
       </label>
       <div className="flex gap-2">

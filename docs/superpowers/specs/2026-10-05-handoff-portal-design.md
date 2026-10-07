@@ -107,8 +107,8 @@ their software.
 
 ## Roles and access
 
-**HND-001.** A person signs in only by email magic link. Resend sends the
-message and D1 stores the session. Handoff does not accept any
+**HND-001.** A person signs in only by email magic link. Cloudflare Email
+Service sends the message and D1 stores the session. Handoff does not accept any
 operations-platform session, and no other product accepts a Handoff session.
 
 **HND-002.** The first super-admin is created from
@@ -381,11 +381,11 @@ refuses a path that would leave `<dir>`.
 
 ## Notifications
 
-**HND-044.** Auth email (magic link and invite) is sent through the Resend
-HTTP API from `HANDOFF_FROM_EMAIL`, with Handoff wording. Supabase is not
+**HND-044.** Auth email (magic link and invite) is sent through Cloudflare
+Email Service from `HANDOFF_FROM_EMAIL`, with Handoff wording. Supabase is not
 part of sign-in.
 
-**HND-045.** Product email is sent through Resend from a `notifications` table
+**HND-045.** Product email is sent through Cloudflare Email Service from a `notifications` table
 with a unique idempotency key per event and recipient.
 
 | Event | Recipients |
@@ -477,7 +477,9 @@ with the purge date, and again 7 days before purge.
 
 ## Security and deployment
 
-**HND-054.** The server and worker secret for mail is `RESEND_API_KEY`. Locker
+**HND-054.** Product mail uses the Wrangler `EMAIL` binding on workers `handoff`
+and `handoff-hq`. A process outside a Worker uses `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID`. The from address is `HANDOFF_FROM_EMAIL`. Locker
 records use the D1 binding `DB`, which is Wrangler configuration and not an
 environment secret. No `NEXT_PUBLIC_` variable contains a secret.
 
@@ -498,7 +500,7 @@ downloads at the same lifetimes. A Cloudflare Container runs `clamd` and the
 worker; a Worker isolate cannot. Queues and Cron Triggers replace a process
 loop. The R2 bucket and the Container use the same region as the D1 database
 (ENAM). File bytes still go to storage directly, through route handlers
-rather than Server Actions. Magic links are sent by Resend.
+rather than Server Actions. Magic links are sent by Cloudflare Email Service.
 
 **HND-057.** Rate limits, counted in the database: 10 batches per workspace
 per hour, 30 invites per inviter per day, 20 exports per operator per hour.
@@ -514,8 +516,9 @@ are scanned, who can see them, and when they are purged.
 ## Environment
 
 ```text
-RESEND_API_KEY                   Server and worker only
 HANDOFF_FROM_EMAIL               Product email sender address
+CLOUDFLARE_API_TOKEN             REST send fallback outside a Worker
+CLOUDFLARE_ACCOUNT_ID            REST send fallback outside a Worker
 HANDOFF_BUCKET=handoff
 HANDOFF_BRANDING_BUCKET=branding
 HANDOFF_SUPER_ADMIN_EMAILS       Bootstrap only, comma-separated

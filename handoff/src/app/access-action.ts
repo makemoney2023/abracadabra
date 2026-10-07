@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { explainAccessRequest, type AccessReply } from "@/lib/access";
-import { sendWithResend } from "@/lib/mail";
+import { sendHandoffMail } from "@/lib/mail";
 import { requestMagicLink, SIGN_IN_MESSAGE } from "@/lib/session";
 import { parseAllowlist } from "@/lib/store/staff";
 
@@ -35,7 +35,7 @@ export async function requestAccess(
       origin: await requestOrigin(),
       from: process.env.HANDOFF_FROM_EMAIL ?? "",
       allowlist: parseAllowlist(process.env.HANDOFF_SUPER_ADMIN_EMAILS),
-      send: sendWithResend,
+      send: sendHandoffMail,
     });
   } catch {
     return { message: "We couldn't send the email. Please try again soon." };

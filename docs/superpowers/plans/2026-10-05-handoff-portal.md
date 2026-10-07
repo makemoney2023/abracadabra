@@ -8,7 +8,7 @@ request checklist, and the operators assigned to that client pull the files
 that pass a malware scan.
 
 **Architecture:** A standalone Next.js app on Cloudflare Workers authenticates
-with magic links sent through Resend. Sessions and locker records live in
+with magic links sent through Cloudflare Email Service. Sessions and locker records live in
 Cloudflare D1. Server routes call one pure authorization function, then read
 and write through record queries that return rows only for workspaces that
 caller can see. The browser uploads bytes with R2 multipart upload into a
@@ -19,7 +19,7 @@ sweeps and purges. Operators pull batches with an export file and a
 linked, or migrated.
 
 **Tech Stack:** Next.js App Router, React, TypeScript, Vitest, Zod, Drizzle
-ORM, Cloudflare D1, Cloudflare R2, Resend, ClamAV `clamd`, Cloudflare
+ORM, Cloudflare D1, Cloudflare R2, Cloudflare Email Service, ClamAV `clamd`, Cloudflare
 Containers, Queues, Cron Triggers, Tailwind CSS.
 
 **Design:** `docs/superpowers/specs/2026-10-05-handoff-portal-design.md`
@@ -55,7 +55,7 @@ or a live membership. Routes still return 404 when that lookup misses.
 | Private downloads | Supabase signed URLs, same TTLs | R2 presigned GET URLs, same TTLs: 5 minutes, 60 minutes, 24 hours |
 | Scanner | Render service with `clamd` beside the worker | Cloudflare Container from `worker/Dockerfile`. A Worker cannot run `clamd` inside the isolate |
 | Sweeps, mail, purge | Render process loop | Queues for scan and mail, Cron Triggers for sweeps and purge |
-| Records and sessions | Supabase Postgres and Auth | D1. Magic links are sent by Resend. Session rows live in D1 |
+| Records and sessions | Supabase Postgres and Auth | D1. Magic links are sent by Cloudflare Email Service. Session rows live in D1 |
 | One region (HND-056) | One Postgres region | D1 region ENAM, with the R2 location and the Container region pinned to it |
 
 Upload routes stay route handlers. Do not accept file bytes through a Server
@@ -76,7 +76,7 @@ part is sent again.
 Local development uses `wrangler dev` for the Worker and D1, or
 `.data/handoff.db` when the Worker context is absent. `npm test` applies
 `migrations/0001_handoff.sql` in memory. Production fails closed when
-`RESEND_API_KEY` is missing. The D1 binding is Wrangler configuration, not an
+`HANDOFF_FROM_EMAIL` is missing. The D1 binding is Wrangler configuration, not an
 environment secret. Containers, R2, and Queues need a Workers plan that
 includes them. R2 must be enabled in the Cloudflare dashboard before buckets
 can be created.
@@ -111,7 +111,7 @@ current guide in that project's `node_modules/next/dist/docs/`.
 - Unit tests use fakes and open no network connection. Database tests run
   the D1 migration on Node's built-in SQLite with `npm test` and
   `npm run test:db`.
-- Production fails closed when `RESEND_API_KEY` is missing. The D1 database
+- Production fails closed when `HANDOFF_FROM_EMAIL` is missing. The D1 database
   is the `DB` binding in `wrangler.jsonc`.
 - No `NEXT_PUBLIC_` variable contains a secret.
 - Logs, email, and audit metadata exclude tokens, signed URLs, and bytes.
@@ -124,7 +124,6 @@ current guide in that project's `node_modules/next/dist/docs/`.
 ## Environment contract
 
 ```text
-RESEND_API_KEY
 HANDOFF_FROM_EMAIL
 HANDOFF_BUCKET=handoff
 HANDOFF_BRANDING_BUCKET=branding
@@ -454,9 +453,9 @@ git commit -m "Store handoff records in Cloudflare D1."
 When `staff` is empty, the first sign-in whose email is listed in
 `HANDOFF_SUPER_ADMIN_EMAILS` creates a super-admin row with that user id.
 
-- [x] **Step 2: Magic link through Resend**
+- [x] **Step 2: Magic link through Cloudflare Email Service**
 
-Send the link with Resend and store the session in D1. The message uses
+Send the link with Cloudflare Email Service and store the session in D1. The first build used another sender. The message uses
 Handoff wording and no client name.
 
 - [x] **Step 3: Resolve the caller**
@@ -682,7 +681,7 @@ git commit -m "Scan handoff objects with clamd in one pass."
 - Create: `src/lib/notifications.ts`
 - Create: `src/worker/jobs/notify.ts`
 - Create: email templates
-- Test: rule and job tests with a fake Resend client
+- Test: rule and job tests with a fake mail sender
 
 - [x] **Step 1: Write failing tests**
 
@@ -836,8 +835,9 @@ on. Public URL: https://handoff.abracadabra-ai.workers.dev. Do not attach
 - [x] **Step 2: Worker secrets**
 
 Set `HANDOFF_SIGNING_SECRET` and `HANDOFF_APP_ORIGIN`
-(`https://handoff.abracadabra-ai.workers.dev`). Do not set `RESEND_API_KEY`,
-`HANDOFF_FROM_EMAIL`, or `HANDOFF_OBJECT_PATH`. Magic links fail closed.
+(`https://handoff.abracadabra-ai.workers.dev`). Do not set
+`HANDOFF_FROM_EMAIL` or `HANDOFF_OBJECT_PATH` until the domain is onboarded
+in Cloudflare Email Service. Magic links fail closed.
 Uploads, scan object reads, and object purge return 503 until object storage
 exists.
 
@@ -896,5 +896,7 @@ Every acceptance item in the design spec passes on staging with two client
 workspaces, and the Strong Foam operations application is unchanged.
 
 The suites, production build, Worker health check, and sign-in page pass.
-Still open until R2, Resend, and the ClamAV container exist: a file over
-1 GB, EICAR, a `clamd` archive limit, and a live client invite.
+Still open until the ClamAV container exists: a file over
+1 GB, EICAR, a `clamd` archive limit, and a live client invite. R2 is in use.
+Product mail uses Cloudflare Email Service and cannot send until
+`HANDOFF_FROM_EMAIL` is set and the domain is onboarded.

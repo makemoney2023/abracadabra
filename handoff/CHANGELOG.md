@@ -2,6 +2,15 @@
 
 ## 2026-10-06
 
+- **What changed** — Staff pages use a shadcn sidebar, separator, badge, label, and textarea on the existing canvas, ink, optic, and phosphor colors. Product mail (magic links, invites, and file notices) sends through Cloudflare Email Service. Workers `handoff` and `handoff-hq` bind `EMAIL`. The scan worker posts to the Email Service REST API with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+- **Why** — The staff chrome should use the component library without replacing the Abracadabra palette. Product mail should use the Cloudflare sender already planned for client conversation mail.
+- **Code touchpoints** — `handoff/src/app/staff-shell.tsx`, `handoff/src/app/staff-nav.tsx`, `handoff/src/components/ui/sidebar.tsx`, `handoff/src/components/ui/sheet.tsx`, `handoff/src/components/ui/tooltip.tsx`, `handoff/src/components/ui/skeleton.tsx`, `handoff/src/hooks/use-mobile.ts`, `handoff/src/app/globals.css`, `handoff/src/lib/mail.ts`, `handoff/src/lib/runtime/production-env.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `handoff/.env.example`
+- **Data-flow impact** — `sendHandoffMail` prefers the Worker `EMAIL` binding. Without that binding it uses the REST send API. With neither, it throws `mail is not configured`. Callers are the magic-link action, space invites, and the scan notification job.
+- **API / schema impact** — none. `PRODUCTION_SECRET_KEYS` is now `HANDOFF_FROM_EMAIL`. `RESEND_API_KEY` is no longer part of the contract.
+- **Verification** — `npm test` passed (61 files, 308 tests). `npm run lint` passed. `npx next typegen` then `npx tsc --noEmit` passed. In the browser at `http://hq.localhost:3000/login`, the page uses canvas `#070706`, ink text, optic wordmark, and the orange primary button. Show password switches the field to text. `/spaces` redirects to `/login`. The staff sidebar was not opened because `HANDOFF_ADMIN_PASSWORD` is not set in this environment. Live mail was not sent. The domain still needs Cloudflare Email Service onboarding before `HANDOFF_FROM_EMAIL` can deliver.
+
+## 2026-10-06
+
 - **What changed** — Deployed `main` after the hostname cutover. Marketing Worker `abracadabra-marketing` is version `efc2764d-ddf2-4489-9eda-86778e21908b`. Client worker `handoff` is version `fa3dce27-fb33-4e3e-bac3-5e5aecb11b5d`. Staff worker `handoff-hq` is version `9c6d6b97-35ef-4e02-bce8-8525dc1e3d75`.
 - **Why** — The custom domains were already attached. This deploy publishes the `main` scripts onto those hosts.
 - **Code touchpoints** — none in this commit beyond the record. The scripts came from the merge of #50.

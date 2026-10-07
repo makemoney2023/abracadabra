@@ -432,7 +432,7 @@ Goal: green end-to-end run, accessibility pass, structured data validated, first
 - [ ] Funnel from `assessment_events`: started → section_complete × 4 → completed → opted_in → results_viewed → booking_opened → booked.
 - [ ] Per-question drop-off; flag any step with > 15 % exit for copy review.
 - [ ] Scan pending rate at results view; if high, revisit polling window or reorder G04 earlier.
-- [ ] Decide on v1.1 items from spec §17 (report email via Resend, nurture for "completed, not booked").
+- [ ] Decide on v1.1 items from spec §17 (report email via Cloudflare Email Service, nurture for "completed, not booked").
 
 ---
 

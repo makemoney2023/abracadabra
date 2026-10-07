@@ -1,0 +1,25 @@
+---
+description: This repo is owned by makemoney2023 and every commit is authored as makemoney2023
+alwaysApply: true
+---
+
+# Ownership and authorship
+
+- **Owner:** GitHub user `makemoney2023`. Remote is `https://github.com/makemoney2023/abracadabra.git`.
+- **Author:** Every commit in this repo is authored and committed as `makemoney2023` (`124006256+makemoney2023@users.noreply.github.com`).
+- **Do not** commit as `Cursor Agent`, `cursoragent@cursor.com`, or `cursor[bot]`.
+- **Do not** change `git config`. Pass the identity on the commit itself:
+
+```bash
+GIT_AUTHOR_NAME='makemoney2023' \
+GIT_AUTHOR_EMAIL='124006256+makemoney2023@users.noreply.github.com' \
+GIT_COMMITTER_NAME='makemoney2023' \
+GIT_COMMITTER_EMAIL='124006256+makemoney2023@users.noreply.github.com' \
+git commit -m "$(cat <<'EOF'
+Message here.
+
+EOF
+)"
+```
+
+- Pull requests, issues, and deploys stay on the `makemoney2023` account.

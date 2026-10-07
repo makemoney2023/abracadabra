@@ -1,5 +1,5 @@
 /** Server configuration that must be present before a production process stays up. */
-export const PRODUCTION_SECRET_KEYS = ["RESEND_API_KEY"] as const;
+export const PRODUCTION_SECRET_KEYS = ["HANDOFF_FROM_EMAIL"] as const;
 
 export type ProductionSecretKey = (typeof PRODUCTION_SECRET_KEYS)[number];
 

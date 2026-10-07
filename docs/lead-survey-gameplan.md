@@ -216,7 +216,7 @@ Inngest: reuse `scan/requested`; add `assessment/completed` for the notification
 - `/ops` queue shows a new **Check** column (band + readiness) and a filter for `booked`.
 - `LeadSheet` gets an "Assessment" tab: pressure profile, sub-dimension scores, the free-text answers, and the booking time.
 - The first call uses the pressure profile as the agenda. `docs/sales/proposal-tiers.md` covers the visibility work; the other pressure rows map to the offers in `docs/source-of-truth.md` and `outputs/sales-enablement/`.
-- Nurture: adapt `docs/sales/nurture-7-day.md` into a "check but no booking" variant. Sending requires an email provider in Schema (Resend is the natural fit; confirm none is wired today before assuming).
+- Nurture: adapt `docs/sales/nurture-7-day.md` into a "check but no booking" variant. Sending uses Cloudflare Email Service, the same sender Handoff uses.
 
 ## 12. Analytics and QA
 

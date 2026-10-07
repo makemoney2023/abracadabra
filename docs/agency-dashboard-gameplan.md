@@ -84,7 +84,7 @@ cookie is set for `hq` only, so a client page can never read it.
 | Agent that drafts and talks | Worker `handoff-agent` (Agents SDK). One instance per client. It calls MCP. It does not own records. |
 | GitHub webhook buffer | Queue `github-events` |
 | Client email in and out | Cloudflare Email Service on `handoff-agent`, after the domain is onboarded in Email Service (SPF and DKIM). The zone is on this account |
-| Handoff product mail (invites, file notices) | The sender Handoff already uses. That is not the client-conversation channel. |
+| Handoff product mail (invites, file notices) | Cloudflare Email Service. Workers `handoff` and `handoff-hq` bind `EMAIL`. The scan worker uses the REST send API with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. That is not the client-conversation channel. |
 | Invoice PDFs | R2 |
 | Finished-work media (images, video, posters) | R2, streamed by the Worker with range requests |
 | Staff host | Custom domain `hq.abra-ca-dabra.app` on worker `handoff-hq`. The workers.dev staff host still answers |
@@ -702,7 +702,7 @@ Each step ships on its own and is useful on its own.
    follow-up tasks, and email drafts. It does not send mail yet. AI client summary for staff only.
 11. **Client email.** Cloudflare Email Service on `handoff-agent`: inbound handler, address routing,
    signed replies, drafts on the client page, staff press Send. Blocked until Email Service is
-   onboarded on this zone (SPF and DKIM). Handoff invite mail stays on its current sender.
+   onboarded on this zone (SPF and DKIM). Handoff invite and file mail uses Cloudflare Email Service on the existing workers.
 12. **Move the Readiness Check to Cloudflare.** Worker port, `rc_` tables in the same D1, Queue for
    scans, Cron for the sweep, Turnstile. Turn off the bridge, Vercel, Supabase, and Inngest.
 
@@ -824,7 +824,7 @@ The agent loads the client through MCP and writes drafts back through MCP.
 
 The zone `abra-ca-dabra.app` is on this Cloudflare account. Email Service still needs the domain
 onboarded, plus SPF and DKIM. Do not send client mail from `workers.dev`. Do not add a second
-email product for this channel. Handoff invite and file mail keeps the sender it has now.
+email product for this channel. Handoff invite and file mail already sends through Cloudflare Email Service (`EMAIL` on `handoff` and `handoff-hq`). Client conversation mail is the new channel on `handoff-agent`.
 
 When Email Service is onboarded:
 

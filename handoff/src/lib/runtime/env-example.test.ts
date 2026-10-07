@@ -3,7 +3,6 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const CONTRACT = [
-  "RESEND_API_KEY",
   "HANDOFF_FROM_EMAIL",
   "HANDOFF_BUCKET=handoff",
   "HANDOFF_BRANDING_BUCKET=branding",

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
-import { sendWithResend } from "@/lib/mail";
+import { sendHandoffMail } from "@/lib/mail";
 import { createInvite, removeMember, resendInvite } from "@/lib/store/invites";
 import { parseAllowlist } from "@/lib/store/staff";
 
@@ -26,7 +26,7 @@ function mail() {
     origin: "",
     from: process.env.HANDOFF_FROM_EMAIL ?? "",
     allowlist: parseAllowlist(process.env.HANDOFF_SUPER_ADMIN_EMAILS),
-    send: sendWithResend,
+    send: sendHandoffMail,
   };
 }
 

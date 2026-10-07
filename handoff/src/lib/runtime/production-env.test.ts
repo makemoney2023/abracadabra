@@ -9,20 +9,20 @@ describe("missingProductionSecrets", () => {
     expect(missingProductionSecrets({ NODE_ENV: "development" })).toEqual([]);
   });
 
-  it("treats a blank production mail key as missing", () => {
+  it("treats a blank production from address as missing", () => {
     expect(
       missingProductionSecrets({
         NODE_ENV: "production",
-        RESEND_API_KEY: "  ",
+        HANDOFF_FROM_EMAIL: "  ",
       }),
-    ).toEqual(["RESEND_API_KEY"]);
+    ).toEqual(["HANDOFF_FROM_EMAIL"]);
   });
 
-  it("accepts production when the mail key is set", () => {
+  it("accepts production when the from address is set", () => {
     expect(
       missingProductionSecrets({
         NODE_ENV: "production",
-        RESEND_API_KEY: "re_test",
+        HANDOFF_FROM_EMAIL: "handoff@abra-ca-dabra.app",
       }),
     ).toEqual([]);
   });
@@ -31,7 +31,7 @@ describe("missingProductionSecrets", () => {
 describe("assertProductionEnv", () => {
   it("names the missing production secret", () => {
     expect(() => assertProductionEnv({ NODE_ENV: "production" })).toThrow(
-      /RESEND_API_KEY/,
+      /HANDOFF_FROM_EMAIL/,
     );
   });
 });

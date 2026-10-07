@@ -11,6 +11,7 @@ import {
 } from "@/db/crm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createMilestoneAction,
   createProjectAction,
@@ -25,8 +26,6 @@ import { AUDIENCE_LABEL, HEALTH_LABEL, PROJECT_STATUS_LABEL, TASK_STATUS_LABEL }
 
 const initial: FormState = { message: "" };
 const selectClass = "h-9 rounded-lg border border-input bg-transparent px-2 text-sm";
-const fieldClass =
-  "min-h-24 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 function Status({ message }: { message: string }) {
   if (!message) return null;
@@ -209,7 +208,7 @@ export function StatusUpdateForm({ projectId, organizationId }: { projectId: str
       <input type="hidden" name="organizationId" value={organizationId} />
       <label className="flex flex-col gap-1 text-sm" htmlFor="status-body">
         Update
-        <textarea id="status-body" name="body" required maxLength={4000} className={fieldClass} />
+        <Textarea id="status-body" name="body" required maxLength={4000} />
       </label>
       <label className="flex flex-col gap-1 text-sm" htmlFor="status-health">
         Health

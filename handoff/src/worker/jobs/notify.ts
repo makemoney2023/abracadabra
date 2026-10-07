@@ -1,6 +1,6 @@
 import type { Sql } from "@/db/sql";
 import { deriveBatchStatus, isBatchActive, type FileStatus } from "@/lib/batches";
-import { sendWithResend } from "@/lib/mail";
+import { sendHandoffMail } from "@/lib/mail";
 import { deliverNotifications, markRequestReceived, queueProductEvent } from "@/lib/notifications";
 import type { ScanDecision } from "@/lib/scan";
 
@@ -46,5 +46,5 @@ export async function publishScanOutcome(
 /** Delivers queued product mail. A send failure stays inside deliverNotifications. */
 export async function flushNotifications(sql: Sql, now: number): Promise<void> {
   const origin = process.env.HANDOFF_APP_ORIGIN?.trim() ?? "";
-  await deliverNotifications(sql, sendWithResend, now, origin);
+  await deliverNotifications(sql, sendHandoffMail, now, origin);
 }

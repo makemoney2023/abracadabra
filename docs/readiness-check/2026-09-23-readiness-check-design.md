@@ -388,7 +388,7 @@ New env: `NEXT_PUBLIC_CHECK_URL`, `NEXT_PUBLIC_CAL_LINK`, `CAL_WEBHOOK_SECRET`. 
 
 ## 17. Open follow-ups (explicitly deferred)
 
-- Email delivery of the report and a "check but no booking" nurture (needs a mail provider — Resend is the natural fit).
+- Email delivery of the report and a "check but no booking" nurture (needs Cloudflare Email Service, the same sender Handoff uses).
 - Aggregate readiness index page once N is real and cleared.
 - Ops-triggered re-score against a newer config version.
 - Share card (OG image with band only) for social.

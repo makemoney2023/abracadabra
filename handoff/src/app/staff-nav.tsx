@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 import { navIsActive } from "./staff-nav-match";
 
 const LINKS = [
@@ -16,20 +23,23 @@ const LINKS = [
 export function StaffNav() {
   const path = usePathname() || "/";
   return (
-    <nav aria-label="Studio" className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm md:flex-col md:gap-1">
-      {LINKS.map((link) => {
-        const active = navIsActive(path, link.href);
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            aria-current={active ? "page" : undefined}
-            className={active ? "font-medium" : "text-muted-foreground"}
-          >
-            {link.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <SidebarMenu aria-label="Studio">
+          {LINKS.map((link) => {
+            const active = navIsActive(path, link.href);
+            return (
+              <SidebarMenuItem key={link.href}>
+                <SidebarMenuButton asChild isActive={active}>
+                  <Link href={link.href} aria-current={active ? "page" : undefined}>
+                    {link.label}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 }
