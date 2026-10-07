@@ -18,6 +18,7 @@ describe("renderInviteEmail", () => {
     expect(mail.text).toContain(URL);
     expect(mail.text).toContain("press the button");
     expect(mail.text).toContain("15 minutes");
+    if (!mail.html) throw new Error("invite html is missing");
     expect(mail.html).toContain("HANDOFF");
     expect(mail.html).toContain("You're invited");
     expect(mail.html).toContain("Open your invite");
@@ -41,6 +42,7 @@ describe("renderInviteEmail", () => {
       spaceName: `North <wind> & "Co"`,
       url: URL,
     });
+    if (!named.html) throw new Error("invite html is missing");
     expect(named.html).toContain("North &lt;wind&gt; &amp; &quot;Co&quot;");
     expect(named.html).not.toContain("<wind>");
     expect(named.subject).toBe(`You're invited to North <wind> & "Co"`);
@@ -53,6 +55,7 @@ describe("renderInviteEmail", () => {
     });
     expect(blank.subject).toBe("You're invited to Handoff");
     expect(blank.text).toContain("Handoff");
+    if (!blank.html) throw new Error("invite html is missing");
     expect(blank.html).toContain("Handoff has a private folder ready for you.");
   });
 });
