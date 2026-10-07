@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/w/[slug]/people/actions.ts`, `handoff/src/lib/current.ts`, `handoff/src/lib/share-link.ts`, `handoff/src/lib/mail.ts`
 - **Data-flow impact** — `invitePersonAction` returns "Sign in again to do that." instead of `notFound()` when the space is missing for the caller. `createInvite` and `resendInvite` receive `publicClientOrigin`. `openSession` keeps the cookie token across the D1 await. `sendHandoffMail` throws "mail was refused" when the binding returns no `messageId`, and the invite row is still deleted.
 - **API / schema impact** — none.
-- **Verification** — `npm test` in `handoff/` passed 378 node tests and 6 agent tests. `npx eslint` on the touched files exited 0. Both live workers already have the `HANDOFF_FROM_EMAIL` secret. This build is not deployed.
+- **Verification** — `npm test` in `handoff/` passed 378 node tests and 6 agent tests. `npx eslint` on the touched files exited 0. Both live workers already have the `HANDOFF_FROM_EMAIL` secret. Worker `handoff` version `e1a09ca2-e533-4bad-80e0-e206e58cde96`. Worker `handoff-hq` version `e06d0732-b032-4d96-9950-120a7521d174`.
 
 ## 2026-10-07
 
