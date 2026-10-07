@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — Product mail sends from `handoff@abra-ca-dabra.app`. That address is a Worker secret on `handoff` and `handoff-hq`.
+- **Why** — Email Sending is onboarded for `abra-ca-dabra.app`. Invite and file mail need a From address on that domain.
+- **Code touchpoints** — `handoff/README.md`, `handoff/.env.example`
+- **Data-flow impact** — `sendHandoffMail` reads `HANDOFF_FROM_EMAIL` and sends through the `EMAIL` binding. The scan worker does not use this secret.
+- **API / schema impact** — none. The value is a Worker secret, not a git file.
+- **Verification** — Secret list on both workers includes `HANDOFF_FROM_EMAIL` after deploy. Public DNS at 1.1.1.1 shows bounce SPF `include:_spf.mx.cloudflare.net`, bounce MX, and a DKIM key on `cf-bounce._domainkey`. `npm run deploy` published worker `handoff` version `5c9e8ebb-69a2-462e-b827-eadbd67ea89a`. `npm run deploy:hq` published worker `handoff-hq` version `dbcaac9d-111b-4877-a33e-5027498d2e2f`.
+
+## 2026-10-07
+
 - **What changed** — The production type check covers brief and design-system labels, skill choices stay `plan` or `complete`, and a GET of an open link still returns 405 when the request is present.
 - **Why** — Workers Builds for `handoff` and `handoff-hq` stopped on commit `4942d42` during `npm run build`.
 - **Code touchpoints** — `handoff/src/app/deliverables/labels.ts`, `handoff/src/lib/client-documents.ts`, `handoff/src/lib/client-documents.test.ts`, `handoff/src/lib/mcp.ts`, `handoff/src/lib/agent-wake.test.ts`, `handoff/src/app/auth/callback/open/route.ts`, `handoff/src/app/share/[token]/open/route.ts`, `handoff/src/scan/bindings.test.ts`
