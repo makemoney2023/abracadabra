@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/mail.ts`, `handoff/src/lib/mail.test.ts`
 - **Data-flow impact** — `sendHandoffMail` adds the name. The Worker binding uses `email`. The REST send uses `address`.
 - **API / schema impact** — none.
-- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 22 tests. `npx eslint src/lib/mail.ts src/lib/mail.test.ts` exited 0.
+- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 22 tests. `npx eslint src/lib/mail.ts src/lib/mail.test.ts` exited 0. Worker `handoff` version `b7439d65-0741-4201-8ad6-a90d1ec44b32`. Worker `handoff-hq` version `df60b8a1-bfa9-4e4d-af19-2380ab3b4fc3`.
 
 ## 2026-10-07
 
