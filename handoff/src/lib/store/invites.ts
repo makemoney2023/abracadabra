@@ -2,6 +2,7 @@ import type { Sql } from "@/db/sql";
 import { can, type Caller, type MembershipRole } from "@/lib/authz";
 import { LIMITS } from "@/lib/policy/limits";
 import { normalizeEmail, requestMagicLink, type OutboundMail } from "@/lib/session";
+import { renderInviteEmail } from "@/lib/email-templates";
 import { REFUSED, type StoreResult } from "@/lib/store/result";
 
 const ALREADY_OPEN = "That invite is already out.";
@@ -66,9 +67,14 @@ async function sendInviteLink(
   sql: Sql,
   email: string,
   inviteId: string,
+  workspaceId: string,
   now: number,
   mail: MailInput,
 ): Promise<boolean> {
+  const workspace = await sql.get<{ display_name: string }>(
+    "SELECT display_name FROM workspaces WHERE id = ?",
+    [workspaceId],
+  );
   const before = await sql.get<{ n: number }>("SELECT count(*) AS n FROM magic_links WHERE email = ?", [email]);
   try {
     await requestMagicLink({
@@ -79,6 +85,15 @@ async function sendInviteLink(
       from: mail.from,
       allowlist: mail.allowlist,
       returnTo: `/invites/${inviteId}`,
+      compose: (url) => {
+        const rendered = renderInviteEmail({
+          from: mail.from,
+          to: email,
+          spaceName: workspace?.display_name ?? "",
+          url,
+        });
+        return { subject: rendered.subject, text: rendered.text, html: rendered.html };
+      },
       send: mail.send,
     });
   } catch {
@@ -129,7 +144,7 @@ export async function createInvite(input: {
      VALUES (?, ?, ?, ?, ?, ?, NULL, NULL)`,
     [id, input.workspaceId, email, role, input.caller.userId, input.now + inviteTtlMs()],
   );
-  const sent = await sendInviteLink(input.sql, email, id, input.now, input);
+  const sent = await sendInviteLink(input.sql, email, id, input.workspaceId, input.now, input);
   if (!sent) {
     await input.sql.run("DELETE FROM invites WHERE id = ?", [id]);
     return { ok: false, message: MAIL_FAILED };
@@ -166,7 +181,7 @@ export async function resendInvite(input: {
     [invite.workspace_id],
   );
   if (workspace?.status !== "active") return { ok: false, message: INVALID };
-  const sent = await sendInviteLink(input.sql, invite.email, invite.id, input.now, input);
+  const sent = await sendInviteLink(input.sql, invite.email, invite.id, invite.workspace_id, input.now, input);
   if (!sent) return { ok: false, message: MAIL_FAILED };
   await input.sql.run("UPDATE invites SET expires_at = ? WHERE id = ?", [input.now + inviteTtlMs(), invite.id]);
   return { ok: true, value: { id: invite.id } };

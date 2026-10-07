@@ -2,11 +2,21 @@ import type { OutboundMail } from "@/lib/session";
 
 const CLOUDFLARE_CONTEXT = Symbol.for("__cloudflare-context__");
 
+/** Visible sender on every product email. The address stays HANDOFF_FROM_EMAIL. */
+export const HANDOFF_FROM_NAME = "Abra-ca-dabra Ai";
+
+type NamedAddress = {
+  email?: string;
+  address?: string;
+  name: string;
+};
+
 type EmailMessage = {
   to: string;
-  from: string;
+  from: string | NamedAddress;
   subject: string;
   text: string;
+  html?: string;
 };
 
 type EmailBinding = {
@@ -21,16 +31,34 @@ function emailBinding(): EmailBinding | undefined {
   return (globalThis as ContextHolder)[CLOUDFLARE_CONTEXT]?.env?.EMAIL;
 }
 
+function senderAddress(from: string): string {
+  const trimmed = from.trim();
+  const wrapped = trimmed.match(/<([^>]+)>\s*$/);
+  return (wrapped?.[1] ?? trimmed).trim();
+}
+
+/** Workers uses `email`. The REST API uses `address`. Both take the same display name. */
+function namedFrom(from: string, key: "email" | "address"): string | NamedAddress {
+  const email = senderAddress(from);
+  if (!email.includes("@")) return from;
+  return { [key]: email, name: HANDOFF_FROM_NAME };
+}
+
+function outbound(message: OutboundMail, key: "email" | "address"): EmailMessage {
+  return {
+    to: message.to,
+    from: namedFrom(message.from, key),
+    subject: message.subject,
+    text: message.text,
+    ...(message.html ? { html: message.html } : {}),
+  };
+}
+
 /** Sends one Handoff message through Cloudflare Email Service. Errors stay generic so tokens and response bodies are not logged. */
 export async function sendHandoffMail(message: OutboundMail): Promise<void> {
   const binding = emailBinding();
   if (binding) {
-    await binding.send({
-      to: message.to,
-      from: message.from,
-      subject: message.subject,
-      text: message.text,
-    });
+    await binding.send(outbound(message, "email"));
     return;
   }
 
@@ -46,12 +74,7 @@ export async function sendHandoffMail(message: OutboundMail): Promise<void> {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        to: message.to,
-        from: message.from,
-        subject: message.subject,
-        text: message.text,
-      }),
+      body: JSON.stringify(outbound(message, "address")),
     },
   );
 

@@ -127,9 +127,12 @@ describe("createInvite", () => {
       expires_at: NOW + LIMITS.inviteTtlDays * 24 * 60 * 60 * 1000,
     });
     expect(sent).toHaveLength(1);
-    expect(sent[0]?.subject).toBe("Sign in to Handoff");
+    expect(sent[0]?.subject).toBe("You're invited to Northwind Co");
     expect(sent[0]?.text).toContain(`${ORIGIN}/auth/callback?token=`);
     expect(sent[0]?.text).toContain(encodeURIComponent(`/invites/${member.value.id}`));
+    expect(sent[0]?.html).toContain("Northwind Co");
+    expect(sent[0]?.html).toContain("Open your invite");
+    expect(sent[0]?.html).toContain(encodeURIComponent(`/invites/${member.value.id}`));
     expect(sent[0]?.text).not.toContain("token_hash");
 
     const ownerInvite = await createInvite({
@@ -281,6 +284,8 @@ describe("createInvite", () => {
     const rows = await sql.get<{ n: number }>("SELECT count(*) AS n FROM invites");
     expect(rows?.n).toBe(1);
     expect(sent).toHaveLength(2);
+    expect(sent[1]?.subject).toBe("You're invited to Northwind Co");
+    expect(sent[1]?.html).toContain("Open your invite");
     expect(sent[1]?.text).toContain(encodeURIComponent(`/invites/${created.value.id}`));
     const expiry = await sql.get<{ expires_at: number }>("SELECT expires_at FROM invites WHERE id = ?", [
       created.value.id,

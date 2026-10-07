@@ -22,7 +22,7 @@ describe("missingProductionSecrets", () => {
     expect(
       missingProductionSecrets({
         NODE_ENV: "production",
-        HANDOFF_FROM_EMAIL: "handoff@abra-ca-dabra.app",
+        HANDOFF_FROM_EMAIL: "magic@abra-ca-dabra.app",
       }),
     ).toEqual([]);
   });

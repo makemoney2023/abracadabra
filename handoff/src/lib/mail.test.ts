@@ -42,7 +42,7 @@ describe("sendHandoffMail", () => {
 
     expect(send).toHaveBeenCalledWith({
       to: message.to,
-      from: message.from,
+      from: { email: message.from, name: "Abra-ca-dabra Ai" },
       subject: message.subject,
       text: message.text,
     });
@@ -76,10 +76,39 @@ describe("sendHandoffMail", () => {
     expect(headers.Authorization).toBe("Bearer token");
     expect(JSON.parse(String(init.body))).toEqual({
       to: message.to,
-      from: message.from,
+      from: { address: message.from, name: "Abra-ca-dabra Ai" },
       subject: message.subject,
       text: message.text,
     });
+  });
+
+  it("sends the invite html with the plain copy", async () => {
+    const send = vi.fn(async () => ({ messageId: "m2" }));
+    setEmailBinding(send);
+    const html = "<p>You're invited</p>";
+
+    await sendHandoffMail({ ...message, html });
+
+    expect(send).toHaveBeenCalledWith({
+      to: message.to,
+      from: { email: message.from, name: "Abra-ca-dabra Ai" },
+      subject: message.subject,
+      text: message.text,
+      html,
+    });
+  });
+
+  it("keeps a wrapped address and still uses the studio sender name", async () => {
+    const send = vi.fn(async () => ({ messageId: "m3" }));
+    setEmailBinding(send);
+
+    await sendHandoffMail({ ...message, from: "Handoff <magic@abra-ca-dabra.app>" });
+
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: { email: "magic@abra-ca-dabra.app", name: "Abra-ca-dabra Ai" },
+      }),
+    );
   });
 
   it("refuses when neither the binding nor the API credentials are set", async () => {

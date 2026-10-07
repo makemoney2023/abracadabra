@@ -21,6 +21,7 @@ export type OutboundMail = {
   to: string;
   subject: string;
   text: string;
+  html?: string;
 };
 
 export function normalizeEmail(value: string): string | null {
@@ -90,6 +91,7 @@ export async function requestMagicLink(input: {
   from: string;
   allowlist: readonly string[];
   returnTo?: string;
+  compose?: (url: string) => Pick<OutboundMail, "subject" | "text" | "html">;
   send: (message: OutboundMail) => Promise<void>;
 }): Promise<{ message: string }> {
   const email = normalizeEmail(input.email);
@@ -119,12 +121,17 @@ export async function requestMagicLink(input: {
   const origin = input.origin.replace(/\/$/, "");
   const next = safeNextPath(input.returnTo ?? null);
   const url = `${origin}/auth/callback?token=${token}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
+  const composed = input.compose?.(url) ?? {
+    subject: "Sign in to Handoff",
+    text: magicLinkText(url),
+  };
   try {
     await input.send({
       from: input.from,
       to: email,
-      subject: "Sign in to Handoff",
-      text: magicLinkText(url),
+      subject: composed.subject,
+      text: composed.text,
+      ...(composed.html ? { html: composed.html } : {}),
     });
   } catch (error) {
     await input.sql.run(`DELETE FROM ${MAGIC_LINKS} WHERE id = ?`, [id]);

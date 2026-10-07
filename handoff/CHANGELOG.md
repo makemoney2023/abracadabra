@@ -2,6 +2,42 @@
 
 ## 2026-10-07
 
+- **What changed** — Product mail shows the sender name Abra-ca-dabra Ai. The address stays `magic@abra-ca-dabra.app`.
+- **Why** — The inbox should name the studio, and the secret stays a bare address.
+- **Code touchpoints** — `handoff/src/lib/mail.ts`, `handoff/src/lib/mail.test.ts`
+- **Data-flow impact** — `sendHandoffMail` adds the name. The Worker binding uses `email`. The REST send uses `address`.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 22 tests. `npx eslint src/lib/mail.ts src/lib/mail.test.ts` exited 0.
+
+## 2026-10-07
+
+- **What changed** — The invite card uses the Abracadabra studio colors and type. The button is the orange accent. The heading is Tektur. The body is IBM Plex Sans.
+- **Why** — Outbound invite mail should match the studio site, not a separate card style.
+- **Code touchpoints** — `handoff/src/lib/email-templates.ts`, `handoff/src/lib/brand/studio.ts`
+- **Data-flow impact** — none. The same invite still has one link. Sign-in mail stays plain text.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 21 tests. `npx eslint src/lib/email-templates.ts src/lib/email-templates.test.ts` exited 0.
+
+## 2026-10-07
+
+- **What changed** — An invite email is a dark HTML card with one button, plus the same words in plain text. The subject names the space.
+- **Why** — Invite mail should look like Handoff. The link still opens a page, and the person still presses Sign in.
+- **Code touchpoints** — `handoff/src/lib/email-templates.ts`, `handoff/src/lib/session.ts`, `handoff/src/lib/mail.ts`, `handoff/src/lib/store/invites.ts`
+- **Data-flow impact** — `createInvite` and `resendInvite` compose the card. Sign-in mail that is not an invite stays plain text. `sendHandoffMail` sends `html` only when the message has it.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 21 tests.
+
+## 2026-10-07
+
+- **What changed** — Product mail sends from `magic@abra-ca-dabra.app`. That address is a Worker secret on `handoff` and `handoff-hq`.
+- **Why** — Client mail from the app uses the agent mailbox.
+- **Code touchpoints** — `handoff/README.md`, `handoff/.env.example`, `handoff/src/lib/runtime/production-env.test.ts`
+- **Data-flow impact** — `sendHandoffMail` still reads `HANDOFF_FROM_EMAIL`. Sign-in and invite mail use the new address. The scan worker does not use this secret.
+- **API / schema impact** — none. The value is a Worker secret, not a git file.
+- **Verification** — Secret list on both workers includes `HANDOFF_FROM_EMAIL` after the secret update. `npm test -- src/lib/runtime/production-env.test.ts` passed.
+
+## 2026-10-07
+
 - **What changed** — Product mail sends from `handoff@abra-ca-dabra.app`. That address is a Worker secret on `handoff` and `handoff-hq`.
 - **Why** — Email Sending is onboarded for `abra-ca-dabra.app`. Invite and file mail need a From address on that domain.
 - **Code touchpoints** — `handoff/README.md`, `handoff/.env.example`
