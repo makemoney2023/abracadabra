@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { TodayBoard, WorkTask } from "@/db/crm";
 import { clientSpaceHref } from "@/lib/host";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dayLabel } from "./projects/dates";
 
@@ -101,7 +102,9 @@ export function TodayScreen({ board }: { board: TodayBoard }) {
             <ul className="flex flex-col gap-2">
               {board.waitingSpaces.map((space) => (
                 <li key={`${space.id}-${space.requestTitle}`} className="text-sm">
-                  <a href={clientSpaceHref(space.slug)}>{space.displayName}</a>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={clientSpaceHref(space.slug)}>{space.displayName}</a>
+                  </Button>
                   <span className="ml-2 text-muted-foreground">{space.requestTitle}</span>
                 </li>
               ))}

@@ -2,6 +2,15 @@
 
 ## 2026-10-06
 
+- **What changed** — Staff can open a space at `/w/[slug]` on the staff host. Space names, client names, and work filters are shadcn buttons and badges. The sidebar shows icons and a menu button on every staff page, including a space.
+- **Why** — Spaces linked to `/w/rewnewimplants` on the staff host, and that host answered "This page is not here." The staff lists were plain links, so the component library did not show up on the pages people use.
+- **Code touchpoints** — `handoff/src/lib/host.ts`, `handoff/src/lib/host.test.ts`, `handoff/src/app/admin/page.tsx`, `handoff/src/app/staff-shell.tsx`, `handoff/src/app/staff-nav.tsx`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/components/ui/card.tsx`, `handoff/README.md`
+- **Data-flow impact** — Staff space links stay on the staff host. Share and invite pages stay client-only.
+- **API / schema impact** — none
+- **Verification** — `npx vitest run src/lib/host.test.ts src/app/staff-nav-match.test.ts` passed (9 tests). `npm run lint` passed. `npx tsc --noEmit` passed. On `http://hq.localhost:3000`, sign-in uses the card and the orange button. Spaces shows the sidebar, outline buttons, and badges. Strongfoam opens `/w/strongfoam` with the sidebar still visible. Share pages on the staff host still return "This page is not here." The live staff host still serves the old block until this build is deployed.
+
+## 2026-10-06
+
 - **What changed** — `npm run build` runs `opennextjs-cloudflare build`. Workers Builds leaves the build command empty. The deploy command is `npm run deploy` for `handoff` and `npm run deploy:hq` for `handoff-hq`.
 - **Why** — Those scripts already build, then deploy. The default `npx wrangler deploy` calls OpenNext deploy and skips the build, so deploy exits with "Could not find compiled Open Next config".
 - **Code touchpoints** — `handoff/package.json`, `handoff/src/lib/runtime/workers-build.test.ts`, `handoff/README.md`

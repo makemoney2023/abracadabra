@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listWork } from "@/db/crm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../staff-shell";
 import { dayLabel } from "../projects/dates";
@@ -26,27 +27,39 @@ export default async function WorkPage({
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
         <div className="flex flex-col gap-3">
           <h1 className="font-heading text-4xl leading-tight">Work</h1>
-          <nav aria-label="Filters" className="flex flex-wrap gap-4 text-sm">
-            <Link href={workHref({ group })} aria-current={!late && !week && !blocked ? "page" : undefined}>
-              All
-            </Link>
-            <Link href={workHref({ ...filters, late: true, week: false, blocked: false })} aria-current={late && !week && !blocked ? "page" : undefined}>
-              Late
-            </Link>
-            <Link href={workHref({ ...filters, late: false, week: true, blocked: false })} aria-current={week && !late && !blocked ? "page" : undefined}>
-              This week
-            </Link>
-            <Link href={workHref({ ...filters, late: false, week: false, blocked: true })} aria-current={blocked && !late && !week ? "page" : undefined}>
-              Blocked
-            </Link>
+          <nav aria-label="Filters" className="flex flex-wrap gap-2">
+            <Button variant={!late && !week && !blocked ? "default" : "outline"} size="sm" asChild>
+              <Link href={workHref({ group })} aria-current={!late && !week && !blocked ? "page" : undefined}>
+                All
+              </Link>
+            </Button>
+            <Button variant={late && !week && !blocked ? "default" : "outline"} size="sm" asChild>
+              <Link href={workHref({ ...filters, late: true, week: false, blocked: false })} aria-current={late && !week && !blocked ? "page" : undefined}>
+                Late
+              </Link>
+            </Button>
+            <Button variant={week && !late && !blocked ? "default" : "outline"} size="sm" asChild>
+              <Link href={workHref({ ...filters, late: false, week: true, blocked: false })} aria-current={week && !late && !blocked ? "page" : undefined}>
+                This week
+              </Link>
+            </Button>
+            <Button variant={blocked && !late && !week ? "default" : "outline"} size="sm" asChild>
+              <Link href={workHref({ ...filters, late: false, week: false, blocked: true })} aria-current={blocked && !late && !week ? "page" : undefined}>
+                Blocked
+              </Link>
+            </Button>
           </nav>
-          <nav aria-label="Group" className="flex flex-wrap gap-4 text-sm">
-            <Link href={workHref({ late, week, blocked, group: "person" })} aria-current={group === "person" ? "page" : undefined}>
-              By person
-            </Link>
-            <Link href={workHref({ late, week, blocked, group: "client" })} aria-current={group === "client" ? "page" : undefined}>
-              By client
-            </Link>
+          <nav aria-label="Group" className="flex flex-wrap gap-2">
+            <Button variant={group === "person" ? "default" : "outline"} size="sm" asChild>
+              <Link href={workHref({ late, week, blocked, group: "person" })} aria-current={group === "person" ? "page" : undefined}>
+                By person
+              </Link>
+            </Button>
+            <Button variant={group === "client" ? "default" : "outline"} size="sm" asChild>
+              <Link href={workHref({ late, week, blocked, group: "client" })} aria-current={group === "client" ? "page" : undefined}>
+                By client
+              </Link>
+            </Button>
           </nav>
         </div>
         {tasks.length === 0 ? (

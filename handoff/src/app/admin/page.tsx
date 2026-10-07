@@ -3,6 +3,8 @@ import { workspacesFor } from "@/db/records";
 import { requireSuperAdminPage } from "@/lib/current";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../staff-shell";
 
@@ -14,11 +16,19 @@ export default async function AdminPage() {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-3">
         <h1 className="font-heading text-4xl leading-tight">Staff tools</h1>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <Link href="/spaces/new">New space</Link>
-          <Link href="/spaces/staff">Add staff</Link>
-          <Link href="/spaces/templates">Request templates</Link>
-          <Link href="/spaces/held">Held files</Link>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/spaces/new">New space</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/spaces/staff">Add staff</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/spaces/templates">Request templates</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/spaces/held">Held files</Link>
+          </Button>
         </div>
       </div>
       <Card>
@@ -32,9 +42,11 @@ export default async function AdminPage() {
           ) : (
             <ul className="flex flex-col gap-2">
               {workspaces.map((workspace) => (
-                <li key={workspace.id}>
-                  <a href={clientSpaceHref(workspace.slug)}>{workspace.display_name}</a>
-                  <span className="ml-2 font-mono text-xs text-muted-foreground">{workspace.slug}</span>
+                <li key={workspace.id} className="flex items-center gap-2">
+                  <Button variant="outline" className="justify-start" asChild>
+                    <a href={clientSpaceHref(workspace.slug)}>{workspace.display_name}</a>
+                  </Button>
+                  <Badge variant="secondary">{workspace.slug}</Badge>
                 </li>
               ))}
             </ul>

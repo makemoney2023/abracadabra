@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { openSession } from "@/lib/current";
+import { isHqHost } from "@/lib/host";
 import { legacyPreviewPath, renamePreviewLocker } from "@/lib/preview-session";
+import { Button } from "@/components/ui/button";
+import { StaffShell } from "../../staff-shell";
 
 export default async function WorkspaceLayout({
   children,
@@ -19,10 +23,11 @@ export default async function WorkspaceLayout({
   if (nextPath) redirect(nextPath);
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
-  return (
+  const host = (await headers()).get("host") ?? "";
+  const page = (
     <div className="flex flex-1 flex-col">
       <header className="border-b border-border">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-6 py-4">
+        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-6 py-4">
           {workspace.logo_object_key ? (
             // The logo is a same-origin file served only when this caller can see the workspace.
             // eslint-disable-next-line @next/next/no-img-element
@@ -38,29 +43,31 @@ export default async function WorkspaceLayout({
             </Link>
             <p className="font-heading text-xl">{workspace.display_name}</p>
           </div>
-          <Link href={`/w/${workspace.slug}`} className="text-sm">
-            Files
-          </Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/w/${workspace.slug}`}>Files</Link>
+          </Button>
           {can(caller, "request.manage", { workspaceId: workspace.id }) ? (
-            <Link href={`/w/${workspace.slug}/requests`} className="text-sm">
-              Ask for files
-            </Link>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/w/${workspace.slug}/requests`}>Ask for files</Link>
+            </Button>
           ) : null}
           {can(caller, "invite.member", { workspaceId: workspace.id }) ? (
-            <Link href={`/w/${workspace.slug}/people`} className="text-sm">
-              People
-            </Link>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/w/${workspace.slug}/people`}>People</Link>
+            </Button>
           ) : null}
           {can(caller, "workspace.configure", { workspaceId: workspace.id }) ||
           can(caller, "workspace.archive", { workspaceId: workspace.id }) ||
           caller.operatorOf.includes(workspace.id) ? (
-            <Link href={`/w/${workspace.slug}/settings`} className="text-sm">
-              Settings
-            </Link>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/w/${workspace.slug}/settings`}>Settings</Link>
+            </Button>
           ) : null}
         </div>
       </header>
       {children}
     </div>
   );
+  if (isHqHost(host)) return <StaffShell>{page}</StaffShell>;
+  return page;
 }

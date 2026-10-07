@@ -52,9 +52,9 @@ export function handoffOrigin(): string {
   return (process.env.HANDOFF_APP_ORIGIN ?? "").replace(/\/$/, "");
 }
 
+/** Same-host path. Staff cookies do not travel to the client host. */
 export function clientSpaceHref(slug: string): string {
-  const origin = handoffOrigin();
-  return origin.length > 0 ? `${origin}/w/${slug}` : `/w/${slug}`;
+  return `/w/${slug}`;
 }
 
 export function isHqHost(hostHeader: string, hqHost = hqHostName()): boolean {
@@ -82,7 +82,7 @@ export function adminPathForSpaces(path: string): string | null {
   return found?.[0] ?? null;
 }
 
-/** Staff pages answer only on hq. Client folders answer only on the Handoff host. */
+/** Staff pages answer only on hq. A space folder answers on both hosts. Share and invite pages stay on the client host. */
 export function decideHost(input: {
   host: string;
   path: string;
@@ -101,6 +101,9 @@ export function decideHost(input: {
   }
   if (STAFF_PREFIXES.some((prefix) => hasPrefix(path, prefix))) {
     return hq ? { kind: "allow" } : { kind: "not-found" };
+  }
+  if (hasPrefix(path, "/w")) {
+    return { kind: "allow" };
   }
   if (CLIENT_PREFIXES.some((prefix) => hasPrefix(path, prefix))) {
     return hq ? { kind: "not-found" } : { kind: "allow" };

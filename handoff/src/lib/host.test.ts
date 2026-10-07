@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminPathForSpaces, decideHost, hqOriginForHost, isHqHost } from "./host";
+import { adminPathForSpaces, clientSpaceHref, decideHost, hqOriginForHost, isHqHost } from "./host";
 
 const STAFF_DEV = "handoff-hq.abracadabra-ai.workers.dev";
 
@@ -21,10 +21,18 @@ describe("decideHost", () => {
     expect(decide("handoff.example", "/settings/github")).toEqual({ kind: "not-found" });
   });
 
-  it("hides client folders on the staff host", () => {
-    expect(decide(HQ, "/w/strongfoam")).toEqual({ kind: "not-found" });
+  it("hides share and invite pages on the staff host", () => {
     expect(decide("hq.localhost:3000", "/share/token")).toEqual({ kind: "not-found" });
     expect(decide(HQ, "/invites/11111111-1111-1111-1111-111111111111")).toEqual({ kind: "not-found" });
+    expect(decide(HQ, "/how-handoff-handles-files")).toEqual({ kind: "not-found" });
+  });
+
+  it("lets staff open a space on the staff host", () => {
+    expect(decide(HQ, "/w/rewnewimplants")).toEqual({ kind: "allow" });
+    expect(decideHost({ host: STAFF_DEV, path: "/w/rewnewimplants", hqHost: HQ, hqOrigin: ORIGIN })).toEqual({
+      kind: "allow",
+    });
+    expect(clientSpaceHref("rewnewimplants")).toBe("/w/rewnewimplants");
   });
 
   it("sends old staff links to the spaces page on hq", () => {
@@ -50,7 +58,7 @@ describe("decideHost", () => {
       kind: "allow",
     });
     expect(decideHost({ host: STAFF_DEV, path: "/w/strongfoam", hqHost: HQ, hqOrigin: ORIGIN })).toEqual({
-      kind: "not-found",
+      kind: "allow",
     });
     expect(
       decideHost({

@@ -12,6 +12,8 @@ import {
 import { requireHqStaffPage } from "@/lib/current";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { dayLabel } from "../dates";
@@ -69,9 +71,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             ) : (
               <ul className="flex flex-col gap-2">
                 {spaces.map((space) => (
-                  <li key={space.id}>
-                    <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
-                    <span className="ml-2 font-mono text-xs text-muted-foreground">{space.slug}</span>
+                  <li key={space.id} className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
+                    </Button>
+                    <Badge variant="secondary">{space.slug}</Badge>
                   </li>
                 ))}
               </ul>

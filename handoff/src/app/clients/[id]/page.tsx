@@ -18,6 +18,7 @@ import { requireHqStaffPage } from "@/lib/current";
 import { listVisibleRepos } from "@/lib/github/app";
 import { readGithubSecrets } from "@/lib/github/secrets";
 import { clientSpaceHref } from "@/lib/host";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
@@ -126,9 +127,11 @@ export default async function ClientPage({
           ) : (
             <ul className="flex flex-col gap-2">
               {linked.map((space) => (
-                <li key={space.id}>
-                  <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
-                  <span className="ml-2 font-mono text-xs text-muted-foreground">{space.slug}</span>
+                <li key={space.id} className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
+                  </Button>
+                  <Badge variant="secondary">{space.slug}</Badge>
                 </li>
               ))}
             </ul>

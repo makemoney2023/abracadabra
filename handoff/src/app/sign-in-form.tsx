@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { signIn } from "./sign-in-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -22,8 +23,8 @@ export function SignInForm() {
     <form action={signIn} className="flex flex-col gap-3" autoComplete="off">
       <input type="hidden" name="username" value="admin" />
       <p className="text-sm">Username: admin</p>
-      <label className="flex flex-col gap-1 text-sm" htmlFor="sign-in-password">
-        Password
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="sign-in-password">Password</Label>
         <Input
           id="sign-in-password"
           name="password"
@@ -34,14 +35,16 @@ export function SignInForm() {
           spellCheck={false}
           required
         />
-      </label>
-      <button
+      </div>
+      <Button
         type="button"
-        className="self-start text-sm text-muted-foreground underline-offset-4 hover:underline"
+        variant="ghost"
+        size="sm"
+        className="w-fit"
         onClick={() => setShowPassword((current) => !current)}
       >
         {showPassword ? "Hide password" : "Show password"}
-      </button>
+      </Button>
       <SubmitButton />
     </form>
   );

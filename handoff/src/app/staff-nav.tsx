@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Building2, CalendarDays, FolderOpen, Inbox, ListTodo, Settings } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -12,27 +14,30 @@ import {
 import { navIsActive } from "./staff-nav-match";
 
 const LINKS = [
-  { href: "/", label: "Today" },
-  { href: "/leads", label: "Leads" },
-  { href: "/clients", label: "Clients" },
-  { href: "/work", label: "Work" },
-  { href: "/spaces", label: "Spaces" },
-  { href: "/settings/github", label: "Settings" },
+  { href: "/", label: "Today", icon: CalendarDays },
+  { href: "/leads", label: "Leads", icon: Inbox },
+  { href: "/clients", label: "Clients", icon: Building2 },
+  { href: "/work", label: "Work", icon: ListTodo },
+  { href: "/spaces", label: "Spaces", icon: FolderOpen },
+  { href: "/settings/github", label: "Settings", icon: Settings },
 ] as const;
 
 export function StaffNav() {
   const path = usePathname() || "/";
   return (
     <SidebarGroup>
+      <SidebarGroupLabel>Studio</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu aria-label="Studio">
           {LINKS.map((link) => {
             const active = navIsActive(path, link.href);
+            const Icon = link.icon;
             return (
               <SidebarMenuItem key={link.href}>
-                <SidebarMenuButton asChild isActive={active}>
+                <SidebarMenuButton asChild isActive={active} tooltip={link.label}>
                   <Link href={link.href} aria-current={active ? "page" : undefined}>
-                    {link.label}
+                    <Icon />
+                    <span>{link.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
