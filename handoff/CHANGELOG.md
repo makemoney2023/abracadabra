@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/session.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/lib/policy/limits.ts`
 - **Data-flow impact** — `consumeMagicLink` no longer checks a clock. One use still marks the link used.
 - **API / schema impact** — none. The stored end time is a far date so the required column stays filled.
-- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 23 tests. `npx eslint` on the touched files exited 0.
+- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 23 tests. `npx eslint` on the touched files exited 0. Worker `handoff` version `7678a518-4d4a-4e04-9ba0-f1f650fd8937`. Worker `handoff-hq` version `106d2324-b6ef-4cb9-af11-b66847695a18`.
 
 ## 2026-10-07
 
