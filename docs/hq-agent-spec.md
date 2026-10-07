@@ -53,7 +53,7 @@ Rules that do not bend:
 ### 2.1 Worker `handoff-agent`
 
 - Package `agents`. Class `ClientAgent extends Agent<Env, AgentState>`.
-- `wrangler.agent.jsonc`: `durable_objects.bindings` `ClientAgent`, `migrations[0].new_sqlite_classes: ["ClientAgent"]`, bindings `AI`, `SKILLS` (R2 `handoff-skills`), `compatibility_flags: ["nodejs_compat", "global_fetch_strictly_public"]`. No D1. No `FILES`. Production `MCP_PORTAL_URL` stays empty until the service token and the `handoff` upstream are linked. The portal hostname is live (section 17).
+- `wrangler.agent.jsonc`: `durable_objects.bindings` `ClientAgent`, `migrations[0].new_sqlite_classes: ["ClientAgent"]`, bindings `AI`, `SKILLS` (R2 `handoff-skills`), `compatibility_flags: ["nodejs_compat", "global_fetch_strictly_public"]`. No D1. No `FILES`. Production `MCP_PORTAL_URL` stays empty until the service token and the `handoff` upstream are linked. The portal hostname is live (section 18).
 - Secrets: `AGENT_WAKE_SECRET`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`. `MCP_PORTAL_URL` is a var, not a secret. No `CURSOR_API_KEY`. No `AGENT_MCP_TOKEN` (that key is stored on the portal, section 2.3).
 - Entry exports `ClientAgent` and a `fetch` that:
   - `POST /wake` — verifies `AGENT_WAKE_SECRET` (constant-time compare on an HMAC of the body), parses `{ organizationId, reason, ref? }`, calls `getAgentByName(env.ClientAgent, organizationId)` and forwards. Anything else is 401.
@@ -152,6 +152,7 @@ A skill names connector tools in its file. The agent calls one only when that na
 | `brief_approved` | dashboard after client or staff approval | Section 6: plan tasks from the brief. |
 | `work` | cron, every 15 minutes, for orgs with tasks not `done` | Section 7: advance each task one step. |
 | `changes_requested` | dashboard after feedback with decision `changes` | Section 10: revision round. |
+| `brief_changed` | dashboard after a brief addendum or revision is approved (section 17.4) | Re-plan from the new brief version: new pieces get tasks, changed pieces reset, removed pieces block. |
 | `run_check` | cron, hourly | Poll `bc-` runs past deadline. |
 | `status` | cron, Monday 08:00 local | Draft the weekly client status update (exists in gameplan). |
 | `follow_up`, `invoice_reminder`, `digest` | cron | Gameplan 12, unchanged. |
@@ -609,6 +610,10 @@ All new UI uses the existing shadcn components in `handoff/src/components/ui`.
 | `CURSOR_API_KEY` | `handoff-hq` | Starts and polls cloud runs. |
 | `AGENT_URL` | `handoff` | `https://agent.abra-ca-dabra.app` (or workers.dev) for wakes. |
 | `max_cloud_runs`, `build_deadline_hours` | `agent_settings` | Editable on `/agent`. |
+| `HQ_CHAT_SECRET` | `handoff-hq` (signs), `handoff-agent` (verifies) | Staff chat token and the bearer on `/api/hq-tools` (17.2). |
+| `EMAIL` (`send_email` binding), `MAGIC_EMAIL_FROM` | `handoff-agent` | Replies from `magic@abra-ca-dabra.app` (17.6). |
+| `EMAIL_REPLY_SECRET` | `handoff-agent` | Signs outbound headers so replies route back to the same thread. |
+| `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_BOT_USER_ID` | `handoff-agent` | Slack channel (17.7). Stored in Obsidian. |
 
 Add `AGENT_WAKE_SECRET`, `CURSOR_API_KEY`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` to `handoff/.env.example` with comments. `AGENT_MCP_TOKEN` is commented as a portal credential, not a Worker secret. Document the portal and the Worker in `handoff/README.md` under a new "Agent" section.
 
@@ -635,11 +640,172 @@ Each step: write the failing test, implement, wire, run `vitest run` and `eslint
 15. **Docs** — README (Agent section, stages, tools, cron), CHANGELOG entries per step, gameplan section 12 pointer and the two amended rules (skills chosen by the brief; `CURSOR_API_KEY` on the dashboard).
 16. **Reusable MCP connectors** — does not block steps 6–14. A skill that names a connector tool before that server is linked already ends in `agent.note`. Worker `handoff-connectors`, migration `0008_connector_grants.sql`, registry module, Search Console adapter (`search_analytics`, `inspect_url`). Tests: missing bearer is 401; a model-supplied `site_url` is ignored and the call uses `connector_grants.resource`; no grant makes no vendor call; a second module registers without an agent change. Staff set the grant on the client page. Portal link for `search-console` uses the Access service-token headers plus `CONNECTOR_TOKEN`, **Require user auth** off. `remote` products (official Google Analytics MCP, when added) are a registry row and a portal link, not a module.
 
+17. **Staff chat, read tools** — section 17.2–17.3. Comes before step 8. `/api/hq-chat/token`, `/api/hq-tools` with the read tools, `HqChat` on `handoff-agent`. Tests: missing, expired, or tampered token is 401 on both the socket and `/api/hq-tools`; a revoked staff member is 403; read tools return what the matching HQ page shows; a client-scoped tool rejects an organization the staff member cannot see.
+18. **Staff chat page and write tools** — Chat page and side panel, CRM and project write tools, then the approval-gated tools. Tests: each write tool records `actor_kind='staff'`, the signed-in `actor_id`, and `data_json.via='hq_chat'`; a gated tool does nothing until approval and nothing after a rejection; repeating an idempotency key returns the stored result; component test for the approval card.
+19. **Add work and revise the brief** — section 17.4, wake `brief_changed`. Tests: an addendum makes a new brief version with the old pieces intact; approving it creates tasks only for new pieces; a changed piece in `describe` or `engineer` resets from copywriting; a piece in `build` or later is untouched and gets a question; a removed piece blocks with `removed_from_brief`; nothing builds from a brief waiting for approval.
+20. **Chat directs the client agent** — `instruct_task`, `answer_question`, `pause_client`, `resume_client`. Tests: an instruction lands in `staffNotes` on the next wake; an answer clears the blocked task; pause sets `agent_paused_at` and the cron skips that client.
+21. **Client conversations core** — migration `0009_conversations.sql`, `ClientDesk`, sender identity, `work_requests`, HQ thread view. Tests use a fake channel: an unknown sender gets the safe reply and no client data; a known sender gets a receipt then clarifying questions; feedback on a delivered item goes to the changes loop; new work becomes a `proposed` request; staff approve and it becomes a brief addendum (step 19); auto-replies are ignored; the per-thread limit holds.
+22. **Email channel** — `email()` handler, routing rule `magic@` → `handoff-agent`, `EMAIL` binding. Tests with raw `.eml` fixtures: DKIM or DMARC pass is required; a reply with the signed header returns to the same thread; attachments go to the client's locker and wait for the scan.
+23. **Slack channel** — Slack app, `/channels/slack`, `slack_channel_links`. Tests: a bad signature or old timestamp is 401; an unlinked channel gets no reply; the 3-second acknowledgement happens before any model call; a thread reply stays in the same conversation.
+
 Docs to read before step 5: Agents SDK MCP client (how `addMcpServer` attaches the two Access headers), Agents testing guide, agent skills runtime page, MCP server portals (service tokens, aliases, adding a server). Before step 8: Cursor cloud-agent API reference for the request body, status values, and auth header.
 
 ---
 
-## 17. Open decisions
+## 17. Conversations: staff chat and client channels
+
+The background loop (sections 5–11) needs nobody to type. This section covers when somebody wants to talk to the agent:
+
+- **Staff** chat in HQ. They can look things up, create client records, add notes, add work, fix a brief, and direct the client agent.
+- **Clients** write to `magic@abra-ca-dabra.app` or post in Slack. They get a receipt, clarifying questions, and status answers. New work goes to staff for approval.
+
+Both use `AIChatAgent` from `@cloudflare/ai-chat` on `handoff-agent`. It saves messages in the Durable Object's SQLite, resumes a dropped stream, and supports `needsApproval` on tools. Client channels use `agents/channels/email` and `agents/channels/slack`, both shipped in `agents` 0.26.0. Add `@cloudflare/ai-chat` to `handoff/package.json`.
+
+### 17.1 Rules that hold for both
+
+- The chat never gets its own copy of a business rule. Every tool calls the same function in `src/db/` that the matching HQ server action calls. Permission checks, gates, and the activities written are the same as the buttons.
+- Nothing typed into a chat can start a build or publish to a client without a person approving. The build gate in 7.3 stays server-side and is the only way into `build`.
+- What a client writes is data, not instructions. The client-facing agent has no tool that changes the brief, the plan, or another client.
+
+### 17.2 Staff chat: agent, sign-in, and attribution
+
+- **Agent class:** `HqChat extends AIChatAgent`, bound as `HQ_CHAT` on `handoff-agent`, one instance per staff member named by `staff.user_id`. A thread is not tied to one client, so "add a client called Pine Co" works before Pine Co exists.
+- **Surfaces:**
+  - `/chat` on HQ, sidebar item "Chat".
+  - A side panel on `/clients/[id]`, `/projects/[id]`, and `/work`. The panel sends `{ organizationId?, projectId?, taskId? }` in the `body` option of `useAgentChat`, so "add a note here" resolves. The model sees the page context as one system line; it is not trusted as authority. Tools still check access.
+  - Built with the shadcn components in `handoff/src/components/ui`.
+- **Sign-in:** `GET /api/hq-chat/token` on `handoff-hq` requires a staff session and returns a token `{ userId, exp }` signed with `HQ_CHAT_SECRET` (HMAC-SHA256, 10-minute life). The page connects with `useAgent({ host: <agent host>, agent: "hq-chat", name: userId, query: { token } })`. `HqChat.onConnect` verifies the signature, the expiry, and that `userId` equals the instance name, then closes the socket otherwise. The page refreshes the token before it expires.
+- **Tool calls:** every tool `execute` posts `{ tool, input, idempotencyKey }` to `POST https://hq.abra-ca-dabra.app/api/hq-tools` with the same token as bearer.
+  - The route loads the staff member, refuses revoked staff, and runs the function as that caller.
+  - Idempotency reuses the `idempotency_keys` table with `actor_id = userId`.
+  - Records are written as `actor_kind='staff'`, `actor_id=userId`, with `data_json.via='hq_chat'`. The person who approved owns the action in the timeline.
+- **Model:** Workers AI through the `AI` binding with `workers-ai-provider`, with the gateway id from `HANDOFF_AI_GATEWAY_ID`. `stopWhen: stepCountIs(8)`. `maxPersistedMessages` is 400 per staff member.
+
+### 17.3 Staff chat tools
+
+| Group | Tools | Calls | Approval |
+|---|---|---|---|
+| Look up | `search_clients`, `client_summary`, `list_tasks`, `list_deliverables`, `open_questions`, `recent_activity`, `get_brief` | `crm.ts` reads, `todayFor` pieces, `get_brief` | none |
+| CRM | `create_client`, `add_contact`, `add_note`, `log_call`, `create_task`, `complete_task`, `move_deal` | `createOrganization`, contacts, `addNote`, `logCall`, task and deal functions | none; the tool result shows the record written with a link |
+| Projects | `create_project`, `create_milestone`, `post_internal_status` | project functions, `audience='internal'` | none |
+| Client-visible or hard to undo | `publish_deliverable`, `publish_client_status`, `invite_person`, `merge_clients`, `set_task_stage` | the matching functions | `needsApproval: true` |
+| Direct the agent | `add_work`, `revise_brief`, `instruct_task`, `answer_question`, `pause_client`, `resume_client` | sections 17.4, 9.3, `agent_paused_at` | `needsApproval: true` |
+| Client requests | `list_work_requests`, `decide_work_request` | 17.5 | approve or decline needs approval |
+
+- `add_note` with `as_instruction: true` writes `kind='staff.instruction'`, so the client agent reads it as `staffNotes` (9.3). Plain notes stay `kind='note'`.
+- `set_task_stage` to `build` goes through the gate in 7.3 and can return its blocked reason.
+- The approval card shows the tool, the client, and every input field. Rejecting writes nothing.
+
+### 17.4 Adding work and fixing a wrong brief
+
+The brief is the list of what the agency owes the client. Both flows change the brief first and let the planner follow.
+
+**Add work** (`add_work` from staff chat, or an approved client request in 17.5):
+
+1. `save_brief` writes a new version with an **Addendum** section: piece title, goal, audience if different, acceptance checks, and due date. Earlier pieces are copied unchanged.
+2. Approval follows `brief_approval` (client or staff). An addendum created from staff chat may be approved in the same approval card when `brief_approval='staff'`.
+3. On approval the dashboard wakes the client agent with `brief_changed`.
+
+**Revise a wrong brief** (`revise_brief`, or Request changes on the brief deliverable):
+
+1. Staff feedback is stored as `deliverable_feedback` with decision `changes`.
+2. The client agent redrafts with the feedback quoted at the top and saves the next version as `draft`.
+3. Approval and the `brief_changed` wake follow, as for an addendum.
+
+**Re-plan on `brief_changed`** (`advanceClientWork` reads the old and the new piece lists):
+
+| Piece | Task stage | Action |
+|---|---|---|
+| New | none | Create a task and a draft deliverable, as in step 7. |
+| Changed | `describe` or `engineer` | Reset `skills_json` from the copywriting step onward and add an `agent.note` that says what changed. |
+| Changed | `build`, `run`, or done | Leave the run alone. `ask_staff` with options **Start next round** and **Keep as is**. Start next round uses the revision path in section 10. |
+| Removed | not done | Set `status='blocked'`, `blocked_reason='removed_from_brief'`. The card offers **Close task** (`done`) or **Keep**. No migration; `tasks.status` has no `cancelled`. |
+| Removed | done | Nothing. |
+
+A piece is matched by its title, normalized. A renamed piece reads as one removed and one new; the removed one blocks, so staff see it. While a brief version waits for approval the gate in 7.3 refuses `build` with `brief_not_approved`, so no cloud run uses a brief nobody approved.
+
+### 17.5 Client conversations core
+
+- **Agent class:** `ClientDesk extends AIChatAgent`, one instance per conversation, named `<organizationId>:<channel>:<threadId>`. It connects to the portal like `ClientAgent` does, with `organizationId` pinned to the name's first part.
+- **Tools:**
+  - Read: `client_context`, `get_brief`, `list_feedback`, `list_deliverables_for_client`. Results include only published work and the client's own requests.
+  - Write: `open_work_request`, `update_work_request`, `record_feedback` (only for items on a published deliverable), `attach_files`. `record_feedback` goes into the section 10 changes loop.
+  - It has no CRM tools, no publish tools, and nothing for another client.
+- **Order of a reply:**
+  1. **Receipt** before any model call: "Got it. I'm reading this against your current work and will reply here shortly."
+  2. **Classify:** feedback on delivered work, new work, status question, or other.
+  3. **Clarify:** the agent asks only what blocks the request, at most three questions per message, and stops when the request has a goal, a scope, and a due date or "no rush".
+  4. **Close:** feedback goes to `record_feedback`. New work goes to `open_work_request` → state `proposed`, and the reply says the team will confirm. Status questions are answered from the board and the latest client status update. Anything else becomes a note for staff.
+- **Staff see everything:** each inbound and outbound message writes an activity on the client timeline, `kind='client.message'` or `kind='agent.reply'`, with `data_json { channel, threadId, requestId? }`. `/clients/[id]` gets a Conversations tab that lists threads and lets staff reply as themselves. A staff reply is sent on the same channel and marked in the thread.
+- **Proposed work:** shows in Today → Needs you, and in staff chat through `list_work_requests`. Approve turns the request into a brief addendum (17.4). Decline asks for a reason, which the client agent sends back in the thread.
+- **Limits:**
+  - Drop messages with `Auto-Submitted` other than `no`, `Precedence: bulk` or `list`, and our own sender.
+  - At most 10 agent replies per thread per hour. Past that the agent writes one "a person will pick this up" reply and asks staff.
+  - Attachments over 25 MB are refused in the reply.
+
+Migration `0009_conversations.sql`:
+
+```sql
+CREATE TABLE work_requests (
+  id TEXT PRIMARY KEY,
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  channel TEXT NOT NULL CHECK (channel IN ('email', 'slack', 'hq_chat')),
+  thread_id TEXT NOT NULL,
+  requested_by TEXT NOT NULL,          -- contact id, member user id, or staff user id
+  summary TEXT NOT NULL,
+  body TEXT NOT NULL,
+  state TEXT NOT NULL CHECK (state IN ('clarifying', 'proposed', 'approved', 'declined')),
+  decided_by TEXT REFERENCES staff(user_id),
+  decided_at INTEGER,
+  decline_reason TEXT,
+  brief_version INTEGER,               -- set when the addendum is saved
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE INDEX work_requests_org_state ON work_requests (organization_id, state);
+
+CREATE TABLE slack_channel_links (
+  team_id TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  organization_id TEXT NOT NULL REFERENCES organizations(id),
+  linked_by TEXT NOT NULL REFERENCES staff(user_id),
+  linked_at INTEGER NOT NULL,
+  unlinked_at INTEGER,
+  PRIMARY KEY (team_id, channel_id)
+);
+```
+
+### 17.6 Email channel (`magic@abra-ca-dabra.app`)
+
+- **Zone state (2026-10-07):** Email Routing is on and reports `ready`.
+  - The apex has MX `route1/2/3.mx.cloudflare.net`, SPF `v=spf1 include:_spf.mx.cloudflare.net ~all` (replacing `v=spf1 -all`), and DKIM `cf2024-1._domainkey`.
+  - Email Service sending records already sit on `cf-bounce`. DMARC is `p=reject` with strict alignment.
+  - No routing rule exists yet. The rule `magic@abra-ca-dabra.app` → Worker `handoff-agent` is created in step 22, after the `email()` handler ships. A rule pointing at a Worker without one would fail delivery.
+- **Inbound:**
+  - `handoff-agent` exports `email(message, env)` and calls `routeAgentEmail` with a resolver. The resolver first tries the signed reply headers (`createSecureReplyEmailResolver(EMAIL_REPLY_SECRET)`), so a reply lands in its thread.
+  - Otherwise it looks up the sender and starts a thread keyed by `Message-ID`, or by the root `References` id when there is one.
+- **Who is writing:** the sender must match a `contacts.email` with an `organization_id`, or a live `memberships.email`, **and** Cloudflare's `Authentication-Results` must show `dkim=pass` or `dmarc=pass` for the sender's domain. Otherwise the reply is fixed text ("Please write from the address registered with us, or sign in to your space"), contains no client data, and writes an `agent.note` for staff with the sender address.
+- **One address, many clients:** a sender who belongs to several organizations gets one question: which client is this about. The answer is remembered on the thread.
+- **Outbound:**
+  - Use `replyToEmail` for replies in the thread, and `sendEmail` with `secret: EMAIL_REPLY_SECRET` when staff reply from HQ.
+  - From is `Magic at Abracadabra <magic@abra-ca-dabra.app>`.
+  - Signed with the zone's DKIM, so DMARC passes under strict alignment.
+- **Attachments:** parsed with `postal-mime`. Each file goes into the client's space as a batch labelled "From email" through the same path as an upload, so the scan in `files.status` runs before the agent reads it.
+
+### 17.7 Slack channel
+
+- **App:** one Slack app in the agency workspace. Each client gets a Slack Connect channel, linked on `/clients/[id]` into `slack_channel_links`.
+  - Scopes: `chat:write`, `app_mentions:read`, `channels:history`, `groups:history`, `im:history`, `files:read`.
+  - Events URL: `https://agent.abra-ca-dabra.app/channels/slack`.
+- **Inbound:** `slack({ botToken, webhook: { signingSecret, botUserId }, route: routes.perThread })` in a `ChannelHost` on `handoff-agent`.
+  - The channel checks Slack's signature and replay window on the raw body. `team_id` and `channel` come from the verified body.
+  - An unlinked channel gets no reply and one `agent.note` for staff the first time.
+- **Speed:** Slack retries if it gets no 2xx within 3 seconds. The handler returns 200 at once, posts the receipt with `chat.postMessage` in the thread, and runs the model with `ctx.waitUntil`. Slack retries carrying `X-Slack-Retry-Num` are acknowledged and dropped.
+- **Who is writing:** anyone in a linked channel speaks for that client. Messages from our own staff in the channel are logged and not answered by the agent.
+
+---
+
+## 18. Open decisions
 
 - **Website fetch from the agent (5.2 step 2).** Closed. `handoff-agent` sets `global_fetch_strictly_public`.
 - **Brief approval default.** `client` is written here. If most clients should not see the PRD, flip the default to `staff` before the migration ships; it is one line.
@@ -648,3 +814,9 @@ Docs to read before step 5: Agents SDK MCP client (how `addMcpServer` attaches t
 - **Service-token headers on `addMcpServer`.** Closed. `agents` 0.26.0 accepts `{ transport: { headers } }`. The worker sends the two Access headers that way.
 - **Portal hostname.** Closed. The portal answers at `https://mcp.abra-ca-dabra.app/mcp` (confirmed 2026-10-07: DNS to Cloudflare, `/mcp` returns 401 `invalid_token`, protected-resource metadata names that URL). Production `MCP_PORTAL_URL` stays empty until the service token and the `handoff` upstream are linked. The test config uses `https://portal.example.invalid/mcp`. Further servers follow section 2.4.
 - **Connector host.** `connectors.abra-ca-dabra.app` is the planned hostname for `handoff-connectors`. It is not created yet.
+- **Order of conversations work.** Written here as steps 17–20 (staff chat) before step 8 (build gate), then 21–23 (client channels). Staff can read and answer client threads before clients can write in.
+- **Removed pieces (17.4).** Written as `blocked` with `removed_from_brief` and no migration. If closed-but-not-done tasks should look different on reports, add `cancelled` to `tasks.status` in `0009`.
+- **Approval policy (17.3).** Written as: notes, tasks, contacts, clients, projects, and internal status run straight away; anything a client sees, stage changes, merges, invites, and anything that directs the client agent asks first. Loosen per tool if the cards get in the way.
+- **Email sender check (17.6).** Cloudflare's MX adds `Authentication-Results`. Confirm the exact header and its `dkim=`/`dmarc=` fields on a real message before step 22 locks the parser.
+- **Slack app owner.** The app sits in the agency workspace and uses Slack Connect channels. If a client wants the bot in their own workspace, that needs OAuth install and a token per team. Not in scope here.
+- **Approved client work and price.** An approved request becomes an addendum with no quote. If new work should create an invoice line or a deal, decide that before step 21.

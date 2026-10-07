@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — Email Routing is on for `abra-ca-dabra.app`. The apex has Cloudflare MX records, SPF `v=spf1 include:_spf.mx.cloudflare.net ~all` in place of `v=spf1 -all`, and DKIM `cf2024-1._domainkey`. The HQ agent spec gains section 17: staff chat, adding work, revising a wrong brief, and client conversations by email and Slack, with build steps 17–23.
+- **Why** — Staff need to talk to the agent and run HQ from a chat. Clients need to send work to `magic@abra-ca-dabra.app` or Slack and get a reply.
+- **Code touchpoints** — `docs/hq-agent-spec.md` (sections 2.2, 15, 16, 17, 18). DNS on zone `abra-ca-dabra.app`. No code.
+- **Data-flow impact** — none yet. Mail to the apex now reaches Cloudflare. With no routing rule, it is not delivered anywhere. The `magic@` rule to `handoff-agent` waits for the `email()` handler in step 22.
+- **API / schema impact** — none yet. Planned: wake reason `brief_changed`, migration `0009_conversations.sql` (`work_requests`, `slack_channel_links`), routes `/api/hq-chat/token` and `/api/hq-tools`, classes `HqChat` and `ClientDesk`.
+- **Verification** — the Email Routing API reports `enabled: true`, `status: ready`. `dig @1.1.1.1` returns the three MX records, the new SPF, and the DKIM key. The old SPF record was removed first so the apex has one SPF record.
+
+## 2026-10-07
+
 - **What changed** — Sending, resending, or removing a person stays on the people form when the session cannot see the space. Invite and resend links use the client host. A Worker email send with no message id is treated as refused. The session cookie is read before the database opens.
 - **Why** — A Strongfoam invite landed on the 404 page and never sent mail. A link built from the staff host opens `/invites`, which that host does not serve.
 - **Code touchpoints** — `handoff/src/app/w/[slug]/people/actions.ts`, `handoff/src/lib/current.ts`, `handoff/src/lib/share-link.ts`, `handoff/src/lib/mail.ts`
