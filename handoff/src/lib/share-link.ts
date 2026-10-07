@@ -33,19 +33,27 @@ function isWorkersDev(value: string): boolean {
   return hostName(value).endsWith(".workers.dev");
 }
 
-/** Absolute page for a share token. Staff hosts and workers.dev never become the link. */
+/** Client host for links a recipient opens. Staff hosts and workers.dev never become the link. */
+export function publicClientOrigin(source: {
+  origin?: string;
+  host?: string | null;
+  proto?: string | null;
+}): string {
+  const configured = source.origin?.trim().replace(/\/$/, "") ?? "";
+  if (configured && !isWorkersDev(configured)) return configured;
+  const host = source.host?.trim() ?? "";
+  if (host && !isWorkersDev(host) && !isHqHost(host)) {
+    return `${source.proto || "https"}://${host}`;
+  }
+  return DEFAULT_CLIENT_ORIGIN;
+}
+
+/** Absolute page for a share token. */
 export function sharePageUrl(
   token: string,
   source: { origin?: string; host?: string | null; proto?: string | null },
 ): string {
-  const path = `/share/${token}`;
-  const configured = source.origin?.trim().replace(/\/$/, "") ?? "";
-  if (configured && !isWorkersDev(configured)) return `${configured}${path}`;
-  const host = source.host?.trim() ?? "";
-  if (host && !isWorkersDev(host) && !isHqHost(host)) {
-    return `${source.proto || "https"}://${host}${path}`;
-  }
-  return `${DEFAULT_CLIENT_ORIGIN}${path}`;
+  return `${publicClientOrigin(source)}/share/${token}`;
 }
 
 /** Returns the same upload link for a space, creating it the first time. */

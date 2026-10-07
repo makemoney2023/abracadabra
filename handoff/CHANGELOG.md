@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — Sending, resending, or removing a person stays on the people form when the session cannot see the space. Invite and resend links use the client host. A Worker email send with no message id is treated as refused. The session cookie is read before the database opens.
+- **Why** — A Strongfoam invite landed on the 404 page and never sent mail. A link built from the staff host opens `/invites`, which that host does not serve.
+- **Code touchpoints** — `handoff/src/app/w/[slug]/people/actions.ts`, `handoff/src/lib/current.ts`, `handoff/src/lib/share-link.ts`, `handoff/src/lib/mail.ts`
+- **Data-flow impact** — `invitePersonAction` returns "Sign in again to do that." instead of `notFound()` when the space is missing for the caller. `createInvite` and `resendInvite` receive `publicClientOrigin`. `openSession` keeps the cookie token across the D1 await. `sendHandoffMail` throws "mail was refused" when the binding returns no `messageId`, and the invite row is still deleted.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/` passed 378 node tests and 6 agent tests. `npx eslint` on the touched files exited 0. Both live workers already have the `HANDOFF_FROM_EMAIL` secret. This build is not deployed.
+
+## 2026-10-07
+
 - **What changed** — Invite and sign-in links no longer expire after 15 minutes. The email no longer says they do. A link ends when someone presses the button once.
 - **Why** — A person can open the invite later. The 15 minute clock was turning a good link into a dead one.
 - **Code touchpoints** — `handoff/src/lib/session.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/lib/policy/limits.ts`

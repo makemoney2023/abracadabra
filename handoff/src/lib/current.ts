@@ -10,17 +10,21 @@ import { ensureStudioAdmin } from "@/lib/preview-session";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 
-export async function currentCaller(sql: Sql): Promise<Caller> {
+async function sessionToken(): Promise<string> {
   const jar = await cookies();
-  const token = jar.get(SESSION_COOKIE)?.value ?? "";
-  return getCaller(sql, token, Date.now());
+  return jar.get(SESSION_COOKIE)?.value ?? "";
+}
+
+export async function currentCaller(sql: Sql): Promise<Caller> {
+  return getCaller(sql, await sessionToken(), Date.now());
 }
 
 export async function openSession(): Promise<{ sql: Sql; caller: Caller }> {
+  const token = await sessionToken();
   const sql = await openHandoffDb();
   await migrate(sql);
   await ensureStudioAdmin(sql, Date.now());
-  return { sql, caller: await currentCaller(sql) };
+  return { sql, caller: await getCaller(sql, token, Date.now()) };
 }
 
 export async function requireSuperAdminPage(): Promise<{ sql: Sql; caller: Caller }> {

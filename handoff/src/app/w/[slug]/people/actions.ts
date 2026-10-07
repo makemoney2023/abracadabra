@@ -2,23 +2,25 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
 import { sendHandoffMail } from "@/lib/mail";
+import { publicClientOrigin } from "@/lib/share-link";
 import { createInvite, removeMember, resendInvite } from "@/lib/store/invites";
 import { parseAllowlist } from "@/lib/store/staff";
 
 export type PeopleState = { message: string };
 
-async function requestOrigin(): Promise<string> {
+const SIGN_IN_AGAIN = "Sign in again to do that.";
+
+async function clientOrigin(): Promise<string> {
   const headerList = await headers();
-  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
-  if (!host) throw new Error("mail is not configured");
-  const forwarded = headerList.get("x-forwarded-proto");
-  const proto =
-    forwarded ?? (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
-  return `${proto}://${host}`;
+  return publicClientOrigin({
+    origin: process.env.HANDOFF_APP_ORIGIN,
+    host: headerList.get("x-forwarded-host") ?? headerList.get("host"),
+    proto: headerList.get("x-forwarded-proto"),
+  });
 }
 
 function mail() {
@@ -37,7 +39,7 @@ export async function invitePersonAction(
   const { sql, caller } = await openSession();
   const slug = String(formData.get("slug") ?? "");
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
-  if (!workspace) notFound();
+  if (!workspace) return { message: SIGN_IN_AGAIN };
   try {
     const created = await createInvite({
       sql,
@@ -47,7 +49,7 @@ export async function invitePersonAction(
       role: String(formData.get("role") ?? ""),
       now: Date.now(),
       ...mail(),
-      origin: await requestOrigin(),
+      origin: await clientOrigin(),
     });
     if (!created.ok) return { message: created.message };
   } catch {
@@ -64,14 +66,14 @@ export async function resendInviteAction(
   const { sql, caller } = await openSession();
   const slug = String(formData.get("slug") ?? "");
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
-  if (!workspace) notFound();
+  if (!workspace) return { message: SIGN_IN_AGAIN };
   const resent = await resendInvite({
     sql,
     caller,
     inviteId: String(formData.get("inviteId") ?? ""),
     now: Date.now(),
     ...mail(),
-    origin: await requestOrigin(),
+    origin: await clientOrigin(),
   });
   if (!resent.ok) return { message: resent.message };
   revalidatePath(`/w/${workspace.slug}/people`);
@@ -85,7 +87,7 @@ export async function removeMemberAction(
   const { sql, caller } = await openSession();
   const slug = String(formData.get("slug") ?? "");
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
-  if (!workspace) notFound();
+  if (!workspace) return { message: SIGN_IN_AGAIN };
   const removed = await removeMember({
     sql,
     caller,

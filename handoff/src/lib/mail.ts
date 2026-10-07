@@ -58,7 +58,8 @@ function outbound(message: OutboundMail, key: "email" | "address"): EmailMessage
 export async function sendHandoffMail(message: OutboundMail): Promise<void> {
   const binding = emailBinding();
   if (binding) {
-    await binding.send(outbound(message, "email"));
+    const sent = await binding.send(outbound(message, "email"));
+    if (!sent?.messageId) throw new Error("mail was refused");
     return;
   }
 

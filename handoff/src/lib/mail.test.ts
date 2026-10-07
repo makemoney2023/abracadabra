@@ -111,6 +111,12 @@ describe("sendHandoffMail", () => {
     );
   });
 
+  it("refuses a binding send that does not return a message id", async () => {
+    setEmailBinding(async () => ({}));
+
+    await expect(sendHandoffMail(message)).rejects.toThrow("mail was refused");
+  });
+
   it("refuses when neither the binding nor the API credentials are set", async () => {
     await expect(sendHandoffMail(message)).rejects.toThrow("mail is not configured");
   });
