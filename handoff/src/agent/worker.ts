@@ -1,5 +1,12 @@
 import { Agent, getAgentByName, routeAgentRequest } from "agents";
 import { verifyWake } from "../lib/agent-wake";
+import {
+  draftClientDocuments,
+  parseSkillCatalog,
+  unwrapToolResult,
+  type SkillCard,
+  type ToolCaller,
+} from "../lib/client-documents";
 
 export interface AgentBindings {
   ClientAgent: DurableObjectNamespace<ClientAgent>;
@@ -96,6 +103,12 @@ export class ClientAgent extends Agent<AgentBindings> {
     return parseSkillIndex(await object.text());
   }
 
+  async skillCatalog(): Promise<SkillCard[]> {
+    const object = await this.env.SKILLS.get("skills/index.json");
+    if (!object) return [];
+    return parseSkillCatalog(await object.text());
+  }
+
   private portal(): PortalTools {
     return (this as unknown as { mcp: PortalTools }).mcp;
   }
@@ -137,7 +150,8 @@ export class ClientAgent extends Agent<AgentBindings> {
     try {
       await this.connectPortal();
       await this.skillNames();
-      this.ctx.storage.sql.exec("UPDATE wakes SET finished_at = ?, outcome = ? WHERE id = ?", Date.now(), "ok", id);
+      const outcome = await this.describeClient(id, reason);
+      this.ctx.storage.sql.exec("UPDATE wakes SET finished_at = ?, outcome = ? WHERE id = ?", Date.now(), outcome, id);
     } catch (error) {
       const message = error instanceof Error ? error.message : "wake failed";
       this.ctx.storage.sql.exec(
@@ -149,6 +163,83 @@ export class ClientAgent extends Agent<AgentBindings> {
     }
     return "started";
   }
+
+  /** Drafts the brief and design system when this wake is for describe or engineer. */
+  private async describeClient(wakeId: string, reason: string): Promise<string> {
+    if (reason !== "onboard" && reason !== "context_changed" && reason !== "brief_approved") return "ok";
+    const call = this.toolCaller(this.portal().getAITools?.() ?? {});
+    if (!call) return "ok";
+    const drafted = await draftClientDocuments({
+      call,
+      reason,
+      requestId: wakeId,
+      now: Date.now(),
+      catalog: await this.skillCatalog(),
+      fetchPage: (url) => this.fetchPage(url),
+      cache: {
+        get: (key) => this.cacheGet(key),
+        set: (key, value, expiresAt) => this.cacheSet(key, value, expiresAt),
+      },
+    });
+    return drafted.outcome === "paused" ? "paused" : "ok";
+  }
+
+  private toolCaller(tools: Record<string, unknown>): ToolCaller | null {
+    if (!findExecute(tools, "client_context")) return null;
+    return async (name, args) => {
+      const execute = findExecute(tools, name);
+      if (!execute) throw new Error(`Missing tool ${name}`);
+      return unwrapToolResult(await execute(this.handoffArguments(args)));
+    };
+  }
+
+  private async cacheGet(key: string): Promise<string | null> {
+    this.ensureTables();
+    const rows = [
+      ...this.ctx.storage.sql.exec<{ value: string; expires_at: number | null }>(
+        "SELECT value, expires_at FROM cache WHERE key = ?",
+        key,
+      ),
+    ];
+    const row = rows[0];
+    if (!row || (row.expires_at != null && row.expires_at <= Date.now())) return null;
+    return row.value;
+  }
+
+  private async cacheSet(key: string, value: string, expiresAt: number): Promise<void> {
+    this.ensureTables();
+    this.ctx.storage.sql.exec(
+      `INSERT INTO cache (key, value, expires_at) VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value, expires_at = excluded.expires_at`,
+      key,
+      value,
+      expiresAt,
+    );
+  }
+
+  private async fetchPage(url: string): Promise<{ ok: boolean; text: string }> {
+    try {
+      const response = await fetch(url, { redirect: "follow" });
+      if (!response.ok) return { ok: false, text: "" };
+      return { ok: true, text: await response.text() };
+    } catch {
+      return { ok: false, text: "" };
+    }
+  }
+}
+
+function findExecute(
+  tools: Record<string, unknown>,
+  name: string,
+): ((args: Record<string, unknown>) => Promise<unknown>) | null {
+  for (const [key, value] of Object.entries(tools)) {
+    if (key !== name && !key.endsWith(`_${name}`)) continue;
+    if (!value || typeof value !== "object" || !("execute" in value)) continue;
+    const execute = (value as { execute?: unknown }).execute;
+    if (typeof execute !== "function") continue;
+    return (args) => execute.call(value, args) as Promise<unknown>;
+  }
+  return null;
 }
 
 const worker = {

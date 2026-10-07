@@ -327,6 +327,7 @@ Trigger: `onboard` or `context_changed`.
    - Audience.
    - Current state (what exists today, from files and website).
    - Scope: the pieces of work, each with a kind (`website`, `social_pack`, `document`, `other`) and a one-line outcome.
+   - Skills: for each piece, the `.cursor/skills` paths the Cursor agent should read, chosen from `skills/index.json` (published from `.cursor/skills`). Each path is marked `complete` or `plan`. An empty index names no skills, and the agent writes a note.
    - Supplied material (file paths used, with the tag).
    - Gaps (files that failed or are missing, questions).
    - Acceptance checks per piece.

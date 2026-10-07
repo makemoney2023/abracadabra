@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-07
+
+- **What changed** — An `onboard` or `context_changed` wake drafts a brief from the client's context and file summaries. A `context_changed` wake that already has a brief, and a `brief_approved` wake, also draft the design system. The brief lists real `.cursor/skills` paths for each piece, marked complete or plan, so a later Cursor run knows which skills to follow.
+- **Why** — Cursor should not guess which skills apply. The brief is the place those paths are written down.
+- **Code touchpoints** — `handoff/src/lib/client-documents.ts`, `handoff/src/lib/client-documents.test.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`, `handoff/README.md`
+- **Data-flow impact** — Those wake reasons call `client_context`, `list_files`, and `search_files`, then `save_brief`. A blocking gap becomes `ask_staff`. A clean brief posts an internal status update. A missing `brief-writing` skill writes `add_note` and still saves the brief. The home page is fetched once for a public website and cached for 24 hours.
+- **API / schema impact** — none
+- **Verification** — `npm test` passed (344 node tests, 6 agent tests). `npx eslint` passed on `src/lib/client-documents.ts`, `src/lib/client-documents.test.ts`, and `src/agent/worker.ts`.
+
 ## 2026-10-06
 
 - **What changed** — Worker `handoff-agent` accepts a signed wake, keeps one open wake per reason, and reads the skill index from R2. The first wake connects to the MCP portal with the Access service-token headers.
