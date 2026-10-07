@@ -1,4 +1,4 @@
-export const DELIVERABLE_KINDS = ["social_pack", "website", "document", "other"] as const;
+export const DELIVERABLE_KINDS = ["social_pack", "website", "document", "brief", "design_system", "other"] as const;
 export const ITEM_FORMATS = [
   "video",
   "static",

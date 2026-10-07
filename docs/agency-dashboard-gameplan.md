@@ -654,9 +654,10 @@ finished work to show the client, like `social-preview` in the renewimplants rep
   should post). The name is in `.env.example` and the Handoff README. The value stays a Worker secret.
   The check also needs `HANDOFF_INTAKE_ORIGIN`. `STRIPE_WEBHOOK_SECRET` is added only when the Stripe
   add-on ships.
-- Agent secrets, added with step 10: `AGENT_WAKE_SECRET` (the cron caller and `handoff-agent`) and
-  `AGENT_MCP_TOKEN` (the agent's MCP key, on `handoff-agent` only). The dashboard stores that key
-  hashed, the same as other MCP keys.
+- Agent secrets, added with the agent worker: `AGENT_WAKE_SECRET` (the cron caller and
+  `handoff-agent`), plus `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` (the portal service
+  token, on `handoff-agent` only). `AGENT_MCP_TOKEN` is the Handoff key stored on the MCP portal,
+  not on the Worker. The dashboard stores that key hashed, the same as other MCP keys.
 - Email secrets, added with step 11: `EMAIL_SECRET` on `handoff-agent`, used to sign reply routing.
   The send binding is `EMAIL`. Do not put a send key in the Next.js app.
 - GitHub secrets: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`. The App has
@@ -773,6 +774,16 @@ Made:
 Sources: [Cloudflare Agents](https://developers.cloudflare.com/agents/) and
 [Email Service email handler](https://developers.cloudflare.com/email-service/api/route-emails/email-handler/).
 
+The full agent specification is [hq-agent-spec.md](hq-agent-spec.md). It supersedes this section
+on five points: skills are chosen by the client brief and chained per task rather than one per
+wake; a Cursor cloud run starts only when a task enters the build stage, with `CURSOR_API_KEY` held
+by the dashboard rather than the agent; a client with no linked repo gets a private GitHub repo
+created and linked in that same gate before Cursor is called; the agent reports to staff through
+internal status updates, agent activities, and `agent_questions` shown on Today and `/agent`; and
+the agent connects to one MCP portal, where Handoff and later MCP servers are added.
+Remote MCP URLs are linked on that portal. Products with no remote MCP URL, Search Console
+included, go through the reusable connector worker in spec section 2.4.
+
 ### What each piece is for
 
 Cloudflare splits this into three kinds of work. We keep that split.
@@ -796,11 +807,16 @@ and wakes on a signed request, on its own schedule, or on inbound mail. The scra
 record. The worker has no D1 binding and no R2 binding. Every client record, including raw mail,
 is written by an MCP tool on the dashboard.
 
-On start it connects to MCP:
+On start it connects to the agency MCP portal (spec section 2.3):
 
-- URL: the staff host `/api/mcp` (`https://hq.abra-ca-dabra.app/api/mcp`).
-- Auth: `Authorization: Bearer` with `AGENT_MCP_TOKEN`, via `addMcpServer`.
-- Tools: `this.mcp.getAITools()`, passed into Workers AI on the `AI` binding.
+- URL: `MCP_PORTAL_URL`. Handoff's `/api/mcp` is the first server linked there. More servers are
+  added on the portal. A remote MCP URL is linked directly. A product with no remote MCP URL is
+  an adapter on `handoff-connectors` (spec section 2.4). Search Console is the first adapter.
+- Auth to the portal: Access service token headers `CF-Access-Client-Id` and
+  `CF-Access-Client-Secret`, via `addMcpServer`.
+- Auth from the portal to Handoff: the deployment knowledge key, stored on the portal.
+- Tools: `this.mcp.getAITools()`, passed into Workers AI on the `AI` binding. The list is whatever
+  the portal currently publishes.
 - Key scopes: `read` and `work`. `can_publish` stays off. No `billing` send and no `code` until a
   person turns those on for a different key. This key cannot send client mail, because send is not
   an MCP tool.

@@ -243,14 +243,30 @@ export type SearchHit = {
   fileName: string;
   passage: string;
   summary: string | null;
+  status: string | null;
+  relativePath: string;
+  tag: string;
 };
 
 type PassageRow = {
   file_name: string;
   passage: string;
   summary: string | null;
+  status: string | null;
+  tag: string;
   embedding: string;
 };
+
+function toHit(row: PassageRow): SearchHit {
+  return {
+    fileName: row.file_name,
+    passage: row.passage,
+    summary: row.summary,
+    status: row.status,
+    relativePath: row.file_name,
+    tag: row.tag,
+  };
+}
 
 function cosine(left: number[], right: number[]): number {
   if (left.length === 0 || left.length !== right.length) return -1;
@@ -278,7 +294,7 @@ function keywordHits(rows: PassageRow[], query: string): SearchHit[] {
   for (const row of rows) {
     const haystack = row.passage.toLowerCase();
     if (!words.some((word) => haystack.includes(word))) continue;
-    hits.push({ fileName: row.file_name, passage: row.passage, summary: row.summary });
+    hits.push(toHit(row));
     if (hits.length >= 8) break;
   }
   return hits;
@@ -290,17 +306,21 @@ export async function searchSpace(input: {
   workspaceId: string;
   query: string;
   understander: Understander | null;
+  tag?: string;
 }): Promise<SearchHit[]> {
+  const tag = input.tag ?? null;
   const rows = await input.sql.all<PassageRow>(
-    `SELECT f.relative_path AS file_name, p.body AS passage, r.summary AS summary, p.embedding
+    `SELECT f.relative_path AS file_name, p.body AS passage, r.summary AS summary,
+            r.status AS status, f.tag AS tag, p.embedding
      FROM file_passages p
      JOIN files f ON f.id = p.file_id AND f.object_deleted_at IS NULL
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
        AND b.discarded_at IS NULL AND b.deleted_at IS NULL
      LEFT JOIN file_reads r ON r.file_id = p.file_id
      WHERE p.workspace_id = ?
+       AND (? IS NULL OR f.tag = ?)
      ORDER BY f.relative_path, p.position`,
-    [input.workspaceId],
+    [input.workspaceId, tag, tag],
   );
   if (!input.understander) return keywordHits(rows, input.query);
   let vectors: number[][] = [];
@@ -326,27 +346,52 @@ export async function searchSpace(input: {
     .sort((a, b) => b.score - a.score)
     .slice(0, 8);
   if (ranked.length === 0) return keywordHits(rows, input.query);
-  return ranked.map((item) => ({
-    fileName: item.row.file_name,
-    passage: item.row.passage,
-    summary: item.row.summary,
-  }));
+  return ranked.map((item) => toHit(item.row));
 }
 
+export type ListedFile = {
+  name: string;
+  status: string;
+  summary: string | null;
+  relativePath: string;
+  tag: string;
+};
+
+/** One space, or every space of one organization. `tag` limits the file's tag. */
 export async function listFileReads(
   sql: Sql,
-  workspaceId: string,
-): Promise<{ name: string; status: string }[]> {
-  return sql.all<{ name: string; status: string }>(
-    `SELECT f.relative_path AS name, r.status AS status
+  workspaceId: string | readonly string[],
+  tag?: string,
+): Promise<ListedFile[]> {
+  const ids = typeof workspaceId === "string" ? [workspaceId] : [...workspaceId];
+  if (ids.length === 0) return [];
+  const placeholders = ids.map(() => "?").join(", ");
+  const tagValue = tag ?? null;
+  const rows = await sql.all<{
+    name: string;
+    status: string;
+    summary: string | null;
+    relative_path: string;
+    tag: string;
+  }>(
+    `SELECT f.relative_path AS name, r.status AS status, r.summary AS summary,
+            f.relative_path AS relative_path, f.tag AS tag
      FROM file_reads r
      JOIN files f ON f.id = r.file_id AND f.object_deleted_at IS NULL
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
        AND b.discarded_at IS NULL AND b.deleted_at IS NULL
-     WHERE r.workspace_id = ?
+     WHERE r.workspace_id IN (${placeholders})
+       AND (? IS NULL OR f.tag = ?)
      ORDER BY f.relative_path`,
-    [workspaceId],
+    [...ids, tagValue, tagValue],
   );
+  return rows.map((row) => ({
+    name: row.name,
+    status: row.status,
+    summary: row.summary,
+    relativePath: row.relative_path,
+    tag: row.tag,
+  }));
 }
 
 /** A project key is shown once. Only the hash is stored, and only for this space. */
@@ -373,11 +418,35 @@ export async function issueKnowledgeKey(input: {
   return { ok: true, token };
 }
 
-export async function workspaceIdForKnowledgeKey(sql: Sql, token: string): Promise<string | null> {
+export type KnowledgePrincipal =
+  | { kind: "workspace"; workspaceId: string }
+  | { kind: "agent"; keyId: string; scopes: string[] };
+
+/** A project key stays on one space. The deployment key (work scope, no organization) is the agent. */
+export async function principalForKnowledgeKey(
+  sql: Sql,
+  token: string,
+): Promise<KnowledgePrincipal | null> {
   if (!token.startsWith("hk_") || token.length < 8) return null;
-  const row = await sql.get<{ workspace_id: string }>(
-    "SELECT workspace_id FROM knowledge_keys WHERE token_hash = ? AND revoked_at IS NULL",
+  const row = await sql.get<{
+    id: string;
+    workspace_id: string;
+    scopes: string;
+    organization_id: string | null;
+  }>(
+    `SELECT id, workspace_id, scopes, organization_id
+     FROM knowledge_keys WHERE token_hash = ? AND revoked_at IS NULL`,
     [await sha256Hex(token)],
   );
-  return row?.workspace_id ?? null;
+  if (!row) return null;
+  const scopes = row.scopes.split(",").map((scope) => scope.trim()).filter(Boolean);
+  if (scopes.includes("work") && row.organization_id == null) {
+    return { kind: "agent", keyId: row.id, scopes };
+  }
+  return { kind: "workspace", workspaceId: row.workspace_id };
+}
+
+export async function workspaceIdForKnowledgeKey(sql: Sql, token: string): Promise<string | null> {
+  const principal = await principalForKnowledgeKey(sql, token);
+  return principal?.kind === "workspace" ? principal.workspaceId : null;
 }

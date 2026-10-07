@@ -11,6 +11,7 @@ import {
   chunkText,
   issueKnowledgeKey,
   listFileReads,
+  principalForKnowledgeKey,
   readSpaceFiles,
   searchSpace,
   wordsFromBytes,
@@ -345,6 +346,639 @@ describe("space knowledge", () => {
       }),
     );
     expect(denied.status).toBe(401);
+  });
+
+  it("treats a deployment key as the agent and a project key as one space", async () => {
+    const sql = await db();
+    await seed(sql);
+    const issued = await issueKnowledgeKey({
+      sql,
+      caller: owner,
+      workspaceId: WORKSPACE,
+      now: Date.now(),
+    });
+    expect(issued.ok).toBe(true);
+    if (!issued.ok) return;
+    await expect(principalForKnowledgeKey(sql, issued.token)).resolves.toEqual({
+      kind: "workspace",
+      workspaceId: WORKSPACE,
+    });
+
+    const agentToken = "hk_agent-deployment-key";
+    await sql.run(
+      `INSERT INTO knowledge_keys (
+        id, workspace_id, token_hash, label, created_at, revoked_at, scopes, can_publish, organization_id
+      ) VALUES ('key-agent', ?, ?, 'HQ agent', ?, NULL, 'read,work', 0, NULL)`,
+      [WORKSPACE, await sha256Hex(agentToken), Date.now()],
+    );
+    await expect(principalForKnowledgeKey(sql, agentToken)).resolves.toEqual({
+      kind: "agent",
+      keyId: "key-agent",
+      scopes: ["read", "work"],
+    });
+    await sql.run("UPDATE knowledge_keys SET revoked_at = ? WHERE id = 'key-agent'", [Date.now()]);
+    await expect(principalForKnowledgeKey(sql, agentToken)).resolves.toBeNull();
+  });
+});
+
+describe("agent read tools", () => {
+  let directory = "";
+  const org = "org-foam";
+  const stranger = "org-stranger";
+  const archived = "org-archived";
+  const spaceA = "ws-foam-a";
+  const spaceB = "ws-foam-b";
+  const spaceC = "ws-stranger";
+  const agentToken = "hk_agent-mcp-read";
+  const spaceToken = "hk_space-mcp-read";
+
+  afterEach(() => {
+    delete process.env.HANDOFF_SQLITE_PATH;
+    delete process.env.HANDOFF_OBJECT_PATH;
+    delete process.env.HANDOFF_SIGNING_SECRET;
+    if (directory) rmSync(directory, { recursive: true, force: true });
+    directory = "";
+  });
+
+  async function db(): Promise<Sql> {
+    if (directory) rmSync(directory, { recursive: true, force: true });
+    directory = mkdtempSync(path.join(tmpdir(), "handoff-agent-read-"));
+    process.env.HANDOFF_SQLITE_PATH = path.join(directory, "handoff.db");
+    process.env.HANDOFF_OBJECT_PATH = path.join(directory, "objects");
+    process.env.HANDOFF_SIGNING_SECRET = "test-signing-secret";
+    const sql = await openHandoffDb();
+    await migrate(sql);
+    return sql;
+  }
+
+  async function seed(sql: Sql): Promise<void> {
+    const now = 1_700_000_000_000;
+    await sql.run(
+      `INSERT INTO organizations (id, name, website, industry, kind, notes, created_at, updated_at, archived_at)
+       VALUES (?, 'Foam Co', 'https://foam.example', 'packaging', 'client', 'Prefers email.', ?, ?, NULL)`,
+      [org, now, now],
+    );
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at, archived_at)
+       VALUES (?, 'Stranger Co', 'client', ?, ?, NULL)`,
+      [stranger, now, now],
+    );
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at, archived_at)
+       VALUES (?, 'Old Co', 'past_client', ?, ?, ?)`,
+      [archived, now, now, now],
+    );
+    for (const [id, slug, organizationId] of [
+      [spaceA, "foam-a", org],
+      [spaceB, "foam-b", org],
+      [spaceC, "stranger", stranger],
+    ] as const) {
+      await sql.run(
+        `INSERT INTO workspaces (
+          id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+          quota_bytes, retention_days, request_digest, status, opened_at, archived_at, purged_at, organization_id
+        ) VALUES (?, ?, ?, ?, NULL, 'Studio', 'standard', ?, ?, 0, 'active', ?, NULL, NULL, ?)`,
+        [id, slug, slug, slug, LIMITS.defaultQuotaBytes, LIMITS.defaultRetentionDays, now, organizationId],
+      );
+    }
+    await sql.run("INSERT INTO users (id, email, created_at) VALUES ('user-owner', 'owner@example.com', ?)", [now]);
+    for (const [batch, workspace] of [
+      ["batch-a", spaceA],
+      ["batch-b", spaceB],
+      ["batch-c", spaceC],
+    ] as const) {
+      await sql.run(
+        `INSERT INTO batches (
+          id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
+        ) VALUES (?, ?, NULL, 'user-owner', 'Drop', NULL, ?, ?, NULL, NULL)`,
+        [batch, workspace, now, now],
+      );
+    }
+    const files: [string, string, string, string, string][] = [
+      ["file-brief", "batch-a", spaceA, "brief.txt", "copy"],
+      ["file-logo", "batch-a", spaceA, "logo.png", "brand"],
+      ["file-notes", "batch-b", spaceB, "notes.txt", "copy"],
+      ["file-secret", "batch-c", spaceC, "secret.txt", "copy"],
+    ];
+    for (const [id, batch, workspace, name, tag] of files) {
+      await sql.run(
+        `INSERT INTO files (
+          id, batch_id, workspace_id, relative_path, extension, declared_content_type, size_bytes,
+          object_key, tag, status, sha256, scan_attempts, created_at
+        ) VALUES (?, ?, ?, ?, 'txt', 'text/plain', 8, ?, ?, 'uploaded', NULL, 0, ?)`,
+        [id, batch, workspace, name, `${workspace}/${batch}/${id}`, tag, now],
+      );
+      await sql.run(
+        `INSERT INTO file_reads (file_id, workspace_id, status, summary, reason, source_sha, read_at)
+         VALUES (?, ?, 'ready', ?, NULL, NULL, ?)`,
+        [id, workspace, `Notes on ${name}`, now],
+      );
+    }
+    await sql.run(
+      `INSERT INTO knowledge_keys (
+        id, workspace_id, token_hash, label, created_at, revoked_at, scopes, can_publish, organization_id
+      ) VALUES ('key-agent-read', ?, ?, 'HQ agent', ?, NULL, 'read,work', 0, NULL)`,
+      [spaceA, await sha256Hex(agentToken), now],
+    );
+    await sql.run(
+      `INSERT INTO knowledge_keys (
+        id, workspace_id, token_hash, label, created_at, revoked_at, scopes, can_publish, organization_id
+      ) VALUES ('key-space-read', ?, ?, 'Project key', ?, NULL, 'read', 0, NULL)`,
+      [spaceA, await sha256Hex(spaceToken), now],
+    );
+    await sql.run(
+      `INSERT INTO deals (
+        id, organization_id, title, stage, source, created_at, updated_at, closed_at
+      ) VALUES ('deal-1', ?, 'Website rebuild', 'won', 'inbound', ?, ?, ?)`,
+      [org, now, now, now],
+    );
+    await sql.run(
+      `INSERT INTO assessments (
+        id, organization_id, answers_json, scores_json, total_score, completed_at, received_at
+      ) VALUES (
+        'assess-1', ?, ?, ?, 42, ?, ?
+      )`,
+      [
+        org,
+        JSON.stringify({ q1: "SECRET_ANSWER_DO_NOT_LEAK" }),
+        JSON.stringify({
+          overall: { total: 42, band: "forming" },
+          readiness: { total: 40 },
+          growth: { total: 55 },
+          visibility: { total: 30 },
+        }),
+        now,
+        now,
+      ],
+    );
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, due_at, created_at, updated_at)
+       VALUES ('project-1', ?, 'Site', 'active', ?, ?, ?)`,
+      [org, now + 86_400_000, now, now],
+    );
+    await sql.run(
+      `INSERT INTO milestones (id, project_id, name, due_at, done_at, sort)
+       VALUES ('mile-1', 'project-1', 'Launch', ?, NULL, 0)`,
+      [now + 86_400_000],
+    );
+    await sql.run(
+      `INSERT INTO repos (
+        id, github_repo_id, full_name, organization_id, project_id, default_branch, is_private, owned_by, created_at
+      ) VALUES ('repo-1', 101, 'makemoney2023/foam', ?, 'project-1', 'main', 1, 'agency', ?)`,
+      [org, now],
+    );
+    await sql.run(
+      `INSERT INTO deliverables (
+        id, organization_id, project_id, workspace_id, title, kind, status, version,
+        actor_kind, created_at, updated_at, published_version
+      ) VALUES (
+        'del-brief', ?, 'project-1', ?, 'Client brief', 'brief', 'in_review', 2,
+        'staff', ?, ?, NULL
+      )`,
+      [org, spaceA, now, now],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+        id, deliverable_id, version, format, title, copy_text, media_json, status, sort
+      ) VALUES ('item-brief', 'del-brief', 2, 'page', 'brief.md', 'The client sells foam.', '[]', 'pending', 0)`,
+    );
+    await sql.run(
+      `INSERT INTO deliverable_feedback (
+        id, deliverable_id, item_id, version, author_kind, decision, body, created_at
+      ) VALUES ('fb-1', 'del-brief', 'item-brief', 2, 'client', 'changes', 'Make the headline shorter.', ?)`,
+      [now],
+    );
+    await sql.run(
+      `INSERT INTO tasks (
+        id, organization_id, project_id, title, status, created_at, updated_at,
+        stage, deliverable_id, round, skills_json, created_by_kind
+      ) VALUES (
+        'task-1', ?, 'project-1', 'Write the homepage', 'todo', ?, ?,
+        'describe', 'del-brief', 1, ?, 'agent'
+      )`,
+      [org, now, now, JSON.stringify({ steps: [{ path: "copywriting", mode: "complete", status: "todo" }] })],
+    );
+    await sql.run(
+      `INSERT INTO activities (id, organization_id, kind, actor_kind, body, data_json, created_at)
+       VALUES ('act-1', ?, 'staff.instruction', 'staff', 'Use the gold logo.', ?, ?)`,
+      [org, JSON.stringify({ taskId: "task-1" }), now],
+    );
+    await sql.run(
+      `INSERT INTO agent_questions (id, organization_id, task_id, question, asked_at, answered_at)
+       VALUES ('q-open', ?, 'task-1', 'Which gold?', ?, NULL)`,
+      [org, now],
+    );
+    await sql.run(
+      `INSERT INTO agent_questions (id, organization_id, task_id, question, answer, asked_at, answered_at)
+       VALUES ('q-done', ?, 'task-1', 'Logo file?', 'logo.png', ?, ?)`,
+      [org, now - 1000, now],
+    );
+  }
+
+  async function call(token: string, method: string, params?: unknown) {
+    const response = await mcp(
+      new Request("https://handoff.example/api/mcp", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      }),
+    );
+    return response.json() as Promise<{
+      result?: { tools?: { name: string }[]; content?: { text: string }[] };
+      error?: { code: number; message: string };
+    }>;
+  }
+
+  function payload(body: { result?: { content?: { text: string }[] } }): unknown {
+    return JSON.parse(body.result?.content?.[0]?.text ?? "");
+  }
+
+  it("lets an agent read one live client and keeps survey answers out", async () => {
+    const sql = await db();
+    await seed(sql);
+    const listed = await call(agentToken, "tools/list");
+    const names = listed.result?.tools?.map((tool) => tool.name) ?? [];
+    expect(names).toEqual(expect.arrayContaining(["client_context", "get_brief", "list_feedback"]));
+
+    const context = await call(agentToken, "tools/call", {
+      name: "client_context",
+      arguments: { organizationId: org },
+    });
+    const text = context.result?.content?.[0]?.text ?? "";
+    expect(text).not.toContain("SECRET_ANSWER_DO_NOT_LEAK");
+    expect(text).not.toContain("answers_json");
+    const body = payload(context) as {
+      organization: { name: string; briefApproval: string };
+      deal: { title: string; wonAt: number };
+      assessment: { totalScore: number; answerSummary: string };
+      project: { milestones: { name: string }[] };
+      workspaces: { slug: string; fileCounts: { clean: number } }[];
+      repos: { fullName: string }[];
+      briefs: { kind: string; version: number }[];
+      tasks: { title: string; staffNotes: string[]; skills: { path: string }[] }[];
+      openQuestions: { question: string }[];
+      answeredSince: { answer: string }[];
+    };
+    expect(body.organization.name).toBe("Foam Co");
+    expect(body.organization.briefApproval).toBe("client");
+    expect(body.deal.wonAt).toBe(1_700_000_000_000);
+    expect(body.assessment.totalScore).toBe(42);
+    expect(body.assessment.answerSummary).toContain("42");
+    expect(body.assessment.answerSummary).toContain("forming");
+    expect(body.project.milestones[0]?.name).toBe("Launch");
+    expect(body.workspaces.map((space) => space.slug).sort()).toEqual(["foam-a", "foam-b"]);
+    expect(body.workspaces.find((space) => space.slug === "foam-a")?.fileCounts.clean).toBe(2);
+    expect(body.repos[0]?.fullName).toBe("makemoney2023/foam");
+    expect(body.briefs[0]).toMatchObject({ kind: "brief", version: 2 });
+    expect(body.tasks[0]?.staffNotes).toEqual(["Use the gold logo."]);
+    expect(body.tasks[0]?.skills[0]?.path).toBe("copywriting");
+    expect(body.openQuestions[0]?.question).toBe("Which gold?");
+    expect(body.answeredSince[0]?.answer).toBe("logo.png");
+
+    const brief = payload(
+      await call(agentToken, "tools/call", {
+        name: "get_brief",
+        arguments: { organizationId: org, kind: "brief" },
+      }),
+    ) as { body: string; changes: { body: string }[] };
+    expect(brief.body).toBe("The client sells foam.");
+    expect(brief.changes[0]?.body).toBe("Make the headline shorter.");
+
+    const feedback = payload(
+      await call(agentToken, "tools/call", {
+        name: "list_feedback",
+        arguments: { organizationId: org, deliverableId: "del-brief" },
+      }),
+    ) as { itemId: string; decision: string }[];
+    expect(feedback[0]).toMatchObject({ itemId: "item-brief", decision: "changes" });
+
+    const missing = await call(agentToken, "tools/call", {
+      name: "client_context",
+      arguments: { organizationId: archived },
+    });
+    expect(missing.error?.code).toBe(-32602);
+  });
+
+  it("refuses a project key that asks for another organization or a work tool", async () => {
+    const sql = await db();
+    await seed(sql);
+    const context = await call(spaceToken, "tools/call", {
+      name: "client_context",
+      arguments: { organizationId: org },
+    });
+    expect(context.error?.code).toBe(-32001);
+    const crossed = await call(spaceToken, "tools/call", {
+      name: "list_files",
+      arguments: { organizationId: org },
+    });
+    expect(crossed.error?.code).toBe(-32001);
+    const work = await call(spaceToken, "tools/call", {
+      name: "save_brief",
+      arguments: { organizationId: org },
+    });
+    expect(work.error?.code).toBe(-32001);
+    const own = await call(spaceToken, "tools/call", { name: "list_files", arguments: {} });
+    const text = own.result?.content?.[0]?.text ?? "";
+    expect(text).toContain("brief.txt");
+    expect(text).toContain("logo.png");
+    expect(text).not.toContain("notes.txt");
+    expect(text).not.toContain("secret.txt");
+  });
+
+  it("lists every space of the organization and honors a tag", async () => {
+    const sql = await db();
+    await seed(sql);
+    const all = payload(
+      await call(agentToken, "tools/call", {
+        name: "list_files",
+        arguments: { organizationId: org },
+      }),
+    ) as { name: string; tag: string; summary: string; relativePath: string }[];
+    expect(all.map((row) => row.name).sort()).toEqual(["brief.txt", "logo.png", "notes.txt"]);
+    expect(all.every((row) => row.summary.startsWith("Notes on"))).toBe(true);
+    expect(all.find((row) => row.name === "brief.txt")?.relativePath).toBe("brief.txt");
+
+    const brand = payload(
+      await call(agentToken, "tools/call", {
+        name: "list_files",
+        arguments: { organizationId: org, tag: "brand" },
+      }),
+    ) as { name: string; tag: string }[];
+    expect(brand).toEqual([{ name: "logo.png", tag: "brand", summary: "Notes on logo.png", relativePath: "logo.png", status: "ready" }]);
+
+    const otherSpace = await call(agentToken, "tools/call", {
+      name: "list_files",
+      arguments: { organizationId: org, workspaceId: spaceC },
+    });
+    expect(otherSpace.error?.code).toBe(-32001);
+
+    const taggedSpace = payload(
+      await call(spaceToken, "tools/call", {
+        name: "list_files",
+        arguments: { tag: "brand" },
+      }),
+    );
+    const taggedText = JSON.stringify(taggedSpace);
+    expect(taggedText).toContain("logo.png");
+    expect(taggedText).not.toContain("brief.txt");
+  });
+});
+
+describe("agent work tools", () => {
+  let directory = "";
+  const org = "org-work";
+  const stranger = "org-work-stranger";
+  const space = "ws-work";
+  const otherSpace = "ws-work-stranger";
+  const agentToken = "hk_agent-mcp-work";
+
+  afterEach(() => {
+    if (directory) rmSync(directory, { recursive: true, force: true });
+    directory = "";
+  });
+
+  async function db(): Promise<Sql> {
+    if (directory) rmSync(directory, { recursive: true, force: true });
+    directory = mkdtempSync(path.join(tmpdir(), "handoff-agent-work-"));
+    process.env.HANDOFF_SQLITE_PATH = path.join(directory, "handoff.db");
+    process.env.HANDOFF_OBJECT_PATH = path.join(directory, "objects");
+    process.env.HANDOFF_SIGNING_SECRET = "test-signing-secret";
+    const sql = await openHandoffDb();
+    await migrate(sql);
+    return sql;
+  }
+
+  async function seed(sql: Sql): Promise<void> {
+    const now = 1_700_000_000_000;
+    for (const [id, name] of [
+      [org, "Foam Co"],
+      [stranger, "Stranger Co"],
+    ] as const) {
+      await sql.run(
+        `INSERT INTO organizations (id, name, kind, created_at, updated_at) VALUES (?, ?, 'client', ?, ?)`,
+        [id, name, now, now],
+      );
+    }
+    for (const [id, slug, organizationId] of [
+      [space, "foam-work", org],
+      [otherSpace, "stranger-work", stranger],
+    ] as const) {
+      await sql.run(
+        `INSERT INTO workspaces (
+          id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+          quota_bytes, retention_days, request_digest, status, opened_at, archived_at, purged_at, organization_id
+        ) VALUES (?, ?, ?, ?, NULL, 'Studio', 'standard', ?, ?, 0, 'active', ?, NULL, NULL, ?)`,
+        [id, slug, slug, slug, LIMITS.defaultQuotaBytes, LIMITS.defaultRetentionDays, now, organizationId],
+      );
+    }
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, created_at, updated_at)
+       VALUES ('project-work', ?, 'Site', 'active', ?, ?)`,
+      [org, now, now],
+    );
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, created_at, updated_at)
+       VALUES ('project-stranger', ?, 'Other site', 'active', ?, ?)`,
+      [stranger, now, now],
+    );
+    await sql.run(
+      `INSERT INTO repos (
+        id, github_repo_id, full_name, organization_id, project_id, default_branch, is_private, owned_by, created_at
+      ) VALUES ('repo-work', 202, 'makemoney2023/foam', ?, 'project-work', 'main', 1, 'agency', ?)`,
+      [org, now],
+    );
+    await sql.run(
+      `INSERT INTO knowledge_keys (
+        id, workspace_id, token_hash, label, created_at, revoked_at, scopes, can_publish, organization_id
+      ) VALUES ('key-agent-work', ?, ?, 'HQ agent', ?, NULL, 'read,work', 0, NULL)`,
+      [space, await sha256Hex(agentToken), now],
+    );
+  }
+
+  async function call(method: string, params?: unknown) {
+    const response = await mcp(
+      new Request("http://handoff.test/api/mcp", {
+        method: "POST",
+        headers: { authorization: `Bearer ${agentToken}`, "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      }),
+    );
+    return response.json() as Promise<{ result?: { content?: { text?: string }[] }; error?: { code: number } }>;
+  }
+
+  function payload(body: { result?: { content?: { text?: string }[] } }): unknown {
+    return JSON.parse(body.result?.content?.[0]?.text ?? "");
+  }
+
+  it("saves one draft brief and repeats the same request", async () => {
+    const sql = await db();
+    await seed(sql);
+    const args = {
+      organizationId: org,
+      kind: "brief",
+      title: "Foam brief",
+      bodyMarkdown: "# Foam\nThey sell foam.",
+      sourcesJson: [{ fileId: "file-1", summary: "Logo notes" }],
+      requestId: "req-brief-1",
+    };
+    const first = payload(await call("tools/call", { name: "save_brief", arguments: args })) as { deliverableId: string };
+    const second = payload(await call("tools/call", { name: "save_brief", arguments: { ...args, title: "Changed" } })) as {
+      deliverableId: string;
+    };
+    expect(second.deliverableId).toBe(first.deliverableId);
+    const count = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM deliverables WHERE organization_id = ? AND kind = 'brief'", [org]);
+    expect(count?.n).toBe(1);
+    const row = await sql.get<{ status: string; actor_kind: string }>(
+      "SELECT status, actor_kind FROM deliverables WHERE id = ?",
+      [first.deliverableId],
+    );
+    expect(row).toEqual({ status: "draft", actor_kind: "agent" });
+    const item = await sql.get<{ title: string; copy_text: string }>(
+      "SELECT title, copy_text FROM deliverable_items WHERE deliverable_id = ?",
+      [first.deliverableId],
+    );
+    expect(item).toEqual({ title: "brief.md", copy_text: "# Foam\nThey sell foam." });
+    const activity = await sql.get<{ kind: string; actor_kind: string; actor_id: string }>(
+      "SELECT kind, actor_kind, actor_id FROM activities WHERE organization_id = ? AND kind = 'agent.brief_drafted'",
+      [org],
+    );
+    expect(activity).toEqual({ kind: "agent.brief_drafted", actor_kind: "agent", actor_id: "key-agent-work" });
+  });
+
+  it("refuses a task aimed at another client's project", async () => {
+    const sql = await db();
+    await seed(sql);
+    const body = await call("tools/call", {
+      name: "create_task",
+      arguments: {
+        organizationId: org,
+        title: "Build the stranger site",
+        projectId: "project-stranger",
+        stage: "describe",
+        skills: [],
+        requestId: "req-task-bad",
+      },
+    });
+    expect(body.error?.code).toBe(-32602);
+    const count = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM tasks WHERE title = 'Build the stranger site'");
+    expect(count?.n).toBe(0);
+  });
+
+  it("updates a task, asks staff, posts status, and lists this client's repos", async () => {
+    const sql = await db();
+    await seed(sql);
+    const created = payload(
+      await call("tools/call", {
+        name: "create_task",
+        arguments: {
+          organizationId: org,
+          title: "Write the homepage",
+          projectId: "project-work",
+          stage: "describe",
+          skills: [{ path: "copywriting", mode: "complete" }],
+          requestId: "req-task-1",
+        },
+      }),
+    ) as { taskId: string };
+    const task = await sql.get<{ created_by_kind: string; stage: string; actor_kind: string }>(
+      `SELECT t.created_by_kind, t.stage, a.actor_kind
+       FROM tasks t JOIN activities a ON a.organization_id = t.organization_id
+       WHERE t.id = ? AND a.kind = 'agent.task_created'`,
+      [created.taskId],
+    );
+    expect(task).toEqual({ created_by_kind: "agent", stage: "describe", actor_kind: "agent" });
+
+    await call("tools/call", {
+      name: "update_task",
+      arguments: { organizationId: org, taskId: created.taskId, stage: "engineer", status: "doing", requestId: "req-task-2" },
+    });
+    const moved = await sql.get<{ stage: string; status: string }>("SELECT stage, status FROM tasks WHERE id = ?", [created.taskId]);
+    expect(moved).toEqual({ stage: "engineer", status: "doing" });
+    const runs = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM cloud_runs");
+    expect(runs?.n).toBe(0);
+
+    await call("tools/call", {
+      name: "ask_staff",
+      arguments: { organizationId: org, taskId: created.taskId, question: "Which gold?", requestId: "req-ask-1" },
+    });
+    const blocked = await sql.get<{ status: string; blocked_reason: string }>(
+      "SELECT status, blocked_reason FROM tasks WHERE id = ?",
+      [created.taskId],
+    );
+    expect(blocked).toEqual({ status: "blocked", blocked_reason: "waiting_on_staff" });
+
+    const internal = payload(
+      await call("tools/call", {
+        name: "post_status_update",
+        arguments: {
+          organizationId: org,
+          projectId: "project-work",
+          health: "on_track",
+          audience: "internal",
+          body: "Brief is drafted.",
+          requestId: "req-status-1",
+        },
+      }),
+    ) as { state: string };
+    const client = payload(
+      await call("tools/call", {
+        name: "post_status_update",
+        arguments: {
+          organizationId: org,
+          projectId: "project-work",
+          health: "on_track",
+          audience: "client",
+          body: "We started the brief.",
+          requestId: "req-status-2",
+        },
+      }),
+    ) as { state: string };
+    expect(internal.state).toBe("published");
+    expect(client.state).toBe("draft");
+
+    const repos = payload(await call("tools/call", { name: "list_repos", arguments: { organizationId: org, requestId: "req-repos-1" } })) as {
+      fullName: string;
+    }[];
+    expect(repos.map((repo) => repo.fullName)).toEqual(["makemoney2023/foam"]);
+
+    const made = payload(
+      await call("tools/call", {
+        name: "create_deliverable",
+        arguments: {
+          organizationId: org,
+          title: "Homepage copy",
+          kind: "document",
+          projectId: "project-work",
+          workspaceId: space,
+          requestId: "req-del-1",
+        },
+      }),
+    ) as { deliverableId: string };
+    await call("tools/call", {
+      name: "add_deliverable_item",
+      arguments: {
+        organizationId: org,
+        deliverableId: made.deliverableId,
+        path: "copy.md",
+        bodyMarkdown: "The headline.",
+        requestId: "req-item-1",
+      },
+    });
+    const copy = await sql.get<{ title: string; copy_text: string }>(
+      "SELECT title, copy_text FROM deliverable_items WHERE deliverable_id = ?",
+      [made.deliverableId],
+    );
+    expect(copy).toEqual({ title: "copy.md", copy_text: "The headline." });
+
+    await call("tools/call", {
+      name: "add_note",
+      arguments: { organizationId: org, taskId: created.taskId, body: "Waiting on the gold.", requestId: "req-note-1" },
+    });
+    const note = await sql.get<{ kind: string; actor_kind: string }>(
+      "SELECT kind, actor_kind FROM activities WHERE organization_id = ? AND kind = 'agent.note'",
+      [org],
+    );
+    expect(note).toEqual({ kind: "agent.note", actor_kind: "agent" });
   });
 });
 

@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: "node",
     passWithNoTests: true,
-    exclude: ["**/node_modules/**", ".next/**", ".open-next/**"],
+    exclude: ["**/node_modules/**", ".next/**", ".open-next/**", "src/agent/**"],
   },
   resolve: {
     alias: {

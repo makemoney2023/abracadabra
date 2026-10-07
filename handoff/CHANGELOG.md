@@ -2,6 +2,51 @@
 
 ## 2026-10-06
 
+- **What changed** — Worker `handoff-agent` accepts a signed wake, keeps one open wake per reason, and reads the skill index from R2. The first wake connects to the MCP portal with the Access service-token headers.
+- **Why** — Each client needs its own agent instance before the brief and build loop can run. The portal is the only front door for tools.
+- **Code touchpoints** — `handoff/src/agent/worker.ts`, `handoff/src/agent/worker.test.ts`, `handoff/wrangler.agent.jsonc`, `handoff/vitest.agent.config.mts`, `handoff/vitest.config.ts`, `handoff/tsconfig.json`, `handoff/.env.example`
+- **Data-flow impact** — `POST /wake` on `handoff-agent` checks `x-handoff-signature`, then `ClientAgent.acceptWake`. A second wake with the same reason still open returns 202. Tool names come from the portal. `organizationId` on a Handoff call is the Durable Object name.
+- **API / schema impact** — New worker config. No D1 change. Production `MCP_PORTAL_URL` is empty until the portal exists.
+- **Verification** — `npm test` passed (333 node tests, 6 agent tests). `npx eslint` passed on `src/agent/worker.ts` and `src/agent/worker.test.ts`.
+
+## 2026-10-06
+
+- **What changed** — Worker `handoff` wakes the HQ agent on a schedule. Every 15 minutes covers a client with open work or new files. Every hour covers a client with a cloud run still open. Monday at 08:00 UTC covers every live client. The POST is signed. A failed call is recorded and tried again next cycle.
+- **Why** — One agent instance per client has to be told when something is waiting. A paused or archived client stays quiet.
+- **Code touchpoints** — `handoff/src/lib/agent-wake.ts`, `handoff/src/lib/agent-wake.test.ts`, `handoff/cloudflare-worker.ts`, `handoff/wrangler.jsonc`, `handoff/.env.example`
+- **Data-flow impact** — Cron on `handoff` reads organizations, tasks, activities, and cloud runs, then POSTs `{ organizationId, reason, sentAt }` to `AGENT_URL/wake` with header `x-handoff-signature`. A non-2xx response writes `agent.wake_failed`.
+- **API / schema impact** — New crons: `*/15 * * * *`, `0 * * * *`, `0 8 * * 1`. New var `AGENT_URL`. Secret `AGENT_WAKE_SECRET` is set on the worker, not in git.
+- **Verification** — `npm test` passed (333 tests). `npx eslint` passed on `src/lib/agent-wake.ts` and `src/lib/agent-wake.test.ts`.
+
+## 2026-10-06
+
+- **What changed** — A deployment key with `work` scope can save a brief, create and update tasks, add a deliverable, ask staff, post a status update, add a note, and list this client's repos. A repeat of the same `requestId` returns the first result. A project or task in another organization is refused and writes nothing. Moving a task to engineer does not start a cloud run.
+- **Why** — The HQ agent writes as itself. Staff tools stay staff-only. The build gate and Cursor stay for a later step.
+- **Code touchpoints** — `handoff/src/db/agent-work.ts`, `handoff/src/lib/mcp.ts`, `handoff/src/lib/deliverable-manifest.ts`, `handoff/src/lib/knowledge.test.ts`
+- **Data-flow impact** — `POST /api/mcp` with a deployment key writes deliverables, tasks, activities, status updates, and agent questions for the named organization. `actor_kind` is `agent`. Internal status updates publish immediately. Client updates stay drafts.
+- **API / schema impact** — Work tools: `save_brief`, `create_task`, `update_task`, `create_deliverable`, `add_deliverable_item`, `post_status_update`, `add_note`, `ask_staff`, `list_repos`. Deliverable kinds now include `brief` and `design_system` in the app constant, matching the database. A key without `work` still gets `-32001`.
+- **Verification** — `npm test` passed (329 tests). `npx eslint` passed on the edited files.
+
+## 2026-10-06
+
+- **What changed** — A deployment key can read one live client's context, brief, and feedback. A project key still searches only its own space. Survey answers stay in the database. A project key cannot name another organization or call a work tool.
+- **Why** — The HQ agent needs that picture before it writes a brief. The same portal key is shared, so the organization id on the call is what keeps clients apart.
+- **Code touchpoints** — `handoff/src/lib/mcp.ts`, `handoff/src/lib/agent-context.ts`, `handoff/src/lib/knowledge.ts`, `handoff/src/lib/knowledge.test.ts`
+- **Data-flow impact** — `POST /api/mcp` with a deployment key reads organizations, deals, assessments (scores only), projects, spaces, repos, briefs, tasks, staff instructions, and agent questions. `list_files` and `search_files` can take a file tag.
+- **API / schema impact** — New tools: `client_context`, `get_brief`, `list_feedback`. Work tool names return JSON-RPC `-32001` when the key has no `work` scope. An unknown or archived organization returns `-32602`.
+- **Verification** — `npm test` passed (326 tests).
+
+## 2026-10-06
+
+- **What changed** — The database can store agent task stages, briefs, design systems, cloud runs, and staff questions. Existing deliverables and tasks keep their rows. A project key still names one space. A deployment key with `work` scope and no organization is the agent.
+- **Why** — The HQ agent needs those records before it can write a brief or start a build. A client with no GitHub repo will get one created when a task enters build; that behavior is specified and not wired yet.
+- **Code touchpoints** — `handoff/migrations/0007_agent.sql`, `handoff/src/db/migration-sql.ts`, `handoff/src/db/migrate.ts`, `handoff/src/db/migrate.test.ts`, `handoff/src/lib/knowledge.ts`, `handoff/src/lib/knowledge.test.ts`
+- **Data-flow impact** — none yet. No route reads the new tables.
+- **API / schema impact** — `tasks` gains `stage`, `deliverable_id`, `cursor_agent_id`, `build_deadline_at`, `skills_json`, `blocked_reason`, `round`, `created_by_kind`. `deliverables.kind` accepts `brief` and `design_system`. `organizations` gains `brief_approval`, `auto_publish_built`, `agent_paused_at`. `knowledge_keys.organization_id` is added. New tables: `agent_questions`, `cloud_runs`, `agent_settings` (`max_cloud_runs` 4, `build_deadline_hours` 2), `deliverable_notices`.
+- **Verification** — `npm test` passed (323 tests).
+
+## 2026-10-06
+
 - **What changed** — Staff can add finished work on a project, send a round to the client, and pull a round from a repo manifest. The client gallery is `/w/[slug]/work`. Approve and ask-for-changes stay on the sent round.
 - **Why** — HQ gameplan step 7. The tables were already in `0005_crm.sql`. A sent round now keeps its own version so a later draft does not hide it.
 - **Code touchpoints** — `handoff/migrations/0006_deliverable_rounds.sql`, `handoff/src/db/deliverables.ts`, `handoff/src/lib/deliverable-manifest.ts`, `handoff/src/lib/github/contents.ts`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/w/[slug]/work/page.tsx`, `handoff/src/app/api/deliverables/[deliverableId]/items/[itemId]/media/[role]/route.ts`

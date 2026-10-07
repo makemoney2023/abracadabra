@@ -76,10 +76,14 @@
       }
     ]
   },
+  "triggers": {
+    "crons": ["*/15 * * * *", "0 * * * *", "0 8 * * 1"]
+  },
   "vars": {
     "HANDOFF_AI_GATEWAY_ID": "default",
     "HANDOFF_HQ_HOST": "hq.abra-ca-dabra.app",
     "HANDOFF_HQ_ORIGIN": "https://hq.abra-ca-dabra.app",
-    "HANDOFF_APP_ORIGIN": "https://handoff.abra-ca-dabra.app"
+    "HANDOFF_APP_ORIGIN": "https://handoff.abra-ca-dabra.app",
+    "AGENT_URL": "https://agent.abra-ca-dabra.app"
   }
 }
