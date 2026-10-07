@@ -980,6 +980,86 @@ describe("agent work tools", () => {
     );
     expect(note).toEqual({ kind: "agent.note", actor_kind: "agent" });
   });
+
+  it("keeps finished skill steps and links the task to its draft", async () => {
+    const sql = await db();
+    await seed(sql);
+    const made = payload(
+      await call("tools/call", {
+        name: "create_deliverable",
+        arguments: {
+          organizationId: org,
+          title: "Homepage",
+          kind: "website",
+          projectId: "project-work",
+          workspaceId: space,
+          requestId: "req-del-link",
+        },
+      }),
+    ) as { deliverableId: string };
+    const created = payload(
+      await call("tools/call", {
+        name: "create_task",
+        arguments: {
+          organizationId: org,
+          title: "Write the homepage",
+          projectId: "project-work",
+          stage: "describe",
+          deliverableId: made.deliverableId,
+          skills: [
+            { path: "copywriting", mode: "complete", status: "done" },
+            { path: "landing-page-design", mode: "plan", status: "todo" },
+          ],
+          requestId: "req-task-link",
+        },
+      }),
+    ) as { taskId: string };
+    await call("tools/call", {
+      name: "update_task",
+      arguments: {
+        organizationId: org,
+        taskId: created.taskId,
+        skills: [
+          { path: "copywriting", mode: "complete", status: "done" },
+          { path: "landing-page-design", mode: "plan", status: "todo" },
+        ],
+        note: "Finished copywriting.",
+        requestId: "req-task-link-step",
+      },
+    });
+    await call("tools/call", {
+      name: "add_note",
+      arguments: {
+        organizationId: org,
+        taskId: created.taskId,
+        body: "Planned 1 task for Foam Co.",
+        kind: "plan",
+        requestId: "req-plan-note",
+      },
+    });
+    const row = await sql.get<{ deliverable_id: string; skills_json: string }>(
+      "SELECT deliverable_id, skills_json FROM tasks WHERE id = ?",
+      [created.taskId],
+    );
+    expect(row?.deliverable_id).toBe(made.deliverableId);
+    expect(JSON.parse(row?.skills_json ?? "{}")).toEqual({
+      steps: [
+        { path: "copywriting", mode: "complete", status: "done" },
+        { path: "landing-page-design", mode: "plan", status: "todo" },
+      ],
+      current: 1,
+    });
+    const skill = await sql.get<{ kind: string }>(
+      "SELECT kind FROM activities WHERE organization_id = ? AND kind = 'agent.skill_done'",
+      [org],
+    );
+    expect(skill?.kind).toBe("agent.skill_done");
+    const plan = await sql.get<{ kind: string }>(
+      "SELECT kind FROM activities WHERE organization_id = ? AND kind = 'agent.plan_written'",
+      [org],
+    );
+    expect(plan?.kind).toBe("agent.plan_written");
+  });
 });
 
 describe("AI Gateway parsing", () => {

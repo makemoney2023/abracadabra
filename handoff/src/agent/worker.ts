@@ -7,6 +7,7 @@ import {
   type SkillCard,
   type ToolCaller,
 } from "../lib/client-documents";
+import { advanceClientWork, planClientWork } from "../lib/client-plan";
 
 export interface AgentBindings {
   ClientAgent: DurableObjectNamespace<ClientAgent>;
@@ -151,6 +152,7 @@ export class ClientAgent extends Agent<AgentBindings> {
       await this.connectPortal();
       await this.skillNames();
       const outcome = await this.describeClient(id, reason);
+      if (outcome !== "paused") await this.continueWork(id, reason);
       this.ctx.storage.sql.exec("UPDATE wakes SET finished_at = ?, outcome = ? WHERE id = ?", Date.now(), outcome, id);
     } catch (error) {
       const message = error instanceof Error ? error.message : "wake failed";
@@ -182,6 +184,56 @@ export class ClientAgent extends Agent<AgentBindings> {
       },
     });
     return drafted.outcome === "paused" ? "paused" : "ok";
+  }
+
+  /** A scheduled follow-up. The delay keeps one step from running the rest of the task. */
+  async work(): Promise<void> {
+    await this.acceptWake("work");
+  }
+
+  private async continueWork(wakeId: string, reason: string): Promise<void> {
+    if (reason !== "brief_approved" && reason !== "work") return;
+    const call = this.toolCaller(this.portal().getAITools?.() ?? {});
+    if (!call) return;
+    if (reason === "brief_approved") {
+      await planClientWork({
+        call,
+        requestId: wakeId,
+        now: Date.now(),
+        catalog: await this.skillCatalog(),
+      });
+      return;
+    }
+    const result = await advanceClientWork({
+      call,
+      requestId: wakeId,
+      now: Date.now(),
+      readSkill: (skillPath) => this.readSkill(skillPath),
+      onLoaded: (skillPath, taskId) => this.recordSkill(taskId, skillPath),
+    });
+    if (result.reschedule) await this.schedule(60, "work", undefined, { idempotent: true });
+  }
+
+  private async readSkill(skillPath: string): Promise<string | null> {
+    const key = `skills/${skillPath.replace(/^\.cursor\/skills\//, "").replace(/^skills\//, "")}`;
+    try {
+      const object = await this.env.SKILLS.get(key);
+      return object ? object.text() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private recordSkill(taskId: string, skillPath: string): void {
+    this.ensureTables();
+    const now = Date.now();
+    this.ctx.storage.sql.exec(
+      "INSERT INTO runs (task_id, skill_path, step, started_at, finished_at, note) VALUES (?, ?, 'loaded', ?, ?, NULL)",
+      taskId,
+      skillPath,
+      now,
+      now,
+    );
   }
 
   private toolCaller(tools: Record<string, unknown>): ToolCaller | null {

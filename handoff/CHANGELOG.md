@@ -11,6 +11,15 @@
 
 ## 2026-10-07
 
+- **What changed** — A brief approval plans one task and one draft per piece. A `work` wake runs one skill step, writes the result on the draft, and schedules the next step a minute later. A plan step writes `build-brief.md` and moves the task to build. A finished complete-only task is marked done and stays a draft.
+- **Why** — The agent needs a record of which skill runs next before a later step starts a cloud agent.
+- **Code touchpoints** — `handoff/src/lib/client-plan.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — `brief_approved` still drafts the design system, then creates tasks. `work` loads one skill file from bucket `handoff-skills` and stores the step on `tasks.skills_json`. The task links to its draft through `tasks.deliverable_id`.
+- **API / schema impact** — none. `create_task` now stores `deliverable_id`. A skill step writes activity `agent.skill_done`. A plan note writes activity `agent.plan_written`.
+- **Verification** — `npm test` in `handoff/` passed 373 node tests and 6 agent tests. `npx eslint` on the touched files exited 0.
+
+## 2026-10-07
+
 - **What changed** — Invite and sign-in links no longer expire after 15 minutes. The email no longer says they do. A link ends when someone presses the button once.
 - **Why** — A person can open the invite later. The 15 minute clock was turning a good link into a dead one.
 - **Code touchpoints** — `handoff/src/lib/session.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/lib/policy/limits.ts`

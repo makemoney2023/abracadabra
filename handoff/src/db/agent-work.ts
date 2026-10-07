@@ -164,15 +164,26 @@ async function saveBrief(sql: Sql, actor: AgentActor, args: WorkArgs, now: numbe
   return { deliverableId: id, version, kind: args.kind };
 }
 
-function skillSteps(value: unknown): { path: string; mode: string; status: "todo" }[] {
+function skillSteps(value: unknown): {
+  steps: { path: string; mode: string; status: "todo" | "doing" | "done" }[];
+  current: number;
+} {
   if (!Array.isArray(value)) throw new AgentWorkError("List the skills for this task.");
-  return value.map((step) => {
+  const steps = value.map((step) => {
     if (!step || typeof step !== "object") throw new AgentWorkError("Check the skills.");
-    const row = step as { path?: string; mode?: string };
+    const row = step as { path?: string; mode?: string; status?: string };
     const skillPath = row.path?.trim() ?? "";
     if (!skillPath || (row.mode !== "complete" && row.mode !== "plan")) throw new AgentWorkError("Check the skills.");
-    return { path: skillPath, mode: row.mode, status: "todo" as const };
+    const status = row.status === "doing" || row.status === "done" ? row.status : "todo";
+    return { path: skillPath, mode: row.mode, status };
   });
+  const open = steps.findIndex((step) => step.status !== "done");
+  return { steps, current: open === -1 ? steps.length : open };
+}
+
+async function deliverableInOrg(sql: Sql, organizationId: string, deliverableId: string): Promise<void> {
+  const row = await sql.get<{ organization_id: string }>("SELECT organization_id FROM deliverables WHERE id = ?", [deliverableId]);
+  if (!row || row.organization_id !== organizationId) throw new AgentWorkError("That deliverable is not in this organization.");
 }
 
 async function createAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {
@@ -193,15 +204,17 @@ async function createAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   }
   const dueAt = args.dueAt ?? null;
   if (dueAt !== null && !Number.isInteger(dueAt)) throw new AgentWorkError("Check the due date.");
+  const deliverableId = args.deliverableId?.trim() || null;
+  if (deliverableId) await deliverableInOrg(sql, actor.organizationId, deliverableId);
   const id = crypto.randomUUID();
   await sql.exec("BEGIN");
   try {
     await sql.run(
       `INSERT INTO tasks (
         id, project_id, milestone_id, organization_id, title, status, assignee_user_id,
-        due_at, created_at, updated_at, done_at, stage, skills_json, created_by_kind, round
-      ) VALUES (?, ?, ?, ?, ?, 'todo', NULL, ?, ?, ?, NULL, ?, ?, 'agent', 1)`,
-      [id, projectId, milestoneId, actor.organizationId, title, dueAt, now, now, stage, JSON.stringify({ steps })],
+        due_at, created_at, updated_at, done_at, stage, skills_json, created_by_kind, round, deliverable_id
+      ) VALUES (?, ?, ?, ?, ?, 'todo', NULL, ?, ?, ?, NULL, ?, ?, 'agent', 1, ?)`,
+      [id, projectId, milestoneId, actor.organizationId, title, dueAt, now, now, stage, JSON.stringify(steps), deliverableId],
     );
     await sql.run(
       `INSERT INTO activities (
@@ -246,7 +259,7 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   }
   if (args.skills !== undefined) {
     sets.push("skills_json = ?");
-    params.push(JSON.stringify({ steps: skillSteps(args.skills) }));
+    params.push(JSON.stringify(skillSteps(args.skills)));
   }
   if (args.blockedReason !== undefined) {
     sets.push("blocked_reason = ?");
@@ -255,11 +268,12 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   params.push(task.id);
   await sql.run(`UPDATE tasks SET ${sets.join(", ")} WHERE id = ?`, params);
   if (args.note?.trim()) {
+    const kind = args.skills !== undefined ? "agent.skill_done" : "task_status";
     await sql.run(
       `INSERT INTO activities (
         id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at
-      ) VALUES (?, ?, ?, 'task_status', 'agent', ?, ?, ?, ?)`,
-      [crypto.randomUUID(), actor.organizationId, task.project_id, actor.keyId, args.note.trim(), JSON.stringify({ taskId: task.id }), now],
+      ) VALUES (?, ?, ?, ?, 'agent', ?, ?, ?, ?)`,
+      [crypto.randomUUID(), actor.organizationId, task.project_id, kind, actor.keyId, args.note.trim(), JSON.stringify({ taskId: task.id }), now],
     );
   }
   return { taskId: task.id, stage: args.stage ?? null, status: args.status ?? null };
@@ -341,11 +355,12 @@ async function addAgentNote(sql: Sql, actor: AgentActor, args: WorkArgs, now: nu
     if (!row || row.organization_id !== actor.organizationId) throw new AgentWorkError("That deliverable is not in this organization.");
   }
   const id = crypto.randomUUID();
+  const activityKind = args.kind === "plan" ? "agent.plan_written" : "agent.note";
   await sql.run(
     `INSERT INTO activities (
       id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
-    ) VALUES (?, ?, 'agent.note', 'agent', ?, ?, ?, ?)`,
-    [id, actor.organizationId, actor.keyId, body, JSON.stringify({ taskId, deliverableId }), now],
+    ) VALUES (?, ?, ?, 'agent', ?, ?, ?, ?)`,
+    [id, actor.organizationId, activityKind, actor.keyId, body, JSON.stringify({ taskId, deliverableId }), now],
   );
   return { activityId: id };
 }

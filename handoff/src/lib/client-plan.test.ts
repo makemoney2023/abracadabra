@@ -1,0 +1,291 @@
+import { describe, expect, it } from "vitest";
+import { chooseSkillsForPiece, parseSkillCatalog, type SkillCard } from "@/lib/client-documents";
+import { advanceClientWork, piecesFromBrief, planClientWork } from "@/lib/client-plan";
+
+const COPY = "community/marketingskills/copywriting/SKILL.md";
+const TEARDOWN = "community/inference-sh/competitor-teardown/SKILL.md";
+const LANDING = "community/inference-sh/landing-page-design/SKILL.md";
+const SOCIAL = "community/marketingskills/social/SKILL.md";
+
+const BRIEF = `## Scope
+- website — A website the client can send to buyers.
+- social_pack — A week of posts.
+
+## Skills
+Cursor reads these files from \`.cursor/skills\` and follows them for each piece.
+
+### website
+A website the client can send to buyers.
+- \`.cursor/skills/${TEARDOWN}\` (complete)
+- \`.cursor/skills/${COPY}\` (complete)
+- \`.cursor/skills/${LANDING}\` (plan)
+
+### social_pack
+A week of posts.
+- \`.cursor/skills/${SOCIAL}\` (complete)
+`;
+
+const DESIGN = "## Palette\nBlue and gold.\n";
+
+type Call = { name: string; args: Record<string, unknown> };
+
+function context(tasks: unknown[] = [], extra: Record<string, unknown> = {}) {
+  return {
+    organization: { id: "org-1", name: "Foam Co", agentPausedAt: null },
+    project: { id: "proj-1", name: "Launch" },
+    tasks,
+    answeredSince: [],
+    ...extra,
+  };
+}
+
+function caller(options: { tasks?: unknown[]; brief?: string | null; paused?: boolean; answered?: unknown[] }) {
+  const calls: Call[] = [];
+  let made = 0;
+  const call = async (name: string, args: Record<string, unknown>) => {
+    calls.push({ name, args });
+    if (name === "client_context") {
+      return context(options.tasks ?? [], {
+        organization: { id: "org-1", name: "Foam Co", agentPausedAt: options.paused ? 1 : null },
+        answeredSince: options.answered ?? [],
+      });
+    }
+    if (name === "get_brief") {
+      if (options.brief === null) return { body: "" };
+      if (args.kind === "design_system") return { body: DESIGN, deliverableId: "del-design" };
+      return { body: options.brief ?? BRIEF, deliverableId: "del-brief", title: "Foam brief" };
+    }
+    if (name === "create_deliverable") {
+      made += 1;
+      return { deliverableId: `del-${made}`, status: "draft" };
+    }
+    if (name === "create_task") return { taskId: `task-${String(args.title)}`, stage: args.stage, status: "todo" };
+    return { ok: true };
+  };
+  return { call, calls };
+}
+
+describe("brief planning", () => {
+  it("reads the skill paths already written on the brief", () => {
+    const pieces = piecesFromBrief(BRIEF);
+    expect(pieces.map((piece) => piece.kind)).toEqual(["website", "social_pack"]);
+    expect(pieces[0]?.stage).toBe("describe");
+    expect(pieces[0]?.skills.map((skill) => `${skill.path}:${skill.mode}`)).toEqual([
+      `${TEARDOWN}:complete`,
+      `${COPY}:complete`,
+      `${LANDING}:plan`,
+    ]);
+    expect(pieces[1]?.stage).toBe("engineer");
+    expect(pieces[1]?.skills).toEqual([{ path: SOCIAL, mode: "complete", status: "todo" }]);
+  });
+
+  it("falls back to the catalog when the brief has no skill list", () => {
+    const catalog: SkillCard[] = parseSkillCatalog(
+      JSON.stringify({
+        skills: [{ name: "copywriting", description: "Landing page copy for a website.", path: COPY }],
+      }),
+    );
+    const pieces = piecesFromBrief("## Scope\n- website — A website the client can send to buyers.\n", catalog);
+    expect(pieces[0]?.skills.map((skill) => skill.path)).toEqual(
+      chooseSkillsForPiece({ kind: "website", outcome: "A website the client can send to buyers." }, catalog).map(
+        (skill) => skill.path,
+      ),
+    );
+  });
+
+  it("creates one task and one draft per piece", async () => {
+    const { call, calls } = caller({});
+    const result = await planClientWork({ call, requestId: "wake-1", now: 1_700_000_000_000 });
+    expect(result).toBe("planned");
+    const tasks = calls.filter((entry) => entry.name === "create_task");
+    const drafts = calls.filter((entry) => entry.name === "create_deliverable");
+    expect(tasks).toHaveLength(2);
+    expect(drafts).toHaveLength(2);
+    expect(tasks[0]?.args).toMatchObject({
+      title: "website: A website the client can send to buyers.",
+      stage: "describe",
+      projectId: "proj-1",
+      deliverableId: "del-1",
+    });
+    expect(tasks[0]?.args.skills).toEqual([
+      { path: TEARDOWN, mode: "complete", status: "todo" },
+      { path: COPY, mode: "complete", status: "todo" },
+      { path: LANDING, mode: "plan", status: "todo" },
+    ]);
+    expect(tasks[1]?.args).toMatchObject({ stage: "engineer", deliverableId: "del-2" });
+    expect(tasks[1]?.args.kind).toBeUndefined();
+    expect(drafts.map((entry) => entry.args.kind)).toEqual(["website", "social_pack"]);
+    const status = calls.find((entry) => entry.name === "post_status_update");
+    expect(status?.args).toMatchObject({ audience: "internal", projectId: "proj-1" });
+    expect(String(status?.args.body)).toContain("Planned");
+    expect(String(status?.args.body)).toContain("Foam Co");
+    const note = calls.find((entry) => entry.name === "add_note");
+    expect(note?.args.kind).toBe("plan");
+    expect(calls.filter((entry) => entry.name === "create_task").every((entry) => String(entry.args.requestId).startsWith("wake-1"))).toBe(
+      true,
+    );
+  });
+
+  it("does not plan a second copy when the tasks already exist", async () => {
+    const { call, calls } = caller({
+      tasks: [{ id: "task-web", title: "website: A website the client can send to buyers.", status: "todo", stage: "describe", skills: [] }],
+    });
+    await planClientWork({ call, requestId: "wake-2", now: 1 });
+    const titles = calls.filter((entry) => entry.name === "create_task").map((entry) => entry.args.title);
+    expect(titles).toEqual(["social_pack: A week of posts."]);
+  });
+
+  it("skips a paused client", async () => {
+    const { call, calls } = caller({ paused: true });
+    expect(await planClientWork({ call, requestId: "wake-3", now: 1 })).toBe("skipped");
+    expect(calls.some((entry) => entry.name === "create_task")).toBe(false);
+  });
+});
+
+describe("one skill step per wake", () => {
+  const websiteTask = {
+    id: "task-web",
+    title: "website: A website the client can send to buyers.",
+    status: "todo",
+    stage: "describe",
+    round: 1,
+    deliverableId: "del-web",
+    skills: [
+      { path: TEARDOWN, mode: "complete", status: "todo" },
+      { path: COPY, mode: "complete", status: "todo" },
+      { path: LANDING, mode: "plan", status: "todo" },
+    ],
+  };
+
+  it("finishes one complete step and leaves the next untouched", async () => {
+    const seen: string[] = [];
+    const { call, calls } = caller({ tasks: [websiteTask] });
+    const result = await advanceClientWork({
+      call,
+      requestId: "wake-4",
+      now: 1,
+      readSkill: async (skillPath) => {
+        seen.push(skillPath);
+        return "---\nname: competitor-teardown\n---\nLook at rivals.";
+      },
+    });
+    expect(result).toEqual({ advanced: 1, reschedule: true });
+    expect(seen).toEqual([TEARDOWN]);
+    const update = calls.find((entry) => entry.name === "update_task");
+    expect(update?.args.skills).toEqual([
+      { path: TEARDOWN, mode: "complete", status: "done" },
+      { path: COPY, mode: "complete", status: "todo" },
+      { path: LANDING, mode: "plan", status: "todo" },
+    ]);
+    expect(update?.args.status).toBe("doing");
+    const item = calls.find((entry) => entry.name === "add_deliverable_item");
+    expect(item?.args).toMatchObject({ deliverableId: "del-web" });
+    expect(String(item?.args.bodyMarkdown).length).toBeGreaterThan(0);
+    expect(String(item?.args.bodyMarkdown)).not.toContain("Look at rivals.");
+    expect(calls.some((entry) => entry.name === "ask_staff")).toBe(false);
+  });
+
+  it("writes the build brief and moves the task to build when the next step is plan", async () => {
+    const planned = {
+      ...websiteTask,
+      skills: [
+        { path: TEARDOWN, mode: "complete", status: "done" },
+        { path: COPY, mode: "complete", status: "done" },
+        { path: LANDING, mode: "plan", status: "todo" },
+      ],
+    };
+    const { call, calls } = caller({ tasks: [planned] });
+    const result = await advanceClientWork({
+      call,
+      requestId: "wake-5",
+      now: 1,
+      readSkill: async () => {
+        throw new Error("a plan step does not load the skill");
+      },
+    });
+    expect(result.reschedule).toBe(false);
+    const item = calls.find((entry) => entry.name === "add_deliverable_item");
+    expect(item?.args.path).toBe("build-brief.md");
+    const body = String(item?.args.bodyMarkdown);
+    expect(body).toContain("del-web");
+    expect(body).toContain("website");
+    expect(body).toContain("Blue and gold.");
+    expect(body).toContain("handoff/del-web/r1");
+    expect(body).toContain("deliverables/website/manifest.json");
+    expect(body).toContain("Deliverable del-web round 1");
+    expect(body).toContain("Deliverable: del-web");
+    expect(body.toLowerCase()).toContain("force push");
+    const update = calls.find((entry) => entry.name === "update_task");
+    expect(update?.args.stage).toBe("build");
+    expect(calls.some((entry) => /cursor|publish|repo/i.test(entry.name))).toBe(false);
+  });
+
+  it("marks a finished complete-only task done and leaves the deliverable unpublished", async () => {
+    const social = {
+      id: "task-social",
+      title: "social_pack: A week of posts.",
+      status: "doing",
+      stage: "engineer",
+      round: 1,
+      deliverableId: "del-social",
+      skills: [{ path: SOCIAL, mode: "complete", status: "todo" }],
+    };
+    const { call, calls } = caller({ tasks: [social] });
+    const result = await advanceClientWork({
+      call,
+      requestId: "wake-6",
+      now: 1,
+      readSkill: async () => "---\nname: social\n---\nWrite the posts.",
+    });
+    expect(result).toEqual({ advanced: 1, reschedule: false });
+    const update = calls.find((entry) => entry.name === "update_task");
+    expect(update?.args).toMatchObject({ taskId: "task-social", status: "done", stage: "run" });
+    expect(calls.some((entry) => entry.name === "add_deliverable_item")).toBe(true);
+    expect(calls.some((entry) => /publish/i.test(entry.name))).toBe(false);
+  });
+
+  it("asks staff when the skill file is missing and does not invent the work", async () => {
+    const social = {
+      id: "task-social",
+      title: "social_pack: A week of posts.",
+      status: "todo",
+      stage: "engineer",
+      deliverableId: "del-social",
+      skills: [{ path: SOCIAL, mode: "complete", status: "todo" }],
+    };
+    const { call, calls } = caller({ tasks: [social] });
+    await advanceClientWork({
+      call,
+      requestId: "wake-7",
+      now: 1,
+      readSkill: async () => null,
+    });
+    const question = calls.find((entry) => entry.name === "ask_staff");
+    expect(question?.args.taskId).toBe("task-social");
+    expect(String(question?.args.question)).toContain(SOCIAL);
+    expect(calls.some((entry) => entry.name === "add_deliverable_item")).toBe(false);
+    expect(calls.some((entry) => entry.name === "update_task" && entry.args.status === "done")).toBe(false);
+  });
+
+  it("stops after eight steps and asks for another wake", async () => {
+    const tasks = Array.from({ length: 9 }, (_, index) => ({
+      id: `task-${index}`,
+      title: `Piece ${index}`,
+      status: "todo",
+      stage: "engineer",
+      deliverableId: `del-${index}`,
+      skills: [{ path: COPY, mode: "complete", status: "todo" }],
+    }));
+    const { call, calls } = caller({ tasks });
+    const result = await advanceClientWork({
+      call,
+      requestId: "wake-8",
+      now: 1,
+      readSkill: async () => "---\nname: copywriting\n---\nWrite.",
+    });
+    expect(result).toEqual({ advanced: 8, reschedule: true });
+    const updated = calls.filter((entry) => entry.name === "update_task").map((entry) => entry.args.taskId);
+    expect(updated).toHaveLength(8);
+    expect(updated).not.toContain("task-8");
+  });
+});
