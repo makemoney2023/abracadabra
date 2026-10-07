@@ -2,6 +2,15 @@
 
 ## 2026-10-06
 
+- **What changed** — `npm run build` runs `opennextjs-cloudflare build`. Workers Builds leaves the build command empty. The deploy command is `npm run deploy` for `handoff` and `npm run deploy:hq` for `handoff-hq`.
+- **Why** — Those scripts already build, then deploy. The default `npx wrangler deploy` calls OpenNext deploy and skips the build, so deploy exits with "Could not find compiled Open Next config".
+- **Code touchpoints** — `handoff/package.json`, `handoff/src/lib/runtime/workers-build.test.ts`, `handoff/README.md`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run src/lib/runtime/workers-build.test.ts`
+
+## 2026-10-06
+
 - **What changed** — Staff pages use a shadcn sidebar, separator, badge, label, and textarea on the existing canvas, ink, optic, and phosphor colors. Product mail (magic links, invites, and file notices) sends through Cloudflare Email Service. Workers `handoff` and `handoff-hq` bind `EMAIL`. The scan worker posts to the Email Service REST API with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 - **Why** — The staff chrome should use the component library without replacing the Abracadabra palette. Product mail should use the Cloudflare sender already planned for client conversation mail.
 - **Code touchpoints** — `handoff/src/app/staff-shell.tsx`, `handoff/src/app/staff-nav.tsx`, `handoff/src/components/ui/sidebar.tsx`, `handoff/src/components/ui/sheet.tsx`, `handoff/src/components/ui/tooltip.tsx`, `handoff/src/components/ui/skeleton.tsx`, `handoff/src/hooks/use-mobile.ts`, `handoff/src/app/globals.css`, `handoff/src/lib/mail.ts`, `handoff/src/lib/runtime/production-env.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `handoff/.env.example`
