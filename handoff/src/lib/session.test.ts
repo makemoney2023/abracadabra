@@ -204,6 +204,31 @@ describe("consumeMagicLink and getCaller", () => {
     expect(sent).toHaveLength(1);
   });
 
+  it("still signs in a day after the link was sent", async () => {
+    const sql = await memoryDb();
+    const sent: Sent[] = [];
+    await requestMagicLink({
+      sql,
+      email: "owner@example.com",
+      now: NOW,
+      origin: ORIGIN,
+      from: FROM,
+      allowlist: ["owner@example.com"],
+      send: async (message) => {
+        sent.push(message);
+      },
+    });
+    const token = sent[0]?.text.match(/token=([a-f0-9]+)/)?.[1] ?? "";
+    const session = await consumeMagicLink({
+      sql,
+      token,
+      now: NOW + 24 * 60 * 60 * 1000,
+      allowlist: ["owner@example.com"],
+    });
+    expect(session?.sessionToken).toBeTruthy();
+    expect(sent[0]?.text).not.toContain("15 minutes");
+  });
+
   it("treats an expired or revoked session as signed out", async () => {
     const sql = await memoryDb();
     const sent: Sent[] = [];

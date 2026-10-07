@@ -17,7 +17,8 @@ describe("renderInviteEmail", () => {
     expect(mail.text).toContain("Northwind Co");
     expect(mail.text).toContain(URL);
     expect(mail.text).toContain("press the button");
-    expect(mail.text).toContain("15 minutes");
+    expect(mail.text).not.toContain("15 minutes");
+    expect(mail.text).not.toContain("stops working");
     if (!mail.html) throw new Error("invite html is missing");
     expect(mail.html).toContain("HANDOFF");
     expect(mail.html).toContain("You're invited");
@@ -32,6 +33,8 @@ describe("renderInviteEmail", () => {
     expect(mail.html).toContain("Tektur");
     expect(mail.html).toContain("IBM Plex Sans");
     expect(mail.html).toContain(`background:${STUDIO.accent}`);
+    expect(mail.html).not.toContain("15 minutes");
+    expect(mail.html).not.toContain("stops working");
     expect(mail.html).not.toContain("token_hash");
   });
 

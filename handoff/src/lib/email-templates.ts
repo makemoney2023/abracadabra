@@ -1,6 +1,5 @@
 import type { OutboundMail } from "@/lib/session";
 import { STUDIO } from "@/lib/brand/studio";
-import { LIMITS } from "@/lib/policy/limits";
 
 export type ProductMailPayload = {
   displayName: string;
@@ -48,7 +47,6 @@ export function renderInviteEmail(input: {
   url: string;
 }): OutboundMail {
   const space = input.spaceName.trim() || "Handoff";
-  const minutes = Math.round(LIMITS.magicLinkTtlMs / 60_000);
   const safeSpace = escapeHtml(space);
   const safeUrl = escapeHtml(input.url);
   const text = [
@@ -59,7 +57,7 @@ export function renderInviteEmail(input: {
     "Use this link to open Handoff. Then press the button on the page:",
     input.url,
     "",
-    `The link stops working in ${minutes} minutes. If you did not ask for it, just ignore this email.`,
+    "If you did not ask for it, just ignore this email.",
   ].join("\n");
   const display = emailFont(STUDIO.display);
   const body = emailFont(STUDIO.body);
@@ -86,7 +84,7 @@ export function renderInviteEmail(input: {
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="${STUDIO.accent}" style="background:${STUDIO.accent};background-color:${STUDIO.accent};border:1px solid ${STUDIO.accent};border-radius:2px;">
 <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;font-family:${body};font-size:14px;font-weight:500;line-height:1;color:${STUDIO.accentInk};text-decoration:none;">Open your invite</a>
 </td></tr></table>
-<p style="margin:28px 0 0;font-family:${body};font-size:13px;line-height:1.55;color:${STUDIO.inkSoft};">The email link itself does not sign you in. Press the button on the page. This link stops working in ${minutes} minutes.</p>
+<p style="margin:28px 0 0;font-family:${body};font-size:13px;line-height:1.55;color:${STUDIO.inkSoft};">The email link itself does not sign you in. Press the button on the page.</p>
 </td></tr>
 <tr><td style="padding:18px 4px 0;font-family:${body};font-size:12px;line-height:1.5;color:${STUDIO.inkSoft};">If you did not ask for this, you can ignore this email.</td></tr>
 </table>

@@ -14,7 +14,6 @@ export const LIMITS = {
   invitesPerInviterPerDay: 30,
   exportsPerOperatorPerHour: 20,
   magicLinksPerEmailPerHour: 5,
-  magicLinkTtlMs: 15 * 60 * 1000,
   sessionTtlMs: 12 * 60 * 60 * 1000,
   inviteTtlDays: 14,
   activityWindowMs: 6 * 60 * 60 * 1000,

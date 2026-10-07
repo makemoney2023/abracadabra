@@ -50,12 +50,11 @@ export function safeNextPath(value: string | null): string | null {
 }
 
 function magicLinkText(url: string): string {
-  const minutes = Math.round(LIMITS.magicLinkTtlMs / 60_000);
   return [
     "Use this link to open Handoff. Then press the button on the page:",
     url,
     "",
-    `The link stops working in ${minutes} minutes. If you did not ask for it, just ignore this email.`,
+    "If you did not ask for it, just ignore this email.",
   ].join("\n");
 }
 
@@ -116,7 +115,7 @@ export async function requestMagicLink(input: {
   await input.sql.run(
     `INSERT INTO ${MAGIC_LINKS} (id, email, token_hash, created_at, expires_at, consumed_at)
      VALUES (?, ?, ?, ?, ?, NULL)`,
-    [id, email, await sha256Hex(token), input.now, input.now + LIMITS.magicLinkTtlMs],
+    [id, email, await sha256Hex(token), input.now, Number.MAX_SAFE_INTEGER],
   );
   const origin = input.origin.replace(/\/$/, "");
   const next = safeNextPath(input.returnTo ?? null);
@@ -149,8 +148,8 @@ export async function consumeMagicLink(input: {
   const tokenHash = await sha256Hex(input.token);
   const link = await input.sql.get<{ id: string; email: string }>(
     `SELECT id, email FROM ${MAGIC_LINKS}
-     WHERE token_hash = ? AND consumed_at IS NULL AND expires_at > ?`,
-    [tokenHash, input.now],
+     WHERE token_hash = ? AND consumed_at IS NULL`,
+    [tokenHash],
   );
   if (!link) return null;
   await input.sql.run(

@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — Invite and sign-in links no longer expire after 15 minutes. The email no longer says they do. A link ends when someone presses the button once.
+- **Why** — A person can open the invite later. The 15 minute clock was turning a good link into a dead one.
+- **Code touchpoints** — `handoff/src/lib/session.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/lib/policy/limits.ts`
+- **Data-flow impact** — `consumeMagicLink` no longer checks a clock. One use still marks the link used.
+- **API / schema impact** — none. The stored end time is a far date so the required column stays filled.
+- **Verification** — `npx vitest run src/lib/email-templates.test.ts src/lib/mail.test.ts src/lib/session.test.ts src/lib/store/invites.test.ts` passed 23 tests. `npx eslint` on the touched files exited 0.
+
+## 2026-10-07
+
 - **What changed** — Product mail shows the sender name Abra-ca-dabra Ai. The address stays `magic@abra-ca-dabra.app`.
 - **Why** — The inbox should name the studio, and the secret stays a bare address.
 - **Code touchpoints** — `handoff/src/lib/mail.ts`, `handoff/src/lib/mail.test.ts`
