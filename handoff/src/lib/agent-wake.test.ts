@@ -95,7 +95,7 @@ describe("signed wakes", () => {
       NOW,
       async (url, init) => {
         calls.push({
-          url,
+          url: typeof url === "string" ? url : url instanceof URL ? url.href : url.url,
           body: String(init?.body),
           signature: new Headers(init?.headers).get("x-handoff-signature") ?? "",
         });

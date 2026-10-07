@@ -65,7 +65,7 @@ const AGENT_TOOLS = [
     inputSchema: {
       ...tool.inputSchema,
       properties: { ...tool.inputSchema.properties, organizationId: organizationField, workspaceId: { type: "string" } },
-      required: ["organizationId", ...("required" in tool.inputSchema ? tool.inputSchema.required : [])],
+      required: ["organizationId", ...("required" in tool.inputSchema ? (tool.inputSchema.required ?? []) : [])],
     },
   })),
   {

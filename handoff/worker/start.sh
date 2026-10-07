@@ -2,6 +2,7 @@
 set -eu
 freshclam --stdout || true
 clamd --config-file=/etc/clamav/clamd.conf || true
+node /app/worker/wait-clamd.mjs
 (
   while true; do
     sleep 14400

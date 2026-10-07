@@ -13,6 +13,8 @@ export const DELIVERABLE_KIND_LABEL: Record<DeliverableKind, string> = {
   social_pack: "Social pack",
   website: "Website",
   document: "Document",
+  brief: "Brief",
+  design_system: "Design system",
   other: "Other",
 };
 

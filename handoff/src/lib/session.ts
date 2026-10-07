@@ -51,7 +51,7 @@ export function safeNextPath(value: string | null): string | null {
 function magicLinkText(url: string): string {
   const minutes = Math.round(LIMITS.magicLinkTtlMs / 60_000);
   return [
-    "Use this link to open Handoff:",
+    "Use this link to open Handoff. Then press the button on the page:",
     url,
     "",
     `The link stops working in ${minutes} minutes. If you did not ask for it, just ignore this email.`,

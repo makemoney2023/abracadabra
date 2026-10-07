@@ -44,6 +44,7 @@ describe("requestMagicLink", () => {
     expect(sent[0]?.to).toBe("owner@example.com");
     expect(sent[0]?.subject).toBe("Sign in to Handoff");
     expect(sent[0]?.text).toContain(`${ORIGIN}/auth/callback?token=`);
+    expect(sent[0]?.text).toContain("press the button");
     expect(sent[0]?.text.toLowerCase()).not.toContain("workspace");
     const token = sent[0]?.text.match(/token=([a-f0-9]+)/)?.[1];
     expect(token).toBeTruthy();

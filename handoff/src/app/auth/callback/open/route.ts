@@ -7,11 +7,18 @@ import { parseAllowlist } from "@/lib/store/staff";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export function GET(request: Request) {
+  void request;
+  return new NextResponse(null, { status: 405, headers: { Allow: "POST" } });
+}
+
+export async function POST(request: Request) {
   const url = new URL(request.url);
-  const token = url.searchParams.get("token") ?? "";
   const home = new URL("/", url.origin);
   try {
+    const form = await request.formData();
+    const token = String(form.get("token") ?? "");
+    const nextValue = form.get("next");
     const sql = await openHandoffDb();
     await migrate(sql);
     const session = await consumeMagicLink({
@@ -24,7 +31,7 @@ export async function GET(request: Request) {
       home.searchParams.set("notice", "link");
       return NextResponse.redirect(home);
     }
-    const next = safeNextPath(url.searchParams.get("next"));
+    const next = safeNextPath(typeof nextValue === "string" ? nextValue : null);
     const response = NextResponse.redirect(next ? new URL(next, url.origin) : home);
     response.cookies.set({
       name: SESSION_COOKIE,

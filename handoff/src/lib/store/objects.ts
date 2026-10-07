@@ -1,5 +1,6 @@
 import { mkdir, open, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { remoteObjectStore } from "./remote";
 
 export type ObjectStat = { sizeBytes: number };
 
@@ -59,6 +60,7 @@ function boundFilesBucket(): FilesBucket | undefined {
 /** True when bytes can be stored: a bound R2 bucket, an object path, or a non-production local disk. */
 export function objectStorageEnabled(): boolean {
   if (boundFilesBucket()) return true;
+  if (process.env.HANDOFF_R2_ORIGIN) return true;
   return localObjectBytesEnabled();
 }
 
@@ -288,6 +290,8 @@ export function localObjectStore(root: string): ObjectStore {
 export function openObjectStore(): ObjectStore {
   const bucket = boundFilesBucket();
   if (bucket) return r2ObjectStore(bucket);
+  const origin = process.env.HANDOFF_R2_ORIGIN;
+  if (origin) return remoteObjectStore(origin);
   const root = process.env.HANDOFF_OBJECT_PATH || path.join(process.cwd(), ".data", "objects");
   return localObjectStore(root);
 }

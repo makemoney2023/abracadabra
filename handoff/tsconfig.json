@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "cloudflare-worker.ts", "src/agent"]
+  "exclude": ["node_modules", "cloudflare-worker.ts", "scan-container.ts", "src/agent"]
 }

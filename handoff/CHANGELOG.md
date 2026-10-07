@@ -2,6 +2,33 @@
 
 ## 2026-10-07
 
+- **What changed** — The production type check covers brief and design-system labels, skill choices stay `plan` or `complete`, and a GET of an open link still returns 405 when the request is present.
+- **Why** — Workers Builds for `handoff` and `handoff-hq` stopped on commit `4942d42` during `npm run build`.
+- **Code touchpoints** — `handoff/src/app/deliverables/labels.ts`, `handoff/src/lib/client-documents.ts`, `handoff/src/lib/client-documents.test.ts`, `handoff/src/lib/mcp.ts`, `handoff/src/lib/agent-wake.test.ts`, `handoff/src/app/auth/callback/open/route.ts`, `handoff/src/app/share/[token]/open/route.ts`, `handoff/src/scan/bindings.test.ts`
+- **Data-flow impact** — none. A visit still does not sign anyone in or open a folder.
+- **API / schema impact** — none.
+- **Verification** — `npm test` passed 357 node tests and 6 agent tests. `npm run build` passed.
+
+## 2026-10-07
+
+- **What changed** — A share link and a magic link open a confirm page. The folder opens, and the person signs in, only when they press the button. The email text tells them to press that button. The link URL is unchanged.
+- **Why** — Mail scanners open a link with a GET. That used to sign a guest in or use up a one-time sign-in link before the person arrived.
+- **Code touchpoints** — `handoff/src/app/share/[token]/page.tsx`, `handoff/src/app/share/[token]/open/route.ts`, `handoff/src/app/auth/callback/page.tsx`, `handoff/src/app/auth/callback/open/route.ts`, `handoff/src/lib/session.ts`, `handoff/src/app/share/[token]/route.test.ts`, `handoff/src/app/auth/callback/route.test.ts`, `handoff/src/lib/session.test.ts`, `handoff/.env.example`
+- **Data-flow impact** — GET `/share/[token]` and GET `/auth/callback` render a button and do not write a session. POST `/share/[token]/open` and POST `/auth/callback/open` do the old work. A GET of either open URL returns 405.
+- **API / schema impact** — none. `HANDOFF_FROM_EMAIL` is still unset. Email Sending for `abra-ca-dabra.app` is not onboarded. Public DNS is SPF `v=spf1 -all`, DMARC `p=reject`, and an empty DKIM key. The local API token can list the zone and cannot call Email Sending or DNS.
+- **Verification** — `npm test` passed (357 node tests, 6 agent tests). `npx eslint` passed on the share page, the sign-in page, both open routes, `src/lib/session.ts`, and their tests. Email Sending was not onboarded: the API token can list the zone and returns authentication error 10000 for Email Sending and DNS.
+
+## 2026-10-07
+
+- **What changed** — Worker `handoff-scan` is deployed and can run the ClamAV container. The container reads D1 and R2 through `http://handoff.d1` and `http://handoff.r2`. Those hosts are answered by the Worker bindings. A cron every two minutes fetches `/health`. `/health` has not yet reported `clamd: true`, so a finished upload can still stay `uploaded`.
+- **Why** — A Worker isolate cannot run `clamd`. Clients will upload files, and only a live scan process can move a file out of `uploaded`.
+- **Code touchpoints** — `handoff/scan-container.ts`, `handoff/wrangler.scan.jsonc`, `handoff/src/scan/bindings.ts`, `handoff/src/db/http.ts`, `handoff/src/db/open.ts`, `handoff/src/lib/store/remote.ts`, `handoff/src/lib/store/objects.ts`, `handoff/worker/start.sh`, `handoff/worker/wait-clamd.mjs`, `handoff/.dockerignore`, `handoff/package.json`
+- **Data-flow impact** — The scan loop is unchanged. In the container it claims one `uploaded` file, reads the object, and writes `clean`, `rejected`, `held`, or a retry. Production still exits when `clamd` does not answer.
+- **API / schema impact** — none. New Worker config. No D1 migration.
+- **Verification** — `npm test` passed (353 node tests, 6 agent tests). `npx eslint` passed on the scan files. `npm run deploy:scan` deployed worker `handoff-scan` (version `c071514e-7206-4198-9a46-c930a3f9cac6`, container application `a036214f-ce8e-42ac-8c7c-4216d905f9e0`). The first image push dropped the registry connection; the retry succeeded. EICAR, a 1 GB file, and an archive-limit hold were not checked.
+
+## 2026-10-07
+
 - **What changed** — An `onboard` or `context_changed` wake drafts a brief from the client's context and file summaries. A `context_changed` wake that already has a brief, and a `brief_approved` wake, also draft the design system. The brief lists real `.cursor/skills` paths for each piece, marked complete or plan, so a later Cursor run knows which skills to follow.
 - **Why** — Cursor should not guess which skills apply. The brief is the place those paths are written down.
 - **Code touchpoints** — `handoff/src/lib/client-documents.ts`, `handoff/src/lib/client-documents.test.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`, `handoff/README.md`

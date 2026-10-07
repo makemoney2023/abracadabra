@@ -7,7 +7,13 @@ import { SESSION_COOKIE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request, context: { params: Promise<{ token: string }> }) {
+export function GET(request: Request, context: { params: Promise<{ token: string }> }) {
+  void request;
+  void context;
+  return new NextResponse(null, { status: 405, headers: { Allow: "POST" } });
+}
+
+export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
   const { token } = await context.params;
   const url = new URL(request.url);
   const home = new URL("/?notice=share", url.origin);

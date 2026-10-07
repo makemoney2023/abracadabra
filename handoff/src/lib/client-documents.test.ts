@@ -66,7 +66,15 @@ function context(extra: Record<string, unknown> = {}) {
   };
 }
 
-const readyFile = {
+type ListedFile = {
+  name: string;
+  status: string;
+  summary: string | null;
+  relativePath: string;
+  tag: string;
+};
+
+const readyFile: ListedFile = {
   name: "about.txt",
   status: "ready",
   summary: "Strongfoam sells protective foam to electronics makers.",
@@ -74,7 +82,7 @@ const readyFile = {
   tag: "copy",
 };
 
-const failedFile = {
+const failedFile: ListedFile = {
   name: "logo.pdf",
   status: "failed",
   summary: null,
@@ -94,7 +102,7 @@ function searchAnswer(query: string, emptyBuyers: boolean) {
 }
 
 function caller(options: {
-  files: typeof readyFile[];
+  files: ListedFile[];
   emptyBuyers?: boolean;
   paused?: boolean;
   briefs?: unknown[];

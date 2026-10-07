@@ -896,7 +896,10 @@ Every acceptance item in the design spec passes on staging with two client
 workspaces, and the Strong Foam operations application is unchanged.
 
 The suites, production build, Worker health check, and sign-in page pass.
-Still open until the ClamAV container exists: a file over
-1 GB, EICAR, a `clamd` archive limit, and a live client invite. R2 is in use.
+Worker `handoff-scan` is deployed (`npm run deploy:scan`, version
+`c071514e-7206-4198-9a46-c930a3f9cac6`). Still open: `/health` reporting
+`clamd: true`, a file over 1 GB, EICAR, a `clamd` archive limit, and a live
+client invite. Until `clamd` answers, a finished upload can stay `uploaded`.
+R2 is in use.
 Product mail uses Cloudflare Email Service and cannot send until
 `HANDOFF_FROM_EMAIL` is set and the domain is onboarded.

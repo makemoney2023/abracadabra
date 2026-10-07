@@ -8,6 +8,7 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "deploy:hq": "opennextjs-cloudflare build && opennextjs-cloudflare deploy --config wrangler.hq.jsonc",
+    "deploy:scan": "wrangler deploy --config wrangler.scan.jsonc",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run && vitest run --config vitest.agent.config.mts",
@@ -17,6 +18,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.7",
     "@jsquash/webp": "^1.5.0",
     "@opennextjs/cloudflare": "^1.20.8",
     "agents": "^0.26.0",

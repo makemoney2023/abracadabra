@@ -1,0 +1,48 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "handoff-scan",
+  "main": "scan-container.ts",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "account_id": "6f6959ecba86d1de4d6cf6aa0b34528d",
+  "containers": [
+    {
+      "class_name": "ScanContainer",
+      "image": "./worker/Dockerfile",
+      "image_build_context": ".",
+      "instance_type": "standard-1",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCAN_CONTAINER",
+        "class_name": "ScanContainer"
+      }
+    ]
+  },
+  "exports": {
+    "ScanContainer": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  },
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "handoff"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "handoff",
+      "database_id": "b2be192c-db0d-447f-8d7c-b2c4d39df274"
+    }
+  ],
+  "triggers": {
+    "crons": ["*/2 * * * *"]
+  }
+}

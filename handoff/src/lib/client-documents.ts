@@ -103,7 +103,7 @@ export function chooseSkillsForPiece(piece: { kind: PieceKind; outcome: string }
     .filter((row) => row.score >= 4)
     .sort((a, b) => b.score - a.score || a.skill.name.localeCompare(b.skill.name))
     .slice(0, 4)
-    .map((row) => ({
+    .map((row): ChosenSkill => ({
       name: row.skill.name,
       path: row.skill.path,
       mode: planMode(row.skill.name) ? "plan" : "complete",

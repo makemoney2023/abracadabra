@@ -1,5 +1,6 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { httpD1 } from "./http";
 import { d1Sql, sqliteSql, type D1Like, type Sql } from "./sql";
 
 const CLOUDFLARE_CONTEXT = Symbol.for("__cloudflare-context__");
@@ -25,6 +26,8 @@ function localLocation(): string {
 export async function openHandoffDb(): Promise<Sql> {
   const bound = boundDatabase();
   if (bound) return d1Sql(bound);
+  const origin = process.env.HANDOFF_D1_ORIGIN;
+  if (origin) return d1Sql(httpD1(origin));
   const location = localLocation();
   if (location !== ":memory:") {
     mkdirSync(path.dirname(location), { recursive: true });
