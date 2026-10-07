@@ -155,14 +155,13 @@ describe("POST /api/workspaces/[slug]/batches", () => {
     expect(JSON.stringify(body)).not.toContain("iVBOR");
   });
 
-  it("refuses a staff caller and writes nothing", async () => {
+  it("lets assigned staff upload without a membership", async () => {
     const sql = await db();
     await seed(sql);
     const response = await post("operator-token", { files: [logo] });
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toEqual({ message: "You can't do that." });
+    expect(response.status).toBe(201);
     const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM batches");
-    expect(count?.n).toBe(0);
+    expect(count?.n).toBe(1);
   });
 
   it("returns 404 for a caller outside the workspace and writes nothing", async () => {

@@ -89,7 +89,7 @@ export function can(caller: Caller, action: Action, target: AuthzTarget = {}): b
     case "knowledge.manage":
       return staffOnWorkspace(caller, workspaceId) || owner;
     case "batch.create":
-      return client;
+      return staffOnWorkspace(caller, workspaceId) || client;
     case "batch.discard":
       if (staffOnWorkspace(caller, workspaceId)) return true;
       return client && caller.userId !== null && caller.userId === target.batchCreatedBy;

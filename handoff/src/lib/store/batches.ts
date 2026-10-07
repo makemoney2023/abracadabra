@@ -1,4 +1,4 @@
-import type { Caller } from "@/lib/authz";
+import { can, type Caller } from "@/lib/authz";
 import { validateManifest } from "@/lib/batches";
 import { workspacesFor } from "@/db/records";
 import type { Sql } from "@/db/sql";
@@ -55,13 +55,7 @@ export async function createBatch(input: {
 }): Promise<CreateBatchResult> {
   const workspace = (await workspacesFor(input.sql, input.caller)).find((row) => row.slug === input.slug);
   if (!workspace || !input.caller.userId) return { ok: false, status: 404, message: "We couldn't find that." };
-
-  const member = await input.sql.get<{ ok: number }>(
-    `SELECT 1 AS ok FROM memberships
-     WHERE workspace_id = ? AND user_id = ? AND revoked_at IS NULL`,
-    [workspace.id, input.caller.userId],
-  );
-  if (!member) {
+  if (!can(input.caller, "batch.create", { workspaceId: workspace.id })) {
     return { ok: false, status: 403, message: REFUSED };
   }
   if (workspace.status !== "active") return { ok: false, status: 409, message: INACTIVE };

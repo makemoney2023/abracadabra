@@ -1,5 +1,8 @@
 export const DEFAULT_HQ_HOST = "hq.abra-ca-dabra.app";
 
+/** Public client host. Share links use this when the request host is staff or workers.dev. */
+export const DEFAULT_CLIENT_ORIGIN = "https://handoff.abra-ca-dabra.app";
+
 /** The workers.dev staff host still counts as HQ after hq.abra-ca-dabra.app is attached. */
 export const STAFF_DEV_HOST = "handoff-hq.abracadabra-ai.workers.dev";
 

@@ -63,7 +63,7 @@ const matrix: { action: Action; allowed: [boolean, boolean, boolean, boolean] }[
   { action: "knowledge.manage", allowed: [true, true, true, false] },
   { action: "member.remove", allowed: [true, true, true, false] },
   { action: "request.manage", allowed: [true, true, false, false] },
-  { action: "batch.create", allowed: [false, false, true, true] },
+  { action: "batch.create", allowed: [true, true, true, true] },
   { action: "file.download", allowed: [true, true, true, true] },
   { action: "batch.discard", allowed: [true, true, true, true] },
   { action: "file.tag", allowed: [true, true, false, false] },
@@ -98,6 +98,7 @@ describe("can", () => {
     expect(can(unassigned, "workspace.view", { workspaceId: WORKSPACE })).toBe(false);
     expect(can(unassigned, "file.download", { workspaceId: WORKSPACE })).toBe(false);
     expect(can(unassigned, "share.copy", { workspaceId: WORKSPACE })).toBe(false);
+    expect(can(unassigned, "batch.create", { workspaceId: WORKSPACE })).toBe(false);
   });
 
   it("hides workspace A from a client of workspace B", () => {
@@ -124,7 +125,8 @@ describe("can", () => {
     expect(can(studio, "workspace.create")).toBe(true);
     expect(can(studio, "batch.create", { workspaceId: WORKSPACE })).toBe(true);
     expect(can(studio, "share.copy", { workspaceId: WORKSPACE })).toBe(true);
-    expect(can(superAdmin, "batch.create", { workspaceId: WORKSPACE })).toBe(false);
+    expect(can(superAdmin, "batch.create", { workspaceId: WORKSPACE })).toBe(true);
+    expect(can(operator, "batch.create", { workspaceId: WORKSPACE })).toBe(true);
     expect(can(superAdmin, "share.copy", { workspaceId: WORKSPACE })).toBe(true);
   });
 

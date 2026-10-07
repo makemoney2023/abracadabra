@@ -23,6 +23,7 @@ describe("statementsFromMigration", () => {
       "0003_upload_shares.sql",
       "0004_knowledge.sql",
       "0005_crm.sql",
+      "0006_deliverable_rounds.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -38,6 +39,11 @@ describe("statementsFromMigration", () => {
       await migrate(sqliteSql(db));
       const row = db.prepare("SELECT name FROM sqlite_master WHERE name = 'upload_shares'").get();
       expect(row).toEqual({ name: "upload_shares" });
+      const columns = db.prepare("PRAGMA table_info(deliverables)").all() as { name: string }[];
+      expect(columns.some((column) => column.name === "published_version")).toBe(true);
+      await migrate(sqliteSql(db));
+      const again = db.prepare("PRAGMA table_info(deliverables)").all() as { name: string }[];
+      expect(again.filter((column) => column.name === "published_version")).toHaveLength(1);
     } finally {
       process.chdir(previous);
     }

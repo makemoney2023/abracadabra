@@ -35,6 +35,25 @@ describe("upload share link", () => {
     expect(sharePageUrl(first, { host: "localhost:3000", proto: "http" })).toBe(
       `http://localhost:3000/share/${first}`,
     );
+    expect(sharePageUrl(first, { origin: "https://handoff.abra-ca-dabra.app" })).toBe(
+      `https://handoff.abra-ca-dabra.app/share/${first}`,
+    );
+    expect(
+      sharePageUrl(first, { origin: "https://handoff.abracadabra-ai.workers.dev" }),
+    ).toBe(`https://handoff.abra-ca-dabra.app/share/${first}`);
+    expect(
+      sharePageUrl(first, {
+        host: "handoff-hq.abracadabra-ai.workers.dev",
+        proto: "https",
+      }),
+    ).toBe(`https://handoff.abra-ca-dabra.app/share/${first}`);
+    expect(sharePageUrl(first, { host: "hq.localhost:3000", proto: "http" })).toBe(
+      `https://handoff.abra-ca-dabra.app/share/${first}`,
+    );
+    expect(sharePageUrl(first, { host: "handoff.abracadabra-ai.workers.dev" })).toBe(
+      `https://handoff.abra-ca-dabra.app/share/${first}`,
+    );
+    expect(sharePageUrl(first, {})).toBe(`https://handoff.abra-ca-dabra.app/share/${first}`);
 
     const opened = await openUploadShare(sql, first, NOW + 2);
     expect(opened?.slug).toBe("strongfoam");

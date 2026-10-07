@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DropZone } from "@/components/drop-zone";
 import { workspacesFor } from "@/db/records";
+import { can } from "@/lib/authz";
 import { openSession } from "@/lib/current";
 import { workspaceRequests } from "@/lib/store/requests";
 
@@ -22,7 +23,8 @@ export default async function DropPage({
   const asked = requestId ? requests.find((request) => request.id === requestId) : undefined;
   if (requestId && !asked) notFound();
   const request = asked ?? (open.length === 1 ? open[0] : undefined);
-  const canDrop = caller.memberships.some((member) => member.workspaceId === workspace.id);
+  const canDrop = can(caller, "batch.create", { workspaceId: workspace.id });
+  const staffDrop = can(caller, "request.manage", { workspaceId: workspace.id });
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-10">
       <Link href={`/w/${workspace.slug}`} className="text-sm">
@@ -56,6 +58,11 @@ export default async function DropPage({
               </li>
             ))}
           </ul>
+        </>
+      ) : staffDrop && canDrop ? (
+        <>
+          <p className="text-muted-foreground">These files go in {workspace.display_name}.</p>
+          <DropZone slug={slug} requestId="" canDrop={canDrop} />
         </>
       ) : (
         <p className="text-sm text-muted-foreground">This folder isn&apos;t taking new files right now.</p>

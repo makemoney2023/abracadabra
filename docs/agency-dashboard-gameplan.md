@@ -690,6 +690,7 @@ Each step ships on its own and is useful on its own.
 7. **Finished work.** `deliverables`, `deliverable_items`, and `deliverable_feedback` tables, the
    access-checked media route, the staff builder, pull from a repo manifest (like social-preview in
    the renewimplants repo), the client gallery at `/w/[slug]/work`, and approve or ask-for-changes.
+   This step is in the app. Staff build at `/deliverables/[id]`. Clients look at `/w/[slug]/work`.
 8. **Invoices and payments.** Invoice screens, PDF to R2, send by email, record payments by hand,
    client read-only view in Handoff. Stripe pay links and webhook come later as an add-on (D8).
 9. **MCP read and write tools.** Key scopes, all tools in section 7 including code and finished-work

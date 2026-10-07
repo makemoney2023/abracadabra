@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { DEFAULT_CLIENT_ORIGIN, isHqHost } from "@/lib/host";
 import { LIMITS } from "@/lib/policy/limits";
 
 const SHARE_TOKEN = /^[0-9a-f]{64}$/;
@@ -18,16 +19,33 @@ export function guestEmail(workspaceId: string): string {
   return `share+${workspaceId}@handoff.local`;
 }
 
-/** Absolute page for a share token. A configured origin wins over the request host. */
+function hostName(value: string): string {
+  const raw = value.trim();
+  try {
+    if (raw.includes("://")) return new URL(raw).hostname;
+  } catch {
+    return "";
+  }
+  return raw.toLowerCase().replace(/:\d+$/, "");
+}
+
+function isWorkersDev(value: string): boolean {
+  return hostName(value).endsWith(".workers.dev");
+}
+
+/** Absolute page for a share token. Staff hosts and workers.dev never become the link. */
 export function sharePageUrl(
   token: string,
   source: { origin?: string; host?: string | null; proto?: string | null },
 ): string {
   const path = `/share/${token}`;
-  const configured = source.origin?.trim().replace(/\/$/, "");
-  if (configured) return `${configured}${path}`;
-  if (source.host) return `${source.proto || "https"}://${source.host}${path}`;
-  return path;
+  const configured = source.origin?.trim().replace(/\/$/, "") ?? "";
+  if (configured && !isWorkersDev(configured)) return `${configured}${path}`;
+  const host = source.host?.trim() ?? "";
+  if (host && !isWorkersDev(host) && !isHqHost(host)) {
+    return `${source.proto || "https"}://${host}${path}`;
+  }
+  return `${DEFAULT_CLIENT_ORIGIN}${path}`;
 }
 
 /** Returns the same upload link for a space, creating it the first time. */

@@ -1,5 +1,5 @@
 import { isBatchActive } from "@/lib/batches";
-import type { Caller } from "@/lib/authz";
+import { can, type Caller } from "@/lib/authz";
 import { recordFileUploaded } from "@/db/crm";
 import { workspacesFor } from "@/db/records";
 import type { Sql } from "@/db/sql";
@@ -45,11 +45,7 @@ async function memberWrite(sql: Sql, caller: Caller, workspaceId: string): Promi
   if (!caller.userId) return "missing";
   const visible = await workspacesFor(sql, caller);
   if (!visible.some((row) => row.id === workspaceId)) return "missing";
-  const member = await sql.get<{ ok: number }>(
-    "SELECT 1 AS ok FROM memberships WHERE workspace_id = ? AND user_id = ? AND revoked_at IS NULL",
-    [workspaceId, caller.userId],
-  );
-  return member ? "ok" : "refused";
+  return can(caller, "batch.create", { workspaceId }) ? "ok" : "refused";
 }
 
 function active(row: FileRow, now: number): boolean {

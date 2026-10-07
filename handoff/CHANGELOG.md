@@ -2,6 +2,69 @@
 
 ## 2026-10-06
 
+- **What changed** — Staff can add finished work on a project, send a round to the client, and pull a round from a repo manifest. The client gallery is `/w/[slug]/work`. Approve and ask-for-changes stay on the sent round.
+- **Why** — HQ gameplan step 7. The tables were already in `0005_crm.sql`. A sent round now keeps its own version so a later draft does not hide it.
+- **Code touchpoints** — `handoff/migrations/0006_deliverable_rounds.sql`, `handoff/src/db/deliverables.ts`, `handoff/src/lib/deliverable-manifest.ts`, `handoff/src/lib/github/contents.ts`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/w/[slug]/work/page.tsx`, `handoff/src/app/api/deliverables/[deliverableId]/items/[itemId]/media/[role]/route.ts`
+- **Data-flow impact** — Pull reads only the manifest and the files it lists from GitHub, stores those bytes in R2, then writes the round. The gallery and the media route read the sent version for a client and the working version for staff.
+- **API / schema impact** — `deliverables.published_version`. `GET /api/deliverables/[deliverableId]/items/[itemId]/media/[role]` returns the bytes when the caller can see that piece.
+- **Verification** — `npm test` passed (321 tests). `npm run lint` and `npx tsc --noEmit` passed. On local HQ, `/w/strongfoam/work` shows Finished work and "Nothing to look at yet." There is no local project, so the builder form was not clicked. Not deployed.
+
+## 2026-10-06
+
+- **What changed** — Staff who can see a space can upload files there from HQ, including Renew Implants. The Upload button shows for an admin and for staff assigned to that space. People in the folder can still upload. Someone who cannot see the space still cannot.
+- **Why** — The space page only offered Upload to people with a folder membership, and starting an upload checked that same membership. Signed-in staff on HQ could open the space and could not add files.
+- **Code touchpoints** — `handoff/src/lib/authz.ts`, `handoff/src/lib/authz.test.ts`, `handoff/src/lib/store/batches.ts`, `handoff/src/lib/store/uploads.ts`, `handoff/src/app/w/[slug]/page.tsx`, `handoff/src/app/w/[slug]/drop/page.tsx`, `handoff/src/app/api/workspaces/[slug]/batches/route.test.ts`, `handoff/README.md`
+- **Data-flow impact** — Upload still posts a file list to `POST /api/workspaces/[slug]/batches`, then sends bytes through the same grant and complete steps. Staff do not need an open file request. A client still needs one.
+- **API / schema impact** — `batch.create` is allowed for an admin and an assigned operator on that space. No schema change.
+- **Verification** — `npx vitest run src/lib/authz.test.ts src/app/api/workspaces/[slug]/batches/route.test.ts src/app/api/batches/[batchId]/files/[fileId]/route.test.ts` passed (37 tests). `npm run lint` and `npx tsc --noEmit` passed. Staff deploy version `47b647b4-1113-4e3e-b32f-76a6c157010e` is live on `handoff-hq`. Signed-in upload on Renew Implants was not clicked in a browser.
+
+## 2026-10-06
+
+- **What changed** — Worker `handoff-hq` version `9b451689-6d56-454c-b9da-2e8d2970cf33` is live. `/w` on `hq.abra-ca-dabra.app` is no longer blocked by the plain-text host gate.
+- **Why** — The previous staff deploy was older than the change that lets staff open a space on the staff host.
+- **Code touchpoints** — none (deploy of the current tree)
+- **Data-flow impact** — A signed-in staff member who can see the space gets the space page. A request with no session gets the normal Next missing page.
+- **API / schema impact** — none
+- **Verification** — `curl` on 2026-10-06 for `/w/strongfoam` and `/w/rewnewimplants`: HTTP/2 404, `content-type: text/html`, `x-opennext: 1`. Neither body contains "This page is not here."
+
+## 2026-10-06
+
+- **What changed** — `npm run build` is `next build` again. Deploy scripts still run `opennextjs-cloudflare build`, then deploy.
+- **Why** — OpenNext runs `npm run build` while it builds. When that script was OpenNext, `npm run deploy:hq` called itself and printed the same banner until it was stopped.
+- **Code touchpoints** — `handoff/package.json`, `handoff/src/lib/runtime/workers-build.test.ts`, `handoff/README.md`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run src/lib/runtime/workers-build.test.ts` passed (3 tests).
+
+## 2026-10-06
+
+- **What changed** — `hq.abra-ca-dabra.app` is attached to worker `handoff-hq`.
+- **Why** — That hostname was still answering from Vercel. Wrangler is signed in on the Abracadabra account, so the custom domain could be attached.
+- **Code touchpoints** — `handoff/README.md`
+- **Data-flow impact** — `https://hq.abra-ca-dabra.app/login` is served by worker `handoff-hq`.
+- **API / schema impact** — none
+- **Verification** — `curl -sI https://hq.abra-ca-dabra.app/login` on 2026-10-06: HTTP/2 200, `x-opennext: 1`, no `x-vercel-error`.
+
+## 2026-10-06
+
+- **What changed** — The Readiness Check host is Cloudflare. The staff host `hq.abra-ca-dabra.app` is the hostname that still reaches Vercel.
+- **Why** — No public host on `abra-ca-dabra.app` is supposed to stay on Vercel.
+- **Code touchpoints** — `handoff/README.md`, `docs/source-of-truth.md`
+- **Data-flow impact** — `https://check.abra-ca-dabra.app/check` answers from a Worker. `https://hq.abra-ca-dabra.app` still returns Vercel `DEPLOYMENT_NOT_FOUND`.
+- **API / schema impact** — none
+- **Verification** — `curl -sI` on 2026-10-06: check `/check` is HTTP/2 200 with `x-opennext: 1`. Apex and `www` have `server: cloudflare` and no `x-vercel-id`. `hq` `/login` is HTTP/2 404 with `x-vercel-error: DEPLOYMENT_NOT_FOUND`.
+
+## 2026-10-06
+
+- **What changed** — A copied share link uses `https://handoff.abra-ca-dabra.app/share/[token]`. A staff host and a workers.dev host do not become that link. Worker `handoff` sets `HANDOFF_APP_ORIGIN` to that client origin.
+- **Why** — Opening a space on the staff host or the workers.dev preview copied a share URL that does not answer there.
+- **Code touchpoints** — `handoff/src/lib/share-link.ts`, `handoff/src/lib/share-link.test.ts`, `handoff/src/lib/host.ts`, `handoff/wrangler.jsonc`, `handoff/.env.example`, `handoff/README.md`
+- **Data-flow impact** — Share links resolve to the client custom domain. Space links stay on the current host.
+- **API / schema impact** — none
+- **Verification** — pending
+
+## 2026-10-06
+
 - **What changed** — Staff can open a space at `/w/[slug]` on the staff host. Space names, client names, and work filters are shadcn buttons and badges. The sidebar shows icons and a menu button on every staff page, including a space.
 - **Why** — Spaces linked to `/w/rewnewimplants` on the staff host, and that host answered "This page is not here." The staff lists were plain links, so the component library did not show up on the pages people use.
 - **Code touchpoints** — `handoff/src/lib/host.ts`, `handoff/src/lib/host.test.ts`, `handoff/src/app/admin/page.tsx`, `handoff/src/app/staff-shell.tsx`, `handoff/src/app/staff-nav.tsx`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/components/ui/card.tsx`, `handoff/README.md`

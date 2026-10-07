@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { listProjectDeliverables } from "@/db/deliverables";
 import {
   listMilestones,
   listProjectRepos,
@@ -9,6 +10,7 @@ import {
   projectById,
   repoActivitySummary,
 } from "@/db/crm";
+import { workspacesFor } from "@/db/records";
 import { requireHqStaffPage } from "@/lib/current";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
@@ -17,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { dayLabel } from "../dates";
+import { CreateDeliverableForm } from "../../deliverables/forms";
+import { DELIVERABLE_STATUS_LABEL } from "../../deliverables/labels";
 import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm, TaskStatusForm } from "../forms";
 import { AUDIENCE_LABEL, HEALTH_LABEL, PROJECT_STATUS_LABEL, TASK_STATUS_LABEL } from "../labels";
 
@@ -39,6 +43,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     ),
   ]);
   const repos = await listProjectRepos(sql, caller, project.id);
+  const visibleIds = new Set((await workspacesFor(sql, caller)).map((row) => row.id));
+  const usableSpaces = spaces.filter((space) => visibleIds.has(space.id));
+  const finished = await listProjectDeliverables(sql, caller, project.id);
   const repoRows = await Promise.all(
     repos.map(async (repo) => ({ repo, summary: await repoActivitySummary(sql, caller, repo.id) })),
   );
@@ -99,6 +106,37 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   </li>
                 ))}
               </ul>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Finished work</CardTitle>
+            <CardDescription>Pieces the client can look at.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-6">
+            {finished.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No finished work yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {finished.map((piece) => (
+                  <li key={piece.id} className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/deliverables/${piece.id}`}>{piece.title}</Link>
+                    </Button>
+                    <Badge variant="secondary">{DELIVERABLE_STATUS_LABEL[piece.status]}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {usableSpaces.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Link a space before you add finished work.</p>
+            ) : (
+              <CreateDeliverableForm
+                organizationId={project.organization_id}
+                projectId={project.id}
+                spaces={usableSpaces.map((space) => ({ id: space.id, displayName: space.display_name }))}
+              />
             )}
           </CardContent>
         </Card>

@@ -22,7 +22,9 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const requests = await workspaceRequests(sql, workspace.id);
   const open = requests.filter((request) => request.status === "open");
   const files = await listFolderFiles(sql, caller, workspace.id);
-  const canDrop = caller.memberships.some((member) => member.workspaceId === workspace.id);
+  const canDrop = can(caller, "batch.create", { workspaceId: workspace.id });
+  const staffDrop = can(caller, "request.manage", { workspaceId: workspace.id });
+  const showUpload = canDrop && (open.length > 0 || staffDrop);
   const canShare = can(caller, "share.copy", { workspaceId: workspace.id });
   const canRead = can(caller, "knowledge.manage", { workspaceId: workspace.id });
   const reads = canRead ? await listFileReads(sql, workspace.id) : [];
@@ -42,7 +44,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
         <div>
           <h1 className="font-heading text-4xl leading-tight">{workspace.display_name}</h1>
         </div>
-        {canDrop && open.length > 0 ? (
+        {showUpload ? (
           <Button asChild>
             <Link href={uploadHref}>Upload</Link>
           </Button>
@@ -53,7 +55,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
       {files.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border px-6 py-12">
           <p className="text-lg">This folder is empty.</p>
-          {canDrop && open.length > 0 ? (
+          {showUpload ? (
             <>
               <p className="text-sm text-muted-foreground">
                 Add files with Upload. People can look at a picture, a PDF, or a text file before the check is done.

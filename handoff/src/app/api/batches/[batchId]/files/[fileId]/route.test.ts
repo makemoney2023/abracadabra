@@ -110,6 +110,33 @@ describe("upload grant and completion", () => {
     expect(refreshed?.last_activity_at).toBeGreaterThan(now - 30_000);
   });
 
+  it("lets an admin grant an upload without a membership", async () => {
+    const now = Date.now();
+    const sql = await db();
+    await seed(sql, "pending", now, now);
+    await sql.run("INSERT INTO users (id, email, created_at) VALUES ('user-admin', 'admin@example.com', ?)", [now]);
+    await sql.run(
+      `INSERT INTO sessions (id, user_id, token_hash, created_at, expires_at, revoked_at)
+       VALUES ('sess-admin', 'user-admin', ?, ?, ?, NULL)`,
+      [await sha256Hex("admin-token"), now, now + LIMITS.sessionTtlMs],
+    );
+    await sql.run(
+      `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at)
+       VALUES ('user-admin', 'admin@example.com', 1, ?, NULL)`,
+      [now],
+    );
+    const response = await grant(
+      new Request(`https://handoff.example/api/batches/${BATCH}/files/${FILE}/grant`, {
+        method: "POST",
+        headers: { cookie: "handoff_session=admin-token" },
+      }),
+      { params: Promise.resolve({ batchId: BATCH, fileId: FILE }) },
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { file: { status: string } };
+    expect(body.file.status).toBe("uploading");
+  });
+
   it("refuses a grant for a clean, held, rejected, or uploaded file", async () => {
     for (const status of ["clean", "held", "rejected", "uploaded"]) {
       const now = Date.now();

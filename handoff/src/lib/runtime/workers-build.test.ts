@@ -7,8 +7,11 @@ const pkg = JSON.parse(
 ) as { scripts: Record<string, string> };
 
 describe("Workers Builds scripts", () => {
+  it("keeps npm run build as next build so OpenNext does not call itself", () => {
+    expect(pkg.scripts.build).toBe("next build");
+  });
+
   it("builds OpenNext before a deploy can find the compiled config", () => {
-    expect(pkg.scripts.build).toBe("opennextjs-cloudflare build");
     expect(pkg.scripts.deploy).toBe(
       "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     );
