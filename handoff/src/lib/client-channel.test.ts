@@ -6,6 +6,8 @@ import {
   handleInboundEmail,
   parseInboundEmail,
   replyMime,
+  replyToClient,
+  type ClientDesk,
   type InboundEmail,
 } from "./client-channel";
 
@@ -161,5 +163,104 @@ describe("client email", () => {
     });
     expect(asked.reply).toBe("Which client is this about?");
     expect(asked.organizationId).toBeNull();
+  });
+});
+
+const desk: ClientDesk = {
+  name: "Northwind",
+  brief: "They sell foam.",
+  status: "Copy is in review.",
+  requests: [],
+  messages: [],
+  forbiddenNames: ["Harbor"],
+};
+
+describe("mailbox reply", () => {
+  it("answers a status question from the published brief", async () => {
+    const turn = await replyToClient({
+      desk,
+      incoming: "Where are we?",
+      model: async () => ({
+        reply: "Copy is in review. The brief is about foam.",
+        kind: "status",
+        goal: null,
+        due: null,
+      }),
+    });
+    expect(turn.kind).toBe("status");
+    expect(turn.reply).toContain("foam");
+    expect(turn.file).toBe(false);
+  });
+
+  it("asks one question for new work that has no goal", async () => {
+    const turn = await replyToClient({
+      desk,
+      incoming: "Please add a pricing page.",
+      model: async () => ({
+        reply: "What should the pricing page help a buyer do?",
+        kind: "new_work",
+        goal: null,
+        due: null,
+      }),
+    });
+    expect(turn.kind).toBe("new_work");
+    expect(turn.file).toBe(true);
+    expect(turn.reply).toContain("?");
+  });
+
+  it("drops a reply that prices the work, promises a date, or names another client", async () => {
+    for (const reply of ["That will be $500.", "We will ship it by Friday.", "Harbor can wait."]) {
+      const turn = await replyToClient({
+        desk,
+        incoming: "Add a page.",
+        model: async () => ({ reply, kind: "new_work", goal: "sell", due: "Friday" }),
+      });
+      expect(turn.kind).toBe("handoff");
+      expect(turn.file).toBe(false);
+      expect(turn.reply).toBe("A person on the team will pick this up.");
+    }
+  });
+
+  it("does not call the model until the sender and the client are known", async () => {
+    let calls = 0;
+    const answer = async () => {
+      calls += 1;
+      return { reply: "Copy is in review.", kind: "status" as const, goal: null, due: null, file: false };
+    };
+    const unknown = await handleInboundEmail(message, {
+      lookup: async () => ({ organizationId: null, authenticated: false }),
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer,
+    });
+    expect(unknown.reply).toContain("registered");
+    const orgs = [
+      { id: "org-1", name: "Northwind" },
+      { id: "org-2", name: "Harbor" },
+    ];
+    const asked = await handleInboundEmail(message, {
+      lookup: async () => ({ organizationId: null, organizations: orgs, authenticated: true }),
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer,
+    });
+    expect(asked.reply).toBe("Which client is this about?");
+    const busy = await handleInboundEmail(message, {
+      lookup: async () => ({ organizationId: "org-1", authenticated: true }),
+      thread: async () => ({ replies: 10, questionCount: 0, text: "" }),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer,
+    });
+    expect(busy.reply).toBe("A person on the team will pick this up.");
+    expect(calls).toBe(0);
+    const failed = await handleInboundEmail(message, {
+      lookup: async () => ({ organizationId: "org-1", authenticated: true }),
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer: async () => {
+        throw new Error("model down");
+      },
+    });
+    expect(failed.reply).toContain("will follow up");
   });
 });

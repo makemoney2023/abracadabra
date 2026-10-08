@@ -5,6 +5,7 @@ import {
   organizationForSenderThread,
   organizationForSlackChannel,
   recordStaffChannelNote,
+  deskContext,
   recordThreadMessage,
   recordUnknownSender,
   threadState,
@@ -84,6 +85,13 @@ export async function POST(request: Request) {
       now,
     );
     return NextResponse.json({ ok: true });
+  }
+  if (action === "desk_context") {
+    const organizationId = text(body, "organizationId");
+    if (!organizationId) {
+      return NextResponse.json({ ok: true, value: { name: "", brief: "", status: "", requests: [], messages: [] } });
+    }
+    return NextResponse.json({ ok: true, value: await deskContext(sql, organizationId, text(body, "threadId")) });
   }
   if (action === "attach") {
     const organizationId = text(body, "organizationId");

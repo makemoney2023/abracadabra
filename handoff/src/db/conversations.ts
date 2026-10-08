@@ -321,6 +321,58 @@ export async function noteUnlinkedChannel(sql: Sql, channelId: string, now: numb
   return true;
 }
 
+export type DeskContext = {
+  name: string;
+  brief: string;
+  status: string;
+  requests: { body: string; state: string; goal: string | null; due: string | null }[];
+  messages: { kind: string; body: string }[];
+};
+
+const EMPTY_DESK: DeskContext = { name: "", brief: "", status: "", requests: [], messages: [] };
+
+/** Published work for one client. A missing organization looks like an empty desk. */
+export async function deskContext(sql: Sql, organizationId: string, threadId: string): Promise<DeskContext> {
+  const org = await sql.get<{ name: string }>("SELECT name FROM organizations WHERE id = ?", [organizationId]);
+  if (!org) return EMPTY_DESK;
+  const brief = await sql.get<{ copy_text: string | null }>(
+    `SELECT di.copy_text
+     FROM deliverables d
+     JOIN deliverable_items di ON di.deliverable_id = d.id AND di.version = d.published_version
+     WHERE d.organization_id = ? AND d.kind = 'brief' AND d.published_version IS NOT NULL
+       AND di.title = 'brief.md'
+     ORDER BY d.published_at DESC
+     LIMIT 1`,
+    [organizationId],
+  );
+  const status = await sql.get<{ body: string }>(
+    `SELECT body FROM status_updates
+     WHERE organization_id = ? AND audience = 'client' AND state = 'published'
+     ORDER BY published_at DESC
+     LIMIT 1`,
+    [organizationId],
+  );
+  const requests = await sql.all<{ body: string; state: string; goal: string | null; due_text: string | null }>(
+    `SELECT body, state, goal, due_text FROM work_requests
+     WHERE organization_id = ? AND state IN ('clarifying', 'proposed')
+     ORDER BY updated_at, rowid`,
+    [organizationId],
+  );
+  const messages = await sql.all<{ kind: string; body: string | null }>(
+    `SELECT kind, body FROM activities
+     WHERE organization_id = ? AND json_extract(data_json, '$.threadId') = ?
+     ORDER BY created_at, rowid`,
+    [organizationId, threadId],
+  );
+  return {
+    name: org.name,
+    brief: brief?.copy_text ?? "",
+    status: status?.body ?? "",
+    requests: requests.map((row) => ({ body: row.body, state: row.state, goal: row.goal, due: row.due_text })),
+    messages: messages.flatMap((row) => (row.body ? [{ kind: row.kind, body: row.body }] : [])),
+  };
+}
+
 export async function organizationForSlackChannel(sql: Sql, channelId: string): Promise<string | null> {
   const row = await sql.get<{ organization_id: string }>(
     "SELECT organization_id FROM slack_channel_links WHERE channel_id = ?",

@@ -8,7 +8,17 @@ import {
   type ToolCaller,
 } from "../lib/client-documents";
 import { advanceClientWork, applyBriefChange, planClientWork } from "../lib/client-plan";
-import { addressOf, bytesToBase64, handleInboundEmail, parseInboundEmail, replyMime, type ThreadState } from "../lib/client-channel";
+import {
+  addressOf,
+  bytesToBase64,
+  handleInboundEmail,
+  parseClientTurn,
+  parseInboundEmail,
+  replyMime,
+  replyToClient,
+  type ClientDesk,
+  type ThreadState,
+} from "../lib/client-channel";
 import { handleSlackEvent } from "../lib/slack-channel";
 import { skillObjectKey } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
@@ -343,6 +353,31 @@ function chatCors(origin: string | undefined): true | Record<string, string> {
   };
 }
 
+const MAILBOX_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+async function mailboxTurn(env: AgentBindings, desk: ClientDesk, incoming: string) {
+  if (!env.AI) throw new Error("Chat is not configured.");
+  const run = env.AI.run.bind(env.AI) as (
+    model: string,
+    input: { messages: { role: string; content: string }[] },
+  ) => Promise<{ response?: string } | string>;
+  const result = await run(MAILBOX_MODEL, {
+    messages: [
+      {
+        role: "system",
+        content:
+          "You write one short email as Magic at Abracadabra. Use only the desk. Do not quote a price or promise a date. Ask one question when new work has no goal or due. Return JSON only: {\"reply\":\"\",\"kind\":\"status|new_work|feedback|other|handoff\",\"goal\":null,\"due\":null}.",
+      },
+      {
+        role: "user",
+        content: `Client: ${desk.name}\nBrief: ${desk.brief || "none"}\nStatus: ${desk.status || "none"}\nOpen requests: ${desk.requests.map((row) => row.body).join("\n") || "none"}\nThread:\n${desk.messages.map((row) => `${row.kind}: ${row.body}`).join("\n") || "none"}\n\nNew message:\n${incoming}`,
+      },
+    ],
+  });
+  const text = typeof result === "string" ? result : (result.response ?? "");
+  return parseClientTurn(text);
+}
+
 const worker = {
   async fetch(request: Request, env: AgentBindings, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -401,6 +436,23 @@ const worker = {
         return body?.value ?? null;
       },
       ownAddress: own,
+      answer: async (organizationId, organizations) => {
+        const body = (await hqChannel(env, {
+          action: "desk_context",
+          organizationId,
+          threadId: parsed.threadId,
+        })) as { value?: ClientDesk } | null;
+        if (!body?.value) throw new Error("desk unavailable");
+        const desk: ClientDesk = {
+          ...body.value,
+          forbiddenNames: organizations.filter((org) => org.id !== organizationId).map((org) => org.name),
+        };
+        return replyToClient({
+          desk,
+          incoming: [parsed.subject, parsed.text].filter(Boolean).join("\n"),
+          model: (nextDesk, incoming) => mailboxTurn(env, nextDesk, incoming),
+        });
+      },
     });
     if (reply.skip) return;
     let replyText = reply.reply;

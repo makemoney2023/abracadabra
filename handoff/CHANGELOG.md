@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — A known client email is answered from that client's published brief and latest status. New work is filed for staff. A reply that prices the work, promises a date, or names another client is replaced with a handoff to a person.
+- **Why** — The mailbox was a fixed receipt. Section 17.8 says it should talk about the client's work.
+- **Code touchpoints** — `handoff/src/db/conversations.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — After the sender gates, `email()` loads `desk_context` and calls the mailbox model. The reply is stored on the same thread.
+- **API / schema impact** — `POST /api/client-messages` accepts `action: "desk_context"`. No migration.
+- **Verification** — Desk and mailbox reply tests passed. Agent typecheck passed. Model id `@cf/meta/llama-3.3-70b-instruct-fp8-fast` is in the Workers AI catalog. Worker `handoff-agent` version `abcc6099-115f-41ac-9420-a627062b0faf`. Worker `handoff-hq` version `b0637d9f-4543-41e6-9bc7-69766c07d822`.
+
+## 2026-10-07
+
 - **What changed** — The HQ agent spec now says the mailbox answers in the thread about that client's published work. Steps 32–34 are the desk read, the reply function, and the wire into `magic@`.
 - **Why** — The live mailbox sends a fixed receipt. Clients need a reply that knows their work, asks one question, and files new work for staff.
 - **Code touchpoints** — `docs/hq-agent-spec.md`

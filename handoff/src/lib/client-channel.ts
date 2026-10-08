@@ -31,6 +31,26 @@ export type ClassifiedNote = {
   due: string | null;
 };
 
+export type ClientKind = "status" | "new_work" | "feedback" | "other" | "handoff";
+
+export type ClientTurn = {
+  reply: string;
+  kind: ClientKind;
+  goal: string | null;
+  due: string | null;
+  /** True when the worker should store this as client work. A handoff files nothing. */
+  file: boolean;
+};
+
+export type ClientDesk = {
+  name: string;
+  brief: string;
+  status: string;
+  requests: { body: string; state: string; goal: string | null; due: string | null }[];
+  messages: { kind: string; body: string }[];
+  forbiddenNames?: string[];
+};
+
 export type ChannelReply = {
   reply: string;
   organizationId: string | null;
@@ -38,6 +58,7 @@ export type ChannelReply = {
   skip: boolean;
   asked: boolean;
   classified: ClassifiedNote;
+  file: boolean;
 };
 
 export const FIXED_UNKNOWN = "Please write from the address registered with us, or sign in to your space.";
@@ -46,11 +67,16 @@ export const HANDED_OFF = "A person on the team will pick this up.";
 const RETRY = "Try again in a minute.";
 const TOO_BIG = "That file is over 25 MB. Send a shorter note.";
 export const THREAD_REPLY_LIMIT = 10;
+export const FOLLOW_UP = "Got it. I have your note. A person on the team will follow up.";
 
 const NOTHING: ClassifiedNote = { kind: "other", state: "clarifying", question: null, goal: null, due: null };
 
 function quiet(): ChannelReply {
-  return { reply: "", organizationId: null, noteOnly: false, skip: true, asked: false, classified: NOTHING };
+  return { reply: "", organizationId: null, noteOnly: false, skip: true, asked: false, classified: NOTHING, file: false };
+}
+
+function held(reply: string, organizationId: string | null, noteOnly = false): ChannelReply {
+  return { reply, organizationId, noteOnly, skip: false, asked: false, classified: NOTHING, file: false };
 }
 
 function domainOf(address: string): string {
@@ -122,6 +148,7 @@ export async function handleInboundEmail(
     thread: (organizationId: string, threadId: string) => Promise<ThreadState>;
     remembered?: (threadId: string) => Promise<string | null>;
     ownAddress: string;
+    answer?: (organizationId: string, organizations: { id: string; name: string }[]) => Promise<ClientTurn>;
   },
 ): Promise<ChannelReply> {
   const sender = addressOf(message.from);
@@ -129,27 +156,17 @@ export async function handleInboundEmail(
   if (message.precedence === "bulk" || message.precedence === "list" || sender === deps.ownAddress.toLowerCase()) {
     return quiet();
   }
-  if (message.bytes > 25 * 1024 * 1024) {
-    return { reply: TOO_BIG, organizationId: null, noteOnly: false, skip: false, asked: false, classified: NOTHING };
-  }
+  if (message.bytes > 25 * 1024 * 1024) return held(TOO_BIG, null);
   const found = await deps.lookup(sender);
-  if (found === "down") {
-    return { reply: RETRY, organizationId: null, noteOnly: false, skip: false, asked: false, classified: NOTHING };
-  }
+  if (found === "down") return held(RETRY, null);
   const listed = found.organizations ?? (found.organizationId ? [{ id: found.organizationId, name: "" }] : []);
-  if (listed.length === 0) {
-    return { reply: FIXED_UNKNOWN, organizationId: null, noteOnly: false, skip: false, asked: false, classified: NOTHING };
-  }
-  if (!found.authenticated) {
-    return { reply: FIXED_UNKNOWN, organizationId: listed[0]!.id, noteOnly: true, skip: false, asked: false, classified: NOTHING };
-  }
+  if (listed.length === 0) return held(FIXED_UNKNOWN, null);
+  if (!found.authenticated) return held(FIXED_UNKNOWN, listed[0]!.id, true);
   const organizations = listed;
   const threadKey = message.threadId || message.messageId || sender;
   const remembered = deps.remembered ? await deps.remembered(threadKey) : null;
   const choice = chooseOrganization(organizations, `${message.subject}\n${message.text}`, remembered);
-  if ("none" in choice) {
-    return { reply: FIXED_UNKNOWN, organizationId: null, noteOnly: false, skip: false, asked: false, classified: NOTHING };
-  }
+  if ("none" in choice) return held(FIXED_UNKNOWN, null);
   if ("ask" in choice) {
     return {
       reply: "Which client is this about?",
@@ -158,11 +175,89 @@ export async function handleInboundEmail(
       skip: false,
       asked: true,
       classified: NOTHING,
+      file: false,
     };
   }
   const thread = await deps.thread(choice.id, threadKey);
-  const answer = replyFor(thread, [message.subject, message.text].filter(Boolean).join("\n"));
-  return { ...answer, organizationId: choice.id, noteOnly: false, skip: false };
+  const incoming = [message.subject, message.text].filter(Boolean).join("\n");
+  if (thread.replies >= THREAD_REPLY_LIMIT) {
+    const limited = replyFor(thread, incoming);
+    return { ...limited, organizationId: choice.id, noteOnly: false, skip: false, file: false };
+  }
+  if (deps.answer) {
+    try {
+      const turn = await deps.answer(choice.id, organizations);
+      return {
+        reply: turn.reply,
+        organizationId: choice.id,
+        noteOnly: false,
+        skip: false,
+        asked: turn.kind === "new_work" && !turn.goal,
+        classified: noteFromTurn(turn),
+        file: turn.file,
+      };
+    } catch {
+      return { ...held(FOLLOW_UP, choice.id), classified: NOTHING };
+    }
+  }
+  const answer = replyFor(thread, incoming);
+  return {
+    ...answer,
+    organizationId: choice.id,
+    noteOnly: false,
+    skip: false,
+    file: answer.classified.kind === "new_work",
+  };
+}
+
+function noteFromTurn(turn: ClientTurn): ClassifiedNote {
+  if (turn.kind !== "new_work" || !turn.file) return NOTHING;
+  return {
+    kind: "new_work",
+    state: turn.goal && turn.due ? "proposed" : "clarifying",
+    question: turn.goal ? null : turn.reply,
+    goal: turn.goal,
+    due: turn.due,
+  };
+}
+
+const PRICE = /\$\s?\d|\b\d[\d,]*\s*(?:dollars|usd)\b/i;
+const PROMISED_DATE = /\b(?:ship|deliver|delivered|launch|ready)\b[^.?\n]{0,40}\b(?:by|on)\b/i;
+
+/** Pulls the JSON turn out of a model reply. Extra prose around the object is ignored. */
+export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end <= start) throw new Error("no turn");
+  const raw = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
+  const kind = raw.kind;
+  if (kind !== "status" && kind !== "new_work" && kind !== "feedback" && kind !== "other" && kind !== "handoff") {
+    throw new Error("bad kind");
+  }
+  if (typeof raw.reply !== "string" || !raw.reply.trim()) throw new Error("no reply");
+  return {
+    reply: raw.reply.trim(),
+    kind,
+    goal: typeof raw.goal === "string" && raw.goal.trim() ? raw.goal.trim() : null,
+    due: typeof raw.due === "string" && raw.due.trim() ? raw.due.trim() : null,
+  };
+}
+
+/** One client email. A reply that prices, promises a date, or names another client is handed to a person. */
+export async function replyToClient(input: {
+  desk: ClientDesk;
+  incoming: string;
+  model: (desk: ClientDesk, incoming: string) => Promise<Omit<ClientTurn, "file">>;
+}): Promise<ClientTurn> {
+  const turn = await input.model(input.desk, input.incoming);
+  const forbidden = (input.desk.forbiddenNames ?? []).filter(Boolean);
+  const leaked = forbidden.some((name) => input.desk && turn.reply.toLowerCase().includes(name.toLowerCase()));
+  if (PRICE.test(turn.reply) || PROMISED_DATE.test(turn.reply) || leaked) {
+    return { reply: HANDED_OFF, kind: "handoff", goal: null, due: null, file: false };
+  }
+  const kind = turn.kind;
+  const file = kind === "new_work" || kind === "feedback";
+  return { reply: turn.reply, kind, goal: turn.goal, due: turn.due, file };
 }
 
 /** The receipt for a client message, read against the thread so far. Past the limit the message is kept with no reply. */
