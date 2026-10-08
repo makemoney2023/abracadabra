@@ -94,6 +94,15 @@ v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Pa
 
 ## Changelog
 
+### 2026-10-07 — Finished scan files schema into Handoff
+
+- **What changed** — When a scan finishes, the app builds the full schema package (JSON-LD for every fetched page, `llms.txt`, `llms-full.txt`, sitemap, robots) and posts it to Handoff `/api/intake/schema`.
+- **Why** — A checked URL should produce the structured schema for that site.
+- **Code touchpoints** — `src/lib/fixes/full-schema.ts`, `src/lib/fixes/generate-package.ts`, `src/lib/handoff-intake.ts`, `src/inngest/functions/run-scan.ts`, `src/lib/scan/supabase-repository.ts`
+- **Data-flow impact** — `scan/requested` still runs the scan, then a second step posts the package when `HANDOFF_INTAKE_ORIGIN` and `INTAKE_SIGNING_SECRET` are set. Missing intake config skips the post and keeps the scan result.
+- **API / schema impact** — none on the check API. Handoff gains the signed schema intake.
+- **Verification** — `npx vitest run tests/unit/full-schema-package.test.ts tests/unit/fix-package.test.ts tests/unit/handoff-intake.test.ts` in `readiness-check/`.
+
 ### 2026-10-07 — Booking webhook typechecks for production
 
 - **What changed** — A real Cal booking is forwarded to Handoff with a kind of created, rescheduled, or cancelled. Ignored payloads still return before that call.

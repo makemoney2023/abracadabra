@@ -97,6 +97,43 @@ export async function deliverCompletedAssessment(
   return postAssessmentRow(row, now);
 }
 
+export type SchemaIntakeInput = {
+  scanId: string;
+  domain: string;
+  origin: string;
+  businessName?: string | null;
+  files: { path: string; content: string }[];
+};
+
+export function schemaIntakeBody(
+  input: SchemaIntakeInput,
+): { skip: true } | { skip: false; body: IntakeBody } {
+  const scanId = input.scanId.trim();
+  const domain = input.domain.trim();
+  if (!scanId || !domain || input.files.length === 0) return { skip: true };
+  return {
+    skip: false,
+    body: {
+      scan_id: scanId,
+      domain,
+      origin: input.origin,
+      business_name: input.businessName ?? null,
+      files: input.files.map((file) => ({ path: file.path, content: file.content })),
+    },
+  };
+}
+
+export async function deliverSchemaPackage(
+  input: SchemaIntakeInput,
+  now = Date.now(),
+  fetchImpl?: FetchImpl,
+): Promise<{ ok: true; skipped?: boolean }> {
+  const built = schemaIntakeBody(input);
+  if (built.skip) return { ok: true, skipped: true };
+  const { origin, secret } = intakeEnv();
+  return postSignedIntake(origin, secret, "/api/intake/schema", built.body, now, fetchImpl);
+}
+
 async function postAssessmentRow(
   row: AssessmentRow,
   now: number,

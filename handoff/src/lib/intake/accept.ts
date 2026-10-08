@@ -30,7 +30,7 @@ export function intakeQueue(): QueueBinding | undefined {
 /** Check the signature, then the body, then put the message on the queue. */
 export async function acceptIntake(
   request: Request,
-  source: "assessment" | "booking",
+  source: "assessment" | "booking" | "schema",
   ready: (payload: unknown) => boolean,
   now = Date.now(),
 ): Promise<Response> {
@@ -70,6 +70,14 @@ export function assessmentBodyReady(payload: unknown): boolean {
   const email = typeof body.email === "string" ? body.email.trim() : "";
   const domain = typeof body.domain === "string" ? body.domain.trim() : "";
   return id.length > 0 && (email.length > 0 || domain.length > 0);
+}
+
+export function schemaBodyReady(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  const body = payload as Record<string, unknown>;
+  const scanId = typeof body.scan_id === "string" ? body.scan_id.trim() : "";
+  const domain = typeof body.domain === "string" ? body.domain.trim() : "";
+  return scanId.length > 0 && domain.length > 0 && Array.isArray(body.files) && body.files.length > 0;
 }
 
 export function bookingBodyReady(payload: unknown): boolean {

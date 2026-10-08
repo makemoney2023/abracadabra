@@ -1,5 +1,6 @@
 import { normalizeDomain } from "../../db/crm";
 import type { Sql } from "../../db/sql";
+import { fileSchemaPackage } from "../schema-work";
 
 export type ConsumeResult =
   | { ok: true; duplicate: boolean; filled_email?: boolean }
@@ -479,5 +480,6 @@ export async function consumeIntake(
 ): Promise<ConsumeResult> {
   if (message.source === "assessment") return consumeAssessment(sql, message.payload, now);
   if (message.source === "booking") return consumeBooking(sql, message.payload, now);
+  if (message.source === "schema") return fileSchemaPackage(sql, message.payload, now);
   return { ok: false, error: "invalid", retry: false };
 }

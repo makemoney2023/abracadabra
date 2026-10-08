@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — A finished website scan files its schema package as finished work on the matching Space and opens a Work-board task.
+- **Why** — Checking a URL should produce the structured schema, not only a score.
+- **Code touchpoints** — `handoff/src/lib/schema-work.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/intake/accept.ts`, `handoff/src/app/api/intake/schema/route.ts`
+- **Data-flow impact** — `POST /api/intake/schema` queues `{ source: "schema" }`. The consumer matches `organizations.domain`, or creates a client, a Website project, and a Space. It inserts a published `website` deliverable and a `todo` task titled `Schema for {domain}`.
+- **API / schema impact** — new signed intake path. No database migration.
+- **Verification** — `npx vitest run src/lib/schema-work.test.ts src/lib/intake/consume.test.ts src/app/api/intake/schema/route.test.ts` in `handoff/`.
+
+## 2026-10-07
+
 - **What changed** — Deployed the chat and client-channel work. `HQ_CHAT_SECRET` and `CLIENT_CHANNEL_SECRET` are set on `handoff-hq` and `handoff-agent`. `AGENT_WAKE_SECRET` is set on `handoff`, `handoff-hq`, and `handoff-agent`. Email Routing sends `magic@abra-ca-dabra.app` to worker `handoff-agent`. The empty `AGENT_WAKE_SECRET` variable was removed from the agent config so the secret is the value that ships.
 - **Why** — The email handler is deployed, so the routing rule can deliver mail. Chat and wakes need a shared secret that is not in git.
 - **Code touchpoints** — `handoff/wrangler.agent.jsonc`

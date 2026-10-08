@@ -181,10 +181,11 @@ export type ScanDetailRow = {
   public_token: string;
 };
 
-/** Load a scan and related pages/findings by public token (service role). */
-export async function loadScanByPublicToken(
-  token: string,
-  client: ReturnType<typeof createAdminClient> = createAdminClient(),
+/** Load a scan and related pages/findings by id or public token (service role). */
+async function loadScanDetail(
+  column: "id" | "public_token",
+  value: string,
+  client: ReturnType<typeof createAdminClient>,
 ): Promise<{
   scan: ScanDetailRow;
   pages: ScanPageRecord[];
@@ -193,7 +194,7 @@ export async function loadScanByPublicToken(
   const { data: scan, error } = await client
     .from("scans")
     .select("id, domain, origin, status, score_total, score_breakdown, public_token")
-    .eq("public_token", token)
+    .eq(column, value)
     .maybeSingle();
 
   if (error) throw new Error(`loadScanByPublicToken failed: ${error.message}`);
@@ -252,4 +253,18 @@ export async function loadScanByPublicToken(
   );
 
   return { scan: scan as ScanDetailRow, pages, findings };
+}
+
+export function loadScanById(
+  scanId: string,
+  client: ReturnType<typeof createAdminClient> = createAdminClient(),
+) {
+  return loadScanDetail("id", scanId, client);
+}
+
+export function loadScanByPublicToken(
+  token: string,
+  client: ReturnType<typeof createAdminClient> = createAdminClient(),
+) {
+  return loadScanDetail("public_token", token, client);
 }

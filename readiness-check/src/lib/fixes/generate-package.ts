@@ -70,6 +70,8 @@ export type FixSelection = {
   faqPairs?: FaqPair[];
   searchUrlTemplate?: string;
   openingHours?: string[];
+  /** Emit JSON-LD for every fetched page, including pages that already have schema. */
+  allPages?: boolean;
 };
 
 export type FixOption = {
@@ -345,7 +347,10 @@ export function resolveSelection(
 ): FixPackage["selection"] {
   const { defaultSelection } = listFixOptions(input);
   const allowedPages = new Set(
-    [...pagesNeedingSchema(input.pages), ...pagesMissingJsonLd(input.pages)].map((p) => p.url),
+    (selection?.allPages
+      ? input.pages.filter((page) => page.fetchStatus === "ok")
+      : [...pagesNeedingSchema(input.pages), ...pagesMissingJsonLd(input.pages)]
+    ).map((page) => page.url),
   );
 
   const source = selection
@@ -571,12 +576,13 @@ function emitMergedJsonLd(
   pathBase: string,
   files: FixFile[],
   mergeNotes: string[],
+  writeCompleteGraph = false,
 ): void {
   const facts = factsFor(page);
   const merged = mergeDesiredSchema({
     desired,
-    existingTypes: facts.existingTypes,
-    existingBlocks: facts.existingBlocks,
+    existingTypes: writeCompleteGraph ? [] : facts.existingTypes,
+    existingBlocks: writeCompleteGraph ? [] : facts.existingBlocks,
   });
 
   if (!merged.document) {
@@ -746,6 +752,7 @@ export function generateFixPackage(
 ): FixPackage {
   const generatedAt = input.generatedAt ?? new Date();
   const selection = resolveSelection(input, selectionInput);
+  const writeCompleteGraph = selectionInput?.allPages === true;
   const biz = resolveBiz(input, selection);
   const files: FixFile[] = [];
   const mergeNotes: string[] = [];
@@ -819,7 +826,7 @@ export function generateFixPackage(
         hasJsonLd: false,
         evidence: emptyPageFacts(),
       };
-      emitMergedJsonLd(desired, fakePage, "json-ld/faq", files, mergeNotes);
+      emitMergedJsonLd(desired, fakePage, "json-ld/faq", files, mergeNotes, writeCompleteGraph);
     }
   }
 
@@ -836,12 +843,12 @@ export function generateFixPackage(
     if (!page || page.fetchStatus !== "ok") continue;
 
     if (page.pageType === "home") {
-      emitMergedJsonLd(buildHomeDesired(origin, biz), page, "json-ld/home", files, mergeNotes);
+      emitMergedJsonLd(buildHomeDesired(origin, biz), page, "json-ld/home", files, mergeNotes, writeCompleteGraph);
       continue;
     }
 
     const slug = `${page.pageType}-${slugFromUrl(page.url)}`;
-    emitMergedJsonLd(buildPageDesired(input, page, biz), page, `json-ld/pages/${slug}`, files, mergeNotes);
+    emitMergedJsonLd(buildPageDesired(input, page, biz), page, `json-ld/pages/${slug}`, files, mergeNotes, writeCompleteGraph);
   }
 
   const addressed = addressedFromSelection(input, selection);

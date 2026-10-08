@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { assessmentIntakeBody, postSignedIntake } from "@/lib/handoff-intake";
+import { assessmentIntakeBody, deliverSchemaPackage, postSignedIntake } from "@/lib/handoff-intake";
 
 async function signIntakeBody(secret: string, body: string): Promise<string> {
   const key = await crypto.subtle.importKey(
@@ -73,6 +73,34 @@ describe("handoff intake poster", () => {
       domain: "northwind.example",
       total_score: 42,
       report_url: "https://check.example/r/tok-1",
+    });
+  });
+
+  it("posts the schema package to the schema intake path", async () => {
+    process.env.INTAKE_SIGNING_SECRET = SECRET;
+    process.env.HANDOFF_INTAKE_ORIGIN = "https://handoff.example";
+    const calls: Array<{ url: string; init: RequestInit }> = [];
+    const fetchImpl = vi.fn(async (url: string, init: RequestInit) => {
+      calls.push({ url, init });
+      return new Response(JSON.stringify({ ok: true }), { status: 202 });
+    });
+    const result = await deliverSchemaPackage(
+      {
+        scanId: "scan-1",
+        domain: "northwind.example",
+        origin: "https://northwind.example",
+        businessName: "Northwind",
+        files: [{ path: "json-ld/home.jsonld", content: "{}" }],
+      },
+      NOW,
+      fetchImpl,
+    );
+    expect(result).toEqual({ ok: true });
+    expect(calls[0]?.url).toBe("https://handoff.example/api/intake/schema");
+    expect(JSON.parse(String(calls[0]?.init.body))).toMatchObject({
+      scan_id: "scan-1",
+      domain: "northwind.example",
+      business_name: "Northwind",
     });
   });
 

@@ -11,7 +11,7 @@ export type IntakeQueueMessage = {
 function messageShape(body: unknown): { source: string; payload: unknown } | null {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
   const source = "source" in body ? body.source : null;
-  if (source !== "assessment" && source !== "booking") return null;
+  if (source !== "assessment" && source !== "booking" && source !== "schema") return null;
   const payload = "payload" in body ? body.payload : null;
   return { source, payload };
 }
