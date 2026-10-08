@@ -53,6 +53,33 @@ describe("lead swarm", () => {
       "https://swarm.example/api/status?id=run-1",
     ]);
     expect(JSON.parse(calls[2]?.body ?? "{}")).toEqual({ workflowId: "lead-wake-1", input: "Lead: Ada North" });
+    expect(JSON.parse(calls[1]?.body ?? "{}").mcpServers).toBeUndefined();
+  });
+
+  it("attaches only catalog servers to each step of the saved workflow", async () => {
+    const calls: { url: string; body?: string }[] = [];
+    const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
+      const href = String(url);
+      calls.push({ url: href, body: init?.body ? String(init.body) : undefined });
+      if (href.includes("/api/template")) return Response.json(template);
+      if (href.endsWith("/api/save")) return Response.json({ success: true });
+      if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-mcp" });
+      return Response.json({ status: "completed", results: { "mkt-r": { status: "done", output: "Time." } } });
+    };
+    await runLeadSwarm({
+      origin: "https://swarm.example",
+      workflowId: "client-1",
+      brief: "Run the clock.",
+      fetchImpl: fetchImpl as typeof fetch,
+      wait: async () => {},
+      mcpServers: [{ id: "swarm-demo", name: "Swarm demo", url: "https://swarm.example/demo-mcp/mcp" }],
+    });
+    const saved = JSON.parse(calls.find((call) => call.url.endsWith("/api/save"))?.body ?? "{}") as {
+      mcpServers?: unknown;
+      nodes?: { mcpServerIds?: string[] }[];
+    };
+    expect(saved.mcpServers).toEqual([{ id: "swarm-demo", name: "Swarm demo", url: "https://swarm.example/demo-mcp/mcp" }]);
+    expect(saved.nodes?.map((node) => node.mcpServerIds)).toEqual([["swarm-demo"], ["swarm-demo"]]);
   });
 
   it("reads one execution without saving or starting another", async () => {

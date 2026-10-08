@@ -478,6 +478,48 @@ describe("runHqTool", () => {
     );
     expect(rejected).toMatchObject({ ok: false, error: "invalid" });
   });
+
+  it("stores a catalog server from the chat tool and refuses any other address", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const group = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_workflow_group", input: { organizationId, name: "Launch swarm" }, idempotencyKey: "group-mcp" },
+      NOW,
+    );
+    const groupId = String((valueOf(group) as { id?: string } | undefined)?.id ?? "");
+    const saved = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_workflow",
+        input: {
+          organizationId,
+          groupId,
+          name: "Clock",
+          templateId: "pack-schema-readiness",
+          mcpServerIds: ["swarm-demo"],
+        },
+        idempotencyKey: "wf-mcp",
+      },
+      NOW,
+    );
+    const workflowId = String((valueOf(saved) as { id?: string } | undefined)?.id ?? "");
+    const row = await sql.get<{ mcp_server_ids: string }>("SELECT mcp_server_ids FROM client_workflows WHERE id = ?", [workflowId]);
+    expect(row?.mcp_server_ids).toBe(JSON.stringify(["swarm-demo"]));
+    const rejected = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_workflow",
+        input: { organizationId, groupId, name: "Elsewhere", templateId: "pack-schema-readiness", mcpServerIds: ["https://evil.example/mcp"] },
+        idempotencyKey: "wf-evil",
+      },
+      NOW,
+    );
+    expect(rejected).toMatchObject({ ok: false, error: "invalid" });
+  });
 });
 
 async function client(sql: Sql): Promise<string> {

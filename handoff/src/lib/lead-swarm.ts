@@ -7,6 +7,8 @@ export type SwarmTemplate = {
   edges: { id: string; source: string; target: string }[];
 };
 
+export type SwarmMcpServer = { id: string; name: string; url: string };
+
 export type LeadFacts = {
   name: string;
   website?: string | null;
@@ -51,6 +53,7 @@ export async function runLeadSwarm(input: {
   workflowId: string;
   brief: string;
   templateId?: string;
+  mcpServers?: SwarmMcpServer[];
   fetchImpl?: typeof fetch;
   polls?: number;
   wait?: (ms: number) => Promise<void>;
@@ -64,7 +67,18 @@ export async function runLeadSwarm(input: {
   if (!Array.isArray(template.nodes) || template.nodes.length === 0) {
     throw new Error("The swarm template is empty.");
   }
-  const workflow = { ...template, id: input.workflowId, createdAt: Date.now() };
+  const servers = input.mcpServers ?? [];
+  const workflow = {
+    ...template,
+    id: input.workflowId,
+    createdAt: Date.now(),
+    ...(servers.length > 0
+      ? {
+          mcpServers: servers,
+          nodes: template.nodes.map((node) => ({ ...node, mcpServerIds: servers.map((server) => server.id) })),
+        }
+      : {}),
+  };
   const saved = await fetchImpl(`${base}/api/save`, {
     method: "POST",
     headers: { "content-type": "application/json" },

@@ -1,4 +1,5 @@
 import type { Sql } from "../db/sql";
+import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { runLeadSwarm } from "./lead-swarm";
 
 export type WorkflowGroup = {
@@ -19,6 +20,7 @@ export type ClientWorkflow = {
   taskId: string | null;
   nextRunAt: number | null;
   everyMs: number | null;
+  mcpServerIds: string[];
   groupName: string;
 };
 
@@ -76,6 +78,17 @@ export function workflowTaskPlan(template: unknown): WorkflowTaskPlan | null {
   return { steps, edges, current: 0 };
 }
 
+function storedMcpIds(value: string | null): string[] | null {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed) || parsed.some((id) => typeof id !== "string")) return null;
+    return allowedMcpIds(parsed);
+  } catch {
+    return null;
+  }
+}
+
 async function projectInOrg(sql: Sql, organizationId: string, projectId: string): Promise<boolean> {
   const row = await sql.get<{ id: string }>(
     "SELECT id FROM projects WHERE id = ? AND organization_id = ?",
@@ -113,6 +126,7 @@ export async function createClientWorkflow(
     plan?: WorkflowTaskPlan | null;
     dueAt?: number | null;
     everyMs?: number | null;
+    mcpServerIds?: string[] | null;
     now: number;
   },
 ): Promise<{ ok: true; workflow: { id: string; projectId: string | null; taskId: string | null } } | { ok: false; error: "invalid" | "missing" }> {
@@ -121,6 +135,8 @@ export async function createClientWorkflow(
   if (!name || !templateId) return { ok: false, error: "invalid" };
   const schedule = scheduleOf(input);
   if (!schedule.ok) return { ok: false, error: "invalid" };
+  const mcpServerIds = allowedMcpIds(input.mcpServerIds ?? []);
+  if (!mcpServerIds) return { ok: false, error: "invalid" };
   const group = await sql.get<{ id: string; organization_id: string }>(
     "SELECT id, organization_id FROM workflow_groups WHERE id = ?",
     [input.groupId],
@@ -132,8 +148,8 @@ export async function createClientWorkflow(
   await sql.run(
     `INSERT INTO client_workflows (
        id, group_id, organization_id, project_id, name, template_id, last_execution_id, last_status, created_at, updated_at,
-       next_run_at, every_ms, scheduled_at
-     ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?)`,
+       next_run_at, every_ms, scheduled_at, mcp_server_ids
+     ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       input.groupId,
@@ -146,6 +162,7 @@ export async function createClientWorkflow(
       schedule.nextRunAt,
       schedule.everyMs,
       schedule.scheduledAt,
+      mcpServerIds.length > 0 ? JSON.stringify(mcpServerIds) : null,
     ],
   );
   const taskId = input.plan && input.plan.steps.length > 0 ? crypto.randomUUID() : null;
@@ -196,10 +213,11 @@ export async function listClientWorkflows(sql: Sql, organizationId: string, proj
     task_id: string | null;
     next_run_at: number | null;
     every_ms: number | null;
+    mcp_server_ids: string | null;
     group_name: string;
   }>(
     `SELECT w.id, w.group_id, w.organization_id, w.project_id, g.project_id AS group_project_id,
-            w.name, w.template_id, w.task_id, w.next_run_at, w.every_ms, g.name AS group_name
+            w.name, w.template_id, w.task_id, w.next_run_at, w.every_ms, w.mcp_server_ids, g.name AS group_name
      FROM client_workflows w
      JOIN workflow_groups g ON g.id = w.group_id
      WHERE w.organization_id = ?
@@ -218,6 +236,7 @@ export async function listClientWorkflows(sql: Sql, organizationId: string, proj
     taskId: row.task_id,
     nextRunAt: row.next_run_at,
     everyMs: row.every_ms,
+    mcpServerIds: storedMcpIds(row.mcp_server_ids) ?? [],
     groupName: row.group_name,
   }));
 }
@@ -234,17 +253,21 @@ export async function runClientWorkflow(input: {
 }): Promise<{ ok: true; executionId: string; status: string; output: string } | { ok: false; error: "missing" | "invalid" }> {
   const brief = input.brief.trim();
   if (!brief || !input.origin.trim()) return { ok: false, error: "invalid" };
-  const workflow = await input.sql.get<{ id: string; name: string; template_id: string }>(
-    "SELECT id, name, template_id FROM client_workflows WHERE id = ?",
+  const workflow = await input.sql.get<{ id: string; name: string; template_id: string; mcp_server_ids: string | null }>(
+    "SELECT id, name, template_id, mcp_server_ids FROM client_workflows WHERE id = ?",
     [input.workflowId],
   );
   if (!workflow) return { ok: false, error: "missing" };
+  const mcpServerIds = storedMcpIds(workflow.mcp_server_ids);
+  const mcpServers = mcpServerIds ? mcpServersFor(mcpServerIds, input.origin) : null;
+  if (!mcpServers) return { ok: false, error: "invalid" };
   try {
     const result = await runLeadSwarm({
       origin: input.origin,
       workflowId: `client-${workflow.id}`,
       brief,
       templateId: workflow.template_id,
+      mcpServers,
       fetchImpl: input.fetchImpl,
       wait: input.wait,
     });

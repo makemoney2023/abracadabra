@@ -15,6 +15,7 @@ const STEPS = [
   { file: "0012_client_workflows.sql", table: "workflow_groups" },
   { file: "0013_workflow_task.sql", column: { table: "client_workflows", name: "task_id" } },
   { file: "0014_workflow_schedule.sql", column: { table: "client_workflows", name: "next_run_at" } },
+  { file: "0015_mcp_catalog.sql", column: { table: "client_workflows", name: "mcp_server_ids" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];

@@ -151,7 +151,7 @@ A skill names connector tools in its file. The agent calls one only when that na
 | `context_changed` | `handoff` after `readSpaceFiles` finishes a batch, or staff edit the website field | Re-read, new brief version if material changed. |
 | `brief_approved` | dashboard after client or staff approval | Section 6: plan tasks from the brief. |
 | `work` | cron, every 15 minutes, for orgs with tasks not `done` whose `due_at` is empty or already past | Section 7: advance each task one step. A future `due_at` waits. A task tied to a scheduled workflow is left to `due`. |
-| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived | Run that workflow on the swarm. A repeat moves `next_run_at` forward. A one-shot clears it. |
+| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived | Run that workflow on the swarm. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. |
 | `changes_requested` | dashboard after feedback with decision `changes` | Section 10: revision round. |
 | `brief_changed` | dashboard after a brief addendum or revision is approved (section 17.4) | Re-plan from the new brief version: new pieces get tasks, changed pieces reset, removed pieces block. |
 | `run_check` | cron, hourly | Poll `bc-` runs past deadline. |
@@ -523,7 +523,7 @@ Approval (`approve` on every item → `approved`) ends the loop. If a `run`-stag
 
 ## 11. Many clients
 
-- Cron on `handoff` (`triggers.crons: ["*/15 * * * *", "0 * * * *", "0 8 * * 1"]`, mapped by `event.cron`) runs `wakeDueAgents(env)`: selects organizations with `archived_at IS NULL AND agent_paused_at IS NULL` and either an open task whose `due_at` is empty or already past, a workflow whose `next_run_at` has arrived, unanswered `context_changed` flags, or a due weekly status, and POSTs `/wake` to `handoff-agent` per organization with `AGENT_WAKE_SECRET`. A future task waits. A workflow with `scheduled_at` set is not also run as a skill step. One HTTP call per client; failures are logged as `activities actor_kind='system' kind='agent.wake_failed'` and retried next cycle.
+- Cron on `handoff` (`triggers.crons: ["*/15 * * * *", "0 * * * *", "0 8 * * 1"]`, mapped by `event.cron`) runs `wakeDueAgents(env)`: selects organizations with `archived_at IS NULL AND agent_paused_at IS NULL` and either an open task whose `due_at` is empty or already past, a workflow whose `next_run_at` has arrived, unanswered `context_changed` flags, or a due weekly status, and POSTs `/wake` to `handoff-agent` per organization with `AGENT_WAKE_SECRET`. A future task waits. A workflow with `scheduled_at` set is not also run as a skill step. A workflow step calls only servers named from the catalog. One HTTP call per client; failures are logged as `activities actor_kind='system' kind='agent.wake_failed'` and retried next cycle.
 - One Durable Object per organization. Client A's wake cannot slow client B's.
 - The global cap is enforced in `updateTask` (7.3 step 5) because it needs the cross-client count. Per-client instances do not see each other.
 - `expireCloudRuns` and `wakeDueAgents` run in the same `scheduled` handler, dashboard side.

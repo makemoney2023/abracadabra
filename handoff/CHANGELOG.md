@@ -2,6 +2,15 @@
 
 ## 2026-10-08
 
+- **What changed** — A workflow can name catalog servers. Each swarm step receives only those servers. Any other address is refused.
+- **Why** — A workflow step needed a third-party tool, and a free URL from chat would let a step call an unreviewed server.
+- **Code touchpoints** — `handoff/src/lib/mcp-catalog.ts`, `handoff/migrations/0015_mcp_catalog.sql`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/hq-tools.ts`
+- **Data-flow impact** — `create_workflow` stores catalog ids. A run resolves them on the swarm origin and sets `mcpServerIds` on every step before the swarm saves the workflow.
+- **API / schema impact** — `client_workflows` gains `mcp_server_ids`. `create_workflow` accepts `mcpServerIds`. The catalog is `swarm-demo` at `/demo-mcp/mcp` on the swarm.
+- **Verification** — `npx vitest run src/lib/mcp-catalog.test.ts src/lib/lead-swarm.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/db/migrate.test.ts` (34 passed). `npx tsc --noEmit` passed.
+
+## 2026-10-08
+
 - **What changed** — A task with a future due time waits. A workflow with a due time wakes on the existing 15-minute cron and runs on the swarm. A repeat moves forward. A one-shot clears. A swarm that does not start keeps the due time for the next cycle.
 - **Why** — The cron woke every client with an open task and never looked at a schedule, so a workflow could not run later.
 - **Code touchpoints** — `handoff/migrations/0014_workflow_schedule.sql`, `handoff/src/lib/agent-wake.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/mcp.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/agent/worker.ts`

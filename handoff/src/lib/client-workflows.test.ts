@@ -226,6 +226,76 @@ describe("client workflows", () => {
     expect(tooSoon).toEqual({ ok: false, error: "invalid" });
   });
 
+  it("stores catalog servers on a workflow and refuses any other address", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Clock",
+      templateId: "pack-schema-readiness",
+      mcpServerIds: ["swarm-demo"],
+      now: NOW,
+    });
+    expect(created.ok).toBe(true);
+    const row = await sql.get<{ mcp_server_ids: string }>("SELECT mcp_server_ids FROM client_workflows");
+    expect(row?.mcp_server_ids).toBe(JSON.stringify(["swarm-demo"]));
+    const refused = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Elsewhere",
+      templateId: "pack-schema-readiness",
+      mcpServerIds: ["https://evil.example/mcp"],
+      now: NOW,
+    });
+    expect(refused).toEqual({ ok: false, error: "invalid" });
+  });
+
+  it("sends the catalog server when that workflow runs", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Clock",
+      templateId: "pack-schema-readiness",
+      mcpServerIds: ["swarm-demo"],
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    let saved = "";
+    await runClientWorkflow({
+      sql,
+      workflowId: created.workflow.id,
+      brief: "What time is it?",
+      origin: "https://swarm.example",
+      now: NOW,
+      wait: async () => {},
+      fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+        const href = String(url);
+        if (href.includes("/api/template")) {
+          return Response.json({
+            id: "pack-schema-readiness",
+            name: "Schema",
+            nodes: [{ id: "n1", type: "researcher", name: "Reader", instructions: "Read.", position: { x: 0, y: 0 } }],
+            edges: [],
+          });
+        }
+        if (href.endsWith("/api/save")) {
+          saved = String(init?.body ?? "");
+          return Response.json({ success: true });
+        }
+        if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-mcp" });
+        return Response.json({ status: "completed", results: { n1: { status: "done", output: "Noon." } } });
+      }) as typeof fetch,
+    });
+    const body = JSON.parse(saved) as { mcpServers?: { url: string }[]; nodes?: { mcpServerIds?: string[] }[] };
+    expect(body.mcpServers).toEqual([{ id: "swarm-demo", name: "Swarm demo", url: "https://swarm.example/demo-mcp/mcp" }]);
+    expect(body.nodes?.[0]?.mcpServerIds).toEqual(["swarm-demo"]);
+  });
+
   it("runs the oldest due workflow and moves a repeating schedule forward", async () => {
     const sql = await database();
     const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
