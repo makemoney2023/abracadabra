@@ -193,6 +193,112 @@ export async function listOrganizations(sql: Sql, caller: Caller): Promise<Organ
   );
 }
 
+export type StoredAssessment = {
+  id: string;
+  totalScore: number | null;
+  completedAt: number;
+  reportUrl: string | null;
+  scores: Record<string, unknown>;
+  answers: Record<string, unknown>;
+};
+
+export type AssessmentView = {
+  total: string;
+  lines: string[];
+  answers: { key: string; value: string }[];
+  reportUrl: string | null;
+};
+
+function jsonObject(raw: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function scoreNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function scoreRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function answerText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => answerText(item))
+      .filter((item) => item.length > 0)
+      .join(", ");
+  }
+  return "";
+}
+
+export function presentAssessment(row: StoredAssessment): AssessmentView {
+  const overall = scoreRecord(row.scores.overall);
+  const readiness = scoreRecord(row.scores.readiness);
+  const growth = scoreRecord(row.scores.growth);
+  const visibility = scoreRecord(row.scores.visibility);
+  const total = scoreNumber(overall.total) ?? row.totalScore;
+  const band = typeof overall.band === "string" ? overall.band : null;
+  const lines: string[] = [];
+  const readinessTotal = scoreNumber(readiness.total);
+  if (readinessTotal != null) lines.push(`Readiness ${readinessTotal}.`);
+  for (const key of ["data", "process", "people", "decision"] as const) {
+    const value = scoreNumber(readiness[key]);
+    if (value != null) lines.push(`${key.slice(0, 1).toUpperCase()}${key.slice(1)} ${value}.`);
+  }
+  const growthTotal = scoreNumber(growth.total);
+  if (growthTotal != null) lines.push(`Growth ${growthTotal}.`);
+  const visibilityTotal = scoreNumber(visibility.total);
+  if (visibilityTotal != null) lines.push(`Visibility ${visibilityTotal}.`);
+  return {
+    total: total == null ? "No overall score." : band ? `Overall ${band} (${total}/100).` : `Overall score ${total}.`,
+    lines,
+    answers: Object.entries(row.answers).flatMap(([key, value]) => {
+      const text = answerText(value);
+      return text ? [{ key, value: text }] : [];
+    }),
+    reportUrl: row.reportUrl,
+  };
+}
+
+export async function latestAssessment(
+  sql: Sql,
+  caller: Caller,
+  organizationId: string,
+): Promise<StoredAssessment | null> {
+  if (!staffUserId(caller)) return null;
+  const row = await sql.get<{
+    id: string;
+    total_score: number | null;
+    completed_at: number;
+    report_url: string | null;
+    scores_json: string;
+    answers_json: string;
+  }>(
+    `SELECT id, total_score, completed_at, report_url, scores_json, answers_json
+     FROM assessments WHERE organization_id = ?
+     ORDER BY completed_at DESC LIMIT 1`,
+    [organizationId],
+  );
+  if (!row) return null;
+  return {
+    id: row.id,
+    totalScore: row.total_score,
+    completedAt: row.completed_at,
+    reportUrl: row.report_url,
+    scores: jsonObject(row.scores_json),
+    answers: jsonObject(row.answers_json),
+  };
+}
+
 export async function organizationById(
   sql: Sql,
   caller: Caller,
@@ -920,10 +1026,14 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
        LEFT JOIN staff s ON s.user_id = t.assignee_user_id
        WHERE o.archived_at IS NULL
          AND t.status != 'done'
-         AND t.due_at IS NOT NULL
-         AND t.due_at <= ?
-       ORDER BY CASE WHEN t.assignee_user_id = ? THEN 0 ELSE 1 END, t.due_at, t.title`,
-      [weekEnd, actorId],
+         AND (
+           (t.due_at IS NOT NULL AND t.due_at <= ?)
+           OR (t.due_at IS NULL AND t.created_at >= ? AND t.created_at <= ?)
+         )
+       ORDER BY CASE WHEN t.assignee_user_id = ? THEN 0 ELSE 1 END,
+                CASE WHEN t.due_at IS NULL THEN 1 ELSE 0 END,
+                t.due_at, t.title`,
+      [weekEnd, now - WEEK_MS, now, actorId],
     ),
     sql.all<{
       id: string;

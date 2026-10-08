@@ -4,6 +4,7 @@ import {
   classifyClientNote,
   emailAuthenticated,
   handleInboundEmail,
+  parseClientTurn,
   parseInboundEmail,
   replyMime,
   replyToClient,
@@ -219,6 +220,30 @@ describe("mailbox reply", () => {
       expect(turn.file).toBe(false);
       expect(turn.reply).toBe("A person on the team will pick this up.");
     }
+  });
+
+  it("keeps the task titles and the brief sentence, and drops them when the reply is handed off", async () => {
+    const parsed = parseClientTurn(
+      'Sure. {"reply":"I can add that.","kind":"new_work","goal":"help buyers compare","due":null,"actions":[{"title":"Write the pricing page"}],"brief":"Add a pricing page."}',
+    );
+    expect(parsed.actions).toEqual([{ title: "Write the pricing page", assignee: null, due: null, skill: null }]);
+    expect(parsed.brief).toBe("Add a pricing page.");
+    const kept = await replyToClient({
+      desk,
+      incoming: "Please add a pricing page.",
+      model: async () => parsed,
+    });
+    expect(kept.actions).toEqual([{ title: "Write the pricing page", assignee: null, due: null, skill: null }]);
+    expect(kept.brief).toBe("Add a pricing page.");
+    expect(kept.file).toBe(true);
+    const dropped = await replyToClient({
+      desk,
+      incoming: "Please add a pricing page.",
+      model: async () => ({ ...parsed, reply: "That will be $500." }),
+    });
+    expect(dropped.kind).toBe("handoff");
+    expect(dropped.actions).toEqual([]);
+    expect(dropped.brief).toBeNull();
   });
 
   it("does not call the model until the sender and the client are known", async () => {

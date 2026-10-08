@@ -287,6 +287,7 @@ type ClientPicture = {
     website?: string | null;
     industry?: string | null;
     notes?: string | null;
+    rules?: string[];
     agentPausedAt?: number | null;
   };
   assessment?: { answerSummary?: string | null } | null;
@@ -459,6 +460,9 @@ function briefMarkdown(
     ...(constraints ? [] : ["- No tone, legal, or platform constraint was found."]),
     ...(buyers.startsWith("The files do not") ? ["- Who buys is still unknown."] : []),
     "",
+    ...(picture.organization?.rules?.length
+      ? ["## Rules", ...picture.organization.rules.map((rule) => `- ${rule}`), "Keep every rule above.", ""]
+      : []),
     "## Acceptance checks",
     ...pieces.map((piece) => `- ${piece.kind}: the result matches "${piece.outcome}" and follows the named skills.`),
     "",

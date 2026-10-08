@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { rulesFromBrief } from "@/lib/channel-plan";
 
 type ScoreBucket = { total?: unknown; band?: unknown };
 
@@ -202,6 +203,8 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
      ORDER BY answered_at DESC LIMIT 20`,
     [organizationId],
   );
+  const currentBrief = await getBrief(sql, organizationId, "brief");
+  const briefBody = currentBrief?.body;
   let scores: unknown = null;
   if (assessment) {
     try {
@@ -218,6 +221,7 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
       website: organization.website,
       industry: organization.industry,
       notes: organization.notes,
+      rules: rulesFromBrief(typeof briefBody === "string" ? briefBody : ""),
       briefApproval: organization.brief_approval,
       autoPublishBuilt: organization.auto_publish_built === 1,
       agentPausedAt: organization.agent_paused_at,

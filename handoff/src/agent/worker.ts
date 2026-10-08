@@ -19,6 +19,7 @@ import {
   type ClientDesk,
   type ThreadState,
 } from "../lib/client-channel";
+import { MAILBOX_INSTRUCTIONS } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
 import { skillObjectKey } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
@@ -365,8 +366,7 @@ async function mailboxTurn(env: AgentBindings, desk: ClientDesk, incoming: strin
     messages: [
       {
         role: "system",
-        content:
-          "You write one short email as Magic at Abracadabra. Use only the desk. Do not quote a price or promise a date. Ask one question when new work has no goal or due. Return JSON only: {\"reply\":\"\",\"kind\":\"status|new_work|feedback|other|handoff\",\"goal\":null,\"due\":null}.",
+        content: MAILBOX_INSTRUCTIONS,
       },
       {
         role: "user",
@@ -382,7 +382,17 @@ const worker = {
   async fetch(request: Request, env: AgentBindings, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/channels/slack" && request.method === "POST") {
-      return handleSlackEvent(request, env, Date.now(), fetch, (work) => ctx?.waitUntil(work));
+      return handleSlackEvent(request, env, Date.now(), fetch, (work) => ctx?.waitUntil(work), async ({ organizationId, text, threadId }) => {
+        const body = (await hqChannel(env, { action: "desk_context", organizationId, threadId })) as {
+          value?: ClientDesk;
+        } | null;
+        if (!body?.value) throw new Error("desk unavailable");
+        return replyToClient({
+          desk: body.value,
+          incoming: text,
+          model: (nextDesk, incoming) => mailboxTurn(env, nextDesk, incoming),
+        });
+      });
     }
     if (url.pathname === "/wake" && request.method === "POST") {
       const raw = await request.text();
@@ -483,6 +493,9 @@ const worker = {
       dueText: reply.classified.due,
       asked: reply.asked,
       replyBody: replyText,
+      actions: reply.plan.actions,
+      brief: reply.plan.brief,
+      rules: reply.plan.rules,
     });
     if (!replyText) return;
     const { EmailMessage } = await import("cloudflare:email");

@@ -185,6 +185,8 @@ function buildBrief(input: {
     `## Brief`,
     input.brief.trim() || input.title,
     ``,
+    `Keep every line under ## Rules. Do not drop those rules.`,
+    ``,
     `## Design system`,
     input.design.trim(),
     ``,

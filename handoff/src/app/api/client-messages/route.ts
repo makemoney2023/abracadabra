@@ -12,6 +12,7 @@ import {
 } from "@/db/conversations";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
+import { applyChannelPlan, normalizeChannelPlan } from "@/lib/channel-plan";
 import { bytesFromBase64 } from "@/lib/client-channel";
 import { lookupEmailSender } from "@/lib/client-channel-store";
 import { storeEmailAttachments } from "@/lib/email-files";
@@ -145,7 +146,9 @@ export async function POST(request: Request) {
       },
       now,
     );
-    return NextResponse.json({ ok: true, value: { id } });
+    const plan = normalizeChannelPlan({ actions: body.actions, brief: text(body, "brief"), rules: text(body, "rules") });
+    const filed = await applyChannelPlan(sql, { organizationId, ...plan }, now);
+    return NextResponse.json({ ok: true, value: { id, taskIds: filed.taskIds, briefUpdated: filed.briefUpdated } });
   }
   return NextResponse.json({ ok: false, error: "unknown" }, { status: 400 });
 }

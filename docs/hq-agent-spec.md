@@ -655,7 +655,7 @@ Steps 24–31 come from the review of 17–23. Do 24–27 before client email or
 24. **Client brief approval wakes the agent** — today nothing wakes the agent when a client approves a brief in their space, for the first brief or an addendum. With `brief_approval='client'` (the default), added work is never planned. When `recordFeedback` approves a `brief` deliverable, send `brief_approved` if no brief piece has a task yet, otherwise `brief_changed`. Add `brief_approved` to `WakeReason`. A staff approval on the brief's page does the same. Tests: client approval of the first brief sends `brief_approved` once; approval of a later version sends `brief_changed`; a comment or a changes request sends nothing; a paused client is not woken.
 25. **Conversations tab** — `/clients/[id]` lists threads from `work_requests` and the `client.message` and `agent.reply` activities, newest first, with the request state. Staff reply as themselves on the same channel: email through `sendEmail` with `EMAIL_REPLY_SECRET` and `References` set to the thread, Slack through `chat.postMessage` with `thread_ts`. A declined request sends its `decline_reason` to the thread. Tests: a thread lists its messages in order; a staff reply is marked as staff and lands on the right channel and thread; a decline sends the reason once.
 26. **Needs you: client requests** — Today → Needs you shows `proposed` requests with Approve (asks for the piece type and outcome) and Decline (asks for a reason), using the same `decide_work_request` function as chat. Tests: a proposed request appears and leaves once decided; the page and chat write the same activity.
-27. **Chat side panel** — the panel from 17.2 on `/clients/[id]`, `/projects/[id]`, and `/work`, sending `{ organizationId?, projectId?, taskId? }` in `body`. The model sees it as one system line; tools still check access. Tests: "add a note here" writes to the page's client; a page id the staff member cannot see is refused.
+27. **Chat drawer** — the panel from 17.2 is the `/chat` page, and a drawer on `/clients/[id]` sending `{ organizationId }`. Work and project pages do not mount it. The model sees the client id as one system line; tools still check access. Tests: "add a note here" writes to that client; a client the staff member cannot see is refused.
 28. **Email go-live** — in order:
     1. Send a real message to the zone and confirm Cloudflare's `Authentication-Results` format, then pin it as a fixture test.
     2. Confirm `handoff-agent` can reach `GET /api/hq-chat/whoami` and `POST /api/client-messages` on the HQ host. If Access protects HQ, give the agent a service token.
@@ -694,7 +694,7 @@ Both use `AIChatAgent` from `@cloudflare/ai-chat` on `handoff-agent`. It saves m
 - **Agent class:** `HqChat extends AIChatAgent`, bound as `HQ_CHAT` on `handoff-agent`, one instance per staff member named by `staff.user_id`. A thread is not tied to one client, so "add a client called Pine Co" works before Pine Co exists.
 - **Surfaces:**
   - `/chat` on HQ, sidebar item "Chat".
-  - A side panel on `/clients/[id]`, `/projects/[id]`, and `/work`. The panel sends `{ organizationId?, projectId?, taskId? }` in the `body` option of `useAgentChat`, so "add a note here" resolves. The model sees the page context as one system line; it is not trusted as authority. Tools still check access.
+  - A drawer on `/clients/[id]`, opened from Chat. It sends `{ organizationId }` so "here" is that client. Work and project pages do not mount the thread. The model sees the page context as one system line; it is not trusted as authority. Tools still check access.
   - Built with the shadcn components in `handoff/src/components/ui`.
 - **Sign-in:** `GET /api/hq-chat/token` on `handoff-hq` requires a staff session and returns a token `{ userId, exp }` signed with `HQ_CHAT_SECRET` (HMAC-SHA256, 10-minute life). The page connects with `useAgent({ host: <agent host>, agent: "hq-chat", name: userId, query: { token } })`. `HqChat.onConnect` verifies the signature, the expiry, and that `userId` equals the instance name, then closes the socket otherwise. The page refreshes the token before it expires.
 - **Tool calls:** every tool `execute` posts `{ tool, input, idempotencyKey }` to `POST https://hq.abra-ca-dabra.app/api/hq-tools` with the same token as bearer.
@@ -707,15 +707,18 @@ Both use `AIChatAgent` from `@cloudflare/ai-chat` on `handoff-agent`. It saves m
 
 | Group | Tools | Calls | Approval |
 |---|---|---|---|
-| Look up | `search_clients`, `client_summary`, `list_tasks`, `list_deliverables`, `open_questions`, `recent_activity`, `get_brief` | `crm.ts` reads, `todayFor` pieces, `get_brief` | none |
+| Look up | `search_clients`, `client_summary`, `list_deals`, `list_tasks`, `list_deliverables`, `open_questions`, `recent_activity`, `get_brief` | `crm.ts` reads, `todayFor` pieces, `get_brief` | none |
 | Skills | `search_skills`, `read_skill` | R2 `handoff-skills` on the agent worker (`skills/index.json`, then one `SKILL.md`) | none. These do not call `/api/hq-tools`. |
-| CRM | `create_client`, `add_contact`, `add_note`, `log_call`, `create_task`, `complete_task`, `move_deal` | `createOrganization`, contacts, `addNote`, `logCall`, task and deal functions | none; the tool result shows the record written with a link |
+| CRM | `create_client`, `add_contact`, `add_note`, `log_call`, `create_task`, `file_actions`, `complete_task`, `move_deal`, `set_deal_step`, `draft_client_status` | `createOrganization`, contacts, `addNote`, `logCall`, task and deal functions, `applyChannelPlan`, a draft client status | none; the tool result shows the record written with a link |
 | Projects | `create_project`, `create_milestone`, `post_internal_status` | project functions, `audience='internal'` | none |
 | Client-visible or hard to undo | `publish_deliverable`, `publish_client_status`, `invite_person`, `merge_clients`, `set_task_stage` | the matching functions | `needsApproval: true` |
 | Direct the agent | `add_work`, `revise_brief`, `instruct_task`, `answer_question`, `pause_client`, `resume_client` | sections 17.4, 9.3, `agent_paused_at` | `needsApproval: true` |
 | Client requests | `list_work_requests`, `decide_work_request` | 17.5 | approve or decline needs approval |
 
-- `add_note` with `as_instruction: true` writes `kind='staff.instruction'`, so the client agent reads it as `staffNotes` (9.3). Plain notes stay `kind='note'`.
+- Turning a lead into a client is `list_deals`, then `move_deal` with stage `won`. If more than one deal is still open, chat asks which one first. Won opens a project and a space. `draft_client_status` then writes a status the client does not see until staff publish it. The model must not answer that it cannot, and must not stop at `add_note`.
+- `set_deal_step` sets the deal's next step and its day.
+- `file_actions` writes one open task per line of `title`, shaped `Title | person | YYYY-MM-DD | .cursor/skills/path`. `body` is the brief sentence. `rules` are standing limits stored under `## Rules`. A person is a staff email or the name before the `@`. Those tasks show on Today, including a new task with no due date from the last week. A lead with no brief keeps the sentence as `agent.brief_change`. Later build briefs copy the brief and tell the worker to keep every rule.
+- `add_note` with `as_instruction: true` writes `kind='staff.instruction'`, so the client agent reads it as `staffNotes` (9.3). Plain notes stay `kind='note'`. A note is for a fact that is not a task, a deal move, or a brief change.
 - `set_task_stage` to `build` goes through the gate in 7.3 and can return its blocked reason.
 - The approval card shows the tool, the client, and every input field. Rejecting writes nothing.
 
@@ -824,7 +827,7 @@ CREATE TABLE slack_channel_links (
   - The channel checks Slack's signature and replay window on the raw body. `team_id` and `channel` come from the verified body.
   - An unlinked channel gets no reply and one `agent.note` for staff the first time.
 - **Speed:** Slack retries if it gets no 2xx within 3 seconds. The handler returns 200 at once, posts the receipt with `chat.postMessage` in the thread, and runs the model with `ctx.waitUntil`. Slack retries carrying `X-Slack-Retry-Num` are acknowledged and dropped.
-- **Who is writing:** anyone in a linked channel speaks for that client. Messages from our own staff in the channel are logged and not answered by the agent. When step 34 has shipped, a client message in a linked channel uses `replyToClient` instead of the fixed receipt. Staff messages stay logged and unanswered.
+- **Who is writing:** anyone in a linked channel speaks for that client. Messages from our own staff in the channel are logged and not answered by the agent. A client message in a linked channel uses `replyToClient` and files the tasks and brief sentence from that turn. Staff messages stay logged and unanswered.
 
 ### 17.8 Mailbox chat
 
@@ -834,10 +837,10 @@ The fixed receipt is the reply only until step 34. After that, a known client ge
 - **What a good reply does.** It names the published work they already have. A status question is answered from the published brief and the latest client-facing status. New work with no goal or no date gets one question. New work is stored as a `proposed` or `clarifying` `work_request` for staff to approve on Today. Feedback on a published item is stored as feedback. Anything else is a note for staff. If the desk cannot answer, the reply is `A person on the team will pick this up.`
 - **What it does not do.** It does not quote a price, promise a ship date, publish, invite, change a stage, send an invoice, or start a build. Those stay on staff chat.
 - **Gates, before the model.** Unchanged from 17.6. An unknown or unauthenticated sender gets `FIXED_UNKNOWN` and no client data, and the model is not called. Several clients get `Which client is this about?` before the model, and the answer is remembered on the thread. Mail from this mailbox, bulk mail, and `Auto-Submitted` other than `no` are ignored. Over 25 MB is refused. The tenth reply in an hour is the person sentence, and the model is not called. Attachments are stored as in 17.6 and are not put in the prompt until `clean`.
-- **Context.** The worker loads step 32's desk and puts it in the prompt. The model does not call HQ and does not receive staff tools. It returns `{ reply, kind, goal, due }`. The worker files a `work_request` or a note. A reply that contains a price, a promised date, or a name that is not this client is discarded. The client gets the person sentence, and nothing is filed.
+- **Context.** The worker loads step 32's desk and puts it in the prompt. The model does not call HQ and does not receive staff tools. It returns `{ reply, kind, goal, due, actions, brief }`. `actions` is one task title per next step. `brief` is one sentence, or null. The worker files a `work_request` or a note, writes each action as an open task, and appends the sentence to the current brief. A lead with no brief keeps the sentence on the timeline. A reply that contains a price, a promised date, or a name that is not this client is discarded. The client gets the person sentence, and nothing is filed. Stage changes, including turning a lead into a client, stay on staff chat.
 - **Failure.** A slow or failed model still sends one reply: the note was received and a person will follow up. Staff still see every inbound and outbound line on the Conversations tab.
 - **Model.** A Workers AI chat model, id checked against the live catalog before the code is written. Not the staff code model `@cf/moonshotai/kimi-k2.7-code`.
-- **No new Durable Object.** The thread is the existing `work_request` and its activities. Slack will call `replyToClient` with the same desk. It does not get a separate brain.
+- **No new Durable Object.** The thread is the existing `work_request` and its activities. Slack calls `replyToClient` with the same desk and files the same tasks and brief sentence. It does not get a separate brain.
 
 ---
 

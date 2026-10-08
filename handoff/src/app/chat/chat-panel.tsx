@@ -21,7 +21,7 @@ async function fetchSession(): Promise<Session> {
   return { ...body, fetchedAt: Date.now() };
 }
 
-export function ChatPanel({ context }: { context?: ChatPageContext }) {
+export function ChatPanel({ context, layout = "page" }: { context?: ChatPageContext; layout?: "page" | "drawer" }) {
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -41,10 +41,10 @@ export function ChatPanel({ context }: { context?: ChatPageContext }) {
     return <p className="text-sm text-muted-foreground">Chat is not available.</p>;
   }
   if (!session?.token) return <p className="text-sm text-muted-foreground">Opening chat…</p>;
-  return <LiveChat first={session} context={context} />;
+  return <LiveChat first={session} context={context} layout={layout} />;
 }
 
-function LiveChat({ first, context }: { first: Session; context?: ChatPageContext }) {
+function LiveChat({ first, context, layout }: { first: Session; context?: ChatPageContext; layout: "page" | "drawer" }) {
   const current = useRef({ token: first.token, at: first.fetchedAt });
   const freshToken = useCallback(async () => {
     if (Date.now() - current.current.at < TOKEN_REFRESH_MS) return current.current.token;
@@ -75,8 +75,8 @@ function LiveChat({ first, context }: { first: Session; context?: ChatPageContex
     void chat.addToolApprovalResponse({ id, approved });
   };
   return (
-    <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_16rem]">
-      <div className="flex flex-col gap-4">
+    <div className={layout === "page" ? "grid gap-6 md:grid-cols-[minmax(0,1fr)_16rem]" : "flex flex-col gap-4"}>
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         {chat.connectionError ? (
           <p className="text-sm text-destructive">Chat lost its connection. Reload the page to sign in again.</p>
         ) : null}
@@ -98,14 +98,16 @@ function LiveChat({ first, context }: { first: Session; context?: ChatPageContex
           </Button>
         </form>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>This thread</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Notes and tasks from this chat show up on the client record.</p>
-        </CardContent>
-      </Card>
+      {layout === "page" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>This thread</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Notes and tasks from this chat show up on the client record.</p>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

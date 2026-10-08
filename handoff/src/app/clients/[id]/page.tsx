@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { listClientThreads } from "@/db/conversations";
 import {
   DEAL_STAGE_LABEL,
+  latestAssessment,
   listContacts,
   listDeals,
   listOpenTasks,
@@ -11,6 +12,7 @@ import {
   listRepos,
   listTimeline,
   organizationById,
+  presentAssessment,
   unlinkedWorkspaces,
   type OrgKind,
 } from "@/db/crm";
@@ -22,8 +24,8 @@ import { clientSpaceHref } from "@/lib/host";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChatPanel } from "../../chat/chat-panel";
 import { StaffShell } from "../../staff-shell";
+import { ClientChat } from "../client-chat";
 import { ProjectForm } from "../../projects/forms";
 import { PROJECT_STATUS_LABEL } from "../../projects/labels";
 import { CallForm, MergeForm, NoteForm, PersonForm, TaskForm } from "../activity-forms";
@@ -80,7 +82,8 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads] = await Promise.all([
+  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads, storedCheck] =
+    await Promise.all([
     unlinkedWorkspaces(sql, caller),
     sql.all<{ id: string; slug: string; display_name: string }>(
       `SELECT id, slug, display_name FROM workspaces
@@ -96,7 +99,9 @@ export default async function ClientPage({
     listProjects(sql, caller, client.id),
     listRepos(sql, caller, client.id),
     listClientThreads(sql, client.id),
+    latestAssessment(sql, caller, client.id),
   ]);
+  const readiness = storedCheck ? presentAssessment(storedCheck) : null;
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
   const choices = visible?.ok
@@ -109,9 +114,11 @@ export default async function ClientPage({
   return (
     <StaffShell>
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-16">
-      <ChatPanel context={{ organizationId: client.id }} />
       <div className="flex flex-col gap-3">
-        <h1 className="font-heading text-4xl leading-tight">{client.name}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="font-heading text-4xl leading-tight">{client.name}</h1>
+          <ClientChat organizationId={client.id} />
+        </div>
         {query.merged === "1" ? <p role="status" className="text-sm">These clients are now one.</p> : null}
         <Link href="/clients" className="text-sm">
           Clients
@@ -143,6 +150,38 @@ export default async function ClientPage({
           )}
           <LinkSpaceForm organizationId={client.id} spaces={free} />
         </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Readiness check</CardTitle>
+          <CardDescription>{readiness ? readiness.total : "No readiness check yet."}</CardDescription>
+        </CardHeader>
+        {readiness ? (
+          <CardContent className="flex flex-col gap-4 text-sm">
+            {readiness.lines.length > 0 ? (
+              <ul className="flex flex-col gap-1">
+                {readiness.lines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+            {readiness.answers.length > 0 ? (
+              <dl className="flex flex-col gap-2">
+                {readiness.answers.map((answer) => (
+                  <div key={answer.key}>
+                    <dt className="text-muted-foreground">{answer.key}</dt>
+                    <dd>{answer.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+            {readiness.reportUrl ? (
+              <a href={readiness.reportUrl} className="underline">
+                Report
+              </a>
+            ) : null}
+          </CardContent>
+        ) : null}
       </Card>
       <Card>
         <CardHeader>

@@ -1,4 +1,5 @@
 import PostalMime from "postal-mime";
+import { normalizeChannelPlan, type ChannelPlan } from "./channel-plan";
 
 export type EmailAttachment = {
   filename: string;
@@ -40,6 +41,12 @@ export type ClientTurn = {
   due: string | null;
   /** True when the worker should store this as client work. A handoff files nothing. */
   file: boolean;
+  /** Concrete next steps. The worker writes each one as a task on the client board. */
+  actions: ChannelPlan["actions"];
+  /** One sentence to add to the client brief. Null leaves the brief alone. */
+  brief: string | null;
+  /** Standing limits to keep on the brief, such as no video. */
+  rules: string | null;
 };
 
 export type ClientDesk = {
@@ -59,6 +66,7 @@ export type ChannelReply = {
   asked: boolean;
   classified: ClassifiedNote;
   file: boolean;
+  plan: ChannelPlan;
 };
 
 export const FIXED_UNKNOWN = "Please write from the address registered with us, or sign in to your space.";
@@ -70,13 +78,14 @@ export const THREAD_REPLY_LIMIT = 10;
 export const FOLLOW_UP = "Got it. I have your note. A person on the team will follow up.";
 
 const NOTHING: ClassifiedNote = { kind: "other", state: "clarifying", question: null, goal: null, due: null };
+const NO_PLAN: ChannelPlan = { actions: [], brief: null, rules: null };
 
 function quiet(): ChannelReply {
-  return { reply: "", organizationId: null, noteOnly: false, skip: true, asked: false, classified: NOTHING, file: false };
+  return { reply: "", organizationId: null, noteOnly: false, skip: true, asked: false, classified: NOTHING, file: false, plan: NO_PLAN };
 }
 
 function held(reply: string, organizationId: string | null, noteOnly = false): ChannelReply {
-  return { reply, organizationId, noteOnly, skip: false, asked: false, classified: NOTHING, file: false };
+  return { reply, organizationId, noteOnly, skip: false, asked: false, classified: NOTHING, file: false, plan: NO_PLAN };
 }
 
 function domainOf(address: string): string {
@@ -176,13 +185,14 @@ export async function handleInboundEmail(
       asked: true,
       classified: NOTHING,
       file: false,
+      plan: NO_PLAN,
     };
   }
   const thread = await deps.thread(choice.id, threadKey);
   const incoming = [message.subject, message.text].filter(Boolean).join("\n");
   if (thread.replies >= THREAD_REPLY_LIMIT) {
     const limited = replyFor(thread, incoming);
-    return { ...limited, organizationId: choice.id, noteOnly: false, skip: false, file: false };
+    return { ...limited, organizationId: choice.id, noteOnly: false, skip: false, file: false, plan: NO_PLAN };
   }
   if (deps.answer) {
     try {
@@ -195,6 +205,7 @@ export async function handleInboundEmail(
         asked: turn.kind === "new_work" && !turn.goal,
         classified: noteFromTurn(turn),
         file: turn.file,
+        plan: turn.kind === "handoff" ? NO_PLAN : normalizeChannelPlan(turn),
       };
     } catch {
       return { ...held(FOLLOW_UP, choice.id), classified: NOTHING };
@@ -207,6 +218,7 @@ export async function handleInboundEmail(
     noteOnly: false,
     skip: false,
     file: answer.classified.kind === "new_work",
+    plan: NO_PLAN,
   };
 }
 
@@ -235,11 +247,15 @@ export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
     throw new Error("bad kind");
   }
   if (typeof raw.reply !== "string" || !raw.reply.trim()) throw new Error("no reply");
+  const plan = normalizeChannelPlan({ actions: raw.actions, brief: raw.brief, rules: raw.rules });
   return {
     reply: raw.reply.trim(),
     kind,
     goal: typeof raw.goal === "string" && raw.goal.trim() ? raw.goal.trim() : null,
     due: typeof raw.due === "string" && raw.due.trim() ? raw.due.trim() : null,
+    actions: plan.actions,
+    brief: plan.brief,
+    rules: plan.rules,
   };
 }
 
@@ -247,17 +263,36 @@ export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
 export async function replyToClient(input: {
   desk: ClientDesk;
   incoming: string;
-  model: (desk: ClientDesk, incoming: string) => Promise<Omit<ClientTurn, "file">>;
+  model: (
+    desk: ClientDesk,
+    incoming: string,
+  ) => Promise<
+    Omit<ClientTurn, "file" | "actions" | "brief" | "rules"> & {
+      actions?: ClientTurn["actions"];
+      brief?: string | null;
+      rules?: string | null;
+    }
+  >;
 }): Promise<ClientTurn> {
   const turn = await input.model(input.desk, input.incoming);
   const forbidden = (input.desk.forbiddenNames ?? []).filter(Boolean);
   const leaked = forbidden.some((name) => input.desk && turn.reply.toLowerCase().includes(name.toLowerCase()));
   if (PRICE.test(turn.reply) || PROMISED_DATE.test(turn.reply) || leaked) {
-    return { reply: HANDED_OFF, kind: "handoff", goal: null, due: null, file: false };
+    return { reply: HANDED_OFF, kind: "handoff", goal: null, due: null, file: false, actions: [], brief: null, rules: null };
   }
   const kind = turn.kind;
   const file = kind === "new_work" || kind === "feedback";
-  return { reply: turn.reply, kind, goal: turn.goal, due: turn.due, file };
+  const plan = normalizeChannelPlan(turn);
+  return {
+    reply: turn.reply,
+    kind,
+    goal: turn.goal,
+    due: turn.due,
+    file,
+    actions: plan.actions,
+    brief: plan.brief,
+    rules: plan.rules,
+  };
 }
 
 /** The receipt for a client message, read against the thread so far. Past the limit the message is kept with no reply. */

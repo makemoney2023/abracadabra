@@ -102,4 +102,30 @@ describe("slack channel", () => {
     expect(hq.bodies.find((body) => body.action === "record")).toMatchObject({ replyBody: "" });
     expect(hq.bodies.some((body) => String(body.url).includes("chat.postMessage"))).toBe(false);
   });
+
+  it("files the interpreted tasks and brief sentence", async () => {
+    const hq = fakeHq();
+    const pending: Promise<unknown>[] = [];
+    await handleSlackEvent(
+      signed(event({ text: "Please turn us into a client", ts: "2.0" })),
+      ENV,
+      NOW,
+      hq.fetchImpl,
+      (work) => pending.push(work),
+      async () => ({
+        reply: "I filed that for the team.",
+        kind: "other",
+        goal: null,
+        due: null,
+        file: false,
+        actions: [{ title: "Turn this lead into a client" }],
+        brief: "They are ready to start.",
+      }),
+    );
+    await Promise.all(pending);
+    expect(hq.bodies.find((body) => body.action === "record")).toMatchObject({
+      actions: [{ title: "Turn this lead into a client" }],
+      brief: "They are ready to start.",
+    });
+  });
 });

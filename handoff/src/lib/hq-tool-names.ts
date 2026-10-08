@@ -1,6 +1,7 @@
 export const READ_HQ_TOOLS = [
   "search_clients",
   "client_summary",
+  "list_deals",
   "list_tasks",
   "list_deliverables",
   "open_questions",
@@ -32,7 +33,11 @@ export function hqToolNeedsApproval(name: string): boolean {
 /** What each tool does and the fields it reads. The model sees this; the approval card shows the label. */
 export const HQ_TOOL_HELP: Record<string, { label: string; description: string }> = {
   search_clients: { label: "Search clients", description: "Find clients by name. Fields: query." },
-  client_summary: { label: "Client summary", description: "One client record. Fields: organizationId." },
+  client_summary: { label: "Client summary", description: "One client record, including open deals. Fields: organizationId." },
+  list_deals: {
+    label: "List deals",
+    description: "Deals for a client. Use the id with move_deal. Fields: organizationId.",
+  },
   list_tasks: { label: "List tasks", description: "Tasks for a client with status and stage. Fields: organizationId." },
   list_deliverables: { label: "List deliverables", description: "Deliverables for a client. Fields: organizationId." },
   open_questions: { label: "Open questions", description: "Agent questions waiting for staff. Fields: organizationId." },
@@ -41,11 +46,28 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   list_work_requests: { label: "Client requests", description: "Requests from client email and Slack. Fields: organizationId." },
   create_client: { label: "Create a client", description: "Add a client record. Fields: name." },
   add_contact: { label: "Add a contact", description: "Add a person to a client. Fields: organizationId, name, email." },
-  add_note: { label: "Add a note", description: "Internal note on the client timeline. Fields: organizationId, body." },
+  add_note: { label: "Add a note", description: "Internal note on the client timeline. Use this only for a fact that is not a task, a deal move, or a brief change. Fields: organizationId, body." },
   log_call: { label: "Log a call", description: "Record a call. Fields: organizationId, body." },
-  create_task: { label: "Create a task", description: "Staff task for a client. Fields: organizationId, title." },
+  create_task: { label: "Create a task", description: "Staff task for a client. It shows on the client board. Fields: organizationId, title." },
+  file_actions: {
+    label: "File tasks and a brief change",
+    description:
+      "One task per line of title, written as Title | person | YYYY-MM-DD | .cursor/skills/path. body is the brief sentence. rules are standing limits, one per line. Fields: organizationId, title, body, rules.",
+  },
   complete_task: { label: "Complete a task", description: "Mark a task done. Fields: taskId." },
-  move_deal: { label: "Move a deal", description: "Change a deal stage. Fields: dealId, stage, lostReason." },
+  set_deal_step: {
+    label: "Set the next step",
+    description: "The next step on a deal, and when it is due. Fields: dealId, body, due (YYYY-MM-DD or a weekday).",
+  },
+  draft_client_status: {
+    label: "Draft a client status",
+    description: "A status update the client does not see until staff publish it. Fields: projectId, body.",
+  },
+  move_deal: {
+    label: "Move a deal",
+    description:
+      "Change a deal stage. Stage won turns a lead into a client and opens a project and a space. Fields: dealId, stage (new, contacted, call_booked, proposal, won, lost), lostReason when the stage is lost.",
+  },
   create_project: { label: "Create a project", description: "New project for a client. Fields: organizationId, name." },
   create_milestone: { label: "Create a milestone", description: "Milestone on a project. Fields: projectId, name." },
   post_internal_status: {

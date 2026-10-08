@@ -17,7 +17,6 @@ import { liveStaff } from "@/lib/store/staff";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChatPanel } from "../../chat/chat-panel";
 import { StaffShell } from "../../staff-shell";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
@@ -55,7 +54,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   return (
     <StaffShell>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
-        <ChatPanel context={{ organizationId: project.organization_id, projectId: project.id }} />
         <div className="flex flex-col gap-3">
           <h1 className="font-heading text-4xl leading-tight">{project.name}</h1>
           <p className="text-sm text-muted-foreground">

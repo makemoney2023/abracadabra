@@ -14,8 +14,10 @@ import {
   listMilestones,
   listOpenTasks,
   listProjects,
+  latestAssessment,
   listDeals,
   listOrganizations,
+  presentAssessment,
   listStatusUpdates,
   listTimeline,
   listWork,
@@ -410,6 +412,50 @@ describe("crm pipeline", () => {
     expect((await listDeals(sql, staff, { source: "readiness_check" })).map((row) => row.id)).toEqual([
       harbor.dealId,
     ]);
+  });
+
+  it("stores readiness scores and answers on the client", async () => {
+    const sql = await database();
+    const harbor = await leadDeal(sql, "Harbor");
+    await sql.run(
+      `INSERT INTO assessments (
+         id, organization_id, deal_id, domain, answers_json, scores_json, total_score,
+         report_url, completed_at, received_at
+       ) VALUES ('as-1', ?, ?, 'harbor.example', ?, ?, 72, ?, ?, ?)`,
+      [
+        harbor.organizationId,
+        harbor.dealId,
+        JSON.stringify({ pressure: ["referrals"], data: "scattered" }),
+        JSON.stringify({
+          overall: { total: 72, band: "forming" },
+          readiness: { total: 40, data: 30, process: 50, people: 20, decision: 60 },
+          growth: { total: 55 },
+          visibility: { total: 80 },
+        }),
+        "https://check.example/r/as-1",
+        NOW,
+        NOW,
+      ],
+    );
+    const stored = await latestAssessment(sql, staff, harbor.organizationId);
+    expect(stored).toMatchObject({
+      id: "as-1",
+      totalScore: 72,
+      reportUrl: "https://check.example/r/as-1",
+      answers: { pressure: ["referrals"], data: "scattered" },
+      scores: { overall: { total: 72, band: "forming" }, readiness: { total: 40 } },
+    });
+    expect(presentAssessment(stored!)).toEqual({
+      total: "Overall forming (72/100).",
+      lines: ["Readiness 40.", "Data 30.", "Process 50.", "People 20.", "Decision 60.", "Growth 55.", "Visibility 80."],
+      answers: [
+        { key: "pressure", value: "referrals" },
+        { key: "data", value: "scattered" },
+      ],
+      reportUrl: "https://check.example/r/as-1",
+    });
+    expect(await latestAssessment(sql, outsider, harbor.organizationId)).toBeNull();
+    expect(await latestAssessment(sql, staff, "missing")).toBeNull();
   });
 
   it("moves a deal and writes a stage change", async () => {
@@ -870,11 +916,12 @@ describe("projects and work", () => {
        VALUES (?, ?, 'note', 'agent', 'Drafted a follow-up.', ?)`,
       [crypto.randomUUID(), harbor.value.id, NOW - 1000],
     );
+    await createTask(sql, staff, { organizationId: harbor.value.id, title: "Just filed" }, NOW);
     const today = await todayFor(sql, staff, NOW);
     expect(today.newLeads.map((row) => row.title)).toEqual(["New site"]);
     expect(today.calls).toHaveLength(1);
     expect(today.calls[0]?.organizationName).toBe("Harbor");
-    expect(today.tasks.map((task) => task.title)).toEqual(["Late sketch"]);
+    expect(today.tasks.map((task) => task.title)).toEqual(["Late sketch", "Just filed"]);
     expect(today.stalledDeals.map((deal) => deal.title).sort()).toEqual(["New site", "Stalled site"]);
     expect(today.waitingSpaces.map((space) => space.requestTitle)).toContain("Logo");
     expect(today.invoices.map((invoice) => invoice.number)).toEqual(["INV-2026-0001"]);

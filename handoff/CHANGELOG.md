@@ -2,6 +2,33 @@
 
 ## 2026-10-07
 
+- **What changed** — Chat can name a person, a day, and a skill on each task, ask which deal to win when more than one is open, set a deal's next step, draft a client status that stays unpublished, and keep standing rules on the brief. A new task with no due date shows on Today for a week.
+- **Why** — Filing work only stored a title. Staff still had to assign it, date it, and remember the limits.
+- **Code touchpoints** — `handoff/src/lib/channel-plan.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/src/lib/client-documents.ts`, `handoff/src/lib/client-plan.ts`
+- **Data-flow impact** — `file_actions` lines are `Title | person | date | skill path`. `set_deal_step` writes `deals.next_step`. `draft_client_status` inserts a draft client status. `## Rules` is copied into the next brief and into the build brief.
+- **API / schema impact** — `record` accepts `rules`. No migration.
+- **Verification** — `npx vitest run` on the channel, chat, CRM, brief, and client-plan tests (114 passed). `npx tsc --noEmit -p tsconfig.agent.json` passed.
+
+## 2026-10-07
+
+- **What changed** — HQ chat stays on `/chat`. A client page opens it in a drawer. Work and project pages no longer show the thread. Staff chat can turn a lead into a client with `move_deal` stage `won`, and `file_actions` writes board tasks and a brief sentence. Email and Slack file the same tasks and brief sentence from the mailbox reply.
+- **Why** — The thread was on every staff screen, and a request to convert a lead only left a note.
+- **Code touchpoints** — `handoff/src/app/chat/chat-panel.tsx`, `handoff/src/app/clients/client-chat.tsx`, `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/work/page.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/lib/channel-plan.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/app/api/client-messages/route.ts`
+- **Data-flow impact** — Staff chat calls `list_deals`, `move_deal`, and `file_actions`. A client email or Slack message that names work writes open tasks and, when a brief exists, a new draft version. A lead with no brief keeps the sentence as `agent.brief_change`.
+- **API / schema impact** — `POST /api/client-messages` action `record` accepts `actions` and `brief`. No migration.
+- **Verification** — `npx vitest run src/lib/channel-plan.test.ts src/lib/hq-chat-playbook.test.ts src/lib/client-channel.test.ts src/lib/hq-tools.test.ts src/lib/slack-channel.test.ts src/db/conversations.test.ts` (36 passed). `npx tsc --noEmit -p tsconfig.agent.json` passed. ESLint on the changed files passed.
+
+## 2026-10-07
+
+- **What changed** — The client page shows the latest readiness check: overall score, readiness, growth, visibility, and the answers.
+- **Why** — Those values were already saved on the assessment row. Staff need them on the client record.
+- **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/app/clients/[id]/page.tsx`
+- **Data-flow impact** — `latestAssessment` reads `assessments` for that organization. The intake path is unchanged.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/db/crm.test.ts -t "stores readiness scores"`
+
+## 2026-10-07
+
 - **What changed** — A known client email is answered from that client's published brief and latest status. New work is filed for staff. A reply that prices the work, promises a date, or names another client is replaced with a handoff to a person.
 - **Why** — The mailbox was a fixed receipt. Section 17.8 says it should talk about the client's work.
 - **Code touchpoints** — `handoff/src/db/conversations.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`

@@ -252,6 +252,91 @@ describe("runHqTool", () => {
     const bad = await runHqTool(sql, staff, { ...request, input: { organizationId, channelId: "general" }, idempotencyKey: "s-2", approved: true }, NOW);
     expect(bad).toEqual({ ok: false, error: "invalid" });
   });
+
+  it("lists the open deal and files tasks plus a brief sentence", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    await sql.run(
+      `INSERT INTO deals (id, organization_id, title, stage, source, created_at, updated_at)
+       VALUES ('deal-1', ?, 'Site rebuild', 'proposal', 'manual', ?, ?)`,
+      [organizationId, NOW, NOW],
+    );
+    const deals = await runHqTool(sql, staff, { tool: "list_deals", input: { organizationId } }, NOW);
+    expect(valueOf(deals)).toEqual([{ id: "deal-1", title: "Site rebuild", stage: "proposal" }]);
+    const summary = await runHqTool(sql, staff, { tool: "client_summary", input: { organizationId } }, NOW);
+    expect(valueOf(summary)).toMatchObject({ id: organizationId, deals: [{ id: "deal-1" }] });
+    const filed = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "file_actions",
+        input: { organizationId, title: "Turn this lead into a client\nOpen the project", body: "They are ready to start." },
+        idempotencyKey: "file-1",
+      },
+      NOW + 1,
+    );
+    expect(valueOf(filed)).toMatchObject({ briefUpdated: false });
+    const tasks = await sql.all<{ title: string }>("SELECT title FROM tasks WHERE organization_id = ? ORDER BY title", [organizationId]);
+    expect(tasks.map((row) => row.title)).toEqual(["Open the project", "Turn this lead into a client"]);
+  });
+
+  it("sets the next step, drafts a client status, and assigns a dated task", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    await sql.run(
+      `INSERT INTO deals (id, organization_id, title, stage, source, created_at, updated_at)
+       VALUES ('deal-1', ?, 'Site rebuild', 'proposal', 'manual', ?, ?)`,
+      [organizationId, NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at)
+       VALUES ('sam', 'sam@example.com', 0, ?, NULL)`,
+      [NOW],
+    );
+    const step = await runHqTool(
+      sql,
+      staff,
+      { tool: "set_deal_step", input: { dealId: "deal-1", body: "Call them", due: "Thursday" }, idempotencyKey: "step-1" },
+      Date.UTC(2026, 9, 7),
+    );
+    expect(valueOf(step)).toMatchObject({ nextStep: "Call them", nextStepAt: Date.UTC(2026, 9, 8) });
+    const project = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_project", input: { organizationId, name: "Site" }, idempotencyKey: "proj-1" },
+      NOW,
+    );
+    const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+    const draft = await runHqTool(
+      sql,
+      staff,
+      { tool: "draft_client_status", input: { projectId, body: "They are a client now." }, idempotencyKey: "status-1" },
+      NOW,
+    );
+    expect(valueOf(draft)).toMatchObject({ state: "draft", audience: "client" });
+    await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "file_actions",
+        input: {
+          organizationId,
+          title: "Send the contract | sam | 2026-10-09 | .cursor/skills/copywriting/SKILL.md",
+          rules: "No video",
+        },
+        idempotencyKey: "file-2",
+      },
+      NOW + 2,
+    );
+    const task = await sql.get<{ assignee_user_id: string; due_at: number; skills_json: string }>(
+      "SELECT assignee_user_id, due_at, skills_json FROM tasks WHERE title = 'Send the contract'",
+    );
+    expect(task?.assignee_user_id).toBe("sam");
+    expect(task?.due_at).toBe(Date.UTC(2026, 9, 9));
+    expect(JSON.parse(task?.skills_json ?? "{}")).toMatchObject({
+      steps: [{ path: ".cursor/skills/copywriting/SKILL.md", status: "todo" }],
+    });
+  });
 });
 
 async function client(sql: Sql): Promise<string> {

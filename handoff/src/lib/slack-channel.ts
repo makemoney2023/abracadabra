@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { replyFor, type ThreadState } from "./client-channel";
+import { replyFor, type ClientTurn, type ThreadState } from "./client-channel";
 
 export type SlackEnv = {
   HQ_ORIGIN?: string;
@@ -57,7 +57,12 @@ async function hq(env: SlackEnv, fetchImpl: typeof fetch, body: Record<string, u
   return (await response.json()) as unknown;
 }
 
-async function answer(event: SlackMessage & { channel: string; ts: string }, env: SlackEnv, fetchImpl: typeof fetch): Promise<void> {
+async function answer(
+  event: SlackMessage & { channel: string; ts: string },
+  env: SlackEnv,
+  fetchImpl: typeof fetch,
+  interpret?: (input: { organizationId: string; text: string; threadId: string }) => Promise<ClientTurn>,
+): Promise<void> {
   const linked = (await hq(env, fetchImpl, { action: "slack_org", channelId: event.channel })) as { value?: string | null } | null;
   const organizationId = linked?.value ?? null;
   if (!organizationId) {
@@ -67,19 +72,49 @@ async function answer(event: SlackMessage & { channel: string; ts: string }, env
   const threadId = event.thread_ts ?? event.ts;
   const state = (await hq(env, fetchImpl, { action: "thread", organizationId, threadId })) as { value?: ThreadState } | null;
   const thread = state?.value ?? { replies: 0, questionCount: 0, text: "" };
-  const reply = replyFor(thread, event.text ?? "");
+  const incoming = event.text ?? "";
+  let reply = replyFor(thread, incoming);
+  let actions: ClientTurn["actions"] = [];
+  let brief: string | null = null;
+  let rules: string | null = null;
+  if (interpret && thread.replies < 10) {
+    try {
+      const turn = await interpret({ organizationId, text: incoming, threadId });
+      reply = {
+        reply: turn.reply,
+        asked: turn.kind === "new_work" && !turn.goal,
+        classified: {
+          kind: turn.kind === "new_work" ? "new_work" : turn.kind === "feedback" ? "feedback" : turn.kind === "status" ? "status" : "other",
+          state: turn.kind === "new_work" && turn.goal && turn.due ? "proposed" : "clarifying",
+          question: null,
+          goal: turn.goal,
+          due: turn.due,
+        },
+      };
+      if (turn.kind !== "handoff") {
+        actions = turn.actions;
+        brief = turn.brief;
+        rules = turn.rules;
+      }
+    } catch {
+      reply = replyFor(thread, incoming);
+    }
+  }
   await hq(env, fetchImpl, {
     action: "record",
     organizationId,
     channel: "slack",
     threadId,
     sender: event.user ?? "",
-    body: event.text ?? "",
+    body: incoming,
     state: reply.classified.state,
     goal: reply.classified.goal,
     dueText: reply.classified.due,
     asked: reply.asked,
     replyBody: reply.reply,
+    actions,
+    brief,
+    rules,
   });
   if (!reply.reply || !env.SLACK_BOT_TOKEN) return;
   await fetchImpl("https://slack.com/api/chat.postMessage", {
@@ -96,6 +131,7 @@ export async function handleSlackEvent(
   now: number,
   fetchImpl: typeof fetch = fetch,
   waitUntil: (work: Promise<unknown>) => void = (work) => void work,
+  interpret?: (input: { organizationId: string; text: string; threadId: string }) => Promise<ClientTurn>,
 ): Promise<Response> {
   if (request.headers.get("x-slack-retry-num")) return new Response(null, { status: 200 });
   const raw = await request.text();
@@ -118,7 +154,7 @@ export async function handleSlackEvent(
   }
   const event = body.event;
   if (clientMessage(event, env)) {
-    waitUntil(answer(event, env, fetchImpl).catch(() => undefined));
+    waitUntil(answer(event, env, fetchImpl, interpret).catch(() => undefined));
   } else if (event?.type === "message" && !event.subtype && !event.bot_id && event.channel && event.user) {
     const staffEvent = event;
     waitUntil(

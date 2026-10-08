@@ -1,4 +1,5 @@
 import { AgentWorkError, saveStaffBrief } from "@/db/agent-work";
+import { actionFromLine, applyChannelPlan, dueMillis } from "@/lib/channel-plan";
 import { linkSlackChannel, listWorkRequests, setWorkRequestState, workRequestById } from "@/db/conversations";
 import {
   addNote,
@@ -9,6 +10,7 @@ import {
   createOrganization,
   createProject,
   createTask,
+  listDeals,
   listOrganizations,
   listTimeline,
   logCall,
@@ -48,6 +50,7 @@ type ToolOptions = {
 const READS = new Set([
   "search_clients",
   "client_summary",
+  "list_deals",
   "list_tasks",
   "list_deliverables",
   "open_questions",
@@ -211,7 +214,13 @@ async function perform(
   if (tool === "client_summary") {
     const org = await seenOrg(sql, caller, organizationId);
     if (!org) return { ok: false, error: "missing" };
-    return { ok: true, value: org };
+    const deals = await listDeals(sql, caller, { organizationId });
+    return { ok: true, value: { ...org, deals } };
+  }
+  if (tool === "list_deals") {
+    if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+    const deals = await listDeals(sql, caller, { organizationId });
+    return { ok: true, value: deals.map((deal) => ({ id: deal.id, title: deal.title, stage: deal.stage })) };
   }
   if (tool === "list_tasks") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
@@ -267,6 +276,31 @@ async function perform(
   if (tool === "create_task") {
     return fromCrm(await createTask(sql, caller, { organizationId, title: text(input, "title") }, now));
   }
+  if (tool === "file_actions") {
+    if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
+    const actions = text(input, "title")
+      .split("\n")
+      .flatMap((line) => {
+        const action = actionFromLine(line);
+        return action ? [action] : [];
+      });
+    const brief = text(input, "body") || null;
+    const rules = text(input, "rules") || null;
+    if (actions.length === 0 && !brief && !rules) return { ok: false, error: "invalid" };
+    const filed = await applyChannelPlan(
+      sql,
+      {
+        organizationId,
+        actions,
+        brief,
+        rules,
+        attribution: { actorKind: "staff", actorId: caller.userId, via: "hq_chat", createdBy: "staff" },
+      },
+      now,
+    );
+    await stampChat(sql, caller.userId, now);
+    return { ok: true, value: filed };
+  }
   if (tool === "complete_task") return fromCrm(await completeTask(sql, caller, { taskId: text(input, "taskId") }, now));
   if (tool === "move_deal") {
     return fromCrm(
@@ -274,6 +308,22 @@ async function perform(
         sql,
         caller,
         { dealId: text(input, "dealId"), stage: text(input, "stage"), lostReason: text(input, "lostReason") || undefined },
+        now,
+      ),
+    );
+  }
+  if (tool === "set_deal_step") return setDealStep(sql, caller, input, now);
+  if (tool === "draft_client_status") {
+    return fromCrm(
+      await postStatusUpdate(
+        sql,
+        caller,
+        {
+          projectId: text(input, "projectId"),
+          body: text(input, "body"),
+          health: "on_track",
+          audience: "client",
+        },
         now,
       ),
     );
@@ -325,6 +375,31 @@ async function perform(
   if (tool === "decide_work_request") return decideWork(sql, caller, input, now, options.wake);
   if (tool === "link_slack_channel") return linkSlack(sql, caller, input, now);
   return { ok: false, error: "unknown" };
+}
+
+async function setDealStep(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
+  const deal = await sql.get<{ id: string; organization_id: string }>(
+    "SELECT id, organization_id FROM deals WHERE id = ?",
+    [text(input, "dealId")],
+  );
+  if (!deal || !(await seenOrg(sql, caller, deal.organization_id)) || !caller.userId) return { ok: false, error: "missing" };
+  const step = text(input, "body");
+  if (!step) return { ok: false, error: "invalid" };
+  const dueText = text(input, "due");
+  const nextStepAt = dueText ? dueMillis(dueText, now) : null;
+  if (dueText && nextStepAt === null) return { ok: false, error: "invalid" };
+  await sql.run("UPDATE deals SET next_step = ?, next_step_at = ?, updated_at = ? WHERE id = ?", [
+    step,
+    nextStepAt,
+    now,
+    deal.id,
+  ]);
+  await logStaff(
+    sql,
+    { organizationId: deal.organization_id, userId: caller.userId, kind: "staff.deal_step", body: step, data: { dealId: deal.id } },
+    now,
+  );
+  return { ok: true, value: { id: deal.id, nextStep: step, nextStepAt } };
 }
 
 async function setTaskStage(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
