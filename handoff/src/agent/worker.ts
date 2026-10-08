@@ -8,8 +8,9 @@ import {
   type ToolCaller,
 } from "../lib/client-documents";
 import { advanceClientWork, applyBriefChange, planClientWork } from "../lib/client-plan";
-import { addressOf, handleInboundEmail, parseInboundEmail, replyMime, type ThreadState } from "../lib/client-channel";
+import { addressOf, bytesToBase64, handleInboundEmail, parseInboundEmail, replyMime, type ThreadState } from "../lib/client-channel";
 import { handleSlackEvent } from "../lib/slack-channel";
+import { skillObjectKey } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
 
 export interface AgentBindings extends ChatBindings {
@@ -229,7 +230,8 @@ export class ClientAgent extends Agent<AgentBindings> {
   }
 
   private async readSkill(skillPath: string): Promise<string | null> {
-    const key = `skills/${skillPath.replace(/^\.cursor\/skills\//, "").replace(/^skills\//, "")}`;
+    const key = skillObjectKey(skillPath);
+    if (!key) return null;
     try {
       const object = await this.env.SKILLS.get(key);
       return object ? object.text() : null;
@@ -329,6 +331,18 @@ async function hqChannel(env: AgentBindings, body: Record<string, unknown>): Pro
   return response.json();
 }
 
+/** HQ reads chat over HTTPS from another host, so the agent names that host. */
+function chatCors(origin: string | undefined): true | Record<string, string> {
+  const allow = origin?.replace(/\/$/, "");
+  if (!allow) return true;
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Methods": "GET, POST, HEAD, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
 const worker = {
   async fetch(request: Request, env: AgentBindings, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -354,7 +368,7 @@ const worker = {
       const outcome = await stub.acceptWake(body.reason);
       return Response.json({ outcome }, { status: outcome === "busy" ? 202 : 200 });
     }
-    const routed = await routeAgentRequest(request, env);
+    const routed = await routeAgentRequest(request, env, { cors: chatCors(env.HQ_ORIGIN) });
     if (routed) return routed;
     return new Response("Not found", { status: 404 });
   },
@@ -389,6 +403,21 @@ const worker = {
       ownAddress: own,
     });
     if (reply.skip) return;
+    let replyText = reply.reply;
+    if (reply.organizationId && parsed.attachments.length > 0) {
+      const saved = (await hqChannel(env, {
+        action: "attach",
+        organizationId: reply.organizationId,
+        files: parsed.attachments.map((file) => ({
+          filename: file.filename,
+          contentType: file.mimeType,
+          body: bytesToBase64(file.bytes),
+        })),
+      })) as { value?: { stored?: string[] } } | null;
+      if ((saved?.value?.stored?.length ?? 0) > 0 && replyText) {
+        replyText = `${replyText} I put the file in your space. It stays unread until the check finishes.`;
+      }
+    }
     await hqChannel(env, {
       action: "record",
       organizationId: reply.organizationId ?? "",
@@ -401,15 +430,15 @@ const worker = {
       goal: reply.classified.goal,
       dueText: reply.classified.due,
       asked: reply.asked,
-      replyBody: reply.reply,
+      replyBody: replyText,
     });
-    if (!reply.reply) return;
+    if (!replyText) return;
     const { EmailMessage } = await import("cloudflare:email");
     const mime = replyMime({
       from: own,
       to: message.from,
       subject: parsed.subject,
-      text: reply.reply,
+      text: replyText,
       messageId: parsed.messageId,
       references: parsed.references,
       domain: own.split("@")[1] ?? "abra-ca-dabra.app",

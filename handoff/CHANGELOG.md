@@ -11,6 +11,33 @@
 
 ## 2026-10-07
 
+- **What changed** — An email attachment is saved in the client's oldest active space as a batch labelled "From email" and left waiting for the scan. A file type the space refuses is not saved. A client with no space gets a staff note. The agent worker has its own type check.
+- **Why** — Step 28 of the HQ agent plan stores inbound files before anyone reads them. Step 30 checks the agent code the Next type check skips.
+- **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/lib/email-files.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/tsconfig.agent.json`, `handoff/src/agent/env.d.ts`
+- **Data-flow impact** — After a known sender is matched, the agent posts `attach` to `/api/client-messages`. HQ writes the bytes and marks the file `uploaded`.
+- **API / schema impact** — `/api/client-messages` accepts `action: "attach"`.
+- **Verification** — Attachment and channel tests passed. `tsc --noEmit -p tsconfig.agent.json` passed. Worker `handoff-agent` version `8bfff59f-fd8b-49e3-95af-755fc47fedd2`. Worker `handoff-hq` version `46b7be6d-84ee-4ebf-879d-4e791d0a3dff`. A live Cloudflare `Authentication-Results` header was not captured; the fixture uses the header shape Cloudflare documents (`mx.cloudflare.net`, `dkim=pass header.d`, `dmarc=pass header.from`) and still ignores a forged header underneath. Slack is still waiting on an app.
+
+## 2026-10-07
+
+- **What changed** — The agent allows `https://hq.abra-ca-dabra.app` to read chat history. The test worker config no longer inherits the agent hostname.
+- **Why** — The browser blocked `get-messages` from HQ because the agent response had no CORS header.
+- **Code touchpoints** — `handoff/src/agent/worker.ts`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — `GET /agents/hq-chat/:id/get-messages` returns `Access-Control-Allow-Origin` set to `HQ_ORIGIN`.
+- **API / schema impact** — none.
+- **Verification** — Agent worker test passed, 7 tests. Worker `handoff-agent` version `07b3970e-5677-4d90-bfe1-4bbfd589d09f`. A live `get-messages` response includes `Access-Control-Allow-Origin: https://hq.abra-ca-dabra.app`.
+
+## 2026-10-07
+
+- **What changed** — Staff chat on HQ opens its socket on `agent.abra-ca-dabra.app`, and that hostname is the `handoff-agent` worker. A missing host shows “Chat is not available.” A model error shows in the thread.
+- **Why** — HQ had no `AGENT_URL`, so Send talked to the HQ site. The agent hostname was also caught by the Vercel wildcard, so the socket never reached the worker.
+- **Code touchpoints** — `handoff/wrangler.hq.jsonc`, `handoff/wrangler.agent.jsonc`, `handoff/src/app/chat/chat-panel.tsx`
+- **Data-flow impact** — `GET /api/hq-chat/token` on HQ returns host `agent.abra-ca-dabra.app`. The browser connects there.
+- **API / schema impact** — none.
+- **Verification** — `agent.abra-ca-dabra.app/agents/hq-chat/test` returns the worker (`Not implemented`), not the Vercel wildcard. Worker `handoff-agent` version `0b08a2b2-7273-4742-bacb-05649f72a90f`. Worker `handoff-hq` version `20b7a02a-99b9-4f62-ae78-b62228404f78` with `AGENT_URL`. The host-config test passed. A live signed-in send was not run from this session.
+
+## 2026-10-07
+
 - **What changed** — Deployed the chat and client-channel work. `HQ_CHAT_SECRET` and `CLIENT_CHANNEL_SECRET` are set on `handoff-hq` and `handoff-agent`. `AGENT_WAKE_SECRET` is set on `handoff`, `handoff-hq`, and `handoff-agent`. Email Routing sends `magic@abra-ca-dabra.app` to worker `handoff-agent`. The empty `AGENT_WAKE_SECRET` variable was removed from the agent config so the secret is the value that ships.
 - **Why** — The email handler is deployed, so the routing rule can deliver mail. Chat and wakes need a shared secret that is not in git.
 - **Code touchpoints** — `handoff/wrangler.agent.jsonc`

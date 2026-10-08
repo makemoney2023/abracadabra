@@ -21,6 +21,7 @@ const message: InboundEmail = {
   autoSubmitted: "",
   precedence: "",
   bytes: 200,
+  attachments: [],
 };
 
 const fresh = async () => ({ replies: 0, questionCount: 0, text: "" });

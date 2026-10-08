@@ -11,7 +11,10 @@ import {
 } from "@/db/conversations";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
+import { bytesFromBase64 } from "@/lib/client-channel";
 import { lookupEmailSender } from "@/lib/client-channel-store";
+import { storeEmailAttachments } from "@/lib/email-files";
+import { openObjectStore } from "@/lib/store/objects";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +84,34 @@ export async function POST(request: Request) {
       now,
     );
     return NextResponse.json({ ok: true });
+  }
+  if (action === "attach") {
+    const organizationId = text(body, "organizationId");
+    if (!organizationId || !Array.isArray(body.files)) {
+      return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
+    }
+    const files = body.files.slice(0, 20).flatMap((file) => {
+      if (!file || typeof file !== "object") return [];
+      const row = file as Record<string, unknown>;
+      const filename = typeof row.filename === "string" ? row.filename : "";
+      const contentType = typeof row.contentType === "string" ? row.contentType : "";
+      const raw = typeof row.body === "string" ? row.body : "";
+      if (!filename || !raw) return [];
+      const bytes = bytesFromBase64(raw);
+      if (bytes.byteLength === 0) return [];
+      return [{ filename, mimeType: contentType, bytes }];
+    });
+    const saved = await storeEmailAttachments({
+      sql,
+      store: openObjectStore(),
+      organizationId,
+      files,
+      now,
+    });
+    return NextResponse.json({
+      ok: true,
+      value: { batchId: saved.batchId, stored: saved.stored, refused: saved.refused },
+    });
   }
   if (action === "record") {
     const organizationId = text(body, "organizationId");

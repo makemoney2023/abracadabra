@@ -12,8 +12,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run && vitest run --config vitest.agent.config.mts",
+    "typecheck:agent": "tsc --noEmit -p tsconfig.agent.json",
     "test:db": "vitest run src/db/isolation.test.ts",
     "worker": "tsx src/worker/index.ts",
+    "publish:skills": "tsx scripts/publish-skills.ts",
     "pull": "tsx cli/pull.ts",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv"
   },

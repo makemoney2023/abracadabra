@@ -75,6 +75,13 @@ describe("handoff agent", () => {
     expect(args).toEqual({ organizationId: "org-stamp", title: "Home" });
   });
 
+  it("lets the HQ site read chat history", async () => {
+    const response = await exports.default.fetch(
+      new Request("https://agent.example/agents/hq-chat/user-cors/get-messages"),
+    );
+    expect(response.headers.get("access-control-allow-origin")).toBe("https://hq.example.invalid");
+  });
+
   it("names tools from the portal list, including one this worker does not catalog", () => {
     expect(
       toolNamesFrom([{ name: "client_context" }, { name: "extra_tool" }, {}], undefined),

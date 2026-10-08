@@ -1,5 +1,11 @@
 import PostalMime from "postal-mime";
 
+export type EmailAttachment = {
+  filename: string;
+  mimeType: string;
+  bytes: Uint8Array;
+};
+
 export type InboundEmail = {
   from: string;
   to: string;
@@ -12,6 +18,7 @@ export type InboundEmail = {
   autoSubmitted: string;
   precedence: string;
   bytes: number;
+  attachments: EmailAttachment[];
 };
 
 export type ThreadState = { replies: number; questionCount: number; text: string };
@@ -188,6 +195,25 @@ function firstMessageId(value: string): string {
   return value.match(/<[^>]+>/)?.[0] ?? "";
 }
 
+export function bytesFromBase64(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+export function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+function attachmentBytes(content: ArrayBuffer | Uint8Array | string): Uint8Array {
+  if (typeof content === "string") return new TextEncoder().encode(content);
+  if (content instanceof Uint8Array) return content;
+  return new Uint8Array(content);
+}
+
 /** Parses a raw message. Only the topmost Authentication-Results counts; a sender can add their own below it. */
 export async function parseInboundEmail(raw: string): Promise<InboundEmail> {
   const headers = headerLines(raw);
@@ -208,6 +234,14 @@ export async function parseInboundEmail(raw: string): Promise<InboundEmail> {
     autoSubmitted: field("auto-submitted"),
     precedence: field("precedence").toLowerCase(),
     bytes: new TextEncoder().encode(raw).byteLength,
+    attachments: (parsed.attachments ?? [])
+      .filter((part) => !part.related && part.disposition !== "inline")
+      .map((part) => ({
+        filename: part.filename ?? "",
+        mimeType: part.mimeType || "application/octet-stream",
+        bytes: attachmentBytes(part.content),
+      }))
+      .filter((part) => part.bytes.byteLength > 0),
   };
 }
 

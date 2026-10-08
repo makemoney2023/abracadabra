@@ -37,7 +37,9 @@ export function ChatPanel({ context }: { context?: ChatPageContext }) {
       live = false;
     };
   }, []);
-  if (error) return <p className="text-sm text-muted-foreground">{error}</p>;
+  if (error || (session && !session.host)) {
+    return <p className="text-sm text-muted-foreground">Chat is not available.</p>;
+  }
   if (!session?.token) return <p className="text-sm text-muted-foreground">Opening chat…</p>;
   return <LiveChat first={session} context={context} />;
 }
@@ -78,6 +80,7 @@ function LiveChat({ first, context }: { first: Session; context?: ChatPageContex
         {chat.connectionError ? (
           <p className="text-sm text-destructive">Chat lost its connection. Reload the page to sign in again.</p>
         ) : null}
+        {chat.error ? <p className="text-sm text-destructive">{chat.error.message}</p> : null}
         <ul className="flex flex-col gap-3">
           {chat.messages.map((message) => (
             <li key={message.id} className="text-sm">

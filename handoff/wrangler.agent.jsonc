@@ -5,6 +5,9 @@
   "compatibility_date": "2026-10-06",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "workers_dev": true,
+  "routes": [
+    { "pattern": "agent.abra-ca-dabra.app", "custom_domain": true }
+  ],
   "durable_objects": {
     "bindings": [
       { "name": "ClientAgent", "class_name": "ClientAgent" },
@@ -27,6 +30,7 @@
   },
   "env": {
     "test": {
+      "routes": [],
       "durable_objects": {
         "bindings": [
           { "name": "ClientAgent", "class_name": "ClientAgent" },
