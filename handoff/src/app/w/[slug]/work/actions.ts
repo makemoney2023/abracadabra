@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { DELIVERABLE_ERRORS, recordFeedback, type FeedbackDecision } from "@/db/deliverables";
+import { DELIVERABLE_ERRORS, openDeliverable, recordFeedback, type FeedbackDecision } from "@/db/deliverables";
+import { briefWakeReason, wakeOrganization } from "@/lib/agent-wake";
 import { openSession } from "@/lib/current";
 
 export type FormState = { message: string };
 
 function isDecision(value: string): value is FeedbackDecision {
-  return value === "approve" || value === "changes";
+  return value === "approve" || value === "changes" || value === "comment";
 }
 
 export async function feedbackAction(_previous: FormState, formData: FormData): Promise<FormState> {
@@ -31,6 +32,34 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
     Date.now(),
   );
   if (!saved.ok) return { message: DELIVERABLE_ERRORS[saved.error] };
+  const opened = await openDeliverable(sql, caller, saved.value.id, caller.staff ? "working" : "published");
+  const organizationId = opened?.deliverable.organization_id ?? "";
+  const paused = organizationId
+    ? await sql.get<{ agent_paused_at: number | null }>(
+        "SELECT agent_paused_at FROM organizations WHERE id = ?",
+        [organizationId],
+      )
+    : null;
+  const planned = organizationId
+    ? await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM tasks WHERE organization_id = ?", [organizationId])
+    : null;
+  const reason = opened
+    ? briefWakeReason({
+        kind: opened.deliverable.kind,
+        status: opened.deliverable.status,
+        decision,
+        paused: paused?.agent_paused_at != null,
+        planned: (planned?.n ?? 0) > 0,
+      })
+    : null;
+  if (reason && opened) {
+    await wakeOrganization(
+      { AGENT_URL: process.env.AGENT_URL, AGENT_WAKE_SECRET: process.env.AGENT_WAKE_SECRET },
+      opened.deliverable.organization_id,
+      reason,
+      Date.now(),
+    );
+  }
   revalidatePath(`/w/${slug}/work`);
   revalidatePath(`/w/${slug}/work/${saved.value.id}`);
   redirect(`/w/${slug}/work/${saved.value.id}`);

@@ -9,6 +9,7 @@ const STEPS = [
   { file: "0005_crm.sql", table: "organizations" },
   { file: "0006_deliverable_rounds.sql", column: { table: "deliverables", name: "published_version" } },
   { file: "0007_agent.sql", table: "agent_settings" },
+  { file: "0009_conversations.sql", table: "work_requests" },
 ] as const;
 
 type Step = (typeof STEPS)[number];

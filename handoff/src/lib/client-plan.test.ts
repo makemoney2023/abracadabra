@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chooseSkillsForPiece, parseSkillCatalog, type SkillCard } from "@/lib/client-documents";
-import { advanceClientWork, piecesFromBrief, planClientWork } from "@/lib/client-plan";
+import { advanceClientWork, applyBriefChange, briefChangeActions, piecesFromBrief, planClientWork } from "@/lib/client-plan";
 
 const COPY = "community/marketingskills/copywriting/SKILL.md";
 const TEARDOWN = "community/inference-sh/competitor-teardown/SKILL.md";
@@ -287,5 +287,84 @@ describe("one skill step per wake", () => {
     const updated = calls.filter((entry) => entry.name === "update_task").map((entry) => entry.args.taskId);
     expect(updated).toHaveLength(8);
     expect(updated).not.toContain("task-8");
+  });
+});
+
+describe("brief changes", () => {
+  const skill = { path: COPY, mode: "complete" as const, status: "todo" as const };
+  const other = { path: SOCIAL, mode: "complete" as const, status: "todo" as const };
+
+  it("creates a new piece and leaves an unchanged piece alone", () => {
+    const actions = briefChangeActions(BRIEF, `${BRIEF}- extra — Another page.\n`, [
+      { id: "web", title: "website: A website the client can send to buyers.", status: "todo", stage: "describe", skills: [skill] },
+    ]);
+    expect(actions.some((action) => action.type === "create")).toBe(true);
+    expect(actions.some((action) => action.type === "reset" && action.taskId === "web")).toBe(false);
+  });
+
+  it("resets skills still in describe and asks once a piece is in build", () => {
+    const next = BRIEF.replace(COPY, SOCIAL);
+    const reset = briefChangeActions(BRIEF, next, [
+      { id: "web", title: "website: A website the client can send to buyers.", status: "todo", stage: "describe", skills: [skill] },
+    ]);
+    expect(reset).toContainEqual({ type: "reset", taskId: "web", skills: expect.any(Array), note: "The brief changed this piece. Skills were reset." });
+    const asked = briefChangeActions(BRIEF, next, [
+      { id: "web", title: "website: A website the client can send to buyers.", status: "doing", stage: "build", skills: [skill] },
+    ]);
+    expect(asked[0]).toMatchObject({ type: "ask", taskId: "web" });
+  });
+
+  it("blocks a removed piece that is not done and keeps a finished one", () => {
+    const next = BRIEF.replace("- social_pack — A week of posts.\n", "");
+    const open = briefChangeActions(BRIEF, next, [
+      { id: "social", title: "social_pack: A week of posts.", status: "todo", stage: "engineer", skills: [other] },
+    ]);
+    expect(open).toContainEqual({ type: "block", taskId: "social" });
+    const done = briefChangeActions(BRIEF, next, [
+      { id: "social", title: "social_pack: A week of posts.", status: "done", stage: "run", skills: [other] },
+    ]);
+    expect(done.some((action) => action.type === "block")).toBe(false);
+    const already = briefChangeActions(BRIEF, next, [
+      { id: "social", title: "social_pack: A week of posts.", status: "blocked", stage: "engineer", skills: [other] },
+    ]);
+    expect(already.some((action) => action.type === "block")).toBe(false);
+  });
+
+  function changed(options: { paused?: boolean } = {}) {
+    const calls: Call[] = [];
+    const call = async (name: string, args: Record<string, unknown>) => {
+      calls.push({ name, args });
+      if (name === "client_context") {
+        return context(
+          [
+            { id: "web", title: "website: A website the client can send to buyers.", status: "todo", stage: "describe", skills: [skill] },
+            { id: "social", title: "social_pack: A week of posts.", status: "todo", stage: "engineer", skills: [other] },
+          ],
+          { organization: { id: "org-1", name: "Foam Co", agentPausedAt: options.paused ? 1 : null } },
+        );
+      }
+      if (name === "get_brief") {
+        return { body: `${BRIEF.replace("## Skills", "- page — A pricing page.\n\n## Skills")}`, previousBody: BRIEF };
+      }
+      if (name === "create_deliverable") return { deliverableId: "del-new" };
+      return { ok: true };
+    };
+    return { call, calls };
+  }
+
+  it("plans a new piece the way the first plan does", async () => {
+    const { call, calls } = changed();
+    const counts = await applyBriefChange({ call, requestId: "wake-1", now: 1, catalog: [] });
+    expect(counts.created).toBe(1);
+    const draft = calls.find((entry) => entry.name === "create_deliverable");
+    expect(draft?.args).toMatchObject({ title: "page: A pricing page.", projectId: "proj-1" });
+    const task = calls.find((entry) => entry.name === "create_task");
+    expect(task?.args).toMatchObject({ title: "page: A pricing page.", projectId: "proj-1", deliverableId: "del-new" });
+  });
+
+  it("does nothing for a paused client", async () => {
+    const { call, calls } = changed({ paused: true });
+    await applyBriefChange({ call, requestId: "wake-2", now: 1, catalog: [] });
+    expect(calls.map((entry) => entry.name)).toEqual(["client_context"]);
   });
 });

@@ -116,6 +116,7 @@ export type TodayBoard = {
     organizationId: string | null;
     organizationName: string;
   }[];
+  workRequests: { id: string; organizationId: string; organizationName: string; body: string; channel: string }[];
 };
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -426,7 +427,13 @@ export async function createContact(
 async function writeStaffActivity(
   sql: Sql,
   caller: Caller,
-  input: { organizationId: string; kind: "note" | "call" | "task"; body: string; contactId?: string },
+  input: {
+    organizationId: string;
+    kind: "note" | "call" | "task" | "staff.instruction";
+    body: string;
+    contactId?: string;
+    data?: Record<string, unknown>;
+  },
   now: number,
 ): Promise<CrmResult<{ id: string }>> {
   const actorId = staffUserId(caller);
@@ -439,9 +446,18 @@ async function writeStaffActivity(
   try {
     await sql.run(
       `INSERT INTO activities (
-         id, organization_id, contact_id, kind, actor_kind, actor_id, body, created_at
-       ) VALUES (?, ?, ?, ?, 'staff', ?, ?, ?)`,
-      [id, input.organizationId, input.contactId ?? null, input.kind, actorId, body, now],
+         id, organization_id, contact_id, kind, actor_kind, actor_id, body, data_json, created_at
+       ) VALUES (?, ?, ?, ?, 'staff', ?, ?, ?, ?)`,
+      [
+        id,
+        input.organizationId,
+        input.contactId ?? null,
+        input.kind,
+        actorId,
+        body,
+        input.data ? JSON.stringify(input.data) : null,
+        now,
+      ],
     );
     await sql.run("UPDATE organizations SET updated_at = ? WHERE id = ?", [now, input.organizationId]);
     await sql.exec("COMMIT");
@@ -455,10 +471,12 @@ async function writeStaffActivity(
 export function addNote(
   sql: Sql,
   caller: Caller,
-  input: { organizationId: string; body: string; contactId?: string },
+  input: { organizationId: string; body: string; contactId?: string; asInstruction?: boolean; taskId?: string },
   now: number,
 ): Promise<CrmResult<{ id: string }>> {
-  return writeStaffActivity(sql, caller, { ...input, kind: "note" }, now);
+  const kind = input.asInstruction ? "staff.instruction" : "note";
+  const data = input.taskId ? { taskId: input.taskId } : undefined;
+  return writeStaffActivity(sql, caller, { ...input, kind, data }, now);
 }
 
 export function logCall(
@@ -870,13 +888,14 @@ const EMPTY_TODAY: TodayBoard = {
   waitingSpaces: [],
   invoices: [],
   agentNotes: [],
+  workRequests: [],
 };
 
 export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<TodayBoard> {
   const actorId = staffUserId(caller);
   if (!actorId) return EMPTY_TODAY;
   const weekEnd = now + WEEK_MS;
-  const [newLeads, calls, tasks, stalledDeals, waitingSpaces, invoices, agentNotes] = await Promise.all([
+  const [newLeads, calls, tasks, stalledDeals, waitingSpaces, invoices, workRequests, agentNotes] = await Promise.all([
     sql.all<{ id: string; title: string; organization_id: string; organization_name: string }>(
       `SELECT d.id, d.title, d.organization_id, o.name AS organization_name
        FROM deals d
@@ -941,6 +960,13 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
        ORDER BY i.due_at`,
       [weekEnd],
     ),
+    sql.all<{ id: string; organization_id: string; organization_name: string; body: string; channel: string }>(
+      `SELECT w.id, w.organization_id, o.name AS organization_name, w.body, w.channel
+       FROM work_requests w
+       JOIN organizations o ON o.id = w.organization_id
+       WHERE o.archived_at IS NULL AND w.state = 'proposed'
+       ORDER BY w.updated_at DESC`,
+    ),
     sql.all<{
       id: string;
       body: string | null;
@@ -996,6 +1022,13 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       createdAt: row.created_at,
       organizationId: row.organization_id,
       organizationName: row.organization_name ?? "",
+    })),
+    workRequests: workRequests.map((row) => ({
+      id: row.id,
+      organizationId: row.organization_id,
+      organizationName: row.organization_name,
+      body: row.body,
+      channel: row.channel,
     })),
   };
 }
@@ -1635,6 +1668,47 @@ export async function repoActivitySummary(
     lastPush,
     latestRelease,
   };
+}
+
+/** A draft invoice for newly approved client work. Staff set the price before it is sent. A repeat of the same source returns the first one. */
+export async function createDraftInvoice(
+  sql: Sql,
+  input: { organizationId: string; description: string; sourceId: string; createdBy: string },
+  now: number,
+): Promise<{ id: string; number: string }> {
+  const existing = await sql.get<{ id: string; number: string }>(
+    "SELECT id, number FROM invoices WHERE external_id = ?",
+    [input.sourceId],
+  );
+  if (existing) return existing;
+  const year = new Date(now).getUTCFullYear();
+  await sql.run(
+    `INSERT INTO invoice_counters (year, last_number) VALUES (?, 1)
+     ON CONFLICT(year) DO UPDATE SET last_number = last_number + 1`,
+    [year],
+  );
+  const counter = await sql.get<{ last_number: number }>("SELECT last_number FROM invoice_counters WHERE year = ?", [year]);
+  const number = `INV-${year}-${String(counter?.last_number ?? 1).padStart(4, "0")}`;
+  const id = crypto.randomUUID();
+  const description = input.description.trim().slice(0, 200) || "Approved client work";
+  await sql.run(
+    `INSERT INTO invoices (
+      id, number, organization_id, project_id, contact_id, status, currency,
+      subtotal_cents, tax_rate_bp, tax_cents, total_cents, paid_cents,
+      issued_at, due_at, sent_at, paid_at, pdf_r2_key, external_id, memo, created_by, created_at, updated_at
+    ) VALUES (
+      ?, ?, ?, NULL, NULL, 'draft', 'usd',
+      0, 0, 0, 0, 0,
+      NULL, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?
+    )`,
+    [id, number, input.organizationId, input.sourceId, "Quote for approved client work. Set the price before sending.", input.createdBy, now, now],
+  );
+  await sql.run(
+    `INSERT INTO invoice_items (id, invoice_id, milestone_id, description, quantity, unit_cents, amount_cents, sort)
+     VALUES (?, ?, NULL, ?, 1, 0, 0, 0)`,
+    [crypto.randomUUID(), id, description],
+  );
+  return { id, number };
 }
 
 /** A request that just moved to received, on a linked space. Safe to call twice. */

@@ -591,6 +591,7 @@ describe("projects and work", () => {
       waitingSpaces: [],
       invoices: [],
       agentNotes: [],
+      workRequests: [],
     });
   });
 

@@ -3,7 +3,23 @@ import type { Sql } from "@/db/sql";
 
 const WINDOW_MS = 5 * 60 * 1000;
 
-export type WakeReason = "work" | "context_changed" | "run_check" | "status";
+export type WakeReason = "work" | "context_changed" | "run_check" | "status" | "brief_approved" | "brief_changed";
+
+/** What a client's decision on a brief should wake. Notes wake nothing. */
+export function briefWakeReason(input: {
+  kind: string;
+  status: string;
+  decision: string;
+  paused: boolean;
+  planned: boolean;
+}): WakeReason | null {
+  if (input.kind !== "brief" || input.paused) return null;
+  if (input.decision === "approve" && input.status === "approved") {
+    return input.planned ? "brief_changed" : "brief_approved";
+  }
+  if (input.decision === "changes") return "context_changed";
+  return null;
+}
 
 export type WakeTarget = { organizationId: string; reason: WakeReason };
 
@@ -92,6 +108,28 @@ export async function dueOrganizations(sql: Sql, cron: string): Promise<WakeTarg
     return rows.map((row) => ({ organizationId: row.id, reason: "status" }));
   }
   return [];
+}
+
+/** One signed wake. Missing address or secret does nothing so a saved note still stands. */
+export async function wakeOrganization(
+  env: WakeEnv,
+  organizationId: string,
+  reason: WakeReason,
+  now: number,
+  fetchImpl: typeof fetch = fetch,
+): Promise<void> {
+  const secret = env.AGENT_WAKE_SECRET ?? "";
+  const url = env.AGENT_URL?.replace(/\/$/, "");
+  if (!url || !secret) return;
+  const body = JSON.stringify({ organizationId, reason, sentAt: now });
+  await fetchImpl(`${url}/wake`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-handoff-signature": signWake(secret, body),
+    },
+    body,
+  });
 }
 
 /** One signed POST per due client. A failed call is an activity and is tried again next cycle. */

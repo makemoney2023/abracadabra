@@ -164,6 +164,70 @@ async function saveBrief(sql: Sql, actor: AgentActor, args: WorkArgs, now: numbe
   return { deliverableId: id, version, kind: args.kind };
 }
 
+/** Staff chat saves the next brief version. The client agent redrafts only after a revision is approved. */
+export async function saveStaffBrief(
+  sql: Sql,
+  input: { organizationId: string; userId: string; title: string; bodyMarkdown: string },
+  now: number,
+): Promise<{ deliverableId: string; version: number }> {
+  const title = input.title.trim();
+  const body = input.bodyMarkdown.trim();
+  if (!title || title.length > 200 || !body) throw new AgentWorkError("Name the brief and its text.");
+  const workspaceId = await workspaceFor(sql, input.organizationId);
+  const existing = await sql.get<{ id: string; version: number }>(
+    `SELECT id, version FROM deliverables
+     WHERE organization_id = ? AND kind = 'brief' AND status != 'archived'
+     ORDER BY updated_at DESC LIMIT 1`,
+    [input.organizationId],
+  );
+  const id = existing?.id ?? crypto.randomUUID();
+  const version = existing ? existing.version + 1 : 1;
+  await sql.exec("BEGIN");
+  try {
+    if (existing) {
+      await sql.run("UPDATE deliverables SET version = ?, status = 'draft', title = ?, updated_at = ? WHERE id = ?", [
+        version,
+        title,
+        now,
+        id,
+      ]);
+    } else {
+      await sql.run(
+        `INSERT INTO deliverables (
+          id, organization_id, project_id, workspace_id, title, kind, status, version,
+          source_repo_id, source_ref, published_at, actor_kind, actor_id, created_at, updated_at, published_version
+        ) VALUES (?, ?, NULL, ?, ?, 'brief', 'draft', 1, NULL, NULL, NULL, 'staff', ?, ?, ?, NULL)`,
+        [id, input.organizationId, workspaceId, title, input.userId, now, now],
+      );
+    }
+    await sql.run(
+      `INSERT INTO deliverable_items (
+        id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+      ) VALUES (?, ?, ?, NULL, 'page', NULL, 'brief.md', ?, '[]', NULL, 'pending', 0)`,
+      [crypto.randomUUID(), id, version, body],
+    );
+    await sql.run(
+      `INSERT INTO activities (
+        id, organization_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at
+      ) VALUES (?, ?, ?, 'staff.brief_addendum', 'staff', ?, ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        input.organizationId,
+        workspaceId,
+        input.userId,
+        title,
+        JSON.stringify({ deliverableId: id, version }),
+        now,
+      ],
+    );
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+  return { deliverableId: id, version };
+}
+
 function skillSteps(value: unknown): {
   steps: { path: string; mode: string; status: "todo" | "doing" | "done" }[];
   current: number;

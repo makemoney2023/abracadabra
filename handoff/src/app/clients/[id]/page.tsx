@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { listClientThreads } from "@/db/conversations";
 import {
   DEAL_STAGE_LABEL,
   listContacts,
@@ -21,10 +22,12 @@ import { clientSpaceHref } from "@/lib/host";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChatPanel } from "../../chat/chat-panel";
 import { StaffShell } from "../../staff-shell";
 import { ProjectForm } from "../../projects/forms";
 import { PROJECT_STATUS_LABEL } from "../../projects/labels";
 import { CallForm, MergeForm, NoteForm, PersonForm, TaskForm } from "../activity-forms";
+import { ThreadReplyForm } from "../thread-forms";
 import { completeTaskAction } from "../actions";
 import { LinkSpaceForm } from "../link-space-form";
 import { AssignRepoForm, LinkRepoForm, UnlinkRepoForm } from "../repo-forms";
@@ -77,7 +80,7 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos] = await Promise.all([
+  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads] = await Promise.all([
     unlinkedWorkspaces(sql, caller),
     sql.all<{ id: string; slug: string; display_name: string }>(
       `SELECT id, slug, display_name FROM workspaces
@@ -92,6 +95,7 @@ export default async function ClientPage({
     listDeals(sql, caller, { organizationId: client.id }),
     listProjects(sql, caller, client.id),
     listRepos(sql, caller, client.id),
+    listClientThreads(sql, client.id),
   ]);
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
@@ -105,6 +109,7 @@ export default async function ClientPage({
   return (
     <StaffShell>
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-16">
+      <ChatPanel context={{ organizationId: client.id }} />
       <div className="flex flex-col gap-3">
         <h1 className="font-heading text-4xl leading-tight">{client.name}</h1>
         {query.merged === "1" ? <p role="status" className="text-sm">These clients are now one.</p> : null}
@@ -216,6 +221,39 @@ export default async function ClientPage({
             </ul>
           )}
           {secrets && visible?.ok ? <LinkRepoForm organizationId={client.id} repos={choices} /> : null}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Conversations</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          {threads.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No client messages yet.</p>
+          ) : (
+            threads.map((thread) => (
+              <section key={thread.id} className="flex flex-col gap-2">
+                <p className="text-sm">
+                  <Badge variant="secondary">{thread.channel}</Badge>
+                  <span className="ml-2 text-muted-foreground">{thread.state}</span>
+                </p>
+                <ul className="flex flex-col gap-2 text-sm">
+                  {thread.messages.map((message) => (
+                    <li key={message.id}>
+                      <span className="text-muted-foreground">{message.actorKind === "staff" ? "You" : message.kind}</span>
+                      {message.body ? <p className="whitespace-pre-wrap">{message.body}</p> : null}
+                    </li>
+                  ))}
+                </ul>
+                <ThreadReplyForm
+                  organizationId={client.id}
+                  threadId={thread.thread_id}
+                  channel={thread.channel}
+                  sender={thread.sender}
+                />
+              </section>
+            ))
+          )}
         </CardContent>
       </Card>
       <Card>

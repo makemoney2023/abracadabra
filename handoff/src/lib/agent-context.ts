@@ -309,6 +309,17 @@ export async function getBrief(
   );
   const preferred = items.find((item) => item.title === "brief.md" || item.title === "design-system.md");
   const body = preferred?.copy_text ?? items.find((item) => item.copy_text)?.copy_text ?? "";
+  const previousItems =
+    deliverable.version > 1
+      ? await sql.all<{ title: string; copy_text: string | null }>(
+          `SELECT title, copy_text FROM deliverable_items
+           WHERE deliverable_id = ? AND version = ?
+           ORDER BY sort`,
+          [deliverable.id, deliverable.version - 1],
+        )
+      : [];
+  const previousPreferred = previousItems.find((item) => item.title === "brief.md" || item.title === "design-system.md");
+  const previousBody = previousPreferred?.copy_text ?? previousItems.find((item) => item.copy_text)?.copy_text ?? "";
   const changes = await sql.all<{ id: string; item_id: string | null; version: number; body: string | null }>(
     `SELECT id, item_id, version, body FROM deliverable_feedback
      WHERE deliverable_id = ? AND version = ? AND decision = 'changes'
@@ -322,6 +333,7 @@ export async function getBrief(
     version: deliverable.version,
     title: deliverable.title,
     body,
+    previousBody,
     changes: changes.map((row) => ({
       id: row.id,
       itemId: row.item_id,

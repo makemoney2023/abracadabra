@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, CalendarDays, FolderOpen, Inbox, ListTodo, Settings } from "lucide-react";
+import { Building2, CalendarDays, FolderOpen, Inbox, ListTodo, MessageSquare, Settings } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -18,6 +18,7 @@ const LINKS = [
   { href: "/leads", label: "Leads", icon: Inbox },
   { href: "/clients", label: "Clients", icon: Building2 },
   { href: "/work", label: "Work", icon: ListTodo },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/spaces", label: "Spaces", icon: FolderOpen },
   { href: "/settings/github", label: "Settings", icon: Settings },
 ] as const;

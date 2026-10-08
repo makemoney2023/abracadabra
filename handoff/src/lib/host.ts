@@ -15,6 +15,7 @@ const STAFF_PREFIXES = [
   "/invoices",
   "/spaces",
   "/settings",
+  "/chat",
 ];
 
 const CLIENT_PREFIXES = ["/w", "/share", "/invites", "/how-handoff-handles-files"];

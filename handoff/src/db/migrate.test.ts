@@ -25,6 +25,7 @@ describe("statementsFromMigration", () => {
       "0005_crm.sql",
       "0006_deliverable_rounds.sql",
       "0007_agent.sql",
+      "0009_conversations.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);

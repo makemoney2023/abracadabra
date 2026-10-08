@@ -312,3 +312,176 @@ export async function advanceClientWork(input: {
   }
   return { advanced, reschedule };
 }
+
+export type BriefTask = {
+  id: string;
+  title: string;
+  status: string;
+  stage: string;
+  skills: PlanSkill[];
+};
+
+export type BriefAction =
+  | { type: "create"; piece: PlannedPiece }
+  | { type: "reset"; taskId: string; skills: PlanSkill[]; note: string }
+  | { type: "ask"; taskId: string; question: string }
+  | { type: "block"; taskId: string };
+
+function normalizeTitle(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function skillKey(skills: PlanSkill[]): string {
+  return skills.map((skill) => `${skill.path}:${skill.mode}`).join("|");
+}
+
+/** Diff two brief versions into creates, skill resets, staff questions, and removals. */
+export function briefChangeActions(
+  previous: string,
+  next: string,
+  tasks: BriefTask[],
+  catalog: SkillCard[] = [],
+): BriefAction[] {
+  const before = new Map(piecesFromBrief(previous, catalog).map((piece) => [normalizeTitle(piece.title), piece]));
+  const after = piecesFromBrief(next, catalog);
+  const afterByTitle = new Map(after.map((piece) => [normalizeTitle(piece.title), piece]));
+  const briefTasks = tasks.filter((task) => /^[a-z0-9_]+: .+/.test(normalizeTitle(task.title)));
+  const taskByTitle = new Map(briefTasks.map((task) => [normalizeTitle(task.title), task]));
+  const actions: BriefAction[] = [];
+  for (const piece of after) {
+    const key = normalizeTitle(piece.title);
+    const task = taskByTitle.get(key);
+    if (!task) {
+      actions.push({ type: "create", piece });
+      continue;
+    }
+    const baseline = before.get(key)?.skills ?? task.skills;
+    if (skillKey(baseline) === skillKey(piece.skills)) continue;
+    const locked = task.status === "done" || task.stage === "build" || task.stage === "run";
+    if (locked) {
+      actions.push({
+        type: "ask",
+        taskId: task.id,
+        question: "This piece is already in build. Start the next round, or keep it as it is?",
+      });
+    } else {
+      actions.push({
+        type: "reset",
+        taskId: task.id,
+        skills: piece.skills,
+        note: "The brief changed this piece. Skills were reset.",
+      });
+    }
+  }
+  for (const task of briefTasks) {
+    if (afterByTitle.has(normalizeTitle(task.title)) || task.status === "done" || task.status === "blocked") continue;
+    actions.push({ type: "block", taskId: task.id });
+  }
+  return actions;
+}
+
+function briefTasksOf(tasks: ContextTask[] | undefined): BriefTask[] {
+  return (tasks ?? []).flatMap((task) => {
+    if (typeof task.id !== "string" || typeof task.title !== "string") return [];
+    const skills = Array.isArray(task.skills)
+      ? task.skills.flatMap((skill) => {
+          if (typeof skill?.path !== "string" || (skill.mode !== "plan" && skill.mode !== "complete")) return [];
+          const status: PlanSkill["status"] = skill.status === "doing" || skill.status === "done" ? skill.status : "todo";
+          return [{ path: skill.path, mode: skill.mode, status }];
+        })
+      : [];
+    return [{ id: task.id, title: task.title, status: task.status ?? "todo", stage: task.stage ?? "describe", skills }];
+  });
+}
+
+/** Re-plans after an approved brief change. A new piece gets a draft and a task, as in the first plan. */
+export async function applyBriefChange(input: {
+  call: ToolCaller;
+  requestId: string;
+  now: number;
+  catalog?: SkillCard[];
+}): Promise<{ created: number; reset: number; asked: number; blocked: number }> {
+  const counts = { created: 0, reset: 0, asked: 0, blocked: 0 };
+  const context = picture(await input.call("client_context", {}));
+  if (context.organization?.agentPausedAt != null) return counts;
+  const brief = fields(await input.call("get_brief", { kind: "brief" }));
+  const next = typeof brief.body === "string" ? brief.body : "";
+  if (!next.trim()) return counts;
+  const previous = typeof brief.previousBody === "string" ? brief.previousBody : "";
+  const actions = briefChangeActions(previous, next, briefTasksOf(context.tasks), input.catalog);
+  const projectId = context.project?.id;
+  let index = 0;
+  for (const action of actions) {
+    index += 1;
+    if (action.type === "create") {
+      const kind = KINDS.has(action.piece.kind) ? action.piece.kind : "other";
+      const draft = fields(
+        await input.call("create_deliverable", {
+          title: action.piece.title,
+          kind,
+          projectId,
+          requestId: `${input.requestId}:deliverable:${index}`,
+        }),
+      );
+      await input.call("create_task", {
+        requestId: `${input.requestId}:create:${index}`,
+        title: action.piece.title,
+        stage: action.piece.stage,
+        projectId,
+        deliverableId: typeof draft.deliverableId === "string" ? draft.deliverableId : undefined,
+        skills: action.piece.skills,
+      });
+      counts.created += 1;
+    } else if (action.type === "reset") {
+      await input.call("update_task", {
+        requestId: `${input.requestId}:reset:${action.taskId}`,
+        taskId: action.taskId,
+        skills: action.skills,
+      });
+      await input.call("add_note", {
+        requestId: `${input.requestId}:note:${action.taskId}`,
+        taskId: action.taskId,
+        body: action.note,
+      });
+      counts.reset += 1;
+    } else if (action.type === "ask") {
+      await input.call("ask_staff", {
+        requestId: `${input.requestId}:ask:${action.taskId}`,
+        taskId: action.taskId,
+        question: action.question,
+        options: ["Start next round", "Keep as is"],
+      });
+      counts.asked += 1;
+    } else {
+      await input.call("update_task", {
+        requestId: `${input.requestId}:block:${action.taskId}`,
+        taskId: action.taskId,
+        status: "blocked",
+        blockedReason: "removed_from_brief",
+      });
+      counts.blocked += 1;
+    }
+  }
+  return counts;
+}
+
+/** Keep every existing scope line and record the new piece as an addendum. */
+export function appendBriefWork(
+  markdown: string,
+  piece: { kind: string; outcome: string; goal: string; due: string },
+): string {
+  const line = `- ${piece.kind} — ${piece.outcome}`;
+  let next = markdown.trim();
+  if (!next.includes("## Scope")) {
+    next = next ? `${next}\n\n## Scope\n${line}\n` : `## Scope\n${line}\n`;
+  } else {
+    const match = next.match(/## Scope\n([\s\S]*?)(?=\n## |$)/);
+    if (match && match.index !== undefined) {
+      const block = match[0].replace(/\s*$/, "");
+      next = `${next.slice(0, match.index)}${block}\n${line}\n${next.slice(match.index + match[0].length)}`;
+    }
+  }
+  const section = `### ${piece.kind}: ${piece.outcome}\n${piece.goal}\nDue: ${piece.due}\n`;
+  if (next.includes("## Addendum")) return `${next.trimEnd()}\n${section}`;
+  return `${next.trimEnd()}\n\n## Addendum\n${section}`;
+}

@@ -2,6 +2,51 @@
 
 ## 2026-10-07
 
+- **What changed** — Steps 24–27 of the HQ agent plan, plus the channel checks that do not need a deploy. A client approving a brief wakes `brief_approved` when nothing is planned yet and `brief_changed` after that. A denial wakes `context_changed`. A paused client is not woken. Today has Needs you for proposed requests, with Approve and Decline. A client page lists conversations and lets staff reply. Chat sits on the client, project, and work pages and tells the model which record is open. A sender on two clients is asked which one. Staff Slack posts are logged and not answered. An unlinked Slack channel is noted once.
+- **Why** — Staff need to see and answer client threads before email and Slack go live.
+- **Code touchpoints** — `handoff/src/lib/agent-wake.ts`, `handoff/src/app/w/[slug]/work/actions.ts`, `handoff/src/db/conversations.ts`, `handoff/src/db/crm.ts`, `handoff/src/app/today-screen.tsx`, `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/thread-forms.tsx`, `handoff/src/app/chat/chat-panel.tsx`, `handoff/src/lib/hq-chat-context.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/app/api/client-messages/route.ts`
+- **Data-flow impact** — Brief approval reads `agent_paused_at` and whether the client has tasks. `todayFor` includes proposed `work_requests`. Staff replies are `staff.reply` activities. Decline of an email request tries to mail the reason.
+- **API / schema impact** — `/api/client-messages` gains `thread_org`, `unlinked_slack`, and `staff_log`. Lookup now returns every organization for the sender.
+- **Verification** — The conversation, email, Slack, wake, chat-context, and HQ tool tests passed. `npx tsc --noEmit` exited 0. Not done, because they need secrets or a live service: the real `Authentication-Results` fixture, deploying, the `magic@` routing rule, the Slack app, email attachments, and the agent type-check config.
+
+## 2026-10-07
+
+- **What changed** — Approving a client request writes a draft invoice for that piece, at $0, for staff to price and send. A brief the client must approve is published to their space at `/w/[slug]/work/[id]`, with Approve, Deny, and Add a note. Approve wakes the agent (`brief_approved` on the first version, `brief_changed` after that). Deny wakes `context_changed`. A note does not.
+- **Why** — New client work needs a quote, and the client needs a page to accept or refuse the brief.
+- **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/agent-wake.ts`, `handoff/src/app/w/[slug]/work/actions.ts`, `handoff/src/app/w/[slug]/work/forms.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — `decide_work_request` inserts `invoices` and `invoice_items` with `external_id` set to the request id. A client-owned addendum sets `published_version` and `status='in_review'`. The work page posts `comment` as well as `approve` and `changes`.
+- **API / schema impact** — none. Wake reason `brief_approved` is now sent from the brief page. It was already handled by the agent.
+- **Verification** — `npx vitest run` on the HQ tool, wake, and deliverable tests passed. `npx tsc --noEmit` and `npx eslint` on the touched files exited 0. The brief page was not clicked in a browser: that needs a client signed into the space.
+
+## 2026-10-07
+
+- **What changed** — The HQ agent spec records the state of steps 17–23 and adds steps 24–31 from the review: client brief approval wakes the agent, a Conversations tab with staff replies, client requests in Needs you, the chat side panel, email go-live (header check, HQ reachability, secrets, then the routing rule, plus the multi-client question and attachments), Slack go-live, an agent type check, and better client message sorting. Section 18 gains the open decision on message sorting and a note on `ClientDesk`.
+- **Why** — The review found work the plan needs before clients can write in.
+- **Code touchpoints** — `docs/hq-agent-spec.md` (section 16 status note and steps 24–31, section 18). No code.
+- **Data-flow impact** — none.
+- **API / schema impact** — none yet. Planned: wake reason `brief_approved` in `WakeReason`, `tsconfig.agent.json`.
+- **Verification** — doc only.
+
+## 2026-10-07
+
+- **What changed** — Review of the chat and client-channel work. The email check now needs a pass that belongs to the sender's domain, and reads only the topmost `Authentication-Results` header. Email bodies are parsed with `postal-mime`. Replies thread on the root `References` id, carry `Message-ID`, `References`, and `Auto-Submitted`, and a refused reply no longer fails the handler. One open request per thread collects each message and counts questions, so the three-question cap holds. Slack replies stay in their thread; edits, joins, and mentions are ignored; the lookup and reply run after the 200. Approving a client request takes the piece kind and outcome from staff, and records `decided_by`, `decided_at`, `decline_reason`, and `brief_version`. Decline needs a reason. `add_work` and approved requests wake the agent only when staff own brief approval. Re-planning creates a draft and a task in the project for each new piece, keeps the piece's stage, and skips a paused client. Stage moves, pauses, answers, brief changes, and request decisions write a staff activity with `via='hq_chat'`. Chat tools have descriptions and a system prompt. The chat token refreshes every eight minutes. The approval card shows the action and its fields. `invite_person` sends mail. New tool `link_slack_channel`.
+- **Why** — Any domain's DKIM pass let a stranger write as a client. Approving a client request always failed because nothing named the piece. Each email reply started a new thread. Added work re-planned before the brief was approved. Chat stopped working after ten minutes.
+- **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/lib/client-channel-store.ts`, `handoff/src/db/conversations.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/agent/worker.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/app/chat/chat-panel.tsx`, `handoff/src/app/chat/approval-card.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/app/api/hq-tools/route.ts`, `handoff/migrations/0009_conversations.sql`, `handoff/wrangler.agent.jsonc`. Removed `handoff/src/agent/client-desk.ts`: it returned fixed JSON and nothing called it.
+- **Data-flow impact** — `/api/client-messages` action `recent_replies` is replaced by `thread`, which returns reply count, question count, and the open request text. Action `link_slack` is removed; linking goes through `/api/hq-tools`.
+- **API / schema impact** — `0009_conversations.sql` (not yet deployed) gains `decided_by`, `decided_at`, `decline_reason`, `brief_version`, and indexes on state and thread. Migration tag `v2` adds only `HqChat`.
+- **Verification** — `npm test` in `handoff/` passed 411 node tests and 6 agent tests. `npx tsc --noEmit` and `npx eslint` on the changed files exited 0. `wrangler deploy --dry-run` for `handoff-agent` bundled.
+
+## 2026-10-07
+
+- **What changed** — Staff can open `/chat` on the HQ host and run HQ reads immediately. Client-facing tools, brief adds, and agent directions wait for approval. Client email and Slack notes are classified and stored as work requests. A brief change wakes the client agent with `brief_changed`. `/chat` on the client host is not found.
+- **Why** — Staff need a conversation that can add records and correct a brief. Clients need a receipt when they write to magic@ or Slack.
+- **Code touchpoints** — `handoff/src/lib/hq-chat-token.ts`, `handoff/src/lib/staff-request.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/db/conversations.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `handoff/src/app/chat/page.tsx`, `handoff/src/lib/host.ts`, `handoff/migrations/0009_conversations.sql`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — Chat tools POST to `/api/hq-tools`. Email and Slack POST to `/api/client-messages`. Approved `add_work` appends a brief addendum and wakes the organization.
+- **API / schema impact** — `0009_conversations.sql` adds `work_requests` and `slack_channel_links`. New routes: `/api/hq-chat/token`, `/api/hq-chat/whoami`, `/api/hq-tools`, `/api/client-messages`. Durable Object class `HqChat` (migration tag `v2`).
+- **Verification** — Chat, tool, email, Slack, brief-change, token-route, and host tests passed. `npx vitest run --config vitest.agent.config.mts` passed 6 tests after the agent test env gained `HQ_ORIGIN`, `MAGIC_EMAIL_FROM`, and `send_email`. Unsigned `/chat` on `hq.localhost` returns 404, the same gate as `/clients`. `/chat` on the client host returns "This page is not here." The composer was not exercised: there is no staff session in this browser. The `magic@` routing rule is still not created.
+
+## 2026-10-07
+
 - **What changed** — Email Routing is on for `abra-ca-dabra.app`. The apex has Cloudflare MX records, SPF `v=spf1 include:_spf.mx.cloudflare.net ~all` in place of `v=spf1 -all`, and DKIM `cf2024-1._domainkey`. The HQ agent spec gains section 17: staff chat, adding work, revising a wrong brief, and client conversations by email and Slack, with build steps 17–23.
 - **Why** — Staff need to talk to the agent and run HQ from a chat. Clients need to send work to `magic@abra-ca-dabra.app` or Slack and get a reply.
 - **Code touchpoints** — `docs/hq-agent-spec.md` (sections 2.2, 15, 16, 17, 18). DNS on zone `abra-ca-dabra.app`. No code.

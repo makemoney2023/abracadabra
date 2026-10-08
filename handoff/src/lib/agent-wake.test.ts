@@ -6,7 +6,7 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
-import { dueOrganizations, signWake, verifyWake, wakeDueAgents } from "@/lib/agent-wake";
+import { briefWakeReason, dueOrganizations, signWake, verifyWake, wakeDueAgents } from "@/lib/agent-wake";
 
 const NOW = 1_700_000_000_000;
 const FIVE_MINUTES = 5 * 60 * 1000;
@@ -158,5 +158,17 @@ describe("signed wakes", () => {
     );
     const hourly = await dueOrganizations(sql, "0 * * * *");
     expect(hourly).toEqual([{ organizationId: "org-build", reason: "run_check" }]);
+  });
+});
+
+describe("brief decisions", () => {
+  it("wakes for an approval or a denial, and stays quiet for a note or a paused client", () => {
+    const base = { kind: "brief", status: "approved", decision: "approve", paused: false, planned: false };
+    expect(briefWakeReason(base)).toBe("brief_approved");
+    expect(briefWakeReason({ ...base, planned: true })).toBe("brief_changed");
+    expect(briefWakeReason({ ...base, paused: true })).toBeNull();
+    expect(briefWakeReason({ ...base, status: "changes_requested", decision: "changes" })).toBe("context_changed");
+    expect(briefWakeReason({ ...base, status: "in_review", decision: "comment" })).toBeNull();
+    expect(briefWakeReason({ ...base, kind: "website" })).toBeNull();
   });
 });

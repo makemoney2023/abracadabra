@@ -15,7 +15,10 @@ import {
   type CrmError,
   type OrgKind,
 } from "@/db/crm";
+import { recordStaffReply, workRequestById } from "@/db/conversations";
 import { requireHqStaffPage } from "@/lib/current";
+import { runHqTool } from "@/lib/hq-tools";
+import { sendHandoffMail } from "@/lib/mail";
 
 export type FormState = { message: string };
 
@@ -149,4 +152,71 @@ export async function mergeClientAction(_previous: FormState, formData: FormData
   if (!merged.ok) return { message: fieldMessage(merged.error, "merge") };
   refresh(keepId);
   redirect(`/clients/${keepId}?merged=1`);
+}
+
+export async function decideRequestAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const { sql, caller } = await requireHqStaffPage();
+  const id = String(formData.get("id") ?? "");
+  const decision = String(formData.get("decision") ?? "");
+  const result = await runHqTool(
+    sql,
+    caller,
+    {
+      tool: "decide_work_request",
+      input: {
+        id,
+        decision,
+        kind: String(formData.get("kind") ?? ""),
+        outcome: String(formData.get("outcome") ?? ""),
+        body: String(formData.get("body") ?? ""),
+      },
+      idempotencyKey: `today:${id}:${decision}`,
+      approved: true,
+    },
+    Date.now(),
+  );
+  if ("needsApproval" in result) return { message: "That still needs approval." };
+  if (!result.ok) return { message: result.error === "invalid" ? "Name the piece, or give a reason." : "That request is not here." };
+  const row = await workRequestById(sql, id);
+  if (row && decision === "declined" && row.channel === "email" && row.sender.includes("@")) {
+    try {
+      await sendHandoffMail({
+        to: row.sender,
+        from: process.env.HANDOFF_FROM_EMAIL ?? "magic@abra-ca-dabra.app",
+        subject: "Re: your request",
+        text: row.decline_reason ?? "We can't take this on.",
+      });
+    } catch {
+      return { message: "Declined. The email did not send." };
+    }
+  }
+  revalidatePath("/");
+  if (row) revalidatePath(`/clients/${row.organization_id}`);
+  return { message: decision === "approved" ? "Approved. A draft invoice is waiting for a price." : "Declined." };
+}
+
+export async function replyToThreadAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const threadId = String(formData.get("threadId") ?? "");
+  const channel = String(formData.get("channel") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  const sender = String(formData.get("sender") ?? "");
+  if (!caller.userId || !body) return { message: "Write a reply." };
+  await recordStaffReply(sql, { organizationId, userId: caller.userId, threadId, channel, body }, Date.now());
+  if (channel === "email" && sender.includes("@")) {
+    try {
+      await sendHandoffMail({
+        to: sender,
+        from: process.env.HANDOFF_FROM_EMAIL ?? "magic@abra-ca-dabra.app",
+        subject: "Re: your note",
+        text: body,
+      });
+    } catch {
+      revalidatePath(`/clients/${organizationId}`);
+      return { message: "Saved. The email did not send." };
+    }
+  }
+  revalidatePath(`/clients/${organizationId}`);
+  return { message: "Sent." };
 }

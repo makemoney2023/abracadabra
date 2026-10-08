@@ -7,16 +7,26 @@ import {
   type SkillCard,
   type ToolCaller,
 } from "../lib/client-documents";
-import { advanceClientWork, planClientWork } from "../lib/client-plan";
+import { advanceClientWork, applyBriefChange, planClientWork } from "../lib/client-plan";
+import { addressOf, handleInboundEmail, parseInboundEmail, replyMime, type ThreadState } from "../lib/client-channel";
+import { handleSlackEvent } from "../lib/slack-channel";
+import type { ChatBindings } from "./hq-chat";
 
-export interface AgentBindings {
+export interface AgentBindings extends ChatBindings {
   ClientAgent: DurableObjectNamespace<ClientAgent>;
+  HQ_CHAT?: DurableObjectNamespace;
+  EMAIL?: SendEmail;
   SKILLS: R2Bucket;
   AI: Ai;
   MCP_PORTAL_URL: string;
   AGENT_WAKE_SECRET: string;
   CF_ACCESS_CLIENT_ID: string;
   CF_ACCESS_CLIENT_SECRET: string;
+  MAGIC_EMAIL_FROM?: string;
+  SLACK_SIGNING_SECRET?: string;
+  SLACK_BOT_TOKEN?: string;
+  SLACK_BOT_USER_ID?: string;
+  SLACK_STAFF_USER_IDS?: string;
 }
 
 type SkillFile = { skills?: { name?: unknown }[] } | { name?: unknown }[];
@@ -192,9 +202,13 @@ export class ClientAgent extends Agent<AgentBindings> {
   }
 
   private async continueWork(wakeId: string, reason: string): Promise<void> {
-    if (reason !== "brief_approved" && reason !== "work") return;
+    if (reason !== "brief_approved" && reason !== "work" && reason !== "brief_changed") return;
     const call = this.toolCaller(this.portal().getAITools?.() ?? {});
     if (!call) return;
+    if (reason === "brief_changed") {
+      await applyBriefChange({ call, requestId: wakeId, now: Date.now(), catalog: await this.skillCatalog() });
+      return;
+    }
     if (reason === "brief_approved") {
       await planClientWork({
         call,
@@ -294,9 +308,33 @@ function findExecute(
   return null;
 }
 
+type InboundEmail = {
+  from: string;
+  to: string;
+  raw: ReadableStream;
+  rawSize?: number;
+  reply: (message: unknown) => Promise<unknown>;
+};
+
+async function hqChannel(env: AgentBindings, body: Record<string, unknown>): Promise<unknown> {
+  const origin = env.HQ_ORIGIN?.replace(/\/$/, "");
+  const secret = env.CLIENT_CHANNEL_SECRET;
+  if (!origin || !secret) return null;
+  const response = await fetch(`${origin}/api/client-messages`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
 const worker = {
-  async fetch(request: Request, env: AgentBindings): Promise<Response> {
+  async fetch(request: Request, env: AgentBindings, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === "/channels/slack" && request.method === "POST") {
+      return handleSlackEvent(request, env, Date.now(), fetch, (work) => ctx?.waitUntil(work));
+    }
     if (url.pathname === "/wake" && request.method === "POST") {
       const raw = await request.text();
       const signature = request.headers.get("x-handoff-signature") ?? "";
@@ -320,6 +358,70 @@ const worker = {
     if (routed) return routed;
     return new Response("Not found", { status: 404 });
   },
+
+  async email(message: InboundEmail, env: AgentBindings): Promise<void> {
+    const raw = await new Response(message.raw).text();
+    const parsed = await parseInboundEmail(raw);
+    if (typeof message.rawSize === "number") parsed.bytes = message.rawSize;
+    const own = env.MAGIC_EMAIL_FROM || "magic@abra-ca-dabra.app";
+    const reply = await handleInboundEmail(parsed, {
+      lookup: async (email) => {
+        const body = (await hqChannel(env, {
+          action: "lookup",
+          email,
+          authenticationResults: parsed.authenticationResults,
+        })) as { value?: { organizationId: string | null; organizations?: { id: string; name: string }[]; authenticated: boolean } } | null;
+        if (!body?.value) return "down";
+        return body.value;
+      },
+      thread: async (organizationIdForThread, threadId) => {
+        const body = (await hqChannel(env, { action: "thread", organizationId: organizationIdForThread, threadId })) as {
+          value?: ThreadState;
+        } | null;
+        return body?.value ?? { replies: 0, questionCount: 0, text: "" };
+      },
+      remembered: async (threadId) => {
+        const body = (await hqChannel(env, { action: "thread_org", threadId, email: addressOf(parsed.from) })) as {
+          value?: string | null;
+        } | null;
+        return body?.value ?? null;
+      },
+      ownAddress: own,
+    });
+    if (reply.skip) return;
+    await hqChannel(env, {
+      action: "record",
+      organizationId: reply.organizationId ?? "",
+      noteOnly: reply.noteOnly,
+      channel: "email",
+      threadId: parsed.threadId,
+      sender: addressOf(parsed.from),
+      body: parsed.text,
+      state: reply.classified.state,
+      goal: reply.classified.goal,
+      dueText: reply.classified.due,
+      asked: reply.asked,
+      replyBody: reply.reply,
+    });
+    if (!reply.reply) return;
+    const { EmailMessage } = await import("cloudflare:email");
+    const mime = replyMime({
+      from: own,
+      to: message.from,
+      subject: parsed.subject,
+      text: reply.reply,
+      messageId: parsed.messageId,
+      references: parsed.references,
+      domain: own.split("@")[1] ?? "abra-ca-dabra.app",
+      now: Date.now(),
+    });
+    try {
+      await message.reply(new EmailMessage(own, message.from, mime));
+    } catch {
+      // Cloudflare refuses a reply when the incoming mail failed DMARC. The note is already on the timeline.
+    }
+  },
 };
 
+export { HqChat } from "./hq-chat";
 export default worker;

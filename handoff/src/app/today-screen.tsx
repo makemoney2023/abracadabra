@@ -3,6 +3,7 @@ import type { TodayBoard, WorkTask } from "@/db/crm";
 import { clientSpaceHref } from "@/lib/host";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RequestDecisionForm } from "./clients/thread-forms";
 import { dayLabel } from "./projects/dates";
 
 function taskHref(task: WorkTask): string {
@@ -126,6 +127,27 @@ export function TodayScreen({ board }: { board: TodayBoard }) {
                   <span>{invoice.number}</span>
                   <span className="ml-2 text-muted-foreground">{invoice.organizationName}</span>
                   <span className="ml-2 text-muted-foreground">Due {dayLabel(invoice.dueAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Needs you</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {board.workRequests.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No client requests waiting.</p>
+          ) : (
+            <ul className="flex flex-col gap-4">
+              {board.workRequests.map((request) => (
+                <li key={request.id} className="text-sm">
+                  <Link href={`/clients/${request.organizationId}`}>{request.organizationName}</Link>
+                  <span className="ml-2 text-muted-foreground">{request.channel}</span>
+                  <p>{request.body}</p>
+                  <RequestDecisionForm id={request.id} />
                 </li>
               ))}
             </ul>

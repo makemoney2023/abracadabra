@@ -4,6 +4,7 @@ import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChatPanel } from "../chat/chat-panel";
 import { StaffShell } from "../staff-shell";
 import { dayLabel } from "../projects/dates";
 import { groupTasks, workHref } from "./query";
@@ -25,6 +26,7 @@ export default async function WorkPage({
   return (
     <StaffShell>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
+        <ChatPanel />
         <div className="flex flex-col gap-3">
           <h1 className="font-heading text-4xl leading-tight">Work</h1>
           <nav aria-label="Filters" className="flex flex-wrap gap-2">

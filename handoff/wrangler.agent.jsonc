@@ -6,28 +6,43 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "workers_dev": true,
   "durable_objects": {
-    "bindings": [{ "name": "ClientAgent", "class_name": "ClientAgent" }]
+    "bindings": [
+      { "name": "ClientAgent", "class_name": "ClientAgent" },
+      { "name": "HQ_CHAT", "class_name": "HqChat" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ClientAgent"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ClientAgent"] },
+    { "tag": "v2", "new_sqlite_classes": ["HqChat"] }
+  ],
+  "send_email": [{ "name": "EMAIL" }],
   "r2_buckets": [{ "binding": "SKILLS", "bucket_name": "handoff-skills" }],
   "ai": { "binding": "AI" },
   "vars": {
     "MCP_PORTAL_URL": "",
     "AGENT_WAKE_SECRET": "",
     "CF_ACCESS_CLIENT_ID": "",
-    "CF_ACCESS_CLIENT_SECRET": ""
+    "CF_ACCESS_CLIENT_SECRET": "",
+    "HQ_ORIGIN": "https://hq.abra-ca-dabra.app",
+    "MAGIC_EMAIL_FROM": "magic@abra-ca-dabra.app"
   },
   "env": {
     "test": {
       "durable_objects": {
-        "bindings": [{ "name": "ClientAgent", "class_name": "ClientAgent" }]
+        "bindings": [
+          { "name": "ClientAgent", "class_name": "ClientAgent" },
+          { "name": "HQ_CHAT", "class_name": "HqChat" }
+        ]
       },
       "r2_buckets": [{ "binding": "SKILLS", "bucket_name": "handoff-skills" }],
+      "send_email": [{ "name": "EMAIL" }],
       "vars": {
         "MCP_PORTAL_URL": "https://portal.example.invalid/mcp",
         "AGENT_WAKE_SECRET": "test-wake-secret",
         "CF_ACCESS_CLIENT_ID": "test-access-id",
-        "CF_ACCESS_CLIENT_SECRET": "test-access-secret"
+        "CF_ACCESS_CLIENT_SECRET": "test-access-secret",
+        "HQ_ORIGIN": "https://hq.example.invalid",
+        "MAGIC_EMAIL_FROM": "magic@example.invalid"
       }
     }
   }

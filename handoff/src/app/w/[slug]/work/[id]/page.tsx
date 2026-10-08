@@ -7,7 +7,7 @@ import { ITEM_FORMATS } from "@/lib/deliverable-manifest";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
-import { ApproveAllForm, ApproveForm, ChangesForm } from "../forms";
+import { ApproveAllForm, ApproveForm, ChangesForm, NoteForm } from "../forms";
 
 function safeLink(value: string | null): string | null {
   if (!value) return null;
@@ -38,23 +38,42 @@ export default async function FinishedPiecePage({
   const items = chosen ? opened.items.filter((item) => item.format === chosen) : opened.items;
   const notes = await listDeliverableFeedback(sql, caller, opened.deliverable.id);
   const version = opened.deliverable.published_version ?? opened.deliverable.version;
+  const brief = opened.deliverable.kind === "brief";
+  const briefItem = brief ? items.find((item) => item.title === "brief.md") ?? items[0] : undefined;
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
       <div className="flex flex-col gap-2">
         <h1 className="font-heading text-4xl leading-tight">{opened.deliverable.title}</h1>
         <p className="text-sm text-muted-foreground">{DELIVERABLE_STATUS_LABEL[opened.deliverable.status]}</p>
-        <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
+        {brief && briefItem ? (
+          <div className="flex flex-col gap-6">
+            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label="Approve" />
+            <ChangesForm
+              slug={slug}
+              deliverableId={opened.deliverable.id}
+              itemId={briefItem.id}
+              version={version}
+              label="Deny"
+              placeholder="Why are you denying this?"
+            />
+            <NoteForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
+          </div>
+        ) : (
+          <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
+        )}
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant={chosen ? "outline" : "default"} size="sm" asChild>
-          <Link href={`/w/${slug}/work/${id}`}>All</Link>
-        </Button>
-        {ITEM_FORMATS.map((itemFormat) => (
-          <Button key={itemFormat} variant={chosen === itemFormat ? "default" : "outline"} size="sm" asChild>
-            <Link href={`/w/${slug}/work/${id}?format=${itemFormat}`}>{ITEM_FORMAT_LABEL[itemFormat]}</Link>
+      {brief ? null : (
+        <div className="flex flex-wrap gap-2">
+          <Button variant={chosen ? "outline" : "default"} size="sm" asChild>
+            <Link href={`/w/${slug}/work/${id}`}>All</Link>
           </Button>
-        ))}
-      </div>
+          {ITEM_FORMATS.map((itemFormat) => (
+            <Button key={itemFormat} variant={chosen === itemFormat ? "default" : "outline"} size="sm" asChild>
+              <Link href={`/w/${slug}/work/${id}?format=${itemFormat}`}>{ITEM_FORMAT_LABEL[itemFormat]}</Link>
+            </Button>
+          ))}
+        </div>
+      )}
       {items.length === 0 ? <p className="text-sm text-muted-foreground">Nothing to look at yet.</p> : null}
       <ul className="flex flex-col gap-8">
         {items.map((item) => (
@@ -64,7 +83,9 @@ export default async function FinishedPiecePage({
               <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
             </div>
             {item.section ? <p className="text-sm text-muted-foreground">{item.section}</p> : null}
-            {item.copy_text ? <p className="text-sm">{item.copy_text}</p> : null}
+            {item.copy_text ? (
+              <p className={brief ? "whitespace-pre-wrap text-sm leading-6" : "text-sm"}>{item.copy_text}</p>
+            ) : null}
             {safeLink(item.link_url) ? (
               <a className="text-sm underline" href={safeLink(item.link_url) ?? "#"}>
                 Open link
@@ -91,16 +112,18 @@ export default async function FinishedPiecePage({
                 ),
               )}
             </div>
-            <div className="flex flex-col gap-3">
-              <ApproveForm
-                slug={slug}
-                deliverableId={opened.deliverable.id}
-                itemId={item.id}
-                version={version}
-                label="Approve"
-              />
-              <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
-            </div>
+            {brief ? null : (
+              <div className="flex flex-col gap-3">
+                <ApproveForm
+                  slug={slug}
+                  deliverableId={opened.deliverable.id}
+                  itemId={item.id}
+                  version={version}
+                  label="Approve"
+                />
+                <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
+              </div>
+            )}
           </li>
         ))}
       </ul>
