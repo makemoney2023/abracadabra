@@ -1,10 +1,12 @@
 import handler, { DOQueueHandler, DOShardedTagCache } from "./.open-next/worker.js";
 import { d1Sql, type D1Like } from "./src/db/sql";
 import { wakeDueAgents, type WakeEnv } from "./src/lib/agent-wake";
+import type { ScanQueue } from "./src/lib/lead-schema";
 import { dispatchQueue } from "./src/lib/queue-dispatch";
 
 type QueueEnv = WakeEnv & {
   DB: D1Like;
+  SCAN_JOBS?: ScanQueue;
 };
 
 export default {

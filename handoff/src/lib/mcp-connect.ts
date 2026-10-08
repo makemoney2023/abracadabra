@@ -1,5 +1,10 @@
 import { unwrapToolResult, type ToolCaller } from "./client-documents";
 
+/** Portal tools when they exist. The Handoff MCP route otherwise. */
+export function callerForClientWork(portal: ToolCaller | null, http: ToolCaller | null): ToolCaller | null {
+  return portal ?? http;
+}
+
 export type McpConnectEnv = {
   MCP_PORTAL_URL?: string;
   HANDOFF_MCP_URL?: string;

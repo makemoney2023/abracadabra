@@ -2,6 +2,15 @@
 
 ## 2026-10-08
 
+- **What changed** — A website lead waits for the schema scan before the agent starts. A scheduled swarm brief includes the client, and a finished swarm becomes an unpublished draft on Finished work. Brief and work wakes still run when the portal URL is empty. Page-title contacts with no email or phone are skipped.
+- **Why** — Automatic intake woke the agent with an empty scan, scheduled packs invented a business, finished copy stayed in the space, and brief planning stopped when `MCP_PORTAL_URL` was empty.
+- **Code touchpoints** — `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/lib/mcp-connect.ts`, `handoff/src/lib/lead-enrich.ts`, `handoff/src/agent/worker.ts`, `handoff/wrangler.jsonc`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — Assessment and booking with a website queue `scan-jobs` and wake on `scan_ready`. Schema packages, leads with no website, and a failed scan insert still wake `lead_created`. A completed swarm files a draft document and a space file. Name-only schema people are dropped.
+- **API / schema impact** — The client worker produces `SCAN_JOBS` on the existing `scan-jobs` queue. It does not consume that queue.
+- **Verification** — `npx vitest run src/lib/intake/queue.test.ts src/lib/lead-enrich.test.ts src/lib/mcp-connect.test.ts src/lib/client-plan.test.ts src/lib/client-workflows.test.ts` (50 passed).
+
+## 2026-10-08
+
 - **What changed** — A scheduled swarm shows on Today as soon as it starts. While it is still running, the same row updates.
 - **Why** — The due runner started the swarm and stored the execution on the workflow, and the activity feed only lists `agent.swarm_run` rows.
 - **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/agent/worker.ts`

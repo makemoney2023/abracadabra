@@ -8,7 +8,7 @@ import {
   type SkillCard,
   type ToolCaller,
 } from "../lib/client-documents";
-import { advanceClientWork, applyBriefChange, planClientWork, qualifyLead } from "../lib/client-plan";
+import { advanceClientWork, applyBriefChange, fileSwarmDelivery, planClientWork, qualifyLead } from "../lib/client-plan";
 import { readSwarmRun, runLeadSwarm } from "../lib/lead-swarm";
 import { packsFromTemplates } from "../lib/pack-picker";
 import { packTemplatesFromCatalog } from "../lib/pack-templates";
@@ -25,7 +25,7 @@ import {
 } from "../lib/client-channel";
 import { MAILBOX_INSTRUCTIONS } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
-import { mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
+import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
 import { skillObjectKey } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
 
@@ -194,7 +194,7 @@ export class ClientAgent extends Agent<AgentBindings> {
   /** Drafts the brief and design system when this wake is for describe or engineer. */
   private async describeClient(wakeId: string, reason: string): Promise<string> {
     if (reason !== "onboard" && reason !== "context_changed" && reason !== "brief_approved") return "ok";
-    const call = this.toolCaller(this.portal().getAITools?.() ?? {});
+    const call = callerForClientWork(this.toolCaller(this.portal().getAITools?.() ?? {}), this.leadCaller());
     if (!call) return "ok";
     const drafted = await draftClientDocuments({
       call,
@@ -294,7 +294,7 @@ export class ClientAgent extends Agent<AgentBindings> {
       activityKey: payload.activityKey,
       trigger: payload.trigger,
     });
-    if (status !== "running" && run.output.trim()) {
+    if (status !== "running" && run.output.trim() && !run.output.includes("still going")) {
       await call("save_space_file", {
         workflow: "swarm",
         run: payload.executionId,
@@ -302,6 +302,20 @@ export class ClientAgent extends Agent<AgentBindings> {
         body: run.output,
         requestId: `${payload.activityKey}:file`,
       });
+    }
+    if (status === "completed" && run.output.trim() && !run.output.includes("still going")) {
+      try {
+        await fileSwarmDelivery(call, {
+          requestId: payload.activityKey,
+          title: payload.packName,
+          body: run.output,
+        });
+      } catch (error) {
+        await call("add_note", {
+          body: error instanceof Error ? error.message : "The draft was not filed.",
+          requestId: `${payload.activityKey}:deliverable-miss`,
+        });
+      }
     }
     if (status === "running" && payload.attempts < 6) {
       await this.schedule(45, "refreshSwarm", { ...payload, attempts: payload.attempts + 1 });
@@ -340,7 +354,7 @@ export class ClientAgent extends Agent<AgentBindings> {
     ) {
       return;
     }
-    const call = this.toolCaller(this.portal().getAITools?.() ?? {});
+    const call = callerForClientWork(this.toolCaller(this.portal().getAITools?.() ?? {}), this.leadCaller());
     if (reason === "lead_created" || reason === "scan_ready") {
       await this.pickupLead(wakeId, reason);
       return;

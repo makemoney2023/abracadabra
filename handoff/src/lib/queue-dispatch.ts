@@ -1,5 +1,6 @@
 import { d1Sql, type D1Like, type Sql } from "@/db/sql";
 import type { WakeEnv } from "@/lib/agent-wake";
+import type { ScanQueue } from "@/lib/lead-schema";
 import { handleGithubBatch, type GithubQueueMessage } from "@/lib/github/queue";
 import { handleLeadIntakeBatch, type IntakeQueueMessage } from "@/lib/intake/queue";
 
@@ -8,7 +9,7 @@ type QueueMessage = { body: unknown; ack(): void; retry(): void };
 /** Lead intake and GitHub events share one worker entry. Each queue has its own handler. */
 export async function dispatchQueue(
   batch: { queue: string; messages: QueueMessage[] },
-  env: { DB: D1Like } & WakeEnv,
+  env: { DB: D1Like; SCAN_JOBS?: ScanQueue } & WakeEnv,
   handlers?: {
     lead?: (messages: IntakeQueueMessage[], db: D1Like) => Promise<void>;
     github?: (messages: GithubQueueMessage[], sql: Sql) => Promise<void>;

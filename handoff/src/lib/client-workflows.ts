@@ -1,8 +1,10 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
+import { leadBrief, runLeadSwarm } from "./lead-swarm";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { packTemplateId } from "./pack-templates";
-import { runLeadSwarm } from "./lead-swarm";
+import type { ObjectStore } from "./store/objects";
+import { storeWorkflowOutput } from "./workflow-files";
 
 export type WorkflowGroup = {
   id: string;
@@ -308,23 +310,42 @@ export async function claimDueWorkflow(input: {
   now: number;
   fetchImpl?: typeof fetch;
   wait?: (ms: number) => Promise<void>;
+  store?: ObjectStore;
 }): Promise<DueClaim> {
   if (!input.origin.trim()) return { ok: false, error: "invalid" };
-  const row = await input.sql.get<{ id: string; name: string; template_id: string; every_ms: number | null }>(
-    `SELECT id, name, template_id, every_ms
-     FROM client_workflows
-     WHERE organization_id = ?
-       AND next_run_at IS NOT NULL
-       AND next_run_at <= ?
-     ORDER BY next_run_at, id
+  const row = await input.sql.get<{
+    id: string;
+    name: string;
+    template_id: string;
+    every_ms: number | null;
+    org_name: string;
+    website: string | null;
+    industry: string | null;
+    notes: string | null;
+  }>(
+    `SELECT w.id, w.name, w.template_id, w.every_ms, o.name AS org_name, o.website, o.industry, o.notes
+     FROM client_workflows w
+     JOIN organizations o ON o.id = w.organization_id
+     WHERE w.organization_id = ?
+       AND w.next_run_at IS NOT NULL
+       AND w.next_run_at <= ?
+     ORDER BY w.next_run_at, w.id
      LIMIT 1`,
     [input.organizationId, input.now],
   );
   if (!row) return { ok: true, none: true };
+  const brief = [
+    leadBrief({ name: row.org_name, website: row.website, packId: row.template_id }),
+    row.industry ? `Industry: ${row.industry}` : "",
+    row.notes ?? "",
+    `Scheduled run of ${row.name}.`,
+  ]
+    .filter((line) => line.trim().length > 0)
+    .join("\n");
   const started = await runClientWorkflow({
     sql: input.sql,
     workflowId: row.id,
-    brief: `Scheduled run of ${row.name}.`,
+    brief,
     origin: input.origin,
     now: input.now,
     fetchImpl: input.fetchImpl,
@@ -346,6 +367,36 @@ export async function claimDueWorkflow(input: {
     now: input.now,
   });
   if (!started.ok) return started;
+  if (input.store && started.status === "completed" && started.output.trim() && !started.output.includes("still going")) {
+    await storeWorkflowOutput({
+      sql: input.sql,
+      store: input.store,
+      organizationId: input.organizationId,
+      files: [{ workflow: "swarm", run: started.executionId, node: "result", body: started.output }],
+      now: input.now,
+    });
+    const space = await input.sql.get<{ id: string }>(
+      "SELECT id FROM workspaces WHERE organization_id = ? AND status = 'active' ORDER BY opened_at LIMIT 1",
+      [input.organizationId],
+    );
+    if (space) {
+      const deliverableId = crypto.randomUUID();
+      const title = `${row.name} for ${row.org_name}`.slice(0, 200);
+      await input.sql.run(
+        `INSERT INTO deliverables (
+          id, organization_id, project_id, workspace_id, title, kind, status, version,
+          source_repo_id, source_ref, published_at, actor_kind, actor_id, created_at, updated_at, published_version
+        ) VALUES (?, ?, NULL, ?, ?, 'document', 'draft', 1, NULL, NULL, NULL, 'agent', 'swarm', ?, ?, NULL)`,
+        [deliverableId, input.organizationId, space.id, title, input.now, input.now],
+      );
+      await input.sql.run(
+        `INSERT INTO deliverable_items (
+          id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+        ) VALUES (?, ?, 1, NULL, 'file', NULL, 'result.md', ?, '[]', NULL, 'pending', 0)`,
+        [crypto.randomUUID(), deliverableId, started.output],
+      );
+    }
+  }
   const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
   await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
     repeating ? input.now + row.every_ms! : null,

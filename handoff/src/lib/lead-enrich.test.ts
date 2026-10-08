@@ -20,7 +20,10 @@ describe("schema enrichment", () => {
         openingHours: ["Mo-Fr 09:00-17:00"],
         existingTypes: ["Organization", "LocalBusiness"],
       },
-      [{ name: "Ada North", title: "Owner", email: "ada@northwind.example" }],
+      [
+        { name: "Ada North", title: "Owner", email: "ada@northwind.example" },
+        { name: "About Us" },
+      ],
       "https://northwind.example/",
     );
     expect(fill.name).toBe("Northwind");
@@ -29,6 +32,7 @@ describe("schema enrichment", () => {
     expect(fill.notes).toContain("We build yards.");
     expect(fill.notes).toContain("1 Dock St");
     expect(fill.contacts.map((contact) => contact.email)).toEqual(["ada@northwind.example", null]);
+    expect(fill.contacts.map((contact) => contact.name)).toEqual(["Ada North", "Northwind"]);
     const kept = leadFillFromSchema(
       { name: "Northwind Yards", domain: "northwind.example", website: "https://northwind.example", industry: "Marine", notes: "We build yards." },
       { businessName: "Other", description: "We build yards." },

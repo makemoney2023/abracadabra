@@ -106,7 +106,7 @@ export function leadFillFromSchema(current: LeadSnapshot, facts: SchemaFacts, pe
     if (!name) return;
     if (email && seenEmail.has(email)) return;
     if (!email && phone && seenPhone.has(phone)) return;
-    if (!email && !phone && !clean(person.name)) return;
+    if (!email && !phone) return;
     if (email) seenEmail.add(email);
     if (phone) seenPhone.add(phone);
     contacts.push({

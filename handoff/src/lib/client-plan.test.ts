@@ -96,6 +96,22 @@ describe("lead pickup", () => {
     });
     expect(briefs[0]).toContain("Lead: Foam Co");
     expect(String(calls.find((entry) => entry.name === "save_space_file")?.args.body)).toContain("Hello Foam Co.");
+    expect(calls.find((entry) => entry.name === "create_deliverable")?.args).toMatchObject({
+      kind: "document",
+      title: "Schema readiness for Foam Co",
+    });
+    expect(calls.find((entry) => entry.name === "add_deliverable_item")?.args.bodyMarkdown).toBe("Hello Foam Co.");
+  });
+
+  it("does not start a second swarm when qualify is already open", async () => {
+    const { call, calls } = caller({ tasks: [{ title: "Qualify Foam Co", status: "todo" }] });
+    const result = await qualifyLead({
+      call,
+      requestId: "wake-again",
+      runSwarm: async () => "again",
+    });
+    expect(result).toBe("skipped");
+    expect(calls.map((entry) => entry.name)).toEqual(["client_context", "store_scan_context"]);
   });
 
   it("saves a JSON swarm result without a markdown heading", async () => {

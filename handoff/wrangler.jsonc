@@ -57,6 +57,10 @@
       {
         "binding": "GITHUB_EVENTS",
         "queue": "github-events"
+      },
+      {
+        "binding": "SCAN_JOBS",
+        "queue": "scan-jobs"
       }
     ],
     "consumers": [

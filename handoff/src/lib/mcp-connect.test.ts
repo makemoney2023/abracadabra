@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mcpConnectTarget, mcpHttpCaller } from "./mcp-connect";
+import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "./mcp-connect";
 
 describe("mcp connect target", () => {
   it("uses the portal and the access headers when the portal is set", () => {
@@ -54,5 +54,13 @@ describe("mcp connect target", () => {
 
   it("returns no caller when the route has no key", () => {
     expect(mcpHttpCaller({ MCP_PORTAL_URL: "", HANDOFF_MCP_URL: "https://hq.abra-ca-dabra.app/api/mcp" })).toBeNull();
+  });
+
+  it("uses the Handoff route when the portal caller is missing", async () => {
+    const http = async () => "http";
+    const portal = async () => "portal";
+    expect(callerForClientWork(null, null)).toBeNull();
+    expect(await callerForClientWork(null, http)("client_context", {})).toBe("http");
+    expect(await callerForClientWork(portal, http)("client_context", {})).toBe("portal");
   });
 });

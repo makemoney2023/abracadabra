@@ -73,6 +73,48 @@ describe("lead intake wake", () => {
     expect(JSON.parse(calls[0]?.body ?? "{}")).toMatchObject({ reason: "lead_created", sentAt: NOW });
   });
 
+  it("queues a schema scan and waits when an assessment has a website", async () => {
+    const db = database();
+    await db.exec(
+      `CREATE TABLE readiness_scans (
+        id TEXT PRIMARY KEY,
+        public_token TEXT UNIQUE,
+        domain TEXT,
+        origin TEXT,
+        source TEXT,
+        status TEXT,
+        organization_id TEXT,
+        error_message TEXT,
+        created_at INTEGER,
+        completed_at INTEGER
+      )`,
+    );
+    const calls: string[] = [];
+    const sent: { type: string; scanId: string }[] = [];
+    const fetchImpl = async () => {
+      calls.push("wake");
+      return new Response("ok", { status: 200 });
+    };
+    await handleLeadIntakeBatch(
+      [{ body: assessment, ack() {}, retry() {} }],
+      db,
+      NOW,
+      {
+        AGENT_URL: "https://agent.example",
+        AGENT_WAKE_SECRET: "wake-secret",
+        SCAN_JOBS: {
+          async send(body) {
+            sent.push(body);
+          },
+        },
+      },
+      fetchImpl as typeof fetch,
+    );
+    expect(calls).toEqual([]);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.type).toBe("scan");
+  });
+
   it("does not wake when the same assessment arrives again", async () => {
     const db = database();
     let wakes = 0;

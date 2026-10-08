@@ -400,6 +400,81 @@ describe("client workflows", () => {
     ]);
     expect(row?.next_run_at).toBe(NOW - 5);
   });
+
+  it("names the client in the scheduled brief and files a draft", async () => {
+    const sql = await database();
+    await sql.run("UPDATE organizations SET website = ?, industry = ?, notes = ? WHERE id = 'org-1'", [
+      "https://northwind.example",
+      "Yards",
+      "We build docks.",
+    ]);
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id
+      ) VALUES ('space-1', 'northwind', 'Northwind', 'Northwind', NULL, 'Abra-ca-dabra', 'standard', 1000000000, 30, 0, 'active', ?, 'org-1')`,
+      [NOW],
+    );
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Once",
+      templateId: "pack-schema-readiness",
+      dueAt: NOW - 1,
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    let brief = "";
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+        const href = String(url);
+        if (href.endsWith("/api/execute")) brief = String(init?.body ?? "");
+        return swarmFetch()(url, init);
+      }) as typeof fetch,
+      wait: async () => {},
+      store: {
+        async stat() {
+          return null;
+        },
+        async read() {
+          return null;
+        },
+        async remove() {},
+        async put() {},
+        async beginUpload() {
+          return "upload-1";
+        },
+        async readUpload() {
+          return null;
+        },
+        async writePart() {},
+        async finishUpload() {},
+      },
+    });
+    expect(result.ok).toBe(true);
+    const sent = JSON.parse(brief) as { input?: string };
+    expect(sent.input).toContain("Northwind");
+    expect(sent.input).toContain("https://northwind.example");
+    expect(sent.input).toContain("Yards");
+    expect(sent.input).toContain("We build docks.");
+    const draft = await sql.get<{ title: string; status: string; published_version: number | null; copy_text: string }>(
+      `SELECT d.title, d.status, d.published_version, i.copy_text
+       FROM deliverables d JOIN deliverable_items i ON i.deliverable_id = d.id
+       WHERE d.organization_id = 'org-1'`,
+    );
+    expect(draft).toMatchObject({
+      title: "Once for Northwind",
+      status: "draft",
+      published_version: null,
+      copy_text: "Score 40.",
+    });
+  });
 });
 
 function swarmFetch(): typeof fetch {

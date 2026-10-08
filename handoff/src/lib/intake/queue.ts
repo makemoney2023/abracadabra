@@ -1,7 +1,11 @@
 import { migrate } from "../../db/migrate";
 import { d1Sql, type D1Like } from "../../db/sql";
 import { noteWakeMiss, wakeOrganization, type WakeEnv } from "../agent-wake";
+import { startLeadSchemaScan, type ScanQueue } from "../lead-schema";
 import { consumeIntake } from "./consume";
+import type { Sql } from "../../db/sql";
+
+type IntakeEnv = WakeEnv & { SCAN_JOBS?: ScanQueue };
 
 export type IntakeQueueMessage = {
   body: unknown;
@@ -30,7 +34,7 @@ export async function handleLeadIntakeBatch(
   messages: IntakeQueueMessage[],
   db: D1Like,
   now = Date.now(),
-  env: WakeEnv = {},
+  env: IntakeEnv = {},
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
   const sql = d1Sql(db);
@@ -59,12 +63,34 @@ export async function handleLeadIntakeBatch(
         continue;
       }
       if (result.leadOrganizationId) {
-        const woke = await wakeOrganization(env, result.leadOrganizationId, "lead_created", now, fetchImpl);
-        if (!woke) await noteWakeMiss(sql, result.leadOrganizationId, now);
+        const waiting = await queuedSchemaScan(sql, shaped.source, result.leadOrganizationId, env.SCAN_JOBS, now);
+        if (!waiting) {
+          const woke = await wakeOrganization(env, result.leadOrganizationId, "lead_created", now, fetchImpl);
+          if (!woke) await noteWakeMiss(sql, result.leadOrganizationId, now);
+        }
       }
       message.ack();
     } catch {
       message.retry();
     }
+  }
+}
+
+/** A website lead waits for the scan. A schema package, a missing site, or a failed insert wakes now. */
+async function queuedSchemaScan(
+  sql: Sql,
+  source: string,
+  organizationId: string,
+  queue: ScanQueue | undefined,
+  now: number,
+): Promise<boolean> {
+  if (source === "schema" || !queue) return false;
+  const org = await sql.get<{ website: string | null }>("SELECT website FROM organizations WHERE id = ?", [organizationId]);
+  if (!org?.website?.trim()) return false;
+  try {
+    const started = await startLeadSchemaScan({ sql, organizationId, website: org.website, now, queue });
+    return started.status === "queued";
+  } catch {
+    return false;
   }
 }

@@ -127,6 +127,8 @@ export async function qualifyLead(input: {
   if (context.organization?.agentPausedAt != null) return "skipped";
   const name = context.organization?.name ?? "this lead";
   const filed = fields(await input.call("store_scan_context", { requestId: `${input.requestId}:scan-context` }));
+  const already = (context.tasks ?? []).some((task) => task.title === `Qualify ${name}` && task.status !== "done");
+  if (already) return "skipped";
   const scanScore = typeof filed.score === "number" ? filed.score : null;
   const choice = pickSkillPack(
     { name, industry: context.organization?.industry, notes: context.organization?.notes },
@@ -179,16 +181,19 @@ export async function qualifyLead(input: {
     skills: [],
     requestId: `${input.requestId}:qualify`,
   });
-  const saved = fields(
-    await input.call("save_space_file", {
-      workflow: "lead",
-      run: input.requestId,
-      node: "qualify",
-      body: fileBody,
-      requestId: `${input.requestId}:lead-file`,
-    }),
-  );
-  const artifacts = Array.isArray(saved.stored) ? saved.stored.filter((path) => typeof path === "string") : [];
+  let artifacts: string[] = [];
+  if (swarmStatus !== "running") {
+    const saved = fields(
+      await input.call("save_space_file", {
+        workflow: "lead",
+        run: input.requestId,
+        node: "qualify",
+        body: fileBody,
+        requestId: `${input.requestId}:lead-file`,
+      }),
+    );
+    artifacts = Array.isArray(saved.stored) ? saved.stored.filter((path) => typeof path === "string") : [];
+  }
   const activityKey = `${input.requestId}:swarm-run`;
   const trigger = input.trigger?.trim() || "lead_created";
   await input.call("record_swarm_run", {
@@ -205,7 +210,43 @@ export async function qualifyLead(input: {
   if (swarmStatus === "running" && executionId && input.onStillRunning) {
     await input.onStillRunning({ executionId, templateId: choice.id, activityKey, packName: choice.name, trigger });
   }
+  if (swarmStatus === "completed" && swarm.trim() && !swarm.includes("still going")) {
+    try {
+      await fileSwarmDelivery(input.call, {
+        requestId: input.requestId,
+        title: `${choice.name} for ${name}`.slice(0, 200),
+        body: swarm,
+      });
+    } catch (error) {
+      await input.call("add_note", {
+        body: error instanceof Error ? error.message : "The draft was not filed.",
+        requestId: `${input.requestId}:deliverable-miss`,
+      });
+    }
+  }
   return "started";
+}
+
+/** An unpublished document staff can open on Finished work. The client sees it after staff publish. */
+export async function fileSwarmDelivery(
+  call: ToolCaller,
+  input: { requestId: string; title: string; body: string },
+): Promise<void> {
+  const created = fields(
+    await call("create_deliverable", {
+      title: input.title.slice(0, 200),
+      kind: "document",
+      requestId: `${input.requestId}:deliverable`,
+    }),
+  );
+  const deliverableId = typeof created.deliverableId === "string" ? created.deliverableId : "";
+  if (!deliverableId) return;
+  await call("add_deliverable_item", {
+    deliverableId,
+    path: "result.md",
+    bodyMarkdown: input.body,
+    requestId: `${input.requestId}:deliverable-item`,
+  });
 }
 
 /** One task and one draft deliverable per piece that does not already have a task. */
