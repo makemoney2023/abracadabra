@@ -2,6 +2,15 @@
 
 ## 2026-10-08
 
+- **What changed** — Staff chat can start a swarm. Moving a task whose first skill is a pack to stage run schedules that pack due now and wakes the client. A second move updates the same workflow.
+- **Why** — Chat filed skill tasks and told staff it could not execute the swarm. Stage run also skipped those tasks, so nothing started.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — `list_swarm_packs` reads the live swarm templates. `set_task_stage` to `run` writes a one-shot `client_workflows` row linked to that task with `next_run_at` now, then posts wake reason `due`. Chat calls `create_workflow` and `run_workflow`; the approval card starts the run.
+- **API / schema impact** — none. `list_swarm_packs` is a new read tool.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/hq-chat-playbook.test.ts src/lib/hq-tools.test.ts src/app/chat/approval-card.test.ts` (22 passed).
+
+## 2026-10-08
+
 - **What changed** — A workflow can name catalog servers. Each swarm step receives only those servers. Any other address is refused.
 - **Why** — A workflow step needed a third-party tool, and a free URL from chat would let a step call an unreviewed server.
 - **Code touchpoints** — `handoff/src/lib/mcp-catalog.ts`, `handoff/migrations/0015_mcp_catalog.sql`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/hq-tools.ts`

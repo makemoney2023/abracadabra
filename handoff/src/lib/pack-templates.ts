@@ -34,6 +34,15 @@ function skipped(value: string): boolean {
   return SKIP.some((part) => parts.includes(part));
 }
 
+/** The swarm template id for a task skill path. A path that is not a pack skill returns null. */
+export function packTemplateId(skillPath: string): string | null {
+  const relative = skillPath.trim().replace(/^\/+/, "").replace(/^\.cursor\/skills\//, "");
+  if (!relative) return null;
+  const pack = packKey(relative);
+  if (!pack || pack === "root" || !pack.includes("/")) return null;
+  return `pack-${slug(pack)}`;
+}
+
 function slug(value: string): string {
   return value
     .toLowerCase()

@@ -1,5 +1,6 @@
 import type { Sql } from "../db/sql";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
+import { packTemplateId } from "./pack-templates";
 import { runLeadSwarm } from "./lead-swarm";
 
 export type WorkflowGroup = {
@@ -339,4 +340,65 @@ export async function claimDueWorkflow(input: {
     output: started.output,
     more: (rest?.n ?? 0) > 0,
   };
+}
+
+function firstSkillPath(skills: string | null): string {
+  if (!skills) return "";
+  try {
+    const parsed = JSON.parse(skills) as { steps?: { path?: unknown }[] };
+    const path = parsed.steps?.[0]?.path;
+    return typeof path === "string" ? path : "";
+  } catch {
+    return "";
+  }
+}
+
+/** A skilled task that staff move to run becomes a due workflow on that same task. */
+export async function scheduleTaskSwarm(
+  sql: Sql,
+  input: { taskId: string; now: number },
+): Promise<
+  | { ok: true; none: true }
+  | { ok: true; none: false; workflowId: string; organizationId: string }
+  | { ok: false; error: "missing" }
+> {
+  const task = await sql.get<{ id: string; organization_id: string | null; title: string; skills_json: string | null }>(
+    "SELECT id, organization_id, title, skills_json FROM tasks WHERE id = ?",
+    [input.taskId],
+  );
+  if (!task?.organization_id) return { ok: false, error: "missing" };
+  const existing = await sql.get<{ id: string }>(
+    "SELECT id FROM client_workflows WHERE task_id = ? ORDER BY created_at LIMIT 1",
+    [task.id],
+  );
+  if (existing) {
+    await sql.run(
+      "UPDATE client_workflows SET next_run_at = ?, scheduled_at = COALESCE(scheduled_at, ?), updated_at = ? WHERE id = ?",
+      [input.now, input.now, input.now, existing.id],
+    );
+    return { ok: true, none: false, workflowId: existing.id, organizationId: task.organization_id };
+  }
+  const templateId = packTemplateId(firstSkillPath(task.skills_json));
+  if (!templateId) return { ok: true, none: true };
+  const groupRow = await sql.get<{ id: string }>(
+    "SELECT id FROM workflow_groups WHERE organization_id = ? ORDER BY created_at LIMIT 1",
+    [task.organization_id],
+  );
+  const groupId = groupRow
+    ? groupRow.id
+    : await createWorkflowGroup(sql, { organizationId: task.organization_id, name: "Swarm", now: input.now }).then((created) =>
+        created.ok ? created.group.id : "",
+      );
+  if (!groupId) return { ok: false, error: "missing" };
+  const created = await createClientWorkflow(sql, {
+    organizationId: task.organization_id,
+    groupId,
+    name: task.title,
+    templateId,
+    dueAt: input.now,
+    now: input.now,
+  });
+  if (!created.ok) return { ok: false, error: "missing" };
+  await sql.run("UPDATE client_workflows SET task_id = ? WHERE id = ?", [task.id, created.workflow.id]);
+  return { ok: true, none: false, workflowId: created.workflow.id, organizationId: task.organization_id };
 }

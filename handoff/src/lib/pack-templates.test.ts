@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { packKey, packTemplatesFromCatalog } from "./pack-templates";
+import { packKey, packTemplateId, packTemplatesFromCatalog } from "./pack-templates";
 
 const catalog = [
   {
@@ -71,5 +71,15 @@ describe("pack templates", () => {
         target: "pack-community-marketingskills-2",
       },
     ]);
+  });
+
+  it("maps a task skill path to the live pack id", () => {
+    expect(packTemplateId(".cursor/skills/community/marketingskills/ad-creative/SKILL.md")).toBe(
+      "pack-community-marketingskills",
+    );
+    expect(
+      packTemplateId(".cursor/skills/community/advertising-skills/skills/operator-os/scroll-stopping-creative/SKILL.md"),
+    ).toBe("pack-community-advertising-skills-skills-operator-os");
+    expect(packTemplateId("notes.md")).toBeNull();
   });
 });

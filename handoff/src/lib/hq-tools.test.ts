@@ -520,6 +520,73 @@ describe("runHqTool", () => {
     );
     expect(rejected).toMatchObject({ ok: false, error: "invalid" });
   });
+
+  it("lists the packs the live swarm can run", async () => {
+    const sql = await database();
+    const listed = await runHqTool(
+      sql,
+      staff,
+      { tool: "list_swarm_packs", input: {} },
+      NOW,
+      {
+        swarm: {
+          origin: "https://swarm.example",
+          fetchImpl: async () =>
+            new Response(
+              JSON.stringify([
+                { id: "pack-community-marketingskills", name: "Marketingskills", description: "Ads" },
+                { id: "pipeline-demo", name: "Pipeline", description: "Not a pack" },
+              ]),
+            ),
+        },
+      },
+    );
+    expect(valueOf(listed)).toEqual([
+      { id: "pack-community-marketingskills", name: "Marketingskills", description: "Ads" },
+    ]);
+  });
+
+  it("schedules the pack and wakes the client when a skilled task moves to run", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const skills = JSON.stringify({
+      steps: [{ path: ".cursor/skills/community/marketingskills/ad-creative/SKILL.md", mode: "complete", status: "todo" }],
+      current: 0,
+    });
+    await sql.run(
+      `INSERT INTO tasks (id, organization_id, title, status, stage, skills_json, created_at, updated_at)
+       VALUES ('task-ads', ?, 'Ad concepts', 'todo', 'describe', ?, ?, ?)`,
+      [organizationId, skills, NOW, NOW],
+    );
+    const wakes: string[] = [];
+    const moved = await runHqTool(
+      sql,
+      staff,
+      { tool: "set_task_stage", input: { taskId: "task-ads", stage: "run" }, idempotencyKey: "stage-run", approved: true },
+      NOW,
+      { wake: async (id, reason) => { wakes.push(`${id}:${reason}`); } },
+    );
+    expect(moved).toMatchObject({ ok: true });
+    const workflow = await sql.get<{ template_id: string; next_run_at: number; task_id: string }>(
+      "SELECT template_id, next_run_at, task_id FROM client_workflows WHERE task_id = 'task-ads'",
+    );
+    expect(workflow).toMatchObject({
+      template_id: "pack-community-marketingskills",
+      next_run_at: NOW,
+      task_id: "task-ads",
+    });
+    expect(wakes).toEqual([`${organizationId}:due`]);
+    const again = await runHqTool(
+      sql,
+      staff,
+      { tool: "set_task_stage", input: { taskId: "task-ads", stage: "run" }, idempotencyKey: "stage-run-2", approved: true },
+      NOW + 1,
+      { wake: async () => {} },
+    );
+    expect(again).toMatchObject({ ok: true });
+    const rows = await sql.all<{ id: string }>("SELECT id FROM client_workflows WHERE task_id = 'task-ads'");
+    expect(rows).toHaveLength(1);
+  });
 });
 
 async function client(sql: Sql): Promise<string> {

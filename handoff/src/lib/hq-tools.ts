@@ -33,9 +33,11 @@ import {
   createWorkflowGroup,
   listClientWorkflows,
   runClientWorkflow,
+  scheduleTaskSwarm,
   workflowTaskPlan,
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
+import { packsFromTemplates } from "@/lib/pack-picker";
 import { hqToolNeedsApproval } from "@/lib/hq-tool-names";
 import { createInvite } from "@/lib/store/invites";
 import type { OutboundMail } from "@/lib/session";
@@ -69,6 +71,7 @@ const READS = new Set([
   "get_brief",
   "list_work_requests",
   "list_workflows",
+  "list_swarm_packs",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {
@@ -393,7 +396,8 @@ async function perform(
   if (tool === "merge_clients") {
     return fromCrm(await mergeOrganizations(sql, caller, { keepId: text(input, "keepId"), dropId: text(input, "dropId") }, now));
   }
-  if (tool === "set_task_stage") return setTaskStage(sql, caller, input, now);
+  if (tool === "set_task_stage") return setTaskStage(sql, caller, input, now, options.wake);
+  if (tool === "list_swarm_packs") return listSwarmPacks(options.swarm);
   if (tool === "add_work") return addWork(sql, caller, input, now, options.wake);
   if (tool === "revise_brief") return reviseBrief(sql, caller, input, now);
   if (tool === "instruct_task") return instructTask(sql, caller, input, now);
@@ -583,7 +587,21 @@ async function setDealStep(sql: Sql, caller: Caller, input: Record<string, unkno
   return { ok: true, value: { id: deal.id, nextStep: step, nextStepAt } };
 }
 
-async function setTaskStage(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
+async function listSwarmPacks(swarm: ToolOptions["swarm"]): Promise<HqToolResult> {
+  const origin = swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
+  if (!origin.startsWith("https://")) return { ok: false, error: "invalid" };
+  const load = swarm?.fetchImpl ?? fetch;
+  const response = await load(`${origin.replace(/\/$/, "")}/api/templates`);
+  if (!response.ok) return { ok: false, error: "invalid" };
+  const packs = packsFromTemplates(await response.json()).map((pack) => ({
+    id: pack.id,
+    name: pack.name,
+    description: pack.description,
+  }));
+  return { ok: true, value: packs };
+}
+
+async function setTaskStage(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number, wake: Wake): Promise<HqToolResult> {
   const stage = text(input, "stage");
   if (!["describe", "engineer", "build", "run"].includes(stage)) return { ok: false, error: "invalid" };
   const task = await sql.get<{ id: string; organization_id: string | null }>(
@@ -603,7 +621,13 @@ async function setTaskStage(sql: Sql, caller: Caller, input: Record<string, unkn
     { organizationId: task.organization_id, userId: caller.userId, kind: "staff.task_stage", body: `Moved to ${stage}.`, data: { taskId: task.id, stage } },
     now,
   );
-  return { ok: true, value: { taskId: task.id, stage } };
+  if (stage !== "run") return { ok: true, value: { taskId: task.id, stage } };
+  const scheduled = await scheduleTaskSwarm(sql, { taskId: task.id, now });
+  if (scheduled.ok && !scheduled.none) await wake(scheduled.organizationId, "due");
+  return {
+    ok: true,
+    value: { taskId: task.id, stage, workflowId: scheduled.ok && !scheduled.none ? scheduled.workflowId : null },
+  };
 }
 
 async function addWork(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number, wake: Wake): Promise<HqToolResult> {

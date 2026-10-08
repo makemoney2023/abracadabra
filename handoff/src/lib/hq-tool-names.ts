@@ -9,6 +9,7 @@ export const READ_HQ_TOOLS = [
   "get_brief",
   "list_work_requests",
   "list_workflows",
+  "list_swarm_packs",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -106,6 +107,10 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   list_workflows: {
     label: "List workflows",
     description: "Workflow groups for a client. Pass projectId to see that project's workflows. Fields: organizationId, projectId.",
+  },
+  list_swarm_packs: {
+    label: "Swarm packs",
+    description: "Pack templates the swarm can run now. Use an id with create_workflow.",
   },
   create_workflow_group: {
     label: "Create a workflow group",

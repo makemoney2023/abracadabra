@@ -10,6 +10,9 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("file_actions");
     expect(HQ_CHAT_PLAYBOOK).toContain("## Rules");
     expect(HQ_CHAT_PLAYBOOK).toContain("Do not stop at add_note");
+    expect(HQ_CHAT_PLAYBOOK).toContain("list_swarm_packs");
+    expect(HQ_CHAT_PLAYBOOK).toContain("run_workflow");
+    expect(HQ_CHAT_PLAYBOOK).toContain("Do not say you cannot execute the swarm from chat");
   });
 
   it("asks the mailbox for task titles and a brief sentence", () => {

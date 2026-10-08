@@ -151,7 +151,7 @@ A skill names connector tools in its file. The agent calls one only when that na
 | `context_changed` | `handoff` after `readSpaceFiles` finishes a batch, or staff edit the website field | Re-read, new brief version if material changed. |
 | `brief_approved` | dashboard after client or staff approval | Section 6: plan tasks from the brief. |
 | `work` | cron, every 15 minutes, for orgs with tasks not `done` whose `due_at` is empty or already past | Section 7: advance each task one step. A future `due_at` waits. A task tied to a scheduled workflow is left to `due`. |
-| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived | Run that workflow on the swarm. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. |
+| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived, and staff chat after a pack task moves to `run` | Run that workflow on the swarm. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. |
 | `changes_requested` | dashboard after feedback with decision `changes` | Section 10: revision round. |
 | `brief_changed` | dashboard after a brief addendum or revision is approved (section 17.4) | Re-plan from the new brief version: new pieces get tasks, changed pieces reset, removed pieces block. |
 | `run_check` | cron, hourly | Poll `bc-` runs past deadline. |
@@ -720,7 +720,7 @@ Both use `AIChatAgent` from `@cloudflare/ai-chat` on `handoff-agent`. It saves m
 - `set_deal_step` sets the deal's next step and its day.
 - `file_actions` writes one open task per line of `title`, shaped `Title | person | YYYY-MM-DD | .cursor/skills/path`. `body` is the brief sentence. `rules` are standing limits stored under `## Rules`. A person is a staff email or the name before the `@`. Those tasks show on Today, including a new task with no due date from the last week. A lead with no brief keeps the sentence as `agent.brief_change`. Later build briefs copy the brief and tell the worker to keep every rule.
 - `add_note` with `as_instruction: true` writes `kind='staff.instruction'`, so the client agent reads it as `staffNotes` (9.3). Plain notes stay `kind='note'`. A note is for a fact that is not a task, a deal move, or a brief change.
-- `set_task_stage` to `build` goes through the gate in 7.3 and can return its blocked reason.
+- `set_task_stage` to `build` goes through the gate in 7.3 and can return its blocked reason. `set_task_stage` to `run` on a task whose first skill is a pack schedules that pack due now, links the workflow to the same task, and wakes `due`. A task with no pack skill only changes stage. Chat can execute a swarm: `list_swarm_packs`, create a group when the client has none, `create_workflow`, then `run_workflow`. The approval card starts the run. Chat must not say it cannot execute the swarm.
 - The approval card shows the tool, the client, and every input field. Rejecting writes nothing.
 
 ### 17.4 Adding work and fixing a wrong brief
