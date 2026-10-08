@@ -94,6 +94,15 @@ v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Pa
 
 ## Changelog
 
+### 2026-10-07 — Gate shows the scored results after the lead is saved
+
+- **What changed** — Submitting the email gate renders the readiness, growth, and visibility scores from the opt-in response. A response without a score stays on the gate and says the score did not come back.
+- **Why** — The opt-in saved the lead, then navigated to the same `/check/[token]` URL. The session never reloaded, so the results score never appeared.
+- **Code touchpoints** — `src/components/check/GateForm.tsx`, `src/components/check/CheckSession.tsx`, `tests/unit/check-session-results.test.tsx`
+- **Data-flow impact** — opt-in response `results` now drives the results screen in the same session
+- **API / schema impact** — none
+- **Verification** — `npx vitest run tests/unit/check-session-results.test.tsx`
+
 ### 2026-09-24 — Readiness Check studio design
 
 - **What changed** — The `/check` surface and the assessment PDF follow the Abracadabra marketing design system (canvas, Tektur, clipped panels, accent CTAs). Button labels use canvas ink on the accent fill so the axe contrast gate passes. Schema scan and ops keep the editorial theme. Score heat colors stay.

@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { config } from "@/lib/assessment/config";
+import type { ResultsPayload } from "@/lib/assessment/present";
 
 export function GateForm({
   token,
   bandLabel,
+  onResults,
 }: {
   token: string;
   bandLabel: string;
+  onResults: (results: ResultsPayload) => void;
 }) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +28,16 @@ export function GateForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, name: name.trim() || undefined }),
       });
-      const data = (await res.json()) as { error?: string; message?: string };
+      const data = (await res.json()) as { error?: string; message?: string; results?: ResultsPayload };
       if (!res.ok) {
         setError(data.message ?? data.error ?? "Could not send the report. Try again.");
         return;
       }
-      router.refresh();
-      router.push(`/check/${token}`);
+      if (!data.results?.scores) {
+        setError("The score did not come back. Try again.");
+        return;
+      }
+      onResults(data.results);
     } catch {
       setError("Could not send the report. Try again.");
     } finally {

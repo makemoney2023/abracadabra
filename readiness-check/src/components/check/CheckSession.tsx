@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { config } from "@/lib/assessment/config";
-import type { AssessmentPayload } from "@/lib/assessment/present";
+import type { AssessmentPayload, ResultsPayload } from "@/lib/assessment/present";
 import { getSteps, sectionIndex, type Step } from "@/lib/assessment/steps";
 import { GateForm } from "./GateForm";
 import { ProgressSegments } from "./ProgressSegments";
@@ -87,9 +87,21 @@ export function CheckSession({ token }: { token: string }) {
     );
   }
   if (!payload) return null;
+  function showResults(results: ResultsPayload) {
+    setPayload((current) =>
+      current ? { ...current, status: "completed", gated: false, results } : current,
+    );
+  }
+
   if (payload.results) return <ResultsView token={token} initial={payload.results} />;
   if (payload.status === "completed" || payload.currentStep === "gate") {
-    return <GateForm token={token} bandLabel={payload.preview?.bandLabel ?? "Scored"} />;
+    return (
+      <GateForm
+        token={token}
+        bandLabel={payload.preview?.bandLabel ?? "Scored"}
+        onResults={showResults}
+      />
+    );
   }
   if (!step) return null;
 
