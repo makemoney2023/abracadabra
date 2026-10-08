@@ -243,6 +243,16 @@ function noteFromTurn(turn: FiledTurn): ClassifiedNote {
 const PRICE = /\$\s?\d|\b\d[\d,]*\s*(?:dollars|usd)\b/i;
 const PROMISED_DATE = /\b(?:ship|deliver|delivered|launch|ready)\b[^.?\n]{0,40}\b(?:by|on)\b/i;
 
+/** Workers AI returns the turn on `response`, as a JSON string or as the parsed object. */
+export function clientTurnFromModel(result: unknown): Omit<ClientTurn, "file"> {
+  if (typeof result === "string") return parseClientTurn(result);
+  if (!result || typeof result !== "object" || !("response" in result)) throw new Error("no turn");
+  const response = (result as { response?: unknown }).response;
+  if (typeof response === "string") return parseClientTurn(response);
+  if (response && typeof response === "object") return parseClientTurn(JSON.stringify(response));
+  throw new Error("no turn");
+}
+
 /** Pulls the JSON turn out of a model reply. Extra prose around the object is ignored. */
 export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
   const start = text.indexOf("{");

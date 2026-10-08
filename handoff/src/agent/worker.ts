@@ -11,8 +11,8 @@ import { advanceClientWork, applyBriefChange, planClientWork } from "../lib/clie
 import {
   addressOf,
   bytesToBase64,
+  clientTurnFromModel,
   handleInboundEmail,
-  parseClientTurn,
   parseInboundEmail,
   replyMime,
   replyToClient,
@@ -374,8 +374,7 @@ async function mailboxTurn(env: AgentBindings, desk: ClientDesk, incoming: strin
       },
     ],
   });
-  const text = typeof result === "string" ? result : (result.response ?? "");
-  return parseClientTurn(text);
+  return clientTurnFromModel(result);
 }
 
 const worker = {

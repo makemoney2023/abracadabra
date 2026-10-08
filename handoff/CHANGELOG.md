@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — Mail to `magic@` uses the model reply when Workers AI returns that reply as an object.
+- **Why** — The live model returns `response` already parsed. The worker treated it as text, the parse threw, and every known sender got "Got it. I have your note. A person on the team will follow up."
+- **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — `email()` and Slack both pass the Workers AI result through `clientTurnFromModel` before the reply is stored and sent.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/client-channel.test.ts` (14 passed). `npx tsc --noEmit -p tsconfig.agent.json` passed. ESLint on the changed files passed. Worker `handoff-agent` version `6958b407-0223-4357-a6ff-e53ffa41b1a6`. A new live mail was not sent from this session.
+
+## 2026-10-07
+
 - **What changed** — The studio menu has Schema. Staff paste sites and see every result. A site that needs us becomes a lead with the contacts scraped from the page.
 - **Why** — Schema ops was on the public readiness check, and covered sites disappeared.
 - **Code touchpoints** — `handoff/src/app/schema/page.tsx`, `handoff/src/app/schema/actions.ts`, `handoff/src/app/staff-nav.tsx`, `handoff/migrations/0010_schema_checks.sql`, `handoff/src/db/migrate.ts`

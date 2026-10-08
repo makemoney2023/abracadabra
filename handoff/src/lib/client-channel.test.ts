@@ -4,6 +4,7 @@ import {
   classifyClientNote,
   emailAuthenticated,
   handleInboundEmail,
+  clientTurnFromModel,
   parseClientTurn,
   parseInboundEmail,
   replyMime,
@@ -220,6 +221,30 @@ describe("mailbox reply", () => {
       expect(turn.file).toBe(false);
       expect(turn.reply).toBe("A person on the team will pick this up.");
     }
+  });
+
+  it("reads a Workers AI turn when response is already an object", () => {
+    const turn = clientTurnFromModel({
+      response: {
+        reply: "The walkthrough is in review.",
+        kind: "status",
+        goal: null,
+        due: null,
+        actions: [],
+        brief: null,
+        rules: null,
+      },
+    });
+    expect(turn.reply).toBe("The walkthrough is in review.");
+    expect(turn.kind).toBe("status");
+  });
+
+  it("still reads a Workers AI turn when response is a JSON string", () => {
+    const turn = clientTurnFromModel({
+      response: '{"reply":"Got the note.","kind":"other","goal":null,"due":null}',
+    });
+    expect(turn.reply).toBe("Got the note.");
+    expect(turn.kind).toBe("other");
   });
 
   it("keeps the task titles and the brief sentence, and drops them when the reply is handed off", async () => {
