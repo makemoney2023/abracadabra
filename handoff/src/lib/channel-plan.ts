@@ -115,7 +115,7 @@ export async function applyChannelPlan(
   sql: Sql,
   input: {
     organizationId: string;
-    actions: ChannelAction[];
+    actions: Array<Pick<ChannelAction, "title"> & Partial<Omit<ChannelAction, "title">>>;
     brief: string | null;
     rules?: string | null;
     attribution?: { actorKind: "agent" | "staff"; actorId: string; via: string; createdBy: "agent" | "staff" };

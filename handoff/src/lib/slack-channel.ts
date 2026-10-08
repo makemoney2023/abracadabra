@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { replyFor, type ClientTurn, type ThreadState } from "./client-channel";
+import { normalizeChannelPlan } from "./channel-plan";
+import { replyFor, type ClientTurn, type FiledTurn, type ThreadState } from "./client-channel";
 
 export type SlackEnv = {
   HQ_ORIGIN?: string;
@@ -61,7 +62,7 @@ async function answer(
   event: SlackMessage & { channel: string; ts: string },
   env: SlackEnv,
   fetchImpl: typeof fetch,
-  interpret?: (input: { organizationId: string; text: string; threadId: string }) => Promise<ClientTurn>,
+  interpret?: (input: { organizationId: string; text: string; threadId: string }) => Promise<FiledTurn>,
 ): Promise<void> {
   const linked = (await hq(env, fetchImpl, { action: "slack_org", channelId: event.channel })) as { value?: string | null } | null;
   const organizationId = linked?.value ?? null;
@@ -92,9 +93,10 @@ async function answer(
         },
       };
       if (turn.kind !== "handoff") {
-        actions = turn.actions;
-        brief = turn.brief;
-        rules = turn.rules;
+        const plan = normalizeChannelPlan(turn);
+        actions = plan.actions;
+        brief = plan.brief;
+        rules = plan.rules;
       }
     } catch {
       reply = replyFor(thread, incoming);
@@ -131,7 +133,7 @@ export async function handleSlackEvent(
   now: number,
   fetchImpl: typeof fetch = fetch,
   waitUntil: (work: Promise<unknown>) => void = (work) => void work,
-  interpret?: (input: { organizationId: string; text: string; threadId: string }) => Promise<ClientTurn>,
+  interpret?: (input: { organizationId: string; text: string; threadId: string }) => Promise<FiledTurn>,
 ): Promise<Response> {
   if (request.headers.get("x-slack-retry-num")) return new Response(null, { status: 200 });
   const raw = await request.text();

@@ -49,6 +49,13 @@ export type ClientTurn = {
   rules: string | null;
 };
 
+/** A mailbox or Slack turn. Actions, the brief sentence, and rules can be left off. */
+export type FiledTurn = Omit<ClientTurn, "actions" | "brief" | "rules"> & {
+  actions?: Array<{ title: string; assignee?: string | null; due?: string | null; skill?: string | null }>;
+  brief?: string | null;
+  rules?: string | null;
+};
+
 export type ClientDesk = {
   name: string;
   brief: string;
@@ -157,7 +164,7 @@ export async function handleInboundEmail(
     thread: (organizationId: string, threadId: string) => Promise<ThreadState>;
     remembered?: (threadId: string) => Promise<string | null>;
     ownAddress: string;
-    answer?: (organizationId: string, organizations: { id: string; name: string }[]) => Promise<ClientTurn>;
+    answer?: (organizationId: string, organizations: { id: string; name: string }[]) => Promise<FiledTurn>;
   },
 ): Promise<ChannelReply> {
   const sender = addressOf(message.from);
@@ -222,7 +229,7 @@ export async function handleInboundEmail(
   };
 }
 
-function noteFromTurn(turn: ClientTurn): ClassifiedNote {
+function noteFromTurn(turn: FiledTurn): ClassifiedNote {
   if (turn.kind !== "new_work" || !turn.file) return NOTHING;
   return {
     kind: "new_work",
