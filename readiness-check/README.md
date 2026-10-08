@@ -17,8 +17,8 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
 ## Product snapshot
 
 - **Public / internal:** URL → score + gaps + generate fixes on the fly → email unlocks full page matrix / findings + PDF (marketing soft-gate later)
-- **Ops:** Parallel FindAll → enrich contacts → auto-scan → inbox queue
-- **Fetch layer:** Parallel only (`search`, `extract`/`fetch`, `findall`, `enrich`) — no Firecrawl in v1
+- **Ops:** paste sites → AI Search qualifies each homepage → a site that needs us becomes a lead and a scan
+- **Fetch layer:** schema scans and ops prospecting both use [Cloudflare AI Search](https://developers.cloudflare.com/ai-search/). Prospecting only follows up when the answer is `NEEDS_US`.
 - **Stack:** Next.js + Supabase + Inngest + shadcn + Vitest/Playwright
 
 ## Local setup
@@ -29,7 +29,7 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
    cp .env.example .env.local
    ```
 
-   Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PARALLEL_API_KEY`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, `NEXT_PUBLIC_APP_URL`.
+   Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, `NEXT_PUBLIC_APP_URL`. Schema scans and ops prospecting use `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (AI Search:Edit and AI Search:Run). Those two are set as secrets on Worker `readiness-check`.
 
 2. Apply DB migrations (Docker + Supabase CLI, or linked remote project):
 
@@ -49,7 +49,7 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
    npx inngest-cli@latest dev
    ```
 
-4. **Ops login:** create a Supabase Auth user, then insert a `staff_profiles` row (`user_id`, `role = 'ops'`). Sign in at `/ops/login` (email/password or magic link). Inbox: `/ops`. Prospecting: `/ops/prospect`.
+4. **Ops login:** create a Supabase Auth user, then insert a `staff_profiles` row (`user_id`, `role = 'ops'`). Sign in at `/ops/login` (email/password or magic link). Inbox: `/ops`. Prospecting is public at `/check/prospect`.
 
 ## Verification
 
@@ -60,6 +60,8 @@ npm run build
 npx playwright install chromium   # once
 npm run test:e2e
 ```
+
+Deploy the public check with `npm run deploy` in this folder. That publishes Worker `readiness-check` at `https://check.abra-ca-dabra.app`.
 
 ## API (current)
 
@@ -76,7 +78,7 @@ npm run test:e2e
 | `GET` | `/api/ops/queue` | Ops inbox list (staff) — filters: `status`, `hasEmail`, `minScore`, `maxScore` |
 | `PATCH` | `/api/ops/queue/[id]` | Update status/notes + audit row (staff) |
 | `POST` | `/api/ops/rescan` | `{ leadId }` → new ops scan + Inngest `scan/requested` |
-| `POST` | `/api/ops/prospect` | `{ objective }` → Inngest `prospect/requested` (FindAll → enrich → scans) |
+| `POST` | `/api/ops/prospect` | `{ objective }` → Inngest `prospect/requested` (AI Search qualifies named sites → leads that need us → scans) |
 | `GET/POST/PUT` | `/api/inngest` | Inngest serve (`scan/requested`, `prospect/requested`) |
 
 Unlock for public detail: httpOnly cookie `scan_unlock_${token}=1` after email unlock. No query-param bypass. Ops uses `GET /api/ops/scans/[token]`.
@@ -90,9 +92,36 @@ On every coding session, follow `startup-session` → read INTENT + design + `pr
 
 ## Status
 
-v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Parallel-only). Deploy/CI polish still open.
+v1 implementation complete for public soft-gate flow + ops inbox/prospecting. Schema scans and ops prospecting use Cloudflare AI Search. Deploy/CI polish still open.
 
 ## Changelog
+
+### 2026-10-07 — Prospect sits in the check menu and is public
+
+- **What changed** — The check header opens a menu with Readiness Check and Prospect. Prospect is `https://check.abra-ca-dabra.app/check/prospect`, uses the studio canvas, type, and accent, and does not ask for a login.
+- **Why** — The form was an internal ops page. It belongs in the public check navigation.
+- **Code touchpoints** — `src/components/check/CheckMenu.tsx`, `src/lib/check-nav.ts`, `src/app/check/layout.tsx`, `src/app/check/prospect/page.tsx`, `src/app/api/ops/prospect/route.ts`
+- **Data-flow impact** — `POST /api/ops/prospect` no longer checks an ops session. A valid note still queues `prospect/requested`.
+- **API / schema impact** — same body. No `requestedBy`.
+- **Verification** — `npx vitest run tests/unit/check-nav.test.ts tests/integration/prospect-route.test.ts`
+
+### 2026-10-07 — Ops prospecting qualifies sites with AI Search
+
+- **What changed** — The prospect form takes sites. AI Search reads each homepage and answers whether the business needs us. Only a `NEEDS_US` answer becomes a lead, an inbox row, and a scan.
+- **Why** — Follow-up should start when a site needs the studio. A covered site should not become a lead.
+- **Code touchpoints** — `src/lib/ai-search/prospect.ts`, `src/lib/ops/prospect.ts`, `src/inngest/functions/run-prospect.ts`, `src/app/ops/prospect/page.tsx`, `src/components/ops/ProspectForm.tsx`
+- **Data-flow impact** — `prospect/requested` no longer calls Parallel FindAll. A qualifying lead still enqueues `scan/requested`.
+- **API / schema impact** — `POST /api/ops/prospect` still takes `{ objective }`. The note must name the sites. Lead `source` is `ai_search`.
+- **Verification** — `npx vitest run tests/unit/ai-search-prospect.test.ts tests/integration/prospect.test.ts`
+
+### 2026-10-07 — Schema scan searches with Cloudflare AI Search
+
+- **What changed** — A public schema scan fetches robots, sitemap, llms files, and pages itself, then uploads the homepage into a Cloudflare AI Search instance and searches that instance for more pages.
+- **Why** — AI Search replaces Parallel for the schema check. AI Search only crawls domains on the same Cloudflare account, so customer sites are fetched directly and indexed in built-in storage. See [AI Search](https://developers.cloudflare.com/ai-search/).
+- **Code touchpoints** — `src/lib/ai-search/scan-client.ts`, `src/lib/scan/orchestrator.ts`, `src/inngest/functions/run-scan.ts`
+- **Data-flow impact** — `scan/requested` calls AI Search instead of `api.parallel.ai`. Ops prospecting still uses Parallel.
+- **API / schema impact** — none. New env: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`.
+- **Verification** — `npx vitest run tests/unit/ai-search-scan.test.ts tests/integration/orchestrator.test.ts`. Worker `readiness-check` stores `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` as secrets.
 
 ### 2026-10-07 — Finished scan files schema into Handoff
 

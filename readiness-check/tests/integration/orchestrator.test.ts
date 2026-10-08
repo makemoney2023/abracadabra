@@ -45,9 +45,9 @@ describe("runScan orchestrator", () => {
         status: "queued",
       },
     ]);
-    const parallel = createTestParallel();
+    const site = createTestParallel();
 
-    await runScan("s1", { parallel, repo });
+    await runScan("s1", { site, repo });
 
     const scan = await repo.getScan("s1");
     expect(scan?.status).toBe("complete");
@@ -74,9 +74,9 @@ describe("runScan orchestrator", () => {
         hasContact: true,
       },
     ]);
-    const parallel = createTestParallel();
+    const site = createTestParallel();
 
-    await runScan("s2", { parallel, repo });
+    await runScan("s2", { site, repo });
 
     const scan = await repo.getScan("s2");
     expect(scan?.status).toBe("complete");

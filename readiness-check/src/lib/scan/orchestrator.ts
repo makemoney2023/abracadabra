@@ -1,7 +1,7 @@
 import { detectJsonLd } from "@/lib/detect/jsonld";
 import { parseSitemapUrls } from "@/lib/detect/sitemap";
 import { computeOpsPriority } from "@/lib/ops/priority";
-import type { ParallelClient, ParallelExtractResult } from "@/lib/parallel/types";
+import type { ParallelExtractResult, ParallelSearchResult } from "@/lib/parallel/types";
 import { prioritizeUrls } from "@/lib/prioritize-urls";
 import { MAX_PAGES } from "@/lib/scoring/constants";
 import { scoreScan } from "@/lib/scoring/score";
@@ -20,8 +20,13 @@ const PAGE_EXTRACT_OBJECTIVE =
 
 const SITE_FILE_PATHS = ["robots.txt", "sitemap.xml", "llms.txt", "llms-full.txt"] as const;
 
+export type ScanSiteClient = {
+  extract(urls: string[], opts?: { objective?: string; fullContent?: boolean }): Promise<ParallelExtractResult[]>;
+  search(objective: string, opts: { includeDomains: string[]; maxResults?: number }): Promise<ParallelSearchResult[]>;
+};
+
 export type RunScanDeps = {
-  parallel: ParallelClient;
+  site: ScanSiteClient;
   repo: ScanRepository;
 };
 
@@ -44,7 +49,7 @@ function isSitemapIndex(xml: string): boolean {
 }
 
 async function resolveSitemapUrls(
-  parallel: ParallelClient,
+  site: ScanSiteClient,
   sitemapXml: string | null,
 ): Promise<string[]> {
   if (!sitemapXml) return [];
@@ -56,7 +61,7 @@ async function resolveSitemapUrls(
   const childLocs = parseSitemapUrls(sitemapXml).slice(0, 5);
   if (childLocs.length === 0) return [];
 
-  const childResults = await parallel.extract(childLocs, { fullContent: true });
+  const childResults = await site.extract(childLocs, { fullContent: true });
   const urls: string[] = [];
   for (const child of childResults) {
     const body = extractBody(child);
@@ -88,7 +93,7 @@ function isCatastrophicFailure(input: {
 }
 
 export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> {
-  const { parallel, repo } = deps;
+  const { site, repo } = deps;
 
   const scan = await repo.getScan(scanId);
   if (!scan) {
@@ -101,7 +106,7 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
     const base = originBase(scan.origin);
     const siteFileUrls = SITE_FILE_PATHS.map((file) => siteFileUrl(scan.origin, file));
 
-    const siteFileResults = await parallel.extract(siteFileUrls, { fullContent: true });
+    const siteFileResults = await site.extract(siteFileUrls, { fullContent: true });
     const siteFileMap = contentByNormalizedUrl(siteFileResults);
 
     const siteFiles: SiteFiles = {
@@ -119,13 +124,13 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
       ),
     };
 
-    const searchResults = await parallel.search(`Find important pages on ${scan.domain}`, {
+    const searchResults = await site.search(`Find important pages on ${scan.domain}`, {
       includeDomains: [scan.domain],
       maxResults: MAX_PAGES,
     });
     const searchUrls = searchResults.map((r) => r.url).filter(Boolean);
 
-    const sitemapUrls = await resolveSitemapUrls(parallel, siteFiles.sitemapXml);
+    const sitemapUrls = await resolveSitemapUrls(site, siteFiles.sitemapXml);
 
     const prioritized = prioritizeUrls({
       origin: base,
@@ -139,7 +144,7 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
       10,
     )) {
       // Excerpts are enough to mark reachability; JSON-LD comes from capped HTML GETs.
-      const batchResults = await parallel.extract(batch, {
+      const batchResults = await site.extract(batch, {
         objective: PAGE_EXTRACT_OBJECTIVE,
         fullContent: false,
       });
@@ -168,7 +173,7 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
       };
     });
 
-    // Parallel markdown strips JSON-LD; capped parallel HTML GETs recover schema without hanging UI.
+    // Indexed text drops JSON-LD script blocks. Capped HTML GETs recover schema without hanging the scan.
     const enriched = await enrichPagesWithSchemaHtml(draftPages);
     const jsonLdBlocksByUrl = new Map(extractBlocksByUrl);
     for (const [url, blocks] of enriched.jsonLdBlocksByUrl) {

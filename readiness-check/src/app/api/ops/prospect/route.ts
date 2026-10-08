@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { inngest } from "@/inngest/client";
-import { requireOpsSession } from "@/lib/ops/auth";
 
 const bodySchema = z.object({
   objective: z.string().min(8).max(2000),
 });
 
 export async function POST(request: Request) {
-  const session = await requireOpsSession();
-  if (!session.ok) {
-    return NextResponse.json({ error: session.error }, { status: session.status });
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -30,16 +24,13 @@ export async function POST(request: Request) {
 
   await inngest.send({
     name: "prospect/requested",
-    data: {
-      objective: parsed.data.objective,
-      requestedBy: session.user.id,
-    },
+    data: { objective: parsed.data.objective },
   });
 
   return NextResponse.json(
     {
       accepted: true,
-      message: "Prospecting started — leads will appear in the inbox as scans complete.",
+      message: "Prospecting started. Sites that need us become a lead we follow up on.",
     },
     { status: 202 },
   );

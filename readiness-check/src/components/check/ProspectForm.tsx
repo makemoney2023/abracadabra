@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 
 export function ProspectForm() {
   const [objective, setObjective] = useState("");
@@ -40,9 +38,11 @@ export function ProspectForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-xl space-y-4">
+    <form onSubmit={onSubmit} className="studio-panel space-y-4 p-5">
       <div className="space-y-2">
-        <Label htmlFor="prospect-objective">FindAll objective</Label>
+        <label htmlFor="prospect-objective" className="studio-kicker">
+          Sites to check
+        </label>
         <textarea
           id="prospect-objective"
           required
@@ -51,18 +51,16 @@ export function ProspectForm() {
           value={objective}
           onChange={(e) => setObjective(e.target.value)}
           disabled={pending}
-          placeholder="e.g. Mid-market B2B SaaS companies in the US that sell analytics tools"
-          className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="Check https://acme.example and northwind.example."
+          className="studio-field min-h-36"
         />
-        <p className="text-xs text-muted-foreground">
-          Runs asynchronously via Parallel FindAll + enrich, then enqueues an ops
-          scan per company. Results show up in the inbox — this may take a few
-          minutes.
+        <p className="text-sm text-muted-foreground">
+          A site that needs us becomes a lead. A site that is already covered is left alone.
         </p>
       </div>
-      <Button type="submit" disabled={pending || objective.trim().length < 8} className="cursor-pointer">
+      <button type="submit" disabled={pending || objective.trim().length < 8} className="studio-cta-primary">
         {pending ? "Starting…" : "Start prospecting"}
-      </Button>
+      </button>
       {error ? (
         <p className="text-sm text-destructive" role="alert">
           {error}

@@ -1,5 +1,5 @@
 import { inngest } from "../client";
-import { createParallelClient } from "@/lib/parallel/client";
+import { createAiSearchProspectFinder } from "@/lib/ai-search/prospect";
 import {
   createSupabaseProspectStore,
   runProspecting,
@@ -15,11 +15,11 @@ export const runProspectFn = inngest.createFunction(
   async ({ event, step }) => {
     const { objective } = event.data as { objective: string };
 
-    const result = await step.run("findall-enrich-enqueue", async () => {
+    const result = await step.run("ai-search-qualify-enqueue", async () => {
       const store = createSupabaseProspectStore(createAdminClient());
       return runProspecting(
         {
-          parallel: createParallelClient(),
+          finder: createAiSearchProspectFinder(),
           store,
           enqueueScan: async (scanId) => {
             await inngest.send({

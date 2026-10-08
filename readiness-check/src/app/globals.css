@@ -230,6 +230,17 @@
   z-index: 2;
 }
 
+.check-studio.check-drawer {
+  position: fixed;
+  isolation: auto;
+  min-height: 0;
+}
+
+.check-studio.check-drawer::before,
+.check-studio.check-drawer::after {
+  display: none;
+}
+
 .check-studio ::selection {
   background: var(--sc-accent);
   color: var(--sc-canvas);

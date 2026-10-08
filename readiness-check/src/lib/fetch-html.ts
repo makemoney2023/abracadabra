@@ -4,9 +4,8 @@ const HTML_FETCH_TIMEOUT_MS = 5_000;
 /**
  * Direct HTML GET for JSON-LD detection.
  *
- * Parallel Extract returns markdown and strips `<script type="application/ld+json">`
- * blocks, so schema detection needs a raw HTML fetch after Parallel confirms the URL
- * is reachable.
+ * Indexed page text drops `<script type="application/ld+json">` blocks, so schema
+ * detection reads the raw HTML after the scan has the page URL.
  */
 export async function fetchHtmlForSchema(url: string): Promise<string | null> {
   try {

@@ -151,7 +151,7 @@ export function QueueTable() {
           Refresh
         </Button>
         <Button asChild variant="secondary" className="ml-auto cursor-pointer">
-          <Link href="/ops/prospect">Prospect</Link>
+          <Link href="/check/prospect">Prospect</Link>
         </Button>
       </div>
 

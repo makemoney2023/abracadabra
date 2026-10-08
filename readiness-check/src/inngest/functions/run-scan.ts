@@ -1,6 +1,6 @@
 import { fullSchemaPackage } from "@/lib/fixes/full-schema";
 import { deliverSchemaPackage } from "@/lib/handoff-intake";
-import { createParallelClient } from "@/lib/parallel/client";
+import { createAiSearchScanClient } from "@/lib/ai-search/scan-client";
 import { runScan } from "@/lib/scan/orchestrator";
 import { createSupabaseScanRepository, loadScanById } from "@/lib/scan/supabase-repository";
 import { inngest } from "../client";
@@ -50,7 +50,7 @@ export const runScanFn = inngest.createFunction(
     const { scanId } = event.data as { scanId: string };
     await step.run("orchestrate", async () => {
       await runScan(scanId, {
-        parallel: createParallelClient(),
+        site: createAiSearchScanClient(),
         repo: createSupabaseScanRepository(),
       });
     });

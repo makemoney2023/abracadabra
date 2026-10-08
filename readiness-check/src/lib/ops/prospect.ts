@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { normalizeDomain } from "@/lib/domain";
-import type { ParallelClient, ParallelLead } from "@/lib/parallel/types";
+import type { ParallelLead } from "@/lib/parallel/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ProspectLeadRow = {
@@ -67,6 +67,10 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
+function leadSource(lead: ParallelLead): string {
+  return typeof lead.raw.source === "string" && lead.raw.source.trim() ? lead.raw.source : "ai_search";
+}
+
 function hasEmailContact(contacts: ParallelLead["contacts"]): boolean {
   return contacts.some((c) => Boolean(c.email?.trim()));
 }
@@ -98,7 +102,7 @@ export function createInMemoryProspectStore(): InMemoryProspectStore {
         domain,
         website: lead.website ?? origin,
         industry: lead.industry ?? null,
-        source: "findall",
+        source: leadSource(lead),
         raw: lead.raw ?? {},
       };
       leads.push(row);
@@ -174,7 +178,7 @@ export function createSupabaseProspectStore(
             website: lead.website ?? origin,
             name: lead.name ?? null,
             industry: lead.industry ?? null,
-            source: "findall",
+            source: leadSource(lead),
             raw: lead.raw ?? {},
             updated_at: new Date().toISOString(),
           },
@@ -191,7 +195,7 @@ export function createSupabaseProspectStore(
         domain: data.domain as string,
         website: (data.website as string | null) ?? null,
         industry: (data.industry as string | null) ?? null,
-        source: (data.source as string) ?? "findall",
+        source: (data.source as string) ?? "ai_search",
         raw: (data.raw as Record<string, unknown>) ?? {},
       };
     },
@@ -315,8 +319,12 @@ export async function processProspectLeads(
   return { leadIds, scanIds, leadCount: leadIds.length };
 }
 
+export type ProspectFinder = {
+  findProspects(objective: string): Promise<ParallelLead[]>;
+};
+
 export type RunProspectingDeps = {
-  parallel: ParallelClient;
+  finder: ProspectFinder;
   store: ProspectStore;
   enqueueScan: (scanId: string) => Promise<void>;
 };
@@ -325,7 +333,7 @@ export async function runProspecting(
   deps: RunProspectingDeps,
   objective: string,
 ): Promise<{ leadCount: number; scanIds: string[]; leadIds: string[] }> {
-  const leads = await deps.parallel.findAllAndEnrich(objective);
+  const leads = await deps.finder.findProspects(objective);
   return processProspectLeads(leads, {
     store: deps.store,
     enqueueScan: deps.enqueueScan,

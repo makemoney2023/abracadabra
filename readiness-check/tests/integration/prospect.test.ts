@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from "vitest";
-import { createMockParallel } from "@/lib/parallel/mock";
 import {
   createInMemoryProspectStore,
   processProspectLeads,
@@ -11,8 +10,8 @@ describe("prospect flow", () => {
     const store = createInMemoryProspectStore();
     const enqueue = vi.fn(async () => {});
 
-    const parallel = createMockParallel({
-      findAllAndEnrich: async () => [
+    const finder = {
+      findProspects: async () => [
         {
           name: "Acme",
           domain: "acme.example",
@@ -26,25 +25,26 @@ describe("prospect flow", () => {
               confidence: 0.9,
             },
           ],
-          raw: { source: "findall" },
+          raw: { source: "ai_search" },
         },
         {
           name: "NoEmail Co",
           domain: "noemail.example",
           website: "https://noemail.example",
           contacts: [{ name: "Bob", title: "VP", phone: "555-0100" }],
-          raw: { source: "findall" },
+          raw: { source: "ai_search" },
         },
       ],
-    });
+    };
 
     const result = await runProspecting(
-      { parallel, store, enqueueScan: enqueue },
-      "B2B SaaS companies missing schema markup",
+      { finder, store, enqueueScan: enqueue },
+      "Check https://acme.example and https://noemail.example",
     );
 
     expect(result.leadCount).toBe(2);
     expect(store.leads).toHaveLength(2);
+    expect(store.leads.every((lead) => lead.source === "ai_search")).toBe(true);
     expect(store.leads.map((l) => l.domain).sort()).toEqual([
       "acme.example",
       "noemail.example",

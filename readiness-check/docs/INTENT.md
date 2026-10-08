@@ -23,13 +23,13 @@ A standalone dual-surface product:
 | Surface | Who | What |
 |---|---|---|
 | **Public scanner** | Any business | Enter a URL → get a readiness score immediately → email unlocks page-level detail + PDF |
-| **Ops inbox** | Internal staff | Parallel FindAll + enrich → auto-scan → queue (`new` / `contacted` / `won` / `skipped`) |
+| **Ops inbox** | Internal staff | Named sites → AI Search `NEEDS_US` → lead and scan → queue (`new` / `contacted` / `won` / `skipped`) |
 
 Both surfaces share one scan and scoring engine.
 
 ## Locked product decisions
 
-- **Parallel** for map / extract / scrape / prospecting (`search`, `extract`/`fetch`, `findall`, `enrich`) — no Firecrawl in v1. Direct HTML GET is used only as a schema fallback because Parallel returns markdown and strips `application/ld+json` script blocks.
+- **Cloudflare AI Search** for the schema scan and for ops prospecting. Staff name the sites. A `NEEDS_US` answer becomes a lead. Direct HTML GET reads pages and JSON-LD. Parallel FindAll is no longer on this path.
 - Soft gate: overall score free; email for page matrix + PDF
 - Standard depth: site files + up to ~40 priority pages
 - In-app ops inbox only (no CRM sync in v1)

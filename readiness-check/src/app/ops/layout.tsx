@@ -45,7 +45,7 @@ export default async function OpsLayout({
                 <Link href="/ops" className="hover:text-foreground">
                   Inbox
                 </Link>
-                <Link href="/ops/prospect" className="hover:text-foreground">
+                <Link href="/check/prospect" className="hover:text-foreground">
                   Prospect
                 </Link>
               </nav>

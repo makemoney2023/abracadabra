@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Tektur } from "next/font/google";
 import Link from "next/link";
+import { CheckMenu } from "@/components/check/CheckMenu";
 import { STUDIO } from "@/lib/brand/studio";
 
 const tektur = Tektur({
@@ -21,9 +22,7 @@ export default function CheckLayout({ children }: { children: React.ReactNode })
           <Link href="/check" className="font-heading text-lg no-underline">
             Readiness Check
           </Link>
-          <a href="https://abra-ca-dabra.app" className="studio-kicker no-underline">
-            Abracadabra
-          </a>
+          <CheckMenu fontClass={tektur.variable} />
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-10">{children}</main>
