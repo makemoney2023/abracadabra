@@ -20,7 +20,6 @@
   "ai": { "binding": "AI" },
   "vars": {
     "MCP_PORTAL_URL": "",
-    "AGENT_WAKE_SECRET": "",
     "CF_ACCESS_CLIENT_ID": "",
     "CF_ACCESS_CLIENT_SECRET": "",
     "HQ_ORIGIN": "https://hq.abra-ca-dabra.app",
