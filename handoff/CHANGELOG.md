@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — Deployed the chat and client-channel work. `HQ_CHAT_SECRET` and `CLIENT_CHANNEL_SECRET` are set on `handoff-hq` and `handoff-agent`. `AGENT_WAKE_SECRET` is set on `handoff`, `handoff-hq`, and `handoff-agent`. Email Routing sends `magic@abra-ca-dabra.app` to worker `handoff-agent`. The empty `AGENT_WAKE_SECRET` variable was removed from the agent config so the secret is the value that ships.
+- **Why** — The email handler is deployed, so the routing rule can deliver mail. Chat and wakes need a shared secret that is not in git.
+- **Code touchpoints** — `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — Mail to `magic@` now reaches `email()` on `handoff-agent`.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff` version `c7f149d3-ec62-4958-84c8-d191870a1d5f`. Worker `handoff-hq` version `d4f704f4-17b4-4a8b-8ee5-b89bb37b8aa9`. Worker `handoff-agent` version `2b53048b-6245-4c40-b9b1-67581b47ea14`. The Email Routing API reports the rule enabled. The Slack app is still not created.
+
+## 2026-10-07
+
 - **What changed** — Steps 24–27 of the HQ agent plan, plus the channel checks that do not need a deploy. A client approving a brief wakes `brief_approved` when nothing is planned yet and `brief_changed` after that. A denial wakes `context_changed`. A paused client is not woken. Today has Needs you for proposed requests, with Approve and Decline. A client page lists conversations and lets staff reply. Chat sits on the client, project, and work pages and tells the model which record is open. A sender on two clients is asked which one. Staff Slack posts are logged and not answered. An unlinked Slack channel is noted once.
 - **Why** — Staff need to see and answer client threads before email and Slack go live.
 - **Code touchpoints** — `handoff/src/lib/agent-wake.ts`, `handoff/src/app/w/[slug]/work/actions.ts`, `handoff/src/db/conversations.ts`, `handoff/src/db/crm.ts`, `handoff/src/app/today-screen.tsx`, `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/thread-forms.tsx`, `handoff/src/app/chat/chat-panel.tsx`, `handoff/src/lib/hq-chat-context.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/app/api/client-messages/route.ts`
