@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/channel-plan.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/src/lib/client-documents.ts`, `handoff/src/lib/client-plan.ts`
 - **Data-flow impact** — `file_actions` lines are `Title | person | date | skill path`. `set_deal_step` writes `deals.next_step`. `draft_client_status` inserts a draft client status. `## Rules` is copied into the next brief and into the build brief.
 - **API / schema impact** — `record` accepts `rules`. No migration.
-- **Verification** — `npx vitest run` on the channel, chat, CRM, brief, and client-plan tests (114 passed). `npx tsc --noEmit -p tsconfig.agent.json` passed.
+- **Verification** — `npx vitest run` on the channel, chat, CRM, brief, and client-plan tests (114 passed). `npx tsc --noEmit -p tsconfig.agent.json` passed. Worker `handoff-agent` version `f809abd6-0eaa-4608-902d-678d73132fa7`. Worker `handoff-hq` version `3ab7e5ec-d960-4fca-8912-8a8f59fb63e0`.
 
 ## 2026-10-07
 
