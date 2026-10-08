@@ -9,7 +9,7 @@ export function GET() {
     "> A five-to-seven-minute check that scores pressure, readiness, growth, and how visible a public site is to answer engines. Results stay behind an email. The next step is a thirty-minute working session.",
     "",
     `Landing: ${base}/check`,
-    `Prospect: ${base}/check/prospect`,
+    `Schema ops: https://hq.abra-ca-dabra.app/schema`,
     "Contact: dev@pirx.ca",
     "",
     "## Guides",

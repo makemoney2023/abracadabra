@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createAiSearchProspectFinder, domainsFromObjective, needsFollowUp } from "@/lib/ai-search/prospect";
+import { createAiSearchProspectFinder, contactsFromHtml, domainsFromObjective, needsFollowUp } from "@/lib/ai-search/prospect";
 
 describe("domainsFromObjective", () => {
   it("reads sites from urls and bare domains", () => {
@@ -12,6 +12,18 @@ describe("domainsFromObjective", () => {
     expect(domainsFromObjective("Write ada@acme.example about https://www.acme.example")).toEqual([
       "acme.example",
     ]);
+  });
+});
+
+describe("contactsFromHtml", () => {
+  it("reads a named contact from the page and ignores a page with none", () => {
+    expect(
+      contactsFromHtml('<a href="mailto:hello@acme.example">Hi</a><a href="tel:+15550109999">call</a>'),
+    ).toEqual([
+      { email: "hello@acme.example" },
+      { phone: "+15550109999" },
+    ]);
+    expect(contactsFromHtml("<p>No contact here.</p>")).toEqual([]);
   });
 });
 
@@ -34,7 +46,14 @@ describe("createAiSearchProspectFinder", () => {
         const href = String(input);
         const method = init?.method ?? "GET";
         if (href === "https://needs.example/") {
-          return new Response("<html><title>Needs Co</title><p>No schema.</p></html>", { status: 200 });
+          return new Response(
+            `<html><title>Needs Co</title>
+            <a href="mailto:Ada@Needs.example">Ada</a>
+            <script type="application/ld+json">
+              {"@type":"Organization","contactPoint":{"@type":"ContactPoint","name":"Ada Lovelace","email":"ada@needs.example","telephone":"+1-555-1212","contactType":"sales"}}
+            </script></html>`,
+            { status: 200 },
+          );
         }
         if (href === "https://covered.example/") {
           return new Response("<html><title>Covered Co</title></html>", { status: 200 });
@@ -70,9 +89,16 @@ describe("createAiSearchProspectFinder", () => {
         name: "Needs Co",
         domain: "needs.example",
         website: "https://needs.example",
-        contacts: [],
+        contacts: [{ name: "Ada Lovelace", title: "sales", email: "ada@needs.example", phone: "+15551212" }],
         raw: { source: "ai_search", answer: "NEEDS_US\nNothing for an answer engine to quote." },
       },
+    ]);
+    const reviews = await finder.reviewSites(
+      "Check https://needs.example and covered.example for shops that cannot be quoted.",
+    );
+    expect(reviews.map((review) => ({ domain: review.domain, needsUs: review.needsUs }))).toEqual([
+      { domain: "needs.example", needsUs: true },
+      { domain: "covered.example", needsUs: false },
     ]);
   });
 

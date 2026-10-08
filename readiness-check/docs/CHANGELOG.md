@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-07 — Schema ops is a Handoff menu item
+
+- **What changed** — HQ has a Schema item. A check lists every site. A site that needs us becomes a lead, and contacts found on the page are saved on that lead.
+- **Why** — Schema ops belongs with the rest of the studio, and a covered site still needs a result.
+- **Code touchpoints** — `handoff/src/app/schema/page.tsx`, `handoff/src/app/staff-nav.tsx`, `handoff/migrations/0010_schema_checks.sql`, `readiness-check/src/lib/ops/schema-check.ts`, `readiness-check/src/lib/ai-search/prospect.ts`
+- **Data-flow impact** — HQ inserts `schema_checks` and asks the readiness-check worker to read each homepage. Covered and unread sites stay on the result list. `NEEDS_US` still opens an organization, a deal, and a scan.
+- **API / schema impact** — D1 tables `schema_checks` and `schema_check_sites`. Prospect jobs accept an optional `checkId`.
+- **Verification** — readiness-check `npx vitest run` on the prospect, schema, and nav tests. handoff `npx tsc --noEmit` and the migration test.
+
 ## 2026-10-07 — The readiness questionnaire uses Cloudflare D1
 
 - **What changed** — Starting a check, saving an answer, scoring it, and leaving an email write `check_assessments` in D1. An email also files the finished check on the Handoff client record.

@@ -19,6 +19,9 @@ describe("navIsActive", () => {
     expect(navIsActive("/admin", "/spaces")).toBe(true);
     expect(navIsActive("/admin/templates", "/spaces")).toBe(true);
     expect(navIsActive("/admin", "/")).toBe(false);
+    expect(navIsActive("/schema", "/schema")).toBe(true);
+    expect(navIsActive("/schema/abc", "/schema")).toBe(true);
+    expect(navIsActive("/leads", "/schema")).toBe(false);
     expect(navIsActive("/settings/github", "/settings/github")).toBe(true);
     expect(navIsActive("/settings", "/settings/github")).toBe(false);
     expect(navIsActive("/clients", "/settings/github")).toBe(false);

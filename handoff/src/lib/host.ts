@@ -9,6 +9,7 @@ export const STAFF_DEV_HOST = "handoff-hq.abracadabra-ai.workers.dev";
 const STAFF_PREFIXES = [
   "/clients",
   "/leads",
+  "/schema",
   "/projects",
   "/work",
   "/deliverables",

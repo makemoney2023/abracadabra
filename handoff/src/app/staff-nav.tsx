@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, CalendarDays, FolderOpen, Inbox, ListTodo, MessageSquare, Settings } from "lucide-react";
+import { Building2, CalendarDays, FolderOpen, Inbox, ListTodo, MessageSquare, Radar, Settings } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,6 +16,7 @@ import { navIsActive } from "./staff-nav-match";
 const LINKS = [
   { href: "/", label: "Today", icon: CalendarDays },
   { href: "/leads", label: "Leads", icon: Inbox },
+  { href: "/schema", label: "Schema", icon: Radar },
   { href: "/clients", label: "Clients", icon: Building2 },
   { href: "/work", label: "Work", icon: ListTodo },
   { href: "/chat", label: "Chat", icon: MessageSquare },

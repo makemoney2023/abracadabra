@@ -45,8 +45,8 @@ export default async function OpsLayout({
                 <Link href="/ops" className="hover:text-foreground">
                   Inbox
                 </Link>
-                <Link href="/check/prospect" className="hover:text-foreground">
-                  Prospect
+                <Link href="https://hq.abra-ca-dabra.app/schema" className="hover:text-foreground">
+                  Schema
                 </Link>
               </nav>
             ) : null}

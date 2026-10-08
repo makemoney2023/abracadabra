@@ -15,8 +15,8 @@ describe("dispatchJob", () => {
       runScan: async (scanId: string) => {
         scans.push(scanId);
       },
-      runProspect: async (objective: string) => {
-        notes.push(objective);
+      runProspect: async (job: { objective: string }) => {
+        notes.push(job.objective);
       },
     };
     await dispatchJob({ type: "scan", scanId: "scan-1" }, {}, handlers);

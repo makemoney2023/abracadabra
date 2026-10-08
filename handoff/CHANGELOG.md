@@ -2,6 +2,15 @@
 
 ## 2026-10-07
 
+- **What changed** — The studio menu has Schema. Staff paste sites and see every result. A site that needs us becomes a lead with the contacts scraped from the page.
+- **Why** — Schema ops was on the public readiness check, and covered sites disappeared.
+- **Code touchpoints** — `handoff/src/app/schema/page.tsx`, `handoff/src/app/schema/actions.ts`, `handoff/src/app/staff-nav.tsx`, `handoff/migrations/0010_schema_checks.sql`, `handoff/src/db/migrate.ts`
+- **Data-flow impact** — The form inserts `schema_checks`, then the readiness-check worker writes `schema_check_sites` and, for a needs-us site, an organization, contacts, and a deal.
+- **API / schema impact** — Tables `schema_checks` and `schema_check_sites`.
+- **Verification** — `npx vitest run src/db/migrate.test.ts src/app/staff-nav-match.test.ts`. `npx tsc --noEmit`.
+
+## 2026-10-07
+
 - **What changed** — Chat can name a person, a day, and a skill on each task, ask which deal to win when more than one is open, set a deal's next step, draft a client status that stays unpublished, and keep standing rules on the brief. A new task with no due date shows on Today for a week.
 - **Why** — Filing work only stored a title. Staff still had to assign it, date it, and remember the limits.
 - **Code touchpoints** — `handoff/src/lib/channel-plan.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/src/lib/client-documents.ts`, `handoff/src/lib/client-plan.ts`

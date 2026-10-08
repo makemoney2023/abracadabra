@@ -3,7 +3,7 @@ import { createAiSearchScanClient } from "@/lib/ai-search/scan-client";
 import type { CheckBindings } from "@/lib/cloudflare/sql";
 import { dispatchJob } from "@/lib/jobs/dispatch";
 import { createD1ProspectStore } from "@/lib/ops/d1-prospect-store";
-import { runProspecting } from "@/lib/ops/prospect";
+import { runSchemaCheck } from "@/lib/ops/schema-check";
 import { createD1ScanRepository } from "@/lib/scan/d1-store";
 import { runScan } from "@/lib/scan/orchestrator";
 
@@ -26,16 +26,17 @@ export async function runCloudflareJob(body: unknown, env: CheckBindings): Promi
         repo: createD1ScanRepository(db),
       });
     },
-    async runProspect(objective) {
-      await runProspecting(
+    async runProspect(job) {
+      await runSchemaCheck(
+        db,
+        job,
         {
-          finder: createAiSearchProspectFinder({ env: searchEnv(env) }),
+          reviewer: createAiSearchProspectFinder({ env: searchEnv(env) }),
           store: createD1ProspectStore(db),
           enqueueScan: async (scanId) => {
             await queue.send({ type: "scan", scanId });
           },
         },
-        objective,
       );
     },
   });

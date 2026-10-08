@@ -16,6 +16,7 @@ describe("decideHost", () => {
     expect(decide("abra-ca-dabra.app", "/clients/abc")).toEqual({ kind: "not-found" });
     expect(decide("localhost:3000", "/spaces")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/leads")).toEqual({ kind: "not-found" });
+    expect(decide("handoff.example", "/schema")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/api/admin/held/file-1")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/api/github/webhook")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/settings/github")).toEqual({ kind: "not-found" });
@@ -73,6 +74,7 @@ describe("decideHost", () => {
 
   it("lets staff open the client list on hq and clients open folders on the other host", () => {
     expect(decide(HQ, "/clients")).toEqual({ kind: "allow" });
+    expect(decide(HQ, "/schema")).toEqual({ kind: "allow" });
     expect(decide(HQ, "/chat")).toEqual({ kind: "allow" });
     expect(decide("hq.localhost", "/")).toEqual({ kind: "allow" });
     expect(decide("handoff.example", "/w/strongfoam")).toEqual({ kind: "allow" });

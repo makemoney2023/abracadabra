@@ -151,7 +151,7 @@ export function QueueTable() {
           Refresh
         </Button>
         <Button asChild variant="secondary" className="ml-auto cursor-pointer">
-          <Link href="/check/prospect">Prospect</Link>
+          <Link href="https://hq.abra-ca-dabra.app/schema">Schema</Link>
         </Button>
       </div>
 
