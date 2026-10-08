@@ -98,6 +98,31 @@ describe("lead pickup", () => {
     expect(String(calls.find((entry) => entry.name === "save_space_file")?.args.body)).toContain("Hello Foam Co.");
   });
 
+  it("saves a JSON swarm result without a markdown heading", async () => {
+    const { call, calls } = caller({});
+    await qualifyLead({
+      call,
+      requestId: "wake-lead",
+      runSwarm: async () => '{"score":28}',
+    });
+    expect(calls.find((entry) => entry.name === "save_space_file")?.args.body).toBe('{"score":28}');
+  });
+
+  it("notes a saved PDF without putting the data URL in the timeline", async () => {
+    const pdf = Buffer.from("%PDF-1.4\n").toString("base64");
+    const body = `data:application/pdf;base64,${pdf}`;
+    const { call, calls } = caller({});
+    await qualifyLead({
+      call,
+      requestId: "wake-lead",
+      runSwarm: async () => body,
+    });
+    expect(calls.find((entry) => entry.name === "save_space_file")?.args.body).toBe(body);
+    const note = String(calls.find((entry) => entry.name === "add_note")?.args.body);
+    expect(note).not.toContain("base64");
+    expect(note.toLowerCase()).toContain("pdf");
+  });
+
   it("runs the pack that matches the lead", async () => {
     const templates: string[] = [];
     const recorded: { packId?: string; status?: string }[] = [];
@@ -280,6 +305,21 @@ describe("one skill step per wake", () => {
     expect(String(item?.args.bodyMarkdown).length).toBeGreaterThan(0);
     expect(String(item?.args.bodyMarkdown)).not.toContain("Look at rivals.");
     expect(calls.some((entry) => entry.name === "ask_staff")).toBe(false);
+  });
+
+  it("files a JSON skill result as json instead of a markdown page", async () => {
+    const { call, calls } = caller({ tasks: [websiteTask] });
+    await advanceClientWork({
+      call,
+      requestId: "wake-4",
+      now: 1,
+      readSkill: async () => "---\nname: competitor-teardown\n---\nLook at rivals.",
+      onLoaded: async () => '{"score":28}',
+    });
+    const file = calls.find((entry) => entry.name === "save_space_file");
+    expect(file?.args.body).toBe('{"score":28}');
+    const item = calls.find((entry) => entry.name === "add_deliverable_item");
+    expect(String(item?.args.path)).toMatch(/\.json$/);
   });
 
   it("writes the build brief and moves the task to build when the next step is plan", async () => {

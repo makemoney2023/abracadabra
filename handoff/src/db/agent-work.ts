@@ -3,6 +3,7 @@ import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { openObjectStore } from "@/lib/store/objects";
 import { recordAgentRun } from "@/lib/agent-activity";
 import { storeScanContext } from "@/lib/scan-context";
+import { itemForPath } from "@/lib/artifact-adapter";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
 
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
@@ -444,11 +445,12 @@ async function addAgentItem(sql: Sql, actor: AgentActor, args: WorkArgs, now: nu
     [row.id, row.version],
   );
   const id = crypto.randomUUID();
+  const item = itemForPath(itemTitle, objectKey);
   await sql.run(
     `INSERT INTO deliverable_items (
       id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
-    ) VALUES (?, ?, ?, NULL, 'page', NULL, ?, ?, ?, NULL, 'pending', ?)`,
-    [id, row.id, row.version, itemTitle, body, JSON.stringify(objectKey ? [{ objectKey }] : []), sortRow?.next ?? 0],
+    ) VALUES (?, ?, ?, NULL, ?, NULL, ?, ?, ?, NULL, 'pending', ?)`,
+    [id, row.id, row.version, item.format, itemTitle, body, item.mediaJson, sortRow?.next ?? 0],
   );
   await sql.run("UPDATE deliverables SET updated_at = ? WHERE id = ?", [now, row.id]);
   return { itemId: id, deliverableId: row.id };

@@ -128,7 +128,7 @@ const AGENT_TOOLS = [
   },
   {
     name: "save_space_file",
-    description: "Save swarm markdown into the client space under agent/<workflow>/<run>/<node>.md.",
+    description: "Save swarm output into the client space. Markdown, JSON, PDFs, and images keep their own file type under agent/<workflow>/<run>/<node>.",
     inputSchema: {
       type: "object",
       properties: {

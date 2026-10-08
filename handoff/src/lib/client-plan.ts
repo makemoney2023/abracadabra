@@ -1,3 +1,4 @@
+import { adaptArtifact } from "./artifact-adapter";
 import { chooseSkillsForPiece, type PieceKind, type SkillCard, type ToolCaller } from "./client-documents";
 import { leadBrief } from "./lead-swarm";
 import { pickSkillPack, type PackCandidate } from "./pack-picker";
@@ -107,7 +108,7 @@ function fields(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 }
 
-/** Picks up a new lead: a timeline note, a qualify task, and a markdown file when a space exists. */
+/** Picks up a new lead: a timeline note, a qualify task, and a space file when a space exists. */
 export async function qualifyLead(input: {
   call: ToolCaller;
   requestId: string;
@@ -164,8 +165,12 @@ export async function qualifyLead(input: {
     }
   }
   const body = swarm || `Picked up ${name}. Pack: ${choice.name}. Next is a fit note, a draft first email, and the next task.`;
+  const adapted = adaptArtifact(body);
+  const noteBody =
+    adapted?.kind === "pdf" || adapted?.kind === "image" ? `Saved a ${adapted.extension} for ${name}.` : body;
+  const fileBody = adapted && adapted.kind !== "markdown" ? body.trim() : `# ${name}\n\n${body}`;
   await input.call("add_note", {
-    body,
+    body: noteBody,
     requestId: `${input.requestId}:lead-note`,
   });
   await input.call("create_task", {
@@ -179,7 +184,7 @@ export async function qualifyLead(input: {
       workflow: "lead",
       run: input.requestId,
       node: "qualify",
-      body: `# ${name}\n\n${body}`,
+      body: fileBody,
       requestId: `${input.requestId}:lead-file`,
     }),
   );
@@ -191,7 +196,7 @@ export async function qualifyLead(input: {
     packName: choice.name,
     status: swarmStatus,
     executionId,
-    body: swarmStatus === "not_started" ? `Swarm did not start. Pack: ${choice.name}.` : body.slice(0, 500),
+    body: swarmStatus === "not_started" ? `Swarm did not start. Pack: ${choice.name}.` : noteBody.slice(0, 500),
     artifacts,
     requestId: activityKey,
     activityKey,
@@ -328,7 +333,7 @@ export async function advanceClientWork(input: {
   requestId: string;
   now: number;
   readSkill: (skillPath: string) => Promise<string | null>;
-  onLoaded?: (skillPath: string, taskId: string) => void | Promise<void>;
+  onLoaded?: (skillPath: string, taskId: string) => void | string | null | Promise<void | string | null>;
 }): Promise<{ advanced: number; reschedule: boolean }> {
   const context = picture(await input.call("client_context", {}));
   if (context.organization?.agentPausedAt != null) return { advanced: 0, reschedule: false };
@@ -387,13 +392,25 @@ export async function advanceClientWork(input: {
       });
       continue;
     }
-    await input.onLoaded?.(step.path, task.id);
+    const produced = await input.onLoaded?.(step.path, task.id);
+    const text = typeof produced === "string" ? produced.trim() : "";
+    const artifact = text ? adaptArtifact(text) : null;
+    const fileBody = artifact && artifact.kind !== "markdown" ? text : "";
     const name = skillName(step.path, loaded);
     const sentence = `Loaded ${name} for ${task.title ?? "this piece"}.`;
+    if (fileBody && artifact) {
+      await input.call("save_space_file", {
+        workflow: "work",
+        run: task.id,
+        node: name,
+        body: fileBody,
+        requestId: `${input.requestId}:file:${task.id}:${step.path}`,
+      });
+    }
     if (task.deliverableId) {
       await input.call("add_deliverable_item", {
         deliverableId: task.deliverableId,
-        path: `${name}.md`,
+        path: fileBody && artifact ? `${name}.${artifact.extension}` : `${name}.md`,
         bodyMarkdown: sentence,
         requestId: `${input.requestId}:item:${task.id}:${step.path}`,
       });

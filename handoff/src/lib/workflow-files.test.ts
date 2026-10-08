@@ -72,6 +72,89 @@ describe("workflow space files", () => {
     expect(new TextDecoder().decode(bytes ?? new Uint8Array())).toContain("Foam.");
   });
 
+  it("stores a JSON object as a json file", async () => {
+    await space();
+    const saved = await storeWorkflowOutput({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ workflow: "schema", run: "run-1", node: "score", body: '{"score":28}' }],
+      now: NOW,
+    });
+    expect(saved.stored).toEqual(["agent/schema/run-1/score.json"]);
+    const file = await sql.get<{ declared_content_type: string; object_key: string }>(
+      "SELECT declared_content_type, object_key FROM files",
+    );
+    expect(file?.declared_content_type).toBe("application/json");
+    const bytes = await store.read(file?.object_key ?? "");
+    expect(JSON.parse(new TextDecoder().decode(bytes ?? new Uint8Array()))).toEqual({ score: 28 });
+  });
+
+  it("stores a PDF data URL as a pdf", async () => {
+    await space();
+    const pdf = Buffer.from("%PDF-1.4\n").toString("base64");
+    const saved = await storeWorkflowOutput({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ workflow: "report", run: "run-1", node: "audit", body: `data:application/pdf;base64,${pdf}` }],
+      now: NOW,
+    });
+    expect(saved.stored).toEqual(["agent/report/run-1/audit.pdf"]);
+    const file = await sql.get<{ declared_content_type: string; object_key: string }>(
+      "SELECT declared_content_type, object_key FROM files",
+    );
+    expect(file?.declared_content_type).toBe("application/pdf");
+    const bytes = await store.read(file?.object_key ?? "");
+    expect(new TextDecoder().decode(bytes ?? new Uint8Array()).startsWith("%PDF")).toBe(true);
+  });
+
+  it("stores a PNG data URL as a png", async () => {
+    await space();
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).toString("base64");
+    const saved = await storeWorkflowOutput({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ workflow: "creative", run: "run-1", node: "hero", body: `data:image/png;base64,${png}` }],
+      now: NOW,
+    });
+    expect(saved.stored).toEqual(["agent/creative/run-1/hero.png"]);
+    const file = await sql.get<{ declared_content_type: string }>("SELECT declared_content_type FROM files");
+    expect(file?.declared_content_type).toBe("image/png");
+  });
+
+  it("keeps a data URL that is not a real PDF as markdown", async () => {
+    await space();
+    const saved = await storeWorkflowOutput({
+      sql,
+      store,
+      organizationId: "org-1",
+      now: NOW,
+      files: [
+        {
+          workflow: "report",
+          run: "run-1",
+          node: "audit",
+          body: "data:application/pdf;base64,aaaa",
+        },
+      ],
+    });
+    expect(saved.stored).toEqual(["agent/report/run-1/audit.md"]);
+  });
+
+  it("keeps a sentence as markdown", async () => {
+    await space();
+    const saved = await storeWorkflowOutput({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ workflow: "notes", run: "run-1", node: "line", body: "{not json" }],
+      now: NOW,
+    });
+    expect(saved.stored).toEqual(["agent/notes/run-1/line.md"]);
+  });
+
   it("records a note when the client has no space", async () => {
     const saved = await storeWorkflowOutput({
       sql,

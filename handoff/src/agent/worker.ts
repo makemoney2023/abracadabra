@@ -1,4 +1,5 @@
 import { Agent, getAgentByName, routeAgentRequest } from "agents";
+import { adaptArtifact } from "../lib/artifact-adapter";
 import { verifyWake } from "../lib/agent-wake";
 import {
   draftClientDocuments,
@@ -276,15 +277,27 @@ export class ClientAgent extends Agent<AgentBindings> {
       templateId: payload.templateId,
     });
     const status = run.status === "completed" || run.status === "failed" ? run.status : "running";
+    const adapted = adaptArtifact(run.output);
+    const activityBody =
+      adapted?.kind === "pdf" || adapted?.kind === "image" ? `Saved a ${adapted.extension}.` : run.output.slice(0, 500);
     await call("record_swarm_run", {
       packName: payload.packName,
       status,
       executionId: payload.executionId,
-      body: run.output.slice(0, 500),
+      body: activityBody,
       requestId: `${payload.activityKey}:refresh:${payload.attempts}`,
       activityKey: payload.activityKey,
       trigger: payload.trigger,
     });
+    if (status !== "running" && run.output.trim()) {
+      await call("save_space_file", {
+        workflow: "swarm",
+        run: payload.executionId,
+        node: "result",
+        body: run.output,
+        requestId: `${payload.activityKey}:file`,
+      });
+    }
     if (status === "running" && payload.attempts < 6) {
       await this.schedule(45, "refreshSwarm", { ...payload, attempts: payload.attempts + 1 });
     }

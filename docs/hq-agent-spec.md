@@ -294,7 +294,7 @@ Notes:
 | `create_task` | `title, projectId?, milestoneId?, stage, skills, deliverableKind?, dueAt?, requestId` | `createTask` (agent path) | `created_by_kind='agent'`, `assignee_user_id` null, status `todo`. Writes `agent.task_created`. |
 | `update_task` | `taskId, status?, stage?, skills?, blockedReason?, note?, requestId` | `updateTask` (agent path) | Stage `build` runs the gate in 7.3 on the server and starts the cloud run there. The agent does not hold `CURSOR_API_KEY`; see the note below. |
 | `create_deliverable` | `title, kind, projectId, workspaceId, requestId` | `createDeliverable` | Draft only. |
-| `add_deliverable_item` | `deliverableId, path, bodyMarkdown \| objectKey, requestId` | new | For skill output that is a document or copy. |
+| `add_deliverable_item` | `deliverableId, path, bodyMarkdown \| objectKey, requestId` | new | For skill output that is a document or copy. A `.md` path stays a page. A PDF or JSON path is a file, and a picture is static. An `objectKey` is stored as media `{ r2_key, role, content_type }` so the preview can open it. |
 | `post_status_update` | `projectId, health, audience, body, requestId` | `postStatusUpdate` | `audience: internal` is the agent's progress report to staff. `client` stays draft. |
 | `add_note` | `body, taskId?, deliverableId?, requestId` | `addNote` | Activity `kind='agent.note'`. |
 | `ask_staff` | `question, options?, taskId?, deliverableId?, requestId` | new | Inserts `agent_questions`, activity `agent.question`, and if the task would otherwise stall, sets it `blocked` with `blocked_reason='waiting_on_staff'`. |

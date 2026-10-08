@@ -2,6 +2,15 @@
 
 ## 2026-10-08
 
+- **What changed** — Swarm output that is JSON, a PDF, or an image is stored as that file in the client space. A sentence still lands as markdown. A PDF or image note says what was saved and does not paste the data URL.
+- **Why** — Every swarm result was wrapped as a markdown page, so a report or picture could not be opened as a file.
+- **Code touchpoints** — `handoff/src/lib/artifact-adapter.ts`, `handoff/src/lib/workflow-files.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/mcp.ts`
+- **Data-flow impact** — `save_space_file` classifies the body and writes `.json`, `.pdf`, or an image extension with the matching content type. A finished skill step that returns one of those files saves it and adds a deliverable item of that type. A later swarm refresh files the completed output once.
+- **API / schema impact** — none. Deliverable items use the existing `file` and `static` formats. Media stores `r2_key`, `role`, and `content_type`.
+- **Verification** — `npx vitest run src/lib/workflow-files.test.ts src/lib/client-plan.test.ts src/db/agent-work.test.ts src/lib/knowledge.test.ts` (49 passed) and `npx tsc --noEmit` (clean)
+
+## 2026-10-08
+
 - **What changed** — Saving a client workflow writes its skill steps onto a task. The existing work wake finishes one complete step and keeps the workflow edges.
 - **Why** — A saved workflow had no task, so the work wake had nothing to run.
 - **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/agent-work.ts`, `handoff/migrations/0013_workflow_task.sql`

@@ -1,4 +1,5 @@
 import type { Sql } from "../db/sql";
+import { adaptArtifact } from "./artifact-adapter";
 import { validateManifest } from "./batches";
 import { inspectFileName, type PolicyProfile } from "./policy/profiles";
 import type { ObjectStore } from "./store/objects";
@@ -33,12 +34,15 @@ function slug(value: string): string {
 }
 
 /** Path inside the client space. A blank name returns null. */
-export function workflowSpacePath(file: Pick<WorkflowFile, "workflow" | "run" | "node">): string | null {
+export function workflowSpacePath(
+  file: Pick<WorkflowFile, "workflow" | "run" | "node">,
+  extension = "md",
+): string | null {
   const workflow = slug(file.workflow);
   const run = slug(file.run);
   const node = slug(file.node);
-  if (!workflow || !run || !node) return null;
-  return `agent/${workflow}/${run}/${node}.md`;
+  if (!workflow || !run || !node || !/^[a-z0-9]{1,8}$/.test(extension)) return null;
+  return `agent/${workflow}/${run}/${node}.${extension}`;
 }
 
 async function note(sql: Sql, organizationId: string, body: string, now: number): Promise<void> {
@@ -50,7 +54,7 @@ async function note(sql: Sql, organizationId: string, body: string, now: number)
   );
 }
 
-/** Writes swarm markdown into the client's oldest active space and leaves it for the scan. */
+/** Writes swarm output into the client's oldest active space and leaves it for the scan. */
 export async function storeWorkflowOutput(input: {
   sql: Sql;
   store: ObjectStore;
@@ -60,9 +64,11 @@ export async function storeWorkflowOutput(input: {
   tag?: "copy" | "reference";
 }): Promise<StoredWorkflowFiles> {
   const prepared = input.files.flatMap((file) => {
-    const relativePath = workflowSpacePath(file);
-    if (!relativePath || file.body.trim().length === 0) return [];
-    return [{ relativePath, bytes: new TextEncoder().encode(file.body) }];
+    const adapted = adaptArtifact(file.body);
+    if (!adapted) return [];
+    const relativePath = workflowSpacePath(file, adapted.extension);
+    if (!relativePath) return [];
+    return [{ relativePath, bytes: adapted.bytes, contentType: adapted.contentType }];
   });
   if (prepared.length === 0) return { batchId: null, stored: [] };
 
@@ -96,7 +102,7 @@ export async function storeWorkflowOutput(input: {
     files: accepted.map((file) => ({
       relativePath: file.relativePath,
       sizeBytes: file.bytes.byteLength,
-      contentType: "text/markdown",
+      contentType: file.contentType,
       tag: input.tag ?? "copy",
     })),
     profile,
@@ -123,13 +129,14 @@ export async function storeWorkflowOutput(input: {
         `INSERT INTO files (
           id, batch_id, workspace_id, relative_path, extension, declared_content_type,
           size_bytes, object_key, tag, status, scan_attempts, created_at, uploaded_at, next_scan_at
-        ) VALUES (?, ?, ?, ?, ?, 'text/markdown', ?, ?, ?, 'uploaded', 0, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'uploaded', 0, ?, ?, ?)`,
         [
           file.id,
           batchId,
           space.id,
           file.relativePath,
           file.extension,
+          file.contentType,
           file.bytes.byteLength,
           `${space.id}/${batchId}/${file.id}`,
           input.tag ?? "copy",
