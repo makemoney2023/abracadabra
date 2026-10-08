@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockSend = vi.fn();
 
-vi.mock("@/inngest/client", () => ({
-  inngest: { send: (...args: unknown[]) => mockSend(...args) },
+vi.mock("@opennextjs/cloudflare", () => ({
+  getCloudflareContext: async () => ({
+    env: { SCAN_JOBS: { send: (...args: unknown[]) => mockSend(...args) } },
+  }),
 }));
 
 describe("POST /api/ops/prospect", () => {
@@ -12,7 +14,7 @@ describe("POST /api/ops/prospect", () => {
     mockSend.mockResolvedValue(undefined);
   });
 
-  it("starts prospecting without a login", async () => {
+  it("starts prospecting on the Cloudflare queue without a login", async () => {
     const { POST } = await import("@/app/api/ops/prospect/route");
     const response = await POST(
       new Request("http://localhost/api/ops/prospect", {
@@ -22,9 +24,11 @@ describe("POST /api/ops/prospect", () => {
       }),
     );
     expect(response.status).toBe(202);
+    const json = (await response.json()) as { accepted?: boolean; error?: string };
+    expect(json.accepted).toBe(true);
     expect(mockSend).toHaveBeenCalledWith({
-      name: "prospect/requested",
-      data: { objective: "Check https://acme.example today." },
+      type: "prospect",
+      objective: "Check https://acme.example today.",
     });
   });
 });

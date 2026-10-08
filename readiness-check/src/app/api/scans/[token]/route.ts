@@ -1,9 +1,10 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import type { CheckBindings } from "@/lib/cloudflare/sql";
 import { selectScanPayload, type FullScanView } from "@/lib/scan/present";
-import { loadScanByPublicToken } from "@/lib/scan/supabase-repository";
+import { loadScanByPublicToken } from "@/lib/scan/d1-store";
 import { unlockCookieName } from "@/lib/scan/unlock";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -13,10 +14,14 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
-  const admin = createAdminClient();
+  const db = ((await getCloudflareContext({ async: true })).env as CheckBindings).DB;
+  if (!db) {
+    return NextResponse.json({ error: "Scan store unavailable" }, { status: 503 });
+  }
+
   let loaded: Awaited<ReturnType<typeof loadScanByPublicToken>>;
   try {
-    loaded = await loadScanByPublicToken(token, admin);
+    loaded = await loadScanByPublicToken(db, token);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to load scan" },

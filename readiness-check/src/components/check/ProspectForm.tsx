@@ -19,11 +19,13 @@ export function ProspectForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ objective }),
       });
-      const data = (await res.json()) as {
-        accepted?: boolean;
-        message?: string;
-        error?: string;
-      };
+      let data: { accepted?: boolean; message?: string; error?: string } = {};
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        setError(res.ok ? "Invalid server response" : `Server error (${res.status})`);
+        return;
+      }
       if (!res.ok || !data.accepted) {
         setError(data.error ?? "Could not start prospecting");
         return;

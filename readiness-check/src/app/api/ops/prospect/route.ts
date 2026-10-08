@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { inngest } from "@/inngest/client";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import type { CheckBindings } from "@/lib/cloudflare/sql";
 
 const bodySchema = z.object({
   objective: z.string().min(8).max(2000),
@@ -22,10 +23,17 @@ export async function POST(request: Request) {
     );
   }
 
-  await inngest.send({
-    name: "prospect/requested",
-    data: { objective: parsed.data.objective },
-  });
+  const env = (await getCloudflareContext({ async: true })).env as CheckBindings;
+  if (!env.SCAN_JOBS) {
+    return NextResponse.json({ error: "Prospect queue unavailable" }, { status: 503 });
+  }
+
+  try {
+    await env.SCAN_JOBS.send({ type: "prospect", objective: parsed.data.objective });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Could not start prospecting";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   return NextResponse.json(
     {

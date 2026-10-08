@@ -18,9 +18,16 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+vi.mock("@opennextjs/cloudflare", () => ({
+  getCloudflareContext: async () => ({ env: { DB: {} } }),
+}));
+
+vi.mock("@/lib/scan/d1-store", () => ({
+  loadScanByPublicToken: (...args: unknown[]) => mockLoadScanByPublicToken(...args),
+}));
+
 vi.mock("@/lib/scan/supabase-repository", () => ({
-  loadScanByPublicToken: (...args: unknown[]) =>
-    mockLoadScanByPublicToken(...args),
+  loadScanByPublicToken: (...args: unknown[]) => mockLoadScanByPublicToken(...args),
 }));
 
 vi.mock("@react-pdf/renderer", () => ({

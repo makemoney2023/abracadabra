@@ -29,11 +29,11 @@ Both surfaces share one scan and scoring engine.
 
 ## Locked product decisions
 
-- **Cloudflare AI Search** for the schema scan and for ops prospecting. Staff name the sites. A `NEEDS_US` answer becomes a lead. Direct HTML GET reads pages and JSON-LD. Parallel FindAll is no longer on this path.
+- **Cloudflare for the URL scan and for prospecting.** D1 database `handoff` stores the scan. Queue `scan-jobs` runs it. AI Search qualifies a named site. A `NEEDS_US` answer becomes a CRM lead (`organizations.kind = 'lead'`) and a follow-up deal. Direct HTML GET reads pages and JSON-LD.
 - Soft gate: overall score free; email for page matrix + PDF
 - Standard depth: site files + up to ~40 priority pages
 - In-app ops inbox only (no CRM sync in v1)
-- Next.js monolith + Supabase + Inngest jobs
+- Next.js on the `readiness-check` Worker. URL scans and prospect leads live in Cloudflare D1, not Supabase.
 - Deterministic scoring (no LLM score subjectivity in v1)
 
 ## Value proposition
