@@ -94,6 +94,15 @@ v1 implementation complete for public soft-gate flow + ops inbox/prospecting (Pa
 
 ## Changelog
 
+### 2026-10-07 — Booking webhook typechecks for production
+
+- **What changed** — A real Cal booking is forwarded to Handoff with a kind of created, rescheduled, or cancelled. Ignored payloads still return before that call.
+- **Why** — Production builds failed typechecking because the ignored kind was still in scope at the Handoff forward.
+- **Code touchpoints** — `src/app/api/webhooks/booking/route.ts`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx tsc --noEmit`
+
 ### 2026-10-07 — Gate shows the scored results after the lead is saved
 
 - **What changed** — Submitting the email gate renders the readiness, growth, and visibility scores from the opt-in response. A response without a score stays on the gate and says the score did not come back.
