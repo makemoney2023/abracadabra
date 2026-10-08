@@ -648,7 +648,7 @@ Each step: write the failing test, implement, wire, run `vitest run` and `eslint
 22. **Email channel** — `email()` handler, routing rule `magic@` → `handoff-agent`, `EMAIL` binding. Tests with raw `.eml` fixtures: DKIM or DMARC pass is required; a reply with the signed header returns to the same thread; attachments go to the client's locker and wait for the scan.
 23. **Slack channel** — Slack app, `/channels/slack`, `slack_channel_links`. Tests: a bad signature or old timestamp is 401; an unlinked channel gets no reply; the 3-second acknowledgement happens before any model call; a thread reply stays in the same conversation.
 
-**Status of 17–31 (2026-10-07):** steps 17–27 are deployed. Step 28 stores email attachments in the client's space and pins the documented Cloudflare authentication header; a live header from a real message is still not captured. Step 29 is blocked on creating the Slack app and its tokens. Step 30 typechecks `src/agent` with `tsc -p tsconfig.agent.json`. Step 31 is not started: pick buttons or a model call first. Step 8, the Cursor build gate, is unblocked and not started. `ClientDesk` stays out until that model exists.
+**Status of 17–34 (2026-10-07):** steps 17–27 are deployed. Step 28 stores email attachments and pins the documented Cloudflare authentication header; a live header from a real message is still not captured. Step 29 is blocked on the Slack app. Step 30 typechecks `src/agent`. Step 31 is closed by section 17.8: the mailbox model reads the email. Steps 32–34 are the mailbox chat and are not started. Step 8, the Cursor build gate, is unblocked and not started.
 
 Steps 24–31 come from the review of 17–23. Do 24–27 before client email or Slack goes live, so staff can see and answer what clients send. Step 8 can run in parallel with them.
 
@@ -665,7 +665,10 @@ Steps 24–31 come from the review of 17–23. Do 24–27 before client email or
     Also in this step: a sender on several clients gets one "which client is this about" question, remembered on the thread. Attachments are parsed with `postal-mime` and go into the client's space as a "From email" batch, waiting for the scan. Tests: the real-header fixture passes and a forged lower header does not; the multi-client question is asked once; an attachment is stored as pending scan.
 29. **Slack go-live** — create the Slack app in the agency workspace with the scopes in 17.7, set `SLACK_SIGNING_SECRET`, `SLACK_BOT_TOKEN`, `SLACK_BOT_USER_ID`, and `SLACK_STAFF_USER_IDS`, then link each client channel with `link_slack_channel`. An unlinked channel writes one `agent.note` for staff the first time. Staff messages in a linked channel are logged and not answered. Tests: the first unlinked post notes once; a staff post is logged with no reply.
 30. **Agent type check** — `handoff/tsconfig.json` excludes `src/agent`, so the worker, `HqChat`, and the channel code are only checked by the bundle and the Workers tests. Add `tsconfig.agent.json` with the Workers types from `wrangler types` and Node types for `nodejs_compat`, and run it in `npm test`. Tests: the check runs and fails on a type error.
-31. **Client message sorting** — the first sort is word matching (`add`, `change`, `status`). Replace it with either a small Workers AI call that returns the kind, goal, and due date as structured output, or Slack buttons and email reply options for "new work" or "feedback". Bring back `ClientDesk` here if the model answers clients directly; it uses only the read-only client tools in 17.5 and its own migration tag. Tests: the same fixtures sort the same way; a message that tries to give the agent instructions is still stored as data.
+31. **Client message sorting** — closed by section 17.8. Word matching stays as the reply until step 34 ships. The mailbox model reads the email. Buttons are not the mailbox sort. There is no `ClientDesk` Durable Object and no new migration: the thread is already `work_requests` plus `client.message` and `agent.reply` activities.
+32. **Client desk read** — `POST /api/client-messages` action `desk_context`, bearer `CLIENT_CHANNEL_SECRET`. Body `{ organizationId, threadId }`. Returns the published brief text, the latest client-facing status, this client's open work requests, and the thread messages in order. An unpublished brief is absent. Another organization's rows are absent. Missing or wrong bearer is 401. A missing organization is an empty desk, not an error that leaks whether the id exists.
+33. **Mailbox reply** — `replyToClient` in `src/lib/client-channel.ts`. The worker passes the desk from step 32 and the new message. The model is injected. It returns `{ reply, kind, goal, due }`. `kind` is `status`, `new_work`, `feedback`, `other`, or `handoff`. Tests use a fake model: a status question is answered from the fixture brief; new work with no goal asks one question and is `new_work`; a reply that names a price, promises a ship date, or names another client is replaced with the handoff sentence and files nothing.
+34. **Wire the mailbox** — `email()` calls `replyToClient` only after the gates in 17.8. One reply, in the same thread. The model is a Workers AI chat model confirmed against the catalog before coding, not `@cf/moonshotai/kimi-k2.7-code`. Tests: an unauthenticated sender never calls the model; the multi-client question is asked before the model; the tenth reply in an hour is the person sentence and the model is not called; a model failure still sends one "a person will follow up" reply. Slack calls this same function later, in step 29, and is not part of 34.
 
 Docs to read before step 5: Agents SDK MCP client (how `addMcpServer` attaches the two Access headers), Agents testing guide, agent skills runtime page, MCP server portals (service tokens, aliases, adding a server). Before step 8: Cursor cloud-agent API reference for the request body, status values, and auth header.
 
@@ -676,7 +679,7 @@ Docs to read before step 5: Agents SDK MCP client (how `addMcpServer` attaches t
 The background loop (sections 5–11) needs nobody to type. This section covers when somebody wants to talk to the agent:
 
 - **Staff** chat in HQ. They can look things up, create client records, add notes, add work, fix a brief, and direct the client agent.
-- **Clients** write to `magic@abra-ca-dabra.app` or post in Slack. They get a receipt, clarifying questions, and status answers. New work goes to staff for approval.
+- **Clients** write to `magic@abra-ca-dabra.app` or post in Slack. The mailbox answers in the thread about that client's published work (section 17.8). Slack stays on the fixed receipt until it calls the same reply. New work goes to staff for approval.
 
 Both use `AIChatAgent` from `@cloudflare/ai-chat` on `handoff-agent`. It saves messages in the Durable Object's SQLite, resumes a dropped stream, and supports `needsApproval` on tools. Client channels use `agents/channels/email` and `agents/channels/slack`, both shipped in `agents` 0.26.0. Add `@cloudflare/ai-chat` to `handoff/package.json`.
 
@@ -705,6 +708,7 @@ Both use `AIChatAgent` from `@cloudflare/ai-chat` on `handoff-agent`. It saves m
 | Group | Tools | Calls | Approval |
 |---|---|---|---|
 | Look up | `search_clients`, `client_summary`, `list_tasks`, `list_deliverables`, `open_questions`, `recent_activity`, `get_brief` | `crm.ts` reads, `todayFor` pieces, `get_brief` | none |
+| Skills | `search_skills`, `read_skill` | R2 `handoff-skills` on the agent worker (`skills/index.json`, then one `SKILL.md`) | none. These do not call `/api/hq-tools`. |
 | CRM | `create_client`, `add_contact`, `add_note`, `log_call`, `create_task`, `complete_task`, `move_deal` | `createOrganization`, contacts, `addNote`, `logCall`, task and deal functions | none; the tool result shows the record written with a link |
 | Projects | `create_project`, `create_milestone`, `post_internal_status` | project functions, `audience='internal'` | none |
 | Client-visible or hard to undo | `publish_deliverable`, `publish_client_status`, `invite_person`, `merge_clients`, `set_task_stage` | the matching functions | `needsApproval: true` |
@@ -809,7 +813,7 @@ CREATE TABLE slack_channel_links (
   - Use `replyToEmail` for replies in the thread, and `sendEmail` with `secret: EMAIL_REPLY_SECRET` when staff reply from HQ.
   - From is `Magic at Abracadabra <magic@abra-ca-dabra.app>`.
   - Signed with the zone's DKIM, so DMARC passes under strict alignment.
-- **Attachments:** parsed with `postal-mime`. Each file goes into the client's space as a batch labelled "From email" through the same path as an upload, so the scan in `files.status` runs before the agent reads it.
+- **Attachments:** parsed with `postal-mime`. Each file goes into the client's space as a batch labelled "From email" through the same path as an upload, so the scan in `files.status` runs before the agent reads it. The mailbox model does not read an attachment until that file is `clean`.
 
 ### 17.7 Slack channel
 
@@ -820,7 +824,20 @@ CREATE TABLE slack_channel_links (
   - The channel checks Slack's signature and replay window on the raw body. `team_id` and `channel` come from the verified body.
   - An unlinked channel gets no reply and one `agent.note` for staff the first time.
 - **Speed:** Slack retries if it gets no 2xx within 3 seconds. The handler returns 200 at once, posts the receipt with `chat.postMessage` in the thread, and runs the model with `ctx.waitUntil`. Slack retries carrying `X-Slack-Retry-Num` are acknowledged and dropped.
-- **Who is writing:** anyone in a linked channel speaks for that client. Messages from our own staff in the channel are logged and not answered by the agent.
+- **Who is writing:** anyone in a linked channel speaks for that client. Messages from our own staff in the channel are logged and not answered by the agent. When step 34 has shipped, a client message in a linked channel uses `replyToClient` instead of the fixed receipt. Staff messages stay logged and unanswered.
+
+### 17.8 Mailbox chat
+
+The fixed receipt is the reply only until step 34. After that, a known client gets one email written for that thread.
+
+- **Who answers.** Magic at Abracadabra, from `magic@abra-ca-dabra.app`, in the same thread. One reply. No second "still reading" mail.
+- **What a good reply does.** It names the published work they already have. A status question is answered from the published brief and the latest client-facing status. New work with no goal or no date gets one question. New work is stored as a `proposed` or `clarifying` `work_request` for staff to approve on Today. Feedback on a published item is stored as feedback. Anything else is a note for staff. If the desk cannot answer, the reply is `A person on the team will pick this up.`
+- **What it does not do.** It does not quote a price, promise a ship date, publish, invite, change a stage, send an invoice, or start a build. Those stay on staff chat.
+- **Gates, before the model.** Unchanged from 17.6. An unknown or unauthenticated sender gets `FIXED_UNKNOWN` and no client data, and the model is not called. Several clients get `Which client is this about?` before the model, and the answer is remembered on the thread. Mail from this mailbox, bulk mail, and `Auto-Submitted` other than `no` are ignored. Over 25 MB is refused. The tenth reply in an hour is the person sentence, and the model is not called. Attachments are stored as in 17.6 and are not put in the prompt until `clean`.
+- **Context.** The worker loads step 32's desk and puts it in the prompt. The model does not call HQ and does not receive staff tools. It returns `{ reply, kind, goal, due }`. The worker files a `work_request` or a note. A reply that contains a price, a promised date, or a name that is not this client is discarded. The client gets the person sentence, and nothing is filed.
+- **Failure.** A slow or failed model still sends one reply: the note was received and a person will follow up. Staff still see every inbound and outbound line on the Conversations tab.
+- **Model.** A Workers AI chat model, id checked against the live catalog before the code is written. Not the staff code model `@cf/moonshotai/kimi-k2.7-code`.
+- **No new Durable Object.** The thread is the existing `work_request` and its activities. Slack will call `replyToClient` with the same desk. It does not get a separate brain.
 
 ---
 
@@ -838,7 +855,7 @@ CREATE TABLE slack_channel_links (
 - **Approval policy (17.3).** Written as: notes, tasks, contacts, clients, projects, and internal status run straight away; anything a client sees, stage changes, merges, invites, and anything that directs the client agent asks first. Loosen per tool if the cards get in the way.
 - **Email sender check (17.6).** Cloudflare's MX adds `Authentication-Results`. Confirm the exact header and its `dkim=`/`dmarc=` fields on a real message before step 22 locks the parser.
 - **Slack app owner.** The app sits in the agency workspace and uses Slack Connect channels. If a client wants the bot in their own workspace, that needs OAuth install and a token per team. Not in scope here.
-- **Client desk model (17.5).** What shipped first has no model on the client side. Email and Slack get a fixed receipt and a rule-based question (goal, then due date, at most three per thread). `ClientDesk` was removed until a model with the read-only client tools is built; it adds a migration tag when it returns. Staff name the brief piece when they approve a request.
-- **Client message sorting (step 31).** A model call reads free text but costs a call per message and has to treat client text as data. Buttons are exact and free but need a click. Pick one before step 31; buttons can come first and the model can sort what nobody clicks.
+- **Client desk model (17.5, 17.8).** Closed. The mailbox is `replyToClient` inside `email()`, steps 32–34. There is no `ClientDesk` Durable Object and no new migration. Until step 34 ships, email still sends the fixed receipt and the two word-match questions. Staff still name the brief piece when they approve a request. Slack keeps the fixed receipt until it calls the same function.
+- **Client message sorting (step 31).** Closed. The mailbox model reads the email. Buttons are not used for mail.
 - **Approved client work and price.** Closed. Approving a client request writes a draft invoice (`status='draft'`, one line, $0) keyed by the request id so a repeat does not add a second one. Staff set the price and send it. The draft is the quote. It does not appear in Today until it is sent and has a due date.
 - **Brief page.** A client-owned brief is published as `in_review` and opens at `/w/[slug]/work/[id]`. The page shows the brief text with Approve, Deny (a reason, stored as `changes`), and Add a note (`comment`). Approve of version 1 wakes `brief_approved`. A later approval wakes `brief_changed`. Deny wakes `context_changed`. A note wakes nothing.

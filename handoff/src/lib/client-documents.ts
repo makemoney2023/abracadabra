@@ -300,7 +300,7 @@ function readDescription(block: string): string {
   const start = lines.findIndex((line) => line.startsWith("description:"));
   if (start === -1) return "";
   const first = lines[start]?.slice("description:".length).trim() ?? "";
-  if (first === ">" || first === "|") {
+  if (first === ">" || first === ">-" || first === ">+" || first === "|" || first === "|-" || first === "|+") {
     const parts: string[] = [];
     for (const line of lines.slice(start + 1)) {
       if (line && !/^\s/.test(line)) break;

@@ -2,6 +2,24 @@
 
 ## 2026-10-07
 
+- **What changed** — The HQ agent spec now says the mailbox answers in the thread about that client's published work. Steps 32–34 are the desk read, the reply function, and the wire into `magic@`.
+- **Why** — The live mailbox sends a fixed receipt. Clients need a reply that knows their work, asks one question, and files new work for staff.
+- **Code touchpoints** — `docs/hq-agent-spec.md`
+- **Data-flow impact** — none until steps 32–34 are built.
+- **API / schema impact** — planned: `POST /api/client-messages` action `desk_context`. No migration.
+- **Verification** — spec only. Not implemented.
+
+## 2026-10-07
+
+- **What changed** — Staff chat can search the skill library and read one skill file. `npm run publish:skills` writes that library to R2 bucket `handoff-skills`.
+- **Why** — The chat was telling staff it had no skills. Cursor agents need an exact `.cursor/skills` path. A separate MCP server and Cloudflare AI Search both add a hop the worker does not need: the agent already has the `SKILLS` binding.
+- **Code touchpoints** — `handoff/src/lib/skill-library.ts`, `handoff/src/lib/skill-tree.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `handoff/scripts/publish-skills.ts`
+- **Data-flow impact** — `search_skills` and `read_skill` read `skills/index.json` and one `SKILL.md` from bucket `handoff-skills`. They do not call `/api/hq-tools`.
+- **API / schema impact** — none.
+- **Verification** — Skill library tests passed (6) and the agent worker tests passed (7). `npm run publish:skills` wrote 667 named skills to R2 bucket `handoff-skills`. Worker `handoff-agent` version `f844d887-3b39-452e-b51d-5062aed01e62`.
+
+## 2026-10-07
+
 - **What changed** — A finished website scan files its schema package as finished work on the matching Space and opens a Work-board task.
 - **Why** — Checking a URL should produce the structured schema, not only a score.
 - **Code touchpoints** — `handoff/src/lib/schema-work.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/intake/accept.ts`, `handoff/src/app/api/intake/schema/route.ts`

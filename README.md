@@ -1,6 +1,6 @@
 # abracadabra
 
-The skill library lives in [`.cursor/skills/`](.cursor/skills/README.md): 724 procedures copied from [SourceControl](https://github.com/makemoney2023/SourceControl) `skills/`, with the team/org pack (`skills/org`) left out. Step 10 of the agency dashboard gameplan is where the Cloudflare agent will read that library. That worker is not built yet (see section 12).
+The skill library lives in [`.cursor/skills/`](.cursor/skills/README.md): 724 procedures copied from [SourceControl](https://github.com/makemoney2023/SourceControl) `skills/`, with the team/org pack (`skills/org`) left out. The Cloudflare agent reads a published copy of that library from R2 bucket `handoff-skills` (`npm run publish:skills` in `handoff/`). See section 12 of the agency dashboard gameplan.
 
 The Showdesk-style product video queue — including LLMCourse and sales enablement — is in [docs/video-pipeline-targets.md](docs/video-pipeline-targets.md).
 

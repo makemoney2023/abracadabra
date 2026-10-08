@@ -946,4 +946,4 @@ After it has the file, it does one of two things:
 
 Sales, finance, marketing, research, and ops skills are eligible to complete when their steps fit the tools. Video, CAD, Remotion, scroll, and design-tool skills plan, and they can still complete the writing part (the brief, the shot list, the prompts) as a draft or a task.
 
-The loader ships with step 10. This section is the contract. The app does not publish the bucket yet, because the agent worker is not built.
+The loader ships with step 10. This section is the contract. `npm run publish:skills` in `handoff/` writes the index and each file. Staff chat searches the index and reads one file on the agent worker's `SKILLS` binding. It does not use AI Search, and it does not call a separate skills MCP server.
