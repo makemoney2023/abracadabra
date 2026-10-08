@@ -3,6 +3,7 @@ import type { SiteReview } from "@/lib/ai-search/prospect";
 import { createD1ProspectStore } from "@/lib/ops/d1-prospect-store";
 import { processProspectLeads, type ProspectStore } from "@/lib/ops/prospect";
 import type { ParallelLead } from "@/lib/parallel/types";
+import { insertScan } from "@/lib/scan/d1-store";
 
 export type SchemaReviewer = {
   reviewSites(objective: string): Promise<SiteReview[]>;
@@ -51,13 +52,31 @@ export async function runSchemaCheck(
   try {
     const reviews = await deps.reviewer.reviewSites(input.objective);
     await db.prepare("DELETE FROM schema_check_sites WHERE check_id = ?").bind(checkId).run();
+    const leads = reviews.filter((review) => review.needsUs).map(asLead);
+    const filed = await processProspectLeads(leads, {
+      store: deps.store ?? createD1ProspectStore(db),
+      enqueueScan: deps.enqueueScan,
+    });
+    const scanByDomain = new Map<string, string>();
+    for (let index = 0; index < leads.length; index += 1) {
+      const domain = leads[index]?.domain;
+      const scanId = filed.scanIds[index];
+      if (domain && scanId) scanByDomain.set(domain, scanId);
+    }
+    for (const review of reviews) {
+      if (scanByDomain.has(review.domain)) continue;
+      const origin = review.website.replace(/\/$/, "") || `https://${review.domain}`;
+      const created = await insertScan(db, { domain: review.domain, origin, source: "ops" });
+      await deps.enqueueScan(created.id);
+      scanByDomain.set(review.domain, created.id);
+    }
     const now = Date.now();
     for (const review of reviews) {
       await db
         .prepare(
           `INSERT INTO schema_check_sites
-            (id, check_id, domain, name, website, verdict, answer, contacts_json, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (id, check_id, domain, name, website, verdict, answer, organization_id, contacts_json, scan_id, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)`,
         )
         .bind(
           crypto.randomUUID(),
@@ -68,15 +87,11 @@ export async function runSchemaCheck(
           verdictOf(review),
           review.answer,
           JSON.stringify(review.contacts),
+          scanByDomain.get(review.domain) ?? null,
           now,
         )
         .run();
     }
-    const leads = reviews.filter((review) => review.needsUs).map(asLead);
-    const filed = await processProspectLeads(leads, {
-      store: deps.store ?? createD1ProspectStore(db),
-      enqueueScan: deps.enqueueScan,
-    });
     for (let i = 0; i < leads.length; i += 1) {
       const leadId = filed.leadIds[i];
       const domain = leads[i]?.domain;

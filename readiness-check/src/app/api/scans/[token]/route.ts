@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import type { CheckBindings } from "@/lib/cloudflare/sql";
 import { selectScanPayload, type FullScanView } from "@/lib/scan/present";
 import { loadScanByPublicToken } from "@/lib/scan/d1-store";
-import { unlockCookieName } from "@/lib/scan/unlock";
+import { scanReportOpen, unlockCookieName } from "@/lib/scan/unlock";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -34,8 +34,10 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const cookieStore = await cookies();
-  const unlocked =
-    cookieStore.get(unlockCookieName(token))?.value === "1";
+  const unlocked = scanReportOpen(
+    loaded.scan.source,
+    cookieStore.get(unlockCookieName(token))?.value,
+  );
 
   const full: FullScanView = {
     domain: loaded.scan.domain,

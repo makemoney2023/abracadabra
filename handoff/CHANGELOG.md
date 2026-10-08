@@ -2,12 +2,30 @@
 
 ## 2026-10-07
 
+- **What changed** — A lead shows the schema score, the five pillars, and a report link, the same way it shows a readiness check. The schema result on HQ uses the studio panel, kicker, and score type.
+- **Why** — The scan lived only on the Schema page, and that report did not follow the studio design.
+- **Code touchpoints** — `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/lib/schema-report.ts`, `handoff/src/db/schema-checks.ts`, `handoff/src/app/schema/page.tsx`, `handoff/src/app/globals.css`
+- **Data-flow impact** — The lead reads the latest `readiness_scans` row for that organization. The report link opens `https://check.abra-ca-dabra.app/scan/{token}`.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/schema-report.test.ts`.
+
+## 2026-10-07
+
 - **What changed** — Mail to `magic@` uses the model reply when Workers AI returns that reply as an object.
 - **Why** — The live model returns `response` already parsed. The worker treated it as text, the parse threw, and every known sender got "Got it. I have your note. A person on the team will follow up."
 - **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/agent/worker.ts`
 - **Data-flow impact** — `email()` and Slack both pass the Workers AI result through `clientTurnFromModel` before the reply is stored and sent.
 - **API / schema impact** — none.
 - **Verification** — `npx vitest run src/lib/client-channel.test.ts` (14 passed). `npx tsc --noEmit -p tsconfig.agent.json` passed. ESLint on the changed files passed. Worker `handoff-agent` version `6958b407-0223-4357-a6ff-e53ffa41b1a6`. A new live mail was not sent from this session.
+
+## 2026-10-07
+
+- **What changed** — A Schema result shows the scan report: overall score, the five pillars, every page, and the findings that failed. Covered sites get that scan too.
+- **Why** — The result only showed the short verdict. The scan already records the detailed report.
+- **Code touchpoints** — `handoff/src/app/schema/page.tsx`, `handoff/src/lib/schema-report.ts`, `handoff/src/db/schema-checks.ts`, `handoff/migrations/0011_schema_check_scan.sql`, `readiness-check/src/lib/ops/schema-check.ts`
+- **Data-flow impact** — Every reviewed site queues a `readiness_scans` row. `schema_check_sites.scan_id` points at it. HQ reads the score, pages, and findings from that row.
+- **API / schema impact** — `schema_check_sites.scan_id`.
+- **Verification** — `npx vitest run src/lib/schema-report.test.ts src/db/migrate.test.ts`. readiness-check `npx vitest run tests/unit/schema-check.test.ts`.
 
 ## 2026-10-07
 

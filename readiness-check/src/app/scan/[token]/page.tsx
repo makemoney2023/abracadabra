@@ -90,26 +90,17 @@ export default function ScanPage() {
   }, [token, status]);
 
   return (
-    <div className="relative flex min-h-full flex-1 flex-col bg-background text-foreground">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_oklch(0.94_0.02_220)_0%,_transparent_55%)]"
-      />
-      <header className="no-print relative z-10 border-b border-border/60">
+    <div className="flex min-h-full flex-1 flex-col">
+      <header className="border-b border-[var(--sc-hairline)]">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link
-            href="/"
-            className="font-heading text-xl tracking-tight text-foreground transition-opacity hover:opacity-80"
-          >
+          <Link href="/check" className="font-heading text-lg no-underline">
             Schema
           </Link>
-          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-            Scan report
-          </span>
+          <span className="studio-kicker">Scan report</span>
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-5 py-10 sm:px-8 sm:py-14">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-10 sm:px-8 sm:py-14">
         {loading ? (
           <p className="animate-pulse text-sm text-muted-foreground">Loading scan…</p>
         ) : null}

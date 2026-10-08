@@ -39,14 +39,27 @@ describe("runSchemaCheck", () => {
     );
 
     expect(result.leadIds).toHaveLength(1);
-    expect(queued).toHaveLength(1);
+    expect(queued).toHaveLength(2);
     const sites = await db
-      .prepare("SELECT domain, verdict, organization_id, contacts_json FROM schema_check_sites WHERE check_id = ? ORDER BY domain")
+      .prepare(
+        "SELECT domain, verdict, organization_id, contacts_json, scan_id FROM schema_check_sites WHERE check_id = ? ORDER BY domain",
+      )
       .bind("check-1")
-      .all<{ domain: string; verdict: string; organization_id: string | null; contacts_json: string }>();
+      .all<{
+        domain: string;
+        verdict: string;
+        organization_id: string | null;
+        contacts_json: string;
+        scan_id: string | null;
+      }>();
     expect(sites.results.map((site) => site.domain)).toEqual(["covered.example", "needs.example"]);
     const covered = sites.results.find((site) => site.domain === "covered.example");
     const needs = sites.results.find((site) => site.domain === "needs.example");
+    expect(covered?.scan_id).toBeTruthy();
+    expect(needs?.scan_id).toBeTruthy();
+    expect(covered?.scan_id).not.toBe(needs?.scan_id);
+    expect(queued).toContain(needs?.scan_id);
+    expect(queued).toContain(covered?.scan_id);
     expect(covered?.verdict).toBe("covered");
     expect(covered?.organization_id).toBeNull();
     expect(needs?.verdict).toBe("needs_us");

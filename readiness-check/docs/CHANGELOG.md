@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-07 — The schema scan report uses the studio design
+
+- **What changed** — The public scan report uses the studio canvas, Tektur, and accent. An ops scan opens the full page matrix without the email gate, so the lead's report link shows the findings.
+- **Why** — The scan report still used the editorial theme, and the staff link would have stopped at the email gate.
+- **Code touchpoints** — `src/app/scan/layout.tsx`, `src/app/scan/[token]/page.tsx`, `src/app/api/scans/[token]/route.ts`, `src/lib/scan/unlock.ts`
+- **Data-flow impact** — `GET /api/scans/{token}` returns the unlocked payload when the scan source is `ops`.
+- **API / schema impact** — Ops scan responses include pages and findings without the unlock cookie.
+- **Verification** — `npx vitest run tests/unit/unlock-gate.test.ts tests/unit/d1-scan-store.test.ts`.
+
+## 2026-10-07 — Schema results show the scan report
+
+- **What changed** — Every site in a schema check queues a full scan. HQ shows that scan's score, pillars, pages, and findings, including sites that do not become a lead.
+- **Why** — The schema page only showed the short verdict. The scan report is the detailed record.
+- **Code touchpoints** — `src/lib/ops/schema-check.ts`, `migrations/0011_schema_check_scan.sql`, `handoff/src/app/schema/page.tsx`
+- **Data-flow impact** — Covered and unread sites now enqueue `scan-jobs` the same way a needs-us site does. The site row stores `scan_id`.
+- **API / schema impact** — `schema_check_sites.scan_id`.
+- **Verification** — `npx vitest run tests/unit/schema-check.test.ts`.
+
 ## 2026-10-07 — Schema ops is a Handoff menu item
 
 - **What changed** — HQ has a Schema item. A check lists every site. A site that needs us becomes a lead, and contacts found on the page are saved on that lead.

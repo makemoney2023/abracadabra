@@ -72,3 +72,19 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+.studio-kicker {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.studio-panel {
+  border: 1px solid color-mix(in oklab, var(--foreground) 22%, transparent);
+  background:
+    linear-gradient(115deg, color-mix(in oklab, var(--card) 96%, transparent), color-mix(in oklab, var(--ring) 6%, var(--background))),
+    var(--background);
+  clip-path: polygon(0 0, calc(100% - 0.85rem) 0, 100% 0.85rem, 100% 100%, 0.85rem 100%, 0 calc(100% - 0.85rem));
+}

@@ -27,6 +27,7 @@ describe("statementsFromMigration", () => {
       "0007_agent.sql",
       "0009_conversations.sql",
       "0010_schema_checks.sql",
+      "0011_schema_check_scan.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -52,6 +53,8 @@ describe("statementsFromMigration", () => {
         { key: "build_deadline_hours", value: "2" },
         { key: "max_cloud_runs", value: "4" },
       ]);
+      const scanColumn = db.prepare("PRAGMA table_info(schema_check_sites)").all() as { name: string }[];
+      expect(scanColumn.some((column) => column.name === "scan_id")).toBe(true);
     } finally {
       process.chdir(previous);
     }

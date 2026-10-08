@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listClientThreads } from "@/db/conversations";
+import { latestSchemaScan } from "@/db/schema-checks";
+import { presentSchemaLead } from "@/lib/schema-report";
 import {
   DEAL_STAGE_LABEL,
   latestAssessment,
@@ -82,7 +84,7 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads, storedCheck] =
+  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads, storedCheck, schemaScan] =
     await Promise.all([
     unlinkedWorkspaces(sql, caller),
     sql.all<{ id: string; slug: string; display_name: string }>(
@@ -100,8 +102,10 @@ export default async function ClientPage({
     listRepos(sql, caller, client.id),
     listClientThreads(sql, client.id),
     latestAssessment(sql, caller, client.id),
+    latestSchemaScan(sql, client.id),
   ]);
   const readiness = storedCheck ? presentAssessment(storedCheck) : null;
+  const schema = schemaScan ? presentSchemaLead(schemaScan) : null;
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
   const choices = visible?.ok
@@ -177,6 +181,28 @@ export default async function ClientPage({
             ) : null}
             {readiness.reportUrl ? (
               <a href={readiness.reportUrl} className="underline">
+                Report
+              </a>
+            ) : null}
+          </CardContent>
+        ) : null}
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Schema scan</CardTitle>
+          <CardDescription>{schema ? schema.total : "No schema scan yet."}</CardDescription>
+        </CardHeader>
+        {schema ? (
+          <CardContent className="flex flex-col gap-4 text-sm">
+            {schema.lines.length > 0 ? (
+              <ul className="flex flex-col gap-1">
+                {schema.lines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+            {schema.reportUrl ? (
+              <a href={schema.reportUrl} className="text-primary underline">
                 Report
               </a>
             ) : null}

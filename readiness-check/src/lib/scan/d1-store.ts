@@ -165,7 +165,7 @@ export async function deleteScan(db: BoundSql, scanId: string): Promise<void> {
 export async function loadScanByPublicToken(db: BoundSql, token: string) {
   const scan = await db
     .prepare(
-      `SELECT id, domain, origin, status, score_total, score_breakdown_json, public_token
+      `SELECT id, domain, origin, source, status, score_total, score_breakdown_json, public_token
        FROM readiness_scans WHERE public_token = ?`,
     )
     .bind(token)
@@ -173,6 +173,7 @@ export async function loadScanByPublicToken(db: BoundSql, token: string) {
       id: string;
       domain: string;
       origin: string;
+      source: string;
       status: string;
       score_total: number | null;
       score_breakdown_json: string | null;
@@ -200,6 +201,7 @@ export async function loadScanByPublicToken(db: BoundSql, token: string) {
       id: scan.id,
       domain: scan.domain,
       origin: scan.origin,
+      source: scan.source,
       status: scan.status,
       score_total: scan.score_total,
       score_breakdown: parseJson(scan.score_breakdown_json),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { selectScanPayload, type FullScanView } from "@/lib/scan/present";
-import { unlockCookieName } from "@/lib/scan/unlock";
+import { scanReportOpen, unlockCookieName } from "@/lib/scan/unlock";
 
 describe("selectScanPayload", () => {
   it("hides pages until unlocked", () => {
@@ -40,6 +40,13 @@ describe("selectScanPayload", () => {
   });
 });
 
+describe("scanReportOpen", () => {
+  it("opens an ops scan without the email gate and keeps a public scan closed", () => {
+    expect(scanReportOpen("ops", undefined)).toBe(true);
+    expect(scanReportOpen("public", undefined)).toBe(false);
+    expect(scanReportOpen("public", "1")).toBe(true);
+  });
+});
 describe("unlockCookieName", () => {
   it("namespaces cookie by public token", () => {
     expect(unlockCookieName("abc123")).toBe("scan_unlock_abc123");
