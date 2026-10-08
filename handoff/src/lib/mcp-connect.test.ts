@@ -59,8 +59,12 @@ describe("mcp connect target", () => {
   it("uses the Handoff route when the portal caller is missing", async () => {
     const http = async () => "http";
     const portal = async () => "portal";
+    const handoff = callerForClientWork(null, http);
+    const preferred = callerForClientWork(portal, http);
     expect(callerForClientWork(null, null)).toBeNull();
-    expect(await callerForClientWork(null, http)("client_context", {})).toBe("http");
-    expect(await callerForClientWork(portal, http)("client_context", {})).toBe("portal");
+    expect(handoff).not.toBeNull();
+    expect(preferred).not.toBeNull();
+    expect(await handoff?.("client_context", {})).toBe("http");
+    expect(await preferred?.("client_context", {})).toBe("portal");
   });
 });
