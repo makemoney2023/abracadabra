@@ -18,6 +18,8 @@ type Spec = {
   returning: boolean;
 };
 
+type QueryResult = { data: unknown; error: { message: string } | null; count: number | null };
+
 type Chain = {
   select(columns?: string, opts?: { count?: string; head?: boolean }): Chain;
   insert(values: Record<string, unknown>): Chain;
@@ -29,10 +31,10 @@ type Chain = {
   limit(n: number): Chain;
   maybeSingle(): Promise<{ data: unknown; error: { message: string } | null }>;
   single(): Promise<{ data: unknown; error: { message: string } | null }>;
-  then<T>(
-    resolve: (value: { data: unknown; error: { message: string } | null; count: number | null }) => T,
-    reject?: (reason: unknown) => T,
-  ): Promise<T>;
+  then(
+    resolve?: ((value: QueryResult) => unknown) | null,
+    reject?: ((reason: unknown) => unknown) | null,
+  ): Promise<unknown>;
 };
 
 function blank(table: string): Spec {
@@ -408,7 +410,10 @@ function chain(db: BoundSql, spec: Spec): Chain {
     single() {
       return execute(db, spec, "one");
     },
-    then(resolve, reject) {
+    then(
+      resolve?: ((value: QueryResult) => unknown) | null,
+      reject?: ((reason: unknown) => unknown) | null,
+    ) {
       return execute(db, spec, "many").then(resolve, reject);
     },
   };
