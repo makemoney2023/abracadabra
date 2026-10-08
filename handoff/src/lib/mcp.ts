@@ -39,6 +39,7 @@ const WORK_TOOLS = new Set([
   "record_swarm_run",
   "ask_staff",
   "list_repos",
+  "run_due_workflow",
 ]);
 
 const tagField = { type: "string", description: "Limit to one file tag, such as brand or copy." };
@@ -124,6 +125,15 @@ const AGENT_TOOLS = [
         trigger: { type: "string" },
       },
       required: ["organizationId", "packName", "status", "requestId"],
+    },
+  },
+  {
+    name: "run_due_workflow",
+    description: "Run the oldest workflow whose next run is due. A repeat moves forward. A one-shot clears.",
+    inputSchema: {
+      type: "object",
+      properties: { organizationId: organizationField, requestId: { type: "string" } },
+      required: ["organizationId", "requestId"],
     },
   },
   {

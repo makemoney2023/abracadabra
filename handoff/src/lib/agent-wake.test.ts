@@ -79,6 +79,62 @@ describe("signed wakes", () => {
     expect(weekly.every((row) => row.reason === "status")).toBe(true);
   });
 
+  it("waits on a future task and wakes a task whose time has arrived", async () => {
+    const sql = await db();
+    await org(sql, "org-later");
+    await org(sql, "org-due");
+    await sql.run(
+      `INSERT INTO tasks (id, organization_id, title, status, created_at, updated_at, due_at)
+       VALUES ('task-later', 'org-later', 'Later', 'todo', ?, ?, ?),
+              ('task-due', 'org-due', 'Now', 'todo', ?, ?, ?)`,
+      [NOW, NOW, NOW + 86_400_000, NOW, NOW, NOW - 1],
+    );
+    const due = await dueOrganizations(sql, "*/15 * * * *", NOW);
+    expect(due).toEqual([{ organizationId: "org-due", reason: "work" }]);
+  });
+
+  it("wakes a client when a workflow is due and leaves a future schedule alone", async () => {
+    const sql = await db();
+    await org(sql, "org-sched");
+    await org(sql, "org-waiting");
+    await sql.run(
+      `INSERT INTO workflow_groups (id, organization_id, name, created_at)
+       VALUES ('group-sched', 'org-sched', 'Care', ?), ('group-wait', 'org-waiting', 'Care', ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO client_workflows (
+         id, group_id, organization_id, name, template_id, created_at, updated_at, next_run_at, every_ms, scheduled_at
+       ) VALUES
+         ('wf-due', 'group-sched', 'org-sched', 'Weekly scan', 'pack-schema-readiness', ?, ?, ?, ?, ?),
+         ('wf-later', 'group-wait', 'org-waiting', 'Later scan', 'pack-schema-readiness', ?, ?, ?, NULL, ?)`,
+      [NOW, NOW, NOW - 1, 86_400_000, NOW, NOW, NOW, NOW + 86_400_000, NOW],
+    );
+    const due = await dueOrganizations(sql, "*/15 * * * *", NOW);
+    expect(due).toEqual([{ organizationId: "org-sched", reason: "due" }]);
+  });
+
+  it("does not run a scheduled workflow's task as ordinary work", async () => {
+    const sql = await db();
+    await org(sql, "org-owned");
+    await sql.run(
+      `INSERT INTO tasks (id, organization_id, title, status, created_at, updated_at)
+       VALUES ('task-owned', 'org-owned', 'Weekly scan', 'todo', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO workflow_groups (id, organization_id, name, created_at) VALUES ('group-owned', 'org-owned', 'Care', ?)`,
+      [NOW],
+    );
+    await sql.run(
+      `INSERT INTO client_workflows (
+         id, group_id, organization_id, name, template_id, created_at, updated_at, task_id, next_run_at, scheduled_at
+       ) VALUES ('wf-owned', 'group-owned', 'org-owned', 'Weekly scan', 'pack-schema-readiness', ?, ?, 'task-owned', ?, ?)`,
+      [NOW, NOW, NOW + 86_400_000, NOW],
+    );
+    expect(await dueOrganizations(sql, "*/15 * * * *", NOW)).toEqual([]);
+  });
+
   it("records a failed wake and does not record a delivered one", async () => {
     const sql = await db();
     await org(sql, "org-open");

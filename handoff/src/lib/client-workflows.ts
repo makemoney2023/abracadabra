@@ -17,6 +17,8 @@ export type ClientWorkflow = {
   name: string;
   templateId: string;
   taskId: string | null;
+  nextRunAt: number | null;
+  everyMs: number | null;
   groupName: string;
 };
 
@@ -27,6 +29,29 @@ export type WorkflowTaskPlan = {
 };
 
 const SKILL_PATH = /Follow (\.cursor\/skills\/\S+)/;
+
+/** The work cron is every 15 minutes, so a repeat cannot be shorter than that. */
+export const MIN_SCHEDULE_MS = 15 * 60 * 1000;
+
+function scheduleOf(input: {
+  dueAt?: number | null;
+  everyMs?: number | null;
+  now: number;
+}): { ok: true; nextRunAt: number | null; everyMs: number | null; scheduledAt: number | null } | { ok: false } {
+  const hasDue = input.dueAt != null;
+  const hasEvery = input.everyMs != null;
+  if (!hasDue && !hasEvery) return { ok: true, nextRunAt: null, everyMs: null, scheduledAt: null };
+  if (!hasDue || typeof input.dueAt !== "number" || !Number.isSafeInteger(input.dueAt)) return { ok: false };
+  if (hasEvery && (typeof input.everyMs !== "number" || !Number.isSafeInteger(input.everyMs) || input.everyMs < MIN_SCHEDULE_MS)) {
+    return { ok: false };
+  }
+  return {
+    ok: true,
+    nextRunAt: input.dueAt,
+    everyMs: hasEvery ? input.everyMs! : null,
+    scheduledAt: input.now,
+  };
+}
 
 /** Ordered skill steps from a swarm template. Nodes without a skill path are skipped. */
 export function workflowTaskPlan(template: unknown): WorkflowTaskPlan | null {
@@ -86,12 +111,16 @@ export async function createClientWorkflow(
     templateId: string;
     projectId?: string | null;
     plan?: WorkflowTaskPlan | null;
+    dueAt?: number | null;
+    everyMs?: number | null;
     now: number;
   },
 ): Promise<{ ok: true; workflow: { id: string; projectId: string | null; taskId: string | null } } | { ok: false; error: "invalid" | "missing" }> {
   const name = input.name.trim().slice(0, 120);
   const templateId = input.templateId.trim().slice(0, 120);
   if (!name || !templateId) return { ok: false, error: "invalid" };
+  const schedule = scheduleOf(input);
+  if (!schedule.ok) return { ok: false, error: "invalid" };
   const group = await sql.get<{ id: string; organization_id: string }>(
     "SELECT id, organization_id FROM workflow_groups WHERE id = ?",
     [input.groupId],
@@ -102,9 +131,22 @@ export async function createClientWorkflow(
   const id = crypto.randomUUID();
   await sql.run(
     `INSERT INTO client_workflows (
-       id, group_id, organization_id, project_id, name, template_id, last_execution_id, last_status, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)`,
-    [id, input.groupId, input.organizationId, projectId, name, templateId, input.now, input.now],
+       id, group_id, organization_id, project_id, name, template_id, last_execution_id, last_status, created_at, updated_at,
+       next_run_at, every_ms, scheduled_at
+     ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.groupId,
+      input.organizationId,
+      projectId,
+      name,
+      templateId,
+      input.now,
+      input.now,
+      schedule.nextRunAt,
+      schedule.everyMs,
+      schedule.scheduledAt,
+    ],
   );
   const taskId = input.plan && input.plan.steps.length > 0 ? crypto.randomUUID() : null;
   if (taskId && input.plan) {
@@ -152,10 +194,12 @@ export async function listClientWorkflows(sql: Sql, organizationId: string, proj
     name: string;
     template_id: string;
     task_id: string | null;
+    next_run_at: number | null;
+    every_ms: number | null;
     group_name: string;
   }>(
     `SELECT w.id, w.group_id, w.organization_id, w.project_id, g.project_id AS group_project_id,
-            w.name, w.template_id, w.task_id, g.name AS group_name
+            w.name, w.template_id, w.task_id, w.next_run_at, w.every_ms, g.name AS group_name
      FROM client_workflows w
      JOIN workflow_groups g ON g.id = w.group_id
      WHERE w.organization_id = ?
@@ -172,6 +216,8 @@ export async function listClientWorkflows(sql: Sql, organizationId: string, proj
     name: row.name,
     templateId: row.template_id,
     taskId: row.task_id,
+    nextRunAt: row.next_run_at,
+    everyMs: row.every_ms,
     groupName: row.group_name,
   }));
 }
@@ -212,4 +258,62 @@ export async function runClientWorkflow(input: {
   } catch {
     return { ok: false, error: "invalid" };
   }
+}
+
+export type DueClaim =
+  | { ok: true; none: true }
+  | { ok: true; none: false; workflowId: string; executionId: string; status: string; output: string; more: boolean }
+  | { ok: false; error: "invalid" | "missing" };
+
+/** Run the oldest workflow whose time has arrived. A failure leaves the due time so the next cycle retries. */
+export async function claimDueWorkflow(input: {
+  sql: Sql;
+  organizationId: string;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+}): Promise<DueClaim> {
+  if (!input.origin.trim()) return { ok: false, error: "invalid" };
+  const row = await input.sql.get<{ id: string; name: string; every_ms: number | null }>(
+    `SELECT id, name, every_ms
+     FROM client_workflows
+     WHERE organization_id = ?
+       AND next_run_at IS NOT NULL
+       AND next_run_at <= ?
+     ORDER BY next_run_at, id
+     LIMIT 1`,
+    [input.organizationId, input.now],
+  );
+  if (!row) return { ok: true, none: true };
+  const started = await runClientWorkflow({
+    sql: input.sql,
+    workflowId: row.id,
+    brief: `Scheduled run of ${row.name}.`,
+    origin: input.origin,
+    now: input.now,
+    fetchImpl: input.fetchImpl,
+    wait: input.wait,
+  });
+  if (!started.ok) return started;
+  const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
+  await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
+    repeating ? input.now + row.every_ms! : null,
+    input.now,
+    row.id,
+  ]);
+  const rest = await input.sql.get<{ n: number }>(
+    `SELECT count(*) AS n FROM client_workflows
+     WHERE organization_id = ? AND id != ? AND next_run_at IS NOT NULL AND next_run_at <= ?`,
+    [input.organizationId, row.id, input.now],
+  );
+  return {
+    ok: true,
+    none: false,
+    workflowId: row.id,
+    executionId: started.executionId,
+    status: started.status,
+    output: started.output,
+    more: (rest?.n ?? 0) > 0,
+  };
 }

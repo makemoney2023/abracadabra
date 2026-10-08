@@ -2,6 +2,15 @@
 
 ## 2026-10-08
 
+- **What changed** — A task with a future due time waits. A workflow with a due time wakes on the existing 15-minute cron and runs on the swarm. A repeat moves forward. A one-shot clears. A swarm that does not start keeps the due time for the next cycle.
+- **Why** — The cron woke every client with an open task and never looked at a schedule, so a workflow could not run later.
+- **Code touchpoints** — `handoff/migrations/0014_workflow_schedule.sql`, `handoff/src/lib/agent-wake.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/mcp.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — The 15-minute cron posts reason `due` when `client_workflows.next_run_at` has arrived. The agent calls `run_due_workflow`, which starts that template on the swarm. A task linked to a scheduled workflow stays off the skill wake.
+- **API / schema impact** — `client_workflows` gains `next_run_at`, `every_ms`, and `scheduled_at`. `create_workflow` accepts `dueAt` and `everyMs`.
+- **Verification** — `npx vitest run src/lib/agent-wake.test.ts src/lib/client-workflows.test.ts src/db/migrate.test.ts src/lib/hq-tools.test.ts` (33 passed). `npx tsc --noEmit` passed.
+
+## 2026-10-08
+
 - **What changed** — Swarm output that is JSON, a PDF, or an image is stored as that file in the client space. A sentence still lands as markdown. A PDF or image note says what was saved and does not paste the data URL.
 - **Why** — Every swarm result was wrapped as a markdown page, so a report or picture could not be opened as a file.
 - **Code touchpoints** — `handoff/src/lib/artifact-adapter.ts`, `handoff/src/lib/workflow-files.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/mcp.ts`

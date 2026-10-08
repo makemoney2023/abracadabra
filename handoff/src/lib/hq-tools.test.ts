@@ -432,6 +432,52 @@ describe("runHqTool", () => {
       current: 0,
     });
   });
+
+  it("stores a workflow schedule from the chat tool", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const group = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_workflow_group", input: { organizationId, name: "Launch swarm" }, idempotencyKey: "group-due" },
+      NOW,
+    );
+    const groupId = String((valueOf(group) as { id?: string } | undefined)?.id ?? "");
+    const saved = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_workflow",
+        input: {
+          organizationId,
+          groupId,
+          name: "Weekly schema",
+          templateId: "pack-schema-readiness",
+          dueAt: String(NOW + 3_600_000),
+          everyMs: 86_400_000,
+        },
+        idempotencyKey: "wf-due",
+      },
+      NOW,
+    );
+    const workflowId = String((valueOf(saved) as { id?: string } | undefined)?.id ?? "");
+    const row = await sql.get<{ next_run_at: number; every_ms: number }>(
+      "SELECT next_run_at, every_ms FROM client_workflows WHERE id = ?",
+      [workflowId],
+    );
+    expect(row).toEqual({ next_run_at: NOW + 3_600_000, every_ms: 86_400_000 });
+    const rejected = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_workflow",
+        input: { organizationId, groupId, name: "Too soon", templateId: "pack-schema-readiness", dueAt: NOW, everyMs: 60_000 },
+        idempotencyKey: "wf-soon",
+      },
+      NOW,
+    );
+    expect(rejected).toMatchObject({ ok: false, error: "invalid" });
+  });
 });
 
 async function client(sql: Sql): Promise<string> {

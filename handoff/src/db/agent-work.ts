@@ -5,6 +5,7 @@ import { recordAgentRun } from "@/lib/agent-activity";
 import { storeScanContext } from "@/lib/scan-context";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
+import { claimDueWorkflow } from "@/lib/client-workflows";
 
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
 const STAGES = new Set(["describe", "engineer", "build", "run"]);
@@ -87,6 +88,14 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
   if (tool === "record_swarm_run") return recordSwarmRun(sql, actor, args, now);
   if (tool === "ask_staff") return askStaff(sql, actor, args, now);
   if (tool === "list_repos") return listAgentRepos(sql, actor);
+  if (tool === "run_due_workflow") {
+    return claimDueWorkflow({
+      sql,
+      organizationId: actor.organizationId,
+      origin: process.env.SWARM_ORIGIN ?? "",
+      now,
+    });
+  }
   throw new AgentWorkError("Unknown tool.");
 }
 

@@ -11,7 +11,8 @@ export type WakeReason =
   | "brief_approved"
   | "brief_changed"
   | "lead_created"
-  | "scan_ready";
+  | "scan_ready"
+  | "due";
 
 /** What a client's decision on a brief should wake. Notes wake nothing. */
 export function briefWakeReason(input: {
@@ -58,11 +59,9 @@ export function verifyWake(secret: string, rawBody: string, signature: string, n
 const LIVE = "archived_at IS NULL AND agent_paused_at IS NULL";
 
 /** Clients this cron should wake. A paused or archived organization is left alone. */
-export async function dueOrganizations(sql: Sql, cron: string): Promise<WakeTarget[]> {
+export async function dueOrganizations(sql: Sql, cron: string, now = Date.now()): Promise<WakeTarget[]> {
   if (cron === "*/15 * * * *") {
-    const rows = await sql.all<{ id: string; reason: WakeReason }>(
-      `SELECT id, CASE
-         WHEN EXISTS (
+    const unanswered = `EXISTS (
            SELECT 1 FROM activities flag
            WHERE flag.organization_id = organizations.id
              AND flag.kind = 'context_changed'
@@ -72,26 +71,37 @@ export async function dueOrganizations(sql: Sql, cron: string): Promise<WakeTarg
                  AND brief.kind = 'agent.brief_drafted'
                  AND brief.created_at >= flag.created_at
              )
-         ) THEN 'context_changed'
+         )`;
+    const workflowDue = `EXISTS (
+           SELECT 1 FROM client_workflows w
+           WHERE w.organization_id = organizations.id
+             AND w.next_run_at IS NOT NULL
+             AND w.next_run_at <= ?
+         )`;
+    const rows = await sql.all<{ id: string; reason: WakeReason }>(
+      `SELECT id, CASE
+         WHEN ${unanswered} THEN 'context_changed'
+         WHEN ${workflowDue} THEN 'due'
          ELSE 'work'
        END AS reason
        FROM organizations
        WHERE ${LIVE}
          AND (
-           EXISTS (SELECT 1 FROM tasks WHERE tasks.organization_id = organizations.id AND tasks.status != 'done')
-           OR EXISTS (
-             SELECT 1 FROM activities flag
-             WHERE flag.organization_id = organizations.id
-               AND flag.kind = 'context_changed'
+           EXISTS (
+             SELECT 1 FROM tasks
+             WHERE tasks.organization_id = organizations.id
+               AND tasks.status != 'done'
+               AND (tasks.due_at IS NULL OR tasks.due_at <= ?)
                AND NOT EXISTS (
-                 SELECT 1 FROM activities brief
-                 WHERE brief.organization_id = organizations.id
-                   AND brief.kind = 'agent.brief_drafted'
-                   AND brief.created_at >= flag.created_at
+                 SELECT 1 FROM client_workflows w
+                 WHERE w.task_id = tasks.id AND w.scheduled_at IS NOT NULL
                )
            )
+           OR ${unanswered}
+           OR ${workflowDue}
          )
        ORDER BY id`,
+      [now, now, now],
     );
     return rows.map((row) => ({ organizationId: row.id, reason: row.reason }));
   }
@@ -163,7 +173,7 @@ export async function wakeDueAgents(
   now: number,
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
-  const due = await dueOrganizations(sql, cron);
+  const due = await dueOrganizations(sql, cron, now);
   for (const target of due) {
     const body = JSON.stringify({ organizationId: target.organizationId, reason: target.reason, sentAt: now });
     const secret = env.AGENT_WAKE_SECRET ?? "";

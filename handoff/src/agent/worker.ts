@@ -216,6 +216,11 @@ export class ClientAgent extends Agent<AgentBindings> {
     await this.acceptWake("work");
   }
 
+  /** A workflow whose time has arrived. Another due workflow in the same client waits one minute. */
+  async due(): Promise<void> {
+    await this.acceptWake("due");
+  }
+
   /** Portal tools when the portal is linked. Otherwise the Handoff MCP route, so the run is recorded. */
   private leadCaller(): ToolCaller | null {
     const portal = this.toolCaller(this.portal().getAITools?.() ?? {});
@@ -304,6 +309,14 @@ export class ClientAgent extends Agent<AgentBindings> {
   }
 
   private async continueWork(wakeId: string, reason: string): Promise<void> {
+    if (reason === "due") {
+      const call = this.leadCaller();
+      if (!call) return;
+      const result = await call("run_due_workflow", { requestId: wakeId });
+      const more = Boolean(result && typeof result === "object" && (result as { more?: unknown }).more === true);
+      if (more) await this.schedule(60, "due");
+      return;
+    }
     if (
       reason !== "brief_approved" &&
       reason !== "work" &&

@@ -7,6 +7,7 @@ import {
   assignClientWorkflow,
   createClientWorkflow,
   createWorkflowGroup,
+  claimDueWorkflow,
   listClientWorkflows,
   runClientWorkflow,
   workflowTaskPlan,
@@ -194,4 +195,145 @@ describe("client workflows", () => {
     const row = await sql.get<{ last_execution_id: string }>("SELECT last_execution_id FROM client_workflows");
     expect(row?.last_execution_id).toBe("run-9");
   });
+
+  it("stores the first run and the repeat gap", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Weekly scan",
+      templateId: "pack-schema-readiness",
+      dueAt: NOW + 3_600_000,
+      everyMs: 86_400_000,
+      now: NOW,
+    });
+    expect(created.ok).toBe(true);
+    const row = await sql.get<{ next_run_at: number; every_ms: number; scheduled_at: number }>(
+      "SELECT next_run_at, every_ms, scheduled_at FROM client_workflows",
+    );
+    expect(row).toEqual({ next_run_at: NOW + 3_600_000, every_ms: 86_400_000, scheduled_at: NOW });
+    const tooSoon = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Too soon",
+      templateId: "pack-schema-readiness",
+      dueAt: NOW,
+      everyMs: 60_000,
+      now: NOW,
+    });
+    expect(tooSoon).toEqual({ ok: false, error: "invalid" });
+  });
+
+  it("runs the oldest due workflow and moves a repeating schedule forward", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const first = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "First",
+      templateId: "pack-schema-readiness",
+      dueAt: NOW - 2,
+      everyMs: 86_400_000,
+      now: NOW,
+    });
+    const second = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Second",
+      templateId: "pack-schema-readiness",
+      dueAt: NOW - 1,
+      now: NOW,
+    });
+    if (!first.ok || !second.ok) throw new Error("workflow");
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      fetchImpl: swarmFetch(),
+      wait: async () => {},
+    });
+    expect(result).toMatchObject({ ok: true, none: false, workflowId: first.workflow.id, executionId: "run-due", more: true });
+    const moved = await sql.get<{ next_run_at: number }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
+      first.workflow.id,
+    ]);
+    expect(moved?.next_run_at).toBe(NOW + 86_400_000);
+  });
+
+  it("clears a one-shot schedule after the swarm starts", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Once",
+      templateId: "pack-schema-readiness",
+      dueAt: NOW - 1,
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      fetchImpl: swarmFetch(),
+      wait: async () => {},
+    });
+    expect(result).toMatchObject({ ok: true, none: false, more: false });
+    const row = await sql.get<{ next_run_at: number | null }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
+      created.workflow.id,
+    ]);
+    expect(row?.next_run_at).toBeNull();
+  });
+
+  it("keeps the due time when the swarm does not start", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Retry",
+      templateId: "pack-schema-readiness",
+      dueAt: NOW - 5,
+      everyMs: 86_400_000,
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      fetchImpl: async () => new Response("no", { status: 500 }),
+      wait: async () => {},
+    });
+    expect(result.ok).toBe(false);
+    const row = await sql.get<{ next_run_at: number }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
+      created.workflow.id,
+    ]);
+    expect(row?.next_run_at).toBe(NOW - 5);
+  });
 });
+
+function swarmFetch(): typeof fetch {
+  return (async (url: string | URL | Request) => {
+    const href = String(url);
+    if (href.includes("/api/template")) {
+      return Response.json({
+        id: "pack-schema-readiness",
+        name: "Schema readiness",
+        nodes: [{ id: "schema-r", type: "researcher", name: "Schema", instructions: "Score.", position: { x: 0, y: 0 } }],
+        edges: [],
+      });
+    }
+    if (href.endsWith("/api/save")) return Response.json({ success: true });
+    if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-due" });
+    return Response.json({ status: "completed", results: { "schema-r": { status: "done", output: "Score 40." } } });
+  }) as typeof fetch;
+}

@@ -76,6 +76,15 @@ function text(input: Record<string, unknown>, key: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
+/** Absent stays unset. A present value that is not a whole number is invalid. */
+function optionalInteger(input: Record<string, unknown>, key: string): number | undefined | null {
+  if (!(key in input) || input[key] == null || input[key] === "") return undefined;
+  const value = input[key];
+  const parsed = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : Number.NaN;
+  if (!Number.isSafeInteger(parsed)) return null;
+  return parsed;
+}
+
 function fromCrm(result: { ok: boolean; value?: unknown; error?: string }): HqToolResult {
   if (result.ok) return { ok: true, value: result.value ?? null };
   if (result.error === "forbidden") return { ok: false, error: "forbidden" };
@@ -441,6 +450,9 @@ async function makeWorkflow(
   const organizationId = text(input, "organizationId");
   if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
   const templateId = text(input, "templateId");
+  const dueAt = optionalInteger(input, "dueAt");
+  const everyMs = optionalInteger(input, "everyMs");
+  if (dueAt === null || everyMs === null) return { ok: false, error: "invalid" };
   const created = await createClientWorkflow(sql, {
     organizationId,
     groupId: text(input, "groupId"),
@@ -448,6 +460,8 @@ async function makeWorkflow(
     templateId,
     projectId: text(input, "projectId") || null,
     plan: await workflowPlan(templateId, options),
+    dueAt,
+    everyMs,
     now,
   });
   if (!created.ok) return { ok: false, error: created.error };
