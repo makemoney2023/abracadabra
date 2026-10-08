@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { BoundSql } from "@/lib/cloudflare/sql";
 
@@ -47,16 +47,30 @@ CREATE TABLE activities (
   body TEXT,
   created_at INTEGER NOT NULL
 );
+CREATE TABLE assessments (
+  id TEXT PRIMARY KEY,
+  organization_id TEXT,
+  contact_id TEXT,
+  deal_id TEXT,
+  domain TEXT,
+  answers_json TEXT NOT NULL,
+  scores_json TEXT NOT NULL,
+  total_score INTEGER,
+  utm_json TEXT,
+  report_url TEXT,
+  completed_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL
+);
 `;
 
 export function memoryCheckDb(): BoundSql {
-  const migration = readFileSync(
-    path.join(process.cwd(), "migrations/0001_readiness_scans.sql"),
-    "utf8",
-  );
+  const dir = path.join(process.cwd(), "migrations");
+  const migrations = readdirSync(dir)
+    .filter((name) => name.endsWith(".sql"))
+    .sort();
   const db = new DatabaseSync(":memory:");
   db.exec(CRM);
-  db.exec(migration);
+  for (const name of migrations) db.exec(readFileSync(path.join(dir, name), "utf8"));
   return {
     prepare(query: string) {
       return {

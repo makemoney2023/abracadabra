@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { opsAssessment } from "@/lib/assessment/actions";
+import { questionnaireAdmin } from "@/lib/assessment/d1-admin";
 import { requireOpsSession } from "@/lib/ops/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -12,7 +12,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
   const { token } = await context.params;
   try {
-    const record = await opsAssessment(createAdminClient(), token);
+    const record = await opsAssessment(await questionnaireAdmin(), token);
     if (!record) return NextResponse.json({ error: "Check not found" }, { status: 404 });
     return NextResponse.json(record);
   } catch (err) {

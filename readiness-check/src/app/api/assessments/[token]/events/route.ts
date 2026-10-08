@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { recordClientEvent } from "@/lib/assessment/actions";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { questionnaireAdmin } from "@/lib/assessment/d1-admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -23,7 +23,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
   try {
-    const result = await recordClientEvent(createAdminClient(), token, parsed.data.kind, parsed.data.data);
+    const result = await recordClientEvent(await questionnaireAdmin(), token, parsed.data.kind, parsed.data.data);
     return NextResponse.json(result.body, { status: result.status });
   } catch (err) {
     return NextResponse.json(

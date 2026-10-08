@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { inngest } from "@/inngest/client";
+import type { BoundSql } from "@/lib/cloudflare/sql";
 import { calLink } from "@/lib/check-env";
 import { computeOpsPriority } from "@/lib/ops/priority";
 import { countRecentPublicScans } from "@/lib/rate-limit";
@@ -7,6 +8,7 @@ import { createPublicScan } from "@/lib/scan/create";
 import { applyPublicOptIn } from "@/lib/scan/opt-in";
 import type { ScoreBreakdown } from "@/lib/types";
 import { config, CONFIG_VERSION } from "./config";
+import { copyCompletedCheckToCrm } from "./d1-admin";
 import { selectAssessmentPayload } from "./present";
 import {
   addAssessmentEvent,
@@ -22,6 +24,15 @@ import { scoreAssessment } from "./score";
 import { firstStep, getSteps, nextStep } from "./steps";
 import type { AssessmentScores, ScanLinkInput } from "./types";
 import { applyAnswer, validateAnswer } from "./validate-answer";
+
+async function publishCompleted(admin: AssessmentAdmin, assessmentId: string) {
+  const db = (admin as AssessmentAdmin & { db?: BoundSql }).db;
+  if (db) {
+    await copyCompletedCheckToCrm(db, assessmentId);
+    return;
+  }
+  await inngest.send({ name: "assessment/completed", data: { assessmentId } });
+}
 
 const CLIENT_EVENTS = new Set(["results_viewed", "booking_opened", "pdf_downloaded"]);
 
@@ -258,7 +269,7 @@ export async function completeAssessment(admin: AssessmentAdmin, token: string) 
   });
   await addAssessmentEvent(admin, row.id, "completed", { band: scores.overall.band });
   await addAssessmentEvent(admin, row.id, "gate_shown", { band: scores.overall.band });
-  await inngest.send({ name: "assessment/completed", data: { assessmentId: row.id } });
+  await publishCompleted(admin, row.id);
   return { status: 200 as const, body: { ok: true, band: scores.overall.band } };
 }
 
@@ -299,7 +310,7 @@ export async function optInAssessment(
     name: input.name ?? null,
     opted_in_at: row.optedInAt ?? new Date().toISOString(),
   });
-  await inngest.send({ name: "assessment/completed", data: { assessmentId: row.id } });
+  await publishCompleted(admin, row.id);
   await addAssessmentEvent(admin, row.id, "opted_in", {});
   const fresh = await getAssessmentByToken(admin, token);
   const findings = await loadFindings(admin, row.scanId);

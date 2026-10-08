@@ -19,7 +19,7 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
 - **Public / internal:** URL → score + gaps + generate fixes on the fly → email unlocks full page matrix / findings + PDF (marketing soft-gate later)
 - **Ops:** paste sites → AI Search qualifies each homepage → a site that needs us becomes a lead and a scan
 - **Fetch layer:** schema scans and ops prospecting both use [Cloudflare AI Search](https://developers.cloudflare.com/ai-search/). Prospecting only follows up when the answer is `NEEDS_US`.
-- **Stack:** Next.js on Cloudflare Workers, D1, Queues, AI Search, shadcn, Vitest/Playwright. The readiness survey still reads Supabase until that path moves.
+- **Stack:** Next.js on Cloudflare Workers, D1, Queues, AI Search, shadcn, Vitest/Playwright. The public check, URL scan, and prospecting use D1. Ops login still uses Supabase Auth.
 
 ## Local setup
 
@@ -29,7 +29,7 @@ Free AI-visibility scanner for Answer Engine Optimization (AEO) and Generative E
    cp .env.example .env.local
    ```
 
-   A public URL scan and prospecting do not use Supabase. They write D1 database `handoff` and queue `scan-jobs`. Apply `migrations/0001_readiness_scans.sql` to that database before deploy. `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (AI Search:Edit and AI Search:Run) are Worker secrets. The readiness survey still needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY` until that path moves. `NEXT_PUBLIC_APP_URL` is the marketing origin.
+   A public URL scan, prospecting, and the readiness questionnaire write D1 database `handoff`. Scans run on queue `scan-jobs`. Apply `migrations/0001_readiness_scans.sql` and `migrations/0002_check_assessments.sql` before deploy. `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (AI Search:Edit and AI Search:Run) are Worker secrets. Ops login still needs Supabase Auth until that path moves. `NEXT_PUBLIC_APP_URL` is the marketing origin.
 
 2. Apply DB migrations (Docker + Supabase CLI, or linked remote project):
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { patchAssessmentAnswer, readAssessment } from "@/lib/assessment/actions";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { questionnaireAdmin } from "@/lib/assessment/d1-admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -13,7 +13,7 @@ const patchSchema = z.object({
 export async function GET(_request: Request, context: RouteContext) {
   const { token } = await context.params;
   try {
-    const payload = await readAssessment(createAdminClient(), token);
+    const payload = await readAssessment(await questionnaireAdmin(), token);
     if (!payload) return NextResponse.json({ error: "Check not found" }, { status: 404 });
     return NextResponse.json(payload);
   } catch (err) {
@@ -37,7 +37,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
   try {
-    const result = await patchAssessmentAnswer(createAdminClient(), token, parsed.data.stepId, parsed.data.answer);
+    const result = await patchAssessmentAnswer(await questionnaireAdmin(), token, parsed.data.stepId, parsed.data.answer);
     return NextResponse.json(result.body, { status: result.status });
   } catch (err) {
     return NextResponse.json(

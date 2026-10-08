@@ -1,4 +1,6 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { nanoid } from "nanoid";
+import type { CheckBindings } from "@/lib/cloudflare/sql";
 import { inngest } from "@/inngest/client";
 
 type ScanAdmin = {
@@ -35,6 +37,16 @@ export async function createPublicScan(
 
   if (error || !scan) {
     throw new Error(error?.message ?? "Failed to create scan");
+  }
+
+  try {
+    const env = (await getCloudflareContext({ async: true })).env as CheckBindings;
+    if (env.SCAN_JOBS) {
+      await env.SCAN_JOBS.send({ type: "scan", scanId: scan.id });
+      return { id: scan.id, token: scan.public_token, status: scan.status };
+    }
+  } catch {
+    // Local tests and the old Supabase path still enqueue through Inngest.
   }
 
   await inngest.send({

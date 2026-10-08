@@ -1,15 +1,15 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 import { readAssessment } from "@/lib/assessment/actions";
+import { questionnaireAdmin } from "@/lib/assessment/d1-admin";
 import { addAssessmentEvent, getAssessmentByToken } from "@/lib/assessment/repository";
 import { AssessmentReportDocument } from "@/lib/pdf/assessment-report";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
 export async function GET(_request: Request, context: RouteContext) {
   const { token } = await context.params;
-  const admin = createAdminClient();
+  const admin = await questionnaireAdmin();
   const row = await getAssessmentByToken(admin, token).catch(() => null);
   if (!row) return NextResponse.json({ error: "Check not found" }, { status: 404 });
   if (!row.optedInAt) {

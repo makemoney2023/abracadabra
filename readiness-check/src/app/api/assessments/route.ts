@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAssessment } from "@/lib/assessment/actions";
+import { questionnaireAdmin } from "@/lib/assessment/d1-admin";
 import { allowAssessmentCreate, clientIp, hashIp } from "@/lib/assessment/ip-limit";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 const bodySchema = z.object({
   utm: z.record(z.string(), z.string()).optional(),
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     );
   }
   try {
-    const created = await createAssessment(createAdminClient(), { utm: parsed.data.utm, ipHash });
+    const created = await createAssessment(await questionnaireAdmin(), { utm: parsed.data.utm, ipHash });
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     return NextResponse.json(

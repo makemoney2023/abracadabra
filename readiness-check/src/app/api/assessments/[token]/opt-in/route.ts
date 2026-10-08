@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { optInAssessment } from "@/lib/assessment/actions";
+import { questionnaireAdmin } from "@/lib/assessment/d1-admin";
 import { unlockCookieName } from "@/lib/scan/unlock";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -25,7 +25,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   }
   try {
-    const result = await optInAssessment(createAdminClient(), token, {
+    const result = await optInAssessment(await questionnaireAdmin(), token, {
       email: parsed.data.email.trim().toLowerCase(),
       name: parsed.data.name,
     });

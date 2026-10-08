@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-07 — The readiness questionnaire uses Cloudflare D1
+
+- **What changed** — Starting a check, saving an answer, scoring it, and leaving an email write `check_assessments` in D1. An email also files the finished check on the Handoff client record.
+- **Why** — The live Worker has no Supabase credentials, so the questionnaire could not open a session.
+- **Code touchpoints** — `src/lib/assessment/d1-admin.ts`, `src/lib/assessment/actions.ts`, `src/app/check/start/route.ts`, `src/app/api/assessments/route.ts`, `src/app/api/assessments/[token]/route.ts`, `migrations/0002_check_assessments.sql`
+- **Data-flow impact** — Public check routes no longer call Supabase. Completing a check does not send Inngest when D1 is bound. A website answer still queues `scan-jobs`.
+- **API / schema impact** — New D1 tables `check_assessments` and `check_assessment_events`. Response shapes are unchanged.
+- **Verification** — `npx vitest run` (225 passed). `npx eslint` on the touched files.
+
 ## 2026-10-07 — URL scans and prospecting use Cloudflare, not Supabase
 
 - **What changed** — Submitting a website URL writes a scan in D1 and queues `scan-jobs`. The prospect form queues the same worker. A site that needs us becomes a Handoff lead and a new deal. The public scan page reads that D1 row.

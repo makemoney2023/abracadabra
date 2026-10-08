@@ -33,7 +33,7 @@ Both surfaces share one scan and scoring engine.
 - Soft gate: overall score free; email for page matrix + PDF
 - Standard depth: site files + up to ~40 priority pages
 - In-app ops inbox only (no CRM sync in v1)
-- Next.js on the `readiness-check` Worker. URL scans and prospect leads live in Cloudflare D1, not Supabase.
+- Next.js on the `readiness-check` Worker. URL scans, prospect leads, and the readiness questionnaire live in Cloudflare D1, not Supabase.
 - Deterministic scoring (no LLM score subjectivity in v1)
 
 ## Value proposition
