@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/db/conversations.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`
 - **Data-flow impact** — After the sender gates, `email()` loads `desk_context` and calls the mailbox model. The reply is stored on the same thread.
 - **API / schema impact** — `POST /api/client-messages` accepts `action: "desk_context"`. No migration.
-- **Verification** — Desk and mailbox reply tests passed. Agent typecheck passed. Model id `@cf/meta/llama-3.3-70b-instruct-fp8-fast` is in the Workers AI catalog. Worker `handoff-agent` version `abcc6099-115f-41ac-9420-a627062b0faf`. Worker `handoff-hq` version `b0637d9f-4543-41e6-9bc7-69766c07d822`.
+- **Verification** — Desk and mailbox reply tests passed. Agent typecheck passed. Model id `@cf/meta/llama-3.3-70b-instruct-fp8-fast` is in the Workers AI catalog. Worker `handoff-agent` version `bd0b3d08-4d43-4036-9f1e-a1d0c13032d1`. Worker `handoff-hq` version `f66bdcfc-fa32-4ea7-8788-c21f3eb36afe`.
 
 ## 2026-10-07
 
