@@ -313,8 +313,22 @@ export class ClientAgent extends Agent<AgentBindings> {
       const call = this.leadCaller();
       if (!call) return;
       const result = await call("run_due_workflow", { requestId: wakeId });
-      const more = Boolean(result && typeof result === "object" && (result as { more?: unknown }).more === true);
-      if (more) await this.schedule(60, "due");
+      const run = result && typeof result === "object" ? (result as Record<string, unknown>) : {};
+      const executionId = typeof run.executionId === "string" ? run.executionId : "";
+      const workflowId = typeof run.workflowId === "string" ? run.workflowId : "";
+      const templateId = typeof run.templateId === "string" ? run.templateId : "";
+      const packName = typeof run.packName === "string" ? run.packName : "Swarm";
+      if (run.status === "running" && executionId && workflowId) {
+        await this.schedule(45, "refreshSwarm", {
+          executionId,
+          templateId,
+          activityKey: `due:${workflowId}`,
+          packName,
+          trigger: "due",
+          attempts: 1,
+        });
+      }
+      if (run.more === true) await this.schedule(60, "due");
       return;
     }
     if (

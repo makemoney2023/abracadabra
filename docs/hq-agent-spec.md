@@ -151,7 +151,7 @@ A skill names connector tools in its file. The agent calls one only when that na
 | `context_changed` | `handoff` after `readSpaceFiles` finishes a batch, or staff edit the website field | Re-read, new brief version if material changed. |
 | `brief_approved` | dashboard after client or staff approval | Section 6: plan tasks from the brief. |
 | `work` | cron, every 15 minutes, for orgs with tasks not `done` whose `due_at` is empty or already past | Section 7: advance each task one step. A future `due_at` waits. A task tied to a scheduled workflow is left to `due`. |
-| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived, and staff chat after a pack task moves to `run` | Run that workflow on the swarm. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. |
+| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived, and staff chat after a pack task moves to `run` | Run that workflow on the swarm and write `agent.swarm_run` so Today shows it. A run that is still going updates that same row. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. |
 | `changes_requested` | dashboard after feedback with decision `changes` | Section 10: revision round. |
 | `brief_changed` | dashboard after a brief addendum or revision is approved (section 17.4) | Re-plan from the new brief version: new pieces get tasks, changed pieces reset, removed pieces block. |
 | `run_check` | cron, hourly | Poll `bc-` runs past deadline. |

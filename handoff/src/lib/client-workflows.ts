@@ -1,4 +1,5 @@
 import type { Sql } from "../db/sql";
+import { recordAgentRun } from "./agent-activity";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { packTemplateId } from "./pack-templates";
 import { runLeadSwarm } from "./lead-swarm";
@@ -286,7 +287,17 @@ export async function runClientWorkflow(input: {
 
 export type DueClaim =
   | { ok: true; none: true }
-  | { ok: true; none: false; workflowId: string; executionId: string; status: string; output: string; more: boolean }
+  | {
+      ok: true;
+      none: false;
+      workflowId: string;
+      templateId: string;
+      packName: string;
+      executionId: string;
+      status: string;
+      output: string;
+      more: boolean;
+    }
   | { ok: false; error: "invalid" | "missing" };
 
 /** Run the oldest workflow whose time has arrived. A failure leaves the due time so the next cycle retries. */
@@ -299,8 +310,8 @@ export async function claimDueWorkflow(input: {
   wait?: (ms: number) => Promise<void>;
 }): Promise<DueClaim> {
   if (!input.origin.trim()) return { ok: false, error: "invalid" };
-  const row = await input.sql.get<{ id: string; name: string; every_ms: number | null }>(
-    `SELECT id, name, every_ms
+  const row = await input.sql.get<{ id: string; name: string; template_id: string; every_ms: number | null }>(
+    `SELECT id, name, template_id, every_ms
      FROM client_workflows
      WHERE organization_id = ?
        AND next_run_at IS NOT NULL
@@ -319,6 +330,21 @@ export async function claimDueWorkflow(input: {
     fetchImpl: input.fetchImpl,
     wait: input.wait,
   });
+  await recordAgentRun(input.sql, {
+    organizationId: input.organizationId,
+    kind: "agent.swarm_run",
+    body: started.ok ? started.output.slice(0, 500) || `${row.name} ${started.status}.` : "The swarm did not start.",
+    status: started.ok ? started.status : "failed",
+    data: {
+      requestId: `due:${row.id}`,
+      trigger: "due",
+      packId: row.template_id,
+      packName: row.name,
+      executionId: started.ok ? started.executionId : "",
+      workflowId: row.id,
+    },
+    now: input.now,
+  });
   if (!started.ok) return started;
   const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
   await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
@@ -335,6 +361,8 @@ export async function claimDueWorkflow(input: {
     ok: true,
     none: false,
     workflowId: row.id,
+    templateId: row.template_id,
+    packName: row.name,
     executionId: started.executionId,
     status: started.status,
     output: started.output,

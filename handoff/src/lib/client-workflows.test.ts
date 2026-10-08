@@ -359,6 +359,17 @@ describe("client workflows", () => {
       created.workflow.id,
     ]);
     expect(row?.next_run_at).toBeNull();
+    const activity = await sql.get<{ kind: string; body: string; data_json: string }>(
+      "SELECT kind, body, data_json FROM activities WHERE organization_id = 'org-1' AND kind = 'agent.swarm_run'",
+    );
+    expect(activity?.kind).toBe("agent.swarm_run");
+    expect(activity?.body).toContain("Score 40");
+    expect(JSON.parse(activity?.data_json ?? "{}")).toMatchObject({
+      status: "completed",
+      executionId: "run-due",
+      trigger: "due",
+      requestId: `due:${created.workflow.id}`,
+    });
   });
 
   it("keeps the due time when the swarm does not start", async () => {

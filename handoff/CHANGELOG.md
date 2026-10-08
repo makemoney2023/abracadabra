@@ -2,6 +2,15 @@
 
 ## 2026-10-08
 
+- **What changed** — A scheduled swarm shows on Today as soon as it starts. While it is still running, the same row updates.
+- **Why** — The due runner started the swarm and stored the execution on the workflow, and the activity feed only lists `agent.swarm_run` rows.
+- **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — `claimDueWorkflow` writes `agent.swarm_run` with trigger `due` and request id `due:<workflow id>`. A run that is still going schedules `refreshSwarm`, which updates that same row.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/client-workflows.test.ts` (11 passed).
+
+## 2026-10-08
+
 - **What changed** — Staff chat can start a swarm. Moving a task whose first skill is a pack to stage run schedules that pack due now and wakes the client. A second move updates the same workflow.
 - **Why** — Chat filed skill tasks and told staff it could not execute the swarm. Stage run also skipped those tasks, so nothing started.
 - **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
