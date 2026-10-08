@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-08 — A finished staff scan wakes the lead
+
+- **What changed** — A completed or failed scan that belongs to an organization sends `scan_ready` on `lead-intake`. A finished scan stays finished if a later step throws. Only scans with no organization count toward the public daily cap.
+- **Why** — The agent was waking before the scan existed, a later error could flip a successful scan to failed, and staff scans were using the public 3-per-domain limit.
+- **Code touchpoints** — `src/lib/jobs/scan-ready.ts`, `src/lib/jobs/run-cloudflare.ts`, `src/lib/scan/d1-store.ts`, `src/lib/scan/orchestrator.ts`
+- **Data-flow impact** — `runCloudflareJob` notifies after `runScan`. A retry of a finished scan returns without scanning again.
+- **API / schema impact** — none. The existing `lead-intake` queue carries `{ source, organizationId, scanId, status }`.
+- **Verification** — `npx vitest run tests/unit/d1-scan-store.test.ts tests/unit/scan-ready.test.ts`.
+
 ## 2026-10-07 — The schema scan report uses the studio design
 
 - **What changed** — The public scan report uses the studio canvas, Tektur, and accent. An ops scan opens the full page matrix without the email gate, so the lead's report link shows the findings.

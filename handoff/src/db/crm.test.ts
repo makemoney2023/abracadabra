@@ -6,6 +6,7 @@ import {
   completeTask,
   createContact,
   createMilestone,
+  createManualLead,
   createOrganization,
   createProject,
   createTask,
@@ -375,6 +376,33 @@ async function leadDeal(
   return { organizationId: created.value.id, dealId };
 }
 
+describe("manual leads", () => {
+  it("adds a lead, a new deal, and a contact", async () => {
+    const sql = await database();
+    const created = await createManualLead(
+      sql,
+      staff,
+      { name: "Northwind", website: "https://northwind.example", contactName: "Ada", email: "ada@northwind.example" },
+      NOW,
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    const deal = await sql.get<{ stage: string; source: string; organization_id: string }>(
+      "SELECT stage, source, organization_id FROM deals WHERE id = ?",
+      [created.value.dealId],
+    );
+    expect(deal).toEqual({ stage: "new", source: "manual", organization_id: created.value.organizationId });
+    const org = await organizationById(sql, staff, created.value.organizationId);
+    expect(org?.kind).toBe("lead");
+    const contact = await sql.get<{ email: string; is_primary: number }>(
+      "SELECT email, is_primary FROM contacts WHERE organization_id = ?",
+      [created.value.organizationId],
+    );
+    expect(contact).toEqual({ email: "ada@northwind.example", is_primary: 1 });
+    expect(await createManualLead(sql, outsider, { name: "Nope" }, NOW)).toEqual({ ok: false, error: "forbidden" });
+  });
+});
+
 describe("slugFromName", () => {
   it("makes a web address from a company name", () => {
     expect(slugFromName("Harbor & Co.")).toBe("harbor-co");
@@ -637,6 +665,7 @@ describe("projects and work", () => {
       waitingSpaces: [],
       invoices: [],
       agentNotes: [],
+      agentActivity: [],
       workRequests: [],
     });
   });

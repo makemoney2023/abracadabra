@@ -3,7 +3,7 @@ import type { Sql } from "../../db/sql";
 import { fileSchemaPackage } from "../schema-work";
 
 export type ConsumeResult =
-  | { ok: true; duplicate: boolean; filled_email?: boolean }
+  | { ok: true; duplicate: boolean; filled_email?: boolean; leadOrganizationId?: string }
   | { ok: false; error: "invalid"; retry: false };
 
 const FREEMAIL = new Set([
@@ -320,12 +320,14 @@ async function consumeAssessment(sql: Sql, payload: unknown, now: number): Promi
   const totalScore = typeof body?.total_score === "number" ? body.total_score : null;
   const completedAt = typeof body?.completed_at === "number" ? body.completed_at : now;
   const reportUrl = typeof body?.report_url === "string" ? body.report_url : null;
+  let leadOrganizationId: string | undefined;
 
   try {
     await withTx(sql, async () => {
       const placed = await placeLead(sql, { email, name, domain, now });
       let deal = await openDeal(sql, placed.organizationId);
       if (!deal) {
+        leadOrganizationId = placed.organizationId;
         const dealId = await insertDeal(sql, {
           organizationId: placed.organizationId,
           title: `${leadName(name, domain)} readiness check`,
@@ -373,7 +375,7 @@ async function consumeAssessment(sql: Sql, payload: unknown, now: number): Promi
     if (isUnique(error)) return { ok: true, duplicate: true };
     throw error;
   }
-  return { ok: true, duplicate: false };
+  return { ok: true, duplicate: false, leadOrganizationId };
 }
 
 async function moveDealToCall(sql: Sql, deal: DealRow, now: number): Promise<void> {
@@ -400,6 +402,7 @@ async function consumeBooking(sql: Sql, payload: unknown, now: number): Promise<
     return { ok: true, duplicate: true };
   }
   if (!current && !email && !domain) return { ok: false, error: "invalid", retry: false };
+  let leadOrganizationId: string | undefined;
 
   try {
     await withTx(sql, async () => {
@@ -420,6 +423,7 @@ async function consumeBooking(sql: Sql, payload: unknown, now: number): Promise<
         ? await sql.get<DealRow>("SELECT id, stage FROM deals WHERE id = ?", [dealId])
         : await openDeal(sql, organizationId);
       if (!deal) {
+        leadOrganizationId = organizationId ?? undefined;
         const createdId = await insertDeal(sql, {
           organizationId,
           title: `${leadName(name, domain)} call`,
@@ -470,7 +474,7 @@ async function consumeBooking(sql: Sql, payload: unknown, now: number): Promise<
     if (isUnique(error)) return { ok: true, duplicate: true };
     throw error;
   }
-  return { ok: true, duplicate: false };
+  return { ok: true, duplicate: false, leadOrganizationId };
 }
 
 export async function consumeIntake(

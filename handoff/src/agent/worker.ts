@@ -7,7 +7,10 @@ import {
   type SkillCard,
   type ToolCaller,
 } from "../lib/client-documents";
-import { advanceClientWork, applyBriefChange, planClientWork } from "../lib/client-plan";
+import { advanceClientWork, applyBriefChange, planClientWork, qualifyLead } from "../lib/client-plan";
+import { readSwarmRun, runLeadSwarm } from "../lib/lead-swarm";
+import { packsFromTemplates } from "../lib/pack-picker";
+import { packTemplatesFromCatalog } from "../lib/pack-templates";
 import {
   addressOf,
   bytesToBase64,
@@ -21,6 +24,7 @@ import {
 } from "../lib/client-channel";
 import { MAILBOX_INSTRUCTIONS } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
+import { mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
 import { skillObjectKey } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
 
@@ -35,6 +39,9 @@ export interface AgentBindings extends ChatBindings {
   CF_ACCESS_CLIENT_ID: string;
   CF_ACCESS_CLIENT_SECRET: string;
   MAGIC_EMAIL_FROM?: string;
+  SWARM_ORIGIN?: string;
+  HANDOFF_MCP_URL?: string;
+  AGENT_MCP_TOKEN?: string;
   SLACK_SIGNING_SECRET?: string;
   SLACK_BOT_TOKEN?: string;
   SLACK_BOT_USER_ID?: string;
@@ -137,18 +144,13 @@ export class ClientAgent extends Agent<AgentBindings> {
   }
 
   private async connectPortal(): Promise<void> {
-    const url = this.env.MCP_PORTAL_URL;
-    if (!url) return;
+    const target = mcpConnectTarget(this.env);
+    if (!target) return;
     const known = this.getMcpServers();
     const already = Object.values(known.servers).some((server) => server.name === "portal");
     if (already) return;
-    await this.addMcpServer("portal", url, {
-      transport: {
-        headers: {
-          "CF-Access-Client-Id": this.env.CF_ACCESS_CLIENT_ID,
-          "CF-Access-Client-Secret": this.env.CF_ACCESS_CLIENT_SECRET,
-        },
-      },
+    await this.addMcpServer("portal", target.url, {
+      transport: { headers: target.headers },
     });
     await this.portal().waitForConnections?.({ timeout: 3000 });
   }
@@ -213,9 +215,96 @@ export class ClientAgent extends Agent<AgentBindings> {
     await this.acceptWake("work");
   }
 
+  /** Portal tools when the portal is linked. Otherwise the Handoff MCP route, so the run is recorded. */
+  private leadCaller(): ToolCaller | null {
+    const portal = this.toolCaller(this.portal().getAITools?.() ?? {});
+    if (portal) return portal;
+    const http = mcpHttpCaller(this.env);
+    if (!http) return null;
+    return async (name, args) => http(name, this.handoffArguments(args));
+  }
+
+  private async leadPacks(origin: string | undefined) {
+    if (origin) {
+      try {
+        const response = await fetch(`${origin}/api/templates`);
+        if (response.ok) {
+          const packs = packsFromTemplates(await response.json());
+          if (packs.length > 0) return packs;
+        }
+      } catch {
+        // The skill catalog is the fallback when the swarm list is unreachable.
+      }
+    }
+    return packTemplatesFromCatalog(await this.skillCatalog());
+  }
+
+  private async pickupLead(wakeId: string, reason: string): Promise<void> {
+    const origin = this.env.SWARM_ORIGIN?.replace(/\/$/, "");
+    const call = this.leadCaller();
+    if (!call) return;
+    const packs = await this.leadPacks(origin);
+    await qualifyLead({
+      call,
+      requestId: wakeId,
+      packs,
+      trigger: reason,
+      runSwarm: origin
+        ? (brief, templateId) => runLeadSwarm({ origin, workflowId: `lead-${wakeId}`, brief, templateId })
+        : undefined,
+      onStillRunning: async (run) => {
+        await this.schedule(45, "refreshSwarm", { ...run, attempts: 1 });
+      },
+    });
+  }
+
+  /** One later read of a swarm that was still going. A new request id updates the same activity row. */
+  async refreshSwarm(payload: {
+    executionId: string;
+    templateId: string;
+    activityKey: string;
+    packName: string;
+    trigger: string;
+    attempts: number;
+  }): Promise<void> {
+    const origin = this.env.SWARM_ORIGIN?.replace(/\/$/, "");
+    const call = this.leadCaller();
+    if (!origin || !call || !payload?.executionId || !payload.activityKey) return;
+    const run = await readSwarmRun({
+      origin,
+      executionId: payload.executionId,
+      templateId: payload.templateId,
+    });
+    const status = run.status === "completed" || run.status === "failed" ? run.status : "running";
+    await call("record_swarm_run", {
+      packName: payload.packName,
+      status,
+      executionId: payload.executionId,
+      body: run.output.slice(0, 500),
+      requestId: `${payload.activityKey}:refresh:${payload.attempts}`,
+      activityKey: payload.activityKey,
+      trigger: payload.trigger,
+    });
+    if (status === "running" && payload.attempts < 6) {
+      await this.schedule(45, "refreshSwarm", { ...payload, attempts: payload.attempts + 1 });
+    }
+  }
+
   private async continueWork(wakeId: string, reason: string): Promise<void> {
-    if (reason !== "brief_approved" && reason !== "work" && reason !== "brief_changed") return;
+    if (
+      reason !== "brief_approved" &&
+      reason !== "work" &&
+      reason !== "brief_changed" &&
+      reason !== "lead_created" &&
+      reason !== "scan_ready"
+    ) {
+      return;
+    }
     const call = this.toolCaller(this.portal().getAITools?.() ?? {});
+    if (reason === "lead_created" || reason === "scan_ready") {
+      await this.pickupLead(wakeId, reason);
+      return;
+    }
     if (!call) return;
     if (reason === "brief_changed") {
       await applyBriefChange({ call, requestId: wakeId, now: Date.now(), catalog: await this.skillCatalog() });

@@ -1,4 +1,6 @@
 import { chooseSkillsForPiece, type PieceKind, type SkillCard, type ToolCaller } from "./client-documents";
+import { leadBrief } from "./lead-swarm";
+import { pickSkillPack, type PackCandidate } from "./pack-picker";
 import { DELIVERABLE_KINDS } from "./deliverable-manifest";
 
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
@@ -26,7 +28,14 @@ type ContextTask = {
 };
 
 type ClientPicture = {
-  organization?: { name?: string; agentPausedAt?: number | null };
+  organization?: {
+    name?: string;
+    website?: string | null;
+    industry?: string | null;
+    notes?: string | null;
+    agentPausedAt?: number | null;
+  };
+  assessment?: { totalScore?: number | null } | null;
   project?: { id?: string } | null;
   tasks?: ContextTask[];
   answeredSince?: unknown[];
@@ -96,6 +105,102 @@ function picture(value: unknown): ClientPicture {
 
 function fields(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+/** Picks up a new lead: a timeline note, a qualify task, and a markdown file when a space exists. */
+export async function qualifyLead(input: {
+  call: ToolCaller;
+  requestId: string;
+  packs?: PackCandidate[];
+  trigger?: string;
+  runSwarm?: (brief: string, templateId: string) => Promise<string | { output: string; status: string; executionId: string }>;
+  onStillRunning?: (run: {
+    executionId: string;
+    templateId: string;
+    activityKey: string;
+    packName: string;
+    trigger: string;
+  }) => Promise<void>;
+}): Promise<"started" | "skipped"> {
+  const context = picture(await input.call("client_context", {}));
+  if (context.organization?.agentPausedAt != null) return "skipped";
+  const name = context.organization?.name ?? "this lead";
+  const filed = fields(await input.call("store_scan_context", { requestId: `${input.requestId}:scan-context` }));
+  const scanScore = typeof filed.score === "number" ? filed.score : null;
+  const choice = pickSkillPack(
+    { name, industry: context.organization?.industry, notes: context.organization?.notes },
+    input.packs ?? [],
+  );
+  const brief = [
+    leadBrief({
+      name,
+      website: context.organization?.website,
+      score: scanScore ?? context.assessment?.totalScore,
+      packId: choice.id,
+    }),
+    context.organization?.industry ? `Industry: ${context.organization.industry}` : "",
+    context.organization?.notes ?? "",
+    `Pack: ${choice.name}.`,
+  ]
+    .filter((line) => line.trim().length > 0)
+    .join("\n");
+  let swarm = "";
+  let swarmStatus = "not_started";
+  let executionId = "";
+  if (input.runSwarm) {
+    try {
+      const finished = await input.runSwarm(brief, choice.id);
+      if (typeof finished === "string") {
+        swarm = finished;
+        swarmStatus = finished.trim() ? "completed" : "failed";
+      } else {
+        swarm = finished.output;
+        swarmStatus = finished.status;
+        executionId = finished.executionId;
+      }
+    } catch (error) {
+      swarm = error instanceof Error ? error.message : "The swarm did not finish.";
+      swarmStatus = "failed";
+    }
+  }
+  const body = swarm || `Picked up ${name}. Pack: ${choice.name}. Next is a fit note, a draft first email, and the next task.`;
+  await input.call("add_note", {
+    body,
+    requestId: `${input.requestId}:lead-note`,
+  });
+  await input.call("create_task", {
+    title: `Qualify ${name}`,
+    stage: "describe",
+    skills: [],
+    requestId: `${input.requestId}:qualify`,
+  });
+  const saved = fields(
+    await input.call("save_space_file", {
+      workflow: "lead",
+      run: input.requestId,
+      node: "qualify",
+      body: `# ${name}\n\n${body}`,
+      requestId: `${input.requestId}:lead-file`,
+    }),
+  );
+  const artifacts = Array.isArray(saved.stored) ? saved.stored.filter((path) => typeof path === "string") : [];
+  const activityKey = `${input.requestId}:swarm-run`;
+  const trigger = input.trigger?.trim() || "lead_created";
+  await input.call("record_swarm_run", {
+    packId: choice.id,
+    packName: choice.name,
+    status: swarmStatus,
+    executionId,
+    body: swarmStatus === "not_started" ? `Swarm did not start. Pack: ${choice.name}.` : body.slice(0, 500),
+    artifacts,
+    requestId: activityKey,
+    activityKey,
+    trigger,
+  });
+  if (swarmStatus === "running" && executionId && input.onStillRunning) {
+    await input.onStillRunning({ executionId, templateId: choice.id, activityKey, packName: choice.name, trigger });
+  }
+  return "started";
 }
 
 /** One task and one draft deliverable per piece that does not already have a task. */

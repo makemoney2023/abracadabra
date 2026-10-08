@@ -57,6 +57,9 @@ const ACTIVITY_LABEL: Record<string, string> = {
   task_done: "Task done",
   task_status: "Task",
   stage_change: "Stage",
+  "schema.scan": "Schema scan",
+  "agent.swarm_run": "Swarm",
+  "agent.wake_failed": "Agent did not wake",
 };
 
 const PAGE_SIZE = 20;
@@ -134,9 +137,16 @@ export default async function ClientPage({
           <CardDescription>{client.website ? client.website : "No website yet."}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          {client.industry ? <p className="text-sm">{client.industry}</p> : null}
+          {client.notes ? <p className="whitespace-pre-wrap text-sm">{client.notes}</p> : null}
           <p className="text-sm">
             Main contact
-            <span className="ml-2">{main?.name ? main.name : "None yet."}</span>
+            <span className="ml-2">
+              {main?.name ? main.name : "None yet."}
+              {main?.title ? `, ${main.title}` : ""}
+              {main?.email ? ` · ${main.email}` : ""}
+              {main?.phone ? ` · ${main.phone}` : ""}
+            </span>
           </p>
           {linked.length === 0 ? (
             <p className="text-sm text-muted-foreground">No space linked yet.</p>

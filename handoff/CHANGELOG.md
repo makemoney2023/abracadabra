@@ -1,5 +1,113 @@
 # Changelog
 
+## 2026-10-08
+
+- **What changed** — Saving a client workflow writes its skill steps onto a task. The existing work wake finishes one complete step and keeps the workflow edges.
+- **Why** — A saved workflow had no task, so the work wake had nothing to run.
+- **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/agent-work.ts`, `handoff/migrations/0013_workflow_task.sql`
+- **Data-flow impact** — `create_workflow` loads the swarm template, stores ordered complete steps and edges as `skills_json`, and links `client_workflows.task_id`. The 15-minute work wake runs the first unfinished complete step. Assigning the workflow moves that task to the same project.
+- **API / schema impact** — Migration `0013_workflow_task.sql` adds `client_workflows.task_id`.
+- **Verification** — `npx vitest run src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/db/migrate.test.ts src/lib/knowledge.test.ts`
+
+## 2026-10-08
+
+- **What changed** — A website lead is enriched after the schema scan finishes. Empty CRM fields fill then, a file space opens if the lead has none, the scraped pages are filed, and the matching skill pack runs. A lead with no website still wakes immediately.
+- **Why** — Enrichment and the swarm ran before the scan existed, so a finished scan never filled the lead. A later failure could also mark a finished scan failed, and a staff scan counted toward the public daily cap.
+- **Code touchpoints** — `handoff/src/lib/lead-schema.ts`, `handoff/src/app/leads/actions.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/pack-picker.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/agent-activity.ts`, `handoff/src/lib/scan-context.ts`, `handoff/src/app/today-screen.tsx`, `readiness-check/src/lib/jobs/scan-ready.ts`, `readiness-check/src/lib/scan/d1-store.ts`, `readiness-check/src/lib/scan/orchestrator.ts`
+- **Data-flow impact** — A queued scan does not wake `lead_created`. When the scan is complete or failed, readiness-check sends `scan_ready` on `lead-intake`, and the handoff worker wakes the agent. That wake stores the scan, fills empty fields, and records the swarm run. A run that is still going updates the same activity. A missing wake secret writes `agent.wake_failed`.
+- **API / schema impact** — none. Staff scans with an organization no longer count toward the public 3-per-domain daily cap.
+- **Verification** — `npx vitest run src/lib/scan-context.test.ts src/lib/lead-schema.test.ts src/lib/intake/queue.test.ts src/lib/lead-swarm.test.ts src/lib/pack-picker.test.ts src/lib/mcp-connect.test.ts src/lib/client-plan.test.ts src/lib/schema-report.test.ts src/lib/agent-activity.test.ts src/db/crm.test.ts src/lib/hq-tools.test.ts` and `npx vitest run tests/unit/d1-scan-store.test.ts tests/unit/scan-ready.test.ts` in readiness-check.
+
+## 2026-10-08
+
+- **What changed** — A manual lead with a website starts a schema scan, and Today shows each scan and swarm run with the time, the client, and whether it succeeded.
+- **Why** — Adding a lead left the schema card on “No schema scan yet,” and a swarm run had no start or result on the dashboard.
+- **Code touchpoints** — `handoff/src/lib/lead-schema.ts`, `handoff/src/lib/agent-activity.ts`, `handoff/src/app/leads/actions.ts`, `handoff/src/app/today-screen.tsx`, `handoff/src/db/crm.ts`, `readiness-check/src/lib/scan/d1-store.ts`
+- **Data-flow impact** — The lead action inserts a queued `readiness_scans` row, sends it on `scan-jobs`, and writes a `schema.scan` activity. The scan worker writes another activity when the scan finishes. A lead wake and an approved chat run write `agent.swarm_run`.
+- **API / schema impact** — none. `handoff-hq` produces to the existing `scan-jobs` queue.
+- **Verification** — `npx vitest run src/lib/lead-schema.test.ts src/lib/client-plan.test.ts src/db/crm.test.ts` and `npx vitest run tests/unit/d1-scan-store.test.ts` in readiness-check.
+
+## 2026-10-08
+
+- **What changed** — A new lead runs the skill pack that matches its notes and industry. No match keeps the schema readiness pack.
+- **Why** — Every lead was starting the same pack. The library already has a pack for the work.
+- **Code touchpoints** — `handoff/src/lib/pack-picker.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — `lead_created` builds pack templates from the skill index, picks one, and starts that template on the swarm. The qualify note names the pack.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/pack-picker.test.ts src/lib/client-plan.test.ts src/lib/lead-swarm.test.ts`.
+
+## 2026-10-08
+
+- **What changed** — Staff can add a lead from the Leads page. A finished schema scan fills the blank company name, website, industry, notes, and contacts.
+- **Why** — Leads only arrived from the readiness check. A typed lead still needs the details the schema pack already found.
+- **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/app/leads/lead-form.tsx`, `handoff/src/lib/lead-enrich.ts`, `handoff/src/lib/scan-context.ts`
+- **Data-flow impact** — Add a lead writes a `manual` deal in stage `new` and wakes `lead_created`. Enrichment runs then, and again when the scan context is stored. A name, industry, or note staff already entered stays.
+- **API / schema impact** — none. `industry` and `notes` were already on `organizations`.
+- **Verification** — `npx vitest run src/lib/lead-enrich.test.ts src/db/crm.test.ts src/lib/scan-context.test.ts`.
+
+## 2026-10-08
+
+- **What changed** — Staff chat can create a workflow group for a client, add workflows, assign them to a project, and run one after approval.
+- **Why** — Swarm work was only the automatic lead pack. A client job needs a named workflow on a project.
+- **Code touchpoints** — `handoff/migrations/0012_client_workflows.sql`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — A group belongs to one client and can belong to one project. A workflow in that group can be assigned to a project of the same client. Run starts that template on the swarm.
+- **API / schema impact** — Tables `workflow_groups` and `client_workflows`. Chat tools `list_workflows`, `create_workflow_group`, `create_workflow`, `assign_workflow`, `run_workflow`.
+- **Verification** — `npx vitest run src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/db/migrate.test.ts`.
+
+## 2026-10-08
+
+- **What changed** — A new lead opens on the schema readiness pack. The latest schema scan's scraped pages are filed into the client knowledge base.
+- **Why** — The first pack was marketing skills. The first job is the readiness check, and the scrape has to stay searchable.
+- **Code touchpoints** — `handoff/src/lib/scan-context.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/client-plan.ts`, `swarm/src/types.ts`, `readiness-check/src/lib/scan/page-record.ts`
+- **Data-flow impact** — `lead_created` calls `store_scan_context`, then starts `pack-schema-readiness`. Each scraped page is a `reference` file with passages. New scans keep the page text on `evidence_json.scrapedText`.
+- **API / schema impact** — MCP tool `store_scan_context`.
+- **Verification** — `npx vitest run src/lib/scan-context.test.ts src/lib/lead-swarm.test.ts src/lib/client-plan.test.ts` and `npx vitest run tests/unit/page-record.test.ts` in `readiness-check`.
+
+## 2026-10-08
+
+- **What changed** — Related skill folders become chainable swarm templates. Each template keeps up to four skills and cites the skill file on the node.
+- **Why** — The canvas had three hand-written packs. The library already groups the work.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/scripts/write-pack-templates.ts`, `swarm/src/pack-templates.json`, `swarm/src/do/WorkflowDO.ts`, `swarm/frontend/src/App.tsx`
+- **Data-flow impact** — `GET /api/templates` and `GET /api/template` serve the generated packs. A new lead still starts the marketing pack, now `pack-community-marketingskills`.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/lead-swarm.test.ts` and `node --test swarm/frontend/src/lib/pack-catalog.test.mjs`.
+
+## 2026-10-08
+
+- **What changed** — The agent calls Handoff MCP at `https://hq.abra-ca-dabra.app/api/mcp` with a deployment key when the portal URL is empty.
+- **Why** — The lead wake could start the swarm, but it could not write the note, the task, or the space file.
+- **Code touchpoints** — `handoff/src/lib/mcp-connect.ts`, `handoff/src/agent/worker.ts`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — Tool calls go to `/api/mcp` as the HQ agent key (`scopes` `read,work`). The portal URL still wins when it is set.
+- **API / schema impact** — One `knowledge_keys` row labeled HQ agent. The token is a worker secret, not in git.
+- **Verification** — `npx vitest run src/lib/mcp-connect.test.ts`.
+
+## 2026-10-08
+
+- **What changed** — A new lead starts the marketing pack on the swarm. The qualify file stores that copy.
+- **Why** — The wake was only a note. The swarm is what should write the fit note and the first email.
+- **Code touchpoints** — `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/agent/worker.ts`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — `lead_created` loads the marketing pack, saves it, runs it, and writes the finished text into the client space.
+- **API / schema impact** — none. The agent reads `SWARM_ORIGIN`.
+- **Verification** — `npx vitest run src/lib/lead-swarm.test.ts src/lib/client-plan.test.ts`.
+
+## 2026-10-08
+
+- **What changed** — The HQ menu has Swarm. It opens the swarm worker inside the staff page.
+- **Why** — Staff need the canvas from the same menu as Today, Work, and Chat.
+- **Code touchpoints** — `handoff/src/app/staff-nav.tsx`, `handoff/src/app/staff-links.ts`, `handoff/src/app/swarm/page.tsx`, `handoff/src/lib/host.ts`, `swarm/src/index.ts`
+- **Data-flow impact** — `/swarm` is staff-only. The page frames `https://agent-swarm-orchestrator.abracadabra-ai.workers.dev`.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/staff-links.test.ts src/lib/host.test.ts`.
+
+## 2026-10-08
+
+- **What changed** — A new lead wakes the HQ agent. Swarm markdown can be saved into the client space. The swarm worker now lives in this repo and targets the Abracadabra Cloudflare account.
+- **Why** — The swarm was deployed on another account, and a new lead waited until a deal was won before the agent started.
+- **Code touchpoints** — `swarm/`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/workflow-files.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — Intake commits a new deal, then `POST /wake` with reason `lead_created`. The agent writes a note, a qualify task, and a markdown file under `agent/` in the client's space when a space exists.
+- **API / schema impact** — MCP tool `save_space_file`. Wake reason `lead_created`.
+- **Verification** — `npx vitest run src/lib/workflow-files.test.ts src/lib/intake/queue.test.ts src/lib/intake/consume.test.ts src/lib/client-plan.test.ts` and `node --test swarm/frontend/src/lib/chain.test.mjs`.
+
 ## 2026-10-07
 
 - **What changed** — A lead shows the schema score, the five pillars, and a report link, the same way it shows a readiness check. The schema result on HQ uses the studio panel, kicker, and score type.

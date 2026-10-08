@@ -31,7 +31,10 @@ describe("intake consumer", () => {
   it("makes a lead, a person, a deal, and an assessment", async () => {
     const sql = await database();
     const result = await consumeIntake(sql, { source: "assessment", payload: assessment }, NOW);
-    expect(result).toMatchObject({ ok: true, duplicate: false });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.duplicate).toBe(false);
+    expect(result.leadOrganizationId).toEqual(expect.any(String));
 
     const org = await sql.get<{ kind: string; domain: string; name: string }>(
       "SELECT kind, domain, name FROM organizations",
@@ -62,6 +65,7 @@ describe("intake consumer", () => {
     await consumeIntake(sql, { source: "assessment", payload: assessment }, NOW);
     const again = await consumeIntake(sql, { source: "assessment", payload: assessment }, NOW + 1);
     expect(again).toMatchObject({ ok: true, duplicate: true });
+    expect(again).not.toHaveProperty("leadOrganizationId");
     const rows = await sql.all<{ id: string }>("SELECT id FROM assessments");
     expect(rows).toHaveLength(1);
     const orgs = await sql.all<{ id: string }>("SELECT id FROM organizations");

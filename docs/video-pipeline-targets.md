@@ -113,7 +113,7 @@ Showdesk stays the reference; do not rebuild it unless the pipeline itself chang
 
 ## Super Funnel walkthroughs (on the films page, 2026-10-07)
 
-Copied from `Desktop/superfunnelsystem` `public/walkthroughs/` into `outputs/videos/superfunnel/`, then published as plain players on `scrollcraft/builds/abracadabra-ai/films.html` (`assets/films/superfunnel-*.mp4`, WebP title-card posters). These are the finished associate tours (captions and music burned in), not scroll-scrub legs. The walkthrough flight stays the four shipped systems. Create still has no video.
+Copied from `Desktop/superfunnelsystem` `public/walkthroughs/` into `outputs/videos/superfunnel/`, then published as plain players on `scrollcraft/builds/abracadabra-ai/films.html` (`assets/films/superfunnel-*.mp4`, WebP title-card posters). These are the finished associate tours (captions and music burned in), not scroll-scrub legs. The walkthrough flight stays the four shipped systems. The homepage work rail shows only Getting started. Create still has no video.
 
 | File | Length | What it shows |
 | --- | --- | --- |

@@ -21,6 +21,7 @@ describe("decideHost", () => {
     expect(decide("handoff.example", "/api/github/webhook")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/settings/github")).toEqual({ kind: "not-found" });
     expect(decide("handoff.example", "/chat")).toEqual({ kind: "not-found" });
+    expect(decide("handoff.example", "/swarm")).toEqual({ kind: "not-found" });
   });
 
   it("hides share and invite pages on the staff host", () => {
@@ -76,6 +77,7 @@ describe("decideHost", () => {
     expect(decide(HQ, "/clients")).toEqual({ kind: "allow" });
     expect(decide(HQ, "/schema")).toEqual({ kind: "allow" });
     expect(decide(HQ, "/chat")).toEqual({ kind: "allow" });
+    expect(decide(HQ, "/swarm")).toEqual({ kind: "allow" });
     expect(decide("hq.localhost", "/")).toEqual({ kind: "allow" });
     expect(decide("handoff.example", "/w/strongfoam")).toEqual({ kind: "allow" });
     expect(decide("handoff.example", "/login")).toEqual({ kind: "allow" });

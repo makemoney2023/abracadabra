@@ -96,4 +96,17 @@ describe("presentSchemaLead", () => {
       reportUrl: "https://check.abra-ca-dabra.app/scan/scan-token",
     });
   });
+
+  it("says a queued scan is queued", () => {
+    const report = schemaScanReport({
+      status: "queued",
+      scoreTotal: null,
+      scoreBreakdown: null,
+      error: null,
+      publicToken: null,
+      pages: [],
+      findings: [],
+    });
+    expect(presentSchemaLead(report).total).toBe("Schema scan is queued.");
+  });
 });

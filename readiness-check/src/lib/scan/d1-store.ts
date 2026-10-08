@@ -116,6 +116,31 @@ async function readScan(db: BoundSql, scanId: string): Promise<ScanRecord | null
   };
 }
 
+async function noteScan(db: BoundSql, scanId: string, status: "complete" | "failed", now: number, error?: string): Promise<void> {
+  const row = await db
+    .prepare("SELECT organization_id, domain, score_total, public_token FROM readiness_scans WHERE id = ?")
+    .bind(scanId)
+    .first<{ organization_id: string | null; domain: string; score_total: number | null; public_token: string | null }>();
+  if (!row?.organization_id) return;
+  const body =
+    status === "complete"
+      ? `Schema scan finished for ${row.domain}. Score ${row.score_total ?? "none"}.`
+      : `Schema scan failed for ${row.domain}. ${(error ?? "The scan failed.").slice(0, 300)}`;
+  await db
+    .prepare(
+      `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
+       VALUES (?, ?, 'schema.scan', 'system', 'schema', ?, ?, ?)`,
+    )
+    .bind(
+      crypto.randomUUID(),
+      row.organization_id,
+      body,
+      JSON.stringify({ scanId, status, domain: row.domain, score: row.score_total, publicToken: row.public_token }),
+      now,
+    )
+    .run();
+}
+
 export async function countRecentPublicScansOnD1(
   db: BoundSql,
   domain: string,
@@ -124,7 +149,7 @@ export async function countRecentPublicScansOnD1(
   const row = await db
     .prepare(
       `SELECT COUNT(*) AS n FROM readiness_scans
-       WHERE domain = ? AND source = 'public' AND created_at >= ?`,
+       WHERE domain = ? AND source = 'public' AND organization_id IS NULL AND created_at >= ?`,
     )
     .bind(domain, now - WINDOW_MS)
     .first<{ n: number }>();
@@ -274,6 +299,7 @@ export function createD1ScanRepository(db: BoundSql): ScanRepository {
     },
 
     async markComplete(scanId, scoreTotal, scoreBreakdown) {
+      const finished = Date.now();
       await db
         .prepare(
           `UPDATE readiness_scans
@@ -281,19 +307,27 @@ export function createD1ScanRepository(db: BoundSql): ScanRepository {
                error_message = NULL, completed_at = ?
            WHERE id = ?`,
         )
-        .bind(scoreTotal, JSON.stringify(scoreBreakdown), Date.now(), scanId)
+        .bind(scoreTotal, JSON.stringify(scoreBreakdown), finished, scanId)
         .run();
+      await noteScan(db, scanId, "complete", finished);
     },
 
     async markFailed(scanId, errorMessage) {
+      const current = await db
+        .prepare("SELECT status FROM readiness_scans WHERE id = ?")
+        .bind(scanId)
+        .first<{ status: string }>();
+      if (current?.status === "complete") return;
+      const finished = Date.now();
       await db
         .prepare(
           `UPDATE readiness_scans
            SET status = 'failed', error_message = ?, completed_at = ?
            WHERE id = ?`,
         )
-        .bind(errorMessage, Date.now(), scanId)
+        .bind(errorMessage, finished, scanId)
         .run();
+      await noteScan(db, scanId, "failed", finished, errorMessage);
     },
 
     async upsertOpsQueue(input) {

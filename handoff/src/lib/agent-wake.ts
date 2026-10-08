@@ -3,7 +3,15 @@ import type { Sql } from "@/db/sql";
 
 const WINDOW_MS = 5 * 60 * 1000;
 
-export type WakeReason = "work" | "context_changed" | "run_check" | "status" | "brief_approved" | "brief_changed";
+export type WakeReason =
+  | "work"
+  | "context_changed"
+  | "run_check"
+  | "status"
+  | "brief_approved"
+  | "brief_changed"
+  | "lead_created"
+  | "scan_ready";
 
 /** What a client's decision on a brief should wake. Notes wake nothing. */
 export function briefWakeReason(input: {
@@ -110,19 +118,19 @@ export async function dueOrganizations(sql: Sql, cron: string): Promise<WakeTarg
   return [];
 }
 
-/** One signed wake. Missing address or secret does nothing so a saved note still stands. */
+/** False when the address or secret is missing, or the agent refuses the wake. A thrown fetch stays thrown so a queue can retry. */
 export async function wakeOrganization(
   env: WakeEnv,
   organizationId: string,
   reason: WakeReason,
   now: number,
   fetchImpl: typeof fetch = fetch,
-): Promise<void> {
+): Promise<boolean> {
   const secret = env.AGENT_WAKE_SECRET ?? "";
   const url = env.AGENT_URL?.replace(/\/$/, "");
-  if (!url || !secret) return;
+  if (!url || !secret) return false;
   const body = JSON.stringify({ organizationId, reason, sentAt: now });
-  await fetchImpl(`${url}/wake`, {
+  const response = await fetchImpl(`${url}/wake`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -130,6 +138,21 @@ export async function wakeOrganization(
     },
     body,
   });
+  return response.ok;
+}
+
+export async function noteWakeMiss(sql: Sql, organizationId: string, now: number): Promise<void> {
+  await sql.run(
+    `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
+     VALUES (?, ?, 'agent.wake_failed', 'system', 'wake', ?, ?, ?)`,
+    [
+      crypto.randomUUID(),
+      organizationId,
+      "The agent did not wake. The agent address or wake secret is missing, or the wake was refused.",
+      JSON.stringify({ status: "failed" }),
+      now,
+    ],
+  );
 }
 
 /** One signed POST per due client. A failed call is an activity and is tried again next cycle. */

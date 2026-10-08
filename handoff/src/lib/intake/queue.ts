@@ -1,5 +1,6 @@
 import { migrate } from "../../db/migrate";
 import { d1Sql, type D1Like } from "../../db/sql";
+import { noteWakeMiss, wakeOrganization, type WakeEnv } from "../agent-wake";
 import { consumeIntake } from "./consume";
 
 export type IntakeQueueMessage = {
@@ -7,6 +8,14 @@ export type IntakeQueueMessage = {
   ack(): void;
   retry(): void;
 };
+
+function scanReady(body: unknown): { organizationId: string } | null {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  if (!("source" in body) || body.source !== "scan_ready") return null;
+  const organizationId = "organizationId" in body ? body.organizationId : null;
+  if (typeof organizationId !== "string" || !organizationId.trim()) return null;
+  return { organizationId: organizationId.trim() };
+}
 
 function messageShape(body: unknown): { source: string; payload: unknown } | null {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
@@ -21,10 +30,23 @@ export async function handleLeadIntakeBatch(
   messages: IntakeQueueMessage[],
   db: D1Like,
   now = Date.now(),
+  env: WakeEnv = {},
+  fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
   const sql = d1Sql(db);
   await migrate(sql);
   for (const message of messages) {
+    const ready = scanReady(message.body);
+    if (ready) {
+      try {
+        const woke = await wakeOrganization(env, ready.organizationId, "scan_ready", now, fetchImpl);
+        if (!woke) await noteWakeMiss(sql, ready.organizationId, now);
+        message.ack();
+      } catch {
+        message.retry();
+      }
+      continue;
+    }
     const shaped = messageShape(message.body);
     if (!shaped) {
       message.ack();
@@ -35,6 +57,10 @@ export async function handleLeadIntakeBatch(
       if (!result.ok) {
         message.ack();
         continue;
+      }
+      if (result.leadOrganizationId) {
+        const woke = await wakeOrganization(env, result.leadOrganizationId, "lead_created", now, fetchImpl);
+        if (!woke) await noteWakeMiss(sql, result.leadOrganizationId, now);
       }
       message.ack();
     } catch {

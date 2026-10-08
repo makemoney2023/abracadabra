@@ -8,6 +8,7 @@ export const READ_HQ_TOOLS = [
   "recent_activity",
   "get_brief",
   "list_work_requests",
+  "list_workflows",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -24,6 +25,7 @@ export const GATED_HQ_TOOLS = new Set([
   "resume_client",
   "decide_work_request",
   "link_slack_channel",
+  "run_workflow",
 ]);
 
 export function hqToolNeedsApproval(name: string): boolean {
@@ -100,6 +102,27 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   link_slack_channel: {
     label: "Link a Slack channel",
     description: "Route a Slack Connect channel to a client. Fields: organizationId, channelId (starts with C or G).",
+  },
+  list_workflows: {
+    label: "List workflows",
+    description: "Workflow groups for a client. Pass projectId to see that project's workflows. Fields: organizationId, projectId.",
+  },
+  create_workflow_group: {
+    label: "Create a workflow group",
+    description: "A group of workflows for one client. Pass projectId to tie the group to that project. Fields: organizationId, name, projectId.",
+  },
+  create_workflow: {
+    label: "Create a workflow",
+    description:
+      "Add a swarm template to a client's group and write its skill steps onto a task the work wake can run. templateId is a pack id such as pack-schema-readiness. Pass projectId to assign it now. Fields: organizationId, groupId, name, templateId, projectId.",
+  },
+  assign_workflow: {
+    label: "Assign a workflow",
+    description: "Assign a workflow to a project of the same client. Fields: id, projectId.",
+  },
+  run_workflow: {
+    label: "Run a workflow",
+    description: "Start a client's workflow on the swarm. body is the instruction for this run. Fields: id, body.",
   },
   decide_work_request: {
     label: "Decide a client request",

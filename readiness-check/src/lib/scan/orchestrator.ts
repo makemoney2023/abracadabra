@@ -8,6 +8,7 @@ import { scoreScan } from "@/lib/scoring/score";
 import type { DetectedPage, SiteFiles } from "@/lib/types";
 import { reclassifyPageType } from "@/lib/scan/reclassify-page-type";
 import { attachFactsToPages } from "./attach-page-facts";
+import { scanPageRecord } from "./page-record";
 import type { ScanRepository } from "./repository";
 import {
   contentByNormalizedUrl,
@@ -99,6 +100,7 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
   if (!scan) {
     throw new Error(`Scan not found: ${scanId}`);
   }
+  if (scan.status === "complete" || scan.status === "failed") return;
 
   await repo.markRunning(scanId);
 
@@ -208,14 +210,7 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
 
     await repo.savePages(
       scanId,
-      pages.map((p) => ({
-        url: p.url,
-        pageType: p.pageType,
-        fetchStatus: p.fetchStatus,
-        hasJsonLd: p.hasJsonLd,
-        schemaTypes: p.schemaTypes,
-        evidence: p.evidence as Record<string, unknown> | undefined,
-      })),
+      pages.map((page) => scanPageRecord(page, markdownByUrl.get(page.url) ?? page.rawContent ?? "")),
     );
 
     await repo.saveFindings(

@@ -1,0 +1,215 @@
+import type { Sql } from "../db/sql";
+import { runLeadSwarm } from "./lead-swarm";
+
+export type WorkflowGroup = {
+  id: string;
+  organizationId: string;
+  projectId: string | null;
+  name: string;
+};
+
+export type ClientWorkflow = {
+  id: string;
+  groupId: string;
+  organizationId: string;
+  projectId: string | null;
+  groupProjectId: string | null;
+  name: string;
+  templateId: string;
+  taskId: string | null;
+  groupName: string;
+};
+
+export type WorkflowTaskPlan = {
+  steps: { path: string; mode: "complete"; status: "todo" }[];
+  edges: { id: string; source: string; target: string }[];
+  current: number;
+};
+
+const SKILL_PATH = /Follow (\.cursor\/skills\/\S+)/;
+
+/** Ordered skill steps from a swarm template. Nodes without a skill path are skipped. */
+export function workflowTaskPlan(template: unknown): WorkflowTaskPlan | null {
+  if (!template || typeof template !== "object") return null;
+  const body = template as { nodes?: unknown; edges?: unknown };
+  const steps = (Array.isArray(body.nodes) ? body.nodes : []).flatMap((node) => {
+    if (!node || typeof node !== "object") return [];
+    const instructions = (node as { instructions?: unknown }).instructions;
+    if (typeof instructions !== "string") return [];
+    const match = SKILL_PATH.exec(instructions);
+    const path = match?.[1]?.replace(/[.,;:]+$/, "");
+    if (!path) return [];
+    return [{ path, mode: "complete" as const, status: "todo" as const }];
+  });
+  if (steps.length === 0) return null;
+  const edges = (Array.isArray(body.edges) ? body.edges : []).flatMap((edge) => {
+    if (!edge || typeof edge !== "object") return [];
+    const row = edge as { id?: unknown; source?: unknown; target?: unknown };
+    if (typeof row.id !== "string" || typeof row.source !== "string" || typeof row.target !== "string") return [];
+    return [{ id: row.id, source: row.source, target: row.target }];
+  });
+  return { steps, edges, current: 0 };
+}
+
+async function projectInOrg(sql: Sql, organizationId: string, projectId: string): Promise<boolean> {
+  const row = await sql.get<{ id: string }>(
+    "SELECT id FROM projects WHERE id = ? AND organization_id = ?",
+    [projectId, organizationId],
+  );
+  return Boolean(row);
+}
+
+/** A named set of workflows for one client, optionally one project. */
+export async function createWorkflowGroup(
+  sql: Sql,
+  input: { organizationId: string; name: string; projectId?: string | null; now: number },
+): Promise<{ ok: true; group: WorkflowGroup } | { ok: false; error: "invalid" | "missing" }> {
+  const name = input.name.trim().slice(0, 120);
+  if (!input.organizationId || !name) return { ok: false, error: "invalid" };
+  const projectId = input.projectId?.trim() || null;
+  if (projectId && !(await projectInOrg(sql, input.organizationId, projectId))) return { ok: false, error: "missing" };
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO workflow_groups (id, organization_id, project_id, name, created_at) VALUES (?, ?, ?, ?, ?)`,
+    [id, input.organizationId, projectId, name, input.now],
+  );
+  return { ok: true, group: { id, organizationId: input.organizationId, projectId, name } };
+}
+
+/** A workflow inside a client's group. It can be assigned to a project now or later. */
+export async function createClientWorkflow(
+  sql: Sql,
+  input: {
+    organizationId: string;
+    groupId: string;
+    name: string;
+    templateId: string;
+    projectId?: string | null;
+    plan?: WorkflowTaskPlan | null;
+    now: number;
+  },
+): Promise<{ ok: true; workflow: { id: string; projectId: string | null; taskId: string | null } } | { ok: false; error: "invalid" | "missing" }> {
+  const name = input.name.trim().slice(0, 120);
+  const templateId = input.templateId.trim().slice(0, 120);
+  if (!name || !templateId) return { ok: false, error: "invalid" };
+  const group = await sql.get<{ id: string; organization_id: string }>(
+    "SELECT id, organization_id FROM workflow_groups WHERE id = ?",
+    [input.groupId],
+  );
+  if (!group || group.organization_id !== input.organizationId) return { ok: false, error: "missing" };
+  const projectId = input.projectId?.trim() || null;
+  if (projectId && !(await projectInOrg(sql, input.organizationId, projectId))) return { ok: false, error: "missing" };
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO client_workflows (
+       id, group_id, organization_id, project_id, name, template_id, last_execution_id, last_status, created_at, updated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)`,
+    [id, input.groupId, input.organizationId, projectId, name, templateId, input.now, input.now],
+  );
+  const taskId = input.plan && input.plan.steps.length > 0 ? crypto.randomUUID() : null;
+  if (taskId && input.plan) {
+    await sql.run(
+      `INSERT INTO tasks (
+         id, project_id, organization_id, title, status, created_at, updated_at, stage, skills_json, round, created_by_kind
+       ) VALUES (?, ?, ?, ?, 'todo', ?, ?, 'describe', ?, 1, 'agent')`,
+      [taskId, projectId, input.organizationId, name, input.now, input.now, JSON.stringify(input.plan)],
+    );
+    await sql.run("UPDATE client_workflows SET task_id = ? WHERE id = ?", [taskId, id]);
+  }
+  return { ok: true, workflow: { id, projectId, taskId } };
+}
+
+/** Point one workflow at a project of the same client. */
+export async function assignClientWorkflow(
+  sql: Sql,
+  input: { workflowId: string; projectId: string; now: number },
+): Promise<{ ok: true; workflowId: string; projectId: string } | { ok: false; error: "missing" }> {
+  const workflow = await sql.get<{ id: string; organization_id: string; task_id: string | null }>(
+    "SELECT id, organization_id, task_id FROM client_workflows WHERE id = ?",
+    [input.workflowId],
+  );
+  if (!workflow || !(await projectInOrg(sql, workflow.organization_id, input.projectId))) return { ok: false, error: "missing" };
+  await sql.run("UPDATE client_workflows SET project_id = ?, updated_at = ? WHERE id = ?", [
+    input.projectId,
+    input.now,
+    workflow.id,
+  ]);
+  if (workflow.task_id) {
+    await sql.run("UPDATE tasks SET project_id = ?, updated_at = ? WHERE id = ?", [input.projectId, input.now, workflow.task_id]);
+  }
+  return { ok: true, workflowId: workflow.id, projectId: input.projectId };
+}
+
+/** Workflows for a client. A project filter includes workflows assigned to it and groups tied to it. */
+export async function listClientWorkflows(sql: Sql, organizationId: string, projectId?: string | null): Promise<ClientWorkflow[]> {
+  const project = projectId?.trim() || null;
+  const rows = await sql.all<{
+    id: string;
+    group_id: string;
+    organization_id: string;
+    project_id: string | null;
+    group_project_id: string | null;
+    name: string;
+    template_id: string;
+    task_id: string | null;
+    group_name: string;
+  }>(
+    `SELECT w.id, w.group_id, w.organization_id, w.project_id, g.project_id AS group_project_id,
+            w.name, w.template_id, w.task_id, g.name AS group_name
+     FROM client_workflows w
+     JOIN workflow_groups g ON g.id = w.group_id
+     WHERE w.organization_id = ?
+       AND (? IS NULL OR w.project_id = ? OR g.project_id = ?)
+     ORDER BY g.name, w.name`,
+    [organizationId, project, project, project],
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    groupId: row.group_id,
+    organizationId: row.organization_id,
+    projectId: row.project_id,
+    groupProjectId: row.group_project_id,
+    name: row.name,
+    templateId: row.template_id,
+    taskId: row.task_id,
+    groupName: row.group_name,
+  }));
+}
+
+/** Start the workflow's template on the swarm for this client. */
+export async function runClientWorkflow(input: {
+  sql: Sql;
+  workflowId: string;
+  brief: string;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+}): Promise<{ ok: true; executionId: string; status: string; output: string } | { ok: false; error: "missing" | "invalid" }> {
+  const brief = input.brief.trim();
+  if (!brief || !input.origin.trim()) return { ok: false, error: "invalid" };
+  const workflow = await input.sql.get<{ id: string; name: string; template_id: string }>(
+    "SELECT id, name, template_id FROM client_workflows WHERE id = ?",
+    [input.workflowId],
+  );
+  if (!workflow) return { ok: false, error: "missing" };
+  try {
+    const result = await runLeadSwarm({
+      origin: input.origin,
+      workflowId: `client-${workflow.id}`,
+      brief,
+      templateId: workflow.template_id,
+      fetchImpl: input.fetchImpl,
+      wait: input.wait,
+    });
+    await input.sql.run("UPDATE client_workflows SET last_execution_id = ?, last_status = ?, updated_at = ? WHERE id = ?", [
+      result.executionId,
+      result.status,
+      input.now,
+      workflow.id,
+    ]);
+    return { ok: true, ...result };
+  } catch {
+    return { ok: false, error: "invalid" };
+  }
+}

@@ -1,5 +1,7 @@
 # abracadabra
 
+The swarm worker lives in [`swarm/`](swarm/). It deploys to the same Cloudflare account as Handoff and HQ. Staff chain skill-pack templates on its canvas. Those packs are generated from related skill folders. A new lead opens on the schema readiness pack, and the scraped pages land in that client's knowledge base. A new lead wakes the HQ agent, and swarm markdown is saved into that client's space.
+
 The skill library lives in [`.cursor/skills/`](.cursor/skills/README.md): 724 procedures copied from [SourceControl](https://github.com/makemoney2023/SourceControl) `skills/`, with the team/org pack (`skills/org`) left out. The Cloudflare agent reads a published copy of that library from R2 bucket `handoff-skills` (`npm run publish:skills` in `handoff/`). See section 12 of the agency dashboard gameplan.
 
 The Showdesk-style product video queue — including LLMCourse and sales enablement — is in [docs/video-pipeline-targets.md](docs/video-pipeline-targets.md).

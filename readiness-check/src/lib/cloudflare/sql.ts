@@ -16,6 +16,7 @@ export type JobQueue = {
 export type CheckBindings = {
   DB?: BoundSql;
   SCAN_JOBS?: JobQueue;
+  LEAD_INTAKE?: JobQueue;
   CLOUDFLARE_ACCOUNT_ID?: string;
   CLOUDFLARE_API_TOKEN?: string;
   WORKER_SELF_REFERENCE?: { fetch(input: string, init?: RequestInit): Promise<Response> };

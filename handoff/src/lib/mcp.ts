@@ -34,6 +34,9 @@ const WORK_TOOLS = new Set([
   "add_deliverable_item",
   "post_status_update",
   "add_note",
+  "save_space_file",
+  "store_scan_context",
+  "record_swarm_run",
   "ask_staff",
   "list_repos",
 ]);
@@ -92,6 +95,51 @@ const AGENT_TOOLS = [
       type: "object",
       properties: { organizationId: organizationField, deliverableId: { type: "string" } },
       required: ["organizationId", "deliverableId"],
+    },
+  },
+  {
+    name: "store_scan_context",
+    description: "Store the latest schema scan's scraped pages as knowledge context in the client space.",
+    inputSchema: {
+      type: "object",
+      properties: { organizationId: organizationField, requestId: { type: "string" } },
+      required: ["organizationId", "requestId"],
+    },
+  },
+  {
+    name: "record_swarm_run",
+    description: "Record one swarm run on the client timeline: pack, status, and saved paths.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        organizationId: organizationField,
+        packId: { type: "string" },
+        packName: { type: "string" },
+        status: { type: "string" },
+        executionId: { type: "string" },
+        body: { type: "string" },
+        artifacts: { type: "array", items: { type: "string" } },
+        requestId: { type: "string" },
+        activityKey: { type: "string", description: "Stable activity key. A later call with a new requestId updates this row." },
+        trigger: { type: "string" },
+      },
+      required: ["organizationId", "packName", "status", "requestId"],
+    },
+  },
+  {
+    name: "save_space_file",
+    description: "Save swarm markdown into the client space under agent/<workflow>/<run>/<node>.md.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        organizationId: organizationField,
+        workflow: { type: "string" },
+        run: { type: "string" },
+        node: { type: "string" },
+        body: { type: "string" },
+        requestId: { type: "string" },
+      },
+      required: ["organizationId", "workflow", "run", "node", "body", "requestId"],
     },
   },
 ];

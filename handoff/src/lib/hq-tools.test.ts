@@ -337,6 +337,101 @@ describe("runHqTool", () => {
       steps: [{ path: ".cursor/skills/copywriting/SKILL.md", status: "todo" }],
     });
   });
+
+  it("creates a workflow for a client and waits to run it", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const project = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_project", input: { organizationId, name: "Launch" }, idempotencyKey: "proj" },
+      NOW,
+    );
+    const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+    const group = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_workflow_group", input: { organizationId, name: "Launch swarm", projectId }, idempotencyKey: "group" },
+      NOW,
+    );
+    const groupId = String((valueOf(group) as { id?: string } | undefined)?.id ?? "");
+    const workflow = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_workflow",
+        input: { organizationId, groupId, name: "Schema readiness", templateId: "pack-schema-readiness" },
+        idempotencyKey: "wf",
+      },
+      NOW,
+    );
+    const workflowId = String((valueOf(workflow) as { id?: string } | undefined)?.id ?? "");
+    const listed = await runHqTool(sql, staff, { tool: "list_workflows", input: { organizationId, projectId } }, NOW);
+    expect(valueOf(listed)).toEqual([
+      expect.objectContaining({ id: workflowId, name: "Schema readiness", groupProjectId: projectId }),
+    ]);
+    const held = await runHqTool(
+      sql,
+      staff,
+      { tool: "run_workflow", input: { id: workflowId, body: "Check the site." }, idempotencyKey: "run" },
+      NOW,
+    );
+    expect(held).toMatchObject({ needsApproval: true });
+  });
+
+  it("writes the template skills onto a task when the workflow is saved", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const group = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_workflow_group", input: { organizationId, name: "Launch swarm" }, idempotencyKey: "group-skills" },
+      NOW,
+    );
+    const groupId = String((valueOf(group) as { id?: string } | undefined)?.id ?? "");
+    const saved = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_workflow",
+        input: { organizationId, groupId, name: "Schema readiness", templateId: "pack-schema-readiness" },
+        idempotencyKey: "wf-skills",
+      },
+      NOW,
+      {
+        swarm: {
+          origin: "https://swarm.test",
+          fetchImpl: async (input) => {
+            expect(String(input)).toBe("https://swarm.test/api/template?id=pack-schema-readiness");
+            return new Response(
+              JSON.stringify({
+                id: "pack-schema-readiness",
+                nodes: [
+                  { id: "n1", instructions: "Follow .cursor/skills/schema/SKILL.md. Read the scan." },
+                  { id: "n2", instructions: "Follow .cursor/skills/notes/SKILL.md. File the note." },
+                ],
+                edges: [{ id: "e1", source: "n1", target: "n2" }],
+              }),
+            );
+          },
+        },
+      },
+    );
+    const taskId = String((valueOf(saved) as { taskId?: string } | undefined)?.taskId ?? "");
+    const task = await sql.get<{ skills_json: string; title: string }>(
+      "SELECT skills_json, title FROM tasks WHERE id = ?",
+      [taskId],
+    );
+    expect(task?.title).toBe("Schema readiness");
+    expect(JSON.parse(task?.skills_json ?? "{}")).toEqual({
+      steps: [
+        { path: ".cursor/skills/schema/SKILL.md", mode: "complete", status: "todo" },
+        { path: ".cursor/skills/notes/SKILL.md", mode: "complete", status: "todo" },
+      ],
+      edges: [{ id: "e1", source: "n1", target: "n2" }],
+      current: 0,
+    });
+  });
 });
 
 async function client(sql: Sql): Promise<string> {

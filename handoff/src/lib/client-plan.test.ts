@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chooseSkillsForPiece, parseSkillCatalog, type SkillCard } from "@/lib/client-documents";
-import { advanceClientWork, applyBriefChange, briefChangeActions, piecesFromBrief, planClientWork } from "@/lib/client-plan";
+import { advanceClientWork, applyBriefChange, briefChangeActions, piecesFromBrief, planClientWork, qualifyLead } from "@/lib/client-plan";
 
 const COPY = "community/marketingskills/copywriting/SKILL.md";
 const TEARDOWN = "community/inference-sh/competitor-teardown/SKILL.md";
@@ -64,6 +64,103 @@ function caller(options: { tasks?: unknown[]; brief?: string | null; paused?: bo
   };
   return { call, calls };
 }
+
+describe("lead pickup", () => {
+  it("files a qualify task, a note, and a space file", async () => {
+    const { call, calls } = caller({});
+    const result = await qualifyLead({ call, requestId: "wake-lead" });
+    expect(result).toBe("started");
+    expect(calls.map((entry) => entry.name)).toEqual([
+      "client_context",
+      "store_scan_context",
+      "add_note",
+      "create_task",
+      "save_space_file",
+      "record_swarm_run",
+    ]);
+    expect(calls[3]?.args).toMatchObject({ title: "Qualify Foam Co", stage: "describe", skills: [] });
+    expect(calls[4]?.args).toMatchObject({ workflow: "lead", run: "wake-lead", node: "qualify" });
+    expect(String(calls[4]?.args.body)).toContain("Foam Co");
+  });
+
+  it("stores the swarm copy when a run is provided", async () => {
+    const { call, calls } = caller({});
+    const briefs: string[] = [];
+    await qualifyLead({
+      call,
+      requestId: "wake-lead",
+      runSwarm: async (brief) => {
+        briefs.push(brief);
+        return "Hello Foam Co.";
+      },
+    });
+    expect(briefs[0]).toContain("Lead: Foam Co");
+    expect(String(calls.find((entry) => entry.name === "save_space_file")?.args.body)).toContain("Hello Foam Co.");
+  });
+
+  it("runs the pack that matches the lead", async () => {
+    const templates: string[] = [];
+    const recorded: { packId?: string; status?: string }[] = [];
+    const call = async (name: string, args: { packId?: string; status?: string } = {}) => {
+      if (name === "record_swarm_run") recorded.push(args);
+      if (name === "client_context") {
+        return { organization: { name: "Foam", notes: "Need an seo audit", agentPausedAt: null } };
+      }
+      return { ok: true };
+    };
+    await qualifyLead({
+      call,
+      requestId: "wake-lead",
+      packs: [
+        { id: "pack-sales", name: "Sales", description: "Skills: call prep, account research." },
+        { id: "pack-seo", name: "Seo", description: "Skills: seo audit, search intent." },
+      ],
+      runSwarm: async (_brief, templateId) => {
+        templates.push(templateId);
+        return "Audit done.";
+      },
+    });
+    expect(templates).toEqual(["pack-seo"]);
+    expect(recorded[0]).toMatchObject({ packId: "pack-seo", status: "completed" });
+  });
+
+  it("asks for another look when the swarm is still running", async () => {
+    const seen: { executionId?: string; activityKey?: string; templateId?: string }[] = [];
+    const call = async (name: string) => {
+      if (name === "client_context") {
+        return { organization: { name: "Foam", notes: "Need an seo audit", agentPausedAt: null } };
+      }
+      return { ok: true, stored: [] };
+    };
+    await qualifyLead({
+      call,
+      requestId: "wake-lead",
+      packs: [{ id: "pack-seo", name: "Seo", description: "Skills: seo audit, search intent." }],
+      runSwarm: async (brief) => {
+        expect(brief.includes("Use the schema scan")).toBe(false);
+        return { output: "Still writing.", status: "running", executionId: "ex-9" };
+      },
+      onStillRunning: async (run) => {
+        seen.push(run);
+      },
+    });
+    expect(seen).toEqual([
+      {
+        executionId: "ex-9",
+        templateId: "pack-seo",
+        activityKey: "wake-lead:swarm-run",
+        packName: "Seo",
+        trigger: "lead_created",
+      },
+    ]);
+  });
+
+  it("stops when the agent is paused", async () => {
+    const { call, calls } = caller({ paused: true });
+    expect(await qualifyLead({ call, requestId: "wake-lead" })).toBe("skipped");
+    expect(calls.map((entry) => entry.name)).toEqual(["client_context"]);
+  });
+});
 
 describe("brief planning", () => {
   it("reads the skill paths already written on the brief", () => {

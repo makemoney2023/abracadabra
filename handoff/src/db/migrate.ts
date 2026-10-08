@@ -12,6 +12,8 @@ const STEPS = [
   { file: "0009_conversations.sql", table: "work_requests" },
   { file: "0010_schema_checks.sql", table: "schema_checks" },
   { file: "0011_schema_check_scan.sql", column: { table: "schema_check_sites", name: "scan_id" } },
+  { file: "0012_client_workflows.sql", table: "workflow_groups" },
+  { file: "0013_workflow_task.sql", column: { table: "client_workflows", name: "task_id" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];

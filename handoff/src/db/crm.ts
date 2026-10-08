@@ -1,5 +1,6 @@
 import type { Caller } from "@/lib/authz";
 import { LIMITS } from "@/lib/policy/limits";
+import { activityLinks, runStatus } from "@/lib/agent-activity";
 import type { Sql } from "./sql";
 
 export type OrgKind = "lead" | "client" | "past_client" | "partner";
@@ -9,6 +10,8 @@ export type Organization = {
   name: string;
   domain: string | null;
   website: string | null;
+  industry: string | null;
+  notes: string | null;
   kind: OrgKind;
   created_at: number;
   updated_at: number;
@@ -116,6 +119,17 @@ export type TodayBoard = {
     organizationId: string | null;
     organizationName: string;
   }[];
+  agentActivity: {
+    id: string;
+    kind: string;
+    body: string | null;
+    status: string;
+    createdAt: number;
+    organizationId: string | null;
+    organizationName: string;
+    reportUrl: string | null;
+    artifacts: string[];
+  }[];
   workRequests: { id: string; organizationId: string; organizationName: string; body: string; channel: string }[];
 };
 
@@ -151,7 +165,7 @@ export const CRM_ERRORS: Record<CrmError, string> = {
 
 const KINDS = new Set<OrgKind>(["lead", "client", "past_client", "partner"]);
 
-const ORG_COLUMNS = "id, name, domain, website, kind, created_at, updated_at";
+const ORG_COLUMNS = "id, name, domain, website, industry, notes, kind, created_at, updated_at";
 
 function staffUserId(caller: Caller): string | null {
   if (!caller.staff || !caller.userId) return null;
@@ -353,6 +367,40 @@ export async function createOrganization(
   const row = await organizationById(sql, caller, id);
   if (!row) return { ok: false, error: "missing" };
   return { ok: true, value: row };
+}
+
+/** A lead typed in by staff: the company, a new deal, and a contact when an email is given. */
+export async function createManualLead(
+  sql: Sql,
+  caller: Caller,
+  input: { name: string; website?: string; contactName?: string; email?: string },
+  now: number,
+): Promise<CrmResult<{ organizationId: string; dealId: string }>> {
+  const created = await createOrganization(sql, caller, { name: input.name, website: input.website, kind: "lead" }, now);
+  if (!created.ok) return created;
+  const dealId = crypto.randomUUID();
+  const title = `${created.value.name}`.slice(0, 200);
+  await sql.run(
+    `INSERT INTO deals (id, organization_id, title, stage, source, created_at, updated_at)
+     VALUES (?, ?, ?, 'new', 'manual', ?, ?)`,
+    [dealId, created.value.id, title, now, now],
+  );
+  const email = (input.email ?? "").trim();
+  if (email) {
+    const contact = await createContact(
+      sql,
+      caller,
+      {
+        organizationId: created.value.id,
+        name: (input.contactName ?? "").trim() || created.value.name,
+        email,
+        primary: true,
+      },
+      now,
+    );
+    if (!contact.ok && contact.error !== "invalid") return { ok: false, error: contact.error };
+  }
+  return { ok: true, value: { organizationId: created.value.id, dealId } };
 }
 
 export async function unlinkedWorkspaces(sql: Sql, caller: Caller): Promise<WorkspaceLink[]> {
@@ -994,6 +1042,7 @@ const EMPTY_TODAY: TodayBoard = {
   waitingSpaces: [],
   invoices: [],
   agentNotes: [],
+  agentActivity: [],
   workRequests: [],
 };
 
@@ -1001,7 +1050,7 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
   const actorId = staffUserId(caller);
   if (!actorId) return EMPTY_TODAY;
   const weekEnd = now + WEEK_MS;
-  const [newLeads, calls, tasks, stalledDeals, waitingSpaces, invoices, workRequests, agentNotes] = await Promise.all([
+  const [newLeads, calls, tasks, stalledDeals, waitingSpaces, invoices, workRequests, agentNotes, agentActivity] = await Promise.all([
     sql.all<{ id: string; title: string; organization_id: string; organization_name: string }>(
       `SELECT d.id, d.title, d.organization_id, o.name AS organization_name
        FROM deals d
@@ -1087,8 +1136,25 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       `SELECT a.id, a.body, a.created_at, a.organization_id, o.name AS organization_name
        FROM activities a
        LEFT JOIN organizations o ON o.id = a.organization_id
-       WHERE a.actor_kind = 'agent' AND a.created_at >= ?
+       WHERE a.actor_kind = 'agent' AND a.kind NOT IN ('agent.swarm_run') AND a.created_at >= ?
        ORDER BY a.created_at DESC`,
+      [now - WEEK_MS],
+    ),
+    sql.all<{
+      id: string;
+      kind: string;
+      body: string | null;
+      data_json: string | null;
+      created_at: number;
+      organization_id: string | null;
+      organization_name: string | null;
+    }>(
+      `SELECT a.id, a.kind, a.body, a.data_json, a.created_at, a.organization_id, o.name AS organization_name
+       FROM activities a
+       LEFT JOIN organizations o ON o.id = a.organization_id
+       WHERE a.kind IN ('schema.scan', 'agent.swarm_run', 'agent.wake_failed') AND a.created_at >= ?
+       ORDER BY a.created_at DESC
+       LIMIT 40`,
       [now - WEEK_MS],
     ),
   ]);
@@ -1133,6 +1199,20 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       organizationId: row.organization_id,
       organizationName: row.organization_name ?? "",
     })),
+    agentActivity: agentActivity.map((row) => {
+      const links = activityLinks(row.data_json);
+      return {
+        id: row.id,
+        kind: row.kind,
+        body: row.body,
+        status: runStatus(row.data_json),
+        createdAt: row.created_at,
+        organizationId: row.organization_id,
+        organizationName: row.organization_name ?? "",
+        reportUrl: links.reportUrl,
+        artifacts: links.artifacts,
+      };
+    }),
     workRequests: workRequests.map((row) => ({
       id: row.id,
       organizationId: row.organization_id,

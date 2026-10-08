@@ -26,7 +26,9 @@
     "CF_ACCESS_CLIENT_ID": "",
     "CF_ACCESS_CLIENT_SECRET": "",
     "HQ_ORIGIN": "https://hq.abra-ca-dabra.app",
-    "MAGIC_EMAIL_FROM": "magic@abra-ca-dabra.app"
+    "MAGIC_EMAIL_FROM": "magic@abra-ca-dabra.app",
+    "SWARM_ORIGIN": "https://agent-swarm-orchestrator.abracadabra-ai.workers.dev",
+    "HANDOFF_MCP_URL": "https://hq.abra-ca-dabra.app/api/mcp"
   },
   "env": {
     "test": {

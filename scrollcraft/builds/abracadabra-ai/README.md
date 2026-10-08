@@ -14,6 +14,11 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Work rail — 2026-10-07: Getting started
+
+- The homepage horizontal pan (`#iii`, “Working systems, already in the world”) now includes one Super Funnel player: Getting started, 66 seconds, `assets/films/superfunnel-getting-started.mp4`, poster `assets/superfunnel-getting-started.webp`.
+- The card links to `films.html`. The other seven tours stay on that page. `walkthrough.html` is unchanged.
+
 ## Films archive — 2026-10-07: Super Funnel tours
 
 - Eight finished Super Funnel associate walkthroughs are plain `<video controls>` players on `films.html`, with WebP title-card posters and measured durations in JSON-LD and `sitemap.xml`.

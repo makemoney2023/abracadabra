@@ -45,6 +45,7 @@ CREATE TABLE activities (
   actor_kind TEXT NOT NULL,
   actor_id TEXT,
   body TEXT,
+  data_json TEXT,
   created_at INTEGER NOT NULL
 );
 CREATE TABLE assessments (

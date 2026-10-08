@@ -4,6 +4,7 @@ import type { CheckBindings } from "@/lib/cloudflare/sql";
 import { dispatchJob } from "@/lib/jobs/dispatch";
 import { createD1ProspectStore } from "@/lib/ops/d1-prospect-store";
 import { runSchemaCheck } from "@/lib/ops/schema-check";
+import { notifyLeadScan } from "@/lib/jobs/scan-ready";
 import { createD1ScanRepository } from "@/lib/scan/d1-store";
 import { runScan } from "@/lib/scan/orchestrator";
 
@@ -25,6 +26,7 @@ export async function runCloudflareJob(body: unknown, env: CheckBindings): Promi
         site: createAiSearchScanClient({ env: searchEnv(env) }),
         repo: createD1ScanRepository(db),
       });
+      await notifyLeadScan(db, env.LEAD_INTAKE, scanId);
     },
     async runProspect(job) {
       await runSchemaCheck(

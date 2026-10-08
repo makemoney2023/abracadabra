@@ -92,7 +92,7 @@
         "height": 1000
       },
       "datePublished": "2026-09-11",
-      "dateModified": "2026-09-23",
+      "dateModified": "2026-10-07",
       "inLanguage": "en",
       "hasPart": { "@id": "https://abra-ca-dabra.app/#work" },
       "mainEntity": { "@id": "https://abra-ca-dabra.app/#faq" }
@@ -101,9 +101,9 @@
       "@type": "ItemList",
       "@id": "https://abra-ca-dabra.app/#work",
       "name": "Working systems, already in the world",
-      "description": "Four shipped systems that can be named and linked today. A sample of what shipped, not a ceiling on what the studio will take on.",
+      "description": "Five shipped systems that can be named today. Super Funnel is linked through its Getting started film. A sample of what shipped, not a ceiling on what the studio will take on.",
       "itemListOrder": "https://schema.org/ItemListOrderAscending",
-      "numberOfItems": 4,
+      "numberOfItems": 5,
       "itemListElement": [
         {
           "@type": "ListItem",
@@ -156,6 +156,20 @@
             "creator": { "@id": "https://abra-ca-dabra.app/#org" },
             "image": "https://abra-ca-dabra.app/assets/cda-home.webp"
           }
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "item": {
+            "@type": "SoftwareApplication",
+            "name": "Super Funnel",
+            "url": "https://abra-ca-dabra.app/films.html",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "description": "One associate app. The cut on this page is Getting started: home dashboard, setup, pipeline, and nav, 66 seconds.",
+            "creator": { "@id": "https://abra-ca-dabra.app/#org" },
+            "image": "https://abra-ca-dabra.app/assets/superfunnel-getting-started.webp"
+          }
         }
       ]
     },
@@ -168,7 +182,7 @@
           "name": "What does Abracadabra AI build?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Bespoke software built around how a business already runs: the steps, the exceptions, and the words the team already uses. AI takes a task, people keep the relationship, and the delivery includes the live system, a film, and the script the team runs. Shipped examples include a live-event operations app (Showdesk), an AI-search visibility scorer (Schema), a self-paced LLM course (LLM Leverage), and a warehouse appliance store (Canadian Discount Appliances)."
+            "text": "Bespoke software built around how a business already runs: the steps, the exceptions, and the words the team already uses. AI takes a task, people keep the relationship, and the delivery includes the live system, a film, and the script the team runs. Shipped examples include a live-event operations app (Showdesk), an AI-search visibility scorer (Schema), a self-paced LLM course (LLM Leverage), a warehouse appliance store (Canadian Discount Appliances), and an associate app shown here as the Getting started film (Super Funnel)."
           }
         },
         {
@@ -176,7 +190,7 @@
           "name": "Do you only build software?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. Marketing, the application, the model, the customer record, the store, and the work that gets you found ship with the product, fitted to how you already work. Public examples on this page include Showdesk, Schema, LLM Leverage, Canadian Discount Appliances, and PIRX. Other work is named when the client allows it."
+            "text": "No. Marketing, the application, the model, the customer record, the store, and the work that gets you found ship with the product, fitted to how you already work. Public examples on this page include Showdesk, Schema, LLM Leverage, Canadian Discount Appliances, Super Funnel, and PIRX. Other work is named when the client allows it."
           }
         },
         {
@@ -971,7 +985,7 @@
   .rail__lead h2 { margin: 0; }
   .item { width: min(42vw, 34rem); flex: none; }
   .item figure { margin: 0 0 var(--sc-4); }
-  .item img { display: block; width: 100%; height: 54vh; object-fit: cover; object-position: top; border: 1px solid var(--sc-hairline); }
+  .item img, .item video { display: block; width: 100%; height: 54vh; object-fit: cover; object-position: top; border: 1px solid var(--sc-hairline); background: #0B0A08; }
   .item h2 { margin: var(--sc-2) 0 var(--sc-3); }
   .item .sc-body + .sc-body { margin-top: var(--sc-3); }
   .item--range { align-self: center; padding: var(--sc-6) var(--sc-6); border: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-surface) 70%, transparent); }
@@ -1158,7 +1172,7 @@
     .situation, .enable, .faq { grid-template-columns: 1fr; }
     .proofbar { grid-template-columns: 1fr 1fr; }
     .spread { grid-template-columns: 1fr; min-height: 0; }
-    .spread img, .item img { height: 42vh; }
+    .spread img, .item img, .item video { height: 42vh; }
     #iii { height: auto !important; }
     #iii > .sc-stage {
       position: relative; top: auto; height: auto; overflow: visible;
@@ -1171,7 +1185,7 @@
     .rail__lead { width: auto; }
     .item { width: auto; }
     .item figure { margin-bottom: var(--sc-4); }
-    .item img { height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+    .item img, .item video { height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
     .item--range { padding: var(--sc-5); }
     .note { width: auto; padding-bottom: 0; }
     .benefits { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-4); }
@@ -1680,6 +1694,15 @@
           <p class="sc-body"><strong>Answer the question that makes the sale.</strong> The appliance warehouse leads with condition, warranty, and whether it fits the door, then a delivery you can book. Phone as a close.</p>
           <p class="sc-body"><a href="https://cdastore.vercel.app/">cdastore.vercel.app</a></p>
         </article>
+        <article class="item" id="superfunnel">
+          <figure>
+            <video controls playsinline preload="none" poster="assets/superfunnel-getting-started.webp" src="assets/films/superfunnel-getting-started.mp4" width="1920" height="1080"></video>
+          </figure>
+          <p class="sc-label">Super Funnel</p>
+          <h2 class="sc-display sc-display--md">Getting started</h2>
+          <p class="sc-body"><strong>One associate app, from the home dashboard.</strong> Setup, pipeline, and nav, in 66 seconds.</p>
+          <p class="sc-body"><a href="films.html">The rest of the tour</a></p>
+        </article>
         <aside class="item item--range" aria-label="Range">
           <p class="sc-lede">The same studio has shipped clinical-style assessments (non-diagnostic, built to educate and route), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, an AI-visibility program that took a brand-new domain to real search traffic, and sites for practices that live on the next appointment.</p>
           <p class="sc-body">We name that work when the client says we can. <strong>This page is a sample of what shipped, not a ceiling on what we'll take on.</strong></p>
@@ -1779,11 +1802,11 @@
         <div class="faq__list">
           <details>
             <summary>What does Abracadabra AI build?</summary>
-            <p class="sc-body">Bespoke software built around how a business already runs: the steps, the exceptions, and the words the team already uses. AI takes a task, people keep the relationship, and the delivery includes the live system, a film, and the script the team runs. Shipped examples include a live-event operations app (Showdesk), an AI-search visibility scorer (Schema), a self-paced LLM course (LLM Leverage), and a warehouse appliance store (Canadian Discount Appliances).</p>
+            <p class="sc-body">Bespoke software built around how a business already runs: the steps, the exceptions, and the words the team already uses. AI takes a task, people keep the relationship, and the delivery includes the live system, a film, and the script the team runs. Shipped examples include a live-event operations app (Showdesk), an AI-search visibility scorer (Schema), a self-paced LLM course (LLM Leverage), a warehouse appliance store (Canadian Discount Appliances), and an associate app shown here as the Getting started film (Super Funnel).</p>
           </details>
           <details>
             <summary>Do you only build software?</summary>
-            <p class="sc-body">No. Marketing, the application, the model, the customer record, the store, and the work that gets you found ship with the product, fitted to how you already work. Public examples on this page include Showdesk, Schema, LLM Leverage, Canadian Discount Appliances, and PIRX. Other work is named when the client allows it.</p>
+            <p class="sc-body">No. Marketing, the application, the model, the customer record, the store, and the work that gets you found ship with the product, fitted to how you already work. Public examples on this page include Showdesk, Schema, LLM Leverage, Canadian Discount Appliances, Super Funnel, and PIRX. Other work is named when the client allows it.</p>
           </details>
           <details>
             <summary>What does the name Abracadabra mean?</summary>

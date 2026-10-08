@@ -1,4 +1,5 @@
 import { AgentWorkError, saveStaffBrief } from "@/db/agent-work";
+import { recordAgentRun } from "@/lib/agent-activity";
 import { actionFromLine, applyChannelPlan, dueMillis } from "@/lib/channel-plan";
 import { linkSlackChannel, listWorkRequests, setWorkRequestState, workRequestById } from "@/db/conversations";
 import {
@@ -26,6 +27,15 @@ import { getBrief } from "@/lib/agent-context";
 import { wakeOrganization, type WakeReason } from "@/lib/agent-wake";
 import type { Caller } from "@/lib/authz";
 import { appendBriefWork } from "@/lib/client-plan";
+import {
+  assignClientWorkflow,
+  createClientWorkflow,
+  createWorkflowGroup,
+  listClientWorkflows,
+  runClientWorkflow,
+  workflowTaskPlan,
+  type WorkflowTaskPlan,
+} from "@/lib/client-workflows";
 import { hqToolNeedsApproval } from "@/lib/hq-tool-names";
 import { createInvite } from "@/lib/store/invites";
 import type { OutboundMail } from "@/lib/session";
@@ -43,8 +53,9 @@ type MailGate = {
 };
 
 type ToolOptions = {
-  wake?: (organizationId: string, reason: WakeReason) => Promise<void>;
+  wake?: (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
   mail?: MailGate;
+  swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void> };
 };
 
 const READS = new Set([
@@ -57,6 +68,7 @@ const READS = new Set([
   "recent_activity",
   "get_brief",
   "list_work_requests",
+  "list_workflows",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {
@@ -106,7 +118,7 @@ async function logStaff(
   );
 }
 
-type Wake = (organizationId: string, reason: WakeReason) => Promise<void>;
+type Wake = (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
 
 /**
  * Saves a brief version with the new piece. When staff own brief approval, this approval card approves the
@@ -202,7 +214,7 @@ async function perform(
   tool: string,
   input: Record<string, unknown>,
   now: number,
-  options: ToolOptions & { wake: (organizationId: string, reason: WakeReason) => Promise<void> },
+  options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const organizationId = text(input, "organizationId");
   if (tool === "search_clients") {
@@ -374,7 +386,153 @@ async function perform(
   if (tool === "resume_client") return resumeClient(sql, caller, organizationId, now, options.wake);
   if (tool === "decide_work_request") return decideWork(sql, caller, input, now, options.wake);
   if (tool === "link_slack_channel") return linkSlack(sql, caller, input, now);
+  if (tool === "list_workflows") return listWorkflows(sql, caller, input);
+  if (tool === "create_workflow_group") return makeWorkflowGroup(sql, caller, input, now);
+  if (tool === "create_workflow") return makeWorkflow(sql, caller, input, now, options);
+  if (tool === "assign_workflow") return assignWorkflow(sql, caller, input, now);
+  if (tool === "run_workflow") return runWorkflow(sql, caller, input, now, options.swarm);
   return { ok: false, error: "unknown" };
+}
+
+async function listWorkflows(sql: Sql, caller: Caller, input: Record<string, unknown>): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+  return { ok: true, value: await listClientWorkflows(sql, organizationId, text(input, "projectId") || null) };
+}
+
+async function makeWorkflowGroup(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
+  const created = await createWorkflowGroup(sql, {
+    organizationId,
+    name: text(input, "name"),
+    projectId: text(input, "projectId") || null,
+    now,
+  });
+  if (!created.ok) return { ok: false, error: created.error };
+  await logStaff(
+    sql,
+    { organizationId, userId: caller.userId, kind: "staff.workflow_group", body: created.group.name, data: { groupId: created.group.id, projectId: created.group.projectId } },
+    now,
+  );
+  return { ok: true, value: created.group };
+}
+
+async function workflowPlan(templateId: string, options: ToolOptions): Promise<WorkflowTaskPlan | null> {
+  const origin = options.swarm?.origin || process.env.SWARM_ORIGIN || "";
+  if (!origin || !templateId) return null;
+  const load = options.swarm?.fetchImpl ?? fetch;
+  try {
+    const response = await load(`${origin.replace(/\/$/, "")}/api/template?id=${encodeURIComponent(templateId)}`);
+    if (!response.ok) return null;
+    return workflowTaskPlan(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+async function makeWorkflow(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
+  const templateId = text(input, "templateId");
+  const created = await createClientWorkflow(sql, {
+    organizationId,
+    groupId: text(input, "groupId"),
+    name: text(input, "name"),
+    templateId,
+    projectId: text(input, "projectId") || null,
+    plan: await workflowPlan(templateId, options),
+    now,
+  });
+  if (!created.ok) return { ok: false, error: created.error };
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId,
+      kind: "staff.workflow",
+      body: text(input, "name"),
+      data: { workflowId: created.workflow.id, projectId: created.workflow.projectId, templateId: text(input, "templateId") },
+    },
+    now,
+  );
+  return { ok: true, value: created.workflow };
+}
+
+async function assignWorkflow(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
+  const workflowId = text(input, "id");
+  const projectId = text(input, "projectId");
+  const row = await sql.get<{ organization_id: string; name: string }>(
+    "SELECT organization_id, name FROM client_workflows WHERE id = ?",
+    [workflowId],
+  );
+  if (!row || !(await seenOrg(sql, caller, row.organization_id)) || !caller.userId) return { ok: false, error: "missing" };
+  const assigned = await assignClientWorkflow(sql, { workflowId, projectId, now });
+  if (!assigned.ok) return { ok: false, error: "missing" };
+  await logStaff(
+    sql,
+    { organizationId: row.organization_id, userId: caller.userId, kind: "staff.workflow_assigned", body: row.name, data: { workflowId, projectId } },
+    now,
+  );
+  return { ok: true, value: assigned };
+}
+
+async function runWorkflow(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  swarm: ToolOptions["swarm"],
+): Promise<HqToolResult> {
+  const workflowId = text(input, "id");
+  const row = await sql.get<{ organization_id: string; name: string; template_id: string }>(
+    "SELECT organization_id, name, template_id FROM client_workflows WHERE id = ?",
+    [workflowId],
+  );
+  if (!row || !(await seenOrg(sql, caller, row.organization_id)) || !caller.userId) return { ok: false, error: "missing" };
+  const origin = swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
+  const started = await runClientWorkflow({
+    sql,
+    workflowId,
+    brief: text(input, "body"),
+    origin,
+    now,
+    fetchImpl: swarm?.fetchImpl,
+    wait: swarm?.wait,
+  });
+  await recordAgentRun(sql, {
+    organizationId: row.organization_id,
+    kind: "agent.swarm_run",
+    body: started.ok ? started.output.slice(0, 500) || row.name : "The swarm did not start.",
+    status: started.ok ? started.status : "failed",
+    data: {
+      trigger: "chat",
+      packId: row.template_id,
+      packName: row.name,
+      executionId: started.ok ? started.executionId : "",
+      workflowId,
+    },
+    now,
+  });
+  if (!started.ok) return { ok: false, error: started.error };
+  await logStaff(
+    sql,
+    {
+      organizationId: row.organization_id,
+      userId: caller.userId,
+      kind: "staff.workflow_run",
+      body: started.output.slice(0, 500) || row.name,
+      data: { workflowId, executionId: started.executionId, status: started.status },
+    },
+    now,
+  );
+  return { ok: true, value: { workflowId, executionId: started.executionId, status: started.status, output: started.output } };
 }
 
 async function setDealStep(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {

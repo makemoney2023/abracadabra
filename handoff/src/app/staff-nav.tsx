@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, CalendarDays, FolderOpen, Inbox, ListTodo, MessageSquare, Radar, Settings } from "lucide-react";
+import { Building2, CalendarDays, FolderOpen, Inbox, ListTodo, MessageSquare, Radar, Settings, Workflow } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -12,17 +12,19 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { navIsActive } from "./staff-nav-match";
+import { STUDIO_NAV } from "./staff-links";
 
-const LINKS = [
-  { href: "/", label: "Today", icon: CalendarDays },
-  { href: "/leads", label: "Leads", icon: Inbox },
-  { href: "/schema", label: "Schema", icon: Radar },
-  { href: "/clients", label: "Clients", icon: Building2 },
-  { href: "/work", label: "Work", icon: ListTodo },
-  { href: "/chat", label: "Chat", icon: MessageSquare },
-  { href: "/spaces", label: "Spaces", icon: FolderOpen },
-  { href: "/settings/github", label: "Settings", icon: Settings },
-] as const;
+const ICONS = {
+  "/": CalendarDays,
+  "/leads": Inbox,
+  "/schema": Radar,
+  "/clients": Building2,
+  "/work": ListTodo,
+  "/chat": MessageSquare,
+  "/swarm": Workflow,
+  "/spaces": FolderOpen,
+  "/settings/github": Settings,
+} as const;
 
 export function StaffNav() {
   const path = usePathname() || "/";
@@ -31,9 +33,9 @@ export function StaffNav() {
       <SidebarGroupLabel>Studio</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu aria-label="Studio">
-          {LINKS.map((link) => {
+          {STUDIO_NAV.map((link) => {
             const active = navIsActive(path, link.href);
-            const Icon = link.icon;
+            const Icon = ICONS[link.href];
             return (
               <SidebarMenuItem key={link.href}>
                 <SidebarMenuButton asChild isActive={active} tooltip={link.label}>

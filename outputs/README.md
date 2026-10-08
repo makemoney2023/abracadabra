@@ -11,7 +11,7 @@ Stored here for the Abracadabra AI Scrollcraft catalog (`scrollcraft/builds/abra
 | Schema | `videos/schema/schema-home-scan.mp4` | Playwright capture of https://schema-two.vercel.app/ |
 | LLMCourse | `videos/llmcourse/llmcourse-home-lesson.mp4`, `llmcourse-workshops.mp4` | Playwright capture of https://llm-leverage-course.vercel.app/ |
 | CDA | `videos/cda/cda-home-path.mp4` | Playwright capture of https://cdastore.vercel.app/ (home scroll, then the "Check my path" click into `/path-check`) |
-| Super Funnel | `videos/superfunnel/*.mp4` (eight cuts, each with a `-poster.jpg` title card) | Copied 2026-10-07 from `Desktop/superfunnelsystem` `public/walkthroughs/`. Associate app tour: getting started, working a lead, quiz lead with samples, quiz lead without samples, follow-ups and activity, My Page / card / funnels, social, team and settings. 1920×1080, 30fps, H.264. Source renders are Git LFS in that repo. Published the same day as plain players on `scrollcraft/builds/abracadabra-ai/films.html`. |
+| Super Funnel | `videos/superfunnel/*.mp4` (eight cuts, each with a `-poster.jpg` title card) | Copied 2026-10-07 from `Desktop/superfunnelsystem` `public/walkthroughs/`. Associate app tour: getting started, working a lead, quiz lead with samples, quiz lead without samples, follow-ups and activity, My Page / card / funnels, social, team and settings. 1920×1080, 30fps, H.264. Source renders are Git LFS in that repo. Published the same day as plain players on `scrollcraft/builds/abracadabra-ai/films.html`. The homepage work rail plays Getting started only. |
 
 Raw WebMs live in `footage/`. Recapture with `npm run capture` from this folder (needs `playwright-core` and Playwright ffmpeg).
 

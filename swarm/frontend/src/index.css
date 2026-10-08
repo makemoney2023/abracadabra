@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  .dark {
+    --background: 60 8% 3%;
+    --foreground: 37 39% 94%;
+    --card: 60 6% 6%;
+    --card-foreground: 37 39% 94%;
+    --popover: 60 6% 6%;
+    --popover-foreground: 37 39% 94%;
+    --primary: 11 100% 57%;
+    --primary-foreground: 36 33% 92%;
+    --secondary: 60 6% 6%;
+    --secondary-foreground: 37 39% 94%;
+    --muted: 60 6% 6%;
+    --muted-foreground: 36 9% 64%;
+    --accent: 14 100% 62%;
+    --accent-foreground: 36 33% 92%;
+    --destructive: 11 100% 57%;
+    --destructive-foreground: 36 33% 92%;
+    --border: 40 5% 16%;
+    --input: 40 5% 16%;
+    --ring: 184 80% 75%;
+    --phosphor: 105 100% 85%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+  h1, h2, .font-heading {
+    font-family: Tektur, "IBM Plex Sans", ui-sans-serif, sans-serif;
+  }
+}
+
+/* React Flow dark-theme tweaks */
+.react-flow__attribution {
+  display: none;
+}
+.react-flow__controls {
+  @apply overflow-hidden rounded-lg border shadow-md;
+  bottom: 20px;
+  left: 20px;
+}
+.react-flow__controls-button {
+  @apply border-b bg-card fill-foreground;
+}
+.react-flow__minimap {
+  @apply rounded-lg border bg-card;
+}
+.react-flow__edge-path {
+  stroke: hsl(var(--muted-foreground));
+  stroke-width: 2;
+}
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge.animated .react-flow__edge-path {
+  stroke: hsl(var(--primary));
+}
+.react-flow__connection-path {
+  stroke: hsl(var(--primary));
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+}
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+}

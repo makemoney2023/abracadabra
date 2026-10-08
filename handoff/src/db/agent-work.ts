@@ -1,5 +1,9 @@
 import type { Sql } from "@/db/sql";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
+import { openObjectStore } from "@/lib/store/objects";
+import { recordAgentRun } from "@/lib/agent-activity";
+import { storeScanContext } from "@/lib/scan-context";
+import { storeWorkflowOutput } from "@/lib/workflow-files";
 
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
 const STAGES = new Set(["describe", "engineer", "build", "run"]);
@@ -41,6 +45,15 @@ type WorkArgs = {
   body?: string;
   question?: string;
   options?: unknown;
+  workflow?: string;
+  run?: string;
+  node?: string;
+  packId?: string;
+  packName?: string;
+  executionId?: string;
+  artifacts?: unknown;
+  activityKey?: string;
+  trigger?: string;
 };
 
 /** One stored result per request. A repeat returns the first result and does not write again. */
@@ -68,9 +81,38 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
   if (tool === "add_deliverable_item") return addAgentItem(sql, actor, args, now);
   if (tool === "post_status_update") return postAgentStatus(sql, actor, args, now);
   if (tool === "add_note") return addAgentNote(sql, actor, args, now);
+  if (tool === "save_space_file") return saveSpaceFile(sql, actor, args, now);
+  if (tool === "store_scan_context") return storeScanContext({ sql, store: openObjectStore(), organizationId: actor.organizationId, now });
+  if (tool === "record_swarm_run") return recordSwarmRun(sql, actor, args, now);
   if (tool === "ask_staff") return askStaff(sql, actor, args, now);
   if (tool === "list_repos") return listAgentRepos(sql, actor);
   throw new AgentWorkError("Unknown tool.");
+}
+
+async function recordSwarmRun(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<{ ok: true }> {
+  const packName = text(args.packName, 120, "pack");
+  const status = text(args.status, 40, "status");
+  const artifacts = Array.isArray(args.artifacts) ? args.artifacts.filter((item) => typeof item === "string") : [];
+  const body = (args.body ?? "").trim().slice(0, 500) || `${packName} ${status}.`;
+  const activityKey = (args.activityKey ?? args.requestId ?? "").trim();
+  await recordAgentRun(sql, {
+    organizationId: actor.organizationId,
+    kind: "agent.swarm_run",
+    body,
+    status,
+    data: {
+      requestId: activityKey,
+      trigger: args.trigger?.trim() || "lead_created",
+      packId: args.packId ?? "",
+      packName,
+      executionId: args.executionId ?? "",
+      artifacts,
+    },
+    now,
+    actorKind: "agent",
+    actorId: "swarm",
+  });
+  return { ok: true };
 }
 
 function text(value: string | undefined, max: number, label: string): string {
@@ -295,9 +337,29 @@ async function createAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   return { taskId: id, stage, status: "todo" };
 }
 
-async function taskInOrg(sql: Sql, organizationId: string, taskId: string): Promise<{ id: string; project_id: string | null }> {
-  const task = await sql.get<{ id: string; project_id: string | null; organization_id: string }>(
-    "SELECT id, project_id, organization_id FROM tasks WHERE id = ?",
+function storedSkillEdges(skillsJson: string | null | undefined): { id: string; source: string; target: string }[] {
+  if (!skillsJson) return [];
+  try {
+    const parsed = JSON.parse(skillsJson) as { edges?: unknown };
+    if (!Array.isArray(parsed.edges)) return [];
+    return parsed.edges.flatMap((edge) => {
+      if (!edge || typeof edge !== "object") return [];
+      const row = edge as { id?: unknown; source?: unknown; target?: unknown };
+      if (typeof row.id !== "string" || typeof row.source !== "string" || typeof row.target !== "string") return [];
+      return [{ id: row.id, source: row.source, target: row.target }];
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function taskInOrg(
+  sql: Sql,
+  organizationId: string,
+  taskId: string,
+): Promise<{ id: string; project_id: string | null; skills_json: string | null }> {
+  const task = await sql.get<{ id: string; project_id: string | null; organization_id: string; skills_json: string | null }>(
+    "SELECT id, project_id, organization_id, skills_json FROM tasks WHERE id = ?",
     [taskId],
   );
   if (!task || task.organization_id !== organizationId) throw new AgentWorkError("That task is not in this organization.");
@@ -323,8 +385,10 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
     params.push(args.stage);
   }
   if (args.skills !== undefined) {
+    const next = skillSteps(args.skills);
+    const edges = storedSkillEdges(task.skills_json);
     sets.push("skills_json = ?");
-    params.push(JSON.stringify(skillSteps(args.skills)));
+    params.push(JSON.stringify(edges.length > 0 ? { ...next, edges } : next));
   }
   if (args.blockedReason !== undefined) {
     sets.push("blocked_reason = ?");
@@ -408,6 +472,20 @@ async function postAgentStatus(sql: Sql, actor: AgentActor, args: WorkArgs, now:
     [id, projectId, actor.organizationId, args.health, args.audience, body, state, actor.keyId, now, state === "published" ? now : null],
   );
   return { id, state };
+}
+
+async function saveSpaceFile(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {
+  const workflow = text(args.workflow, 80, "workflow");
+  const run = text(args.run, 80, "run");
+  const node = text(args.node, 80, "node");
+  const body = text(args.body, 100_000, "body");
+  return storeWorkflowOutput({
+    sql,
+    store: openObjectStore(),
+    organizationId: actor.organizationId,
+    files: [{ workflow, run, node, body }],
+    now,
+  });
 }
 
 async function addAgentNote(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {

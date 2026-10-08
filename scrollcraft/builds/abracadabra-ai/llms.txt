@@ -4,7 +4,7 @@
 
 Site: https://abra-ca-dabra.app/
 Contact: dev@pirx.ca
-Last updated: 2026-09-25
+Last updated: 2026-10-07
 
 ## What we do
 
@@ -38,6 +38,7 @@ pirx.ca launched with no search history and no answer-engine presence. In the tw
 - Schema, scores how visible a site is to answer engines and generates the repair: https://schema-two.vercel.app/
 - LLM Leverage, a self-paced course for better answers from any model, plus a workshop path for a team rollout: https://llm-leverage-course.vercel.app
 - Canadian Discount Appliances, a Kitchener appliance warehouse store that answers condition, warranty, and whether it fits the door, then offers a delivery you can book: https://cdastore.vercel.app/
+- Super Funnel, one associate app. The homepage shows the Getting started film (home dashboard, setup, pipeline, and nav, 66 seconds). The other seven tours are on the films page. There is no separate public app URL: https://abra-ca-dabra.app/films.html
 
 Also shipped, named when the client allows: clinical-style assessments (non-diagnostic; they educate and route, they do not diagnose), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, an AI-visibility program that took a brand-new domain to real search traffic, and sites for practices that live on the next appointment. The list is a sample of what shipped, not a ceiling on what the studio will take on.
 

@@ -51,6 +51,10 @@
   "queues": {
     "producers": [
       {
+        "binding": "SCAN_JOBS",
+        "queue": "scan-jobs"
+      },
+      {
         "binding": "LEAD_INTAKE",
         "queue": "lead-intake"
       },
@@ -65,6 +69,7 @@
     "HANDOFF_HQ_HOST": "hq.abra-ca-dabra.app",
     "HANDOFF_HQ_ORIGIN": "https://hq.abra-ca-dabra.app",
     "HANDOFF_APP_ORIGIN": "https://handoff.abra-ca-dabra.app",
-    "AGENT_URL": "https://agent.abra-ca-dabra.app"
+    "AGENT_URL": "https://agent.abra-ca-dabra.app",
+    "SWARM_ORIGIN": "https://agent-swarm-orchestrator.abracadabra-ai.workers.dev"
   }
 }

@@ -2,8 +2,10 @@ import Link from "next/link";
 import { DEAL_STAGES, DEAL_STAGE_LABEL, listDeals } from "@/db/crm";
 import { requireHqStaffPage } from "@/lib/current";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../staff-shell";
 import { DealBoard } from "./board";
+import { LeadForm } from "./lead-form";
 
 function queryOf(params: { view?: string; stage?: string; source?: string; owner?: string }): string {
   const search = new URLSearchParams();
@@ -43,6 +45,15 @@ export default async function LeadsPage({
       <div className="flex flex-col gap-3">
         <h1 className="font-heading text-4xl leading-tight">Leads</h1>
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Add a lead</CardTitle>
+          <CardDescription>Type the company. A finished schema scan fills the blank details.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <LeadForm />
+        </CardContent>
+      </Card>
       <form method="get" className="flex flex-wrap items-end gap-3">
         {view === "list" ? <input type="hidden" name="view" value="list" /> : null}
         <label className="flex flex-col gap-1 text-sm" htmlFor="filter-stage">

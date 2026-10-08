@@ -25,6 +25,45 @@ describe("D1 readiness scans", () => {
     expect(limit).toEqual({ allowed: false, count: 3 });
   });
 
+  it("does not count a staff scan toward the public daily cap", async () => {
+    const db = memoryCheckDb();
+    const now = Date.parse("2026-10-07T12:00:00Z");
+    for (let i = 0; i < 3; i += 1) {
+      await insertScan(db, {
+        domain: "acme.example",
+        origin: "https://acme.example",
+        source: "public",
+        organizationId: "org-1",
+        now: now + i,
+      });
+    }
+    const limit = await countRecentPublicScansOnD1(db, "acme.example", now + 10);
+    expect(limit).toEqual({ allowed: true, count: 0 });
+  });
+
+  it("leaves a finished scan complete when a later failure is recorded", async () => {
+    const db = memoryCheckDb();
+    const created = await insertScan(db, {
+      domain: "acme.example",
+      origin: "https://acme.example",
+      source: "public",
+      organizationId: "org-1",
+    });
+    const repo = createD1ScanRepository(db);
+    await repo.markComplete(created.id, 28, { structuredData: 10 });
+    await repo.markFailed(created.id, "The follow-up note failed.");
+    const row = await db
+      .prepare("SELECT status FROM readiness_scans WHERE id = ?")
+      .bind(created.id)
+      .first<{ status: string }>();
+    expect(row?.status).toBe("complete");
+    const notes = await db
+      .prepare("SELECT body FROM activities WHERE organization_id = ?")
+      .bind("org-1")
+      .all<{ body: string }>();
+    expect(notes.results.some((note) => note.body.includes("failed"))).toBe(false);
+  });
+
   it("saves pages, findings, and a score that the public token can load", async () => {
     const db = memoryCheckDb();
     const created = await insertScan(db, {
@@ -60,6 +99,24 @@ describe("D1 readiness scans", () => {
     expect(loaded?.scan.score_total).toBe(40);
     expect(loaded?.pages[0]?.evidence).toEqual({ businessName: "Acme" });
     expect(loaded?.findings[0]?.pageUrl).toBe("https://acme.example/");
+  });
+
+  it("records a finished scan on the lead", async () => {
+    const db = memoryCheckDb();
+    const created = await insertScan(db, {
+      domain: "acme.example",
+      origin: "https://acme.example",
+      source: "public",
+      organizationId: "org-1",
+    });
+    const repo = createD1ScanRepository(db);
+    await repo.markComplete(created.id, 64, { structuredData: 10 });
+    const note = await db
+      .prepare("SELECT kind, body FROM activities WHERE organization_id = ?")
+      .bind("org-1")
+      .first<{ kind: string; body: string }>();
+    expect(note?.kind).toBe("schema.scan");
+    expect(note?.body).toContain("Score 64");
   });
 });
 

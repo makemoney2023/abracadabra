@@ -74,12 +74,10 @@ export type SchemaLeadView = {
 const CHECK_ORIGIN = "https://check.abra-ca-dabra.app";
 
 export function presentSchemaLead(report: SchemaScanReport): SchemaLeadView {
+  if (report.status === "failed") return { total: "Schema scan failed.", lines: [], reportUrl: null };
+  if (report.status === "queued") return { total: "Schema scan is queued.", lines: [], reportUrl: null };
   if (report.status !== "complete" || report.scoreTotal == null) {
-    return {
-      total: report.status === "failed" ? "Schema scan failed." : "Schema scan is still running.",
-      lines: [],
-      reportUrl: null,
-    };
+    return { total: "Schema scan is still running.", lines: [], reportUrl: null };
   }
   return {
     total: `Schema score ${report.scoreTotal}/100.`,

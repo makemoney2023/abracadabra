@@ -1,0 +1,1768 @@
+[
+  {
+    "id": "pack-community-academic-research-skills",
+    "name": "Academic Research Skills",
+    "description": "Chain this pack. Skills: academic-paper, academic-paper-reviewer, academic-pipeline, deep-research.",
+    "nodes": [
+      {
+        "id": "pack-community-academic-research-skills-1",
+        "type": "researcher",
+        "name": "academic-paper",
+        "instructions": "Follow .cursor/skills/community/academic-research-skills/academic-paper/SKILL.md. 12-agent academic paper writing pipeline. 11 modes (full/plan/outline/revision/revision-coach/abstract/lit-review/format-convert/citation-check/disclosure/rebuttal-audit). 6 paper types, 5 citation formats, bilingual abstracts, LaTeX/DOCX-via-Pandoc/PDF output. Style Calibration",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-academic-research-skills-2",
+        "type": "critic",
+        "name": "academic-paper-reviewer",
+        "instructions": "Follow .cursor/skills/community/academic-research-skills/academic-paper-reviewer/SKILL.md. Multi-perspective academic paper review with dynamic reviewer personas. Simulates 5 independent reviewers (EIC + 3 peer reviewers + Devil's Advocate) with field-specific expertise. Supports full review, re-review (verification), quick assessment, methodology focus, Socratic guide",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-academic-research-skills-3",
+        "type": "researcher",
+        "name": "academic-pipeline",
+        "instructions": "Follow .cursor/skills/community/academic-research-skills/academic-pipeline/SKILL.md. Orchestrator for the full academic research pipeline: research -> write -> integrity check -> review -> revise -> re-review -> re-revise -> final integrity check -> finalize. Coordinates deep-research, academic-paper, and academic-paper-reviewer into a seamless 10-stage workflow",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-academic-research-skills-4",
+        "type": "researcher",
+        "name": "deep-research",
+        "instructions": "Follow .cursor/skills/community/academic-research-skills/deep-research/SKILL.md. Universal deep research agent team. 13-agent pipeline for rigorous academic research on any topic. 8 modes: full research, quick brief, paper review, lit-review, fact-check, three-way literature scan, Socratic guided research dialogue, and systematic review with optional meta-ana",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-academic-research-skills-e1",
+        "source": "pack-community-academic-research-skills-1",
+        "target": "pack-community-academic-research-skills-2"
+      },
+      {
+        "id": "pack-community-academic-research-skills-e2",
+        "source": "pack-community-academic-research-skills-2",
+        "target": "pack-community-academic-research-skills-3"
+      },
+      {
+        "id": "pack-community-academic-research-skills-e3",
+        "source": "pack-community-academic-research-skills-3",
+        "target": "pack-community-academic-research-skills-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-business-analysis-skills",
+    "name": "Business Analysis Skills",
+    "description": "Chain this pack. Skills: acceptance-criteria-writer, ambiguity-hunter, as-is-process-investigator, assumption-extractor.",
+    "nodes": [
+      {
+        "id": "pack-community-business-analysis-skills-1",
+        "type": "writer",
+        "name": "acceptance-criteria-writer",
+        "instructions": "Follow .cursor/skills/community/business-analysis-skills/skills/acceptance-criteria-writer/SKILL.md.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-business-analysis-skills-2",
+        "type": "writer",
+        "name": "ambiguity-hunter",
+        "instructions": "Follow .cursor/skills/community/business-analysis-skills/skills/ambiguity-hunter/SKILL.md.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-business-analysis-skills-3",
+        "type": "writer",
+        "name": "as-is-process-investigator",
+        "instructions": "Follow .cursor/skills/community/business-analysis-skills/skills/as-is-process-investigator/SKILL.md.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-business-analysis-skills-4",
+        "type": "writer",
+        "name": "assumption-extractor",
+        "instructions": "Follow .cursor/skills/community/business-analysis-skills/skills/assumption-extractor/SKILL.md.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-business-analysis-skills-e1",
+        "source": "pack-community-business-analysis-skills-1",
+        "target": "pack-community-business-analysis-skills-2"
+      },
+      {
+        "id": "pack-community-business-analysis-skills-e2",
+        "source": "pack-community-business-analysis-skills-2",
+        "target": "pack-community-business-analysis-skills-3"
+      },
+      {
+        "id": "pack-community-business-analysis-skills-e3",
+        "source": "pack-community-business-analysis-skills-3",
+        "target": "pack-community-business-analysis-skills-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-advertising-skills-skills-copy-chief",
+    "name": "Copy Chief",
+    "description": "Chain this pack. Skills: headline-matrix, mechanism-builder, objection-crusher, schwartz-awareness-mapper.",
+    "nodes": [
+      {
+        "id": "pack-community-advertising-skills-skills-copy-chief-1",
+        "type": "writer",
+        "name": "headline-matrix",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/copy-chief/headline-matrix/SKILL.md. Generate high-performing headline variations across different angles. Trigger on \"headlines\", \"hooks\", \"ad copy\", \"email subject lines\".",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-copy-chief-2",
+        "type": "writer",
+        "name": "mechanism-builder",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/copy-chief/mechanism-builder/SKILL.md. Use when you need to explain why your solution works and others failed. Trigger on \"unique mechanism\", \"why this works\", \"different angle\", \"positioning\".",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-copy-chief-3",
+        "type": "critic",
+        "name": "objection-crusher",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/copy-chief/objection-crusher/SKILL.md. Identify and neutralize buyer objections. Trigger on \"why wouldn't someone buy\", \"objections\", \"hesitation\", \"conversion issues\".",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-copy-chief-4",
+        "type": "writer",
+        "name": "schwartz-awareness-mapper",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/copy-chief/schwartz-awareness-mapper/SKILL.md. Use when you need to determine audience awareness level and the correct messaging approach. Trigger on \"awareness stage\", \"cold vs warm audience\", \"Schwartz\", \"message to market match\".",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-advertising-skills-skills-copy-chief-e1",
+        "source": "pack-community-advertising-skills-skills-copy-chief-1",
+        "target": "pack-community-advertising-skills-skills-copy-chief-2"
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-copy-chief-e2",
+        "source": "pack-community-advertising-skills-skills-copy-chief-2",
+        "target": "pack-community-advertising-skills-skills-copy-chief-3"
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-copy-chief-e3",
+        "source": "pack-community-advertising-skills-skills-copy-chief-3",
+        "target": "pack-community-advertising-skills-skills-copy-chief-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-11-customer-success",
+    "name": "Customer Success",
+    "description": "Chain this pack. Skills: churn-analysis, customer-research, escalation, knowledge-management.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-1",
+        "type": "critic",
+        "name": "churn-analysis",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/11-customer-success/churn-analysis/SKILL.md. Analyze customer churn patterns, identify at-risk accounts, create retention playbooks, and build early warning systems",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-2",
+        "type": "researcher",
+        "name": "customer-research",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/11-customer-success/customer-research/SKILL.md. Research customer questions by searching across documentation, knowledge bases, and connected sources, then synthesize a confidence-scored answer. Use when a customer asks a question you need to investigate, when building background on a customer situation, or when you need accou",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-3",
+        "type": "publisher",
+        "name": "escalation",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/11-customer-success/escalation/SKILL.md. Structure and package support escalations for engineering, product, or leadership with full context, reproduction steps, and business impact. Use when an issue needs to go beyond support, when writing an escalation brief, or when assessing whether an issue warrants escalation.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-4",
+        "type": "writer",
+        "name": "knowledge-management",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/11-customer-success/knowledge-management/SKILL.md. Write and maintain knowledge base articles from resolved support issues. Use when a ticket has been resolved and the solution should be documented, when updating existing KB articles, or when creating how-to guides, troubleshooting docs, or FAQ entries.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-11-customer-success-1",
+        "target": "pack-community-awesome-claude-corporate-skills-11-customer-success-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-11-customer-success-2",
+        "target": "pack-community-awesome-claude-corporate-skills-11-customer-success-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-11-customer-success-3",
+        "target": "pack-community-awesome-claude-corporate-skills-11-customer-success-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics",
+    "name": "Data Analytics",
+    "description": "Chain this pack. Skills: csv-data-summarizer, data-context-extractor, data-exploration, data-validation.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-1",
+        "type": "summarizer",
+        "name": "csv-data-summarizer",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/10-data-analytics/csv-data-summarizer/SKILL.md. Analyzes CSV files, generates summary stats, and plots quick visualizations using Python and pandas.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-2",
+        "type": "researcher",
+        "name": "data-context-extractor",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/10-data-analytics/data-context-extractor/SKILL.md. Generate or improve a company-specific data analysis skill by extracting tribal knowledge from analysts. BOOTSTRAP MODE - Triggers: \"Create a data context skill\", \"Set up data analysis for our warehouse\", \"Help me create a skill for our database\", \"Generate a data skill for [comp",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-3",
+        "type": "researcher",
+        "name": "data-exploration",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/10-data-analytics/data-exploration/SKILL.md. Profile and explore datasets to understand their shape, quality, and patterns before analysis. Use when encountering a new dataset, assessing data quality, discovering column distributions, identifying nulls and outliers, or deciding which dimensions to analyze.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-4",
+        "type": "critic",
+        "name": "data-validation",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/10-data-analytics/data-validation/SKILL.md. QA an analysis before sharing with stakeholders — methodology checks, accuracy verification, and bias detection. Use when reviewing an analysis for errors, checking for survivorship bias, validating aggregation logic, or preparing documentation for reproducibility.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-10-data-analytics-1",
+        "target": "pack-community-awesome-claude-corporate-skills-10-data-analytics-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-10-data-analytics-2",
+        "target": "pack-community-awesome-claude-corporate-skills-10-data-analytics-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-10-data-analytics-3",
+        "target": "pack-community-awesome-claude-corporate-skills-10-data-analytics-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-13-document-processing",
+    "name": "Document Processing",
+    "description": "Chain this pack. Skills: docx, pdf, pptx, xlsx.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-1",
+        "type": "editor",
+        "name": "docx",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/13-document-processing/docx/SKILL.md. Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page n",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-2",
+        "type": "writer",
+        "name": "pdf",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/13-document-processing/pdf/SKILL.md. Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-3",
+        "type": "editor",
+        "name": "pptx",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/13-document-processing/pptx/SKILL.md. Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-4",
+        "type": "editor",
+        "name": "xlsx",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/13-document-processing/xlsx/SKILL.md. Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); cre",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-13-document-processing-1",
+        "target": "pack-community-awesome-claude-corporate-skills-13-document-processing-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-13-document-processing-2",
+        "target": "pack-community-awesome-claude-corporate-skills-13-document-processing-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-13-document-processing-3",
+        "target": "pack-community-awesome-claude-corporate-skills-13-document-processing-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership",
+    "name": "Executive Leadership",
+    "description": "Chain this pack. Skills: board-meeting-prep, change-management, competitive-analysis, deep-research.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-1",
+        "type": "critic",
+        "name": "board-meeting-prep",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/01-executive-leadership/board-meeting-prep/SKILL.md. ACTIVATE when preparing for board meetings, creating board decks, drafting board materials, developing executive summaries for directors, writing talking points, crafting board agendas, addressing governance matters, preparing for investor questions, or managing board communicati",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-2",
+        "type": "writer",
+        "name": "change-management",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/01-executive-leadership/change-management/SKILL.md. Plan and execute organizational or technical changes. Trigger with \"we're changing\", \"rolling out\", \"migration plan\", \"how do we communicate this change\", \"change management plan\", or when the user is planning a change that affects people, processes, or systems.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-3",
+        "type": "researcher",
+        "name": "competitive-analysis",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/01-executive-leadership/competitive-analysis/SKILL.md. Framework for competitive landscape analysis across any industry. Use when creating competitor analysis, market positioning assessments, investment memos, strategic reviews, or any analysis requiring systematic evaluation of competitive dynamics. Triggers include requests for com",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-4",
+        "type": "researcher",
+        "name": "deep-research",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/01-executive-leadership/deep-research/SKILL.md. Execute autonomous multi-step research using Google Gemini Deep Research Agent. Use for: market analysis, competitive landscaping, literature reviews, technical research, due diligence. Takes 2-10 minutes but produces detailed, cited reports. Costs $2-5 per task.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-1",
+        "target": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-2",
+        "target": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-3",
+        "target": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-plugins-figma",
+    "name": "Figma",
+    "description": "Chain this pack. Skills: figma-code-connect, figma-create-new-file, figma-design-to-code, figma-generate-design.",
+    "nodes": [
+      {
+        "id": "pack-plugins-figma-1",
+        "type": "writer",
+        "name": "figma-code-connect",
+        "instructions": "Follow .cursor/skills/plugins/figma/figma-code-connect/SKILL.md. Creates and maintains Figma Code Connect template files that map Figma components to code snippets. Use when the user mentions Code Connect, Figma component mapping, design-to-code translation, or asks to create/update .figma.ts or .figma.js files.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-figma-2",
+        "type": "critic",
+        "name": "figma-create-new-file",
+        "instructions": "Follow .cursor/skills/plugins/figma/figma-create-new-file/SKILL.md. **MANDATORY prerequisite** — you MUST invoke this skill BEFORE every `create_new_file` tool call. NEVER call `create_new_file` directly without loading this skill first. Trigger whenever the user wants a new blank Figma file — a new design, FigJam, or Slides file — or when you ne",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-figma-3",
+        "type": "critic",
+        "name": "figma-design-to-code",
+        "instructions": "Follow .cursor/skills/plugins/figma/figma-design-to-code/SKILL.md. **MANDATORY prerequisite** — you MUST invoke this skill BEFORE calling the `get_design_context` Figma MCP tool. You MUST trigger this skill whenever the user wants to implement, build, port, or code up a Figma design as code. Example prompts (not exhaustive) are 'implement this F",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-figma-4",
+        "type": "researcher",
+        "name": "figma-generate-design",
+        "instructions": "Follow .cursor/skills/plugins/figma/figma-generate-design/SKILL.md. Use this skill alongside figma-use when the task involves translating an application page, view, or multi-section layout into Figma. Triggers: 'write to Figma', 'create in Figma from code', 'push page to Figma', 'take this app/page and build it in Figma', 'create a screen', 'buil",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-plugins-figma-e1",
+        "source": "pack-plugins-figma-1",
+        "target": "pack-plugins-figma-2"
+      },
+      {
+        "id": "pack-plugins-figma-e2",
+        "source": "pack-plugins-figma-2",
+        "target": "pack-plugins-figma-3"
+      },
+      {
+        "id": "pack-plugins-figma-e3",
+        "source": "pack-plugins-figma-3",
+        "target": "pack-plugins-figma-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting",
+    "name": "Finance Accounting",
+    "description": "Chain this pack. Skills: 3-statements, check-model, datapack-builder, dcf-model.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-1",
+        "type": "writer",
+        "name": "3-statements",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/02-finance-accounting/3-statements/SKILL.md. Complete, populate and fill out 3-statement financial model templates (Income Statement, Balance Sheet, Cash Flow Statement) . Use when asked to fill out model templates, complete existing model frameworks, populate financial models with data, complete a partially filled IS/BS/CF",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-2",
+        "type": "critic",
+        "name": "check-model",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/02-finance-accounting/check-model/SKILL.md.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-3",
+        "type": "publisher",
+        "name": "datapack-builder",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/02-finance-accounting/datapack-builder/SKILL.md. Build professional financial services data packs from various sources including CIMs, offering memorandums, SEC filings, web search, or MCP servers. Extract, normalize, and standardize financial data into investment committee-ready Excel workbooks with consistent structure, prope",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-4",
+        "type": "publisher",
+        "name": "dcf-model",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/02-finance-accounting/dcf-model/SKILL.md. Real DCF (Discounted Cash Flow) model creation for equity valuation. Retrieves financial data from SEC filings and analyst reports, builds comprehensive cash flow projections with proper WACC calculations, performs sensitivity analysis, and outputs professional Excel models with",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-1",
+        "target": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-2",
+        "target": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-3",
+        "target": "pack-community-awesome-claude-corporate-skills-02-finance-accounting-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-advertising-skills-skills-foundations",
+    "name": "Foundations",
+    "description": "Chain this pack. Skills: avatar-extraction, offer-extraction.",
+    "nodes": [
+      {
+        "id": "pack-community-advertising-skills-skills-foundations-1",
+        "type": "writer",
+        "name": "avatar-extraction",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/foundations/avatar-extraction/SKILL.md. Use when you need to define exactly who the buyer is, what they want, what they’ve tried, and what’s driving their decisions. Trigger on \"target audience\", \"ideal client\", \"who is this for\", \"avatar\", \"customer profile\".",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-foundations-2",
+        "type": "writer",
+        "name": "offer-extraction",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/foundations/offer-extraction/SKILL.md. Use when you need to turn a product or service into a compelling, high-converting offer. Trigger on \"offer\", \"why would someone buy\", \"improve conversions\", \"value proposition\".",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-advertising-skills-skills-foundations-e1",
+        "source": "pack-community-advertising-skills-skills-foundations-1",
+        "target": "pack-community-advertising-skills-skills-foundations-2"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-03-human-resources",
+    "name": "Human Resources",
+    "description": "Chain this pack. Skills: compensation-benchmarking, dei-strategy, employee-engagement-survey, employee-handbook-builder.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-03-human-resources-1",
+        "type": "researcher",
+        "name": "compensation-benchmarking",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/03-human-resources/compensation-benchmarking/SKILL.md. TRIGGER THIS when researching market salaries, building compensation strategies, creating salary bands, analyzing pay equity, conducting salary reviews, preparing compensation proposals, or ensuring competitive compensation. Analyzes market data, builds equity-focused salary stru",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-03-human-resources-2",
+        "type": "writer",
+        "name": "dei-strategy",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/03-human-resources/dei-strategy/SKILL.md. TRIGGER THIS when building DEI strategy, creating diversity goals, designing inclusive programs, building equity analyses, developing training, addressing inclusion issues, or tracking DEI metrics. Develops comprehensive diversity, equity, and inclusion strategies aligned to busi",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-03-human-resources-3",
+        "type": "writer",
+        "name": "employee-engagement-survey",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/03-human-resources/employee-engagement-survey/SKILL.md. TRIGGER THIS when designing employee engagement surveys, analyzing employee feedback, creating action plans based on survey results, tracking engagement trends, planning pulse surveys, or improving employee experience. Designs comprehensive surveys that measure engagement, belong",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-03-human-resources-4",
+        "type": "writer",
+        "name": "employee-handbook-builder",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/03-human-resources/employee-handbook-builder/SKILL.md. TRIGGER THIS when creating or updating employee handbooks, documenting HR policies, developing code of conduct, building benefits guides, or creating leave/PTO policies. Creates comprehensive, legally compliant, accessible employee handbooks covering company policies, culture, be",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-03-human-resources-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-03-human-resources-1",
+        "target": "pack-community-awesome-claude-corporate-skills-03-human-resources-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-03-human-resources-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-03-human-resources-2",
+        "target": "pack-community-awesome-claude-corporate-skills-03-human-resources-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-03-human-resources-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-03-human-resources-3",
+        "target": "pack-community-awesome-claude-corporate-skills-03-human-resources-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-inference-sh",
+    "name": "Inference Sh",
+    "description": "Chain this pack. Skills: agent-browser, agent-tools, agent-ui, ai-automation-workflows.",
+    "nodes": [
+      {
+        "id": "pack-community-inference-sh-1",
+        "type": "researcher",
+        "name": "agent-browser",
+        "instructions": "Follow .cursor/skills/community/inference-sh/agent-browser/SKILL.md. Browser automation for AI agents via inference.sh. Navigate web pages, interact with elements using @e refs, take screenshots, record video. Capabilities: web scraping, form filling, clicking, typing, drag-drop, file upload, JavaScript execution. Use for: web automation, data ext",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-inference-sh-2",
+        "type": "writer",
+        "name": "agent-tools",
+        "instructions": "Follow .cursor/skills/community/inference-sh/agent-tools/SKILL.md. Run AI apps via inference.sh CLI - image generation, video creation, LLMs, search, 3D, Twitter automation. Models: FLUX, Veo, Gemini, Grok, Claude, Seedance, OmniHuman, Tavily, Exa, OpenRouter, and many more. Use when running AI apps, generating images/videos, calling LLMs, web s",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-inference-sh-3",
+        "type": "writer",
+        "name": "agent-ui",
+        "instructions": "Follow .cursor/skills/community/inference-sh/agent-ui/SKILL.md. Batteries-included agent component for React/Next.js from ui.inference.sh. One component with runtime, tools, streaming, approvals, and widgets built in. Capabilities: drop-in agent, human-in-the-loop, client-side tools, form filling. Use for: building AI chat interfaces, agentic",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-inference-sh-4",
+        "type": "writer",
+        "name": "ai-automation-workflows",
+        "instructions": "Follow .cursor/skills/community/inference-sh/ai-automation-workflows/SKILL.md. Build automated AI workflows combining multiple models and services. Patterns: batch processing, scheduled tasks, event-driven pipelines, agent loops. Tools: inference.sh CLI, bash scripting, Python SDK, webhook integration. Use for: content automation, data processing, monitorin",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-inference-sh-e1",
+        "source": "pack-community-inference-sh-1",
+        "target": "pack-community-inference-sh-2"
+      },
+      {
+        "id": "pack-community-inference-sh-e2",
+        "source": "pack-community-inference-sh-2",
+        "target": "pack-community-inference-sh-3"
+      },
+      {
+        "id": "pack-community-inference-sh-e3",
+        "source": "pack-community-inference-sh-3",
+        "target": "pack-community-inference-sh-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering",
+    "name": "It Engineering",
+    "description": "Chain this pack. Skills: changelog-generator, code-review, ddd:software-architecture, developer-growth-analysis.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering-1",
+        "type": "writer",
+        "name": "changelog-generator",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/08-it-engineering/changelog-generator/SKILL.md. Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes. Turns hours of manual changelog writing into minutes of automated generation.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering-2",
+        "type": "critic",
+        "name": "code-review",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/08-it-engineering/code-review/SKILL.md. Review code for bugs, security vulnerabilities, performance issues, and maintainability. Trigger with \"review this code\", \"check this PR\", \"look at this diff\", \"is this code safe?\", or when the user shares code and asks for feedback.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering-3",
+        "type": "writer",
+        "name": "ddd:software-architecture",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/08-it-engineering/software-architecture/SKILL.md. Guide for quality focused software architecture. This skill should be used when users want to write code, design architecture, analyze code, in any case that relates to software development.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering-4",
+        "type": "publisher",
+        "name": "developer-growth-analysis",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/08-it-engineering/developer-growth-analysis/SKILL.md. Analyzes your recent Claude Code chat history to identify coding patterns, development gaps, and areas for improvement, curates relevant learning resources from HackerNews, and automatically sends a personalized growth report to your Slack DMs.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-08-it-engineering-1",
+        "target": "pack-community-awesome-claude-corporate-skills-08-it-engineering-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-08-it-engineering-2",
+        "target": "pack-community-awesome-claude-corporate-skills-08-it-engineering-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-08-it-engineering-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-08-it-engineering-3",
+        "target": "pack-community-awesome-claude-corporate-skills-08-it-engineering-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance",
+    "name": "Legal Compliance",
+    "description": "Chain this pack. Skills: canned-responses, compliance, compliance-tracking, contract-review.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-1",
+        "type": "researcher",
+        "name": "canned-responses",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/06-legal-compliance/canned-responses/SKILL.md. Generate templated responses for common legal inquiries and identify when situations require individualized attention. Use when responding to routine legal questions — data subject requests, vendor inquiries, NDA requests, discovery holds — or when managing response templates.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-2",
+        "type": "critic",
+        "name": "compliance",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/06-legal-compliance/compliance/SKILL.md. Navigate privacy regulations (GDPR, CCPA), review DPAs, and handle data subject requests. Use when reviewing data processing agreements, responding to data subject access or deletion requests, assessing cross-border data transfer requirements, or evaluating privacy compliance.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-3",
+        "type": "researcher",
+        "name": "compliance-tracking",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/06-legal-compliance/compliance-tracking/SKILL.md. Track compliance requirements and audit readiness. Trigger with \"compliance\", \"audit prep\", \"SOC 2\", \"ISO 27001\", \"GDPR\", \"regulatory requirement\", or when the user needs help tracking, preparing for, or documenting compliance activities.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-4",
+        "type": "critic",
+        "name": "contract-review",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/06-legal-compliance/contract-review/SKILL.md. Review contracts against your organization's negotiation playbook, flagging deviations and generating redline suggestions. Use when reviewing vendor contracts, customer agreements, or any commercial agreement where you need clause-by-clause analysis against standard positions.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-1",
+        "target": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-2",
+        "target": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-3",
+        "target": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-04-marketing",
+    "name": "Marketing",
+    "description": "Chain this pack. Skills: brand-guidelines, brand-voice-enforcement, campaign-planner, canvas-design.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-04-marketing-1",
+        "type": "writer",
+        "name": "brand-guidelines",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/04-marketing/brand-guidelines/SKILL.md. Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-04-marketing-2",
+        "type": "researcher",
+        "name": "brand-voice-enforcement",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/04-marketing/brand-voice-enforcement/SKILL.md. This skill applies brand guidelines to content creation. It should be used when the user asks to \"write an email\", \"draft a proposal\", \"create a pitch deck\", \"write a LinkedIn post\", \"draft a presentation\", \"write a Slack message\", \"draft sales content\", or any content creation r",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-04-marketing-3",
+        "type": "publisher",
+        "name": "campaign-planner",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/04-marketing/campaign-planner/SKILL.md. Plan comprehensive marketing campaigns from strategy through execution. Develop campaign briefs, select optimal channels, create timelines, allocate budgets, define targeting parameters, design A/B testing strategies, and establish performance measurement frameworks.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-04-marketing-4",
+        "type": "writer",
+        "name": "canvas-design",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/04-marketing/canvas-design/SKILL.md. Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright vi",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-04-marketing-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-04-marketing-1",
+        "target": "pack-community-awesome-claude-corporate-skills-04-marketing-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-04-marketing-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-04-marketing-2",
+        "target": "pack-community-awesome-claude-corporate-skills-04-marketing-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-04-marketing-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-04-marketing-3",
+        "target": "pack-community-awesome-claude-corporate-skills-04-marketing-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-marketingskills",
+    "name": "Marketingskills",
+    "description": "Chain this pack. Skills: ab-testing, ad-creative, ads, ai-seo.",
+    "nodes": [
+      {
+        "id": "pack-community-marketingskills-1",
+        "type": "writer",
+        "name": "ab-testing",
+        "instructions": "Follow .cursor/skills/community/marketingskills/ab-testing/SKILL.md. When the user wants to plan, design, or implement an A/B test or experiment, or build a growth experimentation program. Also use when the user mentions \"A/B test,\" \"split test,\" \"experiment,\" \"test this change,\" \"variant copy,\" \"multivariate test,\" \"hypothesis,\" \"should I test th",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-marketingskills-2",
+        "type": "critic",
+        "name": "ad-creative",
+        "instructions": "Follow .cursor/skills/community/marketingskills/ad-creative/SKILL.md. When the user wants to generate, iterate, or scale ad creative — headlines, descriptions, primary text, or full ad variations — for any paid advertising platform. Also use when the user mentions 'ad copy variations,' 'ad creative,' 'generate headlines,' 'RSA headlines,' 'bulk ad",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-marketingskills-3",
+        "type": "writer",
+        "name": "ads",
+        "instructions": "Follow .cursor/skills/community/marketingskills/ads/SKILL.md. When the user wants help with paid advertising campaigns on Google Ads, Meta (Facebook/Instagram), LinkedIn, Twitter/X, or other ad platforms. Also use when the user mentions 'PPC,' 'paid media,' 'ROAS,' 'CPA,' 'ad campaign,' 'retargeting,' 'audience targeting,' 'Google Ads,' 'Fa",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-marketingskills-4",
+        "type": "researcher",
+        "name": "ai-seo",
+        "instructions": "Follow .cursor/skills/community/marketingskills/ai-seo/SKILL.md. When the user wants to optimize content for AI search engines, get cited by LLMs, or appear in AI-generated answers. Also use when the user mentions 'AI SEO,' 'AEO,' 'GEO,' 'LLMO,' 'answer engine optimization,' 'generative engine optimization,' 'LLM optimization,' 'AI Overviews,'",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-marketingskills-e1",
+        "source": "pack-community-marketingskills-1",
+        "target": "pack-community-marketingskills-2"
+      },
+      {
+        "id": "pack-community-marketingskills-e2",
+        "source": "pack-community-marketingskills-2",
+        "target": "pack-community-marketingskills-3"
+      },
+      {
+        "id": "pack-community-marketingskills-e3",
+        "source": "pack-community-marketingskills-3",
+        "target": "pack-community-marketingskills-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-notfair-seo",
+    "name": "Notfair Seo",
+    "description": "Chain this pack. Skills: broken-link-checker, content-planner, content-writer, geo-optimizer.",
+    "nodes": [
+      {
+        "id": "pack-community-notfair-seo-1",
+        "type": "researcher",
+        "name": "broken-link-checker",
+        "instructions": "Follow .cursor/skills/community/notfair-seo/broken-link-checker/SKILL.md. Scans a website to find broken links (404s, 500s). Crawls internal pages, identifies broken outbound links, and reports source pages for easy fixing. Use this when the user asks to \"check for broken links\", \"find 404s\", \"audit my links\", or \"is my site healthy\".",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-notfair-seo-2",
+        "type": "researcher",
+        "name": "content-planner",
+        "instructions": "Follow .cursor/skills/community/notfair-seo/content-planner/SKILL.md. GSC-driven content calendar. Pulls real Search Console data, finds the highest click-potential opportunities (striking-distance queries at positions 5-20, unanswered query intent, related-keyword expansions), and produces a dated, prioritized content calendar — ready to hand to /",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-notfair-seo-3",
+        "type": "researcher",
+        "name": "content-writer",
+        "instructions": "Follow .cursor/skills/community/notfair-seo/content-writer/SKILL.md. Write SEO-optimized blog posts, landing pages, and content improvements following Google's E-E-A-T and Helpful Content guidelines. Handles new content creation from a keyword or topic, and improving existing pages. Use when asked to \"write a blog post\", \"create a landing page\", \"",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-notfair-seo-4",
+        "type": "researcher",
+        "name": "geo-optimizer",
+        "instructions": "Follow .cursor/skills/community/notfair-seo/geo-optimizer/SKILL.md. Generative Engine Optimization (GEO) — make content rank in AI search answers from ChatGPT, Claude, Perplexity, Gemini, and Google AI Overviews. Audits existing content, rewrites for AI citation, and produces per-engine strategy. Use when asked to \"optimize for AI search\", \"rank",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-notfair-seo-e1",
+        "source": "pack-community-notfair-seo-1",
+        "target": "pack-community-notfair-seo-2"
+      },
+      {
+        "id": "pack-community-notfair-seo-e2",
+        "source": "pack-community-notfair-seo-2",
+        "target": "pack-community-notfair-seo-3"
+      },
+      {
+        "id": "pack-community-notfair-seo-e3",
+        "source": "pack-community-notfair-seo-3",
+        "target": "pack-community-notfair-seo-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-07-operations",
+    "name": "Operations",
+    "description": "Chain this pack. Skills: business-case-builder, file-organizer, incident-postmortem, kaizen:kaizen.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-07-operations-1",
+        "type": "critic",
+        "name": "business-case-builder",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/07-operations/business-case-builder/SKILL.md. Build business cases with cost-benefit analysis, ROI calculations, risk assessment, implementation timeline, and stakeholder analysis",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-07-operations-2",
+        "type": "writer",
+        "name": "file-organizer",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/07-operations/file-organizer/SKILL.md. Intelligently organizes your files and folders across your computer by understanding context, finding duplicates, suggesting better structures, and automating cleanup tasks. Reduces cognitive load and keeps your digital workspace tidy without manual effort.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-07-operations-3",
+        "type": "writer",
+        "name": "incident-postmortem",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/07-operations/incident-postmortem/SKILL.md. Write blameless incident postmortems with timeline reconstruction, root cause analysis, action items, and preventive measures",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-07-operations-4",
+        "type": "writer",
+        "name": "kaizen:kaizen",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/07-operations/kaizen/SKILL.md. Use when Code implementation and refactoring, architecturing or designing systems, process and workflow improvements, error handling and validation. Provide tehniquest to avoid over-engineering and apply iterative improvements.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-07-operations-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-07-operations-1",
+        "target": "pack-community-awesome-claude-corporate-skills-07-operations-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-07-operations-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-07-operations-2",
+        "target": "pack-community-awesome-claude-corporate-skills-07-operations-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-07-operations-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-07-operations-3",
+        "target": "pack-community-awesome-claude-corporate-skills-07-operations-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-advertising-skills-skills-operator-os",
+    "name": "Operator Os",
+    "description": "Chain this pack. Skills: ad-angle-multiplier, conversion-path-builder, performance-diagnosis, scroll-stopping-creative.",
+    "nodes": [
+      {
+        "id": "pack-community-advertising-skills-skills-operator-os-1",
+        "type": "writer",
+        "name": "ad-angle-multiplier",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/operator-os/ad-angle-multiplier/SKILL.md. Expand a core idea into multiple distinct ad angles. Trigger on \"more ads\", \"creative testing\", \"scale campaigns\".",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-operator-os-2",
+        "type": "writer",
+        "name": "conversion-path-builder",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/operator-os/conversion-path-builder/SKILL.md. Design the optimal funnel from click to conversion. Trigger on \"funnel\", \"conversion path\", \"booked calls\".",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-operator-os-3",
+        "type": "writer",
+        "name": "performance-diagnosis",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/operator-os/performance-diagnosis/SKILL.md. Diagnose why campaigns are underperforming. Trigger on \"low performance\", \"high CPL\", \"bad ads\".",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-operator-os-4",
+        "type": "writer",
+        "name": "scroll-stopping-creative",
+        "instructions": "Follow .cursor/skills/community/advertising-skills/skills/operator-os/scroll-stopping-creative/SKILL.md. Create ad concepts that stop attention in the first 3 seconds. Trigger on \"ad creative\", \"thumbstopper\", \"video ideas\".",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-advertising-skills-skills-operator-os-e1",
+        "source": "pack-community-advertising-skills-skills-operator-os-1",
+        "target": "pack-community-advertising-skills-skills-operator-os-2"
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-operator-os-e2",
+        "source": "pack-community-advertising-skills-skills-operator-os-2",
+        "target": "pack-community-advertising-skills-skills-operator-os-3"
+      },
+      {
+        "id": "pack-community-advertising-skills-skills-operator-os-e3",
+        "source": "pack-community-advertising-skills-skills-operator-os-3",
+        "target": "pack-community-advertising-skills-skills-operator-os-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-plugins-parallel",
+    "name": "Parallel",
+    "description": "Chain this pack. Skills: parallel-data-enrichment, parallel-deep-research, parallel-web-extract, parallel-web-search.",
+    "nodes": [
+      {
+        "id": "pack-plugins-parallel-1",
+        "type": "writer",
+        "name": "parallel-data-enrichment",
+        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-data-enrichment/SKILL.md. Bulk data enrichment. Adds web-sourced fields (CEO names, funding, contact info) to lists of companies, people, or products. Use for enriching CSV files or inline data.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-parallel-2",
+        "type": "researcher",
+        "name": "parallel-deep-research",
+        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-deep-research/SKILL.md. ONLY use when user explicitly says 'deep research', 'exhaustive', 'comprehensive report', or 'thorough investigation'. Slower and more expensive than parallel-web-search. For normal research/lookup requests, use parallel-web-search instead.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-parallel-3",
+        "type": "writer",
+        "name": "parallel-web-extract",
+        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-web-extract/SKILL.md. URL content extraction. Use for fetching any URL - webpages, articles, PDFs, JavaScript-heavy sites. Token-efficient: runs in forked context. Prefer over built-in web fetch tools.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-parallel-4",
+        "type": "researcher",
+        "name": "parallel-web-search",
+        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-web-search/SKILL.md. DEFAULT for all research and web queries. Use for any lookup, research, investigation, or question needing current info. Fast and cost-effective. Only use parallel-deep-research if user explicitly requests 'deep' or 'exhaustive' research.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-plugins-parallel-e1",
+        "source": "pack-plugins-parallel-1",
+        "target": "pack-plugins-parallel-2"
+      },
+      {
+        "id": "pack-plugins-parallel-e2",
+        "source": "pack-plugins-parallel-2",
+        "target": "pack-plugins-parallel-3"
+      },
+      {
+        "id": "pack-plugins-parallel-e3",
+        "source": "pack-plugins-parallel-3",
+        "target": "pack-plugins-parallel-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain",
+    "name": "Procurement Supply Chain",
+    "description": "Chain this pack. Skills: contract-negotiation, inventory-forecasting, rfp-builder, supplier-scorecard.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-1",
+        "type": "writer",
+        "name": "contract-negotiation",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/12-procurement-supply-chain/contract-negotiation/SKILL.md. Prepare for contract negotiations with term analysis, BATNA preparation, negotiation playbooks, and comparison frameworks",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-2",
+        "type": "writer",
+        "name": "inventory-forecasting",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/12-procurement-supply-chain/inventory-forecasting/SKILL.md. Forecast inventory needs using demand analysis, safety stock calculations, reorder point optimization, and seasonal adjustment",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-3",
+        "type": "writer",
+        "name": "rfp-builder",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/12-procurement-supply-chain/rfp-builder/SKILL.md. Create Request for Proposals with requirements specifications, evaluation criteria, scoring rubrics, timelines, and compliance requirements",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-4",
+        "type": "writer",
+        "name": "supplier-scorecard",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/12-procurement-supply-chain/supplier-scorecard/SKILL.md. Build supplier performance scorecards with KPIs, quality metrics, delivery performance, cost management, and improvement plans",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-1",
+        "target": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-2",
+        "target": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-3",
+        "target": "pack-community-awesome-claude-corporate-skills-12-procurement-supply-chain-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-09-product-management",
+    "name": "Product Management",
+    "description": "Chain this pack. Skills: brainstorming, doc-coauthoring, feature-spec, prd-writer.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-09-product-management-1",
+        "type": "writer",
+        "name": "brainstorming",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/09-product-management/brainstorming/SKILL.md. You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-09-product-management-2",
+        "type": "writer",
+        "name": "doc-coauthoring",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/09-product-management/doc-coauthoring/SKILL.md. Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-09-product-management-3",
+        "type": "writer",
+        "name": "feature-spec",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/09-product-management/feature-spec/SKILL.md. Write detailed feature specifications with functional requirements, edge cases, data models, API contracts, and UX flows. Create comprehensive technical specifications that enable clear implementation.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-09-product-management-4",
+        "type": "writer",
+        "name": "prd-writer",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/09-product-management/prd-writer/SKILL.md. Write comprehensive Product Requirements Documents with user stories, acceptance criteria, technical specifications, wireframe descriptions, and prioritization frameworks (RICE, MoSCoW). Create clear specifications for product teams.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-09-product-management-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-09-product-management-1",
+        "target": "pack-community-awesome-claude-corporate-skills-09-product-management-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-09-product-management-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-09-product-management-2",
+        "target": "pack-community-awesome-claude-corporate-skills-09-product-management-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-09-product-management-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-09-product-management-3",
+        "target": "pack-community-awesome-claude-corporate-skills-09-product-management-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-awesome-claude-corporate-skills-05-sales",
+    "name": "Sales",
+    "description": "Chain this pack. Skills: account-research, account-research, call-prep, call-prep.",
+    "nodes": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-05-sales-1",
+        "type": "researcher",
+        "name": "account-research",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/05-sales/account-research-common-room/SKILL.md. Research a company using Common Room data. Triggers on 'research [company]', 'tell me about [domain]', 'pull up signals for [account]', 'what's going on with [company]', or any account-level question.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-05-sales-2",
+        "type": "researcher",
+        "name": "account-research",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/05-sales/account-research/SKILL.md. Research a company or person and get actionable sales intel. Works standalone with web search, supercharged when you connect enrichment tools or your CRM. Trigger with \"research [company]\", \"look up [person]\", \"intel on [prospect]\", \"who is [name] at [company]\", or \"tell me about",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-05-sales-3",
+        "type": "writer",
+        "name": "call-prep",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/05-sales/call-prep-common-room/SKILL.md. Prepare for a customer or prospect call using Common Room signals. Triggers on 'prep me for my call with [company]', 'prepare for a meeting with [company]', 'what should I know before talking to [company]', or any call preparation request.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-05-sales-4",
+        "type": "researcher",
+        "name": "call-prep",
+        "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/05-sales/call-prep/SKILL.md. Prepare for a sales call with account context, attendee research, and suggested agenda. Works standalone with user input and web research, supercharged when you connect your CRM, email, chat, or transcripts. Trigger with \"prep me for my call with [company]\", \"I'm meeting with [co",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-05-sales-e1",
+        "source": "pack-community-awesome-claude-corporate-skills-05-sales-1",
+        "target": "pack-community-awesome-claude-corporate-skills-05-sales-2"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-05-sales-e2",
+        "source": "pack-community-awesome-claude-corporate-skills-05-sales-2",
+        "target": "pack-community-awesome-claude-corporate-skills-05-sales-3"
+      },
+      {
+        "id": "pack-community-awesome-claude-corporate-skills-05-sales-e3",
+        "source": "pack-community-awesome-claude-corporate-skills-05-sales-3",
+        "target": "pack-community-awesome-claude-corporate-skills-05-sales-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-plugins-stripe",
+    "name": "Stripe",
+    "description": "Chain this pack. Skills: connect-recommend, stripe-best-practices, stripe-directory, stripe-projects.",
+    "nodes": [
+      {
+        "id": "pack-plugins-stripe-1",
+        "type": "writer",
+        "name": "connect-recommend",
+        "instructions": "Follow .cursor/skills/plugins/stripe/connect-recommend/SKILL.md. This skill should be used when the user asks about Stripe Connect configuration, charge patterns, dashboard access, or how to get started with Connect, is building a marketplace, platform, multi-vendor store, gig platform, or subscription platform, needs to pay out sellers, vendo",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-stripe-2",
+        "type": "critic",
+        "name": "stripe-best-practices",
+        "instructions": "Follow .cursor/skills/plugins/stripe/stripe-best-practices/SKILL.md. Guides Stripe integration decisions — API selection (Checkout Sessions vs PaymentIntents), Connect platform setup (Accounts v2, controller properties), billing/subscriptions, Treasury financial accounts, integration surfaces (Checkout, Payment Element), migrating from deprecated",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-stripe-3",
+        "type": "writer",
+        "name": "stripe-directory",
+        "instructions": "Follow .cursor/skills/plugins/stripe/stripe-directory/SKILL.md. Use when the user wants to find businesses, software, service providers, or partners for a specific industry, workflow, pain point, capability, or job to be done. Also use when the agent needs to programmatically purchase or consume a service. Use Stripe Directory to build a shor",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-stripe-4",
+        "type": "critic",
+        "name": "stripe-projects",
+        "instructions": "Follow .cursor/skills/plugins/stripe/stripe-projects/SKILL.md. Use when the user wants to provision infrastructure or third-party services using Stripe Projects. Triggers: \"I need a database\", \"set up auth\", \"add caching\", \"give me a Postgres\", \"provision Redis\", \"I need hosting\", \"add a vector DB\", \"get me an API key for X\", \"get credential",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-plugins-stripe-e1",
+        "source": "pack-plugins-stripe-1",
+        "target": "pack-plugins-stripe-2"
+      },
+      {
+        "id": "pack-plugins-stripe-e2",
+        "source": "pack-plugins-stripe-2",
+        "target": "pack-plugins-stripe-3"
+      },
+      {
+        "id": "pack-plugins-stripe-e3",
+        "source": "pack-plugins-stripe-3",
+        "target": "pack-plugins-stripe-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-plugins-supabase",
+    "name": "Supabase",
+    "description": "Chain this pack. Skills: supabase, supabase-postgres-best-practices.",
+    "nodes": [
+      {
+        "id": "pack-plugins-supabase-1",
+        "type": "researcher",
+        "name": "supabase",
+        "instructions": "Follow .cursor/skills/plugins/supabase/supabase/SKILL.md. Use when doing ANY task involving Supabase. Triggers: Supabase products (Database, Auth, Edge Functions, Realtime, Storage, Vectors, Cron, Queues); client libraries and SSR integrations (supabase-js, @supabase/ssr) in Next.js, React, SvelteKit, Astro, Remix; auth issues (login, l",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-supabase-2",
+        "type": "critic",
+        "name": "supabase-postgres-best-practices",
+        "instructions": "Follow .cursor/skills/plugins/supabase/supabase-postgres-best-practices/SKILL.md. Postgres performance optimization and best practices from Supabase. Use this skill when writing, reviewing, or optimizing Postgres queries, schema designs, or database configurations.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-plugins-supabase-e1",
+        "source": "pack-plugins-supabase-1",
+        "target": "pack-plugins-supabase-2"
+      }
+    ]
+  },
+  {
+    "id": "pack-plugins-superpowers",
+    "name": "Superpowers",
+    "description": "Chain this pack. Skills: brainstorming, dispatching-parallel-agents, executing-plans, finishing-a-development-branch.",
+    "nodes": [
+      {
+        "id": "pack-plugins-superpowers-1",
+        "type": "writer",
+        "name": "brainstorming",
+        "instructions": "Follow .cursor/skills/plugins/superpowers/brainstorming/SKILL.md. You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-superpowers-2",
+        "type": "writer",
+        "name": "dispatching-parallel-agents",
+        "instructions": "Follow .cursor/skills/plugins/superpowers/dispatching-parallel-agents/SKILL.md. Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-superpowers-3",
+        "type": "critic",
+        "name": "executing-plans",
+        "instructions": "Follow .cursor/skills/plugins/superpowers/executing-plans/SKILL.md. Use when you have a written implementation plan to execute in a separate session with review checkpoints",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-superpowers-4",
+        "type": "writer",
+        "name": "finishing-a-development-branch",
+        "instructions": "Follow .cursor/skills/plugins/superpowers/finishing-a-development-branch/SKILL.md. Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-plugins-superpowers-e1",
+        "source": "pack-plugins-superpowers-1",
+        "target": "pack-plugins-superpowers-2"
+      },
+      {
+        "id": "pack-plugins-superpowers-e2",
+        "source": "pack-plugins-superpowers-2",
+        "target": "pack-plugins-superpowers-3"
+      },
+      {
+        "id": "pack-plugins-superpowers-e3",
+        "source": "pack-plugins-superpowers-3",
+        "target": "pack-plugins-superpowers-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-ui-ux-pro-max-skill",
+    "name": "Ui Ux Pro Max Skill",
+    "description": "Chain this pack. Skills: banner-design, brand, design, design-system.",
+    "nodes": [
+      {
+        "id": "pack-community-ui-ux-pro-max-skill-1",
+        "type": "editor",
+        "name": "banner-design",
+        "instructions": "Follow .cursor/skills/community/ui-ux-pro-max-skill/banner-design/SKILL.md. Design banners for social media, ads, website heroes, creative assets, and print. Multiple art direction options with AI-generated visuals. Actions: design, create, generate banner. Platforms: Facebook, Twitter/X, LinkedIn, YouTube, Instagram, Google Display, website hero, print.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-ui-ux-pro-max-skill-2",
+        "type": "writer",
+        "name": "brand",
+        "instructions": "Follow .cursor/skills/community/ui-ux-pro-max-skill/brand/SKILL.md. Brand voice, visual identity, messaging frameworks, asset management, brand consistency. Activate for branded content, tone of voice, marketing assets, brand compliance, style guides.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-ui-ux-pro-max-skill-3",
+        "type": "writer",
+        "name": "design",
+        "instructions": "Follow .cursor/skills/community/ui-ux-pro-max-skill/design/SKILL.md. Comprehensive design skill: brand identity, design tokens, UI styling, logo generation (55 styles, Gemini AI), corporate identity program (50 deliverables, CIP mockups), HTML presentations (Chart.js), banner design (22 styles, social/ads/web/print), icon design (15 styles, SVG, G",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-ui-ux-pro-max-skill-4",
+        "type": "writer",
+        "name": "design-system",
+        "instructions": "Follow .cursor/skills/community/ui-ux-pro-max-skill/design-system/SKILL.md. Token architecture, component specifications, and slide generation. Three-layer tokens (primitive→semantic→component), CSS variables, spacing/typography scales, component specs, strategic slide creation. Use for design tokens, systematic design, brand-compliant presentations.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-ui-ux-pro-max-skill-e1",
+        "source": "pack-community-ui-ux-pro-max-skill-1",
+        "target": "pack-community-ui-ux-pro-max-skill-2"
+      },
+      {
+        "id": "pack-community-ui-ux-pro-max-skill-e2",
+        "source": "pack-community-ui-ux-pro-max-skill-2",
+        "target": "pack-community-ui-ux-pro-max-skill-3"
+      },
+      {
+        "id": "pack-community-ui-ux-pro-max-skill-e3",
+        "source": "pack-community-ui-ux-pro-max-skill-3",
+        "target": "pack-community-ui-ux-pro-max-skill-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-plugins-vercel",
+    "name": "Vercel",
+    "description": "Chain this pack. Skills: ai-gateway, ai-sdk, auth, benchmark-agents.",
+    "nodes": [
+      {
+        "id": "pack-plugins-vercel-1",
+        "type": "writer",
+        "name": "ai-gateway",
+        "instructions": "Follow .cursor/skills/plugins/vercel/ai-gateway/SKILL.md. Vercel AI Gateway expert guidance. Use when configuring model routing, provider failover, cost tracking, or managing multiple AI providers through a unified API.",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-vercel-2",
+        "type": "writer",
+        "name": "ai-sdk",
+        "instructions": "Follow .cursor/skills/plugins/vercel/ai-sdk/SKILL.md. Vercel AI SDK expert guidance. Use when building AI-powered features — chat interfaces, text generation, structured output, tool calling, agents, MCP integration, streaming, embeddings, reranking, image generation, or working with any LLM provider.",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-vercel-3",
+        "type": "writer",
+        "name": "auth",
+        "instructions": "Follow .cursor/skills/plugins/vercel/auth/SKILL.md. Authentication integration guidance — Clerk (native Vercel Marketplace), Descope, and Auth0 setup for Next.js applications. Covers middleware auth patterns, sign-in/sign-up flows, and Marketplace provisioning. Use when implementing user authentication.",
+        "position": {
+          "x": 670,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-plugins-vercel-4",
+        "type": "writer",
+        "name": "benchmark-agents",
+        "instructions": "Follow .cursor/skills/plugins/vercel/benchmark-agents/SKILL.md. Advanced AI agent benchmark scenarios that push Vercel's cutting-edge platform features — Workflow DevKit, AI Gateway, MCP, Chat SDK, Queues, Flags, Sandbox, and multi-agent orchestration. Designed to stress-test skill injection for complex, multi-system builds.",
+        "position": {
+          "x": 980,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-plugins-vercel-e1",
+        "source": "pack-plugins-vercel-1",
+        "target": "pack-plugins-vercel-2"
+      },
+      {
+        "id": "pack-plugins-vercel-e2",
+        "source": "pack-plugins-vercel-2",
+        "target": "pack-plugins-vercel-3"
+      },
+      {
+        "id": "pack-plugins-vercel-e3",
+        "source": "pack-plugins-vercel-3",
+        "target": "pack-plugins-vercel-4"
+      }
+    ]
+  },
+  {
+    "id": "pack-community-visual-skills",
+    "name": "Visual Skills",
+    "description": "Chain this pack. Skills: image, video.",
+    "nodes": [
+      {
+        "id": "pack-community-visual-skills-1",
+        "type": "editor",
+        "name": "image",
+        "instructions": "Follow .cursor/skills/community/visual-skills/image/SKILL.md. Image prompting skill for Nano Banana (NBP/NB2) and GPT Image 2. Writes ready-to-use prompts with model/quality/size recommendations. Use when: \"нарисуй\", \"сгенерируй картинку\", \"image prompt\", \"промпт для картинки\", blog covers, slides, posters, product shots, UI mockups, storyb",
+        "position": {
+          "x": 50,
+          "y": 120
+        }
+      },
+      {
+        "id": "pack-community-visual-skills-2",
+        "type": "researcher",
+        "name": "video",
+        "instructions": "Follow .cursor/skills/community/visual-skills/video/SKILL.md. Use this skill whenever the user asks to create, improve, audit, or split prompts for AI video generators (Seedance, Kling, Veo, Runway, Luma, Pika, Sora, any image-to-video system). The skill also covers storyboards, shot lists, director treatments, dynamic montage, multi-clip s",
+        "position": {
+          "x": 360,
+          "y": 120
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "pack-community-visual-skills-e1",
+        "source": "pack-community-visual-skills-1",
+        "target": "pack-community-visual-skills-2"
+      }
+    ]
+  }
+]
