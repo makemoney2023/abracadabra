@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/work/board.tsx`
 - **Data-flow impact** — Each new or untitled task gets an `agent.task_brief` activity whose body is the detail and whose `taskId` is the card. The board reads that note with the other agent notes.
 - **API / schema impact** — none.
-- **Verification** — pending.
+- **Verification** — `npm test` in `handoff/`: 769 tests passed, and the agent worker suite passed 7. `npx eslint` on the planner, the project action, and the board exited 0.
 
 ## 2026-10-09
 
