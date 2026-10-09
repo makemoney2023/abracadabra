@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/swarm/swarm-link.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`
 - **Data-flow impact** — none. A stored execution id still links to `/swarm?executionId=`.
 - **API / schema impact** — none.
-- **Verification** — `npx vitest run src/app/swarm/swarm-link.test.ts` in `handoff`.
+- **Verification** — `npx vitest run src/app/swarm/swarm-link.test.ts` in `handoff` (1 file, 3 tests, passed). ESLint clean on the link helper, project page, and Work tab.
 
 ## 2026-10-09
 
@@ -16,7 +16,7 @@
 - **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`, `handoff/migrations/0016_swarm_runs.sql`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/swarm/page.tsx`, `swarm/frontend/src/App.tsx`
 - **Data-flow impact** — Start paths write `swarm_runs`. The canvas reads `executionId` from the query string.
 - **API / schema impact** — New table `swarm_runs`. No new route and no new secret.
-- **Verification** — `npx vitest run` in `handoff` (123 files, 697 tests, passed). `npm test` in `swarm` (4 files, 25 tests, passed) and `node --test frontend/src/lib/execution-link.test.mjs` (1 test, passed).
+- **Verification** — `npx vitest run` in `handoff` (123 files, 698 tests, passed). `npm test` in `swarm` (4 files, 25 tests, passed) and `node --test frontend/src/lib/execution-link.test.mjs` (1 test, passed).
 
 ## 2026-10-09
 
