@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A finished schema scan writes its page copy into the client space as soon as the scan is ready. A repeat does not add the same pages again. Stylesheets and pictures are left out. The quarter-hour job files any finished scan that never landed.
+- **Why** — Adding AbraCadabra finished the schema scan, and the page text stayed on the scan. The space stayed empty because filing waited for the agent, and that wake never wrote the files.
+- **Code touchpoints** — `handoff/src/lib/scan-context.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/queue-dispatch.ts`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — `scan_ready` calls `storeScanContext` before it wakes the agent. The scheduled worker calls `filePendingScanContexts` for scans already finished.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run` in `handoff` (125 files, 717 tests, passed). ESLint clean on the touched library files.
+
+## 2026-10-09
+
 - **What changed** — Swarm history is copied once, not on every page load. A finished run stays finished if a later write says it is still running. A live replay can name nodes as soon as the socket opens. A swarm with no project and no projects yet does not offer an empty project picker.
 - **Why** — The backfill rewrote every run on each request, and a stale running write could clear a finished run.
 - **Code touchpoints** — `handoff/src/db/migrate.ts`, `handoff/src/lib/swarm-runs.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`, `swarm/frontend/src/App.tsx`

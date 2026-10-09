@@ -8,7 +8,7 @@ import { sqliteSql, type Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
 import { searchSpace } from "@/lib/knowledge";
 import { localObjectStore, type ObjectStore } from "@/lib/store/objects";
-import { clientSpaceContext, readinessContextFiles, storeScanContext } from "./scan-context";
+import { clientSpaceContext, filePendingScanContexts, readinessContextFiles, storeScanContext } from "./scan-context";
 
 const NOW = 1_700_000_000_000;
 
@@ -222,6 +222,50 @@ describe("schema context", () => {
 
   it("stores nothing when the client has no finished scan", async () => {
     const saved = await storeScanContext({ sql, store, organizationId: "org-1", now: NOW });
-    expect(saved).toEqual({ scanId: null, score: null, stored: [] });
+    expect(saved).toEqual({ scanId: null, score: null, stored: [], created: false });
+  });
+
+  it("files page copy once and skips asset urls", async () => {
+    await sql.run(
+      `INSERT INTO readiness_scans (id, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('scan-7', 'complete', 'org-1', 81, ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+       VALUES ('page-home', 'scan-7', 'https://northwind.example/', 'home', '["Organization"]', ?)`,
+      [JSON.stringify({ businessName: "Northwind", scrapedText: "We sell foam to shipyards." })],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+       VALUES ('page-css', 'scan-7', 'https://northwind.example/app.css', 'other', '[]', ?)`,
+      [JSON.stringify({ scrapedText: "body { color: black; }" })],
+    );
+    const saved = await storeScanContext({ sql, store, organizationId: "org-1", now: NOW });
+    expect(saved.created).toBe(true);
+    expect(saved.stored).toHaveLength(1);
+    expect(saved.stored[0]).toContain("agent/schema/scan-7/");
+    const again = await storeScanContext({ sql, store, organizationId: "org-1", now: NOW + 1 });
+    expect(again.created).toBe(false);
+    expect(again.stored).toEqual(saved.stored);
+    const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM files");
+    expect(count?.n).toBe(1);
+  });
+
+  it("files a finished scan that never reached the space, then leaves it there", async () => {
+    await sql.run(
+      `INSERT INTO readiness_scans (id, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('scan-8', 'complete', 'org-1', 12, ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+       VALUES ('page-8', 'scan-8', 'https://northwind.example/about', 'about', '[]', ?)`,
+      [JSON.stringify({ scrapedText: "About the yard." })],
+    );
+    expect(await filePendingScanContexts({ sql, store, now: NOW })).toBe(1);
+    expect(await filePendingScanContexts({ sql, store, now: NOW + 1 })).toBe(0);
+    const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM files");
+    expect(count?.n).toBe(1);
   });
 });

@@ -1,7 +1,11 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { d1Sql, type D1Like } from "@/db/sql";
+import { localObjectStore } from "@/lib/store/objects";
 import { handleLeadIntakeBatch } from "./queue";
 
 const NOW = 1_700_000_000_000;
@@ -187,5 +191,84 @@ describe("lead intake wake", () => {
     );
     expect(message.acked).toBe(false);
     expect(message.retried).toBe(true);
+  });
+
+  it("files the scraped pages into the space when the scan is ready, even if the agent does not wake", async () => {
+    const db = database();
+    await migrate(d1Sql(db));
+    await db.exec(`
+      CREATE TABLE readiness_scans (
+        id TEXT PRIMARY KEY,
+        domain TEXT,
+        status TEXT NOT NULL,
+        organization_id TEXT,
+        score_total INTEGER,
+        created_at INTEGER NOT NULL,
+        completed_at INTEGER
+      );
+      CREATE TABLE readiness_scan_pages (
+        id TEXT PRIMARY KEY,
+        scan_id TEXT NOT NULL,
+        url TEXT NOT NULL,
+        page_type TEXT NOT NULL,
+        schema_types_json TEXT NOT NULL,
+        evidence_json TEXT NOT NULL
+      );
+    `);
+    await db
+      .prepare(
+        `INSERT INTO organizations (id, name, kind, website, domain, created_at, updated_at)
+         VALUES ('org-1', 'AbraCadabra', 'client', 'https://abra-ca-dabra.app', 'abra-ca-dabra.app', ?, ?)`,
+      )
+      .bind(NOW, NOW)
+      .run();
+    await db
+      .prepare(
+        `INSERT INTO readiness_scans (id, domain, status, organization_id, score_total, created_at, completed_at)
+         VALUES ('scan-abra', 'abra-ca-dabra.app', 'complete', 'org-1', 81, ?, ?)`,
+      )
+      .bind(NOW, NOW)
+      .run();
+    await db
+      .prepare(
+        `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+         VALUES ('page-home', 'scan-abra', 'https://abra-ca-dabra.app/', 'home', '["Organization"]', ?)`,
+      )
+      .bind(JSON.stringify({ businessName: "Abracadabra", scrapedText: "Bespoke software for the work a team already does." }))
+      .run();
+    const root = mkdtempSync(path.join(tmpdir(), "scan-intake-"));
+    const message = {
+      acked: false,
+      retried: false,
+      body: { source: "scan_ready", organizationId: "org-1", scanId: "scan-abra", status: "complete" },
+      ack() {
+        this.acked = true;
+      },
+      retry() {
+        this.retried = true;
+      },
+    };
+    try {
+      await handleLeadIntakeBatch(
+        [message],
+        db,
+        NOW,
+        { AGENT_URL: "https://agent.example" },
+        (async () => new Response("no", { status: 401 })) as typeof fetch,
+        localObjectStore(root),
+      );
+      expect(message.acked).toBe(true);
+      expect(message.retried).toBe(false);
+      const file = await db
+        .prepare("SELECT relative_path, tag FROM files")
+        .bind()
+        .first<{ relative_path: string; tag: string }>();
+      expect(file?.tag).toBe("reference");
+      expect(file?.relative_path).toContain("agent/schema/scan-abra/");
+      const passage = await db.prepare("SELECT body FROM file_passages").bind().first<{ body: string }>();
+      expect(passage?.body).toContain("Bespoke software");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
