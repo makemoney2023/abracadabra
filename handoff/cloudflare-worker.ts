@@ -11,6 +11,7 @@ type QueueEnv = WakeEnv & {
   DB: D1Like;
   SCAN_JOBS?: ScanQueue;
   FILES?: FilesBucket;
+  EMAIL?: { send(message: unknown): Promise<unknown> };
 };
 
 export default {

@@ -11,6 +11,88 @@
 
 ## 2026-10-09
 
+- **What changed** — Moving between staff screens shows pulsing skeleton bars on the theme border while the next page loads.
+- **Why** — The loading placeholder used `bg-muted`, which matches the canvas, and uncolored borders, which paint in the light text color. That flash looked like an empty white table.
+- **Code touchpoints** — `handoff/src/components/ui/skeleton.tsx`, `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-fallback.test.ts`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run` in `handoff` (126 files, 716 tests, passed) and `npx vitest run --config vitest.agent.config.mts` (1 file, 7 tests, passed). ESLint clean on the skeleton, route fallback, and its test.
+
+## 2026-10-09
+
+- **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
+- **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
+- **Code touchpoints** — none. Deploy of `f2735c0`.
+- **Data-flow impact** — none beyond the kanban already merged. `0018_task_position.sql` runs when a worker starts and the `tasks.position` column is missing.
+- **API / schema impact** — none in this change.
+- **Verification** — Worker `handoff-hq` version `acc941ad-edfd-47b5-8d8e-69ef6689ca05` on `hq.abra-ca-dabra.app`. Worker `handoff` version `9d3bf08e-efcb-4423-a6dd-03c5616a4191` on `handoff.abra-ca-dabra.app`. Worker `handoff-agent` version `2dc0f694-e8fc-49fd-81ee-6fd9ffe9413f` on `agent.abra-ca-dabra.app`. `GET /api/health` on the staff and client hosts returned 200 `{\"database\":\"d1\",\"ok\":true}`.
+
+
+## 2026-10-09
+
+- **What changed** — Review fixes for the kanban. Today opens a task with no project on the client Work tab. A refused build keeps the card's stage and clears `done_at`, and does not mark the plan skill done. A finished card that reaches Build leaves Done. The cloud run uses the latest build brief. A card whose project is missing from the client picture is not taken. Adding a task on a selected project chip files it on that project. Paused, done, and cancelled projects stay off the client and studio boards, including finished cards. The Build column shows open cloud runs over the cap. Late, this week, and blocked filters no longer mix in finished cards.
+- **Why** — An end-to-end pass found those gaps against the board plan.
+- **Code touchpoints** — `handoff/src/app/today-view.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/lib/cursor-build.ts`, `handoff/src/db/crm.ts`, `handoff/src/app/work/page.tsx`, `handoff/src/app/work/board.tsx`, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`
+- **Data-flow impact** — A build update still goes through `moveTaskStage`. The skill checklist is written only after the card is in Build. A refusal leaves the plan skill to do so the next wake can try again.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 713 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript files exited 0.
+
+## 2026-10-09
+
+- **What changed** — Each project has a kanban. The same cards roll up to the client and to every client. The agent takes the top card in Describe or Engineer, one step per project, and no longer files new tasks on whichever project was saved last.
+- **Why** — Open work was a table, and planning attached tasks to the newest project.
+- **Code touchpoints** — `handoff/src/app/work/board.tsx`, `handoff/src/lib/board-model.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/migrations/0018_task_position.sql`
+- **Data-flow impact** — A `work` wake reads task position and project status. A move to Build still starts a cloud run. A move to Run still schedules a swarm pack. A refused build stays in the column it left.
+- **API / schema impact** — `tasks.position` in `0018_task_position.sql`, after the swarm-run and opt-out migrations. `client_context` adds `projects` plus `projectId` and `position` on each task. `get_brief` adds `projectId`.
+- **Verification** — `npm test` in `handoff/`: 705 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched files reported no errors.
+
+## 2026-10-09
+
+- **What changed** — Each project gets a kanban the agent executes from, and that board rolls up to the client and to every client. The plan is written. The board is not built.
+- **Why** — Open work is a table, and planning still attaches new tasks to the most recently updated project.
+- **Code touchpoints** — `docs/kanban-board-gameplan.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `README.md`
+- **Data-flow impact** — none. The plan describes a later `position` column, one shared stage move, and a per-project pull order inside the existing client wake.
+- **API / schema impact** — none in this change. The plan adds `tasks.position` when that step is built.
+- **Verification** — Docs only. No tests.
+
+## 2026-10-09
+
+- **What changed** — The mailbox follow-ups are on `main` and published. Staff HQ and the agent worker were deployed from that merge.
+- **Why** — The branch was merged after `0016` was already the swarm runs table, so the opt-out column ships as `0017_contact_opt_out.sql`.
+- **Code touchpoints** — `handoff/migrations/0017_contact_opt_out.sql`, `handoff/src/db/migrate.ts`, `handoff/src/db/migration-sql.ts`
+- **Data-flow impact** — none beyond the mailbox behavior already described. A database that already has `contacts.opted_out` skips the new migration.
+- **API / schema impact** — `0017_contact_opt_out.sql` adds `contacts.opted_out` when that column is missing.
+- **Verification** — `npx vitest run` on the migration, mailbox, and swarm-run tests passed 7 files / 69 tests. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `acdb5868-bf23-4f74-8f98-4c281e0bdd66` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `89b53063-d8f6-4d42-b8aa-4ef3491c6b26` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. `BOOKING_URL` is still empty.
+
+## 2026-10-09
+
+- **What changed** — A quoted email address is no longer saved as a lead’s website. A yes still confirms a client when the reply’s thread id changes. A booking confirmation that fails to send is tried again on the next delivery, and a second copy is not sent after it succeeds.
+- **Why** — Review of the mailbox follow-ups found those three gaps. An address in the message could start a schema scan of the wrong host, a client reply could never attach, and a failed confirmation was acknowledged and then dropped.
+- **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`
+- **Data-flow impact** — Website capture skips email domains and `abra-ca-dabra.app`. Client confirmation follows one open note for that address, including when References still hold the original thread. Booking mail errors propagate so the intake queue retries; the `agent.reply` row still stops a second confirmation.
+- **API / schema impact** — `open_prospect` accepts `subject` and `references`. No migration.
+- **Verification** — `npx vitest run` in `handoff/` passed 123 files / 708 tests. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `fe5af1e3-c6c0-4cf7-bea9-7a8c6428122f` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `dfe5ddab-0cb7-4c46-a9ef-4a9558344d37` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. `BOOKING_URL` is still empty.
+
+## 2026-10-09
+
+- **What changed** — Magic now asks a prospect for a budget band and a window, stores a website from freemail and starts one schema scan, confirms a new address before attaching it to a client, hands a stalled prospect thread to a person, opens a file space for a lead, stops mail after an opt-out, appends a finished readiness-check link, and confirms a Cal.com booking from the HQ mailbox.
+- **Why** — Those eight follow-ups were specified and not running. A freemail sender had no site scan, a client domain was opened as a new lead, a long prospect thread never handed off, lead files were refused, and a booked call sent no confirmation.
+- **Code touchpoints** — `handoff/migrations/0017_contact_opt_out.sql`, `handoff/src/db/migration-sql.ts`, `handoff/src/db/migrate.ts`, `handoff/src/db/conversations.ts`, `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/client-channel-store.ts`, `handoff/src/lib/email-files.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — An authenticated miss still opens a lead, except a client or past-client domain waits for yes on that thread. A prospect reply can set `deals.next_step`, write a budget `email` activity, set `organizations.website`, and queue `readiness_scans`. Opt-out sets `contacts.opted_out` and later mail is stored with no reply. A lead attachment creates one standard workspace. A live Cal.com booking sends one confirmation after the appointment row commits.
+- **API / schema impact** — Migration `0017_contact_opt_out.sql` adds `contacts.opted_out`. `open_prospect` returns `kind`, `pending`, `declined`, and `organizations`. `record` accepts `optOut` and `stalled`. `contacts.opted_in` stays unused. No invoice column. No appointment is created from the mailbox.
+- **Verification** — `npx vitest run` in `handoff/` passed 123 files / 706 tests. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `fe5d7ffe-32cd-410d-b1db-d95a76ef69ce` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `b6982cbf-6a46-4d9b-9c8e-c04ffef86f67` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. Secret names on both workers are unchanged. `BOOKING_URL` is still empty. Production `contacts.opted_out` is present.
+
+## 2026-10-09
+
+- **What changed** — `main` is live on Cloudflare with stored swarm runs. Staff HQ, the client app, and the swarm worker were published from that tree.
+- **Why** — The swarm-runs branch was merged to `main` and deployed.
+- **Code touchpoints** — none. Deploy only.
+- **Data-flow impact** — The first request runs the `swarm_runs` migration and copies existing timeline runs once.
+- **API / schema impact** — none beyond the migration already on `main`.
+- **Verification** — Worker `handoff` version `cbf04a1a-5bce-492b-8e80-55dfdd85901a` on `handoff.abra-ca-dabra.app`. Worker `handoff-hq` version `c23e8ea5-6957-4029-98a3-22a21c860045` on `hq.abra-ca-dabra.app`. Worker `agent-swarm-orchestrator` version `ebcafe77-a740-4b6a-b0d0-5d6c9a5c568c`. `GET /api/health` returned 200 on Handoff and HQ. The swarm origin returned 200.
+
+## 2026-10-09
+
 - **What changed** — Swarm history is copied once, not on every page load. A finished run stays finished if a later write says it is still running. A live replay can name nodes as soon as the socket opens. A swarm with no project and no projects yet does not offer an empty project picker.
 - **Why** — The backfill rewrote every run on each request, and a stale running write could clear a finished run.
 - **Code touchpoints** — `handoff/src/db/migrate.ts`, `handoff/src/lib/swarm-runs.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`, `swarm/frontend/src/App.tsx`

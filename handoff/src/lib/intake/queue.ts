@@ -4,10 +4,59 @@ import { noteWakeMiss, wakeOrganization, type WakeEnv } from "../agent-wake";
 import { startLeadSchemaScan, type ScanQueue } from "../lead-schema";
 import { storeScanContext } from "../scan-context";
 import type { ObjectStore } from "../store/objects";
-import { consumeIntake } from "./consume";
+import { consumeIntake, type BookingMailer } from "./consume";
 import type { Sql } from "../../db/sql";
 
-type IntakeEnv = WakeEnv & { SCAN_JOBS?: ScanQueue };
+type EmailBinding = { send(message: unknown): Promise<unknown> };
+
+type IntakeEnv = WakeEnv & { SCAN_JOBS?: ScanQueue; EMAIL?: EmailBinding };
+
+function bookingRaw(message: {
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  headers?: Record<string, string>;
+}): string {
+  const extra = message.headers
+    ? Object.entries(message.headers).map(([name, value]) => `${name}: ${value}`)
+    : [];
+  return [
+    `From: ${message.from}`,
+    `To: ${message.to}`,
+    `Subject: ${message.subject}`,
+    ...extra,
+    "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=utf-8",
+    "",
+    message.text,
+  ].join("\r\n");
+}
+
+function bookingMailer(email: EmailBinding | undefined): BookingMailer | null {
+  if (!email) return null;
+  return {
+    async send(message) {
+      const envelope = message.from.match(/<([^>]+)>/)?.[1] ?? message.from;
+      const structured = {
+        to: message.to,
+        from: { email: envelope, name: "Magic at Abracadabra" },
+        subject: message.subject,
+        text: message.text,
+        headers: message.headers,
+      };
+      let EmailMessage: new (from: string, to: string, raw: string) => object;
+      try {
+        const loaded = await import("cloudflare:email");
+        EmailMessage = loaded.EmailMessage;
+      } catch {
+        await email.send(structured);
+        return;
+      }
+      await email.send(new EmailMessage(envelope, message.to, bookingRaw(message)));
+    },
+  };
+}
 
 export type IntakeQueueMessage = {
   body: unknown;
@@ -63,7 +112,7 @@ export async function handleLeadIntakeBatch(
       continue;
     }
     try {
-      const result = await consumeIntake(sql, shaped, now);
+      const result = await consumeIntake(sql, shaped, now, bookingMailer(env.EMAIL));
       if (!result.ok) {
         message.ack();
         continue;

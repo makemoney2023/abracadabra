@@ -100,6 +100,66 @@ function callIsLive(status: string): boolean {
   return status === "booked" || status === "rescheduled";
 }
 
+export type BookingMail = {
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  headers?: Record<string, string>;
+};
+
+export type BookingMailer = {
+  send(message: BookingMail): Promise<void>;
+};
+
+const MAGIC_FROM = "Magic at Abracadabra <magic@abra-ca-dabra.app>";
+
+/** UTC clock time for a booking confirmation. Seconds are dropped. */
+export function formatSessionUtc(startsAt: number): string {
+  const date = new Date(startsAt);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())} UTC`;
+}
+
+async function sendBookingConfirmation(
+  sql: Sql,
+  mailer: BookingMailer,
+  input: { organizationId: string; email: string; externalId: string; startsAt: number },
+  now: number,
+): Promise<void> {
+  const sent = await sql.get<{ id: string }>(
+    `SELECT id FROM activities
+     WHERE kind = 'agent.reply'
+       AND json_extract(data_json, '$.external_id') = ?
+       AND cast(json_extract(data_json, '$.starts_at') AS INTEGER) = ?
+     LIMIT 1`,
+    [input.externalId, input.startsAt],
+  );
+  if (sent) return;
+  const thread = await sql.get<{ thread_id: string }>(
+    `SELECT thread_id FROM work_requests
+     WHERE organization_id = ? AND channel = 'email'
+     ORDER BY updated_at DESC LIMIT 1`,
+    [input.organizationId],
+  );
+  const text = `Your working session is ${formatSessionUtc(input.startsAt)}.`;
+  await mailer.send({
+    from: MAGIC_FROM,
+    to: input.email,
+    subject: "Your working session",
+    text,
+    headers: thread?.thread_id
+      ? { "In-Reply-To": thread.thread_id, References: thread.thread_id }
+      : undefined,
+  });
+  await sql.run(
+    `INSERT INTO activities (
+       id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
+     ) VALUES (?, ?, 'agent.reply', 'agent', 'client-desk', ?, ?, ?)`,
+    [crypto.randomUUID(), input.organizationId, text, JSON.stringify({ external_id: input.externalId, starts_at: input.startsAt }), now],
+  );
+}
+
 async function withTx<T>(sql: Sql, work: () => Promise<T>): Promise<T> {
   await sql.exec("BEGIN");
   try {
@@ -383,7 +443,12 @@ async function moveDealToCall(sql: Sql, deal: DealRow, now: number): Promise<voi
   await sql.run("UPDATE deals SET stage = 'call_booked', updated_at = ? WHERE id = ?", [now, deal.id]);
 }
 
-async function consumeBooking(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+async function consumeBooking(
+  sql: Sql,
+  payload: unknown,
+  now: number,
+  mailer?: BookingMailer | null,
+): Promise<ConsumeResult> {
   const body = asRecord(payload);
   const externalId = typeof body?.external_id === "string" ? body.external_id.trim() : "";
   const startsAt = cleanStarts(body?.starts_at);
@@ -399,6 +464,7 @@ async function consumeBooking(sql: Sql, payload: unknown, now: number): Promise<
     [externalId],
   );
   if (current && current.status === status && current.starts_at === startsAt) {
+    await confirmLiveBooking(sql, mailer, { externalId, startsAt, status, email }, now);
     return { ok: true, duplicate: true };
   }
   if (!current && !email && !domain) return { ok: false, error: "invalid", retry: false };
@@ -471,19 +537,50 @@ async function consumeBooking(sql: Sql, payload: unknown, now: number): Promise<
       );
     });
   } catch (error) {
-    if (isUnique(error)) return { ok: true, duplicate: true };
+    if (isUnique(error)) {
+      await confirmLiveBooking(sql, mailer, { externalId, startsAt, status, email }, now);
+      return { ok: true, duplicate: true };
+    }
     throw error;
   }
+  await confirmLiveBooking(sql, mailer, { externalId, startsAt, status, email }, now);
   return { ok: true, duplicate: false, leadOrganizationId };
+}
+
+async function confirmLiveBooking(
+  sql: Sql,
+  mailer: BookingMailer | null | undefined,
+  input: { externalId: string; startsAt: number; status: string; email: string | null },
+  now: number,
+): Promise<void> {
+  if (!mailer || !callIsLive(input.status) || !input.email) return;
+  const row = await sql.get<{ organization_id: string | null }>(
+    `SELECT organization_id FROM appointments
+     WHERE provider = 'calcom' AND external_id = ? AND status = ? AND starts_at = ?`,
+    [input.externalId, input.status, input.startsAt],
+  );
+  if (!row?.organization_id) return;
+  await sendBookingConfirmation(
+    sql,
+    mailer,
+    {
+      organizationId: row.organization_id,
+      email: input.email,
+      externalId: input.externalId,
+      startsAt: input.startsAt,
+    },
+    now,
+  );
 }
 
 export async function consumeIntake(
   sql: Sql,
   message: { source: string; payload: unknown },
   now: number,
+  mailer?: BookingMailer | null,
 ): Promise<ConsumeResult> {
   if (message.source === "assessment") return consumeAssessment(sql, message.payload, now);
-  if (message.source === "booking") return consumeBooking(sql, message.payload, now);
+  if (message.source === "booking") return consumeBooking(sql, message.payload, now, mailer);
   if (message.source === "schema") return fileSchemaPackage(sql, message.payload, now);
   return { ok: false, error: "invalid", retry: false };
 }

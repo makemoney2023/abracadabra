@@ -41,7 +41,7 @@ function isLate(task: WorkTask, now: number): boolean {
 
 function taskHref(task: WorkTask): string {
   if (task.project_id) return `/projects/${task.project_id}`;
-  return `/clients/${task.organization_id}`;
+  return `/clients/${task.organization_id}?tab=work`;
 }
 
 function taskItem(task: WorkTask, tone: "late" | "blocked"): TodayItem {

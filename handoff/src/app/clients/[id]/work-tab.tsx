@@ -1,81 +1,83 @@
 import Link from "next/link";
-import type { ProjectRow, TaskRow } from "@/db/crm";
+import type { BoardActivity, BoardCard, ProjectRow } from "@/db/crm";
 import { ActionField, ActionForm } from "@/components/action-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { clock } from "@/lib/clock";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRelative } from "@/lib/format";
 import type { SwarmRunRow } from "@/lib/swarm-runs";
+import { WorkBoard } from "../../work/board";
 import { swarmRunLink } from "../../swarm/swarm-link";
 import { ProjectForm } from "../../projects/forms";
-import { PROJECT_STATUS_LABEL } from "../../projects/labels";
-import { assignSwarmRunAction, completeTaskAction } from "../actions";
+import { assignSwarmRunAction } from "../actions";
 import { TaskForm } from "../activity-forms";
+import { tabHref } from "./tabs";
 
 const selectClass = "h-9 rounded-lg border border-input bg-transparent px-2 text-sm";
 
 export function WorkTab({
   organizationId,
   projects,
-  tasks,
+  cards,
+  activity,
+  now,
+  projectId,
+  runCap,
+  runsOpen,
+  opens,
   unassignedRuns,
 }: {
   organizationId: string;
   projects: ProjectRow[];
-  tasks: TaskRow[];
+  cards: BoardCard[];
+  activity: BoardActivity[];
+  now: number;
+  projectId: string;
+  runCap: number | null;
+  runsOpen: number;
+  opens: { projectId: string | null; open: number }[];
   unassignedRuns: SwarmRunRow[];
 }) {
-  const now = clock();
+  const base = tabHref(organizationId, "work");
+  const open = (id: string | null) => opens.find((row) => row.projectId === id)?.open ?? 0;
+  const at = now;
+
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Projects</CardTitle>
-          <CardDescription>Milestones, tasks, and status updates live on the project.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {projects.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No projects yet.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {projects.map((project) => (
-                <li key={project.id} className="text-sm">
-                  <Link href={`/projects/${project.id}`}>{project.name}</Link>
-                  <span className="ml-2 text-muted-foreground">{PROJECT_STATUS_LABEL[project.status]}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <ProjectForm organizationId={organizationId} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle>Tasks</CardTitle>
-          <TaskForm organizationId={organizationId} label="Add a task" variant="outline" />
-        </CardHeader>
-        <CardContent>
-          {tasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No open tasks.</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {tasks.map((task) => (
-                <li key={task.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span>{task.title}</span>
-                  <ActionForm
-                    action={completeTaskAction}
-                    submitLabel="Mark done"
-                    pendingLabel="Saving"
-                    className="w-auto flex-row items-center"
-                  >
-                    <input type="hidden" name="organizationId" value={organizationId} />
-                    <input type="hidden" name="taskId" value={task.id} />
-                  </ActionForm>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link href={base} className={projectId ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
+          All projects
+        </Link>
+        {projects.map((project) => (
+          <Link
+            key={project.id}
+            href={`${base}&project=${project.id}`}
+            className={projectId === project.id ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+          >
+            {project.name} · {open(project.id)}
+          </Link>
+        ))}
+        <Link
+          href={`${base}&project=none`}
+          className={projectId === "none" ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+        >
+          No project · {open(null)}
+        </Link>
+        <ProjectForm organizationId={organizationId} />
+        <TaskForm
+          organizationId={organizationId}
+          projectId={projectId && projectId !== "none" ? projectId : undefined}
+          label="Add a task"
+          variant="outline"
+        />
+      </div>
+      <WorkBoard
+        cards={cards}
+        now={at}
+        showClient={false}
+        showProject={projectId === ""}
+        runCap={runCap}
+        runsOpen={runsOpen}
+        activity={activity}
+      />
       <Card>
         <CardHeader>
           <CardTitle>Swarms not on a project</CardTitle>
@@ -93,7 +95,7 @@ export function WorkTab({
                       {href ? <Link href={href}>{run.name}</Link> : run.name}
                       <span className="ml-2 text-muted-foreground">{run.status}</span>
                       <span className="ml-2 text-muted-foreground">{run.trigger}</span>
-                      <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
+                      <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, at)}</span>
                     </span>
                     {projects.length === 0 ? (
                       <span className="text-muted-foreground">Add a project before this swarm can sit on one.</span>

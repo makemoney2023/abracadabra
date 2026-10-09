@@ -560,12 +560,19 @@ Sidebar `staff-nav.tsx` gains "Agent" between Work and Spaces; `staff-nav-match.
 
 ### 12.4 Work board (`/work`)
 
-- Stage filter chips: Describe, Engineer, Build, Run. Column or badge on each card showing stage and round.
+The board is specified in [kanban-board-gameplan.md](kanban-board-gameplan.md) and is on the staff host.
+
+- Columns: Describe, Engineer, Build, Run, Done. A blocked card stays in its stage column.
+- Cards created by the agent show a bot mark. Cards in build show elapsed time and the PR link.
+- A card's details show `skills_json` as a checklist and the latest `agent.*` activities for that task.
+- Blocked cards show `blocked_reason` and the clearing action (pick a repo, retry creating a repo, choose another repo name, approve brief, answer question, retry run).
 - Cards created by the agent show a bot mark. Cards in build show elapsed time and the PR link.
 - A card's drawer shows `skills_json` as a checklist (done, doing, todo) and the latest `agent.*` activities for that task.
 - Blocked cards show `blocked_reason` and the clearing action (pick a repo, retry creating a repo, choose another repo name, approve brief, answer question, retry run).
 
 ### 12.5 Project page (`/projects/[id]`)
+
+The project page shows the same board, scoped to that project. See [kanban-board-gameplan.md](kanban-board-gameplan.md).
 
 - Status updates list already exists; internal agent updates render there with the bot mark.
 - Deliverables list shows `brief` and `design_system` first with approval state.
@@ -858,7 +865,7 @@ The fixed receipt is the reply only until step 34. After that, a known client ge
 - **Removed pieces (17.4).** Written as `blocked` with `removed_from_brief` and no migration. If closed-but-not-done tasks should look different on reports, add `cancelled` to `tasks.status` in `0009`.
 - **Approval policy (17.3).** Written as: notes, tasks, contacts, clients, projects, and internal status run straight away; anything a client sees, stage changes, merges, invites, and anything that directs the client agent asks first. Loosen per tool if the cards get in the way.
 - **Email sender check (17.6).** Cloudflare's MX adds `Authentication-Results`. Confirm the exact header and its `dkim=`/`dmarc=` fields on a real message before step 22 locks the parser.
-- **Mailbox later.** Specified in [mailbox-later.md](mailbox-later.md). Not built yet. Qualify budget and timeline without quoting a price. Capture a website when the address is freemail, then run the schema scan. Recognize an existing client who writes from a new address. Hand the thread to a person when it stalls. Attach files into the lead's space. Respect an opt-out. Send a readiness-check link. When Cal.com books the slot, confirm that time back in the thread.
+- **Mailbox later.** Built. Specified in [mailbox-later.md](mailbox-later.md). Qualify budget and timeline without quoting a price. Capture a website when the address is freemail, then run the schema scan. Recognize an existing client who writes from a new address. Hand the thread to a person when it stalls. Attach files into the lead's space. Respect an opt-out. Send a readiness-check link. When Cal.com books the slot, confirm that time back in the thread.
 - **Slack app owner.** The app sits in the agency workspace and uses Slack Connect channels. If a client wants the bot in their own workspace, that needs OAuth install and a token per team. Not in scope here.
 - **Client desk model (17.5, 17.8).** Closed. The mailbox is `replyToClient` inside `email()`, steps 32–34. There is no `ClientDesk` Durable Object and no new migration. Until step 34 ships, email still sends the fixed receipt and the two word-match questions. Staff still name the brief piece when they approve a request. Slack keeps the fixed receipt until it calls the same function.
 - **Client message sorting (step 31).** Closed. The mailbox model reads the email. Buttons are not used for mail.

@@ -598,11 +598,42 @@ const worker = {
           action: "open_prospect",
           email: input.email,
           name: input.name ?? "",
-        })) as { value?: { id?: unknown; name?: unknown } } | null;
-        const id = body?.value?.id;
-        const name = body?.value?.name;
-        if (typeof id !== "string" || !id || typeof name !== "string" || !name) return "down";
-        return { id, name };
+          text: input.text,
+          subject: input.subject,
+          threadId: input.threadId,
+          references: input.references,
+        })) as {
+          value?: {
+            id?: unknown;
+            name?: unknown;
+            kind?: unknown;
+            pending?: unknown;
+            declined?: unknown;
+            organizations?: unknown;
+          };
+        } | null;
+        const value = body?.value;
+        if (!value || typeof value.name !== "string") return "down";
+        const pending = value.pending === true;
+        const declined = value.declined === true;
+        const id = typeof value.id === "string" ? value.id : "";
+        if (!pending && !declined && !id) return "down";
+        const organizations = Array.isArray(value.organizations)
+          ? value.organizations.flatMap((item) => {
+              if (!item || typeof item !== "object") return [];
+              const row = item as { id?: unknown; name?: unknown };
+              if (typeof row.id !== "string" || typeof row.name !== "string") return [];
+              return [{ id: row.id, name: row.name }];
+            })
+          : undefined;
+        return {
+          id: id || null,
+          name: value.name,
+          kind: typeof value.kind === "string" ? value.kind : undefined,
+          pending,
+          declined,
+          organizations,
+        };
       },
       answer: async (organizationId, organizations, prospect) => {
         const body = (await hqChannel(env, {
@@ -623,8 +654,8 @@ const worker = {
       },
     });
     if (reply.skip) return;
-    let replyText = reply.reply;
-    if (reply.organizationId && parsed.attachments.length > 0) {
+    let replyText = reply.send === false ? "" : reply.reply;
+    if (reply.send !== false && reply.organizationId && parsed.attachments.length > 0) {
       const saved = (await hqChannel(env, {
         action: "attach",
         organizationId: reply.organizationId,
@@ -656,8 +687,10 @@ const worker = {
       rules: reply.plan.rules,
       prospect: reply.prospect,
       bookingOffered: reply.bookingOffered,
+      optOut: reply.optOut,
+      stalled: reply.stalled,
     });
-    if (!replyText) return;
+    if (reply.send === false || !replyText) return;
     const { EmailMessage } = await import("cloudflare:email");
     const mime = replyMime({
       from: own,
