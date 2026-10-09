@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A gameplan for manual projects: match one swarm pack onto each Describe card, then start that pack from a Run swarm button through the same due run the agent already uses.
+- **Why** — Saving requirements files a brief and no skills, so those cards never schedule a swarm. Chat starts a separate run that does not write the client space.
+- **Code touchpoints** — `docs/manual-project-swarm-gameplan.md`, `docs/hq-agent-spec.md`, `README.md`
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — none.
+- **Verification** — doc review. No tests run.
+
+## 2026-10-09
+
 - **What changed** — HQ chat can list a client's projects. Task lists include the project id. Creating a project with a name that client already has returns that project.
 - **Why** — Chat could see tasks and not the project they belonged to, so it opened a second project, filed one swarm task, and left the original project alone.
 - **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/db/crm.ts`, `handoff/src/agent/hq-chat.ts`
