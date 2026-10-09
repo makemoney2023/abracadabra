@@ -11,6 +11,7 @@ A visual multi-agent workflow builder for Cloudflare Workers. Drag-and-drop agen
 - **Agent Memory** — Agents remember context across executions
 - **Artifact Viewer** — Side panel showing all node outputs
 - **Template Workflows** — 8 pre-built pipelines (Blog Post, Research Report, Content Critique, Parallel Research, Support Triage, Code Review Squad, Startup Pitch Validator, Fact-Check Desk) plus skill-pack chains generated from related skill folders. A second template chains to the right. Regenerate packs from `handoff/` with `npx tsx scripts/write-pack-templates.ts`.
+- **Full Skill Execution** — When a node's instructions reference a `SKILL.md`, the worker loads the full skill body from the `handoff-skills` R2 bucket (`SKILLS` binding) and instructs the agent to execute every step and produce the skill's deliverables. Each node is allowed 4096 output tokens and up to 16,000 characters. Every downstream node also receives the original brief. If a referenced skill isn't published, the node fails with a clear error and does not fall back to a generic prompt.
 - **Finalized PDF Reports** — Cover page, run-summary stat cards, results table, full per-agent outputs, execution timeline, and quality checks; backed up to R2
 - **MCP Tool Access** — Connect remote MCP servers (Streamable HTTP) via the Plug button; agents call tools in a Reason → Act → Observe loop, with per-agent server selection and live tool badges on the canvas
 
@@ -25,6 +26,14 @@ Agents can call tools on any remote MCP server that speaks Streamable HTTP:
 
 No external server handy? Point one at this worker's built-in demo at `/demo-mcp/mcp` (`get_time`, `echo`, `word_count`) to try the loop with zero setup.
 - **Cloudflare Native** — Workers AI, Durable Objects, WebSockets, R2. Deploys to the Abracadabra account, with Handoff and HQ.
+
+## Changelog
+
+- **2026-10-09** — Skill-pack nodes now run their full skills.
+  - **Why:** campaigns came out generic ("Transform Your Idea") with no platform specs or character-limit checks. Nodes only saw a skill path and a short description, Workers AI capped output at 256 tokens, the system prompt said "be concise", ad-creative was typed as a critic, and downstream nodes lost the brief.
+  - **Touchpoints:** `src/ai/skills.ts`, `src/ai/agents.ts`, `src/do/WorkflowDO.ts`, `src/index.ts`, `wrangler.toml`, `handoff/src/lib/pack-templates.ts`, `src/pack-templates.json`.
+  - **Deploy:** publish skills first (`cd handoff && npm run publish:skills`).
+  - **Verification:** `npm test` and `npx tsc --noEmit` in `swarm/`; the full handoff vitest suites.
 
 ## Quick Start
 

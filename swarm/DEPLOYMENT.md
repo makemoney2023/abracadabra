@@ -21,7 +21,10 @@ npx wrangler login
 # 3. Create the R2 bucket (first time only, per account)
 npx wrangler r2 bucket create agent-swarm-artifacts
 
-# 4. Build the UI and deploy everything
+# 4. Publish skills to the handoff-skills bucket (skill-pack nodes load full SKILL.md from it)
+(cd ../handoff && npm run publish:skills)
+
+# 5. Build the UI and deploy everything
 npm run deploy
 ```
 
@@ -32,6 +35,7 @@ npm run deploy
 | `agent-swarm-orchestrator` | Worker | Main application server |
 | `WorkflowDO` | Durable Object | Workflow state, execution engine, WebSocket coordinator |
 | `agent-swarm-artifacts` | R2 Bucket | Output artifacts storage |
+| `handoff-skills` (`SKILLS`) | R2 Bucket (shared with Handoff) | Full skill bodies loaded by skill-pack nodes |
 | `AI` | Workers AI Binding | Llama 3.1 8B model access |
 
 ## Architecture
