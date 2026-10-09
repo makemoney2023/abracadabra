@@ -97,7 +97,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             <Card>
               <CardHeader>
                 <CardTitle>Requirements</CardTitle>
-                <CardDescription>What this project is for, and what it has to produce.</CardDescription>
+                <CardDescription>
+                  Edit this note and save it. The agent reads it and adds tasks that are not already on this project.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ProjectDescriptionForm
