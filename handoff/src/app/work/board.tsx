@@ -152,6 +152,7 @@ function CardFace({
   const late = card.due_at !== null && card.due_at < now && card.status !== "done";
   const waiting = card.stage === "build" && card.status === "todo" && !card.cursor_agent_id && !card.blocked_reason;
   const steps = skillSteps(card.skills_json);
+  const brief = notes.find((note) => note.kind === "agent.task_brief")?.body;
   const doneSteps = steps.filter((step) => step.status === "done").length;
   const pr =
     card.pr_number && card.repo_full_name ? `https://github.com/${card.repo_full_name}/pull/${card.pr_number}` : "";
@@ -179,6 +180,7 @@ function CardFace({
             </Link>
           ) : null}
           {showProject && !card.project_id ? <p className="text-sm text-muted-foreground">No project</p> : null}
+          {brief ? <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{brief}</p> : null}
         </div>
         <CardMenu card={card} />
       </div>

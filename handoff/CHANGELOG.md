@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Saving project requirements asks the agent for what each task must produce. That note is stored on the task and shown on the card. Saving again fills a task that only had a title, and leaves a note that is already the same.
+- **Why** — The first pass created titles only. The card had no detail.
+- **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/work/board.tsx`
+- **Data-flow impact** — Each new or untitled task gets an `agent.task_brief` activity whose body is the detail and whose `taskId` is the card. The board reads that note with the other agent notes.
+- **API / schema impact** — none.
+- **Verification** — pending.
+
+## 2026-10-09
+
 - **What changed** — Saving a project's requirements keeps the note editable and asks the agent to add tasks for work that is not already on that project. Saving again skips a title the project already has. Clearing the note does not remove tasks.
 - **Why** — The requirements field could be saved, and nothing turned that note into work on the board.
 - **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/[id]/page.tsx`
