@@ -48,11 +48,13 @@ Code lands in [`swarm/`](../../../swarm/) and [`.cursor/skills/community/muapi-r
 
 Operator step. No code. Covers MUAPI-001 through MUAPI-009 and the live half of MUAPI-020.
 
-- [ ] **Step 1: Create a sandbox key**
+- [x] **Step 1: Create a sandbox key**
 
 In the MuAPI dashboard, create a key with `is_test: true`. Keep it out of git and out of Worker secrets.
 
-- [ ] **Step 2: Add the remote server**
+The operator supplied the bearer on 2026-10-09. It is stored only as the portal credential. It is not in git and not a Worker secret. This session did not call MuAPI's key API, so `is_test` was not read back.
+
+- [x] **Step 2: Add the remote server**
 
 In **Zero Trust → Access controls → MCP servers**, add a server:
 
@@ -63,7 +65,7 @@ In **Zero Trust → Access controls → MCP servers**, add a server:
 
 If the add dialog only offers OAuth, set `auth_type` to `bearer` and `auth_credentials` to the key on the server record. Do not put the key in the URL.
 
-- [ ] **Step 3: Attach it to the agency portal**
+- [x] **Step 3: Attach it to the agency portal**
 
 On portal `mcp.abra-ca-dabra.app`:
 
@@ -82,9 +84,13 @@ A `PUT` that includes `servers` replaces the whole portal mapping. Start from a 
 
 Open HQ `/mcp` as a super admin. `muapi` is a row. Toggle it on, confirm a `tools/list` through the portal shows the allowlisted names and none of the tools that stay off, then toggle it off. The server stays linked.
 
-- [ ] **Step 5: Record the result**
+Linked on 2026-10-09 with the grant left off. `portal_toggle_single_server` was not called. A `tools/list` through the service token was not run from this session. The portal record shows the 13 render tools enabled and the seven admin tools disabled. Access app `MuAPI` (type `mcp`, destination `muapi`) has the same non-identity policy as Parallel Search, for service token `hq-mcp-portal`.
 
-Note the date, that the row is visible, and that the credential is the sandbox key. Do not paste the key into the note.
+- [x] **Step 5: Record the result**
+
+Note the date, that the row is visible, and that the credential is the operator-supplied bearer. Do not paste the key into the note.
+
+Recorded 2026-10-09. Server `muapi` is on portal `abracadabra` next to `parallel-search`. Hostname `https://api.muapi.ai/mcp`. `on_behalf` is false. `default_disabled` is true. Sync status is `ready` and authentication is `connected`. The key is not in the hostname.
 
 ### Task 2: Tool allowlist
 

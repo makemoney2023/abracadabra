@@ -33,6 +33,13 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — Portal server `muapi` is linked. The HQ grant stays off.
+  - **Why:** Render nodes need the MuAPI tools on the existing portal. The key stays the portal bearer.
+  - **Touchpoints:** Cloudflare portal `abracadabra` and Access app `MuAPI`. No Worker secret. `parallel-search` stays on the portal.
+  - **Data flow:** `on_behalf` is false. `default_disabled` is true. Thirteen render tools are enabled. Seven admin tools are disabled. The grant was not toggled on.
+  - **API / schema:** none.
+  - **Verification:** Portal GET after the update shows `parallel-search` and `muapi`, hostname `https://api.muapi.ai/mcp`, sync `ready`. A service-token `tools/list` was not run from this session.
+
 - **2026-10-09** — Production serves the MuAPI pack catalog, and the canvas keeps each node's tool allowlist.
   - **Why:** The catalog was only in the branch bundle. The previous canvas dropped `mcpToolNames` when a template loaded, so a text node could see every portal tool.
   - **Touchpoints:** `src/index.ts`, `src/ui-asset.ts`, `src/ui-asset.test.ts`. Production worker version `f8aeb845-b439-4194-971b-c57f543ee285`. Canvas files are R2 `ui/` on `agent-swarm-artifacts`. Skill object `skills/community/muapi-render/SKILL.md` is in `handoff-skills`.

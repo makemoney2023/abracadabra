@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-09
 **Product:** The agent swarm, Handoff HQ, and the agency Cloudflare MCP portal
-**Status:** Production worker `agent-swarm-orchestrator` serves the pack catalog as of 2026-10-09. The canvas build that keeps `mcpToolNames` is in R2 prefix `ui/` on bucket `agent-swarm-artifacts`. The render skill is at `skills/community/muapi-render/SKILL.md` in bucket `handoff-skills`, and `skills/index.json` lists it. Portal server `muapi` is not linked. The portal still has only `parallel-search`. Linking waits on a MuAPI sandbox bearer.
+**Status:** Production worker `agent-swarm-orchestrator` serves the pack catalog as of 2026-10-09. The canvas build that keeps `mcpToolNames` is in R2 prefix `ui/` on bucket `agent-swarm-artifacts`. The render skill is at `skills/community/muapi-render/SKILL.md` in bucket `handoff-skills`, and `skills/index.json` lists it. Portal `abracadabra` has server `muapi` (`https://api.muapi.ai/mcp`, bearer, require user auth off, allowlist on, grant left off) beside `parallel-search`. The key is the portal credential only.
 **Requirements:** MUAPI-001 through MUAPI-025
 **Lives in:** [`swarm/`](../../../swarm/), [`docs/`](../../), and the portal at `https://mcp.abra-ca-dabra.app/mcp`
 **Plan:** [`docs/superpowers/plans/2026-10-09-muapi-swarm.md`](../plans/2026-10-09-muapi-swarm.md)

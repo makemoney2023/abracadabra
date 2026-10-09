@@ -144,7 +144,7 @@ First rows:
 
 Search Console has no official remote MCP server. Community servers are local processes with a service account, so they are not pasted into the portal. Operator step, once per property: enable the Search Console API and add that service account's `client_email` as a user on the property. Google Analytics does ship a remote MCP server; when we add it, it is a `remote` row with an admin OAuth grant, not an adapter.
 
-`muapi` is specified and not linked. It is a remote bearer server, **Require user auth** off, allowlist on, no grant row. Website heroes, ads, and later jobs share that server. The roles and the operator steps are the [MuAPI swarm spec](superpowers/specs/2026-10-09-muapi-swarm-design.md).
+`muapi` is linked on portal `mcp.abra-ca-dabra.app` as of 2026-10-09. It is a remote bearer server, **Require user auth** off, allowlist on, no grant row, and the HQ toggle is left off. Website heroes, ads, and later jobs share that server. The roles and the operator steps are the [MuAPI swarm spec](superpowers/specs/2026-10-09-muapi-swarm-design.md).
 
 A skill names connector tools in its file. The agent calls one only when that name is in the current skill and in the portal's tool list. Missing either, the step is skipped and `agent.note` records the name.
 

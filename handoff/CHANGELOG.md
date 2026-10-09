@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Portal server `muapi` is linked on `mcp.abra-ca-dabra.app` beside `parallel-search`. The HQ grant is left off.
+- **Why** — Render nodes call MuAPI through the portal. The API key is the portal bearer, not a Worker secret.
+- **Code touchpoints** — none. Cloudflare MCP server `muapi`, portal `abracadabra`, Access app `MuAPI`.
+- **Data-flow impact** — Require user auth is off. The render allowlist is on. Admin, top-up, key, upload, face-swap, and ghibli tools are disabled. No `connector_grants` row.
+- **API / schema impact** — none.
+- **Verification** — Portal GET shows both servers, hostname `https://api.muapi.ai/mcp`, authentication `connected`. The key is not in the URL.
+
+## 2026-10-09
+
 - **What changed** — Production swarm serves the MuAPI pack catalog. The render skill is in the published library. The canvas build that keeps `mcpToolNames` is served from R2.
 - **Why** — The catalog and the skill had to be reachable for a render run. Portal server `muapi` still needs a sandbox bearer.
 - **Code touchpoints** — `swarm/src/index.ts`, `swarm/src/ui-asset.ts`, `swarm/src/ui-asset.test.ts`. Buckets `agent-swarm-artifacts` (`ui/`) and `handoff-skills` (`skills/community/muapi-render/SKILL.md`, `skills/index.json`).
