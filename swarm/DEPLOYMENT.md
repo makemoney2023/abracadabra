@@ -34,7 +34,7 @@ npm run deploy
 |---|---|---|
 | `agent-swarm-orchestrator` | Worker | Main application server |
 | `WorkflowDO` | Durable Object | Workflow state, execution engine, WebSocket coordinator |
-| `agent-swarm-artifacts` | R2 Bucket | Output artifacts storage |
+| `agent-swarm-artifacts` | R2 Bucket | Output artifacts storage. A canvas build at `ui/` is served before the assets binding |
 | `handoff-skills` (`SKILLS`) | R2 Bucket (shared with Handoff) | Full skill bodies loaded by skill-pack nodes |
 | `AI` | Workers AI Binding | Llama 3.1 8B model access |
 

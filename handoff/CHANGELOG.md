@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Production swarm serves the MuAPI pack catalog. The render skill is in the published library. The canvas build that keeps `mcpToolNames` is served from R2.
+- **Why** — The catalog and the skill had to be reachable for a render run. Portal server `muapi` still needs a sandbox bearer.
+- **Code touchpoints** — `swarm/src/index.ts`, `swarm/src/ui-asset.ts`, `swarm/src/ui-asset.test.ts`. Buckets `agent-swarm-artifacts` (`ui/`) and `handoff-skills` (`skills/community/muapi-render/SKILL.md`, `skills/index.json`).
+- **Data-flow impact** — `GET /api/template?id=website-hero` returns the three text nodes. The canvas script copies `mcpToolNames` on template load and save. The portal mapping is unchanged (`parallel-search` only).
+- **API / schema impact** — none. No Worker secret for the MuAPI key.
+- **Verification** — `npm test` in `swarm/`: 49 passed. `npx tsc --noEmit` in `swarm/` exited 0. Live template and canvas script checks on `https://agent-swarm-orchestrator.abracadabra-ai.workers.dev`.
+
+## 2026-10-09
+
 - **What changed** — The swarm canvas now includes the rest of the MuAPI pack catalog: social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips.
 - **Why** — Those jobs share the render roles already used by the website hero and the ad.
 - **Code touchpoints** — `swarm/src/templates/media-templates.ts`, `swarm/src/templates/media-templates.test.ts`, `.cursor/skills/community/muapi-render/SKILL.md`

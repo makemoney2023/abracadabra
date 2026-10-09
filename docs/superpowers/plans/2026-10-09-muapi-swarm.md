@@ -214,11 +214,11 @@ Front matter `name: muapi-render` and a description that says one node runs one 
 
 No sibling files. The worker loads this body only.
 
-- [ ] **Step 2: Publish**
+- [x] **Step 2: Publish**
 
 From `handoff/`, `npm run publish:skills`, so the `SKILLS` bucket has the object. A render node whose skill is missing already fails closed (`swarm/src/ai/skills.ts`). Do not add a fallback prompt.
 
-Not run on 2026-10-09: `handoff/.env.local` does not have `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_ENDPOINT`. The skill file is in the repo. Publish before the first render run.
+Published on 2026-10-09 without the S3 script. `handoff/.env.local` still has no `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, or `R2_ENDPOINT`, so `npm run publish:skills` did not run and the rest of the library was not rewritten. Object `skills/community/muapi-render/SKILL.md` is in bucket `handoff-skills` (2761 bytes). `skills/index.json` lists `community/muapi-render/SKILL.md` among 668 skills.
 
 ### Task 7: Docs that follow the code
 

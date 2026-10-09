@@ -33,6 +33,13 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — Production serves the MuAPI pack catalog, and the canvas keeps each node's tool allowlist.
+  - **Why:** The catalog was only in the branch bundle. The previous canvas dropped `mcpToolNames` when a template loaded, so a text node could see every portal tool.
+  - **Touchpoints:** `src/index.ts`, `src/ui-asset.ts`, `src/ui-asset.test.ts`. Production worker version `f8aeb845-b439-4194-971b-c57f543ee285`. Canvas files are R2 `ui/` on `agent-swarm-artifacts`. Skill object `skills/community/muapi-render/SKILL.md` is in `handoff-skills`.
+  - **Data flow:** `GET /` and `/assets/<file>` read `ui/` when that object exists, then fall through to the assets binding. Template JSON still carries `mcpToolNames`.
+  - **API / schema:** none. No new Worker secret. Portal server `muapi` is still not linked.
+  - **Verification:** `npm test` in `swarm/` — 49 passed. `npx tsc --noEmit` in `swarm/` exited 0. Live `GET /api/template?id=website-hero` returns three nodes with `mcpToolNames: []`. Live `/assets/index-DIC7CQSj.js` contains `mcpToolNames`.
+
 - **2026-10-09** — The canvas includes the full MuAPI pack catalog.
   - **Why:** Social, brand, product, storyboard, UGC, spokesperson, and highlight clips use the same roles as the website hero and the ad.
   - **Touchpoints:** `src/templates/media-templates.ts`, `src/templates/media-templates.test.ts`, `.cursor/skills/community/muapi-render/SKILL.md`.
