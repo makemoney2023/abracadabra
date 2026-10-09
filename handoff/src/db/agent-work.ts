@@ -407,7 +407,7 @@ async function taskInOrg(
   return task;
 }
 
-function skillsJson(current: string | null, skills: NonNullable<WorkArgs["skills"]>): string {
+function skillsJson(current: string | null, skills: unknown): string {
   const next = skillSteps(skills);
   const edges = storedSkillEdges(current);
   return JSON.stringify(edges.length > 0 ? { ...next, edges } : next);
@@ -420,7 +420,7 @@ async function writeSkillNote(
   args: WorkArgs,
   now: number,
 ): Promise<void> {
-  if (args.skills !== undefined) {
+  if (args.skills != null) {
     await sql.run("UPDATE tasks SET skills_json = ?, updated_at = ? WHERE id = ?", [
       skillsJson(task.skills_json, args.skills),
       now,
@@ -492,7 +492,7 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
     sets.push("stage = ?");
     params.push(args.stage);
   }
-  if (args.skills !== undefined) {
+  if (args.skills != null) {
     sets.push("skills_json = ?");
     params.push(skillsJson(task.skills_json, args.skills));
   }

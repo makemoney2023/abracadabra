@@ -1,5 +1,5 @@
 import type { Caller } from "@/lib/authz";
-import { nextColumnPosition } from "@/lib/task-stage";
+import { nextColumnPosition } from "@/lib/task-position";
 import { LIMITS } from "@/lib/policy/limits";
 import { activityLinks, runStatus } from "@/lib/agent-activity";
 import type { Sql } from "./sql";

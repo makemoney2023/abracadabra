@@ -2,6 +2,9 @@ import type { Sql } from "@/db/sql";
 import type { WakeReason } from "@/lib/agent-wake";
 import { scheduleTaskSwarm } from "@/lib/client-workflows";
 import { defaultBuildDeps, startBuild, type BuildDeps, type GateReason } from "@/lib/cursor-build";
+import { nextColumnPosition } from "@/lib/task-position";
+
+export { nextColumnPosition } from "@/lib/task-position";
 
 export const TASK_COLUMNS = ["describe", "engineer", "build", "run", "done"] as const;
 export type TaskColumn = (typeof TASK_COLUMNS)[number];
@@ -50,24 +53,6 @@ function columnOf(task: { status: string; stage: string }): TaskColumn {
 
 function isColumn(value: string | undefined): value is TaskColumn {
   return value === "describe" || value === "engineer" || value === "build" || value === "run" || value === "done";
-}
-
-/** Next position at the end of one column for one project. */
-export async function nextColumnPosition(
-  sql: Sql,
-  input: { organizationId: string | null; projectId: string | null; column: string },
-): Promise<number> {
-  const row = await sql.get<{ next: number | null }>(
-    `SELECT COALESCE(MAX(position), -1) + 1 AS next FROM tasks
-     WHERE ifnull(organization_id, '') = ifnull(?, '')
-       AND ifnull(project_id, '') = ifnull(?, '')
-       AND (
-         (? = 'done' AND status = 'done')
-         OR (? != 'done' AND stage = ? AND status != 'done')
-       )`,
-    [input.organizationId, input.projectId, input.column, input.column, input.column],
-  );
-  return Number(row?.next ?? 0);
 }
 
 async function columnMates(sql: Sql, task: TaskMoveRow, column: TaskColumn): Promise<{ id: string }[]> {
