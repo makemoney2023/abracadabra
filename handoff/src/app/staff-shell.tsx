@@ -10,7 +10,9 @@ import {
   SidebarProvider,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { CommandPalette } from "@/components/command-palette";
 import { ContextBar, ContextBarProvider } from "@/components/context-bar";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { Toaster } from "@/components/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { StaffNav } from "./staff-nav";
@@ -37,6 +39,8 @@ export function StaffShell({ children }: { children: ReactNode }) {
         {children}
       </SidebarInset>
       <Toaster />
+      <CommandPalette />
+      <KeyboardShortcuts />
       </ContextBarProvider>
     </SidebarProvider>
     </TooltipProvider>

@@ -19,13 +19,23 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export const PALETTE_EVENT = "hq:palette";
+export const ACTION_EVENT = "hq:action";
+
+export type ContextAction = { label: string; run: string };
 
 type ContextBarValue = {
   labels: Record<string, string>;
   actionSlot: HTMLElement | null;
+  paletteActions: ContextAction[];
   setLabel: (path: string, label: string) => void;
   setActionSlot: (slot: HTMLElement | null) => void;
+  setPaletteActions: (actions: ContextAction[]) => void;
 };
+
+function sameActions(left: ContextAction[], right: ContextAction[]): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((action, index) => action.label === right[index]?.label && action.run === right[index]?.run);
+}
 
 const ContextBarContext = React.createContext<ContextBarValue | null>(null);
 
@@ -37,12 +47,16 @@ export function openCommandPalette() {
 export function ContextBarProvider({ children }: { children: React.ReactNode }) {
   const [labels, setLabels] = React.useState<Record<string, string>>({});
   const [actionSlot, setActionSlot] = React.useState<HTMLElement | null>(null);
+  const [paletteActions, setPaletteActionsState] = React.useState<ContextAction[]>([]);
   const setLabel = React.useCallback((path: string, label: string) => {
     setLabels((current) => (current[path] === label ? current : { ...current, [path]: label }));
   }, []);
+  const setPaletteActions = React.useCallback((actions: ContextAction[]) => {
+    setPaletteActionsState((current) => (sameActions(current, actions) ? current : actions));
+  }, []);
   const value = React.useMemo(
-    () => ({ labels, actionSlot, setLabel, setActionSlot }),
-    [labels, actionSlot, setLabel, setActionSlot],
+    () => ({ labels, actionSlot, paletteActions, setLabel, setActionSlot, setPaletteActions }),
+    [labels, actionSlot, paletteActions, setLabel, setActionSlot, setPaletteActions],
   );
   return <ContextBarContext.Provider value={value}>{children}</ContextBarContext.Provider>;
 }
@@ -59,6 +73,17 @@ export function SetContextLabel({ path, label }: { path: string; label: string }
   React.useEffect(() => {
     setLabel(path, label);
   }, [path, label, setLabel]);
+  return null;
+}
+
+/** Registers palette actions for this page. `n` runs the first one. */
+export function SetPaletteActions({ actions }: { actions: ContextAction[] }) {
+  const { setPaletteActions } = useContextBar();
+  const serialized = JSON.stringify(actions);
+  React.useEffect(() => {
+    setPaletteActions(JSON.parse(serialized) as ContextAction[]);
+    return () => setPaletteActions([]);
+  }, [serialized, setPaletteActions]);
   return null;
 }
 

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ staff can open a command palette with ⌘K and jump with keyboard shortcuts. The palette lists pages, recent records, clients, and page actions.
+- **Why** — Staff had to hunt the sidebar for every page and client.
+- **Code touchpoints** — `handoff/src/components/palette-items.ts`, `handoff/src/components/command-palette.tsx`, `handoff/src/components/keyboard-shortcuts.tsx`, `handoff/src/components/context-bar.tsx`, `handoff/src/app/staff-shell.tsx`, `handoff/src/app/api/hq/palette/route.ts`
+- **Data-flow impact** — The palette reads client names from `listOrganizations`. Recent records stay in the browser session.
+- **API / schema impact** — `GET /api/hq/palette` returns `{ clients: [{ id, name }] }` for HQ staff. Anyone else gets 404.
+- **Verification** — `npx vitest run src/components/palette-items.test.ts` (4 passed). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ pages show a sticky context bar: sidebar toggle, breadcrumbs, a slot for page actions, and a command-palette button. Record names stay blank until a page registers one.
 - **Why** — The inset header only had a sidebar toggle, so staff could not see where they were.
 - **Code touchpoints** — `handoff/src/app/breadcrumbs.ts`, `handoff/src/components/context-bar.tsx`, `handoff/src/app/staff-shell.tsx`
