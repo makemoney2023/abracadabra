@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/leads/page.tsx`, `handoff/src/app/leads/view.ts`, `handoff/src/app/leads/board.tsx`, `handoff/src/app/leads/filters.tsx`, `handoff/src/app/leads/lead-form.tsx`, `handoff/src/components/ui/scroll-area.tsx`
 - **Data-flow impact** — The page still reads deals. It also reads staff emails and the first contact on each company so the list can show owner initials and a contact. Stage moves still use the existing action.
 - **API / schema impact** — none.
-- **Verification** — Full npm test follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+- **Verification** — `npm test` (113 files / 625 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
