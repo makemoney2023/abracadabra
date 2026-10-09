@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The mailbox follow-ups are on `main` and published. Staff HQ and the agent worker were deployed from that merge.
+- **Why** — The branch was merged after `0016` was already the swarm runs table, so the opt-out column ships as `0017_contact_opt_out.sql`.
+- **Code touchpoints** — `handoff/migrations/0017_contact_opt_out.sql`, `handoff/src/db/migrate.ts`, `handoff/src/db/migration-sql.ts`
+- **Data-flow impact** — none beyond the mailbox behavior already described. A database that already has `contacts.opted_out` skips the new migration.
+- **API / schema impact** — `0017_contact_opt_out.sql` adds `contacts.opted_out` when that column is missing.
+- **Verification** — `npx vitest run` on the migration, mailbox, and swarm-run tests passed 7 files / 69 tests. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `acdb5868-bf23-4f74-8f98-4c281e0bdd66` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `89b53063-d8f6-4d42-b8aa-4ef3491c6b26` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. `BOOKING_URL` is still empty.
+
+## 2026-10-09
+
 - **What changed** — A quoted email address is no longer saved as a lead’s website. A yes still confirms a client when the reply’s thread id changes. A booking confirmation that fails to send is tried again on the next delivery, and a second copy is not sent after it succeeds.
 - **Why** — Review of the mailbox follow-ups found those three gaps. An address in the message could start a schema scan of the wrong host, a client reply could never attach, and a failed confirmation was acknowledged and then dropped.
 - **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`
