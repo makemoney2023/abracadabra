@@ -13,6 +13,7 @@ import {
   createTask,
   postStatusUpdate,
   publishStatusUpdate,
+  saveProjectDescription,
   updateProject,
   updateTask,
   type CrmError,
@@ -83,6 +84,21 @@ export async function updateProjectAction(_previous: FormState, formData: FormDa
   if (!saved.ok) return { message: messageFor(saved.error, "Pick a status.") };
   refreshProject(projectId, organizationId);
   return { message: "Status saved." };
+}
+
+export async function saveProjectDescriptionAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const { sql, caller } = await requireHqStaffPage();
+  const projectId = String(formData.get("projectId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const saved = await saveProjectDescription(
+    sql,
+    caller,
+    { projectId, description: String(formData.get("description") ?? "") },
+    Date.now(),
+  );
+  if (!saved.ok) return { message: messageFor(saved.error, "Keep the note under 4000 characters.") };
+  refreshProject(projectId, organizationId);
+  return { message: "Requirements saved." };
 }
 
 export async function createMilestoneAction(_previous: FormState, formData: FormData): Promise<FormState> {

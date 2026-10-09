@@ -20,6 +20,7 @@ const STEPS = [
   { file: "0016_swarm_runs.sql", table: "swarm_runs" },
   { file: "0017_contact_opt_out.sql", column: { table: "contacts", name: "opted_out" } },
   { file: "0018_task_position.sql", column: { table: "tasks", name: "position" } },
+  { file: "0019_project_description.sql", column: { table: "projects", name: "description" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];

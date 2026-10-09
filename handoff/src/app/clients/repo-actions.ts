@@ -33,7 +33,10 @@ export async function linkRepoAction(
     secrets: readGithubSecrets(),
   });
   if (!linked.ok) return fail(linked.message, "githubRepoId");
-  refresh(organizationId, "");
+  const placed = await sql.get<{ project_id: string | null }>("SELECT project_id FROM repos WHERE id = ?", [
+    linked.id,
+  ]);
+  refresh(organizationId, placed?.project_id ?? "");
   return ok("This repo is now linked.");
 }
 

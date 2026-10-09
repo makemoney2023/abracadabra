@@ -88,7 +88,8 @@ Describe and Engineer are the columns `advanceClientWork` pulls from. Build is t
 
 Filters are query params, not new routes.
 
-- Client board: `?project=<id>` keeps one project's cards. Chips list each project and its open count. "No project" is a chip for `project_id` null.
+- Client board: `?project=<id>` keeps one project's cards. Chips list each project and its open count. "No project" is a chip for `project_id` null. Each chip also opens `/projects/[id]`. The client Overview lists the same projects, with status and the requirements note.
+
 - Studio board: `?client=<id>&project=<id>` narrows the same way. Late, this week, and blocked stay as filters (`?late=1`, `?week=1`, `?blocked=1`). They are not columns.
 - Group by person and group by client go away on `/work`. The column is the group. The card shows the client and the project.
 

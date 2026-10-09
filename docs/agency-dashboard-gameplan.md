@@ -687,7 +687,7 @@ Each step ships on its own and is useful on its own.
 6. **GitHub repos.** One GitHub App on our org with read and write access. The tables already live
    in `0005_crm.sql` (there is no `0006_github.sql`). `hq /settings/github` is admin only. The signed
    webhook is `hq /api/github/webhook`. `handoff-hq` produces queue `github-events`. The client worker
-   consumes it. The client page and the project page list linked repos. This step is in the app.
+   consumes it. The client page lists linked repos. The project page lists the repos on that project, and the client repos that are not on a project yet. This step is in the app.
 7. **Finished work.** `deliverables`, `deliverable_items`, and `deliverable_feedback` tables, the
    access-checked media route, the staff builder, pull from a repo manifest (like social-preview in
    the renewimplants repo), the client gallery at `/w/[slug]/work`, and approve or ask-for-changes.

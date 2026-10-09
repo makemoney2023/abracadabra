@@ -7,6 +7,7 @@ import {
   type DealCard,
   type LinkedRepo,
   type Organization,
+  type ProjectRow,
   type TaskRow,
   type WorkspaceLink,
 } from "@/db/crm";
@@ -16,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PersonForm } from "../activity-forms";
+import { ProjectForm } from "../../projects/forms";
+import { PROJECT_STATUS_LABEL } from "../../projects/labels";
 import { ActivityLines } from "./activity-tab";
 import { CLIENT_KIND_LABEL, tabHref } from "./tabs";
 
@@ -26,6 +29,7 @@ export function OverviewTab({
   timeline,
   linked,
   repos,
+  projects,
   deals,
   readiness,
   schema,
@@ -36,15 +40,48 @@ export function OverviewTab({
   timeline: ActivityRow[];
   linked: WorkspaceLink[];
   repos: LinkedRepo[];
+  projects: ProjectRow[];
   deals: DealCard[];
   readiness: AssessmentView | null;
   schema: SchemaLeadView | null;
 }) {
+  const projectName = new Map(projects.map((project) => [project.id, project.name]));
   const main = contacts.find((person) => person.is_primary === 1);
   const recent = timeline.slice(0, 5);
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="flex flex-col gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <div>
+              <CardTitle>Projects</CardTitle>
+              <CardDescription>Work for this client. Open a project to write what it needs.</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={tabHref(client.id, "work")}>Work</Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {projects.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No projects yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-3 text-sm">
+                {projects.map((project) => (
+                  <li key={project.id}>
+                    <Link href={`/projects/${project.id}`}>{project.name}</Link>
+                    <span className="ml-2 text-muted-foreground">{PROJECT_STATUS_LABEL[project.status]}</span>
+                    {project.description ? (
+                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{project.description}</p>
+                    ) : (
+                      <p className="mt-1 text-muted-foreground">No requirements yet.</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <ProjectForm organizationId={client.id} />
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>Plan</CardTitle>
@@ -213,6 +250,11 @@ export function OverviewTab({
                 {repos.map((repo) => (
                   <li key={repo.id} className="font-mono">
                     {repo.full_name}
+                    <span className="ml-2 font-sans text-muted-foreground">
+                      {repo.project_id
+                        ? (projectName.get(repo.project_id) ?? "On a project")
+                        : "Not on a project"}
+                    </span>
                   </li>
                 ))}
               </ul>

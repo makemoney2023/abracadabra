@@ -35,6 +35,7 @@ describe("statementsFromMigration", () => {
       "0016_swarm_runs.sql",
       "0017_contact_opt_out.sql",
       "0018_task_position.sql",
+      "0019_project_description.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -63,6 +64,8 @@ describe("statementsFromMigration", () => {
       ]);
       const scanColumn = db.prepare("PRAGMA table_info(schema_check_sites)").all() as { name: string }[];
       expect(scanColumn.some((column) => column.name === "scan_id")).toBe(true);
+      const projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
+      expect(projectColumns.some((column) => column.name === "description")).toBe(true);
     } finally {
       process.chdir(previous);
     }
