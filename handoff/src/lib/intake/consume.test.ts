@@ -276,6 +276,38 @@ describe("intake consumer", () => {
     expect(sent).toHaveLength(2);
   });
 
+  it("sends the booking confirmation on the retry when the first send failed", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "assessment", payload: assessment }, NOW);
+    const sent: BookingMail[] = [];
+    let attempts = 0;
+    const mailer = {
+      send: async (message: BookingMail) => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("mailbox down");
+        sent.push(message);
+      },
+    };
+    const payload = {
+      external_id: "cal-retry",
+      email: "ada@northwind.example",
+      name: "Ada North",
+      domain: "northwind.example",
+      starts_at: NOW + 86_400_000,
+      kind: "created",
+    };
+    await expect(consumeIntake(sql, { source: "booking", payload }, NOW + 2, mailer)).rejects.toThrow("mailbox down");
+    const missed = await sql.get<{ n: number }>(
+      "SELECT count(*) AS n FROM activities WHERE kind = 'agent.reply'",
+    );
+    expect(missed?.n).toBe(0);
+    await consumeIntake(sql, { source: "booking", payload }, NOW + 3, mailer);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.text).toBe("Your working session is 2023-11-15 22:13 UTC.");
+    await consumeIntake(sql, { source: "booking", payload }, NOW + 4, mailer);
+    expect(sent).toHaveLength(1);
+  });
+
   it("refuses an assessment with no id and no way to match a lead", async () => {
     const sql = await database();
     const missingId = await consumeIntake(

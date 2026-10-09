@@ -248,7 +248,9 @@ export async function handleInboundEmail(
       email: string;
       name: string | null;
       text: string;
+      subject: string;
       threadId: string;
+      references: string;
     }) => Promise<OpenedChannelProspect | "down">;
     answer?: (organizationId: string, organizations: { id: string; name: string }[], prospect: boolean) => Promise<FiledTurn>;
   },
@@ -273,7 +275,9 @@ export async function handleInboundEmail(
         email: sender,
         name: displayName(message.from),
         text: message.text,
+        subject: message.subject,
         threadId: threadKey,
+        references: message.references,
       });
     } catch {
       return held(RETRY, null);

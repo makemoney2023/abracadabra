@@ -599,7 +599,9 @@ const worker = {
           email: input.email,
           name: input.name ?? "",
           text: input.text,
+          subject: input.subject,
           threadId: input.threadId,
+          references: input.references,
         })) as {
           value?: {
             id?: unknown;

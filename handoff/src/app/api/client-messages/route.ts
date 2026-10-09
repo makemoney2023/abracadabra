@@ -78,7 +78,9 @@ export async function POST(request: Request) {
         name: text(body, "name") || null,
         now,
         text: text(body, "text") || null,
+        subject: text(body, "subject") || null,
         threadId: text(body, "threadId") || null,
+        references: text(body, "references") || null,
       });
       return NextResponse.json({
         ok: true,

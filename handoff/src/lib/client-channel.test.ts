@@ -333,7 +333,9 @@ describe("mailbox reply", () => {
       email: "ada@northwind.example",
       name: "Ada North",
       text: "We need a new site.",
+      subject: "Please add a page",
       threadId: "<m-1>",
+      references: "",
     });
     expect(answer.organizationId).toBe("lead-1");
     expect(answer.prospect).toBe(true);

@@ -143,19 +143,15 @@ async function sendBookingConfirmation(
     [input.organizationId],
   );
   const text = `Your working session is ${formatSessionUtc(input.startsAt)}.`;
-  try {
-    await mailer.send({
-      from: MAGIC_FROM,
-      to: input.email,
-      subject: "Your working session",
-      text,
-      headers: thread?.thread_id
-        ? { "In-Reply-To": thread.thread_id, References: thread.thread_id }
-        : undefined,
-    });
-  } catch {
-    return;
-  }
+  await mailer.send({
+    from: MAGIC_FROM,
+    to: input.email,
+    subject: "Your working session",
+    text,
+    headers: thread?.thread_id
+      ? { "In-Reply-To": thread.thread_id, References: thread.thread_id }
+      : undefined,
+  });
   await sql.run(
     `INSERT INTO activities (
        id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
@@ -468,11 +464,11 @@ async function consumeBooking(
     [externalId],
   );
   if (current && current.status === status && current.starts_at === startsAt) {
+    await confirmLiveBooking(sql, mailer, { externalId, startsAt, status, email }, now);
     return { ok: true, duplicate: true };
   }
   if (!current && !email && !domain) return { ok: false, error: "invalid", retry: false };
   let leadOrganizationId: string | undefined;
-  const confirm: { organizationId: string | null; email: string | null } = { organizationId: null, email: null };
 
   try {
     await withTx(sql, async () => {
@@ -539,24 +535,42 @@ async function consumeBooking(
          )`,
         [externalId, now, externalId],
       );
-      if (callIsLive(status) && email && organizationId) {
-        confirm.organizationId = organizationId;
-        confirm.email = email;
-      }
     });
   } catch (error) {
-    if (isUnique(error)) return { ok: true, duplicate: true };
+    if (isUnique(error)) {
+      await confirmLiveBooking(sql, mailer, { externalId, startsAt, status, email }, now);
+      return { ok: true, duplicate: true };
+    }
     throw error;
   }
-  if (mailer && confirm.organizationId && confirm.email) {
-    await sendBookingConfirmation(
-      sql,
-      mailer,
-      { organizationId: confirm.organizationId, email: confirm.email, externalId, startsAt },
-      now,
-    );
-  }
+  await confirmLiveBooking(sql, mailer, { externalId, startsAt, status, email }, now);
   return { ok: true, duplicate: false, leadOrganizationId };
+}
+
+async function confirmLiveBooking(
+  sql: Sql,
+  mailer: BookingMailer | null | undefined,
+  input: { externalId: string; startsAt: number; status: string; email: string | null },
+  now: number,
+): Promise<void> {
+  if (!mailer || !callIsLive(input.status) || !input.email) return;
+  const row = await sql.get<{ organization_id: string | null }>(
+    `SELECT organization_id FROM appointments
+     WHERE provider = 'calcom' AND external_id = ? AND status = ? AND starts_at = ?`,
+    [input.externalId, input.status, input.startsAt],
+  );
+  if (!row?.organization_id) return;
+  await sendBookingConfirmation(
+    sql,
+    mailer,
+    {
+      organizationId: row.organization_id,
+      email: input.email,
+      externalId: input.externalId,
+      startsAt: input.startsAt,
+    },
+    now,
+  );
 }
 
 export async function consumeIntake(

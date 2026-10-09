@@ -105,20 +105,35 @@ async function organizationsOnDomain(sql: Sql, domain: string): Promise<DomainOr
   return rows.map((row) => ({ id: row.id, name: row.name, kind: orgKind(row.kind) }));
 }
 
-async function noteExists(
+function sameThread(stored: string | null, threadId: string, references: string): boolean {
+  if (!stored) return false;
+  if (stored === threadId) return true;
+  return references.includes(stored);
+}
+
+async function notedThreads(
   sql: Sql,
-  input: { body: string; emailField: "pendingEmail" | "declinedEmail"; email: string; threadId: string },
-): Promise<boolean> {
+  input: { body: string; emailField: "pendingEmail" | "declinedEmail"; email: string },
+): Promise<{ threadId: string | null }[]> {
   const column = input.emailField === "pendingEmail" ? "$.pendingEmail" : "$.declinedEmail";
-  const row = await sql.get<{ id: string }>(
-    `SELECT id FROM activities
+  return sql.all<{ threadId: string | null }>(
+    `SELECT json_extract(data_json, '$.threadId') AS threadId
+     FROM activities
      WHERE kind = 'agent.note' AND body = ?
-       AND json_extract(data_json, '${column}') = ?
-       AND json_extract(data_json, '$.threadId') = ?
-     LIMIT 1`,
-    [input.body, input.email, input.threadId],
+       AND json_extract(data_json, '${column}') = ?`,
+    [input.body, input.email],
   );
-  return Boolean(row);
+}
+
+/** One open confirmation follows the reply even when the client drops the thread root. */
+function awaitingReply(
+  notes: { threadId: string | null }[],
+  threadId: string,
+  references: string,
+): boolean {
+  if (notes.length === 0) return false;
+  if (notes.length === 1) return true;
+  return notes.some((note) => sameThread(note.threadId, threadId, references));
 }
 
 async function writeNote(
@@ -204,11 +219,11 @@ async function createLead(
 async function recognizeClient(
   sql: Sql,
   clients: DomainOrg[],
-  input: { email: string; contactName: string; text: string; threadId: string; now: number },
+  input: { email: string; contactName: string; text: string; subject: string; threadId: string; references: string; now: number },
 ): Promise<OpenedProspect> {
   const text = input.text.trim();
   if (clients.length > 1) {
-    const folded = text.toLowerCase();
+    const folded = `${input.subject}\n${text}`.toLowerCase();
     const named = clients.filter((org) => org.name && folded.includes(org.name.toLowerCase()));
     if (named.length === 1) return attachPerson(sql, named[0]!, input.email, input.contactName, input.now);
     return {
@@ -221,21 +236,12 @@ async function recognizeClient(
     };
   }
   const org = clients[0]!;
-  const declined = await noteExists(sql, {
-    body: DECLINED_BODY,
-    emailField: "declinedEmail",
-    email: input.email,
-    threadId: input.threadId,
-  });
-  if (declined) {
+  const declined = await notedThreads(sql, { body: DECLINED_BODY, emailField: "declinedEmail", email: input.email });
+  if (awaitingReply(declined, input.threadId, input.references)) {
     return { organizationId: null, name: org.name, created: false, kind: org.kind, pending: false, declined: true };
   }
-  const pending = await noteExists(sql, {
-    body: PENDING_BODY,
-    emailField: "pendingEmail",
-    email: input.email,
-    threadId: input.threadId,
-  });
+  const pendingNotes = await notedThreads(sql, { body: PENDING_BODY, emailField: "pendingEmail", email: input.email });
+  const pending = awaitingReply(pendingNotes, input.threadId, input.references);
   if (pending && YES.test(text)) return attachPerson(sql, org, input.email, input.contactName, input.now);
   if (pending && NO.test(text)) {
     await writeNote(sql, {
@@ -246,7 +252,7 @@ async function recognizeClient(
     });
     return { organizationId: null, name: org.name, created: false, kind: org.kind, pending: false, declined: true };
   }
-  if (!pending) {
+  if (pendingNotes.length === 0) {
     await writeNote(sql, {
       organizationId: org.id,
       body: PENDING_BODY,
@@ -260,7 +266,15 @@ async function recognizeClient(
 /** One lead for a company address. A client domain waits for a yes before the contact is added. */
 export async function openEmailProspect(
   sql: Sql,
-  input: { email: string; name: string | null; now: number; text?: string | null; threadId?: string | null },
+  input: {
+    email: string;
+    name: string | null;
+    now: number;
+    text?: string | null;
+    subject?: string | null;
+    threadId?: string | null;
+    references?: string | null;
+  },
 ): Promise<OpenedProspect> {
   const email = cleanEmail(input.email);
   if (!email) throw new Error("invalid email");
@@ -270,12 +284,22 @@ export async function openEmailProspect(
   const orgName = labelFrom(input.name, email, domain);
   const contactName = input.name?.trim() ? input.name.trim().slice(0, 200) : orgName;
   const text = input.text ?? "";
+  const subject = input.subject ?? "";
   const threadId = input.threadId ?? "";
+  const references = input.references ?? "";
   const orgs = domain ? await organizationsOnDomain(sql, domain) : [];
   const clients = orgs.filter((org) => org.kind === "client" || org.kind === "past_client");
   try {
     if (clients.length > 0) {
-      return await recognizeClient(sql, clients, { email, contactName, text, threadId, now: input.now });
+      return await recognizeClient(sql, clients, {
+        email,
+        contactName,
+        text,
+        subject,
+        threadId,
+        references,
+        now: input.now,
+      });
     }
     const existing = orgs[0];
     if (existing) return await attachPerson(sql, existing, email, contactName, input.now);
@@ -296,7 +320,15 @@ export async function openEmailProspect(
     const raced = domain ? await organizationsOnDomain(sql, domain) : [];
     const racedClients = raced.filter((org) => org.kind === "client" || org.kind === "past_client");
     if (racedClients.length > 0) {
-      return recognizeClient(sql, racedClients, { email, contactName, text, threadId, now: input.now });
+      return recognizeClient(sql, racedClients, {
+        email,
+        contactName,
+        text,
+        subject,
+        threadId,
+        references,
+        now: input.now,
+      });
     }
     const lead = raced[0];
     if (!lead) throw error;
@@ -352,19 +384,27 @@ export async function noteProspectBudget(
   );
 }
 
-/** The first website in the message that a schema scan can open. Freemail hosts are skipped. */
+const OWN_HOST = "abra-ca-dabra.app";
+
+function originAt(text: string, index: number, raw: string): string | null {
+  if (index > 0 && text[index - 1] === "@") return null;
+  const cleaned = raw.replace(/[),.;:!?]+$/g, "");
+  if (cleaned.includes("@")) return null;
+  const target = leadScanTarget(cleaned);
+  if (!target || FREEMAIL.has(target.domain)) return null;
+  if (target.domain === OWN_HOST || target.domain.endsWith(`.${OWN_HOST}`)) return null;
+  return target.origin;
+}
+
+/** The first website in the message that a schema scan can open. An email address is not a site. */
 export function hostInMessage(text: string): string | null {
-  const candidates: string[] = [];
   for (const match of text.matchAll(/https?:\/\/[^\s<>]+/gi)) {
-    candidates.push(match[0].replace(/[),.;:!?]+$/g, ""));
+    const origin = originAt(text, match.index ?? 0, match[0]);
+    if (origin) return origin;
   }
   for (const match of text.matchAll(/\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi)) {
-    candidates.push(match[0]);
-  }
-  for (const candidate of candidates) {
-    const target = leadScanTarget(candidate);
-    if (!target || FREEMAIL.has(target.domain)) continue;
-    return target.origin;
+    const origin = originAt(text, match.index ?? 0, match[0]);
+    if (origin) return origin;
   }
   return null;
 }

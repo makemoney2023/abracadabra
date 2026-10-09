@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A quoted email address is no longer saved as a lead’s website. A yes still confirms a client when the reply’s thread id changes. A booking confirmation that fails to send is tried again on the next delivery, and a second copy is not sent after it succeeds.
+- **Why** — Review of the mailbox follow-ups found those three gaps. An address in the message could start a schema scan of the wrong host, a client reply could never attach, and a failed confirmation was acknowledged and then dropped.
+- **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`
+- **Data-flow impact** — Website capture skips email domains and `abra-ca-dabra.app`. Client confirmation follows one open note for that address, including when References still hold the original thread. Booking mail errors propagate so the intake queue retries; the `agent.reply` row still stops a second confirmation.
+- **API / schema impact** — `open_prospect` accepts `subject` and `references`. No migration.
+- **Verification** — `npx vitest run` on the prospect, channel, intake, and playbook tests. `npx eslint` and both `tsc` projects after the edit.
+
+## 2026-10-09
+
 - **What changed** — Magic now asks a prospect for a budget band and a window, stores a website from freemail and starts one schema scan, confirms a new address before attaching it to a client, hands a stalled prospect thread to a person, opens a file space for a lead, stops mail after an opt-out, appends a finished readiness-check link, and confirms a Cal.com booking from the HQ mailbox.
 - **Why** — Those eight follow-ups were specified and not running. A freemail sender had no site scan, a client domain was opened as a new lead, a long prospect thread never handed off, lead files were refused, and a booked call sent no confirmation.
 - **Code touchpoints** — `handoff/migrations/0016_contact_opt_out.sql`, `handoff/src/db/migration-sql.ts`, `handoff/src/db/migrate.ts`, `handoff/src/db/conversations.ts`, `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/client-channel-store.ts`, `handoff/src/lib/email-files.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/cloudflare-worker.ts`

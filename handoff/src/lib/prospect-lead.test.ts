@@ -130,6 +130,19 @@ describe("email prospect", () => {
     );
     expect(timed?.next_step).toBe("Call Thursday");
     expect(timed?.next_step_at).toEqual(expect.any(Number));
+
+    await noteProspectTurn(sql, {
+      organizationId: orgId(opened),
+      brief: null,
+      dueText: "sometime next season",
+      bookingOffered: false,
+      now: NOW + 4,
+    });
+    const words = await sql.get<{ next_step: string; next_step_at: number | null }>(
+      "SELECT next_step, next_step_at FROM deals",
+    );
+    expect(words?.next_step).toBe("sometime next season");
+    expect(words?.next_step_at).toBeNull();
   });
 
   it("asks a new address on a client domain to confirm before attaching", async () => {
@@ -231,6 +244,48 @@ describe("email prospect", () => {
     expect(contacts?.n).toBe(0);
   });
 
+  it("confirms a client when the reply keeps the original thread in references", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO organizations (id, name, domain, kind, created_at, updated_at)
+       VALUES ('org-acme', 'Acme', 'acme.example', 'past_client', ?, ?)`,
+      [NOW, NOW],
+    );
+    await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW,
+      text: "Hello",
+      threadId: "<root@acme.example>",
+    });
+    const confirmed = await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW + 1,
+      text: "yes",
+      threadId: "<reply@abra-ca-dabra.app>",
+      references: "<root@acme.example> <reply@abra-ca-dabra.app>",
+    });
+    expect(confirmed).toMatchObject({ organizationId: "org-acme", kind: "past_client", pending: false });
+    const drifted = await openEmailProspect(sql, {
+      email: "cara@acme.example",
+      name: "Cara",
+      now: NOW + 2,
+      text: "Hello",
+      threadId: "<cara-root>",
+    });
+    expect(drifted.pending).toBe(true);
+    const still = await openEmailProspect(sql, {
+      email: "cara@acme.example",
+      name: "Cara",
+      now: NOW + 3,
+      text: "yes",
+      threadId: "<cara-new>",
+    });
+    expect(still.organizationId).toBe("org-acme");
+    expect(still.pending).toBe(false);
+  });
+
   it("stores a budget in their words and does not store a dollar amount", async () => {
     const sql = await database();
     const opened = await openEmailProspect(sql, { email: "ada@northwind.example", name: "Ada", now: NOW });
@@ -259,6 +314,9 @@ describe("email prospect", () => {
     const blank = await sql.get<{ n: number }>("SELECT count(*) AS n FROM readiness_scans");
     expect(blank?.n).toBe(0);
     expect(hostInMessage("not a site")).toBeNull();
+    expect(hostInMessage("mail ada@northwind.example")).toBeNull();
+    expect(hostInMessage("Reply to magic@abra-ca-dabra.app")).toBeNull();
+    expect(hostInMessage("the site is northwind.example")).toBe("https://northwind.example");
     await captureProspectWebsite(sql, {
       organizationId: orgId(freemail),
       text: "not a site",

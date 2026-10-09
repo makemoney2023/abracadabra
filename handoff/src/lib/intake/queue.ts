@@ -36,18 +36,22 @@ function bookingMailer(email: EmailBinding | undefined): BookingMailer | null {
   return {
     async send(message) {
       const envelope = message.from.match(/<([^>]+)>/)?.[1] ?? message.from;
+      const structured = {
+        to: message.to,
+        from: { email: envelope, name: "Magic at Abracadabra" },
+        subject: message.subject,
+        text: message.text,
+        headers: message.headers,
+      };
+      let EmailMessage: new (from: string, to: string, raw: string) => object;
       try {
-        const { EmailMessage } = await import("cloudflare:email");
-        await email.send(new EmailMessage(envelope, message.to, bookingRaw(message)));
+        const loaded = await import("cloudflare:email");
+        EmailMessage = loaded.EmailMessage;
       } catch {
-        await email.send({
-          to: message.to,
-          from: { email: envelope, name: "Magic at Abracadabra" },
-          subject: message.subject,
-          text: message.text,
-          headers: message.headers,
-        });
+        await email.send(structured);
+        return;
       }
+      await email.send(new EmailMessage(envelope, message.to, bookingRaw(message)));
     },
   };
 }
