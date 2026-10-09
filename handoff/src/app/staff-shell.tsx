@@ -11,6 +11,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { StaffNav } from "./staff-nav";
 
@@ -36,6 +37,7 @@ export function StaffShell({ children }: { children: ReactNode }) {
         </header>
         {children}
       </SidebarInset>
+      <Toaster />
     </SidebarProvider>
     </TooltipProvider>
   );
