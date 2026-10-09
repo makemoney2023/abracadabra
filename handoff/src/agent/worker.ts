@@ -23,7 +23,7 @@ import {
   type ClientDesk,
   type ThreadState,
 } from "../lib/client-channel";
-import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS } from "../lib/hq-chat-playbook";
+import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS, mailboxUserContent } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
 import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
 import { skillObjectKey } from "../lib/skill-library";
@@ -521,7 +521,7 @@ async function mailboxTurn(env: AgentBindings, desk: ClientDesk, incoming: strin
       },
       {
         role: "user",
-        content: `${prospect ? "Prospect" : "Client"}: ${desk.name}\nBrief: ${desk.brief || "none"}\nStatus: ${desk.status || "none"}\nOpen requests: ${desk.requests.map((row) => row.body).join("\n") || "none"}\nThread:\n${desk.messages.map((row) => `${row.kind}: ${row.body}`).join("\n") || "none"}\n\nNew message:\n${incoming}`,
+        content: mailboxUserContent({ prospect, desk, incoming }),
       },
     ],
   });
@@ -584,13 +584,26 @@ const worker = {
         return body.value;
       },
       thread: async (organizationIdForThread, threadId) => {
-        const body = (await hqChannel(env, { action: "thread", organizationId: organizationIdForThread, threadId })) as {
+        const body = (await hqChannel(env, {
+          action: "thread",
+          organizationId: organizationIdForThread,
+          threadId,
+          references: parsed.references,
+          sender: addressOf(parsed.from),
+          subject: parsed.subject,
+        })) as {
           value?: ThreadState;
         } | null;
         return body?.value ?? { replies: 0, questionCount: 0, text: "" };
       },
       remembered: async (threadId) => {
-        const body = (await hqChannel(env, { action: "thread_org", threadId, email: addressOf(parsed.from) })) as {
+        const body = (await hqChannel(env, {
+          action: "thread_org",
+          threadId,
+          email: addressOf(parsed.from),
+          references: parsed.references,
+          subject: parsed.subject,
+        })) as {
           value?: string | null;
         } | null;
         return body?.value ?? null;
@@ -644,6 +657,9 @@ const worker = {
           action: "desk_context",
           organizationId,
           threadId: parsed.threadId,
+          references: parsed.references,
+          sender: addressOf(parsed.from),
+          subject: parsed.subject,
         })) as { value?: ClientDesk } | null;
         if (!body?.value) throw new Error("desk unavailable");
         const desk: ClientDesk = {
@@ -659,6 +675,8 @@ const worker = {
     });
     if (reply.skip) return;
     let replyText = reply.send === false ? "" : reply.reply;
+    const domain = own.split("@")[1] ?? "abra-ca-dabra.app";
+    const replyMessageId = replyText ? `<${crypto.randomUUID()}@${domain}>` : "";
     if (reply.send !== false && reply.organizationId && parsed.attachments.length > 0) {
       const saved = (await hqChannel(env, {
         action: "attach",
@@ -679,7 +697,10 @@ const worker = {
       noteOnly: reply.noteOnly,
       channel: "email",
       threadId: parsed.threadId,
+      references: parsed.references,
+      subject: parsed.subject,
       sender: addressOf(parsed.from),
+      replyMessageId,
       body: parsed.text,
       state: reply.classified.state,
       goal: reply.classified.goal,
@@ -703,8 +724,9 @@ const worker = {
       text: replyText,
       messageId: parsed.messageId,
       references: parsed.references,
-      domain: own.split("@")[1] ?? "abra-ca-dabra.app",
+      domain,
       now: Date.now(),
+      replyMessageId,
     });
     try {
       await message.reply(new EmailMessage(own, message.from, mime));

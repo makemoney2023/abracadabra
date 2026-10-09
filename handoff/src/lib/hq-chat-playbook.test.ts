@@ -4,6 +4,7 @@ import {
   MAILBOX_INSTRUCTIONS,
   PROSPECT_INSTRUCTIONS,
   conversationTitle,
+  mailboxUserContent,
   starterPrompts,
   toolTaskStatus,
 } from "./hq-chat-playbook";
@@ -29,6 +30,31 @@ describe("channel instructions", () => {
     expect(MAILBOX_INSTRUCTIONS).toContain("Do not quote a price");
     expect(MAILBOX_INSTRUCTIONS).toContain("not a receipt");
     expect(MAILBOX_INSTRUCTIONS).toContain("answer the new message");
+    expect(MAILBOX_INSTRUCTIONS).not.toContain("name the work");
+    expect(MAILBOX_INSTRUCTIONS).toContain('Do not open with "The work you are asking about is"');
+    expect(MAILBOX_INSTRUCTIONS).toContain("actions is []");
+    expect(MAILBOX_INSTRUCTIONS).toContain("do not ask it again");
+  });
+
+  it("puts the earlier question in the prompt so the next reply continues", () => {
+    const prompt = mailboxUserContent({
+      prospect: false,
+      desk: {
+        name: "Northwind",
+        brief: "They sell foam.",
+        status: "none",
+        requests: [],
+        messages: [
+          { kind: "client.message", body: "We need social media ads." },
+          { kind: "agent.reply", body: "Who are these ads for?" },
+        ],
+      },
+      incoming: "Local shops.",
+    });
+    expect(prompt).toContain("Who are these ads for?");
+    expect(prompt).toContain("Do not ask these again");
+    expect(prompt).toContain("Local shops.");
+    expect(prompt).toContain("client.message: We need social media ads.");
   });
 
   it("asks a new sender for the goal, the problem, and the outcome, then a time", () => {

@@ -90,6 +90,18 @@ describe("client email", () => {
     expect(raw).toContain("In-Reply-To: <m-3@client.example>");
     expect(raw).toContain("References: <m-1@client.example> <m-2@abra-ca-dabra.app> <m-3@client.example>");
     expect(raw).toMatch(/^Message-ID: <[^>]+@abra-ca-dabra\.app>$/m);
+    const supplied = replyMime({
+      from: "magic@abra-ca-dabra.app",
+      to: "ada@client.example",
+      subject: "Pricing",
+      text: "Who is it for?",
+      messageId: "<m-3@client.example>",
+      references: "",
+      domain: "abra-ca-dabra.app",
+      now: 1_700_000_000_000,
+      replyMessageId: "<magic-9@abra-ca-dabra.app>",
+    });
+    expect(supplied).toContain("Message-ID: <magic-9@abra-ca-dabra.app>");
     expect(raw.endsWith("\r\n\r\nGot it.")).toBe(true);
   });
 
@@ -192,6 +204,58 @@ describe("mailbox reply", () => {
     expect(turn.kind).toBe("status");
     expect(turn.reply).toContain("foam");
     expect(turn.file).toBe(false);
+  });
+
+  it("does not put a board task on a question that only restates the request", async () => {
+    const turn = await replyToClient({
+      desk,
+      incoming: "We need social media ads.",
+      model: async () => ({
+        reply: "The work you asking about is social media ads, what is the goal of these ads?",
+        kind: "new_work",
+        goal: null,
+        due: null,
+        actions: [{ title: "Social media ads", assignee: null, due: null, skill: null }],
+        brief: "They want social media ads.",
+      }),
+    });
+    expect(turn.reply).toContain("?");
+    expect(turn.actions).toEqual([]);
+    expect(turn.brief).toBeNull();
+    expect(turn.file).toBe(true);
+  });
+
+  it("drops a board task when the reply restates the subject without a question mark", async () => {
+    const turn = await replyToClient({
+      desk,
+      incoming: "We need social media ads.",
+      model: async () => ({
+        reply: "The work you asking about is social media ads.",
+        kind: "other",
+        goal: "social media ads",
+        due: null,
+        actions: [{ title: "Social media ads", assignee: null, due: null, skill: null }],
+        brief: "They want social media ads.",
+      }),
+    });
+    expect(turn.actions).toEqual([]);
+    expect(turn.brief).toBeNull();
+  });
+
+  it("files a task after the client has named the outcome and the reply is not a question", async () => {
+    const turn = await replyToClient({
+      desk,
+      incoming: "The ads should book more calls.",
+      model: async () => ({
+        reply: "I'll put a social ads plan on the board for more booked calls.",
+        kind: "new_work",
+        goal: "more booked calls",
+        due: null,
+        actions: [{ title: "Draft the social ads plan", assignee: null, due: null, skill: null }],
+      }),
+    });
+    expect(turn.actions).toEqual([{ title: "Draft the social ads plan", assignee: null, due: null, skill: null }]);
+    expect(turn.file).toBe(true);
   });
 
   it("asks one question for new work that has no goal", async () => {
@@ -344,6 +408,31 @@ describe("mailbox reply", () => {
     expect(answer.file).toBe(false);
     expect(answer.plan.actions).toEqual([]);
     expect(answer.bookingOffered).toBe(false);
+  });
+
+  it("keeps a clarifying question off the board", async () => {
+    const answer = await handleInboundEmail(
+      { ...message, text: "We need social media ads." },
+      {
+        lookup: async () => ({ organizationId: "org-1", authenticated: true }),
+        thread: async () => fresh(),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer: async () => ({
+          reply: "What result do you want from the ads?",
+          kind: "new_work" as const,
+          goal: null,
+          due: null,
+          file: true,
+          actions: [{ title: "Social media ads", assignee: null, due: null, skill: null }],
+          brief: "They want ads.",
+          rules: "no video",
+        }),
+      },
+    );
+    expect(answer.plan.actions).toEqual([]);
+    expect(answer.plan.brief).toBeNull();
+    expect(answer.plan.rules).toBe("no video");
+    expect(answer.asked).toBe(true);
   });
 
   it("offers the booking link once the prospect's outcome is on the brief", async () => {

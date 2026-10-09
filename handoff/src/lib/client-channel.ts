@@ -332,7 +332,7 @@ export async function handleInboundEmail(
           : { ...normalizeChannelPlan(turn), actions: [] as ChannelPlan["actions"] }
         : handoff
           ? NO_PLAN
-          : normalizeChannelPlan(turn);
+          : conversationPlan(turn);
       const offered =
         prospect && !handoff && plan.brief ? withBookingOffer(turn.reply, deps.bookingUrl) : { reply: turn.reply, offered: false };
       const reply = prospect && !handoff ? withReadinessLink(offered.reply, thread.readiness) : offered.reply;
@@ -463,6 +463,27 @@ export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
   };
 }
 
+/** The canned line that names the subject and stops the conversation. */
+function restatesSubject(reply: string): boolean {
+  return /the work you(?:'re| are)? asking about/i.test(reply);
+}
+
+/** A question, or new work with no outcome yet, stays a conversation. It does not become a board task or a brief edit. */
+export function conversationPlan(turn: {
+  reply: string;
+  kind?: string;
+  goal: string | null;
+  actions?: unknown;
+  brief?: unknown;
+  rules?: unknown;
+}): ChannelPlan {
+  const plan = normalizeChannelPlan(turn);
+  if (turn.reply.includes("?") || restatesSubject(turn.reply) || (turn.kind === "new_work" && !turn.goal)) {
+    return { actions: [], brief: null, rules: plan.rules };
+  }
+  return plan;
+}
+
 /** One client email. A reply that prices, promises a date, or names another client is still sent, and nothing is filed. */
 export async function replyToClient(input: {
   desk: ClientDesk;
@@ -486,7 +507,7 @@ export async function replyToClient(input: {
   }
   const kind = turn.kind;
   const file = kind === "new_work" || kind === "feedback";
-  const plan = normalizeChannelPlan(turn);
+  const plan = conversationPlan({ ...turn, kind });
   return {
     reply: turn.reply,
     kind,
@@ -589,17 +610,20 @@ export function replyMime(input: {
   references: string;
   domain: string;
   now: number;
+  /** Stored on the reply so a later In-Reply-To finds this conversation. */
+  replyMessageId?: string;
 }): string {
   const ids = [...input.references.matchAll(/<[^>]+>/g)].map((match) => match[0]);
   if (input.messageId && !ids.includes(input.messageId)) ids.push(input.messageId);
   const references = ids.slice(-20).join(" ");
   const subject = input.subject.replace(/[\r\n]+/g, " ").trim();
+  const replyId = input.replyMessageId?.trim() || `<${crypto.randomUUID()}@${input.domain}>`;
   const head = [
     `From: ${input.from}`,
     `To: ${input.to}`,
     `Subject: ${/^re:/i.test(subject) ? subject : `Re: ${subject}`}`,
     `Date: ${new Date(input.now).toUTCString()}`,
-    `Message-ID: <${crypto.randomUUID()}@${input.domain}>`,
+    `Message-ID: ${replyId}`,
     input.messageId ? `In-Reply-To: ${input.messageId}` : "",
     references ? `References: ${references}` : "",
     "Auto-Submitted: auto-replied",

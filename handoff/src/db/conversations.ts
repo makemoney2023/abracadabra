@@ -47,14 +47,32 @@ export async function lookupSenders(sql: Sql, email: string): Promise<{ id: stri
   return [...byId.values()];
 }
 
-export async function organizationForSenderThread(sql: Sql, threadId: string, sender: string): Promise<string | null> {
-  const row = await sql.get<{ organization_id: string }>(
+export async function organizationForSenderThread(
+  sql: Sql,
+  threadId: string,
+  sender: string,
+  hints?: { references?: string; subject?: string },
+): Promise<string | null> {
+  const address = sender.trim().toLowerCase();
+  const exact = await sql.get<{ organization_id: string }>(
     `SELECT organization_id FROM work_requests
      WHERE thread_id = ? AND lower(sender) = ? AND state IN ('clarifying', 'proposed')
      ORDER BY updated_at DESC LIMIT 1`,
-    [threadId, sender.trim().toLowerCase()],
+    [threadId, address],
   );
-  return row?.organization_id ?? null;
+  if (exact) return exact.organization_id;
+  const ids = messageIds(hints?.references ?? "", threadId);
+  const fromReply = await organizationForReplyMessage(sql, address, ids);
+  if (fromReply) return fromReply;
+  if (!/^re:/i.test((hints?.subject ?? "").trim())) return null;
+  const open = await sql.all<{ organization_id: string }>(
+    `SELECT organization_id FROM work_requests
+     WHERE lower(sender) = ? AND channel = 'email' AND state IN ('clarifying', 'proposed')
+     ORDER BY updated_at DESC`,
+    [address],
+  );
+  const orgs = [...new Set(open.map((row) => row.organization_id))];
+  return orgs.length === 1 ? orgs[0]! : null;
 }
 
 export async function lookupSender(sql: Sql, email: string): Promise<string | null> {
@@ -78,6 +96,51 @@ export async function lookupSender(sql: Sql, email: string): Promise<string | nu
 }
 
 const HOUR = 60 * 60 * 1000;
+
+function messageIds(references: string, extra = ""): string[] {
+  return [...new Set([...`${references} ${extra}`.matchAll(/<[^>]+>/g)].map((match) => match[0]))];
+}
+
+async function openThreadForReply(
+  sql: Sql,
+  sender: string,
+  ids: string[],
+  organizationId?: string,
+): Promise<{ organizationId: string; threadId: string } | null> {
+  if (!sender || ids.length === 0) return null;
+  const marks = ids.map(() => "?").join(", ");
+  const params = organizationId ? [sender, ...ids, organizationId] : [sender, ...ids];
+  const row = await sql.get<{ organization_id: string; thread_id: string }>(
+    `SELECT w.organization_id, w.thread_id
+     FROM activities a
+     JOIN work_requests w
+       ON w.organization_id = a.organization_id
+      AND w.thread_id = json_extract(a.data_json, '$.threadId')
+     WHERE a.kind = 'agent.reply'
+       AND lower(w.sender) = ?
+       AND w.state IN ('clarifying', 'proposed')
+       AND json_extract(a.data_json, '$.replyMessageId') IN (${marks})
+       ${organizationId ? "AND a.organization_id = ?" : ""}
+     ORDER BY a.created_at DESC
+     LIMIT 1`,
+    params,
+  );
+  if (!row?.thread_id) return null;
+  return { organizationId: row.organization_id, threadId: row.thread_id };
+}
+
+async function organizationForReplyMessage(sql: Sql, sender: string, ids: string[]): Promise<string | null> {
+  return (await openThreadForReply(sql, sender, ids))?.organizationId ?? null;
+}
+
+async function threadForReplyMessage(
+  sql: Sql,
+  organizationId: string,
+  sender: string,
+  ids: string[],
+): Promise<string | null> {
+  return (await openThreadForReply(sql, sender, ids, organizationId))?.threadId ?? null;
+}
 
 async function openRequest(sql: Sql, organizationId: string, threadId: string): Promise<WorkRequest | null> {
   return (
@@ -105,6 +168,50 @@ async function tableExists(sql: Sql, name: string): Promise<boolean> {
     [name],
   );
   return row?.name === name;
+}
+
+/**
+ * The open email conversation this message belongs to.
+ * A reply that drops the original id still matches References, or the one open thread when the subject is a reply.
+ */
+export async function resolveMailThread(
+  sql: Sql,
+  input: {
+    organizationId: string;
+    threadId: string;
+    references?: string;
+    sender?: string;
+    subject?: string;
+  },
+): Promise<string> {
+  const threadId = input.threadId.trim();
+  if (!input.organizationId || !threadId) return threadId;
+  if (await openRequest(sql, input.organizationId, threadId)) return threadId;
+  const sender = (input.sender ?? "").trim().toLowerCase();
+  if (!sender) return threadId;
+  const ids = messageIds(input.references ?? "");
+  if (ids.length > 0) {
+    const marks = ids.map(() => "?").join(", ");
+    const row = await sql.get<{ thread_id: string }>(
+      `SELECT thread_id FROM work_requests
+       WHERE organization_id = ? AND lower(sender) = ? AND state IN ('clarifying', 'proposed')
+         AND thread_id IN (${marks})
+       ORDER BY updated_at DESC LIMIT 1`,
+      [input.organizationId, sender, ...ids],
+    );
+    if (row) return row.thread_id;
+  }
+  const fromReply = await threadForReplyMessage(sql, input.organizationId, sender, messageIds(input.references ?? "", threadId));
+  if (fromReply) return fromReply;
+  if (!/^re:/i.test((input.subject ?? "").trim())) return threadId;
+  const open = await sql.all<{ thread_id: string }>(
+    `SELECT thread_id FROM work_requests
+     WHERE organization_id = ? AND lower(sender) = ? AND channel = 'email'
+       AND state IN ('clarifying', 'proposed')
+     ORDER BY updated_at DESC`,
+    [input.organizationId, sender],
+  );
+  return open.length === 1 ? open[0]!.thread_id : threadId;
 }
 
 /** Replies sent on this thread in the last hour, and whether a prospect brief exists yet. */
@@ -177,6 +284,7 @@ export async function recordThreadMessage(
     dueText?: string | null;
     asked?: boolean;
     replyBody?: string;
+    replyMessageId?: string;
     prospect?: boolean;
   },
   now: number,
@@ -216,12 +324,13 @@ export async function recordThreadMessage(
       ],
     );
   }
-  const data = JSON.stringify({
+  const payload: Record<string, unknown> = {
     threadId: input.threadId,
     channel: input.channel,
     requestId: id,
     ...(input.prospect ? { prospect: 1 } : {}),
-  });
+  };
+  const data = JSON.stringify(payload);
   await sql.run(
     `INSERT INTO activities (
       id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
@@ -229,11 +338,14 @@ export async function recordThreadMessage(
     [crypto.randomUUID(), input.organizationId, input.body, data, now],
   );
   if (input.replyBody) {
+    const replyData = JSON.stringify(
+      input.replyMessageId ? { ...payload, replyMessageId: input.replyMessageId } : payload,
+    );
     await sql.run(
       `INSERT INTO activities (
         id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
       ) VALUES (?, ?, 'agent.reply', 'agent', 'client-desk', ?, ?, ?)`,
-      [crypto.randomUUID(), input.organizationId, input.replyBody, data, now],
+      [crypto.randomUUID(), input.organizationId, input.replyBody, replyData, now],
     );
   }
   return id;

@@ -56,18 +56,58 @@ export function toolTaskStatus(state: string): "doing" | "done" | "blocked" {
   return "doing";
 }
 
-/** Mailbox JSON. The worker files actions as tasks and the brief sentence on the client. */
+/** Mailbox JSON. A question stays in the thread. Tasks are filed only after the outcome is clear. */
 export const MAILBOX_INSTRUCTIONS = [
   "You write one short email as Magic at Abracadabra.",
-  "The reply must answer the new message from the desk.",
+  "Continue the thread. The reply must answer the new message from the desk, in the client's words.",
   "It is not a receipt. Do not write that you have their note, or that a person on the team will follow up.",
+  'Do not open with "The work you are asking about is". Do not restate their subject and then ask for the goal.',
   "Use only the desk. Do not quote a price or promise a date.",
-  "Ask one question when new work has no goal or due.",
-  "Read the request and name the work it asks for.",
+  "While you are still talking, ask one question for a fact the thread does not already contain.",
+  "If a question was already asked, do not ask it again. Ask the next missing fact: who it is for, the offer, where it should run, or when they need it.",
+  "kind is other while you are still asking. kind is new_work only after they have said what the work should achieve.",
+  "actions is [] while the reply asks a question or the goal is still unknown. Do not invent a task from the subject.",
   'Return JSON only: {"reply":"","kind":"status|new_work|feedback|other|handoff","goal":null,"due":null,"actions":[{"title":"","assignee":null,"due":null,"skill":null}],"brief":null,"rules":null}.',
-  "Each action is one next step. assignee is a person name when they named one. due is YYYY-MM-DD or a weekday. skill is a .cursor/skills path when you know one, otherwise null.",
-  "brief is one sentence to add to the client brief, or null. rules is a standing limit to keep, such as no video, or null.",
+  "Each action is one next step after the outcome is clear. assignee is a person name when they named one. due is YYYY-MM-DD or a weekday. skill is a .cursor/skills path when you know one, otherwise null.",
+  "brief is one sentence to add to the client brief once the outcome is clear, or null. rules is a standing limit to keep, such as no video, or null.",
 ].join(" ");
+
+/** The desk, the thread, and any question already sent, so the next mail continues. */
+export function mailboxUserContent(input: {
+  prospect: boolean;
+  desk: {
+    name: string;
+    brief: string;
+    status: string;
+    requests: { body: string }[];
+    messages: { kind: string; body: string }[];
+  };
+  incoming: string;
+}): string {
+  const asked = [
+    ...new Set(
+      input.desk.messages.flatMap((row) => {
+        if (row.kind !== "agent.reply") return [];
+        return row.body
+          .split(/(?<=\?)/)
+          .map((part) => part.replace(/\s+/g, " ").trim())
+          .filter((part) => part.endsWith("?"));
+      }),
+    ),
+  ].slice(0, 8);
+  const prior = asked.length
+    ? `Questions already asked:\n${asked.join("\n")}\nDo not ask these again. Continue from the last client line.`
+    : "No question has been asked yet.";
+  return [
+    `${input.prospect ? "Prospect" : "Client"}: ${input.desk.name}`,
+    `Brief: ${input.desk.brief || "none"}`,
+    `Status: ${input.desk.status || "none"}`,
+    `Open requests: ${input.desk.requests.map((row) => row.body).join("\n") || "none"}`,
+    `Thread:\n${input.desk.messages.map((row) => `${row.kind}: ${row.body}`).join("\n") || "none"}`,
+    prior,
+    `New message:\n${input.incoming}`,
+  ].join("\n");
+}
 
 /** A new sender. One question at a time, then a time to talk. No tasks. */
 export const PROSPECT_INSTRUCTIONS = [

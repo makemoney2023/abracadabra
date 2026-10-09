@@ -2,6 +2,33 @@
 
 ## 2026-10-09
 
+- **What changed** — The mailbox conversation is published. Staff HQ and the agent worker were deployed from this branch.
+- **Why** — Client mail was still running the previous workers, which filed a board card from the first question.
+- **Code touchpoints** — none. Deploy only.
+- **Data-flow impact** — none beyond the mailbox behavior already described.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `688fb45d-c57d-4d6a-8032-facbcd2bad2d` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `717bde38-1ea6-42f0-90f2-bf1868a052f2` on `hq.abra-ca-dabra.app`. `GET /api/health` on the staff host returned 200 `{"database":"d1","ok":true}`.
+
+## 2026-10-09
+
+- **What changed** — A question no longer edits the client brief. A reply that only carries `In-Reply-To` stays on the open conversation, including when that sender has another thread open. The client chosen earlier in the thread is remembered the same way.
+- **Why** — Review of the mailbox conversation found those three gaps. A first question could still draft the brief, and a follow-up that omitted `References` started a new thread whenever more than one conversation was open.
+- **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/db/conversations.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — The outbound `Message-ID` is stored on `agent.reply`. `desk_context`, `thread`, `record`, and `thread_org` follow that id. A question or a subject restatement writes no task and no brief sentence. Rules on that turn are still stored.
+- **API / schema impact** — none. `record` accepts `replyMessageId`. `thread_org` accepts `references` and `subject`.
+- **Verification** — `npm test` in `handoff/`: 763 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
+- **What changed** — A client email continues the thread. A reply that is still a question, including one that only restates the subject, does not add a card to the project board.
+- **Why** — Mail was answering with a fixed “the work is X, what is the goal” line and filing that as a task before the client had said what the work should achieve.
+- **Code touchpoints** — `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/db/conversations.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — `desk_context`, `thread`, and `record` keep one open email conversation when `References` names it, or when the subject is a reply and that sender has one open thread. The model prompt includes questions already asked. `actions` are dropped while the reply asks a question or new work has no goal.
+- **API / schema impact** — none. Those three actions accept optional `references`, `sender`, and `subject`.
+- **Verification** — `npm test` in `handoff/`: 760 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
 - **What changed** — Main is published. Staff HQ, the client app, the agent worker, the swarm, and `handoff-connectors` were deployed from the MCP connector merge.
 - **Why** — `/mcp` and the portal catalog need to be on the live workers.
 - **Code touchpoints** — none. Deploy of `5fb7416`.
