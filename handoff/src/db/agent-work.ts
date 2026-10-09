@@ -1,5 +1,6 @@
 import type { Sql } from "@/db/sql";
-import { defaultBuildDeps, startBuild, type BuildDeps } from "@/lib/cursor-build";
+import { defaultBuildDeps, type BuildDeps } from "@/lib/cursor-build";
+import { moveTaskStage, nextColumnPosition } from "@/lib/task-stage";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { openObjectStore } from "@/lib/store/objects";
 import { recordAgentRun } from "@/lib/agent-activity";
@@ -332,14 +333,19 @@ async function createAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   const deliverableId = args.deliverableId?.trim() || null;
   if (deliverableId) await deliverableInOrg(sql, actor.organizationId, deliverableId);
   const id = crypto.randomUUID();
+  const position = await nextColumnPosition(sql, {
+    organizationId: actor.organizationId,
+    projectId,
+    column: stage,
+  });
   await sql.exec("BEGIN");
   try {
     await sql.run(
       `INSERT INTO tasks (
         id, project_id, milestone_id, organization_id, title, status, assignee_user_id,
-        due_at, created_at, updated_at, done_at, stage, skills_json, created_by_kind, round, deliverable_id
-      ) VALUES (?, ?, ?, ?, ?, 'todo', NULL, ?, ?, ?, NULL, ?, ?, 'agent', 1, ?)`,
-      [id, projectId, milestoneId, actor.organizationId, title, dueAt, now, now, stage, JSON.stringify(steps), deliverableId],
+        due_at, created_at, updated_at, done_at, stage, skills_json, created_by_kind, round, deliverable_id, position
+      ) VALUES (?, ?, ?, ?, ?, 'todo', NULL, ?, ?, ?, NULL, ?, ?, 'agent', 1, ?, ?)`,
+      [id, projectId, milestoneId, actor.organizationId, title, dueAt, now, now, stage, JSON.stringify(steps), deliverableId, position],
     );
     await sql.run(
       `INSERT INTO activities (
@@ -389,14 +395,33 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   if (!taskId) throw new AgentWorkError("Name a task.");
   const task = await taskInOrg(sql, actor.organizationId, taskId);
   if (args.stage === "build") {
-    const built = await startBuild(sql, task.id, deps ?? defaultBuildDeps(now));
+    const built = await moveTaskStage(sql, {
+      taskId: task.id,
+      to: "build",
+      now,
+      actor: { kind: "agent", id: actor.keyId },
+      build: deps ?? defaultBuildDeps(now),
+    });
     const row = await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = ?", [task.id]);
     return {
       taskId: task.id,
       stage: "build",
       status: row?.status ?? null,
-      blockedReason: built.ok ? null : built.reason,
+      blockedReason: built.ok ? null : built.error,
     };
+  }
+  if (
+    args.stage === "describe" ||
+    args.stage === "engineer" ||
+    (args.stage === "run" && args.status !== "done")
+  ) {
+    const moved = await moveTaskStage(sql, {
+      taskId: task.id,
+      to: args.stage,
+      now,
+      actor: { kind: "agent", id: actor.keyId },
+    });
+    if (!moved.ok) throw new AgentWorkError("That stage change did not stick.");
   }
   const sets: string[] = ["updated_at = ?"];
   const params: unknown[] = [now];

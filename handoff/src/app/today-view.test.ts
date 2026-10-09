@@ -26,6 +26,16 @@ function task(partial: Partial<WorkTask> & Pick<WorkTask, "id" | "title" | "stat
     milestone_id: null,
     assignee_user_id: null,
     assignee_email: null,
+    stage: "describe",
+    position: 0,
+    blocked_reason: null,
+    skills_json: null,
+    round: 1,
+    created_by_kind: "staff",
+    cursor_agent_id: null,
+    created_at: NOW,
+    project_name: null,
+    project_status: null,
     ...partial,
   };
 }

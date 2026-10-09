@@ -39,7 +39,13 @@ function context(tasks: unknown[] = [], extra: Record<string, unknown> = {}) {
   };
 }
 
-function caller(options: { tasks?: unknown[]; brief?: string | null; paused?: boolean; answered?: unknown[] }) {
+function caller(options: {
+  tasks?: unknown[];
+  brief?: string | null;
+  paused?: boolean;
+  answered?: unknown[];
+  projects?: { id: string; name: string; status: string }[];
+}) {
   const calls: Call[] = [];
   let made = 0;
   const call = async (name: string, args: Record<string, unknown>) => {
@@ -48,6 +54,7 @@ function caller(options: { tasks?: unknown[]; brief?: string | null; paused?: bo
       return context(options.tasks ?? [], {
         organization: { id: "org-1", name: "Foam Co", agentPausedAt: options.paused ? 1 : null },
         answeredSince: options.answered ?? [],
+        ...(options.projects ? { projects: options.projects } : {}),
       });
     }
     if (name === "get_brief") {
@@ -273,6 +280,19 @@ describe("brief planning", () => {
     expect(titles).toEqual(["social_pack: A week of posts."]);
   });
 
+  it("asks which project to use when two are active and writes no task", async () => {
+    const { call, calls } = caller({
+      projects: [
+        { id: "proj-new", name: "Newer", status: "active" },
+        { id: "proj-old", name: "Older", status: "active" },
+      ],
+    });
+    expect(await planClientWork({ call, requestId: "wake-projects", now: 1 })).toBe("skipped");
+    expect(calls.some((entry) => entry.name === "create_task")).toBe(false);
+    expect(calls.some((entry) => entry.name === "create_deliverable")).toBe(false);
+    expect(calls.find((entry) => entry.name === "ask_staff")?.args.question).toBe("Which project should these tasks use?");
+  });
+
   it("skips a paused client", async () => {
     const { call, calls } = caller({ paused: true });
     expect(await planClientWork({ call, requestId: "wake-3", now: 1 })).toBe("skipped");
@@ -440,6 +460,35 @@ describe("one skill step per wake", () => {
     const updated = calls.filter((entry) => entry.name === "update_task").map((entry) => entry.args.taskId);
     expect(updated).toHaveLength(8);
     expect(updated).not.toContain("task-8");
+  });
+
+  it("takes the first card of each project before the second card of the first", async () => {
+    const skill = [{ path: COPY, mode: "complete", status: "todo" }];
+    const card = (id: string, projectId: string, position: number) => ({
+      id,
+      title: `Piece ${id}`,
+      status: "todo",
+      stage: "engineer",
+      projectId,
+      position,
+      deliverableId: `del-${id}`,
+      skills: skill,
+    });
+    const { call, calls } = caller({
+      projects: [
+        { id: "proj-a", name: "Alpha", status: "active" },
+        { id: "proj-b", name: "Beta", status: "active" },
+      ],
+      tasks: [card("a2", "proj-a", 2), card("a0", "proj-a", 0), card("a1", "proj-a", 1), card("b0", "proj-b", 0)],
+    });
+    await advanceClientWork({
+      call,
+      requestId: "wake-order",
+      now: 1,
+      readSkill: async () => "---\nname: copywriting\n---\nWrite.",
+    });
+    const updated = calls.filter((entry) => entry.name === "update_task").map((entry) => entry.args.taskId);
+    expect(updated.slice(0, 3)).toEqual(["a0", "b0", "a1"]);
   });
 });
 

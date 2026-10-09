@@ -1,4 +1,5 @@
 import type { Caller } from "@/lib/authz";
+import { nextColumnPosition } from "@/lib/task-stage";
 import { LIMITS } from "@/lib/policy/limits";
 import { activityLinks, runStatus } from "@/lib/agent-activity";
 import type { Sql } from "./sql";
@@ -77,6 +78,30 @@ export type WorkTask = TaskRow & {
   assignee_user_id: string | null;
   organization_name: string;
   assignee_email: string | null;
+  stage: string;
+  position: number;
+  blocked_reason: string | null;
+  skills_json: string | null;
+  round: number;
+  created_by_kind: string;
+  cursor_agent_id: string | null;
+  created_at: number;
+  project_name: string | null;
+  project_status: string | null;
+};
+
+export type BoardCard = WorkTask & {
+  run_started_at: number | null;
+  pr_number: number | null;
+  repo_full_name: string | null;
+};
+
+export type BoardActivity = {
+  id: string;
+  taskId: string;
+  kind: string;
+  body: string | null;
+  createdAt: number;
 };
 
 export const STATUS_HEALTHS = ["on_track", "at_risk", "off_track", "done"] as const;
@@ -140,7 +165,21 @@ const MILESTONE_COLUMNS = "id, project_id, name, due_at, done_at, sort";
 const STATUS_COLUMNS =
   "id, project_id, organization_id, health, audience, body, state, actor_kind, actor_id, created_at, published_at";
 const WORK_COLUMNS = `t.id, t.organization_id, t.title, t.status, t.due_at, t.done_at,
-  t.project_id, t.milestone_id, t.assignee_user_id, o.name AS organization_name, s.email AS assignee_email`;
+  t.project_id, t.milestone_id, t.assignee_user_id, t.stage, t.position, t.blocked_reason,
+  t.skills_json, t.round, t.created_by_kind, t.cursor_agent_id, t.created_at,
+  o.name AS organization_name, s.email AS assignee_email,
+  p.name AS project_name, p.status AS project_status`;
+const BOARD_COLUMNS = `${WORK_COLUMNS},
+  cr.started_at AS run_started_at, cr.pr_number AS pr_number, rp.full_name AS repo_full_name`;
+const WORK_JOINS = `FROM tasks t
+  JOIN organizations o ON o.id = t.organization_id
+  LEFT JOIN projects p ON p.id = t.project_id
+  LEFT JOIN staff s ON s.user_id = t.assignee_user_id`;
+const BOARD_JOINS = `${WORK_JOINS}
+  LEFT JOIN cloud_runs cr ON cr.id = (
+    SELECT c2.id FROM cloud_runs c2 WHERE c2.task_id = t.id ORDER BY c2.started_at DESC LIMIT 1
+  )
+  LEFT JOIN repos rp ON rp.id = cr.repo_id`;
 
 export type ActivityRow = {
   id: string;
@@ -699,14 +738,19 @@ export async function createTask(
     if (!person) return { ok: false, error: "invalid" };
   }
   const id = crypto.randomUUID();
+  const position = await nextColumnPosition(sql, {
+    organizationId,
+    projectId,
+    column: "describe",
+  });
   await sql.exec("BEGIN");
   try {
     await sql.run(
       `INSERT INTO tasks (
          id, project_id, milestone_id, organization_id, title, status, assignee_user_id,
-         due_at, created_at, updated_at, done_at
-       ) VALUES (?, ?, ?, ?, ?, 'todo', ?, ?, ?, ?, NULL)`,
-      [id, projectId, milestoneId, organizationId, title, assigneeUserId, dueAt, now, now],
+         due_at, created_at, updated_at, done_at, position
+       ) VALUES (?, ?, ?, ?, ?, 'todo', ?, ?, ?, ?, NULL, ?)`,
+      [id, projectId, milestoneId, organizationId, title, assigneeUserId, dueAt, now, now, position],
     );
     await sql.run(
       `INSERT INTO activities (
@@ -913,19 +957,6 @@ export async function updateTask(
   return { ok: true };
 }
 
-export async function listProjectTasks(sql: Sql, caller: Caller, projectId: string): Promise<WorkTask[]> {
-  if (!staffUserId(caller) || !(await openProject(sql, projectId))) return [];
-  return sql.all<WorkTask>(
-    `SELECT ${WORK_COLUMNS}
-     FROM tasks t
-     JOIN organizations o ON o.id = t.organization_id
-     LEFT JOIN staff s ON s.user_id = t.assignee_user_id
-     WHERE t.project_id = ? AND o.archived_at IS NULL
-     ORDER BY CASE WHEN t.status = 'done' THEN 1 ELSE 0 END, t.due_at, t.title`,
-    [projectId],
-  );
-}
-
 export async function listWork(
   sql: Sql,
   caller: Caller,
@@ -936,9 +967,7 @@ export async function listWork(
   if (!actorId) return [];
   return sql.all<WorkTask>(
     `SELECT ${WORK_COLUMNS}
-     FROM tasks t
-     JOIN organizations o ON o.id = t.organization_id
-     LEFT JOIN staff s ON s.user_id = t.assignee_user_id
+     ${WORK_JOINS}
      WHERE o.archived_at IS NULL
        AND t.status != 'done'
        AND (? = 0 OR t.due_at < ?)
@@ -958,6 +987,83 @@ export async function listWork(
       actorId,
     ],
   );
+}
+
+const ACTIVE_PROJECT = `('planned', 'active', 'waiting_on_client')`;
+
+export type BoardQuery = {
+  organizationId?: string;
+  projectId?: string;
+  unassigned?: boolean;
+  /** Client and studio boards hide open cards on paused, done, and cancelled projects. */
+  hideInactiveProjects?: boolean;
+};
+
+/** One task list for the project board, the client board, and the studio board. */
+export async function listBoard(sql: Sql, caller: Caller, query: BoardQuery): Promise<BoardCard[]> {
+  if (!staffUserId(caller)) return [];
+  const where = ["o.archived_at IS NULL"];
+  const params: unknown[] = [];
+  if (query.organizationId) {
+    where.push("t.organization_id = ?");
+    params.push(query.organizationId);
+  }
+  if (query.unassigned) {
+    where.push("t.project_id IS NULL");
+  } else if (query.projectId) {
+    where.push("t.project_id = ?");
+    params.push(query.projectId);
+  } else if (query.hideInactiveProjects) {
+    where.push(`(t.status = 'done' OR t.project_id IS NULL OR p.status IN ${ACTIVE_PROJECT})`);
+  }
+  return sql.all<BoardCard>(
+    `SELECT ${BOARD_COLUMNS}
+     ${BOARD_JOINS}
+     WHERE ${where.join(" AND ")}
+     ORDER BY t.position, t.created_at, t.id`,
+    params,
+  );
+}
+
+export async function boardClientChips(
+  sql: Sql,
+  caller: Caller,
+): Promise<{ id: string; name: string; open: number }[]> {
+  if (!staffUserId(caller)) return [];
+  const rows = await sql.all<{ id: string; name: string; open: number }>(
+    `SELECT o.id, o.name, COUNT(t.id) AS open
+     FROM organizations o
+     JOIN tasks t ON t.organization_id = o.id AND t.status != 'done'
+     LEFT JOIN projects p ON p.id = t.project_id
+     WHERE o.archived_at IS NULL
+       AND (t.project_id IS NULL OR p.status IN ${ACTIVE_PROJECT})
+     GROUP BY o.id
+     ORDER BY o.name`,
+  );
+  return rows.map((row) => ({ id: row.id, name: row.name, open: Number(row.open) }));
+}
+
+/** Recent agent notes, keyed later by the task id stored on the activity. */
+export async function listBoardActivity(sql: Sql, caller: Caller, organizationIds: string[]): Promise<BoardActivity[]> {
+  if (!staffUserId(caller) || organizationIds.length === 0) return [];
+  const rows = await sql.all<{ id: string; kind: string; body: string | null; created_at: number; data_json: string | null }>(
+    `SELECT id, kind, body, created_at, data_json FROM activities
+     WHERE kind LIKE 'agent.%' AND organization_id IN (${organizationIds.map(() => "?").join(", ")})
+     ORDER BY created_at DESC
+     LIMIT 300`,
+    organizationIds,
+  );
+  return rows.flatMap((row) => {
+    let taskId = "";
+    try {
+      const data = JSON.parse(row.data_json ?? "") as { taskId?: unknown };
+      if (typeof data.taskId === "string") taskId = data.taskId;
+    } catch {
+      taskId = "";
+    }
+    if (!taskId) return [];
+    return [{ id: row.id, taskId, kind: row.kind, body: row.body, createdAt: row.created_at }];
+  });
 }
 
 /** Sidebar badges. Needs you is late or blocked work. Work is that same set. Leads are new deals from the last 7 days. */
@@ -1107,9 +1213,7 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
     ),
     sql.all<WorkTask>(
       `SELECT ${WORK_COLUMNS}
-       FROM tasks t
-       JOIN organizations o ON o.id = t.organization_id
-       LEFT JOIN staff s ON s.user_id = t.assignee_user_id
+       ${WORK_JOINS}
        WHERE o.archived_at IS NULL
          AND t.status != 'done'
          AND (

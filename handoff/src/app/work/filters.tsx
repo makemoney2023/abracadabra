@@ -1,14 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { workHref, type WorkCount } from "./query";
 
@@ -23,60 +15,47 @@ export function WorkToolbar({
   late,
   week,
   blocked,
-  group,
+  client,
+  project,
   counts,
 }: {
   late: boolean;
   week: boolean;
   blocked: boolean;
-  group: "person" | "client";
+  client?: string;
+  project?: string;
   counts: WorkCount;
 }) {
-  const router = useRouter();
-  const filters = { late, week, blocked, group };
+  const scope = { client, project };
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
       <ToggleGroup type="single" value={activeFilter(late, week, blocked)} className="max-w-full flex-wrap">
         <ToggleGroupItem value="all" asChild>
-          <Link href={workHref({ group })}>
+          <Link href={workHref(scope)}>
             All
             <span className="tabular-nums">{counts.all}</span>
           </Link>
         </ToggleGroupItem>
         <ToggleGroupItem value="late" asChild>
-          <Link href={workHref({ ...filters, late: true, week: false, blocked: false })}>
+          <Link href={workHref({ ...scope, late: true })}>
             Late
             <span className="tabular-nums">{counts.late}</span>
           </Link>
         </ToggleGroupItem>
         <ToggleGroupItem value="week" asChild>
-          <Link href={workHref({ ...filters, late: false, week: true, blocked: false })}>
+          <Link href={workHref({ ...scope, week: true })}>
             This week
             <span className="tabular-nums">{counts.thisWeek}</span>
           </Link>
         </ToggleGroupItem>
         <ToggleGroupItem value="blocked" asChild>
-          <Link href={workHref({ ...filters, late: false, week: false, blocked: true })}>
+          <Link href={workHref({ ...scope, blocked: true })}>
             Blocked
             <span className="tabular-nums">{counts.blocked}</span>
           </Link>
         </ToggleGroupItem>
       </ToggleGroup>
-      <Select
-        value={group}
-        onValueChange={(value) => {
-          router.push(workHref({ late, week, blocked, group: value === "client" ? "client" : "person" }));
-        }}
-      >
-        <SelectTrigger aria-label="Group by">
-          <SelectValue placeholder="Person" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="person">Person</SelectItem>
-          <SelectItem value="client">Client</SelectItem>
-        </SelectContent>
-      </Select>
     </div>
   );
 }

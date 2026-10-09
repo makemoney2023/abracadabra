@@ -1,4 +1,5 @@
 import { adaptArtifact } from "./artifact-adapter";
+import { nextSteps, type StepCard } from "./board-model";
 import { chooseSkillsForPiece, type PieceKind, type SkillCard, type ToolCaller } from "./client-documents";
 import { leadBrief } from "./lead-swarm";
 import { pickSkillPack, type PackCandidate } from "./pack-picker";
@@ -23,10 +24,15 @@ type ContextTask = {
   status?: string;
   stage?: string;
   round?: number;
+  projectId?: string | null;
+  position?: number;
+  createdAt?: number;
   deliverableId?: string | null;
   skills?: PlanSkill[];
   blockedReason?: string | null;
 };
+
+type ContextProject = { id?: string; name?: string; status?: string };
 
 type ClientPicture = {
   organization?: {
@@ -37,10 +43,29 @@ type ClientPicture = {
     agentPausedAt?: number | null;
   };
   assessment?: { totalScore?: number | null } | null;
-  project?: { id?: string } | null;
+  project?: ContextProject | null;
+  projects?: ContextProject[];
   tasks?: ContextTask[];
   answeredSince?: unknown[];
 };
+
+const ACTIVE_PROJECT = new Set(["planned", "active", "waiting_on_client"]);
+
+/** Brief project, else the only active project. Two active projects need a person to choose. */
+export function planningProject(input: {
+  briefProjectId?: string | null;
+  projects?: ContextProject[];
+  fallbackProjectId?: string | null;
+}): { projectId: string } | { ask: true } | { none: true } {
+  if (input.briefProjectId) return { projectId: input.briefProjectId };
+  const listed = input.projects ?? [];
+  const active = listed.filter((project) => project.id && ACTIVE_PROJECT.has(project.status ?? "active"));
+  if (active.length > 1) return { ask: true };
+  if (active.length === 1 && active[0]?.id) return { projectId: active[0].id };
+  if (listed.length > 0) return { none: true };
+  if (input.fallbackProjectId) return { projectId: input.fallbackProjectId };
+  return { none: true };
+}
 
 /** Reads one brief section. A missing heading returns null so the caller can fall back. */
 function section(markdown: string, heading: string): string | null {
@@ -261,6 +286,19 @@ export async function planClientWork(input: {
   const brief = fields(await input.call("get_brief", { kind: "brief" }));
   const body = typeof brief.body === "string" ? brief.body : "";
   if (!body.trim()) return "skipped";
+  const chosen = planningProject({
+    briefProjectId: typeof brief.projectId === "string" ? brief.projectId : null,
+    projects: context.projects,
+    fallbackProjectId: context.projects ? null : (context.project?.id ?? null),
+  });
+  if ("ask" in chosen) {
+    await input.call("ask_staff", {
+      question: "Which project should these tasks use?",
+      requestId: `${input.requestId}:project`,
+    });
+    return "skipped";
+  }
+  if ("none" in chosen) return "skipped";
   const pieces = piecesFromBrief(body, input.catalog ?? []);
   const existing = new Set((context.tasks ?? []).map((task) => task.title));
   const created: string[] = [];
@@ -271,14 +309,14 @@ export async function planClientWork(input: {
       await input.call("create_deliverable", {
         title: piece.title,
         kind,
-        projectId: context.project?.id,
+        projectId: chosen.projectId,
         requestId: `${input.requestId}:deliverable:${piece.kind}`,
       }),
     );
     await input.call("create_task", {
       title: piece.title,
       stage: piece.stage,
-      projectId: context.project?.id,
+      projectId: chosen.projectId,
       deliverableId: typeof draft.deliverableId === "string" ? draft.deliverableId : undefined,
       skills: piece.skills,
       requestId: `${input.requestId}:task:${piece.kind}`,
@@ -288,9 +326,9 @@ export async function planClientWork(input: {
   if (created.length === 0) return "skipped";
   const client = context.organization?.name ?? "the client";
   const summary = `Planned ${created.length} tasks for ${client}: ${created.join("; ")}`;
-  if (context.project?.id) {
+  if (chosen.projectId) {
     await input.call("post_status_update", {
-      projectId: context.project.id,
+      projectId: chosen.projectId,
       audience: "internal",
       health: "on_track",
       body: summary,
@@ -368,6 +406,39 @@ function eligible(task: ContextTask, answered: number): boolean {
   return Boolean(task.id && currentSkill(task.skills ?? []));
 }
 
+function queueTasks(context: ClientPicture): { tasks: ContextTask[]; more: boolean } {
+  const projects = context.projects ?? [];
+  const statusById = new Map(
+    projects.flatMap((project) => (project.id ? [[project.id, project.status ?? "active"] as const] : [])),
+  );
+  const nameById = new Map(projects.flatMap((project) => (project.id ? [[project.id, project.name ?? project.id] as const] : [])));
+  const fallbackId = projects.length === 0 ? context.project?.id : undefined;
+  const answeredCount = context.answeredSince?.length ?? 0;
+  const cards = (context.tasks ?? []).flatMap((task) => {
+    if (!task.id) return [];
+    const projectId = task.projectId === undefined ? (fallbackId ?? null) : task.projectId;
+    const projectStatus = projectId
+      ? (statusById.get(projectId) ?? (projectId === context.project?.id ? (context.project?.status ?? "active") : "active"))
+      : null;
+    const card: StepCard & { task: ContextTask } = {
+      id: task.id,
+      projectId,
+      projectStatus,
+      projectName: projectId ? (nameById.get(projectId) ?? context.project?.name) : undefined,
+      status: task.status ?? "todo",
+      stage: task.stage ?? "describe",
+      position: task.position ?? 0,
+      createdAt: task.createdAt ?? 0,
+      blockedAnswered: answeredCount > 0,
+      hasSkill: eligible(task, answeredCount),
+      task,
+    };
+    return [card];
+  });
+  const ordered = nextSteps(cards, Number.POSITIVE_INFINITY);
+  return { tasks: ordered.slice(0, 8).map((card) => card.task), more: ordered.length > 8 };
+}
+
 /** Runs one step of each open task, at most eight, then asks for another wake. */
 export async function advanceClientWork(input: {
   call: ToolCaller;
@@ -378,9 +449,10 @@ export async function advanceClientWork(input: {
 }): Promise<{ advanced: number; reschedule: boolean }> {
   const context = picture(await input.call("client_context", {}));
   if (context.organization?.agentPausedAt != null) return { advanced: 0, reschedule: false };
-  const tasks = (context.tasks ?? []).filter((task) => eligible(task, context.answeredSince?.length ?? 0));
+  const queue = queueTasks(context);
+  const tasks = queue.tasks;
   let advanced = 0;
-  let reschedule = false;
+  let reschedule = queue.more;
   for (const task of tasks) {
     if (advanced >= 8) {
       reschedule = true;
@@ -574,7 +646,19 @@ export async function applyBriefChange(input: {
   if (!next.trim()) return counts;
   const previous = typeof brief.previousBody === "string" ? brief.previousBody : "";
   const actions = briefChangeActions(previous, next, briefTasksOf(context.tasks), input.catalog);
-  const projectId = context.project?.id;
+  const chosen = planningProject({
+    briefProjectId: typeof brief.projectId === "string" ? brief.projectId : null,
+    projects: context.projects,
+    fallbackProjectId: context.projects ? null : (context.project?.id ?? null),
+  });
+  if ("ask" in chosen) {
+    await input.call("ask_staff", {
+      question: "Which project should these tasks use?",
+      requestId: `${input.requestId}:project`,
+    });
+    return counts;
+  }
+  const projectId = "projectId" in chosen ? chosen.projectId : undefined;
   let index = 0;
   for (const action of actions) {
     index += 1;

@@ -1,6 +1,6 @@
 # Kanban boards: project, client, studio
 
-**Status:** plan only. Nothing in this file is built.
+**Status:** built on the staff host. Drag and the move menu call the same stage change.
 **Updated:** 2026-10-09
 **Amends:** [hq-agent-spec.md](hq-agent-spec.md) sections 12.4 and 12.5, and the Work paragraph in [agency-dashboard-gameplan.md](agency-dashboard-gameplan.md). Those sections stay the description of the screens that exist today.
 
@@ -78,7 +78,7 @@ Describe and Engineer are the columns `advanceClientWork` pulls from. Build is t
 
 ## Three boards, one query
 
-`boardCards(tasks)` in a new pure module places each task in one column and sorts by `position`, then `created_at`. The page decides the scope before that function runs.
+`boardCards(tasks)` in `handoff/src/lib/board-model.ts` places each task in one column and sorts by `position`, then `created_at`. The page decides the scope before that function runs.
 
 | Board | Route | Scope |
 |---|---|---|
@@ -222,7 +222,7 @@ Each slice is a failing test, then the code, then the screen that calls it. Do n
 Run from `handoff/`:
 
 ```bash
-npx vitest run src/app/work/board-model.test.ts src/lib/client-plan.test.ts src/lib/hq-tools.test.ts src/lib/cursor-build.test.ts src/db/crm.test.ts src/lib/agent-context.test.ts
+npx vitest run src/lib/board-model.test.ts src/lib/client-plan.test.ts src/lib/hq-tools.test.ts src/lib/cursor-build.test.ts src/db/crm.test.ts src/lib/agent-context.test.ts
 npx eslint src/app/work src/app/projects src/app/clients src/lib/task-stage.ts src/lib/client-plan.ts src/db/crm.ts src/db/agent-work.ts src/lib/hq-tools.ts src/lib/agent-context.ts
 npx tsc --noEmit
 ```

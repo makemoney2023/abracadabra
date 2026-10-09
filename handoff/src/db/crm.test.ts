@@ -21,6 +21,7 @@ import {
   presentAssessment,
   listStatusUpdates,
   listTimeline,
+  listBoard,
   listWork,
   navCounts,
   logCall,
@@ -812,6 +813,38 @@ describe("projects and work", () => {
     expect((await listWork(sql, staff, { thisWeek: true }, NOW)).map((task) => task.title)).toEqual(["This week"]);
     expect((await listWork(sql, staff, { blocked: true }, NOW)).map((task) => task.title)).toEqual(["Blocked"]);
     expect(await listWork(sql, outsider, {}, NOW)).toEqual([]);
+  });
+
+  it("scopes the board to a project, a client, and the studio", async () => {
+    const sql = await database();
+    const first = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    const second = await createOrganization(sql, staff, { name: "Pine" }, NOW);
+    const archived = await createOrganization(sql, staff, { name: "Old" }, NOW);
+    if (!first.ok || !second.ok || !archived.ok) throw new Error("setup");
+    const site = await createProject(sql, staff, { organizationId: first.value.id, name: "Site" }, NOW);
+    const brand = await createProject(sql, staff, { organizationId: first.value.id, name: "Brand" }, NOW);
+    const pine = await createProject(sql, staff, { organizationId: second.value.id, name: "Pine site" }, NOW);
+    if (!site.ok || !brand.ok || !pine.ok) throw new Error("setup");
+    await createTask(sql, staff, { projectId: site.value.id, title: "Site task" }, NOW);
+    await createTask(sql, staff, { projectId: brand.value.id, title: "Brand task" }, NOW);
+    await createTask(sql, staff, { organizationId: first.value.id, title: "Loose task" }, NOW);
+    await createTask(sql, staff, { projectId: pine.value.id, title: "Pine task" }, NOW);
+    await createTask(sql, staff, { organizationId: archived.value.id, title: "Old task" }, NOW);
+    await sql.run("UPDATE organizations SET archived_at = ? WHERE id = ?", [NOW, archived.value.id]);
+    await sql.run("UPDATE projects SET status = 'paused' WHERE id = ?", [brand.value.id]);
+
+    const projectBoard = await listBoard(sql, staff, { projectId: site.value.id });
+    expect(projectBoard.map((card) => card.title)).toEqual(["Site task"]);
+
+    const clientBoard = await listBoard(sql, staff, { organizationId: first.value.id, hideInactiveProjects: true });
+    expect(clientBoard.map((card) => card.title).sort()).toEqual(["Loose task", "Site task"]);
+
+    const pausedBoard = await listBoard(sql, staff, { projectId: brand.value.id });
+    expect(pausedBoard.map((card) => card.title)).toEqual(["Brand task"]);
+
+    const studio = await listBoard(sql, staff, { hideInactiveProjects: true });
+    expect(studio.map((card) => card.title).sort()).toEqual(["Loose task", "Pine task", "Site task"]);
+    expect(await listBoard(sql, outsider, {})).toEqual([]);
   });
 
   it("counts needs-you, open work, and new leads for staff only", async () => {

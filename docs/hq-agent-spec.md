@@ -560,16 +560,19 @@ Sidebar `staff-nav.tsx` gains "Agent" between Work and Spaces; `staff-nav-match.
 
 ### 12.4 Work board (`/work`)
 
-The column board that replaces this chip layout is [kanban-board-gameplan.md](kanban-board-gameplan.md). Until that plan is built, this section is the screen.
+The board is specified in [kanban-board-gameplan.md](kanban-board-gameplan.md) and is on the staff host.
 
-- Stage filter chips: Describe, Engineer, Build, Run. Column or badge on each card showing stage and round.
+- Columns: Describe, Engineer, Build, Run, Done. A blocked card stays in its stage column.
+- Cards created by the agent show a bot mark. Cards in build show elapsed time and the PR link.
+- A card's details show `skills_json` as a checklist and the latest `agent.*` activities for that task.
+- Blocked cards show `blocked_reason` and the clearing action (pick a repo, retry creating a repo, choose another repo name, approve brief, answer question, retry run).
 - Cards created by the agent show a bot mark. Cards in build show elapsed time and the PR link.
 - A card's drawer shows `skills_json` as a checklist (done, doing, todo) and the latest `agent.*` activities for that task.
 - Blocked cards show `blocked_reason` and the clearing action (pick a repo, retry creating a repo, choose another repo name, approve brief, answer question, retry run).
 
 ### 12.5 Project page (`/projects/[id]`)
 
-The project kanban is specified in [kanban-board-gameplan.md](kanban-board-gameplan.md). Until that plan is built, this section is the screen.
+The project page shows the same board, scoped to that project. See [kanban-board-gameplan.md](kanban-board-gameplan.md).
 
 - Status updates list already exists; internal agent updates render there with the bot mark.
 - Deliverables list shows `brief` and `design_system` first with approval state.

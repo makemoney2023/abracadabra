@@ -542,8 +542,7 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 - Every click writes an `activities` row, so staff see it on the timeline and the Today screen.
 
 **Work (`hq /work`)**
-- Every open task across all clients. Group by person or by client. Filter late, this week, blocked.
-- The kanban that replaces this table, including the project board and the client rollup, is specified in [kanban-board-gameplan.md](kanban-board-gameplan.md). It is not built yet.
+- One board for every client. Columns are Describe, Engineer, Build, Run, and Done. Filter late, this week, blocked. A client chip and a project chip narrow the same cards. The project page and the client Work tab use that board. The agent takes the top card in Describe or Engineer. See [kanban-board-gameplan.md](kanban-board-gameplan.md).
 
 **Invoices (`hq /invoices`)**
 - List by status: draft, sent, late, paid. Totals owed and paid this month.

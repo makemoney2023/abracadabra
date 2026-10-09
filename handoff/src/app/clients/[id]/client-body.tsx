@@ -2,6 +2,8 @@ import type { ClientThread } from "@/db/conversations";
 import type {
   ActivityRow,
   AssessmentView,
+  BoardActivity,
+  BoardCard,
   Contact,
   DealCard,
   LinkedRepo,
@@ -26,6 +28,12 @@ export function ClientBody({
   client,
   contacts,
   tasks,
+  cards,
+  activity,
+  now,
+  projectId,
+  runCap,
+  opens,
   timeline,
   linked,
   free,
@@ -45,6 +53,12 @@ export function ClientBody({
   client: Organization;
   contacts: Contact[];
   tasks: TaskRow[];
+  cards: BoardCard[];
+  activity: BoardActivity[];
+  now: number;
+  projectId: string;
+  runCap: number | null;
+  opens: { projectId: string | null; open: number }[];
   timeline: ActivityRow[];
   linked: WorkspaceLink[];
   free: WorkspaceLink[];
@@ -59,7 +73,20 @@ export function ClientBody({
   githubConnected: boolean;
   githubFailed: boolean;
 }) {
-  if (tab === "work") return <WorkTab organizationId={client.id} projects={projects} tasks={tasks} />;
+  if (tab === "work") {
+    return (
+      <WorkTab
+        organizationId={client.id}
+        projects={projects}
+        cards={cards}
+        activity={activity}
+        now={now}
+        projectId={projectId}
+        runCap={runCap}
+        opens={opens}
+      />
+    );
+  }
   if (tab === "threads") return <ThreadsTab organizationId={client.id} threads={threads} />;
   if (tab === "files") return <FilesTab organizationId={client.id} linked={linked} free={free} />;
   if (tab === "repos") {

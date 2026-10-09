@@ -32,6 +32,7 @@ describe("statementsFromMigration", () => {
       "0013_workflow_task.sql",
       "0014_workflow_schedule.sql",
       "0015_mcp_catalog.sql",
+      "0016_task_position.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);

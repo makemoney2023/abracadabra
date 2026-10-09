@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Each project has a kanban. The same cards roll up to the client and to every client. The agent takes the top card in Describe or Engineer, one step per project, and no longer files new tasks on whichever project was saved last.
+- **Why** — Open work was a table, and planning attached tasks to the newest project.
+- **Code touchpoints** — `handoff/src/app/work/board.tsx`, `handoff/src/lib/board-model.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/migrations/0016_task_position.sql`
+- **Data-flow impact** — A `work` wake reads task position and project status. A move to Build still starts a cloud run. A move to Run still schedules a swarm pack. A refused build stays in the column it left.
+- **API / schema impact** — `tasks.position`. `client_context` adds `projects` plus `projectId` and `position` on each task. `get_brief` adds `projectId`.
+- **Verification** — `npm test` in `handoff/`: 705 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched files reported no errors.
+
+## 2026-10-09
+
 - **What changed** — Each project gets a kanban the agent executes from, and that board rolls up to the client and to every client. The plan is written. The board is not built.
 - **Why** — Open work is a table, and planning still attaches new tasks to the most recently updated project.
 - **Code touchpoints** — `docs/kanban-board-gameplan.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `README.md`

@@ -1,72 +1,64 @@
 import Link from "next/link";
-import type { ProjectRow, TaskRow } from "@/db/crm";
-import { ActionForm } from "@/components/action-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { BoardActivity, BoardCard, ProjectRow } from "@/db/crm";
+import { WorkBoard } from "../../work/board";
 import { ProjectForm } from "../../projects/forms";
-import { PROJECT_STATUS_LABEL } from "../../projects/labels";
-import { completeTaskAction } from "../actions";
 import { TaskForm } from "../activity-forms";
+import { tabHref } from "./tabs";
 
 export function WorkTab({
   organizationId,
   projects,
-  tasks,
+  cards,
+  activity,
+  now,
+  projectId,
+  runCap,
+  opens,
 }: {
   organizationId: string;
   projects: ProjectRow[];
-  tasks: TaskRow[];
+  cards: BoardCard[];
+  activity: BoardActivity[];
+  now: number;
+  projectId: string;
+  runCap: number | null;
+  opens: { projectId: string | null; open: number }[];
 }) {
+  const base = tabHref(organizationId, "work");
+  const open = (id: string | null) => opens.find((row) => row.projectId === id)?.open ?? 0;
+
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Projects</CardTitle>
-          <CardDescription>Milestones, tasks, and status updates live on the project.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {projects.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No projects yet.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {projects.map((project) => (
-                <li key={project.id} className="text-sm">
-                  <Link href={`/projects/${project.id}`}>{project.name}</Link>
-                  <span className="ml-2 text-muted-foreground">{PROJECT_STATUS_LABEL[project.status]}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <ProjectForm organizationId={organizationId} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle>Tasks</CardTitle>
-          <TaskForm organizationId={organizationId} label="Add a task" variant="outline" />
-        </CardHeader>
-        <CardContent>
-          {tasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No open tasks.</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {tasks.map((task) => (
-                <li key={task.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span>{task.title}</span>
-                  <ActionForm
-                    action={completeTaskAction}
-                    submitLabel="Mark done"
-                    pendingLabel="Saving"
-                    className="w-auto flex-row items-center"
-                  >
-                    <input type="hidden" name="organizationId" value={organizationId} />
-                    <input type="hidden" name="taskId" value={task.id} />
-                  </ActionForm>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link href={base} className={projectId ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
+          All projects
+        </Link>
+        {projects.map((project) => (
+          <Link
+            key={project.id}
+            href={`${base}&project=${project.id}`}
+            className={projectId === project.id ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+          >
+            {project.name} · {open(project.id)}
+          </Link>
+        ))}
+        <Link
+          href={`${base}&project=none`}
+          className={projectId === "none" ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+        >
+          No project · {open(null)}
+        </Link>
+        <ProjectForm organizationId={organizationId} />
+        <TaskForm organizationId={organizationId} label="Add a task" variant="outline" />
+      </div>
+      <WorkBoard
+        cards={cards}
+        now={now}
+        showClient={false}
+        showProject={projectId === ""}
+        runCap={runCap}
+        activity={activity}
+      />
     </div>
   );
 }

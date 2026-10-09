@@ -52,6 +52,8 @@ export function workHref(input: {
   week?: boolean;
   blocked?: boolean;
   group?: "person" | "client";
+  client?: string;
+  project?: string;
   /** Ignored. Row density follows the staff setting, not the URL. */
   density?: string;
 }): string {
@@ -60,6 +62,8 @@ export function workHref(input: {
   if (input.week) search.set("week", "1");
   if (input.blocked) search.set("blocked", "1");
   if (input.group === "client") search.set("group", "client");
+  if (input.client) search.set("client", input.client);
+  if (input.project) search.set("project", input.project);
   const text = search.toString();
   return text.length > 0 ? `/work?${text}` : "/work";
 }
