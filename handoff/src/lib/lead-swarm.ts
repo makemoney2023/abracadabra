@@ -1,3 +1,4 @@
+import { mcpServersFor } from "./mcp-catalog";
 import { OPENING_PACK_ID } from "./pack-templates";
 
 export type SwarmTemplate = {
@@ -45,6 +46,17 @@ function doneOutput(body: unknown, order: string[]): string {
     if (row?.status === "done" && row.output) parts.push(row.output);
   }
   return parts.join("\n\n");
+}
+
+/** Portal servers for a lead swarm. Empty when the origin or portal URL is not https. */
+export function leadPortalAttach(input: {
+  origin: string;
+  portalUrl?: string;
+  runSecret?: string;
+}): { mcpServers: SwarmMcpServer[]; runSecret: string } {
+  const servers = mcpServersFor(["portal"], input.origin, input.portalUrl ?? "");
+  if (!servers) return { mcpServers: [], runSecret: "" };
+  return { mcpServers: servers, runSecret: input.runSecret?.trim() ?? "" };
 }
 
 /** Saves the schema readiness pack, starts it, and waits for the node outputs. */

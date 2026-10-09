@@ -18,23 +18,27 @@ export type McpConnectTarget = {
   headers: Record<string, string>;
 };
 
-/** Portal when it is set. Otherwise the Handoff MCP route with the agent key. */
+/**
+ * Portal when Access can open it. A portal URL without those headers stays on the
+ * Handoff MCP route so lead swarms can store the portal URL without taking the agent's tools.
+ */
 export function mcpConnectTarget(env: McpConnectEnv): McpConnectTarget | null {
   const portal = env.MCP_PORTAL_URL?.trim() ?? "";
   const handoff = env.HANDOFF_MCP_URL?.trim() ?? "";
-  const url = portal || handoff;
-  if (!url) return null;
-  const headers: Record<string, string> = {};
   const accessId = env.CF_ACCESS_CLIENT_ID?.trim() ?? "";
   const accessSecret = env.CF_ACCESS_CLIENT_SECRET?.trim() ?? "";
-  if (accessId && accessSecret) {
-    headers["CF-Access-Client-Id"] = accessId;
-    headers["CF-Access-Client-Secret"] = accessSecret;
+  if (portal.startsWith("https://") && accessId && accessSecret) {
+    return {
+      url: portal,
+      headers: {
+        "CF-Access-Client-Id": accessId,
+        "CF-Access-Client-Secret": accessSecret,
+      },
+    };
   }
   const token = env.AGENT_MCP_TOKEN?.trim() ?? "";
-  if (!portal && token) headers.Authorization = `Bearer ${token}`;
-  if (!portal && !token) return null;
-  return { url, headers };
+  if (!handoff || !token) return null;
+  return { url: handoff, headers: { Authorization: `Bearer ${token}` } };
 }
 
 /** JSON-RPC tools/call against the Handoff MCP route. Null when no target is configured. */

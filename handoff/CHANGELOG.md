@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A lead swarm started by `handoff-agent` attaches the MCP portal and sends the run secret. The agent keeps using the Handoff MCP route for its own tools until Access headers are set.
+- **Why** — `MCP_PORTAL_URL` was an empty var and `SWARM_RUN_SECRET` was unset, so automatic lead research never reached Parallel Search.
+- **Code touchpoints** — `handoff/src/lib/lead-swarm.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/mcp-connect.ts`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — `pickupLead` saves the portal server on every step and sends `Authorization: Bearer` on save and execute. The swarm still adds the Access headers itself.
+- **API / schema impact** — none. `MCP_PORTAL_URL` on `handoff-agent` is `https://mcp.abra-ca-dabra.app/mcp`. `SWARM_RUN_SECRET` was set to one new shared value on `handoff-agent`, `handoff-hq`, and `agent-swarm-orchestrator`. The value is not in git.
+- **Verification** — `npx vitest run src/lib/lead-swarm.test.ts src/lib/mcp-connect.test.ts` in `handoff/`: 13 tests passed. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `3b75ce05-e278-414f-a3cd-ec6af864d9d8`. Settings read shows the portal URL on `handoff-agent` and `SWARM_RUN_SECRET` on that worker, `handoff-hq`, and the swarm. `AGENT_WAKE_SECRET` and `AGENT_MCP_TOKEN` were still present after deploy.
+
+## 2026-10-09
+
 - **What changed** — Only researcher nodes see the portal's Parallel tools, and a search observation keeps up to 12,000 characters. The portal names those tools `parallel-search_web_search` and `parallel-search_web_fetch`.
 - **Why** — The portal prefixes `{server_id}_` and splits on the first underscore. Every swarm node was offered the tools, and the MCP client cut the result at 4,000 characters before a citation could survive.
 - **Code touchpoints** — `swarm/src/ai/research-tools.ts`, `swarm/src/ai/agents.ts`, `swarm/src/mcp/client.ts`, `swarm/src/do/WorkflowDO.ts`
