@@ -102,14 +102,14 @@ export function ProjectDescriptionForm({
       <input type="hidden" name="projectId" value={projectId} />
       <input type="hidden" name="organizationId" value={organizationId} />
       <label className="flex flex-col gap-1 text-sm" htmlFor="project-description">
-        What this project needs
+        Requirements
         <Textarea
           id="project-description"
           name="description"
           defaultValue={description ?? ""}
           maxLength={4000}
-          rows={6}
-          placeholder="The outcome, the pieces, and any constraints."
+          rows={8}
+          placeholder="What this project has to produce. One outcome per line works well."
         />
       </label>
       <Button type="submit" size="sm" disabled={pending} className="self-start">

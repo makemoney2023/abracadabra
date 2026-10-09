@@ -89,7 +89,7 @@ describe("createAiSearchProspectFinder", () => {
         name: "Needs Co",
         domain: "needs.example",
         website: "https://needs.example",
-        contacts: [{ name: "Ada Lovelace", title: "sales", email: "ada@needs.example", phone: "+15551212" }],
+        contacts: [{ name: "Ada Lovelace", title: "sales", email: "ada@needs.example", phone: "+1-555-1212" }],
         raw: { source: "ai_search", answer: "NEEDS_US\nNothing for an answer engine to quote." },
       },
     ]);

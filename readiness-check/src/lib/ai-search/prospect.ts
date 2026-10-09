@@ -1,5 +1,6 @@
 import "server-only";
 
+import { emailsFromHtml, phoneKey, phonesFromHtml, preferPhone, publishedPhone } from "@/lib/facts/contact-signals";
 import type { ParallelLead } from "@/lib/parallel/types";
 import { instanceIdForDomain, type AiSearchEnv } from "@/lib/ai-search/scan-client";
 
@@ -57,12 +58,7 @@ function cleanEmail(value: string | undefined): string | undefined {
 }
 
 function cleanPhone(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-  const trimmed = value.trim().replace(/^tel:/i, "");
-  const plus = trimmed.startsWith("+");
-  const digits = trimmed.replace(/\D/g, "");
-  if (digits.length < 7) return undefined;
-  return `${plus ? "+" : ""}${digits}`;
+  return publishedPhone(value ?? "") ?? undefined;
 }
 
 function remember(contacts: ScrapedContact[], next: ScrapedContact) {
@@ -72,13 +68,15 @@ function remember(contacts: ScrapedContact[], next: ScrapedContact) {
   const title = next.title?.replace(/\s+/g, " ").trim().slice(0, 120) || undefined;
   if (!email && !phone && !name) return;
   const existing = contacts.find(
-    (contact) => (email && contact.email === email) || (phone && contact.phone === phone),
+    (contact) =>
+      (email && contact.email === email) ||
+      (phone && contact.phone && phoneKey(contact.phone) === phoneKey(phone)),
   );
   if (existing) {
     existing.name = existing.name ?? name;
     existing.title = existing.title ?? title;
     existing.email = existing.email ?? email;
-    existing.phone = existing.phone ?? phone;
+    if (phone) existing.phone = existing.phone ? preferPhone(existing.phone, phone) : phone;
     return;
   }
   const contact: ScrapedContact = {};
@@ -126,12 +124,8 @@ function walkLd(value: unknown, contacts: ScrapedContact[]) {
 export function contactsFromHtml(html: string): ScrapedContact[] {
   const contacts: ScrapedContact[] = [];
   readJsonLd(html, contacts);
-  for (const match of html.matchAll(/mailto:([^"'?\s>]+)/gi)) remember(contacts, { email: match[1] });
-  for (const match of html.matchAll(/tel:([^"'?\s>]+)/gi)) remember(contacts, { phone: match[1] });
-  const withoutScripts = html.replace(/<script[\s\S]*?<\/script>/gi, " ");
-  for (const match of withoutScripts.matchAll(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)) {
-    remember(contacts, { email: match[0] });
-  }
+  for (const email of emailsFromHtml(html)) remember(contacts, { email });
+  for (const phone of phonesFromHtml(html)) remember(contacts, { phone });
   return contacts.filter((contact) => contact.email || contact.phone);
 }
 

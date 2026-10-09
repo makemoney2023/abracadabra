@@ -20,6 +20,33 @@
 
 ## 2026-10-09
 
+- **What changed** — Saving project requirements asks the agent for what each task must produce. That note is stored on the task and shown on the card. Saving again fills a task that only had a title. A project that already has tasks does not get another set of cards when the model renames them.
+- **Why** — The first pass created titles only. The card had no detail.
+- **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/work/board.tsx`
+- **Data-flow impact** — Each new or untitled task gets an `agent.task_brief` activity whose body is the detail and whose `taskId` is the card. The board reads that note with the other agent notes.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 771 tests passed, and the agent worker suite passed 7. `npx eslint` on the planner, the project action, and the board exited 0.
+
+## 2026-10-09
+
+- **What changed** — A schema scan files one office contact with the real email and phone. The page title is not saved as a person. The same phone written three ways counts once. Script versions and map numbers are ignored. A contact that is only that page title is removed on the next scan, and the contact list shows the phone.
+- **Why** — Renew Implants had seventeen contacts named "All-on-4 Dental Implants Ottawa | Renew Implants" and no email. The office address was hidden by Cloudflare, and one phone had been split into many rows.
+- **Code touchpoints** — `handoff/src/lib/contact-signals.ts`, `handoff/src/lib/lead-enrich.ts`, `handoff/src/app/clients/[id]/overview-tab.tsx`
+- **Data-flow impact** — `enrichLeadFromSchema` reads scraped HTML for Cloudflare emails and real phones, then drops page-title contacts that have no email. A named person stays.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/` passed 754 tests, and the agent suite passed 7. `npx eslint` on the touched files exited 0. Live `https://www.renewimplants.ca/contact-us/` yields `info@renewimplants.ca` and `613-841-6111`. `npx tsc --noEmit` still reports existing `LayoutProps` and `PageProps` errors in `src/app/layout.tsx` and `src/app/page.tsx`.
+
+## 2026-10-09
+
+- **What changed** — Saving a project's requirements keeps the note editable and asks the agent to add tasks for work that is not already on that project. Saving again skips a title the project already has. Clearing the note does not remove tasks.
+- **Why** — The requirements field could be saved, and nothing turned that note into work on the board.
+- **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/[id]/page.tsx`
+- **Data-flow impact** — A changed note is sent to Workers AI. The JSON task titles are created on that project in Describe. Titles already on the project are skipped.
+- **API / schema impact** — none. Tasks use the existing `tasks` table.
+- **Verification** — `npm test` in `handoff/`: 768 tests passed, and the agent worker suite passed 7. `npx eslint` on the requirement planner and the project action exited 0.
+
+## 2026-10-09
+
 - **What changed** — A client's Overview lists that client's projects. A project page has a place to write what the project needs. Linking a repo puts it on the project when the client has exactly one. A repo already on the client but not on a project shows on the project page so it can be assigned.
 - **Why** — A project saved for a client was only visible in the Projects list. The client page never listed it. A repo connected on the client stayed off the project because linking did not set `project_id`.
 - **Code touchpoints** — `handoff/src/app/clients/[id]/overview-tab.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/db/crm.ts`, `handoff/migrations/0019_project_description.sql`

@@ -96,6 +96,15 @@ v1 implementation complete for public soft-gate flow + ops inbox/prospecting. Sc
 
 ## Changelog
 
+### 2026-10-09 — Page facts keep a real email and one phone
+
+- **What changed** — A scraped page keeps the office email, including a Cloudflare-protected address, and one phone. The same number in `613-841-6111`, `+16138416111`, and `6138416111` is stored once. A script version and an SVG coordinate are not phones.
+- **Why** — Renew Implants published `info@renewimplants.ca` behind Cloudflare email protection. The old phone match saved the page script and map art as extra numbers.
+- **Code touchpoints** — `src/lib/facts/contact-signals.ts`, `src/lib/facts/extract-from-html.ts`, `src/lib/facts/extract-page-facts.ts`, `src/lib/ai-search/prospect.ts`
+- **Data-flow impact** — Scan evidence `emails` and `phones` now come from those signals. Prospect contacts use the same phone and email read.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `readiness-check/` passed 236 tests. `npx eslint` on the touched files exited 0. Live contact page yields `info@renewimplants.ca` and `613-841-6111`. `npx tsc --noEmit` still reports an existing `LayoutProps` error in `src/app/layout.tsx`.
+
 ### 2026-10-07 — Prospect sits in the check menu and is public
 
 - **What changed** — The check header opens a menu with Readiness Check and Prospect. Prospect is `https://check.abra-ca-dabra.app/check/prospect`, uses the studio canvas, type, and accent, and does not ask for a login.

@@ -1,4 +1,5 @@
 import type { Sql } from "../db/sql";
+import { brandFromTitle, dedupePhones, emailsFromHtml, phoneKey, phonesFromHtml, preferPhone, publishedPhone } from "./contact-signals";
 
 export type LeadSnapshot = {
   name: string;
@@ -96,29 +97,72 @@ export function leadFillFromSchema(current: LeadSnapshot, facts: SchemaFacts, pe
   const extra = lines.filter((line) => !notes.includes(line));
   if (extra.length > 0) fill.notes = [notes.trim(), ...extra].filter(Boolean).join("\n").slice(0, 4000);
 
+  const officeName = (brandFromTitle(businessName) || clean(current.name)).slice(0, 200);
+  const officeNames = new Set(
+    [officeName, clean(businessName), clean(current.name)].map((value) => value.toLowerCase()).filter(Boolean),
+  );
   const seenEmail = new Set<string>();
   const seenPhone = new Set<string>();
   const contacts: LeadFill["contacts"] = [];
+  function isOffice(name: string): boolean {
+    const folded = name.trim().toLowerCase();
+    return !folded || officeNames.has(folded);
+  }
   function add(person: NamedContact) {
     const email = clean(person.email).toLowerCase();
-    const phone = clean(person.phone);
-    const name = clean(person.name) || businessName || current.name;
-    if (!name) return;
-    if (email && seenEmail.has(email)) return;
-    if (!email && phone && seenPhone.has(phone)) return;
+    const phone = publishedPhone(person.phone ?? "") ?? "";
     if (!email && !phone) return;
+    const given = clean(person.name);
+    const personal = Boolean(given) && !isOffice(given);
+    const name = (personal ? given : officeName).slice(0, 200);
+    if (!name) return;
+    const key = phone ? phoneKey(phone) : "";
+    const title = clean(person.title).slice(0, 120) || null;
+    const byEmail = email ? contacts.find((contact) => contact.email === email) : undefined;
+    if (byEmail) {
+      if (phone && !byEmail.phone) byEmail.phone = phone;
+      else if (phone && byEmail.phone) byEmail.phone = preferPhone(byEmail.phone, phone);
+      if (personal && isOffice(byEmail.name)) {
+        byEmail.name = name;
+        if (title) byEmail.title = title;
+      }
+      if (key) seenPhone.add(key);
+      return;
+    }
+    const byPhone = key ? contacts.find((contact) => contact.phone && phoneKey(contact.phone) === key) : undefined;
+    if (byPhone) {
+      if (email && !byPhone.email) byPhone.email = email;
+      if (phone && byPhone.phone) byPhone.phone = preferPhone(byPhone.phone, phone);
+      if (personal && isOffice(byPhone.name)) {
+        byPhone.name = name;
+        if (title) byPhone.title = title;
+      }
+      if (email) seenEmail.add(email);
+      return;
+    }
+    if (!personal) {
+      const office = contacts.find((contact) => isOffice(contact.name));
+      if (office) {
+        if (email && !office.email) office.email = email;
+        if (phone && !office.phone) office.phone = phone;
+        else if (phone && office.phone) office.phone = preferPhone(office.phone, phone);
+        if (email) seenEmail.add(email);
+        if (key) seenPhone.add(key);
+        return;
+      }
+    }
     if (email) seenEmail.add(email);
-    if (phone) seenPhone.add(phone);
+    if (key) seenPhone.add(key);
     contacts.push({
-      name: name.slice(0, 200),
-      title: clean(person.title).slice(0, 120) || null,
+      name,
+      title: personal ? title : null,
       email: email || null,
-      phone: phone.slice(0, 40) || null,
+      phone: phone || null,
     });
   }
   for (const person of people) add(person);
-  for (const email of facts.emails ?? []) add({ email, name: businessName || current.name });
-  for (const phone of facts.phones ?? []) add({ phone, name: businessName || current.name });
+  for (const email of facts.emails ?? []) add({ email, name: officeName || current.name });
+  for (const phone of dedupePhones(facts.phones ?? [])) add({ phone, name: officeName || current.name });
   fill.contacts = contacts;
   return fill;
 }
@@ -160,6 +204,8 @@ export async function enrichLeadFromSchema(sql: Sql, organizationId: string, now
     [scan.id],
   );
   const facts: SchemaFacts = { emails: [], phones: [], sameAs: [], openingHours: [], existingTypes: [] };
+  const scrapedPages: string[] = [];
+  const pageTitles: string[] = [];
   for (const page of pages) {
     let parsed: Record<string, unknown> = {};
     try {
@@ -177,6 +223,8 @@ export async function enrichLeadFromSchema(sql: Sql, organizationId: string, now
     facts.sameAs = [...(facts.sameAs ?? []), ...(next.sameAs ?? [])];
     facts.openingHours = [...(facts.openingHours ?? []), ...(next.openingHours ?? [])];
     facts.existingTypes = [...(facts.existingTypes ?? []), ...(next.existingTypes ?? [])];
+    if (next.businessName) pageTitles.push(clean(next.businessName));
+    if (typeof parsed.scrapedText === "string" && parsed.scrapedText.trim()) scrapedPages.push(parsed.scrapedText);
     try {
       const types = JSON.parse(page.schema_types_json) as unknown;
       if (Array.isArray(types)) {
@@ -186,6 +234,13 @@ export async function enrichLeadFromSchema(sql: Sql, organizationId: string, now
       continue;
     }
   }
+  const scraped = scrapedPages.join("\n");
+  if (scraped) {
+    facts.emails = [...(facts.emails ?? []), ...emailsFromHtml(scraped)];
+    facts.phones = [...(facts.phones ?? []), ...phonesFromHtml(scraped)];
+  }
+  facts.phones = dedupePhones(facts.phones ?? []);
+  facts.emails = [...new Set((facts.emails ?? []).map((email) => email.trim().toLowerCase()).filter(Boolean))];
   const people: NamedContact[] = [];
   const sites = await sql.get<{ name: string }>(
     "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'schema_check_sites'",
@@ -224,33 +279,39 @@ export async function enrichLeadFromSchema(sql: Sql, organizationId: string, now
     if (fill.industry) filled.push("industry");
     if (fill.notes) filled.push("notes");
   }
-  const existing = await sql.all<{ email: string | null; phone: string | null }>(
-    "SELECT email, phone FROM contacts WHERE organization_id = ?",
+  const titles = new Set(pageTitles.map((title) => title.toLowerCase()).filter(Boolean));
+  const existing = await sql.all<{ id: string; name: string | null; email: string | null; phone: string | null; is_primary: number }>(
+    "SELECT id, name, email, phone, is_primary FROM contacts WHERE organization_id = ?",
     [organizationId],
   );
-  const emails = new Set(existing.flatMap((row) => (row.email ? [row.email] : [])));
-  const phones = new Set(existing.flatMap((row) => (row.phone ? [row.phone] : [])));
+  const dropped = new Set<string>();
+  for (const row of existing) {
+    const name = (row.name ?? "").trim().toLowerCase();
+    if (row.email || !name.includes("|") || !titles.has(name)) continue;
+    for (const table of ["activities", "assessments", "appointments", "invoices"]) {
+      await sql.run(`UPDATE ${table} SET contact_id = NULL WHERE contact_id = ?`, [row.id]);
+    }
+    await sql.run("DELETE FROM contacts WHERE id = ?", [row.id]);
+    dropped.add(row.id);
+  }
+  const live = existing.filter((row) => !dropped.has(row.id));
+  const emails = new Set(live.flatMap((row) => (row.email ? [row.email] : [])));
+  const phones = new Set(live.flatMap((row) => (row.phone && publishedPhone(row.phone) ? [phoneKey(row.phone)] : [])));
+  let hasPrimary = live.some((row) => row.is_primary === 1);
   for (const contact of fill.contacts) {
+    const key = contact.phone ? phoneKey(contact.phone) : "";
     if (contact.email && emails.has(contact.email)) continue;
-    if (!contact.email && contact.phone && phones.has(contact.phone)) continue;
+    if (key && phones.has(key)) continue;
     try {
+      const primary = hasPrimary ? 0 : 1;
       await sql.run(
         `INSERT INTO contacts (id, organization_id, name, title, email, phone, is_primary, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          crypto.randomUUID(),
-          organizationId,
-          contact.name,
-          contact.title,
-          contact.email,
-          contact.phone,
-          existing.length === 0 && filled.filter((item) => item === "contact").length === 0 ? 1 : 0,
-          now,
-          now,
-        ],
+        [crypto.randomUUID(), organizationId, contact.name, contact.title, contact.email, contact.phone, primary, now, now],
       );
+      if (primary === 1) hasPrimary = true;
       if (contact.email) emails.add(contact.email);
-      if (contact.phone) phones.add(contact.phone);
+      if (key) phones.add(key);
       filled.push("contact");
     } catch {
       continue;

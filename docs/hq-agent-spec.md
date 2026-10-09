@@ -286,6 +286,8 @@ Notes:
 
 `answerSummary` is built on the server by the existing readiness scoring text, not by passing `answers_json` through. This is the only place survey data touches the agent, and it is already summarized.
 
+Saving a project `description` on the staff project page asks Workers AI for task titles and a detail of what each task must produce. New tasks land in Describe. The detail is an `agent.task_brief` note on that card. An empty note clears the description and leaves existing tasks in place.
+
 **`get_brief`** `{ kind }` → current body of the brief or design system, plus the latest `changes` feedback comments if any.
 
 **`list_files`**, **`search_files`** — exist. Add `tag` filter (`brand`, `copy`, …) and return `file_reads.summary`, `status`, `relative_path`, `tag`.
