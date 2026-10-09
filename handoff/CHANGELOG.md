@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — `main` is live on Cloudflare. Staff HQ, the client app, and the agent worker all run the merged premium UI and build gate.
+- **Why** — Both open branches were merged, then published.
+- **Code touchpoints** — none. Deploy only.
+- **Data-flow impact** — none.
+- **API / schema impact** — none.
+- **Verification** — `npm test` (121 files / 677 tests, plus the agent config 7 tests). Worker `handoff-hq` version `d1b85b31-2038-49c4-b7fd-a1ccd5f9a04a` on `hq.abra-ca-dabra.app`. Worker `handoff` version `d83c6fcc-80f8-437d-abc1-3e7c26aa4f27` on `handoff.abra-ca-dabra.app`. Worker `handoff-agent` version `eb00c99a-fd4d-47f4-ab9a-aaf52c8183a7` on `agent.abra-ca-dabra.app`.
+
+## 2026-10-09
+
 - **What changed** — Moving a task to build starts a Cursor cloud run when the brief and design system are approved and a build brief is on the deliverable. A pull request whose first line names the deliverable pulls the manifest, marks the task done, and publishes when auto publish is on. The same cron expires a run that missed its deadline and retries a build that was waiting for a free slot. Answering a question clears the block. Client changes open the next round.
 - **Why** — The build gate was specified and not wired, so a task could sit in build with no cloud run, no pull, and no notice.
 - **Code touchpoints** — `handoff/src/lib/cursor-build.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/github/queue.ts`, `handoff/cloudflare-worker.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/notifications.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/app/w/[slug]/work/actions.ts`
