@@ -29,10 +29,18 @@ Agents can call tools on any remote MCP server that speaks Streamable HTTP:
 No external server handy? Point one at this worker's built-in demo at `/demo-mcp/mcp` (`get_time`, `echo`, `word_count`) to try the loop with zero setup.
 
 HQ-started runs may include a server with id `portal`. The worker adds `CF-Access-Client-Id` and `CF-Access-Client-Secret` for that server only when the execute request sends `Authorization: Bearer $SWARM_RUN_SECRET`. A request without that bearer drops the portal server before any tool call. Set `SWARM_RUN_SECRET`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` with `wrangler secret put`. They are not written into workflow storage.
+
+Researcher nodes on those runs search the live web through the portal server `parallel-search` (`https://search.parallel.ai/mcp`). The tools are `web_search` and `web_fetch`. The portal stores the Parallel API key as that server's bearer and pins `mode=fast` with at most five results. The swarm worker does not hold the key. No new skill-pack template is required: a run with no stored MCP ids already attaches `portal`.
 - **Cloudflare Native** — Workers AI, Durable Objects, WebSockets, R2. Deploys to the Abracadabra account, with Handoff and HQ.
 
 ## Changelog
 
+- **2026-10-09** — Researcher nodes on HQ runs can search the public web through portal server `parallel-search`.
+  - **Why:** AI Search cannot crawl an arbitrary subject. Parallel Search MCP is the fetcher, and the portal is already the tool door.
+  - **Touchpoints:** `README.md`, `DEPLOYMENT.md`. No worker code.
+  - **Data flow:** HQ run → portal → `https://search.parallel.ai/mcp` (`web_search`, `web_fetch`). The Parallel key stays on the portal server.
+  - **API / schema:** none in this repo.
+  - **Verification:** Portal `abracadabra` on `mcp.abra-ca-dabra.app` lists `parallel-search` as ready, with `web_search` and `web_fetch` enabled.
 - **2026-10-09** — The canvas opens a stored swarm execution from `?executionId=`.
   - **Why:** HQ links need the worker canvas to show the run that was saved, including a live socket when that run is still going.
   - **Touchpoints:** `frontend/src/lib/execution-link.mjs`, `frontend/src/App.tsx`.

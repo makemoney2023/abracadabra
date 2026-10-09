@@ -104,6 +104,7 @@ Cloudflare's portal has two different controls. This spec uses the second one fo
 - **MCP-026.** A second registry module is reachable at its own path without a change to `handoff-agent` or to the `/mcp` page.
 - **MCP-027.** Staff set `resource` on the client page. The control is a single text field for Search Console, saved by a staff action, and shown back on that client.
 - **MCP-028.** Linking `search-console` on the portal stays an operator step: upstream `https://connectors.abra-ca-dabra.app/mcp/search-console`, headers `CF-Access-Client-Id`, `CF-Access-Client-Secret`, and `Authorization: Bearer <CONNECTOR_TOKEN>`, **Require user auth** off. After that link, the server appears on `/mcp`.
+- **MCP-029.** Public-web research for swarm researcher steps is the remote server `parallel-search`, not a `handoff-connectors` module. Upstream `https://search.parallel.ai/mcp`, `auth_type` `bearer`, **Require user auth** off. The bearer is the Parallel API key. Connection settings pin `mode=fast` and `advanced_settings.max_results=5` through `x-parallel-search-config`. Synced tools are `web_search` and `web_fetch`. Task MCP stays unlinked. Attaching it to the portal keeps every existing `server_id`. The key is never written to the swarm, to HQ, or to git.
 
 ## Data model
 
