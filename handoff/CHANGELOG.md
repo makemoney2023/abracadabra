@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/schema-report.ts`, `handoff/src/lib/schema-report.test.ts`, `handoff/src/app/schema/page.tsx`, `handoff/src/app/schema/schema-form.tsx`
 - **Data-flow impact** — The page still reads the same checks, sites, and scan reports. Starting a check still uses the existing action. The prefix split is display only.
 - **API / schema impact** — none.
-- **Verification** — Full `npm test` follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+- **Verification** — `npm test` (115 files / 637 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
