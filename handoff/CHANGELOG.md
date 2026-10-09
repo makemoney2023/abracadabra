@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/format.ts`, `handoff/src/lib/format.test.ts`, `handoff/src/app/admin/layout.tsx`, `handoff/src/app/admin/tabs.ts`, `handoff/src/app/admin/tabs.test.ts`, `handoff/src/app/admin/spaces-tabs.tsx`, `handoff/src/app/admin/page.tsx`, `handoff/src/app/admin/held/page.tsx`, `handoff/src/app/admin/staff/page.tsx`, `handoff/src/app/admin/templates/page.tsx`, `handoff/src/app/admin/staff-form.tsx`, `handoff/src/app/admin/new-workspace-form.tsx`, `handoff/src/app/admin/workspaces/new/page.tsx`, `handoff/src/app/admin/loading.tsx`, `handoff/src/app/w/[slug]/layout.tsx`
 - **Data-flow impact** — The spaces table reads the same folders the caller can see, plus the linked client, the folder owner, and file totals. Held review and template edits still use the existing actions. Adding staff and opening a space still use the existing actions.
 - **API / schema impact** — none.
-- **Verification** — full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (116 files / 643 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
