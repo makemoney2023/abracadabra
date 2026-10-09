@@ -95,24 +95,28 @@ export function WorkTab({
                       <span className="ml-2 text-muted-foreground">{run.trigger}</span>
                       <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
                     </span>
-                    <ActionForm
-                      action={assignSwarmRunAction}
-                      submitLabel="Put on project"
-                      pendingLabel="Saving"
-                      className="w-auto flex-row flex-wrap items-end"
-                    >
-                      <input type="hidden" name="organizationId" value={organizationId} />
-                      <input type="hidden" name="runId" value={run.id} />
-                      <ActionField name="projectId" label="Project">
-                        <select name="projectId" className={selectClass} defaultValue={projects[0]?.id ?? ""}>
-                          {projects.map((project) => (
-                            <option key={project.id} value={project.id}>
-                              {project.name}
-                            </option>
-                          ))}
-                        </select>
-                      </ActionField>
-                    </ActionForm>
+                    {projects.length === 0 ? (
+                      <span className="text-muted-foreground">Add a project before this swarm can sit on one.</span>
+                    ) : (
+                      <ActionForm
+                        action={assignSwarmRunAction}
+                        submitLabel="Put on project"
+                        pendingLabel="Saving"
+                        className="w-auto flex-row flex-wrap items-end"
+                      >
+                        <input type="hidden" name="organizationId" value={organizationId} />
+                        <input type="hidden" name="runId" value={run.id} />
+                        <ActionField name="projectId" label="Project">
+                          <select name="projectId" className={selectClass} defaultValue={projects[0]?.id ?? ""}>
+                            {projects.map((project) => (
+                              <option key={project.id} value={project.id}>
+                                {project.name}
+                              </option>
+                            ))}
+                          </select>
+                        </ActionField>
+                      </ActionForm>
+                    )}
                   </li>
                 );
               })}

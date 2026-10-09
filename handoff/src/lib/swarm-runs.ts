@@ -51,7 +51,24 @@ type SwarmRunPatch = {
   templateId: string | null;
 };
 
+function settledPatch(
+  current: { status: string; finished_at: number | null } | undefined,
+  patch: SwarmRunPatch,
+): SwarmRunPatch {
+  if (!current) return patch;
+  const finished = current.status === "completed" || current.status === "failed";
+  const reopening = patch.status === "running" || patch.status === "not_started";
+  if (!finished || !reopening) return patch;
+  const status = STATUSES.has(current.status) ? (current.status as SwarmRunPatch["status"]) : patch.status;
+  return { ...patch, status, finishedAt: current.finished_at };
+}
+
 async function updateSwarmRun(sql: Sql, id: string, patch: SwarmRunPatch): Promise<void> {
+  const current = await sql.get<{ status: string; finished_at: number | null }>(
+    "SELECT status, finished_at FROM swarm_runs WHERE id = ?",
+    [id],
+  );
+  const next = settledPatch(current, patch);
   await sql.run(
     `UPDATE swarm_runs
      SET status = ?, name = ?, trigger = ?, finished_at = ?,
@@ -61,10 +78,10 @@ async function updateSwarmRun(sql: Sql, id: string, patch: SwarmRunPatch): Promi
          template_id = COALESCE(template_id, ?)
      WHERE id = ?`,
     [
-      patch.status,
-      patch.name,
-      patch.trigger,
-      patch.finishedAt,
+      next.status,
+      next.name,
+      next.trigger,
+      next.finishedAt,
       patch.projectId,
       patch.workflowId,
       patch.swarmWorkflowId,
@@ -143,10 +160,14 @@ export async function saveSwarmRun(
         template_id, name, status, trigger, started_at, finished_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(execution_id) WHERE execution_id IS NOT NULL AND length(execution_id) > 0 DO UPDATE SET
-        status = excluded.status,
+        status = CASE
+          WHEN swarm_runs.status IN ('completed', 'failed') AND excluded.status IN ('running', 'not_started')
+          THEN swarm_runs.status ELSE excluded.status END,
         name = excluded.name,
         trigger = excluded.trigger,
-        finished_at = excluded.finished_at,
+        finished_at = CASE
+          WHEN swarm_runs.status IN ('completed', 'failed') AND excluded.status IN ('running', 'not_started')
+          THEN swarm_runs.finished_at ELSE excluded.finished_at END,
         project_id = COALESCE(swarm_runs.project_id, excluded.project_id),
         workflow_id = COALESCE(swarm_runs.workflow_id, excluded.workflow_id),
         swarm_workflow_id = COALESCE(swarm_runs.swarm_workflow_id, excluded.swarm_workflow_id),

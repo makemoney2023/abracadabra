@@ -310,6 +310,7 @@ export default function App() {
         setWorkflowName(workflow.name || 'Swarm');
         setInputText(execution.input || '');
         setExecutionId(storedId);
+        nodesRef.current = placed;
         setNodes(placed);
         setEdges(
           (workflow.edges || []).map((edge) => ({

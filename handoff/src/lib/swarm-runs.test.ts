@@ -33,6 +33,51 @@ async function database(): Promise<Sql> {
 }
 
 describe("saveSwarmRun", () => {
+  it("keeps a finished run finished when a later write says it is still running", async () => {
+    const sql = await database();
+    await saveSwarmRun(sql, {
+      organizationId: "org-1",
+      executionId: "ex-done",
+      name: "Schema readiness",
+      status: "running",
+      trigger: "lead_created",
+      now: NOW,
+    });
+    await saveSwarmRun(sql, {
+      organizationId: "org-1",
+      executionId: "ex-done",
+      name: "Schema readiness",
+      status: "completed",
+      trigger: "lead_created",
+      now: NOW + 5,
+    });
+    await saveSwarmRun(sql, {
+      organizationId: "org-1",
+      executionId: "ex-done",
+      name: "Schema readiness",
+      status: "running",
+      trigger: "lead_created",
+      now: NOW + 9,
+    });
+    const row = await sql.get<{ status: string; finished_at: number }>(
+      "SELECT status, finished_at FROM swarm_runs WHERE execution_id = 'ex-done'",
+    );
+    expect(row).toEqual({ status: "completed", finished_at: NOW + 5 });
+  });
+
+  it("does not copy timeline rows on a later migrate", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO activities (
+        id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
+      ) VALUES ('act-later', 'org-1', 'agent.swarm_run', 'agent', 'swarm', 'Later', ?, ?)`,
+      [JSON.stringify({ executionId: "ex-later", packName: "Pack", status: "running", trigger: "chat" }), NOW],
+    );
+    await migrate(sql);
+    const row = await sql.get<{ id: string }>("SELECT id FROM swarm_runs WHERE execution_id = 'ex-later'");
+    expect(row).toBeUndefined();
+  });
+
   it("stores a run on the only open project and updates that same execution", async () => {
     const sql = await database();
     const first = await saveSwarmRun(sql, {

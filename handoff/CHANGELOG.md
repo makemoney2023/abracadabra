@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Swarm history is copied once, not on every page load. A finished run stays finished if a later write says it is still running. A live replay can name nodes as soon as the socket opens. A swarm with no project and no projects yet does not offer an empty project picker.
+- **Why** — The backfill rewrote every run on each request, and a stale running write could clear a finished run.
+- **Code touchpoints** — `handoff/src/db/migrate.ts`, `handoff/src/lib/swarm-runs.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`, `swarm/frontend/src/App.tsx`
+- **Data-flow impact** — `migrate` writes `agent_settings.swarm_runs_backfill` after the one copy.
+- **API / schema impact** — none. One settings row.
+- **Verification** — filled in after the suite run.
+
+## 2026-10-09
+
 - **What changed** — A swarm row with no execution id shows its name as plain text.
 - **Why** — Linking that row opened the blank swarm canvas.
 - **Code touchpoints** — `handoff/src/app/swarm/swarm-link.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`

@@ -59,5 +59,14 @@ export async function migrate(sql: Sql): Promise<void> {
       await sql.run(statement);
     }
   }
+  const marked = await sql.get<{ value: string }>(
+    "SELECT value FROM agent_settings WHERE key = 'swarm_runs_backfill'",
+  );
+  if (marked) return;
   await backfillSwarmRuns(sql, Date.now());
+  try {
+    await sql.run("INSERT INTO agent_settings (key, value) VALUES ('swarm_runs_backfill', '1')");
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes("UNIQUE")) throw error;
+  }
 }
