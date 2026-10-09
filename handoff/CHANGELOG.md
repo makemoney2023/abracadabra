@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The MuAPI plan's Task 8 is the rest of the pack catalog: social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips.
+- **Why** — Those jobs use the roles already specified. They do not need another portal server.
+- **Code touchpoints** — `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `README.md`, `swarm/README.md`. No runtime code.
+- **Data-flow impact** — none. The new templates are not in the worker yet.
+- **API / schema impact** — none. Requirement MUAPI-025.
+- **Verification** — Docs review against the catalog table. No test suite run.
+
+## 2026-10-09
+
 - **What changed** — The swarm can render a website hero and an ad through shared MuAPI roles. A node allowlist blocks strategy steps from calling those tools.
 - **Why** — The spec is implemented in the worker. The portal link and the R2 skill publish still wait on operator credentials.
 - **Code touchpoints** — `swarm/src/mcp/tool-allow.ts`, `swarm/src/mcp/render-roles.ts`, `swarm/src/templates/media-templates.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/frontend/src/lib/workflow-payload.mjs`, `.cursor/skills/community/muapi-render/SKILL.md`

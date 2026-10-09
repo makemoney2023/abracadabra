@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Staff can render stills and motion for any brief through one MuAPI portal server. A website hero that is then animated, and an ad, are the first two workflows. They share render roles. The MuAPI key lives on the Cloudflare MCP portal. The swarm never stores it.
+**Goal:** Staff can render stills and motion for any brief through one MuAPI portal server. Website hero and ad are already in the worker. The pack catalog in the spec adds social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips. They share render roles. The MuAPI key lives on the Cloudflare MCP portal. The swarm never stores it.
 
 **Architecture:** An operator links remote MCP server `muapi` (`https://api.muapi.ai/mcp`) on `https://mcp.abra-ca-dabra.app/mcp` with a bearer credential, a general render allowlist, and **Require user auth** off. HQ `/mcp` remains the on/off switch. The swarm gains `mcpToolNames` and one `RENDER_ROLES` map. Text nodes get no tools. Each render node takes one role from that map. A later job adds a template. It does not add a server or a tool.
 
 **Tech Stack:** The existing swarm Worker (Vitest, Workers AI, Durable Objects), the existing HQ portal page, Cloudflare MCP portals.
 
-**Design:** [`docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`](../specs/2026-10-09-muapi-swarm-design.md). Requirements MUAPI-001 through MUAPI-024.
+**Design:** [`docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`](../specs/2026-10-09-muapi-swarm-design.md). Requirements MUAPI-001 through MUAPI-025.
 
 ---
 
@@ -24,7 +24,7 @@ Code lands in [`swarm/`](../../../swarm/) and [`.cursor/skills/community/muapi-r
 | `swarm/src/mcp/tool-allow.test.ts` | Empty list, omitted list, subset, missing name. |
 | `swarm/src/mcp/render-roles.ts` | `RENDER_ROLES`. The only tool lists render nodes may use. |
 | `swarm/src/types.ts` | `mcpToolNames` on `AgentNode`. Templates `website-hero`, `website-hero-render`, `ad-strategy`, `ad-render`, `media-poll`. |
-| `swarm/src/templates/media-templates.test.ts` | Shared roles, both example workflows, absence from the generated pack file. |
+| `swarm/src/templates/media-templates.test.ts` | Shared roles, the full pack catalog, absence from the generated pack file. |
 | `swarm/src/do/WorkflowDO.ts` | Apply the filter before `runAgent`. Fail the node when a required name is missing. |
 | `swarm/frontend/src/components/AgentNode.tsx` | `mcpToolNames` on node data. |
 | `swarm/frontend/src/App.tsx` | Copy the field on template load and on the save payload. |
@@ -234,6 +234,57 @@ The spec and this plan already exist. This task only records what shipped.
 - [x] **Step 2: Changelog the behavior** in `swarm/README.md` (shared roles, website-hero and ad templates, skill path) with the verification commands and their results.
 
 - [ ] **Step 3: Flip the spec status** to linked and built only after Task 1 step 4 and `npm test` in `swarm/` have both been read. The swarm code is in. The portal link is not, so the status stays short of "linked".
+
+### Task 8: Pack catalog
+
+**Files:**
+- Modify: `swarm/src/templates/media-templates.ts`
+- Modify: `swarm/src/templates/media-templates.test.ts`
+- Modify: `.cursor/skills/community/muapi-render/SKILL.md` (skip rules only)
+
+Covers MUAPI-025. Website hero, ad, and `media-poll` stay as Task 4 left them. This task adds the other rows in the spec's pack catalog. No new role. No portal change.
+
+- [ ] **Step 1: Write the failing test**
+
+Extend `media-templates.test.ts`. For every catalog row that is not already implemented:
+
+1. The text template's nodes have `mcpToolNames` deep-equal to `[]`, instructions starting `Follow `, and the skill paths in catalog order.
+2. Each render node uses the `RENDER_ROLES` array named in the catalog (same reference) and its instructions contain `muapi-render` plus `Role: <name>`.
+3. Edges match the catalog. A node with no incoming edge is absent from every edge `target`.
+4. `storyboard-animate` instructions tell an unpicked frame to return `skipped` and not call a tool. The UGC lipsync node says the same when the brief has no audio URL.
+5. `pack-templates.json` contains none of the new ids: `social-pack`, `social-pack-render`, `blog-header`, `blog-header-render`, `logo-sting`, `logo-sting-render`, `brand-kit`, `brand-kit-render`, `page-cutout`, `page-cutout-render`, `product-angles`, `product-angles-render`, `launch-set`, `launch-set-render`, `amazon-listing`, `amazon-listing-render`, `storyboard`, `storyboard-render`, `storyboard-animate`, `ugc-spot`, `ugc-spot-render`, `spokesperson`, `spokesperson-render`, `highlight-clips`, `highlight-clips-render`.
+
+- [ ] **Step 2: Run the test and confirm it fails.**
+
+```bash
+cd swarm && npx vitest run src/templates/media-templates.test.ts
+```
+
+- [ ] **Step 3: Add the templates**
+
+Add them to `MEDIA_TEMPLATES` in `media-templates.ts`. Import `RENDER_ROLES`. Do not retype tool name lists. Use the skill paths in the spec. Lay chains on two rows when a text workflow has more than six nodes.
+
+Render shape, matching the catalog:
+
+| Render template | Nodes and edges |
+|---|---|
+| `social-pack-render` | Still → Edit 1:1, Edit 4:5, Edit 9:16, Edit 16:9 |
+| `blog-header-render` | One Still. Instructions name 1200×628 |
+| `logo-sting-render` | Still → Animate, and Still → Upscale |
+| `brand-kit-render` | Mark, Lockup, Mood. No edges |
+| `page-cutout-render` | Cutout → Upscale |
+| `product-angles-render` | Front, Side, Angle 45, Top. No edges |
+| `launch-set-render` | Still → Animate and the four social edits. Music has no incoming edge |
+| `amazon-listing-render` | Hero, Lifestyle, Infographic, Detail. No edges |
+| `storyboard-render` | Frame 1 through Frame 4. No edges |
+| `storyboard-animate` | Frame 1 through Frame 4, role `animate`. No edges. Skip text in each node's instructions |
+| `ugc-spot-render` | Composite → Animate → Lipsync. Skip text on Lipsync |
+| `spokesperson-render` | Still → Animate → Lipsync. Music has no incoming edge |
+| `highlight-clips-render` | One Clip node |
+
+Add two short sections to `muapi-render`: an unpicked storyboard frame returns `skipped` with no tool call, and lipsync does the same when no audio URL is present.
+
+- [ ] **Step 4: Re-run the test, then `npm test` and `npx tsc --noEmit` in `swarm/`.**
 
 ---
 

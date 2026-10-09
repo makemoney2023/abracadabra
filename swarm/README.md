@@ -33,6 +33,13 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — The MuAPI plan now includes the full pack catalog.
+  - **Why:** Social, brand, product, storyboard, UGC, spokesperson, and highlight clips should be templates on the roles that already exist.
+  - **Touchpoints:** `docs/superpowers/plans/2026-10-09-muapi-swarm.md` Task 8, `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md` pack catalog, `README.md`.
+  - **Data flow:** No runtime change. Those templates are not in the worker yet.
+  - **API / schema:** none.
+  - **Verification:** Docs only. No tests run.
+
 - **2026-10-09** — Render nodes can call a shared MuAPI role, and the canvas ships website-hero and ad workflows.
   - **Why:** Stills and motion should be one portal server. A website hero is a still, then an animation of that still. An ad uses those same roles.
   - **Touchpoints:** `src/mcp/tool-allow.ts`, `src/mcp/render-roles.ts`, `src/templates/media-templates.ts`, `src/do/WorkflowDO.ts`, `frontend/src/lib/workflow-payload.mjs`, `.cursor/skills/community/muapi-render/SKILL.md`.

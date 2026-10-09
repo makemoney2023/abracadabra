@@ -3,7 +3,7 @@
 **Date:** 2026-10-09
 **Product:** The agent swarm, Handoff HQ, and the agency Cloudflare MCP portal
 **Status:** Swarm code implemented on 2026-10-09. Portal server `muapi` is not linked. The render skill is in the repo and is not published to R2 until `npm run publish:skills` runs with R2 credentials.
-**Requirements:** MUAPI-001 through MUAPI-024
+**Requirements:** MUAPI-001 through MUAPI-025
 **Lives in:** [`swarm/`](../../../swarm/), [`docs/`](../../), and the portal at `https://mcp.abra-ca-dabra.app/mcp`
 **Plan:** [`docs/superpowers/plans/2026-10-09-muapi-swarm.md`](../plans/2026-10-09-muapi-swarm.md)
 **Extends:** [`docs/hq-agent-spec.md`](../../hq-agent-spec.md) section 2.4 and [`docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`](2026-10-09-mcp-connectors-design.md)
@@ -48,7 +48,7 @@ Checked against the repo and the MuAPI docs on 2026-10-09.
 - Link MuAPI on the existing portal as server id `muapi`, with a static bearer, **Require user auth** off, and an allowlist of render tools.
 - Keep the API key on the portal. Swarm Durable Object storage, R2, logs, and the PDF never contain it.
 - Give every render node one role from a shared list. A new job is a new template that picks roles. It is not a new portal server and not a new tool.
-- Ship two worked examples on that list: a website hero (still, then animate) and an ad (still, crops, animate, sound). Ship one shared poll template.
+- Ship the pack catalog: website hero and ad are in the worker. Social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips are the rest. One shared poll template serves all of them.
 - Stop a text node from calling MuAPI, and stop a render node from calling any tool outside its role.
 - Fail a render node when a required tool is absent, with the missing name in the error. The node does not invent a CDN URL.
 - Leave `/mcp` as the on/off switch. After the link, `muapi` starts off for the service-token grant.
@@ -56,7 +56,7 @@ Checked against the repo and the MuAPI docs on 2026-10-09.
 ## Non-goals
 
 - Calling MuAPI's design-agent `run-skill` from the swarm. Those recipes stay available for a person who wants MuAPI's planner to run a whole piece. v1 renders with the hosted MCP tools, one role per node.
-- A template for every skill in the library. The role list is the extension point. The two examples prove it. The next job copies a role.
+- A template for every skill in the library. The pack catalog is the set to ship. A job outside that catalog still copies a role. It does not add a portal server.
 - A `handoff-connectors` adapter. MuAPI already serves remote MCP.
 - A `connector_grants` row. One agency wallet pays for every client. There is no per-client MuAPI property to store.
 - Rewriting the portal's `servers` array from HQ or from the swarm.
@@ -223,7 +223,35 @@ The image and video skills tell a reader to open sibling reference files. The wo
 
 ### `media-poll`
 
-One node. Role `poll`. Input is a `request_id` from any render node that was still processing. Output is the CDN URL, or the same id and the latest status. Website heroes and ads share this template.
+One node. Role `poll`. Input is a `request_id` from any render node that was still processing. Output is the CDN URL, or the same id and the latest status. Every pack below shares this template.
+
+### Pack catalog
+
+Website hero and ad are already templates. The rows below are the rest of the set. Each row is a text workflow and a render workflow, except storyboard, which adds a third workflow so staff can pick frames before any clip is generated. Text nodes set `mcpToolNames` to `[]` and start with `Follow `. Render nodes follow `muapi-render`, name their role, and use that role's array from `RENDER_ROLES`.
+
+| Pack | Text template | Render template | Text skills | Render nodes |
+|---|---|---|---|---|
+| Social | `social-pack` | `social-pack-render` | banner-design, then the image skill | Still (`still`). Then Edit 1:1, Edit 4:5, Edit 9:16, Edit 16:9 (`edit`), each edged from Still |
+| Blog header | `blog-header` | `blog-header-render` | image skill. The prompt is a 1200×628 blog or Open Graph header | Still (`still`) |
+| Logo sting | `logo-sting` | `logo-sting-render` | brand skill, image skill, video skill | Still (`still`) → Animate (`animate`). Still → Upscale (`upscale`) |
+| Brand kit | `brand-kit` | `brand-kit-render` | brand skill, then the image skill. The packet holds three prompts: mark, dark and light lockup, mood board | Mark, Lockup, Mood. All `still`. No edges |
+| Page cutout | `page-cutout` | `page-cutout-render` | image skill. Names what stays in frame | Cutout (`cutout`) → Upscale (`upscale`) |
+| Product angles | `product-angles` | `product-angles-render` | image skill. Four angle prompts for one product URL | Front, Side, Angle 45, Top. All `edit`. No edges. Each edits the product URL in the brief |
+| Launch set | `launch-set` | `launch-set-render` | banner-design, image skill, video skill | Still (`still`) → Animate (`animate`). Still → the four social edits (1:1, 4:5, 9:16, 16:9). Music (`sound`) has no incoming edge |
+| Amazon listing | `amazon-listing` | `amazon-listing-render` | image skill. Four prompts: hero, lifestyle, infographic, detail | Hero, Lifestyle, Infographic, Detail. All `still`. No edges. Hero uses the product URL when the brief has one |
+| Storyboard | `storyboard` | `storyboard-render`, then `storyboard-animate` | video skill, then the image skill. Four frames | `storyboard-render`: Frame 1 through Frame 4, all `still`, no edges. `storyboard-animate`: Frame 1 through Frame 4, all `animate`, no edges. An animate node whose frame is not in the approved pick list returns `skipped` and does not call a tool |
+| UGC spot | `ugc-spot` | `ugc-spot-render` | image skill, video skill | Composite (`edit`) → Animate (`animate`) → Lipsync (`lipsync`). Lipsync returns `skipped` and does not call a tool when the brief has no audio URL |
+| Spokesperson | `spokesperson` | `spokesperson-render` | image skill, video skill | Still (`still`) → Animate (`animate`) → Lipsync (`lipsync`). Music (`sound`) has no incoming edge |
+| Highlight clips | `highlight-clips` | `highlight-clips-render` | video skill. Names the moments to keep | Clip (`clip`). No still |
+
+Skill paths:
+
+- banner-design: `.cursor/skills/community/ui-ux-pro-max-skill/banner-design/SKILL.md`
+- brand: `.cursor/skills/community/ui-ux-pro-max-skill/brand/SKILL.md`
+- image: `.cursor/skills/community/visual-skills/image/SKILL.md`
+- video: `.cursor/skills/community/visual-skills/video/SKILL.md`
+
+A render node that would call `muapi_image_edit`, `muapi_video_from_image`, `muapi_enhance_upscale`, `muapi_enhance_bg_remove`, `muapi_edit_lipsync`, or `muapi_edit_clipping` reads its URL from the brief or from the parent node's output. Staff upload that file with `POST /api/v1/upload_file` before the render run.
 
 ## Render skill
 
@@ -239,6 +267,7 @@ One node. Role `poll`. Input is a `request_id` from any render node that was sti
 - An image, video, or audio input is a URL already in the brief or in an upstream output. Do not embed file bytes.
 - The final answer quotes `request_id`, `status`, and any output URL from the last observation.
 - A status other than `completed` is a successful node result. It is not a license to describe media the observation did not return.
+- `storyboard-animate` returns `skipped` and does not call a tool when that frame is not in the approved pick list. UGC `lipsync` does the same when the brief has no audio URL.
 
 ## Recipes the swarm does not run
 
@@ -279,7 +308,8 @@ These MuAPI recipes are the right shape when a person wants one planner to spend
 - **MUAPI-013.** `RENDER_ROLES` is the only tool list for render nodes. `website-hero-render`'s Still and `ad-render`'s Still both use `RENDER_ROLES.still`. `website-hero-render`'s Animate and `ad-render`'s Spot both use `RENDER_ROLES.animate`.
 - **MUAPI-014.** `website-hero` is three text nodes with `mcpToolNames: []`, in the order in the website-hero table. `website-hero-render` is Still → Animate. Both render nodes follow `muapi-render` and name their role.
 - **MUAPI-015.** `ad-strategy` is the eleven text skills in the ad table, each with `mcpToolNames: []`. `ad-render` is the six nodes, edges, and roles in the ad render table. Every render node follows `muapi-render` and names its role.
-- **MUAPI-016.** `media-poll` is one node, role `poll`, following the same skill. `pack-templates.json` does not contain `website-hero`, `website-hero-render`, `ad-strategy`, `ad-render`, or `media-poll`.
+- **MUAPI-016.** `media-poll` is one node, role `poll`, following the same skill. `pack-templates.json` does not contain any id from the pack catalog, including `website-hero`, `website-hero-render`, `ad-strategy`, `ad-render`, and `media-poll`.
+- **MUAPI-025.** The pack catalog is hand-authored on `WORKFLOW_TEMPLATES`. Website hero and ad match the tables above them. Every other row matches the catalog: text nodes have `mcpToolNames: []`, render nodes use the named `RENDER_ROLES` array, and edges match the catalog. `storyboard-animate` and the UGC `lipsync` node may return `skipped` without a tool call when the brief does not ask for that frame or has no audio URL.
 - **MUAPI-017.** `muapi-render` is one `SKILL.md`. It does not depend on a sibling file. It covers every role in the role table: one submit, the server id printed beside the tool, and a final answer that quotes `request_id`, `status`, and URL.
 - **MUAPI-018.** Render nodes do not raise the hard cap above 8 rounds. `media-poll` is how a processing job finishes, for every job.
 - **MUAPI-019.** A person approves the text packet before the matching render workflow runs. A new job adds a text template and a render template made of existing roles. It does not add a portal server or a tool.
