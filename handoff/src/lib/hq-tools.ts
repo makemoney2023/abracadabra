@@ -40,6 +40,7 @@ import {
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
 import { packsFromTemplates } from "@/lib/pack-picker";
+import { saveSwarmRun } from "@/lib/swarm-runs";
 import { hqToolNeedsApproval } from "@/lib/hq-tool-names";
 import { createInvite } from "@/lib/store/invites";
 import type { OutboundMail } from "@/lib/session";
@@ -569,6 +570,17 @@ async function runWorkflow(
       executionId: started.ok ? started.executionId : "",
       workflowId,
     },
+    now,
+  });
+  await saveSwarmRun(sql, {
+    organizationId: row.organization_id,
+    workflowId,
+    swarmWorkflowId: `client-${workflowId}`,
+    executionId: started.ok ? started.executionId : "",
+    templateId: row.template_id,
+    name: row.name,
+    status: started.ok ? started.status : "failed",
+    trigger: "chat",
     now,
   });
   if (!started.ok) return { ok: false, error: started.error };

@@ -413,6 +413,10 @@ describe("client workflows", () => {
       wait: async () => {},
     });
     expect(result).toMatchObject({ ok: true, none: false, workflowId: first.workflow.id, executionId: "run-due", more: true });
+    const recorded = await sql.get<{ execution_id: string; trigger: string }>(
+      "SELECT execution_id, trigger FROM swarm_runs",
+    );
+    expect(recorded).toEqual({ execution_id: "run-due", trigger: "due" });
     const moved = await sql.get<{ next_run_at: number }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
       first.workflow.id,
     ]);

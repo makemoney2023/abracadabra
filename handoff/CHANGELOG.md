@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Starting a swarm from chat, a due schedule, or `record_swarm_run` writes a `swarm_runs` row for that execution.
+- **Why** — The timeline already recorded the start. The project page needs the same run as a row it can open.
+- **Code touchpoints** — `handoff/src/db/agent-work.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/client-workflows.ts`
+- **Data-flow impact** — `claimDueWorkflow` stores trigger `due`. Chat `run_workflow` stores trigger `chat`. `recordSwarmRun` stores the given trigger, or `lead_created` when none is sent. `runClientWorkflow` still only updates `client_workflows.last_execution_id`.
+- **API / schema impact** — none. Rows use the `swarm_runs` table from the previous change.
+- **Verification** — `npx vitest run src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/lib/client-plan.test.ts src/db/agent-work.test.ts` in `handoff` (4 files, 56 tests, passed).
+
+## 2026-10-09
+
 - **What changed** — A spec and an implementation plan describe storing each swarm run on a client project and opening that run from HQ. No runtime behavior changed.
 - **Why** — A finished swarm only left a timeline line, and the Swarm page always opened a blank canvas.
 - **Code touchpoints** — `docs/superpowers/specs/2026-10-09-project-swarm-runs-design.md`, `docs/superpowers/plans/2026-10-09-project-swarm-runs.md`

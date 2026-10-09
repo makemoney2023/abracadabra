@@ -5,6 +5,7 @@ import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { packTemplateId } from "./pack-templates";
 import type { ObjectStore } from "./store/objects";
+import { saveSwarmRun } from "./swarm-runs";
 import { storeWorkflowOutput } from "./workflow-files";
 
 export type WorkflowGroup = {
@@ -366,6 +367,17 @@ export async function claimDueWorkflow(input: {
       executionId: started.ok ? started.executionId : "",
       workflowId: row.id,
     },
+    now: input.now,
+  });
+  await saveSwarmRun(input.sql, {
+    organizationId: input.organizationId,
+    workflowId: row.id,
+    swarmWorkflowId: `client-${row.id}`,
+    executionId: started.ok ? started.executionId : "",
+    templateId: row.template_id,
+    name: row.name,
+    status: started.ok ? started.status : "failed",
+    trigger: "due",
     now: input.now,
   });
   if (!started.ok) return started;
