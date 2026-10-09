@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Moving between staff screens shows pulsing skeleton bars on the theme border while the next page loads.
+- **Why** — The loading placeholder used `bg-muted`, which matches the canvas, and uncolored borders, which paint in the light text color. That flash looked like an empty white table.
+- **Code touchpoints** — `handoff/src/components/ui/skeleton.tsx`, `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-fallback.test.ts`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run src/components/route-fallback.test.ts` in `handoff`
+
+## 2026-10-09
+
 - **What changed** — Swarm history is copied once, not on every page load. A finished run stays finished if a later write says it is still running. A live replay can name nodes as soon as the socket opens. A swarm with no project and no projects yet does not offer an empty project picker.
 - **Why** — The backfill rewrote every run on each request, and a stale running write could clear a finished run.
 - **Code touchpoints** — `handoff/src/db/migrate.ts`, `handoff/src/lib/swarm-runs.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`, `swarm/frontend/src/App.tsx`
