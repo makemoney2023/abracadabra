@@ -158,7 +158,7 @@ function LiveChat({ first, context, layout }: { first: Session; context?: ChatPa
               Chats
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-full data-[side=left]:sm:max-w-sm">
+          <SheetContent side="left" className="w-full data-[side=left]:md:max-w-sm">
             <SheetHeader>
               <SheetTitle>Chats</SheetTitle>
               <SheetDescription>This chat stays with you.</SheetDescription>

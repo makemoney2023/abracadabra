@@ -15,7 +15,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   const canConfigure = await isLiveSuperAdmin(sql, caller);
   const canBrand = canConfigure || caller.operatorOf.includes(workspace.id);
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[36rem] flex-1 flex-col gap-8 px-6 py-[4rem]">
       <h1 className="font-heading text-4xl leading-tight">Settings</h1>
       <Card>
         <CardHeader>

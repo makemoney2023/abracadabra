@@ -1,6 +1,6 @@
 export default function HowHandoffHandlesFiles() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-4 px-6 py-[4rem]">
       <h1 className="font-heading text-4xl leading-tight">How Handoff handles files</h1>
       <p>
         First we check that each file is what it says it is. Then a virus scanner looks at it. A

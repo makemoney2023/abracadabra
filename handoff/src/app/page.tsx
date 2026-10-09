@@ -74,7 +74,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const admin = caller.staff?.superAdmin === true;
   if (caller.userId) {
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-6 py-16">
+      <main className="mx-auto flex w-full max-w-[36rem] flex-1 flex-col gap-6 px-6 py-[4rem]">
         <div className="flex flex-col gap-2">
           <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
           <h1 className="font-heading text-4xl leading-tight">Your folders</h1>
@@ -120,7 +120,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     );
   }
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-8 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[36rem] flex-1 flex-col justify-center gap-8 px-6 py-[4rem]">
       <div className="flex flex-col gap-3">
         <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
         <h1 className="font-heading text-4xl leading-tight">Send files. Get files.</h1>

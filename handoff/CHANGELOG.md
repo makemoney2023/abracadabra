@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — On a phone, a table shows the first two columns and tucks the rest behind More. Drawers use the full screen until the window is wide. Icon buttons name themselves. Space logos and finished-work pictures have alt text. Links and disclosures show a focus ring.
+- **Why** — Phone tables were a long stack, drawers stopped short of the screen, and two pictures had an empty alt.
+- **Code touchpoints** — `handoff/src/components/data-table.tsx`, `handoff/src/components/data-table-mobile.ts`, `handoff/src/components/data-table-mobile.test.ts`, `handoff/src/components/form-drawer.tsx`, `handoff/src/components/ui/sheet.tsx`, `handoff/src/components/ui/dialog.tsx`, `handoff/src/components/ui/sidebar.tsx`, `handoff/src/app/globals.css`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`
+- **Data-flow impact** — none. Client pages keep the same width and padding.
+- **API / schema impact** — none.
+- **Verification** — `npx tsc --noEmit` and `npx eslint` on the touched TypeScript files follow this commit. Full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — Swarm has a toolbar with a status dot, Focus, and Open. Focus hides the sidebar and the context bar until Escape. A skeleton covers the frame while it loads. If the frame fails, the page says to try again.
 - **Why** — Swarm was a bare iframe with no status, no way to focus it, and no failure state.
 - **Code touchpoints** — `handoff/src/app/swarm/page.tsx`, `handoff/src/app/swarm/swarm-frame.tsx`, `handoff/src/components/context-bar.tsx`, `handoff/src/app/globals.css`

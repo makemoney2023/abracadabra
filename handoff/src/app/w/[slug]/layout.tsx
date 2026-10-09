@@ -29,13 +29,13 @@ export default async function WorkspaceLayout({
   const page = (
     <div className="flex flex-1 flex-col">
       <header className="border-b border-border">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-6 py-4">
+        <div className="mx-auto flex w-full max-w-[48rem] flex-wrap items-center gap-2 px-6 py-4">
           {workspace.logo_object_key ? (
             // The logo is a same-origin file served only when this caller can see the workspace.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`/w/${workspace.slug}/logo`}
-              alt=""
+              alt={workspace.display_name ? `${workspace.display_name} logo` : "Space logo"}
               className="h-10 w-10 rounded-md object-contain"
             />
           ) : null}

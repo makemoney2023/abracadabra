@@ -2,6 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 
+import { splitMobileColumns } from "@/components/data-table-mobile";
 import { parseSort, sortHref } from "@/components/data-table-sort";
 import {
   Table,
@@ -132,31 +133,79 @@ function DataRow<Row>({
   columns: Column<Row>[];
   href?: string;
 }) {
+  const { visible, more } = splitMobileColumns(columns);
   return (
     <TableRow className="relative max-md:flex max-md:h-auto max-md:flex-col max-md:items-stretch max-md:py-2">
-      {columns.map((column, index) => (
-        <TableCell
-          key={column.key}
-          data-label={column.header}
-          style={column.width ? { width: column.width } : undefined}
-          className={cn(
-            "max-md:flex max-md:w-full max-md:items-baseline max-md:justify-between max-md:gap-3 max-md:whitespace-normal max-md:py-1",
-            column.align === "right" && "text-right tabular-nums",
-          )}
-        >
-          {href && index === 0 ? (
-            <Link href={href} className="absolute inset-0 z-0" aria-label="Open">
-              <span className="sr-only">Open</span>
-            </Link>
-          ) : null}
-          <span className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase md:hidden">
-            {column.header}
-          </span>
-          <span className="relative z-10 min-w-0 pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto [&_select]:pointer-events-auto [&_textarea]:pointer-events-auto">
-            {column.cell(row)}
-          </span>
+      {visible.map((column, index) => (
+        <DataCell key={column.key} row={row} column={column} href={index === 0 ? href : undefined} />
+      ))}
+      {more.length > 0 ? (
+        <TableCell className="p-0 md:hidden">
+          <details className="relative z-10 px-2">
+            <summary className="cursor-pointer py-1 font-mono text-[11px] tracking-wide text-muted-foreground uppercase">
+              More
+            </summary>
+            <div className="flex flex-col pb-2">
+              {more.map((column) => (
+                <div
+                  key={column.key}
+                  className="flex items-baseline justify-between gap-3 py-1"
+                >
+                  <span className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase">
+                    {column.header}
+                  </span>
+                  <CellValue row={row} column={column} />
+                </div>
+              ))}
+            </div>
+          </details>
         </TableCell>
+      ) : null}
+      {more.map((column) => (
+        <DataCell key={column.key} row={row} column={column} className="max-md:hidden" />
       ))}
     </TableRow>
+  );
+}
+
+function DataCell<Row>({
+  row,
+  column,
+  href,
+  className,
+}: {
+  row: Row;
+  column: Column<Row>;
+  href?: string;
+  className?: string;
+}) {
+  return (
+    <TableCell
+      data-label={column.header}
+      style={column.width ? { width: column.width } : undefined}
+      className={cn(
+        "max-md:flex max-md:w-full max-md:items-baseline max-md:justify-between max-md:gap-3 max-md:whitespace-normal max-md:py-1",
+        column.align === "right" && "text-right tabular-nums",
+        className,
+      )}
+    >
+      {href ? (
+        <Link href={href} className="absolute inset-0 z-0" aria-label="Open">
+          <span className="sr-only">Open</span>
+        </Link>
+      ) : null}
+      <span className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase md:hidden">
+        {column.header}
+      </span>
+      <CellValue row={row} column={column} />
+    </TableCell>
+  );
+}
+
+function CellValue<Row>({ row, column }: { row: Row; column: Column<Row> }) {
+  return (
+    <span className="relative z-10 min-w-0 pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto [&_select]:pointer-events-auto [&_textarea]:pointer-events-auto">
+      {column.cell(row)}
+    </span>
   );
 }

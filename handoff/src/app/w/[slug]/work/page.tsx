@@ -15,7 +15,7 @@ export default async function FinishedWorkPage({ params }: { params: Promise<{ s
   if (!workspace) notFound();
   const cards = await listWorkspaceDeliverables(sql, caller, workspace.id);
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-6 px-6 py-[4rem]">
       <h1 className="font-heading text-4xl leading-tight">Finished work</h1>
       {cards.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nothing to look at yet.</p>

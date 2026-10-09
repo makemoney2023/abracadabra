@@ -120,6 +120,12 @@ html[data-hq-focus] [data-slot="context-bar"] {
   display: none;
 }
 
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 .studio-kicker {
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 0.75rem;

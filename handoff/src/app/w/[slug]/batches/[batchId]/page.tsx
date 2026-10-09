@@ -23,7 +23,7 @@ export default async function BatchPage({
       ? "This upload has a safe file in it, so you can't throw it away."
       : "";
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-6 px-6 py-[4rem]">
       <Link href={`/w/${workspace.slug}`} className="text-sm">
         Back to files
       </Link>

@@ -45,7 +45,7 @@ export function FormDrawer({
     <FormDrawerContext.Provider value={value}>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent className="w-full data-[side=right]:w-full data-[side=right]:sm:max-w-md">
+        <SheetContent className="w-full data-[side=right]:w-full data-[side=right]:md:max-w-md">
           <SheetHeader>
             <SheetTitle className="pr-8 font-heading">{title}</SheetTitle>
             {description ? <SheetDescription>{description}</SheetDescription> : null}

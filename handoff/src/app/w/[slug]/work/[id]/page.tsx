@@ -41,7 +41,7 @@ export default async function FinishedPiecePage({
   const brief = opened.deliverable.kind === "brief";
   const briefItem = brief ? items.find((item) => item.title === "brief.md") ?? items[0] : undefined;
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-8 px-6 py-[4rem]">
       <div className="flex flex-col gap-2">
         <h1 className="font-heading text-4xl leading-tight">{opened.deliverable.title}</h1>
         <p className="text-sm text-muted-foreground">{DELIVERABLE_STATUS_LABEL[opened.deliverable.status]}</p>
@@ -105,7 +105,7 @@ export default async function FinishedPiecePage({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={media.role}
-                    alt=""
+                    alt={item.title || "Finished work"}
                     className="w-full rounded-md"
                     src={`/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${media.role}`}
                   />

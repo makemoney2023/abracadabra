@@ -18,7 +18,7 @@ export default async function RequestsPage({ params }: { params: Promise<{ slug:
   if (!workspace || !can(caller, "request.manage", { workspaceId: workspace.id })) notFound();
   const requests = await workspaceRequests(sql, workspace.id);
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-8 px-6 py-[4rem]">
       <h1 className="font-heading text-4xl leading-tight">Ask for files</h1>
       <Card>
         <CardHeader>
