@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/lead-swarm.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/mcp-connect.ts`, `handoff/wrangler.agent.jsonc`
 - **Data-flow impact** — `pickupLead` saves the portal server on every step and sends `Authorization: Bearer` on save and execute. The swarm still adds the Access headers itself.
 - **API / schema impact** — none. `MCP_PORTAL_URL` on `handoff-agent` is `https://mcp.abra-ca-dabra.app/mcp`. `SWARM_RUN_SECRET` was set to one new shared value on `handoff-agent`, `handoff-hq`, and `agent-swarm-orchestrator`. The value is not in git.
-- **Verification** — `npx vitest run src/lib/lead-swarm.test.ts src/lib/mcp-connect.test.ts` in `handoff/`: 13 tests passed. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `3b75ce05-e278-414f-a3cd-ec6af864d9d8`. Settings read shows the portal URL on `handoff-agent` and `SWARM_RUN_SECRET` on that worker, `handoff-hq`, and the swarm. `AGENT_WAKE_SECRET` and `AGENT_MCP_TOKEN` were still present after deploy.
+- **Verification** — `npx vitest run src/lib/lead-swarm.test.ts src/lib/mcp-connect.test.ts` in `handoff/`: 13 tests passed. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `95aa38f8-ecaa-4217-aa19-7241ab837e29` on `agent.abra-ca-dabra.app`. Worker `agent-swarm-orchestrator` version `c3a294d2-8a23-4fd8-909e-4a2c5a226202`. Settings read shows the portal URL on `handoff-agent` and `SWARM_RUN_SECRET` on that worker, `handoff-hq`, and the swarm.
 
 ## 2026-10-09
 
