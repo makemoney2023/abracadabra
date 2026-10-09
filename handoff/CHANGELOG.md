@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ chat can list a client's projects. Task lists include the project id. Creating a project with a name that client already has returns that project.
+- **Why** — Chat could see tasks and not the project they belonged to, so it opened a second project, filed one swarm task, and left the original project alone.
+- **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/db/crm.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — `list_projects` and `client_summary.projects` are what chat reads before `create_project` or a swarm. A same-name `create_project` does not insert a row.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 786 tests passed, and the agent worker suite passed 7. `npx eslint` on the HQ tools, tool names, CRM, and chat exited 0.
+
+## 2026-10-09
+
 - **What changed** — Main is published with the mailbox conversation. The agent worker and staff HQ were deployed from that merge.
 - **Why** — Client mail needed the conversation path on the same workers as the portal catalog.
 - **Code touchpoints** — none. Deploy of `a09e235`.

@@ -857,6 +857,14 @@ export async function createProject(
   if (dueAt !== null && !Number.isInteger(dueAt)) return { ok: false, error: "invalid" };
   const status = input.status ?? "planned";
   if (!isProjectStatus(status)) return { ok: false, error: "invalid" };
+  const existing = await sql.get<ProjectRow>(
+    `SELECT ${PROJECT_COLUMNS} FROM projects
+     WHERE organization_id = ? AND lower(name) = lower(?)
+     ORDER BY created_at
+     LIMIT 1`,
+    [input.organizationId, name],
+  );
+  if (existing) return { ok: true, value: existing };
   const id = crypto.randomUUID();
   await sql.run(
     `INSERT INTO projects (

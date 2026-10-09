@@ -76,6 +76,7 @@ const READS = new Set([
   "get_brief",
   "list_work_requests",
   "list_workflows",
+  "list_projects",
   "list_swarm_packs",
 ]);
 
@@ -119,6 +120,13 @@ async function stampChat(sql: Sql, userId: string, now: number): Promise<void> {
 async function seenOrg(sql: Sql, caller: Caller, organizationId: string) {
   if (!organizationId) return undefined;
   return organizationById(sql, caller, organizationId);
+}
+
+async function listProjectCards(sql: Sql, organizationId: string): Promise<{ id: string; name: string; status: string }[]> {
+  return sql.all(
+    "SELECT id, name, status FROM projects WHERE organization_id = ? ORDER BY created_at, name",
+    [organizationId],
+  );
 }
 
 /** Timeline entry for a tool that writes outside the CRM helpers, so the staff member owns it. */
@@ -251,7 +259,12 @@ async function perform(
     const org = await seenOrg(sql, caller, organizationId);
     if (!org) return { ok: false, error: "missing" };
     const deals = await listDeals(sql, caller, { organizationId });
-    return { ok: true, value: { ...org, deals } };
+    const projects = await listProjectCards(sql, organizationId);
+    return { ok: true, value: { ...org, deals, projects } };
+  }
+  if (tool === "list_projects") {
+    if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+    return { ok: true, value: await listProjectCards(sql, organizationId) };
   }
   if (tool === "list_deals") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
@@ -260,7 +273,10 @@ async function perform(
   }
   if (tool === "list_tasks") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
-    const rows = await sql.all("SELECT id, title, status, stage FROM tasks WHERE organization_id = ?", [organizationId]);
+    const rows = await sql.all(
+      "SELECT id, title, status, stage, project_id FROM tasks WHERE organization_id = ?",
+      [organizationId],
+    );
     return { ok: true, value: rows };
   }
   if (tool === "list_deliverables") {
