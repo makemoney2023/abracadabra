@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/db/migrate.ts`, `handoff/src/lib/swarm-runs.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`, `swarm/frontend/src/App.tsx`
 - **Data-flow impact** — `migrate` writes `agent_settings.swarm_runs_backfill` after the one copy.
 - **API / schema impact** — none. One settings row.
-- **Verification** — filled in after the suite run.
+- **Verification** — `npx vitest run` in `handoff` (123 files, 700 tests, passed). `npm test` in `swarm` (25 tests, passed). `node --test frontend/src/lib/execution-link.test.mjs` (1 test, passed).
 
 ## 2026-10-09
 
