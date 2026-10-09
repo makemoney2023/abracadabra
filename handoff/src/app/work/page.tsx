@@ -1,12 +1,69 @@
-import Link from "next/link";
-import { listWork } from "@/db/crm";
+import { listWork, type WorkTask } from "@/db/crm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatRelative } from "@/lib/format";
+import { DataTable, type Column } from "@/components/data-table";
+import { EmptyState } from "@/components/empty-state";
+import { PageFrame } from "@/components/page-frame";
+import { StatusDot } from "@/components/status-dot";
 import { StaffShell } from "../staff-shell";
-import { dayLabel } from "../projects/dates";
-import { groupTasks, workHref } from "./query";
+import { WorkToolbar } from "./filters";
+import { filterWork, groupTasks, workCounts } from "./query";
+import { TaskActions } from "./task-actions";
+
+type WorkRow = WorkTask & { projectName: string };
+
+function taskHref(task: WorkRow): string {
+  if (task.project_id) return `/projects/${task.project_id}`;
+  return `/clients/${task.organization_id}`;
+}
+
+function workColumns(now: number): Column<WorkRow>[] {
+  return [
+    {
+      key: "status",
+      header: "Status",
+      width: "4.5rem",
+      cell: (row) => <StatusDot domain="task" value={row.status} />,
+    },
+    {
+      key: "task",
+      header: "Task",
+      cell: (row) => <span className="font-medium">{row.title}</span>,
+    },
+    {
+      key: "client",
+      header: "Client",
+      cell: (row) => row.organization_name,
+    },
+    {
+      key: "project",
+      header: "Project",
+      cell: (row) => row.projectName,
+    },
+    {
+      key: "owner",
+      header: "Owner",
+      cell: (row) => row.assignee_email ?? "",
+    },
+    {
+      key: "due",
+      header: "Due",
+      cell: (row) => {
+        if (row.due_at === null) return "";
+        const late = row.due_at < now;
+        return <span className={late ? "text-status-late" : undefined}>{formatRelative(row.due_at, now)}</span>;
+      },
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      cell: (row) => (
+        <TaskActions taskId={row.id} organizationId={row.organization_id} href={taskHref(row)} />
+      ),
+    },
+  ];
+}
 
 export default async function WorkPage({
   searchParams,
@@ -19,76 +76,47 @@ export default async function WorkPage({
   const blocked = query.blocked === "1";
   const group = query.group === "client" ? "client" : "person";
   const { sql, caller } = await requireHqStaffPage();
-  const tasks = await listWork(sql, caller, { late, thisWeek: week, blocked }, clock());
-  const groups = groupTasks(tasks, group);
-  const filters = { late, week, blocked, group } as const;
+  const now = clock();
+  const tasks = await listWork(sql, caller, {}, now);
+  const counts = workCounts(tasks, now);
+  const visible = filterWork(tasks, { late, week, blocked }, now);
+  const projectIds = [...new Set(visible.flatMap((task) => (task.project_id ? [task.project_id] : [])))];
+  const projects =
+    projectIds.length === 0
+      ? []
+      : await sql.all<{ id: string; name: string }>(
+          `SELECT id, name FROM projects WHERE id IN (${projectIds.map(() => "?").join(", ")})`,
+          projectIds,
+        );
+  const projectName = new Map(projects.map((project) => [project.id, project.name]));
+  const rows: WorkRow[] = visible.map((task) => ({
+    ...task,
+    projectName: task.project_id ? (projectName.get(task.project_id) ?? "") : "",
+  }));
+  const groups = groupTasks(rows, group).map((bucket) => ({
+    label: `${bucket.label} · ${bucket.tasks.length}`,
+    rows: bucket.tasks,
+  }));
+  const filtered = late || week || blocked;
+
   return (
     <StaffShell>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
-        <div className="flex flex-col gap-3">
-          <h1 className="font-heading text-4xl leading-tight">Work</h1>
-          <nav aria-label="Filters" className="flex flex-wrap gap-2">
-            <Button variant={!late && !week && !blocked ? "default" : "outline"} size="sm" asChild>
-              <Link href={workHref({ group })} aria-current={!late && !week && !blocked ? "page" : undefined}>
-                All
-              </Link>
-            </Button>
-            <Button variant={late && !week && !blocked ? "default" : "outline"} size="sm" asChild>
-              <Link href={workHref({ ...filters, late: true, week: false, blocked: false })} aria-current={late && !week && !blocked ? "page" : undefined}>
-                Late
-              </Link>
-            </Button>
-            <Button variant={week && !late && !blocked ? "default" : "outline"} size="sm" asChild>
-              <Link href={workHref({ ...filters, late: false, week: true, blocked: false })} aria-current={week && !late && !blocked ? "page" : undefined}>
-                This week
-              </Link>
-            </Button>
-            <Button variant={blocked && !late && !week ? "default" : "outline"} size="sm" asChild>
-              <Link href={workHref({ ...filters, late: false, week: false, blocked: true })} aria-current={blocked && !late && !week ? "page" : undefined}>
-                Blocked
-              </Link>
-            </Button>
-          </nav>
-          <nav aria-label="Group" className="flex flex-wrap gap-2">
-            <Button variant={group === "person" ? "default" : "outline"} size="sm" asChild>
-              <Link href={workHref({ late, week, blocked, group: "person" })} aria-current={group === "person" ? "page" : undefined}>
-                By person
-              </Link>
-            </Button>
-            <Button variant={group === "client" ? "default" : "outline"} size="sm" asChild>
-              <Link href={workHref({ late, week, blocked, group: "client" })} aria-current={group === "client" ? "page" : undefined}>
-                By client
-              </Link>
-            </Button>
-          </nav>
-        </div>
-        {tasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No open tasks.</p>
-        ) : (
-          groups.map((bucket) => (
-            <Card key={bucket.label}>
-              <CardHeader>
-                <CardTitle>{bucket.label}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="flex flex-col gap-2">
-                  {bucket.tasks.map((task) => (
-                    <li key={task.id} className="text-sm">
-                      <Link href={task.project_id ? `/projects/${task.project_id}` : `/clients/${task.organization_id}`}>
-                        {task.title}
-                      </Link>
-                      <span className="ml-2 text-muted-foreground">
-                        {group === "person" ? task.organization_name : (task.assignee_email ?? "Unassigned")}
-                      </span>
-                      {task.due_at ? <span className="ml-2 text-muted-foreground">Due {dayLabel(task.due_at)}</span> : null}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </main>
+      <PageFrame title="Work" description="Open tasks. Filter by late, this week, or blocked.">
+        <WorkToolbar late={late} week={week} blocked={blocked} group={group} counts={counts} />
+        <DataTable
+          columns={workColumns(now)}
+          rows={rows}
+          rowKey={(row) => row.id}
+          rowHref={taskHref}
+          groups={groups}
+          empty={
+            <EmptyState
+              title={filtered ? "No tasks match" : "No open tasks."}
+              body={filtered ? "Try another filter." : "Open tasks show up here."}
+            />
+          }
+        />
+      </PageFrame>
     </StaffShell>
   );
 }

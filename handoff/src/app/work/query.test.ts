@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupTasks, workHref } from "./query";
+import { filterWork, groupTasks, workCounts, workHref } from "./query";
 
 describe("workHref", () => {
   it("keeps the plain work page when nothing is filtered", () => {
@@ -10,6 +10,55 @@ describe("workHref", () => {
   it("keeps late, this week, blocked, and client grouping in the query", () => {
     expect(workHref({ late: true })).toBe("/work?late=1");
     expect(workHref({ week: true, blocked: true, group: "client" })).toBe("/work?week=1&blocked=1&group=client");
+  });
+
+  it("drops a density key", () => {
+    expect(workHref({ density: "compact" })).toBe("/work");
+    expect(workHref({ late: true, density: "compact", group: "client" })).toBe("/work?late=1&group=client");
+  });
+});
+
+describe("workCounts", () => {
+  const now = 1_700_000_000_000;
+  const day = 24 * 60 * 60 * 1000;
+
+  it("counts every open task, late tasks, this week, and blocked", () => {
+    expect(
+      workCounts(
+        [
+          { status: "todo", due_at: now + day },
+          { status: "blocked", due_at: now + 2 * day },
+          { status: "doing", due_at: null },
+        ],
+        now,
+      ),
+    ).toEqual({ all: 3, late: 0, thisWeek: 2, blocked: 1 });
+  });
+
+  it("counts a task due yesterday as late and not this week", () => {
+    expect(workCounts([{ status: "todo", due_at: now - day }], now)).toEqual({
+      all: 1,
+      late: 1,
+      thisWeek: 0,
+      blocked: 0,
+    });
+    expect(workCounts([], now)).toEqual({ all: 0, late: 0, thisWeek: 0, blocked: 0 });
+  });
+});
+
+describe("filterWork", () => {
+  const now = 1_700_000_000_000;
+  const day = 24 * 60 * 60 * 1000;
+  const tasks = [
+    { id: "late", status: "todo", due_at: now - day },
+    { id: "soon", status: "doing", due_at: now + day },
+    { id: "blocked", status: "blocked", due_at: now + 2 * day },
+  ];
+
+  it("keeps a task due yesterday on Late and leaves it off This week", () => {
+    expect(filterWork(tasks, { late: true }, now).map((task) => task.id)).toEqual(["late"]);
+    expect(filterWork(tasks, { week: true }, now).map((task) => task.id)).toEqual(["soon", "blocked"]);
+    expect(filterWork(tasks, {}, now)).toEqual(tasks);
   });
 });
 

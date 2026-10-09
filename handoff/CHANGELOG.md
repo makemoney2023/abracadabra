@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ Work is one grouped table. All, Late, This week, and Blocked show counts. Group by switches person or client. Done marks a task done, and Open goes to the project or the client.
+- **Why** — The old page was a stack of cards with filters that did not say how many tasks matched.
+- **Code touchpoints** — `handoff/src/app/work/page.tsx`, `handoff/src/app/work/query.ts`, `handoff/src/app/work/query.test.ts`, `handoff/src/app/work/filters.tsx`, `handoff/src/app/work/task-actions.tsx`
+- **Data-flow impact** — The page still reads open tasks. Counts use the full list, then the filter narrows the rows. Project names are read for the rows on screen. Done still uses the existing complete-task action.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/work/query.test.ts` passed (8 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ Leads opens on a sortable list. Stage, owner, and search filters sit above it. The board is the other view, and a new lead opens in a drawer.
 - **Why** — The old page led with a form, used drag to move deals, and printed "No score yet." in empty cells.
 - **Code touchpoints** — `handoff/src/app/leads/page.tsx`, `handoff/src/app/leads/view.ts`, `handoff/src/app/leads/board.tsx`, `handoff/src/app/leads/filters.tsx`, `handoff/src/app/leads/lead-form.tsx`, `handoff/src/components/ui/scroll-area.tsx`
