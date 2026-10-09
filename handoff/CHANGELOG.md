@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-09
+
+- **What changed** — A known sender gets the mailbox model's own sentence. Plain text from Workers AI is sent as the reply. A reply that prices, promises a date, or names another client is still sent, and nothing is filed from that turn.
+- **Why** — A model answer that was not JSON, or that tripped the safety check, was replaced with "Got it. I have your note. A person on the team will follow up." or "A person on the team will pick this up."
+- **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — `email()` still calls the mailbox model after the sender gates. The reply body is that model's text. Tasks and the brief sentence are filed only when the turn is JSON and does not trip the safety check.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/client-channel.test.ts src/lib/hq-chat-playbook.test.ts` in `handoff/` passed 19 tests. `npx eslint` on the touched TypeScript files exited 0.
+
 ## 2026-10-08
 
 - **What changed** — A website lead waits for the schema scan before the agent starts. A scheduled swarm brief includes the client, and a finished swarm becomes an unpublished draft on Finished work. Brief and work wakes still run when the portal URL is empty. Page-title contacts with no email or phone are skipped.

@@ -243,14 +243,64 @@ function noteFromTurn(turn: FiledTurn): ClassifiedNote {
 const PRICE = /\$\s?\d|\b\d[\d,]*\s*(?:dollars|usd)\b/i;
 const PROMISED_DATE = /\b(?:ship|deliver|delivered|launch|ready)\b[^.?\n]{0,40}\b(?:by|on)\b/i;
 
-/** Workers AI returns the turn on `response`, as a JSON string or as the parsed object. */
+/** Text from a Workers AI chat result. Bindings use `response`; the REST API nests it under `result`. */
+function modelText(result: unknown): string {
+  if (typeof result === "string") return result;
+  if (!result || typeof result !== "object") return "";
+  const record = result as Record<string, unknown>;
+  if (typeof record.response === "string") return record.response;
+  if (record.response && typeof record.response === "object") {
+    const nested = modelText(record.response);
+    if (nested && nested !== JSON.stringify(record.response)) return nested;
+    return JSON.stringify(record.response);
+  }
+  if ("result" in record) {
+    const nested = modelText(record.result);
+    if (nested) return nested;
+  }
+  const choice = Array.isArray(record.choices) ? record.choices[0] : undefined;
+  const content =
+    choice && typeof choice === "object" && "message" in choice
+      ? (choice as { message?: { content?: unknown } }).message?.content
+      : undefined;
+  if (typeof content === "string") return content;
+  if (typeof record.reply === "string") return JSON.stringify(record);
+  return "";
+}
+
+/** Workers AI returns the turn on `response`. Plain prose is the email when the model skips JSON. */
 export function clientTurnFromModel(result: unknown): Omit<ClientTurn, "file"> {
-  if (typeof result === "string") return parseClientTurn(result);
-  if (!result || typeof result !== "object" || !("response" in result)) throw new Error("no turn");
-  const response = (result as { response?: unknown }).response;
-  if (typeof response === "string") return parseClientTurn(response);
-  if (response && typeof response === "object") return parseClientTurn(JSON.stringify(response));
-  throw new Error("no turn");
+  const unfenced = modelText(result)
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+  if (!unfenced) throw new Error("no turn");
+  try {
+    return parseClientTurn(unfenced);
+  } catch {
+    const reply = looseReply(unfenced);
+    if (!reply) throw new Error("no turn");
+    return { reply, kind: "other", goal: null, due: null, actions: [], brief: null, rules: null };
+  }
+}
+
+/** A sentence from model text that was not a full turn. A reply field wins over the raw JSON. */
+function looseReply(text: string): string {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try {
+      const raw = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
+      for (const key of ["reply", "message", "text", "content"]) {
+        const value = raw[key];
+        if (typeof value === "string" && value.trim()) return value.trim();
+      }
+    } catch {
+      // The braces were not a JSON object.
+    }
+  }
+  return text.replace(/```/g, "").trim();
 }
 
 /** Pulls the JSON turn out of a model reply. Extra prose around the object is ignored. */
@@ -276,7 +326,7 @@ export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
   };
 }
 
-/** One client email. A reply that prices, promises a date, or names another client is handed to a person. */
+/** One client email. A reply that prices, promises a date, or names another client is still sent, and nothing is filed. */
 export async function replyToClient(input: {
   desk: ClientDesk;
   incoming: string;
@@ -295,7 +345,7 @@ export async function replyToClient(input: {
   const forbidden = (input.desk.forbiddenNames ?? []).filter(Boolean);
   const leaked = forbidden.some((name) => input.desk && turn.reply.toLowerCase().includes(name.toLowerCase()));
   if (PRICE.test(turn.reply) || PROMISED_DATE.test(turn.reply) || leaked) {
-    return { reply: HANDED_OFF, kind: "handoff", goal: null, due: null, file: false, actions: [], brief: null, rules: null };
+    return { reply: turn.reply, kind: "handoff", goal: null, due: null, file: false, actions: [], brief: null, rules: null };
   }
   const kind = turn.kind;
   const file = kind === "new_work" || kind === "feedback";
