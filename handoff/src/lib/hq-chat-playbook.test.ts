@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { HQ_CHAT_PLAYBOOK, MAILBOX_INSTRUCTIONS } from "./hq-chat-playbook";
+import {
+  HQ_CHAT_PLAYBOOK,
+  MAILBOX_INSTRUCTIONS,
+  conversationTitle,
+  starterPrompts,
+  toolTaskStatus,
+} from "./hq-chat-playbook";
 
 describe("channel instructions", () => {
   it("tells staff chat to convert a lead and file tasks on the brief", () => {
@@ -20,5 +26,54 @@ describe("channel instructions", () => {
     expect(MAILBOX_INSTRUCTIONS).toContain('"brief"');
     expect(MAILBOX_INSTRUCTIONS).toContain('"rules"');
     expect(MAILBOX_INSTRUCTIONS).toContain("Do not quote a price");
+  });
+});
+
+describe("starterPrompts", () => {
+  it("returns exactly three prompts, each under 80 characters", () => {
+    const prompts = starterPrompts();
+    expect(prompts).toHaveLength(3);
+    expect(new Set(prompts).size).toBe(3);
+    for (const prompt of prompts) {
+      expect(prompt.trim()).toBe(prompt);
+      expect(prompt.length).toBeGreaterThan(0);
+      expect(prompt.length).toBeLessThan(80);
+    }
+  });
+});
+
+describe("conversationTitle", () => {
+  it("uses the first staff message", () => {
+    expect(
+      conversationTitle([
+        { role: "assistant", parts: [{ type: "text", text: "Hello" }] },
+        { role: "user", parts: [{ type: "text", text: "What needs me today?" }] },
+      ]),
+    ).toBe("What needs me today?");
+  });
+
+  it("falls back to New chat when the thread is empty or blank", () => {
+    expect(conversationTitle([])).toBe("New chat");
+    expect(conversationTitle([{ role: "user", parts: [{ type: "text", text: "   " }] }])).toBe("New chat");
+  });
+
+  it("shortens a long first sentence", () => {
+    const text = "a".repeat(80);
+    expect(conversationTitle([{ role: "user", parts: [{ type: "text", text }] }])).toBe(`${"a".repeat(71)}…`);
+  });
+});
+
+describe("toolTaskStatus", () => {
+  it("maps a finished tool to done and a failed tool to blocked", () => {
+    expect(toolTaskStatus("complete")).toBe("done");
+    expect(toolTaskStatus("error")).toBe("blocked");
+    expect(toolTaskStatus("denied")).toBe("blocked");
+  });
+
+  it("maps an in-flight tool to doing", () => {
+    expect(toolTaskStatus("loading")).toBe("doing");
+    expect(toolTaskStatus("streaming")).toBe("doing");
+    expect(toolTaskStatus("waiting-approval")).toBe("doing");
+    expect(toolTaskStatus("unknown")).toBe("doing");
   });
 });

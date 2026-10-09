@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ Chat is a two-pane thread. The list shows the one live conversation. Replies render as Markdown. Tool calls stay collapsed until opened. An empty thread offers three starter prompts, and the composer stays at the bottom.
+- **Why** — The old chat was one column of plain text with a single-line box.
+- **Code touchpoints** — `handoff/src/app/chat/page.tsx`, `handoff/src/app/chat/chat-panel.tsx`, `handoff/src/app/clients/client-chat.tsx`, `handoff/src/lib/hq-chat-playbook.ts`
+- **Data-flow impact** — Chat still uses the one agent named for the signed-in staff member. New chat clears that thread. The client drawer uses the same composer and does not open a second list.
+- **API / schema impact** — none.
+- **Verification** — Full `npm test` follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — A client record is seven tabs: Overview, Work, Threads, Files & spaces, Repos, Activity, and Settings. Add forms open in drawers and toast when they save.
 - **Why** — The old page was one long stack of cards, so staff could not jump to work, files, or settings.
 - **Code touchpoints** — `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/clients/[id]/tabs.ts`, `handoff/src/app/clients/[id]/client-body.tsx`, the tab files beside it, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/app/clients/activity-forms.tsx`, `handoff/src/app/clients/repo-forms.tsx`, `handoff/src/app/clients/thread-forms.tsx`, `handoff/src/app/clients/link-space-form.tsx`

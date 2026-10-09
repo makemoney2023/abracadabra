@@ -18,6 +18,44 @@ export const HQ_CHAT_PLAYBOOK = [
   "A note is only for a fact that is not a task, a deal move, a next step, or a brief change.",
 ].join(" ");
 
+/** Three short prompts. Buttons prefill the composer. They do not send. */
+export function starterPrompts(): readonly [string, string, string] {
+  return [
+    "What needs me today?",
+    "Turn this lead into a client.",
+    "File the next steps on this client.",
+  ];
+}
+
+export type ConversationMessage = {
+  role: string;
+  parts?: { type: string; text?: string }[];
+};
+
+/** Title of the one live thread. The first staff sentence, or "New chat". */
+export function conversationTitle(messages: ConversationMessage[]): string {
+  for (const message of messages) {
+    if (message.role !== "user") continue;
+    for (const part of message.parts ?? []) {
+      if (part.type !== "text") continue;
+      const text = (part.text ?? "").replace(/\s+/g, " ").trim();
+      if (!text) continue;
+      return text.length > 72 ? `${text.slice(0, 71)}…` : text;
+    }
+  }
+  return "New chat";
+}
+
+/**
+ * Tool rows use the task status colors. Finished is done, failed or
+ * rejected is blocked, and anything still running is doing.
+ */
+export function toolTaskStatus(state: string): "doing" | "done" | "blocked" {
+  if (state === "complete") return "done";
+  if (state === "error" || state === "denied") return "blocked";
+  return "doing";
+}
+
 /** Mailbox JSON. The worker files actions as tasks and the brief sentence on the client. */
 export const MAILBOX_INSTRUCTIONS = [
   "You write one short email as Magic at Abracadabra.",

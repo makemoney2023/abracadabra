@@ -12,7 +12,7 @@ export function ClientChat({ organizationId }: { organizationId: string }) {
           Message
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full overflow-y-auto data-[side=right]:sm:max-w-md">
+      <SheetContent side="right" className="flex w-full flex-col overflow-hidden data-[side=right]:sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Chat</SheetTitle>
           <SheetDescription>Tasks and brief changes from this chat show up on this client.</SheetDescription>
