@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatMoney, formatRelative, initials } from "./format";
+import { formatBytes, formatCount, formatMoney, formatRelative, initials } from "./format";
 
 const now = new Date("2026-03-10T12:00:00Z");
 
@@ -53,6 +53,26 @@ describe("formatMoney", () => {
   it("handles null and undefined", () => {
     expect(formatMoney(null)).toBe("");
     expect(formatMoney(undefined)).toBe("");
+  });
+});
+
+describe("formatBytes", () => {
+  it("uses bytes under 1 KB", () => {
+    expect(formatBytes(0)).toBe("0 B");
+    expect(formatBytes(1023)).toBe("1023 B");
+  });
+
+  it("steps up through KB and MB", () => {
+    expect(formatBytes(1024)).toBe("1 KB");
+    expect(formatBytes(1536)).toBe("1.5 KB");
+    expect(formatBytes(1048576)).toBe("1 MB");
+  });
+
+  it("leaves a missing or bad size blank", () => {
+    expect(formatBytes(null)).toBe("");
+    expect(formatBytes(undefined)).toBe("");
+    expect(formatBytes(-1)).toBe("");
+    expect(formatBytes(Number.NaN)).toBe("");
   });
 });
 

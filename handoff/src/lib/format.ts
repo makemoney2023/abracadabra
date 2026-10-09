@@ -36,6 +36,22 @@ export function formatCount(value: number): string {
   return COUNT.format(value);
 }
 
+const BYTE_UNITS = ["B", "KB", "MB", "GB", "TB"] as const;
+
+/** 1536 → "1.5 KB". Blank for a missing or negative size. */
+export function formatBytes(bytes: number | null | undefined): string {
+  if (bytes === null || bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return "";
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < BYTE_UNITS.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  const rounded = Math.round(value * 10) / 10;
+  const shown = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return `${shown} ${BYTE_UNITS[unit]}`;
+}
+
 /**
  * Compact age for lists: "now", "5m", "2h", "3d", then "Mar 4", and
  * "Mar 4, 2025" once the date falls in a different year than `now`.

@@ -1,28 +1,19 @@
-import Link from "next/link";
 import { requireStaffPage } from "@/lib/current";
 import { templateCatalog } from "@/lib/store/requests";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StaffShell } from "../../staff-shell";
+import { EmptyState } from "@/components/empty-state";
 import { AddItemForm, CreateTemplateForm, MoveItemForm, RetireItemForm, RetireTemplateForm } from "./template-forms";
 
 export default async function TemplatesPage() {
-  const { sql, caller } = await requireStaffPage();
+  const { sql } = await requireStaffPage();
   const templates = await templateCatalog(sql);
   return (
-    <StaffShell>
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
-      <div className="flex flex-col gap-3">
-        <h1 className="font-heading text-4xl leading-tight">Request templates</h1>
-        <div className="flex gap-4 text-sm">
-          <Link href="/">Home</Link>
-          {caller.staff?.superAdmin ? <Link href="/spaces">Staff tools</Link> : null}
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>New template</CardTitle>
           <CardDescription>
-            A workspace copies these items when it is opened. Later edits stay on the template.
+            A space copies these items when it is opened. Later edits stay on the template.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -30,13 +21,15 @@ export default async function TemplatesPage() {
         </CardContent>
       </Card>
       {templates.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No live templates yet.</p>
+        <EmptyState title="No live templates yet." body="Add a template when the same file ask should open with a space." />
       ) : (
         templates.map((template) => (
           <Card key={template.id}>
             <CardHeader>
               <CardTitle>{template.name}</CardTitle>
-              <CardDescription>{template.items.length === 0 ? "No items yet." : "These items are copied into each new space."}</CardDescription>
+              <CardDescription>
+                {template.items.length === 0 ? "No items yet." : "These items are copied into each new space."}
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
               {template.items.length > 0 ? (
@@ -67,7 +60,6 @@ export default async function TemplatesPage() {
           </Card>
         ))
       )}
-    </main>
-    </StaffShell>
+    </div>
   );
 }

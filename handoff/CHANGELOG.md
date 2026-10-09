@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ Spaces is one page with tabs for spaces, held files, staff, and templates. The spaces tab is a table of client, owner, files, storage used, and last upload. New space and Add staff open in drawers. On the staff host, a space folder uses the breadcrumb Spaces / {space name} and drops the extra wordmark.
+- **Why** — Spaces was a stack of cards titled Staff tools, and the folder page repeated the wordmark under the HQ bar.
+- **Code touchpoints** — `handoff/src/lib/format.ts`, `handoff/src/lib/format.test.ts`, `handoff/src/app/admin/layout.tsx`, `handoff/src/app/admin/tabs.ts`, `handoff/src/app/admin/tabs.test.ts`, `handoff/src/app/admin/spaces-tabs.tsx`, `handoff/src/app/admin/page.tsx`, `handoff/src/app/admin/held/page.tsx`, `handoff/src/app/admin/staff/page.tsx`, `handoff/src/app/admin/templates/page.tsx`, `handoff/src/app/admin/staff-form.tsx`, `handoff/src/app/admin/new-workspace-form.tsx`, `handoff/src/app/admin/workspaces/new/page.tsx`, `handoff/src/app/admin/loading.tsx`, `handoff/src/app/w/[slug]/layout.tsx`
+- **Data-flow impact** — The spaces table reads the same folders the caller can see, plus the linked client, the folder owner, and file totals. Held review and template edits still use the existing actions. Adding staff and opening a space still use the existing actions.
+- **API / schema impact** — none.
+- **Verification** — full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ Schema shows one latest result and a history table. Run a check opens in a drawer. A machine prefix such as PASS, FAIL, or NEEDS_US becomes a result badge, and the rest of the answer stays as a sentence.
 - **Why** — Schema used its own panel, and the raw prefix leaked into the answer.
 - **Code touchpoints** — `handoff/src/lib/schema-report.ts`, `handoff/src/lib/schema-report.test.ts`, `handoff/src/app/schema/page.tsx`, `handoff/src/app/schema/schema-form.tsx`

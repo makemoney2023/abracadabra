@@ -6,6 +6,7 @@ import { can } from "@/lib/authz";
 import { openSession } from "@/lib/current";
 import { isHqHost } from "@/lib/host";
 import { legacyPreviewPath, renamePreviewLocker } from "@/lib/preview-session";
+import { SetContextLabel } from "@/components/context-bar";
 import { Button } from "@/components/ui/button";
 import { StaffShell } from "../../staff-shell";
 
@@ -24,6 +25,7 @@ export default async function WorkspaceLayout({
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
   const host = (await headers()).get("host") ?? "";
+  const hq = isHqHost(host);
   const page = (
     <div className="flex flex-1 flex-col">
       <header className="border-b border-border">
@@ -38,9 +40,11 @@ export default async function WorkspaceLayout({
             />
           ) : null}
           <div className="flex flex-1 flex-col">
-            <Link href="/" className="font-mono text-xs tracking-wide text-optic">
-              Handoff
-            </Link>
+            {hq ? null : (
+              <Link href="/" className="font-mono text-xs tracking-wide text-optic">
+                Handoff
+              </Link>
+            )}
             <p className="font-heading text-xl">{workspace.display_name}</p>
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -71,6 +75,13 @@ export default async function WorkspaceLayout({
       {children}
     </div>
   );
-  if (isHqHost(host)) return <StaffShell>{page}</StaffShell>;
+  if (hq) {
+    return (
+      <StaffShell>
+        <SetContextLabel path={`/w/${workspace.slug}`} label={workspace.display_name} />
+        {page}
+      </StaffShell>
+    );
+  }
   return page;
 }

@@ -1,14 +1,40 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useCallback } from "react";
+import { FormDrawer, useFormDrawer } from "@/components/form-drawer";
 import { addStaffAction, type FormState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const initial: FormState = { message: "" };
 
+function saved(message: string): boolean {
+  return message === "Added to the team." || message === "Assigned.";
+}
+
+export function StaffDrawer({ workspaces }: { workspaces: { id: string; displayName: string }[] }) {
+  return (
+    <FormDrawer
+      title="Add staff"
+      description="They can sign in. Assign a space when they should see that folder."
+      trigger={<Button>Add staff</Button>}
+    >
+      <StaffForm workspaces={workspaces} />
+    </FormDrawer>
+  );
+}
+
 export function StaffForm({ workspaces }: { workspaces: { id: string; displayName: string }[] }) {
-  const [state, action, pending] = useActionState(addStaffAction, initial);
+  const drawer = useFormDrawer();
+  const wrapped = useCallback(
+    async (previous: FormState, formData: FormData) => {
+      const next = await addStaffAction(previous, formData);
+      if (saved(next.message)) drawer?.report({ ok: true });
+      return next;
+    },
+    [drawer],
+  );
+  const [state, action, pending] = useActionState(wrapped, initial);
   return (
     <form action={action} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1 text-sm" htmlFor="staff-email">

@@ -1,11 +1,24 @@
 "use client";
 
 import { useActionState } from "react";
+import { FormDrawer } from "@/components/form-drawer";
 import { createWorkspaceAction, type FormState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const initial: FormState = { message: "" };
+
+export function NewSpaceDrawer({ templates }: { templates: { id: string; name: string }[] }) {
+  return (
+    <FormDrawer
+      title="New space"
+      description="This makes a new folder for that client. Pick a file ask if you already have one."
+      trigger={<Button>New space</Button>}
+    >
+      <NewWorkspaceForm templates={templates} />
+    </FormDrawer>
+  );
+}
 
 export function NewWorkspaceForm({ templates }: { templates: { id: string; name: string }[] }) {
   const [state, action, pending] = useActionState(createWorkspaceAction, initial);
