@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Moving between staff screens shows pulsing skeleton bars on the theme border while the next page loads.
+- **Why** — The loading placeholder used `bg-muted`, which matches the canvas, and uncolored borders, which paint in the light text color. That flash looked like an empty white table.
+- **Code touchpoints** — `handoff/src/components/ui/skeleton.tsx`, `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-fallback.test.ts`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run` in `handoff` (126 files, 716 tests, passed) and `npx vitest run --config vitest.agent.config.mts` (1 file, 7 tests, passed). ESLint clean on the skeleton, route fallback, and its test.
+
+## 2026-10-09
+
 - **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
 - **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
 - **Code touchpoints** — none. Deploy of `f2735c0`.
