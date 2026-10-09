@@ -92,6 +92,51 @@
 
 ## 2026-10-09
 
+- **What changed** — The mailbox follow-up spec is on `main`, and staff HQ plus the agent worker were published again. Mailbox behavior is unchanged.
+- **Why** — The spec was merged and both mailbox workers were redeployed from that tree.
+- **Code touchpoints** — `docs/mailbox-later.md`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — none.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `b5d48e29-8d89-4e57-b5fe-09650060c9a1` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `06685dcf-18d3-433f-a246-d545553f53ff` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. Secret names on both workers are unchanged. `BOOKING_URL` is still empty.
+
+## 2026-10-09
+
+- **What changed** — The eight mailbox follow-ups have a spec and an implementation order. Nothing in that list runs yet.
+- **Why** — Budget, a freemail website and schema scan, a known client on a new address, a stalled thread, lead file space, opt-out, the readiness link, and a Cal.com confirmation were named and not planned against the code.
+- **Code touchpoints** — `docs/mailbox-later.md`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — none. The plan describes later changes to the prospect reply, `open_prospect`, `startLeadSchemaScan`, `storeEmailAttachments`, and `consumeBooking`.
+- **API / schema impact** — none in this change. The plan adds `contacts.opted_out` when that step is built. `contacts.opted_in` stays unused so a default of 0 does not silence mail.
+- **Verification** — Docs only. No tests.
+
+## 2026-10-09
+
+- **What changed** — The mailbox that opens a lead for an authenticated new sender, and that sends the model's own sentence, is live on Cloudflare.
+- **Why** — `handoff-agent` was already on that code. Staff HQ still lacked `open_prospect`, so a new sender was told to try again. The HQ build also needed the mailbox safety fixture to carry a full action.
+- **Code touchpoints** — `handoff/src/lib/client-channel.test.ts`
+- **Data-flow impact** — `email()` on `handoff-agent` calls `https://hq.abra-ca-dabra.app/api/client-messages`. An authenticated miss now opens the lead on the deployed HQ.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `9cc09526-d1a7-4c19-8805-f8f4f8c17f2b`. Worker `handoff-hq` version `7a15de72-94f7-4fc5-8981-976ae0006174` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. HQ secret names are unchanged. `BOOKING_URL` on the agent is empty.
+
+## 2026-10-09
+
+- **What changed** — An authenticated new sender to `magic@abra-ca-dabra.app` becomes a lead. Magic asks what they want to accomplish, the problem, and the outcome, then offers the booking link once that sentence is on the brief. A sender who fails DKIM or DMARC still gets the fixed refusal.
+- **Why** — Unknown mail was refused even when the address was authenticated, so a prospect could not start a conversation or land in HQ.
+- **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/db/conversations.ts`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — `email()` looks up the sender. An authenticated miss calls `open_prospect`, then the prospect instructions. The reply files no tasks. The open deal stores the next step. Cal.com still writes the appointment through `POST /api/intake/booking`.
+- **API / schema impact** — `POST /api/client-messages` accepts `open_prospect`. `record` accepts `prospect` and `bookingOffered`. `BOOKING_URL` is a handoff-agent var. No migration.
+- **Verification** — `npx vitest run src/app/api/client-messages/route.test.ts src/lib/client-channel.test.ts src/lib/hq-chat-playbook.test.ts src/lib/prospect-lead.test.ts` in `handoff/` passed 36 tests. `npx eslint` on the touched TypeScript files exited 0. `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
+- **What changed** — A known sender gets the mailbox model's own sentence. Plain text from Workers AI is sent as the reply. A reply that prices, promises a date, or names another client is still sent, and nothing is filed from that turn.
+- **Why** — A model answer that was not JSON, or that tripped the safety check, was replaced with "Got it. I have your note. A person on the team will follow up." or "A person on the team will pick this up."
+- **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — `email()` still calls the mailbox model after the sender gates. The reply body is that model's text. Tasks and a brief sentence are filed only when the turn is JSON and does not trip the safety check.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/client-channel.test.ts src/lib/hq-chat-playbook.test.ts` in `handoff/` passed 19 tests. `npx eslint` on the touched TypeScript files exited 0.
+
+## 2026-10-09
+
 - **What changed** — `main` is live on Cloudflare. Staff HQ, the client app, and the agent worker all run the merged premium UI and build gate.
 - **Why** — Both open branches were merged, then published.
 - **Code touchpoints** — none. Deploy only.

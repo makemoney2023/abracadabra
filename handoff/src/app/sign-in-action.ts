@@ -1,11 +1,10 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { fail, type ActionResult } from "@/lib/action-result";
-import { isHqHost } from "@/lib/host";
 import { LIMITS } from "@/lib/policy/limits";
 import { signInWithPassword } from "@/lib/password-login";
 import { SESSION_COOKIE } from "@/lib/session";
@@ -42,6 +41,5 @@ export async function signIn(_state: ActionResult | null, formData: FormData): P
     if (error && typeof error === "object" && "digest" in error) throw error;
     return fail("We could not sign you in. Please try again soon.");
   }
-  const host = (await headers()).get("host") ?? "";
-  redirect(isHqHost(host) ? "/spaces" : "/");
+  redirect("/");
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   HQ_CHAT_PLAYBOOK,
   MAILBOX_INSTRUCTIONS,
+  PROSPECT_INSTRUCTIONS,
   conversationTitle,
   starterPrompts,
   toolTaskStatus,
@@ -26,6 +27,18 @@ describe("channel instructions", () => {
     expect(MAILBOX_INSTRUCTIONS).toContain('"brief"');
     expect(MAILBOX_INSTRUCTIONS).toContain('"rules"');
     expect(MAILBOX_INSTRUCTIONS).toContain("Do not quote a price");
+    expect(MAILBOX_INSTRUCTIONS).toContain("not a receipt");
+    expect(MAILBOX_INSTRUCTIONS).toContain("answer the new message");
+  });
+
+  it("asks a new sender for the goal, the problem, and the outcome, then a time", () => {
+    expect(PROSPECT_INSTRUCTIONS).toContain("what they want to accomplish");
+    expect(PROSPECT_INSTRUCTIONS).toContain("problem");
+    expect(PROSPECT_INSTRUCTIONS).toContain("outcome");
+    expect(PROSPECT_INSTRUCTIONS).toContain("booking link");
+    expect(PROSPECT_INSTRUCTIONS).toContain("not a receipt");
+    expect(PROSPECT_INSTRUCTIONS).toContain("Do not quote a price");
+    expect(PROSPECT_INSTRUCTIONS).toContain('"kind":"other"');
   });
 });
 
