@@ -1,11 +1,10 @@
+import { dedupePhones, emailsFromHtml, phonesFromHtml } from "./contact-signals";
 import { extractFaqPairsFromCopy } from "./extract-faq-copy";
 import { extractFactsFromHtml, mergeHtmlFacts } from "./extract-from-html";
 import { emptyPageFacts, type FaqPair, type PageFacts, type PostalAddressFacts } from "./types";
 
 const MAX_BLOCKS_BYTES = 50_000;
 
-const EMAIL_RE = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
-const PHONE_RE = /(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b/g;
 const SEARCH_HINT_RE = /\/search\?q=/i;
 
 export type ExtractPageFactsInput = {
@@ -204,10 +203,8 @@ function capBlocks(blocks: unknown[]): unknown[] {
 }
 
 function fromMarkdown(markdown: string, facts: PageFacts) {
-  const emails = markdown.match(EMAIL_RE) ?? [];
-  facts.emails = unique([...facts.emails, ...emails]);
-  const phones = markdown.match(PHONE_RE) ?? [];
-  facts.phones = unique([...facts.phones, ...phones]);
+  facts.emails = unique([...facts.emails, ...emailsFromHtml(markdown)]);
+  facts.phones = dedupePhones([...facts.phones, ...phonesFromHtml(markdown)]);
   if (SEARCH_HINT_RE.test(markdown)) facts.hasSiteSearch = true;
 }
 
@@ -300,6 +297,7 @@ export function extractPageFacts(input: ExtractPageFactsInput): PageFacts {
   });
 
   if (facts.openingHours?.length) facts.openingHours = unique(facts.openingHours);
+  facts.phones = dedupePhones(facts.phones);
 
   if (input.html) {
     return mergeHtmlFacts(facts, extractFactsFromHtml(input.html));

@@ -1,3 +1,4 @@
+import { dedupePhones, emailsFromHtml, phonesFromHtml } from "./contact-signals";
 import type { PageFacts, PostalAddressFacts } from "./types";
 import { emptyPageFacts } from "./types";
 
@@ -183,25 +184,15 @@ export function extractFactsFromHtml(html: string): PageFacts {
     if (src?.startsWith("http")) facts.logoUrl = src;
   }
 
-  const emails: string[] = [];
-  const phones: string[] = [];
   const sameAs: string[] = [];
 
   for (const match of html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>/gi)) {
     const href = match[1]?.trim() ?? "";
-    if (href.toLowerCase().startsWith("mailto:")) {
-      const email = href.slice("mailto:".length).split("?")[0]?.trim();
-      if (email) emails.push(email);
-    } else if (href.toLowerCase().startsWith("tel:")) {
-      const phone = href.slice("tel:".length).split("?")[0]?.trim();
-      if (phone) phones.push(phone);
-    } else if (/^https?:\/\//i.test(href) && isSocial(href)) {
-      sameAs.push(href.split("#")[0]!);
-    }
+    if (/^https?:\/\//i.test(href) && isSocial(href)) sameAs.push(href.split("#")[0]!);
   }
 
-  facts.emails = unique(emails);
-  facts.phones = unique(phones);
+  facts.emails = emailsFromHtml(html);
+  facts.phones = phonesFromHtml(html);
   facts.sameAs = unique(sameAs);
   facts.address = extractAddress(html);
   facts.openingHours = extractHours(html);
@@ -226,7 +217,7 @@ export function mergeHtmlFacts(base: PageFacts, htmlFacts: PageFacts): PageFacts
     logoUrl: base.logoUrl ?? htmlFacts.logoUrl,
     address: base.address ?? htmlFacts.address,
     emails: unique([...base.emails, ...htmlFacts.emails]),
-    phones: unique([...base.phones, ...htmlFacts.phones]),
+    phones: dedupePhones([...base.phones, ...htmlFacts.phones]),
     sameAs: unique([...base.sameAs, ...htmlFacts.sameAs]),
     faqPairs: base.faqPairs.length ? base.faqPairs : htmlFacts.faqPairs,
     reviews: base.reviews.length ? base.reviews : htmlFacts.reviews,

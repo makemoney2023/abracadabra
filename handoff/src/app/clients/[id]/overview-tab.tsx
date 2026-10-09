@@ -168,6 +168,7 @@ export function OverviewTab({
                       <span className="ml-2 text-muted-foreground">Main contact</span>
                     ) : null}
                     {person.email ? <span className="ml-2 text-muted-foreground">{person.email}</span> : null}
+                    {person.phone ? <span className="ml-2 text-muted-foreground">{person.phone}</span> : null}
                   </li>
                 ))}
               </ul>
