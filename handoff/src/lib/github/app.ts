@@ -26,6 +26,39 @@ export type VisibleInstall = {
 
 export type RepoChoice = VisibleRepo & { installationId: number };
 
+const APP_PREFIX = "https://github.com/apps/";
+const APP_SLUG = /^[A-Za-z0-9-]+$/;
+
+/** Install page for this GitHub App. Anything else is not an install link. */
+export function githubAppInstallHref(app: { html_url?: unknown; slug?: unknown }): string | null {
+  if (typeof app.html_url === "string") {
+    const html = app.html_url.replace(/\/$/, "");
+    const slug = html.startsWith(APP_PREFIX) ? html.slice(APP_PREFIX.length) : "";
+    if (APP_SLUG.test(slug)) return `${APP_PREFIX}${slug}/installations/new`;
+  }
+  if (typeof app.slug === "string" && APP_SLUG.test(app.slug)) {
+    return `${APP_PREFIX}${app.slug}/installations/new`;
+  }
+  return null;
+}
+
+/** Looks up this app's install page. Null when GitHub does not answer. Never returns a token. */
+export async function githubInstallHref(input: {
+  secrets: GithubSecrets;
+  fetch: typeof fetch;
+  now: number;
+}): Promise<string | null> {
+  try {
+    const appToken = signGithubAppJwt(input.secrets.appId, input.secrets.privateKey, input.now);
+    const body = await githubJson(input.fetch, `${API}/app`, appToken);
+    const record = asRecord(body);
+    if (!record) return null;
+    return githubAppInstallHref({ html_url: record.html_url, slug: record.slug });
+  } catch {
+    return null;
+  }
+}
+
 type ListResult = { ok: true; value: VisibleInstall[] } | { ok: false; error: "unavailable" };
 
 function asRecord(value: unknown): Record<string, unknown> | null {

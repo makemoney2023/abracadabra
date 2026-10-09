@@ -1,6 +1,12 @@
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { listVisibleRepos, repoChoiceVisible, type VisibleInstall } from "./app";
+import {
+  githubAppInstallHref,
+  githubInstallHref,
+  listVisibleRepos,
+  repoChoiceVisible,
+  type VisibleInstall,
+} from "./app";
 
 function secrets() {
   const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -55,6 +61,44 @@ describe("listVisibleRepos", () => {
     const fetchImpl: typeof fetch = async () => new Response("no", { status: 500 });
     const listed = await listVisibleRepos({ secrets: secrets(), fetch: fetchImpl, now: 1_700_000_000_000 });
     expect(listed).toEqual({ ok: false, error: "unavailable" });
+  });
+});
+
+describe("githubAppInstallHref", () => {
+  it("builds the install page from the app url", () => {
+    expect(githubAppInstallHref({ html_url: "https://github.com/apps/handoff" })).toBe(
+      "https://github.com/apps/handoff/installations/new",
+    );
+    expect(githubAppInstallHref({ html_url: "https://github.com/apps/handoff/" })).toBe(
+      "https://github.com/apps/handoff/installations/new",
+    );
+  });
+
+  it("uses the slug when the url is missing, and refuses anything else", () => {
+    expect(githubAppInstallHref({ slug: "handoff" })).toBe("https://github.com/apps/handoff/installations/new");
+    expect(githubAppInstallHref({ html_url: "https://example.com/apps/handoff" })).toBeNull();
+    expect(githubAppInstallHref({ slug: "../admin" })).toBeNull();
+    expect(githubAppInstallHref({})).toBeNull();
+  });
+});
+
+describe("githubInstallHref", () => {
+  it("reads the install page and drops the token", async () => {
+    const fetchImpl: typeof fetch = async (input, init) => {
+      const auth = new Headers(init?.headers).get("authorization") ?? "";
+      expect(auth.startsWith("Bearer ")).toBe(true);
+      expect(String(input)).toBe("https://api.github.com/app");
+      return Response.json({ html_url: "https://github.com/apps/handoff", slug: "handoff" });
+    };
+    const href = await githubInstallHref({ secrets: secrets(), fetch: fetchImpl, now: 1_700_000_000_000 });
+    expect(href).toBe("https://github.com/apps/handoff/installations/new");
+    expect(href?.includes("Bearer")).toBe(false);
+  });
+
+  it("returns null when GitHub does not answer", async () => {
+    const fetchImpl: typeof fetch = async () => new Response("no", { status: 500 });
+    const href = await githubInstallHref({ secrets: secrets(), fetch: fetchImpl, now: 1_700_000_000_000 });
+    expect(href).toBeNull();
   });
 });
 

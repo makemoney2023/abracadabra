@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Settings is tabs for GitHub, shortcuts, and appearance. GitHub shows Connect GitHub when nothing is linked, or a connection card and a repo table. A GitHub failure says to try again. Shortcuts lists the same keys as the question-mark dialog. Appearance holds the row-height control.
+- **Why** — GitHub settings was a stack of cards, and shortcuts and row height lived only in the shell.
+- **Code touchpoints** — `handoff/src/app/settings/layout.tsx`, `handoff/src/app/settings/page.tsx`, `handoff/src/app/settings/tabs.ts`, `handoff/src/app/settings/tabs.test.ts`, `handoff/src/app/settings/settings-tabs.tsx`, `handoff/src/app/settings/github/page.tsx`, `handoff/src/app/settings/github/rows.ts`, `handoff/src/app/settings/github/rows.test.ts`, `handoff/src/app/settings/github/github-error.tsx`, `handoff/src/app/settings/shortcuts/page.tsx`, `handoff/src/app/settings/appearance/page.tsx`, `handoff/src/app/settings/appearance/panel.tsx`, `handoff/src/app/settings/loading.tsx`, `handoff/src/app/settings/error.tsx`, `handoff/src/components/shortcut-list.ts`, `handoff/src/components/keyboard-shortcuts.tsx`, `handoff/src/lib/github/app.ts`, `handoff/src/lib/github/app.test.ts`
+- **Data-flow impact** — GitHub still lists installs the app can see and stores them with the existing remember step. The repo table joins stored repos to clients and last activity. Connect GitHub opens the app install page only when GitHub returns one. Shortcuts and appearance do not write data.
+- **API / schema impact** — none.
+- **Verification** — Targeted tests passed: `src/app/settings/tabs.test.ts`, `src/app/settings/github/rows.test.ts`, and `src/lib/github/app.test.ts` (3 files / 11 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ Spaces is one page with tabs for spaces, held files, staff, and templates. The spaces tab is a table of client, owner, files, storage used, and last upload. New space and Add staff open in drawers. On the staff host, a space folder uses the breadcrumb Spaces / {space name} and drops the extra wordmark.
 - **Why** — Spaces was a stack of cards titled Staff tools, and the folder page repeated the wordmark under the HQ bar.
 - **Code touchpoints** — `handoff/src/lib/format.ts`, `handoff/src/lib/format.test.ts`, `handoff/src/app/admin/layout.tsx`, `handoff/src/app/admin/tabs.ts`, `handoff/src/app/admin/tabs.test.ts`, `handoff/src/app/admin/spaces-tabs.tsx`, `handoff/src/app/admin/page.tsx`, `handoff/src/app/admin/held/page.tsx`, `handoff/src/app/admin/staff/page.tsx`, `handoff/src/app/admin/templates/page.tsx`, `handoff/src/app/admin/staff-form.tsx`, `handoff/src/app/admin/new-workspace-form.tsx`, `handoff/src/app/admin/workspaces/new/page.tsx`, `handoff/src/app/admin/loading.tsx`, `handoff/src/app/w/[slug]/layout.tsx`
