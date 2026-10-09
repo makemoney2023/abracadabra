@@ -10,6 +10,7 @@ export type ProductMailPayload = {
   finding?: string | null;
   count?: number;
   purgeOn?: string;
+  deliverableId?: string;
 };
 
 /** One Handoff page. The body must not add a second URL, a signed URL, or file bytes. */
@@ -18,6 +19,9 @@ export function productPageLink(origin: string, event: string, payload: ProductM
   const batchLink = event.startsWith("batch.") || event.startsWith("file.");
   if (batchLink && payload.batchId) {
     return `${base}/w/${payload.slug}/batches/${payload.batchId}`;
+  }
+  if (event === "deliverable.published" && payload.deliverableId) {
+    return `${base}/w/${payload.slug}/work/${payload.deliverableId}`;
   }
   return `${base}/w/${payload.slug}`;
 }
@@ -173,6 +177,11 @@ function copy(
             ? `This space is archived. You can still download files until ${purgeOn}. After that, we delete them.`
             : "This space is archived. You can still download files until we delete them.",
         ],
+      };
+    case "deliverable.published":
+      return {
+        subject: `${name}: ${title} is ready`,
+        body: [`${title} is ready for you to look at.`],
       };
     case "workspace.purge_scheduled":
       return {

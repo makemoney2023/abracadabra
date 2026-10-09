@@ -9,6 +9,7 @@ type CloudflareEnv = {
   GITHUB_APP_ID?: string;
   GITHUB_APP_PRIVATE_KEY?: string;
   GITHUB_WEBHOOK_SECRET?: string;
+  CURSOR_API_KEY?: string;
 };
 
 function cloudflareEnv(): CloudflareEnv {
@@ -32,6 +33,15 @@ export function githubWebhookSecret(): string {
 
 export function githubEventsQueue(): QueueBinding | undefined {
   return cloudflareEnv().GITHUB_EVENTS;
+}
+
+/** Cloud-run key for the staff app. Empty when it is not set. The value is never logged. */
+export function cursorApiKey(): string | null {
+  const fromProcess = process.env.CURSOR_API_KEY?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  const value = cloudflareEnv().CURSOR_API_KEY;
+  const fromCloud = typeof value === "string" ? value.trim() : "";
+  return fromCloud || null;
 }
 
 /** Null when any of the three Worker secrets is missing. */

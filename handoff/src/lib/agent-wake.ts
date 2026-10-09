@@ -12,6 +12,7 @@ export type WakeReason =
   | "brief_changed"
   | "lead_created"
   | "scan_ready"
+  | "changes_requested"
   | "due";
 
 /** What a client's decision on a brief should wake. Notes wake nothing. */

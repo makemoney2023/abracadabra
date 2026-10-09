@@ -292,6 +292,32 @@ export async function publishDeliverable(
   if (!row) return { ok: false, error: "missing" };
   const staff = await gateStaff(sql, caller, row.workspace_id);
   if (!staff.ok) return staff;
+  return publishRow(sql, row, { kind: "staff", id: staff.value }, now);
+}
+
+/** Publish as the build pipeline. Only server code that already owns the deliverable may call this. */
+export async function publishDeliverableAsSystem(
+  sql: Sql,
+  deliverableId: string,
+  now: number,
+): Promise<DeliverableResult<{ id: string; version: number }>> {
+  const row = await loadRow(sql, deliverableId);
+  if (!row) return { ok: false, error: "missing" };
+  const published = await publishRow(sql, row, SYSTEM_ACTOR, now);
+  if (!published.ok) return published;
+  return { ok: true, value: { id: row.id, version: row.version } };
+}
+
+type Actor = { kind: "staff" | "system"; id: string };
+
+const SYSTEM_ACTOR: Actor = { kind: "system", id: "cursor" };
+
+async function publishRow(
+  sql: Sql,
+  row: DeliverableRow,
+  actor: Actor,
+  now: number,
+): Promise<DeliverableResult<{ id: string }>> {
   if (row.status !== "draft") return { ok: false, error: "invalid" };
   const items = await itemsFor(sql, row.id, row.version);
   if (items.length === 0) return { ok: false, error: "invalid" };
@@ -302,7 +328,7 @@ export async function publishDeliverable(
         WHERE id = ?`,
       params: [now, now, row.id],
     },
-    activity(row, "deliverable_published", "staff", staff.value, row.title, now),
+    activity(row, "deliverable_published", actor.kind, actor.id, row.title, now),
   ]);
   return { ok: true, value: { id: row.id } };
 }
@@ -505,6 +531,29 @@ export async function pullDeliverableFromManifest(
   if (!row) return { ok: false, error: "missing" };
   const staff = await gateStaff(sql, caller, row.workspace_id);
   if (!staff.ok) return staff;
+  return pullRow(sql, row, { kind: "staff", id: staff.value }, input, now, put);
+}
+
+/** Pull as the build pipeline. Same checks as a staff pull; a bad manifest is "invalid". */
+export async function pullDeliverableAsSystem(
+  sql: Sql,
+  input: PullInput,
+  now: number,
+  put: (bytes: Uint8Array) => Promise<string>,
+): Promise<DeliverableResult<{ id: string }>> {
+  const row = await loadRow(sql, input.deliverableId);
+  if (!row) return { ok: false, error: "missing" };
+  return pullRow(sql, row, SYSTEM_ACTOR, input, now, put);
+}
+
+async function pullRow(
+  sql: Sql,
+  row: DeliverableRow,
+  actor: Actor,
+  input: PullInput,
+  now: number,
+  put: (bytes: Uint8Array) => Promise<string>,
+): Promise<DeliverableResult<{ id: string }>> {
   const commit = input.commit.trim();
   if (!commit || commit.length > 80 || /\s/.test(commit)) return { ok: false, error: "invalid" };
   const repo = await sql.get<{ organization_id: string }>(
@@ -568,7 +617,7 @@ export async function pullDeliverableFromManifest(
       WHERE id = ?`,
     params: [manifest.title, manifest.kind, input.repoId, commit, now, row.id],
   });
-  writes.push(activity(row, "deliverable_pulled", "staff", staff.value, manifest.title, now));
+  writes.push(activity(row, "deliverable_pulled", actor.kind, actor.id, manifest.title, now));
   await writeAll(sql, writes);
   return { ok: true, value: { id: row.id } };
 }

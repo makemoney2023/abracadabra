@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-09
+
+- **What changed** — Moving a task to build starts a Cursor cloud run when the brief and design system are approved and a build brief is on the deliverable. A pull request whose first line names the deliverable pulls the manifest, marks the task done, and publishes when auto publish is on. The same cron expires a run that missed its deadline and retries a build that was waiting for a free slot. Answering a question clears the block. Client changes open the next round.
+- **Why** — The build gate was specified and not wired, so a task could sit in build with no cloud run, no pull, and no notice.
+- **Code touchpoints** — `handoff/src/lib/cursor-build.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/github/queue.ts`, `handoff/cloudflare-worker.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/notifications.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/app/w/[slug]/work/actions.ts`
+- **Data-flow impact** — Build checks the gate, creates a repo when the client has none, then posts a cloud agent. The GitHub queue pulls after it stores the delivery. Publish mails every current member. A revision wakes `changes_requested`.
+- **API / schema impact** — The Cursor API does not take `branchName`. The build brief names the branch. Product mail adds `deliverable.published`.
+- **Verification** — `npm test`, `npm run lint`, and `npm run typecheck:agent` in `handoff/`.
+
 ## 2026-10-08
 
 - **What changed** — A website lead waits for the schema scan before the agent starts. A scheduled swarm brief includes the client, and a finished swarm becomes an unpublished draft on Finished work. Brief and work wakes still run when the portal URL is empty. Page-title contacts with no email or phone are skipped.

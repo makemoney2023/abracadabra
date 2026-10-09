@@ -1,5 +1,6 @@
 import { migrate } from "@/db/migrate";
 import type { Sql } from "@/db/sql";
+import { defaultBuildDeps, ingestPullRequest, type BuildDeps } from "@/lib/cursor-build";
 import { applyGithubDelivery, type GithubDelivery } from "./consume";
 
 export type GithubQueueMessage = {
@@ -31,6 +32,7 @@ export async function handleGithubBatch(
   messages: GithubQueueMessage[],
   sql: Sql,
   now = Date.now(),
+  build?: BuildDeps,
 ): Promise<void> {
   await migrate(sql);
   for (const message of messages) {
@@ -40,7 +42,14 @@ export async function handleGithubBatch(
       continue;
     }
     try {
-      await applyGithubDelivery(sql, shaped, now);
+      const saved = await applyGithubDelivery(sql, shaped, now);
+      if (shaped.event === "pull_request" && saved.ok && !saved.duplicate) {
+        try {
+          await ingestPullRequest(sql, shaped.payload, build ?? defaultBuildDeps(now));
+        } catch {
+          // The delivery is already stored. A later pass can pull a run that is still open.
+        }
+      }
       message.ack();
     } catch {
       message.retry();

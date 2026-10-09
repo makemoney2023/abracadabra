@@ -350,7 +350,8 @@ export class ClientAgent extends Agent<AgentBindings> {
       reason !== "work" &&
       reason !== "brief_changed" &&
       reason !== "lead_created" &&
-      reason !== "scan_ready"
+      reason !== "scan_ready" &&
+      reason !== "changes_requested"
     ) {
       return;
     }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { DELIVERABLE_ERRORS, openDeliverable, recordFeedback, type FeedbackDecision } from "@/db/deliverables";
 import { briefWakeReason, wakeOrganization } from "@/lib/agent-wake";
+import { startRevision } from "@/lib/cursor-build";
 import { openSession } from "@/lib/current";
 
 export type FormState = { message: string };
@@ -58,6 +59,22 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
       opened.deliverable.organization_id,
       reason,
       Date.now(),
+    );
+  }
+  if (
+    opened &&
+    opened.deliverable.status === "changes_requested" &&
+    opened.deliverable.kind !== "brief" &&
+    opened.deliverable.kind !== "design_system"
+  ) {
+    const sentAt = Date.now();
+    await startRevision(sql, opened.deliverable.id, sentAt, (organizationId, revisionReason) =>
+      wakeOrganization(
+        { AGENT_URL: process.env.AGENT_URL, AGENT_WAKE_SECRET: process.env.AGENT_WAKE_SECRET },
+        organizationId,
+        revisionReason,
+        sentAt,
+      ),
     );
   }
   revalidatePath(`/w/${slug}/work`);
