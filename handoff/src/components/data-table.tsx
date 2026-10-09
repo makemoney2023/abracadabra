@@ -152,7 +152,7 @@ function DataRow<Row>({
           <span className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase md:hidden">
             {column.header}
           </span>
-          <span className="relative z-10 min-w-0 pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto">
+          <span className="relative z-10 min-w-0 pointer-events-none [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_input]:pointer-events-auto [&_select]:pointer-events-auto [&_textarea]:pointer-events-auto">
             {column.cell(row)}
           </span>
         </TableCell>

@@ -48,6 +48,7 @@ function messageFor(error: CrmError, invalid: string): string {
 }
 
 function refreshProject(projectId: string, organizationId: string): void {
+  revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}`);
   revalidatePath(`/clients/${organizationId}`);
   revalidatePath("/work");
@@ -66,6 +67,7 @@ export async function createProjectAction(_previous: FormState, formData: FormDa
     Date.now(),
   );
   if (!created.ok) return { message: messageFor(created.error, "Give the project a name.") };
+  revalidatePath("/projects");
   revalidatePath(`/clients/${organizationId}`);
   revalidatePath("/");
   redirect(`/projects/${created.value.id}`);

@@ -2,14 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listDeliverableFeedback, openDeliverable } from "@/db/deliverables";
 import { listProjectRepos } from "@/db/crm";
+import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
 import { readGithubSecrets } from "@/lib/github/secrets";
+import { PageFrame } from "@/components/page-frame";
+import { Timeline } from "@/components/timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { AddItemForm, PublishForm, PullForm } from "../forms";
-import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../labels";
+import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
 
 export default async function DeliverablePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,23 +25,23 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
   const notes = await listDeliverableFeedback(sql, caller, deliverable.id);
   const githubReady = Boolean(readGithubSecrets()) && repos.some((repo) => repo.installation_id != null);
   const sentBehind = deliverable.published_version != null && deliverable.version > deliverable.published_version;
+  const now = clock();
   return (
     <StaffShell>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-heading text-4xl leading-tight">{deliverable.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            {DELIVERABLE_KIND_LABEL[deliverable.kind]} · {DELIVERABLE_STATUS_LABEL[deliverable.status]}
-          </p>
-          {sentBehind ? (
-            <p className="text-sm">Clients still see the last round you sent. This one is not sent yet.</p>
-          ) : null}
-          {deliverable.published_version != null && space ? (
-            <Button variant="outline" size="sm" className="w-fit" asChild>
+      <PageFrame
+        title={deliverable.title}
+        description={`${DELIVERABLE_KIND_LABEL[deliverable.kind]} · ${DELIVERABLE_STATUS_LABEL[deliverable.status]}`}
+        actions={
+          deliverable.published_version != null && space ? (
+            <Button variant="outline" size="sm" asChild>
               <Link href={`/w/${space.slug}/work/${deliverable.id}`}>See what the client sees</Link>
             </Button>
-          ) : null}
-        </div>
+          ) : null
+        }
+      >
+        {sentBehind ? (
+          <p className="text-sm">Clients still see the last round you sent. This one is not sent yet.</p>
+        ) : null}
         <Card>
           <CardHeader>
             <CardTitle>Pieces</CardTitle>
@@ -68,7 +71,7 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           key={media.role}
-                          alt=""
+                          alt={fileLabel({ title: item.title, role: media.role })}
                           className="w-full rounded-md"
                           src={`/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`}
                         />
@@ -106,26 +109,28 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
             )}
           </CardContent>
         </Card>
-        {notes.length > 0 ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex flex-col gap-3 text-sm">
-                {notes.map((note) => (
-                  <li key={note.id}>
-                    <span className="text-muted-foreground">
-                      {note.author_id === caller.userId ? "You" : note.author_kind === "staff" ? "Studio" : "Client"}
-                    </span>
-                    {note.body ? <p>{note.body}</p> : <p>Approved.</p>}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ) : null}
-      </main>
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+            <CardDescription>The client writes these from their space.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {notes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No notes yet.</p>
+            ) : (
+              <Timeline
+                now={now}
+                items={notes.map((note) => ({
+                  id: note.id,
+                  at: note.created_at,
+                  title: note.author_id === caller.userId ? "You" : note.author_kind === "staff" ? "Studio" : "Client",
+                  body: note.body ? note.body : "Approved.",
+                }))}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </PageFrame>
     </StaffShell>
   );
 }

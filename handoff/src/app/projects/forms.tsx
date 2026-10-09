@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useCallback } from "react";
+import { useFormDrawer } from "@/components/form-drawer";
 import {
   PROJECT_STATUSES,
   STATUS_AUDIENCES,
@@ -34,6 +35,34 @@ function Status({ message }: { message: string }) {
       {message}
     </p>
   );
+}
+
+function useProjectAction(
+  serverAction: (previous: FormState, formData: FormData) => Promise<FormState>,
+  saved: (message: string) => boolean,
+) {
+  const drawer = useFormDrawer();
+  const wrapped = useCallback(
+    async (previous: FormState, formData: FormData) => {
+      const next = await serverAction(previous, formData);
+      if (saved(next.message)) drawer?.report({ ok: true });
+      return next;
+    },
+    [drawer, saved, serverAction],
+  );
+  return useActionState(wrapped, initial);
+}
+
+function milestoneSaved(message: string): boolean {
+  return message === "Milestone added.";
+}
+
+function taskSaved(message: string): boolean {
+  return message === "Task added.";
+}
+
+function updateSaved(message: string): boolean {
+  return message === "Draft saved." || message === "Update published.";
 }
 
 export function ProjectForm({ organizationId }: { organizationId: string }) {
@@ -90,7 +119,7 @@ export function ProjectStatusForm({
 }
 
 export function MilestoneForm({ projectId, organizationId }: { projectId: string; organizationId: string }) {
-  const [state, action, pending] = useActionState(createMilestoneAction, initial);
+  const [state, action, pending] = useProjectAction(createMilestoneAction, milestoneSaved);
   return (
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="projectId" value={projectId} />
@@ -122,7 +151,7 @@ export function ProjectTaskForm({
   milestones: { id: string; name: string }[];
   staff: { userId: string; email: string }[];
 }) {
-  const [state, action, pending] = useActionState(createProjectTaskAction, initial);
+  const [state, action, pending] = useProjectAction(createProjectTaskAction, taskSaved);
   return (
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="projectId" value={projectId} />
@@ -201,7 +230,7 @@ export function TaskStatusForm({
 }
 
 export function StatusUpdateForm({ projectId, organizationId }: { projectId: string; organizationId: string }) {
-  const [state, action, pending] = useActionState(postStatusAction, initial);
+  const [state, action, pending] = useProjectAction(postStatusAction, updateSaved);
   return (
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="projectId" value={projectId} />

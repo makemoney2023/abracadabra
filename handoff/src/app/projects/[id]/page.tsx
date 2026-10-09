@@ -9,26 +9,35 @@ import {
   organizationById,
   projectById,
   repoActivitySummary,
+  type WorkTask,
 } from "@/db/crm";
 import { workspacesFor } from "@/db/records";
+import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
+import { formatRelative } from "@/lib/format";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
+import { DataTable, type Column } from "@/components/data-table";
+import { FormDrawer } from "@/components/form-drawer";
+import { PageFrame } from "@/components/page-frame";
+import { StatusBadge } from "@/components/status-badge";
+import { StatusDot } from "@/components/status-dot";
+import { Timeline } from "@/components/timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
-import { DELIVERABLE_STATUS_LABEL } from "../../deliverables/labels";
 import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm, TaskStatusForm } from "../forms";
-import { AUDIENCE_LABEL, HEALTH_LABEL, PROJECT_STATUS_LABEL, TASK_STATUS_LABEL } from "../labels";
+import { AUDIENCE_LABEL, HEALTH_LABEL, PROJECT_STATUS_LABEL } from "../labels";
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { sql, caller } = await requireHqStaffPage();
   const project = await projectById(sql, caller, id);
   if (!project) notFound();
+  const now = clock();
   const [org, milestones, tasks, updates, staff, spaces] = await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
@@ -49,172 +58,301 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const repoRows = await Promise.all(
     repos.map(async (repo) => ({ repo, summary: await repoActivitySummary(sql, caller, repo.id) })),
   );
-  const milestoneIds = new Set(milestones.map((milestone) => milestone.id));
-  const loose = tasks.filter((task) => !task.milestone_id || !milestoneIds.has(task.milestone_id));
+  const latest = updates[0];
+  const people = [...new Set(tasks.flatMap((task) => (task.assignee_email ? [task.assignee_email] : [])))];
+  const milestoneName = new Map(milestones.map((milestone) => [milestone.id, milestone.name]));
+  const due = project.due_at ? ` Due ${formatRelative(project.due_at, now)}.` : "";
+
   return (
     <StaffShell>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
-        <div className="flex flex-col gap-3">
-          <h1 className="font-heading text-4xl leading-tight">{project.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {PROJECT_STATUS_LABEL[project.status]}
-            {project.due_at ? <span className="ml-2">Due {dayLabel(project.due_at)}</span> : null}
-          </p>
-          {org ? (
-            <Link href={`/clients/${org.id}`} className="text-sm">
-              {org.name}
-            </Link>
-          ) : null}
-          <ProjectStatusForm projectId={project.id} organizationId={project.organization_id} status={project.status} />
+      <PageFrame title={project.name} description={`${PROJECT_STATUS_LABEL[project.status]}.${due}`}>
+        {org ? (
+          <Link href={`/clients/${org.id}`} className="text-sm">
+            {org.name}
+          </Link>
+        ) : null}
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="flex min-w-0 flex-col gap-6">
+            <Card>
+              <CardHeader className="flex-row items-center justify-between gap-3">
+                <CardTitle>Milestones</CardTitle>
+                <FormDrawer
+                  title="Add a milestone"
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      Add a milestone
+                    </Button>
+                  }
+                >
+                  <MilestoneForm projectId={project.id} organizationId={project.organization_id} />
+                </FormDrawer>
+              </CardHeader>
+              <CardContent>
+                {milestones.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No milestones yet.</p>
+                ) : (
+                  <Timeline
+                    now={now}
+                    items={milestones.map((milestone) => ({
+                      id: milestone.id,
+                      at: milestone.due_at ?? undefined,
+                      title: milestone.name,
+                      body: milestone.done_at ? "Done" : undefined,
+                      dot: (
+                        <StatusDot
+                          domain="task"
+                          value={
+                            milestone.done_at
+                              ? "done"
+                              : milestone.due_at !== null && milestone.due_at < now
+                                ? "late"
+                                : "todo"
+                          }
+                        />
+                      ),
+                    }))}
+                  />
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex-row items-center justify-between gap-3">
+                <CardTitle>Tasks</CardTitle>
+                <FormDrawer
+                  title="Add a task"
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      Add a task
+                    </Button>
+                  }
+                >
+                  <ProjectTaskForm
+                    projectId={project.id}
+                    organizationId={project.organization_id}
+                    milestones={milestones.map((milestone) => ({ id: milestone.id, name: milestone.name }))}
+                    staff={staff}
+                  />
+                </FormDrawer>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={taskColumns(project.id, project.organization_id, now, milestoneName)}
+                  rows={tasks}
+                  rowKey={(row) => row.id}
+                  empty={<p className="text-sm text-muted-foreground">No tasks yet.</p>}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Finished work</CardTitle>
+                <CardDescription>Pieces the client can look at.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <DataTable
+                  columns={deliverableColumns}
+                  rows={finished}
+                  rowKey={(row) => row.id}
+                  rowHref={(row) => `/deliverables/${row.id}`}
+                  empty={<p className="text-sm text-muted-foreground">No finished work yet.</p>}
+                />
+                {usableSpaces.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Link a space before you add finished work.</p>
+                ) : (
+                  <CreateDeliverableForm
+                    organizationId={project.organization_id}
+                    projectId={project.id}
+                    spaces={usableSpaces.map((space) => ({ id: space.id, displayName: space.display_name }))}
+                  />
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Spaces</CardTitle>
+                <CardDescription>File folders linked to this client.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {spaces.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No space linked yet.</p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {spaces.map((space) => (
+                      <li key={space.id} className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
+                        </Button>
+                        <Badge variant="secondary">{space.slug}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          <aside className="flex flex-col gap-6">
+            <Card>
+              <CardHeader className="flex-row items-center justify-between gap-3">
+                <CardTitle>Status</CardTitle>
+                <FormDrawer
+                  title="Post an update"
+                  description="A client update stays a draft until you publish it. Publishing does not send mail."
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      Post update
+                    </Button>
+                  }
+                >
+                  <StatusUpdateForm projectId={project.id} organizationId={project.organization_id} />
+                </FormDrawer>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <ProjectStatusForm
+                  projectId={project.id}
+                  organizationId={project.organization_id}
+                  status={project.status}
+                />
+                {updates.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No update yet.</p>
+                ) : (
+                  <ul className="flex flex-col gap-4">
+                    {updates.map((update) => (
+                      <li key={update.id} className="flex flex-col gap-2 text-sm">
+                        <p className="flex flex-wrap items-center gap-2">
+                          <StatusDot domain="health" value={update.health} />
+                          <span>{HEALTH_LABEL[update.health]}</span>
+                          <span className="text-muted-foreground">{formatRelative(update.created_at, now)}</span>
+                        </p>
+                        <p>{update.body}</p>
+                        {update.state === "draft" ? (
+                          <PublishUpdateForm
+                            updateId={update.id}
+                            projectId={project.id}
+                            organizationId={project.organization_id}
+                          />
+                        ) : (
+                          <p className="text-muted-foreground">Published</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Repos</CardTitle>
+                <CardDescription>Code we work on for this project.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {repoRows.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No repos linked yet.</p>
+                ) : (
+                  <ul className="flex flex-col gap-6">
+                    {repoRows.map(({ repo, summary }) => (
+                      <li key={repo.id} className="flex flex-col gap-2 text-sm">
+                        <span className="font-mono">{repo.full_name}</span>
+                        {summary ? <RepoSummary summary={summary} /> : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Audience</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{latest ? AUDIENCE_LABEL[latest.audience] : ""}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>People</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {people.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No one assigned.</p>
+                ) : (
+                  <ul className="flex flex-col gap-1 text-sm">
+                    {people.map((email) => (
+                      <li key={email}>{email}</li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </aside>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Spaces</CardTitle>
-            <CardDescription>File folders linked to this client.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {spaces.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No space linked yet.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {spaces.map((space) => (
-                  <li key={space.id} className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
-                    </Button>
-                    <Badge variant="secondary">{space.slug}</Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Repos</CardTitle>
-            <CardDescription>Code we work on for this project.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {repoRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No repos linked yet.</p>
-            ) : (
-              <ul className="flex flex-col gap-6">
-                {repoRows.map(({ repo, summary }) => (
-                  <li key={repo.id} className="flex flex-col gap-2 text-sm">
-                    <span className="font-mono">{repo.full_name}</span>
-                    {summary ? <RepoSummary summary={summary} /> : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Finished work</CardTitle>
-            <CardDescription>Pieces the client can look at.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-            {finished.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No finished work yet.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {finished.map((piece) => (
-                  <li key={piece.id} className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/deliverables/${piece.id}`}>{piece.title}</Link>
-                    </Button>
-                    <Badge variant="secondary">{DELIVERABLE_STATUS_LABEL[piece.status]}</Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {usableSpaces.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Link a space before you add finished work.</p>
-            ) : (
-              <CreateDeliverableForm
-                organizationId={project.organization_id}
-                projectId={project.id}
-                spaces={usableSpaces.map((space) => ({ id: space.id, displayName: space.display_name }))}
-              />
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Milestones</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-            {milestones.length === 0 && loose.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No milestones yet.</p>
-            ) : null}
-            {milestones.map((milestone) => {
-              const rows = tasks.filter((task) => task.milestone_id === milestone.id);
-              return (
-                <section key={milestone.id} className="flex flex-col gap-3">
-                  <h2 className="text-sm font-medium">
-                    {milestone.name}
-                    {milestone.due_at ? (
-                      <span className="ml-2 font-normal text-muted-foreground">Due {dayLabel(milestone.due_at)}</span>
-                    ) : null}
-                  </h2>
-                  <TaskList tasks={rows} projectId={project.id} organizationId={project.organization_id} />
-                </section>
-              );
-            })}
-            {loose.length > 0 ? (
-              <section className="flex flex-col gap-3">
-                <h2 className="text-sm font-medium">No milestone</h2>
-                <TaskList tasks={loose} projectId={project.id} organizationId={project.organization_id} />
-              </section>
-            ) : null}
-            <MilestoneForm projectId={project.id} organizationId={project.organization_id} />
-            <ProjectTaskForm
-              projectId={project.id}
-              organizationId={project.organization_id}
-              milestones={milestones.map((milestone) => ({ id: milestone.id, name: milestone.name }))}
-              staff={staff}
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Status updates</CardTitle>
-            <CardDescription>A client update stays a draft until you publish it. Publishing does not send mail.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {updates.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No updates yet.</p>
-            ) : (
-              <ul className="flex flex-col gap-4">
-                {updates.map((update) => (
-                  <li key={update.id} className="flex flex-col gap-2 text-sm">
-                    <p>
-                      <span className="font-mono text-xs text-muted-foreground">{dayLabel(update.created_at)}</span>
-                      <span className="ml-2">{HEALTH_LABEL[update.health]}</span>
-                      <span className="ml-2 text-muted-foreground">{AUDIENCE_LABEL[update.audience]}</span>
-                      <span className="ml-2 text-muted-foreground">
-                        {update.state === "published" ? "Published" : "Draft"}
-                      </span>
-                    </p>
-                    <p>{update.body}</p>
-                    {update.state === "draft" ? (
-                      <PublishUpdateForm
-                        updateId={update.id}
-                        projectId={project.id}
-                        organizationId={project.organization_id}
-                      />
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <StatusUpdateForm projectId={project.id} organizationId={project.organization_id} />
-          </CardContent>
-        </Card>
-      </main>
+      </PageFrame>
     </StaffShell>
   );
+}
+
+const deliverableColumns: Column<{ id: string; title: string; status: string }>[] = [
+  {
+    key: "title",
+    header: "Piece",
+    cell: (row) => <span className="font-medium">{row.title}</span>,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => <StatusBadge domain="deliverable" value={row.status} />,
+  },
+];
+
+function taskColumns(
+  projectId: string,
+  organizationId: string,
+  now: number,
+  milestoneName: Map<string, string>,
+): Column<WorkTask>[] {
+  return [
+    {
+      key: "status",
+      header: "Status",
+      width: "4.5rem",
+      cell: (row) => <StatusDot domain="task" value={row.status} />,
+    },
+    {
+      key: "task",
+      header: "Task",
+      cell: (row) => <span className="font-medium">{row.title}</span>,
+    },
+    {
+      key: "milestone",
+      header: "Milestone",
+      cell: (row) => (row.milestone_id ? (milestoneName.get(row.milestone_id) ?? "") : ""),
+    },
+    {
+      key: "owner",
+      header: "Owner",
+      cell: (row) => row.assignee_email ?? "",
+    },
+    {
+      key: "due",
+      header: "Due",
+      cell: (row) => {
+        if (row.due_at === null) return "";
+        const late = row.due_at < now && row.status !== "done";
+        return <span className={late ? "text-status-late" : undefined}>{formatRelative(row.due_at, now)}</span>;
+      },
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      cell: (row) => (
+        <TaskStatusForm
+          taskId={row.id}
+          projectId={projectId}
+          organizationId={organizationId}
+          status={row.status}
+        />
+      ),
+    },
+  ];
 }
 
 function GithubLink({ href, children }: { href: string; children: string }) {
@@ -270,45 +408,5 @@ function RepoSummary({
         )}
       </p>
     </div>
-  );
-}
-
-function TaskList({
-  tasks,
-  projectId,
-  organizationId,
-}: {
-  tasks: {
-    id: string;
-    title: string;
-    status: "todo" | "doing" | "blocked" | "done";
-    due_at: number | null;
-    assignee_email: string | null;
-  }[];
-  projectId: string;
-  organizationId: string;
-}) {
-  if (tasks.length === 0) {
-    return <p className="text-sm text-muted-foreground">No tasks yet.</p>;
-  }
-  return (
-    <ul className="flex flex-col gap-3">
-      {tasks.map((task) => (
-        <li key={task.id} className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <span>
-            {task.title}
-            <span className="ml-2 text-muted-foreground">{TASK_STATUS_LABEL[task.status]}</span>
-            {task.due_at ? <span className="ml-2 text-muted-foreground">Due {dayLabel(task.due_at)}</span> : null}
-            {task.assignee_email ? <span className="ml-2 text-muted-foreground">{task.assignee_email}</span> : null}
-          </span>
-          <TaskStatusForm
-            taskId={task.id}
-            projectId={projectId}
-            organizationId={organizationId}
-            status={task.status}
-          />
-        </li>
-      ))}
-    </ul>
   );
 }

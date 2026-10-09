@@ -18,6 +18,15 @@ export const DELIVERABLE_KIND_LABEL: Record<DeliverableKind, string> = {
   other: "Other",
 };
 
+/** Alt text for a piece. The title wins. A blank title uses the role, with underscores as spaces. */
+export function fileLabel(input: { title?: string; role?: string }): string {
+  const title = input.title?.trim() ?? "";
+  if (title) return title;
+  const role = (input.role ?? "").trim().replaceAll("_", " ");
+  if (role) return role;
+  return "File";
+}
+
 export function listedMedia(mediaJson: string): { role: string; video: boolean }[] {
   try {
     const parsed = JSON.parse(mediaJson) as unknown;

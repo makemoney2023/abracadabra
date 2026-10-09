@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ Projects is a table across clients. A project page puts milestones, tasks, and finished work on the left, and status, repos, audience, and people on the right. Post update, Add milestone, and Add task open in drawers. A deliverable picture uses the piece name as its label, and notes show as a timeline.
+- **Why** — Projects had no list, and a project was one long stack of cards. Deliverable pictures had an empty label, and notes were a plain list.
+- **Code touchpoints** — `handoff/src/app/projects/page.tsx`, `handoff/src/app/projects/rows.ts`, `handoff/src/app/projects/rows.test.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/deliverables/labels.ts`, `handoff/src/app/deliverables/labels.test.ts`, `handoff/src/components/timeline.tsx`, `handoff/src/components/data-table.tsx`
+- **Data-flow impact** — The index reads the existing project list, the latest health note per project, and open tasks. Project and deliverable pages still read the same records. Milestone, task, and update saves still use the existing actions, and a success closes the drawer. Notes stay read-only here. The client writes them from their space.
+- **API / schema impact** — none.
+- **Verification** — Full `npm test` follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ Work is one grouped table. All, Late, This week, and Blocked show counts. Group by switches person or client. Done marks a task done, and Open goes to the project or the client.
 - **Why** — The old page was a stack of cards with filters that did not say how many tasks matched.
 - **Code touchpoints** — `handoff/src/app/work/page.tsx`, `handoff/src/app/work/query.ts`, `handoff/src/app/work/query.test.ts`, `handoff/src/app/work/filters.tsx`, `handoff/src/app/work/task-actions.tsx`
