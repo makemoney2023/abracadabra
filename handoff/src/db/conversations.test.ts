@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
-import { deskContext, listClientThreads, noteStalledProspect, recordStaffReply, recordThreadMessage, setWorkRequestState, threadState, workRequestById } from "./conversations";
+import { deskContext, listClientThreads, noteStalledProspect, organizationForSenderThread, recordStaffReply, recordThreadMessage, resolveMailThread, setWorkRequestState, threadState, workRequestById } from "./conversations";
 import { migrate } from "./migrate";
 import { sqliteSql, type Sql } from "./sql";
 
@@ -187,5 +187,106 @@ describe("client threads", () => {
     );
     const withBrief = await threadState(sql, "org-1", "<m-1>", NOW + 20);
     expect(withBrief.briefPresent).toBe(true);
+  });
+
+  it("keeps a reply on the open email conversation", async () => {
+    await recordThreadMessage(
+      sql,
+      { ...message, body: "We need social media ads.", state: "clarifying", replyBody: "Who are these ads for?" },
+      NOW,
+    );
+    const byReference = await resolveMailThread(sql, {
+      organizationId: "org-1",
+      threadId: "<reply-1>",
+      references: "<m-1> <magic-1@abra-ca-dabra.app>",
+      sender: "Ada@Client.example",
+      subject: "ads",
+    });
+    expect(byReference).toBe("<m-1>");
+    const bySubject = await resolveMailThread(sql, {
+      organizationId: "org-1",
+      threadId: "<reply-2>",
+      references: "",
+      sender: "ada@client.example",
+      subject: "Re: ads",
+    });
+    expect(bySubject).toBe("<m-1>");
+    const desk = await deskContext(sql, "org-1", byReference);
+    expect(desk.messages.map((row) => row.body)).toEqual(["We need social media ads.", "Who are these ads for?"]);
+  });
+
+  it("does not guess when two email conversations are open", async () => {
+    await recordThreadMessage(sql, { ...message, body: "Ads.", state: "clarifying" }, NOW);
+    await recordThreadMessage(
+      sql,
+      { ...message, threadId: "<m-2>", body: "A site.", state: "clarifying" },
+      NOW + 1,
+    );
+    const unresolved = await resolveMailThread(sql, {
+      organizationId: "org-1",
+      threadId: "<reply-3>",
+      references: "",
+      sender: "ada@client.example",
+      subject: "Re: hello",
+    });
+    expect(unresolved).toBe("<reply-3>");
+  });
+
+  it("follows In-Reply-To back to the open conversation when two threads are open", async () => {
+    await recordThreadMessage(
+      sql,
+      {
+        ...message,
+        body: "We need social media ads.",
+        state: "clarifying",
+        replyBody: "Who are these ads for?",
+        replyMessageId: "<magic-1@abra-ca-dabra.app>",
+      },
+      NOW,
+    );
+    await recordThreadMessage(
+      sql,
+      { ...message, threadId: "<m-2>", body: "A site.", state: "clarifying", replyBody: "What is the site for?" },
+      NOW + 1,
+    );
+    const resolved = await resolveMailThread(sql, {
+      organizationId: "org-1",
+      threadId: "<magic-1@abra-ca-dabra.app>",
+      references: "",
+      sender: "ada@client.example",
+      subject: "Re: ads",
+    });
+    expect(resolved).toBe("<m-1>");
+  });
+
+  it("remembers the client from the outbound message id", async () => {
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at) VALUES ('org-2', 'Harbor', 'client', ?, ?)`,
+      [NOW, NOW],
+    );
+    await recordThreadMessage(
+      sql,
+      {
+        ...message,
+        body: "Ads for Northwind.",
+        state: "clarifying",
+        replyBody: "Who are they for?",
+        replyMessageId: "<magic-2@abra-ca-dabra.app>",
+      },
+      NOW,
+    );
+    await recordThreadMessage(
+      sql,
+      {
+        ...message,
+        organizationId: "org-2",
+        threadId: "<other>",
+        body: "Harbor site.",
+        state: "clarifying",
+        replyBody: "Which pages?",
+      },
+      NOW + 1,
+    );
+    expect(await organizationForSenderThread(sql, "<magic-2@abra-ca-dabra.app>", "ada@client.example")).toBe("org-1");
   });
 });
