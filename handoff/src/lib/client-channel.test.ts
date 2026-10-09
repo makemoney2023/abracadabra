@@ -220,7 +220,7 @@ describe("mailbox reply", () => {
           kind: "new_work",
           goal: "sell",
           due: "Friday",
-          actions: [{ title: "Write the page" }],
+          actions: [{ title: "Write the page", assignee: null, due: null, skill: null }],
           brief: "Add a page.",
         }),
       });
