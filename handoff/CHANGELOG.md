@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/clients/[id]/tabs.ts`, `handoff/src/app/clients/[id]/client-body.tsx`, the tab files beside it, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/app/clients/activity-forms.tsx`, `handoff/src/app/clients/repo-forms.tsx`, `handoff/src/app/clients/thread-forms.tsx`, `handoff/src/app/clients/link-space-form.tsx`
 - **Data-flow impact** — The page still loads the same client records. The timeline page applies only on the Activity tab. The header reads the latest health note for that client.
 - **API / schema impact** — none. Add, link, reply, and merge actions return the same success and error messages as before.
-- **Verification** — `npx vitest run src/app/clients/[id]/tabs.test.ts` (3 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (112 files / 608 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
