@@ -21,8 +21,9 @@ export function StaffShell({ children }: { children: ReactNode }) {
     <SidebarProvider>
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
-          <Link href="/" className="px-2 font-mono text-xs tracking-wide text-optic">
-            Handoff
+          <Link href="/" className="flex items-baseline gap-1.5 px-2">
+            <span className="font-mono text-xs tracking-wide text-optic">Handoff</span>
+            <span className="font-mono text-xs tracking-wide text-muted-foreground">HQ</span>
           </Link>
         </SidebarHeader>
         <SidebarSeparator />
@@ -33,7 +34,6 @@ export function StaffShell({ children }: { children: ReactNode }) {
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
           <SidebarTrigger />
-          <span className="font-mono text-xs tracking-wide text-optic">Handoff</span>
         </header>
         {children}
       </SidebarInset>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-09
+
+- **What changed** — HQ navigation is six groups (Pulse, Pipeline, Delivery, Records, Automation, System). The sidebar shows one wordmark, "Handoff" plus "HQ". Projects is in Delivery. GitHub is the System item.
+- **Why** — The staff shell listed every page in one Studio group and printed Handoff twice.
+- **Code touchpoints** — `handoff/src/app/staff-links.ts`, `handoff/src/app/staff-nav.tsx`, `handoff/src/app/staff-shell.tsx`
+- **Data-flow impact** — none.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/staff-links.test.ts` (5 passed). `npx tsc --noEmit` next.
+
 ## 2026-10-08
 
 - **What changed** — A website lead waits for the schema scan before the agent starts. A scheduled swarm brief includes the client, and a finished swarm becomes an unpublished draft on Finished work. Brief and work wakes still run when the portal URL is empty. Page-title contacts with no email or phone are skipped.
