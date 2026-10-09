@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A signed-in person who is not on the staff list sees Sign out and a link to the client portal. Sign-in uses a narrow page and shows a field error. An empty username returns that error and does not include the password.
+- **Why** — HQ entry said only "This page is for staff", and a bad sign-in replaced the whole page instead of marking the field.
+- **Code touchpoints** — `handoff/src/app/hq-home.tsx`, `handoff/src/app/login/page.tsx`, `handoff/src/app/sign-in-form.tsx`, `handoff/src/app/sign-in-action.ts`, `handoff/src/app/sign-in-action.test.ts`
+- **Data-flow impact** — A good sign-in still opens a session and redirects. A bad sign-in returns an error to the form. Sign-out still revokes the session.
+- **API / schema impact** — none.
+- **Verification** — `src/app/sign-in-action.test.ts` passed (1 test). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — Settings is tabs for GitHub, shortcuts, and appearance. GitHub shows Connect GitHub when nothing is linked, or a connection card and a repo table. A GitHub failure says to try again. Shortcuts lists the same keys as the question-mark dialog. Appearance holds the row-height control.
 - **Why** — GitHub settings was a stack of cards, and shortcuts and row height lived only in the shell.
 - **Code touchpoints** — `handoff/src/app/settings/layout.tsx`, `handoff/src/app/settings/page.tsx`, `handoff/src/app/settings/tabs.ts`, `handoff/src/app/settings/tabs.test.ts`, `handoff/src/app/settings/settings-tabs.tsx`, `handoff/src/app/settings/github/page.tsx`, `handoff/src/app/settings/github/rows.ts`, `handoff/src/app/settings/github/rows.test.ts`, `handoff/src/app/settings/github/github-error.tsx`, `handoff/src/app/settings/shortcuts/page.tsx`, `handoff/src/app/settings/appearance/page.tsx`, `handoff/src/app/settings/appearance/panel.tsx`, `handoff/src/app/settings/loading.tsx`, `handoff/src/app/settings/error.tsx`, `handoff/src/components/shortcut-list.ts`, `handoff/src/components/keyboard-shortcuts.tsx`, `handoff/src/lib/github/app.ts`, `handoff/src/lib/github/app.test.ts`
