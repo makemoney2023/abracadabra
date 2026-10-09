@@ -4,6 +4,7 @@ import { listProjectDeliverables } from "@/db/deliverables";
 import {
   listBoard,
   listBoardActivity,
+  openCloudRunCount,
   listMilestones,
   listProjectRepos,
   listStatusUpdates,
@@ -39,7 +40,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await projectById(sql, caller, id);
   if (!project) notFound();
   const now = clock();
-  const [org, milestones, tasks, updates, staff, spaces, activity, capRow] = await Promise.all([
+  const [org, milestones, tasks, updates, staff, spaces, activity, capRow, runsOpen] = await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
     listBoard(sql, caller, { projectId: project.id }),
@@ -53,6 +54,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     ),
     listBoardActivity(sql, caller, [project.organization_id]),
     sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
+    openCloudRunCount(sql, caller),
   ]);
   const repos = await listProjectRepos(sql, caller, project.id);
   const visibleIds = new Set((await workspacesFor(sql, caller)).map((row) => row.id));
@@ -142,7 +144,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   now={now}
                   showClient={false}
                   showProject={false}
-                  runCap={capRow ? Number(capRow.value) : null}
+                  runCap={capRow && Number.isFinite(Number(capRow.value)) ? Number(capRow.value) : null}
+                  runsOpen={runsOpen}
                   activity={activity}
                 />
               </CardContent>

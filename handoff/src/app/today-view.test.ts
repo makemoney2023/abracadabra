@@ -133,6 +133,18 @@ describe("needsYou", () => {
       NOW,
     );
     expect(rows.map((row) => row.tone)).toEqual(["blocked", "waiting"]);
+    expect(rows[0]?.href).toBe("/clients/org-1?tab=work");
+  });
+
+  it("opens a project card on that project's board", () => {
+    const rows = needsYou(
+      board({
+        tasks: [task({ id: "mine", title: "Mine", status: "todo", due_at: NOW - 1, project_id: "proj-1" })],
+      }),
+      8,
+      NOW,
+    );
+    expect(rows[0]?.href).toBe("/projects/proj-1");
   });
 });
 

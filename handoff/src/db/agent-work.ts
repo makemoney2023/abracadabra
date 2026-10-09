@@ -390,6 +390,43 @@ async function taskInOrg(
   return task;
 }
 
+function skillsJson(current: string | null, skills: NonNullable<WorkArgs["skills"]>): string {
+  const next = skillSteps(skills);
+  const edges = storedSkillEdges(current);
+  return JSON.stringify(edges.length > 0 ? { ...next, edges } : next);
+}
+
+async function writeSkillNote(
+  sql: Sql,
+  actor: AgentActor,
+  task: { id: string; project_id: string | null; skills_json: string | null },
+  args: WorkArgs,
+  now: number,
+): Promise<void> {
+  if (args.skills !== undefined) {
+    await sql.run("UPDATE tasks SET skills_json = ?, updated_at = ? WHERE id = ?", [
+      skillsJson(task.skills_json, args.skills),
+      now,
+      task.id,
+    ]);
+  }
+  if (!args.note?.trim()) return;
+  await sql.run(
+    `INSERT INTO activities (
+      id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at
+    ) VALUES (?, ?, ?, 'agent.skill_done', 'agent', ?, ?, ?, ?)`,
+    [
+      crypto.randomUUID(),
+      actor.organizationId,
+      task.project_id,
+      actor.keyId,
+      args.note.trim(),
+      JSON.stringify({ taskId: task.id }),
+      now,
+    ],
+  );
+}
+
 async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number, deps?: BuildDeps): Promise<unknown> {
   const taskId = args.taskId?.trim() ?? "";
   if (!taskId) throw new AgentWorkError("Name a task.");
@@ -402,10 +439,11 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
       actor: { kind: "agent", id: actor.keyId },
       build: deps ?? defaultBuildDeps(now),
     });
-    const row = await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = ?", [task.id]);
+    await writeSkillNote(sql, actor, task, built.ok ? args : { note: args.note }, now);
+    const row = await sql.get<{ status: string; stage: string }>("SELECT status, stage FROM tasks WHERE id = ?", [task.id]);
     return {
       taskId: task.id,
-      stage: "build",
+      stage: row?.stage ?? "build",
       status: row?.status ?? null,
       blockedReason: built.ok ? null : built.error,
     };
@@ -438,10 +476,8 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
     params.push(args.stage);
   }
   if (args.skills !== undefined) {
-    const next = skillSteps(args.skills);
-    const edges = storedSkillEdges(task.skills_json);
     sets.push("skills_json = ?");
-    params.push(JSON.stringify(edges.length > 0 ? { ...next, edges } : next));
+    params.push(skillsJson(task.skills_json, args.skills));
   }
   if (args.blockedReason !== undefined) {
     sets.push("blocked_reason = ?");

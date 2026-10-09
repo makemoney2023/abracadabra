@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { runAgentWork } from "@/db/agent-work";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
+import { moveTaskStage } from "@/lib/task-stage";
 import { runHqTool } from "@/lib/hq-tools";
 import type { Caller } from "@/lib/authz";
 import { handleGithubBatch } from "@/lib/github/queue";
@@ -561,12 +562,25 @@ describe("build gate", () => {
       sql,
       { keyId: "key-1", organizationId: "org-1" },
       "update_task",
-      { requestId: "to-build", taskId: "task-1", stage: "build" },
+      {
+        requestId: "to-build",
+        taskId: "task-1",
+        stage: "build",
+        note: "Wrote the build brief.",
+        skills: [{ path: "copywriting", mode: "plan", status: "done" }],
+      },
       NOW,
       deps(routed.fetch),
     )) as { taskId: string; stage: string; blockedReason: string | null };
     expect(updated.stage).toBe("build");
     expect(updated.blockedReason).toBeNull();
+    const noted = await sql.get<{ body: string; skills_json: string }>(
+      `SELECT a.body, t.skills_json
+       FROM tasks t JOIN activities a ON a.organization_id = t.organization_id
+       WHERE t.id = 'task-1' AND a.kind = 'agent.skill_done'`,
+    );
+    expect(noted?.body).toBe("Wrote the build brief.");
+    expect(noted?.skills_json).toContain("copywriting");
     expect(routed.hits).toHaveLength(1);
 
     await sql.run("DELETE FROM cloud_runs");
@@ -582,9 +596,108 @@ describe("build gate", () => {
       { build: deps(routed.fetch) },
     );
     expect(tool).toEqual({ ok: false, error: "brief_not_approved" });
-    expect(await sql.get<{ blocked_reason: string }>("SELECT blocked_reason FROM tasks WHERE id = 'task-1'")).toEqual({
+    expect(await sql.get<{ stage: string; blocked_reason: string }>("SELECT stage, blocked_reason FROM tasks WHERE id = 'task-1'")).toEqual({
+      stage: "engineer",
       blocked_reason: "brief_not_approved",
     });
+  });
+
+  it("leaves the plan skill to do when the build move is refused", async () => {
+    await seed();
+    const skills = JSON.stringify({
+      steps: [{ path: "copywriting", mode: "plan", status: "todo" }],
+      current: 0,
+    });
+    await sql.run("UPDATE tasks SET skills_json = ? WHERE id = 'task-1'", [skills]);
+    await sql.run("UPDATE deliverables SET status = 'draft' WHERE id = 'del-brief'");
+    const quiet = http(() => {
+      throw new Error("refused");
+    });
+    const updated = (await runAgentWork(
+      sql,
+      { keyId: "key-1", organizationId: "org-1" },
+      "update_task",
+      {
+        requestId: "refused-build",
+        taskId: "task-1",
+        stage: "build",
+        note: "Wrote the build brief.",
+        skills: [{ path: "copywriting", mode: "plan", status: "done" }],
+      },
+      NOW,
+      deps(quiet.fetch),
+    )) as { stage: string; blockedReason: string | null };
+    expect(updated.stage).toBe("engineer");
+    expect(updated.blockedReason).toBe("brief_not_approved");
+    const row = await sql.get<{ skills_json: string; stage: string }>(
+      "SELECT skills_json, stage FROM tasks WHERE id = 'task-1'",
+    );
+    expect(row?.stage).toBe("engineer");
+    expect(row?.skills_json).toBe(skills);
+    expect(quiet.hits).toEqual([]);
+  });
+
+  it("moves a finished card into Build when a run is already open", async () => {
+    await seed();
+    await sql.run("UPDATE tasks SET status = 'done', stage = 'run', done_at = ? WHERE id = 'task-1'", [NOW]);
+    await sql.run(
+      `INSERT INTO cloud_runs (
+        id, task_id, deliverable_id, repo_id, round, status, started_at, deadline_at
+      ) VALUES ('run-open', 'task-1', 'del-doc', 'repo-1', 1, 'started', ?, ?)`,
+      [NOW, NOW + 1000],
+    );
+    const quiet = http(() => {
+      throw new Error("already open");
+    });
+    const moved = await moveTaskStage(sql, {
+      taskId: "task-1",
+      to: "build",
+      now: NOW + 5,
+      actor: { kind: "staff", id: "staff-1" },
+      build: deps(quiet.fetch),
+    });
+    expect(moved).toMatchObject({ ok: true, column: "build", status: "doing" });
+    expect(await sql.get("SELECT stage, status, done_at FROM tasks WHERE id = 'task-1'")).toEqual({
+      stage: "build",
+      status: "doing",
+      done_at: null,
+    });
+    expect(quiet.hits).toEqual([]);
+  });
+
+  it("clears done when a finished card waits for a cloud run", async () => {
+    await seed();
+    await sql.run("UPDATE tasks SET status = 'done', stage = 'run', done_at = ? WHERE id = 'task-1'", [NOW]);
+    await sql.run("UPDATE agent_settings SET value = '0' WHERE key = 'max_cloud_runs'");
+    const quiet = http(() => {
+      throw new Error("capped");
+    });
+    const moved = await moveTaskStage(sql, {
+      taskId: "task-1",
+      to: "build",
+      now: NOW + 5,
+      actor: { kind: "staff", id: "staff-1" },
+      build: deps(quiet.fetch),
+    });
+    expect(moved).toMatchObject({ ok: true, column: "build", status: "todo", waiting: "cap_reached" });
+    expect(await sql.get("SELECT stage, status, done_at FROM tasks WHERE id = 'task-1'")).toEqual({
+      stage: "build",
+      status: "todo",
+      done_at: null,
+    });
+  });
+
+  it("sends the latest build brief when more than one is filed", async () => {
+    await seed();
+    await sql.run(
+      `INSERT INTO deliverable_items (
+        id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+      ) VALUES ('item-brief-2', 'del-doc', 1, NULL, 'page', NULL, 'build-brief.md', ?, '[]', NULL, 'pending', 1)`,
+      [`${briefCopy()}\nMarker: later-brief`],
+    );
+    const routed = http((hit) => (hit.url === "https://api.cursor.com/v1/agents" ? cursorOk() : json(404, {})));
+    expect(await startBuild(sql, "task-1", deps(routed.fetch))).toMatchObject({ ok: true, action: "started" });
+    expect(routed.hits[0]?.body).toContain("later-brief");
   });
 });
 

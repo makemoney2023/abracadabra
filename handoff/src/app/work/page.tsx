@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listBoard, listBoardActivity, boardClientChips, listProjects } from "@/db/crm";
+import { listBoard, listBoardActivity, boardClientChips, listProjects, openCloudRunCount } from "@/db/crm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
 import { PageFrame } from "@/components/page-frame";
@@ -21,7 +21,7 @@ export default async function WorkPage({
   const project = query.project ?? "";
   const { sql, caller } = await requireHqStaffPage();
   const now = clock();
-  const [cards, chips, projects, capRow] = await Promise.all([
+  const [cards, chips, projects, capRow, runsOpen] = await Promise.all([
     listBoard(sql, caller, {
       organizationId: client || undefined,
       projectId: project && project !== "none" ? project : undefined,
@@ -31,10 +31,14 @@ export default async function WorkPage({
     boardClientChips(sql, caller),
     client ? listProjects(sql, caller, client) : Promise.resolve([]),
     sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
+    openCloudRunCount(sql, caller),
   ]);
   const open = cards.filter((card) => card.status !== "done");
   const counts = workCounts(open, now);
-  const visible = filterWork(cards, { late, week, blocked }, now);
+  const filtered = late || week || blocked;
+  const visible = filtered
+    ? filterWork(open, { late, week, blocked }, now)
+    : cards;
   const orgIds = [...new Set(visible.map((card) => card.organization_id))];
   const activity = await listBoardActivity(sql, caller, orgIds);
   const runCap = capRow ? Number(capRow.value) : null;
@@ -42,7 +46,7 @@ export default async function WorkPage({
 
   return (
     <StaffShell>
-      <PageFrame title="Work" description="Every open card. The agent takes the top card in Describe or Engineer.">
+      <PageFrame title="Work" description="Cards for every client. The agent takes the top card in Describe or Engineer.">
         <WorkToolbar late={late} week={week} blocked={blocked} client={client || undefined} project={project || undefined} counts={counts} />
         <div className="flex flex-wrap gap-2">
           <Link href={workHref({ late, week, blocked })} className={client ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
@@ -86,6 +90,7 @@ export default async function WorkPage({
           showClient={!client}
           showProject={project === "" || project === "none"}
           runCap={Number.isFinite(runCap) ? runCap : null}
+          runsOpen={runsOpen}
           activity={activity}
         />
       </PageFrame>

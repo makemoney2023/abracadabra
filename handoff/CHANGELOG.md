@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Review fixes for the kanban. Today opens a task with no project on the client Work tab. A refused build keeps the card's stage and clears `done_at`, and does not mark the plan skill done. A finished card that reaches Build leaves Done. The cloud run uses the latest build brief. A card whose project is missing from the client picture is not taken. Adding a task on a selected project chip files it on that project. Paused, done, and cancelled projects stay off the client and studio boards, including finished cards. The Build column shows open cloud runs over the cap. Late, this week, and blocked filters no longer mix in finished cards.
+- **Why** — An end-to-end pass found those gaps against the board plan.
+- **Code touchpoints** — `handoff/src/app/today-view.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/lib/cursor-build.ts`, `handoff/src/db/crm.ts`, `handoff/src/app/work/page.tsx`, `handoff/src/app/work/board.tsx`, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`
+- **Data-flow impact** — A build update still goes through `moveTaskStage`. The skill checklist is written only after the card is in Build. A refusal leaves the plan skill to do so the next wake can try again.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 713 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript files exited 0.
+
+## 2026-10-09
+
 - **What changed** — Each project has a kanban. The same cards roll up to the client and to every client. The agent takes the top card in Describe or Engineer, one step per project, and no longer files new tasks on whichever project was saved last.
 - **Why** — Open work was a table, and planning attached tasks to the newest project.
 - **Code touchpoints** — `handoff/src/app/work/board.tsx`, `handoff/src/lib/board-model.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/migrations/0016_task_position.sql`

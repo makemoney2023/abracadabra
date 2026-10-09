@@ -13,6 +13,7 @@ export function WorkTab({
   now,
   projectId,
   runCap,
+  runsOpen,
   opens,
 }: {
   organizationId: string;
@@ -22,6 +23,7 @@ export function WorkTab({
   now: number;
   projectId: string;
   runCap: number | null;
+  runsOpen: number;
   opens: { projectId: string | null; open: number }[];
 }) {
   const base = tabHref(organizationId, "work");
@@ -49,7 +51,12 @@ export function WorkTab({
           No project · {open(null)}
         </Link>
         <ProjectForm organizationId={organizationId} />
-        <TaskForm organizationId={organizationId} label="Add a task" variant="outline" />
+        <TaskForm
+          organizationId={organizationId}
+          projectId={projectId && projectId !== "none" ? projectId : undefined}
+          label="Add a task"
+          variant="outline"
+        />
       </div>
       <WorkBoard
         cards={cards}
@@ -57,6 +64,7 @@ export function WorkTab({
         showClient={false}
         showProject={projectId === ""}
         runCap={runCap}
+        runsOpen={runsOpen}
         activity={activity}
       />
     </div>

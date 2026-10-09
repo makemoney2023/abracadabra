@@ -839,6 +839,9 @@ describe("projects and work", () => {
     const clientBoard = await listBoard(sql, staff, { organizationId: first.value.id, hideInactiveProjects: true });
     expect(clientBoard.map((card) => card.title).sort()).toEqual(["Loose task", "Site task"]);
 
+    await sql.run("UPDATE tasks SET status = 'done', stage = 'run', done_at = ? WHERE title = 'Brand task'", [NOW]);
+    const hiddenDone = await listBoard(sql, staff, { organizationId: first.value.id, hideInactiveProjects: true });
+    expect(hiddenDone.map((card) => card.title).sort()).toEqual(["Loose task", "Site task"]);
     const pausedBoard = await listBoard(sql, staff, { projectId: brand.value.id });
     expect(pausedBoard.map((card) => card.title)).toEqual(["Brand task"]);
 

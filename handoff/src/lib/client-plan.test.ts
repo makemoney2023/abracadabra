@@ -280,6 +280,17 @@ describe("brief planning", () => {
     expect(titles).toEqual(["social_pack: A week of posts."]);
   });
 
+  it("asks which project to use when the only project is paused", async () => {
+    const { call, calls } = caller({
+      projects: [{ id: "proj-paused", name: "Paused", status: "paused" }],
+    });
+    expect(await planClientWork({ call, requestId: "wake-paused", now: 1 })).toBe("skipped");
+    expect(calls.some((entry) => entry.name === "create_task")).toBe(false);
+    expect(calls.find((entry) => entry.name === "ask_staff")?.args.question).toBe(
+      "Which project should these tasks use?",
+    );
+  });
+
   it("asks which project to use when two are active and writes no task", async () => {
     const { call, calls } = caller({
       projects: [
@@ -390,6 +401,11 @@ describe("one skill step per wake", () => {
     expect(body.toLowerCase()).toContain("force push");
     const update = calls.find((entry) => entry.name === "update_task");
     expect(update?.args.stage).toBe("build");
+    expect(update?.args.skills).toEqual([
+      { path: TEARDOWN, mode: "complete", status: "done" },
+      { path: COPY, mode: "complete", status: "done" },
+      { path: LANDING, mode: "plan", status: "done" },
+    ]);
     expect(calls.some((entry) => /cursor|publish|repo/i.test(entry.name))).toBe(false);
   });
 
@@ -489,6 +505,33 @@ describe("one skill step per wake", () => {
     });
     const updated = calls.filter((entry) => entry.name === "update_task").map((entry) => entry.args.taskId);
     expect(updated.slice(0, 3)).toEqual(["a0", "b0", "a1"]);
+  });
+
+  it("skips a card whose project is missing from the client picture", async () => {
+    const skill = [{ path: COPY, mode: "complete", status: "todo" }];
+    const { call, calls } = caller({
+      projects: [{ id: "proj-a", name: "Alpha", status: "active" }],
+      tasks: [
+        {
+          id: "ghost",
+          title: "Ghost piece",
+          status: "todo",
+          stage: "engineer",
+          projectId: "proj-missing",
+          position: 0,
+          deliverableId: "del-ghost",
+          skills: skill,
+        },
+      ],
+    });
+    const result = await advanceClientWork({
+      call,
+      requestId: "wake-ghost",
+      now: 1,
+      readSkill: async () => "---\nname: copywriting\n---\nWrite.",
+    });
+    expect(result).toEqual({ advanced: 0, reschedule: false });
+    expect(calls.some((entry) => entry.name === "update_task")).toBe(false);
   });
 });
 

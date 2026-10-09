@@ -245,6 +245,7 @@ export function WorkBoard({
   showClient,
   showProject,
   runCap,
+  runsOpen,
   activity,
 }: {
   cards: WorkBoardCard[];
@@ -252,6 +253,7 @@ export function WorkBoard({
   showClient: boolean;
   showProject: boolean;
   runCap: number | null;
+  runsOpen: number;
   activity: BoardActivity[];
 }) {
   const columns = boardCards(cards);
@@ -266,6 +268,8 @@ export function WorkBoard({
   function dropCard(taskId: string, column: BoardColumn) {
     const card = cards.find((item) => item.id === taskId);
     if (!card) return;
+    const current = card.status === "done" ? "done" : card.stage;
+    if (current === column) return;
     const data = new FormData();
     data.set("taskId", card.id);
     data.set("organizationId", card.organization_id);
@@ -286,7 +290,7 @@ export function WorkBoard({
       <div className="flex w-max gap-3 pb-3">
         {BOARD_COLUMNS.map((column) => {
           const items = columns[column];
-          const capNote = column === "build" && runCap !== null ? ` · ${items.length}/${runCap}` : "";
+          const capNote = column === "build" && runCap !== null ? ` · ${runsOpen}/${runCap}` : "";
           return (
             <section
               key={column}

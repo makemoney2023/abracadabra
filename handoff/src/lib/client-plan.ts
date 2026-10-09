@@ -62,7 +62,7 @@ export function planningProject(input: {
   const active = listed.filter((project) => project.id && ACTIVE_PROJECT.has(project.status ?? "active"));
   if (active.length > 1) return { ask: true };
   if (active.length === 1 && active[0]?.id) return { projectId: active[0].id };
-  if (listed.length > 0) return { none: true };
+  if (listed.length > 0) return { ask: true };
   if (input.fallbackProjectId) return { projectId: input.fallbackProjectId };
   return { none: true };
 }
@@ -406,6 +406,18 @@ function eligible(task: ContextTask, answered: number): boolean {
   return Boolean(task.id && currentSkill(task.skills ?? []));
 }
 
+function statusForProject(
+  context: ClientPicture,
+  statusById: Map<string, string>,
+  projectId: string,
+): string | null {
+  const known = statusById.get(projectId);
+  if (known) return known;
+  if (context.projects === undefined) return context.project?.status ?? "active";
+  if (projectId === context.project?.id) return context.project?.status ?? "active";
+  return null;
+}
+
 function queueTasks(context: ClientPicture): { tasks: ContextTask[]; more: boolean } {
   const projects = context.projects ?? [];
   const statusById = new Map(
@@ -417,9 +429,7 @@ function queueTasks(context: ClientPicture): { tasks: ContextTask[]; more: boole
   const cards = (context.tasks ?? []).flatMap((task) => {
     if (!task.id) return [];
     const projectId = task.projectId === undefined ? (fallbackId ?? null) : task.projectId;
-    const projectStatus = projectId
-      ? (statusById.get(projectId) ?? (projectId === context.project?.id ? (context.project?.status ?? "active") : "active"))
-      : null;
+    const projectStatus = projectId ? statusForProject(context, statusById, projectId) : null;
     const card: StepCard & { task: ContextTask } = {
       id: task.id,
       projectId,
@@ -486,6 +496,7 @@ export async function advanceClientWork(input: {
           requestId: `${input.requestId}:brief:${task.id}`,
         });
       }
+      step.status = "done";
       await input.call("update_task", {
         taskId: task.id,
         stage: "build",

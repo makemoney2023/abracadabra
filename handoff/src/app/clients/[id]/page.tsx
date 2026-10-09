@@ -7,6 +7,7 @@ import {
   listDeals,
   listBoard,
   listBoardActivity,
+  openCloudRunCount,
   listOpenTasks,
   listOrganizations,
   listProjects,
@@ -61,7 +62,7 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads, storedCheck, schemaScan, healthRow, cards, activity, capRow, opens] =
+  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads, storedCheck, schemaScan, healthRow, cards, activity, capRow, opens, runsOpen] =
     await Promise.all([
       unlinkedWorkspaces(sql, caller),
       sql.all<{ id: string; slug: string; display_name: string }>(
@@ -101,6 +102,7 @@ export default async function ClientPage({
          GROUP BY project_id`,
         [client.id],
       ),
+      openCloudRunCount(sql, caller),
     ]);
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
@@ -152,6 +154,7 @@ export default async function ClientPage({
           now={clock()}
           projectId={projectFilter}
           runCap={capRow && Number.isFinite(Number(capRow.value)) ? Number(capRow.value) : null}
+          runsOpen={runsOpen}
           opens={opens.map((row) => ({ projectId: row.project_id, open: Number(row.open) }))}
           timeline={timeline}
           linked={linked}

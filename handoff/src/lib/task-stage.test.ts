@@ -47,6 +47,16 @@ describe("moveTaskStage", () => {
     expect(row).toEqual({ stage: "describe", status: "blocked" });
   });
 
+  it("keeps a finished card's stage when build is refused", async () => {
+    await sql.run("UPDATE tasks SET status = 'done', stage = 'run', done_at = ? WHERE id = 'task-a'", [NOW]);
+    const moved = await moveTaskStage(sql, { taskId: "task-a", to: "build", now: NOW + 5, actor });
+    expect(moved).toEqual({ ok: false, error: "brief_not_approved" });
+    const row = await sql.get<{ stage: string; status: string; done_at: number | null }>(
+      "SELECT stage, status, done_at FROM tasks WHERE id = 'task-a'",
+    );
+    expect(row).toEqual({ stage: "run", status: "blocked", done_at: null });
+  });
+
   it("marks a card done and leaves its stage", async () => {
     const moved = await moveTaskStage(sql, { taskId: "task-a", to: "done", now: NOW, actor });
     expect(moved).toMatchObject({ ok: true, column: "done", stage: "describe", status: "done" });

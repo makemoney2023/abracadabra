@@ -110,7 +110,7 @@ The wake stays per client. What changes is which card it takes.
    - Hand out one card per project, then a second, until `budget` (8) or the groups are empty.
 3. `advanceClientWork` runs those cards in that order and still does one skill step each. A client with three active projects no longer spends all eight steps on whichever task was saved last.
 4. Starting a step sets `status = 'doing'` in the same column. Finishing the last non-plan step sets `status = 'done'` and `stage = 'run'`, which places the card in Done.
-5. A plan step still writes `build-brief.md` and moves the card to Build through the shared move. `startBuild` either starts the run, waits on `max_cloud_runs`, or blocks with the existing reason (`link_a_repo`, `missing_build_brief`, and the rest). A refused build leaves the card in Engineer. It does not sit in Build with no run.
+5. A plan step still writes `build-brief.md` and moves the card to Build through the shared move. `startBuild` either starts the run, waits on `max_cloud_runs`, or blocks with the existing reason (`link_a_repo`, `missing_build_brief`, and the rest). A refused build leaves the card in the column it left, and leaves the plan skill to do, so answering the question lets the next wake try the move again. The plan skill is marked done only after the card is in Build. The cloud run uses the latest `build-brief.md` on the deliverable.
 6. Staff notes on a card (`staff.instruction`) still arrive on that task in `client_context`. Order does not throw them away.
 7. The 15-minute cron still wakes each client that has open work. The studio board does not need its own cron.
 
@@ -134,13 +134,13 @@ Behavior:
 | To Build | Call `startBuild`. On failure, do not change stage. On `cap_reached`, stage may already be `build` with status `todo`, which is the waiting card the board shows in Build. |
 | To Run | Set `stage = 'run'`, then the existing swarm schedule and `due` wake. |
 | To Done | Set `status = 'done'` and `done_at`. Leave `stage` as it is. |
-| Out of Done | Set `status = 'todo'`, clear `done_at`, set the target stage through the same function. |
+| Out of Done | Set `status = 'todo'`, clear `done_at`, set the target stage through the same function. A move to Build that starts or resumes a run sets `status = 'doing'` and clears `done_at`. A move that waits on the cap sets `status = 'todo'` and clears `done_at`. |
 | Reorder inside a column | Rewrite `position` for that column's scope: `(organization_id, ifnull(project_id, ''), column)`. |
 | Block | Set `status = 'blocked'` and `blocked_reason`. The card stays in its stage column. |
 
 Every successful move writes the activity the callers write today (`staff.task_stage` or `agent.*`). A repeated move to the same stage only rewrites `position` when the caller sent one.
 
-The project task form and the client task form create the card in Describe at the end of that column. Creating a task on a client with no project selected leaves `project_id` null. The form on a project page sets `project_id`.
+The project task form and the client task form create the card in Describe at the end of that column. Creating a task on a client with no project selected leaves `project_id` null. A project chip on the client Work tab sets `project_id`. The form on a project page sets `project_id`.
 
 ## Card
 

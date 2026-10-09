@@ -227,15 +227,19 @@ async function moveToDone(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Pr
 async function moveToBuild(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Promise<MoveTaskResult> {
   const built = await startBuild(sql, task.id, input.build ?? defaultBuildDeps(input.now));
   if (!built.ok) {
-    await sql.run("UPDATE tasks SET stage = ? WHERE id = ?", [task.stage, task.id]);
+    await sql.run("UPDATE tasks SET stage = ?, done_at = NULL WHERE id = ?", [task.stage, task.id]);
     return { ok: false, error: built.reason };
   }
   const position = await place(sql, task, "build", input);
-  await sql.run("UPDATE tasks SET position = ? WHERE id = ?", [position, task.id]);
   if (built.action === "waiting") {
+    await sql.run("UPDATE tasks SET position = ?, done_at = NULL WHERE id = ?", [position, task.id]);
     await logMove(sql, task, "build", "Waiting for a free cloud run.", input.now, input.actor);
     return { ok: true, taskId: task.id, column: "build", stage: "build", status: "todo", waiting: "cap_reached" };
   }
+  await sql.run(
+    "UPDATE tasks SET position = ?, done_at = NULL, status = 'doing', blocked_reason = NULL WHERE id = ?",
+    [position, task.id],
+  );
   await logMove(sql, task, "build", inputBody("build"), input.now, input.actor);
   return {
     ok: true,

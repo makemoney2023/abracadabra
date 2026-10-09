@@ -400,7 +400,7 @@ export async function startBuild(sql: Sql, taskId: string, deps: BuildDeps): Pro
      WHERE deliverable_items.deliverable_id = ?
        AND deliverable_items.title = 'build-brief.md'
        AND deliverable_items.version = deliverables.version
-     ORDER BY deliverable_items.sort
+     ORDER BY deliverable_items.sort DESC
      LIMIT 1`,
     [task.deliverable_id],
   );

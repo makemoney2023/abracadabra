@@ -1014,7 +1014,7 @@ export async function listBoard(sql: Sql, caller: Caller, query: BoardQuery): Pr
     where.push("t.project_id = ?");
     params.push(query.projectId);
   } else if (query.hideInactiveProjects) {
-    where.push(`(t.status = 'done' OR t.project_id IS NULL OR p.status IN ${ACTIVE_PROJECT})`);
+    where.push(`(t.project_id IS NULL OR p.status IN ${ACTIVE_PROJECT})`);
   }
   return sql.all<BoardCard>(
     `SELECT ${BOARD_COLUMNS}
@@ -1023,6 +1023,14 @@ export async function listBoard(sql: Sql, caller: Caller, query: BoardQuery): Pr
      ORDER BY t.position, t.created_at, t.id`,
     params,
   );
+}
+
+export async function openCloudRunCount(sql: Sql, caller: Caller): Promise<number> {
+  if (!staffUserId(caller)) return 0;
+  const row = await sql.get<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM cloud_runs WHERE status IN ('started', 'pr_open')",
+  );
+  return Number(row?.n ?? 0);
 }
 
 export async function boardClientChips(
@@ -1046,20 +1054,29 @@ export async function boardClientChips(
 /** Recent agent notes, keyed later by the task id stored on the activity. */
 export async function listBoardActivity(sql: Sql, caller: Caller, organizationIds: string[]): Promise<BoardActivity[]> {
   if (!staffUserId(caller) || organizationIds.length === 0) return [];
-  const rows = await sql.all<{ id: string; kind: string; body: string | null; created_at: number; data_json: string | null }>(
-    `SELECT id, kind, body, created_at, data_json FROM activities
-     WHERE kind LIKE 'agent.%' AND organization_id IN (${organizationIds.map(() => "?").join(", ")})
-     ORDER BY created_at DESC
+  const rows = await sql.all<{
+    id: string;
+    kind: string;
+    body: string | null;
+    created_at: number;
+    data_json: string | null;
+    run_task_id: string | null;
+  }>(
+    `SELECT a.id, a.kind, a.body, a.created_at, a.data_json, cr.task_id AS run_task_id
+     FROM activities a
+     LEFT JOIN cloud_runs cr ON cr.id = json_extract(a.data_json, '$.runId')
+     WHERE a.kind LIKE 'agent.%' AND a.organization_id IN (${organizationIds.map(() => "?").join(", ")})
+     ORDER BY a.created_at DESC
      LIMIT 300`,
     organizationIds,
   );
   return rows.flatMap((row) => {
-    let taskId = "";
+    let taskId = row.run_task_id ?? "";
     try {
       const data = JSON.parse(row.data_json ?? "") as { taskId?: unknown };
       if (typeof data.taskId === "string") taskId = data.taskId;
     } catch {
-      taskId = "";
+      taskId = row.run_task_id ?? "";
     }
     if (!taskId) return [];
     return [{ id: row.id, taskId, kind: row.kind, body: row.body, createdAt: row.created_at }];

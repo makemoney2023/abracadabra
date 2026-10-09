@@ -33,6 +33,7 @@ export function ClientBody({
   now,
   projectId,
   runCap,
+  runsOpen,
   opens,
   timeline,
   linked,
@@ -58,6 +59,7 @@ export function ClientBody({
   now: number;
   projectId: string;
   runCap: number | null;
+  runsOpen: number;
   opens: { projectId: string | null; open: number }[];
   timeline: ActivityRow[];
   linked: WorkspaceLink[];
@@ -83,6 +85,7 @@ export function ClientBody({
         now={now}
         projectId={projectId}
         runCap={runCap}
+        runsOpen={runsOpen}
         opens={opens}
       />
     );
