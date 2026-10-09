@@ -960,6 +960,43 @@ export async function listWork(
   );
 }
 
+/** Sidebar badges. Needs you is late or blocked work. Work is that same set. Leads are new deals from the last 7 days. */
+export async function navCounts(
+  sql: Sql,
+  caller: Caller,
+  now: Date,
+): Promise<{ needsYou: number; leads: number; work: number }> {
+  if (!staffUserId(caller)) return { needsYou: 0, leads: 0, work: 0 };
+  const at = now.getTime();
+  const row = await sql.get<{ needs_you: number; work: number; leads: number }>(
+    `SELECT
+       (SELECT count(*)
+        FROM tasks t
+        JOIN organizations o ON o.id = t.organization_id
+        WHERE o.archived_at IS NULL
+          AND t.status != 'done'
+          AND (t.due_at < ? OR t.status = 'blocked')) AS needs_you,
+       (SELECT count(*)
+        FROM tasks t
+        JOIN organizations o ON o.id = t.organization_id
+        WHERE o.archived_at IS NULL
+          AND t.status != 'done'
+          AND (t.due_at < ? OR t.status = 'blocked')) AS work,
+       (SELECT count(*)
+        FROM deals d
+        JOIN organizations o ON o.id = d.organization_id
+        WHERE o.archived_at IS NULL
+          AND d.stage = 'new'
+          AND d.created_at >= ?) AS leads`,
+    [at, at, at - WEEK_MS],
+  );
+  return {
+    needsYou: Number(row?.needs_you ?? 0),
+    work: Number(row?.work ?? 0),
+    leads: Number(row?.leads ?? 0),
+  };
+}
+
 export async function listStatusUpdates(
   sql: Sql,
   caller: Caller,

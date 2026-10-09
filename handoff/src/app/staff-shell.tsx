@@ -1,48 +1,30 @@
-"use client";
-
+import { cache } from "react";
 import type { ReactNode } from "react";
-import Link from "next/link";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarInset,
-  SidebarProvider,
-  SidebarSeparator,
-} from "@/components/ui/sidebar";
-import { CommandPalette } from "@/components/command-palette";
-import { ContextBar, ContextBarProvider } from "@/components/context-bar";
-import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
-import { Toaster } from "@/components/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { StaffNav } from "./staff-nav";
+import { navCounts } from "@/db/crm";
+import { requireHqStaffPage } from "@/lib/current";
+import { StaffChrome } from "./staff-chrome";
 
-export function StaffShell({ children }: { children: ReactNode }) {
+const loadShell = cache(async () => {
+  const { sql, caller } = await requireHqStaffPage();
+  const counts = await navCounts(sql, caller, new Date());
+  const row = await sql.get<{ email: string; is_super_admin: number }>(
+    "SELECT email, is_super_admin FROM staff WHERE user_id = ? AND revoked_at IS NULL",
+    [caller.userId],
+  );
+  return {
+    counts,
+    person: {
+      email: row?.email ?? "",
+      role: row?.is_super_admin === 1 ? ("Admin" as const) : ("Staff" as const),
+    },
+  };
+});
+
+export async function StaffShell({ children }: { children: ReactNode }) {
+  const { counts, person } = await loadShell();
   return (
-    <TooltipProvider>
-    <SidebarProvider>
-      <ContextBarProvider>
-      <Sidebar variant="inset" collapsible="icon">
-        <SidebarHeader>
-          <Link href="/" className="flex items-baseline gap-1.5 px-2">
-            <span className="font-mono text-xs tracking-wide text-optic">Handoff</span>
-            <span className="font-mono text-xs tracking-wide text-muted-foreground">HQ</span>
-          </Link>
-        </SidebarHeader>
-        <SidebarSeparator />
-        <SidebarContent>
-          <StaffNav />
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <ContextBar />
-        {children}
-      </SidebarInset>
-      <Toaster />
-      <CommandPalette />
-      <KeyboardShortcuts />
-      </ContextBarProvider>
-    </SidebarProvider>
-    </TooltipProvider>
+    <StaffChrome counts={counts} person={person}>
+      {children}
+    </StaffChrome>
   );
 }

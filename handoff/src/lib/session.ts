@@ -191,6 +191,15 @@ export async function consumeMagicLink(input: {
   return { sessionToken, userId };
 }
 
+/** Ends one sign-in. A blank token does nothing. */
+export async function revokeSession(sql: Sql, sessionToken: string, now: number): Promise<void> {
+  if (!sessionToken) return;
+  await sql.run(
+    `UPDATE ${SESSIONS} SET revoked_at = ? WHERE token_hash = ? AND revoked_at IS NULL`,
+    [now, await sha256Hex(sessionToken)],
+  );
+}
+
 type CallerRow = {
   user_id: string;
   is_super_admin: number | null;

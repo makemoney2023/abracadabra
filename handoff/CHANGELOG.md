@@ -2,12 +2,21 @@
 
 ## 2026-10-09
 
+- **What changed** — The HQ sidebar shows counts on Today, Leads, and Work when they are above zero. The footer has the signed-in person, a row-density switch, shortcuts, and sign out. Compact rows apply before the page paints.
+- **Why** — Staff could not see how much was waiting, and every table used the same row height.
+- **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/app/staff-shell.tsx`, `handoff/src/app/staff-chrome.tsx`, `handoff/src/app/staff-nav.tsx`, `handoff/src/components/density-toggle.tsx`, `handoff/src/components/user-menu.tsx`, `handoff/src/app/layout.tsx`, `handoff/src/app/sign-out-action.ts`, `handoff/src/lib/session.ts`
+- **Data-flow impact** — `StaffShell` loads counts once per request and passes them into the sidebar.
+- **API / schema impact** — none. Sign out marks the current session revoked.
+- **Verification** — `npx vitest run src/db/crm.test.ts src/lib/session.test.ts -t "counts needs-you|bootstraps only"` (2 passed). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ staff can open a command palette with ⌘K and jump with keyboard shortcuts. The palette lists pages, recent records, clients, and page actions.
 - **Why** — Staff had to hunt the sidebar for every page and client.
 - **Code touchpoints** — `handoff/src/components/palette-items.ts`, `handoff/src/components/command-palette.tsx`, `handoff/src/components/keyboard-shortcuts.tsx`, `handoff/src/components/context-bar.tsx`, `handoff/src/app/staff-shell.tsx`, `handoff/src/app/api/hq/palette/route.ts`
 - **Data-flow impact** — The palette reads client names from `listOrganizations`. Recent records stay in the browser session.
 - **API / schema impact** — `GET /api/hq/palette` returns `{ clients: [{ id, name }] }` for HQ staff. Anyone else gets 404.
-- **Verification** — `npx vitest run src/components/palette-items.test.ts` (4 passed). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+- **Verification** — `npm test` (109 files / 593 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 

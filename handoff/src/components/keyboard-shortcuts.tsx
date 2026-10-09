@@ -12,6 +12,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+export const SHORTCUTS_EVENT = "hq:shortcuts";
+
+export function openShortcutSheet() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(SHORTCUTS_EVENT));
+}
+
 const GO: Record<string, string> = {
   t: "/",
   l: "/leads",
@@ -91,9 +98,14 @@ export function KeyboardShortcuts() {
         }, 1000);
       }
     }
+    function onHelp() {
+      setHelp(true);
+    }
     window.addEventListener("keydown", onKey);
+    window.addEventListener(SHORTCUTS_EVENT, onHelp);
     return () => {
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener(SHORTCUTS_EVENT, onHelp);
       window.clearTimeout(timer);
     };
   }, [router]);

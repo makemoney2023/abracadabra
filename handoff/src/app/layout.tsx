@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Tektur } from "next/font/google";
+import { DENSITY_BOOT } from "@/components/density";
 import { STUDIO } from "@/lib/brand/studio";
 import "./globals.css";
 
@@ -37,7 +38,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${plexSans.variable} ${tektur.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <script dangerouslySetInnerHTML={{ __html: DENSITY_BOOT }} />
+        {children}
+      </body>
     </html>
   );
 }

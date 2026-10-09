@@ -19,6 +19,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
@@ -40,7 +41,20 @@ export const ICONS = {
 
 export const NAV_ICON_HREFS = Object.keys(ICONS);
 
-export function StaffNav() {
+export type NavBadges = {
+  needsYou: number;
+  leads: number;
+  work: number;
+};
+
+function badgeFor(href: string, counts: NavBadges): number {
+  if (href === "/") return counts.needsYou;
+  if (href === "/leads") return counts.leads;
+  if (href === "/work") return counts.work;
+  return 0;
+}
+
+export function StaffNav({ counts }: { counts: NavBadges }) {
   const path = usePathname() || "/";
   return (
     <>
@@ -54,6 +68,7 @@ export function StaffNav() {
               {group.items.map((link) => {
                 const active = navIsActive(path, link.href);
                 const Icon = ICONS[link.href];
+                const badge = badgeFor(link.href, counts);
                 return (
                   <SidebarMenuItem key={link.href}>
                     <SidebarMenuButton asChild isActive={active} tooltip={link.label}>
@@ -62,6 +77,7 @@ export function StaffNav() {
                         <span>{link.label}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {badge > 0 ? <SidebarMenuBadge>{badge}</SidebarMenuBadge> : null}
                   </SidebarMenuItem>
                 );
               })}

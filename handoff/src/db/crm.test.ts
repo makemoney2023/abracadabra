@@ -22,6 +22,7 @@ import {
   listStatusUpdates,
   listTimeline,
   listWork,
+  navCounts,
   logCall,
   mergeOrganizations,
   moveDealStage,
@@ -811,6 +812,31 @@ describe("projects and work", () => {
     expect((await listWork(sql, staff, { thisWeek: true }, NOW)).map((task) => task.title)).toEqual(["This week"]);
     expect((await listWork(sql, staff, { blocked: true }, NOW)).map((task) => task.title)).toEqual(["Blocked"]);
     expect(await listWork(sql, outsider, {}, NOW)).toEqual([]);
+  });
+
+  it("counts needs-you, open work, and new leads for staff only", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    const late = await createTask(
+      sql,
+      staff,
+      { organizationId: made.value.id, title: "Late", dueAt: NOW - 1 },
+      NOW,
+    );
+    const blocked = await createTask(
+      sql,
+      staff,
+      { organizationId: made.value.id, title: "Blocked", dueAt: NOW + WEEK * 2 },
+      NOW,
+    );
+    if (!late.ok || !blocked.ok) throw new Error("setup");
+    expect((await updateTask(sql, staff, { taskId: blocked.value.id, status: "blocked" }, NOW)).ok).toBe(true);
+    const lead = await createManualLead(sql, staff, { name: "Northwind" }, NOW);
+    expect(lead.ok).toBe(true);
+
+    expect(await navCounts(sql, staff, new Date(NOW))).toEqual({ needsYou: 2, work: 2, leads: 1 });
+    expect(await navCounts(sql, outsider, new Date(NOW))).toEqual({ needsYou: 0, work: 0, leads: 0 });
   });
 
   it("keeps a client update as a draft until staff publish it", async () => {

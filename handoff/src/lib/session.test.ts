@@ -3,7 +3,8 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import { LIMITS } from "./policy/limits";
-import { consumeMagicLink, getCaller, requestMagicLink } from "./session";
+import { consumeMagicLink, getCaller, requestMagicLink, revokeSession } from "./session";
+import { signedOutCaller } from "@/db/records";
 
 const NOW = 1_700_000_000_000;
 const ORIGIN = "https://handoff.example";
@@ -189,6 +190,9 @@ describe("consumeMagicLink and getCaller", () => {
 
     const staff = await sql.all<{ email: string }>("SELECT email FROM staff");
     expect(staff).toEqual([{ email: "owner@example.com" }]);
+
+    await revokeSession(sql, session?.sessionToken ?? "", NOW + 1);
+    expect(await getCaller(sql, session?.sessionToken ?? "", NOW + 1)).toEqual(signedOutCaller);
 
     await requestMagicLink({
       sql,
