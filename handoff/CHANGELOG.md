@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The mailbox follow-up spec is on `main`, and staff HQ plus the agent worker were published again. Mailbox behavior is unchanged.
+- **Why** — The spec was merged and both mailbox workers were redeployed from that tree.
+- **Code touchpoints** — `docs/mailbox-later.md`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — none.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `b5d48e29-8d89-4e57-b5fe-09650060c9a1` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `06685dcf-18d3-433f-a246-d545553f53ff` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. Secret names on both workers are unchanged. `BOOKING_URL` is still empty.
+
+## 2026-10-09
+
 - **What changed** — The eight mailbox follow-ups have a spec and an implementation order. Nothing in that list runs yet.
 - **Why** — Budget, a freemail website and schema scan, a known client on a new address, a stalled thread, lead file space, opt-out, the readiness link, and a Cal.com confirmation were named and not planned against the code.
 - **Code touchpoints** — `docs/mailbox-later.md`, `docs/hq-agent-spec.md`
