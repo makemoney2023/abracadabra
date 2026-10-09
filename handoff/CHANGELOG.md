@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/settings/layout.tsx`, `handoff/src/app/settings/page.tsx`, `handoff/src/app/settings/tabs.ts`, `handoff/src/app/settings/tabs.test.ts`, `handoff/src/app/settings/settings-tabs.tsx`, `handoff/src/app/settings/github/page.tsx`, `handoff/src/app/settings/github/rows.ts`, `handoff/src/app/settings/github/rows.test.ts`, `handoff/src/app/settings/github/github-error.tsx`, `handoff/src/app/settings/shortcuts/page.tsx`, `handoff/src/app/settings/appearance/page.tsx`, `handoff/src/app/settings/appearance/panel.tsx`, `handoff/src/app/settings/loading.tsx`, `handoff/src/app/settings/error.tsx`, `handoff/src/components/shortcut-list.ts`, `handoff/src/components/keyboard-shortcuts.tsx`, `handoff/src/lib/github/app.ts`, `handoff/src/lib/github/app.test.ts`
 - **Data-flow impact** — GitHub still lists installs the app can see and stores them with the existing remember step. The repo table joins stored repos to clients and last activity. Connect GitHub opens the app install page only when GitHub returns one. Shortcuts and appearance do not write data.
 - **API / schema impact** — none.
-- **Verification** — Targeted tests passed: `src/app/settings/tabs.test.ts`, `src/app/settings/github/rows.test.ts`, and `src/lib/github/app.test.ts` (3 files / 11 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (118 files / 651 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
