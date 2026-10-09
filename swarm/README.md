@@ -46,7 +46,7 @@ Researcher nodes on those runs search the live web through the portal server `pa
   - **Touchpoints:** `src/ai/research-tools.ts`, `src/ai/agents.ts`, `src/mcp/client.ts`, `src/do/WorkflowDO.ts`.
   - **Data flow:** HQ run → portal tool list → researcher only → `web_search` then `web_fetch`, with the source URL kept in the observation.
   - **API / schema:** none.
-  - **Verification:** `npm test` in `swarm/`: 36 tests passed. `npx tsc --noEmit` exited 0.
+  - **Verification:** `npm test` in `swarm/`: 36 tests passed. `npx tsc --noEmit` exited 0. Deployed `agent-swarm-orchestrator` version `a6a8043f-7104-4c1a-bcac-3abb36c04d10`. Portal `parallel-search` stayed ready, and the swarm run secret and Access token were still set after deploy.
 - **2026-10-09** — The canvas opens a stored swarm execution from `?executionId=`.
   - **Why:** HQ links need the worker canvas to show the run that was saved, including a live socket when that run is still going.
   - **Touchpoints:** `frontend/src/lib/execution-link.mjs`, `frontend/src/App.tsx`.

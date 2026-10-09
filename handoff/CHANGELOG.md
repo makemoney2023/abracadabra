@@ -7,7 +7,7 @@
 - **Code touchpoints** — `swarm/src/ai/research-tools.ts`, `swarm/src/ai/agents.ts`, `swarm/src/mcp/client.ts`, `swarm/src/do/WorkflowDO.ts`
 - **Data-flow impact** — A researcher calls search, then fetch, and the observation still contains the source URL. Other node types keep the rest of the portal tools.
 - **API / schema impact** — none.
-- **Verification** — `npm test` in `swarm/`: 36 tests passed. `npx tsc --noEmit` exited 0.
+- **Verification** — `npm test` in `swarm/`: 36 tests passed. `npx tsc --noEmit` exited 0. Worker `agent-swarm-orchestrator` version `a6a8043f-7104-4c1a-bcac-3abb36c04d10`. Portal `abracadabra` still lists `parallel-search` as ready. `handoff-hq` has `MCP_PORTAL_URL` set to `https://mcp.abra-ca-dabra.app/mcp`. The swarm worker still has `SWARM_RUN_SECRET` and the Access service token after deploy.
 
 ## 2026-10-09
 
