@@ -2,6 +2,16 @@
 
 ## 2026-10-09
 
+- **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
+- **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
+- **Code touchpoints** — none. Deploy of `f2735c0`.
+- **Data-flow impact** — none beyond the kanban already merged. `0018_task_position.sql` runs when a worker starts and the `tasks.position` column is missing.
+- **API / schema impact** — none in this change.
+- **Verification** — Worker `handoff-hq` version `acc941ad-edfd-47b5-8d8e-69ef6689ca05` on `hq.abra-ca-dabra.app`. Worker `handoff` version `9d3bf08e-efcb-4423-a6dd-03c5616a4191` on `handoff.abra-ca-dabra.app`. Worker `handoff-agent` version `2dc0f694-e8fc-49fd-81ee-6fd9ffe9413f` on `agent.abra-ca-dabra.app`. `GET /api/health` on the staff and client hosts returned 200 `{\"database\":\"d1\",\"ok\":true}`.
+
+
+## 2026-10-09
+
 - **What changed** — Review fixes for the kanban. Today opens a task with no project on the client Work tab. A refused build keeps the card's stage and clears `done_at`, and does not mark the plan skill done. A finished card that reaches Build leaves Done. The cloud run uses the latest build brief. A card whose project is missing from the client picture is not taken. Adding a task on a selected project chip files it on that project. Paused, done, and cancelled projects stay off the client and studio boards, including finished cards. The Build column shows open cloud runs over the cap. Late, this week, and blocked filters no longer mix in finished cards.
 - **Why** — An end-to-end pass found those gaps against the board plan.
 - **Code touchpoints** — `handoff/src/app/today-view.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/lib/cursor-build.ts`, `handoff/src/db/crm.ts`, `handoff/src/app/work/page.tsx`, `handoff/src/app/work/board.tsx`, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`
