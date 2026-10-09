@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Saving project requirements asks the agent for what each task must produce. That note is stored on the task and shown on the card. Saving again fills a task that only had a title. A project that already has tasks does not get another set of cards when the model renames them.
+- **Why** — The first pass created titles only. The card had no detail.
+- **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/work/board.tsx`
+- **Data-flow impact** — Each new or untitled task gets an `agent.task_brief` activity whose body is the detail and whose `taskId` is the card. The board reads that note with the other agent notes.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 771 tests passed, and the agent worker suite passed 7. `npx eslint` on the planner, the project action, and the board exited 0.
+
+## 2026-10-09
+
 - **What changed** — A schema scan files one office contact with the real email and phone. The page title is not saved as a person. The same phone written three ways counts once. Script versions and map numbers are ignored. A contact that is only that page title is removed on the next scan, and the contact list shows the phone.
 - **Why** — Renew Implants had seventeen contacts named "All-on-4 Dental Implants Ottawa | Renew Implants" and no email. The office address was hidden by Cloudflare, and one phone had been split into many rows.
 - **Code touchpoints** — `handoff/src/lib/contact-signals.ts`, `handoff/src/lib/lead-enrich.ts`, `handoff/src/app/clients/[id]/overview-tab.tsx`

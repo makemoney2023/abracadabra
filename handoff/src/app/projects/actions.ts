@@ -130,10 +130,18 @@ function planMessage(filed: RequirementPlan): string {
     return "Requirements saved. The agent could not read them, so no tasks were added.";
   }
   if (filed.reason !== "added") return "Requirements saved. No new tasks.";
-  const noun = filed.created.length === 1 ? "task" : "tasks";
-  const listed = filed.created.join("; ");
-  const detail = listed.length <= 180 ? `: ${listed}` : ".";
-  return `Requirements saved. Added ${filed.created.length} ${noun}${detail}`;
+  const parts = ["Requirements saved."];
+  if (filed.created.length > 0) {
+    const noun = filed.created.length === 1 ? "task" : "tasks";
+    const listed = filed.created.join("; ");
+    const detail = listed.length <= 180 ? `: ${listed}` : ".";
+    parts.push(`Added ${filed.created.length} ${noun}${detail}`);
+  }
+  if (filed.detailed.length > 0) {
+    const noun = filed.detailed.length === 1 ? "task" : "tasks";
+    parts.push(`Wrote what ${filed.detailed.length} ${noun} must produce.`);
+  }
+  return parts.join(" ");
 }
 
 export async function createMilestoneAction(_previous: FormState, formData: FormData): Promise<FormState> {
