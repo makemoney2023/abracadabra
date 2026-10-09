@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/cursor-build.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/github/queue.ts`, `handoff/cloudflare-worker.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/notifications.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/app/w/[slug]/work/actions.ts`
 - **Data-flow impact** — Build checks the gate, creates a repo when the client has none, then posts a cloud agent. The GitHub queue pulls after it stores the delivery. Publish mails every current member. A revision wakes `changes_requested`.
 - **API / schema impact** — The Cursor API does not take `branchName`. The build brief names the branch. Product mail adds `deliverable.published`.
-- **Verification** — `npm test`, `npm run lint`, and `npm run typecheck:agent` in `handoff/`.
+- **Verification** — `npm test` (568 passed), `npm run lint` (0 errors), and `npm run typecheck:agent` (passed) in `handoff/`.
 
 ## 2026-10-08
 
