@@ -15,6 +15,7 @@ import {
   createWorkflowGroup,
   claimDueWorkflow,
   listClientWorkflows,
+  scheduleTaskSwarm,
   runClientWorkflow,
   workflowTaskPlan,
 } from "./client-workflows";
@@ -704,6 +705,101 @@ describe("client workflows", () => {
       published_version: null,
       copy_text: "Score 40.",
     });
+  });
+
+  it("sends the task brief and files the draft on that project", async () => {
+    const sql = await database();
+    await sql.run("UPDATE projects SET description = ? WHERE id = 'proj-1'", ["A content calendar of social ads."]);
+    await sql.run(
+      `INSERT INTO tasks (id, project_id, organization_id, title, status, stage, created_at, updated_at)
+       VALUES ('task-1', 'proj-1', 'org-1', 'Create content calendar', 'todo', 'run', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO activities (id, organization_id, project_id, kind, actor_kind, body, data_json, created_at)
+       VALUES ('brief-1', 'org-1', 'proj-1', 'agent.task_brief', 'agent', 'Static, carousel, and video posts.', ?, ?)`,
+      [JSON.stringify({ taskId: "task-1" }), NOW],
+    );
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+      ) VALUES ('space-1', 'northwind', 'Northwind', 'Northwind', NULL, 'Abra', 'standard', 1000, 30, 0, 'active', ?, 'org-1', 'proj-1')`,
+      [NOW],
+    );
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Social Media Ads Run",
+      templateId: "pack-community-marketingskills",
+      projectId: "proj-1",
+      dueAt: NOW - 1,
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    await sql.run("UPDATE client_workflows SET task_id = 'task-1' WHERE id = ?", [created.workflow.id]);
+    let brief = "";
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+        const href = String(url);
+        if (href.endsWith("/api/execute")) brief = String(init?.body ?? "");
+        return swarmFetch()(url, init);
+      }) as typeof fetch,
+      wait: async () => {},
+      store: {
+        async stat() {
+          return null;
+        },
+        async read() {
+          return null;
+        },
+        async remove() {},
+        async put() {},
+        async beginUpload() {
+          return "upload-1";
+        },
+        async readUpload() {
+          return null;
+        },
+        async writePart() {},
+        async finishUpload() {},
+      },
+    });
+    expect(result).toMatchObject({ ok: true, taskId: "task-1", projectId: "proj-1" });
+    const sent = JSON.parse(brief) as { input?: string };
+    expect(sent.input).toContain("Create content calendar");
+    expect(sent.input).toContain("Static, carousel, and video posts.");
+    expect(sent.input).toContain("A content calendar of social ads.");
+    expect(sent.input).not.toContain("Scheduled run");
+    const draft = await sql.get<{ project_id: string }>("SELECT project_id FROM deliverables WHERE organization_id = 'org-1'");
+    expect(draft?.project_id).toBe("proj-1");
+    const task = await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = 'task-1'");
+    expect(task?.status).toBe("done");
+  });
+
+  it("copies the task project onto the scheduled swarm", async () => {
+    const sql = await database();
+    const skills = JSON.stringify({
+      templateId: "pack-community-marketingskills",
+      steps: [{ path: ".cursor/skills/community/marketingskills/ad-creative/SKILL.md", status: "todo" }],
+    });
+    await sql.run(
+      `INSERT INTO tasks (id, project_id, organization_id, title, status, stage, skills_json, created_at, updated_at)
+       VALUES ('task-pack', 'proj-1', 'org-1', 'Ad concepts', 'todo', 'describe', ?, ?, ?)`,
+      [skills, NOW, NOW],
+    );
+    const scheduled = await scheduleTaskSwarm(sql, { taskId: "task-pack", now: NOW });
+    expect(scheduled).toMatchObject({ ok: true, none: false });
+    const row = await sql.get<{ project_id: string; template_id: string }>(
+      "SELECT project_id, template_id FROM client_workflows WHERE task_id = 'task-pack'",
+    );
+    expect(row).toEqual({ project_id: "proj-1", template_id: "pack-community-marketingskills" });
   });
 });
 

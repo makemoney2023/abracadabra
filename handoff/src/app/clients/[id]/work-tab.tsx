@@ -3,6 +3,7 @@ import type { BoardActivity, BoardCard, ProjectRow } from "@/db/crm";
 import { ActionField, ActionForm } from "@/components/action-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRelative } from "@/lib/format";
+import type { PackCandidate } from "@/lib/pack-picker";
 import type { SwarmRunRow } from "@/lib/swarm-runs";
 import { WorkBoard } from "../../work/board";
 import { swarmRunLink } from "../../swarm/swarm-link";
@@ -24,6 +25,8 @@ export function WorkTab({
   runsOpen,
   opens,
   unassignedRuns,
+  runningTaskIds = [],
+  packs = [],
 }: {
   organizationId: string;
   projects: ProjectRow[];
@@ -35,6 +38,8 @@ export function WorkTab({
   runsOpen: number;
   opens: { projectId: string | null; open: number }[];
   unassignedRuns: SwarmRunRow[];
+  runningTaskIds?: string[];
+  packs?: PackCandidate[];
 }) {
   const base = tabHref(organizationId, "work");
   const open = (id: string | null) => opens.find((row) => row.projectId === id)?.open ?? 0;
@@ -81,6 +86,8 @@ export function WorkTab({
         runCap={runCap}
         runsOpen={runsOpen}
         activity={activity}
+        runningTaskIds={runningTaskIds}
+        packs={packs}
       />
       <Card>
         <CardHeader>

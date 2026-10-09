@@ -40,6 +40,7 @@ const WORK_TOOLS = new Set([
   "ask_staff",
   "list_repos",
   "run_due_workflow",
+  "running_swarm",
 ]);
 
 const tagField = { type: "string", description: "Limit to one file tag, such as brand or copy." };
@@ -125,6 +126,15 @@ const AGENT_TOOLS = [
         trigger: { type: "string" },
       },
       required: ["organizationId", "packName", "status", "requestId"],
+    },
+  },
+  {
+    name: "running_swarm",
+    description: "The client's newest swarm run that is still going.",
+    inputSchema: {
+      type: "object",
+      properties: { organizationId: organizationField, requestId: { type: "string" } },
+      required: ["organizationId", "requestId"],
     },
   },
   {

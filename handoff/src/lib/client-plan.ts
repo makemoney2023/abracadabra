@@ -29,6 +29,7 @@ type ContextTask = {
   createdAt?: number;
   deliverableId?: string | null;
   skills?: PlanSkill[];
+  templateId?: string | null;
   blockedReason?: string | null;
 };
 
@@ -256,12 +257,13 @@ export async function qualifyLead(input: {
 /** An unpublished document staff can open on Finished work. The client sees it after staff publish. */
 export async function fileSwarmDelivery(
   call: ToolCaller,
-  input: { requestId: string; title: string; body: string },
+  input: { requestId: string; title: string; body: string; projectId?: string | null },
 ): Promise<void> {
   const created = fields(
     await call("create_deliverable", {
       title: input.title.slice(0, 200),
       kind: "document",
+      projectId: input.projectId ?? "",
       requestId: `${input.requestId}:deliverable`,
     }),
   );
@@ -403,6 +405,7 @@ function currentSkill(skills: PlanSkill[]): PlanSkill | undefined {
 
 function eligible(task: ContextTask, answered: number): boolean {
   if (task.status === "done" || task.stage === "build" || task.stage === "run") return false;
+  if (task.templateId?.startsWith("pack-")) return false;
   if (task.status === "blocked" && answered === 0) return false;
   return Boolean(task.id && currentSkill(task.skills ?? []));
 }

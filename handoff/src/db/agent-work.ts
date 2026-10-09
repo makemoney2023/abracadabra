@@ -109,9 +109,39 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
       organizationId: actor.organizationId,
       origin: process.env.SWARM_ORIGIN ?? "",
       now,
+      store: openObjectStore(),
     });
   }
+  if (tool === "running_swarm") return latestRunningSwarm(sql, actor.organizationId);
   throw new AgentWorkError("Unknown tool.");
+}
+
+async function latestRunningSwarm(sql: Sql, organizationId: string): Promise<Record<string, unknown>> {
+  const row = await sql.get<{
+    execution_id: string;
+    template_id: string;
+    name: string;
+    status: string;
+    task_id: string | null;
+    project_id: string | null;
+  }>(
+    `SELECT s.execution_id, s.template_id, s.name, s.status, w.task_id, COALESCE(w.project_id, s.project_id) AS project_id
+     FROM swarm_runs s
+     LEFT JOIN client_workflows w ON w.id = s.workflow_id
+     WHERE s.organization_id = ? AND s.status = 'running' AND s.execution_id != ''
+     ORDER BY s.started_at DESC, s.id DESC
+     LIMIT 1`,
+    [organizationId],
+  );
+  if (!row) return { none: true };
+  return {
+    executionId: row.execution_id,
+    templateId: row.template_id,
+    packName: row.name,
+    status: row.status,
+    taskId: row.task_id ?? "",
+    projectId: row.project_id,
+  };
 }
 
 async function recordSwarmRun(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<{ ok: true }> {
@@ -120,6 +150,7 @@ async function recordSwarmRun(sql: Sql, actor: AgentActor, args: WorkArgs, now: 
   const artifacts = Array.isArray(args.artifacts) ? args.artifacts.filter((item) => typeof item === "string") : [];
   const body = (args.body ?? "").trim().slice(0, 500) || `${packName} ${status}.`;
   const activityKey = (args.activityKey ?? args.requestId ?? "").trim();
+  const executionId = args.executionId?.trim() ?? "";
   await recordAgentRun(sql, {
     organizationId: actor.organizationId,
     kind: "agent.swarm_run",
@@ -130,7 +161,7 @@ async function recordSwarmRun(sql: Sql, actor: AgentActor, args: WorkArgs, now: 
       trigger: args.trigger?.trim() || "lead_created",
       packId: args.packId ?? "",
       packName,
-      executionId: args.executionId ?? "",
+      executionId,
       artifacts,
     },
     now,
@@ -407,10 +438,25 @@ async function taskInOrg(
   return task;
 }
 
+function storedTemplateId(skillsJson: string | null | undefined): string | null {
+  if (!skillsJson) return null;
+  try {
+    const parsed = JSON.parse(skillsJson) as { templateId?: unknown };
+    return typeof parsed.templateId === "string" && parsed.templateId.startsWith("pack-") ? parsed.templateId : null;
+  } catch {
+    return null;
+  }
+}
+
 function skillsJson(current: string | null, skills: unknown): string {
   const next = skillSteps(skills);
   const edges = storedSkillEdges(current);
-  return JSON.stringify(edges.length > 0 ? { ...next, edges } : next);
+  const templateId = storedTemplateId(current);
+  return JSON.stringify({
+    ...next,
+    ...(edges.length > 0 ? { edges } : {}),
+    ...(templateId ? { templateId } : {}),
+  });
 }
 
 async function writeSkillNote(
@@ -595,6 +641,7 @@ async function saveSpaceFile(sql: Sql, actor: AgentActor, args: WorkArgs, now: n
     sql,
     store: openObjectStore(),
     organizationId: actor.organizationId,
+    projectId: args.projectId,
     files: [{ workflow, run, node, body }],
     now,
   });

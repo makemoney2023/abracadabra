@@ -41,6 +41,65 @@ async function deliverable(): Promise<string> {
   return created.deliverableId;
 }
 
+describe("swarm pack on a task", () => {
+  it("keeps the pack id when a skill step is updated", async () => {
+    await sql.run(
+      `INSERT INTO tasks (
+         id, organization_id, title, status, stage, skills_json, created_at, updated_at
+       ) VALUES (
+         'task-pack', 'org-1', 'Calendar', 'todo', 'describe', ?, ?, ?
+       )`,
+      [
+        JSON.stringify({
+          templateId: "pack-community-marketingskills",
+          steps: [{ path: ".cursor/skills/community/marketingskills/ad-creative/SKILL.md", mode: "complete", status: "todo" }],
+          current: 0,
+        }),
+        NOW,
+        NOW,
+      ],
+    );
+    await runAgentWork(
+      sql,
+      { keyId: "key-1", organizationId: "org-1" },
+      "update_task",
+      {
+        requestId: "step",
+        taskId: "task-pack",
+        status: "doing",
+        skills: [{ path: ".cursor/skills/community/marketingskills/ad-creative/SKILL.md", mode: "complete", status: "done" }],
+      },
+      NOW,
+    );
+    const row = await sql.get<{ skills_json: string }>("SELECT skills_json FROM tasks WHERE id = 'task-pack'");
+    expect(JSON.parse(row?.skills_json ?? "{}")).toMatchObject({
+      templateId: "pack-community-marketingskills",
+      current: 1,
+    });
+  });
+
+  it("marks the swarm run finished when the follow-up records it", async () => {
+    await runAgentWork(
+      sql,
+      { keyId: "key-1", organizationId: "org-1" },
+      "record_swarm_run",
+      { requestId: "run-1", packName: "Marketing", status: "running", executionId: "exec-1", trigger: "due" },
+      NOW,
+    );
+    await runAgentWork(
+      sql,
+      { keyId: "key-1", organizationId: "org-1" },
+      "record_swarm_run",
+      { requestId: "run-2", packName: "Marketing", status: "completed", executionId: "exec-1", trigger: "due" },
+      NOW + 1,
+    );
+    const row = await sql.get<{ status: string; finished_at: number | null }>(
+      "SELECT status, finished_at FROM swarm_runs WHERE execution_id = 'exec-1'",
+    );
+    expect(row).toEqual({ status: "completed", finished_at: NOW + 1 });
+  });
+});
+
 describe("agent deliverable items", () => {
   it("stores a pdf path as a file the preview can open", async () => {
     const deliverableId = await deliverable();

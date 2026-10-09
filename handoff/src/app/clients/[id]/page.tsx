@@ -28,6 +28,7 @@ import { presentSchemaLead } from "@/lib/schema-report";
 import { statusToken } from "@/lib/status-token";
 import { connectorGrant } from "@/lib/connector-grants";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
+import { boardSwarmExtras } from "@/lib/board-swarm";
 import { SetContextLabel } from "@/components/context-bar";
 import { PageFrame } from "@/components/page-frame";
 import { StatusDot } from "@/components/status-dot";
@@ -126,6 +127,7 @@ export default async function ClientPage({
     openCloudRunCount(sql, caller),
     listUnassignedSwarmRuns(sql, caller, client.id),
   ]);
+  const swarm = tab === "work" ? await boardSwarmExtras(sql) : { runningTaskIds: [], packs: [] };
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
   const choices = visible?.ok
@@ -185,6 +187,8 @@ export default async function ClientPage({
           deals={deals}
           projects={projects}
           unassignedRuns={unassignedRuns}
+          runningTaskIds={swarm.runningTaskIds}
+          packs={swarm.packs}
           threads={threads}
           readiness={storedCheck ? presentAssessment(storedCheck) : null}
           schema={schemaScan ? presentSchemaLead(schemaScan) : null}

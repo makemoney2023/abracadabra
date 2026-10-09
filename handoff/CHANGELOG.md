@@ -2,6 +2,33 @@
 
 ## 2026-10-09
 
+- **What changed** — Creating a project attaches the client's single loose space and single loose repo. Saving requirements stores one swarm pack on each open card that has none. Run swarm moves that card to Run. A finished swarm files an unpublished document on the project and marks the card done.
+- **Why** — A project row was on the client while the space and repo stayed unassigned, and Describe cards from requirements had no pack, so Run never scheduled a swarm.
+- **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/task-packs.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/work/board.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — `create_project` returns `spaces`, `repos`, `looseSpaces`, and `looseRepos`. A due run whose workflow has a task sends that task's brief. Chat `run_workflow` on a workflow with a task only moves the task to Run.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 809 tests passed, and the agent worker suite passed 7. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Review kept swarm-pack cards out of the work wake, kept the pack id when a step is saved, hid Run swarm once the card is in Run, and files a finished due run into that project's space.
+
+## 2026-10-09
+
+- **What changed** — The manual-project swarm plan now covers attaching the client's space and repo when a project is created.
+- **Why** — `create_project` already stores the client id. It does not set `workspaces.project_id` or `repos.project_id`, so the agent's project can miss the space and the repo that client already has.
+- **Code touchpoints** — `docs/manual-project-swarm-gameplan.md`, `docs/hq-agent-spec.md`, `README.md`
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — none.
+- **Verification** — doc review against `createProject`, `linkRepo`, and `moveDealStage`.
+
+## 2026-10-09
+
+- **What changed** — A gameplan for manual projects: match one swarm pack onto each Describe card, then start that pack from a Run swarm button through the same due run the agent already uses.
+- **Why** — Saving requirements files a brief and no skills, so those cards never schedule a swarm. Chat starts a separate run that does not write the client space.
+- **Code touchpoints** — `docs/manual-project-swarm-gameplan.md`, `docs/hq-agent-spec.md`, `README.md`
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — none.
+- **Verification** — doc review. No tests run.
+
+## 2026-10-09
+
 - **What changed** — HQ chat can list a client's projects. Task lists include the project id. Creating a project with a name that client already has returns that project.
 - **Why** — Chat could see tasks and not the project they belonged to, so it opened a second project, filed one swarm task, and left the original project alone.
 - **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/db/crm.ts`, `handoff/src/agent/hq-chat.ts`

@@ -1,5 +1,6 @@
 import type { Sql } from "@/db/sql";
 import { rulesFromBrief } from "@/lib/channel-plan";
+import { templateOnCard } from "@/lib/swarm-ready";
 
 type ScoreBucket = { total?: unknown; band?: unknown };
 
@@ -299,6 +300,7 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
       deliverableId: task.deliverable_id,
       cursorAgentId: task.cursor_agent_id,
       skills: skillSteps(task.skills_json),
+      templateId: templateOnCard(task.skills_json),
       blockedReason: task.blocked_reason,
       staffNotes: notes.filter((note) => note.task_id === task.id).map((note) => note.body),
     })),

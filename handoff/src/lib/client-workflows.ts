@@ -5,6 +5,8 @@ import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
 import { packTemplateId } from "./pack-templates";
+import { templateOnCard } from "./swarm-ready";
+import { markTaskDone } from "./task-done";
 import type { ObjectStore } from "./store/objects";
 import { saveSwarmRun } from "./swarm-runs";
 import { storeWorkflowOutput } from "./workflow-files";
@@ -311,6 +313,8 @@ export type DueClaim =
       status: string;
       output: string;
       more: boolean;
+      taskId: string | null;
+      projectId: string | null;
     }
   | { ok: false; error: "invalid" | "missing" };
 
@@ -330,12 +334,15 @@ export async function claimDueWorkflow(input: {
     name: string;
     template_id: string;
     every_ms: number | null;
+    task_id: string | null;
+    project_id: string | null;
     org_name: string;
     website: string | null;
     industry: string | null;
     notes: string | null;
   }>(
-    `SELECT w.id, w.name, w.template_id, w.every_ms, o.name AS org_name, o.website, o.industry, o.notes
+    `SELECT w.id, w.name, w.template_id, w.every_ms, w.task_id, w.project_id,
+            o.name AS org_name, o.website, o.industry, o.notes
      FROM client_workflows w
      JOIN organizations o ON o.id = w.organization_id
      WHERE w.organization_id = ?
@@ -346,7 +353,8 @@ export async function claimDueWorkflow(input: {
     [input.organizationId, input.now],
   );
   if (!row) return { ok: true, none: true };
-  const brief = [
+  const taskBrief = row.task_id ? await taskSwarmBrief(input.sql, row.task_id) : "";
+  const brief = taskBrief || [
     leadBrief({ name: row.org_name, website: row.website, packId: row.template_id }),
     row.industry ? `Industry: ${row.industry}` : "",
     row.notes ?? "",
@@ -390,17 +398,39 @@ export async function claimDueWorkflow(input: {
     now: input.now,
   });
   if (!started.ok) return started;
+  const finished =
+    started.status === "completed" && started.output.trim().length > 0 && !started.output.includes("still going");
+  if (row.task_id && started.status === "failed") {
+    await input.sql.run(
+      `INSERT INTO activities (
+         id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at
+       ) VALUES (?, ?, ?, 'agent.swarm_run', 'agent', 'swarm', ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        input.organizationId,
+        row.project_id,
+        started.output.slice(0, 500) || "The swarm failed.",
+        JSON.stringify({ taskId: row.task_id, workflowId: row.id }),
+        input.now,
+      ],
+    );
+  }
   if (input.store && started.status === "completed" && started.output.trim() && !started.output.includes("still going")) {
     await storeWorkflowOutput({
       sql: input.sql,
       store: input.store,
       organizationId: input.organizationId,
+      projectId: row.project_id,
       files: [{ workflow: "swarm", run: started.executionId, node: "result", body: started.output }],
       now: input.now,
     });
     const space = await input.sql.get<{ id: string }>(
-      "SELECT id FROM workspaces WHERE organization_id = ? AND status = 'active' ORDER BY opened_at LIMIT 1",
-      [input.organizationId],
+      `SELECT id FROM workspaces
+       WHERE organization_id = ? AND status = 'active'
+         AND (? IS NULL OR project_id = ? OR project_id IS NULL)
+       ORDER BY CASE WHEN project_id = ? THEN 0 ELSE 1 END, opened_at
+       LIMIT 1`,
+      [input.organizationId, row.project_id, row.project_id, row.project_id],
     );
     if (space) {
       const deliverableId = crypto.randomUUID();
@@ -409,8 +439,8 @@ export async function claimDueWorkflow(input: {
         `INSERT INTO deliverables (
           id, organization_id, project_id, workspace_id, title, kind, status, version,
           source_repo_id, source_ref, published_at, actor_kind, actor_id, created_at, updated_at, published_version
-        ) VALUES (?, ?, NULL, ?, ?, 'document', 'draft', 1, NULL, NULL, NULL, 'agent', 'swarm', ?, ?, NULL)`,
-        [deliverableId, input.organizationId, space.id, title, input.now, input.now],
+        ) VALUES (?, ?, ?, ?, ?, 'document', 'draft', 1, NULL, NULL, NULL, 'agent', 'swarm', ?, ?, NULL)`,
+        [deliverableId, input.organizationId, row.project_id, space.id, title, input.now, input.now],
       );
       await input.sql.run(
         `INSERT INTO deliverable_items (
@@ -419,6 +449,9 @@ export async function claimDueWorkflow(input: {
         [crypto.randomUUID(), deliverableId, started.output],
       );
     }
+  }
+  if (row.task_id && finished) {
+    await markTaskDone(input.sql, { taskId: row.task_id, now: input.now, actor: { kind: "agent", id: "swarm" } });
   }
   const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
   await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
@@ -441,7 +474,26 @@ export async function claimDueWorkflow(input: {
     status: started.status,
     output: started.output,
     more: (rest?.n ?? 0) > 0,
+    taskId: row.task_id,
+    projectId: row.project_id,
   };
+}
+
+async function taskSwarmBrief(sql: Sql, taskId: string): Promise<string> {
+  const task = await sql.get<{ title: string; description: string | null; brief: string | null }>(
+    `SELECT t.title, p.description,
+            (SELECT a.body FROM activities a
+             WHERE a.kind = 'agent.task_brief' AND json_extract(a.data_json, '$.taskId') = t.id
+             ORDER BY a.created_at DESC LIMIT 1) AS brief
+     FROM tasks t
+     LEFT JOIN projects p ON p.id = t.project_id
+     WHERE t.id = ?`,
+    [taskId],
+  );
+  if (!task) return "";
+  return [task.title, task.brief ?? "", task.description ? `Requirements: ${task.description}` : ""]
+    .filter((line) => line.trim().length > 0)
+    .join("\n");
 }
 
 function firstSkillPath(skills: string | null): string {
@@ -464,10 +516,13 @@ export async function scheduleTaskSwarm(
   | { ok: true; none: false; workflowId: string; organizationId: string }
   | { ok: false; error: "missing" }
 > {
-  const task = await sql.get<{ id: string; organization_id: string | null; title: string; skills_json: string | null }>(
-    "SELECT id, organization_id, title, skills_json FROM tasks WHERE id = ?",
-    [input.taskId],
-  );
+  const task = await sql.get<{
+    id: string;
+    organization_id: string | null;
+    project_id: string | null;
+    title: string;
+    skills_json: string | null;
+  }>("SELECT id, organization_id, project_id, title, skills_json FROM tasks WHERE id = ?", [input.taskId]);
   if (!task?.organization_id) return { ok: false, error: "missing" };
   const existing = await sql.get<{ id: string }>(
     "SELECT id FROM client_workflows WHERE task_id = ? ORDER BY created_at LIMIT 1",
@@ -475,12 +530,14 @@ export async function scheduleTaskSwarm(
   );
   if (existing) {
     await sql.run(
-      "UPDATE client_workflows SET next_run_at = ?, scheduled_at = COALESCE(scheduled_at, ?), updated_at = ? WHERE id = ?",
-      [input.now, input.now, input.now, existing.id],
+      `UPDATE client_workflows
+       SET next_run_at = ?, project_id = COALESCE(project_id, ?), scheduled_at = COALESCE(scheduled_at, ?), updated_at = ?
+       WHERE id = ?`,
+      [input.now, task.project_id, input.now, input.now, existing.id],
     );
     return { ok: true, none: false, workflowId: existing.id, organizationId: task.organization_id };
   }
-  const templateId = packTemplateId(firstSkillPath(task.skills_json));
+  const templateId = templateOnCard(task.skills_json) ?? packTemplateId(firstSkillPath(task.skills_json));
   if (!templateId) return { ok: true, none: true };
   const groupRow = await sql.get<{ id: string }>(
     "SELECT id FROM workflow_groups WHERE organization_id = ? ORDER BY created_at LIMIT 1",
@@ -497,6 +554,7 @@ export async function scheduleTaskSwarm(
     groupId,
     name: task.title,
     templateId,
+    projectId: task.project_id,
     dueAt: input.now,
     now: input.now,
   });

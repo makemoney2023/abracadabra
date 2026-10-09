@@ -4,6 +4,7 @@ import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
 import { PageFrame } from "@/components/page-frame";
 import { StaffShell } from "../staff-shell";
+import { boardSwarmExtras } from "@/lib/board-swarm";
 import { WorkBoard } from "./board";
 import { WorkToolbar } from "./filters";
 import { filterWork, workCounts, workHref } from "./query";
@@ -21,7 +22,7 @@ export default async function WorkPage({
   const project = query.project ?? "";
   const { sql, caller } = await requireHqStaffPage();
   const now = clock();
-  const [cards, chips, projects, capRow, runsOpen] = await Promise.all([
+  const [cards, chips, projects, capRow, runsOpen, swarm] = await Promise.all([
     listBoard(sql, caller, {
       organizationId: client || undefined,
       projectId: project && project !== "none" ? project : undefined,
@@ -32,6 +33,7 @@ export default async function WorkPage({
     client ? listProjects(sql, caller, client) : Promise.resolve([]),
     sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
     openCloudRunCount(sql, caller),
+    boardSwarmExtras(sql),
   ]);
   const open = cards.filter((card) => card.status !== "done");
   const counts = workCounts(open, now);
@@ -92,6 +94,8 @@ export default async function WorkPage({
           runCap={Number.isFinite(runCap) ? runCap : null}
           runsOpen={runsOpen}
           activity={activity}
+          runningTaskIds={swarm.runningTaskIds}
+          packs={swarm.packs}
         />
       </PageFrame>
     </StaffShell>

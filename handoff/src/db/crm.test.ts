@@ -39,6 +39,7 @@ import {
   recordFileUploaded,
   recordRequestDone,
   assignRepoProject,
+  assignSpaceProject,
   cleanRepoName,
   linkRepo,
   saveProjectDescription,
@@ -651,6 +652,73 @@ describe("crm pipeline", () => {
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
 describe("projects and work", () => {
+  it("attaches the client's single loose space and repo, and leaves a pair of repos alone", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    await sql.run(
+      `INSERT INTO workspaces (
+         id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+         quota_bytes, retention_days, request_digest, status, opened_at, organization_id
+       ) VALUES (
+         'space-harbor', 'harbor', 'Harbor', 'Harbor', NULL, 'Harbor', 'standard',
+         1000, 30, 0, 'active', ?, ?
+       )`,
+      [NOW, made.value.id],
+    );
+    await sql.run(
+      `INSERT INTO repos (
+         id, github_repo_id, installation_id, full_name, organization_id, project_id,
+         default_branch, is_private, owned_by, linked_by, created_at, archived_at
+       ) VALUES (
+         'repo-harbor', 77, NULL, 'harbor/app', ?, NULL, 'main', 0, 'agency', 'staff-1', ?, NULL
+       )`,
+      [made.value.id, NOW],
+    );
+    const project = await createProject(sql, staff, { organizationId: made.value.id, name: "Site" }, NOW);
+    if (!project.ok) throw new Error("project");
+    const space = await sql.get<{ project_id: string }>("SELECT project_id FROM workspaces WHERE id = 'space-harbor'");
+    const repo = await sql.get<{ project_id: string }>("SELECT project_id FROM repos WHERE id = 'repo-harbor'");
+    expect(space?.project_id).toBe(project.value.id);
+    expect(repo?.project_id).toBe(project.value.id);
+    await sql.run("UPDATE workspaces SET project_id = NULL WHERE id = 'space-harbor'");
+    await sql.run("UPDATE repos SET project_id = NULL WHERE id = 'repo-harbor'");
+    const again = await createProject(sql, staff, { organizationId: made.value.id, name: "site" }, NOW + 1);
+    if (!again.ok) throw new Error("again");
+    expect(again.value.id).toBe(project.value.id);
+    expect((await sql.get<{ project_id: string }>("SELECT project_id FROM workspaces WHERE id = 'space-harbor'"))?.project_id).toBe(
+      project.value.id,
+    );
+    await sql.run(
+      `INSERT INTO repos (
+         id, github_repo_id, installation_id, full_name, organization_id, project_id,
+         default_branch, is_private, owned_by, linked_by, created_at, archived_at
+       ) VALUES
+         ('repo-held', 78, NULL, 'harbor/held', ?, NULL, 'main', 0, 'agency', 'staff-1', ?, NULL),
+         ('repo-two', 79, NULL, 'harbor/two', ?, NULL, 'main', 0, 'agency', 'staff-1', ?, NULL)`,
+      [made.value.id, NOW, made.value.id, NOW],
+    );
+    const second = await createProject(sql, staff, { organizationId: made.value.id, name: "Ads" }, NOW + 2);
+    if (!second.ok) throw new Error("second");
+    expect((await sql.get<{ project_id: string | null }>("SELECT project_id FROM repos WHERE id = 'repo-harbor'"))?.project_id).toBe(
+      project.value.id,
+    );
+    expect((await sql.get<{ project_id: string | null }>("SELECT project_id FROM repos WHERE id = 'repo-held'"))?.project_id).toBeNull();
+    expect((await sql.get<{ project_id: string | null }>("SELECT project_id FROM repos WHERE id = 'repo-two'"))?.project_id).toBeNull();
+    const other = await createOrganization(sql, staff, { name: "Pine" }, NOW);
+    if (!other.ok) throw new Error("other");
+    const pine = await createProject(sql, staff, { organizationId: other.value.id, name: "Pine site" }, NOW);
+    if (!pine.ok) throw new Error("pine");
+    expect(
+      await assignSpaceProject(
+        sql,
+        staff,
+        { organizationId: made.value.id, workspaceId: "space-harbor", projectId: pine.value.id },
+        NOW,
+      ),
+    ).toEqual({ ok: false, error: "invalid" });
+  });
+
   it("hides projects from people who are not staff", async () => {
     const sql = await database();
     const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);

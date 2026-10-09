@@ -3,7 +3,7 @@
 import { ActionField, ActionForm } from "@/components/action-form";
 import { FormDrawer } from "@/components/form-drawer";
 import { Button } from "@/components/ui/button";
-import { assignRepoAction, linkRepoAction, unlinkRepoAction } from "./repo-actions";
+import { assignRepoAction, assignSpaceAction, linkRepoAction, unlinkRepoAction } from "./repo-actions";
 
 const selectClass = "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
@@ -74,6 +74,24 @@ export function UnlinkRepoForm({
         <input type="hidden" name="projectId" value={projectId ?? ""} />
       </ActionForm>
     </FormDrawer>
+  );
+}
+
+export function AssignSpaceForm({
+  organizationId,
+  workspaceId,
+  projectId,
+}: {
+  organizationId: string;
+  workspaceId: string;
+  projectId: string;
+}) {
+  return (
+    <ActionForm action={assignSpaceAction} submitLabel="Assign" pendingLabel="Assigning">
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <input type="hidden" name="workspaceId" value={workspaceId} />
+      <input type="hidden" name="projectId" value={projectId} />
+    </ActionForm>
   );
 }
 

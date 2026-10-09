@@ -842,6 +842,43 @@ export async function projectById(
   );
 }
 
+type LooseHome = { id: string; name: string };
+
+/** Attaches the client's single loose space and single loose repo. Several of either stay loose. */
+export async function attachLooseHome(
+  sql: Sql,
+  organizationId: string,
+  projectId: string,
+): Promise<{ looseSpaces: LooseHome[]; looseRepos: LooseHome[] }> {
+  const spaces = await sql.all<LooseHome>(
+    `SELECT id, display_name AS name FROM workspaces
+     WHERE organization_id = ? AND project_id IS NULL AND status != 'purged'
+     ORDER BY opened_at, id`,
+    [organizationId],
+  );
+  const repos = await sql.all<LooseHome>(
+    `SELECT id, full_name AS name FROM repos
+     WHERE organization_id = ? AND project_id IS NULL AND archived_at IS NULL
+     ORDER BY full_name, id`,
+    [organizationId],
+  );
+  const space = spaces.length === 1 ? spaces[0] : undefined;
+  const repo = repos.length === 1 ? repos[0] : undefined;
+  if (space) {
+    await sql.run("UPDATE workspaces SET project_id = ? WHERE id = ? AND project_id IS NULL", [projectId, space.id]);
+  }
+  if (repo) {
+    await sql.run("UPDATE repos SET project_id = ? WHERE id = ? AND project_id IS NULL AND archived_at IS NULL", [
+      projectId,
+      repo.id,
+    ]);
+  }
+  return {
+    looseSpaces: spaces.length === 1 ? [] : spaces,
+    looseRepos: repos.length === 1 ? [] : repos,
+  };
+}
+
 export async function createProject(
   sql: Sql,
   caller: Caller,
@@ -864,7 +901,10 @@ export async function createProject(
      LIMIT 1`,
     [input.organizationId, name],
   );
-  if (existing) return { ok: true, value: existing };
+  if (existing) {
+    await attachLooseHome(sql, input.organizationId, existing.id);
+    return { ok: true, value: existing };
+  }
   const id = crypto.randomUUID();
   await sql.run(
     `INSERT INTO projects (
@@ -874,6 +914,7 @@ export async function createProject(
   );
   const row = await sql.get<ProjectRow>(`SELECT ${PROJECT_COLUMNS} FROM projects WHERE id = ?`, [id]);
   if (!row) return { ok: false, error: "missing" };
+  await attachLooseHome(sql, input.organizationId, row.id);
   return { ok: true, value: row };
 }
 
@@ -1963,6 +2004,29 @@ export async function unlinkRepo(
   if (!row) return { ok: false, error: "missing" };
   await sql.run("UPDATE repos SET archived_at = ? WHERE id = ?", [now, row.id]);
   return { ok: true, value: { id: row.id } };
+}
+
+/** Point one of this client's spaces at one of this client's projects. */
+export async function assignSpaceProject(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; workspaceId: string; projectId: string | null },
+  now: number,
+): Promise<CrmResult<{ id: string }>> {
+  void now;
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
+  const space = await sql.get<{ id: string }>(
+    "SELECT id FROM workspaces WHERE id = ? AND organization_id = ? AND status != 'purged'",
+    [input.workspaceId, input.organizationId],
+  );
+  if (!space) return { ok: false, error: "missing" };
+  if (input.projectId) {
+    const project = await openProject(sql, input.projectId);
+    if (!project || project.organization_id !== input.organizationId) return { ok: false, error: "invalid" };
+  }
+  await sql.run("UPDATE workspaces SET project_id = ? WHERE id = ?", [input.projectId, space.id]);
+  return { ok: true, value: { id: space.id } };
 }
 
 export async function assignRepoProject(

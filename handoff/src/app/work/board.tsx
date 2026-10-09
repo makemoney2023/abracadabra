@@ -25,7 +25,8 @@ import {
   skillSteps,
   type BoardColumn,
 } from "@/lib/board-model";
-import { moveBoardCardAction } from "./actions";
+import { swarmRunReady } from "@/lib/swarm-ready";
+import { assignTaskPackAction, moveBoardCardAction } from "./actions";
 import type { BoardActivity } from "@/db/crm";
 
 export type WorkBoardCard = {
@@ -142,17 +143,33 @@ function CardFace({
   showClient,
   showProject,
   notes,
+  running,
+  packs,
+  onMove,
 }: {
   card: WorkBoardCard;
   now: number;
   showClient: boolean;
   showProject: boolean;
   notes: BoardActivity[];
+  running: boolean;
+  packs: { id: string; name: string }[];
+  onMove: (taskId: string, column: BoardColumn) => void;
 }) {
   const late = card.due_at !== null && card.due_at < now && card.status !== "done";
   const waiting = card.stage === "build" && card.status === "todo" && !card.cursor_agent_id && !card.blocked_reason;
   const steps = skillSteps(card.skills_json);
   const brief = notes.find((note) => note.kind === "agent.task_brief")?.body;
+  const swarm = swarmRunReady({
+    status: card.status,
+    stage: card.stage,
+    skillsJson: card.skills_json,
+    running,
+  });
+  const packName = packs.find((pack) => pack.id === swarm.templateId)?.name ?? swarm.templateId ?? "";
+  const [packId, setPackId] = useState(packs[0]?.id ?? "");
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const doneSteps = steps.filter((step) => step.status === "done").length;
   const pr =
     card.pr_number && card.repo_full_name ? `https://github.com/${card.repo_full_name}/pull/${card.pr_number}` : "";
@@ -206,6 +223,55 @@ function CardFace({
         </p>
       ) : null}
       {waiting ? <p className="text-xs text-muted-foreground">Waiting for a free cloud run.</p> : null}
+      {card.status !== "done" && swarm.templateId && running ? (
+        <p className="text-xs text-muted-foreground">{packName} is still going.</p>
+      ) : null}
+      {card.status !== "done" && card.stage === "run" && swarm.templateId && !running ? (
+        <p className="text-xs text-muted-foreground">{packName} is scheduled.</p>
+      ) : null}
+      {swarm.ready ? (
+        <Button size="sm" type="button" disabled={pending} onClick={() => onMove(card.id, "run")}>
+          Run swarm
+        </Button>
+      ) : null}
+      {!swarm.templateId && card.status !== "done" && packs.length > 0 ? (
+        <div className="flex items-center gap-2">
+          <select
+            className="h-8 min-w-0 flex-1 rounded-lg border border-input bg-transparent px-2 text-xs"
+            value={packId}
+            onChange={(event) => setPackId(event.target.value)}
+          >
+            {packs.map((pack) => (
+              <option key={pack.id} value={pack.id}>
+                {pack.name}
+              </option>
+            ))}
+          </select>
+          <Button
+            size="sm"
+            type="button"
+            disabled={pending || packId.length === 0}
+            onClick={() => {
+              const data = new FormData();
+              data.set("taskId", card.id);
+              data.set("organizationId", card.organization_id);
+              data.set("projectId", card.project_id ?? "");
+              data.set("templateId", packId);
+              startTransition(async () => {
+                const result = await assignTaskPackAction(data);
+                if (result.ok) {
+                  toast.success(result.message);
+                  router.refresh();
+                  return;
+                }
+                toast.error(result.message);
+              });
+            }}
+          >
+            Choose pack
+          </Button>
+        </div>
+      ) : null}
       {card.run_started_at && card.status === "doing" ? (
         <p className="text-xs text-muted-foreground">Started {formatRelative(card.run_started_at, now)}</p>
       ) : null}
@@ -249,6 +315,8 @@ export function WorkBoard({
   runCap,
   runsOpen,
   activity,
+  runningTaskIds = [],
+  packs = [],
 }: {
   cards: WorkBoardCard[];
   now: number;
@@ -257,6 +325,8 @@ export function WorkBoard({
   runCap: number | null;
   runsOpen: number;
   activity: BoardActivity[];
+  runningTaskIds?: string[];
+  packs?: { id: string; name: string }[];
 }) {
   const columns = boardCards(cards);
   const notes = new Map<string, BoardActivity[]>();
@@ -321,6 +391,9 @@ export function WorkBoard({
                   showClient={showClient}
                   showProject={showProject}
                   notes={notes.get(card.id) ?? []}
+                  running={runningTaskIds.includes(card.id)}
+                  packs={packs}
+                  onMove={dropCard}
                 />
               ))}
             </section>

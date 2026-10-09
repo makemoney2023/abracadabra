@@ -36,6 +36,42 @@ export function packsFromTemplates(payload: unknown): PackCandidate[] {
   return packs;
 }
 
+/** One pack for a task. No overlap returns null. Schema readiness is not a fallback. */
+export function pickTaskPack(text: string, packs: PackCandidate[]): { id: string; name: string } | null {
+  const taskWords = new Set(words(text));
+  let best: { id: string; name: string; score: number } | null = null;
+  for (const pack of packs) {
+    let score = 0;
+    for (const word of words(`${pack.name} ${pack.description}`)) {
+      if (taskWords.has(word)) score += 1;
+    }
+    if (score <= 0) continue;
+    const earlier = best !== null && score === best.score && pack.name.localeCompare(best.name) < 0;
+    if (!best || score > best.score || earlier) best = { id: pack.id, name: pack.name, score };
+  }
+  return best ? { id: best.id, name: best.name } : null;
+}
+
+/** A model reply is a pack id only when that id is in the live list. */
+export function packIdFromModel(raw: string, packs: PackCandidate[]): string | null {
+  const text = raw.trim();
+  const ids = new Set(packs.map((pack) => pack.id));
+  if (ids.has(text)) return text;
+  try {
+    const parsed = JSON.parse(text) as { id?: unknown };
+    if (typeof parsed.id === "string" && ids.has(parsed.id)) return parsed.id;
+  } catch {
+    // The model often returns the id as a sentence.
+  }
+  const match = text.match(/pack-[a-z0-9-]+/i);
+  return match && ids.has(match[0]) ? match[0] : null;
+}
+
+/** The model's id when it is real. Otherwise the word overlap, or null. */
+export function choosePackId(modelText: string, taskText: string, packs: PackCandidate[]): string | null {
+  return packIdFromModel(modelText, packs) ?? pickTaskPack(taskText, packs)?.id ?? null;
+}
+
 /** The pack whose skills match the lead. No overlap keeps the schema readiness pack. */
 export function pickSkillPack(lead: PackLead, packs: PackCandidate[]): { id: string; name: string } {
   const leadWords = new Set(words([lead.industry, lead.notes, lead.name].filter((part) => part && part.trim()).join(" ")));

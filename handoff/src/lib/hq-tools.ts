@@ -4,6 +4,8 @@ import { actionFromLine, applyChannelPlan, dueMillis } from "@/lib/channel-plan"
 import { linkSlackChannel, listWorkRequests, setWorkRequestState, workRequestById } from "@/db/conversations";
 import {
   addNote,
+  assignRepoProject,
+  assignSpaceProject,
   createDraftInvoice,
   completeTask,
   createContact,
@@ -400,8 +402,26 @@ async function perform(
       ),
     );
   }
-  if (tool === "create_project") {
-    return fromCrm(await createProject(sql, caller, { organizationId, name: text(input, "name") }, now));
+  if (tool === "create_project") return createProjectTool(sql, caller, organizationId, text(input, "name"), now);
+  if (tool === "assign_space_project") {
+    return fromCrm(
+      await assignSpaceProject(
+        sql,
+        caller,
+        { organizationId, workspaceId: text(input, "workspaceId"), projectId: text(input, "projectId") || null },
+        now,
+      ),
+    );
+  }
+  if (tool === "assign_repo_project") {
+    return fromCrm(
+      await assignRepoProject(
+        sql,
+        caller,
+        { organizationId, repoId: text(input, "repoId"), projectId: text(input, "projectId") || null },
+        now,
+      ),
+    );
   }
   if (tool === "create_milestone") {
     return fromCrm(await createMilestone(sql, caller, { projectId: text(input, "projectId"), name: text(input, "name") }, now));
@@ -451,7 +471,7 @@ async function perform(
   if (tool === "create_workflow_group") return makeWorkflowGroup(sql, caller, input, now);
   if (tool === "create_workflow") return makeWorkflow(sql, caller, input, now, options);
   if (tool === "assign_workflow") return assignWorkflow(sql, caller, input, now);
-  if (tool === "run_workflow") return runWorkflow(sql, caller, input, now, options.swarm);
+  if (tool === "run_workflow") return runWorkflow(sql, caller, input, now, options);
   return { ok: false, error: "unknown" };
 }
 
@@ -551,19 +571,67 @@ async function assignWorkflow(sql: Sql, caller: Caller, input: Record<string, un
   return { ok: true, value: assigned };
 }
 
+async function projectHome(sql: Sql, organizationId: string, projectId: string) {
+  const [spaces, repos, looseSpaces, looseRepos] = await Promise.all([
+    sql.all<{ id: string; name: string }>(
+      "SELECT id, display_name AS name FROM workspaces WHERE project_id = ? AND status != 'purged' ORDER BY display_name",
+      [projectId],
+    ),
+    sql.all<{ id: string; name: string }>(
+      "SELECT id, full_name AS name FROM repos WHERE project_id = ? AND archived_at IS NULL ORDER BY full_name",
+      [projectId],
+    ),
+    sql.all<{ id: string; name: string }>(
+      `SELECT id, display_name AS name FROM workspaces
+       WHERE organization_id = ? AND project_id IS NULL AND status != 'purged' ORDER BY display_name`,
+      [organizationId],
+    ),
+    sql.all<{ id: string; name: string }>(
+      `SELECT id, full_name AS name FROM repos
+       WHERE organization_id = ? AND project_id IS NULL AND archived_at IS NULL ORDER BY full_name`,
+      [organizationId],
+    ),
+  ]);
+  return { spaces, repos, looseSpaces, looseRepos };
+}
+
+async function createProjectTool(
+  sql: Sql,
+  caller: Caller,
+  organizationId: string,
+  name: string,
+  now: number,
+): Promise<HqToolResult> {
+  const created = await createProject(sql, caller, { organizationId, name }, now);
+  if (!created.ok) return fromCrm(created);
+  return { ok: true, value: { ...created.value, ...(await projectHome(sql, organizationId, created.value.id)) } };
+}
+
 async function runWorkflow(
   sql: Sql,
   caller: Caller,
   input: Record<string, unknown>,
   now: number,
-  swarm: ToolOptions["swarm"],
+  options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const workflowId = text(input, "id");
-  const row = await sql.get<{ organization_id: string; name: string; template_id: string }>(
-    "SELECT organization_id, name, template_id FROM client_workflows WHERE id = ?",
+  const row = await sql.get<{ organization_id: string; name: string; template_id: string; task_id: string | null }>(
+    "SELECT organization_id, name, template_id, task_id FROM client_workflows WHERE id = ?",
     [workflowId],
   );
   if (!row || !(await seenOrg(sql, caller, row.organization_id)) || !caller.userId) return { ok: false, error: "missing" };
+  if (row.task_id) {
+    const moved = await moveTaskStage(sql, {
+      taskId: row.task_id,
+      to: "run",
+      now,
+      actor: { kind: "staff", id: caller.userId },
+      wake: options.wake,
+    });
+    if (!moved.ok) return { ok: false, error: moved.error };
+    return { ok: true, value: { workflowId, taskId: row.task_id, stage: "run" } };
+  }
+  const swarm = options.swarm;
   const origin = swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
   const started = await runClientWorkflow({
     sql,
@@ -600,6 +668,7 @@ async function runWorkflow(
     now,
   });
   if (!started.ok) return { ok: false, error: started.error };
+  if (started.status === "running") await options.wake(row.organization_id, "due");
   await logStaff(
     sql,
     {
