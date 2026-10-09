@@ -68,7 +68,7 @@ Cloudflare's portal has two different controls. This spec uses the second one fo
 ### Portal grant
 
 - **MCP-001.** Listing and toggling use `MCP_PORTAL_URL` with `CF-Access-Client-Id` and `CF-Access-Client-Secret`. An empty URL or a missing header pair returns a configured-empty result and does not call the network.
-- **MCP-002.** List calls MCP `tools/call` on `portal_list_servers`. The parser accepts a JSON array in a text content block, or a JSON object whose `servers` array has the same rows. Each row yields `serverId`, `name`, and `enabled`. `server_id` and `id` both count as the id. A row missing an id is dropped.
+- **MCP-002.** List calls MCP `tools/call` on `portal_list_servers`. The parser accepts a JSON array in a text content block, a JSON object whose `servers` array has the same rows, or the portal's text lines `- Name (server-id): ✓ enabled` and `- Name (server-id): ✗ disabled`. Each row yields `serverId`, `name`, and `enabled`. `server_id` and `id` both count as the id. A row missing an id is dropped.
 - **MCP-003.** Toggle calls `portal_toggle_single_server` with `{ server_id, action }` where `action` is `toggle` to turn on and `untoggle` to turn off. The page then lists again and renders that list.
 - **MCP-004.** A portal error, a non-JSON body, or a response that contains an elicitation URL leaves the previous switch unchanged and returns the portal's message. The page does not redirect staff to that URL.
 - **MCP-005.** Tests use a recorded fixture. They do not call `mcp.abra-ca-dabra.app`.

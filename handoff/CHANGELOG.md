@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The MCP page reads the portal's text server list, so Parallel Search shows as on or off.
+- **Why** — `portal_list_servers` returns lines like `- Parallel Search (parallel-search): ✓ enabled`. The page only accepted JSON, so a linked server rendered as an empty list. The server was also hidden until its Access app allowed the HQ service token.
+- **Code touchpoints** — `handoff/src/lib/portal-session.ts`, `handoff/src/lib/portal-session.test.ts`
+- **Data-flow impact** — `/mcp` lists the servers that grant can see. Turning one on or off still calls `portal_toggle_single_server`.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/portal-session.test.ts`. Live `portal_list_servers` with the service token returned Parallel Search enabled after the Access policy.
+
+## 2026-10-09
+
 - **What changed** — Creating a project attaches the client's single loose space and single loose repo. Saving requirements stores one swarm pack on each open card that has none. Run swarm moves that card to Run. A finished swarm files an unpublished document on the project and marks the card done.
 - **Why** — A project row was on the client while the space and repo stayed unassigned, and Describe cards from requirements had no pack, so Run never scheduled a swarm.
 - **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/task-packs.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/work/board.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/agent/worker.ts`

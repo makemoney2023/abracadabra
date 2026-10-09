@@ -71,6 +71,33 @@ describe("portal session", () => {
     });
   });
 
+  it("parses the portal's text list of enabled and disabled servers", async () => {
+    const fetchImpl = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { method?: string };
+      if (body.method === "initialize") return rpc({ jsonrpc: "2.0", id: "init-1", result: {} });
+      if (body.method === "notifications/initialized") return new Response(null, { status: 202 });
+      return toolResult(
+        [
+          "Available MCP Servers:",
+          "",
+          "- Parallel Search (parallel-search): ✓ enabled",
+          "- Search Console (search-console): ✗ disabled",
+          "",
+          "Use portal_toggle_single_server to enable/disable a specific server.",
+        ].join("\n"),
+      );
+    });
+    const result = await listPortalServers(env, fetchImpl as typeof fetch);
+    expect(result).toEqual({
+      ok: true,
+      configured: true,
+      servers: [
+        { serverId: "parallel-search", name: "Parallel Search", enabled: true },
+        { serverId: "search-console", name: "Search Console", enabled: false },
+      ],
+    });
+  });
+
   it("turns a server off, and treats an authorize URL as a failed toggle", async () => {
     const calls: { name?: string; arguments?: unknown }[] = [];
     const fetchImpl = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
