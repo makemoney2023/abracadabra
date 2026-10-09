@@ -6,7 +6,7 @@
     "nodes": [
       {
         "id": "pack-community-academic-research-skills-1",
-        "type": "researcher",
+        "type": "writer",
         "name": "academic-paper",
         "instructions": "Follow .cursor/skills/community/academic-research-skills/academic-paper/SKILL.md. 12-agent academic paper writing pipeline. 11 modes (full/plan/outline/revision/revision-coach/abstract/lit-review/format-convert/citation-check/disclosure/rebuttal-audit). 6 paper types, 5 citation formats, bilingual abstracts, LaTeX/DOCX-via-Pandoc/PDF output. Style Calibration",
         "position": {
@@ -26,7 +26,7 @@
       },
       {
         "id": "pack-community-academic-research-skills-3",
-        "type": "researcher",
+        "type": "writer",
         "name": "academic-pipeline",
         "instructions": "Follow .cursor/skills/community/academic-research-skills/academic-pipeline/SKILL.md. Orchestrator for the full academic research pipeline: research -> write -> integrity check -> review -> revise -> re-review -> re-revise -> final integrity check -> finalize. Coordinates deep-research, academic-paper, and academic-paper-reviewer into a seamless 10-stage workflow",
         "position": {
@@ -198,7 +198,7 @@
     "nodes": [
       {
         "id": "pack-community-awesome-claude-corporate-skills-11-customer-success-1",
-        "type": "critic",
+        "type": "writer",
         "name": "churn-analysis",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/11-customer-success/churn-analysis/SKILL.md. Analyze customer churn patterns, identify at-risk accounts, create retention playbooks, and build early warning systems",
         "position": {
@@ -272,7 +272,7 @@
       },
       {
         "id": "pack-community-awesome-claude-corporate-skills-10-data-analytics-2",
-        "type": "researcher",
+        "type": "writer",
         "name": "data-context-extractor",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/10-data-analytics/data-context-extractor/SKILL.md. Generate or improve a company-specific data analysis skill by extracting tribal knowledge from analysts. BOOTSTRAP MODE - Triggers: \"Create a data context skill\", \"Set up data analysis for our warehouse\", \"Help me create a skill for our database\", \"Generate a data skill for [comp",
         "position": {
@@ -326,7 +326,7 @@
     "nodes": [
       {
         "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-1",
-        "type": "editor",
+        "type": "writer",
         "name": "docx",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/13-document-processing/docx/SKILL.md. Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page n",
         "position": {
@@ -356,7 +356,7 @@
       },
       {
         "id": "pack-community-awesome-claude-corporate-skills-13-document-processing-4",
-        "type": "editor",
+        "type": "writer",
         "name": "xlsx",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/13-document-processing/xlsx/SKILL.md. Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); cre",
         "position": {
@@ -390,7 +390,7 @@
     "nodes": [
       {
         "id": "pack-community-awesome-claude-corporate-skills-01-executive-leadership-1",
-        "type": "critic",
+        "type": "summarizer",
         "name": "board-meeting-prep",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/01-executive-leadership/board-meeting-prep/SKILL.md. ACTIVATE when preparing for board meetings, creating board decks, drafting board materials, developing executive summaries for directors, writing talking points, crafting board agendas, addressing governance matters, preparing for investor questions, or managing board communicati",
         "position": {
@@ -464,7 +464,7 @@
       },
       {
         "id": "pack-plugins-figma-2",
-        "type": "critic",
+        "type": "writer",
         "name": "figma-create-new-file",
         "instructions": "Follow .cursor/skills/plugins/figma/figma-create-new-file/SKILL.md. **MANDATORY prerequisite** — you MUST invoke this skill BEFORE every `create_new_file` tool call. NEVER call `create_new_file` directly without loading this skill first. Trigger whenever the user wants a new blank Figma file — a new design, FigJam, or Slides file — or when you ne",
         "position": {
@@ -474,7 +474,7 @@
       },
       {
         "id": "pack-plugins-figma-3",
-        "type": "critic",
+        "type": "writer",
         "name": "figma-design-to-code",
         "instructions": "Follow .cursor/skills/plugins/figma/figma-design-to-code/SKILL.md. **MANDATORY prerequisite** — you MUST invoke this skill BEFORE calling the `get_design_context` Figma MCP tool. You MUST trigger this skill whenever the user wants to implement, build, port, or code up a Figma design as code. Example prompts (not exhaustive) are 'implement this F",
         "position": {
@@ -484,7 +484,7 @@
       },
       {
         "id": "pack-plugins-figma-4",
-        "type": "researcher",
+        "type": "writer",
         "name": "figma-generate-design",
         "instructions": "Follow .cursor/skills/plugins/figma/figma-generate-design/SKILL.md. Use this skill alongside figma-use when the task involves translating an application page, view, or multi-section layout into Figma. Triggers: 'write to Figma', 'create in Figma from code', 'push page to Figma', 'take this app/page and build it in Figma', 'create a screen', 'buil",
         "position": {
@@ -808,7 +808,7 @@
     "nodes": [
       {
         "id": "pack-community-awesome-claude-corporate-skills-06-legal-compliance-1",
-        "type": "researcher",
+        "type": "writer",
         "name": "canned-responses",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/06-legal-compliance/canned-responses/SKILL.md. Generate templated responses for common legal inquiries and identify when situations require individualized attention. Use when responding to routine legal questions — data subject requests, vendor inquiries, NDA requests, discovery holds — or when managing response templates.",
         "position": {
@@ -882,7 +882,7 @@
       },
       {
         "id": "pack-community-awesome-claude-corporate-skills-04-marketing-2",
-        "type": "researcher",
+        "type": "writer",
         "name": "brand-voice-enforcement",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/04-marketing/brand-voice-enforcement/SKILL.md. This skill applies brand guidelines to content creation. It should be used when the user asks to \"write an email\", \"draft a proposal\", \"create a pitch deck\", \"write a LinkedIn post\", \"draft a presentation\", \"write a Slack message\", \"draft sales content\", or any content creation r",
         "position": {
@@ -892,7 +892,7 @@
       },
       {
         "id": "pack-community-awesome-claude-corporate-skills-04-marketing-3",
-        "type": "publisher",
+        "type": "writer",
         "name": "campaign-planner",
         "instructions": "Follow .cursor/skills/community/awesome-claude-corporate-skills/04-marketing/campaign-planner/SKILL.md. Plan comprehensive marketing campaigns from strategy through execution. Develop campaign briefs, select optimal channels, create timelines, allocate budgets, define targeting parameters, design A/B testing strategies, and establish performance measurement frameworks.",
         "position": {
@@ -946,7 +946,7 @@
       },
       {
         "id": "pack-community-marketingskills-2",
-        "type": "critic",
+        "type": "writer",
         "name": "ad-creative",
         "instructions": "Follow .cursor/skills/community/marketingskills/ad-creative/SKILL.md. When the user wants to generate, iterate, or scale ad creative — headlines, descriptions, primary text, or full ad variations — for any paid advertising platform. Also use when the user mentions 'ad copy variations,' 'ad creative,' 'generate headlines,' 'RSA headlines,' 'bulk ad",
         "position": {
@@ -1010,7 +1010,7 @@
       },
       {
         "id": "pack-community-notfair-seo-2",
-        "type": "researcher",
+        "type": "writer",
         "name": "content-planner",
         "instructions": "Follow .cursor/skills/community/notfair-seo/content-planner/SKILL.md. GSC-driven content calendar. Pulls real Search Console data, finds the highest click-potential opportunities (striking-distance queries at positions 5-20, unanswered query intent, related-keyword expansions), and produces a dated, prioritized content calendar — ready to hand to /",
         "position": {
@@ -1020,7 +1020,7 @@
       },
       {
         "id": "pack-community-notfair-seo-3",
-        "type": "researcher",
+        "type": "writer",
         "name": "content-writer",
         "instructions": "Follow .cursor/skills/community/notfair-seo/content-writer/SKILL.md. Write SEO-optimized blog posts, landing pages, and content improvements following Google's E-E-A-T and Helpful Content guidelines. Handles new content creation from a keyword or topic, and improving existing pages. Use when asked to \"write a blog post\", \"create a landing page\", \"",
         "position": {
@@ -1458,7 +1458,7 @@
       },
       {
         "id": "pack-plugins-stripe-2",
-        "type": "critic",
+        "type": "writer",
         "name": "stripe-best-practices",
         "instructions": "Follow .cursor/skills/plugins/stripe/stripe-best-practices/SKILL.md. Guides Stripe integration decisions — API selection (Checkout Sessions vs PaymentIntents), Connect platform setup (Accounts v2, controller properties), billing/subscriptions, Treasury financial accounts, integration surfaces (Checkout, Payment Element), migrating from deprecated",
         "position": {
@@ -1522,7 +1522,7 @@
       },
       {
         "id": "pack-plugins-supabase-2",
-        "type": "critic",
+        "type": "writer",
         "name": "supabase-postgres-best-practices",
         "instructions": "Follow .cursor/skills/plugins/supabase/supabase-postgres-best-practices/SKILL.md. Postgres performance optimization and best practices from Supabase. Use this skill when writing, reviewing, or optimizing Postgres queries, schema designs, or database configurations.",
         "position": {
@@ -1610,7 +1610,7 @@
     "nodes": [
       {
         "id": "pack-community-ui-ux-pro-max-skill-1",
-        "type": "editor",
+        "type": "writer",
         "name": "banner-design",
         "instructions": "Follow .cursor/skills/community/ui-ux-pro-max-skill/banner-design/SKILL.md. Design banners for social media, ads, website heroes, creative assets, and print. Multiple art direction options with AI-generated visuals. Actions: design, create, generate banner. Platforms: Facebook, Twitter/X, LinkedIn, YouTube, Instagram, Google Display, website hero, print.",
         "position": {
@@ -1748,7 +1748,7 @@
       },
       {
         "id": "pack-community-visual-skills-2",
-        "type": "researcher",
+        "type": "writer",
         "name": "video",
         "instructions": "Follow .cursor/skills/community/visual-skills/video/SKILL.md. Use this skill whenever the user asks to create, improve, audit, or split prompts for AI video generators (Seedance, Kling, Veo, Runway, Luma, Pika, Sora, any image-to-video system). The skill also covers storyboards, shot lists, director treatments, dynamic montage, multi-clip s",
         "position": {
