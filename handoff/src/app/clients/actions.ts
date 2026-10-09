@@ -16,6 +16,7 @@ import {
   type OrgKind,
 } from "@/db/crm";
 import { recordStaffReply, workRequestById } from "@/db/conversations";
+import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requireHqStaffPage } from "@/lib/current";
 import { runHqTool } from "@/lib/hq-tools";
 import { sendHandoffMail } from "@/lib/mail";
@@ -42,6 +43,29 @@ export async function createClientAction(_previous: FormState, formData: FormDat
   );
   if (!created.ok) return { message: CRM_ERRORS[created.error] };
   redirect(`/clients/${created.value.id}`);
+}
+
+export async function createClientDrawerAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const name = String(formData.get("name") ?? "").trim();
+  const website = String(formData.get("website") ?? "").trim();
+  const created = await createOrganization(
+    sql,
+    caller,
+    { name, website, kind: kindOf(formData.get("kind")) },
+    Date.now(),
+  );
+  if (!created.ok) {
+    if (created.error === "taken") return fail(CRM_ERRORS.taken, "website");
+    if (created.error === "invalid") return fail(CRM_ERRORS.invalid, name.length < 1 ? "name" : "website");
+    return fail(CRM_ERRORS[created.error]);
+  }
+  revalidatePath("/clients");
+  revalidatePath("/");
+  return ok("Client added.");
 }
 
 export async function linkSpaceAction(_previous: FormState, formData: FormData): Promise<FormState> {

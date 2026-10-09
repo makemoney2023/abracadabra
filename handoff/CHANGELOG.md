@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The HQ clients list is a table with search, sort, health, owner, open work, next step, and last activity. New client opens in a drawer. `/clients/new` stays a short page.
+- **Why** — The old list was a stack of buttons with no way to see who needed work.
+- **Code touchpoints** — `handoff/src/lib/client-rows.ts`, `handoff/src/app/clients/page.tsx`, `handoff/src/app/clients/new/page.tsx`, `handoff/src/app/clients/client-form.tsx`, `handoff/src/app/clients/actions.ts`
+- **Data-flow impact** — The list joins organizations, open tasks, projects, deals, the latest health note, and the latest activity.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/client-rows.test.ts`. Full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ Today opens with a greeting, five counts, a needs-you list, and a timeline of leads, clients, and agent runs.
 - **Why** — The old Today page was a stack of cards with no counts and no way to see what to do first.
 - **Code touchpoints** — `handoff/src/app/today-view.ts`, `handoff/src/app/today-screen.tsx`, `handoff/src/app/today-controls.tsx`, `handoff/src/app/page.tsx`, `handoff/src/app/hq-home.tsx`
