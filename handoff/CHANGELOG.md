@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/staff-links.ts`, `handoff/src/app/staff-nav.tsx`, `handoff/src/app/staff-shell.tsx`
 - **Data-flow impact** — none.
 - **API / schema impact** — none.
-- **Verification** — `npx vitest run src/app/staff-links.test.ts` (5 passed). `npx tsc --noEmit` next.
+- **Verification** — `npx vitest run src/app/staff-links.test.ts` (5 passed). `npx tsc --noEmit` passed. `npx eslint` on the touched app files passed.
 
 ## 2026-10-08
 
