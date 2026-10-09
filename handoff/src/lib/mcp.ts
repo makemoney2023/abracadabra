@@ -100,7 +100,7 @@ const AGENT_TOOLS = [
   },
   {
     name: "store_scan_context",
-    description: "Store the latest schema scan's scraped pages as knowledge context in the client space.",
+    description: "Store the latest schema scan's scraped pages as knowledge context in the client space. Returns the client's existing file-space context for the swarm brief.",
     inputSchema: {
       type: "object",
       properties: { organizationId: organizationField, requestId: { type: "string" } },

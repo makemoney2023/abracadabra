@@ -8,7 +8,7 @@ import { sqliteSql, type Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
 import { searchSpace } from "@/lib/knowledge";
 import { localObjectStore, type ObjectStore } from "@/lib/store/objects";
-import { readinessContextFiles, storeScanContext } from "./scan-context";
+import { clientSpaceContext, readinessContextFiles, storeScanContext } from "./scan-context";
 
 const NOW = 1_700_000_000_000;
 
@@ -182,6 +182,42 @@ describe("schema context", () => {
     );
     expect(opened?.slug.startsWith("northwind-")).toBe(true);
     expect(opened?.slug).not.toBe("northwind");
+  });
+
+  it("reads the filed scrape back as context for the next swarm run", async () => {
+    await sql.run(
+      `INSERT INTO readiness_scans (id, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('scan-5', 'complete', 'org-1', 33, ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+       VALUES ('page-5', 'scan-5', 'https://northwind.example/', 'home', '["Organization"]', ?)`,
+      [JSON.stringify({ scrapedText: "We sell foam to shipyards." })],
+    );
+    await storeScanContext({ sql, store, organizationId: "org-1", now: NOW });
+    const context = await clientSpaceContext(sql, "org-1");
+    expect(context).toContain("Existing client context");
+    expect(context).toContain("agent/schema/scan-5/");
+    expect(context).toContain("We sell foam to shipyards.");
+    expect(await clientSpaceContext(sql, "org-2")).toBe("");
+  });
+
+  it("caps the context it reads from the space", async () => {
+    await sql.run(
+      `INSERT INTO readiness_scans (id, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('scan-6', 'complete', 'org-1', 33, ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+       VALUES ('page-6', 'scan-6', 'https://northwind.example/', 'home', '[]', ?)`,
+      [JSON.stringify({ scrapedText: "foam ".repeat(4000) })],
+    );
+    await storeScanContext({ sql, store, organizationId: "org-1", now: NOW });
+    const context = await clientSpaceContext(sql, "org-1", 500);
+    expect(context.length).toBeLessThanOrEqual(500);
+    expect(context).toContain("foam");
   });
 
   it("stores nothing when the client has no finished scan", async () => {

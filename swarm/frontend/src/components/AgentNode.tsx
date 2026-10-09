@@ -1,7 +1,6 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import {
-  Brain,
   ChevronDown,
   ChevronUp,
   FileEdit,
@@ -50,23 +49,9 @@ const STATUS_VARIANT: Record<NodeStatus, 'idle' | 'running' | 'success' | 'error
 
 function AgentNodeInner({ data, selected }: NodeProps<AgentNodeData>) {
   const [expanded, setExpanded] = useState(false);
-  const [memoryCount, setMemoryCount] = useState(0);
 
   const meta = AGENT_META[data.agentType] ?? AGENT_META.researcher;
   const Icon = ICONS[meta.icon as keyof typeof ICONS] ?? Search;
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/memory?agentType=' + data.agentType)
-      .then((r) => r.json())
-      .then((mem) => {
-        if (!cancelled) setMemoryCount(mem.entries ? mem.entries.length : 0);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [data.agentType, data.status]);
 
   return (
     <Card
@@ -87,12 +72,6 @@ function AgentNodeInner({ data, selected }: NodeProps<AgentNodeData>) {
           <div className="truncate text-sm font-semibold leading-none">{data.name}</div>
           <div className="mt-1 flex items-center gap-1.5">
             <span className="text-[11px] text-muted-foreground">{meta.name}</span>
-            {memoryCount > 0 && (
-              <Badge variant="secondary" className="h-4 gap-0.5 px-1 text-[10px]">
-                <Brain className="h-2.5 w-2.5" />
-                {memoryCount}
-              </Badge>
-            )}
             {(data.toolsUsed?.length ?? 0) > 0 && (
               <Badge
                 variant="secondary"

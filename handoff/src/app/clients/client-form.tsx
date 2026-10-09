@@ -36,7 +36,7 @@ export function NewClientDrawer() {
   return (
     <FormDrawer
       title="New client"
-      description="Add the company. You can link a file space after that."
+      description="Add the company. We open a file space and start the same website check a lead gets."
       trigger={<Button>New client</Button>}
     >
       <ActionForm action={createClientDrawerAction} submitLabel="Add a client" pendingLabel="Adding">

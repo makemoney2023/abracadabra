@@ -13,6 +13,7 @@ import type {
   WorkspaceLink,
 } from "@/db/crm";
 import type { SchemaLeadView } from "@/lib/schema-report";
+import type { SwarmRunRow } from "@/lib/swarm-runs";
 import { ActivityTab } from "./activity-tab";
 import { FilesTab } from "./files-tab";
 import { OverviewTab } from "./overview-tab";
@@ -41,6 +42,7 @@ export function ClientBody({
   repos,
   deals,
   projects,
+  unassignedRuns,
   threads,
   readiness,
   schema,
@@ -67,6 +69,7 @@ export function ClientBody({
   repos: LinkedRepo[];
   deals: DealCard[];
   projects: ProjectRow[];
+  unassignedRuns: SwarmRunRow[];
   threads: ClientThread[];
   readiness: AssessmentView | null;
   schema: SchemaLeadView | null;
@@ -87,6 +90,7 @@ export function ClientBody({
         runCap={runCap}
         runsOpen={runsOpen}
         opens={opens}
+        unassignedRuns={unassignedRuns}
       />
     );
   }

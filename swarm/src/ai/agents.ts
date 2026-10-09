@@ -1,5 +1,10 @@
 import type { AgentType } from '../types';
 import { formatToolsForPrompt, parseToolCalls, type McpToolDef } from '../mcp/client';
+import type { LoadedSkill } from './skills';
+
+/** Workers AI defaults to 256 output tokens, which truncates skill deliverables. */
+export const MAX_OUTPUT_TOKENS = 4096;
+const MAX_OUTPUT_CHARS = 16000;
 
 interface AgentRunOptions {
   input: string;
@@ -11,6 +16,8 @@ interface AgentRunOptions {
   executeTool?: (serverId: string, tool: string, args: Record<string, unknown>) => Promise<string>;
   onToolEvent?: (e: { server: string; tool: string; phase: 'call' | 'result'; summary?: string }) => void;
   maxToolRounds?: number;
+  /** Full skill body loaded from R2 when the node's instructions reference a SKILL.md. */
+  skill?: LoadedSkill | null;
 }
 
 export interface AgentResult {
@@ -37,7 +44,7 @@ function extractToken(parsed: any): string {
 }
 
 async function runModelStream(model: string, messages: any[], env: any, onToken?: (token: string) => void): Promise<string> {
-  const stream = await env.AI.run(model, { messages, stream: true });
+  const stream = await env.AI.run(model, { messages, stream: true, max_tokens: MAX_OUTPUT_TOKENS });
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let fullOutput = '';
@@ -69,7 +76,7 @@ async function runModelStream(model: string, messages: any[], env: any, onToken?
 }
 
 async function runModelOnce(model: string, messages: any[], env: any): Promise<string> {
-  const response = await env.AI.run(model, { messages });
+  const response = await env.AI.run(model, { messages, max_tokens: MAX_OUTPUT_TOKENS });
   const output = extractToken(response)?.trim();
   if (!output) {
     throw new Error(`Model ${model} returned no output.`);
@@ -77,7 +84,7 @@ async function runModelOnce(model: string, messages: any[], env: any): Promise<s
   return output;
 }
 export async function runAgent(type: AgentType, options: AgentRunOptions, env: any): Promise<AgentResult> {
-  const { input, instructions, name, onToken } = options;
+  const { input, instructions, name, onToken, skill } = options;
 
   if (!env || !env.AI) {
     throw new Error('Workers AI binding is not available.');
@@ -86,9 +93,9 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
   const tools = options.mcpTools ?? [];
   const canUseTools = tools.length > 0 && typeof options.executeTool === 'function';
 
-  const systemPrompt = buildSystemPrompt(type, name, instructions)
+  const systemPrompt = buildSystemPrompt(type, name, instructions, skill)
     + (canUseTools ? buildToolPrompt(tools) : '');
-  const userPrompt = buildUserPrompt(type, input);
+  const userPrompt = buildUserPrompt(type, input, skill);
 
   // Fast path: no tools — preserve the original stream-first behavior.
   if (!canUseTools) {
@@ -102,7 +109,7 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
       try {
         const streamed = await runModelStream(model, messages, env, onToken);
         if (streamed) {
-          return { output: streamed.slice(0, 8000), toolsUsed: [] };
+          return { output: streamed.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
         }
       } catch (error) {
         lastError = error;
@@ -110,7 +117,7 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
 
       try {
         const output = await runModelOnce(model, messages, env);
-        return { output: output.slice(0, 8000), toolsUsed: [] };
+        return { output: output.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
       } catch (error) {
         lastError = error;
       }
@@ -203,7 +210,7 @@ async function runOnceChain(messages: { role: string; content: string }[], env: 
   for (const model of MODELS) {
     try {
       const output = await runModelOnce(model, messages, env);
-      if (output) return output.slice(0, 8000);
+      if (output) return output.slice(0, MAX_OUTPUT_CHARS);
     } catch (error) {
       lastError = error;
     }
@@ -214,7 +221,7 @@ async function runOnceChain(messages: { role: string; content: string }[], env: 
 /** Strip leaked tool-call blocks, cap length, and stream to the UI in chunks. */
 function finalize(text: string, onToken?: (token: string) => void): string {
   const clean = text.replace(/\[TOOL_CALL\][\s\S]*?\[\/TOOL_CALL\]/g, '').trim() || text.trim();
-  const output = clean.slice(0, 8000);
+  const output = clean.slice(0, MAX_OUTPUT_CHARS);
   if (onToken) {
     for (let i = 0; i < output.length; i += 48) {
       onToken(output.slice(i, i + 48));
@@ -240,7 +247,7 @@ Rules:
 - When you have enough information, write your FINAL answer as normal prose (no [TOOL_CALL] blocks). Weave tool results into the answer naturally.`;
 }
 
-function buildSystemPrompt(type: AgentType, name: string, instructions: string): string {
+export function buildSystemPrompt(type: AgentType, name: string, instructions: string, skill?: LoadedSkill | null): string {
   const roleMap: Record<AgentType, string> = {
     researcher: 'an expert researcher who gathers and synthesizes information',
     writer: 'a skilled writer who creates clear, engaging content',
@@ -249,6 +256,23 @@ function buildSystemPrompt(type: AgentType, name: string, instructions: string):
     critic: 'a constructive critic who identifies weaknesses and opportunities',
     summarizer: 'a concise summarizer who distills complex information',
   };
+
+  if (skill) {
+    return `You are ${name}, ${roleMap[type]}. ${instructions}
+
+You are executing the skill below (${skill.path}). It is your operating procedure, not reference material.
+
+<skill>
+${skill.body}
+</skill>
+
+Rules:
+- Execute every step of the skill, in order, against the brief and upstream input you receive
+- Produce the skill's actual deliverables (with the formats, platform specs, limits, and checks it requires) — never summarize, paraphrase, or describe the skill
+- Ground every angle, claim, and example in specifics from the brief (audience, pain points, offer, constraints); no generic placeholders
+- Where the skill requires checks (e.g. character limits), show the check results
+- Return only the deliverables, no meta-commentary`;
+  }
 
   return `You are ${name}, ${roleMap[type]}. ${instructions}
 
@@ -259,7 +283,11 @@ Rules:
 - Return only your final output, no meta-commentary`;
 }
 
-function buildUserPrompt(type: AgentType, input: string): string {
+export function buildUserPrompt(type: AgentType, input: string, skill?: LoadedSkill | null): string {
+  if (skill) {
+    return `Execute the skill step by step on the following input and produce its complete deliverables:\n\n${input}`;
+  }
+
   const actionMap: Record<AgentType, string> = {
     researcher: 'Research the following topic and provide comprehensive findings:',
     writer: 'Write content based on the following input:',

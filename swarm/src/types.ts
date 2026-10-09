@@ -78,7 +78,8 @@ export interface WSMessage {
 }
 
 export interface AgentMemory {
-  agentType: AgentType;
+  /** `${workflowId}:${nodeId}` — see ai/memory.ts memoryKey. */
+  key: string;
   entries: MemoryEntry[];
 }
 

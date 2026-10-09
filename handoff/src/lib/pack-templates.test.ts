@@ -73,6 +73,24 @@ describe("pack templates", () => {
     ]);
   });
 
+  it("types a generation skill as a writer even when its text mentions review words", () => {
+    const templates = packTemplatesFromCatalog([
+      {
+        name: "ad-creative",
+        description: "When the user wants to generate ad creative — headlines and RSA copy. Check platform limits.",
+        path: "community/marketingskills/ad-creative/SKILL.md",
+      },
+      {
+        name: "page-cro",
+        description: "Review a landing page for conversion issues.",
+        path: "community/marketingskills/page-cro/SKILL.md",
+      },
+    ]);
+    const nodes = templates[0]?.nodes ?? [];
+    expect(nodes.find((node) => node.name === "ad-creative")?.type).toBe("writer");
+    expect(nodes.find((node) => node.name === "page-cro")?.type).toBe("critic");
+  });
+
   it("maps a task skill path to the live pack id", () => {
     expect(packTemplateId(".cursor/skills/community/marketingskills/ad-creative/SKILL.md")).toBe(
       "pack-community-marketingskills",

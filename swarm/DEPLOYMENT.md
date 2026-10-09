@@ -21,7 +21,10 @@ npx wrangler login
 # 3. Create the R2 bucket (first time only, per account)
 npx wrangler r2 bucket create agent-swarm-artifacts
 
-# 4. Build the UI and deploy everything
+# 4. Publish skills to the handoff-skills bucket (skill-pack nodes load full SKILL.md from it)
+(cd ../handoff && npm run publish:skills)
+
+# 5. Build the UI and deploy everything
 npm run deploy
 ```
 
@@ -32,6 +35,7 @@ npm run deploy
 | `agent-swarm-orchestrator` | Worker | Main application server |
 | `WorkflowDO` | Durable Object | Workflow state, execution engine, WebSocket coordinator |
 | `agent-swarm-artifacts` | R2 Bucket | Output artifacts storage |
+| `handoff-skills` (`SKILLS`) | R2 Bucket (shared with Handoff) | Full skill bodies loaded by skill-pack nodes |
 | `AI` | Workers AI Binding | Llama 3.1 8B model access |
 
 ## Architecture
@@ -67,7 +71,21 @@ npm run deploy
 
 ## Environment Variables
 
-No secrets needed — Workers AI and R2 are bound via `wrangler.toml`.
+Workers AI and R2 are bound via `wrangler.toml`. One optional secret:
+
+| Secret | Purpose |
+|---|---|
+| `RESET_TOKEN` | Enables `POST /api/admin/reset`. Without it the endpoint returns 403. |
+
+## Wipe All Run Data
+
+```bash
+npx wrangler secret put RESET_TOKEN          # once; paste a long random string
+curl -X POST https://<worker-host>/api/admin/reset \
+  -H "Authorization: Bearer $RESET_TOKEN"
+```
+
+The reset clears all Durable Object storage: workflows, executions, memory, and artifact indexes. It also deletes R2 `agent-swarm-artifacts` objects under `artifacts/` and `reports/`. The `handoff-skills` bucket is never touched. Open canvases are disconnected and reconnect to an empty store.
 
 ## Customization
 

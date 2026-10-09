@@ -19,7 +19,9 @@ import { recordStaffReply, workRequestById } from "@/db/conversations";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requireHqStaffPage } from "@/lib/current";
 import { runHqTool } from "@/lib/hq-tools";
+import { beginDirectClient, scanIntakeBindings } from "@/lib/lead-schema";
 import { sendHandoffMail } from "@/lib/mail";
+import { assignSwarmRun } from "@/lib/swarm-runs";
 
 export type FormState = { message: string };
 
@@ -42,6 +44,17 @@ export async function createClientAction(_previous: FormState, formData: FormDat
     Date.now(),
   );
   if (!created.ok) return { message: CRM_ERRORS[created.error] };
+  if ((kind ?? "client") === "client") {
+    const bound = scanIntakeBindings();
+    await beginDirectClient({
+      sql,
+      organizationId: created.value.id,
+      website: created.value.website ?? "",
+      now: Date.now(),
+      queue: bound.queue,
+      env: bound.env,
+    });
+  }
   redirect(`/clients/${created.value.id}`);
 }
 
@@ -62,6 +75,17 @@ export async function createClientDrawerAction(
     if (created.error === "taken") return fail(CRM_ERRORS.taken, "website");
     if (created.error === "invalid") return fail(CRM_ERRORS.invalid, name.length < 1 ? "name" : "website");
     return fail(CRM_ERRORS[created.error]);
+  }
+  if ((kindOf(formData.get("kind")) ?? "client") === "client") {
+    const bound = scanIntakeBindings();
+    await beginDirectClient({
+      sql,
+      organizationId: created.value.id,
+      website: created.value.website ?? "",
+      now: Date.now(),
+      queue: bound.queue,
+      env: bound.env,
+    });
   }
   revalidatePath("/clients");
   revalidatePath("/");
@@ -283,4 +307,15 @@ export async function replyToThreadAction(
   }
   revalidatePath(`/clients/${organizationId}`);
   return ok("Sent.");
+}
+
+export async function assignSwarmRunAction(_previous: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const projectId = String(formData.get("projectId") ?? "");
+  const assigned = await assignSwarmRun(sql, caller, { runId: String(formData.get("runId") ?? ""), projectId }, Date.now());
+  if (!assigned.ok) return fail(assigned.error === "forbidden" ? "You cannot move that." : "Pick a project on this client.");
+  revalidatePath(`/clients/${organizationId}`);
+  revalidatePath(`/projects/${projectId}`);
+  return ok("This swarm is on that project.");
 }

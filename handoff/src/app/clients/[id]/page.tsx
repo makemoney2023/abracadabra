@@ -26,6 +26,7 @@ import { listVisibleRepos } from "@/lib/github/app";
 import { readGithubSecrets } from "@/lib/github/secrets";
 import { presentSchemaLead } from "@/lib/schema-report";
 import { statusToken } from "@/lib/status-token";
+import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { SetContextLabel } from "@/components/context-bar";
 import { PageFrame } from "@/components/page-frame";
 import { StatusDot } from "@/components/status-dot";
@@ -62,48 +63,68 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
-  const [free, linked, contacts, tasks, timeline, orgs, deals, projects, repos, threads, storedCheck, schemaScan, healthRow, cards, activity, capRow, opens, runsOpen] =
-    await Promise.all([
-      unlinkedWorkspaces(sql, caller),
-      sql.all<{ id: string; slug: string; display_name: string }>(
-        `SELECT id, slug, display_name FROM workspaces
-         WHERE organization_id = ? AND status != 'purged'
-         ORDER BY display_name`,
-        [client.id],
-      ),
-      listContacts(sql, caller, client.id),
-      listOpenTasks(sql, caller, client.id),
-      listTimeline(sql, caller, client.id, TIMELINE_PAGE_SIZE, (page - 1) * TIMELINE_PAGE_SIZE),
-      listOrganizations(sql, caller),
-      listDeals(sql, caller, { organizationId: client.id }),
-      listProjects(sql, caller, client.id),
-      listRepos(sql, caller, client.id),
-      listClientThreads(sql, client.id),
-      latestAssessment(sql, caller, client.id),
-      latestSchemaScan(sql, client.id),
-      sql.get<{ health: string }>(
-        `SELECT health FROM status_updates
-         WHERE organization_id = ?
-         ORDER BY created_at DESC, id DESC
-         LIMIT 1`,
-        [client.id],
-      ),
-      listBoard(sql, caller, {
-        organizationId: client.id,
-        projectId: projectFilter && projectFilter !== "none" ? projectFilter : undefined,
-        unassigned: projectFilter === "none",
-        hideInactiveProjects: projectFilter === "" || projectFilter === "none",
-      }),
-      listBoardActivity(sql, caller, [client.id]),
-      sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
-      sql.all<{ project_id: string | null; open: number }>(
-        `SELECT project_id, COUNT(*) AS open FROM tasks
-         WHERE organization_id = ? AND status != 'done'
-         GROUP BY project_id`,
-        [client.id],
-      ),
-      openCloudRunCount(sql, caller),
-    ]);
+  const [
+    free,
+    linked,
+    contacts,
+    tasks,
+    timeline,
+    orgs,
+    deals,
+    projects,
+    repos,
+    threads,
+    storedCheck,
+    schemaScan,
+    healthRow,
+    cards,
+    activity,
+    capRow,
+    opens,
+    runsOpen,
+    unassignedRuns,
+  ] = await Promise.all([
+    unlinkedWorkspaces(sql, caller),
+    sql.all<{ id: string; slug: string; display_name: string }>(
+      `SELECT id, slug, display_name FROM workspaces
+       WHERE organization_id = ? AND status != 'purged'
+       ORDER BY display_name`,
+      [client.id],
+    ),
+    listContacts(sql, caller, client.id),
+    listOpenTasks(sql, caller, client.id),
+    listTimeline(sql, caller, client.id, TIMELINE_PAGE_SIZE, (page - 1) * TIMELINE_PAGE_SIZE),
+    listOrganizations(sql, caller),
+    listDeals(sql, caller, { organizationId: client.id }),
+    listProjects(sql, caller, client.id),
+    listRepos(sql, caller, client.id),
+    listClientThreads(sql, client.id),
+    latestAssessment(sql, caller, client.id),
+    latestSchemaScan(sql, client.id),
+    sql.get<{ health: string }>(
+      `SELECT health FROM status_updates
+       WHERE organization_id = ?
+       ORDER BY created_at DESC, id DESC
+       LIMIT 1`,
+      [client.id],
+    ),
+    listBoard(sql, caller, {
+      organizationId: client.id,
+      projectId: projectFilter && projectFilter !== "none" ? projectFilter : undefined,
+      unassigned: projectFilter === "none",
+      hideInactiveProjects: projectFilter === "" || projectFilter === "none",
+    }),
+    listBoardActivity(sql, caller, [client.id]),
+    sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
+    sql.all<{ project_id: string | null; open: number }>(
+      `SELECT project_id, COUNT(*) AS open FROM tasks
+       WHERE organization_id = ? AND status != 'done'
+       GROUP BY project_id`,
+      [client.id],
+    ),
+    openCloudRunCount(sql, caller),
+    listUnassignedSwarmRuns(sql, caller, client.id),
+  ]);
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
   const choices = visible?.ok
@@ -162,6 +183,7 @@ export default async function ClientPage({
           repos={repos}
           deals={deals}
           projects={projects}
+          unassignedRuns={unassignedRuns}
           threads={threads}
           readiness={storedCheck ? presentAssessment(storedCheck) : null}
           schema={schemaScan ? presentSchemaLead(schemaScan) : null}

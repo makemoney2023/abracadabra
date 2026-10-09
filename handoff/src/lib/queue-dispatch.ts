@@ -9,7 +9,7 @@ type QueueMessage = { body: unknown; ack(): void; retry(): void };
 /** Lead intake and GitHub events share one worker entry. Each queue has its own handler. */
 export async function dispatchQueue(
   batch: { queue: string; messages: QueueMessage[] },
-  env: { DB: D1Like; SCAN_JOBS?: ScanQueue } & WakeEnv,
+  env: { DB: D1Like; SCAN_JOBS?: ScanQueue; EMAIL?: { send(message: unknown): Promise<unknown> } } & WakeEnv,
   handlers?: {
     lead?: (messages: IntakeQueueMessage[], db: D1Like) => Promise<void>;
     github?: (messages: GithubQueueMessage[], sql: Sql) => Promise<void>;

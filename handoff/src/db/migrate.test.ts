@@ -32,7 +32,9 @@ describe("statementsFromMigration", () => {
       "0013_workflow_task.sql",
       "0014_workflow_schedule.sql",
       "0015_mcp_catalog.sql",
-      "0016_task_position.sql",
+      "0016_swarm_runs.sql",
+      "0017_contact_opt_out.sql",
+      "0018_task_position.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -57,6 +59,7 @@ describe("statementsFromMigration", () => {
       expect(settings).toEqual([
         { key: "build_deadline_hours", value: "2" },
         { key: "max_cloud_runs", value: "4" },
+        { key: "swarm_runs_backfill", value: "1" },
       ]);
       const scanColumn = db.prepare("PRAGMA table_info(schema_check_sites)").all() as { name: string }[];
       expect(scanColumn.some((column) => column.name === "scan_id")).toBe(true);

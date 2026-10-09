@@ -85,6 +85,49 @@ describe("runHqTool", () => {
     expect(missing).toEqual({ ok: false, error: "missing" });
   });
 
+  it("opens a space and queues a schema scan when a client is added with a website", async () => {
+    const sql = await database();
+    await sql.exec(`
+      CREATE TABLE readiness_scans (
+        id TEXT PRIMARY KEY,
+        public_token TEXT NOT NULL UNIQUE,
+        domain TEXT NOT NULL,
+        origin TEXT NOT NULL,
+        source TEXT NOT NULL,
+        status TEXT NOT NULL,
+        organization_id TEXT,
+        error_message TEXT,
+        created_at INTEGER NOT NULL,
+        completed_at INTEGER
+      );
+    `);
+    const sent: { type: string; scanId: string }[] = [];
+    const created = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_client", input: { name: "Northwind", website: "https://northwind.example" }, idempotencyKey: "create-site" },
+      NOW,
+      {
+        intake: {
+          queue: {
+            send: async (body) => {
+              sent.push(body);
+            },
+          },
+          env: { AGENT_URL: "https://agent.example", AGENT_WAKE_SECRET: "wake-secret" },
+          fetchImpl: async () => new Response("ok"),
+        },
+      },
+    );
+    expect(created).toMatchObject({ ok: true });
+    expect(sent).toHaveLength(1);
+    const space = await sql.get<{ organization_id: string; slug: string }>(
+      "SELECT organization_id, slug FROM workspaces WHERE slug = 'northwind-example'",
+    );
+    const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");
+    expect(space).toEqual({ organization_id: organizationId, slug: "northwind-example" });
+  });
+
   it("previews a client-facing write and stores nothing until it is approved", async () => {
     const sql = await database();
     const created = await runHqTool(
@@ -377,6 +420,37 @@ describe("runHqTool", () => {
       NOW,
     );
     expect(held).toMatchObject({ needsApproval: true });
+    const started = await runHqTool(
+      sql,
+      staff,
+      { tool: "run_workflow", input: { id: workflowId, body: "Check the site." }, idempotencyKey: "run-go", approved: true },
+      NOW,
+      {
+        swarm: {
+          origin: "https://swarm.example",
+          wait: async () => {},
+          fetchImpl: async (url) => {
+            const href = String(url);
+            if (href.includes("/api/template")) {
+              return Response.json({
+                id: "pack-schema-readiness",
+                name: "Schema readiness",
+                nodes: [{ id: "schema-r", type: "researcher", name: "Schema", instructions: "Score.", position: { x: 0, y: 0 } }],
+                edges: [],
+              });
+            }
+            if (href.endsWith("/api/save")) return Response.json({ success: true });
+            if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-chat" });
+            return Response.json({ status: "completed", results: { "schema-r": { status: "done", output: "Score 40." } } });
+          },
+        },
+      },
+    );
+    expect(started).toMatchObject({ ok: true, value: { executionId: "run-chat" } });
+    const recorded = await sql.get<{ execution_id: string; trigger: string }>(
+      "SELECT execution_id, trigger FROM swarm_runs",
+    );
+    expect(recorded).toEqual({ execution_id: "run-chat", trigger: "chat" });
   });
 
   it("writes the template skills onto a task when the workflow is saved", async () => {

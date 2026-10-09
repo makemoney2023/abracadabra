@@ -1,4 +1,5 @@
 node_modules
+.worktrees/
 outputs/node_modules
 scrollcraft/lab
 scrollcraft/builds/*/node_modules

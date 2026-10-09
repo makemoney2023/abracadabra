@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
-import { deskContext, listClientThreads, recordStaffReply, recordThreadMessage, setWorkRequestState, threadState, workRequestById } from "./conversations";
+import { deskContext, listClientThreads, noteStalledProspect, recordStaffReply, recordThreadMessage, setWorkRequestState, threadState, workRequestById } from "./conversations";
 import { migrate } from "./migrate";
 import { sqliteSql, type Sql } from "./sql";
 
@@ -46,7 +46,14 @@ describe("client threads", () => {
     expect(row?.body).toBe("Please add a pricing page.\n\nSo that buyers can compare, by Friday.");
     expect(row?.due_text).toBe("Friday");
     const state = await threadState(sql, "org-1", "<m-1>", NOW + 2000);
-    expect(state).toEqual({ replies: 2, questionCount: 1, text: row?.body });
+    expect(state).toEqual({
+      replies: 2,
+      questionCount: 1,
+      text: row?.body,
+      prospectReplies: 0,
+      briefPresent: false,
+      readiness: null,
+    });
   });
 
   it("starts a new request once the last one was decided", async () => {
@@ -156,5 +163,29 @@ describe("client threads", () => {
     expect(desk.messages.map((row) => row.body)).toEqual(["Where are we?", "Checking."]);
     const missing = await deskContext(sql, "missing", "<m-1>");
     expect(missing).toEqual({ name: "", brief: "", status: "", requests: [], messages: [] });
+  });
+
+  it("counts prospect replies and writes one stall note", async () => {
+    await recordThreadMessage(
+      sql,
+      { ...message, body: "We need a site.", state: "clarifying", replyBody: "What should it accomplish?", prospect: true },
+      NOW,
+    );
+    const state = await threadState(sql, "org-1", "<m-1>", NOW + 10);
+    expect(state.prospectReplies).toBe(1);
+    await noteStalledProspect(sql, { organizationId: "org-1", threadId: "<m-1>" }, NOW + 11);
+    await noteStalledProspect(sql, { organizationId: "org-1", threadId: "<m-1>" }, NOW + 12);
+    const notes = await sql.all<{ body: string | null }>(
+      "SELECT body FROM activities WHERE kind = 'agent.note'",
+    );
+    expect(notes).toEqual([{ body: "Prospect thread stalled before a brief." }]);
+    await sql.run(
+      `INSERT INTO activities (
+         id, organization_id, kind, actor_kind, body, created_at
+       ) VALUES ('brief-note', 'org-1', 'agent.brief_change', 'agent', 'They want a site.', ?)`,
+      [NOW],
+    );
+    const withBrief = await threadState(sql, "org-1", "<m-1>", NOW + 20);
+    expect(withBrief.briefPresent).toBe(true);
   });
 });

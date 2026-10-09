@@ -13,9 +13,9 @@
 
 - **What changed** — Each project has a kanban. The same cards roll up to the client and to every client. The agent takes the top card in Describe or Engineer, one step per project, and no longer files new tasks on whichever project was saved last.
 - **Why** — Open work was a table, and planning attached tasks to the newest project.
-- **Code touchpoints** — `handoff/src/app/work/board.tsx`, `handoff/src/lib/board-model.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/migrations/0016_task_position.sql`
+- **Code touchpoints** — `handoff/src/app/work/board.tsx`, `handoff/src/lib/board-model.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/migrations/0018_task_position.sql`
 - **Data-flow impact** — A `work` wake reads task position and project status. A move to Build still starts a cloud run. A move to Run still schedules a swarm pack. A refused build stays in the column it left.
-- **API / schema impact** — `tasks.position`. `client_context` adds `projects` plus `projectId` and `position` on each task. `get_brief` adds `projectId`.
+- **API / schema impact** — `tasks.position` in `0018_task_position.sql`, after the swarm-run and opt-out migrations. `client_context` adds `projects` plus `projectId` and `position` on each task. `get_brief` adds `projectId`.
 - **Verification** — `npm test` in `handoff/`: 705 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched files reported no errors.
 
 ## 2026-10-09
@@ -26,6 +26,132 @@
 - **Data-flow impact** — none. The plan describes a later `position` column, one shared stage move, and a per-project pull order inside the existing client wake.
 - **API / schema impact** — none in this change. The plan adds `tasks.position` when that step is built.
 - **Verification** — Docs only. No tests.
+
+## 2026-10-09
+
+- **What changed** — The mailbox follow-ups are on `main` and published. Staff HQ and the agent worker were deployed from that merge.
+- **Why** — The branch was merged after `0016` was already the swarm runs table, so the opt-out column ships as `0017_contact_opt_out.sql`.
+- **Code touchpoints** — `handoff/migrations/0017_contact_opt_out.sql`, `handoff/src/db/migrate.ts`, `handoff/src/db/migration-sql.ts`
+- **Data-flow impact** — none beyond the mailbox behavior already described. A database that already has `contacts.opted_out` skips the new migration.
+- **API / schema impact** — `0017_contact_opt_out.sql` adds `contacts.opted_out` when that column is missing.
+- **Verification** — `npx vitest run` on the migration, mailbox, and swarm-run tests passed 7 files / 69 tests. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `acdb5868-bf23-4f74-8f98-4c281e0bdd66` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `89b53063-d8f6-4d42-b8aa-4ef3491c6b26` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. `BOOKING_URL` is still empty.
+
+## 2026-10-09
+
+- **What changed** — A quoted email address is no longer saved as a lead’s website. A yes still confirms a client when the reply’s thread id changes. A booking confirmation that fails to send is tried again on the next delivery, and a second copy is not sent after it succeeds.
+- **Why** — Review of the mailbox follow-ups found those three gaps. An address in the message could start a schema scan of the wrong host, a client reply could never attach, and a failed confirmation was acknowledged and then dropped.
+- **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`
+- **Data-flow impact** — Website capture skips email domains and `abra-ca-dabra.app`. Client confirmation follows one open note for that address, including when References still hold the original thread. Booking mail errors propagate so the intake queue retries; the `agent.reply` row still stops a second confirmation.
+- **API / schema impact** — `open_prospect` accepts `subject` and `references`. No migration.
+- **Verification** — `npx vitest run` in `handoff/` passed 123 files / 708 tests. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `fe5af1e3-c6c0-4cf7-bea9-7a8c6428122f` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `dfe5ddab-0cb7-4c46-a9ef-4a9558344d37` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. `BOOKING_URL` is still empty.
+
+## 2026-10-09
+
+- **What changed** — Magic now asks a prospect for a budget band and a window, stores a website from freemail and starts one schema scan, confirms a new address before attaching it to a client, hands a stalled prospect thread to a person, opens a file space for a lead, stops mail after an opt-out, appends a finished readiness-check link, and confirms a Cal.com booking from the HQ mailbox.
+- **Why** — Those eight follow-ups were specified and not running. A freemail sender had no site scan, a client domain was opened as a new lead, a long prospect thread never handed off, lead files were refused, and a booked call sent no confirmation.
+- **Code touchpoints** — `handoff/migrations/0017_contact_opt_out.sql`, `handoff/src/db/migration-sql.ts`, `handoff/src/db/migrate.ts`, `handoff/src/db/conversations.ts`, `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/client-channel-store.ts`, `handoff/src/lib/email-files.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — An authenticated miss still opens a lead, except a client or past-client domain waits for yes on that thread. A prospect reply can set `deals.next_step`, write a budget `email` activity, set `organizations.website`, and queue `readiness_scans`. Opt-out sets `contacts.opted_out` and later mail is stored with no reply. A lead attachment creates one standard workspace. A live Cal.com booking sends one confirmation after the appointment row commits.
+- **API / schema impact** — Migration `0017_contact_opt_out.sql` adds `contacts.opted_out`. `open_prospect` returns `kind`, `pending`, `declined`, and `organizations`. `record` accepts `optOut` and `stalled`. `contacts.opted_in` stays unused. No invoice column. No appointment is created from the mailbox.
+- **Verification** — `npx vitest run` in `handoff/` passed 123 files / 706 tests. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `fe5d7ffe-32cd-410d-b1db-d95a76ef69ce` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `b6982cbf-6a46-4d9b-9c8e-c04ffef86f67` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. Secret names on both workers are unchanged. `BOOKING_URL` is still empty. Production `contacts.opted_out` is present.
+
+## 2026-10-09
+
+- **What changed** — `main` is live on Cloudflare with stored swarm runs. Staff HQ, the client app, and the swarm worker were published from that tree.
+- **Why** — The swarm-runs branch was merged to `main` and deployed.
+- **Code touchpoints** — none. Deploy only.
+- **Data-flow impact** — The first request runs the `swarm_runs` migration and copies existing timeline runs once.
+- **API / schema impact** — none beyond the migration already on `main`.
+- **Verification** — Worker `handoff` version `cbf04a1a-5bce-492b-8e80-55dfdd85901a` on `handoff.abra-ca-dabra.app`. Worker `handoff-hq` version `c23e8ea5-6957-4029-98a3-22a21c860045` on `hq.abra-ca-dabra.app`. Worker `agent-swarm-orchestrator` version `ebcafe77-a740-4b6a-b0d0-5d6c9a5c568c`. `GET /api/health` returned 200 on Handoff and HQ. The swarm origin returned 200.
+
+## 2026-10-09
+
+- **What changed** — Swarm history is copied once, not on every page load. A finished run stays finished if a later write says it is still running. A live replay can name nodes as soon as the socket opens. A swarm with no project and no projects yet does not offer an empty project picker.
+- **Why** — The backfill rewrote every run on each request, and a stale running write could clear a finished run.
+- **Code touchpoints** — `handoff/src/db/migrate.ts`, `handoff/src/lib/swarm-runs.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`, `swarm/frontend/src/App.tsx`
+- **Data-flow impact** — `migrate` writes `agent_settings.swarm_runs_backfill` after the one copy.
+- **API / schema impact** — none. One settings row.
+- **Verification** — `npx vitest run` in `handoff` (123 files, 700 tests, passed). `npm test` in `swarm` (25 tests, passed). `node --test frontend/src/lib/execution-link.test.mjs` (1 test, passed).
+
+## 2026-10-09
+
+- **What changed** — A swarm row with no execution id shows its name as plain text.
+- **Why** — Linking that row opened the blank swarm canvas.
+- **Code touchpoints** — `handoff/src/app/swarm/swarm-link.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`
+- **Data-flow impact** — none. A stored execution id still links to `/swarm?executionId=`.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/swarm/swarm-link.test.ts` in `handoff` (1 file, 3 tests, passed). ESLint clean on the link helper, project page, and Work tab.
+
+## 2026-10-09
+
+- **What changed** — Each swarm run is stored on the client and on a project when one is known. Staff open that run from the project page and from the client Work tab when it has no project.
+- **Why** — A finished swarm only left a timeline line, and the Swarm page always opened a blank canvas.
+- **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`, `handoff/migrations/0016_swarm_runs.sql`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/swarm/page.tsx`, `swarm/frontend/src/App.tsx`
+- **Data-flow impact** — Start paths write `swarm_runs`. The canvas reads `executionId` from the query string.
+- **API / schema impact** — New table `swarm_runs`. No new route and no new secret.
+- **Verification** — `npx vitest run` in `handoff` (123 files, 698 tests, passed). `npm test` in `swarm` (4 files, 25 tests, passed) and `node --test frontend/src/lib/execution-link.test.mjs` (1 test, passed).
+
+## 2026-10-09
+
+- **What changed** — Each swarm row on the project page and the client Work tab shows when the run started.
+- **Why** — Staff need the relative time next to the name, status, and trigger.
+- **Code touchpoints** — `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`
+- **Data-flow impact** — none. The lists still come from `listProjectSwarmRuns` and `listUnassignedSwarmRuns` in the same order.
+- **API / schema impact** — none.
+- **Verification** — `npx eslint src/app/projects/[id]/page.tsx src/app/clients/[id]/work-tab.tsx` in `handoff` (clean).
+
+## 2026-10-09
+
+- **What changed** — Staff open a project's swarm runs from the project page, and put an unassigned swarm on a project from the client Work tab.
+- **Why** — The Swarm page always opened a blank canvas, and a run with no project had nowhere to be attached.
+- **Code touchpoints** — `handoff/src/app/swarm/swarm-link.ts`, `handoff/src/app/swarm/page.tsx`, `handoff/src/app/swarm/swarm-frame.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/clients/actions.ts`
+- **Data-flow impact** — `/swarm?executionId=` is passed into the iframe. Assigning a run writes `swarm_runs.project_id` and refreshes the client and project pages.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/swarm/swarm-link.test.ts src/lib/swarm-runs.test.ts` in `handoff` (2 files, 12 tests, passed). ESLint clean on the touched page, frame, action, and link files.
+
+## 2026-10-09
+
+- **What changed** — Swarm backfill replays timeline lines from oldest to newest, and a second insert of the same execution updates the existing row instead of failing migrate.
+- **Why** — The first activity was kept forever, so a later completed line never replaced running. Two migrate callers could also both insert and hit the unique execution index.
+- **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`
+- **Data-flow impact** — Activities update status and finished_at in time order. A workflow last status still inserts only when that execution is missing. `saveSwarmRun` upserts on `execution_id` and, if the insert still raises a unique error, updates the row that won.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/swarm-runs.test.ts src/db/migrate.test.ts` in `handoff` (2 files, 14 tests, passed).
+
+## 2026-10-09
+
+- **What changed** — `migrate` copies existing swarm timeline lines and each workflow's last execution into `swarm_runs`, once per execution id.
+- **Why** — Runs that started before the `swarm_runs` table existed would otherwise stay only on the timeline or on `client_workflows.last_execution_id`.
+- **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`, `handoff/src/db/migrate.ts`
+- **Data-flow impact** — After the schema steps, backfill inserts a row for each `agent.swarm_run` activity and for each client workflow whose last execution is not already stored. A second pass inserts nothing.
+- **API / schema impact** — none. Uses the existing `swarm_runs` table.
+- **Verification** — `npx vitest run src/lib/swarm-runs.test.ts src/db/migrate.test.ts` in `handoff` (2 files, 9 tests, passed).
+
+## 2026-10-09
+
+- **What changed** — Starting a swarm from chat, a due schedule, or `record_swarm_run` writes a `swarm_runs` row for that execution.
+- **Why** — The timeline already recorded the start. The project page needs the same run as a row it can open.
+- **Code touchpoints** — `handoff/src/db/agent-work.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/client-workflows.ts`
+- **Data-flow impact** — `claimDueWorkflow` stores trigger `due`. Chat `run_workflow` stores trigger `chat`. `recordSwarmRun` stores the given trigger, or `lead_created` when none is sent. `runClientWorkflow` still only updates `client_workflows.last_execution_id`.
+- **API / schema impact** — none. Rows use the `swarm_runs` table from the previous change.
+- **Verification** — `npx vitest run src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/lib/client-plan.test.ts src/db/agent-work.test.ts` in `handoff` (4 files, 56 tests, passed).
+
+## 2026-10-09
+
+- **What changed** — A spec and an implementation plan describe storing each swarm run on a client project and opening that run from HQ. No runtime behavior changed.
+- **Why** — A finished swarm only left a timeline line, and the Swarm page always opened a blank canvas.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-project-swarm-runs-design.md`, `docs/superpowers/plans/2026-10-09-project-swarm-runs.md`
+- **Data-flow impact** — none until the plan is implemented.
+- **API / schema impact** — none yet. The plan adds table `swarm_runs`.
+- **Verification** — Docs only. No tests run.
+
+## 2026-10-09
+
+- **What changed** — Adding a client directly opens a file space and starts the same schema check a new lead gets. The scrape is stored in that space when the scan finishes, and the agent wakes with it.
+- **Why** — A client who never passed through the lead form had no website check, no stored context, and no file space.
+- **Code touchpoints** — `handoff/src/lib/lead-schema.ts`, `handoff/src/lib/scan-context.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/clients/actions.ts`
+- **Data-flow impact** — Client create queues a schema scan. `scan_ready` still wakes the agent, which files the scrape into the space and starts the swarm.
+- **API / schema impact** — `create_client` accepts `website`.
+- **Verification** — `npx vitest run` in `handoff` (121 files, 685 tests). ESLint on the touched files reported no issues.
 
 ## 2026-10-09
 

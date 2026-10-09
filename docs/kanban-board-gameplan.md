@@ -174,7 +174,7 @@ Empty column copy is one sentence: "Nothing in Describe." An empty project board
 
 ## Schema
 
-Migration `handoff/migrations/0016_task_position.sql`:
+Migration `handoff/migrations/0018_task_position.sql`:
 
 ```sql
 ALTER TABLE tasks ADD COLUMN position INTEGER NOT NULL DEFAULT 0;

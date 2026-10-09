@@ -52,8 +52,9 @@ function slug(value: string): string {
 
 function agentType(skill: SkillCard): PackAgentType {
   const text = `${skill.name} ${skill.description}`.toLowerCase();
+  if (/\b(generate|write|create|draft)\b/.test(text)) return "writer";
   if (/research|seo|audit|competitor|teardown|discover/.test(text)) return "researcher";
-  if (/critic|review|objection|risk|qa|check/.test(text)) return "critic";
+  if (/\b(critic|critique|review|objection|risk|qa|check)\b/.test(text)) return "critic";
   if (/edit|proof|rewrite/.test(text)) return "editor";
   if (/publish|brief|checklist|report/.test(text)) return "publisher";
   if (/summar/.test(text)) return "summarizer";

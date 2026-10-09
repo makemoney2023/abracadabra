@@ -1,9 +1,7 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SignInForm } from "../sign-in-form";
 import { PageFrame } from "@/components/page-frame";
 import { openSession } from "@/lib/current";
-import { isHqHost } from "@/lib/host";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 
 export default async function LoginPage({
@@ -13,8 +11,7 @@ export default async function LoginPage({
 }) {
   const notice = (await searchParams).notice;
   const session = await openSession();
-  const host = (await headers()).get("host") ?? "";
-  if (await isLiveSuperAdmin(session.sql, session.caller)) redirect(isHqHost(host) ? "/spaces" : "/");
+  if (await isLiveSuperAdmin(session.sql, session.caller)) redirect("/");
 
   const wrong = notice === "wrong";
   const unconfigured = notice === "unconfigured";

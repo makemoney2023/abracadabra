@@ -1,3 +1,4 @@
+import { backfillSwarmRuns } from "../lib/swarm-runs";
 import { MIGRATION_SQL } from "./migration-sql";
 import type { Sql } from "./sql";
 
@@ -16,7 +17,9 @@ const STEPS = [
   { file: "0013_workflow_task.sql", column: { table: "client_workflows", name: "task_id" } },
   { file: "0014_workflow_schedule.sql", column: { table: "client_workflows", name: "next_run_at" } },
   { file: "0015_mcp_catalog.sql", column: { table: "client_workflows", name: "mcp_server_ids" } },
-  { file: "0016_task_position.sql", column: { table: "tasks", name: "position" } },
+  { file: "0016_swarm_runs.sql", table: "swarm_runs" },
+  { file: "0017_contact_opt_out.sql", column: { table: "contacts", name: "opted_out" } },
+  { file: "0018_task_position.sql", column: { table: "tasks", name: "position" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];
@@ -57,5 +60,15 @@ export async function migrate(sql: Sql): Promise<void> {
     for (const statement of statementsFromMigration(file)) {
       await sql.run(statement);
     }
+  }
+  const marked = await sql.get<{ value: string }>(
+    "SELECT value FROM agent_settings WHERE key = 'swarm_runs_backfill'",
+  );
+  if (marked) return;
+  await backfillSwarmRuns(sql, Date.now());
+  try {
+    await sql.run("INSERT INTO agent_settings (key, value) VALUES ('swarm_runs_backfill', '1')");
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes("UNIQUE")) throw error;
   }
 }

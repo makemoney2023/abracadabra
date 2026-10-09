@@ -1,5 +1,8 @@
-import type { Workflow, WorkflowExecution, WSMessage, NodeResult, AgentMemory, MemoryEntry, Artifact, WorkflowTemplate, McpServerConfig } from '../types';
+import type { Workflow, WorkflowExecution, WSMessage, NodeResult, AgentMemory, MemoryEntry, Artifact, McpServerConfig } from '../types';
 import { runAgent } from '../ai/agents';
+import { composeNodeInput, loadSkill } from '../ai/skills';
+import { buildMemoryContext, memoryKey } from '../ai/memory';
+import { RESET_R2_PREFIXES, clearR2Prefixes, isAuthorizedReset } from '../admin/reset';
 import packTemplates from '../pack-templates.json';
 import { WORKFLOW_TEMPLATES, type WorkflowTemplate } from '../types';
 
@@ -195,21 +198,12 @@ export class WorkflowDO {
       }
     }
 
-    // Get memory for an agent type
-    if (url.pathname === '/memory' && request.method === 'GET') {
-      const agentType = url.searchParams.get('agentType');
-      const mem = agentType ? this.memories.get(agentType) : null;
-      return Response.json(mem || { agentType, entries: [] });
-    }
-
-    // Clear memory for an agent type
-    if (url.pathname === '/memory' && request.method === 'DELETE') {
-      const agentType = url.searchParams.get('agentType');
-      if (agentType) {
-        this.memories.delete(agentType);
-        await this.state.storage.delete(`mem:${agentType}`);
+    // Wipe all run data (workflows, executions, memory, artifacts, R2 run files)
+    if (url.pathname === '/admin/reset' && request.method === 'POST') {
+      if (!isAuthorizedReset(request, this.env.RESET_TOKEN)) {
+        return new Response('Forbidden', { status: 403 });
       }
-      return Response.json({ success: true });
+      return Response.json(await this.resetAll());
     }
 
     return new Response('Not found', { status: 404 });
@@ -381,13 +375,10 @@ export class WorkflowDO {
             // Gather inputs from all parent nodes
             const parentEdges = workflow.edges.filter((e) => e.target === nodeId);
             const parentInputs = parentEdges.map((e) => nodeOutputs[e.source] || '').filter(Boolean);
-            const nodeInput = parentInputs.length > 0 ? parentInputs.join('\n\n---\n\n') : input;
+            const nodeInput = composeNodeInput(input, parentInputs);
 
-            // Retrieve memory for this agent type
-            const memory = this.memories.get(node.type);
-            const memoryContext = memory && memory.entries.length > 0
-              ? `\n\nPrevious context from past runs:\n${memory.entries.slice(-3).map((e) => e.content).join('\n---\n')}`
-              : '';
+            const memKey = memoryKey(workflow.id, node.id);
+            const memoryContext = buildMemoryContext(this.memories.get(memKey)?.entries);
 
             // Mark as running (persisted so a resume can see it started)
             const startResult: NodeResult = {
@@ -412,6 +403,7 @@ export class WorkflowDO {
               // Resolve this node's MCP servers (node selection, else all workflow servers).
               const servers = this.resolveNodeServers(workflow, node);
               const mcpTools = await this.collectNodeTools(servers);
+              const skill = await loadSkill(this.env.SKILLS, node.instructions);
 
               const result = await runAgent(
                 node.type,
@@ -419,6 +411,7 @@ export class WorkflowDO {
                   input: nodeInput + memoryContext,
                   instructions: node.instructions,
                   name: node.name,
+                  skill,
                   mcpTools,
                   executeTool: async (serverId, tool, args) => {
                     const server = servers.find((s) => s.id === serverId);
@@ -480,7 +473,7 @@ export class WorkflowDO {
               await this.state.storage.put(`art:${executionId}`, this.artifacts.get(executionId));
 
               // Store memory
-              this.addMemory(node.type, result.output, executionId);
+              this.addMemory(memKey, result.output, executionId);
 
               this.broadcast(executionId, {
                 type: 'node_done',
@@ -577,10 +570,9 @@ export class WorkflowDO {
     return tools;
   }
 
-  private addMemory(agentType: string, content: string, executionId: string) {
-    const key = agentType as any;
+  private addMemory(key: string, content: string, executionId: string) {
     if (!this.memories.has(key)) {
-      this.memories.set(key, { agentType: key, entries: [] });
+      this.memories.set(key, { key, entries: [] });
     }
     const mem = this.memories.get(key)!;
     const entry: MemoryEntry = {
@@ -590,11 +582,38 @@ export class WorkflowDO {
       executionId,
     };
     mem.entries.push(entry);
-    // Keep only last 10 entries per agent type
+    // Keep only last 10 entries per workflow node
     if (mem.entries.length > 10) {
       mem.entries = mem.entries.slice(-10);
     }
     this.state.storage.put(`mem:${key}`, mem);
+  }
+
+  private async resetAll() {
+    const counts = {
+      workflows: this.workflows.size,
+      executions: this.executions.size,
+      memories: this.memories.size,
+      artifactSets: this.artifacts.size,
+    };
+    for (const sockets of this.websockets.values()) {
+      for (const ws of sockets) {
+        try {
+          ws.close(1012, 'Reset');
+        } catch {
+          // Already closed.
+        }
+      }
+    }
+    this.workflows.clear();
+    this.executions.clear();
+    this.memories.clear();
+    this.artifacts.clear();
+    this.websockets.clear();
+    this.activeRuns.clear();
+    await this.state.storage.deleteAll();
+    const r2Objects = await clearR2Prefixes(this.env.ARTIFACTS, RESET_R2_PREFIXES);
+    return { success: true, cleared: { ...counts, r2Objects } };
   }
 
   private async backupArtifactsToR2(executionId: string) {

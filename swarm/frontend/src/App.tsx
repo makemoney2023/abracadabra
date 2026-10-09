@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -51,19 +51,21 @@ import { Toaster, toast } from '@/components/ui/sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { AGENT_META, PRESET_GROUPS, TEMPLATES, type AgentPreset, type AgentType, type Artifact, type McpServerConfig, type TemplateMeta } from '@/lib/agents';
 import { bridgeEdge, chainOffset } from '@/lib/chain.mjs';
+import { executionIdFromSearch } from '@/lib/execution-link.mjs';
 
 const nodeTypes = { agent: AgentNode };
 
 type FlowNode = Node<AgentNodeData>;
 
-const ADD_ICONS = {
-  Search,
-  PenLine,
-  FileEdit,
-  Megaphone,
-  ScanSearch,
-  ListCollapse,
-} as const;
+interface LoadedWorkflowNode {
+  id: string;
+  type: AgentType;
+  name: string;
+  instructions: string;
+  position: { x: number; y: number };
+  mcpServerIds?: string[];
+  mcpServers?: McpServerConfig[];
+}
 
 interface WSMessage {
   type: 'node_start' | 'node_output' | 'node_done' | 'node_error' | 'workflow_complete' | 'workflow_error' | 'node_tool';
@@ -76,10 +78,136 @@ interface WSMessage {
   server?: string;
   tool?: string;
   summary?: string;
+  nodeName?: string;
 }
+
+type NodeListSetter = Dispatch<SetStateAction<FlowNode[]>>;
+type ArtifactSetter = Dispatch<SetStateAction<Artifact[]>>;
+type FlagSetter = Dispatch<SetStateAction<boolean>>;
+
+function resultStatus(status: string | undefined): AgentNodeData['status'] {
+  if (status === 'done' || status === 'error' || status === 'running') return status;
+  return 'idle';
+}
+
+function toolsUsedLabels(tools: { server?: string; tool?: string }[] | undefined): string[] {
+  if (!Array.isArray(tools)) return [];
+  return tools.flatMap((tool) => (tool?.server && tool.tool ? [`${tool.server}/${tool.tool}`] : []));
+}
+
+function swarmArtifactId(nodeId: string, output: string, timestamp: number | undefined): string {
+  return typeof timestamp === 'number' ? `${nodeId}-${timestamp}` : `${nodeId}-${output.length}`;
+}
+
+function applySwarmMessage(
+  msg: WSMessage,
+  eid: string,
+  nodesRef: { current: FlowNode[] },
+  setNodes: NodeListSetter,
+  setArtifacts: ArtifactSetter,
+  setIsExecuting: FlagSetter,
+  close: () => void,
+) {
+  if (msg.type === 'node_tool' && msg.nodeId && msg.server && msg.tool) {
+    const label = `${msg.server}/${msg.tool}`;
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === msg.nodeId && !(n.data.toolsUsed ?? []).includes(label)
+          ? { ...n, data: { ...n.data, toolsUsed: [...(n.data.toolsUsed ?? []), label] } }
+          : n,
+      ),
+    );
+  }
+  if (msg.nodeId && msg.type !== 'node_tool') {
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id !== msg.nodeId) return n;
+        const status = msg.type === 'node_done' ? 'done' : msg.type === 'node_error' ? 'error' : 'running';
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            status,
+            output: msg.output !== undefined ? msg.output : n.data.output,
+          },
+        };
+      }),
+    );
+
+    if (msg.type === 'node_done' && msg.output) {
+      const nodeId = msg.nodeId;
+      const output = msg.output;
+      const nodeName = msg.nodeName || nodesRef.current.find((node) => node.id === nodeId)?.data.name;
+      if (nodeName) {
+        const artifactId = swarmArtifactId(nodeId, output, msg.timestamp);
+        setArtifacts((prev) =>
+          prev.some((artifact) => artifact.id === artifactId)
+            ? prev
+            : [
+                ...prev,
+                {
+                  id: artifactId,
+                  executionId: eid,
+                  nodeId,
+                  nodeName,
+                  content: output,
+                  timestamp: typeof msg.timestamp === 'number' ? msg.timestamp : Date.now(),
+                },
+              ],
+        );
+      }
+    }
+  }
+  if (msg.type === 'workflow_complete') {
+    setIsExecuting(false);
+    toast.success('Swarm finished');
+    close();
+    fetch('/api/artifacts?executionId=' + eid)
+      .then((r) => r.json())
+      .then((arts) => setArtifacts(arts))
+      .catch(() => {});
+  } else if (msg.type === 'workflow_error') {
+    setIsExecuting(false);
+    toast.error(msg.error || 'Workflow failed');
+    close();
+  }
+}
+
+function openSwarmSocket(
+  eid: string,
+  wsRef: { current: WebSocket | null },
+  nodesRef: { current: FlowNode[] },
+  setNodes: NodeListSetter,
+  setArtifacts: ArtifactSetter,
+  setIsExecuting: FlagSetter,
+) {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${protocol}//${window.location.host}/api/ws?executionId=${eid}`);
+  wsRef.current?.close();
+  wsRef.current = ws;
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data) as WSMessage;
+    applySwarmMessage(msg, eid, nodesRef, setNodes, setArtifacts, setIsExecuting, () => ws.close());
+  };
+  ws.onerror = () => {
+    setIsExecuting(false);
+    toast.error('Lost connection to the swarm');
+  };
+}
+
+const ADD_ICONS = {
+  Search,
+  PenLine,
+  FileEdit,
+  Megaphone,
+  ScanSearch,
+  ListCollapse,
+} as const;
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AgentNodeData>([]);
+  const nodesRef = useRef<FlowNode[]>(nodes);
+  nodesRef.current = nodes;
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [workflowName, setWorkflowName] = useState('My Agent Swarm');
   const [inputText, setInputText] = useState('');
@@ -118,6 +246,111 @@ export default function App() {
       cancelled = true;
     };
   }, [templatesOpen]);
+
+  useEffect(() => {
+    const storedId = executionIdFromSearch(window.location.search);
+    if (!storedId) return;
+    let cancelled = false;
+    let opened: WebSocket | null = null;
+    (async () => {
+      let executionStatus: string | undefined;
+      try {
+        const statusResponse = await fetch('/api/status?id=' + encodeURIComponent(storedId));
+        const execution = (await statusResponse.json()) as {
+          error?: string;
+          workflowId?: string;
+          input?: string;
+          status?: string;
+          results?: Record<string, { status?: string; output?: string; toolsUsed?: { server?: string; tool?: string }[] }>;
+        };
+        if (cancelled) return;
+        if (!statusResponse.ok || execution.error || !execution.workflowId) {
+          toast.error('This swarm run is not on the worker anymore.');
+          return;
+        }
+        const workflowResponse = await fetch('/api/get?id=' + encodeURIComponent(execution.workflowId));
+        const workflow = (await workflowResponse.json()) as {
+          error?: string;
+          name?: string;
+          nodes?: LoadedWorkflowNode[];
+          edges?: { id: string; source: string; target: string }[];
+          mcpServers?: McpServerConfig[];
+        };
+        if (cancelled) return;
+        if (!workflowResponse.ok || workflow.error || !workflow.nodes) {
+          toast.error('This swarm run is not on the worker anymore.');
+          return;
+        }
+        executionStatus = execution.status;
+        const placed: FlowNode[] = workflow.nodes.map((node) => {
+          const result = execution.results?.[node.id];
+          return {
+            id: node.id,
+            type: 'agent',
+            position: node.position,
+            data: {
+              agentType: node.type,
+              name: node.name,
+              instructions: node.instructions,
+              status: resultStatus(result?.status),
+              output: result?.output || '',
+              mcpServerIds: node.mcpServerIds,
+              mcpServers: node.mcpServers,
+              toolsUsed: toolsUsedLabels(result?.toolsUsed),
+            },
+          };
+        });
+        for (const node of placed) {
+          const match = /^node-(\d+)$/.exec(node.id);
+          if (match) {
+            const n = Number(match[1]);
+            if (n > nodeIdCounter.current) nodeIdCounter.current = n;
+          }
+        }
+        setWorkflowName(workflow.name || 'Swarm');
+        setInputText(execution.input || '');
+        setExecutionId(storedId);
+        nodesRef.current = placed;
+        setNodes(placed);
+        setEdges(
+          (workflow.edges || []).map((edge) => ({
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+            animated: true,
+          })),
+        );
+        if (Array.isArray(workflow.mcpServers)) setMcpServers(workflow.mcpServers);
+        setSelectedNodeId(null);
+      } catch {
+        if (!cancelled) toast.error('This swarm run is not on the worker anymore.');
+        return;
+      }
+
+      try {
+        const artsResponse = await fetch('/api/artifacts?executionId=' + encodeURIComponent(storedId));
+        if (!cancelled && artsResponse.ok) {
+          const list = await artsResponse.json();
+          if (!cancelled && Array.isArray(list) && list.length > 0) {
+            setArtifacts(list);
+            setShowArtifacts(true);
+          }
+        }
+      } catch {
+        // Artifacts are optional. The graph stays, and a live run still opens its socket.
+      }
+      if (cancelled) return;
+      if (executionStatus === 'running') {
+        setIsExecuting(true);
+        openSwarmSocket(storedId, wsRef, nodesRef, setNodes, setArtifacts, setIsExecuting);
+        opened = wsRef.current;
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (opened && wsRef.current === opened) opened.close();
+    };
+  }, []);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
 
@@ -290,82 +523,7 @@ export default function App() {
       if (!res.ok) throw new Error('execute failed');
       const { executionId: eid } = await res.json();
       setExecutionId(eid);
-
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const ws = new WebSocket(`${protocol}//${window.location.host}/api/ws?executionId=${eid}`);
-      wsRef.current = ws;
-
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data) as WSMessage;
-        if (msg.type === 'node_tool' && msg.nodeId && msg.server && msg.tool) {
-          const label = `${msg.server}/${msg.tool}`;
-          setNodes((nds) =>
-            nds.map((n) =>
-              n.id === msg.nodeId && !(n.data.toolsUsed ?? []).includes(label)
-                ? { ...n, data: { ...n.data, toolsUsed: [...(n.data.toolsUsed ?? []), label] } }
-                : n,
-            ),
-          );
-        }
-        if (msg.nodeId && msg.type !== 'node_tool') {
-          setNodes((nds) =>
-            nds.map((n) => {
-              if (n.id !== msg.nodeId) return n;
-              const status =
-                msg.type === 'node_done' ? 'done' : msg.type === 'node_error' ? 'error' : 'running';
-              return {
-                ...n,
-                data: {
-                  ...n.data,
-                  status,
-                  output: msg.output !== undefined ? msg.output : n.data.output,
-                },
-              };
-            }),
-          );
-
-          if (msg.type === 'node_done' && msg.output) {
-            const nodeId = msg.nodeId;
-            const output = msg.output;
-            const ts = msg.timestamp;
-            setNodes((nds) => {
-              const node = nds.find((n) => n.id === nodeId);
-              if (node) {
-                setArtifacts((prev) => [
-                  ...prev,
-                  {
-                    id: `${nodeId}-${Date.now()}`,
-                    executionId: eid,
-                    nodeId,
-                    nodeName: node.data.name,
-                    content: output,
-                    timestamp: ts,
-                  },
-                ]);
-              }
-              return nds;
-            });
-          }
-        }
-        if (msg.type === 'workflow_complete') {
-          setIsExecuting(false);
-          toast.success('Swarm finished');
-          ws.close();
-          fetch('/api/artifacts?executionId=' + eid)
-            .then((r) => r.json())
-            .then((arts) => setArtifacts(arts))
-            .catch(() => {});
-        } else if (msg.type === 'workflow_error') {
-          setIsExecuting(false);
-          toast.error(msg.error || 'Workflow failed');
-          ws.close();
-        }
-      };
-
-      ws.onerror = () => {
-        setIsExecuting(false);
-        toast.error('Lost connection to the swarm');
-      };
+      openSwarmSocket(eid, wsRef, nodesRef, setNodes, setArtifacts, setIsExecuting);
     } catch {
       setIsExecuting(false);
       toast.error('Failed to start execution');

@@ -18,6 +18,7 @@ import { requireHqStaffPage } from "@/lib/current";
 import { formatRelative } from "@/lib/format";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
+import { listProjectSwarmRuns } from "@/lib/swarm-runs";
 import { DataTable, type Column } from "@/components/data-table";
 import { WorkBoard } from "../../work/board";
 import { FormDrawer } from "@/components/form-drawer";
@@ -29,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
+import { swarmRunLink } from "../../swarm/swarm-link";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
 import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm } from "../forms";
@@ -40,7 +42,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await projectById(sql, caller, id);
   if (!project) notFound();
   const now = clock();
-  const [org, milestones, tasks, updates, staff, spaces, activity, capRow, runsOpen] = await Promise.all([
+  const [org, milestones, tasks, updates, staff, spaces, activity, capRow, runsOpen, swarmRuns] = await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
     listBoard(sql, caller, { projectId: project.id }),
@@ -55,6 +57,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     listBoardActivity(sql, caller, [project.organization_id]),
     sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
     openCloudRunCount(sql, caller),
+    listProjectSwarmRuns(sql, caller, project.id),
   ]);
   const repos = await listProjectRepos(sql, caller, project.id);
   const visibleIds = new Set((await workspacesFor(sql, caller)).map((row) => row.id));
@@ -148,6 +151,30 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   runsOpen={runsOpen}
                   activity={activity}
                 />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Swarms</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {swarmRuns.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No swarms on this project yet.</p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {swarmRuns.map((run) => {
+                      const href = swarmRunLink(run.execution_id);
+                      return (
+                        <li key={run.id} className="text-sm">
+                          {href ? <Link href={href}>{run.name}</Link> : run.name}
+                          <span className="ml-2 text-muted-foreground">{run.status}</span>
+                          <span className="ml-2 text-muted-foreground">{run.trigger}</span>
+                          <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </CardContent>
             </Card>
             <Card>

@@ -7,7 +7,11 @@ export interface Env {
   AI: any;
   WORKFLOW_DO: DurableObjectNamespace;
   ARTIFACTS: R2Bucket;
+  /** Published skill bodies (handoff `npm run publish:skills`), keyed skills/<path>/SKILL.md. */
+  SKILLS: R2Bucket;
   ASSETS: Fetcher;
+  /** Enables POST /api/admin/reset when set (wrangler secret). */
+  RESET_TOKEN?: string;
 }
 
 export default {

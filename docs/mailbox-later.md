@@ -1,15 +1,12 @@
 # Mailbox later
 
-Spec and implementation plan for the eight mailbox items left open in [hq-agent-spec.md](hq-agent-spec.md) section 18. This document does not change runtime behavior.
+Spec for the eight mailbox items in [hq-agent-spec.md](hq-agent-spec.md) section 18. Those items are implemented. `contacts.opted_out` is migration `0017_contact_opt_out.sql`. `BOOKING_URL` stays empty until a real Cal.com link is configured. Deployed worker versions are recorded in `handoff/CHANGELOG.md`.
 
 ## What is already live
 
 An authenticated sender who is not on file becomes one lead (`organizations.kind = lead`, one contact, one deal with `source = email`). Magic asks what they want to accomplish, the problem, and the outcome, then offers `BOOKING_URL` once that sentence is on the brief. `BOOKING_URL` is empty in production, so the live reply asks which two times work. A sender who fails DKIM or DMARC still gets the fixed refusal. A prospect turn files no tasks. Cal.com still writes the appointment only through `POST /api/intake/booking`.
 
-Deployed with this path:
-
-- `handoff-agent` version `9cc09526-d1a7-4c19-8805-f8f4f8c17f2b`
-- `handoff-hq` version `7a15de72-94f7-4fc5-8981-976ae0006174` on `hq.abra-ca-dabra.app`
+Deployed worker versions for this behavior are in `handoff/CHANGELOG.md`.
 
 ## Shared rules
 

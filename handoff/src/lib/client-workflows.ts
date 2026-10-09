@@ -1,9 +1,11 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
 import { leadBrief, runLeadSwarm } from "./lead-swarm";
+import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { packTemplateId } from "./pack-templates";
 import type { ObjectStore } from "./store/objects";
+import { saveSwarmRun } from "./swarm-runs";
 import { storeWorkflowOutput } from "./workflow-files";
 
 export type WorkflowGroup = {
@@ -257,8 +259,8 @@ export async function runClientWorkflow(input: {
 }): Promise<{ ok: true; executionId: string; status: string; output: string } | { ok: false; error: "missing" | "invalid" }> {
   const brief = input.brief.trim();
   if (!brief || !input.origin.trim()) return { ok: false, error: "invalid" };
-  const workflow = await input.sql.get<{ id: string; name: string; template_id: string; mcp_server_ids: string | null }>(
-    "SELECT id, name, template_id, mcp_server_ids FROM client_workflows WHERE id = ?",
+  const workflow = await input.sql.get<{ id: string; organization_id: string; name: string; template_id: string; mcp_server_ids: string | null }>(
+    "SELECT id, organization_id, name, template_id, mcp_server_ids FROM client_workflows WHERE id = ?",
     [input.workflowId],
   );
   if (!workflow) return { ok: false, error: "missing" };
@@ -266,10 +268,11 @@ export async function runClientWorkflow(input: {
   const mcpServers = mcpServerIds ? mcpServersFor(mcpServerIds, input.origin) : null;
   if (!mcpServers) return { ok: false, error: "invalid" };
   try {
+    const spaceContext = await clientSpaceContext(input.sql, workflow.organization_id);
     const result = await runLeadSwarm({
       origin: input.origin,
       workflowId: `client-${workflow.id}`,
-      brief,
+      brief: spaceContext ? `${brief}\n\n${spaceContext}` : brief,
       templateId: workflow.template_id,
       mcpServers,
       fetchImpl: input.fetchImpl,
@@ -364,6 +367,17 @@ export async function claimDueWorkflow(input: {
       executionId: started.ok ? started.executionId : "",
       workflowId: row.id,
     },
+    now: input.now,
+  });
+  await saveSwarmRun(input.sql, {
+    organizationId: input.organizationId,
+    workflowId: row.id,
+    swarmWorkflowId: `client-${row.id}`,
+    executionId: started.ok ? started.executionId : "",
+    templateId: row.template_id,
+    name: row.name,
+    status: started.ok ? started.status : "failed",
+    trigger: "due",
     now: input.now,
   });
   if (!started.ok) return started;

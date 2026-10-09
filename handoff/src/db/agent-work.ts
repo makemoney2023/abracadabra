@@ -4,10 +4,11 @@ import { moveTaskStage, nextColumnPosition } from "@/lib/task-stage";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { openObjectStore } from "@/lib/store/objects";
 import { recordAgentRun } from "@/lib/agent-activity";
-import { storeScanContext } from "@/lib/scan-context";
+import { clientSpaceContext, storeScanContext } from "@/lib/scan-context";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
 import { claimDueWorkflow } from "@/lib/client-workflows";
+import { saveSwarmRun } from "@/lib/swarm-runs";
 
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
 const STAGES = new Set(["describe", "engineer", "build", "run"]);
@@ -55,6 +56,8 @@ type WorkArgs = {
   packId?: string;
   packName?: string;
   executionId?: string;
+  workflowId?: string;
+  swarmWorkflowId?: string;
   artifacts?: unknown;
   activityKey?: string;
   trigger?: string;
@@ -93,7 +96,10 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
   if (tool === "post_status_update") return postAgentStatus(sql, actor, args, now);
   if (tool === "add_note") return addAgentNote(sql, actor, args, now);
   if (tool === "save_space_file") return saveSpaceFile(sql, actor, args, now);
-  if (tool === "store_scan_context") return storeScanContext({ sql, store: openObjectStore(), organizationId: actor.organizationId, now });
+  if (tool === "store_scan_context") {
+    const filed = await storeScanContext({ sql, store: openObjectStore(), organizationId: actor.organizationId, now });
+    return { ...filed, context: await clientSpaceContext(sql, actor.organizationId) };
+  }
   if (tool === "record_swarm_run") return recordSwarmRun(sql, actor, args, now);
   if (tool === "ask_staff") return askStaff(sql, actor, args, now);
   if (tool === "list_repos") return listAgentRepos(sql, actor);
@@ -130,6 +136,17 @@ async function recordSwarmRun(sql: Sql, actor: AgentActor, args: WorkArgs, now: 
     now,
     actorKind: "agent",
     actorId: "swarm",
+  });
+  await saveSwarmRun(sql, {
+    organizationId: actor.organizationId,
+    workflowId: args.workflowId,
+    swarmWorkflowId: args.swarmWorkflowId,
+    executionId: args.executionId,
+    templateId: args.packId,
+    name: packName,
+    status,
+    trigger: args.trigger?.trim() || "lead_created",
+    now,
   });
   return { ok: true };
 }
