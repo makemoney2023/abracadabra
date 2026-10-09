@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — `main` is live on Cloudflare with stored swarm runs. Staff HQ, the client app, and the swarm worker were published from that tree.
+- **Why** — The swarm-runs branch was merged to `main` and deployed.
+- **Code touchpoints** — none. Deploy only.
+- **Data-flow impact** — The first request runs the `swarm_runs` migration and copies existing timeline runs once.
+- **API / schema impact** — none beyond the migration already on `main`.
+- **Verification** — Worker `handoff` version `cbf04a1a-5bce-492b-8e80-55dfdd85901a` on `handoff.abra-ca-dabra.app`. Worker `handoff-hq` version `c23e8ea5-6957-4029-98a3-22a21c860045` on `hq.abra-ca-dabra.app`. Worker `agent-swarm-orchestrator` version `ebcafe77-a740-4b6a-b0d0-5d6c9a5c568c`. `GET /api/health` returned 200 on Handoff and HQ. The swarm origin returned 200.
+
+## 2026-10-09
+
 - **What changed** — Swarm history is copied once, not on every page load. A finished run stays finished if a later write says it is still running. A live replay can name nodes as soon as the socket opens. A swarm with no project and no projects yet does not offer an empty project picker.
 - **Why** — The backfill rewrote every run on each request, and a stale running write could clear a finished run.
 - **Code touchpoints** — `handoff/src/db/migrate.ts`, `handoff/src/lib/swarm-runs.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`, `swarm/frontend/src/App.tsx`
