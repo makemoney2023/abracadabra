@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/chat/page.tsx`, `handoff/src/app/chat/chat-panel.tsx`, `handoff/src/app/clients/client-chat.tsx`, `handoff/src/lib/hq-chat-playbook.ts`
 - **Data-flow impact** — Chat still uses the one agent named for the signed-in staff member. New chat clears that thread. The client drawer uses the same composer and does not open a second list.
 - **API / schema impact** — none.
-- **Verification** — Full `npm test` follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+- **Verification** — `npm test` (112 files / 614 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
