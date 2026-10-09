@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "wrangler dev",
     "build:ui": "npm --prefix frontend run build",
-    "deploy": "npm run build:ui && wrangler deploy"
+    "deploy": "npm run build:ui && wrangler deploy",
+    "test": "vitest run --dir src"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240901.0",
     "typescript": "^5.5.0",
+    "vitest": "^2.1.9",
     "wrangler": "^3.73.0"
   },
   "dependencies": {

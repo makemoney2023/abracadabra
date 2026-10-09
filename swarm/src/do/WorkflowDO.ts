@@ -1,5 +1,6 @@
-import type { Workflow, WorkflowExecution, WSMessage, NodeResult, AgentMemory, MemoryEntry, Artifact, WorkflowTemplate, McpServerConfig } from '../types';
+import type { Workflow, WorkflowExecution, WSMessage, NodeResult, AgentMemory, MemoryEntry, Artifact, McpServerConfig } from '../types';
 import { runAgent } from '../ai/agents';
+import { composeNodeInput, loadSkill } from '../ai/skills';
 import packTemplates from '../pack-templates.json';
 import { WORKFLOW_TEMPLATES, type WorkflowTemplate } from '../types';
 
@@ -381,7 +382,7 @@ export class WorkflowDO {
             // Gather inputs from all parent nodes
             const parentEdges = workflow.edges.filter((e) => e.target === nodeId);
             const parentInputs = parentEdges.map((e) => nodeOutputs[e.source] || '').filter(Boolean);
-            const nodeInput = parentInputs.length > 0 ? parentInputs.join('\n\n---\n\n') : input;
+            const nodeInput = composeNodeInput(input, parentInputs);
 
             // Retrieve memory for this agent type
             const memory = this.memories.get(node.type);
@@ -412,6 +413,7 @@ export class WorkflowDO {
               // Resolve this node's MCP servers (node selection, else all workflow servers).
               const servers = this.resolveNodeServers(workflow, node);
               const mcpTools = await this.collectNodeTools(servers);
+              const skill = await loadSkill(this.env.SKILLS, node.instructions);
 
               const result = await runAgent(
                 node.type,
@@ -419,6 +421,7 @@ export class WorkflowDO {
                   input: nodeInput + memoryContext,
                   instructions: node.instructions,
                   name: node.name,
+                  skill,
                   mcpTools,
                   executeTool: async (serverId, tool, args) => {
                     const server = servers.find((s) => s.id === serverId);

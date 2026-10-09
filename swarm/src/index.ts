@@ -7,6 +7,8 @@ export interface Env {
   AI: any;
   WORKFLOW_DO: DurableObjectNamespace;
   ARTIFACTS: R2Bucket;
+  /** Published skill bodies (handoff `npm run publish:skills`), keyed skills/<path>/SKILL.md. */
+  SKILLS: R2Bucket;
   ASSETS: Fetcher;
 }
 

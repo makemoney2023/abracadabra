@@ -18,6 +18,10 @@ new_sqlite_classes = ["WorkflowDO"]
 binding = "ARTIFACTS"
 bucket_name = "agent-swarm-artifacts"
 
+[[r2_buckets]]
+binding = "SKILLS"
+bucket_name = "handoff-skills"
+
 [assets]
 directory = "./frontend/dist/"
 binding = "ASSETS"
