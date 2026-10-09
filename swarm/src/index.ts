@@ -1,5 +1,6 @@
 import { WorkflowDO } from './do/WorkflowDO';
 import { handleDemoMcp } from './mcp/demo';
+import { uiAssetKey, uiContentType } from './ui-asset';
 
 export { WorkflowDO };
 
@@ -17,6 +18,9 @@ export interface Env {
   CF_ACCESS_CLIENT_ID?: string;
   CF_ACCESS_CLIENT_SECRET?: string;
 }
+
+const frameAncestors =
+  "frame-ancestors https://hq.abra-ca-dabra.app https://handoff-hq.abracadabra-ai.workers.dev http://hq.localhost:3000 http://localhost:3000";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -36,13 +40,25 @@ export default {
       return stub.fetch(new Request(doUrl.toString(), request));
     }
 
+    // A published canvas build in R2 wins, so the allowlist field ships without a Wrangler asset session.
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const uiKey = uiAssetKey(url.pathname);
+      if (uiKey) {
+        const object = await env.ARTIFACTS.get(uiKey);
+        if (object) {
+          const headers = new Headers();
+          headers.set('content-type', object.httpMetadata?.contentType || uiContentType(uiKey));
+          headers.set('Content-Security-Policy', frameAncestors);
+          if (request.method === 'HEAD') return new Response(null, { status: 200, headers });
+          return new Response(object.body, { status: 200, headers });
+        }
+      }
+    }
+
     // Static frontend. HQ embeds this page, so only those hosts may frame it.
     const asset = await env.ASSETS.fetch(request);
     const headers = new Headers(asset.headers);
-    headers.set(
-      "Content-Security-Policy",
-      "frame-ancestors https://hq.abra-ca-dabra.app https://handoff-hq.abracadabra-ai.workers.dev http://hq.localhost:3000 http://localhost:3000",
-    );
+    headers.set("Content-Security-Policy", frameAncestors);
     return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });
   },
 };
