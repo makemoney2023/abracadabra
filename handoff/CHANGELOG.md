@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/hq-home.tsx`, `handoff/src/app/login/page.tsx`, `handoff/src/app/sign-in-form.tsx`, `handoff/src/app/sign-in-action.ts`, `handoff/src/app/sign-in-action.test.ts`
 - **Data-flow impact** — A good sign-in still opens a session and redirects. A bad sign-in returns an error to the form. Sign-out still revokes the session.
 - **API / schema impact** — none.
-- **Verification** — `src/app/sign-in-action.test.ts` passed (1 test). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (119 files / 652 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
