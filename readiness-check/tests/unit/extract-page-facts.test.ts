@@ -102,6 +102,23 @@ describe("extractPageFacts", () => {
     expect(facts.image).toBe("https://acme.example/post.jpg");
   });
 
+  it("keeps the office email and one phone from a page title and script noise", () => {
+    const html = `<!doctype html><html><head>
+      <title>All-on-4 Dental Implants Ottawa | Renew Implants</title>
+      <script src="/assets/scripts.js?v=1791570015"></script>
+    </head><body>
+      <a href="tel:613-841-6111">613-841-6111</a>
+      <a href="tel:+16138416111">+16138416111</a>
+      <a href="tel:6138416111">6138416111</a>
+      <a href="/cdn-cgi/l/email-protection#177e7971785765727972607e7a677b76796364397476" data-cfemail="177e7971785765727972607e7a677b76796364397476">email</a>
+      <svg><path d="M134.38984417525506 56.63179261412644"/></svg>
+      <p>Call 613-841-6111</p>
+    </body></html>`;
+    const facts = extractPageFacts({ markdown: html, html, jsonLdBlocks: [] });
+    expect(facts.emails).toEqual(["info@renewimplants.ca"]);
+    expect(facts.phones).toEqual(["613-841-6111"]);
+  });
+
   it("finds emails/phones and search hint from markdown when JSON-LD is empty", () => {
     const facts = extractPageFacts({
       markdown:

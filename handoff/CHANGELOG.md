@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A schema scan files one office contact with the real email and phone. The page title is not saved as a person. The same phone written three ways counts once. Script versions and map numbers are ignored. A contact that is only that page title is removed on the next scan, and the contact list shows the phone.
+- **Why** — Renew Implants had seventeen contacts named "All-on-4 Dental Implants Ottawa | Renew Implants" and no email. The office address was hidden by Cloudflare, and one phone had been split into many rows.
+- **Code touchpoints** — `handoff/src/lib/contact-signals.ts`, `handoff/src/lib/lead-enrich.ts`, `handoff/src/app/clients/[id]/overview-tab.tsx`
+- **Data-flow impact** — `enrichLeadFromSchema` reads scraped HTML for Cloudflare emails and real phones, then drops page-title contacts that have no email. A named person stays.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/` passed 754 tests, and the agent suite passed 7. `npx eslint` on the touched files exited 0. Live `https://www.renewimplants.ca/contact-us/` yields `info@renewimplants.ca` and `613-841-6111`. `npx tsc --noEmit` still reports existing `LayoutProps` and `PageProps` errors in `src/app/layout.tsx` and `src/app/page.tsx`.
+
+## 2026-10-09
+
 - **What changed** — Saving a project's requirements keeps the note editable and asks the agent to add tasks for work that is not already on that project. Saving again skips a title the project already has. Clearing the note does not remove tasks.
 - **Why** — The requirements field could be saved, and nothing turned that note into work on the board.
 - **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/[id]/page.tsx`
