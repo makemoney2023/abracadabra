@@ -1,147 +1,143 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState, useTransition, type DragEvent } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { DEAL_STAGES, DEAL_STAGE_LABEL, type DealCard, type DealStage } from "@/db/crm";
+import { useRouter } from "next/navigation";
+import { MoreHorizontalIcon } from "lucide-react";
+import { toast } from "sonner";
+import { DEAL_STAGES, DEAL_STAGE_LABEL, type DealStage } from "@/db/crm";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { moveDealAction, type MoveState } from "./actions";
 
 const initial: MoveState = { message: "", moved: false };
 
-function day(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
-}
+export type BoardDeal = {
+  id: string;
+  organizationId: string;
+  company: string;
+  contact: string;
+  score: number | null;
+  age: string;
+  stage: DealStage;
+};
 
-function DealCardForm({ deal }: { deal: DealCard }) {
-  const [state, action, pending] = useActionState(moveDealAction, initial);
+function StageMenu({ deal }: { deal: BoardDeal }) {
   const router = useRouter();
-  useEffect(() => {
-    if (state.moved) router.refresh();
-  }, [state, router]);
-  return (
-    <article
-      id={`deal-${deal.id}`}
-      draggable
-      onDragStart={(event) => {
-        event.dataTransfer.setData("text/plain", deal.id);
-        event.dataTransfer.effectAllowed = "move";
-      }}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3"
-    >
-      <div>
-        <Link href={`/clients/${deal.organization_id}`} className="text-sm font-medium">
-          {deal.organization_name}
-        </Link>
-        <p className="text-sm">{deal.title}</p>
-        <p className="text-xs text-muted-foreground">{deal.source}</p>
-        <p className="text-xs text-muted-foreground">
-          {deal.score === null ? "No score yet." : `Score ${deal.score}`}
-        </p>
-        <p className="text-xs text-muted-foreground">{deal.next_step?.trim() ? deal.next_step : "No next step."}</p>
-        <p className="text-xs text-muted-foreground">
-          {deal.last_touch === null ? "No touch yet." : `Last touch ${day(deal.last_touch)}`}
-        </p>
-      </div>
-      <form action={action} className="flex flex-col gap-2">
-        <input type="hidden" name="dealId" value={deal.id} />
-        <label className="flex flex-col gap-1 text-xs" htmlFor={`stage-${deal.id}`}>
-          Stage
-          <select
-            id={`stage-${deal.id}`}
-            name="stage"
-            defaultValue={deal.stage}
-            className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-          >
-            {DEAL_STAGES.map((stage) => (
-              <option key={stage} value={stage}>
-                {DEAL_STAGE_LABEL[stage]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs" htmlFor={`lost-${deal.id}`}>
-          If lost, say why
-          <input
-            id={`lost-${deal.id}`}
-            name="lostReason"
-            maxLength={500}
-            className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-          />
-        </label>
-        <Button type="submit" size="sm" disabled={pending}>
-          {pending ? "Moving" : "Move"}
-        </Button>
-        {state.message ? (
-          <p role="status" className="text-xs text-muted-foreground">
-            {state.message}
-          </p>
-        ) : null}
-      </form>
-    </article>
-  );
-}
-
-export function DealBoard({ deals, view }: { deals: DealCard[]; view: "board" | "list" }) {
-  const router = useRouter();
-  const [notice, setNotice] = useState("");
+  const [reason, setReason] = useState("");
   const [pending, startTransition] = useTransition();
-  const byStage = new Map<DealStage, DealCard[]>();
-  for (const stage of DEAL_STAGES) byStage.set(stage, []);
-  for (const deal of deals) byStage.get(deal.stage)?.push(deal);
 
-  function dropOn(event: DragEvent<HTMLElement>, stage: DealStage) {
-    event.preventDefault();
-    const dealId = event.dataTransfer.getData("text/plain");
-    if (!dealId) return;
-    const reason = document.getElementById(`lost-${dealId}`);
+  function move(stage: DealStage, lostReason: string) {
     const data = new FormData();
-    data.set("dealId", dealId);
+    data.set("dealId", deal.id);
     data.set("stage", stage);
-    data.set("lostReason", reason instanceof HTMLInputElement ? reason.value : "");
+    data.set("lostReason", lostReason);
     startTransition(async () => {
       const result = await moveDealAction(initial, data);
-      setNotice(result.message);
-      if (result.moved) router.refresh();
+      if (result.moved) {
+        toast.success("Moved.");
+        router.refresh();
+        return;
+      }
+      toast.error(result.message || "Could not move this deal.");
     });
   }
 
-  if (view === "list") {
-    return (
-      <div className="flex flex-col gap-3">
-        {notice ? <p role="status" className="text-sm">{notice}</p> : null}
-        {pending ? <p className="text-sm text-muted-foreground">Moving</p> : null}
-        <ul className="flex flex-col gap-3">
-          {deals.map((deal) => (
-            <li key={deal.id}>
-              <DealCardForm deal={deal} />
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-3">
-      {notice ? <p role="status" className="text-sm">{notice}</p> : null}
-      {pending ? <p className="text-sm text-muted-foreground">Moving</p> : null}
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {DEAL_STAGES.map((stage) => (
-          <section
-            key={stage}
-            aria-label={DEAL_STAGE_LABEL[stage]}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => dropOn(event, stage)}
-            className="flex w-64 shrink-0 flex-col gap-2 rounded-lg bg-muted/40 p-2"
-          >
-            <h2 className="px-1 text-sm font-medium">{DEAL_STAGE_LABEL[stage]}</h2>
-            {(byStage.get(stage) ?? []).map((deal) => (
-              <DealCardForm key={deal.id} deal={deal} />
-            ))}
-          </section>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon-sm" variant="ghost" aria-label={`Move ${deal.company}`} disabled={pending}>
+          <MoreHorizontalIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {DEAL_STAGES.filter((stage) => stage !== deal.stage && stage !== "lost").map((stage) => (
+          <DropdownMenuItem key={stage} onSelect={() => move(stage, "")}>
+            {DEAL_STAGE_LABEL[stage]}
+          </DropdownMenuItem>
         ))}
+        {deal.stage === "lost" ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <div className="flex flex-col gap-1.5 px-2 py-1.5">
+              <label className="text-xs" htmlFor={`lost-${deal.id}`}>
+                Lost
+              </label>
+              <Input
+                id={`lost-${deal.id}`}
+                value={reason}
+                maxLength={500}
+                placeholder="Say why"
+                onChange={(event) => setReason(event.target.value)}
+                onKeyDown={(event) => event.stopPropagation()}
+              />
+              <Button size="sm" type="button" disabled={pending} onClick={() => move("lost", reason)}>
+                Mark lost
+              </Button>
+            </div>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function DealBoard({ deals, stages }: { deals: BoardDeal[]; stages: DealStage[] }) {
+  const byStage = new Map<DealStage, BoardDeal[]>();
+  for (const stage of stages) byStage.set(stage, []);
+  for (const deal of deals) byStage.get(deal.stage)?.push(deal);
+  return (
+    <ScrollArea className="w-full">
+      <div className="flex w-max gap-3 pb-3">
+        {stages.map((stage) => {
+          const cards = byStage.get(stage) ?? [];
+          return (
+            <section
+              key={stage}
+              aria-label={DEAL_STAGE_LABEL[stage]}
+              className="flex w-64 shrink-0 flex-col gap-2 rounded-lg bg-muted/40 p-2"
+            >
+              <h2 className="flex items-center justify-between px-1 text-sm font-medium">
+                {DEAL_STAGE_LABEL[stage]}
+                <span className="tabular-nums text-muted-foreground">{cards.length}</span>
+              </h2>
+              {cards.map((deal) => (
+                <article key={deal.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <Link href={`/clients/${deal.organizationId}`} className="text-sm font-medium">
+                        {deal.company}
+                      </Link>
+                      {deal.contact ? (
+                        <p className="truncate text-sm text-muted-foreground">{deal.contact}</p>
+                      ) : null}
+                    </div>
+                    <StageMenu deal={deal} />
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    {deal.score === null ? (
+                      <span />
+                    ) : (
+                      <span className="rounded-4xl bg-muted px-2 py-0.5 font-mono text-[11px] tabular-nums">
+                        {deal.score}
+                      </span>
+                    )}
+                    {deal.age ? <span className="text-xs text-muted-foreground">{deal.age}</span> : null}
+                  </div>
+                </article>
+              ))}
+            </section>
+          );
+        })}
       </div>
-    </div>
+    </ScrollArea>
   );
 }

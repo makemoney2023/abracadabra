@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ Leads opens on a sortable list. Stage, owner, and search filters sit above it. The board is the other view, and a new lead opens in a drawer.
+- **Why** — The old page led with a form, used drag to move deals, and printed "No score yet." in empty cells.
+- **Code touchpoints** — `handoff/src/app/leads/page.tsx`, `handoff/src/app/leads/view.ts`, `handoff/src/app/leads/board.tsx`, `handoff/src/app/leads/filters.tsx`, `handoff/src/app/leads/lead-form.tsx`, `handoff/src/components/ui/scroll-area.tsx`
+- **Data-flow impact** — The page still reads deals. It also reads staff emails and the first contact on each company so the list can show owner initials and a contact. Stage moves still use the existing action.
+- **API / schema impact** — none.
+- **Verification** — Full npm test follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ Chat is a two-pane thread. The list shows the one live conversation. Replies render as Markdown. Tool calls stay collapsed until opened. An empty thread offers three starter prompts, and the composer stays at the bottom.
 - **Why** — The old chat was one column of plain text with a single-line box.
 - **Code touchpoints** — `handoff/src/app/chat/page.tsx`, `handoff/src/app/chat/chat-panel.tsx`, `handoff/src/app/clients/client-chat.tsx`, `handoff/src/lib/hq-chat-playbook.ts`

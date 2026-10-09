@@ -1,113 +1,195 @@
-import Link from "next/link";
-import { DEAL_STAGES, DEAL_STAGE_LABEL, listDeals } from "@/db/crm";
+import { DEAL_STAGES, DEAL_STAGE_LABEL, listDeals, type DealStage } from "@/db/crm";
+import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatRelative } from "@/lib/format";
+import { sortRows } from "@/components/data-table-sort";
+import { DataTable, type Column } from "@/components/data-table";
+import { EmptyState } from "@/components/empty-state";
+import { PageFrame } from "@/components/page-frame";
+import { StatusBadge } from "@/components/status-badge";
 import { StaffShell } from "../staff-shell";
-import { DealBoard } from "./board";
-import { LeadForm } from "./lead-form";
+import { DealBoard, type BoardDeal } from "./board";
+import { LeadsToolbar } from "./filters";
+import { NewLeadDrawer } from "./lead-form";
+import { filterDeals, leadsHref, leadsView, ownerInitials, stageCounts, type LeadFilterRow } from "./view";
 
-function queryOf(params: { view?: string; stage?: string; source?: string; owner?: string }): string {
-  const search = new URLSearchParams();
-  if (params.view === "list") search.set("view", "list");
-  if (params.stage) search.set("stage", params.stage);
-  if (params.source) search.set("source", params.source);
-  if (params.owner) search.set("owner", params.owner);
-  const text = search.toString();
-  return text.length > 0 ? `?${text}` : "";
+type LeadRow = LeadFilterRow & {
+  organizationId: string;
+  company: string;
+  score: number | null;
+  nextStep: string;
+  ownerLabel: string;
+  updated: number | null;
+};
+
+function knownStage(value: string | undefined): string {
+  const stage = value?.trim() ?? "";
+  return (DEAL_STAGES as readonly string[]).includes(stage) ? stage : "";
+}
+
+function sortValue(row: LeadRow, key: string): string | number | null {
+  if (key === "company") return row.company;
+  if (key === "contact") return row.contact ?? "";
+  if (key === "stage") return DEAL_STAGE_LABEL[row.stage];
+  if (key === "score") return row.score;
+  if (key === "next") return row.nextStep;
+  if (key === "owner") return row.ownerLabel;
+  if (key === "updated") return row.updated;
+  return "";
+}
+
+function leadColumns(now: number): Column<LeadRow>[] {
+  return [
+    {
+      key: "company",
+      header: "Company",
+      sortable: true,
+      cell: (row) => <span className="font-medium">{row.company}</span>,
+    },
+    {
+      key: "contact",
+      header: "Contact",
+      sortable: true,
+      cell: (row) => row.contact || null,
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      sortable: true,
+      cell: (row) => <StatusBadge domain="deal" value={row.stage} />,
+    },
+    {
+      key: "score",
+      header: "Score",
+      sortable: true,
+      align: "right",
+      cell: (row) => (row.score === null ? null : <span className="tabular-nums">{row.score}</span>),
+    },
+    {
+      key: "next",
+      header: "Next step",
+      sortable: true,
+      cell: (row) => row.nextStep || null,
+    },
+    {
+      key: "owner",
+      header: "Owner",
+      sortable: true,
+      cell: (row) => row.ownerLabel || null,
+    },
+    {
+      key: "updated",
+      header: "Updated",
+      sortable: true,
+      cell: (row) => (row.updated == null ? null : formatRelative(row.updated, now)),
+    },
+  ];
 }
 
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; stage?: string; source?: string; owner?: string }>;
+  searchParams: Promise<{ view?: string; stage?: string; owner?: string; q?: string; sort?: string }>;
 }) {
   const query = await searchParams;
-  const view = query.view === "list" ? "list" : "board";
-  const stage = query.stage?.trim() ?? "";
-  const source = query.source?.trim() ?? "";
+  const view = leadsView(query.view);
+  const stage = knownStage(query.stage);
   const owner = query.owner?.trim() ?? "";
+  const q = query.q?.trim() ?? "";
+  const sort = query.sort?.trim() || undefined;
   const { sql, caller } = await requireHqStaffPage();
-  const [deals, owners] = await Promise.all([
-    listDeals(sql, caller, {
-      stage: stage || undefined,
-      source: source || undefined,
-      ownerUserId: owner || undefined,
-    }),
+  const now = clock();
+  const [deals, owners, contacts] = await Promise.all([
+    listDeals(sql, caller),
     sql.all<{ user_id: string; email: string }>(
       "SELECT user_id, email FROM staff WHERE revoked_at IS NULL ORDER BY email",
     ),
+    sql.all<{ organization_id: string; name: string }>(
+      `SELECT organization_id, name FROM contacts
+       ORDER BY is_primary DESC, name`,
+    ),
   ]);
-  const otherView = view === "list" ? "board" : "list";
+  const emailOf = new Map(owners.map((person) => [person.user_id, person.email]));
+  const contactOf = new Map<string, string>();
+  for (const person of contacts) {
+    const name = person.name.trim();
+    if (name.length > 0 && !contactOf.has(person.organization_id)) {
+      contactOf.set(person.organization_id, name);
+    }
+  }
+  const rows: LeadRow[] = deals.map((deal) => ({
+    id: deal.id,
+    stage: deal.stage,
+    organization_name: deal.organization_name,
+    title: deal.title,
+    owner_user_id: deal.owner_user_id,
+    next_step: deal.next_step,
+    contact: contactOf.get(deal.organization_id) ?? "",
+    organizationId: deal.organization_id,
+    company: deal.organization_name,
+    score: deal.score,
+    nextStep: deal.next_step?.trim() ?? "",
+    ownerLabel: ownerInitials(deal.owner_user_id ? emailOf.get(deal.owner_user_id) : null),
+    updated: deal.last_touch,
+  }));
+  const scoped = filterDeals(rows, { owner, q });
+  const counts = stageCounts(scoped);
+  const visible = sortRows(filterDeals(scoped, { stage }), sort, sortValue);
+  const filtered = Boolean(stage || owner || q);
+  const basePath = leadsHref({ view, stage, owner, q });
+  const boardDeals: BoardDeal[] = visible.map((row) => ({
+    id: row.id,
+    organizationId: row.organizationId,
+    company: row.company,
+    contact: row.contact ?? "",
+    score: row.score,
+    age: row.updated == null ? "" : formatRelative(row.updated, now),
+    stage: row.stage as DealStage,
+  }));
+
   return (
     <StaffShell>
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-16">
-      <div className="flex flex-col gap-3">
-        <h1 className="font-heading text-4xl leading-tight">Leads</h1>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Add a lead</CardTitle>
-          <CardDescription>Type the company. A finished schema scan fills the blank details.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LeadForm />
-        </CardContent>
-      </Card>
-      <form method="get" className="flex flex-wrap items-end gap-3">
-        {view === "list" ? <input type="hidden" name="view" value="list" /> : null}
-        <label className="flex flex-col gap-1 text-sm" htmlFor="filter-stage">
-          Stage
-          <select
-            id="filter-stage"
-            name="stage"
-            defaultValue={stage}
-            className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm"
-          >
-            <option value="">Any stage</option>
-            {DEAL_STAGES.map((item) => (
-              <option key={item} value={item}>
-                {DEAL_STAGE_LABEL[item]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm" htmlFor="filter-source">
-          Source
-          <input
-            id="filter-source"
-            name="source"
-            defaultValue={source}
-            maxLength={80}
-            className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm"
+      <PageFrame
+        title="Leads"
+        description="Deals in motion. Filter by stage, owner, or a word."
+        width="wide"
+        actions={<NewLeadDrawer />}
+      >
+        <LeadsToolbar
+          view={view}
+          stage={stage}
+          owner={owner}
+          q={q}
+          sort={sort}
+          counts={counts}
+          owners={owners.map((person) => ({ userId: person.user_id, email: person.email }))}
+        />
+        {view === "board" ? (
+          visible.length === 0 ? (
+            <EmptyState
+              title={filtered ? "No leads match" : "No leads yet"}
+              body={filtered ? "Try another stage, owner, or word." : "Add a lead to start a deal."}
+            />
+          ) : (
+            <DealBoard deals={boardDeals} stages={stage ? [stage as DealStage] : [...DEAL_STAGES]} />
+          )
+        ) : (
+          <DataTable
+            columns={leadColumns(now)}
+            rows={visible}
+            rowKey={(row) => row.id}
+            rowHref={(row) => `/clients/${row.organizationId}`}
+            sort={sort}
+            basePath={basePath}
+            empty={
+              <EmptyState
+                title={filtered ? "No leads match" : "No leads yet"}
+                body={filtered ? "Try another stage, owner, or word." : "Add a lead to start a deal."}
+              />
+            }
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm" htmlFor="filter-owner">
-          Owner
-          <select
-            id="filter-owner"
-            name="owner"
-            defaultValue={owner}
-            className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm"
-          >
-            <option value="">Anyone</option>
-            {owners.map((person) => (
-              <option key={person.user_id} value={person.user_id}>
-                {person.email}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button type="submit" variant="outline">
-          Filter
-        </Button>
-        <Link href={`/leads${queryOf({ view: otherView, stage, source, owner })}`} className="text-sm">
-          {view === "list" ? "Board" : "List"}
-        </Link>
-      </form>
-      {deals.length === 0 ? <p className="text-sm text-muted-foreground">No deals yet.</p> : null}
-      <DealBoard deals={deals} view={view} />
-    </main>
+        )}
+      </PageFrame>
     </StaffShell>
   );
 }
