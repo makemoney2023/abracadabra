@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/client-rows.ts`, `handoff/src/app/clients/page.tsx`, `handoff/src/app/clients/new/page.tsx`, `handoff/src/app/clients/client-form.tsx`, `handoff/src/app/clients/actions.ts`
 - **Data-flow impact** — The list joins organizations, open tasks, projects, deals, the latest health note, and the latest activity.
 - **API / schema impact** — none.
-- **Verification** — `npx vitest run src/lib/client-rows.test.ts`. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (111 files / 605 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
