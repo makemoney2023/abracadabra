@@ -47,13 +47,17 @@ export function WorkTab({
           All projects
         </Link>
         {projects.map((project) => (
-          <Link
-            key={project.id}
-            href={`${base}&project=${project.id}`}
-            className={projectId === project.id ? "text-sm font-medium" : "text-sm text-muted-foreground"}
-          >
-            {project.name} · {open(project.id)}
-          </Link>
+          <span key={project.id} className="inline-flex items-center gap-2">
+            <Link
+              href={`${base}&project=${project.id}`}
+              className={projectId === project.id ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+            >
+              {project.name} · {open(project.id)}
+            </Link>
+            <Link href={`/projects/${project.id}`} className="text-sm text-muted-foreground">
+              Open
+            </Link>
+          </span>
         ))}
         <Link
           href={`${base}&project=none`}

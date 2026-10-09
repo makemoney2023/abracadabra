@@ -29,6 +29,87 @@
 
 ## 2026-10-09
 
+- **What changed** — Main is published. Staff HQ, the client app, the agent worker, the swarm, and `handoff-connectors` were deployed from the MCP connector merge.
+- **Why** — `/mcp` and the portal catalog need to be on the live workers.
+- **Code touchpoints** — none. Deploy of `5fb7416`.
+- **Data-flow impact** — The first HQ health check created `connector_grants`. A swarm run still drops the portal server until `SWARM_RUN_SECRET` is set on HQ and the swarm. `/mcp` stays empty until the Access service token is set on HQ.
+- **API / schema impact** — `connector_grants` is present in production D1.
+- **Verification** — Worker `handoff-hq` version `28504f03-78c5-4e97-b97c-468402ca3061` on `hq.abra-ca-dabra.app`. Worker `handoff` version `09147c3d-0c34-45b0-a3cf-9d6114917e6f` on `handoff.abra-ca-dabra.app`. Worker `handoff-agent` version `dcb86dcc-5b55-4b86-bdd7-7dd572fc0ab5` on `agent.abra-ca-dabra.app`. Worker `agent-swarm-orchestrator` version `79b069b6-b162-42df-9200-1d1021b525ff`. Worker `handoff-connectors` version `027f2fd8-0fe6-48e6-adff-31d446caedca`. `GET /api/health` returned 200 on HQ and Handoff. The swarm origin returned 200. The connector returns 401 without a bearer. `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`, and `SWARM_RUN_SECRET` are not set on HQ or the swarm. `CONNECTOR_TOKEN` and `GOOGLE_SEARCH_CONSOLE_SA` are not set on the connector worker.
+
+## 2026-10-09
+
+- **What changed** — Super admins can list the MCP portal's servers at `/mcp` and turn each one on or off. A swarm run with no stored servers calls that portal when it is configured. Search Console grants live on the client, and a connector worker exposes `search_analytics` and `inspect_url` for the granted property.
+- **Why** — The agent and swarm runs need the same portal grant, and staff need a switch that does not detach a server or rewrite the portal mapping.
+- **Code touchpoints** — `handoff/src/lib/portal-session.ts`, `handoff/src/app/mcp/page.tsx`, `handoff/src/lib/mcp-catalog.ts`, `handoff/src/lib/client-workflows.ts`, `swarm/src/mcp/portal-gate.ts`, `handoff/src/lib/connector-grants.ts`, `connectors/src/index.ts`, `handoff/migrations/0020_connector_grants.sql`
+- **Data-flow impact** — `/mcp` calls `portal_list_servers` and `portal_toggle_single_server` with the Access service token. HQ sends `SWARM_RUN_SECRET` when a run includes the portal. The swarm adds the Access headers for that call and does not store them. `connector_grants` is the Search Console property per client.
+- **API / schema impact** — New table `connector_grants`. New page `/mcp`. New worker `handoff-connectors`. New secrets `SWARM_RUN_SECRET` on HQ and the swarm, and `CONNECTOR_TOKEN` plus `GOOGLE_SEARCH_CONSOLE_SA` on the connector worker.
+- **Verification** — `npm test` in `handoff/` (131 files, 774 tests, plus the agent worker suite of 7). `npm test` and `npx tsc --noEmit` in `swarm/` (28 tests). `npm test` and `npx tsc --noEmit` in `connectors/` (6 tests). `npx eslint` on the touched handoff TypeScript files exited 0.
+
+## 2026-10-09
+
+- **What changed** — A design and an implementation plan describe the HQ MCP page, the portal grant the agent and swarm runs share, and the Search Console connector behind that portal. No runtime behavior changed.
+- **Why** — Swarm runs could only attach the demo MCP server, and nothing in HQ listed the Cloudflare portal's servers or turned them on or off.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`, `docs/superpowers/plans/2026-10-09-mcp-connectors.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `README.md`
+- **Data-flow impact** — none until the plan is implemented.
+- **API / schema impact** — none. The plan adds catalog id `portal`, `/mcp`, `SWARM_RUN_SECRET`, and `connector_grants`.
+- **Verification** — docs only. No test run.
+
+## 2026-10-09
+
+- **What changed** — Saving project requirements asks the agent for what each task must produce. That note is stored on the task and shown on the card. Saving again fills a task that only had a title. A project that already has tasks does not get another set of cards when the model renames them.
+- **Why** — The first pass created titles only. The card had no detail.
+- **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/work/board.tsx`
+- **Data-flow impact** — Each new or untitled task gets an `agent.task_brief` activity whose body is the detail and whose `taskId` is the card. The board reads that note with the other agent notes.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 771 tests passed, and the agent worker suite passed 7. `npx eslint` on the planner, the project action, and the board exited 0.
+
+## 2026-10-09
+
+- **What changed** — A schema scan files one office contact with the real email and phone. The page title is not saved as a person. The same phone written three ways counts once. Script versions and map numbers are ignored. A contact that is only that page title is removed on the next scan, and the contact list shows the phone.
+- **Why** — Renew Implants had seventeen contacts named "All-on-4 Dental Implants Ottawa | Renew Implants" and no email. The office address was hidden by Cloudflare, and one phone had been split into many rows.
+- **Code touchpoints** — `handoff/src/lib/contact-signals.ts`, `handoff/src/lib/lead-enrich.ts`, `handoff/src/app/clients/[id]/overview-tab.tsx`
+- **Data-flow impact** — `enrichLeadFromSchema` reads scraped HTML for Cloudflare emails and real phones, then drops page-title contacts that have no email. A named person stays.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/` passed 754 tests, and the agent suite passed 7. `npx eslint` on the touched files exited 0. Live `https://www.renewimplants.ca/contact-us/` yields `info@renewimplants.ca` and `613-841-6111`. `npx tsc --noEmit` still reports existing `LayoutProps` and `PageProps` errors in `src/app/layout.tsx` and `src/app/page.tsx`.
+
+## 2026-10-09
+
+- **What changed** — Saving a project's requirements keeps the note editable and asks the agent to add tasks for work that is not already on that project. Saving again skips a title the project already has. Clearing the note does not remove tasks.
+- **Why** — The requirements field could be saved, and nothing turned that note into work on the board.
+- **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/[id]/page.tsx`
+- **Data-flow impact** — A changed note is sent to Workers AI. The JSON task titles are created on that project in Describe. Titles already on the project are skipped.
+- **API / schema impact** — none. Tasks use the existing `tasks` table.
+- **Verification** — `npm test` in `handoff/`: 768 tests passed, and the agent worker suite passed 7. `npx eslint` on the requirement planner and the project action exited 0.
+
+## 2026-10-09
+
+- **What changed** — A client's Overview lists that client's projects. A project page has a place to write what the project needs. Linking a repo puts it on the project when the client has exactly one. A repo already on the client but not on a project shows on the project page so it can be assigned.
+- **Why** — A project saved for a client was only visible in the Projects list. The client page never listed it. A repo connected on the client stayed off the project because linking did not set `project_id`.
+- **Code touchpoints** — `handoff/src/app/clients/[id]/overview-tab.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/db/crm.ts`, `handoff/migrations/0019_project_description.sql`
+- **Data-flow impact** — `linkRepo` sets `project_id` only when that client has one project, and only when the repo does not already have one. The project page reads every repo on the client and splits the ones with no project from the ones on this project. `client_context` includes each project's description.
+- **API / schema impact** — `projects.description` in `0019_project_description.sql`. Empty text stores null. `client_context` adds `description` on `project` and on each entry in `projects`.
+- **Verification** — `npm test` in `handoff/`: 756 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript files exited 0. Live D1: `makemoney2023/abracadabra` is now on project Social Media Ads (`75d6d16a-33a9-46f3-aaf4-5960599a8cb3`) because that client has one project. The Overview list and the requirements field ship with this change.
+
+## 2026-10-09
+
+- **What changed** — A finished schema scan writes its page copy into the client space as soon as the scan is ready. A repeat does not add the same pages again. Stylesheets and pictures are left out. The quarter-hour job files any finished scan that never landed.
+- **Why** — Adding AbraCadabra finished the schema scan, and the page text stayed on the scan. The space stayed empty because filing waited for the agent, and that wake never wrote the files.
+- **Code touchpoints** — `handoff/src/lib/scan-context.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/queue-dispatch.ts`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — `scan_ready` calls `storeScanContext` before it wakes the agent. The scheduled worker calls `filePendingScanContexts` for scans already finished.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run` in `handoff` (125 files, 717 tests, passed). ESLint clean on the touched library files.
+
+## 2026-10-09
+
+- **What changed** — Moving between staff screens shows pulsing skeleton bars on the theme border while the next page loads.
+- **Why** — The loading placeholder used `bg-muted`, which matches the canvas, and uncolored borders, which paint in the light text color. That flash looked like an empty white table.
+- **Code touchpoints** — `handoff/src/components/ui/skeleton.tsx`, `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-fallback.test.ts`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run` in `handoff` (126 files, 716 tests, passed) and `npx vitest run --config vitest.agent.config.mts` (1 file, 7 tests, passed). ESLint clean on the skeleton, route fallback, and its test.
+
+## 2026-10-09
+
 - **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
 - **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
 - **Code touchpoints** — none. Deploy of `f2735c0`.

@@ -27,6 +27,8 @@ Agents can call tools on any remote MCP server that speaks Streamable HTTP:
 4. Tool calls stream live over WebSockets, appear as wrench badges on nodes, and are recorded in the PDF report (`via MCP: server/tool`).
 
 No external server handy? Point one at this worker's built-in demo at `/demo-mcp/mcp` (`get_time`, `echo`, `word_count`) to try the loop with zero setup.
+
+HQ-started runs may include a server with id `portal`. The worker adds `CF-Access-Client-Id` and `CF-Access-Client-Secret` for that server only when the execute request sends `Authorization: Bearer $SWARM_RUN_SECRET`. A request without that bearer drops the portal server before any tool call. Set `SWARM_RUN_SECRET`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` with `wrangler secret put`. They are not written into workflow storage.
 - **Cloudflare Native** — Workers AI, Durable Objects, WebSockets, R2. Deploys to the Abracadabra account, with Handoff and HQ.
 
 ## Changelog

@@ -10,6 +10,7 @@ import {
   Inbox,
   ListTodo,
   MessageSquare,
+  Plug,
   Radar,
   Settings,
   Workflow,
@@ -37,6 +38,7 @@ export const ICONS = {
   "/swarm": Workflow,
   "/spaces": FolderOpen,
   "/settings/github": Settings,
+  "/mcp": Plug,
 } as const;
 
 export const NAV_ICON_HREFS = Object.keys(ICONS);

@@ -26,6 +26,7 @@ import { listVisibleRepos } from "@/lib/github/app";
 import { readGithubSecrets } from "@/lib/github/secrets";
 import { presentSchemaLead } from "@/lib/schema-report";
 import { statusToken } from "@/lib/status-token";
+import { connectorGrant } from "@/lib/connector-grants";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { SetContextLabel } from "@/components/context-bar";
 import { PageFrame } from "@/components/page-frame";
@@ -191,6 +192,7 @@ export default async function ClientPage({
           others={orgs.filter((org) => org.id !== client.id).map((org) => ({ id: org.id, name: org.name }))}
           githubConnected={Boolean(secrets)}
           githubFailed={Boolean(secrets && visible && !visible.ok)}
+          searchConsoleResource={await connectorGrant(sql, client.id, "search-console")}
         />
       </PageFrame>
     </StaffShell>

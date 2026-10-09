@@ -78,6 +78,7 @@ export function parseSkillIndex(raw: string): string[] {
 type PortalTools = {
   getAITools?: () => Record<string, unknown>;
   waitForConnections?: (options?: { timeout?: number }) => Promise<unknown>;
+  discoverIfConnected?: (serverId: string, options?: { timeoutMs?: number }) => Promise<unknown>;
 };
 
 export class ClientAgent extends Agent<AgentBindings> {
@@ -149,9 +150,12 @@ export class ClientAgent extends Agent<AgentBindings> {
   private async connectPortal(): Promise<void> {
     const target = mcpConnectTarget(this.env);
     if (!target) return;
-    const known = this.getMcpServers();
-    const already = Object.values(known.servers).some((server) => server.name === "portal");
-    if (already) return;
+    const known = this.getMcpServers() as { servers?: Record<string, { name?: string }> };
+    const serverId = Object.entries(known.servers ?? {}).find(([, server]) => server.name === "portal")?.[0];
+    if (serverId) {
+      await this.portal().discoverIfConnected?.(serverId, { timeoutMs: 3000 });
+      return;
+    }
     await this.addMcpServer("portal", target.url, {
       transport: { headers: target.headers },
     });

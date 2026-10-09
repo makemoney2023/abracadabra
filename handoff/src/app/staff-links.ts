@@ -35,7 +35,10 @@ export const STUDIO_NAV_GROUPS = [
   },
   {
     label: "System",
-    items: [{ href: "/settings/github", label: "GitHub" }],
+    items: [
+      { href: "/settings/github", label: "GitHub" },
+      { href: "/mcp", label: "MCP" },
+    ],
   },
 ] as const;
 

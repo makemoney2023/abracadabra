@@ -5,8 +5,8 @@ export type RouteShape = "metrics" | "table" | "board" | "thread" | "frame" | "c
 
 function TableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-lg border" aria-hidden>
-      <div className="flex gap-4 border-b px-3 py-3">
+    <div className="overflow-hidden rounded-lg border border-border" aria-hidden>
+      <div className="flex gap-4 border-b border-border px-3 py-3">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-4 w-20" />
@@ -14,7 +14,7 @@ function TableSkeleton({ rows = 8 }: { rows?: number }) {
       {Array.from({ length: rows }, (_, index) => (
         <div
           key={index}
-          className="flex items-center gap-4 border-b px-3 last:border-b-0"
+          className="flex items-center gap-4 border-b border-border px-3 last:border-b-0"
           style={{ height: "var(--row-h)" }}
         >
           <Skeleton className="h-4 w-40" />
@@ -43,7 +43,7 @@ function BoardSkeleton() {
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-hidden>
       {Array.from({ length: 4 }, (_, column) => (
-        <div key={column} className="space-y-3 rounded-lg border p-3">
+        <div key={column} className="space-y-3 rounded-lg border border-border p-3">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
