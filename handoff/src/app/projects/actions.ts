@@ -1,5 +1,6 @@
 "use server";
 
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
@@ -13,6 +14,7 @@ import {
   createTask,
   postStatusUpdate,
   publishStatusUpdate,
+  saveProjectDescription,
   updateProject,
   updateTask,
   type CrmError,
@@ -22,6 +24,11 @@ import {
   type TaskStatus,
 } from "@/db/crm";
 import { requireHqStaffPage } from "@/lib/current";
+import {
+  askRequirementModel,
+  fileRequirementTasks,
+  type RequirementPlan,
+} from "@/lib/requirement-tasks";
 import { dayToUtc } from "./dates";
 
 export type FormState = { message: string };
@@ -83,6 +90,50 @@ export async function updateProjectAction(_previous: FormState, formData: FormDa
   if (!saved.ok) return { message: messageFor(saved.error, "Pick a status.") };
   refreshProject(projectId, organizationId);
   return { message: "Status saved." };
+}
+
+export async function saveProjectDescriptionAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const { sql, caller } = await requireHqStaffPage();
+  const projectId = String(formData.get("projectId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const description = String(formData.get("description") ?? "");
+  const now = Date.now();
+  const saved = await saveProjectDescription(sql, caller, { projectId, description }, now);
+  if (!saved.ok) return { message: messageFor(saved.error, "Keep the note under 4000 characters.") };
+  const filed = await fileRequirementTasks({
+    sql,
+    caller,
+    projectId,
+    requirements: description,
+    now,
+    ask: askForRequirements,
+  });
+  refreshProject(projectId, organizationId);
+  return { message: planMessage(filed) };
+}
+
+async function askForRequirements(prompt: string): Promise<string> {
+  try {
+    const env = (await getCloudflareContext({ async: true })).env as {
+      AI?: Parameters<typeof askRequirementModel>[0];
+      HANDOFF_AI_GATEWAY_ID?: string;
+    };
+    return await askRequirementModel(env.AI, prompt, env.HANDOFF_AI_GATEWAY_ID || "default");
+  } catch {
+    return "";
+  }
+}
+
+function planMessage(filed: RequirementPlan): string {
+  if (filed.reason === "cleared") return "Requirements cleared.";
+  if (filed.reason === "unread") {
+    return "Requirements saved. The agent could not read them, so no tasks were added.";
+  }
+  if (filed.reason !== "added") return "Requirements saved. No new tasks.";
+  const noun = filed.created.length === 1 ? "task" : "tasks";
+  const listed = filed.created.join("; ");
+  const detail = listed.length <= 180 ? `: ${listed}` : ".";
+  return `Requirements saved. Added ${filed.created.length} ${noun}${detail}`;
 }
 
 export async function createMilestoneAction(_previous: FormState, formData: FormData): Promise<FormState> {

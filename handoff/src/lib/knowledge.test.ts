@@ -600,6 +600,9 @@ describe("agent read tools", () => {
     const names = listed.result?.tools?.map((tool) => tool.name) ?? [];
     expect(names).toEqual(expect.arrayContaining(["client_context", "get_brief", "list_feedback"]));
 
+    await sql.run("UPDATE projects SET description = ? WHERE id = 'project-1'", [
+      "Landing page and three ad sizes.",
+    ]);
     const context = await call(agentToken, "tools/call", {
       name: "client_context",
       arguments: { organizationId: org },
@@ -611,7 +614,8 @@ describe("agent read tools", () => {
       organization: { name: string; briefApproval: string };
       deal: { title: string; wonAt: number };
       assessment: { totalScore: number; answerSummary: string };
-      project: { milestones: { name: string }[] };
+      project: { milestones: { name: string }[]; description: string | null };
+      projects: { id: string; description: string | null }[];
       workspaces: { slug: string; fileCounts: { clean: number } }[];
       repos: { fullName: string }[];
       briefs: { kind: string; version: number }[];
@@ -626,6 +630,10 @@ describe("agent read tools", () => {
     expect(body.assessment.answerSummary).toContain("42");
     expect(body.assessment.answerSummary).toContain("forming");
     expect(body.project.milestones[0]?.name).toBe("Launch");
+    expect(body.project.description).toBe("Landing page and three ad sizes.");
+    expect(body.projects.find((row) => row.id === "project-1")?.description).toBe(
+      "Landing page and three ad sizes.",
+    );
     expect(body.workspaces.map((space) => space.slug).sort()).toEqual(["foam-a", "foam-b"]);
     expect(body.workspaces.find((space) => space.slug === "foam-a")?.fileCounts.clean).toBe(2);
     expect(body.repos[0]?.fullName).toBe("makemoney2023/foam");

@@ -120,12 +120,18 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
      ORDER BY completed_at DESC LIMIT 1`,
     [organizationId],
   );
-  const projects = await sql.all<{ id: string; name: string; status: string }>(
-    `SELECT id, name, status FROM projects WHERE organization_id = ? ORDER BY name, id`,
+  const projects = await sql.all<{ id: string; name: string; status: string; description: string | null }>(
+    `SELECT id, name, status, description FROM projects WHERE organization_id = ? ORDER BY name, id`,
     [organizationId],
   );
-  const project = await sql.get<{ id: string; name: string; status: string; due_at: number | null }>(
-    `SELECT id, name, status, due_at FROM projects
+  const project = await sql.get<{
+    id: string;
+    name: string;
+    status: string;
+    due_at: number | null;
+    description: string | null;
+  }>(
+    `SELECT id, name, status, due_at, description FROM projects
      WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 1`,
     [organizationId],
   );
@@ -250,10 +256,16 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
           name: project.name,
           status: project.status,
           dueAt: project.due_at,
+          description: project.description,
           milestones: milestones.map((row) => ({ name: row.name, dueAt: row.due_at, doneAt: row.done_at })),
         }
       : null,
-    projects: projects.map((row) => ({ id: row.id, name: row.name, status: row.status })),
+    projects: projects.map((row) => ({
+      id: row.id,
+      name: row.name,
+      status: row.status,
+      description: row.description,
+    })),
     workspaces: workspaces.map((row) => ({
       id: row.id,
       slug: row.slug,

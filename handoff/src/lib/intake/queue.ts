@@ -2,6 +2,8 @@ import { migrate } from "../../db/migrate";
 import { d1Sql, type D1Like } from "../../db/sql";
 import { noteWakeMiss, wakeOrganization, type WakeEnv } from "../agent-wake";
 import { startLeadSchemaScan, type ScanQueue } from "../lead-schema";
+import { storeScanContext } from "../scan-context";
+import type { ObjectStore } from "../store/objects";
 import { consumeIntake, type BookingMailer } from "./consume";
 import type { Sql } from "../../db/sql";
 
@@ -85,6 +87,7 @@ export async function handleLeadIntakeBatch(
   now = Date.now(),
   env: IntakeEnv = {},
   fetchImpl: typeof fetch = fetch,
+  store?: ObjectStore | null,
 ): Promise<void> {
   const sql = d1Sql(db);
   await migrate(sql);
@@ -92,6 +95,9 @@ export async function handleLeadIntakeBatch(
     const ready = scanReady(message.body);
     if (ready) {
       try {
+        if (store) {
+          await storeScanContext({ sql, store, organizationId: ready.organizationId, now });
+        }
         const woke = await wakeOrganization(env, ready.organizationId, "scan_ready", now, fetchImpl);
         if (!woke) await noteWakeMiss(sql, ready.organizationId, now);
         message.ack();

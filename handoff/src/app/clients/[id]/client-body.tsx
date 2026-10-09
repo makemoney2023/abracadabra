@@ -118,6 +118,7 @@ export function ClientBody({
       timeline={timeline}
       linked={linked}
       repos={repos}
+      projects={projects}
       deals={deals}
       readiness={readiness}
       schema={schema}

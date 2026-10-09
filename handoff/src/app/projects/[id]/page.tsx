@@ -6,7 +6,8 @@ import {
   listBoardActivity,
   openCloudRunCount,
   listMilestones,
-  listProjectRepos,
+  listProjects,
+  listRepos,
   listStatusUpdates,
   organizationById,
   projectById,
@@ -33,7 +34,15 @@ import { StaffShell } from "../../staff-shell";
 import { swarmRunLink } from "../../swarm/swarm-link";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
-import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm } from "../forms";
+import { AssignRepoForm } from "../../clients/repo-forms";
+import {
+  MilestoneForm,
+  ProjectDescriptionForm,
+  ProjectStatusForm,
+  ProjectTaskForm,
+  PublishUpdateForm,
+  StatusUpdateForm,
+} from "../forms";
 import { AUDIENCE_LABEL, HEALTH_LABEL, PROJECT_STATUS_LABEL } from "../labels";
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -42,7 +51,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await projectById(sql, caller, id);
   if (!project) notFound();
   const now = clock();
-  const [org, milestones, tasks, updates, staff, spaces, activity, capRow, runsOpen, swarmRuns] = await Promise.all([
+  const [org, milestones, tasks, updates, staff, spaces, activity, capRow, runsOpen, swarmRuns, clientRepos, siblings] =
+    await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
     listBoard(sql, caller, { projectId: project.id }),
@@ -58,8 +68,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
     openCloudRunCount(sql, caller),
     listProjectSwarmRuns(sql, caller, project.id),
+    listRepos(sql, caller, project.organization_id),
+    listProjects(sql, caller, project.organization_id),
   ]);
-  const repos = await listProjectRepos(sql, caller, project.id);
+  const repos = clientRepos.filter((repo) => repo.project_id === project.id);
+  const unassignedRepos = clientRepos.filter((repo) => repo.project_id == null);
+  const repoChoices = siblings.map((row) => ({ id: row.id, name: row.name }));
   const visibleIds = new Set((await workspacesFor(sql, caller)).map((row) => row.id));
   const usableSpaces = spaces.filter((space) => visibleIds.has(space.id));
   const finished = await listProjectDeliverables(sql, caller, project.id);
@@ -80,6 +94,21 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         ) : null}
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="flex min-w-0 flex-col gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Requirements</CardTitle>
+                <CardDescription>
+                  Edit this note and save it. The agent reads it and adds tasks that are not already on this project.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProjectDescriptionForm
+                  projectId={project.id}
+                  organizationId={project.organization_id}
+                  description={project.description}
+                />
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader className="flex-row items-center justify-between gap-3">
                 <CardTitle>Milestones</CardTitle>
@@ -278,10 +307,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 <CardTitle>Repos</CardTitle>
                 <CardDescription>Code we work on for this project.</CardDescription>
               </CardHeader>
-              <CardContent>
-                {repoRows.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No repos linked yet.</p>
-                ) : (
+              <CardContent className="flex flex-col gap-6">
+                {repoRows.length === 0 && unassignedRepos.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No repos linked to this client yet.{" "}
+                    {org ? <Link href={`/clients/${org.id}?tab=repos`}>Link one on the client.</Link> : null}
+                  </p>
+                ) : null}
+                {repoRows.length > 0 ? (
                   <ul className="flex flex-col gap-6">
                     {repoRows.map(({ repo, summary }) => (
                       <li key={repo.id} className="flex flex-col gap-2 text-sm">
@@ -290,7 +323,27 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                       </li>
                     ))}
                   </ul>
-                )}
+                ) : unassignedRepos.length > 0 ? (
+                  <p className="text-sm text-muted-foreground">None of this client&apos;s repos are on this project yet.</p>
+                ) : null}
+                {unassignedRepos.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-muted-foreground">On this client, not on a project.</p>
+                    <ul className="flex flex-col gap-3">
+                      {unassignedRepos.map((repo) => (
+                        <li key={repo.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                          <span className="font-mono">{repo.full_name}</span>
+                          <AssignRepoForm
+                            organizationId={project.organization_id}
+                            repoId={repo.id}
+                            projectId={null}
+                            projects={repoChoices}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
             <Card>

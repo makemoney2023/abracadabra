@@ -11,6 +11,42 @@
 
 ## 2026-10-09
 
+- **What changed** — Saving a project's requirements keeps the note editable and asks the agent to add tasks for work that is not already on that project. Saving again skips a title the project already has. Clearing the note does not remove tasks.
+- **Why** — The requirements field could be saved, and nothing turned that note into work on the board.
+- **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/[id]/page.tsx`
+- **Data-flow impact** — A changed note is sent to Workers AI. The JSON task titles are created on that project in Describe. Titles already on the project are skipped.
+- **API / schema impact** — none. Tasks use the existing `tasks` table.
+- **Verification** — `npm test` in `handoff/`: 768 tests passed, and the agent worker suite passed 7. `npx eslint` on the requirement planner and the project action exited 0.
+
+## 2026-10-09
+
+- **What changed** — A client's Overview lists that client's projects. A project page has a place to write what the project needs. Linking a repo puts it on the project when the client has exactly one. A repo already on the client but not on a project shows on the project page so it can be assigned.
+- **Why** — A project saved for a client was only visible in the Projects list. The client page never listed it. A repo connected on the client stayed off the project because linking did not set `project_id`.
+- **Code touchpoints** — `handoff/src/app/clients/[id]/overview-tab.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/db/crm.ts`, `handoff/migrations/0019_project_description.sql`
+- **Data-flow impact** — `linkRepo` sets `project_id` only when that client has one project, and only when the repo does not already have one. The project page reads every repo on the client and splits the ones with no project from the ones on this project. `client_context` includes each project's description.
+- **API / schema impact** — `projects.description` in `0019_project_description.sql`. Empty text stores null. `client_context` adds `description` on `project` and on each entry in `projects`.
+- **Verification** — `npm test` in `handoff/`: 756 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript files exited 0. Live D1: `makemoney2023/abracadabra` is now on project Social Media Ads (`75d6d16a-33a9-46f3-aaf4-5960599a8cb3`) because that client has one project. The Overview list and the requirements field ship with this change.
+
+## 2026-10-09
+
+- **What changed** — A finished schema scan writes its page copy into the client space as soon as the scan is ready. A repeat does not add the same pages again. Stylesheets and pictures are left out. The quarter-hour job files any finished scan that never landed.
+- **Why** — Adding AbraCadabra finished the schema scan, and the page text stayed on the scan. The space stayed empty because filing waited for the agent, and that wake never wrote the files.
+- **Code touchpoints** — `handoff/src/lib/scan-context.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/queue-dispatch.ts`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — `scan_ready` calls `storeScanContext` before it wakes the agent. The scheduled worker calls `filePendingScanContexts` for scans already finished.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run` in `handoff` (125 files, 717 tests, passed). ESLint clean on the touched library files.
+
+## 2026-10-09
+
+- **What changed** — Moving between staff screens shows pulsing skeleton bars on the theme border while the next page loads.
+- **Why** — The loading placeholder used `bg-muted`, which matches the canvas, and uncolored borders, which paint in the light text color. That flash looked like an empty white table.
+- **Code touchpoints** — `handoff/src/components/ui/skeleton.tsx`, `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-fallback.test.ts`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run` in `handoff` (126 files, 716 tests, passed) and `npx vitest run --config vitest.agent.config.mts` (1 file, 7 tests, passed). ESLint clean on the skeleton, route fallback, and its test.
+
+## 2026-10-09
+
 - **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
 - **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
 - **Code touchpoints** — none. Deploy of `f2735c0`.

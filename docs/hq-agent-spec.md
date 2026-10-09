@@ -269,7 +269,8 @@ Notes:
   "organization": { "id", "name", "website", "industry", "notes", "briefApproval", "autoPublishBuilt", "agentPausedAt" },
   "deal": { "id", "title", "stage", "wonAt" } | null,
   "assessment": { "totalScore", "scores": {...}, "answerSummary": "agent-safe text, never raw answers" } | null,
-  "project": { "id", "name", "status", "dueAt", "milestones": [...] } | null,
+  "project": { "id", "name", "status", "dueAt", "description", "milestones": [...] } | null,
+  "projects": [ { "id", "name", "status", "description" } ],
   "workspaces": [ { "id", "slug", "displayName", "logoObjectKey", "policyProfile", "fileCounts": { "clean", "waiting", "failed" } } ],
   "repos": [ { "id", "fullName", "projectId", "defaultBranch" } ],
   "briefs": [ { "deliverableId", "kind": "brief|design_system", "status", "version", "publishedVersion" } ],
@@ -280,6 +281,8 @@ Notes:
 ```
 
 `answerSummary` is built on the server by the existing readiness scoring text, not by passing `answers_json` through. This is the only place survey data touches the agent, and it is already summarized.
+
+Saving a project `description` on the staff project page asks Workers AI for task titles and creates the ones that project does not already have. The tasks land in Describe. An empty note clears the description and leaves existing tasks in place.
 
 **`get_brief`** `{ kind }` → current body of the brief or design system, plus the latest `changes` feedback comments if any.
 
