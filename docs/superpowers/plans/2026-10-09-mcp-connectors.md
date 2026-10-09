@@ -53,7 +53,7 @@ Work is in [`handoff/`](../../../handoff/), [`swarm/`](../../../swarm/), and a n
 - Create: `handoff/src/lib/portal-session.ts`
 - Test: `handoff/src/lib/portal-session.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Cover four cases:
 
@@ -62,17 +62,17 @@ Cover four cases:
 3. The same row under `result.servers`, and a row that only has `id`, also parse. A row with no id is dropped.
 4. `setPortalServer({ serverId: "handoff", enabled: false })` posts `portal_toggle_single_server` with `action: "untoggle"`, then lists again. A body that includes `https://mcp.example/authorize` returns `{ ok: false }` and does not report the server as off.
 
-- [ ] **Step 2: Run the test and confirm it fails** because the module is missing.
+- [x] **Step 2: Run the test and confirm it fails** because the module is missing.
 
 ```bash
 cd handoff && npx vitest run src/lib/portal-session.test.ts
 ```
 
-- [ ] **Step 3: Implement the client**
+- [x] **Step 3: Implement the client**
 
 `listPortalServers(env, fetchImpl)` and `setPortalServer(env, input, fetchImpl)`. POST JSON-RPC to `MCP_PORTAL_URL` with the two Access headers and `Accept: application/json, text/event-stream`. Initialize is best-effort, matching `swarm/src/mcp/client.ts`: send `initialize`, keep `mcp-session-id` when present, ignore a failed `notifications/initialized`.
 
-- [ ] **Step 4: Re-run the test until it passes.**
+- [x] **Step 4: Re-run the test until it passes.**
 
 ### Task 2: `/mcp` page
 
@@ -84,19 +84,19 @@ cd handoff && npx vitest run src/lib/portal-session.test.ts
 - Test: `handoff/src/app/staff-links.test.ts`
 - Test: `handoff/src/app/mcp/actions.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `staff-links.test.ts` expects System to be GitHub then `/mcp`, and every nav href to have an icon.
 
 `actions.test.ts` expects a non-super-admin caller to get the not-found path `requireHqSuperAdminPage` already uses, and a super admin toggle to call `setPortalServer` with the posted `serverId` and `enabled`.
 
-- [ ] **Step 2: Run those tests and confirm the nav assertion fails.**
+- [x] **Step 2: Run those tests and confirm the nav assertion fails.**
 
-- [ ] **Step 3: Add the nav item and the page**
+- [x] **Step 3: Add the nav item and the page**
 
 System group, label `MCP`, href `/mcp`, icon `Plug`. The page calls `requireHqSuperAdminPage`, then `listPortalServers`. Empty URL and empty list use the copy in MCP-009 and MCP-010. Each row is a form posting `serverId` and the next `enabled` value. The action revalidates `/mcp`.
 
-- [ ] **Step 4: Re-run the nav test, the action test, and eslint on the new files.**
+- [x] **Step 4: Re-run the nav test, the action test, and eslint on the new files.**
 
 ### Task 3: Catalog id `portal`
 
@@ -108,7 +108,7 @@ System group, label `MCP`, href `/mcp`, icon `Plug`. The page calls `requireHqSu
 - Test: `handoff/src/lib/client-workflows.test.ts`
 - Test: `handoff/src/lib/lead-swarm.test.ts`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 1. `allowedMcpIds(["portal", "swarm-demo"])` returns both. `["https://evil.example/mcp"]` is still null.
 2. Resolving `portal` with portal URL `https://mcp.example/mcp` yields that exact URL. An http portal URL is null. Resolving `swarm-demo` still appends `/demo-mcp/mcp` to the swarm origin.
@@ -116,13 +116,13 @@ System group, label `MCP`, href `/mcp`, icon `Plug`. The page calls `requireHqSu
 4. The same run with portal URL empty still posts no `mcpServers`.
 5. A stored `["swarm-demo"]` stays demo-only even when the portal URL is set.
 
-- [ ] **Step 2: Run the catalog and workflow tests and confirm the new cases fail.**
+- [x] **Step 2: Run the catalog and workflow tests and confirm the new cases fail.**
 
-- [ ] **Step 3: Implement resolution and the secret header**
+- [x] **Step 3: Implement resolution and the secret header**
 
 `mcpServersFor` takes the swarm origin and an optional portal URL. `runLeadSwarm` accepts an optional `runSecret` and sets the Authorization header when it is non-empty. `runClientWorkflow` passes `env.MCP_PORTAL_URL` and `env.SWARM_RUN_SECRET` from the existing server env helper used by other HQ calls. Add both names to `handoff/.env.example` as empty values, with a comment that they match the agent Access token and the swarm run bearer.
 
-- [ ] **Step 4: Re-run `npx vitest run src/lib/mcp-catalog.test.ts src/lib/client-workflows.test.ts src/lib/lead-swarm.test.ts`.**
+- [x] **Step 4: Re-run `npx vitest run src/lib/mcp-catalog.test.ts src/lib/client-workflows.test.ts src/lib/lead-swarm.test.ts`.**
 
 ### Task 4: Swarm secret gate
 
@@ -131,7 +131,7 @@ System group, label `MCP`, href `/mcp`, icon `Plug`. The page calls `requireHqSu
 - Modify: `swarm/src/index.ts`
 - Test: add a node test next to the existing swarm tests, named `src/mcp/portal-gate.test.ts`, that exercises a pure helper rather than the Durable Object.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Extract `portalAllowed(authorization, secret)` and `serversForRun(servers, allowed)`:
 
@@ -140,13 +140,13 @@ Extract `portalAllowed(authorization, secret)` and `serversForRun(servers, allow
 3. When the run is not allowed, the `portal` entry is removed and `swarm-demo` remains.
 4. `headersFor(server, env, allowed)` adds the two Access headers only for id `portal` when allowed and both env values are set. A `headers` field already on that server is not copied.
 
-- [ ] **Step 2: Run `npm test` in `swarm/` and confirm the new file fails.**
+- [x] **Step 2: Run `npm test` in `swarm/` and confirm the new file fails.**
 
-- [ ] **Step 3: Use the helper in `WorkflowDO` before `collectNodeTools`.**
+- [x] **Step 3: Use the helper in `WorkflowDO` before `collectNodeTools`.**
 
 Compare the secret with a constant-time equal on equal-length hashes (SHA-256 of the provided bearer and of `SWARM_RUN_SECRET`) so a short guess does not exit early on length alone. Add `SWARM_RUN_SECRET`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` to the swarm `Env` and document them in `swarm/README.md` and `swarm/DEPLOYMENT.md`.
 
-- [ ] **Step 4: Re-run `npm test` and `npx tsc --noEmit` in `swarm/`.**
+- [x] **Step 4: Re-run `npm test` and `npx tsc --noEmit` in `swarm/`.**
 
 ### Task 5: Connector grants
 
@@ -158,22 +158,22 @@ Compare the secret with a constant-time equal on equal-length hashes (SHA-256 of
 - Test: `handoff/src/lib/connector-grants.test.ts`
 - Modify: the client page and `handoff/src/app/clients/actions.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `saveConnectorGrant` upserts one row for the organization and `search-console`. A second save replaces `resource`. A staff caller who cannot see the client is refused. An empty resource deletes the row.
 
-- [ ] **Step 2: Run it and confirm failure.**
+- [x] **Step 2: Run it and confirm failure.**
 
-- [ ] **Step 3: Add the migration, the save function, and a text field on the client page labeled with the connector id.** The field posts through a staff action that calls `requireHqStaffPage`. Show the saved resource on the next render.
+- [x] **Step 3: Add the migration, the save function, and a text field on the client page labeled with the connector id.** The field posts through a staff action that calls `requireHqStaffPage`. Show the saved resource on the next render.
 
-- [ ] **Step 4: Re-run the grant test and the migrate test.**
+- [x] **Step 4: Re-run the grant test and the migrate test.**
 
 ### Task 6: `handoff-connectors`
 
 **Files:**
 - Create: `connectors/` Worker (package, `wrangler.jsonc`, `src/index.ts`, `src/registry.ts`, `src/search-console.ts`, tests)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 1. No bearer, or the wrong bearer, is 401 and the Google fetch mock is not called.
 2. `POST /mcp/missing` is 404.
@@ -182,13 +182,13 @@ Compare the secret with a constant-time equal on equal-length hashes (SHA-256 of
 5. `tools/call` with `site_url` set and a grant row calls Google with the grant's `resource` only.
 6. A second module registered in the test registry is listed at its own path.
 
-- [ ] **Step 2: Run the connector tests and confirm failure.**
+- [x] **Step 2: Run the connector tests and confirm failure.**
 
-- [ ] **Step 3: Implement the Worker**
+- [x] **Step 3: Implement the Worker**
 
 D1 binding for grants, secret `CONNECTOR_TOKEN`, secret `GOOGLE_SEARCH_CONSOLE_SA`. The Google call can be a thin `fetch` to the Search Console API using a JWT from the service account. Keep the HTTP shape in one function so the test injects a fake fetch. Hostname in the wrangler config is `connectors.abra-ca-dabra.app` as a route comment until the operator attaches the zone. Do not create the DNS record from this task.
 
-- [ ] **Step 4: Re-run the connector tests.**
+- [x] **Step 4: Re-run the connector tests.**
 
 ### Task 7: Docs and operator note
 
@@ -198,9 +198,9 @@ D1 binding for grants, secret `CONNECTOR_TOKEN`, secret `GOOGLE_SEARCH_CONSOLE_S
 - Modify: `handoff/CHANGELOG.md`
 - Modify: `connectors/README.md` (create)
 
-- [ ] **Step 1: Document the page, the catalog id, the run secret, and the operator link for Search Console (MCP-028).**
+- [x] **Step 1: Document the page, the catalog id, the run secret, and the operator link for Search Console (MCP-028).**
 
-- [ ] **Step 2: Run the full handoff vitest suite, swarm `npm test`, swarm `tsc`, connector tests, and eslint on the touched files. Record the counts in the changelog.**
+- [x] **Step 2: Run the full handoff vitest suite, swarm `npm test`, swarm `tsc`, connector tests, and eslint on the touched files. Record the counts in the changelog.**
 
 ## Operator check after secrets exist
 

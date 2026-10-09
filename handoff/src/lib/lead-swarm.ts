@@ -54,6 +54,7 @@ export async function runLeadSwarm(input: {
   brief: string;
   templateId?: string;
   mcpServers?: SwarmMcpServer[];
+  runSecret?: string;
   fetchImpl?: typeof fetch;
   polls?: number;
   wait?: (ms: number) => Promise<void>;
@@ -68,6 +69,9 @@ export async function runLeadSwarm(input: {
     throw new Error("The swarm template is empty.");
   }
   const servers = input.mcpServers ?? [];
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  const runSecret = input.runSecret?.trim() ?? "";
+  if (runSecret) headers.authorization = `Bearer ${runSecret}`;
   const workflow = {
     ...template,
     id: input.workflowId,
@@ -81,13 +85,13 @@ export async function runLeadSwarm(input: {
   };
   const saved = await fetchImpl(`${base}/api/save`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify(workflow),
   });
   if (!saved.ok) throw new Error("The swarm did not save the workflow.");
   const started = await fetchImpl(`${base}/api/execute`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify({ workflowId: input.workflowId, input: input.brief }),
   });
   if (!started.ok) throw new Error("The swarm did not start.");

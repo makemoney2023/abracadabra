@@ -9,6 +9,7 @@ import { WORKFLOW_TEMPLATES, type WorkflowTemplate } from '../types';
 const ALL_TEMPLATES: WorkflowTemplate[] = [...WORKFLOW_TEMPLATES, ...(packTemplates as WorkflowTemplate[])];
 import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
+import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
 
 export class WorkflowDO {
   private state: DurableObjectState;
@@ -108,6 +109,7 @@ export class WorkflowDO {
         status: 'running',
         results: {},
         startedAt: Date.now(),
+        portalAllowed: await portalAllowed(request.headers.get('authorization'), this.env.SWARM_RUN_SECRET),
       };
       this.executions.set(executionId, execution);
       await this.state.storage.put(`ex:${executionId}`, execution);
@@ -297,7 +299,8 @@ export class WorkflowDO {
     const execution = this.executions.get(executionId);
     if (!execution || execution.status !== 'running') return;
 
-    const workflow = this.workflows.get(execution.workflowId);
+    const storedWorkflow = this.workflows.get(execution.workflowId);
+    const workflow = storedWorkflow ? this.workflowForRun(storedWorkflow, execution.portalAllowed === true) : undefined;
     if (!workflow) {
       execution.status = 'failed';
       execution.finishedAt = Date.now();
@@ -544,6 +547,19 @@ export class WorkflowDO {
         timestamp: Date.now(),
       });
     }
+  }
+
+  /** A run copy. Portal headers come from the worker env and are not written back to storage. */
+  private workflowForRun(workflow: Workflow, allowed: boolean): Workflow {
+    const apply = (server: McpServerConfig) => ({ ...server, headers: headersFor(server, this.env, allowed) });
+    return {
+      ...workflow,
+      mcpServers: serversForRun(workflow.mcpServers ?? [], allowed).map(apply),
+      nodes: workflow.nodes.map((node) => ({
+        ...node,
+        mcpServers: node.mcpServers ? serversForRun(node.mcpServers, allowed).map(apply) : node.mcpServers,
+      })),
+    };
   }
 
   /** Effective servers for a node: its own servers plus selected workflow servers. */

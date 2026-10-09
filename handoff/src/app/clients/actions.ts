@@ -21,6 +21,7 @@ import { requireHqStaffPage } from "@/lib/current";
 import { runHqTool } from "@/lib/hq-tools";
 import { beginDirectClient, scanIntakeBindings } from "@/lib/lead-schema";
 import { sendHandoffMail } from "@/lib/mail";
+import { saveConnectorGrant } from "@/lib/connector-grants";
 import { assignSwarmRun } from "@/lib/swarm-runs";
 
 export type FormState = { message: string };
@@ -318,4 +319,15 @@ export async function assignSwarmRunAction(_previous: ActionResult | null, formD
   revalidatePath(`/clients/${organizationId}`);
   revalidatePath(`/projects/${projectId}`);
   return ok("This swarm is on that project.");
+}
+
+export async function saveSearchConsoleGrantAction(formData: FormData): Promise<void> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  await saveConnectorGrant(sql, caller, {
+    organizationId,
+    connectorId: "search-console",
+    resource: String(formData.get("resource") ?? ""),
+  });
+  revalidatePath(`/clients/${organizationId}`);
 }

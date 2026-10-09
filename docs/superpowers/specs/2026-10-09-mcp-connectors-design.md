@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-09
 **Product:** Handoff HQ (`hq.abra-ca-dabra.app`), the HQ agent, and the swarm worker
-**Status:** Proposed, implementation-ready
+**Status:** Implemented
 **Requirements:** MCP-001 through MCP-028
 **Lives in:** [`handoff/`](../../../handoff/), [`swarm/`](../../../swarm/), and a new worker `handoff-connectors`
 **Plan:** [`docs/superpowers/plans/2026-10-09-mcp-connectors.md`](../plans/2026-10-09-mcp-connectors.md)

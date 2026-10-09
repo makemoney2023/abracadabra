@@ -382,6 +382,146 @@ describe("client workflows", () => {
     expect(body.nodes?.[0]?.mcpServerIds).toEqual(["swarm-demo"]);
   });
 
+  it("attaches the portal when a workflow has no stored servers and the portal URL is set", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Clock",
+      templateId: "pack-schema-readiness",
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    const headers: { save?: string; execute?: string } = {};
+    let saved = "";
+    await runClientWorkflow({
+      sql,
+      workflowId: created.workflow.id,
+      brief: "What time is it?",
+      origin: "https://swarm.example",
+      portalUrl: "https://mcp.example/mcp",
+      runSecret: "test-run-secret",
+      now: NOW,
+      wait: async () => {},
+      fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+        const href = String(url);
+        const authorization = new Headers(init?.headers).get("authorization") ?? "";
+        if (href.includes("/api/template")) {
+          return Response.json({
+            id: "pack-schema-readiness",
+            name: "Schema",
+            nodes: [{ id: "n1", type: "researcher", name: "Reader", instructions: "Read.", position: { x: 0, y: 0 } }],
+            edges: [],
+          });
+        }
+        if (href.endsWith("/api/save")) {
+          saved = String(init?.body ?? "");
+          headers.save = authorization;
+          return Response.json({ success: true });
+        }
+        if (href.endsWith("/api/execute")) {
+          headers.execute = authorization;
+          return Response.json({ executionId: "run-portal" });
+        }
+        return Response.json({ status: "completed", results: { n1: { status: "done", output: "Noon." } } });
+      }) as typeof fetch,
+    });
+    const body = JSON.parse(saved) as { mcpServers?: { id: string; url: string; headers?: unknown }[] };
+    expect(body.mcpServers).toEqual([{ id: "portal", name: "MCP portal", url: "https://mcp.example/mcp" }]);
+    expect(body.mcpServers?.[0]?.headers).toBeUndefined();
+    expect(headers.save).toBe("Bearer test-run-secret");
+    expect(headers.execute).toBe("Bearer test-run-secret");
+  });
+
+  it("leaves a workflow with no stored servers unattached when the portal URL is empty", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Clock",
+      templateId: "pack-schema-readiness",
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    let saved = "";
+    await runClientWorkflow({
+      sql,
+      workflowId: created.workflow.id,
+      brief: "What time is it?",
+      origin: "https://swarm.example",
+      portalUrl: "",
+      now: NOW,
+      wait: async () => {},
+      fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+        const href = String(url);
+        if (href.includes("/api/template")) {
+          return Response.json({
+            id: "pack-schema-readiness",
+            name: "Schema",
+            nodes: [{ id: "n1", type: "researcher", name: "Reader", instructions: "Read.", position: { x: 0, y: 0 } }],
+            edges: [],
+          });
+        }
+        if (href.endsWith("/api/save")) {
+          saved = String(init?.body ?? "");
+          return Response.json({ success: true });
+        }
+        if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-plain" });
+        return Response.json({ status: "completed", results: { n1: { status: "done", output: "Noon." } } });
+      }) as typeof fetch,
+    });
+    expect(JSON.parse(saved).mcpServers).toBeUndefined();
+  });
+
+  it("keeps a stored demo server even when the portal URL is set", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Clock",
+      templateId: "pack-schema-readiness",
+      mcpServerIds: ["swarm-demo"],
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    let saved = "";
+    await runClientWorkflow({
+      sql,
+      workflowId: created.workflow.id,
+      brief: "What time is it?",
+      origin: "https://swarm.example",
+      portalUrl: "https://mcp.example/mcp",
+      runSecret: "test-run-secret",
+      now: NOW,
+      wait: async () => {},
+      fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+        const href = String(url);
+        if (href.includes("/api/template")) {
+          return Response.json({
+            id: "pack-schema-readiness",
+            name: "Schema",
+            nodes: [{ id: "n1", type: "researcher", name: "Reader", instructions: "Read.", position: { x: 0, y: 0 } }],
+            edges: [],
+          });
+        }
+        if (href.endsWith("/api/save")) {
+          saved = String(init?.body ?? "");
+          return Response.json({ success: true });
+        }
+        if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-demo" });
+        return Response.json({ status: "completed", results: { n1: { status: "done", output: "Noon." } } });
+      }) as typeof fetch,
+    });
+    const body = JSON.parse(saved) as { mcpServers?: { id: string }[] };
+    expect(body.mcpServers?.map((server) => server.id)).toEqual(["swarm-demo"]);
+  });
+
   it("runs the oldest due workflow and moves a repeating schedule forward", async () => {
     const sql = await database();
     const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });

@@ -19,7 +19,7 @@ describe("studio menu", () => {
     const delivery = STUDIO_NAV_GROUPS.find((group) => group.label === "Delivery");
     expect(delivery?.items.map((item) => item.href)).toEqual(["/work", "/projects"]);
     const system = STUDIO_NAV_GROUPS.find((group) => group.label === "System");
-    expect(system?.items.map((item) => item.href)).toEqual(["/settings/github"]);
+    expect(system?.items.map((item) => item.href)).toEqual(["/settings/github", "/mcp"]);
   });
 
   it("flattens groups into a unique menu", () => {

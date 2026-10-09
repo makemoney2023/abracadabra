@@ -1,0 +1,17 @@
+{
+  "name": "handoff-connectors",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest run --dir src",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240901.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.9",
+    "wrangler": "^3.73.0"
+  }
+}

@@ -50,6 +50,7 @@ export function ClientBody({
   others,
   githubConnected,
   githubFailed,
+  searchConsoleResource,
 }: {
   tab: ClientTabId;
   page: number;
@@ -77,6 +78,7 @@ export function ClientBody({
   others: { id: string; name: string }[];
   githubConnected: boolean;
   githubFailed: boolean;
+  searchConsoleResource: string;
 }) {
   if (tab === "work") {
     return (
@@ -109,7 +111,9 @@ export function ClientBody({
     );
   }
   if (tab === "activity") return <ActivityTab organizationId={client.id} timeline={timeline} page={page} />;
-  if (tab === "settings") return <SettingsTab keepId={client.id} others={others} />;
+  if (tab === "settings") {
+    return <SettingsTab keepId={client.id} others={others} searchConsoleResource={searchConsoleResource} />;
+  }
   return (
     <OverviewTab
       client={client}
