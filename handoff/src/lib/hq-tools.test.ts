@@ -697,6 +697,111 @@ it("returns the client's projects and reuses one with the same name", async () =
   expect(count?.n).toBe(1);
 });
 
+it("lists two loose repos and refuses a space from another client", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  await sql.run(
+    `INSERT INTO repos (
+       id, github_repo_id, installation_id, full_name, organization_id, project_id,
+       default_branch, is_private, owned_by, linked_by, created_at, archived_at
+     ) VALUES
+       ('repo-a', 11, NULL, 'north/a', ?, NULL, 'main', 0, 'agency', 'staff-1', ?, NULL),
+       ('repo-b', 12, NULL, 'north/b', ?, NULL, 'main', 0, 'agency', 'staff-1', ?, NULL)`,
+    [organizationId, NOW, organizationId, NOW],
+  );
+  const created = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Launch" }, idempotencyKey: "proj-loose" },
+    NOW,
+  );
+  const value = valueOf(created) as { id?: string; looseRepos?: { id: string }[]; spaces?: { id: string }[] };
+  expect(value.looseRepos?.map((repo) => repo.id).sort()).toEqual(["repo-a", "repo-b"]);
+  expect((await sql.get<{ project_id: string | null }>("SELECT project_id FROM repos WHERE id = 'repo-a'"))?.project_id).toBeNull();
+  expect((await sql.get<{ project_id: string | null }>("SELECT project_id FROM repos WHERE id = 'repo-b'"))?.project_id).toBeNull();
+  const other = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_client", input: { name: "Pine" }, idempotencyKey: "pine" },
+    NOW,
+  );
+  const pineId = String((valueOf(other) as { id?: string } | undefined)?.id ?? "");
+  const pine = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId: pineId, name: "Pine site" }, idempotencyKey: "pine-proj" },
+    NOW + 1,
+  );
+  const pineProject = String((valueOf(pine) as { id?: string } | undefined)?.id ?? "");
+  const refused = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "assign_space_project",
+      input: { organizationId, workspaceId: "ws-1", projectId: pineProject },
+      idempotencyKey: "assign-space",
+    },
+    NOW + 2,
+  );
+  expect(refused).toEqual({ ok: false, error: "invalid" });
+});
+
+it("moves a workflow task to run instead of starting a second swarm", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const project = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Launch" }, idempotencyKey: "proj-run" },
+    NOW,
+  );
+  const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+  const group = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_workflow_group", input: { organizationId, name: "Launch swarm", projectId }, idempotencyKey: "group-run" },
+    NOW,
+  );
+  const groupId = String((valueOf(group) as { id?: string } | undefined)?.id ?? "");
+  const wakes: string[] = [];
+  const workflow = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "create_workflow",
+      input: { organizationId, groupId, name: "Ads", templateId: "pack-community-marketingskills", projectId },
+      idempotencyKey: "wf-run",
+    },
+    NOW,
+    {
+      swarm: {
+        origin: "https://swarm.example",
+        fetchImpl: async () =>
+          Response.json({
+            nodes: [{ instructions: "Follow .cursor/skills/community/marketingskills/ad-creative/SKILL.md" }],
+            edges: [],
+          }),
+      },
+    },
+  );
+  const workflowId = String((valueOf(workflow) as { id?: string } | undefined)?.id ?? "");
+  const taskId = String((valueOf(workflow) as { taskId?: string } | undefined)?.taskId ?? "");
+  expect(taskId).not.toBe("");
+  const started = await runHqTool(
+    sql,
+    staff,
+    { tool: "run_workflow", input: { id: workflowId, body: "Go." }, idempotencyKey: "run-task", approved: true },
+    NOW + 1,
+    { wake: async (id, reason) => { wakes.push(`${id}:${reason}`); } },
+  );
+  expect(started).toMatchObject({ ok: true, value: { taskId, stage: "run" } });
+  const task = await sql.get<{ stage: string }>("SELECT stage FROM tasks WHERE id = ?", [taskId]);
+  expect(task?.stage).toBe("run");
+  expect(wakes).toEqual([`${organizationId}:due`]);
+  const runs = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM swarm_runs");
+  expect(runs?.n).toBe(0);
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");

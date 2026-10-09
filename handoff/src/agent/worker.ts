@@ -278,6 +278,8 @@ export class ClientAgent extends Agent<AgentBindings> {
     packName: string;
     trigger: string;
     attempts: number;
+    taskId?: string;
+    projectId?: string | null;
   }): Promise<void> {
     const origin = this.env.SWARM_ORIGIN?.replace(/\/$/, "");
     const call = this.leadCaller();
@@ -315,6 +317,7 @@ export class ClientAgent extends Agent<AgentBindings> {
           requestId: payload.activityKey,
           title: payload.packName,
           body: run.output,
+          projectId: payload.projectId,
         });
       } catch (error) {
         await call("add_note", {
@@ -322,6 +325,21 @@ export class ClientAgent extends Agent<AgentBindings> {
           requestId: `${payload.activityKey}:deliverable-miss`,
         });
       }
+      if (payload.taskId) {
+        await call("update_task", {
+          taskId: payload.taskId,
+          status: "done",
+          note: "Swarm finished.",
+          requestId: `${payload.activityKey}:done`,
+        });
+      }
+    }
+    if (status === "failed" && payload.taskId) {
+      await call("add_note", {
+        taskId: payload.taskId,
+        body: activityBody || "The swarm failed.",
+        requestId: `${payload.activityKey}:failed`,
+      });
     }
     if (status === "running" && payload.attempts < 6) {
       await this.schedule(45, "refreshSwarm", { ...payload, attempts: payload.attempts + 1 });
@@ -338,6 +356,8 @@ export class ClientAgent extends Agent<AgentBindings> {
       const workflowId = typeof run.workflowId === "string" ? run.workflowId : "";
       const templateId = typeof run.templateId === "string" ? run.templateId : "";
       const packName = typeof run.packName === "string" ? run.packName : "Swarm";
+      const taskId = typeof run.taskId === "string" ? run.taskId : "";
+      const projectId = typeof run.projectId === "string" ? run.projectId : null;
       if (run.status === "running" && executionId && workflowId) {
         await this.schedule(45, "refreshSwarm", {
           executionId,
@@ -346,7 +366,25 @@ export class ClientAgent extends Agent<AgentBindings> {
           packName,
           trigger: "due",
           attempts: 1,
+          taskId,
+          projectId,
         });
+      } else if (run.none === true) {
+        const open = await call("running_swarm", { requestId: wakeId });
+        const row = open && typeof open === "object" ? (open as Record<string, unknown>) : {};
+        const openId = typeof row.executionId === "string" ? row.executionId : "";
+        if (row.status === "running" && openId) {
+          await this.schedule(45, "refreshSwarm", {
+            executionId: openId,
+            templateId: typeof row.templateId === "string" ? row.templateId : "",
+            activityKey: `chat:${openId}`,
+            packName: typeof row.packName === "string" ? row.packName : "Swarm",
+            trigger: "chat",
+            attempts: 1,
+            taskId: typeof row.taskId === "string" ? row.taskId : "",
+            projectId: typeof row.projectId === "string" ? row.projectId : null,
+          });
+        }
       }
       if (run.more === true) await this.schedule(60, "due");
       return;

@@ -29,6 +29,8 @@ import {
   fileRequirementTasks,
   type RequirementPlan,
 } from "@/lib/requirement-tasks";
+import { packsFromTemplates } from "@/lib/pack-picker";
+import { askPackModel, assignOpenTaskPacks } from "@/lib/task-packs";
 import { dayToUtc } from "./dates";
 
 export type FormState = { message: string };
@@ -108,8 +110,53 @@ export async function saveProjectDescriptionAction(_previous: FormState, formDat
     now,
     ask: askForRequirements,
   });
+  const packed = description.trim() ? await matchPacks(sql, projectId, now) : [];
   refreshProject(projectId, organizationId);
-  return { message: planMessage(filed) };
+  return { message: planMessage(filed, packed) };
+}
+
+async function matchPacks(sql: Awaited<ReturnType<typeof requireHqStaffPage>>["sql"], projectId: string, now: number) {
+  const origin = process.env.SWARM_ORIGIN?.trim() ?? "";
+  if (!origin.startsWith("https://")) return [];
+  const packs = await livePacks(origin);
+  return assignOpenTaskPacks({
+    sql,
+    projectId,
+    now,
+    packs,
+    ask: askForPack,
+    template: (templateId) => loadTemplate(origin, templateId),
+  });
+}
+
+async function livePacks(origin: string) {
+  try {
+    const response = await fetch(`${origin.replace(/\/$/, "")}/api/templates`, { signal: AbortSignal.timeout(2500) });
+    if (!response.ok) return [];
+    return packsFromTemplates(await response.json());
+  } catch {
+    return [];
+  }
+}
+
+async function loadTemplate(origin: string, templateId: string): Promise<unknown> {
+  const response = await fetch(`${origin.replace(/\/$/, "")}/api/template?id=${encodeURIComponent(templateId)}`, {
+    signal: AbortSignal.timeout(2500),
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
+async function askForPack(prompt: string): Promise<string> {
+  try {
+    const env = (await getCloudflareContext({ async: true })).env as {
+      AI?: Parameters<typeof askPackModel>[0];
+      HANDOFF_AI_GATEWAY_ID?: string;
+    };
+    return await askPackModel(env.AI, prompt, env.HANDOFF_AI_GATEWAY_ID || "default");
+  } catch {
+    return "";
+  }
 }
 
 async function askForRequirements(prompt: string): Promise<string> {
@@ -124,22 +171,26 @@ async function askForRequirements(prompt: string): Promise<string> {
   }
 }
 
-function planMessage(filed: RequirementPlan): string {
+function planMessage(filed: RequirementPlan, packed: string[]): string {
   if (filed.reason === "cleared") return "Requirements cleared.";
   if (filed.reason === "unread") {
     return "Requirements saved. The agent could not read them, so no tasks were added.";
   }
-  if (filed.reason !== "added") return "Requirements saved. No new tasks.";
   const parts = ["Requirements saved."];
-  if (filed.created.length > 0) {
+  if (filed.reason === "added" && filed.created.length > 0) {
     const noun = filed.created.length === 1 ? "task" : "tasks";
     const listed = filed.created.join("; ");
     const detail = listed.length <= 180 ? `: ${listed}` : ".";
     parts.push(`Added ${filed.created.length} ${noun}${detail}`);
   }
-  if (filed.detailed.length > 0) {
+  if (filed.reason === "added" && filed.detailed.length > 0) {
     const noun = filed.detailed.length === 1 ? "task" : "tasks";
     parts.push(`Wrote what ${filed.detailed.length} ${noun} must produce.`);
+  }
+  if (filed.reason !== "added" && packed.length === 0) parts.push("No new tasks.");
+  if (packed.length > 0) {
+    const noun = packed.length === 1 ? "task" : "tasks";
+    parts.push(`Matched a swarm pack on ${packed.length} ${noun}.`);
   }
   return parts.join(" ");
 }

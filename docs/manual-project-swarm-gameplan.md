@@ -1,7 +1,7 @@
 # Manual projects run the same swarm
 
-**Status:** proposed. Not built.
-**Updated:** 2026-10-09. Adds client, space, and repo attachment on project create.
+**Status:** built on the staff host.
+**Updated:** 2026-10-09.
 **Amends, when built:** the swarm paragraph in [hq-agent-spec.md](hq-agent-spec.md) section 17.3, and the Work paragraph in [README.md](../README.md).
 
 ## Outcome
@@ -11,6 +11,8 @@ Staff create a project, write the requirements, and save. The project is on that
 When a card has a pack and no swarm is running, **Run swarm** appears on the card. Pressing it starts the same run the agent uses: move the card to Run, schedule that pack due now, wake `due`, and follow the run until the output is a file in the client space and an unpublished document on that project.
 
 The client portal does not get this button. Staff publish before the client sees the document.
+
+This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** calls the same move to Run. A finished due run sends the task brief, files the unpublished document on that project, and marks the card done. Chat `run_workflow` on a workflow that already has a task only moves that task to Run.
 
 ## What is already true
 
@@ -22,19 +24,17 @@ The client portal does not get this button. Staff publish before the client sees
 | A workflow created from a live pack writes that pack's skill steps onto its own task, in Describe. | `createClientWorkflow` and `workflowTaskPlan` in `handoff/src/lib/client-workflows.ts` |
 | Moving a card to Run schedules a swarm only when the first skill path maps to a pack template id. Otherwise the column changes and nothing is scheduled. | `moveTaskStage` → `scheduleTaskSwarm` |
 | The `due` wake starts that workflow, and if it is still running schedules `refreshSwarm`. A finished run with real output is saved in the client space and filed as an unpublished document. | `continueWork` and `refreshSwarm` in `handoff/src/agent/worker.ts`, `claimDueWorkflow` in `client-workflows.ts` |
-| Chat `run_workflow` starts the orchestrator immediately, stores "still going", and does not schedule `refreshSwarm`. | `runWorkflow` in `handoff/src/lib/hq-tools.ts` |
-| The brief sent on a due run is the client name, site, industry, notes, and "Scheduled run of {workflow name}". It does not include the task brief. The draft deliverable is saved with `project_id` null. | `claimDueWorkflow` |
-| `scheduleTaskSwarm` creates the workflow without the task's `project_id`. | `scheduleTaskSwarm` |
+| Chat `run_workflow` on a workflow with a task moves that task to Run. A workflow with no task still starts inline, and a run that is still going wakes `due` so the follow-up can poll. | `runWorkflow` in `handoff/src/lib/hq-tools.ts` |
+| A due run whose workflow has a task sends the task title, the task brief, and the project requirements. The draft document uses that project. A workflow with no task still sends the lead brief. | `claimDueWorkflow` |
+| `scheduleTaskSwarm` copies the task's `project_id` onto the workflow. | `scheduleTaskSwarm` |
 | Lead pack choice falls back to the schema readiness pack when nothing overlaps. | `pickSkillPack` in `handoff/src/lib/pack-picker.ts` |
-| `create_project` requires a live client id. A project name that client already has returns that row. Chat is told to call `list_projects` before creating one. | `createProject` in `handoff/src/db/crm.ts`, `HqChat` system prompt |
-| Linking a repo sets `project_id` only when the client has exactly one project, and only at link time. A repo linked before any project exists stays unassigned after a project is created. | `soleProjectId` inside `linkRepo` |
-| Winning a deal links the client's single unassigned space to that deal's project, or creates a space on the new project. `createProject` does not. | `moveDealStage` |
-| Chat cannot assign a repo or a space. `assignRepoProject` is a staff action. There is no space assign function. | `handoff/src/app/clients/repo-actions.ts` |
-| The project page lists every space of the client, including a space whose `project_id` is null. Repos on the page are only those with this `project_id`. | `handoff/src/app/projects/[id]/page.tsx` |
+| `create_project` requires a live client id. A repeated name returns that project and attaches one loose space and one loose repo. | `createProject` in `handoff/src/db/crm.ts` |
+| Chat can assign one loose space or repo with `assign_space_project` and `assign_repo_project`. The project page uses the same functions. | `handoff/src/lib/hq-tools.ts`, `handoff/src/app/projects/[id]/page.tsx` |
+| The project page lists spaces whose `project_id` is this project. Loose spaces of the client are an assign control. | `handoff/src/app/projects/[id]/page.tsx` |
 
-## The hole
+## The hole this build closes
 
-A manual project and a chat swarm are two different starts.
+A manual project and a chat swarm were two different starts.
 
 1. Requirement cards have a brief and no pack, so Run does not schedule anything and the wake skips them.
 2. Chat creates a second project and a second card, then starts a swarm that never writes the space file or the deliverable.

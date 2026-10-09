@@ -14,6 +14,7 @@ import {
   repoActivitySummary,
 } from "@/db/crm";
 import { workspacesFor } from "@/db/records";
+import { boardSwarmExtras } from "@/lib/board-swarm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
 import { formatRelative } from "@/lib/format";
@@ -34,7 +35,7 @@ import { StaffShell } from "../../staff-shell";
 import { swarmRunLink } from "../../swarm/swarm-link";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
-import { AssignRepoForm } from "../../clients/repo-forms";
+import { AssignRepoForm, AssignSpaceForm } from "../../clients/repo-forms";
 import {
   MilestoneForm,
   ProjectDescriptionForm,
@@ -51,7 +52,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await projectById(sql, caller, id);
   if (!project) notFound();
   const now = clock();
-  const [org, milestones, tasks, updates, staff, spaces, activity, capRow, runsOpen, swarmRuns, clientRepos, siblings] =
+  const [org, milestones, tasks, updates, staff, spaces, looseSpaces, activity, capRow, runsOpen, swarmRuns, clientRepos, siblings, swarm] =
     await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
@@ -60,9 +61,15 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     liveStaff(sql),
     sql.all<{ id: string; slug: string; display_name: string }>(
       `SELECT id, slug, display_name FROM workspaces
-       WHERE status != 'purged' AND (project_id = ? OR organization_id = ?)
+       WHERE status != 'purged' AND project_id = ?
        ORDER BY display_name`,
-      [project.id, project.organization_id],
+      [project.id],
+    ),
+    sql.all<{ id: string; slug: string; display_name: string }>(
+      `SELECT id, slug, display_name FROM workspaces
+       WHERE status != 'purged' AND organization_id = ? AND project_id IS NULL
+       ORDER BY display_name`,
+      [project.organization_id],
     ),
     listBoardActivity(sql, caller, [project.organization_id]),
     sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
@@ -70,12 +77,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     listProjectSwarmRuns(sql, caller, project.id),
     listRepos(sql, caller, project.organization_id),
     listProjects(sql, caller, project.organization_id),
+    boardSwarmExtras(sql),
   ]);
   const repos = clientRepos.filter((repo) => repo.project_id === project.id);
   const unassignedRepos = clientRepos.filter((repo) => repo.project_id == null);
   const repoChoices = siblings.map((row) => ({ id: row.id, name: row.name }));
   const visibleIds = new Set((await workspacesFor(sql, caller)).map((row) => row.id));
   const usableSpaces = spaces.filter((space) => visibleIds.has(space.id));
+  const usableLoose = looseSpaces.filter((space) => visibleIds.has(space.id));
   const finished = await listProjectDeliverables(sql, caller, project.id);
   const repoRows = await Promise.all(
     repos.map(async (repo) => ({ repo, summary: await repoActivitySummary(sql, caller, repo.id) })),
@@ -179,6 +188,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   runCap={capRow && Number.isFinite(Number(capRow.value)) ? Number(capRow.value) : null}
                   runsOpen={runsOpen}
                   activity={activity}
+                  runningTaskIds={swarm.runningTaskIds}
+                  packs={swarm.packs}
                 />
               </CardContent>
             </Card>
@@ -233,14 +244,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             <Card>
               <CardHeader>
                 <CardTitle>Spaces</CardTitle>
-                <CardDescription>File folders linked to this client.</CardDescription>
+                <CardDescription>File folders on this project.</CardDescription>
               </CardHeader>
-              <CardContent>
-                {spaces.length === 0 ? (
+              <CardContent className="flex flex-col gap-4">
+                {usableSpaces.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No space linked yet.</p>
                 ) : (
                   <ul className="flex flex-col gap-2">
-                    {spaces.map((space) => (
+                    {usableSpaces.map((space) => (
                       <li key={space.id} className="flex items-center gap-2">
                         <Button variant="outline" size="sm" asChild>
                           <a href={clientSpaceHref(space.slug)}>{space.display_name}</a>
@@ -250,6 +261,23 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     ))}
                   </ul>
                 )}
+                {usableLoose.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-muted-foreground">On this client, not on a project.</p>
+                    <ul className="flex flex-col gap-3">
+                      {usableLoose.map((space) => (
+                        <li key={space.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                          <span>{space.display_name}</span>
+                          <AssignSpaceForm
+                            organizationId={project.organization_id}
+                            workspaceId={space.id}
+                            projectId={project.id}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           </div>

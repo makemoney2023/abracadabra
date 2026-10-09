@@ -13,6 +13,7 @@ import type {
   WorkspaceLink,
 } from "@/db/crm";
 import type { SchemaLeadView } from "@/lib/schema-report";
+import type { PackCandidate } from "@/lib/pack-picker";
 import type { SwarmRunRow } from "@/lib/swarm-runs";
 import { ActivityTab } from "./activity-tab";
 import { FilesTab } from "./files-tab";
@@ -43,6 +44,8 @@ export function ClientBody({
   deals,
   projects,
   unassignedRuns,
+  runningTaskIds = [],
+  packs = [],
   threads,
   readiness,
   schema,
@@ -71,6 +74,8 @@ export function ClientBody({
   deals: DealCard[];
   projects: ProjectRow[];
   unassignedRuns: SwarmRunRow[];
+  runningTaskIds?: string[];
+  packs?: PackCandidate[];
   threads: ClientThread[];
   readiness: AssessmentView | null;
   schema: SchemaLeadView | null;
@@ -93,6 +98,8 @@ export function ClientBody({
         runsOpen={runsOpen}
         opens={opens}
         unassignedRuns={unassignedRuns}
+        runningTaskIds={runningTaskIds}
+        packs={packs}
       />
     );
   }

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Creating a project attaches the client's single loose space and single loose repo. Saving requirements stores one swarm pack on each open card that has none. Run swarm moves that card to Run. A finished swarm files an unpublished document on the project and marks the card done.
+- **Why** — A project row was on the client while the space and repo stayed unassigned, and Describe cards from requirements had no pack, so Run never scheduled a swarm.
+- **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/task-packs.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/work/board.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/agent/worker.ts`
+- **Data-flow impact** — `create_project` returns `spaces`, `repos`, `looseSpaces`, and `looseRepos`. A due run whose workflow has a task sends that task's brief. Chat `run_workflow` on a workflow with a task only moves the task to Run.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 806 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched files reported 0 errors. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
 - **What changed** — The manual-project swarm plan now covers attaching the client's space and repo when a project is created.
 - **Why** — `create_project` already stores the client id. It does not set `workspaces.project_id` or `repos.project_id`, so the agent's project can miss the space and the repo that client already has.
 - **Code touchpoints** — `docs/manual-project-swarm-gameplan.md`, `docs/hq-agent-spec.md`, `README.md`

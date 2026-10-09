@@ -256,12 +256,13 @@ export async function qualifyLead(input: {
 /** An unpublished document staff can open on Finished work. The client sees it after staff publish. */
 export async function fileSwarmDelivery(
   call: ToolCaller,
-  input: { requestId: string; title: string; body: string },
+  input: { requestId: string; title: string; body: string; projectId?: string | null },
 ): Promise<void> {
   const created = fields(
     await call("create_deliverable", {
       title: input.title.slice(0, 200),
       kind: "document",
+      projectId: input.projectId ?? "",
       requestId: `${input.requestId}:deliverable`,
     }),
   );

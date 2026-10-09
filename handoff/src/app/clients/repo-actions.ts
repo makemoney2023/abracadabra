@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { CRM_ERRORS, assignRepoProject, unlinkRepo, type CrmError } from "@/db/crm";
+import { CRM_ERRORS, assignRepoProject, assignSpaceProject, unlinkRepo, type CrmError } from "@/db/crm";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requireHqStaffPage } from "@/lib/current";
 import { linkChosenRepo } from "@/lib/github/link";
@@ -56,6 +56,28 @@ export async function unlinkRepoAction(
   if (!saved.ok) return fail(repoMessage(saved.error));
   refresh(organizationId, projectId);
   return ok("This repo is unlinked.");
+}
+
+export async function assignSpaceAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const projectId = String(formData.get("projectId") ?? "");
+  const saved = await assignSpaceProject(
+    sql,
+    caller,
+    {
+      organizationId,
+      workspaceId: String(formData.get("workspaceId") ?? ""),
+      projectId: projectId || null,
+    },
+    Date.now(),
+  );
+  if (!saved.ok) return fail(saved.error === "invalid" ? "Pick a project on this client." : "That space is not on this client.");
+  refresh(organizationId, projectId);
+  return ok("This space is on that project.");
 }
 
 export async function assignRepoAction(

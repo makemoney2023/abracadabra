@@ -84,7 +84,16 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   },
   create_project: {
     label: "Create a project",
-    description: "New project for a client. A name that already exists returns that project. Fields: organizationId, name.",
+    description:
+      "New project for a client. A name that already exists returns that project. One loose space and one loose repo on that client are attached. Several stay listed as looseSpaces and looseRepos. Fields: organizationId, name.",
+  },
+  assign_space_project: {
+    label: "Assign a space",
+    description: "Put one of this client's spaces on one of this client's projects. Fields: organizationId, workspaceId, projectId.",
+  },
+  assign_repo_project: {
+    label: "Assign a repo",
+    description: "Put one of this client's repos on one of this client's projects. Fields: organizationId, repoId, projectId.",
   },
   create_milestone: { label: "Create a milestone", description: "Milestone on a project. Fields: projectId, name." },
   post_internal_status: {

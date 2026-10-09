@@ -111,7 +111,36 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
       now,
     });
   }
+  if (tool === "running_swarm") return latestRunningSwarm(sql, actor.organizationId);
   throw new AgentWorkError("Unknown tool.");
+}
+
+async function latestRunningSwarm(sql: Sql, organizationId: string): Promise<Record<string, unknown>> {
+  const row = await sql.get<{
+    execution_id: string;
+    template_id: string;
+    name: string;
+    status: string;
+    task_id: string | null;
+    project_id: string | null;
+  }>(
+    `SELECT s.execution_id, s.template_id, s.name, s.status, w.task_id, COALESCE(w.project_id, s.project_id) AS project_id
+     FROM swarm_runs s
+     LEFT JOIN client_workflows w ON w.id = s.workflow_id
+     WHERE s.organization_id = ? AND s.status = 'running' AND s.execution_id != ''
+     ORDER BY s.started_at DESC, s.id DESC
+     LIMIT 1`,
+    [organizationId],
+  );
+  if (!row) return { none: true };
+  return {
+    executionId: row.execution_id,
+    templateId: row.template_id,
+    packName: row.name,
+    status: row.status,
+    taskId: row.task_id ?? "",
+    projectId: row.project_id,
+  };
 }
 
 async function recordSwarmRun(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<{ ok: true }> {
