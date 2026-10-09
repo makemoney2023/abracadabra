@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/swarm/page.tsx`, `handoff/src/app/swarm/swarm-frame.tsx`, `handoff/src/components/context-bar.tsx`, `handoff/src/app/globals.css`
 - **Data-flow impact** — The frame still loads `SWARM_ORIGIN`. Focus is display only.
 - **API / schema impact** — none.
-- **Verification** — `npx tsc --noEmit` passed. `npx eslint` on the touched TypeScript files passed. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (119 files / 652 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched TypeScript files passed. `next build` was not run.
 
 ## 2026-10-09
 
