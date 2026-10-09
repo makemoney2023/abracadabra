@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Swarm has a toolbar with a status dot, Focus, and Open. Focus hides the sidebar and the context bar until Escape. A skeleton covers the frame while it loads. If the frame fails, the page says to try again.
+- **Why** — Swarm was a bare iframe with no status, no way to focus it, and no failure state.
+- **Code touchpoints** — `handoff/src/app/swarm/page.tsx`, `handoff/src/app/swarm/swarm-frame.tsx`, `handoff/src/components/context-bar.tsx`, `handoff/src/app/globals.css`
+- **Data-flow impact** — The frame still loads `SWARM_ORIGIN`. Focus is display only.
+- **API / schema impact** — none.
+- **Verification** — `npx tsc --noEmit` passed. `npx eslint` on the touched TypeScript files passed. Full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — A signed-in person who is not on the staff list sees Sign out and a link to the client portal. Sign-in uses a narrow page and shows a field error. An empty username returns that error and does not include the password.
 - **Why** — HQ entry said only "This page is for staff", and a bad sign-in replaced the whole page instead of marking the field.
 - **Code touchpoints** — `handoff/src/app/hq-home.tsx`, `handoff/src/app/login/page.tsx`, `handoff/src/app/sign-in-form.tsx`, `handoff/src/app/sign-in-action.ts`, `handoff/src/app/sign-in-action.test.ts`

@@ -100,7 +100,7 @@ export function ContextBar() {
   const crumbs = breadcrumbsFor(pathname, labels);
 
   return (
-    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3">
+    <header data-slot="context-bar" className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-3">
       <SidebarTrigger />
       <Breadcrumb className="min-w-0 flex-1">
         <BreadcrumbList>

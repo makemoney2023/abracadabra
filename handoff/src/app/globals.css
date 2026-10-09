@@ -115,6 +115,11 @@ body {
   color: var(--foreground);
 }
 
+html[data-hq-focus] [data-slot="sidebar"],
+html[data-hq-focus] [data-slot="context-bar"] {
+  display: none;
+}
+
 .studio-kicker {
   font-family: var(--font-plex-mono), ui-monospace, monospace;
   font-size: 0.75rem;
