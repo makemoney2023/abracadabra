@@ -2,12 +2,21 @@
 
 ## 2026-10-09
 
+- **What changed** — Each swarm run is stored on the client and on a project when one is known. Staff open that run from the project page and from the client Work tab when it has no project.
+- **Why** — A finished swarm only left a timeline line, and the Swarm page always opened a blank canvas.
+- **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`, `handoff/migrations/0016_swarm_runs.sql`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/swarm/page.tsx`, `swarm/frontend/src/App.tsx`
+- **Data-flow impact** — Start paths write `swarm_runs`. The canvas reads `executionId` from the query string.
+- **API / schema impact** — New table `swarm_runs`. No new route and no new secret.
+- **Verification** — `npx vitest run` in `handoff` (123 files, 697 tests, passed). `npm test` in `swarm` (4 files, 25 tests, passed) and `node --test frontend/src/lib/execution-link.test.mjs` (1 test, passed).
+
+## 2026-10-09
+
 - **What changed** — Each swarm row on the project page and the client Work tab shows when the run started.
 - **Why** — Staff need the relative time next to the name, status, and trigger.
 - **Code touchpoints** — `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`
 - **Data-flow impact** — none. The lists still come from `listProjectSwarmRuns` and `listUnassignedSwarmRuns` in the same order.
 - **API / schema impact** — none.
-- **Verification** — `npx eslint src/app/projects/[id]/page.tsx src/app/clients/[id]/work-tab.tsx` in `handoff`.
+- **Verification** — `npx eslint src/app/projects/[id]/page.tsx src/app/clients/[id]/work-tab.tsx` in `handoff` (clean).
 
 ## 2026-10-09
 
