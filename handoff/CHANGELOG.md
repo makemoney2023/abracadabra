@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/wrangler.agent.jsonc`
 - **Data-flow impact** — HQ can open `https://mcp.abra-ca-dabra.app/mcp`. The portal currently has no upstream servers linked, so the list is empty until one is added. Search Console still has no service-account JSON.
 - **API / schema impact** — none. Secrets only: `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`, and `SWARM_RUN_SECRET` on HQ; the same three on the swarm; `CONNECTOR_TOKEN` on `handoff-connectors`. `GOOGLE_SEARCH_CONSOLE_SA` is not set.
-- **Verification** — Secret name lists match. Portal initialize with the service token returned 200. Connector `tools/list` with the bearer returned `search_analytics` and `inspect_url`.
+- **Verification** — Secret name lists match on HQ, the swarm, and `handoff-connectors`. Portal initialize with the service token returned 200. Connector `tools/list` with the bearer returned `search_analytics` and `inspect_url`. Worker `handoff-agent` version `a861a821-3b88-4673-8f40-c44a41ada9b1` on `agent.abra-ca-dabra.app` binds `MCP_PORTAL_URL` to that portal, and `CF_ACCESS_CLIENT_ID` plus `CF_ACCESS_CLIENT_SECRET` are secrets on that worker.
 
 ## 2026-10-09
 
