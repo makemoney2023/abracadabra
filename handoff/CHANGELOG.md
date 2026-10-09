@@ -2,12 +2,21 @@
 
 ## 2026-10-09
 
+- **What changed** — Every HQ route shows a skeleton of its main strip, table, board, thread, or frame while it loads, and a retry screen when it fails. The retry screen does not print the error.
+- **Why** — A slow or failed page left a blank inset.
+- **Code touchpoints** — `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-error.tsx`, `handoff/src/components/page-frame.tsx`, `loading.tsx` and `error.tsx` under `handoff/src/app/`, `leads/`, `schema/`, `clients/`, `clients/[id]/`, `work/`, `projects/`, `chat/`, `swarm/`, `admin/`, and `settings/`
+- **Data-flow impact** — none. The home route uses a skeleton heading because `/` is also the marketing sign-in.
+- **API / schema impact** — none.
+- **Verification** — `npm test` (109 files / 594 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — The HQ sidebar shows counts on Today, Leads, and Work when they are above zero. The footer has the signed-in person, a row-density switch, shortcuts, and sign out. Compact rows apply before the page paints.
 - **Why** — Staff could not see how much was waiting, and every table used the same row height.
 - **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/app/staff-shell.tsx`, `handoff/src/app/staff-chrome.tsx`, `handoff/src/app/staff-nav.tsx`, `handoff/src/components/density-toggle.tsx`, `handoff/src/components/user-menu.tsx`, `handoff/src/app/layout.tsx`, `handoff/src/app/sign-out-action.ts`, `handoff/src/lib/session.ts`
 - **Data-flow impact** — `StaffShell` loads counts once per request and passes them into the sidebar.
 - **API / schema impact** — none. Sign out marks the current session revoked.
-- **Verification** — `npx vitest run src/db/crm.test.ts src/lib/session.test.ts -t "counts needs-you|bootstraps only"` (2 passed). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+- **Verification** — `npm test` (109 files / 594 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 

@@ -18,7 +18,7 @@ export function PageFrame({
   className,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   kicker?: string;
   description?: string;
   actions?: React.ReactNode;
