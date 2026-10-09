@@ -10,7 +10,8 @@ export type ProductEvent =
   | { kind: "batch.window_failed"; batchId: string }
   | { kind: "request.digest"; workspaceId: string; weekStart: number }
   | { kind: "workspace.archived"; workspaceId: string }
-  | { kind: "workspace.purge_scheduled"; workspaceId: string };
+  | { kind: "workspace.purge_scheduled"; workspaceId: string }
+  | { kind: "deliverable.published"; deliverableId: string; version: number; title: string };
 
 type WorkspaceRow = {
   id: string;
@@ -160,6 +161,30 @@ export async function queueProductEvent(sql: Sql, event: ProductEvent, now: numb
         key: (email) => `${event.kind}:${event.workspaceId}:${email}`,
         payload: payloadFor(workspace, { purgeOn: purgeDate(workspace.purge_after) }),
       });
+      return;
+    }
+    case "deliverable.published": {
+      const deliverable = await sql.get<{ workspace_id: string }>(
+        "SELECT workspace_id FROM deliverables WHERE id = ?",
+        [event.deliverableId],
+      );
+      if (!deliverable) return;
+      const workspace = await loadWorkspace(sql, deliverable.workspace_id);
+      if (!workspace) return;
+      const members = await sql.all<{ email: string }>(
+        `SELECT email FROM memberships WHERE workspace_id = ? AND revoked_at IS NULL ORDER BY email`,
+        [deliverable.workspace_id],
+      );
+      await enqueueMany(
+        sql,
+        members.map((member) => member.email),
+        {
+          workspaceId: workspace.id,
+          event: "deliverable.published",
+          key: (email) => `deliverable:${event.deliverableId}:v${event.version}:${email}`,
+          payload: payloadFor(workspace, { title: event.title, deliverableId: event.deliverableId }),
+        },
+      );
       return;
     }
     default: {

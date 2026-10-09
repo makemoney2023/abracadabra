@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { defaultBuildDeps, startBuild, type BuildDeps } from "@/lib/cursor-build";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { openObjectStore } from "@/lib/store/objects";
 import { recordAgentRun } from "@/lib/agent-activity";
@@ -59,7 +60,14 @@ type WorkArgs = {
 };
 
 /** One stored result per request. A repeat returns the first result and does not write again. */
-export async function runAgentWork(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs, now: number): Promise<unknown> {
+export async function runAgentWork(
+  sql: Sql,
+  actor: AgentActor,
+  tool: string,
+  args: WorkArgs,
+  now: number,
+  deps?: BuildDeps,
+): Promise<unknown> {
   const requestId = args.requestId?.trim() ?? "";
   if (!requestId) throw new AgentWorkError("Name a requestId.");
   const prior = await sql.get<{ result_json: string }>(
@@ -67,7 +75,7 @@ export async function runAgentWork(sql: Sql, actor: AgentActor, tool: string, ar
     [actor.keyId, requestId],
   );
   if (prior) return JSON.parse(prior.result_json) as unknown;
-  const result = await perform(sql, actor, tool, args, now);
+  const result = await perform(sql, actor, tool, args, now, deps);
   await sql.run(
     `INSERT INTO idempotency_keys (key, actor_id, tool, result_json, created_at) VALUES (?, ?, ?, ?, ?)`,
     [requestId, actor.keyId, tool, JSON.stringify(result), now],
@@ -75,10 +83,10 @@ export async function runAgentWork(sql: Sql, actor: AgentActor, tool: string, ar
   return result;
 }
 
-async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs, now: number): Promise<unknown> {
+async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs, now: number, deps?: BuildDeps): Promise<unknown> {
   if (tool === "save_brief") return saveBrief(sql, actor, args, now);
   if (tool === "create_task") return createAgentTask(sql, actor, args, now);
-  if (tool === "update_task") return updateAgentTask(sql, actor, args, now);
+  if (tool === "update_task") return updateAgentTask(sql, actor, args, now, deps);
   if (tool === "create_deliverable") return createAgentDeliverable(sql, actor, args, now);
   if (tool === "add_deliverable_item") return addAgentItem(sql, actor, args, now);
   if (tool === "post_status_update") return postAgentStatus(sql, actor, args, now);
@@ -376,10 +384,20 @@ async function taskInOrg(
   return task;
 }
 
-async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {
+async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number, deps?: BuildDeps): Promise<unknown> {
   const taskId = args.taskId?.trim() ?? "";
   if (!taskId) throw new AgentWorkError("Name a task.");
   const task = await taskInOrg(sql, actor.organizationId, taskId);
+  if (args.stage === "build") {
+    const built = await startBuild(sql, task.id, deps ?? defaultBuildDeps(now));
+    const row = await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = ?", [task.id]);
+    return {
+      taskId: task.id,
+      stage: "build",
+      status: row?.status ?? null,
+      blockedReason: built.ok ? null : built.reason,
+    };
+  }
   const sets: string[] = ["updated_at = ?"];
   const params: unknown[] = [now];
   if (args.status !== undefined) {
@@ -415,7 +433,12 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
       [crypto.randomUUID(), actor.organizationId, task.project_id, kind, actor.keyId, args.note.trim(), JSON.stringify({ taskId: task.id }), now],
     );
   }
-  return { taskId: task.id, stage: args.stage ?? null, status: args.status ?? null };
+  return {
+    taskId: task.id,
+    stage: args.stage ?? null,
+    status: args.status ?? null,
+    blockedReason: args.blockedReason?.trim() || null,
+  };
 }
 
 async function createAgentDeliverable(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {

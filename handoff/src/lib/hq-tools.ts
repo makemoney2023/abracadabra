@@ -25,6 +25,7 @@ import { publishDeliverable } from "@/db/deliverables";
 import type { Sql } from "@/db/sql";
 import { getBrief } from "@/lib/agent-context";
 import { wakeOrganization, type WakeReason } from "@/lib/agent-wake";
+import { defaultBuildDeps, startBuild, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import type { Caller } from "@/lib/authz";
 import { appendBriefWork } from "@/lib/client-plan";
 import {
@@ -44,7 +45,7 @@ import type { OutboundMail } from "@/lib/session";
 
 export type HqToolResult =
   | { ok: true; value: unknown }
-  | { ok: false; error: "unauthorized" | "forbidden" | "missing" | "invalid" | "unknown" | "brief_not_approved" }
+  | { ok: false; error: "unauthorized" | "forbidden" | "missing" | "invalid" | "unknown" | GateReason }
   | { needsApproval: true; preview: string };
 
 type MailGate = {
@@ -58,6 +59,7 @@ type ToolOptions = {
   wake?: (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void> };
+  build?: BuildDeps;
 };
 
 const READS = new Set([
@@ -396,12 +398,12 @@ async function perform(
   if (tool === "merge_clients") {
     return fromCrm(await mergeOrganizations(sql, caller, { keepId: text(input, "keepId"), dropId: text(input, "dropId") }, now));
   }
-  if (tool === "set_task_stage") return setTaskStage(sql, caller, input, now, options.wake);
+  if (tool === "set_task_stage") return setTaskStage(sql, caller, input, now, options);
   if (tool === "list_swarm_packs") return listSwarmPacks(options.swarm);
   if (tool === "add_work") return addWork(sql, caller, input, now, options.wake);
   if (tool === "revise_brief") return reviseBrief(sql, caller, input, now);
   if (tool === "instruct_task") return instructTask(sql, caller, input, now);
-  if (tool === "answer_question") return answerQuestion(sql, caller, input, now);
+  if (tool === "answer_question") return answerQuestion(sql, caller, input, now, options);
   if (tool === "pause_client") return setPaused(sql, caller, organizationId, now, true);
   if (tool === "resume_client") return resumeClient(sql, caller, organizationId, now, options.wake);
   if (tool === "decide_work_request") return decideWork(sql, caller, input, now, options.wake);
@@ -601,7 +603,13 @@ async function listSwarmPacks(swarm: ToolOptions["swarm"]): Promise<HqToolResult
   return { ok: true, value: packs };
 }
 
-async function setTaskStage(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number, wake: Wake): Promise<HqToolResult> {
+async function setTaskStage(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions & { wake: Wake },
+): Promise<HqToolResult> {
   const stage = text(input, "stage");
   if (!["describe", "engineer", "build", "run"].includes(stage)) return { ok: false, error: "invalid" };
   const task = await sql.get<{ id: string; organization_id: string | null }>(
@@ -612,8 +620,15 @@ async function setTaskStage(sql: Sql, caller: Caller, input: Record<string, unkn
     return { ok: false, error: "missing" };
   }
   if (stage === "build") {
-    const brief = await getBrief(sql, task.organization_id, "brief");
-    if (!brief || brief.status !== "approved") return { ok: false, error: "brief_not_approved" };
+    const built = await startBuild(sql, task.id, options.build ?? defaultBuildDeps(now));
+    if (!built.ok) return { ok: false, error: built.reason };
+    await logStaff(
+      sql,
+      { organizationId: task.organization_id, userId: caller.userId, kind: "staff.task_stage", body: "Moved to build.", data: { taskId: task.id, stage } },
+      now,
+    );
+    if (built.action === "waiting") return { ok: true, value: { taskId: task.id, stage: "build", waiting: "cap_reached" } };
+    return { ok: true, value: { taskId: task.id, stage: "build", runId: built.runId } };
   }
   await sql.run("UPDATE tasks SET stage = ?, updated_at = ? WHERE id = ?", [stage, now, task.id]);
   await logStaff(
@@ -623,7 +638,7 @@ async function setTaskStage(sql: Sql, caller: Caller, input: Record<string, unkn
   );
   if (stage !== "run") return { ok: true, value: { taskId: task.id, stage } };
   const scheduled = await scheduleTaskSwarm(sql, { taskId: task.id, now });
-  if (scheduled.ok && !scheduled.none) await wake(scheduled.organizationId, "due");
+  if (scheduled.ok && !scheduled.none) await options.wake(scheduled.organizationId, "due");
   return {
     ok: true,
     value: { taskId: task.id, stage, workflowId: scheduled.ok && !scheduled.none ? scheduled.workflowId : null },
@@ -679,7 +694,13 @@ async function instructTask(sql: Sql, caller: Caller, input: Record<string, unkn
   );
 }
 
-async function answerQuestion(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
+async function answerQuestion(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions & { wake: Wake },
+): Promise<HqToolResult> {
   const row = await sql.get<{ id: string; organization_id: string; task_id: string | null }>(
     "SELECT id, organization_id, task_id FROM agent_questions WHERE id = ? AND answered_at IS NULL",
     [text(input, "id")],
@@ -693,13 +714,7 @@ async function answerQuestion(sql: Sql, caller: Caller, input: Record<string, un
     now,
     row.id,
   ]);
-  if (row.task_id) {
-    await sql.run(
-      `UPDATE tasks SET status = 'todo', blocked_reason = NULL, updated_at = ?
-       WHERE id = ? AND blocked_reason = 'waiting_on_staff'`,
-      [now, row.task_id],
-    );
-  }
+  await unblockAnsweredQuestion(sql, row.id, now, options.wake);
   await logStaff(
     sql,
     { organizationId: row.organization_id, userId: caller.userId, kind: "staff.question_answered", body: answer, data: { questionId: row.id } },

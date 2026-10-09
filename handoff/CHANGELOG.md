@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Moving a task to build starts a Cursor cloud run when the brief and design system are approved and a build brief is on the deliverable. A pull request whose first line names the deliverable pulls the manifest, marks the task done, and publishes when auto publish is on. The same cron expires a run that missed its deadline and retries a build that was waiting for a free slot. Answering a question clears the block. Client changes open the next round.
+- **Why** — The build gate was specified and not wired, so a task could sit in build with no cloud run, no pull, and no notice.
+- **Code touchpoints** — `handoff/src/lib/cursor-build.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/github/queue.ts`, `handoff/cloudflare-worker.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/notifications.ts`, `handoff/src/lib/email-templates.ts`, `handoff/src/app/w/[slug]/work/actions.ts`
+- **Data-flow impact** — Build checks the gate, creates a repo when the client has none, then posts a cloud agent. The GitHub queue pulls after it stores the delivery. Publish mails every current member. A revision wakes `changes_requested`.
+- **API / schema impact** — The Cursor API does not take `branchName`. The build brief names the branch. Product mail adds `deliverable.published`.
+- **Verification** — On the build-gate branch: `npm test` (568 passed), `npm run lint` (0 errors), and `npm run typecheck:agent` (passed). After merging onto main: `npm test` (121 files / 677 tests, plus the agent config 7 tests).
+
+## 2026-10-09
+
 - **What changed** — On a phone, a table shows the first two columns and tucks the rest behind More. Drawers use the full screen until the window is wide. Icon buttons name themselves. Space logos and finished-work pictures have alt text. Links and disclosures show a focus ring.
 - **Why** — Phone tables were a long stack, drawers stopped short of the screen, and two pictures had an empty alt.
 - **Code touchpoints** — `handoff/src/components/data-table.tsx`, `handoff/src/components/data-table-mobile.ts`, `handoff/src/components/data-table-mobile.test.ts`, `handoff/src/components/form-drawer.tsx`, `handoff/src/components/ui/sheet.tsx`, `handoff/src/components/ui/dialog.tsx`, `handoff/src/components/ui/sidebar.tsx`, `handoff/src/app/globals.css`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`

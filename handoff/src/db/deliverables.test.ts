@@ -9,6 +9,8 @@ import {
   listWorkspaceDeliverables,
   openDeliverable,
   publishDeliverable,
+  publishDeliverableAsSystem,
+  pullDeliverableAsSystem,
   pullDeliverableFromManifest,
   recordFeedback,
   visibleMedia,
@@ -286,5 +288,95 @@ describe("finished work", () => {
     const staffDraft = await visibleMedia(sql, staff, created.value.id, working?.items[0]?.id ?? "", "main");
     expect(staffDraft?.contentType).toBe("image/png");
     expect(await visibleMedia(sql, stranger, created.value.id, working?.items[0]?.id ?? "", "main")).toBeNull();
+  });
+
+  it("publishes and pulls as the build pipeline", async () => {
+    const sql = await database();
+    const created = await createDeliverable(
+      sql,
+      staff,
+      { organizationId: "org-1", projectId: "project-1", workspaceId: "ws-1", title: "Audit", kind: "document" },
+      NOW,
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    const added = await addDeliverableItem(
+      sql,
+      staff,
+      { deliverableId: created.value.id, title: "Page", format: "static", copyText: "Findings" },
+      NOW + 1,
+    );
+    expect(added.ok).toBe(true);
+    const published = await publishDeliverableAsSystem(sql, created.value.id, NOW + 2);
+    expect(published).toEqual({ ok: true, value: { id: created.value.id, version: 1 } });
+    const row = await sql.get<{ status: string; published_version: number }>(
+      "SELECT status, published_version FROM deliverables WHERE id = ?",
+      [created.value.id],
+    );
+    expect(row).toEqual({ status: "in_review", published_version: 1 });
+
+    const pulled = await pullDeliverableAsSystem(
+      sql,
+      {
+        deliverableId: created.value.id,
+        repoId: "repo-1",
+        commit: "abc123",
+        manifest: {
+          title: "Audit",
+          kind: "document",
+          items: [{ title: "Page", format: "page", copy: "The findings." }],
+        },
+        files: {},
+      },
+      NOW + 3,
+      async () => "object-key",
+    );
+    expect(pulled.ok).toBe(true);
+
+    const spaced = await pullDeliverableAsSystem(
+      sql,
+      {
+        deliverableId: created.value.id,
+        repoId: "repo-1",
+        commit: "abc 123",
+        manifest: {
+          title: "Audit",
+          kind: "document",
+          items: [{ title: "Page", format: "page", copy: "The findings." }],
+        },
+        files: {},
+      },
+      NOW + 4,
+      async () => "object-key",
+    );
+    expect(spaced).toEqual({ ok: false, error: "invalid" });
+
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at) VALUES ('org-2', 'Other', 'client', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO repos (
+        id, github_repo_id, full_name, organization_id, default_branch, is_private, owned_by, created_at
+      ) VALUES ('repo-2', 99, 'makemoney2023/other', 'org-2', 'main', 1, 'agency', ?)`,
+      [NOW],
+    );
+    const foreign = await pullDeliverableAsSystem(
+      sql,
+      {
+        deliverableId: created.value.id,
+        repoId: "repo-2",
+        commit: "abc123",
+        manifest: {
+          title: "Audit",
+          kind: "document",
+          items: [{ title: "Page", format: "page", copy: "The findings." }],
+        },
+        files: {},
+      },
+      NOW + 5,
+      async () => "object-key",
+    );
+    expect(foreign).toEqual({ ok: false, error: "invalid" });
   });
 });
