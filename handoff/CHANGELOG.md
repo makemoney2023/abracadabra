@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/projects/page.tsx`, `handoff/src/app/projects/rows.ts`, `handoff/src/app/projects/rows.test.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/deliverables/labels.ts`, `handoff/src/app/deliverables/labels.test.ts`, `handoff/src/components/timeline.tsx`, `handoff/src/components/data-table.tsx`
 - **Data-flow impact** — The index reads the existing project list, the latest health note per project, and open tasks. Project and deliverable pages still read the same records. Milestone, task, and update saves still use the existing actions, and a success closes the drawer. Notes stay read-only here. The client writes them from their space.
 - **API / schema impact** — none.
-- **Verification** — Full `npm test` follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+- **Verification** — `npm test` (115 files / 635 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
