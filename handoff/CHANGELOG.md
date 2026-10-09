@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The mailbox conversation is published. Staff HQ and the agent worker were deployed from this branch.
+- **Why** — Client mail was still running the previous workers, which filed a board card from the first question.
+- **Code touchpoints** — none. Deploy only.
+- **Data-flow impact** — none beyond the mailbox behavior already described.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `688fb45d-c57d-4d6a-8032-facbcd2bad2d` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `717bde38-1ea6-42f0-90f2-bf1868a052f2` on `hq.abra-ca-dabra.app`. `GET /api/health` on the staff host returned 200 `{"database":"d1","ok":true}`.
+
+## 2026-10-09
+
 - **What changed** — A question no longer edits the client brief. A reply that only carries `In-Reply-To` stays on the open conversation, including when that sender has another thread open. The client chosen earlier in the thread is remembered the same way.
 - **Why** — Review of the mailbox conversation found those three gaps. A first question could still draft the brief, and a follow-up that omitted `References` started a new thread whenever more than one conversation was open.
 - **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/db/conversations.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`
