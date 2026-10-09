@@ -29,10 +29,24 @@ Agents can call tools on any remote MCP server that speaks Streamable HTTP:
 No external server handy? Point one at this worker's built-in demo at `/demo-mcp/mcp` (`get_time`, `echo`, `word_count`) to try the loop with zero setup.
 
 HQ-started runs may include a server with id `portal`. The worker adds `CF-Access-Client-Id` and `CF-Access-Client-Secret` for that server only when the execute request sends `Authorization: Bearer $SWARM_RUN_SECRET`. A request without that bearer drops the portal server before any tool call. Set `SWARM_RUN_SECRET`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` with `wrangler secret put`. They are not written into workflow storage.
+
+Researcher nodes on those runs search the live web through the portal server `parallel-search` (`https://search.parallel.ai/mcp`). The portal prefixes the tools as `parallel-search_web_search` and `parallel-search_web_fetch`. Only researcher nodes see them. A web-search observation keeps up to 12,000 characters, and those calls wait up to 45 seconds. The portal stores the Parallel API key as that server's bearer and pins `mode=fast` with at most five results. The swarm worker does not hold the key. No new skill-pack template is required: a run with no stored MCP ids already attaches `portal`.
 - **Cloudflare Native** — Workers AI, Durable Objects, WebSockets, R2. Deploys to the Abracadabra account, with Handoff and HQ.
 
 ## Changelog
 
+- **2026-10-09** — Researcher nodes on HQ runs can search the public web through portal server `parallel-search`.
+  - **Why:** AI Search cannot crawl an arbitrary subject. Parallel Search MCP is the fetcher, and the portal is already the tool door.
+  - **Touchpoints:** `README.md`, `DEPLOYMENT.md`. No worker code.
+  - **Data flow:** HQ run → portal → `https://search.parallel.ai/mcp` (`web_search`, `web_fetch`). The Parallel key stays on the portal server.
+  - **API / schema:** none in this repo.
+  - **Verification:** Portal `abracadabra` on `mcp.abra-ca-dabra.app` lists `parallel-search` as ready, with `web_search` and `web_fetch` enabled.
+- **2026-10-09** — Researcher nodes are the only ones that see the portal's web search tools, and a search result is no longer cut at 4,000 characters.
+  - **Why:** The portal names the tools `parallel-search_web_search` and `parallel-search_web_fetch`. Every node was receiving them, and `McpClient.callTool` sliced the answer to 4,000 characters before the agent could cite it.
+  - **Touchpoints:** `src/ai/research-tools.ts`, `src/ai/agents.ts`, `src/mcp/client.ts`, `src/do/WorkflowDO.ts`.
+  - **Data flow:** HQ run → portal tool list → researcher only → `web_search` then `web_fetch`, with the source URL kept in the observation.
+  - **API / schema:** none.
+  - **Verification:** `npm test` in `swarm/`: 36 tests passed. `npx tsc --noEmit` exited 0. Deployed `agent-swarm-orchestrator` version `c3a294d2-8a23-4fd8-909e-4a2c5a226202`. `handoff-agent` version `95aa38f8-ecaa-4217-aa19-7241ab837e29`. The swarm run secret was still set after deploy.
 - **2026-10-09** — The canvas opens a stored swarm execution from `?executionId=`.
   - **Why:** HQ links need the worker canvas to show the run that was saved, including a live socket when that run is still going.
   - **Touchpoints:** `frontend/src/lib/execution-link.mjs`, `frontend/src/App.tsx`.

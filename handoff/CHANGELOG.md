@@ -2,6 +2,33 @@
 
 ## 2026-10-09
 
+- **What changed** — A lead swarm started by `handoff-agent` attaches the MCP portal and sends the run secret. The agent keeps using the Handoff MCP route for its own tools until Access headers are set.
+- **Why** — `MCP_PORTAL_URL` was an empty var and `SWARM_RUN_SECRET` was unset, so automatic lead research never reached Parallel Search.
+- **Code touchpoints** — `handoff/src/lib/lead-swarm.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/mcp-connect.ts`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — `pickupLead` saves the portal server on every step and sends `Authorization: Bearer` on save and execute. The swarm still adds the Access headers itself.
+- **API / schema impact** — none. `MCP_PORTAL_URL` on `handoff-agent` is `https://mcp.abra-ca-dabra.app/mcp`. `SWARM_RUN_SECRET` was set to one new shared value on `handoff-agent`, `handoff-hq`, and `agent-swarm-orchestrator`. The value is not in git.
+- **Verification** — `npx vitest run src/lib/lead-swarm.test.ts src/lib/mcp-connect.test.ts` in `handoff/`: 13 tests passed. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `95aa38f8-ecaa-4217-aa19-7241ab837e29` on `agent.abra-ca-dabra.app`. Worker `agent-swarm-orchestrator` version `c3a294d2-8a23-4fd8-909e-4a2c5a226202`. Settings read shows the portal URL on `handoff-agent` and `SWARM_RUN_SECRET` on that worker, `handoff-hq`, and the swarm.
+
+## 2026-10-09
+
+- **What changed** — Only researcher nodes see the portal's Parallel tools, and a search observation keeps up to 12,000 characters. The portal names those tools `parallel-search_web_search` and `parallel-search_web_fetch`.
+- **Why** — The portal prefixes `{server_id}_` and splits on the first underscore. Every swarm node was offered the tools, and the MCP client cut the result at 4,000 characters before a citation could survive.
+- **Code touchpoints** — `swarm/src/ai/research-tools.ts`, `swarm/src/ai/agents.ts`, `swarm/src/mcp/client.ts`, `swarm/src/do/WorkflowDO.ts`
+- **Data-flow impact** — A researcher calls search, then fetch, and the observation still contains the source URL. Other node types keep the rest of the portal tools.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `swarm/`: 36 tests passed. `npx tsc --noEmit` exited 0. Worker `agent-swarm-orchestrator` version `a6a8043f-7104-4c1a-bcac-3abb36c04d10`. Portal `abracadabra` still lists `parallel-search` as ready. `handoff-hq` has `MCP_PORTAL_URL` set to `https://mcp.abra-ca-dabra.app/mcp`. The swarm worker still has `SWARM_RUN_SECRET` and the Access service token after deploy.
+
+## 2026-10-09
+
+- **What changed** — Swarm researchers search the public web through Parallel Search on the Cloudflare MCP portal. Server id `parallel-search`, upstream `https://search.parallel.ai/mcp`, tools `web_search` and `web_fetch`, fast mode, five results. The API key is that server's bearer. No new swarm template.
+- **Why** — AI Search only indexes a corpus this account owns. Researcher nodes need a fetcher for the open web, and HQ runs already enter through the portal.
+- **Code touchpoints** — `README.md`, `handoff/README.md`, `swarm/README.md`, `swarm/DEPLOYMENT.md`, `docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`
+- **Data-flow impact** — An HQ swarm run with no stored MCP ids still calls `portal`. After the server is linked and enabled, `tools/list` includes `web_search` and `web_fetch`.
+- **API / schema impact** — Cloudflare Access MCP server `parallel-search` on the existing portal. No app migration.
+- **Verification** — Cloudflare account `6f6959ecba86d1de4d6cf6aa0b34528d`. Created MCP server `parallel-search` (bearer, auth connected). Sync status `ready` with tools `web_search` and `web_fetch`. Portal `abracadabra` (`mcp.abra-ca-dabra.app`) now lists that server, `on_behalf` false, `default_disabled` false, both tools enabled. No other portal server was present to keep.
+
+## 2026-10-09
+
 - **What changed** — Creating a project attaches the client's single loose space and single loose repo. Saving requirements stores one swarm pack on each open card that has none. Run swarm moves that card to Run. A finished swarm files an unpublished document on the project and marks the card done.
 - **Why** — A project row was on the client while the space and repo stayed unassigned, and Describe cards from requirements had no pack, so Run never scheduled a swarm.
 - **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/task-packs.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/work/board.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/agent/worker.ts`
