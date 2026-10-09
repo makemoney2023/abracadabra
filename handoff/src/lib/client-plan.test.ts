@@ -347,6 +347,26 @@ describe("one skill step per wake", () => {
     ],
   };
 
+  it("leaves a swarm pack card for the Run swarm button", async () => {
+    const { call, calls } = caller({
+      tasks: [
+        {
+          ...websiteTask,
+          templateId: "pack-community-marketingskills",
+          skills: [{ path: "community/marketingskills/social/SKILL.md", mode: "complete", status: "todo" }],
+        },
+      ],
+    });
+    const result = await advanceClientWork({
+      call,
+      requestId: "wake-pack",
+      now: 1,
+      readSkill: async () => "---\nname: social\n---\nWrite posts.",
+    });
+    expect(result).toEqual({ advanced: 0, reschedule: false });
+    expect(calls.some((entry) => entry.name === "update_task")).toBe(false);
+  });
+
   it("finishes one complete step and leaves the next untouched", async () => {
     const seen: string[] = [];
     const { call, calls } = caller({ tasks: [websiteTask] });

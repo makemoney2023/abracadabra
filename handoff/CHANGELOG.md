@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/task-packs.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/work/board.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/agent/worker.ts`
 - **Data-flow impact** — `create_project` returns `spaces`, `repos`, `looseSpaces`, and `looseRepos`. A due run whose workflow has a task sends that task's brief. Chat `run_workflow` on a workflow with a task only moves the task to Run.
 - **API / schema impact** — none.
-- **Verification** — `npm test` in `handoff/`: 806 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched files reported 0 errors. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+- **Verification** — `npm test` in `handoff/`: 806 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched files reported 0 errors. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. A later review kept swarm-pack cards out of the work wake, kept the pack id when a step is saved, hid Run swarm after the card is already in Run, and files a finished due run into that project's space.
 
 ## 2026-10-09
 

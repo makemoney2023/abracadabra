@@ -16,10 +16,12 @@ export function templateOnCard(skillsJson: string | null): string | null {
 /** Run swarm shows on an open card that has a pack and no swarm already running. */
 export function swarmRunReady(input: {
   status: string;
+  stage: string;
   skillsJson: string | null;
   running: boolean;
 }): { ready: boolean; templateId: string | null } {
   const templateId = templateOnCard(input.skillsJson);
-  if (!templateId || input.status === "done" || input.running) return { ready: false, templateId };
+  if (!templateId || input.status === "done") return { ready: false, templateId: null };
+  if (input.running || input.stage === "run") return { ready: false, templateId };
   return { ready: true, templateId };
 }

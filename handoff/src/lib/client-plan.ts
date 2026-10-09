@@ -29,6 +29,7 @@ type ContextTask = {
   createdAt?: number;
   deliverableId?: string | null;
   skills?: PlanSkill[];
+  templateId?: string | null;
   blockedReason?: string | null;
 };
 
@@ -404,6 +405,7 @@ function currentSkill(skills: PlanSkill[]): PlanSkill | undefined {
 
 function eligible(task: ContextTask, answered: number): boolean {
   if (task.status === "done" || task.stage === "build" || task.stage === "run") return false;
+  if (task.templateId?.startsWith("pack-")) return false;
   if (task.status === "blocked" && answered === 0) return false;
   return Boolean(task.id && currentSkill(task.skills ?? []));
 }

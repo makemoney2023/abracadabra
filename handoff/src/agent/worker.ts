@@ -308,6 +308,7 @@ export class ClientAgent extends Agent<AgentBindings> {
         run: payload.executionId,
         node: "result",
         body: run.output,
+        projectId: payload.projectId ?? "",
         requestId: `${payload.activityKey}:file`,
       });
     }

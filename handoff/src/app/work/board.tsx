@@ -160,7 +160,12 @@ function CardFace({
   const waiting = card.stage === "build" && card.status === "todo" && !card.cursor_agent_id && !card.blocked_reason;
   const steps = skillSteps(card.skills_json);
   const brief = notes.find((note) => note.kind === "agent.task_brief")?.body;
-  const swarm = swarmRunReady({ status: card.status, skillsJson: card.skills_json, running });
+  const swarm = swarmRunReady({
+    status: card.status,
+    stage: card.stage,
+    skillsJson: card.skills_json,
+    running,
+  });
   const packName = packs.find((pack) => pack.id === swarm.templateId)?.name ?? swarm.templateId ?? "";
   const [packId, setPackId] = useState(packs[0]?.id ?? "");
   const [pending, startTransition] = useTransition();
@@ -218,7 +223,12 @@ function CardFace({
         </p>
       ) : null}
       {waiting ? <p className="text-xs text-muted-foreground">Waiting for a free cloud run.</p> : null}
-      {swarm.templateId && running ? <p className="text-xs text-muted-foreground">{packName} is still going.</p> : null}
+      {card.status !== "done" && swarm.templateId && running ? (
+        <p className="text-xs text-muted-foreground">{packName} is still going.</p>
+      ) : null}
+      {card.status !== "done" && card.stage === "run" && swarm.templateId && !running ? (
+        <p className="text-xs text-muted-foreground">{packName} is scheduled.</p>
+      ) : null}
       {swarm.ready ? (
         <Button size="sm" type="button" disabled={pending} onClick={() => onMove(card.id, "run")}>
           Run swarm

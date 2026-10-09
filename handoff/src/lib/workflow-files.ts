@@ -62,6 +62,7 @@ export async function storeWorkflowOutput(input: {
   files: WorkflowFile[];
   now: number;
   tag?: "copy" | "reference";
+  projectId?: string | null;
 }): Promise<StoredWorkflowFiles> {
   const prepared = input.files.flatMap((file) => {
     const adapted = adaptArtifact(file.body);
@@ -72,11 +73,14 @@ export async function storeWorkflowOutput(input: {
   });
   if (prepared.length === 0) return { batchId: null, stored: [] };
 
+  const projectId = input.projectId?.trim() || null;
   const space = await input.sql.get<{ id: string; policy_profile: string; quota_bytes: number }>(
     `SELECT id, policy_profile, quota_bytes FROM workspaces
      WHERE organization_id = ? AND status = 'active'
-     ORDER BY opened_at ASC LIMIT 1`,
-    [input.organizationId],
+       AND (? IS NULL OR project_id = ? OR project_id IS NULL)
+     ORDER BY CASE WHEN project_id = ? THEN 0 ELSE 1 END, opened_at ASC
+     LIMIT 1`,
+    [input.organizationId, projectId, projectId, projectId],
   );
   const profile = space ? profileOf(space.policy_profile) : null;
   if (!space || !profile) {

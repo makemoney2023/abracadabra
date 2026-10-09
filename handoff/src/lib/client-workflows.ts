@@ -398,9 +398,8 @@ export async function claimDueWorkflow(input: {
     now: input.now,
   });
   if (!started.ok) return started;
-  if (row.task_id && started.status === "completed" && started.output.trim() && !started.output.includes("still going")) {
-    await markTaskDone(input.sql, { taskId: row.task_id, now: input.now, actor: { kind: "agent", id: "swarm" } });
-  }
+  const finished =
+    started.status === "completed" && started.output.trim().length > 0 && !started.output.includes("still going");
   if (row.task_id && started.status === "failed") {
     await input.sql.run(
       `INSERT INTO activities (
@@ -421,6 +420,7 @@ export async function claimDueWorkflow(input: {
       sql: input.sql,
       store: input.store,
       organizationId: input.organizationId,
+      projectId: row.project_id,
       files: [{ workflow: "swarm", run: started.executionId, node: "result", body: started.output }],
       now: input.now,
     });
@@ -449,6 +449,9 @@ export async function claimDueWorkflow(input: {
         [crypto.randomUUID(), deliverableId, started.output],
       );
     }
+  }
+  if (row.task_id && finished) {
+    await markTaskDone(input.sql, { taskId: row.task_id, now: input.now, actor: { kind: "agent", id: "swarm" } });
   }
   const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
   await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
