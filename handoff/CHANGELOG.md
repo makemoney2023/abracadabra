@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The mailbox that opens a lead for an authenticated new sender, and that sends the model's own sentence, is live on Cloudflare.
+- **Why** — `handoff-agent` was already on that code. Staff HQ still lacked `open_prospect`, so a new sender was told to try again. The HQ build also needed the mailbox safety fixture to carry a full action.
+- **Code touchpoints** — `handoff/src/lib/client-channel.test.ts`
+- **Data-flow impact** — `email()` on `handoff-agent` calls `https://hq.abra-ca-dabra.app/api/client-messages`. An authenticated miss now opens the lead on the deployed HQ.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `9cc09526-d1a7-4c19-8805-f8f4f8c17f2b`. Worker `handoff-hq` version `7a15de72-94f7-4fc5-8981-976ae0006174` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. HQ secret names are unchanged. `BOOKING_URL` on the agent is empty.
+
+## 2026-10-09
+
 - **What changed** — An authenticated new sender to `magic@abra-ca-dabra.app` becomes a lead. Magic asks what they want to accomplish, the problem, and the outcome, then offers the booking link once that sentence is on the brief. A sender who fails DKIM or DMARC still gets the fixed refusal.
 - **Why** — Unknown mail was refused even when the address was authenticated, so a prospect could not start a conversation or land in HQ.
 - **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/db/conversations.ts`, `handoff/wrangler.agent.jsonc`
