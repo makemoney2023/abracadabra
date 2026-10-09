@@ -543,6 +543,7 @@ All plain words, grade 5 reading level, same shadcn look as Handoff admin.
 
 **Work (`hq /work`)**
 - Every open task across all clients. Group by person or by client. Filter late, this week, blocked.
+- The kanban that replaces this table, including the project board and the client rollup, is specified in [kanban-board-gameplan.md](kanban-board-gameplan.md). It is not built yet.
 
 **Invoices (`hq /invoices`)**
 - List by status: draft, sent, late, paid. Totals owed and paid this month.

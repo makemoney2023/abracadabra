@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Each project gets a kanban the agent executes from, and that board rolls up to the client and to every client. The plan is written. The board is not built.
+- **Why** — Open work is a table, and planning still attaches new tasks to the most recently updated project.
+- **Code touchpoints** — `docs/kanban-board-gameplan.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `README.md`
+- **Data-flow impact** — none. The plan describes a later `position` column, one shared stage move, and a per-project pull order inside the existing client wake.
+- **API / schema impact** — none in this change. The plan adds `tasks.position` when that step is built.
+- **Verification** — Docs only. No tests.
+
+## 2026-10-09
+
 - **What changed** — The mailbox follow-up spec is on `main`, and staff HQ plus the agent worker were published again. Mailbox behavior is unchanged.
 - **Why** — The spec was merged and both mailbox workers were redeployed from that tree.
 - **Code touchpoints** — `docs/mailbox-later.md`, `docs/hq-agent-spec.md`
