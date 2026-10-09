@@ -160,6 +160,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                         <Link href={hqSwarmHref(run.execution_id)}>{run.name}</Link>
                         <span className="ml-2 text-muted-foreground">{run.status}</span>
                         <span className="ml-2 text-muted-foreground">{run.trigger}</span>
+                        <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
                       </li>
                     ))}
                   </ul>

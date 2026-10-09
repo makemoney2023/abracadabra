@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { ProjectRow, TaskRow } from "@/db/crm";
 import { ActionField, ActionForm } from "@/components/action-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { clock } from "@/lib/clock";
+import { formatRelative } from "@/lib/format";
 import type { SwarmRunRow } from "@/lib/swarm-runs";
 import { hqSwarmHref } from "../../swarm/swarm-link";
 import { ProjectForm } from "../../projects/forms";
@@ -22,6 +24,7 @@ export function WorkTab({
   tasks: TaskRow[];
   unassignedRuns: SwarmRunRow[];
 }) {
+  const now = clock();
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -88,6 +91,7 @@ export function WorkTab({
                     <Link href={hqSwarmHref(run.execution_id)}>{run.name}</Link>
                     <span className="ml-2 text-muted-foreground">{run.status}</span>
                     <span className="ml-2 text-muted-foreground">{run.trigger}</span>
+                    <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
                   </span>
                   <ActionForm
                     action={assignSwarmRunAction}

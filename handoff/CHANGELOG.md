@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Each swarm row on the project page and the client Work tab shows when the run started.
+- **Why** — Staff need the relative time next to the name, status, and trigger.
+- **Code touchpoints** — `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`
+- **Data-flow impact** — none. The lists still come from `listProjectSwarmRuns` and `listUnassignedSwarmRuns` in the same order.
+- **API / schema impact** — none.
+- **Verification** — `npx eslint src/app/projects/[id]/page.tsx src/app/clients/[id]/work-tab.tsx` in `handoff`.
+
+## 2026-10-09
+
 - **What changed** — Staff open a project's swarm runs from the project page, and put an unassigned swarm on a project from the client Work tab.
 - **Why** — The Swarm page always opened a blank canvas, and a run with no project had nowhere to be attached.
 - **Code touchpoints** — `handoff/src/app/swarm/swarm-link.ts`, `handoff/src/app/swarm/page.tsx`, `handoff/src/app/swarm/swarm-frame.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/clients/actions.ts`
