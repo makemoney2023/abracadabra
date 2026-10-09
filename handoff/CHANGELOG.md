@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A spec and an implementation plan describe storing each swarm run on a client project and opening that run from HQ. No runtime behavior changed.
+- **Why** — A finished swarm only left a timeline line, and the Swarm page always opened a blank canvas.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-project-swarm-runs-design.md`, `docs/superpowers/plans/2026-10-09-project-swarm-runs.md`
+- **Data-flow impact** — none until the plan is implemented.
+- **API / schema impact** — none yet. The plan adds table `swarm_runs`.
+- **Verification** — Docs only. No tests run.
+
+## 2026-10-09
+
 - **What changed** — Adding a client directly opens a file space and starts the same schema check a new lead gets. The scrape is stored in that space when the scan finishes, and the agent wakes with it.
 - **Why** — A client who never passed through the lead form had no website check, no stored context, and no file space.
 - **Code touchpoints** — `handoff/src/lib/lead-schema.ts`, `handoff/src/lib/scan-context.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/clients/actions.ts`

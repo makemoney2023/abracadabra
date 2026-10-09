@@ -45,6 +45,6 @@ Staff add finished work on a project page, then open it at `/deliverables/[id]`.
 
 ## Agent
 
-Adding a client from the staff form or the HQ `create_client` tool opens a file space and queues the same schema scan a new lead gets. A client with no website still gets the space, and the agent wakes at once. When the scan finishes, the agent files the scraped pages into that space and starts from them.
+Opening a past swarm from a project is specified in `docs/superpowers/specs/2026-10-09-project-swarm-runs-design.md` and is not built yet. Adding a client from the staff form or the HQ `create_client` tool opens a file space and queues the same schema scan a new lead gets. A client with no website still gets the space, and the agent wakes at once. When the scan finishes, the agent files the scraped pages into that space and starts from them.
 
 When a task moves to build, Handoff starts a Cursor cloud run if the brief and the design system are approved, a build brief is on the deliverable, and a repo is linked or can be created. The prompt is the build brief. The Cursor API does not take a branch name. The brief tells the agent which branch to use. A pull request whose first line is `Deliverable: <id>` pulls the manifest, marks the task done, and publishes when auto publish is on. The same cron that wakes the agent also expires a run that missed its deadline and starts a build that was waiting for a free slot. `CURSOR_API_KEY` starts the run. Set it on the staff app. It is not a secret on the agent worker.
