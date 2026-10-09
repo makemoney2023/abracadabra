@@ -14,6 +14,13 @@ export type ScrapedPage = {
 };
 
 const PAGE_CAP = 20;
+const ASSET_URL = /\.(?:css|js|mjs|png|jpe?g|gif|webp|svg|ico|woff2?|mp4|webm|map)(?:$|[?#])/i;
+
+/** Page text worth keeping. Stylesheets, pictures, and binary downloads are not copy. */
+function pageCopy(url: string, text: string): string {
+  if (ASSET_URL.test(url) || text.includes("\u0000")) return "";
+  return text;
+}
 
 function slug(value: string): string {
   const base = value
@@ -181,11 +188,12 @@ export async function storeScanContext(input: {
   store: ObjectStore;
   organizationId: string;
   now: number;
-}): Promise<{ scanId: string | null; score: number | null; stored: string[] }> {
+}): Promise<{ scanId: string | null; score: number | null; stored: string[]; created: boolean }> {
+  const empty = { scanId: null, score: null, stored: [] as string[], created: false };
   const table = await input.sql.get<{ name: string }>(
     "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'readiness_scans'",
   );
-  if (!table) return { scanId: null, score: null, stored: [] };
+  if (!table) return empty;
   const scan = await input.sql.get<{ id: string; score_total: number | null }>(
     `SELECT id, score_total FROM readiness_scans
      WHERE status = 'complete'
@@ -197,7 +205,9 @@ export async function storeScanContext(input: {
      LIMIT 1`,
     [input.organizationId, input.organizationId],
   );
-  if (!scan) return { scanId: null, score: null, stored: [] };
+  if (!scan) return empty;
+  const prior = await filedScanPaths(input.sql, input.organizationId, scan.id);
+  if (prior.length > 0) return { scanId: scan.id, score: scan.score_total, stored: prior, created: false };
   const rows = await input.sql.all<{
     url: string;
     page_type: string;
@@ -210,7 +220,7 @@ export async function storeScanContext(input: {
   );
   const pages: ScrapedPage[] = rows.map((row) => {
     const facts = jsonObject(row.evidence_json);
-    const scrapedText = typeof facts.scrapedText === "string" ? facts.scrapedText : "";
+    const scrapedText = pageCopy(row.url, typeof facts.scrapedText === "string" ? facts.scrapedText : "");
     return {
       url: row.url,
       pageType: row.page_type,
@@ -245,5 +255,47 @@ export async function storeScanContext(input: {
     }
   }
   await enrichLeadFromSchema(input.sql, input.organizationId, input.now);
-  return { scanId: scan.id, score: scan.score_total, stored: saved.stored };
+  return { scanId: scan.id, score: scan.score_total, stored: saved.stored, created: saved.stored.length > 0 };
+}
+
+async function filedScanPaths(sql: Sql, organizationId: string, scanId: string): Promise<string[]> {
+  const rows = await sql.all<{ relative_path: string }>(
+    `SELECT f.relative_path AS relative_path
+     FROM files f
+     JOIN workspaces w ON w.id = f.workspace_id
+     WHERE w.organization_id = ?
+       AND f.object_deleted_at IS NULL
+       AND f.relative_path LIKE ?
+     ORDER BY f.relative_path`,
+    [organizationId, `agent/schema/${scanId}/%`],
+  );
+  return rows.map((row) => row.relative_path);
+}
+
+/** Files every finished scan that is not already in its client space. A repeat adds nothing. */
+export async function filePendingScanContexts(input: {
+  sql: Sql;
+  store: ObjectStore;
+  now: number;
+}): Promise<number> {
+  const table = await input.sql.get<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'readiness_scans'",
+  );
+  if (!table) return 0;
+  const orgs = await input.sql.all<{ id: string }>(
+    `SELECT DISTINCT organization_id AS id FROM readiness_scans
+     WHERE status = 'complete' AND organization_id IS NOT NULL`,
+  );
+  let created = 0;
+  for (const org of orgs) {
+    if (!org.id) continue;
+    const saved = await storeScanContext({
+      sql: input.sql,
+      store: input.store,
+      organizationId: org.id,
+      now: input.now,
+    });
+    if (saved.created) created += 1;
+  }
+  return created;
 }

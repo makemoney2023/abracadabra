@@ -11,6 +11,24 @@
 
 ## 2026-10-09
 
+- **What changed** — A finished schema scan writes its page copy into the client space as soon as the scan is ready. A repeat does not add the same pages again. Stylesheets and pictures are left out. The quarter-hour job files any finished scan that never landed.
+- **Why** — Adding AbraCadabra finished the schema scan, and the page text stayed on the scan. The space stayed empty because filing waited for the agent, and that wake never wrote the files.
+- **Code touchpoints** — `handoff/src/lib/scan-context.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/queue-dispatch.ts`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — `scan_ready` calls `storeScanContext` before it wakes the agent. The scheduled worker calls `filePendingScanContexts` for scans already finished.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run` in `handoff` (125 files, 717 tests, passed). ESLint clean on the touched library files.
+
+## 2026-10-09
+
+- **What changed** — Moving between staff screens shows pulsing skeleton bars on the theme border while the next page loads.
+- **Why** — The loading placeholder used `bg-muted`, which matches the canvas, and uncolored borders, which paint in the light text color. That flash looked like an empty white table.
+- **Code touchpoints** — `handoff/src/components/ui/skeleton.tsx`, `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-fallback.test.ts`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run` in `handoff` (126 files, 716 tests, passed) and `npx vitest run --config vitest.agent.config.mts` (1 file, 7 tests, passed). ESLint clean on the skeleton, route fallback, and its test.
+
+## 2026-10-09
+
 - **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
 - **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
 - **Code touchpoints** — none. Deploy of `f2735c0`.
