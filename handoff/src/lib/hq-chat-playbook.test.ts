@@ -38,6 +38,11 @@ describe("channel instructions", () => {
     expect(PROSPECT_INSTRUCTIONS).toContain("booking link");
     expect(PROSPECT_INSTRUCTIONS).toContain("not a receipt");
     expect(PROSPECT_INSTRUCTIONS).toContain("Do not quote a price");
+    expect(PROSPECT_INSTRUCTIONS).toContain("budget band");
+    expect(PROSPECT_INSTRUCTIONS).toContain("window they are aiming for");
+    expect(PROSPECT_INSTRUCTIONS).toContain("Do not name an amount");
+    expect(PROSPECT_INSTRUCTIONS).toContain("do not repeat that number");
+    expect(PROSPECT_INSTRUCTIONS).toContain("ask for the site");
     expect(PROSPECT_INSTRUCTIONS).toContain('"kind":"other"');
   });
 });

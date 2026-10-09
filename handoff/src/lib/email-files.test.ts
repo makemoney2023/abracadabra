@@ -126,4 +126,61 @@ describe("email attachments", () => {
     );
     expect(note?.body).toContain("no file space");
   });
+
+  it("opens one file space for a lead and reuses it", async () => {
+    await sql.run("UPDATE organizations SET kind = 'lead' WHERE id = 'org-1'");
+    const first = await storeEmailAttachments({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ filename: "brief.pdf", mimeType: "application/pdf", bytes: PDF }],
+      now: NOW,
+    });
+    expect(first.stored).toEqual(["brief.pdf"]);
+    const spaces = await sql.all<{ project_id: string | null }>("SELECT project_id FROM workspaces");
+    expect(spaces).toEqual([{ project_id: null }]);
+    const kind = await sql.get<{ kind: string }>("SELECT kind FROM organizations WHERE id = 'org-1'");
+    expect(kind?.kind).toBe("lead");
+    const requests = await sql.get<{ n: number }>("SELECT count(*) AS n FROM requests WHERE title = 'Files'");
+    expect(requests?.n).toBe(1);
+
+    const second = await storeEmailAttachments({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ filename: "more.pdf", mimeType: "application/pdf", bytes: PDF }],
+      now: NOW + 1,
+    });
+    expect(second.stored).toEqual(["more.pdf"]);
+    const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM workspaces");
+    expect(count?.n).toBe(1);
+
+    const refused = await storeEmailAttachments({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [
+        { filename: "secret.pem", mimeType: "application/x-pem-file", bytes: new TextEncoder().encode("nope") },
+        { filename: "empty.pdf", mimeType: "application/pdf", bytes: new Uint8Array() },
+      ],
+      now: NOW + 2,
+    });
+    expect(refused.stored).toEqual([]);
+    expect(refused.refused.length).toBeGreaterThan(0);
+    const after = await sql.get<{ n: number }>("SELECT count(*) AS n FROM workspaces");
+    expect(after?.n).toBe(1);
+  });
+
+  it("does not open a second space for a client who already has one", async () => {
+    await space();
+    await storeEmailAttachments({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ filename: "brief.pdf", mimeType: "application/pdf", bytes: PDF }],
+      now: NOW,
+    });
+    const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM workspaces");
+    expect(count?.n).toBe(1);
+  });
 });
