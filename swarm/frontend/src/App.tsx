@@ -78,6 +78,7 @@ interface WSMessage {
   server?: string;
   tool?: string;
   summary?: string;
+  nodeName?: string;
 }
 
 type NodeListSetter = Dispatch<SetStateAction<FlowNode[]>>;
@@ -94,9 +95,14 @@ function toolsUsedLabels(tools: { server?: string; tool?: string }[] | undefined
   return tools.flatMap((tool) => (tool?.server && tool.tool ? [`${tool.server}/${tool.tool}`] : []));
 }
 
+function swarmArtifactId(nodeId: string, output: string, timestamp: number | undefined): string {
+  return typeof timestamp === 'number' ? `${nodeId}-${timestamp}` : `${nodeId}-${output.length}`;
+}
+
 function applySwarmMessage(
   msg: WSMessage,
   eid: string,
+  nodesRef: { current: FlowNode[] },
   setNodes: NodeListSetter,
   setArtifacts: ArtifactSetter,
   setIsExecuting: FlagSetter,
@@ -131,24 +137,25 @@ function applySwarmMessage(
     if (msg.type === 'node_done' && msg.output) {
       const nodeId = msg.nodeId;
       const output = msg.output;
-      const ts = msg.timestamp;
-      setNodes((nds) => {
-        const node = nds.find((n) => n.id === nodeId);
-        if (node) {
-          setArtifacts((prev) => [
-            ...prev,
-            {
-              id: `${nodeId}-${Date.now()}`,
-              executionId: eid,
-              nodeId,
-              nodeName: node.data.name,
-              content: output,
-              timestamp: ts,
-            },
-          ]);
-        }
-        return nds;
-      });
+      const nodeName = msg.nodeName || nodesRef.current.find((node) => node.id === nodeId)?.data.name;
+      if (nodeName) {
+        const artifactId = swarmArtifactId(nodeId, output, msg.timestamp);
+        setArtifacts((prev) =>
+          prev.some((artifact) => artifact.id === artifactId)
+            ? prev
+            : [
+                ...prev,
+                {
+                  id: artifactId,
+                  executionId: eid,
+                  nodeId,
+                  nodeName,
+                  content: output,
+                  timestamp: typeof msg.timestamp === 'number' ? msg.timestamp : Date.now(),
+                },
+              ],
+        );
+      }
     }
   }
   if (msg.type === 'workflow_complete') {
@@ -169,6 +176,7 @@ function applySwarmMessage(
 function openSwarmSocket(
   eid: string,
   wsRef: { current: WebSocket | null },
+  nodesRef: { current: FlowNode[] },
   setNodes: NodeListSetter,
   setArtifacts: ArtifactSetter,
   setIsExecuting: FlagSetter,
@@ -179,7 +187,7 @@ function openSwarmSocket(
   wsRef.current = ws;
   ws.onmessage = (event) => {
     const msg = JSON.parse(event.data) as WSMessage;
-    applySwarmMessage(msg, eid, setNodes, setArtifacts, setIsExecuting, () => ws.close());
+    applySwarmMessage(msg, eid, nodesRef, setNodes, setArtifacts, setIsExecuting, () => ws.close());
   };
   ws.onerror = () => {
     setIsExecuting(false);
@@ -198,6 +206,8 @@ const ADD_ICONS = {
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AgentNodeData>([]);
+  const nodesRef = useRef<FlowNode[]>(nodes);
+  nodesRef.current = nodes;
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [workflowName, setWorkflowName] = useState('My Agent Swarm');
   const [inputText, setInputText] = useState('');
@@ -320,7 +330,7 @@ export default function App() {
         const artsResponse = await fetch('/api/artifacts?executionId=' + encodeURIComponent(storedId));
         if (!cancelled && artsResponse.ok) {
           const list = await artsResponse.json();
-          if (Array.isArray(list) && list.length > 0) {
+          if (!cancelled && Array.isArray(list) && list.length > 0) {
             setArtifacts(list);
             setShowArtifacts(true);
           }
@@ -331,7 +341,7 @@ export default function App() {
       if (cancelled) return;
       if (executionStatus === 'running') {
         setIsExecuting(true);
-        openSwarmSocket(storedId, wsRef, setNodes, setArtifacts, setIsExecuting);
+        openSwarmSocket(storedId, wsRef, nodesRef, setNodes, setArtifacts, setIsExecuting);
         opened = wsRef.current;
       }
     })();
@@ -512,7 +522,7 @@ export default function App() {
       if (!res.ok) throw new Error('execute failed');
       const { executionId: eid } = await res.json();
       setExecutionId(eid);
-      openSwarmSocket(eid, wsRef, setNodes, setArtifacts, setIsExecuting);
+      openSwarmSocket(eid, wsRef, nodesRef, setNodes, setArtifacts, setIsExecuting);
     } catch {
       setIsExecuting(false);
       toast.error('Failed to start execution');
