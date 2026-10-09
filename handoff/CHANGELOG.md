@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The manual-project swarm plan now covers attaching the client's space and repo when a project is created.
+- **Why** — `create_project` already stores the client id. It does not set `workspaces.project_id` or `repos.project_id`, so the agent's project can miss the space and the repo that client already has.
+- **Code touchpoints** — `docs/manual-project-swarm-gameplan.md`, `docs/hq-agent-spec.md`, `README.md`
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — none.
+- **Verification** — doc review against `createProject`, `linkRepo`, and `moveDealStage`.
+
+## 2026-10-09
+
 - **What changed** — A gameplan for manual projects: match one swarm pack onto each Describe card, then start that pack from a Run swarm button through the same due run the agent already uses.
 - **Why** — Saving requirements files a brief and no skills, so those cards never schedule a swarm. Chat starts a separate run that does not write the client space.
 - **Code touchpoints** — `docs/manual-project-swarm-gameplan.md`, `docs/hq-agent-spec.md`, `README.md`

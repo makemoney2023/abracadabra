@@ -1,7 +1,7 @@
 # Manual projects run the same swarm
 
 **Status:** proposed. Not built.
-**Updated:** 2026-10-09
+**Updated:** 2026-10-09. Adds client, space, and repo attachment on project create.
 **Amends, when built:** the swarm paragraph in [hq-agent-spec.md](hq-agent-spec.md) section 17.3, and the Work paragraph in [README.md](../README.md).
 
 ## Outcome
@@ -26,6 +26,11 @@ The client portal does not get this button. Staff publish before the client sees
 | The brief sent on a due run is the client name, site, industry, notes, and "Scheduled run of {workflow name}". It does not include the task brief. The draft deliverable is saved with `project_id` null. | `claimDueWorkflow` |
 | `scheduleTaskSwarm` creates the workflow without the task's `project_id`. | `scheduleTaskSwarm` |
 | Lead pack choice falls back to the schema readiness pack when nothing overlaps. | `pickSkillPack` in `handoff/src/lib/pack-picker.ts` |
+| `create_project` requires a live client id. A project name that client already has returns that row. Chat is told to call `list_projects` before creating one. | `createProject` in `handoff/src/db/crm.ts`, `HqChat` system prompt |
+| Linking a repo sets `project_id` only when the client has exactly one project, and only at link time. A repo linked before any project exists stays unassigned after a project is created. | `soleProjectId` inside `linkRepo` |
+| Winning a deal links the client's single unassigned space to that deal's project, or creates a space on the new project. `createProject` does not. | `moveDealStage` |
+| Chat cannot assign a repo or a space. `assignRepoProject` is a staff action. There is no space assign function. | `handoff/src/app/clients/repo-actions.ts` |
+| The project page lists every space of the client, including a space whose `project_id` is null. Repos on the page are only those with this `project_id`. | `handoff/src/app/projects/[id]/page.tsx` |
 
 ## The hole
 
@@ -35,6 +40,7 @@ A manual project and a chat swarm are two different starts.
 2. Chat creates a second project and a second card, then starts a swarm that never writes the space file or the deliverable.
 3. The due path, which does write those artifacts, sends a lead brief and files the document on no project.
 4. Nothing on the card tells staff the pack is missing, or gives them one press that runs the pack.
+5. The project row is on the right client. The client's space and repo are not. `createProject` never sets `workspaces.project_id` or `repos.project_id`. A space or repo that was already unassigned stays that way, and chat has no tool to attach one when the client has more than one.
 
 ## Locked decisions
 
@@ -50,6 +56,11 @@ A manual project and a chat swarm are two different starts.
 10. **Staff press the button.** Saving requirements does not start the swarm.
 11. **Staff can attach a pack by hand.** The card menu lists live packs. Choosing one writes the same skill steps the matcher writes.
 12. **No new env var, no new worker, no client-portal control.**
+13. **The project stays on the client chat already resolved.** `create_project` keeps requiring `organizationId`. Chat uses the client drawer id, or an id from `search_clients`. It does not create a second client to hold the project.
+14. **Create attaches the client's single loose space and single loose repo.** After the project row exists, including when the name already existed, set `project_id` on the one active space with `project_id` null, and on the one active repo with `project_id` null. A space or repo that already points at a project stays there. Two or more loose spaces, or two or more loose repos, attach nothing.
+15. **Several loose records are a question, not a guess.** The tool result lists those ids and names. Chat asks which one, then calls `assign_space_project` or `assign_repo_project`. Both call the same functions as the project page. A space or repo from another client is refused.
+16. **Do not open a space or a repo just because the project is new.** When the client has none, the result says so. A space still opens from a won deal or from New space. A repo still links from the client page.
+17. **The project page shows what is actually attached.** Spaces on that page are `project_id = this project`. Loose spaces of the same client appear only in the assign control, the way loose repos already do.
 
 ## Ready
 
@@ -66,6 +77,11 @@ A card with no pack keeps "No skills on this card." and shows **Choose pack** in
 ## Flow
 
 ```
+Create project (chat or the staff form)
+  → project row on that client (existing, or the same-name row)
+  → one loose space on that client: set its project_id
+  → one loose repo on that client: set its project_id
+  → more than one loose space or repo: leave them, and list them
 Save requirements
   → file tasks and briefs (unchanged)
   → for each open card on that project with no pack:
@@ -105,6 +121,10 @@ The project requirements form does not grow a second control. The save result is
 - A due run whose workflow has a task sends the task brief, not the lead brief.
 - `run_workflow` for a workflow with a task only moves that task to Run.
 - A completed refresh writes the space file, the unpublished document on that project, and moves the card to done. A failed refresh leaves the card in Run.
+- Creating a project for a client with one unassigned space and one unassigned repo sets both `project_id`s. A second create with the same name returns that project and still attaches them if they are still loose.
+- A space or repo that already has a `project_id` is not moved.
+- Two unassigned repos attach neither, and the result lists both.
+- `assign_space_project` refuses a space whose client is not the project's client.
 
 ## Out of scope
 
@@ -112,4 +132,4 @@ The project requirements form does not grow a second control. The save result is
 - Running two packs on one card.
 - The Build column and Cursor cloud runs.
 - Showing the button on the client portal.
-- Closing the swarm that chat already started, or deleting the extra project that chat created.
+- Closing the swarm that chat already started, or deleting the extra project that chat created. The next create of that same name returns the older project and can attach a still-loose space or repo to it.
