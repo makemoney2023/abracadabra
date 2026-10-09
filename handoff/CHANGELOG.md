@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A question no longer edits the client brief. A reply that only carries `In-Reply-To` stays on the open conversation, including when that sender has another thread open. The client chosen earlier in the thread is remembered the same way.
+- **Why** — Review of the mailbox conversation found those three gaps. A first question could still draft the brief, and a follow-up that omitted `References` started a new thread whenever more than one conversation was open.
+- **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/db/conversations.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — The outbound `Message-ID` is stored on `agent.reply`. `desk_context`, `thread`, `record`, and `thread_org` follow that id. A question or a subject restatement writes no task and no brief sentence. Rules on that turn are still stored.
+- **API / schema impact** — none. `record` accepts `replyMessageId`. `thread_org` accepts `references` and `subject`.
+- **Verification** — `npm test` in `handoff/`: 763 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
 - **What changed** — A client email continues the thread. A reply that is still a question, including one that only restates the subject, does not add a card to the project board.
 - **Why** — Mail was answering with a fixed “the work is X, what is the goal” line and filing that as a task before the client had said what the work should achieve.
 - **Code touchpoints** — `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/db/conversations.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`

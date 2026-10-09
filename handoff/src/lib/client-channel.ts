@@ -463,7 +463,12 @@ export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
   };
 }
 
-/** A question, or new work with no outcome yet, stays a conversation. It does not become a board task. */
+/** The canned line that names the subject and stops the conversation. */
+function restatesSubject(reply: string): boolean {
+  return /the work you(?:'re| are)? asking about/i.test(reply);
+}
+
+/** A question, or new work with no outcome yet, stays a conversation. It does not become a board task or a brief edit. */
 export function conversationPlan(turn: {
   reply: string;
   kind?: string;
@@ -473,8 +478,8 @@ export function conversationPlan(turn: {
   rules?: unknown;
 }): ChannelPlan {
   const plan = normalizeChannelPlan(turn);
-  if (turn.reply.includes("?") || (turn.kind === "new_work" && !turn.goal)) {
-    return { actions: [], brief: plan.brief, rules: plan.rules };
+  if (turn.reply.includes("?") || restatesSubject(turn.reply) || (turn.kind === "new_work" && !turn.goal)) {
+    return { actions: [], brief: null, rules: plan.rules };
   }
   return plan;
 }
@@ -605,17 +610,20 @@ export function replyMime(input: {
   references: string;
   domain: string;
   now: number;
+  /** Stored on the reply so a later In-Reply-To finds this conversation. */
+  replyMessageId?: string;
 }): string {
   const ids = [...input.references.matchAll(/<[^>]+>/g)].map((match) => match[0]);
   if (input.messageId && !ids.includes(input.messageId)) ids.push(input.messageId);
   const references = ids.slice(-20).join(" ");
   const subject = input.subject.replace(/[\r\n]+/g, " ").trim();
+  const replyId = input.replyMessageId?.trim() || `<${crypto.randomUUID()}@${input.domain}>`;
   const head = [
     `From: ${input.from}`,
     `To: ${input.to}`,
     `Subject: ${/^re:/i.test(subject) ? subject : `Re: ${subject}`}`,
     `Date: ${new Date(input.now).toUTCString()}`,
-    `Message-ID: <${crypto.randomUUID()}@${input.domain}>`,
+    `Message-ID: ${replyId}`,
     input.messageId ? `In-Reply-To: ${input.messageId}` : "",
     references ? `References: ${references}` : "",
     "Auto-Submitted: auto-replied",

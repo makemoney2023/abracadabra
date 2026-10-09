@@ -90,6 +90,18 @@ describe("client email", () => {
     expect(raw).toContain("In-Reply-To: <m-3@client.example>");
     expect(raw).toContain("References: <m-1@client.example> <m-2@abra-ca-dabra.app> <m-3@client.example>");
     expect(raw).toMatch(/^Message-ID: <[^>]+@abra-ca-dabra\.app>$/m);
+    const supplied = replyMime({
+      from: "magic@abra-ca-dabra.app",
+      to: "ada@client.example",
+      subject: "Pricing",
+      text: "Who is it for?",
+      messageId: "<m-3@client.example>",
+      references: "",
+      domain: "abra-ca-dabra.app",
+      now: 1_700_000_000_000,
+      replyMessageId: "<magic-9@abra-ca-dabra.app>",
+    });
+    expect(supplied).toContain("Message-ID: <magic-9@abra-ca-dabra.app>");
     expect(raw.endsWith("\r\n\r\nGot it.")).toBe(true);
   });
 
@@ -209,7 +221,25 @@ describe("mailbox reply", () => {
     });
     expect(turn.reply).toContain("?");
     expect(turn.actions).toEqual([]);
+    expect(turn.brief).toBeNull();
     expect(turn.file).toBe(true);
+  });
+
+  it("drops a board task when the reply restates the subject without a question mark", async () => {
+    const turn = await replyToClient({
+      desk,
+      incoming: "We need social media ads.",
+      model: async () => ({
+        reply: "The work you asking about is social media ads.",
+        kind: "other",
+        goal: "social media ads",
+        due: null,
+        actions: [{ title: "Social media ads", assignee: null, due: null, skill: null }],
+        brief: "They want social media ads.",
+      }),
+    });
+    expect(turn.actions).toEqual([]);
+    expect(turn.brief).toBeNull();
   });
 
   it("files a task after the client has named the outcome and the reply is not a question", async () => {
@@ -395,12 +425,13 @@ describe("mailbox reply", () => {
           file: true,
           actions: [{ title: "Social media ads", assignee: null, due: null, skill: null }],
           brief: "They want ads.",
-          rules: null,
+          rules: "no video",
         }),
       },
     );
     expect(answer.plan.actions).toEqual([]);
-    expect(answer.plan.brief).toBe("They want ads.");
+    expect(answer.plan.brief).toBeNull();
+    expect(answer.plan.rules).toBe("no video");
     expect(answer.asked).toBe(true);
   });
 

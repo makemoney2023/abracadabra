@@ -593,7 +593,13 @@ const worker = {
         return body?.value ?? { replies: 0, questionCount: 0, text: "" };
       },
       remembered: async (threadId) => {
-        const body = (await hqChannel(env, { action: "thread_org", threadId, email: addressOf(parsed.from) })) as {
+        const body = (await hqChannel(env, {
+          action: "thread_org",
+          threadId,
+          email: addressOf(parsed.from),
+          references: parsed.references,
+          subject: parsed.subject,
+        })) as {
           value?: string | null;
         } | null;
         return body?.value ?? null;
@@ -665,6 +671,8 @@ const worker = {
     });
     if (reply.skip) return;
     let replyText = reply.send === false ? "" : reply.reply;
+    const domain = own.split("@")[1] ?? "abra-ca-dabra.app";
+    const replyMessageId = replyText ? `<${crypto.randomUUID()}@${domain}>` : "";
     if (reply.send !== false && reply.organizationId && parsed.attachments.length > 0) {
       const saved = (await hqChannel(env, {
         action: "attach",
@@ -688,6 +696,7 @@ const worker = {
       references: parsed.references,
       subject: parsed.subject,
       sender: addressOf(parsed.from),
+      replyMessageId,
       body: parsed.text,
       state: reply.classified.state,
       goal: reply.classified.goal,
@@ -711,8 +720,9 @@ const worker = {
       text: replyText,
       messageId: parsed.messageId,
       references: parsed.references,
-      domain: own.split("@")[1] ?? "abra-ca-dabra.app",
+      domain,
       now: Date.now(),
+      replyMessageId,
     });
     try {
       await message.reply(new EmailMessage(own, message.from, mime));

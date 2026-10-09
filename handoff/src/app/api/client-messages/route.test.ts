@@ -82,9 +82,24 @@ describe("POST /api/client-messages conversation", () => {
       state: "clarifying",
       asked: true,
       replyBody: "Who are these ads for?",
-      actions: [],
+      replyMessageId: "<magic-1@abra-ca-dabra.app>",
+      actions: [{ title: "Social media ads" }],
+      brief: "They want ads.",
     });
     expect(recorded.status).toBe(200);
+    const recordedBody = (await recorded.json()) as { value: { taskIds: string[] } };
+    expect(recordedBody.value.taskIds).toEqual([]);
+    const byReply = (await (
+      await post({
+        action: "desk_context",
+        organizationId,
+        threadId: "<magic-1@abra-ca-dabra.app>",
+        references: "",
+        sender: "ada@northwind.example",
+        subject: "ads",
+      })
+    ).json()) as { value: { messages: { body: string }[] } };
+    expect(byReply.value.messages.map((row) => row.body)).toContain("Who are these ads for?");
     const desk = (await (
       await post({
         action: "desk_context",

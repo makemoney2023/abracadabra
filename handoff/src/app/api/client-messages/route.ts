@@ -16,7 +16,7 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import { applyChannelPlan, normalizeChannelPlan } from "@/lib/channel-plan";
-import { bytesFromBase64, replyStatesPrice } from "@/lib/client-channel";
+import { bytesFromBase64, conversationPlan, replyStatesPrice } from "@/lib/client-channel";
 import { lookupEmailSender, markOptedOut } from "@/lib/client-channel-store";
 import type { ScanQueue } from "@/lib/lead-schema";
 import { captureProspectWebsite, noteProspectBudget, noteProspectTurn, openEmailProspect } from "@/lib/prospect-lead";
@@ -113,7 +113,10 @@ export async function POST(request: Request) {
   if (action === "thread_org") {
     return NextResponse.json({
       ok: true,
-      value: await organizationForSenderThread(sql, text(body, "threadId"), text(body, "email")),
+      value: await organizationForSenderThread(sql, text(body, "threadId"), text(body, "email"), {
+        references: text(body, "references"),
+        subject: text(body, "subject"),
+      }),
     });
   }
   if (action === "thread") {
@@ -197,11 +200,22 @@ export async function POST(request: Request) {
         dueText: text(body, "dueText") || null,
         asked: body.asked === true,
         replyBody: text(body, "replyBody") || undefined,
+        replyMessageId: text(body, "replyMessageId") || undefined,
         prospect: body.prospect === true,
       },
       now,
     );
-    const plan = normalizeChannelPlan({ actions: body.actions, brief: text(body, "brief"), rules: text(body, "rules") });
+    const incomingPlan = { actions: body.actions, brief: text(body, "brief"), rules: text(body, "rules") };
+    const plan =
+      body.prospect === true
+        ? normalizeChannelPlan(incomingPlan)
+        : conversationPlan({
+            reply: text(body, "replyBody"),
+            goal: text(body, "goal") || null,
+            actions: incomingPlan.actions,
+            brief: incomingPlan.brief,
+            rules: incomingPlan.rules,
+          });
     const filed = await applyChannelPlan(sql, { organizationId, ...plan }, now);
     if (body.optOut === true) await markOptedOut(sql, text(body, "sender"), now);
     if (body.stalled === true) await noteStalledProspect(sql, { organizationId, threadId }, now);
