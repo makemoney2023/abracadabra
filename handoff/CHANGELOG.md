@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/portal-session.ts`, `handoff/src/lib/portal-session.test.ts`
 - **Data-flow impact** — `/mcp` lists the servers that grant can see. Turning one on or off still calls `portal_toggle_single_server`.
 - **API / schema impact** — none.
-- **Verification** — `npx vitest run src/lib/portal-session.test.ts`. Live `portal_list_servers` with the service token returned Parallel Search enabled after the Access policy.
+- **Verification** — `npx vitest run src/lib/portal-session.test.ts` passed 5. Live `portal_list_servers` with the service token returned Parallel Search enabled. Worker `handoff-hq` version `eb0227e2-1336-4570-b080-089eadc26bae` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200.
 
 ## 2026-10-09
 
