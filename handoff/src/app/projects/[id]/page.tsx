@@ -17,6 +17,7 @@ import { requireHqStaffPage } from "@/lib/current";
 import { formatRelative } from "@/lib/format";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
+import { listProjectSwarmRuns } from "@/lib/swarm-runs";
 import { DataTable, type Column } from "@/components/data-table";
 import { FormDrawer } from "@/components/form-drawer";
 import { PageFrame } from "@/components/page-frame";
@@ -27,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
+import { hqSwarmHref } from "../../swarm/swarm-link";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
 import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm, TaskStatusForm } from "../forms";
@@ -38,7 +40,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await projectById(sql, caller, id);
   if (!project) notFound();
   const now = clock();
-  const [org, milestones, tasks, updates, staff, spaces] = await Promise.all([
+  const [org, milestones, tasks, updates, staff, spaces, swarmRuns] = await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
     listProjectTasks(sql, caller, project.id),
@@ -50,6 +52,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
        ORDER BY display_name`,
       [project.id, project.organization_id],
     ),
+    listProjectSwarmRuns(sql, caller, project.id),
   ]);
   const repos = await listProjectRepos(sql, caller, project.id);
   const visibleIds = new Set((await workspacesFor(sql, caller)).map((row) => row.id));
@@ -141,6 +144,26 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   rowKey={(row) => row.id}
                   empty={<p className="text-sm text-muted-foreground">No tasks yet.</p>}
                 />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Swarms</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {swarmRuns.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No swarms on this project yet.</p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {swarmRuns.map((run) => (
+                      <li key={run.id} className="text-sm">
+                        <Link href={hqSwarmHref(run.execution_id)}>{run.name}</Link>
+                        <span className="ml-2 text-muted-foreground">{run.status}</span>
+                        <span className="ml-2 text-muted-foreground">{run.trigger}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </CardContent>
             </Card>
             <Card>

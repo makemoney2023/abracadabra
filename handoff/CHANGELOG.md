@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Staff open a project's swarm runs from the project page, and put an unassigned swarm on a project from the client Work tab.
+- **Why** — The Swarm page always opened a blank canvas, and a run with no project had nowhere to be attached.
+- **Code touchpoints** — `handoff/src/app/swarm/swarm-link.ts`, `handoff/src/app/swarm/page.tsx`, `handoff/src/app/swarm/swarm-frame.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/clients/actions.ts`
+- **Data-flow impact** — `/swarm?executionId=` is passed into the iframe. Assigning a run writes `swarm_runs.project_id` and refreshes the client and project pages.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/swarm/swarm-link.test.ts src/lib/swarm-runs.test.ts` in `handoff` (2 files, 12 tests, passed). ESLint clean on the touched page, frame, action, and link files.
+
+## 2026-10-09
+
 - **What changed** — Swarm backfill replays timeline lines from oldest to newest, and a second insert of the same execution updates the existing row instead of failing migrate.
 - **Why** — The first activity was kept forever, so a later completed line never replaced running. Two migrate callers could also both insert and hit the unique execution index.
 - **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`
