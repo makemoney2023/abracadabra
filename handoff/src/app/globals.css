@@ -34,6 +34,18 @@
   --color-ink: #f5f0e8;
   --color-optic: #8debf2;
   --color-phosphor: #c6ffb3;
+  --color-status-late: var(--status-late);
+  --color-status-late-fg: var(--status-late-fg);
+  --color-status-blocked: var(--status-blocked);
+  --color-status-blocked-fg: var(--status-blocked-fg);
+  --color-status-waiting: var(--status-waiting);
+  --color-status-waiting-fg: var(--status-waiting-fg);
+  --color-status-active: var(--status-active);
+  --color-status-active-fg: var(--status-active-fg);
+  --color-status-complete: var(--status-complete);
+  --color-status-complete-fg: var(--status-complete-fg);
+  --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-fg: var(--status-neutral-fg);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -66,6 +78,36 @@
   --sidebar-border: #2a2926;
   --sidebar-ring: #8debf2;
   --radius: 0.5rem;
+  --status-late: #ff4b24;
+  --status-late-fg: #070706;
+  --status-blocked: #f2b84b;
+  --status-blocked-fg: #070706;
+  --status-waiting: #8debf2;
+  --status-waiting-fg: #070706;
+  --status-active: #c6ffb3;
+  --status-active-fg: #070706;
+  --status-complete: #aaa49a;
+  --status-complete-fg: #070706;
+  --status-neutral: #2a2926;
+  --status-neutral-fg: var(--foreground);
+  --row-h: 2.5rem;
+  --cell-py: 0.5rem;
+}
+
+html[data-density="compact"] {
+  --row-h: 2rem;
+  --cell-py: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {
@@ -78,7 +120,7 @@ body {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--muted-foreground);
 }
 
 .studio-panel {
