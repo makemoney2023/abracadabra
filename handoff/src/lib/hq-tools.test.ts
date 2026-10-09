@@ -663,6 +663,40 @@ describe("runHqTool", () => {
   });
 });
 
+it("returns the client's projects and reuses one with the same name", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const first = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Social Media Ads" }, idempotencyKey: "proj-a" },
+    NOW,
+  );
+  const projectId = String((valueOf(first) as { id?: string } | undefined)?.id ?? "");
+  await sql.run(
+    `INSERT INTO tasks (id, project_id, organization_id, title, status, created_at, updated_at)
+     VALUES ('task-1', ?, ?, 'Create content calendar', 'todo', ?, ?)`,
+    [projectId, organizationId, NOW, NOW],
+  );
+  const projects = await runHqTool(sql, staff, { tool: "list_projects", input: { organizationId } }, NOW);
+  expect(valueOf(projects)).toEqual([{ id: projectId, name: "Social Media Ads", status: "planned" }]);
+  const tasks = await runHqTool(sql, staff, { tool: "list_tasks", input: { organizationId } }, NOW);
+  expect(valueOf(tasks)).toEqual([
+    { id: "task-1", title: "Create content calendar", status: "todo", stage: "describe", project_id: projectId },
+  ]);
+  const summary = await runHqTool(sql, staff, { tool: "client_summary", input: { organizationId } }, NOW);
+  expect(valueOf(summary)).toMatchObject({ projects: [{ id: projectId, name: "Social Media Ads" }] });
+  const again = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "social media ads" }, idempotencyKey: "proj-b" },
+    NOW + 1,
+  );
+  expect((valueOf(again) as { id?: string } | undefined)?.id).toBe(projectId);
+  const count = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM projects WHERE organization_id = ?", [organizationId]);
+  expect(count?.n).toBe(1);
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");

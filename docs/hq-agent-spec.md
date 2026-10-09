@@ -723,10 +723,10 @@ Both use `AIChatAgent` from `@cloudflare/ai-chat` on `handoff-agent`. It saves m
 
 | Group | Tools | Calls | Approval |
 |---|---|---|---|
-| Look up | `search_clients`, `client_summary`, `list_deals`, `list_tasks`, `list_deliverables`, `open_questions`, `recent_activity`, `get_brief` | `crm.ts` reads, `todayFor` pieces, `get_brief` | none |
+| Look up | `search_clients`, `client_summary`, `list_deals`, `list_projects`, `list_tasks`, `list_deliverables`, `open_questions`, `recent_activity`, `get_brief` | `crm.ts` reads, `todayFor` pieces, `get_brief` | `list_tasks` includes `project_id`. `client_summary` includes `projects`. |
 | Skills | `search_skills`, `read_skill` | R2 `handoff-skills` on the agent worker (`skills/index.json`, then one `SKILL.md`) | none. These do not call `/api/hq-tools`. |
 | CRM | `create_client`, `add_contact`, `add_note`, `log_call`, `create_task`, `file_actions`, `complete_task`, `move_deal`, `set_deal_step`, `draft_client_status` | `createOrganization`, contacts, `addNote`, `logCall`, task and deal functions, `applyChannelPlan`, a draft client status | none; the tool result shows the record written with a link |
-| Projects | `create_project`, `create_milestone`, `post_internal_status` | project functions, `audience='internal'` | none |
+| Projects | `create_project`, `create_milestone`, `post_internal_status` | project functions, `audience='internal'` | `create_project` returns the existing project when the name already belongs to that client. |
 | Client-visible or hard to undo | `publish_deliverable`, `publish_client_status`, `invite_person`, `merge_clients`, `set_task_stage` | the matching functions | `needsApproval: true` |
 | Direct the agent | `add_work`, `revise_brief`, `instruct_task`, `answer_question`, `pause_client`, `resume_client` | sections 17.4, 9.3, `agent_paused_at` | `needsApproval: true` |
 | Client requests | `list_work_requests`, `decide_work_request` | 17.5 | approve or decline needs approval |

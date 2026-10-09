@@ -9,6 +9,7 @@ export const READ_HQ_TOOLS = [
   "get_brief",
   "list_work_requests",
   "list_workflows",
+  "list_projects",
   "list_swarm_packs",
 ] as const;
 
@@ -41,7 +42,14 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     label: "List deals",
     description: "Deals for a client. Use the id with move_deal. Fields: organizationId.",
   },
-  list_tasks: { label: "List tasks", description: "Tasks for a client with status and stage. Fields: organizationId." },
+  list_tasks: {
+    label: "List tasks",
+    description: "Tasks for a client with status, stage, and project_id. Fields: organizationId.",
+  },
+  list_projects: {
+    label: "List projects",
+    description: "Projects for a client. Use an id before creating a project or a swarm. Fields: organizationId.",
+  },
   list_deliverables: { label: "List deliverables", description: "Deliverables for a client. Fields: organizationId." },
   open_questions: { label: "Open questions", description: "Agent questions waiting for staff. Fields: organizationId." },
   recent_activity: { label: "Recent activity", description: "The client timeline, newest first. Fields: organizationId." },
@@ -74,7 +82,10 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     description:
       "Change a deal stage. Stage won turns a lead into a client and opens a project and a space. Fields: dealId, stage (new, contacted, call_booked, proposal, won, lost), lostReason when the stage is lost.",
   },
-  create_project: { label: "Create a project", description: "New project for a client. Fields: organizationId, name." },
+  create_project: {
+    label: "Create a project",
+    description: "New project for a client. A name that already exists returns that project. Fields: organizationId, name.",
+  },
   create_milestone: { label: "Create a milestone", description: "Milestone on a project. Fields: projectId, name." },
   post_internal_status: {
     label: "Internal status",
