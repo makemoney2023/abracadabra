@@ -94,7 +94,7 @@ Note the date, that the row is visible, and that the credential is the sandbox k
 
 Covers MUAPI-010 and MUAPI-011.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Cover four cases:
 
@@ -103,17 +103,17 @@ Cover four cases:
 3. `toolsForNode(tools, ['muapi_image_generate', 'muapi_predict_result'])` returns those two, in list order.
 4. `missingToolNames(tools, ['muapi_image_generate', 'muapi_predict_result'])` is `[]` when both exist, and `['muapi_predict_result']` when that name is absent. An empty allowlist has no missing names.
 
-- [ ] **Step 2: Run the test and confirm it fails** because the module is missing.
+- [x] **Step 2: Run the test and confirm it fails** because the module is missing.
 
 ```bash
 cd swarm && npx vitest run src/mcp/tool-allow.test.ts
 ```
 
-- [ ] **Step 3: Implement the two functions**
+- [x] **Step 3: Implement the two functions**
 
 `toolsForNode` filters by `tool.name`. `missingToolNames` returns allowlist entries that are not in the discovered set. Neither function fetches.
 
-- [ ] **Step 4: Re-run the test until it passes.**
+- [x] **Step 4: Re-run the test until it passes.**
 
 ### Task 3: Enforce the allowlist on a node
 
@@ -124,13 +124,13 @@ cd swarm && npx vitest run src/mcp/tool-allow.test.ts
 
 Covers MUAPI-011 and MUAPI-012's worker half.
 
-- [ ] **Step 1: Write the failing test** for the error string helper if it is separate, or for `missingToolNames` already covering the name. If `WorkflowDO` needs a test seam, extract `assertToolsAllowed(discovered, allow)` in `tool-allow.ts` that throws the `Missing MCP tool:` error. Test that throw.
+- [x] **Step 1: Write the failing test** for the error string helper if it is separate, or for `missingToolNames` already covering the name. If `WorkflowDO` needs a test seam, extract `assertToolsAllowed(discovered, allow)` in `tool-allow.ts` that throws the `Missing MCP tool:` error. Test that throw.
 
-- [ ] **Step 2: Run it and confirm it fails.**
+- [x] **Step 2: Run it and confirm it fails.**
 
-- [ ] **Step 3: Call `assertToolsAllowed` in the node runner** with `node.mcpToolNames` and the tools just discovered. Pass the filtered list into `runAgent`. Leave `maxToolRounds` at its current default for strategy nodes. Render nodes may pass `8`, which is the existing cap in `runAgent` (`Math.min(..., 8)`).
+- [x] **Step 3: Call `assertToolsAllowed` in the node runner** with `node.mcpToolNames` and the tools just discovered. Pass the filtered list into `runAgent`. Leave `maxToolRounds` at its current default for strategy nodes. Render nodes may pass `8`, which is the existing cap in `runAgent` (`Math.min(..., 8)`).
 
-- [ ] **Step 4: Re-run `npm test` in `swarm/`.**
+- [x] **Step 4: Re-run `npm test` in `swarm/`.**
 
 ### Task 4: Shared roles and the two example workflows
 
@@ -141,7 +141,7 @@ Covers MUAPI-011 and MUAPI-012's worker half.
 
 Covers MUAPI-013 through MUAPI-016 and MUAPI-019.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Import `RENDER_ROLES`, `WORKFLOW_TEMPLATES`, and `pack-templates.json`.
 
@@ -153,15 +153,15 @@ Import `RENDER_ROLES`, `WORKFLOW_TEMPLATES`, and `pack-templates.json`.
 6. `media-poll` has one node whose `mcpToolNames` is `RENDER_ROLES.poll`.
 7. `pack-templates.json` has none of those five template ids.
 
-- [ ] **Step 2: Run the test and confirm it fails.**
+- [x] **Step 2: Run the test and confirm it fails.**
 
 ```bash
 cd swarm && npx vitest run src/templates/media-templates.test.ts
 ```
 
-- [ ] **Step 3: Add `RENDER_ROLES` and the five templates.** Templates import the role arrays. They do not retype the tool names. Lay long text chains on two rows. Do not add them to `pack-templates.json`.
+- [x] **Step 3: Add `RENDER_ROLES` and the five templates.** Templates import the role arrays. They do not retype the tool names. Lay long text chains on two rows. Do not add them to `pack-templates.json`.
 
-- [ ] **Step 4: Re-run the test until it passes.**
+- [x] **Step 4: Re-run the test until it passes.**
 
 ### Task 5: Canvas round-trip
 
@@ -172,21 +172,21 @@ cd swarm && npx vitest run src/templates/media-templates.test.ts
 
 Covers MUAPI-012.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 A template node `{ mcpToolNames: [] }` loaded the way `loadTemplate` maps fields still has `mcpToolNames: []` on node data. `buildWorkflowPayload`'s node includes that array. A node with the field omitted does not gain a spurious empty list.
 
 If `loadTemplate` and `buildWorkflowPayload` are not importable, extract the two mappers into `swarm/frontend/src/lib/workflow-payload.mjs` and call them from `App.tsx`. Test the mappers.
 
-- [ ] **Step 2: Run it and confirm it fails.**
+- [x] **Step 2: Run it and confirm it fails.**
 
 ```bash
 cd swarm && node --test frontend/src/lib/workflow-payload.test.mjs
 ```
 
-- [ ] **Step 3: Thread `mcpToolNames` through node data, template load, and the save payload.**
+- [x] **Step 3: Thread `mcpToolNames` through node data, template load, and the save payload.**
 
-- [ ] **Step 4: Re-run the test, then `npx tsc --noEmit` in `swarm/`.**
+- [x] **Step 4: Re-run the test, then `npx tsc --noEmit` in `swarm/`.**
 
 ### Task 6: Render skill
 
@@ -195,7 +195,7 @@ cd swarm && node --test frontend/src/lib/workflow-payload.test.mjs
 
 Covers MUAPI-017 and MUAPI-018.
 
-- [ ] **Step 1: Write the skill as one file**
+- [x] **Step 1: Write the skill as one file**
 
 Front matter `name: muapi-render` and a description that says one node runs one render role, then polls. Body has a section per role in `RENDER_ROLES`:
 
@@ -218,6 +218,8 @@ No sibling files. The worker loads this body only.
 
 From `handoff/`, `npm run publish:skills`, so the `SKILLS` bucket has the object. A render node whose skill is missing already fails closed (`swarm/src/ai/skills.ts`). Do not add a fallback prompt.
 
+Not run on 2026-10-09: `handoff/.env.local` does not have `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_ENDPOINT`. The skill file is in the repo. Publish before the first render run.
+
 ### Task 7: Docs that follow the code
 
 **Files:**
@@ -227,11 +229,11 @@ From `handoff/`, `npm run publish:skills`, so the `SKILLS` bucket has the object
 
 The spec and this plan already exist. This task only records what shipped.
 
-- [ ] **Step 1: Add a secrets-table row** that the MuAPI key is stored on portal server `muapi` and is not a Worker secret.
+- [x] **Step 1: Add a secrets-table row** that the MuAPI key is stored on portal server `muapi` and is not a Worker secret.
 
-- [ ] **Step 2: Changelog the behavior** in `swarm/README.md` (shared roles, website-hero and ad templates, skill path) with the verification commands and their results.
+- [x] **Step 2: Changelog the behavior** in `swarm/README.md` (shared roles, website-hero and ad templates, skill path) with the verification commands and their results.
 
-- [ ] **Step 3: Flip the spec status** to linked and built only after Task 1 step 4 and `npm test` in `swarm/` have both been read.
+- [ ] **Step 3: Flip the spec status** to linked and built only after Task 1 step 4 and `npm test` in `swarm/` have both been read. The swarm code is in. The portal link is not, so the status stays short of "linked".
 
 ---
 

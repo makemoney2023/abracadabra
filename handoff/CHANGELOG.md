@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The swarm can render a website hero and an ad through shared MuAPI roles. A node allowlist blocks strategy steps from calling those tools.
+- **Why** — The spec is implemented in the worker. The portal link and the R2 skill publish still wait on operator credentials.
+- **Code touchpoints** — `swarm/src/mcp/tool-allow.ts`, `swarm/src/mcp/render-roles.ts`, `swarm/src/templates/media-templates.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/frontend/src/lib/workflow-payload.mjs`, `.cursor/skills/community/muapi-render/SKILL.md`
+- **Data-flow impact** — Canvas save and HQ template copy keep `mcpToolNames`. A render node fails with `Missing MCP tool:` when the portal has not enabled that tool.
+- **API / schema impact** — none. No new Worker secret.
+- **Verification** — `npm test` in `swarm/` (43 passed). `npx tsc --noEmit` in `swarm/` exited 0. `node --test frontend/src/lib/workflow-payload.test.mjs` (2 passed). Skill publish did not run.
+
+## 2026-10-09
+
 - **What changed** — The MuAPI spec now treats the portal server as a general render kit. A website hero (still, then animate) and an ad share the same roles. A later job adds a template.
 - **Why** — Ads were the first example. The same key, allowlist, and node roles have to serve any brief.
 - **Code touchpoints** — `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `README.md`, `docs/hq-agent-spec.md`, `docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`, `swarm/README.md`. No runtime code.

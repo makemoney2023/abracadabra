@@ -33,6 +33,13 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — Render nodes can call a shared MuAPI role, and the canvas ships website-hero and ad workflows.
+  - **Why:** Stills and motion should be one portal server. A website hero is a still, then an animation of that still. An ad uses those same roles.
+  - **Touchpoints:** `src/mcp/tool-allow.ts`, `src/mcp/render-roles.ts`, `src/templates/media-templates.ts`, `src/do/WorkflowDO.ts`, `frontend/src/lib/workflow-payload.mjs`, `.cursor/skills/community/muapi-render/SKILL.md`.
+  - **Data flow:** A node with `mcpToolNames: []` gets no tools. A non-empty list is the only tools passed to the model, and a missing name fails the node before the model runs. Render nodes get 8 tool rounds. HQ still copies the template JSON, so the allowlist survives a staff run.
+  - **API / schema:** Template nodes may include `mcpToolNames`. No Worker secret for the MuAPI key.
+  - **Verification:** `npm test` in `swarm/` — 43 passed. `npx tsc --noEmit` in `swarm/` exited 0. `node --test frontend/src/lib/workflow-payload.test.mjs` — 2 passed. `npm run publish:skills` was not run: `handoff/.env.local` has no R2 credentials. The portal server is not linked.
+
 - **2026-10-09** — The MuAPI spec is a general render kit. Ads are one workflow. A website hero that is then animated is another. Both use the same portal server and the same node roles.
   - **Why:** A later job should add a template, not a new MCP server.
   - **Touchpoints:** `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `README.md`, `docs/hq-agent-spec.md`.

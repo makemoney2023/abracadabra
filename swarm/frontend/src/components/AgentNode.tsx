@@ -36,6 +36,8 @@ export interface AgentNodeData {
   mcpServerIds?: string[];
   /** Servers attached directly to this node. */
   mcpServers?: McpServerConfig[];
+  /** Tool names this node may call. Omitted means every discovered tool. */
+  mcpToolNames?: readonly string[];
   /** Tools called during the last run, as "server/tool". */
   toolsUsed: string[];
 }
