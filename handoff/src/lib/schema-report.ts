@@ -71,6 +71,20 @@ export type SchemaLeadView = {
   reportUrl: string | null;
 };
 
+const ANSWER_PREFIX = /^(PASS|COVERED|FAIL|NEEDS_US)\b(?:\s*[:.\-]\s*|\s+)?/i;
+
+export type AnswerFlag = "pass" | "fail";
+
+/** Drop a machine prefix such as PASS, FAIL, or NEEDS_US. The rest is the sentence staff should read. */
+export function stripAnswerPrefix(text: string): { flag: AnswerFlag | null; text: string } {
+  const trimmed = text.trim();
+  const match = ANSWER_PREFIX.exec(trimmed);
+  if (!match) return { flag: null, text: trimmed };
+  const word = match[1].toUpperCase();
+  const flag: AnswerFlag = word === "PASS" || word === "COVERED" ? "pass" : "fail";
+  return { flag, text: trimmed.slice(match[0].length).trim() };
+}
+
 const CHECK_ORIGIN = "https://check.abra-ca-dabra.app";
 
 export function presentSchemaLead(report: SchemaScanReport): SchemaLeadView {

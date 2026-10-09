@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { presentSchemaLead, schemaScanReport } from "./schema-report";
+import { presentSchemaLead, schemaScanReport, stripAnswerPrefix } from "./schema-report";
 
 describe("schemaScanReport", () => {
   it("keeps the score, every pillar, the page matrix, and the gaps", () => {
@@ -64,6 +64,22 @@ describe("schemaScanReport", () => {
     expect(report.pages).toEqual([]);
     expect(report.gaps).toEqual([]);
     expect(report.status).toBe("running");
+  });
+});
+
+describe("stripAnswerPrefix", () => {
+  it("reads PASS and FAIL prefixes and leaves plain text alone", () => {
+    expect(stripAnswerPrefix("PASS: all good")).toEqual({ flag: "pass", text: "all good" });
+    expect(stripAnswerPrefix("FAIL - missing FAQ")).toEqual({ flag: "fail", text: "missing FAQ" });
+    expect(stripAnswerPrefix("The homepage has a FAQ.")).toEqual({
+      flag: null,
+      text: "The homepage has a FAQ.",
+    });
+  });
+
+  it("strips a NEEDS_US prefix and keeps the sentence", () => {
+    expect(stripAnswerPrefix("NEEDS_US. No schema.")).toEqual({ flag: "fail", text: "No schema." });
+    expect(stripAnswerPrefix("")).toEqual({ flag: null, text: "" });
   });
 });
 

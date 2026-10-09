@@ -1,21 +1,36 @@
-import Link from "next/link";
-import { recentSchemaChecks, schemaCheckSites, schemaReportsFor } from "@/db/schema-checks";
+import { ExternalLink } from "lucide-react";
+import { recentSchemaChecks, schemaCheckSites, schemaReportsFor, type SchemaCheckRow, type SchemaSiteRow } from "@/db/schema-checks";
+import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
-import type { SchemaScanReport } from "@/lib/schema-report";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatRelative } from "@/lib/format";
+import { stripAnswerPrefix } from "@/lib/schema-report";
+import { statusToken } from "@/lib/status-token";
+import { sortRows } from "@/components/data-table-sort";
+import { DataTable, type Column } from "@/components/data-table";
+import { EmptyState } from "@/components/empty-state";
+import { Metric } from "@/components/metric";
+import { PageFrame } from "@/components/page-frame";
+import { StatusBadge } from "@/components/status-badge";
 import { StaffShell } from "../staff-shell";
-import { SchemaForm } from "./schema-form";
-
-const VERDICT: Record<string, string> = {
-  needs_us: "Needs us",
-  covered: "Covered",
-  unread: "Unread",
-};
+import { SchemaCheckDrawer } from "./schema-form";
 
 const CHECK_ORIGIN = "https://check.abra-ca-dabra.app";
 
 type Contact = { name?: string; title?: string; email?: string; phone?: string };
+
+type SchemaHistoryRow = {
+  id: string;
+  site: string;
+  domain: string;
+  checked: number;
+  flag: string | null;
+  prose: string;
+  contacts: string;
+  score: number | null;
+  issues: number | null;
+  reportUrl: string | null;
+  clientId: string | null;
+};
 
 function contactsOf(raw: string): Contact[] {
   try {
@@ -26,156 +41,178 @@ function contactsOf(raw: string): Contact[] {
   }
 }
 
-function SchemaReportView({ report }: { report: SchemaScanReport | undefined }) {
-  if (!report) {
-    return <p className="studio-kicker mt-4">Scan has not started</p>;
-  }
-  if (report.status !== "complete") {
-    return (
-      <p className="studio-kicker mt-4">
-        {report.status === "failed" ? report.error || "Scan failed" : "Scan running"}
-      </p>
-    );
-  }
-  return (
-    <div className="studio-panel mt-4 flex flex-col gap-5 px-4 py-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="studio-kicker">Schema score</p>
-          <p className="font-heading text-5xl leading-none">{report.scoreTotal ?? 0}</p>
-        </div>
-        {report.publicToken ? (
-          <a className="text-sm text-primary underline" href={`${CHECK_ORIGIN}/scan/${report.publicToken}`}>
-            Report
-          </a>
-        ) : null}
-      </div>
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {report.pillars.map((pillar) => (
-          <li key={pillar.label} className="border border-border px-3 py-2">
-            <p className="studio-kicker">{pillar.label}</p>
-            <p className="font-heading text-2xl">
-              {pillar.score}
-              <span className="text-base text-muted-foreground">/{pillar.max}</span>
-            </p>
-          </li>
-        ))}
-      </ul>
-      {report.pages.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          <p className="studio-kicker">Pages</p>
-          <ul className="flex flex-col gap-2">
-            {report.pages.map((page) => (
-              <li key={page.url} className="flex flex-wrap items-center gap-2 text-sm">
-                <Badge variant={page.hasJsonLd ? "default" : "outline"}>{page.pageType}</Badge>
-                <span>{page.hasJsonLd ? page.schemaTypes.join(", ") || "JSON-LD" : "No JSON-LD"}</span>
-                <span className="text-muted-foreground">{page.url}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      <div className="flex flex-col gap-2">
-        <p className="studio-kicker">Findings</p>
-        {report.gaps.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {report.gaps.map((gap) => (
-              <li key={`${gap.severity}-${gap.message}`} className="text-sm">
-                <Badge variant={gap.severity === "critical" ? "destructive" : "outline"}>{gap.severity}</Badge>
-                <span className="ml-2">{gap.message}</span>
-                {gap.pageUrl ? <span className="mt-1 block text-muted-foreground">{gap.pageUrl}</span> : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">No gaps on this scan.</p>
-        )}
-      </div>
-    </div>
-  );
+function contactLine(raw: string): string {
+  return contactsOf(raw)
+    .map((contact) => [contact.name, contact.title, contact.email, contact.phone].filter(Boolean).join(" · "))
+    .filter(Boolean)
+    .join(", ");
 }
 
-export default async function SchemaPage({ searchParams }: { searchParams: Promise<{ check?: string }> }) {
+function siteLabel(site: SchemaSiteRow): string {
+  const name = site.name?.trim();
+  return name || site.domain;
+}
+
+function checkLabel(check: SchemaCheckRow): string {
+  const text = check.objective.trim();
+  if (text.length <= 72) return text;
+  return `${text.slice(0, 72)}…`;
+}
+
+function historyRow(
+  check: SchemaCheckRow,
+  site: SchemaSiteRow | null,
+  reportStatus: string | null,
+  issues: number | null,
+  score: number | null,
+  reportUrl: string | null,
+): SchemaHistoryRow {
+  const stripped = site?.answer ? stripAnswerPrefix(site.answer) : { flag: null, text: "" };
+  const running =
+    check.status === "queued" || check.status === "running" || reportStatus === "queued" || reportStatus === "running";
+  const failed = check.status === "failed" || reportStatus === "failed";
+  const flag = stripped.flag ?? (running ? "pending" : failed ? "fail" : null);
+  return {
+    id: site?.id ?? check.id,
+    site: site ? siteLabel(site) : checkLabel(check),
+    domain: site?.domain ?? "",
+    checked: check.created_at,
+    flag,
+    prose: stripped.text || check.error_message || "",
+    contacts: site ? contactLine(site.contacts_json) : "",
+    score,
+    issues,
+    reportUrl,
+    clientId: site?.organization_id ?? null,
+  };
+}
+
+function columns(now: number): Column<SchemaHistoryRow>[] {
+  return [
+    {
+      key: "site",
+      header: "Site",
+      sortable: true,
+      cell: (row) => (
+        <span className="flex flex-col gap-1">
+          <span className="font-medium">{row.site}</span>
+          {row.domain && row.domain !== row.site ? (
+            <span className="text-sm font-normal text-muted-foreground">{row.domain}</span>
+          ) : null}
+          {row.prose ? <span className="text-sm font-normal text-muted-foreground">{row.prose}</span> : null}
+          {row.contacts ? <span className="text-sm font-normal">{row.contacts}</span> : null}
+        </span>
+      ),
+    },
+    {
+      key: "checked",
+      header: "Checked",
+      sortable: true,
+      cell: (row) => formatRelative(row.checked, now),
+    },
+    {
+      key: "result",
+      header: "Result",
+      sortable: true,
+      cell: (row) => (row.flag ? <StatusBadge domain="schema" value={row.flag} /> : null),
+    },
+    {
+      key: "issues",
+      header: "Issues",
+      sortable: true,
+      align: "right",
+      cell: (row) => (row.issues === null ? "" : <span className="tabular-nums">{row.issues}</span>),
+    },
+    {
+      key: "report",
+      header: "Report",
+      cell: (row) =>
+        row.reportUrl ? (
+          <a href={row.reportUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+            Report
+            <ExternalLink className="size-3.5" aria-hidden />
+          </a>
+        ) : null,
+    },
+  ];
+}
+
+export default async function SchemaPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
   const query = await searchParams;
+  const sort = typeof query.sort === "string" ? query.sort : undefined;
   const { sql } = await requireHqStaffPage();
   const checks = await recentSchemaChecks(sql);
-  const selected = query.check && checks.some((check) => check.id === query.check) ? query.check : checks[0]?.id;
-  const sites = selected ? await schemaCheckSites(sql, selected) : [];
-  const current = checks.find((check) => check.id === selected);
+  const now = clock();
+  const grouped = await Promise.all(
+    checks.map(async (check) => ({ check, sites: await schemaCheckSites(sql, check.id) })),
+  );
   const reports = await schemaReportsFor(
     sql,
-    sites.flatMap((site) => (site.scan_id ? [site.scan_id] : [])),
+    grouped.flatMap(({ sites }) => sites.flatMap((site) => (site.scan_id ? [site.scan_id] : []))),
   );
+
+  const rows: SchemaHistoryRow[] = [];
+  for (const { check, sites } of grouped) {
+    if (sites.length === 0) {
+      rows.push(historyRow(check, null, null, null, null, null));
+      continue;
+    }
+    for (const site of sites) {
+      const report = site.scan_id ? reports.get(site.scan_id) : undefined;
+      const ready = report?.status === "complete";
+      rows.push(
+        historyRow(
+          check,
+          site,
+          report?.status ?? null,
+          ready ? report.gaps.length : null,
+          ready ? report.scoreTotal : null,
+          report?.publicToken ? `${CHECK_ORIGIN}/scan/${report.publicToken}` : null,
+        ),
+      );
+    }
+  }
+
+  const ordered = sortRows(rows, sort, (row, key) => {
+    if (key === "site") return row.site;
+    if (key === "checked") return row.checked;
+    if (key === "result") return row.flag ?? "";
+    if (key === "issues") return row.issues;
+    return null;
+  });
+  const newestAt = rows[0]?.checked;
+  const latestBatch = rows.filter((row) => row.checked === newestAt);
+  const latest = latestBatch.find((row) => row.score !== null) ?? latestBatch[0];
+  const latestToken = latest?.flag ? statusToken("schema", latest.flag) : null;
 
   return (
     <StaffShell>
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-16">
-        <div className="flex flex-col gap-3">
-          <h1 className="font-heading text-4xl leading-tight">Schema</h1>
-          <p className="max-w-xl text-muted-foreground">
-            Name the sites. Every one shows the schema scan: score, pages, and findings. A site that needs us becomes a
-            lead, with the contacts found on the page.
-          </p>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Check sites</CardTitle>
-            <CardDescription>Paste URLs or bare domains. The scan report follows a minute later.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SchemaForm />
-          </CardContent>
-        </Card>
-        {checks.length > 0 ? (
-          <section className="flex flex-col gap-4">
-            <h2 className="font-heading text-2xl">Results</h2>
-            <div className="flex flex-wrap gap-2">
-              {checks.map((check) => (
-                <Link
-                  key={check.id}
-                  href={`/schema?check=${check.id}`}
-                  className={check.id === selected ? "text-sm underline" : "text-sm text-muted-foreground"}
-                >
-                  {check.status} · {check.objective.slice(0, 48)}
-                </Link>
-              ))}
-            </div>
-            {current?.error_message ? <p className="text-sm text-destructive">{current.error_message}</p> : null}
-            <ul className="flex flex-col gap-3">
-              {sites.map((site) => {
-                const contacts = contactsOf(site.contacts_json);
-                return (
-                  <li key={site.id} className="rounded-lg border border-border px-4 py-3">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-medium">{site.name || site.domain}</p>
-                      <p className="text-sm">{VERDICT[site.verdict] ?? site.verdict}</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{site.domain}</p>
-                    {site.answer ? <p className="mt-2 text-sm">{site.answer}</p> : null}
-                    {contacts.length > 0 ? (
-                      <ul className="mt-2 text-sm">
-                        {contacts.map((contact, index) => (
-                          <li key={`${site.id}-${index}`}>
-                            {[contact.name, contact.title, contact.email, contact.phone].filter(Boolean).join(" · ")}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-2 text-sm text-muted-foreground">No contact on the page.</p>
-                    )}
-                    {site.organization_id ? (
-                      <Link href={`/clients/${site.organization_id}`} className="mt-2 inline-block text-sm underline">
-                        Open the lead
-                      </Link>
-                    ) : null}
-                    <SchemaReportView report={site.scan_id ? reports.get(site.scan_id) : undefined} />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+      <PageFrame
+        title="Schema"
+        width="wide"
+        description="Name the sites. The latest result sits on top. Older checks stay in the table."
+        actions={<SchemaCheckDrawer />}
+      >
+        {latest ? (
+          <div className="mb-6 max-w-sm">
+            <Metric
+              label="Latest result"
+              value={latest.score !== null ? latest.score : (latestToken?.label ?? "No result")}
+              hint={`${latest.site}. Checked ${formatRelative(latest.checked, now)}.`}
+              tone={latestToken?.tone ?? "neutral"}
+            />
+          </div>
         ) : null}
-      </main>
+        <DataTable
+          columns={columns(now)}
+          rows={ordered}
+          rowKey={(row) => row.id}
+          rowHref={(row) => (row.clientId ? `/clients/${row.clientId}` : "")}
+          sort={sort}
+          basePath="/schema"
+          empty={<EmptyState title="No checks yet." body="Run a check to read a site." />}
+        />
+      </PageFrame>
     </StaffShell>
   );
 }

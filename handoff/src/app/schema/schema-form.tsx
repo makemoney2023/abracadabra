@@ -1,12 +1,25 @@
 "use client";
 
 import { useActionState } from "react";
+import { FormDrawer } from "@/components/form-drawer";
 import { Button } from "@/components/ui/button";
 import { startSchemaCheck, type SchemaFormState } from "./actions";
 
 const initial: SchemaFormState = { message: "" };
 
-export function SchemaForm() {
+export function SchemaCheckDrawer() {
+  return (
+    <FormDrawer
+      title="Run a check"
+      description="Paste URLs or bare domains. The scan report follows a minute later."
+      trigger={<Button>Run a check</Button>}
+    >
+      <SchemaForm />
+    </FormDrawer>
+  );
+}
+
+function SchemaForm() {
   const [state, action, pending] = useActionState(startSchemaCheck, initial);
   return (
     <form action={action} className="flex flex-col gap-3">

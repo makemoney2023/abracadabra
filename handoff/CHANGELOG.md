@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ Schema shows one latest result and a history table. Run a check opens in a drawer. A machine prefix such as PASS, FAIL, or NEEDS_US becomes a result badge, and the rest of the answer stays as a sentence.
+- **Why** — Schema used its own panel, and the raw prefix leaked into the answer.
+- **Code touchpoints** — `handoff/src/lib/schema-report.ts`, `handoff/src/lib/schema-report.test.ts`, `handoff/src/app/schema/page.tsx`, `handoff/src/app/schema/schema-form.tsx`
+- **Data-flow impact** — The page still reads the same checks, sites, and scan reports. Starting a check still uses the existing action. The prefix split is display only.
+- **API / schema impact** — none.
+- **Verification** — Full `npm test` follows this commit. `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ Projects is a table across clients. A project page puts milestones, tasks, and finished work on the left, and status, repos, audience, and people on the right. Post update, Add milestone, and Add task open in drawers. A deliverable picture uses the piece name as its label, and notes show as a timeline.
 - **Why** — Projects had no list, and a project was one long stack of cards. Deliverable pictures had an empty label, and notes were a plain list.
 - **Code touchpoints** — `handoff/src/app/projects/page.tsx`, `handoff/src/app/projects/rows.ts`, `handoff/src/app/projects/rows.test.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/deliverables/labels.ts`, `handoff/src/app/deliverables/labels.test.ts`, `handoff/src/components/timeline.tsx`, `handoff/src/components/data-table.tsx`
