@@ -3,7 +3,7 @@ import { defaultBuildDeps, startBuild, type BuildDeps } from "@/lib/cursor-build
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { openObjectStore } from "@/lib/store/objects";
 import { recordAgentRun } from "@/lib/agent-activity";
-import { storeScanContext } from "@/lib/scan-context";
+import { clientSpaceContext, storeScanContext } from "@/lib/scan-context";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
 import { claimDueWorkflow } from "@/lib/client-workflows";
@@ -92,7 +92,10 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
   if (tool === "post_status_update") return postAgentStatus(sql, actor, args, now);
   if (tool === "add_note") return addAgentNote(sql, actor, args, now);
   if (tool === "save_space_file") return saveSpaceFile(sql, actor, args, now);
-  if (tool === "store_scan_context") return storeScanContext({ sql, store: openObjectStore(), organizationId: actor.organizationId, now });
+  if (tool === "store_scan_context") {
+    const filed = await storeScanContext({ sql, store: openObjectStore(), organizationId: actor.organizationId, now });
+    return { ...filed, context: await clientSpaceContext(sql, actor.organizationId) };
+  }
   if (tool === "record_swarm_run") return recordSwarmRun(sql, actor, args, now);
   if (tool === "ask_staff") return askStaff(sql, actor, args, now);
   if (tool === "list_repos") return listAgentRepos(sql, actor);

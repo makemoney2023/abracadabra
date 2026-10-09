@@ -147,6 +147,34 @@ async function indexFile(sql: Sql, workspaceId: string, fileId: string, text: st
   );
 }
 
+/** Reads what the client's file space already holds, schema notes first, as brief context. */
+export async function clientSpaceContext(sql: Sql, organizationId: string, cap = 6000): Promise<string> {
+  const rows = await sql.all<{ path: string; body: string }>(
+    `SELECT f.relative_path AS path, p.body AS body
+     FROM file_passages p
+     JOIN files f ON f.id = p.file_id AND f.object_deleted_at IS NULL
+     JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
+       AND b.discarded_at IS NULL AND b.deleted_at IS NULL
+     JOIN workspaces w ON w.id = p.workspace_id AND w.status = 'active'
+     WHERE w.organization_id = ?
+     ORDER BY CASE WHEN f.relative_path LIKE 'agent/schema/%' THEN 0 ELSE 1 END, f.relative_path, p.position`,
+    [organizationId],
+  );
+  if (rows.length === 0) return "";
+  let text = "Existing client context from the file space:";
+  let current = "";
+  for (const row of rows) {
+    const piece = (row.path === current ? "\n" : `\n\n## ${row.path}\n`) + row.body.trim();
+    current = row.path;
+    if (text.length + piece.length > cap) {
+      text += piece.slice(0, Math.max(0, cap - text.length));
+      break;
+    }
+    text += piece;
+  }
+  return text;
+}
+
 /** Files the latest schema scan into the client's knowledge base. */
 export async function storeScanContext(input: {
   sql: Sql;

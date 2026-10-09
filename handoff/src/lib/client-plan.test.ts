@@ -103,6 +103,27 @@ describe("lead pickup", () => {
     expect(calls.find((entry) => entry.name === "add_deliverable_item")?.args.bodyMarkdown).toBe("Hello Foam Co.");
   });
 
+  it("puts the client's file-space context in the swarm brief", async () => {
+    const base = caller({});
+    const call = async (name: string, args: Record<string, unknown>) => {
+      if (name === "store_scan_context") {
+        await base.call(name, args);
+        return { ok: true, context: "Existing client context from the file space:\nFoam mattresses ship free." };
+      }
+      return base.call(name, args);
+    };
+    const briefs: string[] = [];
+    await qualifyLead({
+      call,
+      requestId: "wake-lead",
+      runSwarm: async (brief) => {
+        briefs.push(brief);
+        return "Hello Foam Co.";
+      },
+    });
+    expect(briefs[0]).toContain("Foam mattresses ship free.");
+  });
+
   it("does not start a second swarm when qualify is already open", async () => {
     const { call, calls } = caller({ tasks: [{ title: "Qualify Foam Co", status: "todo" }] });
     const result = await qualifyLead({

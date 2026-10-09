@@ -144,6 +144,7 @@ export async function qualifyLead(input: {
     context.organization?.industry ? `Industry: ${context.organization.industry}` : "",
     context.organization?.notes ?? "",
     `Pack: ${choice.name}.`,
+    typeof filed.context === "string" ? filed.context : "",
   ]
     .filter((line) => line.trim().length > 0)
     .join("\n");

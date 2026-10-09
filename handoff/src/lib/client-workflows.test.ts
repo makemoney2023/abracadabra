@@ -1,8 +1,14 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
 import { runAgentWork } from "@/db/agent-work";
+import { LIMITS } from "@/lib/policy/limits";
+import { localObjectStore } from "@/lib/store/objects";
+import { storeScanContext } from "./scan-context";
 import {
   assignClientWorkflow,
   createClientWorkflow,
@@ -194,6 +200,86 @@ describe("client workflows", () => {
     expect(calls[0]).toBe("https://swarm.example/api/template?id=pack-schema-readiness");
     const row = await sql.get<{ last_execution_id: string }>("SELECT last_execution_id FROM client_workflows");
     expect(row?.last_execution_id).toBe("run-9");
+  });
+
+  it("adds the client's stored website scrape to the brief", async () => {
+    const sql = await database();
+    await sql.exec(`
+      CREATE TABLE readiness_scans (
+        id TEXT PRIMARY KEY, domain TEXT, status TEXT NOT NULL, organization_id TEXT,
+        score_total INTEGER, created_at INTEGER NOT NULL, completed_at INTEGER
+      );
+      CREATE TABLE readiness_scan_pages (
+        id TEXT PRIMARY KEY, scan_id TEXT NOT NULL, url TEXT NOT NULL, page_type TEXT NOT NULL,
+        schema_types_json TEXT NOT NULL, evidence_json TEXT NOT NULL
+      );
+    `);
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id
+      ) VALUES (
+        '11111111-1111-4111-8111-111111111111', 'northwind', 'Northwind', 'Northwind', NULL, 'Northwind', 'standard',
+        ?, ?, 0, 'active', ?, 'org-1'
+      )`,
+      [LIMITS.defaultQuotaBytes, LIMITS.defaultRetentionDays, NOW],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scans (id, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('scan-1', 'complete', 'org-1', 40, ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+       VALUES ('page-1', 'scan-1', 'https://northwind.example/', 'home', '["Organization"]', ?)`,
+      [JSON.stringify({ businessName: "Northwind", scrapedText: "We sell foam to shipyards." })],
+    );
+    const root = mkdtempSync(path.join(tmpdir(), "workflow-context-"));
+    try {
+      await storeScanContext({ sql, store: localObjectStore(root), organizationId: "org-1", now: NOW });
+      const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Launch swarm", now: NOW });
+      if (!group.ok) throw new Error("group");
+      const created = await createClientWorkflow(sql, {
+        organizationId: "org-1",
+        groupId: group.group.id,
+        name: "Schema readiness",
+        templateId: "pack-schema-readiness",
+        now: NOW,
+      });
+      if (!created.ok) throw new Error("workflow");
+      let sent = "";
+      const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
+        const href = String(url);
+        if (href.includes("/api/template")) {
+          return Response.json({
+            id: "pack-schema-readiness",
+            name: "Schema readiness",
+            nodes: [{ id: "schema-r", type: "researcher", name: "Schema", instructions: "Score.", position: { x: 0, y: 0 } }],
+            edges: [],
+          });
+        }
+        if (href.endsWith("/api/save")) return Response.json({ success: true });
+        if (href.endsWith("/api/execute")) {
+          sent = String(init?.body ?? "");
+          return Response.json({ executionId: "run-ctx" });
+        }
+        return Response.json({ status: "completed", results: { "schema-r": { status: "done", output: "Score 40." } } });
+      };
+      await runClientWorkflow({
+        sql,
+        workflowId: created.workflow.id,
+        brief: "Check Northwind.",
+        origin: "https://swarm.example",
+        now: NOW,
+        fetchImpl: fetchImpl as typeof fetch,
+        wait: async () => {},
+      });
+      expect(sent).toContain("Check Northwind.");
+      expect(sent).toContain("Existing client context from the file space:");
+      expect(sent).toContain("We sell foam to shipyards.");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it("stores the first run and the repeat gap", async () => {
