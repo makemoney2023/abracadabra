@@ -26,6 +26,16 @@ function task(partial: Partial<WorkTask> & Pick<WorkTask, "id" | "title" | "stat
     milestone_id: null,
     assignee_user_id: null,
     assignee_email: null,
+    stage: "describe",
+    position: 0,
+    blocked_reason: null,
+    skills_json: null,
+    round: 1,
+    created_by_kind: "staff",
+    cursor_agent_id: null,
+    created_at: NOW,
+    project_name: null,
+    project_status: null,
     ...partial,
   };
 }
@@ -123,6 +133,18 @@ describe("needsYou", () => {
       NOW,
     );
     expect(rows.map((row) => row.tone)).toEqual(["blocked", "waiting"]);
+    expect(rows[0]?.href).toBe("/clients/org-1?tab=work");
+  });
+
+  it("opens a project card on that project's board", () => {
+    const rows = needsYou(
+      board({
+        tasks: [task({ id: "mine", title: "Mine", status: "todo", due_at: NOW - 1, project_id: "proj-1" })],
+      }),
+      8,
+      NOW,
+    );
+    expect(rows[0]?.href).toBe("/projects/proj-1");
   });
 });
 

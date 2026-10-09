@@ -193,14 +193,20 @@ export async function createTaskAction(
 ): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
+  const projectId = String(formData.get("projectId") ?? "").trim();
   const saved = await createTask(
     sql,
     caller,
-    { organizationId, title: String(formData.get("title") ?? "") },
+    {
+      organizationId,
+      projectId: projectId && projectId !== "none" ? projectId : undefined,
+      title: String(formData.get("title") ?? ""),
+    },
     Date.now(),
   );
   if (!saved.ok) return actionError(saved.error, "task", "title");
   refresh(organizationId);
+  if (projectId && projectId !== "none") revalidatePath(`/projects/${projectId}`);
   return ok("Task added.");
 }
 

@@ -2,7 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { consumeIntake } from "./consume";
+import { consumeIntake, formatSessionUtc, type BookingMail } from "./consume";
 
 const NOW = 1_700_000_000_000;
 
@@ -199,6 +199,113 @@ describe("intake consumer", () => {
       "SELECT status, starts_at FROM appointments",
     );
     expect(updated).toEqual({ status: "rescheduled", starts_at: NOW + 172_800_000 });
+  });
+
+  it("confirms a live booking once, and again only when the time changes", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "assessment", payload: assessment }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    await sql.run(
+      `INSERT INTO work_requests (
+         id, organization_id, channel, thread_id, sender, body, state, question_count, created_at, updated_at
+       ) VALUES ('req-1', ?, 'email', '<thread-1>', 'ada@northwind.example', 'Hello', 'clarifying', 0, ?, ?)`,
+      [org?.id, NOW, NOW],
+    );
+    const sent: BookingMail[] = [];
+    const mailer = {
+      send: async (message: BookingMail) => {
+        sent.push(message);
+      },
+    };
+    const payload = {
+      external_id: "cal-mail",
+      email: "ada@northwind.example",
+      name: "Ada North",
+      domain: "northwind.example",
+      starts_at: NOW + 86_400_000,
+      kind: "created",
+    };
+    await consumeIntake(sql, { source: "booking", payload }, NOW + 2, mailer);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.from).toBe("Magic at Abracadabra <magic@abra-ca-dabra.app>");
+    expect(sent[0]?.to).toBe("ada@northwind.example");
+    expect(sent[0]?.subject).toBe("Your working session");
+    expect(sent[0]?.text).toBe(`Your working session is ${formatSessionUtc(NOW + 86_400_000)}.`);
+    expect(sent[0]?.text).toBe("Your working session is 2023-11-15 22:13 UTC.");
+    expect(sent[0]?.headers?.["In-Reply-To"]).toBe("<thread-1>");
+    const replies = await sql.all<{ id: string }>("SELECT id FROM activities WHERE kind = 'agent.reply'");
+    expect(replies).toHaveLength(1);
+
+    await consumeIntake(sql, { source: "booking", payload }, NOW + 3, mailer);
+    expect(sent).toHaveLength(1);
+
+    await consumeIntake(
+      sql,
+      {
+        source: "booking",
+        payload: { ...payload, starts_at: NOW + 172_800_000, kind: "rescheduled" },
+      },
+      NOW + 4,
+      mailer,
+    );
+    expect(sent).toHaveLength(2);
+    expect(sent[1]?.text).toContain("2023-11-16 22:13 UTC");
+
+    await consumeIntake(
+      sql,
+      {
+        source: "booking",
+        payload: {
+          external_id: "cal-domain",
+          domain: "northwind.example",
+          starts_at: NOW + 200_000_000,
+          kind: "created",
+        },
+      },
+      NOW + 5,
+      mailer,
+    );
+    expect(sent).toHaveLength(2);
+
+    await consumeIntake(
+      sql,
+      { source: "booking", payload: { ...payload, external_id: "cal-cancel", kind: "cancelled" } },
+      NOW + 6,
+      mailer,
+    );
+    expect(sent).toHaveLength(2);
+  });
+
+  it("sends the booking confirmation on the retry when the first send failed", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "assessment", payload: assessment }, NOW);
+    const sent: BookingMail[] = [];
+    let attempts = 0;
+    const mailer = {
+      send: async (message: BookingMail) => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("mailbox down");
+        sent.push(message);
+      },
+    };
+    const payload = {
+      external_id: "cal-retry",
+      email: "ada@northwind.example",
+      name: "Ada North",
+      domain: "northwind.example",
+      starts_at: NOW + 86_400_000,
+      kind: "created",
+    };
+    await expect(consumeIntake(sql, { source: "booking", payload }, NOW + 2, mailer)).rejects.toThrow("mailbox down");
+    const missed = await sql.get<{ n: number }>(
+      "SELECT count(*) AS n FROM activities WHERE kind = 'agent.reply'",
+    );
+    expect(missed?.n).toBe(0);
+    await consumeIntake(sql, { source: "booking", payload }, NOW + 3, mailer);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.text).toBe("Your working session is 2023-11-15 22:13 UTC.");
+    await consumeIntake(sql, { source: "booking", payload }, NOW + 4, mailer);
+    expect(sent).toHaveLength(1);
   });
 
   it("refuses an assessment with no id and no way to match a lead", async () => {

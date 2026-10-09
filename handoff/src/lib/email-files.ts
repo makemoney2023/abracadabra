@@ -1,6 +1,8 @@
+import { slugFromName } from "../db/crm";
 import type { Sql } from "../db/sql";
 import { validateManifest } from "./batches";
 import type { EmailAttachment } from "./client-channel";
+import { LIMITS } from "./policy/limits";
 import { inspectFileName, type PolicyProfile } from "./policy/profiles";
 import type { ObjectStore } from "./store/objects";
 
@@ -43,6 +45,75 @@ function uniqueName(name: string, used: Set<string>): string {
   return next;
 }
 
+async function freeSlug(sql: Sql, base: string): Promise<string> {
+  let candidate = base;
+  for (let n = 2; n < 50; n += 1) {
+    const taken = await sql.get<{ id: string }>("SELECT id FROM workspaces WHERE slug = ?", [candidate]);
+    if (!taken) return candidate;
+    candidate = `${base}-${n}`;
+  }
+  return `${base}-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+/** A lead with no space gets one standard workspace. The organization stays a lead. */
+async function ensureLeadSpace(
+  sql: Sql,
+  organizationId: string,
+  now: number,
+): Promise<{ id: string; policy_profile: string; quota_bytes: number } | null> {
+  const org = await sql.get<{ kind: string; name: string; owner_user_id: string | null }>(
+    "SELECT kind, name, owner_user_id FROM organizations WHERE id = ?",
+    [organizationId],
+  );
+  if (!org || org.kind !== "lead") return null;
+  const workspaceId = crypto.randomUUID();
+  const slug = await freeSlug(sql, slugFromName(org.name));
+  const staff = org.owner_user_id
+    ? await sql.get<{ user_id: string }>(
+        "SELECT user_id FROM staff WHERE user_id = ? AND revoked_at IS NULL",
+        [org.owner_user_id],
+      )
+    : undefined;
+  await sql.exec("BEGIN");
+  try {
+    await sql.run(
+      `INSERT INTO workspaces (
+         id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+         quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+       ) VALUES (?, ?, ?, ?, NULL, ?, 'standard', ?, ?, 0, 'active', ?, ?, NULL)`,
+      [
+        workspaceId,
+        slug,
+        org.name,
+        org.name,
+        org.name,
+        LIMITS.defaultQuotaBytes,
+        LIMITS.defaultRetentionDays,
+        now,
+        organizationId,
+      ],
+    );
+    await sql.run(
+      `INSERT INTO requests (
+         id, workspace_id, position, title, guidance, suggested_tag, due_on, status, received_at, closed_at
+       ) VALUES (?, ?, 1, 'Files', NULL, 'other', NULL, 'open', NULL, NULL)`,
+      [crypto.randomUUID(), workspaceId],
+    );
+    if (staff) {
+      await sql.run(
+        `INSERT INTO workspace_operators (id, workspace_id, user_id, assigned_by, assigned_at, removed_at)
+         VALUES (?, ?, ?, ?, ?, NULL)`,
+        [crypto.randomUUID(), workspaceId, staff.user_id, staff.user_id, now],
+      );
+    }
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+  return { id: workspaceId, policy_profile: "standard", quota_bytes: LIMITS.defaultQuotaBytes };
+}
+
 async function note(sql: Sql, organizationId: string, body: string, now: number): Promise<void> {
   await sql.run(
     `INSERT INTO activities (
@@ -67,8 +138,10 @@ export async function storeEmailAttachments(input: {
      ORDER BY opened_at ASC LIMIT 1`,
     [input.organizationId],
   );
-  const profile = space ? profileOf(space.policy_profile) : null;
-  if (!space || !profile) {
+  const room =
+    space ?? (await ensureLeadSpace(input.sql, input.organizationId, input.now));
+  const profile = room ? profileOf(room.policy_profile) : null;
+  if (!room || !profile) {
     await note(input.sql, input.organizationId, "An email attachment arrived and this client has no file space.", input.now);
     return { batchId: null, stored: [], refused: input.files.map((file) => file.filename || "attachment") };
   }
@@ -105,7 +178,7 @@ export async function storeEmailAttachments(input: {
      FROM files f
      JOIN batches b ON b.id = f.batch_id
      WHERE f.workspace_id = ? AND f.object_deleted_at IS NULL AND b.deleted_at IS NULL`,
-    [space.id],
+    [room.id],
   );
   const manifest = validateManifest({
     files: accepted.map((file) => ({
@@ -116,7 +189,7 @@ export async function storeEmailAttachments(input: {
     })),
     profile,
     workspaceUsedBytes: used?.n ?? 0,
-    workspaceQuotaBytes: space.quota_bytes,
+    workspaceQuotaBytes: room.quota_bytes,
   });
   if (!manifest.ok) {
     await note(input.sql, input.organizationId, "An email attachment did not fit in the client's space.", input.now);
@@ -131,7 +204,7 @@ export async function storeEmailAttachments(input: {
       `INSERT INTO batches (
         id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
       ) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?, NULL, NULL)`,
-      [batchId, space.id, ACTOR, LABEL, input.now, input.now],
+      [batchId, room.id, ACTOR, LABEL, input.now, input.now],
     );
     for (const file of rows) {
       await input.sql.run(
@@ -142,12 +215,12 @@ export async function storeEmailAttachments(input: {
         [
           file.id,
           batchId,
-          space.id,
+          room.id,
           file.name,
           file.extension,
           file.contentType,
           file.bytes.byteLength,
-          `${space.id}/${batchId}/${file.id}`,
+          `${room.id}/${batchId}/${file.id}`,
           input.now,
           input.now,
           input.now,
@@ -162,7 +235,7 @@ export async function storeEmailAttachments(input: {
 
   const stored: string[] = [];
   for (const file of rows) {
-    const key = `${space.id}/${batchId}/${file.id}`;
+    const key = `${room.id}/${batchId}/${file.id}`;
     try {
       await input.store.put(key, file.bytes);
       stored.push(file.name);

@@ -1,5 +1,6 @@
 import type { Sql } from "@/db/sql";
-import { defaultBuildDeps, startBuild, type BuildDeps } from "@/lib/cursor-build";
+import { defaultBuildDeps, type BuildDeps } from "@/lib/cursor-build";
+import { moveTaskStage, nextColumnPosition } from "@/lib/task-stage";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { openObjectStore } from "@/lib/store/objects";
 import { recordAgentRun } from "@/lib/agent-activity";
@@ -349,14 +350,19 @@ async function createAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   const deliverableId = args.deliverableId?.trim() || null;
   if (deliverableId) await deliverableInOrg(sql, actor.organizationId, deliverableId);
   const id = crypto.randomUUID();
+  const position = await nextColumnPosition(sql, {
+    organizationId: actor.organizationId,
+    projectId,
+    column: stage,
+  });
   await sql.exec("BEGIN");
   try {
     await sql.run(
       `INSERT INTO tasks (
         id, project_id, milestone_id, organization_id, title, status, assignee_user_id,
-        due_at, created_at, updated_at, done_at, stage, skills_json, created_by_kind, round, deliverable_id
-      ) VALUES (?, ?, ?, ?, ?, 'todo', NULL, ?, ?, ?, NULL, ?, ?, 'agent', 1, ?)`,
-      [id, projectId, milestoneId, actor.organizationId, title, dueAt, now, now, stage, JSON.stringify(steps), deliverableId],
+        due_at, created_at, updated_at, done_at, stage, skills_json, created_by_kind, round, deliverable_id, position
+      ) VALUES (?, ?, ?, ?, ?, 'todo', NULL, ?, ?, ?, NULL, ?, ?, 'agent', 1, ?, ?)`,
+      [id, projectId, milestoneId, actor.organizationId, title, dueAt, now, now, stage, JSON.stringify(steps), deliverableId, position],
     );
     await sql.run(
       `INSERT INTO activities (
@@ -401,19 +407,76 @@ async function taskInOrg(
   return task;
 }
 
+function skillsJson(current: string | null, skills: unknown): string {
+  const next = skillSteps(skills);
+  const edges = storedSkillEdges(current);
+  return JSON.stringify(edges.length > 0 ? { ...next, edges } : next);
+}
+
+async function writeSkillNote(
+  sql: Sql,
+  actor: AgentActor,
+  task: { id: string; project_id: string | null; skills_json: string | null },
+  args: WorkArgs,
+  now: number,
+): Promise<void> {
+  if (args.skills != null) {
+    await sql.run("UPDATE tasks SET skills_json = ?, updated_at = ? WHERE id = ?", [
+      skillsJson(task.skills_json, args.skills),
+      now,
+      task.id,
+    ]);
+  }
+  if (!args.note?.trim()) return;
+  await sql.run(
+    `INSERT INTO activities (
+      id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at
+    ) VALUES (?, ?, ?, 'agent.skill_done', 'agent', ?, ?, ?, ?)`,
+    [
+      crypto.randomUUID(),
+      actor.organizationId,
+      task.project_id,
+      actor.keyId,
+      args.note.trim(),
+      JSON.stringify({ taskId: task.id }),
+      now,
+    ],
+  );
+}
+
 async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number, deps?: BuildDeps): Promise<unknown> {
   const taskId = args.taskId?.trim() ?? "";
   if (!taskId) throw new AgentWorkError("Name a task.");
   const task = await taskInOrg(sql, actor.organizationId, taskId);
   if (args.stage === "build") {
-    const built = await startBuild(sql, task.id, deps ?? defaultBuildDeps(now));
-    const row = await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = ?", [task.id]);
+    const built = await moveTaskStage(sql, {
+      taskId: task.id,
+      to: "build",
+      now,
+      actor: { kind: "agent", id: actor.keyId },
+      build: deps ?? defaultBuildDeps(now),
+    });
+    await writeSkillNote(sql, actor, task, built.ok ? args : { note: args.note }, now);
+    const row = await sql.get<{ status: string; stage: string }>("SELECT status, stage FROM tasks WHERE id = ?", [task.id]);
     return {
       taskId: task.id,
-      stage: "build",
+      stage: row?.stage ?? "build",
       status: row?.status ?? null,
-      blockedReason: built.ok ? null : built.reason,
+      blockedReason: built.ok ? null : built.error,
     };
+  }
+  if (
+    args.stage === "describe" ||
+    args.stage === "engineer" ||
+    (args.stage === "run" && args.status !== "done")
+  ) {
+    const moved = await moveTaskStage(sql, {
+      taskId: task.id,
+      to: args.stage,
+      now,
+      actor: { kind: "agent", id: actor.keyId },
+    });
+    if (!moved.ok) throw new AgentWorkError("That stage change did not stick.");
   }
   const sets: string[] = ["updated_at = ?"];
   const params: unknown[] = [now];
@@ -429,11 +492,9 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
     sets.push("stage = ?");
     params.push(args.stage);
   }
-  if (args.skills !== undefined) {
-    const next = skillSteps(args.skills);
-    const edges = storedSkillEdges(task.skills_json);
+  if (args.skills != null) {
     sets.push("skills_json = ?");
-    params.push(JSON.stringify(edges.length > 0 ? { ...next, edges } : next));
+    params.push(skillsJson(task.skills_json, args.skills));
   }
   if (args.blockedReason !== undefined) {
     sets.push("blocked_reason = ?");

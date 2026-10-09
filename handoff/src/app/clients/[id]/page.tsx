@@ -5,6 +5,9 @@ import {
   latestAssessment,
   listContacts,
   listDeals,
+  listBoard,
+  listBoardActivity,
+  openCloudRunCount,
   listOpenTasks,
   listOrganizations,
   listProjects,
@@ -50,10 +53,11 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string; merged?: string; tab?: string }>;
+  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
+  const projectFilter = query.project ?? "";
   const tab = activeTab(query.tab);
   const page = tab === "activity" ? pageNumber(query.page) : 1;
   const { sql, caller } = await requireHqStaffPage();
@@ -73,6 +77,11 @@ export default async function ClientPage({
     storedCheck,
     schemaScan,
     healthRow,
+    cards,
+    activity,
+    capRow,
+    opens,
+    runsOpen,
     unassignedRuns,
   ] = await Promise.all([
     unlinkedWorkspaces(sql, caller),
@@ -99,6 +108,21 @@ export default async function ClientPage({
        LIMIT 1`,
       [client.id],
     ),
+    listBoard(sql, caller, {
+      organizationId: client.id,
+      projectId: projectFilter && projectFilter !== "none" ? projectFilter : undefined,
+      unassigned: projectFilter === "none",
+      hideInactiveProjects: projectFilter === "" || projectFilter === "none",
+    }),
+    listBoardActivity(sql, caller, [client.id]),
+    sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
+    sql.all<{ project_id: string | null; open: number }>(
+      `SELECT project_id, COUNT(*) AS open FROM tasks
+       WHERE organization_id = ? AND status != 'done'
+       GROUP BY project_id`,
+      [client.id],
+    ),
+    openCloudRunCount(sql, caller),
     listUnassignedSwarmRuns(sql, caller, client.id),
   ]);
   const secrets = readGithubSecrets();
@@ -146,6 +170,13 @@ export default async function ClientPage({
           client={client}
           contacts={contacts}
           tasks={tasks}
+          cards={cards}
+          activity={activity}
+          now={clock()}
+          projectId={projectFilter}
+          runCap={capRow && Number.isFinite(Number(capRow.value)) ? Number(capRow.value) : null}
+          runsOpen={runsOpen}
+          opens={opens.map((row) => ({ projectId: row.project_id, open: Number(row.open) }))}
           timeline={timeline}
           linked={linked}
           free={free}

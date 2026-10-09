@@ -8,6 +8,7 @@ import { dispatchQueue } from "./src/lib/queue-dispatch";
 type QueueEnv = WakeEnv & {
   DB: D1Like;
   SCAN_JOBS?: ScanQueue;
+  EMAIL?: { send(message: unknown): Promise<unknown> };
 };
 
 export default {

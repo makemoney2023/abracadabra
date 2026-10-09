@@ -26,7 +26,8 @@ import type { Sql } from "@/db/sql";
 import { getBrief } from "@/lib/agent-context";
 import { wakeOrganization, type WakeEnv, type WakeReason } from "@/lib/agent-wake";
 import { beginDirectClient, scanIntakeBindings, type ScanQueue } from "@/lib/lead-schema";
-import { defaultBuildDeps, startBuild, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
+import { defaultBuildDeps, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
+import { moveTaskStage } from "@/lib/task-stage";
 import type { Caller } from "@/lib/authz";
 import { appendBriefWork } from "@/lib/client-plan";
 import {
@@ -35,7 +36,6 @@ import {
   createWorkflowGroup,
   listClientWorkflows,
   runClientWorkflow,
-  scheduleTaskSwarm,
   workflowTaskPlan,
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
@@ -645,7 +645,9 @@ async function setTaskStage(
   options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const stage = text(input, "stage");
-  if (!["describe", "engineer", "build", "run"].includes(stage)) return { ok: false, error: "invalid" };
+  if (stage !== "describe" && stage !== "engineer" && stage !== "build" && stage !== "run") {
+    return { ok: false, error: "invalid" };
+  }
   const task = await sql.get<{ id: string; organization_id: string | null }>(
     "SELECT id, organization_id FROM tasks WHERE id = ?",
     [text(input, "taskId")],
@@ -653,30 +655,19 @@ async function setTaskStage(
   if (!task?.organization_id || !(await seenOrg(sql, caller, task.organization_id)) || !caller.userId) {
     return { ok: false, error: "missing" };
   }
-  if (stage === "build") {
-    const built = await startBuild(sql, task.id, options.build ?? defaultBuildDeps(now));
-    if (!built.ok) return { ok: false, error: built.reason };
-    await logStaff(
-      sql,
-      { organizationId: task.organization_id, userId: caller.userId, kind: "staff.task_stage", body: "Moved to build.", data: { taskId: task.id, stage } },
-      now,
-    );
-    if (built.action === "waiting") return { ok: true, value: { taskId: task.id, stage: "build", waiting: "cap_reached" } };
-    return { ok: true, value: { taskId: task.id, stage: "build", runId: built.runId } };
-  }
-  await sql.run("UPDATE tasks SET stage = ?, updated_at = ? WHERE id = ?", [stage, now, task.id]);
-  await logStaff(
-    sql,
-    { organizationId: task.organization_id, userId: caller.userId, kind: "staff.task_stage", body: `Moved to ${stage}.`, data: { taskId: task.id, stage } },
+  const moved = await moveTaskStage(sql, {
+    taskId: task.id,
+    to: stage,
     now,
-  );
-  if (stage !== "run") return { ok: true, value: { taskId: task.id, stage } };
-  const scheduled = await scheduleTaskSwarm(sql, { taskId: task.id, now });
-  if (scheduled.ok && !scheduled.none) await options.wake(scheduled.organizationId, "due");
-  return {
-    ok: true,
-    value: { taskId: task.id, stage, workflowId: scheduled.ok && !scheduled.none ? scheduled.workflowId : null },
-  };
+    actor: { kind: "staff", id: caller.userId },
+    build: options.build ?? defaultBuildDeps(now),
+    wake: options.wake,
+  });
+  if (!moved.ok) return { ok: false, error: moved.error };
+  if (moved.waiting) return { ok: true, value: { taskId: task.id, stage: "build", waiting: "cap_reached" } };
+  if (moved.runId) return { ok: true, value: { taskId: task.id, stage: "build", runId: moved.runId } };
+  if (stage === "run") return { ok: true, value: { taskId: task.id, stage, workflowId: moved.workflowId ?? null } };
+  return { ok: true, value: { taskId: task.id, stage } };
 }
 
 async function addWork(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number, wake: Wake): Promise<HqToolResult> {

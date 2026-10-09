@@ -2,8 +2,8 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { lookupEmailSender } from "./client-channel-store";
-import { noteProspectTurn, openEmailProspect } from "./prospect-lead";
+import { markOptedOut, lookupEmailSender } from "./client-channel-store";
+import { captureProspectWebsite, hostInMessage, noteProspectBudget, noteProspectTurn, openEmailProspect, type OpenedProspect } from "./prospect-lead";
 
 const NOW = 1_700_000_000_000;
 
@@ -15,12 +15,40 @@ async function database(): Promise<Sql> {
   return sql;
 }
 
+function orgId(opened: OpenedProspect): string {
+  if (!opened.organizationId) throw new Error("expected an organization");
+  return opened.organizationId;
+}
+
+async function scans(sql: Sql): Promise<void> {
+  await sql.exec(`
+    CREATE TABLE readiness_scans (
+      id TEXT PRIMARY KEY,
+      public_token TEXT NOT NULL UNIQUE,
+      domain TEXT NOT NULL,
+      origin TEXT NOT NULL,
+      source TEXT NOT NULL,
+      status TEXT NOT NULL,
+      organization_id TEXT,
+      error_message TEXT,
+      created_at INTEGER NOT NULL,
+      completed_at INTEGER
+    );
+  `);
+}
+
 describe("email prospect", () => {
   it("opens one lead, one person, and one deal from a company address", async () => {
     const sql = await database();
     const first = await openEmailProspect(sql, { email: "Ada@Northwind.example", name: "Ada North", now: NOW });
     const second = await openEmailProspect(sql, { email: "ada@northwind.example", name: "Ada North", now: NOW + 1 });
-    expect(second).toEqual({ organizationId: first.organizationId, name: "Ada North", created: false });
+    expect(second).toEqual({
+      organizationId: first.organizationId,
+      name: "Ada North",
+      created: false,
+      kind: "lead",
+      pending: false,
+    });
 
     const org = await sql.get<{ kind: string; domain: string; name: string; website: string }>(
       "SELECT kind, domain, name, website FROM organizations",
@@ -55,6 +83,14 @@ describe("email prospect", () => {
       "SELECT domain, website, name FROM organizations",
     );
     expect(org).toEqual({ domain: null, website: null, name: "ada" });
+    const note = await sql.get<{ body: string | null }>(
+      "SELECT body FROM activities WHERE kind = 'agent.note'",
+    );
+    expect(note?.body).toBe("ada@gmail.com");
+    const scan = await sql.get<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE name = 'readiness_scans'",
+    );
+    expect(scan).toBeUndefined();
   });
 
   it("adds a second person at the same company without a second lead", async () => {
@@ -73,7 +109,7 @@ describe("email prospect", () => {
     const sql = await database();
     const opened = await openEmailProspect(sql, { email: "ada@northwind.example", name: "Ada", now: NOW });
     await noteProspectTurn(sql, {
-      organizationId: opened.organizationId,
+      organizationId: orgId(opened),
       brief: "They want a site so buyers can book a call.",
       dueText: null,
       bookingOffered: true,
@@ -83,7 +119,7 @@ describe("email prospect", () => {
     expect(booked?.next_step).toBe("Book a working session");
 
     await noteProspectTurn(sql, {
-      organizationId: opened.organizationId,
+      organizationId: orgId(opened),
       brief: "They want a site so buyers can book a call.",
       dueText: "Thursday",
       bookingOffered: false,
@@ -94,5 +130,268 @@ describe("email prospect", () => {
     );
     expect(timed?.next_step).toBe("Call Thursday");
     expect(timed?.next_step_at).toEqual(expect.any(Number));
+
+    await noteProspectTurn(sql, {
+      organizationId: orgId(opened),
+      brief: null,
+      dueText: "sometime next season",
+      bookingOffered: false,
+      now: NOW + 4,
+    });
+    const words = await sql.get<{ next_step: string; next_step_at: number | null }>(
+      "SELECT next_step, next_step_at FROM deals",
+    );
+    expect(words?.next_step).toBe("sometime next season");
+    expect(words?.next_step_at).toBeNull();
+  });
+
+  it("asks a new address on a client domain to confirm before attaching", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO organizations (id, name, domain, kind, created_at, updated_at)
+       VALUES ('org-acme', 'Acme', 'acme.example', 'client', ?, ?)`,
+      [NOW, NOW],
+    );
+    const opened = await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW,
+      text: "Hello",
+      threadId: "<t-1>",
+    });
+    expect(opened.pending).toBe(true);
+    expect(opened.organizationId).toBeNull();
+    expect(opened.kind).toBe("client");
+    const contacts = await sql.get<{ n: number }>("SELECT count(*) AS n FROM contacts");
+    expect(contacts?.n).toBe(0);
+    const orgs = await sql.get<{ n: number }>("SELECT count(*) AS n FROM organizations");
+    expect(orgs?.n).toBe(1);
+
+    const yesFirst = await openEmailProspect(sql, {
+      email: "erin@acme.example",
+      name: "Erin",
+      now: NOW,
+      text: "yes",
+      threadId: "<erin>",
+    });
+    expect(yesFirst.pending).toBe(true);
+    expect(yesFirst.organizationId).toBeNull();
+    const stillNone = await sql.get<{ n: number }>("SELECT count(*) AS n FROM contacts");
+    expect(stillNone?.n).toBe(0);
+
+    const confirmed = await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW + 1,
+      text: "yes",
+      threadId: "<t-1>",
+    });
+    expect(confirmed).toMatchObject({ organizationId: "org-acme", kind: "client", pending: false, created: false });
+    const found = await lookupEmailSender(sql, "bob@acme.example", "mx; dmarc=pass header.from=acme.example");
+    expect(found.organizations).toEqual([{ id: "org-acme", name: "Acme", kind: "client" }]);
+    expect(found.optedOut).toBe(false);
+  });
+
+  it("does not attach a freemail address to an existing client", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO organizations (id, name, domain, kind, created_at, updated_at)
+       VALUES ('org-acme', 'Acme', 'acme.example', 'client', ?, ?)`,
+      [NOW, NOW],
+    );
+    const opened = await openEmailProspect(sql, { email: "ada@gmail.com", name: null, now: NOW, text: "Hello" });
+    expect(opened.organizationId).not.toBe("org-acme");
+    expect(opened.pending).toBe(false);
+    const org = await sql.get<{ website: string | null; kind: string }>(
+      "SELECT website, kind FROM organizations WHERE id = ?",
+      [opened.organizationId],
+    );
+    expect(org).toEqual({ website: null, kind: "lead" });
+  });
+
+  it("leaves a decline note and does not attach on a later yes", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO organizations (id, name, domain, kind, created_at, updated_at)
+       VALUES ('org-acme', 'Acme', 'acme.example', 'client', ?, ?)`,
+      [NOW, NOW],
+    );
+    await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW,
+      text: "Hello",
+      threadId: "<t-1>",
+    });
+    const declined = await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW + 1,
+      text: "no",
+      threadId: "<t-1>",
+    });
+    expect(declined.declined).toBe(true);
+    expect(declined.organizationId).toBeNull();
+    const later = await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW + 2,
+      text: "yes",
+      threadId: "<t-1>",
+    });
+    expect(later.declined).toBe(true);
+    const contacts = await sql.get<{ n: number }>("SELECT count(*) AS n FROM contacts");
+    expect(contacts?.n).toBe(0);
+  });
+
+  it("confirms a client when the reply keeps the original thread in references", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO organizations (id, name, domain, kind, created_at, updated_at)
+       VALUES ('org-acme', 'Acme', 'acme.example', 'past_client', ?, ?)`,
+      [NOW, NOW],
+    );
+    await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW,
+      text: "Hello",
+      threadId: "<root@acme.example>",
+    });
+    const confirmed = await openEmailProspect(sql, {
+      email: "bob@acme.example",
+      name: "Bob",
+      now: NOW + 1,
+      text: "yes",
+      threadId: "<reply@abra-ca-dabra.app>",
+      references: "<root@acme.example> <reply@abra-ca-dabra.app>",
+    });
+    expect(confirmed).toMatchObject({ organizationId: "org-acme", kind: "past_client", pending: false });
+    const drifted = await openEmailProspect(sql, {
+      email: "cara@acme.example",
+      name: "Cara",
+      now: NOW + 2,
+      text: "Hello",
+      threadId: "<cara-root>",
+    });
+    expect(drifted.pending).toBe(true);
+    const still = await openEmailProspect(sql, {
+      email: "cara@acme.example",
+      name: "Cara",
+      now: NOW + 3,
+      text: "yes",
+      threadId: "<cara-new>",
+    });
+    expect(still.organizationId).toBe("org-acme");
+    expect(still.pending).toBe(false);
+  });
+
+  it("stores a budget in their words and does not store a dollar amount", async () => {
+    const sql = await database();
+    const opened = await openEmailProspect(sql, { email: "ada@northwind.example", name: "Ada", now: NOW });
+    await noteProspectBudget(sql, {
+      organizationId: orgId(opened),
+      text: "Our budget is a few thousand for the first pass.",
+      now: NOW + 1,
+    });
+    await noteProspectBudget(sql, {
+      organizationId: orgId(opened),
+      text: "Our budget is $500.",
+      now: NOW + 2,
+    });
+    const notes = await sql.all<{ body: string | null; kind: string }>(
+      "SELECT body, kind FROM activities WHERE kind = 'email' AND body LIKE '%budget%'",
+    );
+    expect(notes).toEqual([{ body: "Our budget is a few thousand for the first pass.", kind: "email" }]);
+    const invoices = await sql.get<{ n: number }>("SELECT count(*) AS n FROM invoices");
+    expect(invoices?.n).toBe(0);
+  });
+
+  it("captures one website for a freemail lead and does not scan a company lead", async () => {
+    const sql = await database();
+    await scans(sql);
+    const freemail = await openEmailProspect(sql, { email: "ada@gmail.com", name: null, now: NOW });
+    const blank = await sql.get<{ n: number }>("SELECT count(*) AS n FROM readiness_scans");
+    expect(blank?.n).toBe(0);
+    expect(hostInMessage("not a site")).toBeNull();
+    expect(hostInMessage("mail ada@northwind.example")).toBeNull();
+    expect(hostInMessage("Reply to magic@abra-ca-dabra.app")).toBeNull();
+    expect(hostInMessage("the site is northwind.example")).toBe("https://northwind.example");
+    await captureProspectWebsite(sql, {
+      organizationId: orgId(freemail),
+      text: "not a site",
+      now: NOW + 1,
+      queue: { send: async () => undefined },
+    });
+    const still = await sql.get<{ website: string | null }>("SELECT website FROM organizations WHERE id = ?", [
+      freemail.organizationId,
+    ]);
+    expect(still?.website).toBeNull();
+
+    const sent: { scanId: string }[] = [];
+    await captureProspectWebsite(sql, {
+      organizationId: orgId(freemail),
+      text: "The site is https://northwind.example.",
+      now: NOW + 2,
+      queue: { send: async (body) => void sent.push(body) },
+    });
+    const site = await sql.get<{ website: string }>("SELECT website FROM organizations WHERE id = ?", [
+      freemail.organizationId,
+    ]);
+    expect(site?.website).toBe("https://northwind.example");
+    const queued = await sql.all<{ status: string }>("SELECT status FROM readiness_scans");
+    expect(queued).toEqual([{ status: "queued" }]);
+    expect(sent).toHaveLength(1);
+
+    await captureProspectWebsite(sql, {
+      organizationId: orgId(freemail),
+      text: "Also see https://other.example",
+      now: NOW + 3,
+      queue: { send: async (body) => void sent.push(body) },
+    });
+    expect(sent).toHaveLength(1);
+
+    const company = await openEmailProspect(sql, { email: "ada@northwind.example", name: "Ada", now: NOW });
+    await captureProspectWebsite(sql, {
+      organizationId: orgId(company),
+      text: "https://other.example",
+      now: NOW + 4,
+      queue: { send: async () => undefined },
+    });
+    const companyScans = await sql.get<{ n: number }>(
+      "SELECT count(*) AS n FROM readiness_scans WHERE organization_id = ?",
+      [company.organizationId],
+    );
+    expect(companyScans?.n).toBe(0);
+  });
+
+  it("records a failed scan when the queue is missing and does not wake", async () => {
+    const sql = await database();
+    await scans(sql);
+    const opened = await openEmailProspect(sql, { email: "ada@gmail.com", name: null, now: NOW });
+    await captureProspectWebsite(sql, {
+      organizationId: orgId(opened),
+      text: "https://northwind.example",
+      now: NOW + 1,
+      queue: null,
+    });
+    const scan = await sql.get<{ status: string; error_message: string | null }>(
+      "SELECT status, error_message FROM readiness_scans",
+    );
+    expect(scan).toEqual({ status: "failed", error_message: "The scan queue is not connected." });
+  });
+
+  it("opts out one address and leaves the other person at the company", async () => {
+    const sql = await database();
+    const ada = await openEmailProspect(sql, { email: "ada@northwind.example", name: "Ada", now: NOW });
+    await openEmailProspect(sql, { email: "bob@northwind.example", name: "Bob", now: NOW + 1 });
+    await markOptedOut(sql, "ada@northwind.example", NOW + 2);
+    const adaFound = await lookupEmailSender(sql, "ada@northwind.example", "mx; dmarc=pass header.from=northwind.example");
+    const bobFound = await lookupEmailSender(sql, "bob@northwind.example", "mx; dmarc=pass header.from=northwind.example");
+    expect(adaFound.optedOut).toBe(true);
+    expect(bobFound.optedOut).toBe(false);
+    expect(bobFound.organizationId).toBe(ada.organizationId);
+    const org = await sql.get<{ kind: string }>("SELECT kind FROM organizations");
+    expect(org?.kind).toBe("lead");
   });
 });
