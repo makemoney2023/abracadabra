@@ -19,6 +19,7 @@ import { recordStaffReply, workRequestById } from "@/db/conversations";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requireHqStaffPage } from "@/lib/current";
 import { runHqTool } from "@/lib/hq-tools";
+import { beginDirectClient, scanIntakeBindings } from "@/lib/lead-schema";
 import { sendHandoffMail } from "@/lib/mail";
 
 export type FormState = { message: string };
@@ -42,6 +43,17 @@ export async function createClientAction(_previous: FormState, formData: FormDat
     Date.now(),
   );
   if (!created.ok) return { message: CRM_ERRORS[created.error] };
+  if ((kind ?? "client") === "client") {
+    const bound = scanIntakeBindings();
+    await beginDirectClient({
+      sql,
+      organizationId: created.value.id,
+      website: created.value.website ?? "",
+      now: Date.now(),
+      queue: bound.queue,
+      env: bound.env,
+    });
+  }
   redirect(`/clients/${created.value.id}`);
 }
 
@@ -62,6 +74,17 @@ export async function createClientDrawerAction(
     if (created.error === "taken") return fail(CRM_ERRORS.taken, "website");
     if (created.error === "invalid") return fail(CRM_ERRORS.invalid, name.length < 1 ? "name" : "website");
     return fail(CRM_ERRORS[created.error]);
+  }
+  if ((kindOf(formData.get("kind")) ?? "client") === "client") {
+    const bound = scanIntakeBindings();
+    await beginDirectClient({
+      sql,
+      organizationId: created.value.id,
+      website: created.value.website ?? "",
+      now: Date.now(),
+      queue: bound.queue,
+      env: bound.env,
+    });
   }
   revalidatePath("/clients");
   revalidatePath("/");

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Adding a client directly opens a file space and starts the same schema check a new lead gets. The scrape is stored in that space when the scan finishes, and the agent wakes with it.
+- **Why** — A client who never passed through the lead form had no website check, no stored context, and no file space.
+- **Code touchpoints** — `handoff/src/lib/lead-schema.ts`, `handoff/src/lib/scan-context.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/clients/actions.ts`
+- **Data-flow impact** — Client create queues a schema scan. `scan_ready` still wakes the agent, which files the scrape into the space and starts the swarm.
+- **API / schema impact** — `create_client` accepts `website`.
+- **Verification** — `npm test` in `handoff` for the lead-schema and hq-tools suites.
+
+## 2026-10-09
+
 - **What changed** — `main` is live on Cloudflare. Staff HQ, the client app, and the agent worker all run the merged premium UI and build gate.
 - **Why** — Both open branches were merged, then published.
 - **Code touchpoints** — none. Deploy only.

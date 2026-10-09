@@ -24,7 +24,8 @@ import {
 import { publishDeliverable } from "@/db/deliverables";
 import type { Sql } from "@/db/sql";
 import { getBrief } from "@/lib/agent-context";
-import { wakeOrganization, type WakeReason } from "@/lib/agent-wake";
+import { wakeOrganization, type WakeEnv, type WakeReason } from "@/lib/agent-wake";
+import { beginDirectClient, scanIntakeBindings, type ScanQueue } from "@/lib/lead-schema";
 import { defaultBuildDeps, startBuild, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import type { Caller } from "@/lib/authz";
 import { appendBriefWork } from "@/lib/client-plan";
@@ -60,6 +61,7 @@ type ToolOptions = {
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void> };
   build?: BuildDeps;
+  intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
 };
 
 const READS = new Set([
@@ -289,7 +291,27 @@ async function perform(
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
     return { ok: true, value: await listWorkRequests(sql, organizationId) };
   }
-  if (tool === "create_client") return fromCrm(await createOrganization(sql, caller, { name: text(input, "name") }, now));
+  if (tool === "create_client") {
+    const created = await createOrganization(
+      sql,
+      caller,
+      { name: text(input, "name"), website: text(input, "website") || undefined, kind: "client" },
+      now,
+    );
+    if (created.ok) {
+      const bound = scanIntakeBindings();
+      await beginDirectClient({
+        sql,
+        organizationId: created.value.id,
+        website: created.value.website ?? "",
+        now,
+        queue: options.intake?.queue ?? bound.queue,
+        env: options.intake?.env ?? bound.env,
+        fetchImpl: options.intake?.fetchImpl,
+      });
+    }
+    return fromCrm(created);
+  }
   if (tool === "add_contact") {
     return fromCrm(
       await createContact(

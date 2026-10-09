@@ -85,6 +85,49 @@ describe("runHqTool", () => {
     expect(missing).toEqual({ ok: false, error: "missing" });
   });
 
+  it("opens a space and queues a schema scan when a client is added with a website", async () => {
+    const sql = await database();
+    await sql.exec(`
+      CREATE TABLE readiness_scans (
+        id TEXT PRIMARY KEY,
+        public_token TEXT NOT NULL UNIQUE,
+        domain TEXT NOT NULL,
+        origin TEXT NOT NULL,
+        source TEXT NOT NULL,
+        status TEXT NOT NULL,
+        organization_id TEXT,
+        error_message TEXT,
+        created_at INTEGER NOT NULL,
+        completed_at INTEGER
+      );
+    `);
+    const sent: { type: string; scanId: string }[] = [];
+    const created = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_client", input: { name: "Northwind", website: "https://northwind.example" }, idempotencyKey: "create-site" },
+      NOW,
+      {
+        intake: {
+          queue: {
+            send: async (body) => {
+              sent.push(body);
+            },
+          },
+          env: { AGENT_URL: "https://agent.example", AGENT_WAKE_SECRET: "wake-secret" },
+          fetchImpl: async () => new Response("ok"),
+        },
+      },
+    );
+    expect(created).toMatchObject({ ok: true });
+    expect(sent).toHaveLength(1);
+    const space = await sql.get<{ organization_id: string; slug: string }>(
+      "SELECT organization_id, slug FROM workspaces WHERE slug = 'northwind-example'",
+    );
+    const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");
+    expect(space).toEqual({ organization_id: organizationId, slug: "northwind-example" });
+  });
+
   it("previews a client-facing write and stores nothing until it is approved", async () => {
     const sql = await database();
     const created = await runHqTool(

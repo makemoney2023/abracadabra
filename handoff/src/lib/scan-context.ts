@@ -93,8 +93,8 @@ function spaceSlug(value: string): string {
   return base.length > 0 ? base : "client";
 }
 
-/** A manual lead has no locker until the scan is filed. Open one so the scrape can land. */
-async function ensureLeadSpace(sql: Sql, organizationId: string, now: number): Promise<void> {
+/** Opens the client's file space when they do not have one yet. The scrape lands in the first active space. */
+export async function ensureClientSpace(sql: Sql, organizationId: string, now: number): Promise<void> {
   const existing = await sql.get<{ id: string }>(
     `SELECT id FROM workspaces
      WHERE organization_id = ? AND status = 'active'
@@ -220,7 +220,7 @@ export async function storeScanContext(input: {
     };
   });
   const files = readinessContextFiles(scan.id, pages);
-  await ensureLeadSpace(input.sql, input.organizationId, input.now);
+  await ensureClientSpace(input.sql, input.organizationId, input.now);
   const saved = await storeWorkflowOutput({
     sql: input.sql,
     store: input.store,

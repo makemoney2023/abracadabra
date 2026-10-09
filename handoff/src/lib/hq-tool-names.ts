@@ -47,7 +47,10 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   recent_activity: { label: "Recent activity", description: "The client timeline, newest first. Fields: organizationId." },
   get_brief: { label: "Read the brief", description: "The latest brief and its status. Fields: organizationId." },
   list_work_requests: { label: "Client requests", description: "Requests from client email and Slack. Fields: organizationId." },
-  create_client: { label: "Create a client", description: "Add a client record. Fields: name." },
+  create_client: {
+    label: "Create a client",
+    description: "Add a client, open a file space, and start the same schema check a lead gets. Fields: name, website.",
+  },
   add_contact: { label: "Add a contact", description: "Add a person to a client. Fields: organizationId, name, email." },
   add_note: { label: "Add a note", description: "Internal note on the client timeline. Use this only for a fact that is not a task, a deal move, or a brief change. Fields: organizationId, body." },
   log_call: { label: "Log a call", description: "Record a call. Fields: organizationId, body." },
