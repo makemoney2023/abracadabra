@@ -13,7 +13,7 @@ const REQUIREMENT_SYSTEM = [
   "Each title is one piece of work the requirements ask for.",
   "Each detail says what that task must produce, including sizes, counts, and constraints the requirements named.",
   "Use the words in the requirements. Do not add work, dates, or tools they did not ask for.",
-  "Do not repeat a task that is already on the project.",
+  "When tasks are already listed, copy those titles exactly and only fill detail. Do not add or rename a task.",
   "Keep each title under 120 characters and each detail under 600 characters.",
   'If there is no new work, return {"tasks":[]}.',
 ].join(" ");
@@ -96,7 +96,9 @@ export function requirementPrompt(requirements: string, existing: string[]): str
     requirements.trim(),
     "",
     "Tasks already on this project:",
-    listed.length > 0 ? listed.map((title) => `- ${title}`).join("\n") : "None.",
+    listed.length > 0
+      ? `${listed.map((title) => `- ${title}`).join("\n")}\nCopy each title exactly. Do not add a task.`
+      : "None.",
   ].join("\n");
 }
 
@@ -136,8 +138,8 @@ export async function fileRequirementTasks(input: {
     [input.projectId],
   );
   if (!project) return { created: [], detailed: [], reason: "unread" };
-  const existing = await input.sql.all<{ id: string; title: string; brief: string | null }>(
-    `SELECT t.id, t.title, a.body AS brief
+  const existing = await input.sql.all<{ id: string; title: string; status: string; brief: string | null }>(
+    `SELECT t.id, t.title, t.status, a.body AS brief
      FROM tasks t
      LEFT JOIN activities a ON a.kind = 'agent.task_brief'
        AND json_extract(a.data_json, '$.taskId') = t.id
@@ -145,7 +147,8 @@ export async function fileRequirementTasks(input: {
      ORDER BY t.position, t.created_at`,
     [input.projectId],
   );
-  const byTitle = new Map(existing.map((row) => [row.title.trim().toLocaleLowerCase(), row]));
+  const open = existing.filter((row) => row.status !== "done");
+  const byTitle = new Map(open.map((row) => [row.title.trim().toLocaleLowerCase(), row]));
   let raw = "";
   try {
     raw = await input.ask(requirementPrompt(requirements, existing.map((row) => row.title)));
@@ -156,9 +159,12 @@ export async function fileRequirementTasks(input: {
   const planned = tasksFromRequirementModel(raw);
   const created: string[] = [];
   const detailed: string[] = [];
+  const matched = new Set<string>();
+  const leftovers: RequirementTask[] = [];
   for (const task of planned) {
     const prior = byTitle.get(task.title.toLocaleLowerCase());
     if (prior) {
+      matched.add(prior.id);
       if (task.detail && task.detail !== (prior.brief ?? "")) {
         await writeTaskBrief(input.sql, {
           organizationId: project.organization_id,
@@ -171,10 +177,34 @@ export async function fileRequirementTasks(input: {
       }
       continue;
     }
-    const saved = await createTask(input.sql, input.caller, { projectId: input.projectId, title: task.title }, input.now);
-    if (!saved.ok) break;
-    created.push(saved.value.title);
-    if (task.detail) {
+    leftovers.push(task);
+  }
+  if (open.length > 0) {
+    const waiting = open.filter((row) => !matched.has(row.id));
+    for (let index = 0; index < waiting.length && index < leftovers.length; index += 1) {
+      const prior = waiting[index];
+      const detail = leftovers[index]?.detail ?? "";
+      if (!prior || !detail || detail === (prior.brief ?? "")) continue;
+      await writeTaskBrief(input.sql, {
+        organizationId: project.organization_id,
+        projectId: input.projectId,
+        taskId: prior.id,
+        detail,
+        now: input.now,
+      });
+      detailed.push(prior.title);
+    }
+  } else {
+    for (const task of leftovers) {
+      const saved = await createTask(
+        input.sql,
+        input.caller,
+        { projectId: input.projectId, title: task.title },
+        input.now,
+      );
+      if (!saved.ok) break;
+      created.push(saved.value.title);
+      if (!task.detail) continue;
       await writeTaskBrief(input.sql, {
         organizationId: saved.value.organization_id,
         projectId: input.projectId,

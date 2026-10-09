@@ -106,8 +106,8 @@ describe("fileRequirementTasks", () => {
       now: NOW + 1,
     });
     expect(filed).toEqual({
-      created: ["Three ad sizes"],
-      detailed: ["Landing page", "Three ad sizes"],
+      created: [],
+      detailed: ["Landing page"],
       reason: "added",
     });
     expect(prompts[0]).toContain("A landing page and three ad sizes.");
@@ -115,17 +115,69 @@ describe("fileRequirementTasks", () => {
     const rows = await sql.all<{ title: string; stage: string; created_by_kind: string }>(
       "SELECT title, stage, created_by_kind FROM tasks WHERE project_id = 'proj-1' ORDER BY position",
     );
-    expect(rows).toEqual([
-      { title: "Landing page", stage: "describe", created_by_kind: "staff" },
-      { title: "Three ad sizes", stage: "describe", created_by_kind: "staff" },
-    ]);
+    expect(rows).toEqual([{ title: "Landing page", stage: "describe", created_by_kind: "staff" }]);
     const notes = await sql.all<{ body: string; task_id: string; kind: string }>(
       `SELECT body, json_extract(data_json, '$.taskId') AS task_id, kind
        FROM activities WHERE kind = 'agent.task_brief' ORDER BY body`,
     );
     expect(notes).toEqual([
       { body: "One page that states the offer.", task_id: "task-1", kind: "agent.task_brief" },
-      { body: "Square, story, and landscape.", task_id: expect.any(String), kind: "agent.task_brief" },
+    ]);
+  });
+
+  it("does not add a rephrased task when the project already has cards", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO tasks (
+         id, project_id, organization_id, title, status, stage, position, created_at, updated_at
+       ) VALUES ('task-1', 'proj-1', 'org-1', 'Define video prompts', 'todo', 'describe', 0, ?, ?)`,
+      [NOW, NOW],
+    );
+    const filed = await fileRequirementTasks({
+      sql,
+      caller: staff,
+      projectId: "proj-1",
+      requirements: "Video animation prompts.",
+      ask: async () =>
+        JSON.stringify({
+          tasks: [{ title: "Create video posts", detail: "Animation prompts for each video post." }],
+        }),
+      now: NOW + 1,
+    });
+    expect(filed).toEqual({ created: [], detailed: ["Define video prompts"], reason: "added" });
+    const titles = await sql.all<{ title: string }>("SELECT title FROM tasks WHERE project_id = 'proj-1'");
+    expect(titles).toEqual([{ title: "Define video prompts" }]);
+    const note = await sql.get<{ body: string }>(
+      "SELECT body FROM activities WHERE kind = 'agent.task_brief' AND json_extract(data_json, '$.taskId') = 'task-1'",
+    );
+    expect(note?.body).toBe("Animation prompts for each video post.");
+  });
+
+  it("creates tasks with details when the project has none", async () => {
+    const sql = await database();
+    const filed = await fileRequirementTasks({
+      sql,
+      caller: staff,
+      projectId: "proj-1",
+      requirements: "A landing page and three ad sizes.",
+      ask: async () =>
+        JSON.stringify({
+          tasks: [
+            { title: "Landing page", detail: "One page that states the offer." },
+            { title: "Three ad sizes", detail: "Square, story, and landscape." },
+          ],
+        }),
+      now: NOW,
+    });
+    expect(filed.created).toEqual(["Landing page", "Three ad sizes"]);
+    expect(filed.detailed).toEqual(["Landing page", "Three ad sizes"]);
+    expect(await sql.all("SELECT title FROM tasks ORDER BY position")).toEqual([
+      { title: "Landing page" },
+      { title: "Three ad sizes" },
+    ]);
+    expect(await sql.all("SELECT body FROM activities WHERE kind = 'agent.task_brief' ORDER BY body")).toEqual([
+      { body: "One page that states the offer." },
+      { body: "Square, story, and landscape." },
     ]);
   });
 

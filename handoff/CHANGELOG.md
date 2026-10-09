@@ -2,7 +2,7 @@
 
 ## 2026-10-09
 
-- **What changed** — Saving project requirements asks the agent for what each task must produce. That note is stored on the task and shown on the card. Saving again fills a task that only had a title, and leaves a note that is already the same.
+- **What changed** — Saving project requirements asks the agent for what each task must produce. That note is stored on the task and shown on the card. Saving again fills a task that only had a title. A project that already has tasks does not get another set of cards when the model renames them.
 - **Why** — The first pass created titles only. The card had no detail.
 - **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/work/board.tsx`
 - **Data-flow impact** — Each new or untitled task gets an `agent.task_brief` activity whose body is the detail and whose `taskId` is the card. The board reads that note with the other agent notes.
