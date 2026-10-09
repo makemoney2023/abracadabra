@@ -2,11 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { CRM_ERRORS, assignRepoProject, unlinkRepo, type CrmError } from "@/db/crm";
+import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requireHqStaffPage } from "@/lib/current";
 import { linkChosenRepo } from "@/lib/github/link";
 import { readGithubSecrets } from "@/lib/github/secrets";
-
-export type FormState = { message: string };
 
 function refresh(organizationId: string, projectId: string): void {
   revalidatePath(`/clients/${organizationId}`);
@@ -20,7 +19,10 @@ function repoMessage(error: CrmError): string {
   return CRM_ERRORS[error];
 }
 
-export async function linkRepoAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function linkRepoAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const githubRepoId = Number(formData.get("githubRepoId"));
@@ -30,12 +32,15 @@ export async function linkRepoAction(_previous: FormState, formData: FormData): 
     now: Date.now(),
     secrets: readGithubSecrets(),
   });
-  if (!linked.ok) return { message: linked.message };
+  if (!linked.ok) return fail(linked.message, "githubRepoId");
   refresh(organizationId, "");
-  return { message: "This repo is now linked." };
+  return ok("This repo is now linked.");
 }
 
-export async function unlinkRepoAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function unlinkRepoAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const projectId = String(formData.get("projectId") ?? "");
@@ -45,12 +50,15 @@ export async function unlinkRepoAction(_previous: FormState, formData: FormData)
     { organizationId, repoId: String(formData.get("repoId") ?? "") },
     Date.now(),
   );
-  if (!saved.ok) return { message: repoMessage(saved.error) };
+  if (!saved.ok) return fail(repoMessage(saved.error));
   refresh(organizationId, projectId);
-  return { message: "This repo is unlinked." };
+  return ok("This repo is unlinked.");
 }
 
-export async function assignRepoAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function assignRepoAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const rawProject = String(formData.get("projectId") ?? "");
@@ -66,8 +74,8 @@ export async function assignRepoAction(_previous: FormState, formData: FormData)
     },
     Date.now(),
   );
-  if (!saved.ok) return { message: repoMessage(saved.error) };
+  if (!saved.ok) return fail(repoMessage(saved.error), "projectId");
   refresh(organizationId, projectId ?? "");
   if (previousProjectId && previousProjectId !== projectId) refresh(organizationId, previousProjectId);
-  return { message: projectId ? "This repo is on that project." : "This repo is not on a project." };
+  return ok(projectId ? "This repo is on that project." : "This repo is not on a project.");
 }

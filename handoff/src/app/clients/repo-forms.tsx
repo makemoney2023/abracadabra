@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { ActionField, ActionForm } from "@/components/action-form";
+import { FormDrawer } from "@/components/form-drawer";
 import { Button } from "@/components/ui/button";
-import { assignRepoAction, linkRepoAction, unlinkRepoAction, type FormState } from "./repo-actions";
+import { assignRepoAction, linkRepoAction, unlinkRepoAction } from "./repo-actions";
 
-const initial: FormState = { message: "" };
+const selectClass = "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
 export function LinkRepoForm({
   organizationId,
@@ -13,38 +14,38 @@ export function LinkRepoForm({
   organizationId: string;
   repos: { id: number; fullName: string }[];
 }) {
-  const [state, action, pending] = useActionState(linkRepoAction, initial);
-  if (repos.length === 0) {
-    return <p className="text-sm text-muted-foreground">No repos to link.</p>;
-  }
   return (
-    <form action={action} className="flex flex-col gap-3">
-      <input type="hidden" name="organizationId" value={organizationId} />
-      <label className="flex flex-col gap-1 text-sm" htmlFor="link-repo">
-        Link a repo
-        <select
-          id="link-repo"
-          name="githubRepoId"
-          required
-          className="h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm"
-          defaultValue={String(repos[0]?.id ?? "")}
-        >
-          {repos.map((repo) => (
-            <option key={repo.id} value={repo.id}>
-              {repo.fullName}
-            </option>
-          ))}
-        </select>
-      </label>
-      <Button type="submit" disabled={pending}>
-        {pending ? "Linking" : "Link a repo"}
-      </Button>
-      {state.message ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          {state.message}
-        </p>
-      ) : null}
-    </form>
+    <FormDrawer
+      title="Link a repo"
+      description="A GitHub repo this client works in."
+      trigger={
+        <Button variant="outline" size="sm">
+          Link a repo
+        </Button>
+      }
+    >
+      {repos.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No repos to link.</p>
+      ) : (
+        <ActionForm action={linkRepoAction} submitLabel="Link a repo" pendingLabel="Linking">
+          <input type="hidden" name="organizationId" value={organizationId} />
+          <ActionField name="githubRepoId" label="Repo">
+            <select
+              name="githubRepoId"
+              required
+              className={selectClass}
+              defaultValue={String(repos[0]?.id ?? "")}
+            >
+              {repos.map((repo) => (
+                <option key={repo.id} value={repo.id}>
+                  {repo.fullName}
+                </option>
+              ))}
+            </select>
+          </ActionField>
+        </ActionForm>
+      )}
+    </FormDrawer>
   );
 }
 
@@ -57,21 +58,22 @@ export function UnlinkRepoForm({
   repoId: string;
   projectId: string | null;
 }) {
-  const [state, action, pending] = useActionState(unlinkRepoAction, initial);
   return (
-    <form action={action} className="flex flex-col gap-2">
-      <input type="hidden" name="organizationId" value={organizationId} />
-      <input type="hidden" name="repoId" value={repoId} />
-      <input type="hidden" name="projectId" value={projectId ?? ""} />
-      <Button type="submit" size="sm" variant="outline" disabled={pending}>
-        {pending ? "Unlinking" : "Unlink"}
-      </Button>
-      {state.message ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          {state.message}
-        </p>
-      ) : null}
-    </form>
+    <FormDrawer
+      title="Unlink repo"
+      description="The repo leaves this client. GitHub keeps the code."
+      trigger={
+        <Button variant="outline" size="sm">
+          Unlink
+        </Button>
+      }
+    >
+      <ActionForm action={unlinkRepoAction} submitLabel="Unlink" pendingLabel="Unlinking">
+        <input type="hidden" name="organizationId" value={organizationId} />
+        <input type="hidden" name="repoId" value={repoId} />
+        <input type="hidden" name="projectId" value={projectId ?? ""} />
+      </ActionForm>
+    </FormDrawer>
   );
 }
 
@@ -86,36 +88,31 @@ export function AssignRepoForm({
   projectId: string | null;
   projects: { id: string; name: string }[];
 }) {
-  const [state, action, pending] = useActionState(assignRepoAction, initial);
   return (
-    <form action={action} className="flex flex-col gap-2 sm:flex-row sm:items-end">
-      <input type="hidden" name="organizationId" value={organizationId} />
-      <input type="hidden" name="repoId" value={repoId} />
-      <input type="hidden" name="previousProjectId" value={projectId ?? ""} />
-      <label className="flex flex-col gap-1 text-sm" htmlFor={`assign-${repoId}`}>
-        Project
-        <select
-          id={`assign-${repoId}`}
-          name="projectId"
-          className="h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm"
-          defaultValue={projectId ?? ""}
-        >
-          <option value="">No project</option>
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <Button type="submit" size="sm" variant="outline" disabled={pending}>
-        {pending ? "Saving" : "Save project"}
-      </Button>
-      {state.message ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          {state.message}
-        </p>
-      ) : null}
-    </form>
+    <FormDrawer
+      title="Set project"
+      description="Which project this repo belongs to."
+      trigger={
+        <Button variant="outline" size="sm">
+          Project
+        </Button>
+      }
+    >
+      <ActionForm action={assignRepoAction} submitLabel="Save project" pendingLabel="Saving">
+        <input type="hidden" name="organizationId" value={organizationId} />
+        <input type="hidden" name="repoId" value={repoId} />
+        <input type="hidden" name="previousProjectId" value={projectId ?? ""} />
+        <ActionField name="projectId" label="Project">
+          <select name="projectId" className={selectClass} defaultValue={projectId ?? ""}>
+            <option value="">No project</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </ActionField>
+      </ActionForm>
+    </FormDrawer>
   );
 }

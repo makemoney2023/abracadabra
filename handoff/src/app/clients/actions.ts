@@ -68,7 +68,10 @@ export async function createClientDrawerAction(
   return ok("Client added.");
 }
 
-export async function linkSpaceAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function linkSpaceAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const linked = await linkWorkspace(
@@ -80,10 +83,14 @@ export async function linkSpaceAction(_previous: FormState, formData: FormData):
     },
     Date.now(),
   );
-  if (!linked.ok) return { message: CRM_ERRORS[linked.error] };
+  if (!linked.ok) {
+    return linked.error === "invalid"
+      ? fail(CRM_ERRORS[linked.error], "workspaceId")
+      : fail(CRM_ERRORS[linked.error]);
+  }
   revalidatePath(`/clients/${organizationId}`);
   revalidatePath("/clients");
-  return { message: "This space is now linked." };
+  return ok("This space is now linked.");
 }
 
 function fieldMessage(error: CrmError, field: "contact" | "note" | "call" | "task" | "merge"): string {
@@ -104,7 +111,14 @@ function refresh(organizationId: string): void {
   revalidatePath("/");
 }
 
-export async function createContactAction(_previous: FormState, formData: FormData): Promise<FormState> {
+function actionError(error: CrmError, field: "contact" | "note" | "call" | "task" | "merge", name: string): ActionResult {
+  return error === "invalid" ? fail(fieldMessage(error, field), name) : fail(fieldMessage(error, field));
+}
+
+export async function createContactAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const created = await createContact(
@@ -120,30 +134,39 @@ export async function createContactAction(_previous: FormState, formData: FormDa
     },
     Date.now(),
   );
-  if (!created.ok) return { message: fieldMessage(created.error, "contact") };
+  if (!created.ok) return actionError(created.error, "contact", "name");
   refresh(organizationId);
-  return { message: "Person added." };
+  return ok("Person added.");
 }
 
-export async function addNoteAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function addNoteAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const saved = await addNote(sql, caller, { organizationId, body: String(formData.get("body") ?? "") }, Date.now());
-  if (!saved.ok) return { message: fieldMessage(saved.error, "note") };
+  if (!saved.ok) return actionError(saved.error, "note", "body");
   refresh(organizationId);
-  return { message: "Note added." };
+  return ok("Note added.");
 }
 
-export async function logCallAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function logCallAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const saved = await logCall(sql, caller, { organizationId, body: String(formData.get("body") ?? "") }, Date.now());
-  if (!saved.ok) return { message: fieldMessage(saved.error, "call") };
+  if (!saved.ok) return actionError(saved.error, "call", "body");
   refresh(organizationId);
-  return { message: "Call logged." };
+  return ok("Call logged.");
 }
 
-export async function createTaskAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function createTaskAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const saved = await createTask(
@@ -152,19 +175,27 @@ export async function createTaskAction(_previous: FormState, formData: FormData)
     { organizationId, title: String(formData.get("title") ?? "") },
     Date.now(),
   );
-  if (!saved.ok) return { message: fieldMessage(saved.error, "task") };
+  if (!saved.ok) return actionError(saved.error, "task", "title");
   refresh(organizationId);
-  return { message: "Task added." };
+  return ok("Task added.");
 }
 
-export async function completeTaskAction(formData: FormData): Promise<void> {
+export async function completeTaskAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
-  await completeTask(sql, caller, { taskId: String(formData.get("taskId") ?? "") }, Date.now());
+  const saved = await completeTask(sql, caller, { taskId: String(formData.get("taskId") ?? "") }, Date.now());
+  if (!saved.ok) return fail(CRM_ERRORS[saved.error]);
   refresh(organizationId);
+  return ok("Marked done.");
 }
 
-export async function mergeClientAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function mergeClientAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const keepId = String(formData.get("keepId") ?? "");
   const merged = await mergeOrganizations(
@@ -173,7 +204,7 @@ export async function mergeClientAction(_previous: FormState, formData: FormData
     { keepId, dropId: String(formData.get("dropId") ?? "") },
     Date.now(),
   );
-  if (!merged.ok) return { message: fieldMessage(merged.error, "merge") };
+  if (!merged.ok) return actionError(merged.error, "merge", "dropId");
   refresh(keepId);
   redirect(`/clients/${keepId}?merged=1`);
 }
@@ -219,14 +250,17 @@ export async function decideRequestAction(_previous: FormState, formData: FormDa
   return { message: decision === "approved" ? "Approved. A draft invoice is waiting for a price." : "Declined." };
 }
 
-export async function replyToThreadAction(_previous: FormState, formData: FormData): Promise<FormState> {
+export async function replyToThreadAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");
   const threadId = String(formData.get("threadId") ?? "");
   const channel = String(formData.get("channel") ?? "");
   const body = String(formData.get("body") ?? "").trim();
   const sender = String(formData.get("sender") ?? "");
-  if (!caller.userId || !body) return { message: "Write a reply." };
+  if (!caller.userId || !body) return fail("Write a reply.", "body");
   await recordStaffReply(sql, { organizationId, userId: caller.userId, threadId, channel, body }, Date.now());
   if (channel === "email" && sender.includes("@")) {
     try {
@@ -238,9 +272,9 @@ export async function replyToThreadAction(_previous: FormState, formData: FormDa
       });
     } catch {
       revalidatePath(`/clients/${organizationId}`);
-      return { message: "Saved. The email did not send." };
+      return fail("Saved. The email did not send.");
     }
   }
   revalidatePath(`/clients/${organizationId}`);
-  return { message: "Sent." };
+  return ok("Sent.");
 }

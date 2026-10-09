@@ -9,7 +9,7 @@ export function ClientChat({ organizationId }: { organizationId: string }) {
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" size="sm">
-          Chat
+          Message
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full overflow-y-auto data-[side=right]:sm:max-w-md">

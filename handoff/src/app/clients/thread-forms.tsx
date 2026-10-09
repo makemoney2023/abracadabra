@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
+import { ActionField, ActionForm } from "@/components/action-form";
+import { FormDrawer } from "@/components/form-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,16 +43,25 @@ export function ThreadReplyForm({
   channel: string;
   sender: string;
 }) {
-  const [state, action, pending] = useActionState(replyToThreadAction, initial);
   return (
-    <form action={action} className="flex flex-col gap-2">
-      <input type="hidden" name="organizationId" value={organizationId} />
-      <input type="hidden" name="threadId" value={threadId} />
-      <input type="hidden" name="channel" value={channel} />
-      <input type="hidden" name="sender" value={sender} />
-      <Textarea name="body" required maxLength={2000} placeholder="Reply as yourself" aria-label="Reply" />
-      <Button type="submit" size="sm" disabled={pending}>{pending ? "Sending…" : "Reply"}</Button>
-      <Status message={state.message} />
-    </form>
+    <FormDrawer
+      title="Reply"
+      description="Send this as yourself."
+      trigger={
+        <Button variant="outline" size="sm">
+          Reply
+        </Button>
+      }
+    >
+      <ActionForm action={replyToThreadAction} submitLabel="Reply" pendingLabel="Sending">
+        <input type="hidden" name="organizationId" value={organizationId} />
+        <input type="hidden" name="threadId" value={threadId} />
+        <input type="hidden" name="channel" value={channel} />
+        <input type="hidden" name="sender" value={sender} />
+        <ActionField name="body" label="Reply">
+          <Textarea name="body" required maxLength={2000} placeholder="Reply as yourself" />
+        </ActionField>
+      </ActionForm>
+    </FormDrawer>
   );
 }
