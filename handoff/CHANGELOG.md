@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Main is published. Staff HQ, the client app, the agent worker, the swarm, and `handoff-connectors` were deployed from the MCP connector merge.
+- **Why** — `/mcp` and the portal catalog need to be on the live workers.
+- **Code touchpoints** — none. Deploy of `5fb7416`.
+- **Data-flow impact** — The first HQ health check created `connector_grants`. A swarm run still drops the portal server until `SWARM_RUN_SECRET` is set on HQ and the swarm. `/mcp` stays empty until the Access service token is set on HQ.
+- **API / schema impact** — `connector_grants` is present in production D1.
+- **Verification** — Worker `handoff-hq` version `28504f03-78c5-4e97-b97c-468402ca3061` on `hq.abra-ca-dabra.app`. Worker `handoff` version `09147c3d-0c34-45b0-a3cf-9d6114917e6f` on `handoff.abra-ca-dabra.app`. Worker `handoff-agent` version `dcb86dcc-5b55-4b86-bdd7-7dd572fc0ab5` on `agent.abra-ca-dabra.app`. Worker `agent-swarm-orchestrator` version `79b069b6-b162-42df-9200-1d1021b525ff`. Worker `handoff-connectors` version `027f2fd8-0fe6-48e6-adff-31d446caedca`. `GET /api/health` returned 200 on HQ and Handoff. The swarm origin returned 200. The connector returns 401 without a bearer. `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`, and `SWARM_RUN_SECRET` are not set on HQ or the swarm. `CONNECTOR_TOKEN` and `GOOGLE_SEARCH_CONSOLE_SA` are not set on the connector worker.
+
+## 2026-10-09
+
 - **What changed** — Super admins can list the MCP portal's servers at `/mcp` and turn each one on or off. A swarm run with no stored servers calls that portal when it is configured. Search Console grants live on the client, and a connector worker exposes `search_analytics` and `inspect_url` for the granted property.
 - **Why** — The agent and swarm runs need the same portal grant, and staff need a switch that does not detach a server or rewrite the portal mapping.
 - **Code touchpoints** — `handoff/src/lib/portal-session.ts`, `handoff/src/app/mcp/page.tsx`, `handoff/src/lib/mcp-catalog.ts`, `handoff/src/lib/client-workflows.ts`, `swarm/src/mcp/portal-gate.ts`, `handoff/src/lib/connector-grants.ts`, `connectors/src/index.ts`, `handoff/migrations/0020_connector_grants.sql`
