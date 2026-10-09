@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/today-view.ts`, `handoff/src/app/today-screen.tsx`, `handoff/src/app/today-controls.tsx`, `handoff/src/app/page.tsx`, `handoff/src/app/hq-home.tsx`
 - **Data-flow impact** — Today still reads `todayFor`. It also counts active clients, deal stages, and the latest health on each client.
 - **API / schema impact** — none.
-- **Verification** — `npx vitest run src/app/today-view.test.ts` (8 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (110 files / 602 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
