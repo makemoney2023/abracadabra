@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ pages show a sticky context bar: sidebar toggle, breadcrumbs, a slot for page actions, and a command-palette button. Record names stay blank until a page registers one.
+- **Why** — The inset header only had a sidebar toggle, so staff could not see where they were.
+- **Code touchpoints** — `handoff/src/app/breadcrumbs.ts`, `handoff/src/components/context-bar.tsx`, `handoff/src/app/staff-shell.tsx`
+- **Data-flow impact** — none. Breadcrumbs are built from the pathname plus labels a page passes in.
+- **API / schema impact** — none.
+- **Verification** — `npm test` (108 files / 589 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — HQ navigation is six groups (Pulse, Pipeline, Delivery, Records, Automation, System). The sidebar shows one wordmark, "Handoff" plus "HQ". Projects is in Delivery. GitHub is the System item.
 - **Why** — The staff shell listed every page in one Studio group and printed Handoff twice.
 - **Code touchpoints** — `handoff/src/app/staff-links.ts`, `handoff/src/app/staff-nav.tsx`, `handoff/src/app/staff-shell.tsx`

@@ -9,8 +9,8 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarSeparator,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { ContextBar, ContextBarProvider } from "@/components/context-bar";
 import { Toaster } from "@/components/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { StaffNav } from "./staff-nav";
@@ -19,6 +19,7 @@ export function StaffShell({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider>
     <SidebarProvider>
+      <ContextBarProvider>
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <Link href="/" className="flex items-baseline gap-1.5 px-2">
@@ -32,12 +33,11 @@ export function StaffShell({ children }: { children: ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
-          <SidebarTrigger />
-        </header>
+        <ContextBar />
         {children}
       </SidebarInset>
       <Toaster />
+      </ContextBarProvider>
     </SidebarProvider>
     </TooltipProvider>
   );
