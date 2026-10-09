@@ -59,6 +59,8 @@ export function toolTaskStatus(state: string): "doing" | "done" | "blocked" {
 /** Mailbox JSON. The worker files actions as tasks and the brief sentence on the client. */
 export const MAILBOX_INSTRUCTIONS = [
   "You write one short email as Magic at Abracadabra.",
+  "The reply must answer the new message from the desk.",
+  "It is not a receipt. Do not write that you have their note, or that a person on the team will follow up.",
   "Use only the desk. Do not quote a price or promise a date.",
   "Ask one question when new work has no goal or due.",
   "Read the request and name the work it asks for.",

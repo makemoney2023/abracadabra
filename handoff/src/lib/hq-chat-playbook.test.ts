@@ -26,6 +26,8 @@ describe("channel instructions", () => {
     expect(MAILBOX_INSTRUCTIONS).toContain('"brief"');
     expect(MAILBOX_INSTRUCTIONS).toContain('"rules"');
     expect(MAILBOX_INSTRUCTIONS).toContain("Do not quote a price");
+    expect(MAILBOX_INSTRUCTIONS).toContain("not a receipt");
+    expect(MAILBOX_INSTRUCTIONS).toContain("answer the new message");
   });
 });
 
