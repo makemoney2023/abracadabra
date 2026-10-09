@@ -6,7 +6,7 @@
 
 ## Outcome
 
-Staff create a project, write the requirements, and save. Each new Describe card gets the one swarm pack that can do that task, and the pack's skill steps are stored on the card.
+Staff create a project, write the requirements, and save. The project is on that client. When the client has one space and one repo that are not on a project yet, those are attached to this project. Each new Describe card gets the one swarm pack that can do that task, and the pack's skill steps are stored on the card.
 
 When a card has a pack and no swarm is running, **Run swarm** appears on the card. Pressing it starts the same run the agent uses: move the card to Run, schedule that pack due now, wake `due`, and follow the run until the output is a file in the client space and an unpublished document on that project.
 
