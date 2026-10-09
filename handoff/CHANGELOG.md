@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/lead-schema.ts`, `handoff/src/lib/scan-context.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/clients/actions.ts`
 - **Data-flow impact** — Client create queues a schema scan. `scan_ready` still wakes the agent, which files the scrape into the space and starts the swarm.
 - **API / schema impact** — `create_client` accepts `website`.
-- **Verification** — `npm test` in `handoff` for the lead-schema and hq-tools suites.
+- **Verification** — `npx vitest run` in `handoff` (121 files, 685 tests). ESLint on the touched files reported no issues.
 
 ## 2026-10-09
 
