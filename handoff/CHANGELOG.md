@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/app/work/page.tsx`, `handoff/src/app/work/query.ts`, `handoff/src/app/work/query.test.ts`, `handoff/src/app/work/filters.tsx`, `handoff/src/app/work/task-actions.tsx`
 - **Data-flow impact** — The page still reads open tasks. Counts use the full list, then the filter narrows the rows. Project names are read for the rows on screen. Done still uses the existing complete-task action.
 - **API / schema impact** — none.
-- **Verification** — `npx vitest run src/app/work/query.test.ts` passed (8 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (113 files / 629 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. `next build` was not run.
 
 ## 2026-10-09
 
