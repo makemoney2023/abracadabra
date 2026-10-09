@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-09
 **Product:** The agent swarm, Handoff HQ, and the agency Cloudflare MCP portal
-**Status:** Swarm code implemented on 2026-10-09. Portal server `muapi` is not linked. The render skill is in the repo and is not published to R2 until `npm run publish:skills` runs with R2 credentials.
+**Status:** Swarm templates for the full pack catalog are in the worker as of 2026-10-09. Portal server `muapi` is not linked. The render skill is in the repo and is not published to R2 until `npm run publish:skills` runs with R2 credentials.
 **Requirements:** MUAPI-001 through MUAPI-025
 **Lives in:** [`swarm/`](../../../swarm/), [`docs/`](../../), and the portal at `https://mcp.abra-ca-dabra.app/mcp`
 **Plan:** [`docs/superpowers/plans/2026-10-09-muapi-swarm.md`](../plans/2026-10-09-muapi-swarm.md)

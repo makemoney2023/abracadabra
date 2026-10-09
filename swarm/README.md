@@ -33,6 +33,13 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — The canvas includes the full MuAPI pack catalog.
+  - **Why:** Social, brand, product, storyboard, UGC, spokesperson, and highlight clips use the same roles as the website hero and the ad.
+  - **Touchpoints:** `src/templates/media-templates.ts`, `src/templates/media-templates.test.ts`, `.cursor/skills/community/muapi-render/SKILL.md`.
+  - **Data flow:** Each new pack is a text workflow with no tools and a render workflow whose nodes use `RENDER_ROLES`. Unpicked storyboard frames and UGC lipsync without audio return `skipped`.
+  - **API / schema:** none. No new Worker secret.
+  - **Verification:** `npm test` in `swarm/` — 45 passed. `npx tsc --noEmit` in `swarm/` exited 0.
+
 - **2026-10-09** — The MuAPI plan now includes the full pack catalog.
   - **Why:** Social, brand, product, storyboard, UGC, spokesperson, and highlight clips should be templates on the roles that already exist.
   - **Touchpoints:** `docs/superpowers/plans/2026-10-09-muapi-swarm.md` Task 8, `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md` pack catalog, `README.md`.

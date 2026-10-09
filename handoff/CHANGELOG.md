@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The swarm canvas now includes the rest of the MuAPI pack catalog: social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips.
+- **Why** — Those jobs share the render roles already used by the website hero and the ad.
+- **Code touchpoints** — `swarm/src/templates/media-templates.ts`, `swarm/src/templates/media-templates.test.ts`, `.cursor/skills/community/muapi-render/SKILL.md`
+- **Data-flow impact** — Text nodes still get no tools. Render nodes use `RENDER_ROLES`. An unpicked storyboard frame and a UGC lipsync with no audio return `skipped` and do not call MuAPI.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `swarm/`: 45 passed. `npx tsc --noEmit` in `swarm/` exited 0.
+
+## 2026-10-09
+
 - **What changed** — The MuAPI plan's Task 8 is the rest of the pack catalog: social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips.
 - **Why** — Those jobs use the roles already specified. They do not need another portal server.
 - **Code touchpoints** — `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `README.md`, `swarm/README.md`. No runtime code.

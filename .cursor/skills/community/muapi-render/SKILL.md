@@ -34,6 +34,7 @@ One still.
 
 One clip.
 
+- If the node instructions say to skip a storyboard frame that was not picked, and this frame is not in the approved pick list, return `skipped` and do not call a tool.
 - When a still URL is in hand, call `muapi_video_from_image` with that URL and the approved motion prompt.
 - Otherwise call `muapi_video_generate` once from the text prompt.
 - Poll.
@@ -65,7 +66,8 @@ One track.
 
 ## Role: lipsync
 
-- Call `muapi_edit_lipsync` with the video URL and the audio URL.
+- If the node instructions say to skip when the brief has no audio URL, and no audio URL is present, return `skipped` and do not call a tool.
+- Otherwise call `muapi_edit_lipsync` with the video URL and the audio URL.
 - Poll.
 
 ## Role: clip

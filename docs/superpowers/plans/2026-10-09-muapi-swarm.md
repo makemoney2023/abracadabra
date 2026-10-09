@@ -244,7 +244,7 @@ The spec and this plan already exist. This task only records what shipped.
 
 Covers MUAPI-025. Website hero, ad, and `media-poll` stay as Task 4 left them. This task adds the other rows in the spec's pack catalog. No new role. No portal change.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Extend `media-templates.test.ts`. For every catalog row that is not already implemented:
 
@@ -254,13 +254,13 @@ Extend `media-templates.test.ts`. For every catalog row that is not already impl
 4. `storyboard-animate` instructions tell an unpicked frame to return `skipped` and not call a tool. The UGC lipsync node says the same when the brief has no audio URL.
 5. `pack-templates.json` contains none of the new ids: `social-pack`, `social-pack-render`, `blog-header`, `blog-header-render`, `logo-sting`, `logo-sting-render`, `brand-kit`, `brand-kit-render`, `page-cutout`, `page-cutout-render`, `product-angles`, `product-angles-render`, `launch-set`, `launch-set-render`, `amazon-listing`, `amazon-listing-render`, `storyboard`, `storyboard-render`, `storyboard-animate`, `ugc-spot`, `ugc-spot-render`, `spokesperson`, `spokesperson-render`, `highlight-clips`, `highlight-clips-render`.
 
-- [ ] **Step 2: Run the test and confirm it fails.**
+- [x] **Step 2: Run the test and confirm it fails.**
 
 ```bash
 cd swarm && npx vitest run src/templates/media-templates.test.ts
 ```
 
-- [ ] **Step 3: Add the templates**
+- [x] **Step 3: Add the templates**
 
 Add them to `MEDIA_TEMPLATES` in `media-templates.ts`. Import `RENDER_ROLES`. Do not retype tool name lists. Use the skill paths in the spec. Lay chains on two rows when a text workflow has more than six nodes.
 
@@ -284,7 +284,7 @@ Render shape, matching the catalog:
 
 Add two short sections to `muapi-render`: an unpicked storyboard frame returns `skipped` with no tool call, and lipsync does the same when no audio URL is present.
 
-- [ ] **Step 4: Re-run the test, then `npm test` and `npx tsc --noEmit` in `swarm/`.**
+- [x] **Step 4: Re-run the test, then `npm test` and `npx tsc --noEmit` in `swarm/`.** `npm test` passed 45 tests. `npx tsc --noEmit` exited 0.
 
 ---
 
