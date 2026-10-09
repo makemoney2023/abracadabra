@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
-import { deskContext, listClientThreads, noteStalledProspect, recordStaffReply, recordThreadMessage, setWorkRequestState, threadState, workRequestById } from "./conversations";
+import { deskContext, listClientThreads, noteStalledProspect, recordStaffReply, recordThreadMessage, resolveMailThread, setWorkRequestState, threadState, workRequestById } from "./conversations";
 import { migrate } from "./migrate";
 import { sqliteSql, type Sql } from "./sql";
 
@@ -187,5 +187,48 @@ describe("client threads", () => {
     );
     const withBrief = await threadState(sql, "org-1", "<m-1>", NOW + 20);
     expect(withBrief.briefPresent).toBe(true);
+  });
+
+  it("keeps a reply on the open email conversation", async () => {
+    await recordThreadMessage(
+      sql,
+      { ...message, body: "We need social media ads.", state: "clarifying", replyBody: "Who are these ads for?" },
+      NOW,
+    );
+    const byReference = await resolveMailThread(sql, {
+      organizationId: "org-1",
+      threadId: "<reply-1>",
+      references: "<m-1> <magic-1@abra-ca-dabra.app>",
+      sender: "Ada@Client.example",
+      subject: "ads",
+    });
+    expect(byReference).toBe("<m-1>");
+    const bySubject = await resolveMailThread(sql, {
+      organizationId: "org-1",
+      threadId: "<reply-2>",
+      references: "",
+      sender: "ada@client.example",
+      subject: "Re: ads",
+    });
+    expect(bySubject).toBe("<m-1>");
+    const desk = await deskContext(sql, "org-1", byReference);
+    expect(desk.messages.map((row) => row.body)).toEqual(["We need social media ads.", "Who are these ads for?"]);
+  });
+
+  it("does not guess when two email conversations are open", async () => {
+    await recordThreadMessage(sql, { ...message, body: "Ads.", state: "clarifying" }, NOW);
+    await recordThreadMessage(
+      sql,
+      { ...message, threadId: "<m-2>", body: "A site.", state: "clarifying" },
+      NOW + 1,
+    );
+    const unresolved = await resolveMailThread(sql, {
+      organizationId: "org-1",
+      threadId: "<reply-3>",
+      references: "",
+      sender: "ada@client.example",
+      subject: "Re: hello",
+    });
+    expect(unresolved).toBe("<reply-3>");
   });
 });

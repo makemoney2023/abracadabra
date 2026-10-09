@@ -9,10 +9,12 @@ import {
   noteStalledProspect,
   recordThreadMessage,
   recordUnknownSender,
+  resolveMailThread,
   threadState,
 } from "@/db/conversations";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
+import type { Sql } from "@/db/sql";
 import { applyChannelPlan, normalizeChannelPlan } from "@/lib/channel-plan";
 import { bytesFromBase64, replyStatesPrice } from "@/lib/client-channel";
 import { lookupEmailSender, markOptedOut } from "@/lib/client-channel-store";
@@ -36,6 +38,16 @@ function authorized(request: Request): boolean {
 function text(body: Record<string, unknown>, key: string): string {
   const value = body[key];
   return typeof value === "string" ? value : "";
+}
+
+async function mailThreadId(sql: Sql, body: Record<string, unknown>): Promise<string> {
+  return resolveMailThread(sql, {
+    organizationId: text(body, "organizationId"),
+    threadId: text(body, "threadId"),
+    references: text(body, "references"),
+    sender: text(body, "sender"),
+    subject: text(body, "subject"),
+  });
 }
 
 async function scanQueue(): Promise<ScanQueue | null> {
@@ -106,7 +118,7 @@ export async function POST(request: Request) {
   }
   if (action === "thread") {
     const organizationId = text(body, "organizationId");
-    const threadId = text(body, "threadId");
+    const threadId = await mailThreadId(sql, body);
     if (!organizationId || !threadId) return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
     return NextResponse.json({ ok: true, value: await threadState(sql, organizationId, threadId, now) });
   }
@@ -134,7 +146,7 @@ export async function POST(request: Request) {
     if (!organizationId) {
       return NextResponse.json({ ok: true, value: { name: "", brief: "", status: "", requests: [], messages: [] } });
     }
-    return NextResponse.json({ ok: true, value: await deskContext(sql, organizationId, text(body, "threadId")) });
+    return NextResponse.json({ ok: true, value: await deskContext(sql, organizationId, await mailThreadId(sql, body)) });
   }
   if (action === "attach") {
     const organizationId = text(body, "organizationId");
@@ -170,7 +182,7 @@ export async function POST(request: Request) {
       if (organizationId) await recordUnknownSender(sql, { organizationId, sender: text(body, "sender") }, now);
       return NextResponse.json({ ok: true });
     }
-    const threadId = text(body, "threadId");
+    const threadId = await mailThreadId(sql, body);
     if (!organizationId || !threadId) return NextResponse.json({ ok: true });
     const id = await recordThreadMessage(
       sql,

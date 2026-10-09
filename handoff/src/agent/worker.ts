@@ -23,7 +23,7 @@ import {
   type ClientDesk,
   type ThreadState,
 } from "../lib/client-channel";
-import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS } from "../lib/hq-chat-playbook";
+import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS, mailboxUserContent } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
 import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
 import { skillObjectKey } from "../lib/skill-library";
@@ -517,7 +517,7 @@ async function mailboxTurn(env: AgentBindings, desk: ClientDesk, incoming: strin
       },
       {
         role: "user",
-        content: `${prospect ? "Prospect" : "Client"}: ${desk.name}\nBrief: ${desk.brief || "none"}\nStatus: ${desk.status || "none"}\nOpen requests: ${desk.requests.map((row) => row.body).join("\n") || "none"}\nThread:\n${desk.messages.map((row) => `${row.kind}: ${row.body}`).join("\n") || "none"}\n\nNew message:\n${incoming}`,
+        content: mailboxUserContent({ prospect, desk, incoming }),
       },
     ],
   });
@@ -580,7 +580,14 @@ const worker = {
         return body.value;
       },
       thread: async (organizationIdForThread, threadId) => {
-        const body = (await hqChannel(env, { action: "thread", organizationId: organizationIdForThread, threadId })) as {
+        const body = (await hqChannel(env, {
+          action: "thread",
+          organizationId: organizationIdForThread,
+          threadId,
+          references: parsed.references,
+          sender: addressOf(parsed.from),
+          subject: parsed.subject,
+        })) as {
           value?: ThreadState;
         } | null;
         return body?.value ?? { replies: 0, questionCount: 0, text: "" };
@@ -640,6 +647,9 @@ const worker = {
           action: "desk_context",
           organizationId,
           threadId: parsed.threadId,
+          references: parsed.references,
+          sender: addressOf(parsed.from),
+          subject: parsed.subject,
         })) as { value?: ClientDesk } | null;
         if (!body?.value) throw new Error("desk unavailable");
         const desk: ClientDesk = {
@@ -675,6 +685,8 @@ const worker = {
       noteOnly: reply.noteOnly,
       channel: "email",
       threadId: parsed.threadId,
+      references: parsed.references,
+      subject: parsed.subject,
       sender: addressOf(parsed.from),
       body: parsed.text,
       state: reply.classified.state,

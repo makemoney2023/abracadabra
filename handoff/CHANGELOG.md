@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A client email continues the thread. A reply that is still a question, including one that only restates the subject, does not add a card to the project board.
+- **Why** — Mail was answering with a fixed “the work is X, what is the goal” line and filing that as a task before the client had said what the work should achieve.
+- **Code touchpoints** — `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/slack-channel.ts`, `handoff/src/db/conversations.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — `desk_context`, `thread`, and `record` keep one open email conversation when `References` names it, or when the subject is a reply and that sender has one open thread. The model prompt includes questions already asked. `actions` are dropped while the reply asks a question or new work has no goal.
+- **API / schema impact** — none. Those three actions accept optional `references`, `sender`, and `subject`.
+- **Verification** — `npm test` in `handoff/`: 760 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
 - **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
 - **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
 - **Code touchpoints** — none. Deploy of `f2735c0`.

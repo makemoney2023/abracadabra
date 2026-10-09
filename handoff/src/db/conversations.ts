@@ -107,6 +107,48 @@ async function tableExists(sql: Sql, name: string): Promise<boolean> {
   return row?.name === name;
 }
 
+/**
+ * The open email conversation this message belongs to.
+ * A reply that drops the original id still matches References, or the one open thread when the subject is a reply.
+ */
+export async function resolveMailThread(
+  sql: Sql,
+  input: {
+    organizationId: string;
+    threadId: string;
+    references?: string;
+    sender?: string;
+    subject?: string;
+  },
+): Promise<string> {
+  const threadId = input.threadId.trim();
+  if (!input.organizationId || !threadId) return threadId;
+  if (await openRequest(sql, input.organizationId, threadId)) return threadId;
+  const sender = (input.sender ?? "").trim().toLowerCase();
+  if (!sender) return threadId;
+  const ids = [...(input.references ?? "").matchAll(/<[^>]+>/g)].map((match) => match[0]);
+  if (ids.length > 0) {
+    const marks = ids.map(() => "?").join(", ");
+    const row = await sql.get<{ thread_id: string }>(
+      `SELECT thread_id FROM work_requests
+       WHERE organization_id = ? AND lower(sender) = ? AND state IN ('clarifying', 'proposed')
+         AND thread_id IN (${marks})
+       ORDER BY updated_at DESC LIMIT 1`,
+      [input.organizationId, sender, ...ids],
+    );
+    if (row) return row.thread_id;
+  }
+  if (!/^re:/i.test((input.subject ?? "").trim())) return threadId;
+  const open = await sql.all<{ thread_id: string }>(
+    `SELECT thread_id FROM work_requests
+     WHERE organization_id = ? AND lower(sender) = ? AND channel = 'email'
+       AND state IN ('clarifying', 'proposed')
+     ORDER BY updated_at DESC`,
+    [input.organizationId, sender],
+  );
+  return open.length === 1 ? open[0]!.thread_id : threadId;
+}
+
 /** Replies sent on this thread in the last hour, and whether a prospect brief exists yet. */
 export async function threadState(
   sql: Sql,

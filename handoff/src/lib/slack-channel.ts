@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { normalizeChannelPlan } from "./channel-plan";
-import { replyFor, type ClientTurn, type FiledTurn, type ThreadState } from "./client-channel";
+import { conversationPlan, replyFor, type ClientTurn, type FiledTurn, type ThreadState } from "./client-channel";
 
 export type SlackEnv = {
   HQ_ORIGIN?: string;
@@ -93,7 +92,7 @@ async function answer(
         },
       };
       if (turn.kind !== "handoff") {
-        const plan = normalizeChannelPlan(turn);
+        const plan = conversationPlan(turn);
         actions = plan.actions;
         brief = plan.brief;
         rules = plan.rules;
