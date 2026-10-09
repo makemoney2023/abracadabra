@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A design and a build order say HQ generates stills, video, and voice, and Cursor builds the site or the app from the finished files. Studio keys stay on `handoff-connectors`. A client repo receives a variable name only when the running product calls a vendor with the client's own credential. No runtime behavior changed.
+- **Why** — Generation keys have to be available for third-party renders, and putting them on a client repo or a Cursor environment would expose the studio account to every build.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-studio-secrets-design.md`, `docs/superpowers/plans/2026-10-09-studio-secrets.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `connectors/README.md`, `README.md`
+- **Data-flow impact** — none until the plan is implemented.
+- **API / schema impact** — none. The plan adds connector module `studio`, an R2 binding on that worker, and table `client_runtime_secrets` (names and hosts only).
+- **Verification** — docs only. No test run.
+
+## 2026-10-09
+
 - **What changed** — Super admins can list the MCP portal's servers at `/mcp` and turn each one on or off. A swarm run with no stored servers calls that portal when it is configured. Search Console grants live on the client, and a connector worker exposes `search_analytics` and `inspect_url` for the granted property.
 - **Why** — The agent and swarm runs need the same portal grant, and staff need a switch that does not detach a server or rewrite the portal mapping.
 - **Code touchpoints** — `handoff/src/lib/portal-session.ts`, `handoff/src/app/mcp/page.tsx`, `handoff/src/lib/mcp-catalog.ts`, `handoff/src/lib/client-workflows.ts`, `swarm/src/mcp/portal-gate.ts`, `handoff/src/lib/connector-grants.ts`, `connectors/src/index.ts`, `handoff/migrations/0020_connector_grants.sql`

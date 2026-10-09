@@ -374,7 +374,7 @@ Trigger: `brief_approved` for kind `brief`.
 1. `client_context`, `get_brief kind=brief`.
 2. For each piece in the brief's scope, decide the skills. Load `skills/index.json` from `SKILLS` (names and descriptions only), score each skill's description against the piece, and keep the ordered set that covers it. Typical:
    - Website piece: `research/competitor-teardown` → `copywriting/landing-page` → `design/website-build` (build) → `qa/site-review` (run).
-   - Social pack: `marketing/content-planner` → `copywriting/social` → `ai-image-generation` (build, if images are to be made) → review.
+   - Social pack: `marketing/content-planner` → `copywriting/social` → `ai-image-generation` (complete, studio connector) → review. Images and video are rendered in HQ. The cloud run is the website or the app, and it receives the finished files. See [studio secrets](superpowers/specs/2026-10-09-studio-secrets-design.md).
    - Document: `research/*` → `copywriting/*` → done in Worker.
 3. `create_task` per piece with `stage=describe` or `engineer` (engineer when research is done in the brief already), `skills` set, `deliverableKind`. One `create_deliverable` draft per piece so items can accumulate before build.
 4. `post_status_update audience=internal`: "Planned N tasks for <client>: …" with the task titles. Activity `agent.plan_written`.
@@ -426,6 +426,7 @@ Written by the agent as a deliverable item before the stage change. It is the wh
 - Items already in the deliverable (copy, shot lists, prompts) by path.
 - Output contract: branch `handoff/<deliverable_id>/r<round>`, file `deliverables/<slug>/manifest.json` per `parseManifest`, only listed media and copy in the PR, PR title `Deliverable <id> round <round>`, PR body first line `Deliverable: <id>`.
 - What not to do: no secrets, no changes outside `deliverables/<slug>/` and the app paths the brief names, no force push.
+- Finished media by path, when the piece uses stills or video that HQ already stored. The brief does not include a vendor key, a vendor URL, or a Cursor `envVars` payload. Studio keys live on `handoff-connectors` ([studio secrets](superpowers/specs/2026-10-09-studio-secrets-design.md)).
 
 Nothing else. The dashboard rejects the stage change if the build brief item is missing.
 
@@ -623,7 +624,8 @@ All new UI uses the existing shadcn components in `handoff/src/components/ui`.
 | `AGENT_MCP_TOKEN` | MCP portal, upstream credential for `handoff` | The deployment knowledge key with `read,work`. Issued in HQ. Not a Worker secret. |
 | `CONNECTOR_TOKEN` | MCP portal headers for each adapter, and `handoff-connectors` | Bearer the portal sends to `handoff-connectors`. Not on `handoff-agent`. |
 | `GOOGLE_SEARCH_CONSOLE_SA` | `handoff-connectors` | Google service-account JSON for the Search Console adapter. Not on the portal and not on the agent. |
-| `CURSOR_API_KEY` | `handoff-hq` | Starts and polls cloud runs. |
+| `CURSOR_API_KEY` | `handoff-hq` | Starts and polls cloud runs. The create body keeps `agentId` and does not send `envVars`. |
+| `FAL_KEY`, `INFSH_API_KEY`, `ELEVENLABS_API_KEY` | `handoff-connectors`, when the studio module ships | Vendor calls for stills, video, and voice. Specified in [studio secrets](superpowers/specs/2026-10-09-studio-secrets-design.md). Not set yet. Not on this worker and not on the agent. |
 | `AGENT_URL` | `handoff` | `https://agent.abra-ca-dabra.app` (or workers.dev) for wakes. |
 | `max_cloud_runs`, `build_deadline_hours` | `agent_settings` | Editable on `/agent`. |
 | `HQ_CHAT_SECRET` | `handoff-hq` (signs), `handoff-agent` (verifies) | Staff chat token and the bearer on `/api/hq-tools` (17.2). |

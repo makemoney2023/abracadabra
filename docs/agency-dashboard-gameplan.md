@@ -663,6 +663,9 @@ finished work to show the client, like `social-preview` in the renewimplants rep
 - GitHub secrets: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, and `GITHUB_WEBHOOK_SECRET`. The App has
   write access to our org, so the private key lives in Worker secrets only. We make a short-lived
   install token per call and never store or log it. Add to `.env.example` and the README.
+- Studio generation keys (`FAL_KEY` and the voice and video fallbacks) live on `handoff-connectors`
+  when that module ships. They are not copied into a client repo or a Cursor environment. The design
+  is [studio secrets](superpowers/specs/2026-10-09-studio-secrets-design.md).
 - Finished work: the media route checks that the viewer can see that space on every request, and
   only serves published versions to clients. R2 keys are random ids, not names, so they can't be
   guessed.
