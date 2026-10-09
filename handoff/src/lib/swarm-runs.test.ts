@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
 import type { Caller } from "@/lib/authz";
-import { assignSwarmRun, listProjectSwarmRuns, listUnassignedSwarmRuns, saveSwarmRun } from "./swarm-runs";
+import {
+  assignSwarmRun,
+  backfillSwarmRuns,
+  listProjectSwarmRuns,
+  listUnassignedSwarmRuns,
+  saveSwarmRun,
+} from "./swarm-runs";
 
 const NOW = 1_700_000_000_000;
 const staff: Caller = { userId: "staff-1", staff: { superAdmin: false }, operatorOf: [], memberships: [] };
@@ -97,5 +103,42 @@ describe("saveSwarmRun", () => {
     });
     expect(await assignSwarmRun(sql, staff, { runId: saved.id, projectId: "proj-1" }, NOW)).toEqual({ ok: true });
     expect(await listProjectSwarmRuns(sql, staff, "proj-1")).toHaveLength(1);
+  });
+});
+
+describe("backfillSwarmRuns", () => {
+  it("copies a timeline execution once", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO activities (
+        id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
+      ) VALUES ('act-1', 'org-1', 'agent.swarm_run', 'agent', 'swarm', 'Done', ?, ?)`,
+      [JSON.stringify({ executionId: "ex-old", packName: "Schema readiness", status: "completed", trigger: "chat" }), NOW],
+    );
+    expect(await backfillSwarmRuns(sql, NOW + 1)).toBe(1);
+    expect(await backfillSwarmRuns(sql, NOW + 2)).toBe(0);
+    const row = await sql.get<{ execution_id: string; project_id: string; started_at: number }>(
+      "SELECT execution_id, project_id, started_at FROM swarm_runs",
+    );
+    expect(row).toEqual({ execution_id: "ex-old", project_id: "proj-1", started_at: NOW });
+  });
+
+  it("copies a workflow last execution once when no activity matches", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workflow_groups (id, organization_id, name, created_at)
+       VALUES ('grp-1', 'org-1', 'Ops', ?)`,
+      [NOW],
+    );
+    await sql.run(
+      `INSERT INTO client_workflows (
+        id, group_id, organization_id, name, template_id, last_execution_id, last_status, created_at, updated_at
+      ) VALUES ('wf-1', 'grp-1', 'org-1', 'Weekly scan', 'pack-schema', 'ex-wf', 'running', ?, ?)`,
+      [NOW, NOW],
+    );
+    expect(await backfillSwarmRuns(sql, NOW + 1)).toBe(1);
+    expect(await backfillSwarmRuns(sql, NOW + 2)).toBe(0);
+    const row = await sql.get<{ execution_id: string }>("SELECT execution_id FROM swarm_runs");
+    expect(row).toEqual({ execution_id: "ex-wf" });
   });
 });

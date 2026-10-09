@@ -171,3 +171,79 @@ export async function assignSwarmRun(
   await sql.run("UPDATE swarm_runs SET project_id = ? WHERE id = ?", [input.projectId, input.runId]);
   return { ok: true };
 }
+
+export async function backfillSwarmRuns(sql: Sql, now: number): Promise<number> {
+  const table = await sql.get<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'swarm_runs'",
+  );
+  if (!table) return 0;
+  const activities = await sql.all<{
+    organization_id: string;
+    created_at: number;
+    data_json: string;
+    body: string | null;
+  }>(
+    `SELECT organization_id, created_at, data_json, body FROM activities
+     WHERE kind = 'agent.swarm_run' AND organization_id IS NOT NULL`,
+  );
+  let inserted = 0;
+  for (const activity of activities) {
+    let data: Record<string, unknown> = {};
+    try {
+      data = JSON.parse(activity.data_json) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    if (!data || typeof data !== "object") continue;
+    const executionId = typeof data.executionId === "string" ? data.executionId.trim() : "";
+    if (!executionId) continue;
+    const before = await sql.get<{ id: string }>("SELECT id FROM swarm_runs WHERE execution_id = ?", [executionId]);
+    if (before) continue;
+    const status = typeof data.status === "string" ? data.status : "completed";
+    await saveSwarmRun(sql, {
+      organizationId: activity.organization_id,
+      workflowId: typeof data.workflowId === "string" ? data.workflowId : null,
+      swarmWorkflowId: typeof data.swarmWorkflowId === "string" ? data.swarmWorkflowId : null,
+      executionId,
+      templateId: typeof data.packId === "string" ? data.packId : null,
+      name: typeof data.packName === "string" ? data.packName : activity.body || "Swarm",
+      status,
+      trigger: typeof data.trigger === "string" ? data.trigger : "lead_created",
+      now: activity.created_at,
+    });
+    inserted += 1;
+  }
+  const workflows = await sql.all<{
+    id: string;
+    organization_id: string;
+    project_id: string | null;
+    name: string;
+    template_id: string;
+    last_execution_id: string | null;
+    last_status: string | null;
+    updated_at: number;
+  }>(
+    `SELECT id, organization_id, project_id, name, template_id, last_execution_id, last_status, updated_at
+     FROM client_workflows WHERE last_execution_id IS NOT NULL AND length(last_execution_id) > 0`,
+  );
+  for (const workflow of workflows) {
+    const executionId = workflow.last_execution_id?.trim() ?? "";
+    if (!executionId) continue;
+    const before = await sql.get<{ id: string }>("SELECT id FROM swarm_runs WHERE execution_id = ?", [executionId]);
+    if (before) continue;
+    await saveSwarmRun(sql, {
+      organizationId: workflow.organization_id,
+      projectId: workflow.project_id,
+      workflowId: workflow.id,
+      swarmWorkflowId: `client-${workflow.id}`,
+      executionId,
+      templateId: workflow.template_id,
+      name: workflow.name,
+      status: workflow.last_status || "running",
+      trigger: "due",
+      now: workflow.updated_at || now,
+    });
+    inserted += 1;
+  }
+  return inserted;
+}

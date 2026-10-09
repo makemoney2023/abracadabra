@@ -1,3 +1,4 @@
+import { backfillSwarmRuns } from "../lib/swarm-runs";
 import { MIGRATION_SQL } from "./migration-sql";
 import type { Sql } from "./sql";
 
@@ -58,4 +59,5 @@ export async function migrate(sql: Sql): Promise<void> {
       await sql.run(statement);
     }
   }
+  await backfillSwarmRuns(sql, Date.now());
 }

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — `migrate` copies existing swarm timeline lines and each workflow's last execution into `swarm_runs`, once per execution id.
+- **Why** — Runs that started before the `swarm_runs` table existed would otherwise stay only on the timeline or on `client_workflows.last_execution_id`.
+- **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`, `handoff/src/db/migrate.ts`
+- **Data-flow impact** — After the schema steps, backfill inserts a row for each `agent.swarm_run` activity and for each client workflow whose last execution is not already stored. A second pass inserts nothing.
+- **API / schema impact** — none. Uses the existing `swarm_runs` table.
+- **Verification** — `npx vitest run src/lib/swarm-runs.test.ts src/db/migrate.test.ts` in `handoff` (2 files, 9 tests, passed).
+
+## 2026-10-09
+
 - **What changed** — Starting a swarm from chat, a due schedule, or `record_swarm_run` writes a `swarm_runs` row for that execution.
 - **Why** — The timeline already recorded the start. The project page needs the same run as a row it can open.
 - **Code touchpoints** — `handoff/src/db/agent-work.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/client-workflows.ts`
