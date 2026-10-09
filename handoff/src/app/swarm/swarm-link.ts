@@ -5,7 +5,11 @@ export function swarmRunHref(origin: string, executionId: string | null): string
   return `${base}/?executionId=${encodeURIComponent(id)}`;
 }
 
-export function hqSwarmHref(executionId: string | null): string {
+export function swarmRunLink(executionId: string | null): string | null {
   const id = executionId?.trim() ?? "";
-  return id ? `/swarm?executionId=${encodeURIComponent(id)}` : "/swarm";
+  return id ? `/swarm?executionId=${encodeURIComponent(id)}` : null;
+}
+
+export function hqSwarmHref(executionId: string | null): string {
+  return swarmRunLink(executionId) ?? "/swarm";
 }

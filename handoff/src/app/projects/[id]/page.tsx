@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
-import { hqSwarmHref } from "../../swarm/swarm-link";
+import { swarmRunLink } from "../../swarm/swarm-link";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
 import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm, TaskStatusForm } from "../forms";
@@ -155,14 +155,17 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   <p className="text-sm text-muted-foreground">No swarms on this project yet.</p>
                 ) : (
                   <ul className="flex flex-col gap-2">
-                    {swarmRuns.map((run) => (
-                      <li key={run.id} className="text-sm">
-                        <Link href={hqSwarmHref(run.execution_id)}>{run.name}</Link>
-                        <span className="ml-2 text-muted-foreground">{run.status}</span>
-                        <span className="ml-2 text-muted-foreground">{run.trigger}</span>
-                        <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
-                      </li>
-                    ))}
+                    {swarmRuns.map((run) => {
+                      const href = swarmRunLink(run.execution_id);
+                      return (
+                        <li key={run.id} className="text-sm">
+                          {href ? <Link href={href}>{run.name}</Link> : run.name}
+                          <span className="ml-2 text-muted-foreground">{run.status}</span>
+                          <span className="ml-2 text-muted-foreground">{run.trigger}</span>
+                          <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </CardContent>

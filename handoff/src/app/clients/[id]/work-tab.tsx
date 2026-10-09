@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { clock } from "@/lib/clock";
 import { formatRelative } from "@/lib/format";
 import type { SwarmRunRow } from "@/lib/swarm-runs";
-import { hqSwarmHref } from "../../swarm/swarm-link";
+import { swarmRunLink } from "../../swarm/swarm-link";
 import { ProjectForm } from "../../projects/forms";
 import { PROJECT_STATUS_LABEL } from "../../projects/labels";
 import { assignSwarmRunAction, completeTaskAction } from "../actions";
@@ -85,34 +85,37 @@ export function WorkTab({
             <p className="text-sm text-muted-foreground">Every swarm is on a project.</p>
           ) : (
             <ul className="flex flex-col gap-4">
-              {unassignedRuns.map((run) => (
-                <li key={run.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                  <span>
-                    <Link href={hqSwarmHref(run.execution_id)}>{run.name}</Link>
-                    <span className="ml-2 text-muted-foreground">{run.status}</span>
-                    <span className="ml-2 text-muted-foreground">{run.trigger}</span>
-                    <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
-                  </span>
-                  <ActionForm
-                    action={assignSwarmRunAction}
-                    submitLabel="Put on project"
-                    pendingLabel="Saving"
-                    className="w-auto flex-row flex-wrap items-end"
-                  >
-                    <input type="hidden" name="organizationId" value={organizationId} />
-                    <input type="hidden" name="runId" value={run.id} />
-                    <ActionField name="projectId" label="Project">
-                      <select name="projectId" className={selectClass} defaultValue={projects[0]?.id ?? ""}>
-                        {projects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
-                        ))}
-                      </select>
-                    </ActionField>
-                  </ActionForm>
-                </li>
-              ))}
+              {unassignedRuns.map((run) => {
+                const href = swarmRunLink(run.execution_id);
+                return (
+                  <li key={run.id} className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                    <span>
+                      {href ? <Link href={href}>{run.name}</Link> : run.name}
+                      <span className="ml-2 text-muted-foreground">{run.status}</span>
+                      <span className="ml-2 text-muted-foreground">{run.trigger}</span>
+                      <span className="ml-2 text-muted-foreground">{formatRelative(run.started_at, now)}</span>
+                    </span>
+                    <ActionForm
+                      action={assignSwarmRunAction}
+                      submitLabel="Put on project"
+                      pendingLabel="Saving"
+                      className="w-auto flex-row flex-wrap items-end"
+                    >
+                      <input type="hidden" name="organizationId" value={organizationId} />
+                      <input type="hidden" name="runId" value={run.id} />
+                      <ActionField name="projectId" label="Project">
+                        <select name="projectId" className={selectClass} defaultValue={projects[0]?.id ?? ""}>
+                          {projects.map((project) => (
+                            <option key={project.id} value={project.id}>
+                              {project.name}
+                            </option>
+                          ))}
+                        </select>
+                      </ActionField>
+                    </ActionForm>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A swarm row with no execution id shows its name as plain text.
+- **Why** — Linking that row opened the blank swarm canvas.
+- **Code touchpoints** — `handoff/src/app/swarm/swarm-link.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`
+- **Data-flow impact** — none. A stored execution id still links to `/swarm?executionId=`.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/swarm/swarm-link.test.ts` in `handoff`.
+
+## 2026-10-09
+
 - **What changed** — Each swarm run is stored on the client and on a project when one is known. Staff open that run from the project page and from the client Work tab when it has no project.
 - **Why** — A finished swarm only left a timeline line, and the Swarm page always opened a blank canvas.
 - **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`, `handoff/migrations/0016_swarm_runs.sql`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/swarm/page.tsx`, `swarm/frontend/src/App.tsx`

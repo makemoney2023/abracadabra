@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hqSwarmHref, swarmRunHref } from "./swarm-link";
+import { hqSwarmHref, swarmRunHref, swarmRunLink } from "./swarm-link";
 
 describe("swarm links", () => {
   it("builds the canvas url and skips a run with no execution", () => {
@@ -10,5 +10,11 @@ describe("swarm links", () => {
   it("builds the staff swarm path and falls back when there is no execution", () => {
     expect(hqSwarmHref("ex-1")).toBe("/swarm?executionId=ex-1");
     expect(hqSwarmHref(null)).toBe("/swarm");
+  });
+
+  it("omits the staff link when the execution id is missing", () => {
+    expect(swarmRunLink("ex-1")).toBe("/swarm?executionId=ex-1");
+    expect(swarmRunLink(null)).toBeNull();
+    expect(swarmRunLink("  ")).toBeNull();
   });
 });
