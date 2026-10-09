@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`
 - **Data-flow impact** — Website capture skips email domains and `abra-ca-dabra.app`. Client confirmation follows one open note for that address, including when References still hold the original thread. Booking mail errors propagate so the intake queue retries; the `agent.reply` row still stops a second confirmation.
 - **API / schema impact** — `open_prospect` accepts `subject` and `references`. No migration.
-- **Verification** — `npx vitest run` on the prospect, channel, intake, and playbook tests. `npx eslint` and both `tsc` projects after the edit.
+- **Verification** — `npx vitest run` in `handoff/` passed 123 files / 708 tests. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Worker `handoff-agent` version `fe5af1e3-c6c0-4cf7-bea9-7a8c6428122f` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `dfe5ddab-0cb7-4c46-a9ef-4a9558344d37` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200. `BOOKING_URL` is still empty.
 
 ## 2026-10-09
 
