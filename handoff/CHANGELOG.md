@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/components/data-table.tsx`, `handoff/src/components/data-table-mobile.ts`, `handoff/src/components/data-table-mobile.test.ts`, `handoff/src/components/form-drawer.tsx`, `handoff/src/components/ui/sheet.tsx`, `handoff/src/components/ui/dialog.tsx`, `handoff/src/components/ui/sidebar.tsx`, `handoff/src/app/globals.css`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`
 - **Data-flow impact** — none. Client pages keep the same width and padding.
 - **API / schema impact** — none.
-- **Verification** — `npx tsc --noEmit` and `npx eslint` on the touched TypeScript files follow this commit. Full `npm test` follows this commit. `next build` was not run.
+- **Verification** — `npm test` (120 files / 654 tests, plus the agent config 7 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched TypeScript files passed. `next build` was not run.
 
 ## 2026-10-09
 
