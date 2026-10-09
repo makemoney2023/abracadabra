@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Only researcher nodes see the portal's Parallel tools, and a search observation keeps up to 12,000 characters. The portal names those tools `parallel-search_web_search` and `parallel-search_web_fetch`.
+- **Why** — The portal prefixes `{server_id}_` and splits on the first underscore. Every swarm node was offered the tools, and the MCP client cut the result at 4,000 characters before a citation could survive.
+- **Code touchpoints** — `swarm/src/ai/research-tools.ts`, `swarm/src/ai/agents.ts`, `swarm/src/mcp/client.ts`, `swarm/src/do/WorkflowDO.ts`
+- **Data-flow impact** — A researcher calls search, then fetch, and the observation still contains the source URL. Other node types keep the rest of the portal tools.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `swarm/`: 36 tests passed. `npx tsc --noEmit` exited 0.
+
+## 2026-10-09
+
 - **What changed** — Swarm researchers search the public web through Parallel Search on the Cloudflare MCP portal. Server id `parallel-search`, upstream `https://search.parallel.ai/mcp`, tools `web_search` and `web_fetch`, fast mode, five results. The API key is that server's bearer. No new swarm template.
 - **Why** — AI Search only indexes a corpus this account owns. Researcher nodes need a fetcher for the open web, and HQ runs already enter through the portal.
 - **Code touchpoints** — `README.md`, `handoff/README.md`, `swarm/README.md`, `swarm/DEPLOYMENT.md`, `docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`
