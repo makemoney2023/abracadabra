@@ -6,6 +6,7 @@ import {
   organizationForSlackChannel,
   recordStaffChannelNote,
   deskContext,
+  noteStalledProspect,
   recordThreadMessage,
   recordUnknownSender,
   threadState,
@@ -13,9 +14,10 @@ import {
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { applyChannelPlan, normalizeChannelPlan } from "@/lib/channel-plan";
-import { bytesFromBase64 } from "@/lib/client-channel";
-import { lookupEmailSender } from "@/lib/client-channel-store";
-import { noteProspectTurn, openEmailProspect } from "@/lib/prospect-lead";
+import { bytesFromBase64, replyStatesPrice } from "@/lib/client-channel";
+import { lookupEmailSender, markOptedOut } from "@/lib/client-channel-store";
+import type { ScanQueue } from "@/lib/lead-schema";
+import { captureProspectWebsite, noteProspectBudget, noteProspectTurn, openEmailProspect } from "@/lib/prospect-lead";
 import { storeEmailAttachments } from "@/lib/email-files";
 import { openObjectStore } from "@/lib/store/objects";
 
@@ -34,6 +36,17 @@ function authorized(request: Request): boolean {
 function text(body: Record<string, unknown>, key: string): string {
   const value = body[key];
   return typeof value === "string" ? value : "";
+}
+
+async function scanQueue(): Promise<ScanQueue | null> {
+  try {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const cloudflare = await getCloudflareContext({ async: true });
+    const queue = (cloudflare.env as { SCAN_JOBS?: ScanQueue }).SCAN_JOBS;
+    return queue ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /** Channel storage for handoff-agent, which has no D1. The bearer is CLIENT_CHANNEL_SECRET. */
@@ -60,10 +73,24 @@ export async function POST(request: Request) {
   if (action === "open_prospect") {
     const email = text(body, "email");
     try {
-      const opened = await openEmailProspect(sql, { email, name: text(body, "name") || null, now });
+      const opened = await openEmailProspect(sql, {
+        email,
+        name: text(body, "name") || null,
+        now,
+        text: text(body, "text") || null,
+        threadId: text(body, "threadId") || null,
+      });
       return NextResponse.json({
         ok: true,
-        value: { id: opened.organizationId, name: opened.name, created: opened.created },
+        value: {
+          id: opened.organizationId,
+          name: opened.name,
+          created: opened.created,
+          kind: opened.kind,
+          pending: opened.pending,
+          declined: opened.declined === true,
+          organizations: opened.organizations ?? [],
+        },
       });
     } catch {
       return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
@@ -156,18 +183,31 @@ export async function POST(request: Request) {
         dueText: text(body, "dueText") || null,
         asked: body.asked === true,
         replyBody: text(body, "replyBody") || undefined,
+        prospect: body.prospect === true,
       },
       now,
     );
     const plan = normalizeChannelPlan({ actions: body.actions, brief: text(body, "brief"), rules: text(body, "rules") });
     const filed = await applyChannelPlan(sql, { organizationId, ...plan }, now);
-    if (body.prospect === true) {
+    if (body.optOut === true) await markOptedOut(sql, text(body, "sender"), now);
+    if (body.stalled === true) await noteStalledProspect(sql, { organizationId, threadId }, now);
+    if (body.prospect === true && body.optOut !== true) {
       await noteProspectTurn(sql, {
         organizationId,
         brief: plan.brief,
         dueText: text(body, "dueText") || null,
         bookingOffered: body.bookingOffered === true,
         now,
+      });
+      const replyBody = text(body, "replyBody");
+      if (body.stalled !== true && !replyStatesPrice(replyBody)) {
+        await noteProspectBudget(sql, { organizationId, text: text(body, "body"), now });
+      }
+      await captureProspectWebsite(sql, {
+        organizationId,
+        text: text(body, "body"),
+        now,
+        queue: await scanQueue(),
       });
     }
     return NextResponse.json({ ok: true, value: { id, taskIds: filed.taskIds, briefUpdated: filed.briefUpdated } });

@@ -15,4 +15,5 @@ export const MIGRATION_SQL: Record<string, string> = {
   "0013_workflow_task.sql": "-- The task whose skill steps the work wake runs for this workflow.\nALTER TABLE client_workflows ADD COLUMN task_id TEXT REFERENCES tasks(id);\n",
   "0014_workflow_schedule.sql": "-- When a workflow should run next. scheduled_at keeps its task off the skill wake.\nALTER TABLE client_workflows ADD COLUMN next_run_at INTEGER;\nALTER TABLE client_workflows ADD COLUMN every_ms INTEGER;\nALTER TABLE client_workflows ADD COLUMN scheduled_at INTEGER;\n",
   "0015_mcp_catalog.sql": "-- Servers from the catalog that a workflow's steps may call.\nALTER TABLE client_workflows ADD COLUMN mcp_server_ids TEXT;\n",
+  "0016_contact_opt_out.sql": "-- A contact who asked this mailbox to stop. Default 0 still answers. opted_in stays unused.\nALTER TABLE contacts ADD COLUMN opted_out INTEGER NOT NULL DEFAULT 0 CHECK (opted_out IN (0, 1));\n",
 };

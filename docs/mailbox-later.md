@@ -1,6 +1,6 @@
 # Mailbox later
 
-Spec and implementation plan for the eight mailbox items left open in [hq-agent-spec.md](hq-agent-spec.md) section 18. This document does not change runtime behavior.
+Spec for the eight mailbox items in [hq-agent-spec.md](hq-agent-spec.md) section 18. Those items are implemented. `contacts.opted_out` is migration `0016_contact_opt_out.sql`. `BOOKING_URL` stays empty until a real Cal.com link is configured. Deployed worker versions are recorded in `handoff/CHANGELOG.md`.
 
 ## What is already live
 

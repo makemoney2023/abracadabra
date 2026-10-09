@@ -1,5 +1,6 @@
 import PostalMime from "postal-mime";
 import { normalizeChannelPlan, type ChannelPlan } from "./channel-plan";
+import { CHECK_ORIGIN } from "./schema-report";
 
 export type EmailAttachment = {
   filename: string;
@@ -22,7 +23,14 @@ export type InboundEmail = {
   attachments: EmailAttachment[];
 };
 
-export type ThreadState = { replies: number; questionCount: number; text: string };
+export type ThreadState = {
+  replies: number;
+  questionCount: number;
+  text: string;
+  prospectReplies?: number;
+  briefPresent?: boolean;
+  readiness?: { status: string; publicToken: string | null } | null;
+};
 
 export type ClassifiedNote = {
   kind: "feedback" | "new_work" | "status" | "other";
@@ -78,6 +86,21 @@ export type ChannelReply = {
   prospect: boolean;
   /** True when the reply includes the booking link. */
   bookingOffered: boolean;
+  /** False when the inbound note is stored and no mail goes out. */
+  send: boolean;
+  /** True when this address asked the mailbox to stop. */
+  optOut: boolean;
+  /** True when a prospect thread is handed to a person. */
+  stalled: boolean;
+};
+
+export type OpenedChannelProspect = {
+  id: string | null;
+  name: string;
+  kind?: string;
+  pending?: boolean;
+  declined?: boolean;
+  organizations?: { id: string; name: string }[];
 };
 
 export const FIXED_UNKNOWN = "Please write from the address registered with us, or sign in to your space.";
@@ -90,35 +113,37 @@ export const FOLLOW_UP = "Got it. I have your note. A person on the team will fo
 
 const NOTHING: ClassifiedNote = { kind: "other", state: "clarifying", question: null, goal: null, due: null };
 const NO_PLAN: ChannelPlan = { actions: [], brief: null, rules: null };
+const OPT_OUT = /^(please\s+)?(stop|unsubscribe|opt\s+out)[.!]?$/i;
+const DECLINED = "Okay. I will not attach this address.";
 
-function quiet(): ChannelReply {
+export function isMailboxOptOut(text: string): boolean {
+  return OPT_OUT.test(text.trim());
+}
+
+function replyBase(patch: Partial<ChannelReply> & Pick<ChannelReply, "reply">): ChannelReply {
   return {
-    reply: "",
-    organizationId: null,
-    noteOnly: false,
-    skip: true,
-    asked: false,
-    classified: NOTHING,
-    file: false,
-    plan: NO_PLAN,
-    prospect: false,
-    bookingOffered: false,
+    reply: patch.reply,
+    organizationId: patch.organizationId ?? null,
+    noteOnly: patch.noteOnly ?? false,
+    skip: patch.skip ?? false,
+    asked: patch.asked ?? false,
+    classified: patch.classified ?? NOTHING,
+    file: patch.file ?? false,
+    plan: patch.plan ?? NO_PLAN,
+    prospect: patch.prospect ?? false,
+    bookingOffered: patch.bookingOffered ?? false,
+    send: patch.send ?? true,
+    optOut: patch.optOut ?? false,
+    stalled: patch.stalled ?? false,
   };
 }
 
+function quiet(): ChannelReply {
+  return replyBase({ reply: "", skip: true, send: false });
+}
+
 function held(reply: string, organizationId: string | null, noteOnly = false): ChannelReply {
-  return {
-    reply,
-    organizationId,
-    noteOnly,
-    skip: false,
-    asked: false,
-    classified: NOTHING,
-    file: false,
-    plan: NO_PLAN,
-    prospect: false,
-    bookingOffered: false,
-  };
+  return replyBase({ reply, organizationId, noteOnly });
 }
 
 type ListedOrg = { id: string; name: string; kind?: string };
@@ -137,6 +162,13 @@ function withBookingOffer(reply: string, bookingUrl: string | undefined): { repl
   if (!url) return { reply, offered: false };
   if (reply.includes(url)) return { reply, offered: true };
   return { reply: `${reply}\n\nYou can pick a time here: ${url}`, offered: true };
+}
+
+function withReadinessLink(reply: string, readiness: ThreadState["readiness"]): string {
+  if (!readiness || readiness.status !== "complete" || !readiness.publicToken) return reply;
+  const url = `${CHECK_ORIGIN}/scan/${readiness.publicToken}`;
+  if (reply.includes(url)) return reply;
+  return `${reply}\n\nThe readiness check is here: ${url}`;
 }
 
 function domainOf(address: string): string {
@@ -204,13 +236,20 @@ export function classifyClientNote(text: string, questionCount: number): Classif
 export async function handleInboundEmail(
   message: InboundEmail,
   deps: {
-    lookup: (email: string) => Promise<{ organizationId: string | null; organizations?: ListedOrg[]; authenticated: boolean } | "down">;
+    lookup: (
+      email: string,
+    ) => Promise<{ organizationId: string | null; organizations?: ListedOrg[]; authenticated: boolean; optedOut?: boolean } | "down">;
     thread: (organizationId: string, threadId: string) => Promise<ThreadState>;
     remembered?: (threadId: string) => Promise<string | null>;
     ownAddress: string;
     /** Public Cal.com link. Empty means the prompt asks for two times. */
     bookingUrl?: string;
-    openProspect?: (input: { email: string; name: string | null }) => Promise<{ id: string; name: string } | "down">;
+    openProspect?: (input: {
+      email: string;
+      name: string | null;
+      text: string;
+      threadId: string;
+    }) => Promise<OpenedChannelProspect | "down">;
     answer?: (organizationId: string, organizations: { id: string; name: string }[], prospect: boolean) => Promise<FiledTurn>;
   },
 ): Promise<ChannelReply> {
@@ -222,90 +261,101 @@ export async function handleInboundEmail(
   if (message.bytes > 25 * 1024 * 1024) return held(TOO_BIG, null);
   const found = await deps.lookup(sender);
   if (found === "down") return held(RETRY, null);
+  if (found.optedOut) return replyBase({ reply: "", organizationId: found.organizationId, send: false });
   let listed: ListedOrg[] = found.organizations ?? (found.organizationId ? [{ id: found.organizationId, name: "" }] : []);
+  const threadKey = message.threadId || message.messageId || sender;
   if (listed.length === 0) {
+    if (isMailboxOptOut(message.text)) return quiet();
     if (!found.authenticated || !deps.openProspect) return held(FIXED_UNKNOWN, null);
-    let opened: { id: string; name: string } | "down";
+    let opened: OpenedChannelProspect | "down";
     try {
-      opened = await deps.openProspect({ email: sender, name: displayName(message.from) });
+      opened = await deps.openProspect({
+        email: sender,
+        name: displayName(message.from),
+        text: message.text,
+        threadId: threadKey,
+      });
     } catch {
       return held(RETRY, null);
     }
     if (opened === "down") return held(RETRY, null);
-    listed = [{ id: opened.id, name: opened.name, kind: "lead" }];
+    if (opened.declined) return replyBase({ reply: DECLINED });
+    if (opened.pending && (opened.organizations?.length ?? 0) > 1) {
+      return replyBase({ reply: "Which client is this about?", asked: true });
+    }
+    if (opened.pending) return replyBase({ reply: `Is this ${opened.name}? Reply yes to confirm this address.` });
+    if (!opened.id) return held(RETRY, null);
+    listed = [{ id: opened.id, name: opened.name, kind: opened.kind ?? "lead" }];
   }
   if (!found.authenticated) return held(FIXED_UNKNOWN, listed[0]!.id, true);
   const organizations = listed;
-  const threadKey = message.threadId || message.messageId || sender;
   const remembered = deps.remembered ? await deps.remembered(threadKey) : null;
   const choice = chooseOrganization(organizations, `${message.subject}\n${message.text}`, remembered);
   if ("none" in choice) return held(FIXED_UNKNOWN, null);
-  if ("ask" in choice) {
-    return {
-      reply: "Which client is this about?",
-      organizationId: null,
-      noteOnly: false,
-      skip: false,
-      asked: true,
-      classified: NOTHING,
-      file: false,
-      plan: NO_PLAN,
-      prospect: false,
-      bookingOffered: false,
-    };
-  }
+  if ("ask" in choice) return replyBase({ reply: "Which client is this about?", asked: true });
   const prospect = organizations.some((org) => org.id === choice.id && org.kind === "lead");
+  if (isMailboxOptOut(message.text)) {
+    return replyBase({ reply: "Mail from this mailbox will stop.", organizationId: choice.id, optOut: true });
+  }
   const thread = await deps.thread(choice.id, threadKey);
   const incoming = [message.subject, message.text].filter(Boolean).join("\n");
+  if (prospect && (thread.prospectReplies ?? 0) >= 3 && thread.briefPresent !== true) {
+    return replyBase({
+      reply: HANDED_OFF,
+      organizationId: choice.id,
+      prospect: true,
+      stalled: true,
+      classified: { ...NOTHING, due: null, goal: null },
+    });
+  }
   if (thread.replies >= THREAD_REPLY_LIMIT) {
     const limited = replyFor(thread, incoming);
-    return {
-      ...limited,
+    return replyBase({
+      reply: limited.reply,
+      asked: limited.asked,
+      classified: limited.classified,
       organizationId: choice.id,
-      noteOnly: false,
-      skip: false,
-      file: false,
-      plan: NO_PLAN,
       prospect,
-      bookingOffered: false,
-    };
+    });
   }
   if (deps.answer) {
     try {
       const turn = await deps.answer(choice.id, organizations, prospect);
+      const handoff = turn.kind === "handoff";
       const plan = prospect
-        ? { ...normalizeChannelPlan(turn), actions: [] as ChannelPlan["actions"] }
-        : turn.kind === "handoff"
+        ? handoff
+          ? NO_PLAN
+          : { ...normalizeChannelPlan(turn), actions: [] as ChannelPlan["actions"] }
+        : handoff
           ? NO_PLAN
           : normalizeChannelPlan(turn);
-      const offered = prospect && plan.brief ? withBookingOffer(turn.reply, deps.bookingUrl) : { reply: turn.reply, offered: false };
-      return {
-        reply: offered.reply,
+      const offered =
+        prospect && !handoff && plan.brief ? withBookingOffer(turn.reply, deps.bookingUrl) : { reply: turn.reply, offered: false };
+      const reply = prospect && !handoff ? withReadinessLink(offered.reply, thread.readiness) : offered.reply;
+      return replyBase({
+        reply,
         organizationId: choice.id,
-        noteOnly: false,
-        skip: false,
         asked: !prospect && turn.kind === "new_work" && !turn.goal,
         classified: prospect ? { ...NOTHING, goal: turn.goal, due: turn.due } : noteFromTurn(turn),
         file: prospect ? false : turn.file,
         plan,
         prospect,
         bookingOffered: offered.offered,
-      };
+        stalled: prospect && handoff,
+      });
     } catch {
-      return { ...held(FOLLOW_UP, choice.id), classified: NOTHING };
+      return held(FOLLOW_UP, choice.id);
     }
   }
   const answer = replyFor(thread, incoming);
-  return {
-    ...answer,
+  return replyBase({
+    reply: answer.reply,
+    asked: answer.asked,
+    classified: answer.classified,
     organizationId: choice.id,
-    noteOnly: false,
-    skip: false,
     file: answer.classified.kind === "new_work",
-    plan: NO_PLAN,
     prospect,
-    bookingOffered: false,
-  };
+  });
 }
 
 function noteFromTurn(turn: FiledTurn): ClassifiedNote {
@@ -321,6 +371,10 @@ function noteFromTurn(turn: FiledTurn): ClassifiedNote {
 
 const PRICE = /\$\s?\d|\b\d[\d,]*\s*(?:dollars|usd)\b/i;
 const PROMISED_DATE = /\b(?:ship|deliver|delivered|launch|ready)\b[^.?\n]{0,40}\b(?:by|on)\b/i;
+
+export function replyStatesPrice(text: string): boolean {
+  return PRICE.test(text);
+}
 
 /** Text from a Workers AI chat result. Bindings use `response`; the REST API nests it under `result`. */
 function modelText(result: unknown): string {

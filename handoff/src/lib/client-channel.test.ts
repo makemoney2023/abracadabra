@@ -329,7 +329,12 @@ describe("mailbox reply", () => {
         },
       },
     );
-    expect(opened).toEqual({ email: "ada@northwind.example", name: "Ada North" });
+    expect(opened).toEqual({
+      email: "ada@northwind.example",
+      name: "Ada North",
+      text: "We need a new site.",
+      threadId: "<m-1>",
+    });
     expect(answer.organizationId).toBe("lead-1");
     expect(answer.prospect).toBe(true);
     expect(answer.reply).toBe("What should this site accomplish?");
@@ -427,5 +432,265 @@ describe("mailbox reply", () => {
       },
     });
     expect(failed.reply).toContain("will follow up");
+  });
+
+  it("hands a stalled prospect to a person before the model, and still asks once a brief exists", async () => {
+    let calls = 0;
+    const answer = async () => {
+      calls += 1;
+      return { reply: "What is the outcome?", kind: "other" as const, goal: null, due: null, file: false };
+    };
+    const stalled = await handleInboundEmail(
+      { ...message, from: "Ada <ada@northwind.example>", text: "Still thinking." },
+      {
+        lookup: async () => ({
+          organizationId: "lead-1",
+          organizations: [{ id: "lead-1", name: "Ada", kind: "lead" }],
+          authenticated: true,
+        }),
+        thread: async () => ({ replies: 0, questionCount: 0, text: "", prospectReplies: 3, briefPresent: false }),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer,
+      },
+    );
+    expect(stalled.reply).toBe("A person on the team will pick this up.");
+    expect(stalled.file).toBe(false);
+    expect(stalled.stalled).toBe(true);
+    expect(stalled.plan.actions).toEqual([]);
+    expect(calls).toBe(0);
+
+    const handed = await handleInboundEmail(message, {
+      lookup: async () => ({
+        organizationId: "lead-1",
+        organizations: [{ id: "lead-1", name: "Ada", kind: "lead" }],
+        authenticated: true,
+      }),
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer: async () => ({
+        reply: "I'll ask a person to take this.",
+        kind: "handoff" as const,
+        goal: null,
+        due: null,
+        file: true,
+        actions: [{ title: "Build it", assignee: null, due: null, skill: null }],
+        brief: "They want a site.",
+        rules: null,
+      }),
+    });
+    expect(handed.reply).toBe("I'll ask a person to take this.");
+    expect(handed.file).toBe(false);
+    expect(handed.stalled).toBe(true);
+    expect(handed.plan).toEqual({ actions: [], brief: null, rules: null });
+
+    const continued = await handleInboundEmail(
+      { ...message, from: "Ada <ada@northwind.example>", text: "The outcome is more calls." },
+      {
+        lookup: async () => ({
+          organizationId: "lead-1",
+          organizations: [{ id: "lead-1", name: "Ada", kind: "lead" }],
+          authenticated: true,
+        }),
+        thread: async () => ({ replies: 1, questionCount: 0, text: "", prospectReplies: 3, briefPresent: true }),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer,
+      },
+    );
+    expect(calls).toBe(1);
+    expect(continued.reply).toBe("What is the outcome?");
+  });
+
+  it("stops mail for an opt-out and keeps answering a different request", async () => {
+    let calls = 0;
+    const answer = async () => {
+      calls += 1;
+      return { reply: "What should this achieve?", kind: "other" as const, goal: null, due: null, file: false };
+    };
+    const stopped = await handleInboundEmail({ ...message, text: "Please stop" }, {
+      lookup: async () => ({ organizationId: "org-1", organizations: [{ id: "org-1", name: "Northwind", kind: "client" }], authenticated: true }),
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer,
+    });
+    expect(stopped.reply).toBe("Mail from this mailbox will stop.");
+    expect(stopped.optOut).toBe(true);
+    expect(calls).toBe(0);
+
+    const later = await handleInboundEmail(message, {
+      lookup: async () => ({
+        organizationId: "org-1",
+        organizations: [{ id: "org-1", name: "Northwind", kind: "client" }],
+        authenticated: true,
+        optedOut: true,
+      }),
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer,
+    });
+    expect(later.reply).toBe("");
+    expect(later.send).toBe(false);
+    expect(later.skip).toBe(false);
+    expect(calls).toBe(0);
+
+    const working = await handleInboundEmail({ ...message, text: "Do not stop the work" }, {
+      lookup: async () => ({ organizationId: "org-1", authenticated: true }),
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      answer,
+    });
+    expect(working.optOut).toBe(false);
+    expect(calls).toBe(1);
+
+    let opened = false;
+    const unknown = await handleInboundEmail({ ...message, text: "unsubscribe" }, {
+      lookup: async () => ({ organizationId: null, organizations: [], authenticated: true }),
+      openProspect: async () => {
+        opened = true;
+        return { id: "lead-1", name: "Ada" };
+      },
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+    });
+    expect(opened).toBe(false);
+    expect(unknown.skip).toBe(true);
+  });
+
+  it("asks which client when a new address matches more than one, and confirms a single client", async () => {
+    let calls = 0;
+    const asked = await handleInboundEmail(
+      { ...message, from: "Bob <bob@acme.example>", text: "Hello" },
+      {
+        lookup: async () => ({ organizationId: null, organizations: [], authenticated: true }),
+        openProspect: async () => ({
+          id: null,
+          name: "",
+          kind: "client",
+          pending: true,
+          organizations: [
+            { id: "east", name: "Acme East" },
+            { id: "west", name: "Acme West" },
+          ],
+        }),
+        thread: async () => fresh(),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer: async () => {
+          calls += 1;
+          return { reply: "no", kind: "other" as const, goal: null, due: null, file: false };
+        },
+      },
+    );
+    expect(asked.reply).toBe("Which client is this about?");
+    expect(asked.organizationId).toBeNull();
+    expect(calls).toBe(0);
+
+    const confirm = await handleInboundEmail(
+      { ...message, from: "Bob <bob@acme.example>", text: "Hello" },
+      {
+        lookup: async () => ({ organizationId: null, organizations: [], authenticated: true }),
+        openProspect: async () => ({ id: null, name: "Acme", kind: "client", pending: true }),
+        thread: async () => fresh(),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer: async () => {
+          calls += 1;
+          return { reply: "no", kind: "other" as const, goal: null, due: null, file: false };
+        },
+      },
+    );
+    expect(confirm.reply).toBe("Is this Acme? Reply yes to confirm this address.");
+    expect(calls).toBe(0);
+
+    const client = await handleInboundEmail(
+      { ...message, from: "Bob <bob@acme.example>", text: "Yes" },
+      {
+        lookup: async () => ({ organizationId: null, organizations: [], authenticated: true }),
+        openProspect: async () => ({ id: "org-acme", name: "Acme", kind: "client", pending: false }),
+        thread: async () => fresh(),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer: async (_id, _orgs, prospect) => {
+          expect(prospect).toBe(false);
+          return { reply: "What is this about?", kind: "other" as const, goal: null, due: null, file: false };
+        },
+      },
+    );
+    expect(client.prospect).toBe(false);
+    expect(client.organizationId).toBe("org-acme");
+  });
+
+  it("appends a finished readiness link once and skips a queued scan", async () => {
+    const token = "abc123token";
+    const url = `https://check.abra-ca-dabra.app/scan/${token}`;
+    const complete = await handleInboundEmail(
+      { ...message, from: "Ada <ada@northwind.example>", text: "The site is up." },
+      {
+        lookup: async () => ({
+          organizationId: "lead-1",
+          organizations: [{ id: "lead-1", name: "Ada", kind: "lead" }],
+          authenticated: true,
+        }),
+        thread: async () => ({
+          replies: 0,
+          questionCount: 0,
+          text: "",
+          readiness: { status: "complete", publicToken: token },
+        }),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer: async () => ({
+          reply: "Thanks for the site.",
+          kind: "other" as const,
+          goal: null,
+          due: null,
+          file: false,
+        }),
+      },
+    );
+    expect(complete.reply).toContain(url);
+    expect(complete.reply.split(url)).toHaveLength(2);
+
+    const queued = await handleInboundEmail(
+      { ...message, from: "Ada <ada@northwind.example>", text: "The site is up." },
+      {
+        lookup: async () => ({
+          organizationId: "lead-1",
+          organizations: [{ id: "lead-1", name: "Ada", kind: "lead" }],
+          authenticated: true,
+        }),
+        thread: async () => ({
+          replies: 0,
+          questionCount: 0,
+          text: "",
+          readiness: { status: "queued", publicToken: token },
+        }),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer: async () => ({ reply: "Thanks for the site.", kind: "other" as const, goal: null, due: null, file: false }),
+      },
+    );
+    expect(queued.reply).toBe("Thanks for the site.");
+    expect(queued.reply).not.toContain("https://check.abra-ca-dabra.app");
+
+    const once = await handleInboundEmail(
+      { ...message, from: "Ada <ada@northwind.example>", text: "The site is up." },
+      {
+        lookup: async () => ({
+          organizationId: "lead-1",
+          organizations: [{ id: "lead-1", name: "Ada", kind: "lead" }],
+          authenticated: true,
+        }),
+        thread: async () => ({
+          replies: 0,
+          questionCount: 0,
+          text: "",
+          readiness: { status: "complete", publicToken: token },
+        }),
+        ownAddress: "magic@abra-ca-dabra.app",
+        answer: async () => ({
+          reply: `The report is ${url}`,
+          kind: "other" as const,
+          goal: null,
+          due: null,
+          file: false,
+        }),
+      },
+    );
+    expect(once.reply.split(url)).toHaveLength(2);
   });
 });

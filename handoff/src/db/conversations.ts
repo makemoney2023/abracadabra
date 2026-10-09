@@ -90,21 +90,77 @@ async function openRequest(sql: Sql, organizationId: string, threadId: string): 
   );
 }
 
-/** Replies sent on this thread in the last hour, and the open request so far. */
+export type MailThreadState = {
+  replies: number;
+  questionCount: number;
+  text: string;
+  prospectReplies: number;
+  briefPresent: boolean;
+  readiness: { status: string; publicToken: string | null } | null;
+};
+
+async function tableExists(sql: Sql, name: string): Promise<boolean> {
+  const row = await sql.get<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+    [name],
+  );
+  return row?.name === name;
+}
+
+/** Replies sent on this thread in the last hour, and whether a prospect brief exists yet. */
 export async function threadState(
   sql: Sql,
   organizationId: string,
   threadId: string,
   now: number,
-): Promise<{ replies: number; questionCount: number; text: string }> {
+): Promise<MailThreadState> {
   const row = await sql.get<{ n: number }>(
     `SELECT COUNT(*) AS n FROM activities
      WHERE organization_id = ? AND kind = 'agent.reply' AND created_at > ?
        AND json_extract(data_json, '$.threadId') = ?`,
     [organizationId, now - HOUR, threadId],
   );
+  const prospect = await sql.get<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM activities
+     WHERE organization_id = ? AND kind = 'agent.reply'
+       AND json_extract(data_json, '$.threadId') = ?
+       AND json_extract(data_json, '$.prospect') = 1`,
+    [organizationId, threadId],
+  );
+  const briefDeliverable = await sql.get<{ id: string }>(
+    `SELECT id FROM deliverables
+     WHERE organization_id = ? AND kind = 'brief' AND status != 'archived'
+     LIMIT 1`,
+    [organizationId],
+  );
+  const briefActivity = briefDeliverable
+    ? null
+    : await sql.get<{ id: string }>(
+        `SELECT id FROM activities
+         WHERE organization_id = ? AND kind IN ('agent.brief_change', 'agent.brief_updated')
+           AND body IS NOT NULL AND trim(body) != ''
+         LIMIT 1`,
+        [organizationId],
+      );
+  let readiness: MailThreadState["readiness"] = null;
+  if (await tableExists(sql, "readiness_scans")) {
+    const scan = await sql.get<{ status: string; public_token: string | null }>(
+      `SELECT status, public_token FROM readiness_scans
+       WHERE organization_id = ?
+       ORDER BY created_at DESC LIMIT 1`,
+      [organizationId],
+    );
+    if (scan) readiness = { status: scan.status, publicToken: scan.public_token };
+  }
   const open = await openRequest(sql, organizationId, threadId);
-  return { replies: row?.n ?? 0, questionCount: open?.question_count ?? 0, text: open?.body ?? "" };
+  return {
+    replies: row?.n ?? 0,
+    questionCount: open?.question_count ?? 0,
+    text: open?.body ?? "",
+    prospectReplies: prospect?.n ?? 0,
+    briefPresent: Boolean(briefDeliverable || briefActivity),
+    readiness,
+  };
 }
 
 /** Adds a client message to the thread's open request, or opens one. Writes the message and any reply to the timeline. */
@@ -121,6 +177,7 @@ export async function recordThreadMessage(
     dueText?: string | null;
     asked?: boolean;
     replyBody?: string;
+    prospect?: boolean;
   },
   now: number,
 ): Promise<string> {
@@ -159,7 +216,12 @@ export async function recordThreadMessage(
       ],
     );
   }
-  const data = JSON.stringify({ threadId: input.threadId, channel: input.channel, requestId: id });
+  const data = JSON.stringify({
+    threadId: input.threadId,
+    channel: input.channel,
+    requestId: id,
+    ...(input.prospect ? { prospect: 1 } : {}),
+  });
   await sql.run(
     `INSERT INTO activities (
       id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
@@ -175,6 +237,30 @@ export async function recordThreadMessage(
     );
   }
   return id;
+}
+
+const STALL_NOTE = "Prospect thread stalled before a brief.";
+
+/** One stall note per prospect thread. A later handoff does not add a second copy. */
+export async function noteStalledProspect(
+  sql: Sql,
+  input: { organizationId: string; threadId: string },
+  now: number,
+): Promise<void> {
+  const existing = await sql.get<{ id: string }>(
+    `SELECT id FROM activities
+     WHERE organization_id = ? AND kind = 'agent.note' AND body = ?
+       AND json_extract(data_json, '$.threadId') = ?
+     LIMIT 1`,
+    [input.organizationId, STALL_NOTE, input.threadId],
+  );
+  if (existing) return;
+  await sql.run(
+    `INSERT INTO activities (
+       id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
+     ) VALUES (?, ?, 'agent.note', 'agent', 'client-desk', ?, ?, ?)`,
+    [crypto.randomUUID(), input.organizationId, STALL_NOTE, JSON.stringify({ threadId: input.threadId }), now],
+  );
 }
 
 export async function recordUnknownSender(sql: Sql, input: { organizationId: string; sender: string }, now: number): Promise<void> {

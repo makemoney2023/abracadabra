@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Magic now asks a prospect for a budget band and a window, stores a website from freemail and starts one schema scan, confirms a new address before attaching it to a client, hands a stalled prospect thread to a person, opens a file space for a lead, stops mail after an opt-out, appends a finished readiness-check link, and confirms a Cal.com booking from the HQ mailbox.
+- **Why** — Those eight follow-ups were specified and not running. A freemail sender had no site scan, a client domain was opened as a new lead, a long prospect thread never handed off, lead files were refused, and a booked call sent no confirmation.
+- **Code touchpoints** — `handoff/migrations/0016_contact_opt_out.sql`, `handoff/src/db/migration-sql.ts`, `handoff/src/db/migrate.ts`, `handoff/src/db/conversations.ts`, `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/client-channel-store.ts`, `handoff/src/lib/email-files.ts`, `handoff/src/lib/intake/consume.ts`, `handoff/src/lib/intake/queue.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/cloudflare-worker.ts`
+- **Data-flow impact** — An authenticated miss still opens a lead, except a client or past-client domain waits for yes on that thread. A prospect reply can set `deals.next_step`, write a budget `email` activity, set `organizations.website`, and queue `readiness_scans`. Opt-out sets `contacts.opted_out` and later mail is stored with no reply. A lead attachment creates one standard workspace. A live Cal.com booking sends one confirmation after the appointment row commits.
+- **API / schema impact** — Migration `0016_contact_opt_out.sql` adds `contacts.opted_out`. `open_prospect` returns `kind`, `pending`, `declined`, and `organizations`. `record` accepts `optOut` and `stalled`. `contacts.opted_in` stays unused. No invoice column. No appointment is created from the mailbox.
+- **Verification** — `npx vitest run` in `handoff/` passed 123 files / 706 tests. `npx eslint` on the touched TypeScript exited 0. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
 - **What changed** — The mailbox follow-up spec is on `main`, and staff HQ plus the agent worker were published again. Mailbox behavior is unchanged.
 - **Why** — The spec was merged and both mailbox workers were redeployed from that tree.
 - **Code touchpoints** — `docs/mailbox-later.md`, `docs/hq-agent-spec.md`

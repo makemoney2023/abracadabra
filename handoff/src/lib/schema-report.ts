@@ -85,7 +85,7 @@ export function stripAnswerPrefix(text: string): { flag: AnswerFlag | null; text
   return { flag, text: trimmed.slice(match[0].length).trim() };
 }
 
-const CHECK_ORIGIN = "https://check.abra-ca-dabra.app";
+export const CHECK_ORIGIN = "https://check.abra-ca-dabra.app";
 
 export function presentSchemaLead(report: SchemaScanReport): SchemaLeadView {
   if (report.status === "failed") return { total: "Schema scan failed.", lines: [], reportUrl: null };
