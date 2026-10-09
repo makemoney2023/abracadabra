@@ -41,6 +41,7 @@ import {
   assignRepoProject,
   cleanRepoName,
   linkRepo,
+  saveProjectDescription,
   listProjectRepos,
   listRepos,
   repoActivitySummary,
@@ -689,6 +690,7 @@ describe("projects and work", () => {
     expect(project.ok).toBe(true);
     if (!project.ok) return;
     expect(project.value.status).toBe("planned");
+    expect(project.value.description).toBeNull();
     expect(project.value.organization_id).toBe(made.value.id);
     expect(project.value.owner_user_id).toBe("staff-1");
     expect(await listProjects(sql, staff, made.value.id)).toEqual([project.value]);
@@ -697,6 +699,39 @@ describe("projects and work", () => {
     const moved = await updateProject(sql, staff, { projectId: project.value.id, status: "active" }, NOW + 1);
     expect(moved.ok).toBe(true);
     expect((await projectById(sql, staff, project.value.id))?.status).toBe("active");
+    const described = await saveProjectDescription(
+      sql,
+      staff,
+      { projectId: project.value.id, description: "Landing page and three ad sizes." },
+      NOW + 2,
+    );
+    expect(described.ok).toBe(true);
+    expect((await projectById(sql, staff, project.value.id))?.description).toBe("Landing page and three ad sizes.");
+    expect((await listProjects(sql, staff, made.value.id))[0]?.description).toBe("Landing page and three ad sizes.");
+    const cleared = await saveProjectDescription(
+      sql,
+      staff,
+      { projectId: project.value.id, description: "   " },
+      NOW + 3,
+    );
+    expect(cleared.ok).toBe(true);
+    expect((await projectById(sql, staff, project.value.id))?.description).toBeNull();
+    expect(
+      await saveProjectDescription(
+        sql,
+        staff,
+        { projectId: project.value.id, description: "a".repeat(4001) },
+        NOW + 4,
+      ),
+    ).toEqual({ ok: false, error: "invalid" });
+    expect(
+      await saveProjectDescription(
+        sql,
+        outsider,
+        { projectId: project.value.id, description: "Nope" },
+        NOW + 5,
+      ),
+    ).toEqual({ ok: false, error: "forbidden" });
     const milestone = await createMilestone(sql, staff, { projectId: project.value.id, name: "Design" }, NOW);
     expect(milestone.ok).toBe(true);
     if (!milestone.ok) return;
@@ -1068,7 +1103,7 @@ describe("crm repos", () => {
 
   it("links a repo, lists it, and refuses a bad name", async () => {
     const sql = await database();
-    const { left } = await twoClients(sql);
+    const { left, project } = await twoClients(sql);
     expect(await linkRepo(sql, staff, { ...link, organizationId: left, fullName: "nope" }, NOW)).toEqual({
       ok: false,
       error: "invalid",
@@ -1084,6 +1119,7 @@ describe("crm repos", () => {
     expect(rows.map((row) => row.full_name)).toEqual(["abracadabra/renew-implants"]);
     expect(rows[0]?.github_repo_id).toBe(42);
     expect(rows[0]?.is_private).toBe(1);
+    expect(rows[0]?.project_id).toBe(project);
     const again = await linkRepo(
       sql,
       staff,
@@ -1092,6 +1128,41 @@ describe("crm repos", () => {
     );
     expect(again).toEqual({ ok: true, value: { id: linked.value.id } });
     expect((await listRepos(sql, staff, left))[0]?.default_branch).toBe("develop");
+  });
+
+  it("attaches a client repo that was linked with no project when the client has one", async () => {
+    const sql = await database();
+    const { left, project } = await twoClients(sql);
+    const linked = await linkRepo(sql, staff, { ...link, organizationId: left }, NOW);
+    if (!linked.ok) throw new Error("setup");
+    await sql.run("UPDATE repos SET project_id = NULL WHERE id = ?", [linked.value.id]);
+    const again = await linkRepo(sql, staff, { ...link, organizationId: left }, NOW + 1);
+    expect(again).toEqual({ ok: true, value: { id: linked.value.id } });
+    expect((await listRepos(sql, staff, left))[0]?.project_id).toBe(project);
+  });
+
+  it("puts a moved repo on the only project of the new client", async () => {
+    const sql = await database();
+    const { left, right } = await twoClients(sql);
+    const linked = await linkRepo(sql, staff, { ...link, organizationId: left }, NOW);
+    if (!linked.ok) throw new Error("setup");
+    expect((await unlinkRepo(sql, staff, { organizationId: left, repoId: linked.value.id }, NOW + 1)).ok).toBe(true);
+    const only = await createProject(sql, staff, { organizationId: right, name: "Only" }, NOW + 2);
+    if (!only.ok) throw new Error("setup");
+    const moved = await linkRepo(sql, staff, { ...link, organizationId: right }, NOW + 3);
+    expect(moved).toEqual({ ok: true, value: { id: linked.value.id } });
+    expect((await listRepos(sql, staff, right))[0]?.project_id).toBe(only.value.id);
+  });
+
+  it("leaves the repo off a project when the client has two", async () => {
+    const sql = await database();
+    const { left } = await twoClients(sql);
+    const second = await createProject(sql, staff, { organizationId: left, name: "Ads" }, NOW);
+    if (!second.ok) throw new Error("setup");
+    const linked = await linkRepo(sql, staff, { ...link, organizationId: left, githubRepoId: 99, fullName: "abracadabra/ads" }, NOW);
+    expect(linked.ok).toBe(true);
+    const rows = await listRepos(sql, staff, left);
+    expect(rows.find((row) => row.github_repo_id === 99)?.project_id).toBeNull();
   });
 
   it("refuses an active repo that already belongs to another client", async () => {

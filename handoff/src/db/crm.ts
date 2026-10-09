@@ -59,6 +59,7 @@ export type ProjectRow = {
   due_at: number | null;
   created_at: number;
   updated_at: number;
+  description: string | null;
 };
 
 export type MilestoneRow = {
@@ -160,7 +161,7 @@ export type TodayBoard = {
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const PROJECT_COLUMNS =
-  "id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at";
+  "id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at, description";
 const MILESTONE_COLUMNS = "id, project_id, name, due_at, done_at, sort";
 const STATUS_COLUMNS =
   "id, project_id, organization_id, health, audience, body, state, actor_kind, actor_id, created_at, published_at";
@@ -817,7 +818,7 @@ export async function listProjects(
   }
   return sql.all<ProjectRow>(
     `SELECT p.id, p.organization_id, p.deal_id, p.name, p.status, p.owner_user_id,
-            p.starts_at, p.due_at, p.created_at, p.updated_at
+            p.starts_at, p.due_at, p.created_at, p.updated_at, p.description
      FROM projects p
      JOIN organizations o ON o.id = p.organization_id
      WHERE o.archived_at IS NULL
@@ -833,7 +834,7 @@ export async function projectById(
   if (!staffUserId(caller)) return undefined;
   return sql.get<ProjectRow>(
     `SELECT p.id, p.organization_id, p.deal_id, p.name, p.status, p.owner_user_id,
-            p.starts_at, p.due_at, p.created_at, p.updated_at
+            p.starts_at, p.due_at, p.created_at, p.updated_at, p.description
      FROM projects p
      JOIN organizations o ON o.id = p.organization_id
      WHERE p.id = ? AND o.archived_at IS NULL`,
@@ -879,6 +880,26 @@ export async function updateProject(
   const project = await openProject(sql, input.projectId);
   if (!project) return { ok: false, error: "missing" };
   await sql.run("UPDATE projects SET status = ?, updated_at = ? WHERE id = ?", [input.status, now, project.id]);
+  return { ok: true, value: { id: project.id } };
+}
+
+/** What the project is for. An empty note clears it. */
+export async function saveProjectDescription(
+  sql: Sql,
+  caller: Caller,
+  input: { projectId: string; description: string },
+  now: number,
+): Promise<CrmResult<{ id: string }>> {
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  const project = await openProject(sql, input.projectId);
+  if (!project) return { ok: false, error: "missing" };
+  const description = input.description.trim();
+  if (description.length > 4000) return { ok: false, error: "invalid" };
+  await sql.run("UPDATE projects SET description = ?, updated_at = ? WHERE id = ?", [
+    description.length > 0 ? description : null,
+    now,
+    project.id,
+  ]);
   return { ok: true, value: { id: project.id } };
 }
 
@@ -1866,12 +1887,14 @@ export async function linkRepo(
       await sql.exec("ROLLBACK");
       return { ok: false, error: "taken" };
     }
+    const sole = await soleProjectId(sql, input.organizationId);
     if (existing && existing.archived_at == null) {
       await sql.run(
         `UPDATE repos
-         SET installation_id = ?, full_name = ?, default_branch = ?, is_private = ?, linked_by = ?
+         SET installation_id = ?, full_name = ?, default_branch = ?, is_private = ?, linked_by = ?,
+             project_id = COALESCE(project_id, ?)
          WHERE id = ?`,
-        [input.installationId, fullName, branch, isPrivate, actorId, existing.id],
+        [input.installationId, fullName, branch, isPrivate, actorId, sole, existing.id],
       );
       await sql.exec("COMMIT");
       return { ok: true, value: { id: existing.id } };
@@ -1894,16 +1917,19 @@ export async function linkRepo(
           existing.id,
         ],
       );
+      if (sole) {
+        await sql.run("UPDATE repos SET project_id = COALESCE(project_id, ?) WHERE id = ?", [sole, existing.id]);
+      }
       await sql.exec("COMMIT");
       return { ok: true, value: { id: existing.id } };
     }
     const id = crypto.randomUUID();
     await sql.run(
       `INSERT INTO repos (
-         id, github_repo_id, installation_id, full_name, organization_id, default_branch,
+         id, github_repo_id, installation_id, full_name, organization_id, project_id, default_branch,
          is_private, owned_by, linked_by, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, 'agency', ?, ?)`,
-      [id, input.githubRepoId, input.installationId, fullName, input.organizationId, branch, isPrivate, actorId, now],
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'agency', ?, ?)`,
+      [id, input.githubRepoId, input.installationId, fullName, input.organizationId, sole, branch, isPrivate, actorId, now],
     );
     await sql.exec("COMMIT");
     return { ok: true, value: { id } };
@@ -1951,6 +1977,11 @@ export async function assignRepoProject(
   }
   await sql.run("UPDATE repos SET project_id = ? WHERE id = ?", [input.projectId, row.id]);
   return { ok: true, value: { id: row.id } };
+}
+
+async function soleProjectId(sql: Sql, organizationId: string): Promise<string | null> {
+  const rows = await sql.all<{ id: string }>("SELECT id FROM projects WHERE organization_id = ?", [organizationId]);
+  return rows.length === 1 ? (rows[0]?.id ?? null) : null;
 }
 
 function activityData(raw: string | null): Record<string, unknown> | null {

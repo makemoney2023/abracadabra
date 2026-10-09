@@ -19,6 +19,7 @@ import {
   createProjectTaskAction,
   postStatusAction,
   publishStatusAction,
+  saveProjectDescriptionAction,
   updateProjectAction,
   updateTaskStatusAction,
   type FormState,
@@ -80,6 +81,39 @@ export function ProjectForm({ organizationId }: { organizationId: string }) {
       </label>
       <Button type="submit" disabled={pending}>
         {pending ? "Adding" : "Add a project"}
+      </Button>
+      <Status message={state.message} />
+    </form>
+  );
+}
+
+export function ProjectDescriptionForm({
+  projectId,
+  organizationId,
+  description,
+}: {
+  projectId: string;
+  organizationId: string;
+  description: string | null;
+}) {
+  const [state, action, pending] = useActionState(saveProjectDescriptionAction, initial);
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      <input type="hidden" name="projectId" value={projectId} />
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <label className="flex flex-col gap-1 text-sm" htmlFor="project-description">
+        What this project needs
+        <Textarea
+          id="project-description"
+          name="description"
+          defaultValue={description ?? ""}
+          maxLength={4000}
+          rows={6}
+          placeholder="The outcome, the pieces, and any constraints."
+        />
+      </label>
+      <Button type="submit" size="sm" disabled={pending} className="self-start">
+        {pending ? "Saving" : "Save requirements"}
       </Button>
       <Status message={state.message} />
     </form>

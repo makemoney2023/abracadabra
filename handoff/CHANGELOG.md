@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A client's Overview lists that client's projects. A project page has a place to write what the project needs. Linking a repo puts it on the project when the client has exactly one. A repo already on the client but not on a project shows on the project page so it can be assigned.
+- **Why** — A project saved for a client was only visible in the Projects list. The client page never listed it. A repo connected on the client stayed off the project because linking did not set `project_id`.
+- **Code touchpoints** — `handoff/src/app/clients/[id]/overview-tab.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/db/crm.ts`, `handoff/migrations/0019_project_description.sql`
+- **Data-flow impact** — `linkRepo` sets `project_id` only when that client has one project, and only when the repo does not already have one. The project page reads every repo on the client and splits the ones with no project from the ones on this project. `client_context` includes each project's description.
+- **API / schema impact** — `projects.description` in `0019_project_description.sql`. Empty text stores null. `client_context` adds `description` on `project` and on each entry in `projects`.
+- **Verification** — `npm test` in `handoff/`: 756 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript files exited 0. Live D1: `makemoney2023/abracadabra` is now on project Social Media Ads (`75d6d16a-33a9-46f3-aaf4-5960599a8cb3`) because that client has one project. The Overview list and the requirements field ship with this change.
+
+## 2026-10-09
+
 - **What changed** — The project kanban is on `main` and published. Staff HQ, the client app, and the agent worker were deployed from that merge.
 - **Why** — Each project board, the client rollup, and the studio board are the queue the agent reads.
 - **Code touchpoints** — none. Deploy of `f2735c0`.
