@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Main is published with the mailbox conversation. The agent worker and staff HQ were deployed from that merge.
+- **Why** — Client mail needed the conversation path on the same workers as the portal catalog.
+- **Code touchpoints** — none. Deploy of `a09e235`.
+- **Data-flow impact** — none beyond the mailbox behavior already described. `/mcp` stays on staff HQ.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `492ef675-8eaf-4957-990b-4eb2dab029b1` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `ab953a4d-64cc-457d-9d75-8bd0c94c46b0` on `hq.abra-ca-dabra.app`. `GET /api/health` on the staff host returned 200 `{"database":"d1","ok":true}`.
+
+## 2026-10-09
+
 - **What changed** — The mailbox conversation is published. Staff HQ and the agent worker were deployed from this branch.
 - **Why** — Client mail was still running the previous workers, which filed a board card from the first question.
 - **Code touchpoints** — none. Deploy only.
