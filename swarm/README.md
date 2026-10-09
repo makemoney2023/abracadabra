@@ -33,6 +33,13 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — Spec and plan for MuAPI stills, video, and ads through the Cloudflare MCP portal.
+  - **Why:** The swarm writes ad strategy. MuAPI renders it. The API key belongs on the portal, with an allowlist, so HQ `/mcp` can turn the server on and off.
+  - **Touchpoints:** `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/hq-agent-spec.md` section 2.4, `README.md`.
+  - **Data flow:** No runtime change. The server `muapi` is not linked yet. Strategy nodes will take no tools. Each render node will submit once and poll.
+  - **API / schema:** none yet. The plan adds `mcpToolNames` on a swarm node when it is built.
+  - **Verification:** Docs only. No tests run.
+
 - **2026-10-09** — The canvas opens a stored swarm execution from `?executionId=`.
   - **Why:** HQ links need the worker canvas to show the run that was saved, including a live socket when that run is still going.
   - **Touchpoints:** `frontend/src/lib/execution-link.mjs`, `frontend/src/App.tsx`.

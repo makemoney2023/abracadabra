@@ -80,6 +80,8 @@ Workers AI and R2 are bound via `wrangler.toml`. Secrets:
 | `CF_ACCESS_CLIENT_ID` | Access service token id, added only on an authorized portal call. |
 | `CF_ACCESS_CLIENT_SECRET` | Access service token secret, added only on an authorized portal call. |
 
+The MuAPI API key is not a secret on this worker. It is the bearer credential on portal server `muapi`. See [the MuAPI swarm spec](../docs/superpowers/specs/2026-10-09-muapi-swarm-design.md).
+
 ## Wipe All Run Data
 
 ```bash

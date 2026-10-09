@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A spec and a plan describe MuAPI as a remote MCP server on the agency portal, and the swarm templates that render stills, video, and ads through it.
+- **Why** — Ad strategy already lives in swarm skills. Pixels need a render API whose key stays on the portal, behind the `/mcp` switch.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/hq-agent-spec.md`, `README.md`, `swarm/README.md`, `swarm/DEPLOYMENT.md`. No runtime code.
+- **Data-flow impact** — none. Server `muapi` is not linked. HQ still does not rewrite the portal's server list.
+- **API / schema impact** — none.
+- **Verification** — Docs review against the portal link rules in the MCP connectors spec and against `https://muapi.ai/docs/mcp`. No test suite run.
+
+## 2026-10-09
+
 - **What changed** — Creating a project attaches the client's single loose space and single loose repo. Saving requirements stores one swarm pack on each open card that has none. Run swarm moves that card to Run. A finished swarm files an unpublished document on the project and marks the card done.
 - **Why** — A project row was on the client while the space and repo stayed unassigned, and Describe cards from requirements had no pack, so Run never scheduled a swarm.
 - **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/task-packs.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/work/board.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/agent/worker.ts`
