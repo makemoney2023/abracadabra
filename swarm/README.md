@@ -4,7 +4,8 @@ A visual multi-agent workflow builder for Cloudflare Workers. Drag-and-drop agen
 
 ## Features
 
-- **Visual Canvas** — Drag-and-drop agent nodes with React Flow
+- **Visual Canvas** — Drag-and-drop agent nodes with React Flow. `?executionId=` opens that stored run: nodes, edges, input, results, and artifacts. A run that is still `running` reconnects to the same websocket. Completed and failed runs stay still. Execute starts a new run.
+
 - **6 Agent Types** — Researcher, Writer, Editor, Publisher, Critic, Summarizer
 - **Parallel Execution** — Branches run concurrently with topological scheduling
 - **Live Streaming** — WebSocket-powered token-by-token output
@@ -30,6 +31,12 @@ No external server handy? Point one at this worker's built-in demo at `/demo-mcp
 
 ## Changelog
 
+- **2026-10-09** — The canvas opens a stored swarm execution from `?executionId=`.
+  - **Why:** HQ links need the worker canvas to show the run that was saved, including a live socket when that run is still going.
+  - **Touchpoints:** `frontend/src/lib/execution-link.mjs`, `frontend/src/App.tsx`.
+  - **Data flow:** `GET /api/status`, `GET /api/get`, `GET /api/artifacts`, and `/api/ws` only when status is `running`. A missing run toasts and leaves the board empty. Execute still starts a new run.
+  - **API / schema:** none.
+  - **Verification:** `node --test frontend/src/lib/execution-link.test.mjs` and `npm test` in `swarm/`.
 - **2026-10-09** — Memory is scoped per workflow step, and there is a token-guarded full reset.
   - **Why:** memory was keyed by agent type across every client and workflow. Each node got the last three outputs from any run, so old generic concepts kept coming back.
   - **Touchpoints:** `src/ai/memory.ts`, `src/admin/reset.ts`, `src/do/WorkflowDO.ts`, `src/types.ts`, `src/index.ts`, `frontend/src/components/AgentNode.tsx` (memory badge removed).

@@ -7,10 +7,12 @@ import { ExternalLink } from "@/components/external-link";
 import { StatusDot } from "@/components/status-dot";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { swarmRunHref } from "./swarm-link";
 
 type Phase = "loading" | "live" | "error";
 
-export function SwarmFrame({ origin }: { origin: string }) {
+export function SwarmFrame({ origin, executionId }: { origin: string; executionId?: string | null }) {
+  const href = swarmRunHref(origin, executionId ?? null) ?? origin;
   const [phase, setPhase] = React.useState<Phase>("loading");
   const [focused, setFocused] = React.useState(false);
   const [attempt, setAttempt] = React.useState(0);
@@ -49,7 +51,7 @@ export function SwarmFrame({ origin }: { origin: string }) {
         >
           {focused ? "Exit focus" : "Focus"}
         </Button>
-        <ExternalLink href={origin}>Open</ExternalLink>
+        <ExternalLink href={href}>Open</ExternalLink>
       </div>
       <div className="relative min-h-0 flex-1">
         {phase === "error" ? (
@@ -65,7 +67,7 @@ export function SwarmFrame({ origin }: { origin: string }) {
           <iframe
             key={attempt}
             title="Swarm"
-            src={origin}
+            src={href}
             className={
               focused
                 ? "h-full min-h-0 w-full flex-1 border-0 bg-background"

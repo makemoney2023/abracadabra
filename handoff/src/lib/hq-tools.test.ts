@@ -420,6 +420,37 @@ describe("runHqTool", () => {
       NOW,
     );
     expect(held).toMatchObject({ needsApproval: true });
+    const started = await runHqTool(
+      sql,
+      staff,
+      { tool: "run_workflow", input: { id: workflowId, body: "Check the site." }, idempotencyKey: "run-go", approved: true },
+      NOW,
+      {
+        swarm: {
+          origin: "https://swarm.example",
+          wait: async () => {},
+          fetchImpl: async (url) => {
+            const href = String(url);
+            if (href.includes("/api/template")) {
+              return Response.json({
+                id: "pack-schema-readiness",
+                name: "Schema readiness",
+                nodes: [{ id: "schema-r", type: "researcher", name: "Schema", instructions: "Score.", position: { x: 0, y: 0 } }],
+                edges: [],
+              });
+            }
+            if (href.endsWith("/api/save")) return Response.json({ success: true });
+            if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-chat" });
+            return Response.json({ status: "completed", results: { "schema-r": { status: "done", output: "Score 40." } } });
+          },
+        },
+      },
+    );
+    expect(started).toMatchObject({ ok: true, value: { executionId: "run-chat" } });
+    const recorded = await sql.get<{ execution_id: string; trigger: string }>(
+      "SELECT execution_id, trigger FROM swarm_runs",
+    );
+    expect(recorded).toEqual({ execution_id: "run-chat", trigger: "chat" });
   });
 
   it("writes the template skills onto a task when the workflow is saved", async () => {

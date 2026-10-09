@@ -74,6 +74,10 @@ export type ChannelReply = {
   classified: ClassifiedNote;
   file: boolean;
   plan: ChannelPlan;
+  /** True when this turn is a lead, not a client. */
+  prospect: boolean;
+  /** True when the reply includes the booking link. */
+  bookingOffered: boolean;
 };
 
 export const FIXED_UNKNOWN = "Please write from the address registered with us, or sign in to your space.";
@@ -88,11 +92,51 @@ const NOTHING: ClassifiedNote = { kind: "other", state: "clarifying", question: 
 const NO_PLAN: ChannelPlan = { actions: [], brief: null, rules: null };
 
 function quiet(): ChannelReply {
-  return { reply: "", organizationId: null, noteOnly: false, skip: true, asked: false, classified: NOTHING, file: false, plan: NO_PLAN };
+  return {
+    reply: "",
+    organizationId: null,
+    noteOnly: false,
+    skip: true,
+    asked: false,
+    classified: NOTHING,
+    file: false,
+    plan: NO_PLAN,
+    prospect: false,
+    bookingOffered: false,
+  };
 }
 
 function held(reply: string, organizationId: string | null, noteOnly = false): ChannelReply {
-  return { reply, organizationId, noteOnly, skip: false, asked: false, classified: NOTHING, file: false, plan: NO_PLAN };
+  return {
+    reply,
+    organizationId,
+    noteOnly,
+    skip: false,
+    asked: false,
+    classified: NOTHING,
+    file: false,
+    plan: NO_PLAN,
+    prospect: false,
+    bookingOffered: false,
+  };
+}
+
+type ListedOrg = { id: string; name: string; kind?: string };
+
+/** The name before the address. A bare address has none. */
+function displayName(from: string): string | null {
+  if (!from.includes("<")) return null;
+  const name = from.slice(0, from.indexOf("<")).replace(/^["'\s]+|["'\s]+$/g, "").trim();
+  if (!name || name.includes("@")) return null;
+  return name.slice(0, 120);
+}
+
+/** Adds the booking link once the outcome is known. An empty link leaves the sentence alone. */
+function withBookingOffer(reply: string, bookingUrl: string | undefined): { reply: string; offered: boolean } {
+  const url = bookingUrl?.trim() ?? "";
+  if (!url) return { reply, offered: false };
+  if (reply.includes(url)) return { reply, offered: true };
+  return { reply: `${reply}\n\nYou can pick a time here: ${url}`, offered: true };
 }
 
 function domainOf(address: string): string {
@@ -160,11 +204,14 @@ export function classifyClientNote(text: string, questionCount: number): Classif
 export async function handleInboundEmail(
   message: InboundEmail,
   deps: {
-    lookup: (email: string) => Promise<{ organizationId: string | null; organizations?: { id: string; name: string }[]; authenticated: boolean } | "down">;
+    lookup: (email: string) => Promise<{ organizationId: string | null; organizations?: ListedOrg[]; authenticated: boolean } | "down">;
     thread: (organizationId: string, threadId: string) => Promise<ThreadState>;
     remembered?: (threadId: string) => Promise<string | null>;
     ownAddress: string;
-    answer?: (organizationId: string, organizations: { id: string; name: string }[]) => Promise<FiledTurn>;
+    /** Public Cal.com link. Empty means the prompt asks for two times. */
+    bookingUrl?: string;
+    openProspect?: (input: { email: string; name: string | null }) => Promise<{ id: string; name: string } | "down">;
+    answer?: (organizationId: string, organizations: { id: string; name: string }[], prospect: boolean) => Promise<FiledTurn>;
   },
 ): Promise<ChannelReply> {
   const sender = addressOf(message.from);
@@ -175,8 +222,18 @@ export async function handleInboundEmail(
   if (message.bytes > 25 * 1024 * 1024) return held(TOO_BIG, null);
   const found = await deps.lookup(sender);
   if (found === "down") return held(RETRY, null);
-  const listed = found.organizations ?? (found.organizationId ? [{ id: found.organizationId, name: "" }] : []);
-  if (listed.length === 0) return held(FIXED_UNKNOWN, null);
+  let listed: ListedOrg[] = found.organizations ?? (found.organizationId ? [{ id: found.organizationId, name: "" }] : []);
+  if (listed.length === 0) {
+    if (!found.authenticated || !deps.openProspect) return held(FIXED_UNKNOWN, null);
+    let opened: { id: string; name: string } | "down";
+    try {
+      opened = await deps.openProspect({ email: sender, name: displayName(message.from) });
+    } catch {
+      return held(RETRY, null);
+    }
+    if (opened === "down") return held(RETRY, null);
+    listed = [{ id: opened.id, name: opened.name, kind: "lead" }];
+  }
   if (!found.authenticated) return held(FIXED_UNKNOWN, listed[0]!.id, true);
   const organizations = listed;
   const threadKey = message.threadId || message.messageId || sender;
@@ -193,26 +250,46 @@ export async function handleInboundEmail(
       classified: NOTHING,
       file: false,
       plan: NO_PLAN,
+      prospect: false,
+      bookingOffered: false,
     };
   }
+  const prospect = organizations.some((org) => org.id === choice.id && org.kind === "lead");
   const thread = await deps.thread(choice.id, threadKey);
   const incoming = [message.subject, message.text].filter(Boolean).join("\n");
   if (thread.replies >= THREAD_REPLY_LIMIT) {
     const limited = replyFor(thread, incoming);
-    return { ...limited, organizationId: choice.id, noteOnly: false, skip: false, file: false, plan: NO_PLAN };
+    return {
+      ...limited,
+      organizationId: choice.id,
+      noteOnly: false,
+      skip: false,
+      file: false,
+      plan: NO_PLAN,
+      prospect,
+      bookingOffered: false,
+    };
   }
   if (deps.answer) {
     try {
-      const turn = await deps.answer(choice.id, organizations);
+      const turn = await deps.answer(choice.id, organizations, prospect);
+      const plan = prospect
+        ? { ...normalizeChannelPlan(turn), actions: [] as ChannelPlan["actions"] }
+        : turn.kind === "handoff"
+          ? NO_PLAN
+          : normalizeChannelPlan(turn);
+      const offered = prospect && plan.brief ? withBookingOffer(turn.reply, deps.bookingUrl) : { reply: turn.reply, offered: false };
       return {
-        reply: turn.reply,
+        reply: offered.reply,
         organizationId: choice.id,
         noteOnly: false,
         skip: false,
-        asked: turn.kind === "new_work" && !turn.goal,
-        classified: noteFromTurn(turn),
-        file: turn.file,
-        plan: turn.kind === "handoff" ? NO_PLAN : normalizeChannelPlan(turn),
+        asked: !prospect && turn.kind === "new_work" && !turn.goal,
+        classified: prospect ? { ...NOTHING, goal: turn.goal, due: turn.due } : noteFromTurn(turn),
+        file: prospect ? false : turn.file,
+        plan,
+        prospect,
+        bookingOffered: offered.offered,
       };
     } catch {
       return { ...held(FOLLOW_UP, choice.id), classified: NOTHING };
@@ -226,6 +303,8 @@ export async function handleInboundEmail(
     skip: false,
     file: answer.classified.kind === "new_work",
     plan: NO_PLAN,
+    prospect,
+    bookingOffered: false,
   };
 }
 
@@ -243,14 +322,64 @@ function noteFromTurn(turn: FiledTurn): ClassifiedNote {
 const PRICE = /\$\s?\d|\b\d[\d,]*\s*(?:dollars|usd)\b/i;
 const PROMISED_DATE = /\b(?:ship|deliver|delivered|launch|ready)\b[^.?\n]{0,40}\b(?:by|on)\b/i;
 
-/** Workers AI returns the turn on `response`, as a JSON string or as the parsed object. */
+/** Text from a Workers AI chat result. Bindings use `response`; the REST API nests it under `result`. */
+function modelText(result: unknown): string {
+  if (typeof result === "string") return result;
+  if (!result || typeof result !== "object") return "";
+  const record = result as Record<string, unknown>;
+  if (typeof record.response === "string") return record.response;
+  if (record.response && typeof record.response === "object") {
+    const nested = modelText(record.response);
+    if (nested && nested !== JSON.stringify(record.response)) return nested;
+    return JSON.stringify(record.response);
+  }
+  if ("result" in record) {
+    const nested = modelText(record.result);
+    if (nested) return nested;
+  }
+  const choice = Array.isArray(record.choices) ? record.choices[0] : undefined;
+  const content =
+    choice && typeof choice === "object" && "message" in choice
+      ? (choice as { message?: { content?: unknown } }).message?.content
+      : undefined;
+  if (typeof content === "string") return content;
+  if (typeof record.reply === "string") return JSON.stringify(record);
+  return "";
+}
+
+/** Workers AI returns the turn on `response`. Plain prose is the email when the model skips JSON. */
 export function clientTurnFromModel(result: unknown): Omit<ClientTurn, "file"> {
-  if (typeof result === "string") return parseClientTurn(result);
-  if (!result || typeof result !== "object" || !("response" in result)) throw new Error("no turn");
-  const response = (result as { response?: unknown }).response;
-  if (typeof response === "string") return parseClientTurn(response);
-  if (response && typeof response === "object") return parseClientTurn(JSON.stringify(response));
-  throw new Error("no turn");
+  const unfenced = modelText(result)
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+  if (!unfenced) throw new Error("no turn");
+  try {
+    return parseClientTurn(unfenced);
+  } catch {
+    const reply = looseReply(unfenced);
+    if (!reply) throw new Error("no turn");
+    return { reply, kind: "other", goal: null, due: null, actions: [], brief: null, rules: null };
+  }
+}
+
+/** A sentence from model text that was not a full turn. A reply field wins over the raw JSON. */
+function looseReply(text: string): string {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try {
+      const raw = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
+      for (const key of ["reply", "message", "text", "content"]) {
+        const value = raw[key];
+        if (typeof value === "string" && value.trim()) return value.trim();
+      }
+    } catch {
+      // The braces were not a JSON object.
+    }
+  }
+  return text.replace(/```/g, "").trim();
 }
 
 /** Pulls the JSON turn out of a model reply. Extra prose around the object is ignored. */
@@ -276,7 +405,7 @@ export function parseClientTurn(text: string): Omit<ClientTurn, "file"> {
   };
 }
 
-/** One client email. A reply that prices, promises a date, or names another client is handed to a person. */
+/** One client email. A reply that prices, promises a date, or names another client is still sent, and nothing is filed. */
 export async function replyToClient(input: {
   desk: ClientDesk;
   incoming: string;
@@ -295,7 +424,7 @@ export async function replyToClient(input: {
   const forbidden = (input.desk.forbiddenNames ?? []).filter(Boolean);
   const leaked = forbidden.some((name) => input.desk && turn.reply.toLowerCase().includes(name.toLowerCase()));
   if (PRICE.test(turn.reply) || PROMISED_DATE.test(turn.reply) || leaked) {
-    return { reply: HANDED_OFF, kind: "handoff", goal: null, due: null, file: false, actions: [], brief: null, rules: null };
+    return { reply: turn.reply, kind: "handoff", goal: null, due: null, file: false, actions: [], brief: null, rules: null };
   }
   const kind = turn.kind;
   const file = kind === "new_work" || kind === "feedback";

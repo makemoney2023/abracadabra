@@ -26,23 +26,23 @@ const REQUEST_COLUMNS = `id, organization_id, channel, thread_id, sender, body, 
   piece_title, goal, due_text, question_count, decided_by, decided_at, decline_reason, brief_version,
   created_at, updated_at`;
 
-export async function lookupSenders(sql: Sql, email: string): Promise<{ id: string; name: string }[]> {
+export async function lookupSenders(sql: Sql, email: string): Promise<{ id: string; name: string; kind: string }[]> {
   const address = email.trim().toLowerCase();
   if (!address) return [];
-  const contacts = await sql.all<{ id: string; name: string }>(
-    `SELECT DISTINCT o.id, o.name FROM contacts c
+  const contacts = await sql.all<{ id: string; name: string; kind: string }>(
+    `SELECT DISTINCT o.id, o.name, o.kind FROM contacts c
      JOIN organizations o ON o.id = c.organization_id
      WHERE lower(c.email) = ? AND o.archived_at IS NULL`,
     [address],
   );
-  const members = await sql.all<{ id: string; name: string }>(
-    `SELECT DISTINCT o.id, o.name FROM memberships m
+  const members = await sql.all<{ id: string; name: string; kind: string }>(
+    `SELECT DISTINCT o.id, o.name, o.kind FROM memberships m
      JOIN workspaces w ON w.id = m.workspace_id
      JOIN organizations o ON o.id = w.organization_id
      WHERE lower(m.email) = ? AND m.revoked_at IS NULL AND o.archived_at IS NULL`,
     [address],
   );
-  const byId = new Map<string, { id: string; name: string }>();
+  const byId = new Map<string, { id: string; name: string; kind: string }>();
   for (const row of [...contacts, ...members]) byId.set(row.id, row);
   return [...byId.values()];
 }

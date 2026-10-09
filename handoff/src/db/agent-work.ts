@@ -7,6 +7,7 @@ import { clientSpaceContext, storeScanContext } from "@/lib/scan-context";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
 import { claimDueWorkflow } from "@/lib/client-workflows";
+import { saveSwarmRun } from "@/lib/swarm-runs";
 
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
 const STAGES = new Set(["describe", "engineer", "build", "run"]);
@@ -54,6 +55,8 @@ type WorkArgs = {
   packId?: string;
   packName?: string;
   executionId?: string;
+  workflowId?: string;
+  swarmWorkflowId?: string;
   artifacts?: unknown;
   activityKey?: string;
   trigger?: string;
@@ -132,6 +135,17 @@ async function recordSwarmRun(sql: Sql, actor: AgentActor, args: WorkArgs, now: 
     now,
     actorKind: "agent",
     actorId: "swarm",
+  });
+  await saveSwarmRun(sql, {
+    organizationId: actor.organizationId,
+    workflowId: args.workflowId,
+    swarmWorkflowId: args.swarmWorkflowId,
+    executionId: args.executionId,
+    templateId: args.packId,
+    name: packName,
+    status,
+    trigger: args.trigger?.trim() || "lead_created",
+    now,
   });
   return { ok: true };
 }
