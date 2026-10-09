@@ -140,11 +140,11 @@ First rows:
 |---|---|---|---|---|---|
 | `handoff` | remote | `https://hq.abra-ca-dabra.app/api/mcp` | none (portal holds the deployment knowledge key) | organization id, already stamped | section 4 bare names |
 | `search-console` | adapter | `https://connectors.abra-ca-dabra.app/mcp/search-console` | `GOOGLE_SEARCH_CONSOLE_SA` on `handoff-connectors` | Search Console property | `search_analytics`, `inspect_url` |
-| `muapi` | remote | `https://api.muapi.ai/mcp` | none (portal holds the MuAPI API key as a bearer) | none (one agency wallet) | the ten-tool allowlist in the [MuAPI swarm spec](superpowers/specs/2026-10-09-muapi-swarm-design.md) |
+| `muapi` | remote | `https://api.muapi.ai/mcp` | none (portal holds the MuAPI API key as a bearer) | none (one agency wallet) | the shared render-role allowlist in the [MuAPI swarm spec](superpowers/specs/2026-10-09-muapi-swarm-design.md) |
 
 Search Console has no official remote MCP server. Community servers are local processes with a service account, so they are not pasted into the portal. Operator step, once per property: enable the Search Console API and add that service account's `client_email` as a user on the property. Google Analytics does ship a remote MCP server; when we add it, it is a `remote` row with an admin OAuth grant, not an adapter.
 
-`muapi` is specified and not linked. It is a remote bearer server, **Require user auth** off, allowlist on, no grant row. The swarm templates and the operator steps are the [MuAPI swarm spec](superpowers/specs/2026-10-09-muapi-swarm-design.md).
+`muapi` is specified and not linked. It is a remote bearer server, **Require user auth** off, allowlist on, no grant row. Website heroes, ads, and later jobs share that server. The roles and the operator steps are the [MuAPI swarm spec](superpowers/specs/2026-10-09-muapi-swarm-design.md).
 
 A skill names connector tools in its file. The agent calls one only when that name is in the current skill and in the portal's tool list. Missing either, the step is skipped and `agent.note` records the name.
 

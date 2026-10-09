@@ -33,6 +33,13 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — The MuAPI spec is a general render kit. Ads are one workflow. A website hero that is then animated is another. Both use the same portal server and the same node roles.
+  - **Why:** A later job should add a template, not a new MCP server.
+  - **Touchpoints:** `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `README.md`, `docs/hq-agent-spec.md`.
+  - **Data flow:** No runtime change. The server `muapi` is not linked yet.
+  - **API / schema:** none yet.
+  - **Verification:** Docs only. No tests run.
+
 - **2026-10-09** — Spec and plan for MuAPI stills, video, and ads through the Cloudflare MCP portal.
   - **Why:** The swarm writes ad strategy. MuAPI renders it. The API key belongs on the portal, with an allowlist, so HQ `/mcp` can turn the server on and off.
   - **Touchpoints:** `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/hq-agent-spec.md` section 2.4, `README.md`.

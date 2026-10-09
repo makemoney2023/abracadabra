@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Staff can run an ad strategy on the swarm, approve it, and render stills, crops, a spot, and music through MuAPI. The MuAPI key lives on the Cloudflare MCP portal. The swarm never stores it.
+**Goal:** Staff can render stills and motion for any brief through one MuAPI portal server. A website hero that is then animated, and an ad, are the first two workflows. They share render roles. The MuAPI key lives on the Cloudflare MCP portal. The swarm never stores it.
 
-**Architecture:** An operator links remote MCP server `muapi` (`https://api.muapi.ai/mcp`) on `https://mcp.abra-ca-dabra.app/mcp` with a bearer credential, an allowlist, and **Require user auth** off. HQ `/mcp` remains the on/off switch. The swarm gains `mcpToolNames` so strategy nodes get no tools and each render node gets one job. Three hand-authored templates and one self-contained skill carry the procedure.
+**Architecture:** An operator links remote MCP server `muapi` (`https://api.muapi.ai/mcp`) on `https://mcp.abra-ca-dabra.app/mcp` with a bearer credential, a general render allowlist, and **Require user auth** off. HQ `/mcp` remains the on/off switch. The swarm gains `mcpToolNames` and one `RENDER_ROLES` map. Text nodes get no tools. Each render node takes one role from that map. A later job adds a template. It does not add a server or a tool.
 
 **Tech Stack:** The existing swarm Worker (Vitest, Workers AI, Durable Objects), the existing HQ portal page, Cloudflare MCP portals.
 
@@ -22,15 +22,16 @@ Code lands in [`swarm/`](../../../swarm/) and [`.cursor/skills/community/muapi-r
 | --- | --- |
 | `swarm/src/mcp/tool-allow.ts` | Filter discovered tools by `mcpToolNames`. Report missing names. |
 | `swarm/src/mcp/tool-allow.test.ts` | Empty list, omitted list, subset, missing name. |
-| `swarm/src/types.ts` | `mcpToolNames` on `AgentNode`. Templates `ad-strategy`, `ad-render`, `ad-poll`. |
-| `swarm/src/templates/ad-studio.test.ts` | Template order, allowlists, skill paths, absence from the generated pack file. |
+| `swarm/src/mcp/render-roles.ts` | `RENDER_ROLES`. The only tool lists render nodes may use. |
+| `swarm/src/types.ts` | `mcpToolNames` on `AgentNode`. Templates `website-hero`, `website-hero-render`, `ad-strategy`, `ad-render`, `media-poll`. |
+| `swarm/src/templates/media-templates.test.ts` | Shared roles, both example workflows, absence from the generated pack file. |
 | `swarm/src/do/WorkflowDO.ts` | Apply the filter before `runAgent`. Fail the node when a required name is missing. |
 | `swarm/frontend/src/components/AgentNode.tsx` | `mcpToolNames` on node data. |
 | `swarm/frontend/src/App.tsx` | Copy the field on template load and on the save payload. |
 | `.cursor/skills/community/muapi-render/SKILL.md` | One-file render procedure. |
 | `swarm/DEPLOYMENT.md` | The MuAPI key is a portal credential, not a worker secret. |
 
-`pack-templates.json` stays generated. Do not hand-edit it. `npx tsx scripts/write-pack-templates.ts` from `handoff/` must not grow an `ad-strategy` row, because that script only reads skill folders.
+`pack-templates.json` stays generated. Do not hand-edit it. `npx tsx scripts/write-pack-templates.ts` from `handoff/` must not grow these template ids, because that script only reads skill folders.
 
 ## Global constraints
 
@@ -70,7 +71,8 @@ On portal `mcp.abra-ca-dabra.app`:
 - Turn **Require user auth** off.
 - On that server's Access application, add a Service Auth policy for the same service token the HQ agent already uses.
 - Set the mapping to `default_disabled: true`.
-- Turn on only: `search_models`, `muapi_image_generate`, `muapi_image_edit`, `muapi_video_generate`, `muapi_video_from_image`, `muapi_predict_result`, `muapi_enhance_upscale`, `muapi_enhance_bg_remove`, `muapi_audio_create`, `muapi_account_balance`.
+- Turn on the general kit: `search_models`, `muapi_image_generate`, `muapi_image_edit`, `muapi_video_generate`, `muapi_video_from_image`, `muapi_predict_result`, `muapi_enhance_upscale`, `muapi_enhance_bg_remove`, `muapi_audio_create`, `muapi_audio_from_text`, `muapi_edit_lipsync`, `muapi_edit_clipping`, `muapi_account_balance`.
+- Leave off `muapi_account_topup`, `muapi_keys_list`, `muapi_keys_create`, `muapi_keys_delete`, `muapi_upload_image`, `muapi_enhance_face_swap`, and `muapi_enhance_ghibli`.
 - Leave aliases equal to those upstream names.
 - Leave context optimization off, so `tools/list` returns the enabled tools.
 
@@ -78,7 +80,7 @@ A `PUT` that includes `servers` replaces the whole portal mapping. Start from a 
 
 - [ ] **Step 4: Confirm the grant, then leave it off**
 
-Open HQ `/mcp` as a super admin. `muapi` is a row. Toggle it on, confirm a `tools/list` through the portal shows the ten names above, then toggle it off. The server stays linked.
+Open HQ `/mcp` as a super admin. `muapi` is a row. Toggle it on, confirm a `tools/list` through the portal shows the allowlisted names and none of the tools that stay off, then toggle it off. The server stays linked.
 
 - [ ] **Step 5: Record the result**
 
@@ -130,33 +132,34 @@ Covers MUAPI-011 and MUAPI-012's worker half.
 
 - [ ] **Step 4: Re-run `npm test` in `swarm/`.**
 
-### Task 4: Ad templates
+### Task 4: Shared roles and the two example workflows
 
 **Files:**
+- Create: `swarm/src/mcp/render-roles.ts`
 - Modify: `swarm/src/types.ts` (`WORKFLOW_TEMPLATES`)
-- Test: `swarm/src/templates/ad-studio.test.ts`
+- Test: `swarm/src/templates/media-templates.test.ts`
 
 Covers MUAPI-013 through MUAPI-016 and MUAPI-019.
 
 - [ ] **Step 1: Write the failing test**
 
-Import `WORKFLOW_TEMPLATES` and `pack-templates.json`.
+Import `RENDER_ROLES`, `WORKFLOW_TEMPLATES`, and `pack-templates.json`.
 
-1. `ad-strategy` has eleven nodes, in the skill order in the spec, each with `mcpToolNames` deep-equal to `[]`, each instructions string starting `Follow ` and containing that row's `SKILL.md` path.
-2. Edges form one chain, node 1 through node 11.
-3. `ad-render` has Hero, Spot, three crops, and Music. Hero's allowlist is `search_models`, `muapi_image_generate`, `muapi_image_edit`, `muapi_predict_result`. Spot's is `muapi_video_from_image` and `muapi_predict_result`. Each crop's is `muapi_image_edit` and `muapi_predict_result`. Music's is `muapi_audio_create` and `muapi_predict_result`.
-4. Edges: Hero → Spot, Hero → each crop. Music has no incoming edge.
-5. Every render node instructions string contains `Follow .cursor/skills/community/muapi-render/SKILL.md`.
-6. `ad-poll` has one node whose allowlist is `['muapi_predict_result']` and the same skill path.
-7. `pack-templates.json` has no template id `ad-strategy`, `ad-render`, or `ad-poll`.
+1. `RENDER_ROLES` has `still`, `animate`, `edit`, `upscale`, `cutout`, `sound`, `lipsync`, `clip`, and `poll`, with the tool names in the spec's role table.
+2. `website-hero` has three text nodes, `mcpToolNames` deep-equal to `[]`, instructions starting `Follow ` for banner-design, the image skill, and the video skill, in that order. Edges chain them.
+3. `website-hero-render` has Still then Animate. Still's `mcpToolNames` is `RENDER_ROLES.still` (same array). Animate's is `RENDER_ROLES.animate`. The only edge is Still → Animate. Both instructions contain `Follow .cursor/skills/community/muapi-render/SKILL.md` and `Role: still` or `Role: animate`.
+4. `ad-strategy` has eleven nodes, in the skill order in the spec, each with `mcpToolNames` deep-equal to `[]`.
+5. `ad-render` Still uses `RENDER_ROLES.still`. Spot uses `RENDER_ROLES.animate`. Each crop uses `RENDER_ROLES.edit`. Music uses `RENDER_ROLES.sound`. Edges: Still → Spot and Still → each crop. Music has no incoming edge. Each render node's instructions name its role and follow `muapi-render`.
+6. `media-poll` has one node whose `mcpToolNames` is `RENDER_ROLES.poll`.
+7. `pack-templates.json` has none of those five template ids.
 
 - [ ] **Step 2: Run the test and confirm it fails.**
 
 ```bash
-cd swarm && npx vitest run src/templates/ad-studio.test.ts
+cd swarm && npx vitest run src/templates/media-templates.test.ts
 ```
 
-- [ ] **Step 3: Add the three templates** to `WORKFLOW_TEMPLATES`. Lay the strategy nodes on two rows so the canvas can show them. Do not add them to `pack-templates.json`.
+- [ ] **Step 3: Add `RENDER_ROLES` and the five templates.** Templates import the role arrays. They do not retype the tool names. Lay long text chains on two rows. Do not add them to `pack-templates.json`.
 
 - [ ] **Step 4: Re-run the test until it passes.**
 
@@ -194,15 +197,20 @@ Covers MUAPI-017 and MUAPI-018.
 
 - [ ] **Step 1: Write the skill as one file**
 
-Front matter `name: muapi-render` and a description that says it runs one MuAPI submit and then polls. Body:
+Front matter `name: muapi-render` and a description that says one node runs one render role, then polls. Body has a section per role in `RENDER_ROLES`:
 
 - Use the server id printed next to the tool in the prompt. On an HQ run that id is the portal.
-- Submit once. Then call `muapi_predict_result` with the returned `request_id`.
+- Read the node's `Role:` line and follow that section only.
+- Submit once. Then call `muapi_predict_result` with the returned `request_id`, unless the role is `poll`.
+- `still` calls `muapi_image_edit` when an image URL is already in hand, and `muapi_image_generate` otherwise.
+- `animate` calls `muapi_video_from_image` when a still URL is in hand, and `muapi_video_generate` otherwise.
+- `edit` calls `muapi_image_edit` on the URL the instructions name.
+- `sound` calls `muapi_audio_create` for music and `muapi_audio_from_text` for an effect.
+- `upscale`, `cutout`, `lipsync`, and `clip` each call their one tool.
 - Stop when `status` is `completed` or when no further tool call is available.
 - The final answer quotes `request_id`, `status`, and the output URL from the last observation.
 - A status other than `completed` is the deliverable. Do not describe media the observation did not return.
-- A product image is a URL already in the brief. Pass that URL. Do not embed bytes.
-- Hero: call `muapi_image_edit` when the brief has an image URL, otherwise `muapi_image_generate`. Crops call `muapi_image_edit` on the hero URL. Spot calls `muapi_video_from_image` on the hero URL.
+- Inputs are URLs. Do not embed file bytes.
 
 No sibling files. The worker loads this body only.
 
@@ -221,7 +229,7 @@ The spec and this plan already exist. This task only records what shipped.
 
 - [ ] **Step 1: Add a secrets-table row** that the MuAPI key is stored on portal server `muapi` and is not a Worker secret.
 
-- [ ] **Step 2: Changelog the behavior** in `swarm/README.md` (allowlist, three templates, skill path) with the verification commands and their results.
+- [ ] **Step 2: Changelog the behavior** in `swarm/README.md` (shared roles, website-hero and ad templates, skill path) with the verification commands and their results.
 
 - [ ] **Step 3: Flip the spec status** to linked and built only after Task 1 step 4 and `npm test` in `swarm/` have both been read.
 
@@ -229,14 +237,14 @@ The spec and this plan already exist. This task only records what shipped.
 
 ## Operator check after the code is deployed
 
-Do this with the sandbox key, then repeat the hero once with a live key if the example URL looks right.
+Do this with the sandbox key. Repeat the website-hero still once with a live key if the example URL looks right.
 
-1. Run `ad-strategy` on a real brief. Confirm the nodes return text and the PDF's tool list for those nodes is empty.
+1. Run `website-hero` on a page brief. Confirm the nodes return text and the PDF's tool list for those nodes is empty.
 2. Turn `muapi` on at `/mcp`.
-3. Run `ad-render` with the approved packet and a product image URL from `POST /api/v1/upload_file`.
-4. Confirm the hero output is an example URL (sandbox) or a real CDN URL (live key), and that a still-processing spot returns a `request_id`.
-5. Run `ad-poll` with that id.
-6. Turn `muapi` off at `/mcp`. Run the hero again. The node fails with `Missing MCP tool:` and does not call MuAPI.
+3. Run `website-hero-render` with that packet. Confirm Still returns an example URL (sandbox) or a CDN URL (live key), and Animate returns a video URL or a `request_id` for that still.
+4. If Animate is still processing, run `media-poll` with that id.
+5. Run `ad-strategy`, then `ad-render`, on a second brief. Confirm the ad Still is the same role as the website Still: one submit, then a poll.
+6. Turn `muapi` off at `/mcp`. Run `website-hero-render` again. Still fails with `Missing MCP tool:` and does not call MuAPI.
 7. Search the workflow's Durable Object record and the PDF for the key. It is absent.
 
 Automated tests stay on fixtures (MUAPI-024).
