@@ -36,6 +36,44 @@ function storedStatus(status: string): "running" | "completed" | "failed" | "not
   return STATUSES.has(status) ? (status as "running" | "completed" | "failed" | "not_started") : "failed";
 }
 
+function isUnique(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("UNIQUE");
+}
+
+type SwarmRunPatch = {
+  status: "running" | "completed" | "failed" | "not_started";
+  name: string;
+  trigger: string;
+  finishedAt: number | null;
+  projectId: string | null;
+  workflowId: string | null;
+  swarmWorkflowId: string | null;
+  templateId: string | null;
+};
+
+async function updateSwarmRun(sql: Sql, id: string, patch: SwarmRunPatch): Promise<void> {
+  await sql.run(
+    `UPDATE swarm_runs
+     SET status = ?, name = ?, trigger = ?, finished_at = ?,
+         project_id = COALESCE(project_id, ?),
+         workflow_id = COALESCE(workflow_id, ?),
+         swarm_workflow_id = COALESCE(swarm_workflow_id, ?),
+         template_id = COALESCE(template_id, ?)
+     WHERE id = ?`,
+    [
+      patch.status,
+      patch.name,
+      patch.trigger,
+      patch.finishedAt,
+      patch.projectId,
+      patch.workflowId,
+      patch.swarmWorkflowId,
+      patch.templateId,
+      id,
+    ],
+  );
+}
+
 function staff(caller: Caller): boolean {
   return caller.staff !== null;
 }
@@ -77,57 +115,74 @@ export async function saveSwarmRun(
   const trigger = input.trigger.trim().slice(0, 40) || "lead_created";
   const finishedAt = status === "completed" || status === "failed" ? input.now : null;
   const projectId = await resolveProject(sql, input);
+  const patch: SwarmRunPatch = {
+    status,
+    name,
+    trigger,
+    finishedAt,
+    projectId,
+    workflowId: input.workflowId?.trim() || null,
+    swarmWorkflowId: input.swarmWorkflowId?.trim() || null,
+    templateId: input.templateId?.trim() || null,
+  };
   if (executionId) {
     const existing = await sql.get<{ id: string; project_id: string | null }>(
       "SELECT id, project_id FROM swarm_runs WHERE execution_id = ?",
       [executionId],
     );
     if (existing) {
-      await sql.run(
-        `UPDATE swarm_runs
-         SET status = ?, name = ?, trigger = ?, finished_at = ?,
-             project_id = COALESCE(project_id, ?),
-             workflow_id = COALESCE(workflow_id, ?),
-             swarm_workflow_id = COALESCE(swarm_workflow_id, ?),
-             template_id = COALESCE(template_id, ?)
-         WHERE id = ?`,
-        [
-          status,
-          name,
-          trigger,
-          finishedAt,
-          projectId,
-          input.workflowId?.trim() || null,
-          input.swarmWorkflowId?.trim() || null,
-          input.templateId?.trim() || null,
-          existing.id,
-        ],
-      );
+      await updateSwarmRun(sql, existing.id, patch);
       return { id: existing.id, projectId: existing.project_id ?? projectId };
     }
   }
   const id = crypto.randomUUID();
-  await sql.run(
-    `INSERT INTO swarm_runs (
-      id, organization_id, project_id, workflow_id, swarm_workflow_id, execution_id,
-      template_id, name, status, trigger, started_at, finished_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      id,
-      input.organizationId,
-      projectId,
-      input.workflowId?.trim() || null,
-      input.swarmWorkflowId?.trim() || null,
-      executionId || null,
-      input.templateId?.trim() || null,
-      name,
-      status,
-      trigger,
-      input.now,
-      finishedAt,
-    ],
+  try {
+    await sql.run(
+      `INSERT INTO swarm_runs (
+        id, organization_id, project_id, workflow_id, swarm_workflow_id, execution_id,
+        template_id, name, status, trigger, started_at, finished_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(execution_id) WHERE execution_id IS NOT NULL AND length(execution_id) > 0 DO UPDATE SET
+        status = excluded.status,
+        name = excluded.name,
+        trigger = excluded.trigger,
+        finished_at = excluded.finished_at,
+        project_id = COALESCE(swarm_runs.project_id, excluded.project_id),
+        workflow_id = COALESCE(swarm_runs.workflow_id, excluded.workflow_id),
+        swarm_workflow_id = COALESCE(swarm_runs.swarm_workflow_id, excluded.swarm_workflow_id),
+        template_id = COALESCE(swarm_runs.template_id, excluded.template_id)`,
+      [
+        id,
+        input.organizationId,
+        patch.projectId,
+        patch.workflowId,
+        patch.swarmWorkflowId,
+        executionId || null,
+        patch.templateId,
+        patch.name,
+        patch.status,
+        patch.trigger,
+        input.now,
+        patch.finishedAt,
+      ],
+    );
+  } catch (error) {
+    if (!executionId || !isUnique(error)) throw error;
+    const raced = await sql.get<{ id: string; project_id: string | null }>(
+      "SELECT id, project_id FROM swarm_runs WHERE execution_id = ?",
+      [executionId],
+    );
+    if (!raced) throw error;
+    await updateSwarmRun(sql, raced.id, patch);
+    return { id: raced.id, projectId: raced.project_id ?? projectId };
+  }
+  if (!executionId) return { id, projectId };
+  const stored = await sql.get<{ id: string; project_id: string | null }>(
+    "SELECT id, project_id FROM swarm_runs WHERE execution_id = ?",
+    [executionId],
   );
-  return { id, projectId };
+  if (!stored) return { id, projectId };
+  return { id: stored.id, projectId: stored.project_id ?? projectId };
 }
 
 const COLUMNS =
@@ -184,7 +239,8 @@ export async function backfillSwarmRuns(sql: Sql, now: number): Promise<number> 
     body: string | null;
   }>(
     `SELECT organization_id, created_at, data_json, body FROM activities
-     WHERE kind = 'agent.swarm_run' AND organization_id IS NOT NULL`,
+     WHERE kind = 'agent.swarm_run' AND organization_id IS NOT NULL
+     ORDER BY created_at ASC, id ASC`,
   );
   let inserted = 0;
   for (const activity of activities) {
@@ -198,7 +254,6 @@ export async function backfillSwarmRuns(sql: Sql, now: number): Promise<number> 
     const executionId = typeof data.executionId === "string" ? data.executionId.trim() : "";
     if (!executionId) continue;
     const before = await sql.get<{ id: string }>("SELECT id FROM swarm_runs WHERE execution_id = ?", [executionId]);
-    if (before) continue;
     const status = typeof data.status === "string" ? data.status : "completed";
     await saveSwarmRun(sql, {
       organizationId: activity.organization_id,
@@ -211,7 +266,7 @@ export async function backfillSwarmRuns(sql: Sql, now: number): Promise<number> 
       trigger: typeof data.trigger === "string" ? data.trigger : "lead_created",
       now: activity.created_at,
     });
-    inserted += 1;
+    if (!before) inserted += 1;
   }
   const workflows = await sql.all<{
     id: string;

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — Swarm backfill replays timeline lines from oldest to newest, and a second insert of the same execution updates the existing row instead of failing migrate.
+- **Why** — The first activity was kept forever, so a later completed line never replaced running. Two migrate callers could also both insert and hit the unique execution index.
+- **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`
+- **Data-flow impact** — Activities update status and finished_at in time order. A workflow last status still inserts only when that execution is missing. `saveSwarmRun` upserts on `execution_id` and, if the insert still raises a unique error, updates the row that won.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/swarm-runs.test.ts src/db/migrate.test.ts` in `handoff` (2 files, 14 tests, passed).
+
+## 2026-10-09
+
 - **What changed** — `migrate` copies existing swarm timeline lines and each workflow's last execution into `swarm_runs`, once per execution id.
 - **Why** — Runs that started before the `swarm_runs` table existed would otherwise stay only on the timeline or on `client_workflows.last_execution_id`.
 - **Code touchpoints** — `handoff/src/lib/swarm-runs.ts`, `handoff/src/db/migrate.ts`
