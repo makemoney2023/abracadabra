@@ -301,6 +301,91 @@ describe("mailbox reply", () => {
     expect(dropped.brief).toBeNull();
   });
 
+  it("opens a lead and asks an authenticated new sender what they want", async () => {
+    let opened: { email: string; name: string | null } | null = null;
+    const answer = await handleInboundEmail(
+      { ...message, from: "Ada North <ada@northwind.example>", text: "We need a new site." },
+      {
+        lookup: async () => ({ organizationId: null, organizations: [], authenticated: true }),
+        openProspect: async (input) => {
+          opened = input;
+          return { id: "lead-1", name: "Ada North" };
+        },
+        thread: async () => fresh(),
+        ownAddress: "magic@abra-ca-dabra.app",
+        bookingUrl: "https://cal.example/working-session",
+        answer: async (_organizationId, _organizations, prospect) => {
+          expect(prospect).toBe(true);
+          return {
+            reply: "What should this site accomplish?",
+            kind: "other" as const,
+            goal: null,
+            due: null,
+            file: false,
+            actions: [{ title: "Build the site", assignee: null, due: null, skill: null }],
+            brief: null,
+            rules: null,
+          };
+        },
+      },
+    );
+    expect(opened).toEqual({ email: "ada@northwind.example", name: "Ada North" });
+    expect(answer.organizationId).toBe("lead-1");
+    expect(answer.prospect).toBe(true);
+    expect(answer.reply).toBe("What should this site accomplish?");
+    expect(answer.reply).not.toContain("registered");
+    expect(answer.file).toBe(false);
+    expect(answer.plan.actions).toEqual([]);
+    expect(answer.bookingOffered).toBe(false);
+  });
+
+  it("offers the booking link once the prospect's outcome is on the brief", async () => {
+    const answer = await handleInboundEmail(message, {
+      lookup: async () => ({
+        organizationId: "lead-1",
+        organizations: [{ id: "lead-1", name: "Ada North", kind: "lead" }],
+        authenticated: true,
+      }),
+      openProspect: async () => {
+        throw new Error("already a lead");
+      },
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+      bookingUrl: "https://cal.example/working-session",
+      answer: async () => ({
+        reply: "A working session is the next step.",
+        kind: "other" as const,
+        goal: "more booked calls",
+        due: "Thursday",
+        file: true,
+        actions: [],
+        brief: "They want a site so buyers can book a call.",
+        rules: null,
+      }),
+    });
+    expect(answer.prospect).toBe(true);
+    expect(answer.reply).toContain("https://cal.example/working-session");
+    expect(answer.bookingOffered).toBe(true);
+    expect(answer.plan.brief).toContain("book a call");
+    expect(answer.file).toBe(false);
+  });
+
+  it("refuses an unauthenticated new sender and does not open a lead", async () => {
+    let opened = false;
+    const unknown = await handleInboundEmail(message, {
+      lookup: async () => ({ organizationId: null, organizations: [], authenticated: false }),
+      openProspect: async () => {
+        opened = true;
+        return { id: "lead-1", name: "Ada" };
+      },
+      thread: async () => fresh(),
+      ownAddress: "magic@abra-ca-dabra.app",
+    });
+    expect(opened).toBe(false);
+    expect(unknown.reply).toBe("Please write from the address registered with us, or sign in to your space.");
+    expect(unknown.prospect).toBe(false);
+  });
+
   it("does not call the model until the sender and the client are known", async () => {
     let calls = 0;
     const answer = async () => {

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — An authenticated new sender to `magic@abra-ca-dabra.app` becomes a lead. Magic asks what they want to accomplish, the problem, and the outcome, then offers the booking link once that sentence is on the brief. A sender who fails DKIM or DMARC still gets the fixed refusal.
+- **Why** — Unknown mail was refused even when the address was authenticated, so a prospect could not start a conversation or land in HQ.
+- **Code touchpoints** — `handoff/src/lib/prospect-lead.ts`, `handoff/src/lib/client-channel.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/app/api/client-messages/route.ts`, `handoff/src/agent/worker.ts`, `handoff/src/db/conversations.ts`, `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — `email()` looks up the sender. An authenticated miss calls `open_prospect`, then the prospect instructions. The reply files no tasks. The open deal stores the next step. Cal.com still writes the appointment through `POST /api/intake/booking`.
+- **API / schema impact** — `POST /api/client-messages` accepts `open_prospect`. `record` accepts `prospect` and `bookingOffered`. `BOOKING_URL` is a handoff-agent var. No migration.
+- **Verification** — `npx vitest run src/app/api/client-messages/route.test.ts src/lib/client-channel.test.ts src/lib/hq-chat-playbook.test.ts src/lib/prospect-lead.test.ts` in `handoff/` passed 36 tests. `npx eslint` on the touched TypeScript files exited 0. `npx tsc --noEmit -p tsconfig.agent.json` exited 0.
+
+## 2026-10-09
+
 - **What changed** — A known sender gets the mailbox model's own sentence. Plain text from Workers AI is sent as the reply. A reply that prices, promises a date, or names another client is still sent, and nothing is filed from that turn.
 - **Why** — A model answer that was not JSON, or that tripped the safety check, was replaced with "Got it. I have your note. A person on the team will follow up." or "A person on the team will pick this up."
 - **Code touchpoints** — `handoff/src/lib/client-channel.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `docs/hq-agent-spec.md`
