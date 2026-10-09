@@ -71,11 +71,14 @@ npm run deploy
 
 ## Environment Variables
 
-Workers AI and R2 are bound via `wrangler.toml`. One optional secret:
+Workers AI and R2 are bound via `wrangler.toml`. Secrets:
 
 | Secret | Purpose |
 |---|---|
 | `RESET_TOKEN` | Enables `POST /api/admin/reset`. Without it the endpoint returns 403. |
+| `SWARM_RUN_SECRET` | Bearer HQ sends before a run may call the MCP portal. Without it, a `portal` server is dropped. |
+| `CF_ACCESS_CLIENT_ID` | Access service token id, added only on an authorized portal call. |
+| `CF_ACCESS_CLIENT_SECRET` | Access service token secret, added only on an authorized portal call. |
 
 ## Wipe All Run Data
 

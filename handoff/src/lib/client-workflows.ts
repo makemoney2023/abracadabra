@@ -3,6 +3,7 @@ import { recordAgentRun } from "./agent-activity";
 import { leadBrief, runLeadSwarm } from "./lead-swarm";
 import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
+import { portalRuntime } from "./portal-env";
 import { packTemplateId } from "./pack-templates";
 import type { ObjectStore } from "./store/objects";
 import { saveSwarmRun } from "./swarm-runs";
@@ -254,6 +255,8 @@ export async function runClientWorkflow(input: {
   brief: string;
   origin: string;
   now: number;
+  portalUrl?: string;
+  runSecret?: string;
   fetchImpl?: typeof fetch;
   wait?: (ms: number) => Promise<void>;
 }): Promise<{ ok: true; executionId: string; status: string; output: string } | { ok: false; error: "missing" | "invalid" }> {
@@ -264,8 +267,13 @@ export async function runClientWorkflow(input: {
     [input.workflowId],
   );
   if (!workflow) return { ok: false, error: "missing" };
+  const runtime = portalRuntime();
+  const portalUrl = input.portalUrl ?? runtime.MCP_PORTAL_URL ?? "";
+  const runSecret = input.runSecret ?? runtime.runSecret ?? "";
   const mcpServerIds = storedMcpIds(workflow.mcp_server_ids);
-  const mcpServers = mcpServerIds ? mcpServersFor(mcpServerIds, input.origin) : null;
+  if (!mcpServerIds) return { ok: false, error: "invalid" };
+  const ids = mcpServerIds.length > 0 ? mcpServerIds : portalUrl.startsWith("https://") ? ["portal"] : [];
+  const mcpServers = mcpServersFor(ids, input.origin, portalUrl);
   if (!mcpServers) return { ok: false, error: "invalid" };
   try {
     const spaceContext = await clientSpaceContext(input.sql, workflow.organization_id);
@@ -275,6 +283,7 @@ export async function runClientWorkflow(input: {
       brief: spaceContext ? `${brief}\n\n${spaceContext}` : brief,
       templateId: workflow.template_id,
       mcpServers,
+      runSecret: mcpServers.some((server) => server.id === "portal") ? runSecret : "",
       fetchImpl: input.fetchImpl,
       wait: input.wait,
     });

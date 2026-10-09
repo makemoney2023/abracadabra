@@ -12,6 +12,10 @@ export interface Env {
   ASSETS: Fetcher;
   /** Enables POST /api/admin/reset when set (wrangler secret). */
   RESET_TOKEN?: string;
+  /** Required before a run may call the MCP portal. */
+  SWARM_RUN_SECRET?: string;
+  CF_ACCESS_CLIENT_ID?: string;
+  CF_ACCESS_CLIENT_SECRET?: string;
 }
 
 export default {

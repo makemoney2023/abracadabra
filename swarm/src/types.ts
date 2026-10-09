@@ -61,6 +61,8 @@ export interface WorkflowExecution {
   results: Record<string, NodeResult>;
   startedAt: number;
   finishedAt?: number;
+  /** True when this run presented SWARM_RUN_SECRET. The secret itself is not stored. */
+  portalAllowed?: boolean;
 }
 
 export interface WSMessage {

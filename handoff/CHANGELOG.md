@@ -2,6 +2,24 @@
 
 ## 2026-10-09
 
+- **What changed** — Super admins can list the MCP portal's servers at `/mcp` and turn each one on or off. A swarm run with no stored servers calls that portal when it is configured. Search Console grants live on the client, and a connector worker exposes `search_analytics` and `inspect_url` for the granted property.
+- **Why** — The agent and swarm runs need the same portal grant, and staff need a switch that does not detach a server or rewrite the portal mapping.
+- **Code touchpoints** — `handoff/src/lib/portal-session.ts`, `handoff/src/app/mcp/page.tsx`, `handoff/src/lib/mcp-catalog.ts`, `handoff/src/lib/client-workflows.ts`, `swarm/src/mcp/portal-gate.ts`, `handoff/src/lib/connector-grants.ts`, `connectors/src/index.ts`, `handoff/migrations/0020_connector_grants.sql`
+- **Data-flow impact** — `/mcp` calls `portal_list_servers` and `portal_toggle_single_server` with the Access service token. HQ sends `SWARM_RUN_SECRET` when a run includes the portal. The swarm adds the Access headers for that call and does not store them. `connector_grants` is the Search Console property per client.
+- **API / schema impact** — New table `connector_grants`. New page `/mcp`. New worker `handoff-connectors`. New secrets `SWARM_RUN_SECRET` on HQ and the swarm, and `CONNECTOR_TOKEN` plus `GOOGLE_SEARCH_CONSOLE_SA` on the connector worker.
+- **Verification** — `npm test` in `handoff/` (131 files, 774 tests, plus the agent worker suite of 7). `npm test` and `npx tsc --noEmit` in `swarm/` (28 tests). `npm test` and `npx tsc --noEmit` in `connectors/` (6 tests). `npx eslint` on the touched handoff TypeScript files exited 0.
+
+## 2026-10-09
+
+- **What changed** — A design and an implementation plan describe the HQ MCP page, the portal grant the agent and swarm runs share, and the Search Console connector behind that portal. No runtime behavior changed.
+- **Why** — Swarm runs could only attach the demo MCP server, and nothing in HQ listed the Cloudflare portal's servers or turned them on or off.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`, `docs/superpowers/plans/2026-10-09-mcp-connectors.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `README.md`
+- **Data-flow impact** — none until the plan is implemented.
+- **API / schema impact** — none. The plan adds catalog id `portal`, `/mcp`, `SWARM_RUN_SECRET`, and `connector_grants`.
+- **Verification** — docs only. No test run.
+
+## 2026-10-09
+
 - **What changed** — Saving project requirements asks the agent for what each task must produce. That note is stored on the task and shown on the card. Saving again fills a task that only had a title. A project that already has tasks does not get another set of cards when the model renames them.
 - **Why** — The first pass created titles only. The card had no detail.
 - **Code touchpoints** — `handoff/src/lib/requirement-tasks.ts`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/work/board.tsx`
