@@ -1,241 +1,283 @@
 import Link from "next/link";
-import type { TodayBoard, WorkTask } from "@/db/crm";
-import { clientSpaceHref } from "@/lib/host";
+import type { DealCard, TodayBoard } from "@/db/crm";
+import { DEAL_STAGE_LABEL } from "@/db/crm";
+import { formatRelative } from "@/lib/format";
+import { PageFrame } from "@/components/page-frame";
+import { Metric } from "@/components/metric";
+import { MetricStrip } from "@/components/metric-strip";
+import { DataTable, type Column } from "@/components/data-table";
+import { Timeline, type TimelineItem } from "@/components/timeline";
+import { EmptyState } from "@/components/empty-state";
+import { StatusDot } from "@/components/status-dot";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ActivityTime } from "./activity-time";
 import { RequestDecisionForm } from "./clients/thread-forms";
-import { dayLabel } from "./projects/dates";
+import { OpenPaletteButton, TodayFeedToggle } from "./today-controls";
+import {
+  activityItems,
+  clientsAtRisk,
+  greeting,
+  needsYou,
+  pipelineCounts,
+  timelineFilter,
+  todayKicker,
+  todayMetrics,
+  type ClientHealth,
+  type TodayFeed,
+  type TodayItem,
+} from "./today-view";
 
-function taskHref(task: WorkTask): string {
-  if (task.project_id) return `/projects/${task.project_id}`;
-  return `/clients/${task.organization_id}`;
+const GROUPS = ["Today", "Yesterday", "Earlier"] as const;
+
+function dayKey(ms: number): string {
+  const date = new Date(ms);
+  return `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
 }
 
-function activityLabel(kind: string, status: string): string {
-  if (kind === "agent.wake_failed") return "Agent did not wake";
-  if (kind === "schema.scan") {
-    if (status === "queued") return "Schema scan queued";
-    if (status === "not_started") return "Schema scan did not start";
-    return status ? `Schema scan ${status}` : "Schema scan";
-  }
-  return status ? `Swarm ${status}` : "Swarm run";
+function groupOf(at: number | undefined, now: number): (typeof GROUPS)[number] {
+  const stamp = at ?? now;
+  if (dayKey(stamp) === dayKey(now)) return "Today";
+  const yesterday = new Date(now);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  if (dayKey(stamp) === dayKey(yesterday.getTime())) return "Yesterday";
+  return "Earlier";
 }
 
-function activityExtra(label: string, body: string | null): string | null {
-  if (!body) return null;
-  if (body === label) return null;
-  if (body.startsWith(`${label}.`) || body.startsWith(`${label} `)) {
-    const rest = body.slice(label.length).replace(/^[\s.:]+/, "");
-    return rest || null;
-  }
-  return body;
+function ageOf(at: number | undefined, now: number): string {
+  if (at === undefined || at > now) return "";
+  return formatRelative(at, now);
 }
 
-export function TodayScreen({ board }: { board: TodayBoard }) {
+function statusValue(tone: TodayItem["tone"]): { domain: "task" | "project"; value: string } {
+  if (tone === "late") return { domain: "task", value: "late" };
+  if (tone === "blocked") return { domain: "task", value: "blocked" };
+  return { domain: "project", value: "waiting_on_client" };
+}
+
+const COLUMNS: Column<TodayItem>[] = [
+  {
+    key: "status",
+    header: "Status",
+    width: "4.5rem",
+    cell: (row) => {
+      const status = statusValue(row.tone);
+      return <StatusDot domain={status.domain} value={status.value} />;
+    },
+  },
+  {
+    key: "title",
+    header: "Title",
+    cell: (row) =>
+      row.href ? (
+        <Link href={row.href} className="font-medium hover:underline">
+          {row.title}
+        </Link>
+      ) : (
+        row.title
+      ),
+  },
+  {
+    key: "client",
+    header: "Client",
+    cell: (row) => row.client ?? "",
+  },
+  {
+    key: "age",
+    header: "Age",
+    align: "right",
+    cell: () => "",
+  },
+];
+
+export function TodayScreen({
+  board,
+  now,
+  activeClients,
+  deals,
+  health,
+  name,
+  feed,
+}: {
+  board: TodayBoard;
+  now: number;
+  activeClients: number;
+  deals: Pick<DealCard, "stage">[];
+  health: ClientHealth[];
+  name?: string;
+  feed: TodayFeed;
+}) {
+  const when = new Date(now);
+  const metrics = todayMetrics(board, now, activeClients);
+  const rows = needsYou(board, 8, now);
+  const tasks = rows.filter((row) => !row.request);
+  const requests = rows.filter((row) => row.request);
+  const activity = timelineFilter(activityItems(board), feed);
+  const stages = pipelineCounts(deals);
+  const risk = clientsAtRisk(health);
+  const runs = activityItems(board)
+    .filter((item) => item.run)
+    .slice(0, 5);
+  const columns: Column<TodayItem>[] = COLUMNS.map((column) =>
+    column.key === "age" ? { ...column, cell: (row) => ageOf(row.at, now) } : column,
+  );
+  const grouped = GROUPS.map((label) => ({
+    label,
+    items: activity
+      .filter((item) => groupOf(item.at, now) === label)
+      .map(
+        (item): TimelineItem => ({
+          id: item.id,
+          at: item.at ?? now,
+          title: item.title,
+          body: item.body ?? item.client,
+          href: item.href,
+        }),
+      ),
+  })).filter((group) => group.items.length > 0);
+
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
-      <h1 className="font-heading text-4xl leading-tight">Today</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Agent activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.agentActivity.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No agent activity in the last 7 days.</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {board.agentActivity.map((row) => {
-                const label = activityLabel(row.kind, row.status);
-                const extra = activityExtra(label, row.body);
-                return (
-                  <li key={row.id} className="text-sm">
-                    <ActivityTime ms={row.createdAt} />
-                    <span className="ml-2">{label}</span>
-                    {row.organizationId ? (
-                      <Link href={`/clients/${row.organizationId}`} className="ml-2">
-                        {row.organizationName || "Client"}
+    <PageFrame
+      kicker={todayKicker(when)}
+      title={greeting(when, name)}
+      actions={
+        <>
+          <Button size="sm" asChild>
+            <Link href="/leads">New lead</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/work">New task</Link>
+          </Button>
+          <OpenPaletteButton />
+        </>
+      }
+    >
+      <MetricStrip>
+        {metrics.map((metric) => (
+          <Metric
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+            tone={metric.tone}
+            href={metric.href}
+          />
+        ))}
+      </MetricStrip>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-heading text-lg font-medium">Needs you</h2>
+          {rows.length > 0 ? (
+            <Link href="/work" className="text-sm text-muted-foreground hover:text-foreground">
+              View all
+            </Link>
+          ) : null}
+        </div>
+        {rows.length === 0 ? (
+          <EmptyState
+            title="Nothing needs you"
+            action={
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/work">Work</Link>
+              </Button>
+            }
+          />
+        ) : (
+          <>
+            {tasks.length > 0 ? (
+              <DataTable columns={columns} rows={tasks} rowKey={(row) => row.id} empty={null} />
+            ) : null}
+            {requests.length > 0 ? (
+              <ul className="flex flex-col gap-4">
+                {requests.map((request) => (
+                  <li key={request.id} className="rounded-lg border border-border p-4 text-sm">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <Link href={request.href ?? "/clients"} className="font-medium hover:underline">
+                        {request.client || "Client"}
                       </Link>
-                    ) : null}
-                    {row.reportUrl ? (
-                      <a href={row.reportUrl} className="ml-2">
-                        Report
-                      </a>
-                    ) : null}
-                    {extra ? <p className="text-muted-foreground">{extra}</p> : null}
-                    {row.artifacts.length > 0 ? (
-                      <p className="font-mono text-xs text-muted-foreground">{row.artifacts.join(", ")}</p>
-                    ) : null}
+                      <span className="text-muted-foreground">{request.title}</span>
+                    </div>
+                    <RequestDecisionForm id={request.id} />
                   </li>
-                );
-              })}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>New leads</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.newLeads.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No new leads.</p>
+                ))}
+              </ul>
+            ) : null}
+          </>
+        )}
+      </section>
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-heading text-lg font-medium">Activity</h2>
+            <TodayFeedToggle value={feed} />
+          </div>
+          {grouped.length === 0 ? (
+            <EmptyState title="Nothing new" />
           ) : (
-            <ul className="flex flex-col gap-2">
-              {board.newLeads.map((lead) => (
-                <li key={lead.id} className="text-sm">
-                  <Link href={`/clients/${lead.organizationId}`}>{lead.title}</Link>
-                  <span className="ml-2 text-muted-foreground">{lead.organizationName}</span>
+            grouped.map((group) => (
+              <div key={group.label} className="space-y-2">
+                <h3 className="font-mono text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                  {group.label}
+                </h3>
+                <Timeline items={group.items} now={now} />
+              </div>
+            ))
+          )}
+        </section>
+
+        <aside className="space-y-4">
+          <section className="rounded-lg border border-border p-4">
+            <h2 className="mb-3 font-heading text-sm font-medium">Pipeline</h2>
+            <ul className="flex flex-col gap-1.5 text-sm">
+              {stages.map((stage) => (
+                <li key={stage.stage} className="flex items-baseline justify-between gap-3">
+                  <span>{DEAL_STAGE_LABEL[stage.stage]}</span>
+                  <span className="tabular-nums text-muted-foreground">{stage.count}</span>
                 </li>
               ))}
             </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Calls</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.calls.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No calls in the next 7 days.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {board.calls.map((call) => (
-                <li key={call.id} className="text-sm">
-                  <Link href={`/clients/${call.organizationId}`}>{call.organizationName}</Link>
-                  <span className="ml-2 text-muted-foreground">{dayLabel(call.startsAt)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks due</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.tasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tasks due.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {board.tasks.map((task) => (
-                <li key={task.id} className="text-sm">
-                  <Link href={taskHref(task)}>{task.title}</Link>
-                  <span className="ml-2 text-muted-foreground">{task.organization_name}</span>
-                  {task.due_at ? <span className="ml-2 text-muted-foreground">Due {dayLabel(task.due_at)}</span> : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Deals that need a next step</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.stalledDeals.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Every open deal has a next step.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {board.stalledDeals.map((deal) => (
-                <li key={deal.id} className="text-sm">
-                  <Link href="/leads">{deal.title}</Link>
-                  <span className="ml-2 text-muted-foreground">{deal.organizationName}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Waiting on a client</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.waitingSpaces.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No spaces waiting on a client.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {board.waitingSpaces.map((space) => (
-                <li key={`${space.id}-${space.requestTitle}`} className="text-sm">
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={clientSpaceHref(space.slug)}>{space.displayName}</a>
-                  </Button>
-                  <span className="ml-2 text-muted-foreground">{space.requestTitle}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Invoices</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.invoices.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No invoices due.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {board.invoices.map((invoice) => (
-                <li key={invoice.id} className="text-sm">
-                  <span>{invoice.number}</span>
-                  <span className="ml-2 text-muted-foreground">{invoice.organizationName}</span>
-                  <span className="ml-2 text-muted-foreground">Due {dayLabel(invoice.dueAt)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Needs you</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.workRequests.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No client requests waiting.</p>
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {board.workRequests.map((request) => (
-                <li key={request.id} className="text-sm">
-                  <Link href={`/clients/${request.organizationId}`}>{request.organizationName}</Link>
-                  <span className="ml-2 text-muted-foreground">{request.channel}</span>
-                  <p>{request.body}</p>
-                  <RequestDecisionForm id={request.id} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Agent notes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {board.agentNotes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No agent notes.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {board.agentNotes.map((note) => (
-                <li key={note.id} className="text-sm">
-                  {note.organizationId ? (
-                    <Link href={`/clients/${note.organizationId}`}>{note.organizationName || "Client"}</Link>
-                  ) : (
-                    <span>{note.organizationName || "Note"}</span>
-                  )}
-                  {note.body ? <p>{note.body}</p> : null}
-                  <span className="font-mono text-xs text-muted-foreground">{dayLabel(note.createdAt)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-    </main>
+          </section>
+
+          <section className="rounded-lg border border-border p-4">
+            <h2 className="mb-3 font-heading text-sm font-medium">Clients at risk</h2>
+            {risk.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Every client is on track.</p>
+            ) : (
+              <ul className="flex flex-col gap-2 text-sm">
+                {risk.map((client) => (
+                  <li key={client.id} className="flex items-center gap-2">
+                    <StatusDot domain="health" value={client.health} />
+                    <Link href={`/clients/${client.id}`} className="hover:underline">
+                      {client.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-lg border border-border p-4">
+            <h2 className="mb-3 font-heading text-sm font-medium">Agent runs</h2>
+            {runs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No agent runs in the last 7 days.</p>
+            ) : (
+              <ul className="flex flex-col gap-2 text-sm">
+                {runs.map((run) => (
+                  <li key={run.id}>
+                    {run.href ? (
+                      <Link href={run.href} className="hover:underline">
+                        {run.title}
+                      </Link>
+                    ) : (
+                      <span>{run.title}</span>
+                    )}
+                    <span className="ml-2 text-muted-foreground">{formatRelative(run.at ?? now, now)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </aside>
+      </div>
+    </PageFrame>
   );
 }

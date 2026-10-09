@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { todayFor } from "@/db/crm";
+import { listDeals, listOrganizations, todayFor } from "@/db/crm";
 import { HqHome } from "./hq-home";
 import { SignInForm } from "./sign-in-form";
 import { StaffShell } from "./staff-shell";
 import { TodayScreen } from "./today-screen";
+import { greetingName, todayFeed, type ClientHealth } from "./today-view";
 import { workspacesFor } from "@/db/records";
 import { clock } from "@/lib/clock";
 import { openSession } from "@/lib/current";
@@ -12,8 +13,20 @@ import { hqOrigin, isHqHost } from "@/lib/host";
 import { renamePreviewLocker } from "@/lib/preview-session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+const CLIENT_HEALTH = `SELECT o.id AS id, o.name AS name, s.health AS health
+  FROM organizations o
+  JOIN status_updates s ON s.id = (
+    SELECT s2.id FROM status_updates s2
+    WHERE s2.organization_id = o.id
+    ORDER BY s2.created_at DESC, s2.id DESC
+    LIMIT 1
+  )
+  WHERE o.archived_at IS NULL AND o.kind = 'client'
+  ORDER BY o.name`;
+
 export default async function Home({ searchParams }: PageProps<"/">) {
-  const notice = (await searchParams).notice;
+  const params = await searchParams;
+  const notice = params.notice;
   const linkExpired = notice === "link";
   const openFailed = notice === "open";
   const shareFailed = notice === "share";
@@ -21,10 +34,28 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const host = (await headers()).get("host") ?? "";
   if (isHqHost(host)) {
     if (caller.userId && caller.staff) {
-      const board = await todayFor(sql, caller, clock());
+      const now = clock();
+      const [board, orgs, deals, health, staff] = await Promise.all([
+        todayFor(sql, caller, now),
+        listOrganizations(sql, caller),
+        listDeals(sql, caller),
+        sql.all<ClientHealth>(CLIENT_HEALTH),
+        sql.get<{ email: string }>(
+          "SELECT email FROM staff WHERE user_id = ? AND revoked_at IS NULL",
+          [caller.userId],
+        ),
+      ]);
       return (
         <StaffShell>
-          <TodayScreen board={board} />
+          <TodayScreen
+            board={board}
+            now={now}
+            activeClients={orgs.filter((org) => org.kind === "client").length}
+            deals={deals}
+            health={health}
+            name={greetingName(staff?.email)}
+            feed={todayFeed("feed" in params ? params.feed : undefined)}
+          />
         </StaffShell>
       );
     }

@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ Today opens with a greeting, five counts, a needs-you list, and a timeline of leads, clients, and agent runs.
+- **Why** — The old Today page was a stack of cards with no counts and no way to see what to do first.
+- **Code touchpoints** — `handoff/src/app/today-view.ts`, `handoff/src/app/today-screen.tsx`, `handoff/src/app/today-controls.tsx`, `handoff/src/app/page.tsx`, `handoff/src/app/hq-home.tsx`
+- **Data-flow impact** — Today still reads `todayFor`. It also counts active clients, deal stages, and the latest health on each client.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/app/today-view.test.ts` (8 tests). `npx tsc --noEmit` passed. `npx eslint` on the touched files passed. Full `npm test` follows this commit. `next build` was not run.
+
+## 2026-10-09
+
 - **What changed** — Every HQ route shows a skeleton of its main strip, table, board, thread, or frame while it loads, and a retry screen when it fails. The retry screen does not print the error.
 - **Why** — A slow or failed page left a blank inset.
 - **Code touchpoints** — `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-error.tsx`, `handoff/src/components/page-frame.tsx`, `loading.tsx` and `error.tsx` under `handoff/src/app/`, `leads/`, `schema/`, `clients/`, `clients/[id]/`, `work/`, `projects/`, `chat/`, `swarm/`, `admin/`, and `settings/`
