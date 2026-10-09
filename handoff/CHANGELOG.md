@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — The eight mailbox follow-ups have a spec and an implementation order. Nothing in that list runs yet.
+- **Why** — Budget, a freemail website and schema scan, a known client on a new address, a stalled thread, lead file space, opt-out, the readiness link, and a Cal.com confirmation were named and not planned against the code.
+- **Code touchpoints** — `docs/mailbox-later.md`, `docs/hq-agent-spec.md`
+- **Data-flow impact** — none. The plan describes later changes to the prospect reply, `open_prospect`, `startLeadSchemaScan`, `storeEmailAttachments`, and `consumeBooking`.
+- **API / schema impact** — none in this change. The plan adds `contacts.opted_out` when that step is built. `contacts.opted_in` stays unused so a default of 0 does not silence mail.
+- **Verification** — Docs only. No tests.
+
+## 2026-10-09
+
 - **What changed** — The mailbox that opens a lead for an authenticated new sender, and that sends the model's own sentence, is live on Cloudflare.
 - **Why** — `handoff-agent` was already on that code. Staff HQ still lacked `open_prospect`, so a new sender was told to try again. The HQ build also needed the mailbox safety fixture to carry a full action.
 - **Code touchpoints** — `handoff/src/lib/client-channel.test.ts`
