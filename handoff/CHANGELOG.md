@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/components/ui/skeleton.tsx`, `handoff/src/components/route-fallback.tsx`, `handoff/src/components/route-fallback.test.ts`
 - **Data-flow impact** — none
 - **API / schema impact** — none
-- **Verification** — `npx vitest run src/components/route-fallback.test.ts` in `handoff`
+- **Verification** — `npx vitest run` in `handoff` (126 files, 716 tests, passed) and `npx vitest run --config vitest.agent.config.mts` (1 file, 7 tests, passed). ESLint clean on the skeleton, route fallback, and its test.
 
 ## 2026-10-09
 
