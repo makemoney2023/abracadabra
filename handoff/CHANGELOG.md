@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — HQ and the swarm have the Access service token and the shared swarm run secret. The connector worker has its bearer. The portal allows that service token. The agent worker uses the same portal URL and no longer ships empty Access values.
+- **Why** — `/mcp` and swarm portal calls need those credentials, and the portal had no service-token policy.
+- **Code touchpoints** — `handoff/wrangler.agent.jsonc`
+- **Data-flow impact** — HQ can open `https://mcp.abra-ca-dabra.app/mcp`. The portal currently has no upstream servers linked, so the list is empty until one is added. Search Console still has no service-account JSON.
+- **API / schema impact** — none. Secrets only: `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`, and `SWARM_RUN_SECRET` on HQ; the same three on the swarm; `CONNECTOR_TOKEN` on `handoff-connectors`. `GOOGLE_SEARCH_CONSOLE_SA` is not set.
+- **Verification** — Secret name lists match. Portal initialize with the service token returned 200. Connector `tools/list` with the bearer returned `search_analytics` and `inspect_url`.
+
+## 2026-10-09
+
 - **What changed** — HQ chat can list a client's projects. Task lists include the project id. Creating a project with a name that client already has returns that project.
 - **Why** — Chat could see tasks and not the project they belonged to, so it opened a second project, filed one swarm task, and left the original project alone.
 - **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/db/crm.ts`, `handoff/src/agent/hq-chat.ts`
