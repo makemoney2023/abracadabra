@@ -83,6 +83,8 @@ Handoff tool aliases on the portal are the bare names in section 4 (`client_cont
 
 Adding another server follows section 2.4. Two kinds: a remote MCP URL linked on the portal, or an adapter we host when the product has no remote MCP URL. Either way the portal link is the same shape: tools on, aliases set, credential stored, **Require user auth** off. The next wake sees the new tools. No agent deploy.
 
+Staff turn those linked servers on or off for the service-token grant at `/mcp`. The list is `portal_list_servers`. The switch is `portal_toggle_single_server`. HQ does not rewrite the portal's `servers` array. The design is [MCP connectors](superpowers/specs/2026-10-09-mcp-connectors-design.md).
+
 The agent calls a non-Handoff tool only when the current skill names it and the portal returned it. A skill that names a tool the portal did not return is skipped for that step, and the agent writes `agent.note` with the missing name. The agent does not browse or enable servers on its own.
 
 Because every client shares one upstream Handoff credential, the Durable Object name is the organization id and the agent runtime sets `organizationId` on every Handoff tool call from that name. A value supplied by the model is replaced before the call leaves the instance. Section 4.1 is the server side of that rule. The same stamp applies to every connector tool (section 2.4).
@@ -116,7 +118,7 @@ Each module:
 
 Every tool argument includes `organizationId`. The agent runtime sets it from the Durable Object name and replaces a model-supplied value, the same rule as Handoff. The connector ignores any vendor resource id the model sends (`site_url`, property, account id). It loads the grant and calls the vendor with that resource only.
 
-Grants live in D1, migration `0008_connector_grants.sql` (not part of `0007`):
+Grants live in D1, migration `0020_connector_grants.sql` (the original `0008` name was never shipped; 0008 through 0019 are already used):
 
 ```sql
 CREATE TABLE connector_grants (
@@ -143,6 +145,8 @@ Search Console has no official remote MCP server. Community servers are local pr
 
 A skill names connector tools in its file. The agent calls one only when that name is in the current skill and in the portal's tool list. Missing either, the step is skipped and `agent.note` records the name.
 
+HQ-started swarm runs call this same portal. The catalog id is `portal`. The swarm worker adds the Access headers only when the execute request presents `SWARM_RUN_SECRET`. `/mcp` is the on/off switch for that grant, so a server turned off there disappears from the next swarm run and the next wake. The canvas Plug button is unchanged and is not a catalog entry.
+
 ### 2.2 Wake reasons
 
 | Reason | Sender | What the agent does |
@@ -151,7 +155,7 @@ A skill names connector tools in its file. The agent calls one only when that na
 | `context_changed` | `handoff` after `readSpaceFiles` finishes a batch, or staff edit the website field | Re-read, new brief version if material changed. |
 | `brief_approved` | dashboard after client or staff approval | Section 6: plan tasks from the brief. |
 | `work` | cron, every 15 minutes, for orgs with tasks not `done` whose `due_at` is empty or already past | Section 7: advance each task one step. A future `due_at` waits. A task tied to a scheduled workflow is left to `due`. |
-| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived, and staff chat after a pack task moves to `run` | Run that workflow on the swarm and write `agent.swarm_run` so Today shows it. A run that is still going updates that same row. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. |
+| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived, and staff chat after a pack task moves to `run` | Run that workflow on the swarm and write `agent.swarm_run` so Today shows it. A run that is still going updates that same row. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. When the portal URL is set and the workflow has no stored ids, that catalog is `portal`. |
 | `changes_requested` | dashboard after feedback with decision `changes` | Section 10: revision round. |
 | `brief_changed` | dashboard after a brief addendum or revision is approved (section 17.4) | Re-plan from the new brief version: new pieces get tasks, changed pieces reset, removed pieces block. |
 | `run_check` | cron, hourly | Poll `bc-` runs past deadline. |
@@ -611,8 +615,9 @@ All new UI uses the existing shadcn components in `handoff/src/components/ui`.
 | Name | Where | Purpose |
 |---|---|---|
 | `AGENT_WAKE_SECRET` | `handoff` (sender), `handoff-agent` (verifier) | Signs wake calls. |
-| `MCP_PORTAL_URL` | `handoff-agent` (var) | The agency portal URL. Same value for every client. |
-| `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | `handoff-agent` | Access service token. Sent as `CF-Access-Client-Id` and `CF-Access-Client-Secret`. |
+| `MCP_PORTAL_URL` | `handoff`, `handoff-agent`, and `swarm` | The agency portal URL. Same value for every client. HQ lists and toggles it. Swarm runs call it. |
+| `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` | `handoff`, `handoff-agent`, and `swarm` | Access service token. Sent as `CF-Access-Client-Id` and `CF-Access-Client-Secret`. |
+| `SWARM_RUN_SECRET` | `handoff` (sender), `swarm` (verifier) | Bearer required before a swarm run may attach the portal. |
 | `AGENT_MCP_TOKEN` | MCP portal, upstream credential for `handoff` | The deployment knowledge key with `read,work`. Issued in HQ. Not a Worker secret. |
 | `CONNECTOR_TOKEN` | MCP portal headers for each adapter, and `handoff-connectors` | Bearer the portal sends to `handoff-connectors`. Not on `handoff-agent`. |
 | `GOOGLE_SEARCH_CONSOLE_SA` | `handoff-connectors` | Google service-account JSON for the Search Console adapter. Not on the portal and not on the agent. |
@@ -647,7 +652,7 @@ Each step: write the failing test, implement, wire, run `vitest run` and `eslint
 13. **Dashboard** — Today Agent section, `/agent`, client Agent card, board stage filter and drawer, project and client-side rendering of the two document kinds. Behavior tests on `todayFor` and the work query; component tests for the question answer form.
 14. **Skills publish script** and the two new skills if missing.
 15. **Docs** — README (Agent section, stages, tools, cron), CHANGELOG entries per step, gameplan section 12 pointer and the two amended rules (skills chosen by the brief; `CURSOR_API_KEY` on the dashboard).
-16. **Reusable MCP connectors** — does not block steps 6–14. A skill that names a connector tool before that server is linked already ends in `agent.note`. Worker `handoff-connectors`, migration `0008_connector_grants.sql`, registry module, Search Console adapter (`search_analytics`, `inspect_url`). Tests: missing bearer is 401; a model-supplied `site_url` is ignored and the call uses `connector_grants.resource`; no grant makes no vendor call; a second module registers without an agent change. Staff set the grant on the client page. Portal link for `search-console` uses the Access service-token headers plus `CONNECTOR_TOKEN`, **Require user auth** off. `remote` products (official Google Analytics MCP, when added) are a registry row and a portal link, not a module.
+16. **Reusable MCP connectors** — does not block steps 6–14. A skill that names a connector tool before that server is linked already ends in `agent.note`. The build steps are [the MCP connectors plan](superpowers/plans/2026-10-09-mcp-connectors.md): `/mcp` lists the portal grant and toggles servers with `portal_toggle_single_server`; catalog id `portal` is what swarm runs call; `SWARM_RUN_SECRET` gates that call; worker `handoff-connectors`, the grant table, and the Search Console adapter (`search_analytics`, `inspect_url`). Tests: missing bearer is 401; a model-supplied `site_url` is ignored and the call uses `connector_grants.resource`; no grant makes no vendor call; a second module registers without an agent change. Staff set the grant on the client page. Super admins use `/mcp` for on/off. Portal link for `search-console` uses the Access service-token headers plus `CONNECTOR_TOKEN`, **Require user auth** off. `remote` products (official Google Analytics MCP, when added) are a registry row and a portal link, not a module. The grant migration is `0020_connector_grants.sql`, the next free number after `0019_project_description.sql`. The original `0008_connector_grants.sql` name is retired.
 
 17. **Staff chat, read tools** — section 17.2–17.3. Comes before step 8. `/api/hq-chat/token`, `/api/hq-tools` with the read tools, `HqChat` on `handoff-agent`. Tests: missing, expired, or tampered token is 401 on both the socket and `/api/hq-tools`; a revoked staff member is 403; read tools return what the matching HQ page shows; a client-scoped tool rejects an organization the staff member cannot see.
 18. **Staff chat page and write tools** — Chat page and side panel, CRM and project write tools, then the approval-gated tools. Tests: each write tool records `actor_kind='staff'`, the signed-in `actor_id`, and `data_json.via='hq_chat'`; a gated tool does nothing until approval and nothing after a rejection; repeating an idempotency key returns the stored result; component test for the approval card.
@@ -861,7 +866,7 @@ The fixed receipt is the reply only until step 34. After that, a known client ge
 - **Agent host.** `agent.abra-ca-dabra.app` or the workers.dev host. Wakes are signed either way; a zone route is tidier for logs.
 - **Service-token headers on `addMcpServer`.** Closed. `agents` 0.26.0 accepts `{ transport: { headers } }`. The worker sends the two Access headers that way.
 - **Portal hostname.** Closed. The portal answers at `https://mcp.abra-ca-dabra.app/mcp` (confirmed 2026-10-07: DNS to Cloudflare, `/mcp` returns 401 `invalid_token`, protected-resource metadata names that URL). Production `MCP_PORTAL_URL` stays empty until the service token and the `handoff` upstream are linked. The test config uses `https://portal.example.invalid/mcp`. Further servers follow section 2.4.
-- **Connector host.** `connectors.abra-ca-dabra.app` is the planned hostname for `handoff-connectors`. It is not created yet.
+- **Connector host.** `connectors.abra-ca-dabra.app` is the planned hostname for `handoff-connectors`. It is not created yet. Staff on/off for servers already linked on `https://mcp.abra-ca-dabra.app/mcp` is specified in [MCP connectors](superpowers/specs/2026-10-09-mcp-connectors-design.md) and is not built yet.
 - **Order of conversations work.** Written here as steps 17–20 (staff chat) before step 8 (build gate), then 21–23 (client channels). Staff can read and answer client threads before clients can write in.
 - **Removed pieces (17.4).** Written as `blocked` with `removed_from_brief` and no migration. If closed-but-not-done tasks should look different on reports, add `cancelled` to `tasks.status` in `0009`.
 - **Approval policy (17.3).** Written as: notes, tasks, contacts, clients, projects, and internal status run straight away; anything a client sees, stage changes, merges, invites, and anything that directs the client agent asks first. Loosen per tool if the cards get in the way.

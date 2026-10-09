@@ -2,6 +2,15 @@
 
 ## 2026-10-09
 
+- **What changed** — A design and an implementation plan describe the HQ MCP page, the portal grant the agent and swarm runs share, and the Search Console connector behind that portal. No runtime behavior changed.
+- **Why** — Swarm runs could only attach the demo MCP server, and nothing in HQ listed the Cloudflare portal's servers or turned them on or off.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`, `docs/superpowers/plans/2026-10-09-mcp-connectors.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `README.md`
+- **Data-flow impact** — none until the plan is implemented.
+- **API / schema impact** — none. The plan adds catalog id `portal`, `/mcp`, `SWARM_RUN_SECRET`, and `connector_grants`.
+- **Verification** — docs only. No test run.
+
+## 2026-10-09
+
 - **What changed** — A client's Overview lists that client's projects. A project page has a place to write what the project needs. Linking a repo puts it on the project when the client has exactly one. A repo already on the client but not on a project shows on the project page so it can be assigned.
 - **Why** — A project saved for a client was only visible in the Projects list. The client page never listed it. A repo connected on the client stayed off the project because linking did not set `project_id`.
 - **Code touchpoints** — `handoff/src/app/clients/[id]/overview-tab.tsx`, `handoff/src/app/clients/[id]/client-body.tsx`, `handoff/src/app/clients/[id]/work-tab.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/app/projects/forms.tsx`, `handoff/src/app/projects/actions.ts`, `handoff/src/app/clients/repo-actions.ts`, `handoff/src/db/crm.ts`, `handoff/migrations/0019_project_description.sql`

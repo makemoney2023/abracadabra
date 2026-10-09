@@ -816,7 +816,9 @@ On start it connects to the agency MCP portal (spec section 2.3):
   `CF-Access-Client-Secret`, via `addMcpServer`.
 - Auth from the portal to Handoff: the deployment knowledge key, stored on the portal.
 - Tools: `this.mcp.getAITools()`, passed into Workers AI on the `AI` binding. The list is whatever
-  the portal currently publishes.
+  the portal currently publishes. Super admins turn a linked server on or off for that same
+  service-token grant at `/mcp` ([MCP connectors](superpowers/specs/2026-10-09-mcp-connectors-design.md)).
+  HQ-started swarm runs call the portal under catalog id `portal`.
 - Key scopes: `read` and `work`. `can_publish` stays off. No `billing` send and no `code` until a
   person turns those on for a different key. This key cannot send client mail, because send is not
   an MCP tool.
