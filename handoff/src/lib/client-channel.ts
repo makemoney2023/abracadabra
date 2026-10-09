@@ -74,6 +74,10 @@ export type ChannelReply = {
   classified: ClassifiedNote;
   file: boolean;
   plan: ChannelPlan;
+  /** True when this turn is a lead, not a client. */
+  prospect: boolean;
+  /** True when the reply includes the booking link. */
+  bookingOffered: boolean;
 };
 
 export const FIXED_UNKNOWN = "Please write from the address registered with us, or sign in to your space.";
@@ -88,11 +92,51 @@ const NOTHING: ClassifiedNote = { kind: "other", state: "clarifying", question: 
 const NO_PLAN: ChannelPlan = { actions: [], brief: null, rules: null };
 
 function quiet(): ChannelReply {
-  return { reply: "", organizationId: null, noteOnly: false, skip: true, asked: false, classified: NOTHING, file: false, plan: NO_PLAN };
+  return {
+    reply: "",
+    organizationId: null,
+    noteOnly: false,
+    skip: true,
+    asked: false,
+    classified: NOTHING,
+    file: false,
+    plan: NO_PLAN,
+    prospect: false,
+    bookingOffered: false,
+  };
 }
 
 function held(reply: string, organizationId: string | null, noteOnly = false): ChannelReply {
-  return { reply, organizationId, noteOnly, skip: false, asked: false, classified: NOTHING, file: false, plan: NO_PLAN };
+  return {
+    reply,
+    organizationId,
+    noteOnly,
+    skip: false,
+    asked: false,
+    classified: NOTHING,
+    file: false,
+    plan: NO_PLAN,
+    prospect: false,
+    bookingOffered: false,
+  };
+}
+
+type ListedOrg = { id: string; name: string; kind?: string };
+
+/** The name before the address. A bare address has none. */
+function displayName(from: string): string | null {
+  if (!from.includes("<")) return null;
+  const name = from.slice(0, from.indexOf("<")).replace(/^["'\s]+|["'\s]+$/g, "").trim();
+  if (!name || name.includes("@")) return null;
+  return name.slice(0, 120);
+}
+
+/** Adds the booking link once the outcome is known. An empty link leaves the sentence alone. */
+function withBookingOffer(reply: string, bookingUrl: string | undefined): { reply: string; offered: boolean } {
+  const url = bookingUrl?.trim() ?? "";
+  if (!url) return { reply, offered: false };
+  if (reply.includes(url)) return { reply, offered: true };
+  return { reply: `${reply}\n\nYou can pick a time here: ${url}`, offered: true };
 }
 
 function domainOf(address: string): string {
@@ -160,11 +204,14 @@ export function classifyClientNote(text: string, questionCount: number): Classif
 export async function handleInboundEmail(
   message: InboundEmail,
   deps: {
-    lookup: (email: string) => Promise<{ organizationId: string | null; organizations?: { id: string; name: string }[]; authenticated: boolean } | "down">;
+    lookup: (email: string) => Promise<{ organizationId: string | null; organizations?: ListedOrg[]; authenticated: boolean } | "down">;
     thread: (organizationId: string, threadId: string) => Promise<ThreadState>;
     remembered?: (threadId: string) => Promise<string | null>;
     ownAddress: string;
-    answer?: (organizationId: string, organizations: { id: string; name: string }[]) => Promise<FiledTurn>;
+    /** Public Cal.com link. Empty means the prompt asks for two times. */
+    bookingUrl?: string;
+    openProspect?: (input: { email: string; name: string | null }) => Promise<{ id: string; name: string } | "down">;
+    answer?: (organizationId: string, organizations: { id: string; name: string }[], prospect: boolean) => Promise<FiledTurn>;
   },
 ): Promise<ChannelReply> {
   const sender = addressOf(message.from);
@@ -175,8 +222,18 @@ export async function handleInboundEmail(
   if (message.bytes > 25 * 1024 * 1024) return held(TOO_BIG, null);
   const found = await deps.lookup(sender);
   if (found === "down") return held(RETRY, null);
-  const listed = found.organizations ?? (found.organizationId ? [{ id: found.organizationId, name: "" }] : []);
-  if (listed.length === 0) return held(FIXED_UNKNOWN, null);
+  let listed: ListedOrg[] = found.organizations ?? (found.organizationId ? [{ id: found.organizationId, name: "" }] : []);
+  if (listed.length === 0) {
+    if (!found.authenticated || !deps.openProspect) return held(FIXED_UNKNOWN, null);
+    let opened: { id: string; name: string } | "down";
+    try {
+      opened = await deps.openProspect({ email: sender, name: displayName(message.from) });
+    } catch {
+      return held(RETRY, null);
+    }
+    if (opened === "down") return held(RETRY, null);
+    listed = [{ id: opened.id, name: opened.name, kind: "lead" }];
+  }
   if (!found.authenticated) return held(FIXED_UNKNOWN, listed[0]!.id, true);
   const organizations = listed;
   const threadKey = message.threadId || message.messageId || sender;
@@ -193,26 +250,46 @@ export async function handleInboundEmail(
       classified: NOTHING,
       file: false,
       plan: NO_PLAN,
+      prospect: false,
+      bookingOffered: false,
     };
   }
+  const prospect = organizations.some((org) => org.id === choice.id && org.kind === "lead");
   const thread = await deps.thread(choice.id, threadKey);
   const incoming = [message.subject, message.text].filter(Boolean).join("\n");
   if (thread.replies >= THREAD_REPLY_LIMIT) {
     const limited = replyFor(thread, incoming);
-    return { ...limited, organizationId: choice.id, noteOnly: false, skip: false, file: false, plan: NO_PLAN };
+    return {
+      ...limited,
+      organizationId: choice.id,
+      noteOnly: false,
+      skip: false,
+      file: false,
+      plan: NO_PLAN,
+      prospect,
+      bookingOffered: false,
+    };
   }
   if (deps.answer) {
     try {
-      const turn = await deps.answer(choice.id, organizations);
+      const turn = await deps.answer(choice.id, organizations, prospect);
+      const plan = prospect
+        ? { ...normalizeChannelPlan(turn), actions: [] as ChannelPlan["actions"] }
+        : turn.kind === "handoff"
+          ? NO_PLAN
+          : normalizeChannelPlan(turn);
+      const offered = prospect && plan.brief ? withBookingOffer(turn.reply, deps.bookingUrl) : { reply: turn.reply, offered: false };
       return {
-        reply: turn.reply,
+        reply: offered.reply,
         organizationId: choice.id,
         noteOnly: false,
         skip: false,
-        asked: turn.kind === "new_work" && !turn.goal,
-        classified: noteFromTurn(turn),
-        file: turn.file,
-        plan: turn.kind === "handoff" ? NO_PLAN : normalizeChannelPlan(turn),
+        asked: !prospect && turn.kind === "new_work" && !turn.goal,
+        classified: prospect ? { ...NOTHING, goal: turn.goal, due: turn.due } : noteFromTurn(turn),
+        file: prospect ? false : turn.file,
+        plan,
+        prospect,
+        bookingOffered: offered.offered,
       };
     } catch {
       return { ...held(FOLLOW_UP, choice.id), classified: NOTHING };
@@ -226,6 +303,8 @@ export async function handleInboundEmail(
     skip: false,
     file: answer.classified.kind === "new_work",
     plan: NO_PLAN,
+    prospect,
+    bookingOffered: false,
   };
 }
 

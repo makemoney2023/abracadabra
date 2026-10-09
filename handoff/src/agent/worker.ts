@@ -23,7 +23,7 @@ import {
   type ClientDesk,
   type ThreadState,
 } from "../lib/client-channel";
-import { MAILBOX_INSTRUCTIONS } from "../lib/hq-chat-playbook";
+import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
 import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
 import { skillObjectKey } from "../lib/skill-library";
@@ -40,6 +40,8 @@ export interface AgentBindings extends ChatBindings {
   CF_ACCESS_CLIENT_ID: string;
   CF_ACCESS_CLIENT_SECRET: string;
   MAGIC_EMAIL_FROM?: string;
+  /** Public Cal.com link. Empty asks the prospect for two times. */
+  BOOKING_URL?: string;
   SWARM_ORIGIN?: string;
   HANDOFF_MCP_URL?: string;
   AGENT_MCP_TOKEN?: string;
@@ -500,21 +502,22 @@ function chatCors(origin: string | undefined): true | Record<string, string> {
 
 const MAILBOX_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-async function mailboxTurn(env: AgentBindings, desk: ClientDesk, incoming: string) {
+async function mailboxTurn(env: AgentBindings, desk: ClientDesk, incoming: string, prospect = false) {
   if (!env.AI) throw new Error("Chat is not configured.");
   const run = env.AI.run.bind(env.AI) as (
     model: string,
     input: { messages: { role: string; content: string }[] },
   ) => Promise<{ response?: string } | string>;
+  const booking = env.BOOKING_URL?.trim() || "none. Ask which two times work for a call.";
   const result = await run(MAILBOX_MODEL, {
     messages: [
       {
         role: "system",
-        content: MAILBOX_INSTRUCTIONS,
+        content: prospect ? `${PROSPECT_INSTRUCTIONS} Booking link: ${booking}` : MAILBOX_INSTRUCTIONS,
       },
       {
         role: "user",
-        content: `Client: ${desk.name}\nBrief: ${desk.brief || "none"}\nStatus: ${desk.status || "none"}\nOpen requests: ${desk.requests.map((row) => row.body).join("\n") || "none"}\nThread:\n${desk.messages.map((row) => `${row.kind}: ${row.body}`).join("\n") || "none"}\n\nNew message:\n${incoming}`,
+        content: `${prospect ? "Prospect" : "Client"}: ${desk.name}\nBrief: ${desk.brief || "none"}\nStatus: ${desk.status || "none"}\nOpen requests: ${desk.requests.map((row) => row.body).join("\n") || "none"}\nThread:\n${desk.messages.map((row) => `${row.kind}: ${row.body}`).join("\n") || "none"}\n\nNew message:\n${incoming}`,
       },
     ],
   });
@@ -589,7 +592,19 @@ const worker = {
         return body?.value ?? null;
       },
       ownAddress: own,
-      answer: async (organizationId, organizations) => {
+      bookingUrl: env.BOOKING_URL ?? "",
+      openProspect: async (input) => {
+        const body = (await hqChannel(env, {
+          action: "open_prospect",
+          email: input.email,
+          name: input.name ?? "",
+        })) as { value?: { id?: unknown; name?: unknown } } | null;
+        const id = body?.value?.id;
+        const name = body?.value?.name;
+        if (typeof id !== "string" || !id || typeof name !== "string" || !name) return "down";
+        return { id, name };
+      },
+      answer: async (organizationId, organizations, prospect) => {
         const body = (await hqChannel(env, {
           action: "desk_context",
           organizationId,
@@ -603,7 +618,7 @@ const worker = {
         return replyToClient({
           desk,
           incoming: [parsed.subject, parsed.text].filter(Boolean).join("\n"),
-          model: (nextDesk, incoming) => mailboxTurn(env, nextDesk, incoming),
+          model: (nextDesk, incoming) => mailboxTurn(env, nextDesk, incoming, prospect),
         });
       },
     });
@@ -639,6 +654,8 @@ const worker = {
       actions: reply.plan.actions,
       brief: reply.plan.brief,
       rules: reply.plan.rules,
+      prospect: reply.prospect,
+      bookingOffered: reply.bookingOffered,
     });
     if (!replyText) return;
     const { EmailMessage } = await import("cloudflare:email");

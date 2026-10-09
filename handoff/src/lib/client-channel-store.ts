@@ -4,7 +4,7 @@ import { emailAuthenticated } from "./client-channel";
 
 export async function lookupEmailSender(sql: Sql, email: string, authenticationResults: string): Promise<{
   organizationId: string | null;
-  organizations: { id: string; name: string }[];
+  organizations: { id: string; name: string; kind: string }[];
   authenticated: boolean;
 }> {
   const organizations = await lookupSenders(sql, email);

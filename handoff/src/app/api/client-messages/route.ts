@@ -15,6 +15,7 @@ import { openHandoffDb } from "@/db/open";
 import { applyChannelPlan, normalizeChannelPlan } from "@/lib/channel-plan";
 import { bytesFromBase64 } from "@/lib/client-channel";
 import { lookupEmailSender } from "@/lib/client-channel-store";
+import { noteProspectTurn, openEmailProspect } from "@/lib/prospect-lead";
 import { storeEmailAttachments } from "@/lib/email-files";
 import { openObjectStore } from "@/lib/store/objects";
 
@@ -55,6 +56,18 @@ export async function POST(request: Request) {
       ok: true,
       value: await lookupEmailSender(sql, text(body, "email"), text(body, "authenticationResults")),
     });
+  }
+  if (action === "open_prospect") {
+    const email = text(body, "email");
+    try {
+      const opened = await openEmailProspect(sql, { email, name: text(body, "name") || null, now });
+      return NextResponse.json({
+        ok: true,
+        value: { id: opened.organizationId, name: opened.name, created: opened.created },
+      });
+    } catch {
+      return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
+    }
   }
   if (action === "thread_org") {
     return NextResponse.json({
@@ -148,6 +161,15 @@ export async function POST(request: Request) {
     );
     const plan = normalizeChannelPlan({ actions: body.actions, brief: text(body, "brief"), rules: text(body, "rules") });
     const filed = await applyChannelPlan(sql, { organizationId, ...plan }, now);
+    if (body.prospect === true) {
+      await noteProspectTurn(sql, {
+        organizationId,
+        brief: plan.brief,
+        dueText: text(body, "dueText") || null,
+        bookingOffered: body.bookingOffered === true,
+        now,
+      });
+    }
     return NextResponse.json({ ok: true, value: { id, taskIds: filed.taskIds, briefUpdated: filed.briefUpdated } });
   }
   return NextResponse.json({ ok: false, error: "unknown" }, { status: 400 });
