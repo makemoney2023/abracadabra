@@ -2,6 +2,33 @@
 
 ## 2026-10-09
 
+- **What changed** — Review fixes for the kanban. Today opens a task with no project on the client Work tab. A refused build keeps the card's stage and clears `done_at`, and does not mark the plan skill done. A finished card that reaches Build leaves Done. The cloud run uses the latest build brief. A card whose project is missing from the client picture is not taken. Adding a task on a selected project chip files it on that project. Paused, done, and cancelled projects stay off the client and studio boards, including finished cards. The Build column shows open cloud runs over the cap. Late, this week, and blocked filters no longer mix in finished cards.
+- **Why** — An end-to-end pass found those gaps against the board plan.
+- **Code touchpoints** — `handoff/src/app/today-view.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/lib/cursor-build.ts`, `handoff/src/db/crm.ts`, `handoff/src/app/work/page.tsx`, `handoff/src/app/work/board.tsx`, `handoff/src/app/clients/actions.ts`, `handoff/src/app/clients/[id]/work-tab.tsx`
+- **Data-flow impact** — A build update still goes through `moveTaskStage`. The skill checklist is written only after the card is in Build. A refusal leaves the plan skill to do so the next wake can try again.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 713 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched TypeScript files exited 0.
+
+## 2026-10-09
+
+- **What changed** — Each project has a kanban. The same cards roll up to the client and to every client. The agent takes the top card in Describe or Engineer, one step per project, and no longer files new tasks on whichever project was saved last.
+- **Why** — Open work was a table, and planning attached tasks to the newest project.
+- **Code touchpoints** — `handoff/src/app/work/board.tsx`, `handoff/src/lib/board-model.ts`, `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-plan.ts`, `handoff/src/db/crm.ts`, `handoff/src/lib/agent-context.ts`, `handoff/migrations/0018_task_position.sql`
+- **Data-flow impact** — A `work` wake reads task position and project status. A move to Build still starts a cloud run. A move to Run still schedules a swarm pack. A refused build stays in the column it left.
+- **API / schema impact** — `tasks.position` in `0018_task_position.sql`, after the swarm-run and opt-out migrations. `client_context` adds `projects` plus `projectId` and `position` on each task. `get_brief` adds `projectId`.
+- **Verification** — `npm test` in `handoff/`: 705 tests passed, and the agent worker suite passed 7. `npx eslint` on the touched files reported no errors.
+
+## 2026-10-09
+
+- **What changed** — Each project gets a kanban the agent executes from, and that board rolls up to the client and to every client. The plan is written. The board is not built.
+- **Why** — Open work is a table, and planning still attaches new tasks to the most recently updated project.
+- **Code touchpoints** — `docs/kanban-board-gameplan.md`, `docs/hq-agent-spec.md`, `docs/agency-dashboard-gameplan.md`, `README.md`
+- **Data-flow impact** — none. The plan describes a later `position` column, one shared stage move, and a per-project pull order inside the existing client wake.
+- **API / schema impact** — none in this change. The plan adds `tasks.position` when that step is built.
+- **Verification** — Docs only. No tests.
+
+## 2026-10-09
+
 - **What changed** — The mailbox follow-ups are on `main` and published. Staff HQ and the agent worker were deployed from that merge.
 - **Why** — The branch was merged after `0016` was already the swarm runs table, so the opt-out column ships as `0017_contact_opt_out.sql`.
 - **Code touchpoints** — `handoff/migrations/0017_contact_opt_out.sql`, `handoff/src/db/migrate.ts`, `handoff/src/db/migration-sql.ts`

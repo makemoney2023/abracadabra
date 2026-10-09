@@ -2,14 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listProjectDeliverables } from "@/db/deliverables";
 import {
+  listBoard,
+  listBoardActivity,
+  openCloudRunCount,
   listMilestones,
   listProjectRepos,
-  listProjectTasks,
   listStatusUpdates,
   organizationById,
   projectById,
   repoActivitySummary,
-  type WorkTask,
 } from "@/db/crm";
 import { workspacesFor } from "@/db/records";
 import { clock } from "@/lib/clock";
@@ -19,6 +20,7 @@ import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
 import { listProjectSwarmRuns } from "@/lib/swarm-runs";
 import { DataTable, type Column } from "@/components/data-table";
+import { WorkBoard } from "../../work/board";
 import { FormDrawer } from "@/components/form-drawer";
 import { PageFrame } from "@/components/page-frame";
 import { StatusBadge } from "@/components/status-badge";
@@ -31,7 +33,7 @@ import { StaffShell } from "../../staff-shell";
 import { swarmRunLink } from "../../swarm/swarm-link";
 import { dayLabel } from "../dates";
 import { CreateDeliverableForm } from "../../deliverables/forms";
-import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm, TaskStatusForm } from "../forms";
+import { MilestoneForm, ProjectStatusForm, ProjectTaskForm, PublishUpdateForm, StatusUpdateForm } from "../forms";
 import { AUDIENCE_LABEL, HEALTH_LABEL, PROJECT_STATUS_LABEL } from "../labels";
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,10 +42,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const project = await projectById(sql, caller, id);
   if (!project) notFound();
   const now = clock();
-  const [org, milestones, tasks, updates, staff, spaces, swarmRuns] = await Promise.all([
+  const [org, milestones, tasks, updates, staff, spaces, activity, capRow, runsOpen, swarmRuns] = await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
-    listProjectTasks(sql, caller, project.id),
+    listBoard(sql, caller, { projectId: project.id }),
     listStatusUpdates(sql, caller, project.id),
     liveStaff(sql),
     sql.all<{ id: string; slug: string; display_name: string }>(
@@ -52,6 +54,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
        ORDER BY display_name`,
       [project.id, project.organization_id],
     ),
+    listBoardActivity(sql, caller, [project.organization_id]),
+    sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
+    openCloudRunCount(sql, caller),
     listProjectSwarmRuns(sql, caller, project.id),
   ]);
   const repos = await listProjectRepos(sql, caller, project.id);
@@ -63,7 +68,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   );
   const latest = updates[0];
   const people = [...new Set(tasks.flatMap((task) => (task.assignee_email ? [task.assignee_email] : [])))];
-  const milestoneName = new Map(milestones.map((milestone) => [milestone.id, milestone.name]));
   const due = project.due_at ? ` Due ${formatRelative(project.due_at, now)}.` : "";
 
   return (
@@ -138,11 +142,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                 </FormDrawer>
               </CardHeader>
               <CardContent>
-                <DataTable
-                  columns={taskColumns(project.id, project.organization_id, now, milestoneName)}
-                  rows={tasks}
-                  rowKey={(row) => row.id}
-                  empty={<p className="text-sm text-muted-foreground">No tasks yet.</p>}
+                <WorkBoard
+                  cards={tasks}
+                  now={now}
+                  showClient={false}
+                  showProject={false}
+                  runCap={capRow && Number.isFinite(Number(capRow.value)) ? Number(capRow.value) : null}
+                  runsOpen={runsOpen}
+                  activity={activity}
                 />
               </CardContent>
             </Card>
@@ -329,58 +336,6 @@ const deliverableColumns: Column<{ id: string; title: string; status: string }>[
     cell: (row) => <StatusBadge domain="deliverable" value={row.status} />,
   },
 ];
-
-function taskColumns(
-  projectId: string,
-  organizationId: string,
-  now: number,
-  milestoneName: Map<string, string>,
-): Column<WorkTask>[] {
-  return [
-    {
-      key: "status",
-      header: "Status",
-      width: "4.5rem",
-      cell: (row) => <StatusDot domain="task" value={row.status} />,
-    },
-    {
-      key: "task",
-      header: "Task",
-      cell: (row) => <span className="font-medium">{row.title}</span>,
-    },
-    {
-      key: "milestone",
-      header: "Milestone",
-      cell: (row) => (row.milestone_id ? (milestoneName.get(row.milestone_id) ?? "") : ""),
-    },
-    {
-      key: "owner",
-      header: "Owner",
-      cell: (row) => row.assignee_email ?? "",
-    },
-    {
-      key: "due",
-      header: "Due",
-      cell: (row) => {
-        if (row.due_at === null) return "";
-        const late = row.due_at < now && row.status !== "done";
-        return <span className={late ? "text-status-late" : undefined}>{formatRelative(row.due_at, now)}</span>;
-      },
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      cell: (row) => (
-        <TaskStatusForm
-          taskId={row.id}
-          projectId={projectId}
-          organizationId={organizationId}
-          status={row.status}
-        />
-      ),
-    },
-  ];
-}
 
 function GithubLink({ href, children }: { href: string; children: string }) {
   if (!href.startsWith("https://github.com/")) return <span>{children}</span>;

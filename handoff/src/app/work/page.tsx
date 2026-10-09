@@ -1,120 +1,97 @@
-import { listWork, type WorkTask } from "@/db/crm";
+import Link from "next/link";
+import { listBoard, listBoardActivity, boardClientChips, listProjects, openCloudRunCount } from "@/db/crm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
-import { formatRelative } from "@/lib/format";
-import { DataTable, type Column } from "@/components/data-table";
-import { EmptyState } from "@/components/empty-state";
 import { PageFrame } from "@/components/page-frame";
-import { StatusDot } from "@/components/status-dot";
 import { StaffShell } from "../staff-shell";
+import { WorkBoard } from "./board";
 import { WorkToolbar } from "./filters";
-import { filterWork, groupTasks, workCounts } from "./query";
-import { TaskActions } from "./task-actions";
-
-type WorkRow = WorkTask & { projectName: string };
-
-function taskHref(task: WorkRow): string {
-  if (task.project_id) return `/projects/${task.project_id}`;
-  return `/clients/${task.organization_id}`;
-}
-
-function workColumns(now: number): Column<WorkRow>[] {
-  return [
-    {
-      key: "status",
-      header: "Status",
-      width: "4.5rem",
-      cell: (row) => <StatusDot domain="task" value={row.status} />,
-    },
-    {
-      key: "task",
-      header: "Task",
-      cell: (row) => <span className="font-medium">{row.title}</span>,
-    },
-    {
-      key: "client",
-      header: "Client",
-      cell: (row) => row.organization_name,
-    },
-    {
-      key: "project",
-      header: "Project",
-      cell: (row) => row.projectName,
-    },
-    {
-      key: "owner",
-      header: "Owner",
-      cell: (row) => row.assignee_email ?? "",
-    },
-    {
-      key: "due",
-      header: "Due",
-      cell: (row) => {
-        if (row.due_at === null) return "";
-        const late = row.due_at < now;
-        return <span className={late ? "text-status-late" : undefined}>{formatRelative(row.due_at, now)}</span>;
-      },
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      cell: (row) => (
-        <TaskActions taskId={row.id} organizationId={row.organization_id} href={taskHref(row)} />
-      ),
-    },
-  ];
-}
+import { filterWork, workCounts, workHref } from "./query";
 
 export default async function WorkPage({
   searchParams,
 }: {
-  searchParams: Promise<{ late?: string; week?: string; blocked?: string; group?: string }>;
+  searchParams: Promise<{ late?: string; week?: string; blocked?: string; client?: string; project?: string }>;
 }) {
   const query = await searchParams;
   const late = query.late === "1";
   const week = query.week === "1";
   const blocked = query.blocked === "1";
-  const group = query.group === "client" ? "client" : "person";
+  const client = query.client ?? "";
+  const project = query.project ?? "";
   const { sql, caller } = await requireHqStaffPage();
   const now = clock();
-  const tasks = await listWork(sql, caller, {}, now);
-  const counts = workCounts(tasks, now);
-  const visible = filterWork(tasks, { late, week, blocked }, now);
-  const projectIds = [...new Set(visible.flatMap((task) => (task.project_id ? [task.project_id] : [])))];
-  const projects =
-    projectIds.length === 0
-      ? []
-      : await sql.all<{ id: string; name: string }>(
-          `SELECT id, name FROM projects WHERE id IN (${projectIds.map(() => "?").join(", ")})`,
-          projectIds,
-        );
-  const projectName = new Map(projects.map((project) => [project.id, project.name]));
-  const rows: WorkRow[] = visible.map((task) => ({
-    ...task,
-    projectName: task.project_id ? (projectName.get(task.project_id) ?? "") : "",
-  }));
-  const groups = groupTasks(rows, group).map((bucket) => ({
-    label: `${bucket.label} · ${bucket.tasks.length}`,
-    rows: bucket.tasks,
-  }));
+  const [cards, chips, projects, capRow, runsOpen] = await Promise.all([
+    listBoard(sql, caller, {
+      organizationId: client || undefined,
+      projectId: project && project !== "none" ? project : undefined,
+      unassigned: project === "none",
+      hideInactiveProjects: project === "" || project === "none",
+    }),
+    boardClientChips(sql, caller),
+    client ? listProjects(sql, caller, client) : Promise.resolve([]),
+    sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
+    openCloudRunCount(sql, caller),
+  ]);
+  const open = cards.filter((card) => card.status !== "done");
+  const counts = workCounts(open, now);
   const filtered = late || week || blocked;
+  const visible = filtered
+    ? filterWork(open, { late, week, blocked }, now)
+    : cards;
+  const orgIds = [...new Set(visible.map((card) => card.organization_id))];
+  const activity = await listBoardActivity(sql, caller, orgIds);
+  const runCap = capRow ? Number(capRow.value) : null;
+  const scope = { late, week, blocked, client: client || undefined };
 
   return (
     <StaffShell>
-      <PageFrame title="Work" description="Open tasks. Filter by late, this week, or blocked.">
-        <WorkToolbar late={late} week={week} blocked={blocked} group={group} counts={counts} />
-        <DataTable
-          columns={workColumns(now)}
-          rows={rows}
-          rowKey={(row) => row.id}
-          rowHref={taskHref}
-          groups={groups}
-          empty={
-            <EmptyState
-              title={filtered ? "No tasks match" : "No open tasks."}
-              body={filtered ? "Try another filter." : "Open tasks show up here."}
-            />
-          }
+      <PageFrame title="Work" description="Cards for every client. The agent takes the top card in Describe or Engineer.">
+        <WorkToolbar late={late} week={week} blocked={blocked} client={client || undefined} project={project || undefined} counts={counts} />
+        <div className="flex flex-wrap gap-2">
+          <Link href={workHref({ late, week, blocked })} className={client ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
+            All clients
+          </Link>
+          {chips.map((chip) => (
+            <Link
+              key={chip.id}
+              href={workHref({ ...scope, client: chip.id })}
+              className={chip.id === client ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+            >
+              {chip.name} · {chip.open}
+            </Link>
+          ))}
+        </div>
+        {client ? (
+          <div className="flex flex-wrap gap-2">
+            <Link href={workHref(scope)} className={project ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
+              All projects
+            </Link>
+            {projects.map((item) => (
+              <Link
+                key={item.id}
+                href={workHref({ ...scope, project: item.id })}
+                className={item.id === project ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+              >
+                {item.name}
+              </Link>
+            ))}
+            <Link
+              href={workHref({ ...scope, project: "none" })}
+              className={project === "none" ? "text-sm font-medium" : "text-sm text-muted-foreground"}
+            >
+              No project
+            </Link>
+          </div>
+        ) : null}
+        <WorkBoard
+          cards={visible}
+          now={now}
+          showClient={!client}
+          showProject={project === "" || project === "none"}
+          runCap={Number.isFinite(runCap) ? runCap : null}
+          runsOpen={runsOpen}
+          activity={activity}
         />
       </PageFrame>
     </StaffShell>

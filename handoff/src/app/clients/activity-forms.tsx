@@ -93,10 +93,12 @@ export function CallForm({ organizationId }: { organizationId: string }) {
 
 export function TaskForm({
   organizationId,
+  projectId,
   label = "New task",
   variant = "default",
 }: {
   organizationId: string;
+  projectId?: string;
   label?: string;
   variant?: "default" | "outline";
 }) {
@@ -112,6 +114,7 @@ export function TaskForm({
     >
       <ActionForm action={createTaskAction} submitLabel="Add a task" pendingLabel="Adding">
         <input type="hidden" name="organizationId" value={organizationId} />
+        {projectId ? <input type="hidden" name="projectId" value={projectId} /> : null}
         <ActionField name="title" label="Task">
           <Input name="title" required maxLength={200} />
         </ActionField>

@@ -120,6 +120,10 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
      ORDER BY completed_at DESC LIMIT 1`,
     [organizationId],
   );
+  const projects = await sql.all<{ id: string; name: string; status: string }>(
+    `SELECT id, name, status FROM projects WHERE organization_id = ? ORDER BY name, id`,
+    [organizationId],
+  );
   const project = await sql.get<{ id: string; name: string; status: string; due_at: number | null }>(
     `SELECT id, name, status, due_at FROM projects
      WHERE organization_id = ? ORDER BY updated_at DESC LIMIT 1`,
@@ -179,9 +183,13 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
     cursor_agent_id: string | null;
     skills_json: string | null;
     blocked_reason: string | null;
+    project_id: string | null;
+    position: number;
+    created_at: number;
   }>(
-    `SELECT id, title, status, stage, round, deliverable_id, cursor_agent_id, skills_json, blocked_reason
-     FROM tasks WHERE organization_id = ? ORDER BY updated_at DESC`,
+    `SELECT id, title, status, stage, round, deliverable_id, cursor_agent_id, skills_json, blocked_reason,
+            project_id, position, created_at
+     FROM tasks WHERE organization_id = ? ORDER BY position, created_at, id`,
     [organizationId],
   );
   const notes = await sql.all<{ body: string; task_id: string | null }>(
@@ -245,6 +253,7 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
           milestones: milestones.map((row) => ({ name: row.name, dueAt: row.due_at, doneAt: row.done_at })),
         }
       : null,
+    projects: projects.map((row) => ({ id: row.id, name: row.name, status: row.status })),
     workspaces: workspaces.map((row) => ({
       id: row.id,
       slug: row.slug,
@@ -272,6 +281,9 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
       status: task.status,
       stage: task.stage,
       round: task.round,
+      projectId: task.project_id,
+      position: task.position,
+      createdAt: task.created_at,
       deliverableId: task.deliverable_id,
       cursorAgentId: task.cursor_agent_id,
       skills: skillSteps(task.skills_json),
@@ -298,8 +310,9 @@ export async function getBrief(
     title: string;
     status: string;
     version: number;
+    project_id: string | null;
   }>(
-    `SELECT id, title, status, version FROM deliverables
+    `SELECT id, title, status, version, project_id FROM deliverables
      WHERE organization_id = ? AND kind = ? AND status != 'archived'
      ORDER BY updated_at DESC LIMIT 1`,
     [organizationId, kind],
@@ -332,6 +345,7 @@ export async function getBrief(
   );
   return {
     deliverableId: deliverable.id,
+    projectId: deliverable.project_id,
     kind,
     status: deliverable.status,
     version: deliverable.version,
