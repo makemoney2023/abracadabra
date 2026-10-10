@@ -20,4 +20,5 @@ export const MIGRATION_SQL: Record<string, string> = {
   "0018_task_position.sql": 'ALTER TABLE tasks ADD COLUMN position INTEGER NOT NULL DEFAULT 0;\n\nCREATE INDEX tasks_board ON tasks (organization_id, project_id, stage, status, position);\n',
   "0019_project_description.sql": "ALTER TABLE projects ADD COLUMN description TEXT;\n",
   "0020_connector_grants.sql": "CREATE TABLE connector_grants (\n  organization_id TEXT NOT NULL REFERENCES organizations(id),\n  connector_id TEXT NOT NULL,\n  resource TEXT NOT NULL,\n  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),\n  PRIMARY KEY (organization_id, connector_id)\n);\n",
+  "0021_workflow_chain.sql": "-- The text a finished workflow passes to the next workflow in its group.\nALTER TABLE client_workflows ADD COLUMN last_output TEXT;\n",
 };

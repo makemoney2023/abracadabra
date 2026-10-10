@@ -280,6 +280,7 @@ export class ClientAgent extends Agent<AgentBindings> {
     attempts: number;
     taskId?: string;
     projectId?: string | null;
+    workflowId?: string;
   }): Promise<void> {
     const origin = this.env.SWARM_ORIGIN?.replace(/\/$/, "");
     const call = this.leadCaller();
@@ -334,6 +335,31 @@ export class ClientAgent extends Agent<AgentBindings> {
           requestId: `${payload.activityKey}:done`,
         });
       }
+      if (payload.workflowId) {
+        const advanced = await call("advance_workflow_chain", {
+          workflowId: payload.workflowId,
+          executionId: payload.executionId,
+          status,
+          body: run.output,
+          requestId: `${payload.activityKey}:chain:${payload.attempts}`,
+        });
+        const next = advanced && typeof advanced === "object" ? (advanced as Record<string, unknown>) : {};
+        const nextId = typeof next.executionId === "string" ? next.executionId : "";
+        const nextWorkflowId = typeof next.workflowId === "string" ? next.workflowId : "";
+        if (next.status === "running" && nextId && nextWorkflowId) {
+          await this.schedule(45, "refreshSwarm", {
+            executionId: nextId,
+            templateId: typeof next.templateId === "string" ? next.templateId : "",
+            activityKey: `due:${nextWorkflowId}`,
+            packName: typeof next.packName === "string" ? next.packName : "Swarm",
+            trigger: "due",
+            attempts: 1,
+            taskId: typeof next.taskId === "string" ? next.taskId : "",
+            projectId: typeof next.projectId === "string" ? next.projectId : null,
+            workflowId: nextWorkflowId,
+          });
+        }
+      }
     }
     if (status === "failed" && payload.taskId) {
       await call("add_note", {
@@ -369,21 +395,28 @@ export class ClientAgent extends Agent<AgentBindings> {
           attempts: 1,
           taskId,
           projectId,
+          workflowId,
         });
       } else if (run.none === true) {
-        const open = await call("running_swarm", { requestId: wakeId });
-        const row = open && typeof open === "object" ? (open as Record<string, unknown>) : {};
-        const openId = typeof row.executionId === "string" ? row.executionId : "";
-        if (row.status === "running" && openId) {
+        const open = await call("running_swarms", { requestId: wakeId });
+        const runs =
+          open && typeof open === "object" && Array.isArray((open as { runs?: unknown }).runs)
+            ? ((open as { runs: Record<string, unknown>[] }).runs)
+            : [];
+        for (const row of runs) {
+          const openId = typeof row.executionId === "string" ? row.executionId : "";
+          if (row.status !== "running" || !openId) continue;
+          const openWorkflowId = typeof row.workflowId === "string" ? row.workflowId : "";
           await this.schedule(45, "refreshSwarm", {
             executionId: openId,
             templateId: typeof row.templateId === "string" ? row.templateId : "",
-            activityKey: `chat:${openId}`,
+            activityKey: openWorkflowId ? `due:${openWorkflowId}` : `chat:${openId}`,
             packName: typeof row.packName === "string" ? row.packName : "Swarm",
             trigger: "chat",
             attempts: 1,
             taskId: typeof row.taskId === "string" ? row.taskId : "",
             projectId: typeof row.projectId === "string" ? row.projectId : null,
+            workflowId: openWorkflowId,
           });
         }
       }

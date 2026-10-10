@@ -12,7 +12,7 @@ When a card has a pack and no swarm is running, **Run swarm** appears on the car
 
 The client portal does not get this button. Staff publish before the client sees the document.
 
-This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
+This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. Workflows in one group run one at a time. Research runs first, and its output is the next workflow's input. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
 
 ## What is already true
 
@@ -24,7 +24,7 @@ This is built. `createProject` attaches one loose space and one loose repo. Savi
 | A workflow created from a live pack writes that pack's skill steps onto its own task, in Describe. | `createClientWorkflow` and `workflowTaskPlan` in `handoff/src/lib/client-workflows.ts` |
 | Moving a card to Run schedules a swarm only when the first skill path maps to a pack template id. Otherwise the column changes and nothing is scheduled. | `moveTaskStage` → `scheduleTaskSwarm` |
 | The `due` wake starts that workflow, and if it is still running schedules `refreshSwarm`. A finished run with real output is saved in the client space and filed as an unpublished document. | `continueWork` and `refreshSwarm` in `handoff/src/agent/worker.ts`, `claimDueWorkflow` in `client-workflows.ts` |
-| Chat `run_workflow` on a workflow with a task moves that task to Run and starts that swarm. The latest staff instruction is sent with the task brief. A run that is still going wakes `due` so the follow-up can poll. | `runWorkflow` in `handoff/src/lib/hq-tools.ts` |
+| Chat `run_workflow` on a workflow with a task moves that task to Run. Research in that group runs before the others. A later workflow waits, then receives the earlier output. A run that is still going wakes `due`, and a finished run starts the next workflow. | `runWorkflow` in `handoff/src/lib/hq-tools.ts`, `claimDueWorkflow` in `handoff/src/lib/client-workflows.ts` |
 | A due run whose workflow has a task sends the task title, the task brief, and the project requirements. The draft document uses that project. A workflow with no task still sends the lead brief. | `claimDueWorkflow` |
 | `scheduleTaskSwarm` copies the task's `project_id` onto the workflow. | `scheduleTaskSwarm` |
 | Lead pack choice falls back to the schema readiness pack when nothing overlaps. | `pickSkillPack` in `handoff/src/lib/pack-picker.ts` |

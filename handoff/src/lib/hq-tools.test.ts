@@ -197,6 +197,44 @@ describe("runHqTool", () => {
     expect(brief).toEqual({ status: "in_review", published_version: 1 });
   });
 
+  it("stores the brief on the project and in its requirements", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const project = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_project", input: { organizationId, name: "Social media" }, idempotencyKey: "proj-brief" },
+      NOW,
+    );
+    const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+    const result = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "add_work",
+        input: {
+          organizationId,
+          projectId,
+          kind: "social_pack",
+          outcome: "Buyer psychology research, then a content calendar",
+          goal: "so the posts speak to loss aversion",
+          due: "Friday",
+        },
+        idempotencyKey: "work-project",
+        approved: true,
+      },
+      NOW + 1,
+      { wake: async () => {} },
+    );
+    expect(result).toMatchObject({ ok: true, value: { waitingFor: "client" } });
+    const brief = await sql.get<{ project_id: string | null }>(
+      "SELECT project_id FROM deliverables WHERE kind = 'brief'",
+    );
+    expect(brief?.project_id).toBe(projectId);
+    const description = await sql.get<{ description: string }>("SELECT description FROM projects WHERE id = ?", [projectId]);
+    expect(description?.description).toContain("Buyer psychology research, then a content calendar");
+  });
+
   it("turns an approved client request into a brief piece and records who decided", async () => {
     const sql = await database();
     const organizationId = await client(sql);

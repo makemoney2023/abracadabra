@@ -52,6 +52,8 @@ export type MoveTaskResult =
       executionId?: string;
       swarmStatus?: string;
       output?: string;
+      waitingOn?: string;
+      startedWorkflowId?: string;
     }
   | { ok: false; error: "missing" | "invalid" | GateReason };
 
@@ -274,7 +276,8 @@ async function moveToRun(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Pro
       store: input.swarm?.store,
     });
     const follow =
-      !started.ok || (started.ok && !started.none && (started.status === "running" || started.more));
+      !started.ok ||
+      (started.ok && !started.none && (started.status === "running" || started.status === "queued" || started.more));
     if (follow) await input.wake?.(scheduled.organizationId, "due");
     await logMove(sql, task, "run", inputBody("run"), input.now, input.actor);
     if (!started.ok) return started;
@@ -288,9 +291,11 @@ async function moveToRun(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Pro
       stage: "run",
       status: taskStatus,
       workflowId: scheduled.workflowId,
-      executionId: started.executionId,
+      executionId: started.executionId || undefined,
       swarmStatus: started.status,
       output: started.output,
+      waitingOn: started.status === "queued" ? started.waitingOn : undefined,
+      startedWorkflowId: started.workflowId,
     };
   }
   if (!scheduled.none) await input.wake?.(scheduled.organizationId, "due");

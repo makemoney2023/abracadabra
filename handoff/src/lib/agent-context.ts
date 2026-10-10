@@ -318,7 +318,9 @@ export async function getBrief(
   sql: Sql,
   organizationId: string,
   kind: "brief" | "design_system",
+  projectId?: string | null,
 ): Promise<Record<string, unknown> | null> {
+  const project = projectId?.trim() || null;
   const deliverable = await sql.get<{
     id: string;
     title: string;
@@ -328,8 +330,10 @@ export async function getBrief(
   }>(
     `SELECT id, title, status, version, project_id FROM deliverables
      WHERE organization_id = ? AND kind = ? AND status != 'archived'
-     ORDER BY updated_at DESC LIMIT 1`,
-    [organizationId, kind],
+       AND (? IS NULL OR project_id = ?)
+     ORDER BY CASE WHEN project_id = ? THEN 0 ELSE 1 END, updated_at DESC
+     LIMIT 1`,
+    [organizationId, kind, project, project, project],
   );
   if (!deliverable) return null;
   const items = await sql.all<{ title: string; copy_text: string | null }>(

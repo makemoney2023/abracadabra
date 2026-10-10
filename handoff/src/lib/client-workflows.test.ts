@@ -10,6 +10,7 @@ import { LIMITS } from "@/lib/policy/limits";
 import { localObjectStore } from "@/lib/store/objects";
 import { storeScanContext } from "./scan-context";
 import {
+  advanceWorkflowChain,
   assignClientWorkflow,
   createClientWorkflow,
   createWorkflowGroup,
@@ -801,7 +802,286 @@ describe("client workflows", () => {
     );
     expect(row).toEqual({ project_id: "proj-1", template_id: "pack-community-marketingskills" });
   });
+
+  it("runs research before an earlier workflow and feeds that output to the next one", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", projectId: "proj-1", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      projectId: "proj-1",
+      dueAt: NOW - 2,
+      now: NOW,
+    });
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      projectId: "proj-1",
+      dueAt: NOW - 1,
+      now: NOW + 1,
+    });
+    if (!copy.ok || !research.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const fetchImpl = chainFetch(executed);
+    const first = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(first).toMatchObject({ ok: true, workflowId: research.workflow.id, status: "completed" });
+    expect(executed).toHaveLength(1);
+    expect(executed[0]?.workflowId).toBe(`client-${research.workflow.id}`);
+    const second = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 3,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(second).toMatchObject({ ok: true, workflowId: copy.workflow.id, status: "completed" });
+    expect(executed[1]?.input).toContain("Research:");
+    expect(executed[1]?.input).toContain("Buyers fear loss.");
+  });
+
+  it("starts research when a later workflow is asked to run first", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Visual skills",
+      templateId: "pack-visual",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Research",
+      templateId: "parallel-research",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!copy.ok || !research.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const started = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      workflowId: copy.workflow.id,
+      instruction: "Calendar concepts after the research.",
+      fetchImpl: chainFetch(executed),
+      wait: async () => {},
+    });
+    expect(started).toMatchObject({ ok: true, workflowId: research.workflow.id, status: "completed" });
+    expect(executed).toHaveLength(1);
+    expect(executed[0]?.workflowId).toBe(`client-${research.workflow.id}`);
+    const copyRow = await sql.get<{ last_execution_id: string | null }>(
+      "SELECT last_execution_id FROM client_workflows WHERE id = ?",
+      [copy.workflow.id],
+    );
+    expect(copyRow?.last_execution_id).toBeNull();
+  });
+
+  it("does not start the next workflow while research is still going", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!research.ok || !copy.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const fetchImpl = chainFetch(executed, { hold: true });
+    const first = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(first).toMatchObject({ ok: true, workflowId: research.workflow.id, status: "running" });
+    const again = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 3,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(again).toEqual({ ok: true, none: true });
+    const queued = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 4,
+      workflowId: copy.workflow.id,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(queued).toMatchObject({ ok: true, status: "queued", waitingOn: research.workflow.id, workflowId: copy.workflow.id });
+    expect(executed).toHaveLength(1);
+    const due = await sql.get<{ next_run_at: number }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
+      copy.workflow.id,
+    ]);
+    expect(due?.next_run_at).toBe(NOW);
+  });
+
+  it("starts the next workflow once a finished research output arrives", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!research.ok || !copy.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const fetchImpl = chainFetch(executed, { hold: true });
+    await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl,
+      wait: async () => {},
+    });
+    fetchImpl.release();
+    const advanced = await advanceWorkflowChain({
+      sql,
+      organizationId: "org-1",
+      workflowId: research.workflow.id,
+      output: "Buyers fear loss.",
+      status: "completed",
+      origin: "https://swarm.example",
+      now: NOW + 5,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(advanced).toMatchObject({ ok: true, workflowId: copy.workflow.id, status: "completed" });
+    expect(executed[1]?.input).toContain("Research:");
+    expect(executed[1]?.input).toContain("Buyers fear loss.");
+    expect(executed[1]?.input.length).toBeLessThanOrEqual(7900);
+  });
+
+  it("keeps a long research note inside the swarm input limit", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      projectId: "proj-1",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!research.ok || !copy.ok) throw new Error("workflow");
+    await sql.run(
+      `INSERT INTO tasks (id, project_id, organization_id, title, status, stage, created_at, updated_at)
+       VALUES ('task-copy', 'proj-1', 'org-1', 'Content calendar', 'todo', 'run', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run("UPDATE client_workflows SET task_id = 'task-copy' WHERE id = ?", [copy.workflow.id]);
+    const note = `Buyers fear loss. ${"detail ".repeat(2000)}`;
+    await sql.run("UPDATE client_workflows SET last_status = 'completed', last_output = ? WHERE id = ?", [
+      note,
+      research.workflow.id,
+    ]);
+    const executed: { workflowId: string; input: string }[] = [];
+    await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      workflowId: copy.workflow.id,
+      fetchImpl: chainFetch(executed),
+      wait: async () => {},
+    });
+    expect(executed[0]?.input.length).toBeLessThanOrEqual(7900);
+    expect(executed[0]?.input).toContain("Content calendar");
+    expect(executed[0]?.input).toContain("Buyers fear loss.");
+  });
 });
+
+function chainFetch(
+  executed: { workflowId: string; input: string }[],
+  options?: { hold?: boolean },
+): typeof fetch & { release: () => void } {
+  let hold = options?.hold === true;
+  let sequence = 0;
+  const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+    const href = String(url);
+    if (href.includes("/api/template")) {
+      return Response.json({
+        id: "pack",
+        name: "Pack",
+        nodes: [{ id: "n1", type: "researcher", name: "Reader", instructions: "Read.", position: { x: 0, y: 0 } }],
+        edges: [],
+      });
+    }
+    if (href.endsWith("/api/save")) return Response.json({ success: true });
+    if (href.endsWith("/api/execute")) {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { workflowId?: string; input?: string };
+      executed.push({ workflowId: body.workflowId ?? "", input: body.input ?? "" });
+      sequence += 1;
+      return Response.json({ executionId: `run-chain-${sequence}` });
+    }
+    if (hold && sequence < 2) return Response.json({ status: "running", results: {} });
+    const output = sequence <= 1 ? "Buyers fear loss." : "Calendar drafted.";
+    return Response.json({ status: "completed", results: { n1: { status: "done", output } } });
+  }) as typeof fetch & { release: () => void };
+  fetchImpl.release = () => {
+    hold = false;
+  };
+  return fetchImpl;
+}
 
 function swarmFetch(): typeof fetch {
   return (async (url: string | URL | Request) => {

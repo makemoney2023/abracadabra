@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — Workflows in one group run one at a time. Research runs before copy, visuals, or a calendar, and its output is the next workflow's input. A brief added in chat is stored on the project.
+- **Why** — The agent started every swarm together, so research never fed the later work, and the brief was not on the project page.
+- **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/migrations/0021_workflow_chain.sql`
+- **Data-flow impact** — A later workflow waits while an earlier one is unfinished. Asking to run a later workflow starts research first when research has not started. A finished run is saved and the next workflow is armed. A follow-up that finds the finished output starts the next workflow with that text. `add_work` writes the brief's `project_id` and the project requirements.
+- **API / schema impact** — `client_workflows.last_output`. Agent tools `running_swarms` and `advance_workflow_chain`.
+- **Verification** — `npx vitest run src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/db/migrate.test.ts src/lib/hq-chat-playbook.test.ts` passed 58. `npx vitest run --config vitest.agent.config.mts` passed 7. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. eslint on the changed files exited 0. A full `npx vitest run` passed 816 and timed out 4 unrelated upload tests at 5s; those tests pass when run on their own.
+
 - **What changed** — Main is published. Staff HQ and the agent worker were deployed from that merge.
 - **Why** — Packed Run cards need to start on the live workers, and HQ chat needs the stream-order fix.
 - **Code touchpoints** — none. Deploy of `6546654`.

@@ -21,6 +21,8 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("list_swarm_packs");
     expect(HQ_CHAT_PLAYBOOK).toContain("run_workflow");
     expect(HQ_CHAT_PLAYBOOK).toContain("Do not say you cannot execute the swarm from chat");
+    expect(HQ_CHAT_PLAYBOOK).toContain("Research comes first");
+    expect(HQ_CHAT_PLAYBOOK).toContain("one at a time");
   });
 
   it("asks the mailbox for task titles and a brief sentence", () => {
