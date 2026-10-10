@@ -16,6 +16,9 @@ export const HQ_CHAT_PLAYBOOK = [
   "Put the brief sentence in body. Put standing limits, such as no video or brand colors, one per line in rules. They are stored under ## Rules.",
   "Those tasks show on Today and on the client board. Rules stay on the brief and later work must keep them.",
   "A note is only for a fact that is not a task, a deal move, a next step, or a brief change.",
+  "When staff ask to delete a project or a task, call list_projects or list_tasks, then delete_project or delete_task.",
+  "The approval card removes it. Deleting a project removes its tasks. The space, the repo, and deliverables stay.",
+  "Do not say you cannot delete work.",
 ].join(" ");
 
 /** Three short prompts. Buttons prefill the composer. They do not send. */

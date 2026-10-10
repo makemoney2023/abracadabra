@@ -21,6 +21,9 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("list_swarm_packs");
     expect(HQ_CHAT_PLAYBOOK).toContain("run_workflow");
     expect(HQ_CHAT_PLAYBOOK).toContain("Do not say you cannot execute the swarm from chat");
+    expect(HQ_CHAT_PLAYBOOK).toContain("delete_project");
+    expect(HQ_CHAT_PLAYBOOK).toContain("delete_task");
+    expect(HQ_CHAT_PLAYBOOK).toContain("Do not say you cannot delete work");
   });
 
   it("asks the mailbox for task titles and a brief sentence", () => {

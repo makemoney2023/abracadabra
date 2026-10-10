@@ -685,6 +685,11 @@ describe("agent read tools", () => {
       arguments: { organizationId: org },
     });
     expect(work.error?.code).toBe(-32001);
+    const deleted = await call(spaceToken, "tools/call", {
+      name: "delete_task",
+      arguments: { organizationId: org, taskId: "task-1", requestId: "req-del-space" },
+    });
+    expect(deleted.error?.code).toBe(-32001);
     const own = await call(spaceToken, "tools/call", { name: "list_files", arguments: {} });
     const text = own.result?.content?.[0]?.text ?? "";
     expect(text).toContain("brief.txt");
@@ -811,7 +816,10 @@ describe("agent work tools", () => {
         body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
       }),
     );
-    return response.json() as Promise<{ result?: { content?: { text?: string }[] }; error?: { code: number } }>;
+    return response.json() as Promise<{
+      result?: { tools?: { name: string }[]; content?: { text?: string }[] };
+      error?: { code: number };
+    }>;
   }
 
   function payload(body: { result?: { content?: { text?: string }[] } }): unknown {
@@ -1067,6 +1075,62 @@ describe("agent work tools", () => {
       [org],
     );
     expect(plan?.kind).toBe("agent.plan_written");
+  });
+
+  it("deletes a task and a project for this client only", async () => {
+    const sql = await db();
+    await seed(sql);
+    const listed = await call("tools/list");
+    const names = listed.result?.tools?.map((tool) => tool.name) ?? [];
+    expect(names).toEqual(expect.arrayContaining(["delete_task", "delete_project"]));
+    const created = payload(
+      await call("tools/call", {
+        name: "create_task",
+        arguments: {
+          organizationId: org,
+          title: "Write the homepage",
+          projectId: "project-work",
+          stage: "describe",
+          skills: [],
+          requestId: "req-task-del",
+        },
+      }),
+    ) as { taskId: string };
+    const args = { organizationId: org, taskId: created.taskId, requestId: "req-del-task" };
+    const first = payload(await call("tools/call", { name: "delete_task", arguments: args })) as { id: string; title: string };
+    const second = payload(await call("tools/call", { name: "delete_task", arguments: { ...args, title: "Changed" } })) as {
+      id: string;
+    };
+    expect(second.id).toBe(first.id);
+    expect(first.title).toBe("Write the homepage");
+    expect(await sql.get("SELECT id FROM tasks WHERE id = ?", [created.taskId])).toBeUndefined();
+    const activity = await sql.get<{ kind: string; actor_kind: string }>(
+      "SELECT kind, actor_kind FROM activities WHERE organization_id = ? AND kind = 'agent.task_deleted'",
+      [org],
+    );
+    expect(activity).toEqual({ kind: "agent.task_deleted", actor_kind: "agent" });
+
+    const refused = await call("tools/call", {
+      name: "delete_project",
+      arguments: { organizationId: org, projectId: "project-stranger", requestId: "req-del-stranger" },
+    });
+    expect(refused.error?.code).toBe(-32602);
+    expect(await sql.get("SELECT id FROM projects WHERE id = 'project-stranger'")).toBeTruthy();
+
+    const removed = payload(
+      await call("tools/call", {
+        name: "delete_project",
+        arguments: { organizationId: org, projectId: "project-work", requestId: "req-del-project" },
+      }),
+    ) as { id: string; name: string; tasksRemoved: number };
+    expect(removed).toMatchObject({ id: "project-work", name: "Site", tasksRemoved: 0 });
+    expect(await sql.get("SELECT id FROM projects WHERE id = 'project-work'")).toBeUndefined();
+    expect(await sql.get<{ id: string }>("SELECT id FROM workspaces WHERE id = ?", [space])).toEqual({ id: space });
+    const projectActivity = await sql.get<{ kind: string; actor_kind: string }>(
+      "SELECT kind, actor_kind FROM activities WHERE organization_id = ? AND kind = 'agent.project_deleted'",
+      [org],
+    );
+    expect(projectActivity).toEqual({ kind: "agent.project_deleted", actor_kind: "agent" });
   });
 });
 
