@@ -39,6 +39,8 @@ const WORK_TOOLS = new Set([
   "record_swarm_run",
   "ask_staff",
   "list_repos",
+  "delete_task",
+  "delete_project",
   "run_due_workflow",
   "running_swarm",
 ]);
@@ -160,6 +162,33 @@ const AGENT_TOOLS = [
         requestId: { type: "string" },
       },
       required: ["organizationId", "workflow", "run", "node", "body", "requestId"],
+    },
+  },
+  {
+    name: "delete_task",
+    description: "Delete one task in this organization. The card leaves the board. A linked workflow stops being due. The space and repo stay.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        organizationId: organizationField,
+        taskId: { type: "string" },
+        requestId: { type: "string" },
+      },
+      required: ["organizationId", "taskId", "requestId"],
+    },
+  },
+  {
+    name: "delete_project",
+    description:
+      "Delete one project and its tasks in this organization. The space, repo, invoices, and deliverables stay, with the project link cleared.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        organizationId: organizationField,
+        projectId: { type: "string" },
+        requestId: { type: "string" },
+      },
+      required: ["organizationId", "projectId", "requestId"],
     },
   },
 ];

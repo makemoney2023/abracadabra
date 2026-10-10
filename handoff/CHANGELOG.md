@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — The HQ agent can delete a task, or a project and the tasks on it. Staff chat shows an approval card before either delete.
+- **Why** — The agent could create projects and tasks and had no way to remove them.
+- **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/mcp.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`
+- **Data-flow impact** — `delete_task` and `delete_project` on the agent work key and on HQ chat. A project delete clears `project_id` on the space, repo, invoices, deliverables, workflow group, and swarm history. Tasks, milestones, status updates, and cloud runs on that project are removed.
+- **API / schema impact** — none. No new tables.
+- **Verification** — `npm test` in `handoff/` after rebase onto main: 818 tests passed, and the agent worker suite passed 7.
+
 - **What changed** — Main is published. Staff HQ and the agent worker were deployed from that merge.
 - **Why** — Packed Run cards need to start on the live workers, and HQ chat needs the stream-order fix.
 - **Code touchpoints** — none. Deploy of `6546654`.

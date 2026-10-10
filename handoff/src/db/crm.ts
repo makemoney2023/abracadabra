@@ -801,6 +801,199 @@ export async function completeTask(
   return { ok: true };
 }
 
+export type DeletedTask = {
+  id: string;
+  title: string;
+  organizationId: string;
+  projectId: string | null;
+};
+
+export type DeletedProject = {
+  id: string;
+  name: string;
+  organizationId: string;
+  tasksRemoved: number;
+};
+
+type DeleteActor = { kind: "staff" | "agent"; id: string };
+
+function deletedKind(actor: DeleteActor, record: "task" | "project"): string {
+  if (actor.kind === "agent") return record === "task" ? "agent.task_deleted" : "agent.project_deleted";
+  return record === "task" ? "task_deleted" : "project_deleted";
+}
+
+/** Drops the rows that point at a task, then the task. The caller owns the transaction. */
+async function eraseTaskRow(sql: Sql, taskId: string, now: number): Promise<void> {
+  await sql.run("DELETE FROM cloud_runs WHERE task_id = ?", [taskId]);
+  await sql.run("DELETE FROM agent_questions WHERE task_id = ?", [taskId]);
+  await sql.run(
+    "UPDATE client_workflows SET task_id = NULL, next_run_at = NULL, updated_at = ? WHERE task_id = ?",
+    [now, taskId],
+  );
+  await sql.run("DELETE FROM tasks WHERE id = ?", [taskId]);
+}
+
+/** Removes one task that belongs to this live client. */
+export async function eraseTask(
+  sql: Sql,
+  input: { taskId: string; organizationId: string; actor: DeleteActor },
+  now: number,
+): Promise<{ ok: true; value: DeletedTask } | { ok: false; error: "missing" | "invalid" }> {
+  const taskId = input.taskId.trim();
+  if (!taskId || !input.organizationId.trim() || !input.actor.id) return { ok: false, error: "invalid" };
+  const task = await sql.get<{ id: string; title: string; organization_id: string; project_id: string | null }>(
+    `SELECT t.id, t.title, t.organization_id, t.project_id
+     FROM tasks t
+     JOIN organizations o ON o.id = t.organization_id
+     WHERE t.id = ? AND t.organization_id = ? AND o.archived_at IS NULL`,
+    [taskId, input.organizationId],
+  );
+  if (!task) return { ok: false, error: "missing" };
+  await sql.exec("BEGIN");
+  try {
+    await eraseTaskRow(sql, task.id, now);
+    await sql.run(
+      `INSERT INTO activities (
+         id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        task.organization_id,
+        task.project_id,
+        deletedKind(input.actor, "task"),
+        input.actor.kind,
+        input.actor.id,
+        task.title,
+        JSON.stringify({ taskId: task.id }),
+        now,
+      ],
+    );
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+  return {
+    ok: true,
+    value: {
+      id: task.id,
+      title: task.title,
+      organizationId: task.organization_id,
+      projectId: task.project_id,
+    },
+  };
+}
+
+/** Removes a project and its tasks. The space, repo, invoice, and deliverable stay, unlinked. */
+export async function eraseProject(
+  sql: Sql,
+  input: { projectId: string; organizationId: string; actor: DeleteActor },
+  now: number,
+): Promise<{ ok: true; value: DeletedProject } | { ok: false; error: "missing" | "invalid" }> {
+  const projectId = input.projectId.trim();
+  if (!projectId || !input.organizationId.trim() || !input.actor.id) return { ok: false, error: "invalid" };
+  const project = await sql.get<{ id: string; name: string; organization_id: string }>(
+    `SELECT p.id, p.name, p.organization_id
+     FROM projects p
+     JOIN organizations o ON o.id = p.organization_id
+     WHERE p.id = ? AND p.organization_id = ? AND o.archived_at IS NULL`,
+    [projectId, input.organizationId],
+  );
+  if (!project) return { ok: false, error: "missing" };
+  await sql.exec("BEGIN");
+  let tasksRemoved = 0;
+  try {
+    const tasks = await sql.all<{ id: string }>("SELECT id FROM tasks WHERE project_id = ?", [project.id]);
+    tasksRemoved = tasks.length;
+    for (const task of tasks) await eraseTaskRow(sql, task.id, now);
+    await sql.run(
+      `UPDATE tasks SET milestone_id = NULL
+       WHERE milestone_id IN (SELECT id FROM milestones WHERE project_id = ?)`,
+      [project.id],
+    );
+    await sql.run(
+      `UPDATE client_workflows
+       SET project_id = NULL, next_run_at = NULL, updated_at = ?
+       WHERE project_id = ?`,
+      [now, project.id],
+    );
+    await sql.run(
+      `UPDATE invoice_items SET milestone_id = NULL
+       WHERE milestone_id IN (SELECT id FROM milestones WHERE project_id = ?)`,
+      [project.id],
+    );
+    await sql.run("DELETE FROM milestones WHERE project_id = ?", [project.id]);
+    await sql.run("DELETE FROM status_updates WHERE project_id = ?", [project.id]);
+    for (const table of ["workspaces", "repos", "deliverables", "invoices", "activities", "workflow_groups", "swarm_runs"]) {
+      await sql.run(`UPDATE ${table} SET project_id = NULL WHERE project_id = ?`, [project.id]);
+    }
+    await sql.run("DELETE FROM projects WHERE id = ?", [project.id]);
+    await sql.run(
+      `INSERT INTO activities (
+         id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        project.organization_id,
+        deletedKind(input.actor, "project"),
+        input.actor.kind,
+        input.actor.id,
+        project.name,
+        JSON.stringify({ projectId: project.id, tasksRemoved }),
+        now,
+      ],
+    );
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+  return {
+    ok: true,
+    value: {
+      id: project.id,
+      name: project.name,
+      organizationId: project.organization_id,
+      tasksRemoved,
+    },
+  };
+}
+
+export async function deleteTask(
+  sql: Sql,
+  caller: Caller,
+  input: { taskId: string },
+  now: number,
+): Promise<{ ok: true; value: DeletedTask } | { ok: false; error: CrmError }> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  const taskId = input.taskId.trim();
+  if (!taskId) return { ok: false, error: "invalid" };
+  const task = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM tasks WHERE id = ?", [taskId]);
+  if (!task?.organization_id) return { ok: false, error: "missing" };
+  if (!(await liveOrg(sql, caller, task.organization_id))) return { ok: false, error: "missing" };
+  return eraseTask(sql, { taskId, organizationId: task.organization_id, actor: { kind: "staff", id: actorId } }, now);
+}
+
+export async function deleteProject(
+  sql: Sql,
+  caller: Caller,
+  input: { projectId: string },
+  now: number,
+): Promise<{ ok: true; value: DeletedProject } | { ok: false; error: CrmError }> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  const projectId = input.projectId.trim();
+  if (!projectId) return { ok: false, error: "invalid" };
+  const project = await openProject(sql, projectId);
+  if (!project) return { ok: false, error: "missing" };
+  return eraseProject(
+    sql,
+    { projectId, organizationId: project.organization_id, actor: { kind: "staff", id: actorId } },
+    now,
+  );
+}
+
 export async function listProjects(
   sql: Sql,
   caller: Caller,

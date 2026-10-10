@@ -5,6 +5,8 @@ import {
   addNote,
   completeTask,
   createContact,
+  deleteProject,
+  deleteTask,
   createMilestone,
   createManualLead,
   createOrganization,
@@ -863,6 +865,189 @@ describe("projects and work", () => {
       ),
     ).toEqual({ ok: false, error: "invalid" });
     expect(await createMilestone(sql, staff, { projectId: "missing", name: "Design" }, NOW)).toEqual({
+      ok: false,
+      error: "missing",
+    });
+  });
+
+  it("deletes a task and leaves the project", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    const project = await createProject(sql, staff, { organizationId: made.value.id, name: "Site" }, NOW);
+    if (!project.ok) throw new Error("setup");
+    const task = await createTask(sql, staff, { projectId: project.value.id, title: "Sketch the home page" }, NOW);
+    if (!task.ok) throw new Error("setup");
+    const kept = await createTask(sql, staff, { organizationId: made.value.id, title: "Loose card" }, NOW);
+    if (!kept.ok) throw new Error("setup");
+    expect(await deleteTask(sql, outsider, { taskId: task.value.id }, NOW)).toEqual({ ok: false, error: "forbidden" });
+    expect(await deleteTask(sql, staff, { taskId: "  " }, NOW)).toEqual({ ok: false, error: "invalid" });
+    expect(await deleteTask(sql, staff, { taskId: "missing" }, NOW)).toEqual({ ok: false, error: "missing" });
+    const removed = await deleteTask(sql, staff, { taskId: task.value.id }, NOW + 1);
+    expect(removed).toEqual({
+      ok: true,
+      value: {
+        id: task.value.id,
+        title: "Sketch the home page",
+        organizationId: made.value.id,
+        projectId: project.value.id,
+      },
+    });
+    expect(await sql.get("SELECT id FROM tasks WHERE id = ?", [task.value.id])).toBeUndefined();
+    expect(await sql.get<{ title: string }>("SELECT title FROM tasks WHERE id = ?", [kept.value.id])).toEqual({
+      title: "Loose card",
+    });
+    expect(await projectById(sql, staff, project.value.id)).toBeTruthy();
+    const activity = await sql.get<{ kind: string; actor_kind: string; actor_id: string; body: string }>(
+      "SELECT kind, actor_kind, actor_id, body FROM activities WHERE kind = 'task_deleted'",
+    );
+    expect(activity).toEqual({
+      kind: "task_deleted",
+      actor_kind: "staff",
+      actor_id: "staff-1",
+      body: "Sketch the home page",
+    });
+    expect(await deleteTask(sql, staff, { taskId: task.value.id }, NOW + 2)).toEqual({ ok: false, error: "missing" });
+    await sql.run("UPDATE organizations SET archived_at = ? WHERE id = ?", [NOW + 3, made.value.id]);
+    expect(await deleteTask(sql, staff, { taskId: kept.value.id }, NOW + 4)).toEqual({ ok: false, error: "missing" });
+    expect(await sql.get("SELECT id FROM tasks WHERE id = ?", [kept.value.id])).toBeTruthy();
+  });
+
+  it("deletes a project and its tasks, and keeps the space, repo, and deliverable", async () => {
+    const sql = await database();
+    const made = await createOrganization(sql, staff, { name: "Harbor" }, NOW);
+    if (!made.ok) throw new Error("setup");
+    const project = await createProject(sql, staff, { organizationId: made.value.id, name: "Site" }, NOW);
+    const other = await createProject(sql, staff, { organizationId: made.value.id, name: "Ads" }, NOW);
+    if (!project.ok || !other.ok) throw new Error("setup");
+    const milestone = await createMilestone(sql, staff, { projectId: project.value.id, name: "Design" }, NOW);
+    if (!milestone.ok) throw new Error("setup");
+    const task = await createTask(
+      sql,
+      staff,
+      { projectId: project.value.id, milestoneId: milestone.value.id, title: "Sketch the home page" },
+      NOW,
+    );
+    const kept = await createTask(sql, staff, { projectId: other.value.id, title: "Write the ads" }, NOW);
+    if (!task.ok || !kept.ok) throw new Error("setup");
+    await sql.run("UPDATE workspaces SET organization_id = ?, project_id = ? WHERE id = 'ws-1'", [
+      made.value.id,
+      project.value.id,
+    ]);
+    await sql.run(
+      `INSERT INTO repos (
+         id, github_repo_id, full_name, organization_id, project_id, default_branch, is_private, owned_by, created_at
+       ) VALUES ('repo-site', 41, 'harbor/site', ?, ?, 'main', 1, 'agency', ?)`,
+      [made.value.id, project.value.id, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, project_id, workspace_id, title, kind, status, version,
+         actor_kind, created_at, updated_at
+       ) VALUES ('del-site', ?, ?, 'ws-1', 'Homepage', 'document', 'draft', 1, 'staff', ?, ?)`,
+      [made.value.id, project.value.id, NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO invoices (
+         id, number, organization_id, project_id, status, currency, subtotal_cents, tax_rate_bp, tax_cents,
+         total_cents, paid_cents, created_at, updated_at
+       ) VALUES ('inv-site', 'INV-2026-0009', ?, ?, 'draft', 'usd', 100, 0, 0, 100, 0, ?, ?)`,
+      [made.value.id, project.value.id, NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO invoice_items (id, invoice_id, milestone_id, description, quantity, unit_cents, amount_cents, sort)
+       VALUES ('item-site', 'inv-site', ?, 'Design', 1, 100, 100, 0)`,
+      [milestone.value.id],
+    );
+    await sql.run(
+      `INSERT INTO cloud_runs (
+         id, task_id, deliverable_id, repo_id, round, status, started_at, deadline_at
+       ) VALUES ('run-site', ?, 'del-site', 'repo-site', 1, 'started', ?, ?)`,
+      [task.value.id, NOW, NOW + 1000],
+    );
+    await sql.run(
+      `INSERT INTO agent_questions (id, organization_id, task_id, question, asked_at)
+       VALUES ('q-site', ?, ?, 'Which gold?', ?)`,
+      [made.value.id, task.value.id, NOW],
+    );
+    await sql.run(
+      `INSERT INTO workflow_groups (id, organization_id, project_id, name, created_at)
+       VALUES ('group-site', ?, ?, 'Launch', ?)`,
+      [made.value.id, project.value.id, NOW],
+    );
+    await sql.run(
+      `INSERT INTO client_workflows (
+         id, group_id, organization_id, project_id, name, template_id, created_at, updated_at, task_id, next_run_at
+       ) VALUES ('flow-site', 'group-site', ?, ?, 'Schema', 'pack-schema-readiness', ?, ?, ?, ?)`,
+      [made.value.id, project.value.id, NOW, NOW, task.value.id, NOW],
+    );
+    await sql.run(
+      `INSERT INTO swarm_runs (
+         id, organization_id, project_id, name, status, trigger, started_at
+       ) VALUES ('swarm-site', ?, ?, 'Schema', 'completed', 'manual', ?)`,
+      [made.value.id, project.value.id, NOW],
+    );
+    const posted = await postStatusUpdate(
+      sql,
+      staff,
+      { projectId: project.value.id, body: "On track.", health: "on_track", audience: "internal" },
+      NOW,
+    );
+    expect(posted.ok).toBe(true);
+    expect(await deleteProject(sql, outsider, { projectId: project.value.id }, NOW)).toEqual({
+      ok: false,
+      error: "forbidden",
+    });
+    expect(await deleteProject(sql, staff, { projectId: " " }, NOW)).toEqual({ ok: false, error: "invalid" });
+    expect(await deleteProject(sql, staff, { projectId: "missing" }, NOW)).toEqual({ ok: false, error: "missing" });
+    const removed = await deleteProject(sql, staff, { projectId: project.value.id }, NOW + 1);
+    expect(removed).toEqual({
+      ok: true,
+      value: { id: project.value.id, name: "Site", organizationId: made.value.id, tasksRemoved: 1 },
+    });
+    expect(await projectById(sql, staff, project.value.id)).toBeUndefined();
+    expect(await sql.get("SELECT id FROM tasks WHERE id = ?", [task.value.id])).toBeUndefined();
+    expect(await sql.get("SELECT id FROM milestones WHERE id = ?", [milestone.value.id])).toBeUndefined();
+    expect(await sql.get("SELECT id FROM status_updates WHERE project_id = ?", [project.value.id])).toBeUndefined();
+    expect(await sql.get("SELECT id FROM cloud_runs WHERE id = 'run-site'")).toBeUndefined();
+    expect(await sql.get("SELECT id FROM agent_questions WHERE id = 'q-site'")).toBeUndefined();
+    expect(await sql.get<{ title: string }>("SELECT title FROM tasks WHERE id = ?", [kept.value.id])).toEqual({
+      title: "Write the ads",
+    });
+    expect(await projectById(sql, staff, other.value.id)).toBeTruthy();
+    expect(await sql.get<{ project_id: string | null }>("SELECT project_id FROM workspaces WHERE id = 'ws-1'")).toEqual({
+      project_id: null,
+    });
+    expect(await sql.get<{ project_id: string | null }>("SELECT project_id FROM repos WHERE id = 'repo-site'")).toEqual({
+      project_id: null,
+    });
+    expect(await sql.get<{ project_id: string | null; title: string }>("SELECT project_id, title FROM deliverables WHERE id = 'del-site'")).toEqual({
+      project_id: null,
+      title: "Homepage",
+    });
+    expect(await sql.get<{ project_id: string | null }>("SELECT project_id FROM invoices WHERE id = 'inv-site'")).toEqual({
+      project_id: null,
+    });
+    expect(await sql.get<{ milestone_id: string | null }>("SELECT milestone_id FROM invoice_items WHERE id = 'item-site'")).toEqual({
+      milestone_id: null,
+    });
+    expect(
+      await sql.get<{ project_id: string | null; task_id: string | null; next_run_at: number | null }>(
+        "SELECT project_id, task_id, next_run_at FROM client_workflows WHERE id = 'flow-site'",
+      ),
+    ).toEqual({ project_id: null, task_id: null, next_run_at: null });
+    expect(await sql.get<{ project_id: string | null }>("SELECT project_id FROM workflow_groups WHERE id = 'group-site'")).toEqual({
+      project_id: null,
+    });
+    expect(await sql.get<{ project_id: string | null; name: string }>("SELECT project_id, name FROM swarm_runs WHERE id = 'swarm-site'")).toEqual({
+      project_id: null,
+      name: "Schema",
+    });
+    const activity = await sql.get<{ kind: string; actor_kind: string; body: string }>(
+      "SELECT kind, actor_kind, body FROM activities WHERE kind = 'project_deleted'",
+    );
+    expect(activity).toEqual({ kind: "project_deleted", actor_kind: "staff", body: "Site" });
+    expect(await deleteProject(sql, staff, { projectId: project.value.id }, NOW + 2)).toEqual({
       ok: false,
       error: "missing",
     });
