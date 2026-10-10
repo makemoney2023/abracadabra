@@ -11,6 +11,8 @@ export const READ_HQ_TOOLS = [
   "list_workflows",
   "list_projects",
   "list_swarm_packs",
+  "list_space_files",
+  "read_space_file",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -138,6 +140,16 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   link_slack_channel: {
     label: "Link a Slack channel",
     description: "Route a Slack Connect channel to a client. Fields: organizationId, channelId (starts with C or G).",
+  },
+  list_space_files: {
+    label: "List space files",
+    description:
+      "Files in this client's space. Swarm output is under agent/swarm/. path is an optional prefix. Fields: organizationId, path, projectId.",
+  },
+  read_space_file: {
+    label: "Read a space file",
+    description:
+      "Read one text file from the client's space, including swarm markdown. Pass id from list_space_files, or organizationId and path. Fields: id, organizationId, path.",
   },
   list_workflows: {
     label: "List workflows",

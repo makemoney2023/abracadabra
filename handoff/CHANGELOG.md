@@ -2,6 +2,15 @@
 
 ## 2026-10-10
 
+- **What changed** — Staff chat can list and read files in the client's space, including swarm output.
+- **Why** — The chat agent had no tool that opened those files, so a review stopped and asked staff to paste the calendar.
+- **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — `list_space_files` returns paths in the client's active spaces. `read_space_file` reads the stored text, up to 20,000 characters. A file from another client is missing. Swarm files stay under `agent/swarm/`.
+- **API / schema impact** — none. Two read tools on staff chat and `/api/hq-tools`.
+- **Verification** — `npx vitest run src/lib/hq-tools.test.ts src/lib/hq-chat-playbook.test.ts` passed 34. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. eslint on the changed files exited 0.
+
+## 2026-10-10
+
 - **What changed** — A chat brief is stored on the project. A workflow named research keeps Parallel tools only, and each swarm node stops after three minutes.
 - **Why** — Creating a project from staff chat left the requirements empty, so the project page had no brief. The research swarm was saved under the marketing pack name, called image generation, and stayed on that node for about six minutes.
 - **Code touchpoints** — `handoff/src/lib/channel-plan.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/lead-swarm.ts`, `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`

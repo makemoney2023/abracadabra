@@ -1050,6 +1050,116 @@ it("asks before deleting a task or a project, then removes that work", async () 
   expect(space?.id).toBe("ws-1");
 });
 
+it("lists swarm files in the client space and reads the text", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  await sql.run(
+    `INSERT INTO batches (
+      id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
+    ) VALUES ('batch-1', 'ws-1', NULL, 'agent', 'From the swarm', NULL, ?, ?, NULL, NULL)`,
+    [NOW, NOW],
+  );
+  await sql.run(
+    `INSERT INTO files (
+      id, batch_id, workspace_id, relative_path, extension, declared_content_type,
+      size_bytes, object_key, tag, status, scan_attempts, created_at, uploaded_at, next_scan_at
+    ) VALUES (
+      'file-calendar', 'batch-1', 'ws-1', 'agent/swarm/run-1/result.md', 'md', 'text/markdown',
+      24, 'ws-1/batch-1/file-calendar', 'copy', 'uploaded', 0, ?, ?, ?
+    )`,
+    [NOW, NOW, NOW],
+  );
+  await sql.run(
+    `INSERT INTO organizations (id, name, kind, created_at, updated_at) VALUES ('org-other', 'Other', 'client', ?, ?)`,
+    [NOW, NOW],
+  );
+  await sql.run(
+    `INSERT INTO workspaces (
+      id, slug, name, display_name, sender_name, policy_profile, quota_bytes, retention_days,
+      request_digest, status, opened_at, organization_id
+    ) VALUES (
+      'ws-other', 'other', 'Other', 'Other', 'Studio', 'standard', 1000, 30, 0, 'active', ?, 'org-other'
+    )`,
+    [NOW],
+  );
+  await sql.run(
+    `INSERT INTO batches (
+      id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
+    ) VALUES ('batch-other', 'ws-other', NULL, 'agent', 'From the swarm', NULL, ?, ?, NULL, NULL)`,
+    [NOW, NOW],
+  );
+  await sql.run(
+    `INSERT INTO files (
+      id, batch_id, workspace_id, relative_path, extension, declared_content_type,
+      size_bytes, object_key, tag, status, scan_attempts, created_at, uploaded_at, next_scan_at
+    ) VALUES (
+      'file-other', 'batch-other', 'ws-other', 'agent/swarm/run-9/secret.md', 'md', 'text/markdown',
+      6, 'other-key', 'copy', 'uploaded', 0, ?, ?, ?
+    )`,
+    [NOW, NOW, NOW],
+  );
+  const objects = new Map<string, Uint8Array>([
+    ["ws-1/batch-1/file-calendar", new TextEncoder().encode("# Calendar\nPost on Monday.")],
+    ["other-key", new TextEncoder().encode("secret")],
+  ]);
+  const store = {
+    async stat() {
+      return null;
+    },
+    async read(key: string) {
+      return objects.get(key) ?? null;
+    },
+    async remove() {},
+    async put() {},
+    async beginUpload() {
+      return "upload-1";
+    },
+    async readUpload() {
+      return null;
+    },
+    async writePart() {},
+    async finishUpload() {},
+  };
+  const listed = await runHqTool(
+    sql,
+    staff,
+    { tool: "list_space_files", input: { organizationId, path: "agent/swarm/" } },
+    NOW,
+    { swarm: { origin: "https://swarm.example", store } },
+  );
+  expect(valueOf(listed)).toEqual([
+    {
+      id: "file-calendar",
+      workspaceId: "ws-1",
+      path: "agent/swarm/run-1/result.md",
+      tag: "copy",
+      status: "uploaded",
+      sizeBytes: 24,
+    },
+  ]);
+  const read = await runHqTool(
+    sql,
+    staff,
+    { tool: "read_space_file", input: { organizationId, id: "file-calendar" } },
+    NOW,
+    { swarm: { origin: "https://swarm.example", store } },
+  );
+  expect(valueOf(read)).toEqual({
+    id: "file-calendar",
+    path: "agent/swarm/run-1/result.md",
+    body: "# Calendar\nPost on Monday.",
+    truncated: false,
+  });
+  const hidden = await runHqTool(
+    sql,
+    staff,
+    { tool: "read_space_file", input: { organizationId, id: "file-other" } },
+    NOW,
+    { swarm: { origin: "https://swarm.example", store } },
+  );
+  expect(hidden).toEqual({ ok: false, error: "missing" });
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");

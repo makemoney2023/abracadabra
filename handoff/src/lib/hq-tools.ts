@@ -82,6 +82,8 @@ const READS = new Set([
   "list_workflows",
   "list_projects",
   "list_swarm_packs",
+  "list_space_files",
+  "read_space_file",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {
@@ -514,11 +516,129 @@ async function perform(
   if (tool === "decide_work_request") return decideWork(sql, caller, input, now, options.wake);
   if (tool === "link_slack_channel") return linkSlack(sql, caller, input, now);
   if (tool === "list_workflows") return listWorkflows(sql, caller, input);
+  if (tool === "list_space_files") return listSpaceFiles(sql, caller, input);
+  if (tool === "read_space_file") return readSpaceFile(sql, caller, input, options);
   if (tool === "create_workflow_group") return makeWorkflowGroup(sql, caller, input, now);
   if (tool === "create_workflow") return makeWorkflow(sql, caller, input, now, options);
   if (tool === "assign_workflow") return assignWorkflow(sql, caller, input, now);
   if (tool === "run_workflow") return runWorkflow(sql, caller, input, now, options);
   return { ok: false, error: "unknown" };
+}
+
+const SPACE_FILE_LIST = 40;
+const SPACE_FILE_TEXT = 20_000;
+const SPACE_FILE_BYTES = 500_000;
+const TEXT_EXTENSIONS = new Set(["md", "txt", "json", "csv"]);
+
+async function listSpaceFiles(sql: Sql, caller: Caller, input: Record<string, unknown>): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+  const prefix = text(input, "path");
+  const projectId = text(input, "projectId");
+  const rows = await sql.all<{
+    id: string;
+    workspace_id: string;
+    relative_path: string;
+    tag: string | null;
+    status: string;
+    size_bytes: number;
+  }>(
+    `SELECT f.id, f.workspace_id, f.relative_path, f.tag, f.status, f.size_bytes
+     FROM files f
+     JOIN workspaces w ON w.id = f.workspace_id
+     JOIN batches b ON b.id = f.batch_id
+     WHERE w.organization_id = ?
+       AND w.status = 'active'
+       AND f.object_deleted_at IS NULL
+       AND b.deleted_at IS NULL
+       AND (? = '' OR w.project_id = ? OR w.project_id IS NULL)
+       AND (? = '' OR substr(f.relative_path, 1, length(?)) = ?)
+     ORDER BY CASE WHEN substr(f.relative_path, 1, 12) = 'agent/swarm/' THEN 0 ELSE 1 END,
+              f.created_at DESC, f.id
+     LIMIT ?`,
+    [organizationId, projectId, projectId, prefix, prefix, prefix, SPACE_FILE_LIST],
+  );
+  return {
+    ok: true,
+    value: rows.map((row) => ({
+      id: row.id,
+      workspaceId: row.workspace_id,
+      path: row.relative_path,
+      tag: row.tag,
+      status: row.status,
+      sizeBytes: row.size_bytes,
+    })),
+  };
+}
+
+async function readSpaceFile(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const fileId = text(input, "id");
+  const path = text(input, "path");
+  const organizationId = text(input, "organizationId");
+  if (!fileId && !(path && organizationId)) return { ok: false, error: "invalid" };
+  const row = fileId
+    ? await sql.get<{
+        id: string;
+        relative_path: string;
+        extension: string;
+        size_bytes: number;
+        object_key: string;
+        organization_id: string;
+      }>(
+        `SELECT f.id, f.relative_path, f.extension, f.size_bytes, f.object_key, w.organization_id
+         FROM files f
+         JOIN workspaces w ON w.id = f.workspace_id
+         JOIN batches b ON b.id = f.batch_id
+         WHERE f.id = ? AND f.object_deleted_at IS NULL AND b.deleted_at IS NULL AND w.status = 'active'`,
+        [fileId],
+      )
+    : await sql.get<{
+        id: string;
+        relative_path: string;
+        extension: string;
+        size_bytes: number;
+        object_key: string;
+        organization_id: string;
+      }>(
+        `SELECT f.id, f.relative_path, f.extension, f.size_bytes, f.object_key, w.organization_id
+         FROM files f
+         JOIN workspaces w ON w.id = f.workspace_id
+         JOIN batches b ON b.id = f.batch_id
+         WHERE w.organization_id = ? AND f.relative_path = ?
+           AND f.object_deleted_at IS NULL AND b.deleted_at IS NULL AND w.status = 'active'
+         ORDER BY f.created_at DESC, f.id
+         LIMIT 1`,
+        [organizationId, path],
+      );
+  if (!row || (organizationId && row.organization_id !== organizationId) || !(await seenOrg(sql, caller, row.organization_id))) {
+    return { ok: false, error: "missing" };
+  }
+  if (!TEXT_EXTENSIONS.has(row.extension)) {
+    return { ok: true, value: { id: row.id, path: row.relative_path, binary: true, sizeBytes: row.size_bytes } };
+  }
+  if (row.size_bytes > SPACE_FILE_BYTES) {
+    return { ok: true, value: { id: row.id, path: row.relative_path, tooLarge: true, sizeBytes: row.size_bytes } };
+  }
+  const store = options.swarm?.store;
+  if (!store) return { ok: false, error: "invalid" };
+  const bytes = await store.read(row.object_key);
+  if (!bytes) return { ok: false, error: "missing" };
+  const decoded = new TextDecoder().decode(bytes);
+  const truncated = decoded.length > SPACE_FILE_TEXT;
+  return {
+    ok: true,
+    value: {
+      id: row.id,
+      path: row.relative_path,
+      body: truncated ? decoded.slice(0, SPACE_FILE_TEXT) : decoded,
+      truncated,
+    },
+  };
 }
 
 async function listWorkflows(sql: Sql, caller: Caller, input: Record<string, unknown>): Promise<HqToolResult> {
