@@ -13,6 +13,7 @@ export const READ_HQ_TOOLS = [
   "list_swarm_packs",
   "list_space_files",
   "read_space_file",
+  "read_deliverable",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -31,6 +32,7 @@ export const GATED_HQ_TOOLS = new Set([
   "link_slack_channel",
   "run_workflow",
   "queue_followup_swarms",
+  "publish_swarm_report",
   "delete_task",
   "delete_project",
 ]);
@@ -152,6 +154,10 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     description:
       "Read one text file from the client's space, including swarm markdown. Pass id from list_space_files, or organizationId and path. Fields: id, organizationId, path.",
   },
+  read_deliverable: {
+    label: "Read a deliverable",
+    description: "Read the text of one project document or brief. Fields: id, organizationId.",
+  },
   list_workflows: {
     label: "List workflows",
     description: "Workflow groups for a client. Pass projectId to see that project's workflows. Fields: organizationId, projectId.",
@@ -178,6 +184,11 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     description:
       "Start the first workflow in a group. Research runs before the others. A later workflow waits until that output is ready, then receives it. body is the instruction for this run. Fields: id, body.",
   },
+  publish_swarm_report: {
+    label: "Publish the swarm PDF",
+    description:
+      "Show the finished swarm PDF to the client. id is the workflow. The file is agent/swarm/<run>/report.pdf. Fields: id.",
+  },
   save_swarm_report: {
     label: "Save the swarm PDF",
     description:
@@ -186,7 +197,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   queue_followup_swarms: {
     label: "Queue the next swarms",
     description:
-      "After a swarm finishes, file the next set and start them with that output. title is one line per swarm: Name | pack id. id is the finished workflow. name is the new group. Fields: organizationId, id, title, projectId, name.",
+      "After a swarm finishes, file the next set and start them with that output. body is the review to put ahead of the finished text. title is one line per swarm: Name | pack id. id is the finished workflow. name is the new group. Fields: organizationId, id, title, body, projectId, name.",
   },
   decide_work_request: {
     label: "Decide a client request",

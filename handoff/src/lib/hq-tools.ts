@@ -33,6 +33,8 @@ import { beginDirectClient, scanIntakeBindings, type ScanQueue } from "@/lib/lea
 import { defaultBuildDeps, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import { moveTaskStage } from "@/lib/task-stage";
 import type { Caller } from "@/lib/authz";
+import { itemForPath } from "@/lib/artifact-adapter";
+import { workflowSpacePath } from "@/lib/workflow-files";
 import { appendBriefWork } from "@/lib/client-plan";
 import {
   assignClientWorkflow,
@@ -85,6 +87,7 @@ const READS = new Set([
   "list_swarm_packs",
   "list_space_files",
   "read_space_file",
+  "read_deliverable",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {
@@ -348,6 +351,7 @@ async function perform(
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
     return { ok: true, value: await getBrief(sql, organizationId, "brief") };
   }
+  if (tool === "read_deliverable") return readDeliverable(sql, caller, input);
   if (tool === "list_work_requests") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
     return { ok: true, value: await listWorkRequests(sql, organizationId) };
@@ -524,6 +528,7 @@ async function perform(
   if (tool === "assign_workflow") return assignWorkflow(sql, caller, input, now);
   if (tool === "run_workflow") return runWorkflow(sql, caller, input, now, options);
   if (tool === "save_swarm_report") return saveSwarmReport(sql, caller, input, now, options);
+  if (tool === "publish_swarm_report") return publishSwarmReport(sql, caller, input, now, options);
   if (tool === "queue_followup_swarms") return queueFollowupSwarms(sql, caller, input, now, options);
   return { ok: false, error: "unknown" };
 }
@@ -659,6 +664,168 @@ function followupLines(value: string): { name: string; templateId: string }[] {
   return rows;
 }
 
+async function readDeliverable(sql: Sql, caller: Caller, input: Record<string, unknown>): Promise<HqToolResult> {
+  const id = text(input, "id");
+  if (!id) return { ok: false, error: "invalid" };
+  const row = await sql.get<{
+    id: string;
+    organization_id: string;
+    title: string;
+    kind: string;
+    status: string;
+    version: number;
+  }>("SELECT id, organization_id, title, kind, status, version FROM deliverables WHERE id = ? AND status != 'archived'", [
+    id,
+  ]);
+  const organizationId = text(input, "organizationId");
+  if (!row || (organizationId && row.organization_id !== organizationId) || !(await seenOrg(sql, caller, row.organization_id))) {
+    return { ok: false, error: "missing" };
+  }
+  const items = await sql.all<{ copy_text: string | null }>(
+    "SELECT copy_text FROM deliverable_items WHERE deliverable_id = ? AND version = ? ORDER BY sort, title",
+    [row.id, row.version],
+  );
+  const body = items
+    .map((item) => item.copy_text?.trim() ?? "")
+    .filter((item) => item.length > 0)
+    .join("\n\n");
+  const truncated = body.length > SPACE_FILE_TEXT;
+  return {
+    ok: true,
+    value: {
+      id: row.id,
+      title: row.title,
+      kind: row.kind,
+      status: row.status,
+      version: row.version,
+      body: truncated ? body.slice(0, SPACE_FILE_TEXT) : body,
+      truncated,
+    },
+  };
+}
+
+async function publishSwarmReport(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  if (!caller.userId) return { ok: false, error: "missing" };
+  const workflow = await sql.get<{
+    id: string;
+    name: string;
+    organization_id: string;
+    project_id: string | null;
+    last_execution_id: string | null;
+    last_output: string | null;
+  }>("SELECT id, name, organization_id, project_id, last_execution_id, last_output FROM client_workflows WHERE id = ?", [
+    text(input, "id"),
+  ]);
+  if (!workflow?.last_execution_id || !(await seenOrg(sql, caller, workflow.organization_id))) return { ok: false, error: "missing" };
+  const relativePath = workflowSpacePath({ workflow: "swarm", run: workflow.last_execution_id, node: "report" }, "pdf");
+  if (!relativePath) return { ok: false, error: "invalid" };
+  const loadFile = async () =>
+    sql.get<{ id: string; object_key: string; size_bytes: number; workspace_id: string }>(
+      `SELECT f.id, f.object_key, f.size_bytes, f.workspace_id
+       FROM files f
+       JOIN workspaces w ON w.id = f.workspace_id
+       JOIN batches b ON b.id = f.batch_id
+       WHERE w.organization_id = ? AND f.relative_path = ?
+         AND f.object_deleted_at IS NULL AND b.deleted_at IS NULL
+       ORDER BY f.created_at DESC
+       LIMIT 1`,
+      [workflow.organization_id, relativePath],
+    );
+  let file = await loadFile();
+  const origin = options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
+  const store = options.swarm?.store;
+  if (!file && origin.startsWith("https://") && store) {
+    await storeSwarmReport({
+      sql,
+      store,
+      origin,
+      organizationId: workflow.organization_id,
+      projectId: workflow.project_id,
+      executionId: workflow.last_execution_id,
+      now,
+      fetchImpl: options.swarm?.fetchImpl,
+    });
+    file = await loadFile();
+  }
+  if (!file?.object_key) return { ok: false, error: "missing" };
+  const existing = await sql.get<{ id: string; status: string }>(
+    `SELECT d.id, d.status
+     FROM deliverables d
+     JOIN deliverable_items i ON i.deliverable_id = d.id AND i.version = d.version
+     WHERE d.organization_id = ? AND d.status != 'archived' AND i.title = 'report.pdf'
+       AND (? IS NULL OR d.project_id = ?)
+     ORDER BY d.updated_at DESC
+     LIMIT 1`,
+    [workflow.organization_id, workflow.project_id, workflow.project_id],
+  );
+  if (existing) {
+    if (existing.status === "draft") {
+      await sql.run(
+        "UPDATE deliverables SET published_version = version, published_at = ?, status = 'in_review', updated_at = ? WHERE id = ?",
+        [now, now, existing.id],
+      );
+    }
+    return {
+      ok: true,
+      value: { id: existing.id, status: existing.status === "draft" ? "in_review" : existing.status, path: relativePath },
+    };
+  }
+  const deliverableId = crypto.randomUUID();
+  const title = `${workflow.name} report`.slice(0, 200);
+  const copy = workflow.last_output?.trim().slice(0, 4_000) || "Swarm report.";
+  const media = itemForPath(relativePath, file.object_key);
+  let mediaJson = media.mediaJson;
+  try {
+    const parsed = JSON.parse(mediaJson) as { size?: number }[];
+    if (Array.isArray(parsed) && parsed[0]) parsed[0].size = file.size_bytes;
+    mediaJson = JSON.stringify(parsed);
+  } catch {
+    mediaJson = media.mediaJson;
+  }
+  await sql.exec("BEGIN");
+  try {
+    await sql.run(
+      `INSERT INTO deliverables (
+        id, organization_id, project_id, workspace_id, title, kind, status, version,
+        source_repo_id, source_ref, published_at, actor_kind, actor_id, created_at, updated_at, published_version
+      ) VALUES (?, ?, ?, ?, ?, 'document', 'in_review', 1, NULL, NULL, ?, 'staff', ?, ?, ?, 1)`,
+      [deliverableId, workflow.organization_id, workflow.project_id, file.workspace_id, title, now, caller.userId, now, now],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+        id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+      ) VALUES (?, ?, 1, NULL, 'file', NULL, 'report.pdf', ?, ?, NULL, 'pending', 0)`,
+      [crypto.randomUUID(), deliverableId, copy, mediaJson],
+    );
+    await sql.run(
+      `INSERT INTO activities (
+        id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at
+      ) VALUES (?, ?, ?, ?, 'deliverable_published', 'staff', ?, ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        workflow.organization_id,
+        workflow.project_id,
+        file.workspace_id,
+        caller.userId,
+        title,
+        JSON.stringify({ deliverableId, path: relativePath, via: "hq_chat" }),
+        now,
+      ],
+    );
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+  return { ok: true, value: { id: deliverableId, status: "in_review", path: relativePath } };
+}
+
 async function saveSwarmReport(
   sql: Sql,
   caller: Caller,
@@ -742,6 +909,7 @@ async function queueFollowupSwarms(
     workflowIds.push(workflow.workflow.id);
     if (workflow.workflow.taskId) taskIds.push(workflow.workflow.taskId);
   }
+  const review = text(input, "body");
   const origin = options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
   const started = await claimDueWorkflow({
     sql,
@@ -749,7 +917,7 @@ async function queueFollowupSwarms(
     origin,
     now,
     workflowId: workflowIds[0],
-    instruction: output,
+    instruction: review ? `${review}\n\n${output}` : output,
     trigger: "chat",
     fetchImpl: options.swarm?.fetchImpl,
     wait: options.swarm?.wait,
