@@ -22,9 +22,7 @@
   "r2_buckets": [{ "binding": "SKILLS", "bucket_name": "handoff-skills" }],
   "ai": { "binding": "AI" },
   "vars": {
-    "MCP_PORTAL_URL": "",
-    "CF_ACCESS_CLIENT_ID": "",
-    "CF_ACCESS_CLIENT_SECRET": "",
+    "MCP_PORTAL_URL": "https://mcp.abra-ca-dabra.app/mcp",
     "HQ_ORIGIN": "https://hq.abra-ca-dabra.app",
     "MAGIC_EMAIL_FROM": "magic@abra-ca-dabra.app",
     "BOOKING_URL": "",
