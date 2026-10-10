@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — The social media project was deleted for the fresh test.
+- **Why** — The earlier clear left the project in place.
+- **Code touchpoints** — none.
+- **Data-flow impact** — Removed project `af24cc5d-3f8b-4c1e-b83c-7a76f04a7ff4`. The AbraCadabra space and the abracadabra repo stayed, with the project link cleared. Git activity stayed.
+- **API / schema impact** — none.
+- **Verification** — Projects 0. Workspaces 2, both with no project. Repos 2, both with no project.
+
 - **What changed** — The social-media test was cleared again so the next run can start from scratch.
 - **Why** — The buying-psychology research run, its workflows, the project brief, and the HQ chat were still in place.
 - **Code touchpoints** — none. Data clear after agent deploy `62013526-8aab-4d3d-8503-45822dc391df`.
