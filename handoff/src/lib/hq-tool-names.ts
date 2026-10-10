@@ -28,6 +28,8 @@ export const GATED_HQ_TOOLS = new Set([
   "decide_work_request",
   "link_slack_channel",
   "run_workflow",
+  "delete_task",
+  "delete_project",
 ]);
 
 export function hqToolNeedsApproval(name: string): boolean {
@@ -69,6 +71,15 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
       "One task per line of title, written as Title | person | YYYY-MM-DD | .cursor/skills/path. body is the brief sentence. rules are standing limits, one per line. Fields: organizationId, title, body, rules.",
   },
   complete_task: { label: "Complete a task", description: "Mark a task done. Fields: taskId." },
+  delete_task: {
+    label: "Delete a task",
+    description: "Remove a task from the board. A workflow linked to it stops being due. Fields: taskId.",
+  },
+  delete_project: {
+    label: "Delete a project",
+    description:
+      "Remove a project and its tasks. The client's space, repo, and deliverables stay, with the project link cleared. Fields: projectId.",
+  },
   set_deal_step: {
     label: "Set the next step",
     description: "The next step on a deal, and when it is due. Fields: dealId, body, due (YYYY-MM-DD or a weekday).",

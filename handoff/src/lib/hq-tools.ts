@@ -8,6 +8,8 @@ import {
   createDraftInvoice,
   completeTask,
   createContact,
+  deleteProject,
+  deleteTask,
   createMilestone,
   createOrganization,
   createProject,
@@ -123,6 +125,26 @@ async function seenOrg(sql: Sql, caller: Caller, organizationId: string) {
   return organizationById(sql, caller, organizationId);
 }
 
+async function deletionLabel(sql: Sql, caller: Caller, tool: string, id: string): Promise<string | null> {
+  if (tool === "delete_task") {
+    const task = await sql.get<{ title: string; organization_id: string | null }>(
+      "SELECT title, organization_id FROM tasks WHERE id = ?",
+      [id],
+    );
+    if (!task?.organization_id || !(await seenOrg(sql, caller, task.organization_id))) return null;
+    return task.title;
+  }
+  const project = await sql.get<{ name: string; organization_id: string }>(
+    `SELECT p.name, p.organization_id
+     FROM projects p
+     JOIN organizations o ON o.id = p.organization_id
+     WHERE p.id = ? AND o.archived_at IS NULL`,
+    [id],
+  );
+  if (!project || !(await seenOrg(sql, caller, project.organization_id))) return null;
+  return project.name;
+}
+
 async function listProjectCards(sql: Sql, organizationId: string): Promise<{ id: string; name: string; status: string }[]> {
   return sql.all(
     "SELECT id, name, status FROM projects WHERE organization_id = ? ORDER BY created_at, name",
@@ -227,6 +249,13 @@ export async function runHqTool(
     if (prior) return JSON.parse(prior.result_json) as HqToolResult;
   }
   if (hqToolNeedsApproval(tool) && request.approved !== true) {
+    if (tool === "delete_task" || tool === "delete_project") {
+      const targetId = tool === "delete_task" ? text(input, "taskId") : text(input, "projectId");
+      if (!targetId) return { ok: false, error: "invalid" };
+      const label = await deletionLabel(sql, caller, tool, targetId);
+      if (!label) return { ok: false, error: "missing" };
+      return { needsApproval: true, preview: `Approve ${tool} for ${label}.` };
+    }
     const org = await seenOrg(sql, caller, text(input, "organizationId"));
     const label = org?.name || text(input, "organizationId") || text(input, "taskId") || text(input, "id") || "this record";
     return { needsApproval: true, preview: `Approve ${tool} for ${label}.` };
@@ -385,6 +414,8 @@ async function perform(
     return { ok: true, value: filed };
   }
   if (tool === "complete_task") return fromCrm(await completeTask(sql, caller, { taskId: text(input, "taskId") }, now));
+  if (tool === "delete_task") return fromCrm(await deleteTask(sql, caller, { taskId: text(input, "taskId") }, now));
+  if (tool === "delete_project") return fromCrm(await deleteProject(sql, caller, { projectId: text(input, "projectId") }, now));
   if (tool === "move_deal") {
     return fromCrm(
       await moveDealStage(

@@ -1,3 +1,4 @@
+import { eraseProject, eraseTask } from "@/db/crm";
 import type { Sql } from "@/db/sql";
 import { defaultBuildDeps, type BuildDeps } from "@/lib/cursor-build";
 import { moveTaskStage, nextColumnPosition } from "@/lib/task-stage";
@@ -91,6 +92,8 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
   if (tool === "save_brief") return saveBrief(sql, actor, args, now);
   if (tool === "create_task") return createAgentTask(sql, actor, args, now);
   if (tool === "update_task") return updateAgentTask(sql, actor, args, now, deps);
+  if (tool === "delete_task") return deleteAgentTask(sql, actor, args, now);
+  if (tool === "delete_project") return deleteAgentProject(sql, actor, args, now);
   if (tool === "create_deliverable") return createAgentDeliverable(sql, actor, args, now);
   if (tool === "add_deliverable_item") return addAgentItem(sql, actor, args, now);
   if (tool === "post_status_update") return postAgentStatus(sql, actor, args, now);
@@ -544,6 +547,30 @@ async function writeSkillNote(
       now,
     ],
   );
+}
+
+async function deleteAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {
+  const taskId = args.taskId?.trim() ?? "";
+  if (!taskId) throw new AgentWorkError("Name a task.");
+  const removed = await eraseTask(
+    sql,
+    { taskId, organizationId: actor.organizationId, actor: { kind: "agent", id: actor.keyId } },
+    now,
+  );
+  if (!removed.ok) throw new AgentWorkError("That task is not in this organization.");
+  return removed.value;
+}
+
+async function deleteAgentProject(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {
+  const projectId = args.projectId?.trim() ?? "";
+  if (!projectId) throw new AgentWorkError("Name a project.");
+  const removed = await eraseProject(
+    sql,
+    { projectId, organizationId: actor.organizationId, actor: { kind: "agent", id: actor.keyId } },
+    now,
+  );
+  if (!removed.ok) throw new AgentWorkError("That project is not in this organization.");
+  return removed.value;
 }
 
 async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number, deps?: BuildDeps): Promise<unknown> {

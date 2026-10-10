@@ -931,6 +931,76 @@ it("starts the swarm when a workflow task is approved to run", async () => {
   expect(wakes).toEqual([]);
 });
 
+it("asks before deleting a task or a project, then removes that work", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const project = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Site" }, idempotencyKey: "proj-del" },
+    NOW,
+  );
+  const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+  const task = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_task", input: { organizationId, title: "Sketch the home page" }, idempotencyKey: "task-del" },
+    NOW,
+  );
+  const taskId = String((valueOf(task) as { id?: string } | undefined)?.id ?? "");
+  await sql.run("UPDATE tasks SET project_id = ? WHERE id = ?", [projectId, taskId]);
+  const heldTask = await runHqTool(
+    sql,
+    staff,
+    { tool: "delete_task", input: { taskId }, idempotencyKey: "del-task" },
+    NOW + 1,
+  );
+  expect(heldTask).toEqual({ needsApproval: true, preview: "Approve delete_task for Sketch the home page." });
+  expect(await sql.get("SELECT id FROM tasks WHERE id = ?", [taskId])).toBeTruthy();
+  const removedTask = await runHqTool(
+    sql,
+    staff,
+    { tool: "delete_task", input: { taskId }, idempotencyKey: "del-task", approved: true },
+    NOW + 1,
+  );
+  expect(removedTask).toMatchObject({
+    ok: true,
+    value: { id: taskId, title: "Sketch the home page", organizationId, projectId },
+  });
+  expect(await sql.get("SELECT id FROM tasks WHERE id = ?", [taskId])).toBeUndefined();
+  const stamped = await sql.get<{ via: string }>(
+    "SELECT json_extract(data_json, '$.via') AS via FROM activities WHERE kind = 'task_deleted'",
+  );
+  expect(stamped?.via).toBe("hq_chat");
+  expect(
+    await runHqTool(sql, staff, { tool: "delete_task", input: { taskId: "missing" }, idempotencyKey: "del-missing", approved: true }, NOW + 2),
+  ).toEqual({ ok: false, error: "missing" });
+  expect(
+    await runHqTool(sql, staff, { tool: "delete_task", input: { taskId: " " }, idempotencyKey: "del-blank" }, NOW + 3),
+  ).toEqual({ ok: false, error: "invalid" });
+
+  const heldProject = await runHqTool(
+    sql,
+    staff,
+    { tool: "delete_project", input: { projectId }, idempotencyKey: "del-proj" },
+    NOW + 4,
+  );
+  expect(heldProject).toEqual({ needsApproval: true, preview: "Approve delete_project for Site." });
+  const removedProject = await runHqTool(
+    sql,
+    staff,
+    { tool: "delete_project", input: { projectId }, idempotencyKey: "del-proj", approved: true },
+    NOW + 4,
+  );
+  expect(removedProject).toMatchObject({
+    ok: true,
+    value: { id: projectId, name: "Site", organizationId, tasksRemoved: 0 },
+  });
+  expect(await sql.get("SELECT id FROM projects WHERE id = ?", [projectId])).toBeUndefined();
+  const space = await sql.get<{ id: string }>("SELECT id FROM workspaces WHERE id = 'ws-1'");
+  expect(space?.id).toBe("ws-1");
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");
