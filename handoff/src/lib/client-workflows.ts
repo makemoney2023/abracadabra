@@ -1,6 +1,6 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
-import { leadBrief, readSwarmArtifacts, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
+import { leadBrief, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
 import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
@@ -814,4 +814,92 @@ export async function advanceWorkflowChain(input: {
     wait: input.wait,
     store: input.store,
   });
+}
+
+/** File a swarm the worker already finished, then start the next workflow in that group. */
+export async function settleRunningSwarms(input: {
+  sql: Sql;
+  store?: ObjectStore;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+}): Promise<number> {
+  if (!input.origin.trim()) return 0;
+  const rows = await input.sql.all<{
+    id: string;
+    organization_id: string;
+    project_id: string | null;
+    workflow_id: string | null;
+    execution_id: string;
+    template_id: string | null;
+  }>(
+    `SELECT id, organization_id, project_id, workflow_id, execution_id, template_id
+     FROM swarm_runs
+     WHERE status = 'running' AND execution_id != ''
+     ORDER BY started_at, id`,
+  );
+  let settled = 0;
+  for (const row of rows) {
+    const run = await readSwarmRun({
+      origin: input.origin,
+      executionId: row.execution_id,
+      templateId: row.template_id ?? "",
+      fetchImpl: input.fetchImpl,
+    });
+    const status = run.status === "completed" || run.status === "failed" ? run.status : "running";
+    if (status === "running") continue;
+    const finished = status === "completed" && run.output.trim().length > 0 && !run.output.includes("still going");
+    if (input.store) {
+      const artifacts = await readSwarmArtifacts({
+        origin: input.origin,
+        executionId: row.execution_id,
+        fetchImpl: input.fetchImpl,
+      });
+      const files = swarmArtifactFiles(artifacts).map((file) => ({
+        workflow: "swarm",
+        run: row.execution_id,
+        node: file.node,
+        body: file.body,
+      }));
+      if (finished) files.push({ workflow: "swarm", run: row.execution_id, node: "result", body: run.output });
+      if (files.length > 0) {
+        await storeWorkflowOutput({
+          sql: input.sql,
+          store: input.store,
+          organizationId: row.organization_id,
+          projectId: row.project_id,
+          files,
+          now: input.now,
+        });
+      }
+    }
+    await input.sql.run("UPDATE swarm_runs SET status = ?, finished_at = ? WHERE id = ? AND status = 'running'", [
+      status,
+      input.now,
+      row.id,
+    ]);
+    if (row.workflow_id) {
+      await input.sql.run(
+        "UPDATE client_workflows SET last_status = ?, last_execution_id = COALESCE(last_execution_id, ?), updated_at = ? WHERE id = ?",
+        [status, row.execution_id, input.now, row.workflow_id],
+      );
+    }
+    if (finished && row.workflow_id) {
+      await advanceWorkflowChain({
+        sql: input.sql,
+        organizationId: row.organization_id,
+        workflowId: row.workflow_id,
+        executionId: row.execution_id,
+        output: run.output,
+        status,
+        origin: input.origin,
+        now: input.now,
+        fetchImpl: input.fetchImpl,
+        wait: async () => {},
+        store: input.store,
+      });
+    }
+    settled += 1;
+  }
+  return settled;
 }

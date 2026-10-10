@@ -4,6 +4,7 @@ import { wakeDueAgents, type WakeEnv } from "./src/lib/agent-wake";
 import { defaultBuildDeps, expireCloudRuns, retryCappedBuilds } from "./src/lib/cursor-build";
 import type { ScanQueue } from "./src/lib/lead-schema";
 import { filePendingScanContexts } from "./src/lib/scan-context";
+import { settleRunningSwarms } from "./src/lib/client-workflows";
 import { dispatchQueue } from "./src/lib/queue-dispatch";
 import { r2ObjectStore, type FilesBucket } from "./src/lib/store/objects";
 
@@ -12,6 +13,7 @@ type QueueEnv = WakeEnv & {
   SCAN_JOBS?: ScanQueue;
   FILES?: FilesBucket;
   EMAIL?: { send(message: unknown): Promise<unknown> };
+  SWARM_ORIGIN?: string;
 };
 
 export default {
@@ -27,6 +29,19 @@ export default {
         await filePendingScanContexts({ sql, store: r2ObjectStore(env.FILES), now });
       } catch (error) {
         console.error(error instanceof Error ? error.message : "Scan filing failed.");
+      }
+    }
+    const origin = env.SWARM_ORIGIN?.trim() ?? "";
+    if (origin) {
+      try {
+        await settleRunningSwarms({
+          sql,
+          store: env.FILES ? r2ObjectStore(env.FILES) : undefined,
+          origin,
+          now,
+        });
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : "Swarm follow failed.");
       }
     }
     await wakeDueAgents(sql, env, event.cron, now);
