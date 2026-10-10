@@ -9,7 +9,7 @@ import {
   type ToolCaller,
 } from "../lib/client-documents";
 import { advanceClientWork, applyBriefChange, fileSwarmDelivery, planClientWork, qualifyLead } from "../lib/client-plan";
-import { readSwarmRun, runLeadSwarm } from "../lib/lead-swarm";
+import { followRunningSwarm, readSwarmRun, runLeadSwarm } from "../lib/lead-swarm";
 import { packsFromTemplates } from "../lib/pack-picker";
 import { packTemplatesFromCatalog } from "../lib/pack-templates";
 import {
@@ -368,8 +368,11 @@ export class ClientAgent extends Agent<AgentBindings> {
         requestId: `${payload.activityKey}:failed`,
       });
     }
-    if (status === "running" && payload.attempts < 6) {
+    const follow = followRunningSwarm(status, payload.attempts);
+    if (follow === "refresh") {
       await this.schedule(45, "refreshSwarm", { ...payload, attempts: payload.attempts + 1 });
+    } else if (follow === "handoff") {
+      await this.schedule(60, "due");
     }
   }
 

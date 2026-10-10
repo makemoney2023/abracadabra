@@ -118,7 +118,7 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
       try {
         const streamed = await runModelStream(model, messages, env, onToken);
         if (streamed) {
-          return { output: streamed.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
+          return { output: finalAnswer(streamed), toolsUsed: [] };
         }
       } catch (error) {
         if (!shouldTryNextModel(error)) throw error;
@@ -127,7 +127,7 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
 
       try {
         const output = await runModelOnce(model, messages, env);
-        return { output: output.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
+        return { output: finalAnswer(output), toolsUsed: [] };
       } catch (error) {
         if (!shouldTryNextModel(error)) throw error;
         lastError = error;
@@ -230,10 +230,18 @@ async function runOnceChain(messages: { role: string; content: string }[], env: 
   throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
 }
 
+/** Prose after tool-call blocks are removed. A call with no answer is not a deliverable. */
+export function finalAnswer(text: string): string {
+  const clean = text.replace(/\[TOOL_CALL\][\s\S]*?\[\/TOOL_CALL\]/g, '').trim();
+  if (!clean) {
+    throw new Error('The step ended on a tool call and did not write an answer.');
+  }
+  return clean.slice(0, MAX_OUTPUT_CHARS);
+}
+
 /** Strip leaked tool-call blocks, cap length, and stream to the UI in chunks. */
 function finalize(text: string, onToken?: (token: string) => void): string {
-  const clean = text.replace(/\[TOOL_CALL\][\s\S]*?\[\/TOOL_CALL\]/g, '').trim() || text.trim();
-  const output = clean.slice(0, MAX_OUTPUT_CHARS);
+  const output = finalAnswer(text);
   if (onToken) {
     for (let i = 0; i < output.length; i += 48) {
       onToken(output.slice(i, i + 48));

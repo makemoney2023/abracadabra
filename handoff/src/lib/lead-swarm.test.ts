@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { OPENING_PACK_ID } from "./pack-templates";
-import { leadBrief, readSwarmRun, runLeadSwarm } from "./lead-swarm";
+import { followRunningSwarm, leadBrief, readSwarmRun, runLeadSwarm, SWARM_REFRESH_LIMIT } from "./lead-swarm";
 
 const template = {
   id: OPENING_PACK_ID,
@@ -103,5 +103,12 @@ describe("lead swarm", () => {
     });
     expect(result).toEqual({ status: "completed", output: "They sell foam.\n\nHello Ada." });
     expect(urls.some((url) => url.includes("/api/execute") || url.includes("/api/save"))).toBe(false);
+  });
+
+  it("keeps following a running swarm well past six checks, then hands it back to due", () => {
+    expect(followRunningSwarm("running", 6)).toBe("refresh");
+    expect(followRunningSwarm("running", SWARM_REFRESH_LIMIT - 1)).toBe("refresh");
+    expect(followRunningSwarm("running", SWARM_REFRESH_LIMIT)).toBe("handoff");
+    expect(followRunningSwarm("completed", 1)).toBe("stop");
   });
 });

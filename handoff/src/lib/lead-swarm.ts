@@ -139,3 +139,13 @@ export async function readSwarmRun(input: {
   const output = doneOutput(body, order);
   return { status, output: output || (status === "running" ? `Swarm run ${input.executionId} is still going.` : "") };
 }
+
+/** Forty checks, 45 seconds apart, covers a research pack that runs for about half an hour. */
+export const SWARM_REFRESH_LIMIT = 40;
+
+/** Keep reading a running swarm. After the limit, hand the follow-up to the due wake instead of dropping it. */
+export function followRunningSwarm(status: string, attempts: number): "refresh" | "handoff" | "stop" {
+  if (status !== "running") return "stop";
+  if (attempts < SWARM_REFRESH_LIMIT) return "refresh";
+  return "handoff";
+}

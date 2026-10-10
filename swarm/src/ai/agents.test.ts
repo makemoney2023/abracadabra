@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_OUTPUT_TOKENS, buildSystemPrompt, buildUserPrompt, runAgent } from './agents';
+import { MAX_OUTPUT_TOKENS, buildSystemPrompt, buildUserPrompt, finalAnswer, runAgent } from './agents';
 
 const skill = { path: '.cursor/skills/m/ad-creative/SKILL.md', body: '## Step 1\nCheck platform character limits.' };
 
@@ -28,6 +28,21 @@ describe('buildUserPrompt', () => {
 
   it('uses the role action for nodes without a skill', () => {
     expect(buildUserPrompt('summarizer', 'text')).toBe('Summarize the following content:\n\ntext');
+  });
+});
+
+describe('finalAnswer', () => {
+  it('drops a tool call and keeps the prose around it', () => {
+    const answer = finalAnswer('Finding.\n[TOOL_CALL]{"server":"portal","tool":"parallel-search_web_search","arguments":{}}[/TOOL_CALL]\nDone.');
+    expect(answer).toContain('Finding.');
+    expect(answer).toContain('Done.');
+    expect(answer).not.toContain('TOOL_CALL');
+  });
+
+  it('rejects a step whose only output is a tool call', () => {
+    expect(() =>
+      finalAnswer('[TOOL_CALL]{"server":"portal","tool":"parallel-search_web_search","arguments":{"q":"buyers"}}[/TOOL_CALL]'),
+    ).toThrow(/tool call/i);
   });
 });
 

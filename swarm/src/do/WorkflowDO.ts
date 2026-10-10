@@ -459,7 +459,7 @@ export class WorkflowDO {
                   executeTool: async (serverId, tool, args) => {
                     const server = servers.find((s) => s.id === serverId);
                     if (!server) throw new Error(`Unknown MCP server: ${serverId}`);
-                    return new McpClient(server).callTool(tool, args);
+                    return new McpClient(server, 60_000).callTool(tool, args);
                   },
                   onToken: (token) => {
                     if (settled) return;

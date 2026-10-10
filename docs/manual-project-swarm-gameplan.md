@@ -12,7 +12,7 @@ When a card has a pack and no swarm is running, **Run swarm** appears on the car
 
 The client portal does not get this button. Staff publish before the client sees the document.
 
-This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. Workflows in one group run one at a time. Research runs first, and its output is the next workflow's input. A research pack uses Parallel Search. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
+This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. Workflows in one group run one at a time. Research runs first, and its output is the next workflow's input. A research pack uses Parallel Search. HQ follows a running swarm for about 30 minutes, then checks again. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
 
 ## What is already true
 
