@@ -21,6 +21,9 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("list_swarm_packs");
     expect(HQ_CHAT_PLAYBOOK).toContain("run_workflow");
     expect(HQ_CHAT_PLAYBOOK).toContain("Do not say you cannot execute the swarm from chat");
+    expect(HQ_CHAT_PLAYBOOK).toContain("list_space_files");
+    expect(HQ_CHAT_PLAYBOOK).toContain("read_space_file");
+    expect(HQ_CHAT_PLAYBOOK).toContain("agent/swarm/");
     expect(HQ_CHAT_PLAYBOOK).toContain("Research comes first");
     expect(HQ_CHAT_PLAYBOOK).toContain("Parallel Search");
     expect(HQ_CHAT_PLAYBOOK).toContain("create_project with description");
