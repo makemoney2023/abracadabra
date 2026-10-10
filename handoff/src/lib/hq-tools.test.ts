@@ -1160,6 +1160,131 @@ it("lists swarm files in the client space and reads the text", async () => {
   expect(hidden).toEqual({ ok: false, error: "missing" });
 });
 
+it("saves a finished swarm PDF and starts the next swarms with that output", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const project = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Social" }, idempotencyKey: "proj-next" },
+    NOW,
+  );
+  const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+  const group = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_workflow_group", input: { organizationId, name: "First", projectId }, idempotencyKey: "group-next" },
+    NOW,
+  );
+  const groupId = String((valueOf(group) as { id?: string } | undefined)?.id ?? "");
+  const source = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "create_workflow",
+      input: { organizationId, groupId, name: "Research", templateId: "pack-research", projectId },
+      idempotencyKey: "wf-source",
+    },
+    NOW,
+  );
+  const sourceId = String((valueOf(source) as { id?: string } | undefined)?.id ?? "");
+  await sql.run(
+    "UPDATE client_workflows SET last_status = 'completed', last_output = ?, last_execution_id = ? WHERE id = ?",
+    ["The calendar is ready.", "exec-done", sourceId],
+  );
+  const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]);
+  const objects = new Map<string, Uint8Array>();
+  const calls: { url: string; body?: string }[] = [];
+  const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
+    const href = String(url);
+    calls.push({ url: href, body: init?.body ? String(init.body) : undefined });
+    if (href.includes("/api/report")) return new Response(pdf);
+    if (href.includes("/api/template")) {
+      return Response.json({
+        id: "pack-copy",
+        nodes: [{ id: "n1", instructions: "Follow .cursor/skills/community/marketingskills/copy/SKILL.md Write the calendar.", position: { x: 0, y: 0 } }],
+        edges: [],
+      });
+    }
+    if (href.endsWith("/api/save")) return Response.json({ success: true });
+    if (href.endsWith("/api/execute")) return Response.json({ executionId: "exec-next" });
+    return Response.json({ status: "running", results: {} });
+  };
+  const store = {
+    async stat() {
+      return null;
+    },
+    async read(key: string) {
+      return objects.get(key) ?? null;
+    },
+    async remove() {},
+    async put(key: string, bytes: Uint8Array) {
+      objects.set(key, bytes);
+    },
+    async beginUpload() {
+      return "upload-1";
+    },
+    async readUpload() {
+      return null;
+    },
+    async writePart() {},
+    async finishUpload() {},
+  };
+  const swarm = { origin: "https://swarm.example", fetchImpl: fetchImpl as typeof fetch, wait: async () => {}, store };
+  const report = await runHqTool(
+    sql,
+    staff,
+    { tool: "save_swarm_report", input: { id: sourceId }, idempotencyKey: "pdf-1" },
+    NOW + 1,
+    { swarm },
+  );
+  expect(valueOf(report)).toEqual({ path: "agent/swarm/exec-done/report.pdf", executionId: "exec-done" });
+  const held = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "queue_followup_swarms",
+      input: { organizationId, id: sourceId, projectId, title: "Copy calendar | pack-copy\nVisual prompts | pack-visual", name: "Next" },
+      idempotencyKey: "next-1",
+    },
+    NOW + 2,
+    { swarm },
+  );
+  expect(held).toMatchObject({ needsApproval: true });
+  const queued = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "queue_followup_swarms",
+      input: { organizationId, id: sourceId, projectId, title: "Copy calendar | pack-copy\nVisual prompts | pack-visual", name: "Next" },
+      idempotencyKey: "next-1",
+      approved: true,
+    },
+    NOW + 2,
+    { swarm },
+  );
+  const value = valueOf(queued) as { workflowIds?: string[]; taskIds?: string[]; status?: string; executionId?: string };
+  expect(value.workflowIds).toHaveLength(2);
+  expect(value.taskIds?.length).toBeGreaterThan(0);
+  expect(value.executionId).toBe("exec-next");
+  expect(value.status).toBe("running");
+  const started = calls.find((call) => call.url.endsWith("/api/execute"));
+  expect(started?.body).toContain("The calendar is ready.");
+  const unfinished = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "queue_followup_swarms",
+      input: { organizationId, id: value.workflowIds?.[0], title: "More | pack-copy" },
+      idempotencyKey: "next-2",
+      approved: true,
+    },
+    NOW + 3,
+    { swarm },
+  );
+  expect(unfinished).toEqual({ ok: false, error: "invalid" });
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");

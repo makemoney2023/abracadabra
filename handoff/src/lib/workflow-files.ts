@@ -12,12 +12,18 @@ export type WorkflowFile = {
   run: string;
   node: string;
   body: string;
+  /** Raw PDF bytes. When set, the body is not used. */
+  bytes?: Uint8Array;
 };
 
 export type StoredWorkflowFiles = {
   batchId: string | null;
   stored: string[];
 };
+
+function isPdfBytes(bytes: Uint8Array): boolean {
+  return bytes.byteLength >= 5 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+}
 
 function profileOf(value: string): PolicyProfile | null {
   if (value === "standard" || value === "software") return value;
@@ -65,6 +71,11 @@ export async function storeWorkflowOutput(input: {
   projectId?: string | null;
 }): Promise<StoredWorkflowFiles> {
   const prepared = input.files.flatMap((file) => {
+    if (file.bytes && isPdfBytes(file.bytes)) {
+      const relativePath = workflowSpacePath(file, "pdf");
+      if (!relativePath) return [];
+      return [{ relativePath, bytes: file.bytes, contentType: "application/pdf" }];
+    }
     const adapted = adaptArtifact(file.body);
     if (!adapted) return [];
     const relativePath = workflowSpacePath(file, adapted.extension);

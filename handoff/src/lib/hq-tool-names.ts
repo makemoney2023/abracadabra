@@ -30,6 +30,7 @@ export const GATED_HQ_TOOLS = new Set([
   "decide_work_request",
   "link_slack_channel",
   "run_workflow",
+  "queue_followup_swarms",
   "delete_task",
   "delete_project",
 ]);
@@ -176,6 +177,16 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     label: "Run a workflow",
     description:
       "Start the first workflow in a group. Research runs before the others. A later workflow waits until that output is ready, then receives it. body is the instruction for this run. Fields: id, body.",
+  },
+  save_swarm_report: {
+    label: "Save the swarm PDF",
+    description:
+      "Save the finished swarm's PDF report into the client space at agent/swarm/<run>/report.pdf. A finished run also saves it. Fields: id (workflow id).",
+  },
+  queue_followup_swarms: {
+    label: "Queue the next swarms",
+    description:
+      "After a swarm finishes, file the next set and start them with that output. title is one line per swarm: Name | pack id. id is the finished workflow. name is the new group. Fields: organizationId, id, title, projectId, name.",
   },
   decide_work_request: {
     label: "Decide a client request",

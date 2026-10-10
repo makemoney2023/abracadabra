@@ -162,6 +162,25 @@ export function swarmArtifactFiles(artifacts: SwarmNodeArtifact[]): { node: stri
   return files;
 }
 
+/** The swarm's PDF report for one finished execution. A missing or non-PDF body is null. */
+export async function readSwarmReport(input: {
+  origin: string;
+  executionId: string;
+  fetchImpl?: typeof fetch;
+}): Promise<Uint8Array | null> {
+  const fetchImpl = input.fetchImpl ?? fetch;
+  const base = originOf(input.origin);
+  try {
+    const response = await fetchImpl(`${base}/api/report?executionId=${encodeURIComponent(input.executionId)}`);
+    if (!response.ok) return null;
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (bytes.byteLength < 5 || bytes[0] !== 0x25 || bytes[1] !== 0x50 || bytes[2] !== 0x44 || bytes[3] !== 0x46) return null;
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
 /** Node artifacts for one execution. A missing list is empty. */
 export async function readSwarmArtifacts(input: {
   origin: string;
