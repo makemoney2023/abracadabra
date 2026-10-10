@@ -114,6 +114,28 @@ describe("signed wakes", () => {
     expect(due).toEqual([{ organizationId: "org-sched", reason: "due" }]);
   });
 
+  it("wakes due when a swarm is still marked running and nothing else is scheduled", async () => {
+    const sql = await db();
+    await org(sql, "org-swarm");
+    await sql.run(
+      `INSERT INTO workflow_groups (id, organization_id, name, created_at) VALUES ('group-swarm', 'org-swarm', 'Care', ?)`,
+      [NOW],
+    );
+    await sql.run(
+      `INSERT INTO client_workflows (
+         id, group_id, organization_id, name, template_id, created_at, updated_at, next_run_at
+       ) VALUES ('wf-swarm', 'group-swarm', 'org-swarm', 'Research', 'pack-research', ?, ?, NULL)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO swarm_runs (
+         id, organization_id, workflow_id, execution_id, name, status, trigger, started_at
+       ) VALUES ('run-swarm', 'org-swarm', 'wf-swarm', 'exec-1', 'Research', 'running', 'due', ?)`,
+      [NOW],
+    );
+    expect(await dueOrganizations(sql, "*/15 * * * *", NOW)).toEqual([{ organizationId: "org-swarm", reason: "due" }]);
+  });
+
   it("does not run a scheduled workflow's task as ordinary work", async () => {
     const sql = await db();
     await org(sql, "org-owned");

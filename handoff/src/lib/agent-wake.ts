@@ -79,10 +79,15 @@ export async function dueOrganizations(sql: Sql, cron: string, now = Date.now())
              AND w.next_run_at IS NOT NULL
              AND w.next_run_at <= ?
          )`;
+    const swarmRunning = `EXISTS (
+           SELECT 1 FROM swarm_runs s
+           WHERE s.organization_id = organizations.id
+             AND s.status = 'running'
+         )`;
     const rows = await sql.all<{ id: string; reason: WakeReason }>(
       `SELECT id, CASE
          WHEN ${unanswered} THEN 'context_changed'
-         WHEN ${workflowDue} THEN 'due'
+         WHEN ${workflowDue} OR ${swarmRunning} THEN 'due'
          ELSE 'work'
        END AS reason
        FROM organizations
@@ -100,6 +105,7 @@ export async function dueOrganizations(sql: Sql, cron: string, now = Date.now())
            )
            OR ${unanswered}
            OR ${workflowDue}
+           OR ${swarmRunning}
          )
        ORDER BY id`,
       [now, now, now],
