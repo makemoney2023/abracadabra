@@ -37,6 +37,11 @@ export function mcpConnectTarget(env: McpConnectEnv): McpConnectTarget | null {
   return { url, headers };
 }
 
+/** Work tools on the Handoff route, even when the connector portal is also configured. */
+export function handoffWorkCaller(env: McpConnectEnv, fetchImpl: typeof fetch = fetch): ToolCaller | null {
+  return mcpHttpCaller({ ...env, MCP_PORTAL_URL: "" }, fetchImpl);
+}
+
 /** JSON-RPC tools/call against the Handoff MCP route. Null when no target is configured. */
 export function mcpHttpCaller(env: McpConnectEnv, fetchImpl: typeof fetch = fetch): ToolCaller | null {
   const target = mcpConnectTarget(env);

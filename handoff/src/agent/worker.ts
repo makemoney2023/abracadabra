@@ -25,7 +25,7 @@ import {
 } from "../lib/client-channel";
 import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS, mailboxUserContent } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
-import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
+import { callerForClientWork, handoffWorkCaller, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
 import { skillObjectKey } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
 
@@ -248,9 +248,13 @@ export class ClientAgent extends Agent<AgentBindings> {
     await this.acceptWake("due");
   }
 
-  /** Portal tools when the portal is linked. Otherwise the Handoff MCP route, so the run is recorded. */
+  /** Portal work tools when they are loaded. Otherwise the Handoff route, which has run_due_workflow. */
   private leadCaller(): ToolCaller | null {
-    const portal = this.toolCaller(this.portal().getAITools?.() ?? {});
+    const tools = this.portal().getAITools?.() ?? {};
+    const portal = this.toolCaller(tools);
+    if (portal && findExecute(tools, "run_due_workflow")) return portal;
+    const handoff = handoffWorkCaller(this.env);
+    if (handoff) return handoff;
     if (portal) return portal;
     const http = mcpHttpCaller(this.env);
     if (!http) return null;
@@ -441,8 +445,8 @@ export class ClientAgent extends Agent<AgentBindings> {
           projectId,
           workflowId,
         });
-      } else if (run.none === true) {
-        const open = await call("running_swarms", { requestId: wakeId });
+      } else {
+        const open = await call("running_swarms", { requestId: `${wakeId}:open` });
         const runs =
           open && typeof open === "object" && Array.isArray((open as { runs?: unknown }).runs)
             ? ((open as { runs: Record<string, unknown>[] }).runs)
