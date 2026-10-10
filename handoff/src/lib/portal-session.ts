@@ -85,18 +85,34 @@ function serverRow(value: unknown): PortalServer | null {
   return { serverId, name, enabled: row.enabled === true };
 }
 
+const SERVER_LINE = /^- (.+) \(([a-z0-9]+(?:-[a-z0-9]+)*)\): .*?(enabled|disabled)$/;
+
+function parsePortalServerLines(text: string): PortalServer[] {
+  const servers: PortalServer[] = [];
+  for (const line of text.split("\n")) {
+    const match = line.trim().match(SERVER_LINE);
+    if (!match) continue;
+    const name = match[1]?.trim() ?? "";
+    const serverId = match[2] ?? "";
+    if (!serverId) continue;
+    servers.push({ serverId, name: name || serverId, enabled: match[3] === "enabled" });
+  }
+  return servers;
+}
+
 export function parsePortalServers(text: string): PortalServer[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
   } catch {
-    return [];
+    return parsePortalServerLines(text);
   }
   const rows = Array.isArray(parsed)
     ? parsed
     : parsed && typeof parsed === "object" && Array.isArray((parsed as { servers?: unknown }).servers)
       ? (parsed as { servers: unknown[] }).servers
-      : [];
+      : null;
+  if (!rows) return parsePortalServerLines(text);
   return rows.flatMap((row) => {
     const server = serverRow(row);
     return server ? [server] : [];
@@ -118,6 +134,7 @@ class PortalCall {
       headers: {
         "content-type": "application/json",
         accept: "application/json, text/event-stream",
+        "user-agent": "Mozilla/5.0",
         ...this.target.headers,
         ...(this.sessionId ? { "mcp-session-id": this.sessionId } : {}),
       },
