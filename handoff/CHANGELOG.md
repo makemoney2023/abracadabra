@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — The social-media test was cleared again so the next run can start from scratch.
+- **Why** — The buying-psychology research run, its workflows, the project brief, and the HQ chat were still in place.
+- **Code touchpoints** — none. Data clear after agent deploy `62013526-8aab-4d3d-8503-45822dc391df`.
+- **Data-flow impact** — Removed the three tasks, the workflow group, the swarm run, the project requirements, the brief attached to the social media project, and the HQ chat messages. The social media project, the client, staff, spaces, git activity, and the older unattached brief remain.
+- **API / schema impact** — none.
+- **Verification** — Tasks 0, workflows 0, workflow groups 0, swarm runs 0, idempotency keys 0. The social media project description is empty. HQ chat messages 0 after the agent redeploy.
+
 - **What changed** — A research pack calls Parallel Search. A swarm step that is still running is left alone for two minutes, retried once, then marked timed out so the later steps can run.
 - **Why** — The buying-psychology research run restarted its reviewer on every status check, so the run never finished and the paper step never called Parallel.
 - **Code touchpoints** — `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/mcp/research-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`
