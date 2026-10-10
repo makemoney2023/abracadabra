@@ -2,6 +2,15 @@
 
 ## 2026-10-10
 
+- **What changed** — Staff chat can read a project document, publish the swarm PDF to the client, and send a review into the next swarms.
+- **Why** — A review could open space files, but not the project document, and the next swarm received only the finished output.
+- **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — `read_deliverable` returns the current text, up to 20,000 characters. `publish_swarm_report` waits for approval, then files `report.pdf` as a client-visible document. `queue_followup_swarms` puts `body` ahead of the finished swarm text.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/hq-tools.test.ts src/lib/hq-chat-playbook.test.ts` passed 35. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. eslint on the changed files exited 0.
+
+## 2026-10-10
+
 - **What changed** — A finished swarm stores its PDF report in the client space. Staff chat can save that PDF and start the next swarms with the finished output.
 - **Why** — The report stayed on the swarm worker, and the agent could not turn a finished run into the next set of swarm tasks.
 - **Code touchpoints** — `handoff/src/lib/workflow-files.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`

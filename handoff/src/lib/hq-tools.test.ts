@@ -1256,7 +1256,14 @@ it("saves a finished swarm PDF and starts the next swarms with that output", asy
     staff,
     {
       tool: "queue_followup_swarms",
-      input: { organizationId, id: sourceId, projectId, title: "Copy calendar | pack-copy\nVisual prompts | pack-visual", name: "Next" },
+      input: {
+        organizationId,
+        id: sourceId,
+        projectId,
+        title: "Copy calendar | pack-copy\nVisual prompts | pack-visual",
+        name: "Next",
+        body: "Fewer carousels.",
+      },
       idempotencyKey: "next-1",
       approved: true,
     },
@@ -1269,7 +1276,35 @@ it("saves a finished swarm PDF and starts the next swarms with that output", asy
   expect(value.executionId).toBe("exec-next");
   expect(value.status).toBe("running");
   const started = calls.find((call) => call.url.endsWith("/api/execute"));
+  expect(started?.body).toContain("Fewer carousels.");
   expect(started?.body).toContain("The calendar is ready.");
+  const heldReport = await runHqTool(
+    sql,
+    staff,
+    { tool: "publish_swarm_report", input: { id: sourceId }, idempotencyKey: "pub-1" },
+    NOW + 4,
+  );
+  expect(heldReport).toMatchObject({ needsApproval: true });
+  const published = await runHqTool(
+    sql,
+    staff,
+    { tool: "publish_swarm_report", input: { id: sourceId }, idempotencyKey: "pub-1", approved: true },
+    NOW + 4,
+    { swarm },
+  );
+  const reportDoc = valueOf(published) as { id?: string; status?: string; path?: string };
+  expect(reportDoc.status).toBe("in_review");
+  expect(reportDoc.path).toBe("agent/swarm/exec-done/report.pdf");
+  const read = await runHqTool(sql, staff, { tool: "read_deliverable", input: { id: reportDoc.id, organizationId } }, NOW + 5);
+  expect(valueOf(read)).toMatchObject({ id: reportDoc.id, status: "in_review", kind: "document" });
+  expect(String((valueOf(read) as { body?: string }).body)).toContain("The calendar is ready.");
+  const wrongOrg = await runHqTool(
+    sql,
+    staff,
+    { tool: "read_deliverable", input: { id: reportDoc.id, organizationId: "org-other" } },
+    NOW + 5,
+  );
+  expect(wrongOrg).toEqual({ ok: false, error: "missing" });
   const unfinished = await runHqTool(
     sql,
     staff,
