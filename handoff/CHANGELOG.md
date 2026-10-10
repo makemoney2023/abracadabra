@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-10
+
+- **What changed** — Main includes the MCP server list and the agent portal URL. Staff HQ and the agent were deployed from that merge.
+- **Why** — The list parser and the live portal URL were only on draft branches.
+- **Code touchpoints** — none. Deploy of `5ab4243`.
+- **Data-flow impact** — `/mcp` reads the portal's text server list. The agent opens `https://mcp.abra-ca-dabra.app/mcp` with the Access service token.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-hq` version `e71e1979-2371-4d97-943b-133ebf11bc54` on `hq.abra-ca-dabra.app`. Worker `handoff-agent` version `3affd6eb-3ca6-44a4-b20c-421e269c9f3e` on `agent.abra-ca-dabra.app`. `GET /api/health` returned 200. `portal_list_servers` still lists Parallel Search as enabled. The agent Access secrets were put again after the deploy.
+
 ## 2026-10-09
 
 - **What changed** — The MCP page reads the portal's text server list, so Parallel Search shows as on or off.
