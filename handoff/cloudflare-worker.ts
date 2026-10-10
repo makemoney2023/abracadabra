@@ -23,7 +23,11 @@ export default {
     const now = Date.now();
     const sql = d1Sql(env.DB);
     if (env.FILES) {
-      await filePendingScanContexts({ sql, store: r2ObjectStore(env.FILES), now });
+      try {
+        await filePendingScanContexts({ sql, store: r2ObjectStore(env.FILES), now });
+      } catch (error) {
+        console.error(error instanceof Error ? error.message : "Scan filing failed.");
+      }
     }
     await wakeDueAgents(sql, env, event.cron, now);
     const deps = defaultBuildDeps(now);

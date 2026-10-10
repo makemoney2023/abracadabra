@@ -268,4 +268,53 @@ describe("schema context", () => {
     const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM files");
     expect(count?.n).toBe(1);
   });
+
+  it("records a note and keeps going when one scan cannot be filed", async () => {
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at) VALUES ('org-2', 'Other', 'client', ?, ?)`,
+      [NOW, NOW],
+    );
+    for (const [orgId, scanId] of [
+      ["org-1", "scan-a"],
+      ["org-2", "scan-b"],
+    ] as const) {
+      await sql.run(
+        `INSERT INTO readiness_scans (id, status, organization_id, score_total, created_at, completed_at)
+         VALUES (?, 'complete', ?, 10, ?, ?)`,
+        [scanId, orgId, NOW, NOW],
+      );
+      await sql.run(
+        `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+         VALUES (?, ?, 'https://northwind.example/', 'home', '[]', ?)`,
+        [`page-${scanId}`, scanId, JSON.stringify({ scrapedText: "Foam." })],
+      );
+    }
+    await sql.exec("DROP TABLE file_reads");
+    await expect(filePendingScanContexts({ sql, store, now: NOW })).resolves.toBe(0);
+    const notes = await sql.all<{ organization_id: string }>(
+      "SELECT organization_id FROM activities WHERE kind = 'agent.note' ORDER BY organization_id",
+    );
+    expect(notes.map((note) => note.organization_id)).toEqual(["org-1", "org-2"]);
+  });
+
+  it("recognizes a filed scan whose id contains hyphens", async () => {
+    const scanId = "27f4e0a6-8727-436f-b5dc-6add69824651";
+    await sql.run(
+      `INSERT INTO readiness_scans (id, status, organization_id, score_total, created_at, completed_at)
+       VALUES (?, 'complete', 'org-1', 40, ?, ?)`,
+      [scanId, NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO readiness_scan_pages (id, scan_id, url, page_type, schema_types_json, evidence_json)
+       VALUES ('page-uuid', ?, 'https://northwind.example/', 'home', '[]', ?)`,
+      [scanId, JSON.stringify({ scrapedText: "We sell foam." })],
+    );
+    const saved = await storeScanContext({ sql, store, organizationId: "org-1", now: NOW });
+    expect(saved.created).toBe(true);
+    expect(saved.stored[0]).toContain(`agent/schema/${scanId}/`);
+    const again = await storeScanContext({ sql, store, organizationId: "org-1", now: NOW + 1 });
+    expect(again).toMatchObject({ created: false, stored: saved.stored });
+    const count = await sql.get<{ n: number }>("SELECT count(*) AS n FROM files");
+    expect(count?.n).toBe(1);
+  });
 });
