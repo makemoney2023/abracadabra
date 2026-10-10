@@ -28,6 +28,10 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("queue_followup_swarms");
     expect(HQ_CHAT_PLAYBOOK).toContain("read_deliverable");
     expect(HQ_CHAT_PLAYBOOK).toContain("publish_swarm_report");
+    expect(HQ_CHAT_PLAYBOOK).toContain("list_repos");
+    expect(HQ_CHAT_PLAYBOOK).toContain("list_repo_files");
+    expect(HQ_CHAT_PLAYBOOK).toContain("read_repo_file");
+    expect(HQ_CHAT_PLAYBOOK).toContain("search_repo");
     expect(HQ_CHAT_PLAYBOOK).toContain("Research comes first");
     expect(HQ_CHAT_PLAYBOOK).toContain("Parallel Search");
     expect(HQ_CHAT_PLAYBOOK).toContain("create_project with description");

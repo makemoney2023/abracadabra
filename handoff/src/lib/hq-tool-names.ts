@@ -14,6 +14,10 @@ export const READ_HQ_TOOLS = [
   "list_space_files",
   "read_space_file",
   "read_deliverable",
+  "list_repos",
+  "list_repo_files",
+  "read_repo_file",
+  "search_repo",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -157,6 +161,25 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   read_deliverable: {
     label: "Read a deliverable",
     description: "Read the text of one project document or brief. Fields: id, organizationId.",
+  },
+  list_repos: {
+    label: "List repos",
+    description: "GitHub repos attached to this client. Fields: organizationId.",
+  },
+  list_repo_files: {
+    label: "List repo files",
+    description:
+      "List one folder in a repo attached to this client. path is optional and starts at the root. Pass repoId when the client has more than one repo. Fields: organizationId, repoId, projectId, path.",
+  },
+  read_repo_file: {
+    label: "Read a repo file",
+    description:
+      "Read one text file from a repo attached to this client. path is the file path. Pass repoId when the client has more than one repo. Fields: organizationId, repoId, path.",
+  },
+  search_repo: {
+    label: "Search a repo",
+    description:
+      "Search code in a repo attached to this client. query is the words to find. Pass repoId when the client has more than one repo. Fields: organizationId, repoId, query.",
   },
   list_workflows: {
     label: "List workflows",
