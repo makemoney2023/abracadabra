@@ -2,6 +2,15 @@
 
 ## 2026-10-10
 
+- **What changed** — Staff chat can list, read, and search a GitHub repo attached to the client.
+- **Why** — The agent could see that a repo was linked, but it could not open the files.
+- **Code touchpoints** — `handoff/src/lib/github/browse.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — `list_repos` lists attached repos. `list_repo_files` lists one folder. `read_repo_file` returns text up to 20,000 characters. `search_repo` searches that repo and drops hits from any other repository. A client with more than one repo is asked to pick before GitHub is called.
+- **API / schema impact** — none. The GitHub App token stays on the staff worker.
+- **Verification** — `npx vitest run src/lib/github/browse.test.ts src/lib/hq-tools.test.ts src/lib/hq-chat-playbook.test.ts src/app/chat/approval-card.test.ts` passed 43. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. eslint on the changed files exited 0.
+
+## 2026-10-10
+
 - **What changed** — Staff chat can read a project document, publish the swarm PDF to the client, and send a review into the next swarms.
 - **Why** — A review could open space files, but not the project document, and the next swarm received only the finished output.
 - **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`

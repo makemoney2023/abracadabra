@@ -3,6 +3,7 @@ import { actionFromLine, applyChannelPlan, dueMillis } from "@/lib/channel-plan"
 import { linkSlackChannel, listWorkRequests, setWorkRequestState, workRequestById } from "@/db/conversations";
 import {
   addNote,
+  cleanRepoName,
   assignRepoProject,
   assignSpaceProject,
   createDraftInvoice,
@@ -16,6 +17,7 @@ import {
   createTask,
   listDeals,
   listOrganizations,
+  listRepos,
   listTimeline,
   logCall,
   mergeOrganizations,
@@ -23,6 +25,7 @@ import {
   organizationById,
   postStatusUpdate,
   saveProjectDescription,
+  type LinkedRepo,
   type StatusHealth,
 } from "@/db/crm";
 import { publishDeliverable } from "@/db/deliverables";
@@ -48,6 +51,10 @@ import {
 } from "@/lib/client-workflows";
 import { packsFromTemplates } from "@/lib/pack-picker";
 import type { ObjectStore } from "@/lib/store/objects";
+import { installationAccessToken } from "@/lib/github/contents";
+import { listRepoDirectory, readRepoText, searchRepoCode, type RepoBrowseError } from "@/lib/github/browse";
+import { readGithubSecrets } from "@/lib/github/secrets";
+import type { GithubSecrets } from "@/lib/github/app";
 import { hqToolNeedsApproval } from "@/lib/hq-tool-names";
 import { createInvite } from "@/lib/store/invites";
 import type { OutboundMail } from "@/lib/session";
@@ -70,6 +77,7 @@ type ToolOptions = {
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
   build?: BuildDeps;
   intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
+  github?: { fetchImpl?: typeof fetch; secrets?: GithubSecrets | null; now?: number };
 };
 
 const READS = new Set([
@@ -88,6 +96,10 @@ const READS = new Set([
   "list_space_files",
   "read_space_file",
   "read_deliverable",
+  "list_repos",
+  "list_repo_files",
+  "read_repo_file",
+  "search_repo",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {
@@ -523,6 +535,10 @@ async function perform(
   if (tool === "list_workflows") return listWorkflows(sql, caller, input);
   if (tool === "list_space_files") return listSpaceFiles(sql, caller, input);
   if (tool === "read_space_file") return readSpaceFile(sql, caller, input, options);
+  if (tool === "list_repos") return listClientRepos(sql, caller, input);
+  if (tool === "list_repo_files") return listClientRepoFiles(sql, caller, input, now, options);
+  if (tool === "read_repo_file") return readClientRepoFile(sql, caller, input, now, options);
+  if (tool === "search_repo") return searchClientRepo(sql, caller, input, now, options);
   if (tool === "create_workflow_group") return makeWorkflowGroup(sql, caller, input, now);
   if (tool === "create_workflow") return makeWorkflow(sql, caller, input, now, options);
   if (tool === "assign_workflow") return assignWorkflow(sql, caller, input, now);
@@ -531,6 +547,163 @@ async function perform(
   if (tool === "publish_swarm_report") return publishSwarmReport(sql, caller, input, now, options);
   if (tool === "queue_followup_swarms") return queueFollowupSwarms(sql, caller, input, now, options);
   return { ok: false, error: "unknown" };
+}
+
+type RepoChoice = { id: string; fullName: string; projectId: string | null; defaultBranch: string };
+
+function repoChoice(repo: LinkedRepo): RepoChoice {
+  return {
+    id: repo.id,
+    fullName: repo.full_name,
+    projectId: repo.project_id,
+    defaultBranch: repo.default_branch?.trim() || "main",
+  };
+}
+
+async function clientRepos(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+): Promise<{ ok: true; repos: LinkedRepo[] } | { ok: false; error: "missing" }> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+  return { ok: true, repos: await listRepos(sql, caller, organizationId) };
+}
+
+function chooseRepo(
+  repos: LinkedRepo[],
+  input: Record<string, unknown>,
+): LinkedRepo | { choices: RepoChoice[] } | null {
+  const repoId = text(input, "repoId");
+  const projectId = text(input, "projectId");
+  const scoped = projectId ? repos.filter((repo) => repo.project_id === projectId) : repos;
+  if (repoId) {
+    const found = repos.find((repo) => repo.id === repoId);
+    if (!found || (projectId && found.project_id !== projectId)) return null;
+    return found;
+  }
+  if (scoped.length === 1) return scoped[0];
+  return { choices: scoped.map(repoChoice) };
+}
+
+function fromBrowse(result: RepoBrowseError): HqToolResult {
+  if (result.error === "unavailable") return { ok: true, value: { unavailable: true } };
+  return { ok: false, error: result.error };
+}
+
+function githubSecretsFrom(options: ToolOptions): GithubSecrets | null {
+  if (options.github && "secrets" in options.github) return options.github.secrets ?? null;
+  return readGithubSecrets();
+}
+
+async function tokenForRepo(repo: LinkedRepo, now: number, options: ToolOptions): Promise<string | null> {
+  if (repo.suspended_at || !repo.installation_id || !cleanRepoName(repo.full_name)) return null;
+  const secrets = githubSecretsFrom(options);
+  if (!secrets) return null;
+  return installationAccessToken({
+    appId: secrets.appId,
+    privateKey: secrets.privateKey,
+    installationId: repo.installation_id,
+    fetch: options.github?.fetchImpl ?? fetch,
+    now: options.github?.now ?? now,
+  });
+}
+
+async function listClientRepos(sql: Sql, caller: Caller, input: Record<string, unknown>): Promise<HqToolResult> {
+  const loaded = await clientRepos(sql, caller, input);
+  if (!loaded.ok) return loaded;
+  return { ok: true, value: loaded.repos.map(repoChoice) };
+}
+
+async function openAttachedRepo(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<{ ok: true; repo: LinkedRepo; token: string; ref: string } | HqToolResult> {
+  const loaded = await clientRepos(sql, caller, input);
+  if (!loaded.ok) return loaded;
+  const picked = chooseRepo(loaded.repos, input);
+  if (!picked) return { ok: false, error: "missing" };
+  if ("choices" in picked) return { ok: true, value: { repos: picked.choices } };
+  const token = await tokenForRepo(picked, now, options);
+  if (!token) return { ok: true, value: { unavailable: true } };
+  return { ok: true, repo: picked, token, ref: picked.default_branch?.trim() || "main" };
+}
+
+async function listClientRepoFiles(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const opened = await openAttachedRepo(sql, caller, input, now, options);
+  if (!("repo" in opened)) return opened;
+  const listed = await listRepoDirectory({
+    fullName: opened.repo.full_name,
+    ref: opened.ref,
+    path: text(input, "path"),
+    token: opened.token,
+    fetch: options.github?.fetchImpl ?? fetch,
+  });
+  if (!listed.ok) return fromBrowse(listed);
+  return {
+    ok: true,
+    value: {
+      repoId: opened.repo.id,
+      fullName: opened.repo.full_name,
+      ref: opened.ref,
+      path: text(input, "path"),
+      entries: listed.entries,
+      truncated: listed.truncated,
+    },
+  };
+}
+
+async function readClientRepoFile(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const opened = await openAttachedRepo(sql, caller, input, now, options);
+  if (!("repo" in opened)) return opened;
+  const read = await readRepoText({
+    fullName: opened.repo.full_name,
+    ref: opened.ref,
+    path: text(input, "path"),
+    token: opened.token,
+    fetch: options.github?.fetchImpl ?? fetch,
+  });
+  if (!read.ok) return fromBrowse(read);
+  const { ok, ...file } = read;
+  void ok;
+  return { ok: true, value: { repoId: opened.repo.id, fullName: opened.repo.full_name, ...file } };
+}
+
+async function searchClientRepo(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const opened = await openAttachedRepo(sql, caller, input, now, options);
+  if (!("repo" in opened)) return opened;
+  const found = await searchRepoCode({
+    fullName: opened.repo.full_name,
+    query: text(input, "query"),
+    token: opened.token,
+    fetch: options.github?.fetchImpl ?? fetch,
+  });
+  if (!found.ok) return fromBrowse(found);
+  return {
+    ok: true,
+    value: { repoId: opened.repo.id, fullName: opened.repo.full_name, hits: found.hits },
+  };
 }
 
 const SPACE_FILE_LIST = 40;

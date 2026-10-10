@@ -1,3 +1,4 @@
+import { generateKeyPairSync } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { organizationForSlackChannel, recordThreadMessage, workRequestById } from "@/db/conversations";
@@ -1320,6 +1321,149 @@ it("saves a finished swarm PDF and starts the next swarms with that output", asy
   expect(unfinished).toEqual({ ok: false, error: "invalid" });
 });
 
+it("lists, reads, and searches only the repo attached to this client", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const other = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Pine" }, idempotencyKey: "pine-repo" }, NOW);
+  const otherId = String((valueOf(other) as { id?: string } | undefined)?.id ?? "");
+  await sql.run(
+    `INSERT INTO github_installations (id, account_login, account_type, created_at)
+     VALUES (77, 'north', 'Organization', ?)`,
+    [NOW],
+  );
+  await sql.run(
+    `INSERT INTO repos (
+       id, github_repo_id, installation_id, full_name, organization_id, project_id,
+       default_branch, is_private, owned_by, linked_by, created_at, archived_at
+     ) VALUES
+       ('repo-site', 21, 77, 'north/site', ?, NULL, 'main', 1, 'agency', 'staff-1', ?, NULL),
+       ('repo-other', 22, 77, 'pine/site', ?, NULL, 'main', 1, 'agency', 'staff-1', ?, NULL)`,
+    [organizationId, NOW, otherId, NOW],
+  );
+  const calls: string[] = [];
+  const github = {
+    secrets: githubSecrets(),
+    fetchImpl: (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes("/access_tokens")) return Response.json({ token: "install-token" });
+      const header = new Headers(init?.headers).get("authorization");
+      expect(header).toBe("Bearer install-token");
+      if (url.endsWith("/contents/src?ref=main")) {
+        return Response.json([{ name: "app.ts", path: "src/app.ts", type: "file", size: 4 }]);
+      }
+      if (url.endsWith("/contents/src/app.ts?ref=main")) {
+        return Response.json({
+          type: "file",
+          path: "src/app.ts",
+          size: 4,
+          encoding: "base64",
+          content: Buffer.from("site").toString("base64"),
+        });
+      }
+      if (url.includes("/search/code?")) {
+        return Response.json({
+          items: [
+            { path: "src/app.ts", repository: { full_name: "north/site" }, text_matches: [{ fragment: "site" }] },
+            { path: "secret.ts", repository: { full_name: "pine/site" }, text_matches: [{ fragment: "hidden" }] },
+          ],
+        });
+      }
+      return new Response("no", { status: 404 });
+    }) as typeof fetch,
+  };
+  const listed = await runHqTool(
+    sql,
+    staff,
+    { tool: "list_repos", input: { organizationId } },
+    NOW,
+    { github },
+  );
+  expect(valueOf(listed)).toEqual([{ id: "repo-site", fullName: "north/site", projectId: null, defaultBranch: "main" }]);
+  const files = await runHqTool(
+    sql,
+    staff,
+    { tool: "list_repo_files", input: { organizationId, path: "src" } },
+    NOW,
+    { github },
+  );
+  expect(valueOf(files)).toMatchObject({
+    repoId: "repo-site",
+    fullName: "north/site",
+    entries: [{ name: "app.ts", path: "src/app.ts", type: "file", size: 4 }],
+  });
+  const file = await runHqTool(
+    sql,
+    staff,
+    { tool: "read_repo_file", input: { organizationId, path: "src/app.ts" } },
+    NOW,
+    { github },
+  );
+  expect(valueOf(file)).toMatchObject({ path: "src/app.ts", body: "site" });
+  const found = await runHqTool(
+    sql,
+    staff,
+    { tool: "search_repo", input: { organizationId, query: "site" } },
+    NOW,
+    { github },
+  );
+  expect(valueOf(found)).toEqual({
+    repoId: "repo-site",
+    fullName: "north/site",
+    hits: [{ path: "src/app.ts", fragment: "site" }],
+  });
+  const foreign = await runHqTool(
+    sql,
+    staff,
+    { tool: "read_repo_file", input: { organizationId, repoId: "repo-other", path: "src/app.ts" } },
+    NOW,
+    { github },
+  );
+  expect(foreign).toEqual({ ok: false, error: "missing" });
+  expect(calls.some((url) => url.includes("pine/site"))).toBe(false);
+});
+
+it("asks which repo when the client has more than one and does not call GitHub", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  await sql.run(
+    `INSERT INTO github_installations (id, account_login, account_type, created_at)
+     VALUES (78, 'north', 'Organization', ?)`,
+    [NOW],
+  );
+  await sql.run(
+    `INSERT INTO repos (
+       id, github_repo_id, installation_id, full_name, organization_id, project_id,
+       default_branch, is_private, owned_by, linked_by, created_at, archived_at
+     ) VALUES
+       ('repo-a', 31, 78, 'north/a', ?, NULL, 'main', 1, 'agency', 'staff-1', ?, NULL),
+       ('repo-b', 32, 78, 'north/b', ?, NULL, 'main', 1, 'agency', 'staff-1', ?, NULL)`,
+    [organizationId, NOW, organizationId, NOW],
+  );
+  let called = false;
+  const github = {
+    secrets: githubSecrets(),
+    fetchImpl: (async () => {
+      called = true;
+      return new Response("no", { status: 500 });
+    }) as typeof fetch,
+  };
+  const files = await runHqTool(
+    sql,
+    staff,
+    { tool: "list_repo_files", input: { organizationId } },
+    NOW,
+    { github },
+  );
+  expect(valueOf(files)).toEqual({
+    repos: [
+      { id: "repo-a", fullName: "north/a", projectId: null, defaultBranch: "main" },
+      { id: "repo-b", fullName: "north/b", projectId: null, defaultBranch: "main" },
+    ],
+  });
+  expect(called).toBe(false);
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");
@@ -1329,4 +1473,13 @@ async function client(sql: Sql): Promise<string> {
 
 function valueOf(result: HqToolResult): unknown {
   return "ok" in result && result.ok ? result.value : undefined;
+}
+
+function githubSecrets() {
+  const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  return {
+    appId: "1",
+    privateKey: privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+    webhookSecret: "hook",
+  };
 }

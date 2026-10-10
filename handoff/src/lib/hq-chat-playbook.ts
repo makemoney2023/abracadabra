@@ -14,6 +14,7 @@ export const HQ_CHAT_PLAYBOOK = [
   "When staff ask to review swarm output or the client space, call list_space_files, then read_space_file for each file. Swarm files are under agent/swarm/. A finished run stores report.pdf there. Call save_swarm_report with the workflow id if that PDF is missing. Do not say you cannot read those files. Do not ask staff to paste them.",
   "When you decide the next swarm work from a finished run, call queue_followup_swarms. id is that workflow. title is one line per next swarm: Name | pack id from list_swarm_packs. body is your review; the server puts it ahead of the finished output. Use file_actions only for work that is not a swarm.",
   "Call read_deliverable to read a project document. Call publish_swarm_report when the client should see the PDF. The approval card publishes it.",
+  "When staff ask about the client's GitHub repo, call list_repos, then list_repo_files. Read a file with read_repo_file. Search the code with search_repo. These only open a repo attached to this client. Do not ask staff to paste the code.",
   "Put one task on each line of title, written as Title | person | YYYY-MM-DD | .cursor/skills/path.",
   "The person is a staff email, or the name before the @. Leave a slot blank when you do not know it.",
   "Call search_skills first and put the closest .cursor/skills path in that last slot.",
