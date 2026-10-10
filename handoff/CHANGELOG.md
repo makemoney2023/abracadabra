@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — Main is published. Staff HQ and the agent worker were deployed from that merge.
+- **Why** — Packed Run cards need to start on the live workers, and HQ chat needs the stream-order fix.
+- **Code touchpoints** — none. Deploy of `6546654`.
+- **Data-flow impact** — none beyond the Run start and chat stream behavior already described.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `6bc02dba-3a5e-4ad7-8503-c0ec2a986d3a` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `55002d13-6559-47b8-b329-989055ea8532` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200 `{"database":"d1","ok":true}`. Existing secrets on both workers were still present after deploy.
+
 - **What changed** — Approving a run, or moving a packed card to Run, starts that swarm immediately. The brief sent to the swarm includes the latest staff instruction.
 - **Why** — Cards sat in Run after the stage change. The start waited on a later due wake, and a draft brief was treated as a hold.
 - **Code touchpoints** — `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/api/hq-tools/route.ts`, `handoff/src/app/work/actions.ts`
