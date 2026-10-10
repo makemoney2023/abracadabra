@@ -1,6 +1,7 @@
 import type { Sql } from "@/db/sql";
 import type { WakeReason } from "@/lib/agent-wake";
-import { scheduleTaskSwarm } from "@/lib/client-workflows";
+import { claimDueWorkflow, scheduleTaskSwarm } from "@/lib/client-workflows";
+import type { ObjectStore } from "@/lib/store/objects";
 import { defaultBuildDeps, startBuild, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import { nextColumnPosition } from "@/lib/task-position";
 
@@ -28,6 +29,14 @@ export type MoveTaskInput = {
   actor: { kind: "staff" | "agent"; id: string };
   build?: BuildDeps;
   wake?: (organizationId: string, reason: WakeReason) => Promise<unknown>;
+  /** When set, a move to run starts this task's swarm in this call. */
+  swarm?: {
+    origin: string;
+    fetchImpl?: typeof fetch;
+    wait?: (ms: number) => Promise<void>;
+    store?: ObjectStore;
+  };
+  instruction?: string;
 };
 
 export type MoveTaskResult =
@@ -40,6 +49,9 @@ export type MoveTaskResult =
       waiting?: "cap_reached";
       runId?: string;
       workflowId?: string | null;
+      executionId?: string;
+      swarmStatus?: string;
+      output?: string;
     }
   | { ok: false; error: "missing" | "invalid" | GateReason };
 
@@ -247,6 +259,40 @@ async function moveToRun(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Pro
   );
   const scheduled = await scheduleTaskSwarm(sql, { taskId: task.id, now: input.now });
   if (!scheduled.ok) return { ok: false, error: "missing" };
+  const taskStatus = status === "done" ? "todo" : status;
+  const origin = input.swarm?.origin.trim() ?? "";
+  if (!scheduled.none && origin.startsWith("https://")) {
+    const started = await claimDueWorkflow({
+      sql,
+      organizationId: scheduled.organizationId,
+      origin,
+      now: input.now,
+      workflowId: scheduled.workflowId,
+      instruction: input.instruction,
+      fetchImpl: input.swarm?.fetchImpl,
+      wait: input.swarm?.wait,
+      store: input.swarm?.store,
+    });
+    const follow =
+      !started.ok || (started.ok && !started.none && (started.status === "running" || started.more));
+    if (follow) await input.wake?.(scheduled.organizationId, "due");
+    await logMove(sql, task, "run", inputBody("run"), input.now, input.actor);
+    if (!started.ok) return started;
+    if (started.none) {
+      return { ok: true, taskId: task.id, column: "run", stage: "run", status: taskStatus, workflowId: scheduled.workflowId };
+    }
+    return {
+      ok: true,
+      taskId: task.id,
+      column: "run",
+      stage: "run",
+      status: taskStatus,
+      workflowId: scheduled.workflowId,
+      executionId: started.executionId,
+      swarmStatus: started.status,
+      output: started.output,
+    };
+  }
   if (!scheduled.none) await input.wake?.(scheduled.organizationId, "due");
   await logMove(sql, task, "run", inputBody("run"), input.now, input.actor);
   return {
@@ -254,7 +300,7 @@ async function moveToRun(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Pro
     taskId: task.id,
     column: "run",
     stage: "run",
-    status: status === "done" ? "todo" : status,
+    status: taskStatus,
     workflowId: scheduled.none ? null : scheduled.workflowId,
   };
 }

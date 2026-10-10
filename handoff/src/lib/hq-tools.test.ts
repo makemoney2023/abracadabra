@@ -802,6 +802,97 @@ it("moves a workflow task to run instead of starting a second swarm", async () =
   expect(runs?.n).toBe(0);
 });
 
+it("starts the swarm when a workflow task is approved to run", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const project = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Launch" }, idempotencyKey: "proj-go" },
+    NOW,
+  );
+  const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+  const group = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_workflow_group", input: { organizationId, name: "Launch swarm", projectId }, idempotencyKey: "group-go" },
+    NOW,
+  );
+  const groupId = String((valueOf(group) as { id?: string } | undefined)?.id ?? "");
+  const template = Response.json({
+    id: "pack-community-marketingskills",
+    name: "Ads",
+    nodes: [
+      {
+        id: "ads",
+        type: "writer",
+        name: "Ads",
+        instructions: "Follow .cursor/skills/community/marketingskills/ad-creative/SKILL.md",
+        position: { x: 0, y: 0 },
+      },
+    ],
+    edges: [],
+  });
+  const workflow = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "create_workflow",
+      input: { organizationId, groupId, name: "Ads", templateId: "pack-community-marketingskills", projectId },
+      idempotencyKey: "wf-go",
+    },
+    NOW,
+    { swarm: { origin: "https://swarm.example", fetchImpl: async () => template.clone() } },
+  );
+  const workflowId = String((valueOf(workflow) as { id?: string } | undefined)?.id ?? "");
+  const taskId = String((valueOf(workflow) as { taskId?: string } | undefined)?.taskId ?? "");
+  await runHqTool(
+    sql,
+    staff,
+    { tool: "instruct_task", input: { taskId, body: "Use the spring offer." }, idempotencyKey: "tell", approved: true },
+    NOW + 1,
+  );
+  let brief = "";
+  const wakes: string[] = [];
+  const started = await runHqTool(
+    sql,
+    staff,
+    { tool: "run_workflow", input: { id: workflowId, body: "Run it now." }, idempotencyKey: "run-go", approved: true },
+    NOW + 2,
+    {
+      wake: async (id, reason) => {
+        wakes.push(`${id}:${reason}`);
+      },
+      swarm: {
+        origin: "https://swarm.example",
+        wait: async () => {},
+        fetchImpl: (async (url: string | URL | Request, init?: RequestInit) => {
+          const href = String(url);
+          if (href.endsWith("/api/execute")) brief = String(init?.body ?? "");
+          if (href.includes("/api/template")) return template.clone();
+          if (href.endsWith("/api/save")) return Response.json({ success: true });
+          if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-ads" });
+          return Response.json({ status: "completed", results: { ads: { status: "done", output: "Three posts." } } });
+        }) as typeof fetch,
+      },
+    },
+  );
+  expect(started).toMatchObject({
+    ok: true,
+    value: { taskId, stage: "run", executionId: "run-ads", status: "completed" },
+  });
+  const sent = JSON.parse(brief) as { input?: string };
+  expect(sent.input).toContain("Use the spring offer.");
+  expect(sent.input).toContain("Run it now.");
+  const runs = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM swarm_runs");
+  expect(runs?.n).toBe(1);
+  const due = await sql.get<{ next_run_at: number | null }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
+    workflowId,
+  ]);
+  expect(due?.next_run_at).toBeNull();
+  expect(wakes).toEqual([]);
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");

@@ -2,6 +2,15 @@
 
 ## 2026-10-10
 
+- **What changed** — Approving a run, or moving a packed card to Run, starts that swarm immediately. The brief sent to the swarm includes the latest staff instruction.
+- **Why** — Cards sat in Run after the stage change. The start waited on a later due wake, and a draft brief was treated as a hold.
+- **Code touchpoints** — `handoff/src/lib/task-stage.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/api/hq-tools/route.ts`, `handoff/src/app/work/actions.ts`
+- **Data-flow impact** — `run_workflow` and `set_task_stage` to run call the swarm in that request. A finished run still files an unpublished document. A run that is still going wakes `due` to poll. The due time is cleared so the same workflow is not started twice.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 813 tests passed, and the agent worker suite passed 7. eslint on the changed files exited 0.
+
+## 2026-10-10
+
 - **What changed** — HQ chat keeps a tool-approval continuation from sending a text delta before its text part has started, and it no longer drops a text-start line that arrives split across two reads.
 - **Why** — The chat showed `Received text-delta for missing text part` while Publish and Instruct were still on screen, so the turn stopped before those cards could finish.
 - **Code touchpoints** — `handoff/src/lib/hq-chat-stream.ts`, `handoff/src/agent/hq-chat.ts`

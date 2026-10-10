@@ -5,6 +5,7 @@ import { runHqTool } from "@/lib/hq-tools";
 import { sendHandoffMail } from "@/lib/mail";
 import { publicClientOrigin } from "@/lib/share-link";
 import { staffFromRequest } from "@/lib/staff-request";
+import { openObjectStore } from "@/lib/store/objects";
 import { parseAllowlist } from "@/lib/store/staff";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
     },
     Date.now(),
     {
+      swarm: { origin: process.env.SWARM_ORIGIN ?? "", store: openObjectStore() },
       mail: {
         origin: publicClientOrigin({
           origin: process.env.HANDOFF_APP_ORIGIN,

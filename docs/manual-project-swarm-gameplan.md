@@ -8,11 +8,11 @@
 
 Staff create a project, write the requirements, and save. The project is on that client. When the client has one space and one repo that are not on a project yet, those are attached to this project. Each new Describe card gets the one swarm pack that can do that task, and the pack's skill steps are stored on the card.
 
-When a card has a pack and no swarm is running, **Run swarm** appears on the card. Pressing it starts the same run the agent uses: move the card to Run, schedule that pack due now, wake `due`, and follow the run until the output is a file in the client space and an unpublished document on that project.
+When a card has a pack and no swarm is running, **Run swarm** appears on the card. Pressing it moves the card to Run and starts that pack now. A run that is still going wakes `due` so the agent can follow it until the output is a file in the client space and an unpublished document on that project.
 
 The client portal does not get this button. Staff publish before the client sees the document.
 
-This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** calls the same move to Run. A finished due run sends the task brief, files the unpublished document on that project, and marks the card done. Chat `run_workflow` on a workflow that already has a task only moves that task to Run.
+This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
 
 ## What is already true
 
@@ -24,7 +24,7 @@ This is built. `createProject` attaches one loose space and one loose repo. Savi
 | A workflow created from a live pack writes that pack's skill steps onto its own task, in Describe. | `createClientWorkflow` and `workflowTaskPlan` in `handoff/src/lib/client-workflows.ts` |
 | Moving a card to Run schedules a swarm only when the first skill path maps to a pack template id. Otherwise the column changes and nothing is scheduled. | `moveTaskStage` → `scheduleTaskSwarm` |
 | The `due` wake starts that workflow, and if it is still running schedules `refreshSwarm`. A finished run with real output is saved in the client space and filed as an unpublished document. | `continueWork` and `refreshSwarm` in `handoff/src/agent/worker.ts`, `claimDueWorkflow` in `client-workflows.ts` |
-| Chat `run_workflow` on a workflow with a task moves that task to Run. A workflow with no task still starts inline, and a run that is still going wakes `due` so the follow-up can poll. | `runWorkflow` in `handoff/src/lib/hq-tools.ts` |
+| Chat `run_workflow` on a workflow with a task moves that task to Run and starts that swarm. The latest staff instruction is sent with the task brief. A run that is still going wakes `due` so the follow-up can poll. | `runWorkflow` in `handoff/src/lib/hq-tools.ts` |
 | A due run whose workflow has a task sends the task title, the task brief, and the project requirements. The draft document uses that project. A workflow with no task still sends the lead brief. | `claimDueWorkflow` |
 | `scheduleTaskSwarm` copies the task's `project_id` onto the workflow. | `scheduleTaskSwarm` |
 | Lead pack choice falls back to the schema readiness pack when nothing overlaps. | `pickSkillPack` in `handoff/src/lib/pack-picker.ts` |
@@ -49,7 +49,7 @@ A manual project and a chat swarm were two different starts.
 3. **The pack is the template's skill steps.** After a pack is chosen, load `/api/template?id=` and store `workflowTaskPlan` on `skills_json`. `scheduleTaskSwarm` and the card Details already read that shape. No new column and no new table.
 4. **Do not replace a pack that is already on the card.** A later requirements save can fill a brief. It does not overwrite `skills_json`.
 5. **Run swarm is `moveTaskStage` to `run`.** The button, the drag, and `set_task_stage` call that function. The button is the affordance on a card that already has a pack.
-6. **Chat joins that start.** `run_workflow` on a workflow that has a task moves that task to Run. It does not call `runClientWorkflow` a second time. A workflow with no task still starts inline, and then schedules the same `refreshSwarm` follow-up the due wake schedules.
+6. **Chat starts that swarm.** `run_workflow` on a workflow that has a task moves that task to Run and starts that workflow once. The due time is cleared so a later wake does not start it again. A workflow with no task still starts inline. A run that is still going wakes `due` for the same `refreshSwarm` follow-up.
 7. **The swarm brief is the task.** When the workflow has a `task_id`, the due brief is the task title, the `agent.task_brief` body, and the project requirements. The lead brief stays for a workflow with no task.
 8. **The artifacts belong to the project.** `scheduleTaskSwarm` copies the task's `project_id` onto the workflow. The space file and the unpublished document use that project. Staff still publish before the client sees the document.
 9. **A finished run with real output marks the card done.** `refreshSwarm` calls `moveTaskStage` to `done` after the file and the document are written. A failed run leaves the card in Run and writes the error as a note. It does not start another run.
