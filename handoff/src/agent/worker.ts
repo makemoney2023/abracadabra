@@ -9,7 +9,7 @@ import {
   type ToolCaller,
 } from "../lib/client-documents";
 import { advanceClientWork, applyBriefChange, fileSwarmDelivery, planClientWork, qualifyLead } from "../lib/client-plan";
-import { readSwarmRun, runLeadSwarm } from "../lib/lead-swarm";
+import { followRunningSwarm, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "../lib/lead-swarm";
 import { packsFromTemplates } from "../lib/pack-picker";
 import { packTemplatesFromCatalog } from "../lib/pack-templates";
 import {
@@ -25,7 +25,7 @@ import {
 } from "../lib/client-channel";
 import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS, mailboxUserContent } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
-import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
+import { callerForClientWork, handoffWorkCaller, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
 import { skillObjectKey } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
 
@@ -75,6 +75,9 @@ export function parseSkillIndex(raw: string): string[] {
   }
 }
 
+/** Longer than any real wake runs. */
+const STALE_WAKE_MS = 15 * 60_000;
+
 type PortalTools = {
   getAITools?: () => Record<string, unknown>;
   waitForConnections?: (options?: { timeout?: number }) => Promise<unknown>;
@@ -116,14 +119,24 @@ export class ClientAgent extends Agent<AgentBindings> {
   }
 
   /** Leaves a wake open so a second POST with the same reason stays quiet. */
-  seedOpenWake(reason: string): void {
+  seedOpenWake(reason: string, startedAt = Date.now()): void {
     this.ensureTables();
     this.ctx.storage.sql.exec(
       "INSERT INTO wakes (id, reason, started_at, finished_at, outcome) VALUES (?, ?, ?, NULL, NULL)",
       crypto.randomUUID(),
       reason,
-      Date.now(),
+      startedAt,
     );
+  }
+
+  wakeLog(reason: string): { outcome: string | null; finished: boolean }[] {
+    this.ensureTables();
+    return [
+      ...this.ctx.storage.sql.exec<{ outcome: string | null; finished_at: number | null }>(
+        "SELECT outcome, finished_at FROM wakes WHERE reason = ? ORDER BY started_at",
+        reason,
+      ),
+    ].map((row) => ({ outcome: row.outcome, finished: row.finished_at !== null }));
   }
 
   /** Replaces any model-supplied organization id with this instance's name. */
@@ -170,6 +183,14 @@ export class ClientAgent extends Agent<AgentBindings> {
 
   async acceptWake(reason: string): Promise<"started" | "busy"> {
     this.ensureTables();
+    const now = Date.now();
+    // An evicted isolate never stamps finished_at, so an old open row would block this reason forever.
+    this.ctx.storage.sql.exec(
+      "UPDATE wakes SET finished_at = ?, outcome = 'abandoned' WHERE reason = ? AND finished_at IS NULL AND started_at < ?",
+      now,
+      reason,
+      now - STALE_WAKE_MS,
+    );
     const open = [...this.ctx.storage.sql.exec("SELECT id FROM wakes WHERE reason = ? AND finished_at IS NULL", reason)];
     if (open.length > 0) return "busy";
     const id = crypto.randomUUID();
@@ -227,9 +248,13 @@ export class ClientAgent extends Agent<AgentBindings> {
     await this.acceptWake("due");
   }
 
-  /** Portal tools when the portal is linked. Otherwise the Handoff MCP route, so the run is recorded. */
+  /** Portal work tools when they are loaded. Otherwise the Handoff route, which has run_due_workflow. */
   private leadCaller(): ToolCaller | null {
-    const portal = this.toolCaller(this.portal().getAITools?.() ?? {});
+    const tools = this.portal().getAITools?.() ?? {};
+    const portal = this.toolCaller(tools);
+    if (portal && findExecute(tools, "run_due_workflow")) return portal;
+    const handoff = handoffWorkCaller(this.env);
+    if (handoff) return handoff;
     if (portal) return portal;
     const http = mcpHttpCaller(this.env);
     if (!http) return null;
@@ -280,6 +305,7 @@ export class ClientAgent extends Agent<AgentBindings> {
     attempts: number;
     taskId?: string;
     projectId?: string | null;
+    workflowId?: string;
   }): Promise<void> {
     const origin = this.env.SWARM_ORIGIN?.replace(/\/$/, "");
     const call = this.leadCaller();
@@ -302,6 +328,26 @@ export class ClientAgent extends Agent<AgentBindings> {
       activityKey: payload.activityKey,
       trigger: payload.trigger,
     });
+    if (status !== "running") {
+      const artifacts = await readSwarmArtifacts({ origin, executionId: payload.executionId });
+      for (const file of swarmArtifactFiles(artifacts)) {
+        try {
+          await call("save_space_file", {
+            workflow: "swarm",
+            run: payload.executionId,
+            node: file.node,
+            body: file.body,
+            projectId: payload.projectId ?? "",
+            requestId: `${payload.activityKey}:file:${file.node}`,
+          });
+        } catch (error) {
+          await call("add_note", {
+            body: error instanceof Error ? error.message : "A swarm file was not saved.",
+            requestId: `${payload.activityKey}:file-miss:${file.node}`,
+          });
+        }
+      }
+    }
     if (status !== "running" && run.output.trim() && !run.output.includes("still going")) {
       await call("save_space_file", {
         workflow: "swarm",
@@ -334,6 +380,31 @@ export class ClientAgent extends Agent<AgentBindings> {
           requestId: `${payload.activityKey}:done`,
         });
       }
+      if (payload.workflowId) {
+        const advanced = await call("advance_workflow_chain", {
+          workflowId: payload.workflowId,
+          executionId: payload.executionId,
+          status,
+          body: run.output,
+          requestId: `${payload.activityKey}:chain:${payload.attempts}`,
+        });
+        const next = advanced && typeof advanced === "object" ? (advanced as Record<string, unknown>) : {};
+        const nextId = typeof next.executionId === "string" ? next.executionId : "";
+        const nextWorkflowId = typeof next.workflowId === "string" ? next.workflowId : "";
+        if (next.status === "running" && nextId && nextWorkflowId) {
+          await this.schedule(45, "refreshSwarm", {
+            executionId: nextId,
+            templateId: typeof next.templateId === "string" ? next.templateId : "",
+            activityKey: `due:${nextWorkflowId}`,
+            packName: typeof next.packName === "string" ? next.packName : "Swarm",
+            trigger: "due",
+            attempts: 1,
+            taskId: typeof next.taskId === "string" ? next.taskId : "",
+            projectId: typeof next.projectId === "string" ? next.projectId : null,
+            workflowId: nextWorkflowId,
+          });
+        }
+      }
     }
     if (status === "failed" && payload.taskId) {
       await call("add_note", {
@@ -342,8 +413,11 @@ export class ClientAgent extends Agent<AgentBindings> {
         requestId: `${payload.activityKey}:failed`,
       });
     }
-    if (status === "running" && payload.attempts < 6) {
+    const follow = followRunningSwarm(status, payload.attempts);
+    if (follow === "refresh") {
       await this.schedule(45, "refreshSwarm", { ...payload, attempts: payload.attempts + 1 });
+    } else if (follow === "handoff") {
+      await this.schedule(60, "due");
     }
   }
 
@@ -369,21 +443,28 @@ export class ClientAgent extends Agent<AgentBindings> {
           attempts: 1,
           taskId,
           projectId,
+          workflowId,
         });
-      } else if (run.none === true) {
-        const open = await call("running_swarm", { requestId: wakeId });
-        const row = open && typeof open === "object" ? (open as Record<string, unknown>) : {};
-        const openId = typeof row.executionId === "string" ? row.executionId : "";
-        if (row.status === "running" && openId) {
+      } else {
+        const open = await call("running_swarms", { requestId: `${wakeId}:open` });
+        const runs =
+          open && typeof open === "object" && Array.isArray((open as { runs?: unknown }).runs)
+            ? ((open as { runs: Record<string, unknown>[] }).runs)
+            : [];
+        for (const row of runs) {
+          const openId = typeof row.executionId === "string" ? row.executionId : "";
+          if (row.status !== "running" || !openId) continue;
+          const openWorkflowId = typeof row.workflowId === "string" ? row.workflowId : "";
           await this.schedule(45, "refreshSwarm", {
             executionId: openId,
             templateId: typeof row.templateId === "string" ? row.templateId : "",
-            activityKey: `chat:${openId}`,
+            activityKey: openWorkflowId ? `due:${openWorkflowId}` : `chat:${openId}`,
             packName: typeof row.packName === "string" ? row.packName : "Swarm",
             trigger: "chat",
             attempts: 1,
             taskId: typeof row.taskId === "string" ? row.taskId : "",
             projectId: typeof row.projectId === "string" ? row.projectId : null,
+            workflowId: openWorkflowId,
           });
         }
       }

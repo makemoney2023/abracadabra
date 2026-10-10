@@ -15,6 +15,10 @@ type ToolArgs = {
   tag?: string;
   kind?: string;
   deliverableId?: string;
+  workflowId?: string;
+  executionId?: string;
+  status?: string;
+  body?: string;
 };
 
 type Rpc = {
@@ -43,6 +47,8 @@ const WORK_TOOLS = new Set([
   "delete_project",
   "run_due_workflow",
   "running_swarm",
+  "running_swarms",
+  "advance_workflow_chain",
 ]);
 
 const tagField = { type: "string", description: "Limit to one file tag, such as brand or copy." };
@@ -137,6 +143,31 @@ const AGENT_TOOLS = [
       type: "object",
       properties: { organizationId: organizationField, requestId: { type: "string" } },
       required: ["organizationId", "requestId"],
+    },
+  },
+  {
+    name: "running_swarms",
+    description: "Every swarm run for this client that is still going.",
+    inputSchema: {
+      type: "object",
+      properties: { organizationId: organizationField, requestId: { type: "string" } },
+      required: ["organizationId", "requestId"],
+    },
+  },
+  {
+    name: "advance_workflow_chain",
+    description: "Save a finished swarm's output and start the next workflow in its group. The next run receives that output.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        organizationId: organizationField,
+        requestId: { type: "string" },
+        workflowId: { type: "string" },
+        executionId: { type: "string" },
+        status: { type: "string" },
+        body: { type: "string", description: "The finished swarm output." },
+      },
+      required: ["organizationId", "requestId", "status", "body"],
     },
   },
   {

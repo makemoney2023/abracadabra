@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { callerForClientWork, mcpConnectTarget, mcpHttpCaller } from "./mcp-connect";
+import { callerForClientWork, handoffWorkCaller, mcpConnectTarget, mcpHttpCaller } from "./mcp-connect";
 
 describe("mcp connect target", () => {
   it("uses the portal and the access headers when the portal is set", () => {
@@ -50,6 +50,26 @@ describe("mcp connect target", () => {
     );
     expect(caller).not.toBeNull();
     expect(await caller?.("client_context", {})).toEqual({ ok: true });
+  });
+
+  it("calls Handoff work tools when the connector portal is also set", async () => {
+    let url = "";
+    let authorization = "";
+    const caller = handoffWorkCaller(
+      {
+        MCP_PORTAL_URL: "https://mcp.abra-ca-dabra.app/mcp",
+        HANDOFF_MCP_URL: "https://hq.abra-ca-dabra.app/api/mcp",
+        AGENT_MCP_TOKEN: "hk_secret",
+      },
+      (async (target, init) => {
+        url = String(target);
+        authorization = new Headers(init?.headers).get("authorization") ?? "";
+        return Response.json({ result: { content: [{ type: "text", text: "{\"none\":true}" }] } });
+      }) as typeof fetch,
+    );
+    expect(await caller?.("run_due_workflow", { requestId: "wake-1" })).toEqual({ none: true });
+    expect(url).toBe("https://hq.abra-ca-dabra.app/api/mcp");
+    expect(authorization).toBe("Bearer hk_secret");
   });
 
   it("returns no caller when the route has no key", () => {

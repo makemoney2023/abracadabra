@@ -28,10 +28,16 @@ Agents can call tools on any remote MCP server that speaks Streamable HTTP:
 
 No external server handy? Point one at this worker's built-in demo at `/demo-mcp/mcp` (`get_time`, `echo`, `word_count`) to try the loop with zero setup.
 
-HQ-started runs may include a server with id `portal`. The worker adds `CF-Access-Client-Id` and `CF-Access-Client-Secret` for that server only when the execute request sends `Authorization: Bearer $SWARM_RUN_SECRET`. A request without that bearer drops the portal server before any tool call. Set `SWARM_RUN_SECRET`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` with `wrangler secret put`. They are not written into workflow storage.
+HQ-started runs may include a server with id `portal`. The worker adds `CF-Access-Client-Id` and `CF-Access-Client-Secret` for that server only when the execute request sends `Authorization: Bearer $SWARM_RUN_SECRET`. A request without that bearer drops the portal server before any tool call. Set `SWARM_RUN_SECRET`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` with `wrangler secret put`. They are not written into workflow storage. A research pack passes the portal's Parallel Search tools to every step and tells the model to call Parallel Search before the final answer. A tool call is allowed 60 seconds. A step that returns only the tool-call block is an error, not a finished answer. A step saved as `running` is left alone for two minutes, retried once, then marked `The step timed out.` so the following steps still run. Each model call stops after 170 seconds.
 - **Cloudflare Native** — Workers AI, Durable Objects, WebSockets, R2. Deploys to the Abracadabra account, with Handoff and HQ.
 
 ## Changelog
+
+- **2026-10-10** — Research packs call Parallel Search, and a stalled step times out instead of restarting on every status read.
+  - **Why:** The reviewer step was saved as `running` with an empty output. Each status poll started it over, so later steps never ran and the paper step never called Parallel.
+  - **Touchpoints:** `src/do/resume.ts`, `src/do/WorkflowDO.ts`, `src/mcp/research-tools.ts`.
+  - **Data flow:** On resume, a running step younger than 120 seconds stays in flight. After that it is retried once. A second stall, or a step older than 180 seconds, is an error and the chain continues. Research nodes see only Parallel tools when the portal lists any.
+  - **API / schema:** none. Node results may include `attempts`.
 
 - **2026-10-09** — The canvas opens a stored swarm execution from `?executionId=`.
   - **Why:** HQ links need the worker canvas to show the run that was saved, including a live socket when that run is still going.

@@ -59,9 +59,12 @@ export function verifyWake(secret: string, rawBody: string, signature: string, n
 
 const LIVE = "archived_at IS NULL AND agent_paused_at IS NULL";
 
+/** First cron in wrangler.jsonc. Cloudflare's shortest schedule is one minute. */
+export const WORK_WAKE_CRON = "* * * * *";
+
 /** Clients this cron should wake. A paused or archived organization is left alone. */
 export async function dueOrganizations(sql: Sql, cron: string, now = Date.now()): Promise<WakeTarget[]> {
-  if (cron === "*/15 * * * *") {
+  if (cron === WORK_WAKE_CRON) {
     const unanswered = `EXISTS (
            SELECT 1 FROM activities flag
            WHERE flag.organization_id = organizations.id
@@ -79,10 +82,15 @@ export async function dueOrganizations(sql: Sql, cron: string, now = Date.now())
              AND w.next_run_at IS NOT NULL
              AND w.next_run_at <= ?
          )`;
+    const swarmRunning = `EXISTS (
+           SELECT 1 FROM swarm_runs s
+           WHERE s.organization_id = organizations.id
+             AND s.status = 'running'
+         )`;
     const rows = await sql.all<{ id: string; reason: WakeReason }>(
       `SELECT id, CASE
          WHEN ${unanswered} THEN 'context_changed'
-         WHEN ${workflowDue} THEN 'due'
+         WHEN ${workflowDue} OR ${swarmRunning} THEN 'due'
          ELSE 'work'
        END AS reason
        FROM organizations
@@ -100,6 +108,7 @@ export async function dueOrganizations(sql: Sql, cron: string, now = Date.now())
            )
            OR ${unanswered}
            OR ${workflowDue}
+           OR ${swarmRunning}
          )
        ORDER BY id`,
       [now, now, now],

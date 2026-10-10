@@ -259,15 +259,17 @@ export async function storeScanContext(input: {
 }
 
 async function filedScanPaths(sql: Sql, organizationId: string, scanId: string): Promise<string[]> {
+  // D1 rejects a LIKE pattern that contains a long id, so match the prefix directly.
+  const prefix = `agent/schema/${scanId}/`;
   const rows = await sql.all<{ relative_path: string }>(
     `SELECT f.relative_path AS relative_path
      FROM files f
      JOIN workspaces w ON w.id = f.workspace_id
      WHERE w.organization_id = ?
        AND f.object_deleted_at IS NULL
-       AND f.relative_path LIKE ?
+       AND substr(f.relative_path, 1, ?) = ?
      ORDER BY f.relative_path`,
-    [organizationId, `agent/schema/${scanId}/%`],
+    [organizationId, prefix.length, prefix],
   );
   return rows.map((row) => row.relative_path);
 }
@@ -289,13 +291,23 @@ export async function filePendingScanContexts(input: {
   let created = 0;
   for (const org of orgs) {
     if (!org.id) continue;
-    const saved = await storeScanContext({
-      sql: input.sql,
-      store: input.store,
-      organizationId: org.id,
-      now: input.now,
-    });
-    if (saved.created) created += 1;
+    try {
+      const saved = await storeScanContext({
+        sql: input.sql,
+        store: input.store,
+        organizationId: org.id,
+        now: input.now,
+      });
+      if (saved.created) created += 1;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Scan filing failed.";
+      await input.sql.run(
+        `INSERT INTO activities (
+          id, organization_id, kind, actor_kind, actor_id, body, created_at
+        ) VALUES (?, ?, 'agent.note', 'agent', 'swarm', ?, ?)`,
+        [crypto.randomUUID(), org.id, message.slice(0, 500), input.now],
+      );
+    }
   }
   return created;
 }

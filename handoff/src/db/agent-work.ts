@@ -8,7 +8,7 @@ import { recordAgentRun } from "@/lib/agent-activity";
 import { clientSpaceContext, storeScanContext } from "@/lib/scan-context";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
-import { claimDueWorkflow } from "@/lib/client-workflows";
+import { advanceWorkflowChain, claimDueWorkflow } from "@/lib/client-workflows";
 import { saveSwarmRun } from "@/lib/swarm-runs";
 
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
@@ -116,6 +116,20 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
     });
   }
   if (tool === "running_swarm") return latestRunningSwarm(sql, actor.organizationId);
+  if (tool === "running_swarms") return listRunningSwarms(sql, actor.organizationId);
+  if (tool === "advance_workflow_chain") {
+    return advanceWorkflowChain({
+      sql,
+      organizationId: actor.organizationId,
+      workflowId: args.workflowId,
+      executionId: args.executionId,
+      output: args.body ?? "",
+      status: args.status ?? "",
+      origin: process.env.SWARM_ORIGIN ?? "",
+      now,
+      store: openObjectStore(),
+    });
+  }
   throw new AgentWorkError("Unknown tool.");
 }
 
@@ -125,10 +139,12 @@ async function latestRunningSwarm(sql: Sql, organizationId: string): Promise<Rec
     template_id: string;
     name: string;
     status: string;
+    workflow_id: string | null;
     task_id: string | null;
     project_id: string | null;
   }>(
-    `SELECT s.execution_id, s.template_id, s.name, s.status, w.task_id, COALESCE(w.project_id, s.project_id) AS project_id
+    `SELECT s.execution_id, s.template_id, s.name, s.status, s.workflow_id, w.task_id,
+            COALESCE(w.project_id, s.project_id) AS project_id
      FROM swarm_runs s
      LEFT JOIN client_workflows w ON w.id = s.workflow_id
      WHERE s.organization_id = ? AND s.status = 'running' AND s.execution_id != ''
@@ -144,6 +160,38 @@ async function latestRunningSwarm(sql: Sql, organizationId: string): Promise<Rec
     status: row.status,
     taskId: row.task_id ?? "",
     projectId: row.project_id,
+    workflowId: row.workflow_id ?? "",
+  };
+}
+
+async function listRunningSwarms(sql: Sql, organizationId: string): Promise<Record<string, unknown>> {
+  const rows = await sql.all<{
+    execution_id: string;
+    template_id: string;
+    name: string;
+    status: string;
+    workflow_id: string | null;
+    task_id: string | null;
+    project_id: string | null;
+  }>(
+    `SELECT s.execution_id, s.template_id, s.name, s.status, s.workflow_id, w.task_id,
+            COALESCE(w.project_id, s.project_id) AS project_id
+     FROM swarm_runs s
+     LEFT JOIN client_workflows w ON w.id = s.workflow_id
+     WHERE s.organization_id = ? AND s.status = 'running' AND s.execution_id != ''
+     ORDER BY s.started_at ASC, s.id ASC`,
+    [organizationId],
+  );
+  return {
+    runs: rows.map((row) => ({
+      executionId: row.execution_id,
+      templateId: row.template_id,
+      packName: row.name,
+      status: row.status,
+      taskId: row.task_id ?? "",
+      projectId: row.project_id,
+      workflowId: row.workflow_id ?? "",
+    })),
   };
 }
 
@@ -279,38 +327,45 @@ async function saveBrief(sql: Sql, actor: AgentActor, args: WorkArgs, now: numbe
 /** Staff chat saves the next brief version. The client agent redrafts only after a revision is approved. */
 export async function saveStaffBrief(
   sql: Sql,
-  input: { organizationId: string; userId: string; title: string; bodyMarkdown: string },
+  input: { organizationId: string; userId: string; title: string; bodyMarkdown: string; projectId?: string | null },
   now: number,
 ): Promise<{ deliverableId: string; version: number }> {
   const title = input.title.trim();
   const body = input.bodyMarkdown.trim();
   if (!title || title.length > 200 || !body) throw new AgentWorkError("Name the brief and its text.");
+  const projectId = input.projectId?.trim() || null;
+  if (projectId) await projectInOrg(sql, input.organizationId, projectId);
   const workspaceId = await workspaceFor(sql, input.organizationId);
   const existing = await sql.get<{ id: string; version: number }>(
-    `SELECT id, version FROM deliverables
-     WHERE organization_id = ? AND kind = 'brief' AND status != 'archived'
-     ORDER BY updated_at DESC LIMIT 1`,
-    [input.organizationId],
+    projectId
+      ? `SELECT id, version FROM deliverables
+         WHERE organization_id = ? AND kind = 'brief' AND status != 'archived' AND project_id = ?
+         ORDER BY updated_at DESC LIMIT 1`
+      : `SELECT id, version FROM deliverables
+         WHERE organization_id = ? AND kind = 'brief' AND status != 'archived' AND project_id IS NULL
+         ORDER BY updated_at DESC LIMIT 1`,
+    projectId ? [input.organizationId, projectId] : [input.organizationId],
   );
   const id = existing?.id ?? crypto.randomUUID();
   const version = existing ? existing.version + 1 : 1;
   await sql.exec("BEGIN");
   try {
     if (existing) {
-      await sql.run("UPDATE deliverables SET version = ?, status = 'draft', title = ?, updated_at = ? WHERE id = ?", [
-        version,
-        title,
-        now,
-        id,
-      ]);
+      await sql.run(
+        "UPDATE deliverables SET version = ?, status = 'draft', title = ?, project_id = COALESCE(?, project_id), updated_at = ? WHERE id = ?",
+        [version, title, projectId, now, id],
+      );
     } else {
       await sql.run(
         `INSERT INTO deliverables (
           id, organization_id, project_id, workspace_id, title, kind, status, version,
           source_repo_id, source_ref, published_at, actor_kind, actor_id, created_at, updated_at, published_version
-        ) VALUES (?, ?, NULL, ?, ?, 'brief', 'draft', 1, NULL, NULL, NULL, 'staff', ?, ?, ?, NULL)`,
-        [id, input.organizationId, workspaceId, title, input.userId, now, now],
+        ) VALUES (?, ?, ?, ?, ?, 'brief', 'draft', 1, NULL, NULL, NULL, 'staff', ?, ?, ?, NULL)`,
+        [id, input.organizationId, projectId, workspaceId, title, input.userId, now, now],
       );
+    }
+    if (projectId) {
+      await sql.run("UPDATE projects SET description = ?, updated_at = ? WHERE id = ?", [body.slice(0, 20_000), now, projectId]);
     }
     await sql.run(
       `INSERT INTO deliverable_items (
@@ -320,11 +375,12 @@ export async function saveStaffBrief(
     );
     await sql.run(
       `INSERT INTO activities (
-        id, organization_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at
-      ) VALUES (?, ?, ?, 'staff.brief_addendum', 'staff', ?, ?, ?, ?)`,
+        id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at
+      ) VALUES (?, ?, ?, ?, 'staff.brief_addendum', 'staff', ?, ?, ?, ?)`,
       [
         crypto.randomUUID(),
         input.organizationId,
+        projectId,
         workspaceId,
         input.userId,
         title,

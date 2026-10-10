@@ -1,5 +1,6 @@
 import type { AgentType } from '../types';
 import { formatToolsForPrompt, parseToolCalls, type McpToolDef } from '../mcp/client';
+import { MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE, shouldTryNextModel, withStepTimeout } from '../do/resume';
 import type { LoadedSkill } from './skills';
 
 /** Workers AI defaults to 256 output tokens, which truncates skill deliverables. */
@@ -44,6 +45,10 @@ function extractToken(parsed: any): string {
 }
 
 async function runModelStream(model: string, messages: any[], env: any, onToken?: (token: string) => void): Promise<string> {
+  return withStepTimeout(readModelStream(model, messages, env, onToken), MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE);
+}
+
+async function readModelStream(model: string, messages: any[], env: any, onToken?: (token: string) => void): Promise<string> {
   const stream = await env.AI.run(model, { messages, stream: true, max_tokens: MAX_OUTPUT_TOKENS });
   const reader = stream.getReader();
   const decoder = new TextDecoder();
@@ -76,6 +81,10 @@ async function runModelStream(model: string, messages: any[], env: any, onToken?
 }
 
 async function runModelOnce(model: string, messages: any[], env: any): Promise<string> {
+  return withStepTimeout(readModelOnce(model, messages, env), MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE);
+}
+
+async function readModelOnce(model: string, messages: any[], env: any): Promise<string> {
   const response = await env.AI.run(model, { messages, max_tokens: MAX_OUTPUT_TOKENS });
   const output = extractToken(response)?.trim();
   if (!output) {
@@ -109,16 +118,18 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
       try {
         const streamed = await runModelStream(model, messages, env, onToken);
         if (streamed) {
-          return { output: streamed.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
+          return { output: finalAnswer(streamed), toolsUsed: [] };
         }
       } catch (error) {
+        if (!shouldTryNextModel(error)) throw error;
         lastError = error;
       }
 
       try {
         const output = await runModelOnce(model, messages, env);
-        return { output: output.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
+        return { output: finalAnswer(output), toolsUsed: [] };
       } catch (error) {
+        if (!shouldTryNextModel(error)) throw error;
         lastError = error;
       }
     }
@@ -212,16 +223,25 @@ async function runOnceChain(messages: { role: string; content: string }[], env: 
       const output = await runModelOnce(model, messages, env);
       if (output) return output.slice(0, MAX_OUTPUT_CHARS);
     } catch (error) {
+      if (!shouldTryNextModel(error)) throw error;
       lastError = error;
     }
   }
   throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
 }
 
+/** Prose after tool-call blocks are removed. A call with no answer is not a deliverable. */
+export function finalAnswer(text: string): string {
+  const clean = text.replace(/\[TOOL_CALL\][\s\S]*?\[\/TOOL_CALL\]/g, '').trim();
+  if (!clean) {
+    throw new Error('The step ended on a tool call and did not write an answer.');
+  }
+  return clean.slice(0, MAX_OUTPUT_CHARS);
+}
+
 /** Strip leaked tool-call blocks, cap length, and stream to the UI in chunks. */
 function finalize(text: string, onToken?: (token: string) => void): string {
-  const clean = text.replace(/\[TOOL_CALL\][\s\S]*?\[\/TOOL_CALL\]/g, '').trim() || text.trim();
-  const output = clean.slice(0, MAX_OUTPUT_CHARS);
+  const output = finalAnswer(text);
   if (onToken) {
     for (let i = 0; i < output.length; i += 48) {
       onToken(output.slice(i, i + 48));

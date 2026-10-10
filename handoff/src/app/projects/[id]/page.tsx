@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listProjectDeliverables } from "@/db/deliverables";
+import { getBrief } from "@/lib/agent-context";
 import {
   listBoard,
   listBoardActivity,
@@ -85,7 +86,12 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const visibleIds = new Set((await workspacesFor(sql, caller)).map((row) => row.id));
   const usableSpaces = spaces.filter((space) => visibleIds.has(space.id));
   const usableLoose = looseSpaces.filter((space) => visibleIds.has(space.id));
-  const finished = await listProjectDeliverables(sql, caller, project.id);
+  const finished = (await listProjectDeliverables(sql, caller, project.id)).filter(
+    (row) => row.kind !== "brief" && row.kind !== "design_system",
+  );
+  const projectBrief = project.organization_id ? await getBrief(sql, project.organization_id, "brief", project.id) : null;
+  const requirements =
+    project.description?.trim() || (typeof projectBrief?.body === "string" ? projectBrief.body : "");
   const repoRows = await Promise.all(
     repos.map(async (repo) => ({ repo, summary: await repoActivitySummary(sql, caller, repo.id) })),
   );
@@ -107,14 +113,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
               <CardHeader>
                 <CardTitle>Requirements</CardTitle>
                 <CardDescription>
-                  Edit this note and save it. The agent reads it and adds tasks that are not already on this project.
+                  This is the project brief. Edit it and save. The agent reads it and adds tasks that are not already on this project.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ProjectDescriptionForm
                   projectId={project.id}
                   organizationId={project.organization_id}
-                  description={project.description}
+                  description={requirements}
                 />
               </CardContent>
             </Card>

@@ -10,11 +10,13 @@ import { LIMITS } from "@/lib/policy/limits";
 import { localObjectStore } from "@/lib/store/objects";
 import { storeScanContext } from "./scan-context";
 import {
+  advanceWorkflowChain,
   assignClientWorkflow,
   createClientWorkflow,
   createWorkflowGroup,
   claimDueWorkflow,
   listClientWorkflows,
+  settleRunningSwarms,
   scheduleTaskSwarm,
   runClientWorkflow,
   workflowTaskPlan,
@@ -707,6 +709,92 @@ describe("client workflows", () => {
     });
   });
 
+  it("saves each swarm node into the client space", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+      ) VALUES ('space-1', 'northwind', 'Northwind', 'Northwind', NULL, 'Abra', 'standard', 1000000000, 30, 0, 'active', ?, 'org-1', 'proj-1')`,
+      [NOW],
+    );
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", projectId: "proj-1", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Research",
+      templateId: "pack-schema-readiness",
+      projectId: "proj-1",
+      dueAt: NOW - 1,
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    const fetchImpl = async (url: string | URL | Request) => {
+      const href = String(url);
+      if (href.includes("/api/template")) {
+        return Response.json({
+          id: "pack-schema-readiness",
+          name: "Research",
+          nodes: [
+            { id: "mkt-r", type: "researcher", name: "Market research", instructions: "Research.", position: { x: 0, y: 0 } },
+            { id: "mkt-w", type: "writer", name: "Copy", instructions: "Write.", position: { x: 1, y: 0 } },
+          ],
+          edges: [],
+        });
+      }
+      if (href.endsWith("/api/save")) return Response.json({ success: true });
+      if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-nodes" });
+      if (href.includes("/api/artifacts")) {
+        return Response.json([
+          { nodeId: "mkt-r", nodeName: "Market research", content: "They sell foam." },
+          { nodeId: "mkt-w", nodeName: "Copy", content: "Hello docks." },
+          { nodeId: "mkt-x", nodeName: "Blank", content: "  " },
+        ]);
+      }
+      return Response.json({
+        status: "completed",
+        results: {
+          "mkt-r": { status: "done", output: "They sell foam." },
+          "mkt-w": { status: "done", output: "Hello docks." },
+        },
+      });
+    };
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      fetchImpl: fetchImpl as typeof fetch,
+      wait: async () => {},
+      store: {
+        async stat() {
+          return null;
+        },
+        async read() {
+          return null;
+        },
+        async remove() {},
+        async put() {},
+        async beginUpload() {
+          return "upload-1";
+        },
+        async readUpload() {
+          return null;
+        },
+        async writePart() {},
+        async finishUpload() {},
+      },
+    });
+    expect(result).toMatchObject({ ok: true, executionId: "run-nodes", status: "completed" });
+    const files = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files ORDER BY relative_path");
+    expect(files.map((file) => file.relative_path)).toEqual([
+      "agent/swarm/run-nodes/copy.md",
+      "agent/swarm/run-nodes/market-research.md",
+      "agent/swarm/run-nodes/result.md",
+    ]);
+  });
+
   it("sends the task brief and files the draft on that project", async () => {
     const sql = await database();
     await sql.run("UPDATE projects SET description = ? WHERE id = 'proj-1'", ["A content calendar of social ads."]);
@@ -801,7 +889,391 @@ describe("client workflows", () => {
     );
     expect(row).toEqual({ project_id: "proj-1", template_id: "pack-community-marketingskills" });
   });
+
+  it("runs research before an earlier workflow and feeds that output to the next one", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", projectId: "proj-1", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      projectId: "proj-1",
+      dueAt: NOW - 2,
+      now: NOW,
+    });
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      projectId: "proj-1",
+      dueAt: NOW - 1,
+      now: NOW + 1,
+    });
+    if (!copy.ok || !research.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const fetchImpl = chainFetch(executed);
+    const first = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(first).toMatchObject({ ok: true, workflowId: research.workflow.id, status: "completed" });
+    expect(executed).toHaveLength(1);
+    expect(executed[0]?.workflowId).toBe(`client-${research.workflow.id}`);
+    const second = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 3,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(second).toMatchObject({ ok: true, workflowId: copy.workflow.id, status: "completed" });
+    expect(executed[1]?.input).toContain("Research:");
+    expect(executed[1]?.input).toContain("Buyers fear loss.");
+  });
+
+  it("starts research when a later workflow is asked to run first", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Visual skills",
+      templateId: "pack-visual",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Research",
+      templateId: "parallel-research",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!copy.ok || !research.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const started = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      workflowId: copy.workflow.id,
+      instruction: "Calendar concepts after the research.",
+      fetchImpl: chainFetch(executed),
+      wait: async () => {},
+    });
+    expect(started).toMatchObject({ ok: true, workflowId: research.workflow.id, status: "completed" });
+    expect(executed).toHaveLength(1);
+    expect(executed[0]?.workflowId).toBe(`client-${research.workflow.id}`);
+    const copyRow = await sql.get<{ last_execution_id: string | null }>(
+      "SELECT last_execution_id FROM client_workflows WHERE id = ?",
+      [copy.workflow.id],
+    );
+    expect(copyRow?.last_execution_id).toBeNull();
+  });
+
+  it("does not start the next workflow while research is still going", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!research.ok || !copy.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const fetchImpl = chainFetch(executed, { hold: true });
+    const first = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(first).toMatchObject({ ok: true, workflowId: research.workflow.id, status: "running" });
+    const again = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 3,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(again).toEqual({ ok: true, none: true });
+    const queued = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 4,
+      workflowId: copy.workflow.id,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(queued).toMatchObject({ ok: true, status: "queued", waitingOn: research.workflow.id, workflowId: copy.workflow.id });
+    expect(executed).toHaveLength(1);
+    const due = await sql.get<{ next_run_at: number }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
+      copy.workflow.id,
+    ]);
+    expect(due?.next_run_at).toBe(NOW);
+  });
+
+  it("starts the next workflow once a finished research output arrives", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!research.ok || !copy.ok) throw new Error("workflow");
+    const executed: { workflowId: string; input: string }[] = [];
+    const fetchImpl = chainFetch(executed, { hold: true });
+    await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl,
+      wait: async () => {},
+    });
+    fetchImpl.release();
+    const advanced = await advanceWorkflowChain({
+      sql,
+      organizationId: "org-1",
+      workflowId: research.workflow.id,
+      output: "Buyers fear loss.",
+      status: "completed",
+      origin: "https://swarm.example",
+      now: NOW + 5,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(advanced).toMatchObject({ ok: true, workflowId: copy.workflow.id, status: "completed" });
+    expect(executed[1]?.input).toContain("Research:");
+    expect(executed[1]?.input).toContain("Buyers fear loss.");
+    expect(executed[1]?.input.length).toBeLessThanOrEqual(7900);
+  });
+
+  it("keeps a long research note inside the swarm input limit", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Buyer research",
+      templateId: "pack-research",
+      dueAt: NOW,
+      now: NOW,
+    });
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy Chief",
+      templateId: "pack-copy-chief",
+      projectId: "proj-1",
+      dueAt: NOW,
+      now: NOW + 1,
+    });
+    if (!research.ok || !copy.ok) throw new Error("workflow");
+    await sql.run(
+      `INSERT INTO tasks (id, project_id, organization_id, title, status, stage, created_at, updated_at)
+       VALUES ('task-copy', 'proj-1', 'org-1', 'Content calendar', 'todo', 'run', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run("UPDATE client_workflows SET task_id = 'task-copy' WHERE id = ?", [copy.workflow.id]);
+    const note = `Buyers fear loss. ${"detail ".repeat(2000)}`;
+    await sql.run("UPDATE client_workflows SET last_status = 'completed', last_output = ? WHERE id = ?", [
+      note,
+      research.workflow.id,
+    ]);
+    const executed: { workflowId: string; input: string }[] = [];
+    await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      workflowId: copy.workflow.id,
+      fetchImpl: chainFetch(executed),
+      wait: async () => {},
+    });
+    expect(executed[0]?.input.length).toBeLessThanOrEqual(7900);
+    expect(executed[0]?.input).toContain("Content calendar");
+    expect(executed[0]?.input).toContain("Buyers fear loss.");
+  });
+
+  it("files a finished swarm that is still marked running and starts the next workflow", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+      ) VALUES ('space-1', 'northwind', 'Northwind', 'Northwind', NULL, 'Abra', 'standard', 1000000000, 30, 0, 'active', ?, 'org-1', 'proj-1')`,
+      [NOW],
+    );
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", projectId: "proj-1", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const research = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Research",
+      templateId: "pack-research",
+      projectId: "proj-1",
+      now: NOW,
+    });
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy",
+      templateId: "pack-copy",
+      projectId: "proj-1",
+      now: NOW + 1,
+    });
+    if (!research.ok || !copy.ok) throw new Error("workflow");
+    await sql.run(
+      `INSERT INTO swarm_runs (
+        id, organization_id, project_id, workflow_id, swarm_workflow_id, execution_id, template_id, name, status, trigger, started_at
+      ) VALUES ('swarm-1', 'org-1', 'proj-1', ?, 'client-research', 'exec-research', 'pack-research', 'Research', 'running', 'due', ?)`,
+      [research.workflow.id, NOW],
+    );
+    const fetchImpl = async (url: string | URL | Request) => {
+      const href = String(url);
+      if (href.includes("/api/template")) {
+        return Response.json({
+          id: "pack-research",
+          name: "Research",
+          nodes: [
+            { id: "mkt-r", type: "researcher", name: "Market research", instructions: "Research.", position: { x: 0, y: 0 } },
+            { id: "mkt-w", type: "writer", name: "Copy", instructions: "Write.", position: { x: 1, y: 0 } },
+          ],
+          edges: [],
+        });
+      }
+      if (href.includes("/api/artifacts")) {
+        return Response.json([
+          { nodeId: "mkt-r", nodeName: "Market research", content: "They sell foam." },
+          { nodeId: "mkt-w", nodeName: "Copy", content: "Hello docks." },
+        ]);
+      }
+      if (href.endsWith("/api/save")) return Response.json({ success: true });
+      if (href.endsWith("/api/execute")) return Response.json({ executionId: "exec-copy" });
+      return Response.json({
+        status: "completed",
+        results: {
+          "mkt-r": { status: "done", output: "They sell foam." },
+          "mkt-w": { status: "done", output: "Hello docks." },
+        },
+      });
+    };
+    const settled = await settleRunningSwarms({
+      sql,
+      store: {
+        async stat() {
+          return null;
+        },
+        async read() {
+          return null;
+        },
+        async remove() {},
+        async put() {},
+        async beginUpload() {
+          return "upload-1";
+        },
+        async readUpload() {
+          return null;
+        },
+        async writePart() {},
+        async finishUpload() {},
+      },
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl: fetchImpl as typeof fetch,
+    });
+    expect(settled).toBe(1);
+    const researchRun = await sql.get<{ status: string }>("SELECT status FROM swarm_runs WHERE id = 'swarm-1'");
+    expect(researchRun?.status).toBe("completed");
+    const next = await sql.get<{ last_execution_id: string; last_status: string }>(
+      "SELECT last_execution_id, last_status FROM client_workflows WHERE id = ?",
+      [copy.workflow.id],
+    );
+    expect(next).toEqual({ last_execution_id: "exec-copy", last_status: "completed" });
+    const files = await sql.all<{ relative_path: string }>(
+      "SELECT relative_path FROM files WHERE relative_path LIKE 'agent/swarm/exec-research/%' ORDER BY relative_path",
+    );
+    expect(files.map((file) => file.relative_path)).toEqual([
+      "agent/swarm/exec-research/copy.md",
+      "agent/swarm/exec-research/market-research.md",
+      "agent/swarm/exec-research/result.md",
+    ]);
+  });
 });
+
+function chainFetch(
+  executed: { workflowId: string; input: string }[],
+  options?: { hold?: boolean },
+): typeof fetch & { release: () => void } {
+  let hold = options?.hold === true;
+  let sequence = 0;
+  const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+    const href = String(url);
+    if (href.includes("/api/template")) {
+      return Response.json({
+        id: "pack",
+        name: "Pack",
+        nodes: [{ id: "n1", type: "researcher", name: "Reader", instructions: "Read.", position: { x: 0, y: 0 } }],
+        edges: [],
+      });
+    }
+    if (href.endsWith("/api/save")) return Response.json({ success: true });
+    if (href.endsWith("/api/execute")) {
+      const body = JSON.parse(String(init?.body ?? "{}")) as { workflowId?: string; input?: string };
+      executed.push({ workflowId: body.workflowId ?? "", input: body.input ?? "" });
+      sequence += 1;
+      return Response.json({ executionId: `run-chain-${sequence}` });
+    }
+    if (hold && sequence < 2) return Response.json({ status: "running", results: {} });
+    const output = sequence <= 1 ? "Buyers fear loss." : "Calendar drafted.";
+    return Response.json({ status: "completed", results: { n1: { status: "done", output } } });
+  }) as typeof fetch & { release: () => void };
+  fetchImpl.release = () => {
+    hold = false;
+  };
+  return fetchImpl;
+}
 
 function swarmFetch(): typeof fetch {
   return (async (url: string | URL | Request) => {

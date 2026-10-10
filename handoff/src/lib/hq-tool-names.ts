@@ -127,7 +127,8 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   },
   add_work: {
     label: "Add work to the brief",
-    description: "New brief piece. Fields: organizationId, kind (page, website, social_pack, document), outcome, goal, due.",
+    description:
+      "New brief piece stored on the project. Pass the projectId from create_project. Fields: organizationId, projectId, kind (page, website, social_pack, document), outcome, goal, due.",
   },
   revise_brief: { label: "Ask for a brief rewrite", description: "Send changes for the brief. Fields: organizationId, body." },
   instruct_task: { label: "Instruct the agent", description: "Instruction the agent reads on its next run. Fields: taskId, body." },
@@ -153,7 +154,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   create_workflow: {
     label: "Create a workflow",
     description:
-      "Add a swarm template to a client's group and write its skill steps onto a task the work wake can run. templateId is a pack id such as pack-schema-readiness. Pass projectId to assign it now. dueAt is a unix millisecond time for the first swarm run. everyMs repeats it and must be at least 15 minutes. mcpServerIds names catalog servers each step may call, such as swarm-demo. Fields: organizationId, groupId, name, templateId, projectId, dueAt, everyMs, mcpServerIds.",
+      "Add a swarm template to a client's group and write its skill steps onto a task the work wake can run. Create the research workflow before copy, visuals, or a calendar. The group runs one at a time. templateId is a pack id such as pack-schema-readiness. Pass projectId to assign it now. dueAt is a unix millisecond time for the first swarm run. everyMs repeats it and must be at least 15 minutes. mcpServerIds names catalog servers each step may call, such as swarm-demo. Fields: organizationId, groupId, name, templateId, projectId, dueAt, everyMs, mcpServerIds.",
   },
   assign_workflow: {
     label: "Assign a workflow",
@@ -161,7 +162,8 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   },
   run_workflow: {
     label: "Run a workflow",
-    description: "Start a client's workflow on the swarm. body is the instruction for this run. Fields: id, body.",
+    description:
+      "Start the first workflow in a group. Research runs before the others. A later workflow waits until that output is ready, then receives it. body is the instruction for this run. Fields: id, body.",
   },
   decide_work_request: {
     label: "Decide a client request",

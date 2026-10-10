@@ -2,6 +2,50 @@
 
 ## 2026-10-10
 
+- **What changed** — The work wake runs every minute. An open wake older than 15 minutes is abandoned. Each swarm node is saved in the client's file space. A scan-filing error no longer stops that wake.
+- **Why** — A 15-minute cron left a finished research run marked running, and a stale wake row could block the next check. Only the combined result was filed. The minute cron was firing, then dying on a D1 `LIKE` of the scan id before it could wake the agent.
+- **Code touchpoints** — `handoff/wrangler.jsonc`, `handoff/cloudflare-worker.ts`, `handoff/src/lib/scan-context.ts`, `handoff/src/lib/agent-wake.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/mcp-connect.ts`, `handoff/src/agent/worker.ts`, `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`
+- **Data-flow impact** — Cron `* * * * *` posts `work`, `context_changed`, or `due`, including a client whose swarm run is still `running`. A busy agent still returns 202. When the connector portal has not loaded work tools, the due wake calls the Handoff route. A follow-up read of running swarms uses its own request id, so it is not replaced by the previous tool result. The minute cron also reads each swarm still marked running and, when the swarm has finished, files its nodes and starts the next workflow. On completion, `agent/swarm/<run>/<node>.md` is written for each artifact plus `result.md`. A repeating workflow still waits at least 15 minutes. Already-filed scans are matched by path prefix, not `LIKE`. One client's scan error is a note, and the wake still runs. The hourly cloud-run check and the Monday status note are unchanged.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/agent-wake.test.ts src/lib/lead-swarm.test.ts src/lib/client-workflows.test.ts src/lib/scan-context.test.ts src/lib/mcp-connect.test.ts` passed. `npx vitest run --config vitest.agent.config.mts` passed 8. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npm test` in `swarm/` passed 48. A full `npx vitest run` passed 826 and timed out 4 unrelated upload tests at 5s. Live: handoff `e0246e4c-d1f0-4731-b4ea-fa9bd69aefbb`, agent `acb91e1c-1b6d-4077-b723-809cd395a612`, swarm `699d2ef6-ee8c-4f7e-a9fe-de49946cef6a`. Research run `1d8003f8-b5ef-45f9-88a1-75a6d30e2f6b` is completed and its three node files plus `result.md` are in the client space. Copy run `2916b63b-4901-465d-89af-6c55b13c5a23` is running. Visual waits for copy.
+
+## 2026-10-10
+
+- **What changed** — The social media project was deleted for the fresh test.
+- **Why** — The earlier clear left the project in place.
+- **Code touchpoints** — none.
+- **Data-flow impact** — Removed project `af24cc5d-3f8b-4c1e-b83c-7a76f04a7ff4`. The AbraCadabra space and the abracadabra repo stayed, with the project link cleared. Git activity stayed.
+- **API / schema impact** — none.
+- **Verification** — Projects 0. Workspaces 2, both with no project. Repos 2, both with no project.
+
+- **What changed** — The social-media test was cleared again so the next run can start from scratch.
+- **Why** — The buying-psychology research run, its workflows, the project brief, and the HQ chat were still in place.
+- **Code touchpoints** — none. Data clear after agent deploy `62013526-8aab-4d3d-8503-45822dc391df`.
+- **Data-flow impact** — Removed the three tasks, the workflow group, the swarm run, the project requirements, the brief attached to the social media project, and the HQ chat messages. The social media project, the client, staff, spaces, git activity, and the older unattached brief remain.
+- **API / schema impact** — none.
+- **Verification** — Tasks 0, workflows 0, workflow groups 0, swarm runs 0, idempotency keys 0. The social media project description is empty. HQ chat messages 0 after the agent redeploy.
+
+- **What changed** — A research pack calls Parallel Search. A swarm step that is still running is left alone for two minutes, retried once, then marked timed out so the later steps can run.
+- **Why** — The buying-psychology research run restarted its reviewer on every status check, so the run never finished and the paper step never called Parallel.
+- **Code touchpoints** — `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/mcp/research-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`
+- **Data-flow impact** — Research workflow nodes receive Parallel tools from the portal when they are listed, and the step is told to call Parallel Search before the final answer. A tool call waits up to 60 seconds. A step whose only output is the tool-call block is an error. A hung model call becomes an error instead of staying `running` forever. HQ keeps reading a running swarm for about 30 minutes, then schedules another due wake instead of stopping after six checks. The quarter-hour wake also includes a client whose swarm run is still marked running, so a finished run is filed after HQ stopped polling. HQ still files a project document only when the run completes.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `swarm/` passed 45. `npx vitest run src/lib/lead-swarm.test.ts src/lib/hq-chat-playbook.test.ts src/lib/agent-wake.test.ts` passed. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. Swarm worker version `1831b70d-c214-42aa-994e-7198e387d696`. Agent worker version `babbe3fd-75c7-4cba-80f0-9d30d8878df4`. Handoff worker version `18a23b8a-7a4f-4825-acb3-39659ef35d45`. The buying-psychology swarm had already finished on the worker. HQ still had it marked running because it stopped polling. The next quarter-hour wake files that run.
+
+- **What changed** — The merged workflow-order build is on the staff HQ and the agent. Project chat, tasks, and swarm runs were cleared for a fresh test.
+- **Why** — Main's delete tools and the research-first chain needed to be on the same live workers, and the previous social-media run was still in the chat.
+- **Code touchpoints** — none. Deploy of `dedd7b3`.
+- **Data-flow impact** — Removed the HQ chat messages, the two tasks, the workflow group, and the swarm runs. The social media project, the client, staff, spaces, and git activity remain. The unattached brief deliverable remains.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `da00b4ac-1e53-4613-9531-1400b4541e5a` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `93884e42-f3eb-48c0-a52d-fe7182df7a7e` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200 `{"database":"d1","ok":true,"visible":0}`. Tasks 0, swarm runs 0, workflows 0, HQ chat messages 0.
+
+- **What changed** — Workflows in one group run one at a time. Research runs before copy, visuals, or a calendar, and its output is the next workflow's input. A brief added in chat is stored on the project.
+- **Why** — The agent started every swarm together, so research never fed the later work, and the brief was not on the project page.
+- **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/migrations/0021_workflow_chain.sql`
+- **Data-flow impact** — A later workflow waits while an earlier one is unfinished. Asking to run a later workflow starts research first when research has not started. A finished run is saved and the next workflow is armed. A follow-up that finds the finished output starts the next workflow with that text. `add_work` writes the brief's `project_id` and the project requirements.
+- **API / schema impact** — `client_workflows.last_output`. Agent tools `running_swarms` and `advance_workflow_chain`.
+- **Verification** — `npx vitest run src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/db/migrate.test.ts src/lib/hq-chat-playbook.test.ts` passed 58. `npx vitest run --config vitest.agent.config.mts` passed 7. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. eslint on the changed files exited 0. A full `npx vitest run` passed 816 and timed out 4 unrelated upload tests at 5s; those tests pass when run on their own. Remote D1 gained `client_workflows.last_output`. Worker `handoff-agent` version `1430959e-88a3-4e37-8c58-70fa8e5d90c6` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `2a2498c7-42c8-4cd6-918b-ac5b08842af6` on `hq.abra-ca-dabra.app`.
+
 - **What changed** — Delete work is live. Staff HQ, the client worker, and the agent worker were deployed from the merge. Workers Builds for `handoff` and `handoff-hq` skip the separate `next build` and let `npm run deploy` and `npm run deploy:hq` build OpenNext.
 - **Why** — The delete tools were only on the branch. The separate `next build` failed on the Google font step before deploy could run.
 - **Code touchpoints** — none in git. Deploy of `e468d54`. Workers Builds triggers `2de98be9-149f-4a8b-851f-475f194fed85` and `31f8691a-1a3b-4107-822c-2c64e5faf83d`.

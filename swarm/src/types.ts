@@ -34,6 +34,7 @@ export interface AgentEdge {
 export interface Workflow {
   id: string;
   name: string;
+  description?: string;
   nodes: AgentNode[];
   edges: AgentEdge[];
   createdAt: number;
@@ -51,6 +52,8 @@ export interface NodeResult {
   startedAt?: number;
   finishedAt?: number;
   toolsUsed?: { server: string; tool: string }[];
+  /** How many times this step has been started. A second stalled start is a timeout. */
+  attempts?: number;
 }
 
 export interface WorkflowExecution {

@@ -1,6 +1,6 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
-import { leadBrief, runLeadSwarm } from "./lead-swarm";
+import { leadBrief, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
 import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
@@ -41,7 +41,7 @@ export type WorkflowTaskPlan = {
 
 const SKILL_PATH = /Follow (\.cursor\/skills\/\S+)/;
 
-/** The work cron is every 15 minutes, so a repeat cannot be shorter than that. */
+/** A repeating workflow stays at least 15 minutes apart. The work wake itself runs every minute. */
 export const MIN_SCHEDULE_MS = 15 * 60 * 1000;
 
 function scheduleOf(input: {
@@ -282,7 +282,7 @@ export async function runClientWorkflow(input: {
     const result = await runLeadSwarm({
       origin: input.origin,
       workflowId: `client-${workflow.id}`,
-      brief: spaceContext ? `${brief}\n\n${spaceContext}` : brief,
+      brief: capWithSpace(brief, spaceContext),
       templateId: workflow.template_id,
       mcpServers,
       runSecret: mcpServers.some((server) => server.id === "portal") ? runSecret : "",
@@ -315,8 +315,129 @@ export type DueClaim =
       more: boolean;
       taskId: string | null;
       projectId: string | null;
+      waitingOn?: string;
     }
   | { ok: false; error: "invalid" | "missing" };
+
+/** Swarm execute rejects a brief longer than 8000 characters. */
+const SWARM_INPUT_LIMIT = 7900;
+
+type ChainWorkflow = {
+  id: string;
+  name: string;
+  template_id: string;
+  created_at: number;
+  next_run_at: number | null;
+  last_status: string | null;
+  last_output: string | null;
+  last_execution_id: string | null;
+};
+
+type RunnableWorkflow = {
+  id: string;
+  group_id: string;
+  name: string;
+  template_id: string;
+  every_ms: number | null;
+  task_id: string | null;
+  project_id: string | null;
+  org_name: string;
+  website: string | null;
+  industry: string | null;
+  notes: string | null;
+};
+
+function chainRank(row: { name: string; template_id: string }): number {
+  return `${row.name} ${row.template_id}`.toLowerCase().includes("research") ? 0 : 1;
+}
+
+function compareChain(a: ChainWorkflow, b: ChainWorkflow): number {
+  const rank = chainRank(a) - chainRank(b);
+  if (rank !== 0) return rank;
+  if (a.created_at !== b.created_at) return a.created_at - b.created_at;
+  const aDue = a.next_run_at ?? Number.MAX_SAFE_INTEGER;
+  const bDue = b.next_run_at ?? Number.MAX_SAFE_INTEGER;
+  if (aDue !== bDue) return aDue - bDue;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+function outputReady(row: { last_status: string | null; last_output: string | null }): boolean {
+  const output = row.last_output?.trim() ?? "";
+  return row.last_status === "completed" && output.length > 0 && !output.includes("still going");
+}
+
+function predecessorInFlight(row: ChainWorkflow): boolean {
+  if (outputReady(row) || row.last_status === "failed") return false;
+  return Boolean(row.last_execution_id);
+}
+
+function orderedChain(rows: ChainWorkflow[]): ChainWorkflow[] {
+  return [...rows].sort(compareChain);
+}
+
+function blockingPredecessor(rows: ChainWorkflow[], workflowId: string): ChainWorkflow | null {
+  const ordered = orderedChain(rows);
+  const index = ordered.findIndex((row) => row.id === workflowId);
+  if (index <= 0) return null;
+  return ordered.slice(0, index).find((row) => !outputReady(row)) ?? null;
+}
+
+function followingWorkflow(rows: ChainWorkflow[], workflowId: string): ChainWorkflow | null {
+  const ordered = orderedChain(rows);
+  const index = ordered.findIndex((row) => row.id === workflowId);
+  if (index < 0) return null;
+  return ordered[index + 1] ?? null;
+}
+
+function priorChainText(rows: ChainWorkflow[], workflowId: string): string {
+  const ordered = orderedChain(rows);
+  const index = ordered.findIndex((row) => row.id === workflowId);
+  if (index <= 0) return "";
+  return ordered
+    .slice(0, index)
+    .filter((row) => outputReady(row))
+    .map((row) => `${chainRank(row) === 0 ? "Research" : row.name}:\n${row.last_output?.trim()}`)
+    .join("\n\n");
+}
+
+function fitSwarmBrief(prior: string, own: string): string {
+  const task = own.trim().slice(0, SWARM_INPUT_LIMIT);
+  const research = prior.trim();
+  if (!research) return task;
+  const room = SWARM_INPUT_LIMIT - task.length - 2;
+  if (room <= 0) return task;
+  const clipped = research.length > room ? research.slice(0, room) : research;
+  return `${clipped}\n\n${task}`;
+}
+
+function capWithSpace(brief: string, extra: string): string {
+  const base = brief.trim().slice(0, SWARM_INPUT_LIMIT);
+  const more = extra.trim();
+  if (!more) return base;
+  const room = SWARM_INPUT_LIMIT - base.length - 2;
+  if (room <= 0) return base;
+  return `${base}\n\n${more.slice(0, room)}`;
+}
+
+async function chainWorkflows(sql: Sql, groupId: string): Promise<ChainWorkflow[]> {
+  return sql.all<ChainWorkflow>(
+    `SELECT id, name, template_id, created_at, next_run_at, last_status, last_output, last_execution_id
+     FROM client_workflows WHERE group_id = ?`,
+    [groupId],
+  );
+}
+
+async function runnableWorkflow(sql: Sql, organizationId: string, workflowId: string): Promise<RunnableWorkflow | null> {
+  const row = await sql.get<RunnableWorkflow>(
+    `SELECT w.id, w.group_id, w.name, w.template_id, w.every_ms, w.task_id, w.project_id,
+            o.name AS org_name, o.website, o.industry, o.notes
+     FROM client_workflows w
+     JOIN organizations o ON o.id = w.organization_id
+     WHERE w.organization_id = ? AND w.id = ?`,
+    [organizationId, workflowId],
+  );
+  return row ?? null;
+}
 
 /** Run the oldest workflow whose time has arrived. A failure leaves the due time so the next cycle retries. */
 export async function claimDueWorkflow(input: {
@@ -328,38 +449,71 @@ export async function claimDueWorkflow(input: {
   workflowId?: string;
   /** Staff instruction for this run. It is sent ahead of the task brief. */
   instruction?: string;
+  /** Stored on the swarm run. A chat start uses chat. A wake uses due. */
+  trigger?: string;
   fetchImpl?: typeof fetch;
   wait?: (ms: number) => Promise<void>;
   store?: ObjectStore;
 }): Promise<DueClaim> {
   if (!input.origin.trim()) return { ok: false, error: "invalid" };
   const targeted = Boolean(input.workflowId);
-  const row = await input.sql.get<{
-    id: string;
-    name: string;
-    template_id: string;
-    every_ms: number | null;
-    task_id: string | null;
-    project_id: string | null;
-    org_name: string;
-    website: string | null;
-    industry: string | null;
-    notes: string | null;
-  }>(
-    `SELECT w.id, w.name, w.template_id, w.every_ms, w.task_id, w.project_id,
-            o.name AS org_name, o.website, o.industry, o.notes
-     FROM client_workflows w
-     JOIN organizations o ON o.id = w.organization_id
-     WHERE w.organization_id = ?
-       AND ${targeted ? "w.id = ?" : "w.next_run_at IS NOT NULL AND w.next_run_at <= ?"}
-     ORDER BY w.next_run_at, w.id
-     LIMIT 1`,
-    targeted ? [input.organizationId, input.workflowId] : [input.organizationId, input.now],
-  );
-  if (!row) return targeted ? { ok: false, error: "missing" } : { ok: true, none: true };
+  const trigger = input.trigger?.trim() || "due";
+  let row: RunnableWorkflow | null = null;
+  if (targeted) {
+    row = await runnableWorkflow(input.sql, input.organizationId, input.workflowId ?? "");
+    if (!row) return { ok: false, error: "missing" };
+    const blocker = blockingPredecessor(await chainWorkflows(input.sql, row.group_id), row.id);
+    if (blocker && (predecessorInFlight(blocker) || blocker.last_status === "failed")) {
+      return {
+        ok: true,
+        none: false,
+        workflowId: row.id,
+        templateId: row.template_id,
+        packName: row.name,
+        executionId: "",
+        status: "queued",
+        output: "",
+        more: false,
+        taskId: row.task_id,
+        projectId: row.project_id,
+        waitingOn: blocker.id,
+      };
+    }
+    if (blocker) {
+      row = await runnableWorkflow(input.sql, input.organizationId, blocker.id);
+      if (!row) return { ok: false, error: "missing" };
+    }
+  } else {
+    const due = await input.sql.all<RunnableWorkflow>(
+      `SELECT w.id, w.group_id, w.name, w.template_id, w.every_ms, w.task_id, w.project_id,
+              o.name AS org_name, o.website, o.industry, o.notes
+       FROM client_workflows w
+       JOIN organizations o ON o.id = w.organization_id
+       WHERE w.organization_id = ? AND w.next_run_at IS NOT NULL AND w.next_run_at <= ?
+       ORDER BY w.next_run_at, w.id`,
+      [input.organizationId, input.now],
+    );
+    for (const candidate of due) {
+      const blocker = blockingPredecessor(await chainWorkflows(input.sql, candidate.group_id), candidate.id);
+      if (!blocker) {
+        row = candidate;
+        break;
+      }
+      if (!predecessorInFlight(blocker) && blocker.last_status !== "failed") {
+        const earlier = await runnableWorkflow(input.sql, input.organizationId, blocker.id);
+        if (earlier) {
+          row = earlier;
+          break;
+        }
+      }
+    }
+    if (!row) return { ok: true, none: true };
+  }
+  if (!row) return { ok: true, none: true };
+  const chain = await chainWorkflows(input.sql, row.group_id);
   const taskBrief = row.task_id ? await taskSwarmBrief(input.sql, row.task_id) : "";
   const instruction = input.instruction?.trim() ?? "";
-  const brief = [instruction, taskBrief].filter((line) => line.trim().length > 0).join("\n\n") || [
+  const ownBrief = [instruction, taskBrief].filter((line) => line.trim().length > 0).join("\n\n") || [
     leadBrief({ name: row.org_name, website: row.website, packId: row.template_id }),
     row.industry ? `Industry: ${row.industry}` : "",
     row.notes ?? "",
@@ -367,6 +521,13 @@ export async function claimDueWorkflow(input: {
   ]
     .filter((line) => line.trim().length > 0)
     .join("\n");
+  const brief = fitSwarmBrief(priorChainText(chain, row.id), ownBrief);
+  if (row.task_id) {
+    await input.sql.run("UPDATE tasks SET stage = 'run', updated_at = ? WHERE id = ? AND status != 'done'", [
+      input.now,
+      row.task_id,
+    ]);
+  }
   const started = await runClientWorkflow({
     sql: input.sql,
     workflowId: row.id,
@@ -382,8 +543,8 @@ export async function claimDueWorkflow(input: {
     body: started.ok ? started.output.slice(0, 500) || `${row.name} ${started.status}.` : "The swarm did not start.",
     status: started.ok ? started.status : "failed",
     data: {
-      requestId: `due:${row.id}`,
-      trigger: "due",
+      requestId: `${trigger}:${row.id}`,
+      trigger,
       packId: row.template_id,
       packName: row.name,
       executionId: started.ok ? started.executionId : "",
@@ -399,7 +560,7 @@ export async function claimDueWorkflow(input: {
     templateId: row.template_id,
     name: row.name,
     status: started.ok ? started.status : "failed",
-    trigger: "due",
+    trigger,
     now: input.now,
   });
   if (!started.ok) return started;
@@ -420,15 +581,33 @@ export async function claimDueWorkflow(input: {
       ],
     );
   }
-  if (input.store && started.status === "completed" && started.output.trim() && !started.output.includes("still going")) {
-    await storeWorkflowOutput({
-      sql: input.sql,
-      store: input.store,
-      organizationId: input.organizationId,
-      projectId: row.project_id,
-      files: [{ workflow: "swarm", run: started.executionId, node: "result", body: started.output }],
-      now: input.now,
+  if (input.store && (finished || started.status === "failed")) {
+    const artifacts = await readSwarmArtifacts({
+      origin: input.origin,
+      executionId: started.executionId,
+      fetchImpl: input.fetchImpl,
     });
+    const files = swarmArtifactFiles(artifacts).map((file) => ({
+      workflow: "swarm",
+      run: started.executionId,
+      node: file.node,
+      body: file.body,
+    }));
+    if (finished) {
+      files.push({ workflow: "swarm", run: started.executionId, node: "result", body: started.output });
+    }
+    if (files.length > 0) {
+      await storeWorkflowOutput({
+        sql: input.sql,
+        store: input.store,
+        organizationId: input.organizationId,
+        projectId: row.project_id,
+        files,
+        now: input.now,
+      });
+    }
+  }
+  if (input.store && finished) {
     const space = await input.sql.get<{ id: string }>(
       `SELECT id FROM workspaces
        WHERE organization_id = ? AND status = 'active'
@@ -457,6 +636,19 @@ export async function claimDueWorkflow(input: {
   }
   if (row.task_id && finished) {
     await markTaskDone(input.sql, { taskId: row.task_id, now: input.now, actor: { kind: "agent", id: "swarm" } });
+  }
+  if (finished) {
+    await input.sql.run("UPDATE client_workflows SET last_output = ? WHERE id = ?", [started.output, row.id]);
+    const next = followingWorkflow(await chainWorkflows(input.sql, row.group_id), row.id);
+    if (next && !outputReady(next) && !next.last_execution_id && next.last_status !== "failed") {
+      await input.sql.run(
+        `UPDATE client_workflows
+         SET next_run_at = CASE WHEN next_run_at IS NULL OR next_run_at > ? THEN ? ELSE next_run_at END,
+             updated_at = ?
+         WHERE id = ?`,
+        [input.now, input.now, input.now, next.id],
+      );
+    }
   }
   const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
   await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
@@ -569,4 +761,145 @@ export async function scheduleTaskSwarm(
   if (!created.ok) return { ok: false, error: "missing" };
   await sql.run("UPDATE client_workflows SET task_id = ? WHERE id = ?", [task.id, created.workflow.id]);
   return { ok: true, none: false, workflowId: created.workflow.id, organizationId: task.organization_id };
+}
+
+/** Save a finished swarm's output and start the next workflow in that group. */
+export async function advanceWorkflowChain(input: {
+  sql: Sql;
+  organizationId: string;
+  workflowId?: string;
+  executionId?: string;
+  output: string;
+  status: string;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+  store?: ObjectStore;
+}): Promise<DueClaim> {
+  const output = input.output.trim();
+  const finished = input.status === "completed" && output.length > 0 && !output.includes("still going");
+  if (!finished) return { ok: true, none: true };
+  const workflowId = input.workflowId?.trim() ?? "";
+  const executionId = input.executionId?.trim() ?? "";
+  const current = await input.sql.get<{ id: string; organization_id: string; group_id: string }>(
+    `SELECT id, organization_id, group_id FROM client_workflows
+     WHERE organization_id = ? AND (id = ? OR (? != '' AND last_execution_id = ?))
+     ORDER BY CASE WHEN id = ? THEN 0 ELSE 1 END
+     LIMIT 1`,
+    [input.organizationId, workflowId, executionId, executionId, workflowId],
+  );
+  if (!current) return { ok: false, error: "missing" };
+  await input.sql.run("UPDATE client_workflows SET last_output = ?, last_status = 'completed', updated_at = ? WHERE id = ?", [
+    output,
+    input.now,
+    current.id,
+  ]);
+  const next = followingWorkflow(await chainWorkflows(input.sql, current.group_id), current.id);
+  if (!next || outputReady(next) || next.last_execution_id || next.last_status === "failed") return { ok: true, none: true };
+  await input.sql.run(
+    `UPDATE client_workflows
+     SET next_run_at = CASE WHEN next_run_at IS NULL OR next_run_at > ? THEN ? ELSE next_run_at END,
+         updated_at = ?
+     WHERE id = ?`,
+    [input.now, input.now, input.now, next.id],
+  );
+  return claimDueWorkflow({
+    sql: input.sql,
+    organizationId: input.organizationId,
+    origin: input.origin,
+    now: input.now,
+    workflowId: next.id,
+    fetchImpl: input.fetchImpl,
+    wait: input.wait,
+    store: input.store,
+  });
+}
+
+/** File a swarm the worker already finished, then start the next workflow in that group. */
+export async function settleRunningSwarms(input: {
+  sql: Sql;
+  store?: ObjectStore;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+}): Promise<number> {
+  if (!input.origin.trim()) return 0;
+  const rows = await input.sql.all<{
+    id: string;
+    organization_id: string;
+    project_id: string | null;
+    workflow_id: string | null;
+    execution_id: string;
+    template_id: string | null;
+  }>(
+    `SELECT id, organization_id, project_id, workflow_id, execution_id, template_id
+     FROM swarm_runs
+     WHERE status = 'running' AND execution_id != ''
+     ORDER BY started_at, id`,
+  );
+  let settled = 0;
+  for (const row of rows) {
+    const run = await readSwarmRun({
+      origin: input.origin,
+      executionId: row.execution_id,
+      templateId: row.template_id ?? "",
+      fetchImpl: input.fetchImpl,
+    });
+    const status = run.status === "completed" || run.status === "failed" ? run.status : "running";
+    if (status === "running") continue;
+    const finished = status === "completed" && run.output.trim().length > 0 && !run.output.includes("still going");
+    if (input.store) {
+      const artifacts = await readSwarmArtifacts({
+        origin: input.origin,
+        executionId: row.execution_id,
+        fetchImpl: input.fetchImpl,
+      });
+      const files = swarmArtifactFiles(artifacts).map((file) => ({
+        workflow: "swarm",
+        run: row.execution_id,
+        node: file.node,
+        body: file.body,
+      }));
+      if (finished) files.push({ workflow: "swarm", run: row.execution_id, node: "result", body: run.output });
+      if (files.length > 0) {
+        await storeWorkflowOutput({
+          sql: input.sql,
+          store: input.store,
+          organizationId: row.organization_id,
+          projectId: row.project_id,
+          files,
+          now: input.now,
+        });
+      }
+    }
+    await input.sql.run("UPDATE swarm_runs SET status = ?, finished_at = ? WHERE id = ? AND status = 'running'", [
+      status,
+      input.now,
+      row.id,
+    ]);
+    if (row.workflow_id) {
+      await input.sql.run(
+        "UPDATE client_workflows SET last_status = ?, last_execution_id = COALESCE(last_execution_id, ?), updated_at = ? WHERE id = ?",
+        [status, row.execution_id, input.now, row.workflow_id],
+      );
+    }
+    if (finished && row.workflow_id) {
+      await advanceWorkflowChain({
+        sql: input.sql,
+        organizationId: row.organization_id,
+        workflowId: row.workflow_id,
+        executionId: row.execution_id,
+        output: run.output,
+        status,
+        origin: input.origin,
+        now: input.now,
+        fetchImpl: input.fetchImpl,
+        wait: async () => {},
+        store: input.store,
+      });
+    }
+    settled += 1;
+  }
+  return settled;
 }

@@ -1,5 +1,4 @@
 import { AgentWorkError, saveStaffBrief } from "@/db/agent-work";
-import { recordAgentRun } from "@/lib/agent-activity";
 import { actionFromLine, applyChannelPlan, dueMillis } from "@/lib/channel-plan";
 import { linkSlackChannel, listWorkRequests, setWorkRequestState, workRequestById } from "@/db/conversations";
 import {
@@ -36,15 +35,14 @@ import type { Caller } from "@/lib/authz";
 import { appendBriefWork } from "@/lib/client-plan";
 import {
   assignClientWorkflow,
+  claimDueWorkflow,
   createClientWorkflow,
   createWorkflowGroup,
   listClientWorkflows,
-  runClientWorkflow,
   workflowTaskPlan,
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
 import { packsFromTemplates } from "@/lib/pack-picker";
-import { saveSwarmRun } from "@/lib/swarm-runs";
 import type { ObjectStore } from "@/lib/store/objects";
 import { hqToolNeedsApproval } from "@/lib/hq-tool-names";
 import { createInvite } from "@/lib/store/invites";
@@ -183,11 +181,20 @@ type Wake = (organizationId: string, reason: WakeReason) => Promise<void | boole
  */
 async function saveAddendum(
   sql: Sql,
-  input: { organizationId: string; organizationName: string; userId: string; kind: string; outcome: string; goal: string; due: string },
+  input: {
+    organizationId: string;
+    organizationName: string;
+    userId: string;
+    kind: string;
+    outcome: string;
+    goal: string;
+    due: string;
+    projectId: string | null;
+  },
   now: number,
   wake: Wake,
 ): Promise<HqToolResult> {
-  const brief = await getBrief(sql, input.organizationId, "brief");
+  const brief = await getBrief(sql, input.organizationId, "brief", input.projectId);
   const markdown = appendBriefWork(typeof brief?.body === "string" ? brief.body : "", input);
   const approval = await sql.get<{ brief_approval: string }>("SELECT brief_approval FROM organizations WHERE id = ?", [
     input.organizationId,
@@ -200,6 +207,7 @@ async function saveAddendum(
         userId: input.userId,
         title: typeof brief?.title === "string" ? brief.title : `${input.organizationName} brief`,
         bodyMarkdown: markdown,
+        projectId: input.projectId,
       },
       now,
     );
@@ -680,48 +688,38 @@ async function runWorkflow(
         workflowId,
         taskId: row.task_id,
         stage: "run",
-        ...(moved.executionId ? { executionId: moved.executionId, status: moved.swarmStatus, output: moved.output } : {}),
+        ...(moved.swarmStatus === "queued"
+          ? { status: "queued", waitingOn: moved.waitingOn }
+          : moved.executionId
+            ? {
+                executionId: moved.executionId,
+                status: moved.swarmStatus,
+                output: moved.output,
+                startedWorkflowId: moved.startedWorkflowId,
+              }
+            : {}),
       },
     };
   }
   const swarm = options.swarm;
   const origin = swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
-  const started = await runClientWorkflow({
+  const started = await claimDueWorkflow({
     sql,
-    workflowId,
-    brief: text(input, "body"),
+    organizationId: row.organization_id,
     origin,
     now,
+    workflowId,
+    instruction: text(input, "body"),
+    trigger: "chat",
     fetchImpl: swarm?.fetchImpl,
     wait: swarm?.wait,
-  });
-  await recordAgentRun(sql, {
-    organizationId: row.organization_id,
-    kind: "agent.swarm_run",
-    body: started.ok ? started.output.slice(0, 500) || row.name : "The swarm did not start.",
-    status: started.ok ? started.status : "failed",
-    data: {
-      trigger: "chat",
-      packId: row.template_id,
-      packName: row.name,
-      executionId: started.ok ? started.executionId : "",
-      workflowId,
-    },
-    now,
-  });
-  await saveSwarmRun(sql, {
-    organizationId: row.organization_id,
-    workflowId,
-    swarmWorkflowId: `client-${workflowId}`,
-    executionId: started.ok ? started.executionId : "",
-    templateId: row.template_id,
-    name: row.name,
-    status: started.ok ? started.status : "failed",
-    trigger: "chat",
-    now,
+    store: swarm?.store,
   });
   if (!started.ok) return { ok: false, error: started.error };
-  if (started.status === "running") await options.wake(row.organization_id, "due");
+  if (started.none) return { ok: false, error: "missing" };
+  if (started.status === "running" || started.status === "queued" || started.more) {
+    await options.wake(row.organization_id, "due");
+  }
   await logStaff(
     sql,
     {
@@ -729,11 +727,20 @@ async function runWorkflow(
       userId: caller.userId,
       kind: "staff.workflow_run",
       body: started.output.slice(0, 500) || row.name,
-      data: { workflowId, executionId: started.executionId, status: started.status },
+      data: { workflowId: started.workflowId, executionId: started.executionId, status: started.status },
     },
     now,
   );
-  return { ok: true, value: { workflowId, executionId: started.executionId, status: started.status, output: started.output } };
+  return {
+    ok: true,
+    value: {
+      workflowId: started.workflowId,
+      executionId: started.executionId,
+      status: started.status,
+      output: started.output,
+      ...(started.waitingOn ? { waitingOn: started.waitingOn } : {}),
+    },
+  };
 }
 
 async function setDealStep(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
@@ -819,6 +826,23 @@ async function setTaskStage(
   return { ok: true, value: { taskId: task.id, stage } };
 }
 
+async function projectForBrief(sql: Sql, organizationId: string, requested: string): Promise<string | null | "missing"> {
+  if (requested) {
+    const row = await sql.get<{ id: string }>("SELECT id FROM projects WHERE id = ? AND organization_id = ?", [
+      requested,
+      organizationId,
+    ]);
+    return row ? requested : "missing";
+  }
+  const rows = await sql.all<{ id: string }>(
+    `SELECT id FROM projects
+     WHERE organization_id = ? AND status IN ('planned', 'active', 'waiting_on_client')
+     ORDER BY created_at`,
+    [organizationId],
+  );
+  return rows.length === 1 ? rows[0].id : null;
+}
+
 async function addWork(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number, wake: Wake): Promise<HqToolResult> {
   const organizationId = text(input, "organizationId");
   const org = await seenOrg(sql, caller, organizationId);
@@ -828,7 +852,14 @@ async function addWork(sql: Sql, caller: Caller, input: Record<string, unknown>,
   const goal = text(input, "goal");
   const due = text(input, "due");
   if (!kind || !outcome || !goal || !due) return { ok: false, error: "invalid" };
-  return saveAddendum(sql, { organizationId, organizationName: org.name, userId: caller.userId, kind, outcome, goal, due }, now, wake);
+  const projectId = await projectForBrief(sql, organizationId, text(input, "projectId"));
+  if (projectId === "missing") return { ok: false, error: "missing" };
+  return saveAddendum(
+    sql,
+    { organizationId, organizationName: org.name, userId: caller.userId, kind, outcome, goal, due, projectId },
+    now,
+    wake,
+  );
 }
 
 async function reviseBrief(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
@@ -982,6 +1013,8 @@ async function decideWork(sql: Sql, caller: Caller, input: Record<string, unknow
   const kind = text(input, "kind") || named[0] || "";
   const outcome = text(input, "outcome") || named.slice(1).join(": ");
   if (!kind || !outcome) return { ok: false, error: "invalid" };
+  const projectId = await projectForBrief(sql, row.organization_id, text(input, "projectId"));
+  if (projectId === "missing") return { ok: false, error: "missing" };
   const saved = await saveAddendum(
     sql,
     {
@@ -992,6 +1025,7 @@ async function decideWork(sql: Sql, caller: Caller, input: Record<string, unknow
       outcome,
       goal: text(input, "goal") || row.goal || "Not stated.",
       due: text(input, "due") || row.due_text || "No rush.",
+      projectId,
     },
     now,
     wake,
