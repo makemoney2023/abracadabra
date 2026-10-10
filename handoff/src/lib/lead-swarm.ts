@@ -117,6 +117,78 @@ export async function runLeadSwarm(input: {
   return { executionId, status, output };
 }
 
+export type SwarmNodeArtifact = {
+  nodeId: string;
+  nodeName: string;
+  content: string;
+};
+
+const ARTIFACT_BODY_MAX = 100_000;
+
+function slug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+/** One file name per node. A repeated name keeps the node id so the later file is not overwritten. */
+export function swarmArtifactFiles(artifacts: SwarmNodeArtifact[]): { node: string; body: string }[] {
+  const used = new Set<string>();
+  const files: { node: string; body: string }[] = [];
+  for (const artifact of artifacts) {
+    const body = artifact.content.trim().slice(0, ARTIFACT_BODY_MAX);
+    if (!body) continue;
+    const name = slug(artifact.nodeName);
+    const id = slug(artifact.nodeId);
+    let node = name || id;
+    if (!node) continue;
+    if (used.has(node)) node = slug(`${name || "node"}-${id}`) || `${node}-2`;
+    let candidate = node;
+    let extra = 2;
+    while (used.has(candidate)) {
+      candidate = slug(`${node}-${extra}`) || `${node}-${extra}`;
+      extra += 1;
+    }
+    used.add(candidate);
+    files.push({ node: candidate, body });
+  }
+  return files;
+}
+
+/** Node artifacts for one execution. A missing list is empty. */
+export async function readSwarmArtifacts(input: {
+  origin: string;
+  executionId: string;
+  fetchImpl?: typeof fetch;
+}): Promise<SwarmNodeArtifact[]> {
+  const fetchImpl = input.fetchImpl ?? fetch;
+  const base = originOf(input.origin);
+  try {
+    const response = await fetchImpl(`${base}/api/artifacts?executionId=${encodeURIComponent(input.executionId)}`);
+    if (!response.ok) return [];
+    const body = (await response.json()) as unknown;
+    if (!Array.isArray(body)) return [];
+    return body.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const row = item as { nodeId?: unknown; nodeName?: unknown; content?: unknown };
+      const content = typeof row.content === "string" ? row.content : "";
+      if (!content.trim()) return [];
+      return [
+        {
+          nodeId: typeof row.nodeId === "string" ? row.nodeId : "",
+          nodeName: typeof row.nodeName === "string" ? row.nodeName : "",
+          content,
+        },
+      ];
+    });
+  } catch {
+    return [];
+  }
+}
+
 /** Reads one swarm execution without starting another. Node order comes from the template. */
 export async function readSwarmRun(input: {
   origin: string;

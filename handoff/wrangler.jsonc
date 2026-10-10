@@ -81,7 +81,7 @@
     ]
   },
   "triggers": {
-    "crons": ["*/15 * * * *", "0 * * * *", "0 8 * * 1"]
+    "crons": ["* * * * *", "0 * * * *", "0 8 * * 1"]
   },
   "vars": {
     "HANDOFF_AI_GATEWAY_ID": "default",

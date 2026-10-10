@@ -708,6 +708,92 @@ describe("client workflows", () => {
     });
   });
 
+  it("saves each swarm node into the client space", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+      ) VALUES ('space-1', 'northwind', 'Northwind', 'Northwind', NULL, 'Abra', 'standard', 1000000000, 30, 0, 'active', ?, 'org-1', 'proj-1')`,
+      [NOW],
+    );
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", projectId: "proj-1", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Research",
+      templateId: "pack-schema-readiness",
+      projectId: "proj-1",
+      dueAt: NOW - 1,
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    const fetchImpl = async (url: string | URL | Request) => {
+      const href = String(url);
+      if (href.includes("/api/template")) {
+        return Response.json({
+          id: "pack-schema-readiness",
+          name: "Research",
+          nodes: [
+            { id: "mkt-r", type: "researcher", name: "Market research", instructions: "Research.", position: { x: 0, y: 0 } },
+            { id: "mkt-w", type: "writer", name: "Copy", instructions: "Write.", position: { x: 1, y: 0 } },
+          ],
+          edges: [],
+        });
+      }
+      if (href.endsWith("/api/save")) return Response.json({ success: true });
+      if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-nodes" });
+      if (href.includes("/api/artifacts")) {
+        return Response.json([
+          { nodeId: "mkt-r", nodeName: "Market research", content: "They sell foam." },
+          { nodeId: "mkt-w", nodeName: "Copy", content: "Hello docks." },
+          { nodeId: "mkt-x", nodeName: "Blank", content: "  " },
+        ]);
+      }
+      return Response.json({
+        status: "completed",
+        results: {
+          "mkt-r": { status: "done", output: "They sell foam." },
+          "mkt-w": { status: "done", output: "Hello docks." },
+        },
+      });
+    };
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      fetchImpl: fetchImpl as typeof fetch,
+      wait: async () => {},
+      store: {
+        async stat() {
+          return null;
+        },
+        async read() {
+          return null;
+        },
+        async remove() {},
+        async put() {},
+        async beginUpload() {
+          return "upload-1";
+        },
+        async readUpload() {
+          return null;
+        },
+        async writePart() {},
+        async finishUpload() {},
+      },
+    });
+    expect(result).toMatchObject({ ok: true, executionId: "run-nodes", status: "completed" });
+    const files = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files ORDER BY relative_path");
+    expect(files.map((file) => file.relative_path)).toEqual([
+      "agent/swarm/run-nodes/copy.md",
+      "agent/swarm/run-nodes/market-research.md",
+      "agent/swarm/run-nodes/result.md",
+    ]);
+  });
+
   it("sends the task brief and files the draft on that project", async () => {
     const sql = await database();
     await sql.run("UPDATE projects SET description = ? WHERE id = 'proj-1'", ["A content calendar of social ads."]);

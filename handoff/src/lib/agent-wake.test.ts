@@ -1,12 +1,12 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
+import { briefWakeReason, dueOrganizations, signWake, verifyWake, wakeDueAgents, WORK_WAKE_CRON } from "@/lib/agent-wake";
 import { LIMITS } from "@/lib/policy/limits";
-import { briefWakeReason, dueOrganizations, signWake, verifyWake, wakeDueAgents } from "@/lib/agent-wake";
 
 const NOW = 1_700_000_000_000;
 const FIVE_MINUTES = 5 * 60 * 1000;
@@ -43,6 +43,13 @@ describe("signed wakes", () => {
     expect(verifyWake("wake-secret", body, signature, NOW + FIVE_MINUTES + 1)).toBe(false);
   });
 
+  it("uses the same one-minute work cron as the worker trigger", () => {
+    const raw = readFileSync(new URL("../../wrangler.jsonc", import.meta.url), "utf8");
+    const match = raw.match(/"crons":\s*\[\s*"([^"]+)"/);
+    expect(WORK_WAKE_CRON).toBe("* * * * *");
+    expect(match?.[1]).toBe(WORK_WAKE_CRON);
+  });
+
   it("wakes a client with open work and skips a paused or archived client", async () => {
     const sql = await db();
     await org(sql, "org-open");
@@ -67,7 +74,7 @@ describe("signed wakes", () => {
       [NOW],
     );
 
-    const quarter = await dueOrganizations(sql, "*/15 * * * *");
+    const quarter = await dueOrganizations(sql, WORK_WAKE_CRON);
     expect(quarter.map((row) => row.organizationId).sort()).toEqual(["org-idle", "org-open"]);
     expect(quarter.find((row) => row.organizationId === "org-open")?.reason).toBe("work");
     expect(quarter.find((row) => row.organizationId === "org-idle")?.reason).toBe("context_changed");
@@ -89,7 +96,7 @@ describe("signed wakes", () => {
               ('task-due', 'org-due', 'Now', 'todo', ?, ?, ?)`,
       [NOW, NOW, NOW + 86_400_000, NOW, NOW, NOW - 1],
     );
-    const due = await dueOrganizations(sql, "*/15 * * * *", NOW);
+    const due = await dueOrganizations(sql, WORK_WAKE_CRON, NOW);
     expect(due).toEqual([{ organizationId: "org-due", reason: "work" }]);
   });
 
@@ -110,7 +117,7 @@ describe("signed wakes", () => {
          ('wf-later', 'group-wait', 'org-waiting', 'Later scan', 'pack-schema-readiness', ?, ?, ?, NULL, ?)`,
       [NOW, NOW, NOW - 1, 86_400_000, NOW, NOW, NOW, NOW + 86_400_000, NOW],
     );
-    const due = await dueOrganizations(sql, "*/15 * * * *", NOW);
+    const due = await dueOrganizations(sql, WORK_WAKE_CRON, NOW);
     expect(due).toEqual([{ organizationId: "org-sched", reason: "due" }]);
   });
 
@@ -133,7 +140,7 @@ describe("signed wakes", () => {
        ) VALUES ('run-swarm', 'org-swarm', 'wf-swarm', 'exec-1', 'Research', 'running', 'due', ?)`,
       [NOW],
     );
-    expect(await dueOrganizations(sql, "*/15 * * * *", NOW)).toEqual([{ organizationId: "org-swarm", reason: "due" }]);
+    expect(await dueOrganizations(sql, WORK_WAKE_CRON, NOW)).toEqual([{ organizationId: "org-swarm", reason: "due" }]);
   });
 
   it("does not run a scheduled workflow's task as ordinary work", async () => {
@@ -154,7 +161,7 @@ describe("signed wakes", () => {
        ) VALUES ('wf-owned', 'group-owned', 'org-owned', 'Weekly scan', 'pack-schema-readiness', ?, ?, 'task-owned', ?, ?)`,
       [NOW, NOW, NOW + 86_400_000, NOW],
     );
-    expect(await dueOrganizations(sql, "*/15 * * * *", NOW)).toEqual([]);
+    expect(await dueOrganizations(sql, WORK_WAKE_CRON, NOW)).toEqual([]);
   });
 
   it("records a failed wake and does not record a delivered one", async () => {
@@ -169,7 +176,7 @@ describe("signed wakes", () => {
     await wakeDueAgents(
       sql,
       { AGENT_URL: "https://agent.example", AGENT_WAKE_SECRET: "wake-secret" },
-      "*/15 * * * *",
+      WORK_WAKE_CRON,
       NOW,
       async (url, init) => {
         calls.push({
@@ -192,7 +199,7 @@ describe("signed wakes", () => {
     await wakeDueAgents(
       sql,
       { AGENT_URL: "https://agent.example", AGENT_WAKE_SECRET: "wake-secret" },
-      "*/15 * * * *",
+      WORK_WAKE_CRON,
       NOW,
       async () => new Response("ok", { status: 202 }),
     );

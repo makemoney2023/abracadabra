@@ -59,9 +59,12 @@ export function verifyWake(secret: string, rawBody: string, signature: string, n
 
 const LIVE = "archived_at IS NULL AND agent_paused_at IS NULL";
 
+/** First cron in wrangler.jsonc. Cloudflare's shortest schedule is one minute. */
+export const WORK_WAKE_CRON = "* * * * *";
+
 /** Clients this cron should wake. A paused or archived organization is left alone. */
 export async function dueOrganizations(sql: Sql, cron: string, now = Date.now()): Promise<WakeTarget[]> {
-  if (cron === "*/15 * * * *") {
+  if (cron === WORK_WAKE_CRON) {
     const unanswered = `EXISTS (
            SELECT 1 FROM activities flag
            WHERE flag.organization_id = organizations.id

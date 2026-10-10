@@ -55,6 +55,19 @@ describe("handoff agent", () => {
     expect(payload.outcome).toBe("busy");
   });
 
+  it("starts a new wake when the open one was abandoned long ago", async () => {
+    const stub = await getAgentByName(env.ClientAgent, "org-stale");
+    const result = await runInDurableObject(stub, async (instance: ClientAgent) => {
+      instance.seedOpenWake("due", Date.now() - 20 * 60_000);
+      const outcome = await instance.acceptWake("due");
+      return { outcome, wakes: instance.wakeLog("due") };
+    });
+    expect(result.outcome).toBe("started");
+    expect(result.wakes).toHaveLength(2);
+    expect(result.wakes[0]?.outcome).toBe("abandoned");
+    expect(result.wakes[1]?.finished).toBe(true);
+  });
+
   it("reads the skill index from the skills bucket", async () => {
     await env.SKILLS.put(
       "skills/index.json",

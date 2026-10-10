@@ -154,15 +154,15 @@ HQ-started swarm runs call this same portal. The catalog id is `portal`. The swa
 | `onboard` | cron, first time an org has a linked workspace with clean files or a won deal | Section 5: build the brief. |
 | `context_changed` | `handoff` after `readSpaceFiles` finishes a batch, or staff edit the website field | Re-read, new brief version if material changed. |
 | `brief_approved` | dashboard after client or staff approval | Section 6: plan tasks from the brief. |
-| `work` | cron, every 15 minutes, for orgs with tasks not `done` whose `due_at` is empty or already past | Section 7: advance each task one step. A future `due_at` waits. A task tied to a scheduled workflow is left to `due`. |
-| `due` | cron, every 15 minutes, when a workflow `next_run_at` has arrived, and staff chat after a pack task moves to `run` | Run that workflow on the swarm and write `agent.swarm_run` so Today shows it. A run that is still going updates that same row. A repeat moves `next_run_at` forward. A one-shot clears it. Each step may call only catalog servers stored on the workflow. When the portal URL is set and the workflow has no stored ids, that catalog is `portal`. |
+| `work` | cron, every minute, for orgs with tasks not `done` whose `due_at` is empty or already past | Section 7: advance each task one step. A future `due_at` waits. A task tied to a scheduled workflow is left to `due`. |
+| `due` | cron, every minute, when a workflow `next_run_at` has arrived or a swarm run is still marked running, and staff chat after a pack task moves to `run` | Run that workflow on the swarm and write `agent.swarm_run` so Today shows it. A run that is still going updates that same row. A repeat moves `next_run_at` forward. A one-shot clears it. Each finished node is saved in the client space. Each step may call only catalog servers stored on the workflow. When the portal URL is set and the workflow has no stored ids, that catalog is `portal`. |
 | `changes_requested` | dashboard after feedback with decision `changes` | Section 10: revision round. |
 | `brief_changed` | dashboard after a brief addendum or revision is approved (section 17.4) | Re-plan from the new brief version: new pieces get tasks, changed pieces reset, removed pieces block. |
 | `run_check` | cron, hourly | Poll `bc-` runs past deadline. |
 | `status` | cron, Monday 08:00 local | Draft the weekly client status update (exists in gameplan). |
 | `follow_up`, `invoice_reminder`, `digest` | cron | Gameplan 12, unchanged. |
 
-A wake is idempotent. Two wakes with the same reason in flight on one instance: the second sees the first in `wakes` with no `finished_at` and returns 202 without doing work. Durable Object single-threading makes this safe.
+A wake is idempotent. Two wakes with the same reason in flight on one instance: the second sees the first in `wakes` with no `finished_at` and returns 202 without doing work. An open row older than 15 minutes is marked abandoned so an evicted isolate cannot block that reason forever. Durable Object single-threading makes this safe.
 
 ---
 

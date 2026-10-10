@@ -113,7 +113,7 @@ The wake stays per client. What changes is which card it takes.
 4. Starting a step sets `status = 'doing'` in the same column. Finishing the last non-plan step sets `status = 'done'` and `stage = 'run'`, which places the card in Done.
 5. A plan step still writes `build-brief.md` and moves the card to Build through the shared move. `startBuild` either starts the run, waits on `max_cloud_runs`, or blocks with the existing reason (`link_a_repo`, `missing_build_brief`, and the rest). A refused build leaves the card in the column it left, and leaves the plan skill to do, so answering the question lets the next wake try the move again. The plan skill is marked done only after the card is in Build. The cloud run uses the latest `build-brief.md` on the deliverable.
 6. Staff notes on a card (`staff.instruction`) still arrive on that task in `client_context`. Order does not throw them away.
-7. The 15-minute cron still wakes each client that has open work. The studio board does not need its own cron.
+7. The minute cron still wakes each client that has open work. The studio board does not need its own cron.
 
 `eligible` in `client-plan.ts` remains the per-card rule. `nextSteps` is the order across projects. Tests cover both.
 

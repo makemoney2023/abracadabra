@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { OPENING_PACK_ID } from "./pack-templates";
-import { followRunningSwarm, leadBrief, readSwarmRun, runLeadSwarm, SWARM_REFRESH_LIMIT } from "./lead-swarm";
+import {
+  followRunningSwarm,
+  leadBrief,
+  readSwarmArtifacts,
+  readSwarmRun,
+  runLeadSwarm,
+  swarmArtifactFiles,
+  SWARM_REFRESH_LIMIT,
+} from "./lead-swarm";
 
 const template = {
   id: OPENING_PACK_ID,
@@ -103,6 +111,49 @@ describe("lead swarm", () => {
     });
     expect(result).toEqual({ status: "completed", output: "They sell foam.\n\nHello Ada." });
     expect(urls.some((url) => url.includes("/api/execute") || url.includes("/api/save"))).toBe(false);
+  });
+
+  it("reads each node artifact and skips a blank one", async () => {
+    const urls: string[] = [];
+    const artifacts = await readSwarmArtifacts({
+      origin: "https://swarm.example/",
+      executionId: "run-1",
+      fetchImpl: (async (url: string | URL | Request) => {
+        urls.push(String(url));
+        return Response.json([
+          { id: "a1", executionId: "run-1", nodeId: "mkt-r", nodeName: "Market research", content: "They sell foam.", timestamp: 1 },
+          { id: "a2", executionId: "run-1", nodeId: "mkt-w", nodeName: "Copy", content: "   ", timestamp: 2 },
+          { nodeId: "mkt-x", nodeName: "Notes", content: "Keep this." },
+          "nope",
+        ]);
+      }) as typeof fetch,
+    });
+    expect(urls).toEqual(["https://swarm.example/api/artifacts?executionId=run-1"]);
+    expect(artifacts).toEqual([
+      { nodeId: "mkt-r", nodeName: "Market research", content: "They sell foam." },
+      { nodeId: "mkt-x", nodeName: "Notes", content: "Keep this." },
+    ]);
+    expect(await readSwarmArtifacts({
+      origin: "https://swarm.example",
+      executionId: "run-2",
+      fetchImpl: (async () => Response.json({ status: "completed" })) as typeof fetch,
+    })).toEqual([]);
+  });
+
+  it("names each node file once and keeps a short body", () => {
+    const long = "x".repeat(100_001);
+    expect(
+      swarmArtifactFiles([
+        { nodeId: "mkt-r", nodeName: "Market research", content: "They sell foam." },
+        { nodeId: "mkt-r2", nodeName: "Market research", content: "Second pass." },
+        { nodeId: "blank", nodeName: "Empty", content: "  " },
+        { nodeId: "note-1", nodeName: "", content: long },
+      ]),
+    ).toEqual([
+      { node: "market-research", body: "They sell foam." },
+      { node: "market-research-mkt-r2", body: "Second pass." },
+      { node: "note-1", body: "x".repeat(100_000) },
+    ]);
   });
 
   it("keeps following a running swarm well past six checks, then hands it back to due", () => {

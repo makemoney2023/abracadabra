@@ -2,6 +2,15 @@
 
 ## 2026-10-10
 
+- **What changed** — The work wake runs every minute. An open wake older than 15 minutes is abandoned. Each swarm node is saved in the client's file space.
+- **Why** — A 15-minute cron left a finished research run marked running, and a stale wake row could block the next check. Only the combined result was filed, so the research, copy, and visual nodes never landed in the space.
+- **Code touchpoints** — `handoff/wrangler.jsonc`, `handoff/src/lib/agent-wake.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/agent/worker.ts`, `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`
+- **Data-flow impact** — Cron `* * * * *` posts `work`, `context_changed`, or `due`, including a client whose swarm run is still `running`. A busy agent still returns 202. On completion, `agent/swarm/<run>/<node>.md` is written for each artifact plus `result.md`. A repeating workflow still waits at least 15 minutes. The hourly cloud-run check and the Monday status note are unchanged.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/agent-wake.test.ts src/lib/lead-swarm.test.ts src/lib/client-workflows.test.ts` passed 41. `npx vitest run --config vitest.agent.config.mts` passed 8. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npm test` in `swarm/` passed 48. A full `npx vitest run` passed 826 and timed out 4 unrelated upload tests at 5s.
+
+## 2026-10-10
+
 - **What changed** — The social media project was deleted for the fresh test.
 - **Why** — The earlier clear left the project in place.
 - **Code touchpoints** — none.

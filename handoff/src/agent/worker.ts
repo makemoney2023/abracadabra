@@ -9,7 +9,7 @@ import {
   type ToolCaller,
 } from "../lib/client-documents";
 import { advanceClientWork, applyBriefChange, fileSwarmDelivery, planClientWork, qualifyLead } from "../lib/client-plan";
-import { followRunningSwarm, readSwarmRun, runLeadSwarm } from "../lib/lead-swarm";
+import { followRunningSwarm, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "../lib/lead-swarm";
 import { packsFromTemplates } from "../lib/pack-picker";
 import { packTemplatesFromCatalog } from "../lib/pack-templates";
 import {
@@ -75,6 +75,9 @@ export function parseSkillIndex(raw: string): string[] {
   }
 }
 
+/** Longer than any real wake runs. */
+const STALE_WAKE_MS = 15 * 60_000;
+
 type PortalTools = {
   getAITools?: () => Record<string, unknown>;
   waitForConnections?: (options?: { timeout?: number }) => Promise<unknown>;
@@ -116,14 +119,24 @@ export class ClientAgent extends Agent<AgentBindings> {
   }
 
   /** Leaves a wake open so a second POST with the same reason stays quiet. */
-  seedOpenWake(reason: string): void {
+  seedOpenWake(reason: string, startedAt = Date.now()): void {
     this.ensureTables();
     this.ctx.storage.sql.exec(
       "INSERT INTO wakes (id, reason, started_at, finished_at, outcome) VALUES (?, ?, ?, NULL, NULL)",
       crypto.randomUUID(),
       reason,
-      Date.now(),
+      startedAt,
     );
+  }
+
+  wakeLog(reason: string): { outcome: string | null; finished: boolean }[] {
+    this.ensureTables();
+    return [
+      ...this.ctx.storage.sql.exec<{ outcome: string | null; finished_at: number | null }>(
+        "SELECT outcome, finished_at FROM wakes WHERE reason = ? ORDER BY started_at",
+        reason,
+      ),
+    ].map((row) => ({ outcome: row.outcome, finished: row.finished_at !== null }));
   }
 
   /** Replaces any model-supplied organization id with this instance's name. */
@@ -170,6 +183,14 @@ export class ClientAgent extends Agent<AgentBindings> {
 
   async acceptWake(reason: string): Promise<"started" | "busy"> {
     this.ensureTables();
+    const now = Date.now();
+    // An evicted isolate never stamps finished_at, so an old open row would block this reason forever.
+    this.ctx.storage.sql.exec(
+      "UPDATE wakes SET finished_at = ?, outcome = 'abandoned' WHERE reason = ? AND finished_at IS NULL AND started_at < ?",
+      now,
+      reason,
+      now - STALE_WAKE_MS,
+    );
     const open = [...this.ctx.storage.sql.exec("SELECT id FROM wakes WHERE reason = ? AND finished_at IS NULL", reason)];
     if (open.length > 0) return "busy";
     const id = crypto.randomUUID();
@@ -303,6 +324,26 @@ export class ClientAgent extends Agent<AgentBindings> {
       activityKey: payload.activityKey,
       trigger: payload.trigger,
     });
+    if (status !== "running") {
+      const artifacts = await readSwarmArtifacts({ origin, executionId: payload.executionId });
+      for (const file of swarmArtifactFiles(artifacts)) {
+        try {
+          await call("save_space_file", {
+            workflow: "swarm",
+            run: payload.executionId,
+            node: file.node,
+            body: file.body,
+            projectId: payload.projectId ?? "",
+            requestId: `${payload.activityKey}:file:${file.node}`,
+          });
+        } catch (error) {
+          await call("add_note", {
+            body: error instanceof Error ? error.message : "A swarm file was not saved.",
+            requestId: `${payload.activityKey}:file-miss:${file.node}`,
+          });
+        }
+      }
+    }
     if (status !== "running" && run.output.trim() && !run.output.includes("still going")) {
       await call("save_space_file", {
         workflow: "swarm",

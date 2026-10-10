@@ -1,6 +1,6 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
-import { leadBrief, runLeadSwarm } from "./lead-swarm";
+import { leadBrief, readSwarmArtifacts, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
 import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
@@ -41,7 +41,7 @@ export type WorkflowTaskPlan = {
 
 const SKILL_PATH = /Follow (\.cursor\/skills\/\S+)/;
 
-/** The work cron is every 15 minutes, so a repeat cannot be shorter than that. */
+/** A repeating workflow stays at least 15 minutes apart. The work wake itself runs every minute. */
 export const MIN_SCHEDULE_MS = 15 * 60 * 1000;
 
 function scheduleOf(input: {
@@ -581,15 +581,33 @@ export async function claimDueWorkflow(input: {
       ],
     );
   }
-  if (input.store && started.status === "completed" && started.output.trim() && !started.output.includes("still going")) {
-    await storeWorkflowOutput({
-      sql: input.sql,
-      store: input.store,
-      organizationId: input.organizationId,
-      projectId: row.project_id,
-      files: [{ workflow: "swarm", run: started.executionId, node: "result", body: started.output }],
-      now: input.now,
+  if (input.store && (finished || started.status === "failed")) {
+    const artifacts = await readSwarmArtifacts({
+      origin: input.origin,
+      executionId: started.executionId,
+      fetchImpl: input.fetchImpl,
     });
+    const files = swarmArtifactFiles(artifacts).map((file) => ({
+      workflow: "swarm",
+      run: started.executionId,
+      node: file.node,
+      body: file.body,
+    }));
+    if (finished) {
+      files.push({ workflow: "swarm", run: started.executionId, node: "result", body: started.output });
+    }
+    if (files.length > 0) {
+      await storeWorkflowOutput({
+        sql: input.sql,
+        store: input.store,
+        organizationId: input.organizationId,
+        projectId: row.project_id,
+        files,
+        now: input.now,
+      });
+    }
+  }
+  if (input.store && finished) {
     const space = await input.sql.get<{ id: string }>(
       `SELECT id FROM workspaces
        WHERE organization_id = ? AND status = 'active'
