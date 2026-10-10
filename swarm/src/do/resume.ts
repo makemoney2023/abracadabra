@@ -14,6 +14,20 @@ export const MODEL_STEP_TIMEOUT_MS = 170_000;
 
 export const STEP_TIMEOUT_MESSAGE = 'The step timed out.';
 
+/**
+ * Durable Objects ignore waitUntil, so a run is only driven while a request or
+ * alarm is live. The alarm re-wakes the object until every run has finished.
+ */
+export const RESUME_ALARM_MS = 30_000;
+
+/** When to wake the object next, or null when no execution is still running. */
+export function nextResumeAlarm(executions: Iterable<{ status: string }>, now: number): number | null {
+  for (const execution of executions) {
+    if (execution.status === 'running') return now + RESUME_ALARM_MS;
+  }
+  return null;
+}
+
 export type ResumeAction = 'done' | 'error' | 'in-flight' | 'retry' | 'give-up';
 
 /** Decide what a persisted node should do when a new isolate wakes the run. */

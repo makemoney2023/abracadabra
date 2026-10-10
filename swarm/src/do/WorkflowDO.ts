@@ -11,7 +11,7 @@ import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
 import { isResearchWorkflow, researchTaskNote, toolsForResearch } from '../mcp/research-tools';
-import { STEP_TIMEOUT_MESSAGE, classifyResume } from './resume';
+import { STEP_TIMEOUT_MESSAGE, classifyResume, nextResumeAlarm } from './resume';
 
 export class WorkflowDO {
   private state: DurableObjectState;
@@ -116,9 +116,9 @@ export class WorkflowDO {
       this.executions.set(executionId, execution);
       await this.state.storage.put(`ex:${executionId}`, execution);
 
-      // Start execution asynchronously and keep the Durable Object alive.
-      // Progress is persisted per node; resumeStuck() re-drives the run if
-      // this isolate is evicted mid-execution.
+      // Progress is persisted per node. The alarm keeps waking the object
+      // until the run finishes, so an evicted isolate does not strand it.
+      await this.scheduleResume();
       this.state.waitUntil(this.executeWorkflow(executionId));
 
       return Response.json({ executionId });
@@ -290,6 +290,24 @@ export class WorkflowDO {
         this.state.waitUntil(this.executeWorkflow(id));
       }
     }
+    this.state.waitUntil(this.scheduleResume());
+  }
+
+  /** Drive every running execution, then wake again while any is unfinished. */
+  async alarm() {
+    const running = [...this.executions.values()].filter((e) => e.status === 'running').map((e) => e.id);
+    try {
+      await Promise.all(running.map((id) => this.executeWorkflow(id)));
+    } finally {
+      await this.scheduleResume();
+    }
+  }
+
+  private async scheduleResume() {
+    const at = nextResumeAlarm(this.executions.values(), Date.now());
+    if (at === null) return;
+    const current = await this.state.storage.getAlarm();
+    if (current === null || current > at) await this.state.storage.setAlarm(at);
   }
 
   private async saveExecution(execution: WorkflowExecution) {

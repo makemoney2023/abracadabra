@@ -4,7 +4,9 @@ import {
   RUNNING_GRACE_MS,
   RUNNING_GIVE_UP_MS,
   STEP_TIMEOUT_MESSAGE,
+  RESUME_ALARM_MS,
   classifyResume,
+  nextResumeAlarm,
   shouldTryNextModel,
   withStepTimeout,
 } from './resume';
@@ -49,5 +51,20 @@ describe('withStepTimeout', () => {
   it('keeps the model limit longer than a step that already succeeded', () => {
     expect(MODEL_STEP_TIMEOUT_MS).toBeGreaterThan(90_000);
     expect(MODEL_STEP_TIMEOUT_MS).toBeLessThan(RUNNING_GIVE_UP_MS);
+  });
+});
+
+describe('nextResumeAlarm', () => {
+  it('wakes the object again while any execution is still running', () => {
+    expect(nextResumeAlarm([{ status: 'completed' }, { status: 'running' }], NOW)).toBe(NOW + RESUME_ALARM_MS);
+  });
+
+  it('sets no alarm once every execution has finished', () => {
+    expect(nextResumeAlarm([{ status: 'completed' }, { status: 'failed' }], NOW)).toBeNull();
+    expect(nextResumeAlarm([], NOW)).toBeNull();
+  });
+
+  it('wakes before a stranded step reaches the give-up limit', () => {
+    expect(RESUME_ALARM_MS).toBeLessThan(RUNNING_GIVE_UP_MS - RUNNING_GRACE_MS);
   });
 });
