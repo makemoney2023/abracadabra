@@ -33,6 +33,55 @@ HQ-started runs may include a server with id `portal`. The worker adds `CF-Acces
 
 ## Changelog
 
+- **2026-10-09** — Portal server `muapi` is linked. The HQ grant stays off.
+  - **Why:** Render nodes need the MuAPI tools on the existing portal. The key stays the portal bearer.
+  - **Touchpoints:** Cloudflare portal `abracadabra` and Access app `MuAPI`. No Worker secret. `parallel-search` stays on the portal.
+  - **Data flow:** `on_behalf` is false. `default_disabled` is true. Thirteen render tools are enabled. Seven admin tools are disabled. The grant was not toggled on.
+  - **API / schema:** none.
+  - **Verification:** Portal GET after the update shows `parallel-search` and `muapi`, hostname `https://api.muapi.ai/mcp`, sync `ready`. A service-token `tools/list` was not run from this session.
+
+- **2026-10-09** — Production serves the MuAPI pack catalog, and the canvas keeps each node's tool allowlist.
+  - **Why:** The catalog was only in the branch bundle. The previous canvas dropped `mcpToolNames` when a template loaded, so a text node could see every portal tool.
+  - **Touchpoints:** `src/index.ts`, `src/ui-asset.ts`, `src/ui-asset.test.ts`. Production worker version `f8aeb845-b439-4194-971b-c57f543ee285`. Canvas files are R2 `ui/` on `agent-swarm-artifacts`. Skill object `skills/community/muapi-render/SKILL.md` is in `handoff-skills`.
+  - **Data flow:** `GET /` and `/assets/<file>` read `ui/` when that object exists, then fall through to the assets binding. Template JSON still carries `mcpToolNames`.
+  - **API / schema:** none. No new Worker secret. Portal server `muapi` is still not linked.
+  - **Verification:** `npm test` in `swarm/` — 49 passed. `npx tsc --noEmit` in `swarm/` exited 0. Live `GET /api/template?id=website-hero` returns three nodes with `mcpToolNames: []`. Live `/assets/index-DIC7CQSj.js` contains `mcpToolNames`.
+
+- **2026-10-09** — The canvas includes the full MuAPI pack catalog.
+  - **Why:** Social, brand, product, storyboard, UGC, spokesperson, and highlight clips use the same roles as the website hero and the ad.
+  - **Touchpoints:** `src/templates/media-templates.ts`, `src/templates/media-templates.test.ts`, `.cursor/skills/community/muapi-render/SKILL.md`.
+  - **Data flow:** Each new pack is a text workflow with no tools and a render workflow whose nodes use `RENDER_ROLES`. Unpicked storyboard frames and UGC lipsync without audio return `skipped`.
+  - **API / schema:** none. No new Worker secret.
+  - **Verification:** `npm test` in `swarm/` — 45 passed. `npx tsc --noEmit` in `swarm/` exited 0.
+
+- **2026-10-09** — The MuAPI plan now includes the full pack catalog.
+  - **Why:** Social, brand, product, storyboard, UGC, spokesperson, and highlight clips should be templates on the roles that already exist.
+  - **Touchpoints:** `docs/superpowers/plans/2026-10-09-muapi-swarm.md` Task 8, `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md` pack catalog, `README.md`.
+  - **Data flow:** No runtime change. Those templates are not in the worker yet.
+  - **API / schema:** none.
+  - **Verification:** Docs only. No tests run.
+
+- **2026-10-09** — Render nodes can call a shared MuAPI role, and the canvas ships website-hero and ad workflows.
+  - **Why:** Stills and motion should be one portal server. A website hero is a still, then an animation of that still. An ad uses those same roles.
+  - **Touchpoints:** `src/mcp/tool-allow.ts`, `src/mcp/render-roles.ts`, `src/templates/media-templates.ts`, `src/do/WorkflowDO.ts`, `frontend/src/lib/workflow-payload.mjs`, `.cursor/skills/community/muapi-render/SKILL.md`.
+  - **Data flow:** A node with `mcpToolNames: []` gets no tools. A non-empty list is the only tools passed to the model, and a missing name fails the node before the model runs. Render nodes get 8 tool rounds. HQ still copies the template JSON, so the allowlist survives a staff run.
+  - **API / schema:** Template nodes may include `mcpToolNames`. No Worker secret for the MuAPI key.
+  - **Verification:** `npm test` in `swarm/` — 43 passed. `npx tsc --noEmit` in `swarm/` exited 0. `node --test frontend/src/lib/workflow-payload.test.mjs` — 2 passed. `npm run publish:skills` was not run: `handoff/.env.local` has no R2 credentials. The portal server is not linked.
+
+- **2026-10-09** — The MuAPI spec is a general render kit. Ads are one workflow. A website hero that is then animated is another. Both use the same portal server and the same node roles.
+  - **Why:** A later job should add a template, not a new MCP server.
+  - **Touchpoints:** `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `README.md`, `docs/hq-agent-spec.md`.
+  - **Data flow:** No runtime change. The server `muapi` is not linked yet.
+  - **API / schema:** none yet.
+  - **Verification:** Docs only. No tests run.
+
+- **2026-10-09** — Spec and plan for MuAPI stills, video, and ads through the Cloudflare MCP portal.
+  - **Why:** The swarm writes ad strategy. MuAPI renders it. The API key belongs on the portal, with an allowlist, so HQ `/mcp` can turn the server on and off.
+  - **Touchpoints:** `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/hq-agent-spec.md` section 2.4, `README.md`.
+  - **Data flow:** No runtime change. The server `muapi` is not linked yet. Strategy nodes will take no tools. Each render node will submit once and poll.
+  - **API / schema:** none yet. The plan adds `mcpToolNames` on a swarm node when it is built.
+  - **Verification:** Docs only. No tests run.
+
 - **2026-10-09** — The canvas opens a stored swarm execution from `?executionId=`.
   - **Why:** HQ links need the worker canvas to show the run that was saved, including a live socket when that run is still going.
   - **Touchpoints:** `frontend/src/lib/execution-link.mjs`, `frontend/src/App.tsx`.

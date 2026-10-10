@@ -1,3 +1,5 @@
+import { MEDIA_TEMPLATES } from './templates/media-templates';
+
 export type AgentType = 'researcher' | 'writer' | 'editor' | 'publisher' | 'critic' | 'summarizer';
 
 export interface AgentNode {
@@ -10,6 +12,11 @@ export interface AgentNode {
   mcpServerIds?: string[];
   /** Servers attached directly to this node (independent of workflow servers). */
   mcpServers?: McpServerConfig[];
+  /**
+   * Tool names this node may call. Omitted means every discovered tool.
+   * An empty list means no tools. A non-empty list is also the required set.
+   */
+  mcpToolNames?: readonly string[];
 }
 
 export interface McpServerConfig {
@@ -313,4 +320,5 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
       { id: 'schema-e1', source: 'schema-r', target: 'schema-w' },
     ],
   },
+  ...MEDIA_TEMPLATES,
 ];

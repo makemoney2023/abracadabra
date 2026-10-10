@@ -10,6 +10,7 @@ const ALL_TEMPLATES: WorkflowTemplate[] = [...WORKFLOW_TEMPLATES, ...(packTempla
 import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
+import { assertToolsAllowed, toolsForNode } from '../mcp/tool-allow';
 
 export class WorkflowDO {
   private state: DurableObjectState;
@@ -405,7 +406,9 @@ export class WorkflowDO {
 
               // Resolve this node's MCP servers (node selection, else all workflow servers).
               const servers = this.resolveNodeServers(workflow, node);
-              const mcpTools = await this.collectNodeTools(servers);
+              const discovered = await this.collectNodeTools(servers);
+              assertToolsAllowed(discovered, node.mcpToolNames);
+              const mcpTools = toolsForNode(discovered, node.mcpToolNames);
               const skill = await loadSkill(this.env.SKILLS, node.instructions);
 
               const result = await runAgent(
@@ -416,6 +419,7 @@ export class WorkflowDO {
                   name: node.name,
                   skill,
                   mcpTools,
+                  maxToolRounds: node.mcpToolNames && node.mcpToolNames.length > 0 ? 8 : undefined,
                   executeTool: async (serverId, tool, args) => {
                     const server = servers.find((s) => s.id === serverId);
                     if (!server) throw new Error(`Unknown MCP server: ${serverId}`);

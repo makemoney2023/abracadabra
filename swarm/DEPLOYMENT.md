@@ -34,7 +34,7 @@ npm run deploy
 |---|---|---|
 | `agent-swarm-orchestrator` | Worker | Main application server |
 | `WorkflowDO` | Durable Object | Workflow state, execution engine, WebSocket coordinator |
-| `agent-swarm-artifacts` | R2 Bucket | Output artifacts storage |
+| `agent-swarm-artifacts` | R2 Bucket | Output artifacts storage. A canvas build at `ui/` is served before the assets binding |
 | `handoff-skills` (`SKILLS`) | R2 Bucket (shared with Handoff) | Full skill bodies loaded by skill-pack nodes |
 | `AI` | Workers AI Binding | Llama 3.1 8B model access |
 
@@ -79,6 +79,8 @@ Workers AI and R2 are bound via `wrangler.toml`. Secrets:
 | `SWARM_RUN_SECRET` | Bearer HQ sends before a run may call the MCP portal. Without it, a `portal` server is dropped. |
 | `CF_ACCESS_CLIENT_ID` | Access service token id, added only on an authorized portal call. |
 | `CF_ACCESS_CLIENT_SECRET` | Access service token secret, added only on an authorized portal call. |
+
+The MuAPI API key is not a secret on this worker. It is the bearer credential on portal server `muapi`. See [the MuAPI swarm spec](../docs/superpowers/specs/2026-10-09-muapi-swarm-design.md).
 
 ## Wipe All Run Data
 

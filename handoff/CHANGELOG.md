@@ -20,6 +20,69 @@
 
 ## 2026-10-09
 
+- **What changed** — Portal server `muapi` is linked on `mcp.abra-ca-dabra.app` beside `parallel-search`. The HQ grant is left off.
+- **Why** — Render nodes call MuAPI through the portal. The API key is the portal bearer, not a Worker secret.
+- **Code touchpoints** — none. Cloudflare MCP server `muapi`, portal `abracadabra`, Access app `MuAPI`.
+- **Data-flow impact** — Require user auth is off. The render allowlist is on. Admin, top-up, key, upload, face-swap, and ghibli tools are disabled. No `connector_grants` row.
+- **API / schema impact** — none.
+- **Verification** — Portal GET shows both servers, hostname `https://api.muapi.ai/mcp`, authentication `connected`. The key is not in the URL.
+
+## 2026-10-09
+
+- **What changed** — Production swarm serves the MuAPI pack catalog. The render skill is in the published library. The canvas build that keeps `mcpToolNames` is served from R2.
+- **Why** — The catalog and the skill had to be reachable for a render run. Portal server `muapi` still needs a sandbox bearer.
+- **Code touchpoints** — `swarm/src/index.ts`, `swarm/src/ui-asset.ts`, `swarm/src/ui-asset.test.ts`. Buckets `agent-swarm-artifacts` (`ui/`) and `handoff-skills` (`skills/community/muapi-render/SKILL.md`, `skills/index.json`).
+- **Data-flow impact** — `GET /api/template?id=website-hero` returns the three text nodes. The canvas script copies `mcpToolNames` on template load and save. The portal mapping is unchanged (`parallel-search` only).
+- **API / schema impact** — none. No Worker secret for the MuAPI key.
+- **Verification** — `npm test` in `swarm/`: 49 passed. `npx tsc --noEmit` in `swarm/` exited 0. Live template and canvas script checks on `https://agent-swarm-orchestrator.abracadabra-ai.workers.dev`.
+
+## 2026-10-09
+
+- **What changed** — The swarm canvas now includes the rest of the MuAPI pack catalog: social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips.
+- **Why** — Those jobs share the render roles already used by the website hero and the ad.
+- **Code touchpoints** — `swarm/src/templates/media-templates.ts`, `swarm/src/templates/media-templates.test.ts`, `.cursor/skills/community/muapi-render/SKILL.md`
+- **Data-flow impact** — Text nodes still get no tools. Render nodes use `RENDER_ROLES`. An unpicked storyboard frame and a UGC lipsync with no audio return `skipped` and do not call MuAPI.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `swarm/`: 45 passed. `npx tsc --noEmit` in `swarm/` exited 0.
+
+## 2026-10-09
+
+- **What changed** — The MuAPI plan's Task 8 is the rest of the pack catalog: social, blog header, logo sting, brand kit, cutout, product angles, launch set, Amazon listing, storyboard, UGC, spokesperson, and highlight clips.
+- **Why** — Those jobs use the roles already specified. They do not need another portal server.
+- **Code touchpoints** — `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `README.md`, `swarm/README.md`. No runtime code.
+- **Data-flow impact** — none. The new templates are not in the worker yet.
+- **API / schema impact** — none. Requirement MUAPI-025.
+- **Verification** — Docs review against the catalog table. No test suite run.
+
+## 2026-10-09
+
+- **What changed** — The swarm can render a website hero and an ad through shared MuAPI roles. A node allowlist blocks strategy steps from calling those tools.
+- **Why** — The spec is implemented in the worker. The portal link and the R2 skill publish still wait on operator credentials.
+- **Code touchpoints** — `swarm/src/mcp/tool-allow.ts`, `swarm/src/mcp/render-roles.ts`, `swarm/src/templates/media-templates.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/frontend/src/lib/workflow-payload.mjs`, `.cursor/skills/community/muapi-render/SKILL.md`
+- **Data-flow impact** — Canvas save and HQ template copy keep `mcpToolNames`. A render node fails with `Missing MCP tool:` when the portal has not enabled that tool.
+- **API / schema impact** — none. No new Worker secret.
+- **Verification** — `npm test` in `swarm/` (43 passed). `npx tsc --noEmit` in `swarm/` exited 0. `node --test frontend/src/lib/workflow-payload.test.mjs` (2 passed). Skill publish did not run.
+
+## 2026-10-09
+
+- **What changed** — The MuAPI spec now treats the portal server as a general render kit. A website hero (still, then animate) and an ad share the same roles. A later job adds a template.
+- **Why** — Ads were the first example. The same key, allowlist, and node roles have to serve any brief.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `README.md`, `docs/hq-agent-spec.md`, `docs/superpowers/specs/2026-10-09-mcp-connectors-design.md`, `swarm/README.md`. No runtime code.
+- **Data-flow impact** — none. Server `muapi` is not linked.
+- **API / schema impact** — none.
+- **Verification** — Docs review against the role table. No test suite run.
+
+## 2026-10-09
+
+- **What changed** — A spec and a plan describe MuAPI as a remote MCP server on the agency portal, and the swarm templates that render stills, video, and ads through it.
+- **Why** — Ad strategy already lives in swarm skills. Pixels need a render API whose key stays on the portal, behind the `/mcp` switch.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-09-muapi-swarm-design.md`, `docs/superpowers/plans/2026-10-09-muapi-swarm.md`, `docs/hq-agent-spec.md`, `README.md`, `swarm/README.md`, `swarm/DEPLOYMENT.md`. No runtime code.
+- **Data-flow impact** — none. Server `muapi` is not linked. HQ still does not rewrite the portal's server list.
+- **API / schema impact** — none.
+- **Verification** — Docs review against the portal link rules in the MCP connectors spec and against `https://muapi.ai/docs/mcp`. No test suite run.
+
+## 2026-10-09
+
 - **What changed** — Creating a project attaches the client's single loose space and single loose repo. Saving requirements stores one swarm pack on each open card that has none. Run swarm moves that card to Run. A finished swarm files an unpublished document on the project and marks the card done.
 - **Why** — A project row was on the client while the space and repo stayed unassigned, and Describe cards from requirements had no pack, so Run never scheduled a swarm.
 - **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/lib/task-packs.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/app/work/board.tsx`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/src/agent/worker.ts`
