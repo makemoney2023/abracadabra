@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createWorkersAI } from "workers-ai-provider";
 import { chatContextLine, type ChatPageContext } from "../lib/hq-chat-context";
 import { HQ_CHAT_PLAYBOOK } from "../lib/hq-chat-playbook";
+import { closeDanglingStreamParts, rechunkSseResponse } from "../lib/hq-chat-stream";
 import { hqChatConnectDecision, verifyHqChatToken } from "../lib/hq-chat-token";
 import { GATED_HQ_TOOLS, HQ_TOOL_HELP, READ_HQ_TOOLS } from "../lib/hq-tool-names";
 import { readPublishedSkill, searchPublishedSkills } from "../lib/skill-library";
@@ -160,11 +161,15 @@ export class HqChat extends AIChatAgent<ChatBindings> {
     await super.onConnect(connection as never, ctx);
   }
 
-  async onChatMessage(_onFinish: unknown, options?: { body?: Record<string, unknown> }): Promise<Response | undefined> {
+  async onChatMessage(
+    _onFinish: unknown,
+    options?: { body?: Record<string, unknown>; continuation?: boolean },
+  ): Promise<Response | undefined> {
     if (!this.env.AI) return new Response("Chat is not configured.", { status: 200 });
     const token = typeof options?.body?.token === "string" ? options.body.token : "";
     const signed = verifyHqChatToken(token, this.env.HQ_CHAT_SECRET ?? "", Date.now());
     if (!signed || signed.userId !== this.name) return new Response("Sign in again.", { status: 401 });
+    if (options?.continuation) closeDanglingStreamParts(this.messages);
     const context = options?.body?.context;
     const page = context && typeof context === "object" ? chatContextLine(context as ChatPageContext) : "";
     const workersai = createWorkersAI({ binding: this.env.AI });
@@ -175,6 +180,6 @@ export class HqChat extends AIChatAgent<ChatBindings> {
       tools: { ...chatTools(this.env.HQ_ORIGIN ?? "", token), ...skillTools(this.env.SKILLS) },
       stopWhen: stepCountIs(8),
     });
-    return result.toUIMessageStreamResponse();
+    return rechunkSseResponse(result.toUIMessageStreamResponse());
   }
 }

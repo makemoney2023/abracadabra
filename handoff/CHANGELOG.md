@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-10
+
+- **What changed** — HQ chat keeps a tool-approval continuation from sending a text delta before its text part has started, and it no longer drops a text-start line that arrives split across two reads.
+- **Why** — The chat showed `Received text-delta for missing text part` while Publish and Instruct were still on screen, so the turn stopped before those cards could finish.
+- **Code touchpoints** — `handoff/src/lib/hq-chat-stream.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — A continuation closes any still-streaming text or reasoning part on the assistant message before the next model stream starts. The UI message stream is re-emitted as whole SSE lines.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `handoff/`: 812 tests passed, and the agent worker suite passed 7. `npx tsc --noEmit -p tsconfig.agent.json` and eslint on the changed files exited 0.
+
 ## 2026-10-09
 
 - **What changed** — Creating a project attaches the client's single loose space and single loose repo. Saving requirements stores one swarm pack on each open card that has none. Run swarm moves that card to Run. A finished swarm files an unpublished document on the project and marks the card done.
