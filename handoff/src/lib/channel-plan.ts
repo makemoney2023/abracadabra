@@ -107,14 +107,18 @@ export function rulesFromBrief(markdown: string): string[] {
     .filter(Boolean);
 }
 
+const PROJECT_DESCRIPTION_MAX = 4_000;
+
 /**
- * Writes each action as an open task on the client, and appends the brief sentence
- * to the current brief. A lead with no brief keeps the sentence on the timeline.
+ * Writes each action as an open task on the client, and stores the brief sentence
+ * on the project. A client with a space gets a brief deliverable. A lead with no
+ * space keeps the sentence on the timeline, and a known project still gets the text.
  */
 export async function applyChannelPlan(
   sql: Sql,
   input: {
     organizationId: string;
+    projectId?: string | null;
     actions: Array<Pick<ChannelAction, "title"> & Partial<Omit<ChannelAction, "title">>>;
     brief: string | null;
     rules?: string | null;
@@ -150,8 +154,8 @@ export async function applyChannelPlan(
         `INSERT INTO tasks (
            id, project_id, milestone_id, organization_id, title, status, assignee_user_id,
            due_at, created_at, updated_at, done_at, created_by_kind, skills_json
-         ) VALUES (?, NULL, NULL, ?, ?, 'todo', ?, ?, ?, ?, NULL, ?, ?)`,
-        [id, input.organizationId, action.title, assignee, dueAt, now, now, who.createdBy, skills],
+         ) VALUES (?, ?, NULL, ?, ?, 'todo', ?, ?, ?, ?, NULL, ?, ?)`,
+        [id, input.projectId ?? null, input.organizationId, action.title, assignee, dueAt, now, now, who.createdBy, skills],
       );
       await sql.run(
         `INSERT INTO activities (
@@ -169,7 +173,10 @@ export async function applyChannelPlan(
       );
       taskIds.push(id);
     }
-    const briefUpdated = plan.brief || plan.rules ? await writeBrief(sql, input.organizationId, plan.brief, plan.rules, now, who) : false;
+    const briefUpdated =
+      plan.brief || plan.rules
+        ? await writeBrief(sql, input.organizationId, input.projectId ?? null, plan.brief, plan.rules, now, who)
+        : false;
     await sql.exec("COMMIT");
     return { taskIds, briefUpdated, unassigned };
   } catch (error) {
@@ -187,20 +194,141 @@ function matchStaff(people: { user_id: string; email: string }[], name: string |
   return local.length === 1 ? local[0]!.user_id : null;
 }
 
+async function workspaceId(sql: Sql, organizationId: string, projectId: string | null): Promise<string | null> {
+  const row = await sql.get<{ id: string }>(
+    `SELECT id FROM workspaces
+     WHERE organization_id = ? AND status != 'purged'
+     ORDER BY CASE WHEN project_id = ? THEN 0 ELSE 1 END, slug
+     LIMIT 1`,
+    [organizationId, projectId],
+  );
+  return row?.id ?? null;
+}
+
+async function fillEmptyDescription(sql: Sql, projectId: string | null, body: string, now: number): Promise<void> {
+  if (!projectId) return;
+  const text = body.trim().slice(0, PROJECT_DESCRIPTION_MAX);
+  if (!text) return;
+  await sql.run(
+    `UPDATE projects SET description = ?, updated_at = ?
+     WHERE id = ? AND (description IS NULL OR trim(description) = '')`,
+    [text, now, projectId],
+  );
+}
+
+/**
+ * Stores a run's own brief on a project whose requirements are still empty.
+ * Scraped pages are not part of this text. A missing space still leaves the description.
+ */
+export async function rememberProjectBrief(
+  sql: Sql,
+  input: {
+    organizationId: string;
+    projectId: string;
+    body: string;
+    now: number;
+    actorKind?: "agent" | "staff";
+    actorId?: string;
+  },
+): Promise<boolean> {
+  const body = input.body.trim().slice(0, PROJECT_DESCRIPTION_MAX);
+  if (!body) return false;
+  const project = await sql.get<{ id: string; description: string | null }>(
+    "SELECT id, description FROM projects WHERE id = ? AND organization_id = ?",
+    [input.projectId, input.organizationId],
+  );
+  if (!project || project.description?.trim()) return false;
+  await fillEmptyDescription(sql, project.id, body, input.now);
+  const existing = await sql.get<{ id: string }>(
+    `SELECT id FROM deliverables
+     WHERE organization_id = ? AND kind = 'brief' AND status != 'archived' AND project_id = ?
+     LIMIT 1`,
+    [input.organizationId, project.id],
+  );
+  if (existing) return true;
+  const space = await workspaceId(sql, input.organizationId, project.id);
+  if (!space) return true;
+  try {
+    await insertBriefDeliverable(sql, {
+      organizationId: input.organizationId,
+      projectId: project.id,
+      workspaceId: space,
+      body,
+      now: input.now,
+      who: { actorKind: input.actorKind ?? "agent", actorId: input.actorId ?? "swarm", via: "swarm" },
+    });
+  } catch {
+    return true;
+  }
+  return true;
+}
+
+async function insertBriefDeliverable(
+  sql: Sql,
+  input: {
+    organizationId: string;
+    projectId: string | null;
+    workspaceId: string;
+    body: string;
+    now: number;
+    who: { actorKind: "agent" | "staff"; actorId: string; via: string };
+  },
+): Promise<string> {
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO deliverables (
+       id, organization_id, project_id, workspace_id, title, kind, status, version,
+       source_repo_id, source_ref, published_at, actor_kind, actor_id, created_at, updated_at, published_version
+     ) VALUES (?, ?, ?, ?, 'Brief', 'brief', 'draft', 1, NULL, NULL, NULL, ?, ?, ?, ?, NULL)`,
+    [id, input.organizationId, input.projectId, input.workspaceId, input.who.actorKind, input.who.actorId, input.now, input.now],
+  );
+  await sql.run(
+    `INSERT INTO deliverable_items (
+       id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+     ) VALUES (?, ?, 1, NULL, 'page', NULL, 'brief.md', ?, '[]', NULL, 'pending', 0)`,
+    [crypto.randomUUID(), id, input.body],
+  );
+  await sql.run(
+    `INSERT INTO activities (
+       id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
+     ) VALUES (?, ?, 'agent.brief_updated', ?, ?, ?, ?, ?)`,
+    [
+      crypto.randomUUID(),
+      input.organizationId,
+      input.who.actorKind,
+      input.who.actorId,
+      input.body.slice(0, 500),
+      JSON.stringify({ deliverableId: id, version: 1, via: input.who.via }),
+      input.now,
+    ],
+  );
+  return id;
+}
+
 async function writeBrief(
   sql: Sql,
   organizationId: string,
+  projectId: string | null,
   note: string | null,
   rules: string | null,
   now: number,
   who: { actorKind: "agent" | "staff"; actorId: string; via: string },
 ): Promise<boolean> {
-  const existing = await sql.get<{ id: string; version: number; title: string }>(
-    `SELECT id, version, title FROM deliverables
-     WHERE organization_id = ? AND kind = 'brief' AND status != 'archived'
-     ORDER BY updated_at DESC LIMIT 1`,
-    [organizationId],
-  );
+  const existing = projectId
+    ? await sql.get<{ id: string; version: number; project_id: string | null }>(
+        `SELECT id, version, project_id FROM deliverables
+         WHERE organization_id = ? AND kind = 'brief' AND status != 'archived'
+           AND (project_id = ? OR project_id IS NULL)
+         ORDER BY CASE WHEN project_id = ? THEN 0 WHEN project_id IS NULL THEN 1 ELSE 2 END, updated_at DESC
+         LIMIT 1`,
+        [organizationId, projectId, projectId],
+      )
+    : await sql.get<{ id: string; version: number; project_id: string | null }>(
+        `SELECT id, version, project_id FROM deliverables
+         WHERE organization_id = ? AND kind = 'brief' AND status != 'archived'
+         ORDER BY updated_at DESC LIMIT 1`,
+        [organizationId],
+      );
   if (existing) {
     const item = await sql.get<{ copy_text: string | null }>(
       `SELECT copy_text FROM deliverable_items
@@ -210,11 +338,10 @@ async function writeBrief(
     );
     const body = mergeBrief(item?.copy_text ?? "", note, rules);
     const version = existing.version + 1;
-    await sql.run("UPDATE deliverables SET version = ?, status = 'draft', updated_at = ? WHERE id = ?", [
-      version,
-      now,
-      existing.id,
-    ]);
+    await sql.run(
+      "UPDATE deliverables SET version = ?, status = 'draft', project_id = COALESCE(project_id, ?), updated_at = ? WHERE id = ?",
+      [version, projectId, now, existing.id],
+    );
     await sql.run(
       `INSERT INTO deliverable_items (
          id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
@@ -235,6 +362,14 @@ async function writeBrief(
         now,
       ],
     );
+    await fillEmptyDescription(sql, projectId, body, now);
+    return true;
+  }
+  const body = mergeBrief("", note, rules);
+  await fillEmptyDescription(sql, projectId, body, now);
+  const space = await workspaceId(sql, organizationId, projectId);
+  if (space) {
+    await insertBriefDeliverable(sql, { organizationId, projectId, workspaceId: space, body, now, who });
     return true;
   }
   await sql.run(

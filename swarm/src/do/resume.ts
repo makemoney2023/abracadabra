@@ -6,6 +6,9 @@ export const RUNNING_GRACE_MS = 120_000;
 /** A running step older than this is stopped even on its first attempt. */
 export const RUNNING_GIVE_UP_MS = 180_000;
 
+/** One node, including its tool rounds, stops here so the next node can run. */
+export const NODE_BUDGET_MS = RUNNING_GIVE_UP_MS;
+
 /**
  * Workers AI has no request timeout. A paper step has finished in about 91s,
  * so the cap sits above that and below the give-up backstop.

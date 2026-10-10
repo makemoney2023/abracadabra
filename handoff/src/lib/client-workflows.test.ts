@@ -525,6 +525,76 @@ describe("client workflows", () => {
     expect(body.mcpServers?.map((server) => server.id)).toEqual(["swarm-demo"]);
   });
 
+  it("stores the run brief on an empty project and saves the research workflow name", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+      ) VALUES ('space-1', 'renew', 'Renew', 'Renew', NULL, 'Abra', 'standard', 1000, 30, 0, 'active', ?, 'org-1', 'proj-1')`,
+      [NOW],
+    );
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", projectId: "proj-1", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const created = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "research: audience, competitors, content calendar strategy",
+      templateId: "pack-marketing",
+      projectId: "proj-1",
+      dueAt: NOW,
+      now: NOW,
+    });
+    if (!created.ok) throw new Error("workflow");
+    let saved = "";
+    let started = "";
+    const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
+      const href = String(url);
+      if (href.includes("/api/template")) {
+        return Response.json({
+          id: "pack-marketing",
+          name: "Marketing pack",
+          nodes: [{ id: "mkt-r", type: "researcher", name: "parallel-search", instructions: "Search.", position: { x: 0, y: 0 } }],
+          edges: [],
+        });
+      }
+      if (href.endsWith("/api/save")) {
+        saved = init?.body ? String(init.body) : "";
+        return Response.json({ success: true });
+      }
+      if (href.endsWith("/api/execute")) {
+        started = init?.body ? String(init.body) : "";
+        return Response.json({ executionId: "run-brief" });
+      }
+      return Response.json({ status: "running", results: {} });
+    };
+    const instruction = "For Renew Implants (renewimplants.ca), research the audience, competitors, and social media content strategy.";
+    const result = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW,
+      workflowId: created.workflow.id,
+      instruction,
+      fetchImpl: fetchImpl as typeof fetch,
+      wait: async () => {},
+    });
+    expect(result).toMatchObject({ ok: true, none: false, status: "running" });
+    const description = await sql.get<{ description: string }>("SELECT description FROM projects WHERE id = 'proj-1'");
+    expect(description?.description).toBe(instruction);
+    expect(description?.description).not.toContain("<html");
+    const brief = await sql.get<{ project_id: string; copy_text: string }>(
+      `SELECT d.project_id, i.copy_text FROM deliverables d
+       JOIN deliverable_items i ON i.deliverable_id = d.id AND i.version = d.version
+       WHERE d.kind = 'brief'`,
+    );
+    expect(brief).toEqual({ project_id: "proj-1", copy_text: instruction });
+    expect(JSON.parse(saved).name).toBe("research: audience, competitors, content calendar strategy");
+    const sent = JSON.parse(started) as { input?: string };
+    expect(sent.input).toContain(instruction);
+    expect(sent.input).not.toContain("<html");
+  });
+
   it("runs the oldest due workflow and moves a repeating schedule forward", async () => {
     const sql = await database();
     const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Care", now: NOW });
@@ -1165,6 +1235,12 @@ describe("client workflows", () => {
     });
     if (!research.ok || !copy.ok) throw new Error("workflow");
     await sql.run(
+      `INSERT INTO tasks (id, project_id, organization_id, title, status, stage, created_at, updated_at)
+       VALUES ('task-research', 'proj-1', 'org-1', 'Research', 'todo', 'run', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run("UPDATE client_workflows SET task_id = 'task-research' WHERE id = ?", [research.workflow.id]);
+    await sql.run(
       `INSERT INTO swarm_runs (
         id, organization_id, project_id, workflow_id, swarm_workflow_id, execution_id, template_id, name, status, trigger, started_at
       ) VALUES ('swarm-1', 'org-1', 'proj-1', ?, 'client-research', 'exec-research', 'pack-research', 'Research', 'running', 'due', ?)`,
@@ -1239,6 +1315,8 @@ describe("client workflows", () => {
       "agent/swarm/exec-research/market-research.md",
       "agent/swarm/exec-research/result.md",
     ]);
+    const card = await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = 'task-research'");
+    expect(card?.status).toBe("done");
   });
 });
 

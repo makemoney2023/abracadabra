@@ -23,6 +23,8 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("Do not say you cannot execute the swarm from chat");
     expect(HQ_CHAT_PLAYBOOK).toContain("Research comes first");
     expect(HQ_CHAT_PLAYBOOK).toContain("Parallel Search");
+    expect(HQ_CHAT_PLAYBOOK).toContain("create_project with description");
+    expect(HQ_CHAT_PLAYBOOK).toContain("file_actions takes that same brief as body and the projectId");
     expect(HQ_CHAT_PLAYBOOK).toContain("one at a time");
     expect(HQ_CHAT_PLAYBOOK).toContain("delete_project");
     expect(HQ_CHAT_PLAYBOOK).toContain("delete_task");

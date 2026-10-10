@@ -121,4 +121,62 @@ describe("applyChannelPlan", () => {
     );
     expect(note?.body).toBe("They are ready to start.");
   });
+
+  it("stores the first brief on the project when the client has a space", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workspaces (
+         id, slug, name, display_name, sender_name, policy_profile, quota_bytes, retention_days,
+         request_digest, status, opened_at, organization_id
+       ) VALUES (
+         'ws-1', 'northwind', 'Northwind', 'Northwind', 'Studio', 'standard', 1000, 30, 0, 'active', ?, 'org-1'
+       )`,
+      [NOW],
+    );
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, created_at, updated_at)
+       VALUES ('proj-1', 'org-1', 'Social', 'planned', ?, ?)`,
+      [NOW, NOW],
+    );
+    const saved = await applyChannelPlan(
+      sql,
+      {
+        organizationId: "org-1",
+        projectId: "proj-1",
+        actions: [{ title: "Research the audience" }],
+        brief: "For Renew Implants, research the audience and competitors.",
+      },
+      NOW,
+    );
+    expect(saved.briefUpdated).toBe(true);
+    const task = await sql.get<{ project_id: string }>("SELECT project_id FROM tasks WHERE title = 'Research the audience'");
+    expect(task?.project_id).toBe("proj-1");
+    const description = await sql.get<{ description: string }>("SELECT description FROM projects WHERE id = 'proj-1'");
+    expect(description?.description).toBe("For Renew Implants, research the audience and competitors.");
+    const brief = await getBrief(sql, "org-1", "brief", "proj-1");
+    expect(brief?.body).toBe("For Renew Implants, research the audience and competitors.");
+  });
+
+  it("writes the requirements when a project is known and the lead has no space", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, created_at, updated_at)
+       VALUES ('proj-1', 'org-1', 'Social', 'planned', ?, ?)`,
+      [NOW, NOW],
+    );
+    const saved = await applyChannelPlan(
+      sql,
+      {
+        organizationId: "org-1",
+        projectId: "proj-1",
+        actions: [{ title: "Research the audience" }],
+        brief: "They are ready to start.",
+      },
+      NOW,
+    );
+    expect(saved.briefUpdated).toBe(false);
+    const description = await sql.get<{ description: string }>("SELECT description FROM projects WHERE id = 'proj-1'");
+    expect(description?.description).toBe("They are ready to start.");
+    expect(await sql.get("SELECT id FROM deliverables WHERE kind = 'brief'")).toBeUndefined();
+  });
 });

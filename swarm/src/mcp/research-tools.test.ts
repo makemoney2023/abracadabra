@@ -51,6 +51,13 @@ describe('isResearchWorkflow', () => {
     expect(isResearchWorkflow({ name: 'Buying psychology research', nodes: [{ name: 'academic-paper' }] })).toBe(true);
     expect(isResearchWorkflow({ name: 'Academic Research Skills', description: 'Write and review a paper' })).toBe(true);
     expect(isResearchWorkflow({ name: 'Opening', nodes: [{ name: 'deep-research' }] })).toBe(true);
+    expect(isResearchWorkflow({ name: 'research: audience, competitors, content calendar strategy' })).toBe(true);
+  });
+
+  it('drops image generation and portal admin tools when Parallel is listed', () => {
+    const image: McpToolDef = { ...other, name: 'muapi_muapi_image_generate', description: 'Generate an image' };
+    const toggle: McpToolDef = { ...other, name: 'portal_toggle_single_server', description: 'Turn one server on' };
+    expect(toolsForResearch([image, toggle, parallel])).toEqual([parallel]);
   });
 
   it('does not treat a calendar pack as research because an instruction mentions the word', () => {

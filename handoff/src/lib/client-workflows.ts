@@ -1,5 +1,6 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
+import { rememberProjectBrief } from "./channel-plan";
 import { leadBrief, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
 import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
@@ -282,6 +283,7 @@ export async function runClientWorkflow(input: {
     const result = await runLeadSwarm({
       origin: input.origin,
       workflowId: `client-${workflow.id}`,
+      workflowName: workflow.name,
       brief: capWithSpace(brief, spaceContext),
       templateId: workflow.template_id,
       mcpServers,
@@ -521,6 +523,19 @@ export async function claimDueWorkflow(input: {
   ]
     .filter((line) => line.trim().length > 0)
     .join("\n");
+  const statedBrief = [instruction, taskBrief].filter((line) => line.trim().length > 0).join("\n\n");
+  if (statedBrief && row.project_id) {
+    try {
+      await rememberProjectBrief(input.sql, {
+        organizationId: input.organizationId,
+        projectId: row.project_id,
+        body: statedBrief,
+        now: input.now,
+      });
+    } catch {
+      // A missing space must not stop the swarm. The description write is already inside the helper.
+    }
+  }
   const brief = fitSwarmBrief(priorChainText(chain, row.id), ownBrief);
   if (row.task_id) {
     await input.sql.run("UPDATE tasks SET stage = 'run', updated_at = ? WHERE id = ? AND status != 'done'", [
@@ -885,6 +900,13 @@ export async function settleRunningSwarms(input: {
       );
     }
     if (finished && row.workflow_id) {
+      const linked = await input.sql.get<{ task_id: string | null }>(
+        "SELECT task_id FROM client_workflows WHERE id = ?",
+        [row.workflow_id],
+      );
+      if (linked?.task_id) {
+        await markTaskDone(input.sql, { taskId: linked.task_id, now: input.now, actor: { kind: "agent", id: "swarm" } });
+      }
       await advanceWorkflowChain({
         sql: input.sql,
         organizationId: row.organization_id,

@@ -90,6 +90,29 @@ describe("lead swarm", () => {
     expect(saved.nodes?.map((node) => node.mcpServerIds)).toEqual([["swarm-demo"], ["swarm-demo"]]);
   });
 
+  it("saves the client workflow name so a research run is not the pack name", async () => {
+    const calls: { url: string; body?: string }[] = [];
+    const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
+      const href = String(url);
+      calls.push({ url: href, body: init?.body ? String(init.body) : undefined });
+      if (href.includes("/api/template")) return Response.json(template);
+      if (href.endsWith("/api/save")) return Response.json({ success: true });
+      if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-name" });
+      return Response.json({ status: "completed", results: { "mkt-r": { status: "done", output: "Audience." } } });
+    };
+    await runLeadSwarm({
+      origin: "https://swarm.example",
+      workflowId: "client-research",
+      workflowName: "research: audience, competitors, content calendar strategy",
+      brief: "For Renew Implants, research the audience.",
+      templateId: "pack-marketing",
+      fetchImpl: fetchImpl as typeof fetch,
+      wait: async () => {},
+    });
+    const saved = JSON.parse(calls.find((call) => call.url.endsWith("/api/save"))?.body ?? "{}") as { name?: string };
+    expect(saved.name).toBe("research: audience, competitors, content calendar strategy");
+  });
+
   it("reads one execution without saving or starting another", async () => {
     const urls: string[] = [];
     const result = await readSwarmRun({

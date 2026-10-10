@@ -11,7 +11,7 @@ import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
 import { isResearchWorkflow, researchTaskNote, toolsForResearch } from '../mcp/research-tools';
-import { STEP_TIMEOUT_MESSAGE, classifyResume, nextResumeAlarm } from './resume';
+import { NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE, classifyResume, nextResumeAlarm, withStepTimeout } from './resume';
 
 export class WorkflowDO {
   private state: DurableObjectState;
@@ -466,7 +466,7 @@ export class WorkflowDO {
               }
               const skill = await loadSkill(this.env.SKILLS, node.instructions);
 
-              const result = await runAgent(
+              const result = await withStepTimeout(runAgent(
                 node.type,
                 {
                   input: nodeInput + memoryContext,
@@ -504,7 +504,7 @@ export class WorkflowDO {
                   },
                 },
                 this.env,
-              );
+              ), NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE);
               settled = true;
               output = result.output;
               toolsUsed.push(...result.toolsUsed);
