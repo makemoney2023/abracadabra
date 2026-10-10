@@ -40,6 +40,7 @@ import {
   createClientWorkflow,
   createWorkflowGroup,
   listClientWorkflows,
+  storeSwarmReport,
   workflowTaskPlan,
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
@@ -522,6 +523,8 @@ async function perform(
   if (tool === "create_workflow") return makeWorkflow(sql, caller, input, now, options);
   if (tool === "assign_workflow") return assignWorkflow(sql, caller, input, now);
   if (tool === "run_workflow") return runWorkflow(sql, caller, input, now, options);
+  if (tool === "save_swarm_report") return saveSwarmReport(sql, caller, input, now, options);
+  if (tool === "queue_followup_swarms") return queueFollowupSwarms(sql, caller, input, now, options);
   return { ok: false, error: "unknown" };
 }
 
@@ -637,6 +640,142 @@ async function readSpaceFile(
       path: row.relative_path,
       body: truncated ? decoded.slice(0, SPACE_FILE_TEXT) : decoded,
       truncated,
+    },
+  };
+}
+
+const FOLLOWUP_LIMIT = 6;
+
+function followupLines(value: string): { name: string; templateId: string }[] {
+  const rows: { name: string; templateId: string }[] = [];
+  for (const line of value.split("\n")) {
+    const parts = line.split("|").map((part) => part.trim());
+    const name = parts[0]?.slice(0, 120) ?? "";
+    const templateId = parts[1]?.slice(0, 120) ?? "";
+    if (!name || !templateId) continue;
+    rows.push({ name, templateId });
+    if (rows.length >= FOLLOWUP_LIMIT) break;
+  }
+  return rows;
+}
+
+async function saveSwarmReport(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const row = await sql.get<{
+    organization_id: string;
+    project_id: string | null;
+    last_execution_id: string | null;
+  }>("SELECT organization_id, project_id, last_execution_id FROM client_workflows WHERE id = ?", [text(input, "id")]);
+  if (!row?.last_execution_id || !(await seenOrg(sql, caller, row.organization_id))) return { ok: false, error: "missing" };
+  const origin = options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
+  const store = options.swarm?.store;
+  if (!origin.startsWith("https://") || !store) return { ok: false, error: "invalid" };
+  const path = await storeSwarmReport({
+    sql,
+    store,
+    origin,
+    organizationId: row.organization_id,
+    projectId: row.project_id,
+    executionId: row.last_execution_id,
+    now,
+    fetchImpl: options.swarm?.fetchImpl,
+  });
+  if (!path) return { ok: false, error: "missing" };
+  return { ok: true, value: { path, executionId: row.last_execution_id } };
+}
+
+async function queueFollowupSwarms(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
+  const source = await sql.get<{
+    id: string;
+    organization_id: string;
+    project_id: string | null;
+    name: string;
+    last_status: string | null;
+    last_output: string | null;
+  }>("SELECT id, organization_id, project_id, name, last_status, last_output FROM client_workflows WHERE id = ?", [
+    text(input, "id"),
+  ]);
+  if (!source || source.organization_id !== organizationId) return { ok: false, error: "missing" };
+  const output = source.last_output?.trim() ?? "";
+  if (source.last_status !== "completed" || output.length === 0 || output.includes("still going")) return { ok: false, error: "invalid" };
+  const lines = followupLines(text(input, "title"));
+  if (lines.length === 0) return { ok: false, error: "invalid" };
+  const requested = await projectForBrief(sql, organizationId, text(input, "projectId") || source.project_id || "");
+  if (requested === "missing") return { ok: false, error: "missing" };
+  const groupName = (text(input, "name") || `After ${source.name}`).slice(0, 200);
+  const created = await createWorkflowGroup(sql, {
+    organizationId,
+    name: groupName,
+    projectId: requested,
+    now,
+  });
+  if (!created.ok) return { ok: false, error: created.error };
+  const workflowIds: string[] = [];
+  const taskIds: string[] = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    const plan = await workflowPlan(line.templateId, options);
+    const workflow = await createClientWorkflow(sql, {
+      organizationId,
+      groupId: created.group.id,
+      name: line.name,
+      templateId: line.templateId,
+      projectId: requested,
+      plan,
+      dueAt: index === 0 ? now : null,
+      now: now + index,
+    });
+    if (!workflow.ok) return { ok: false, error: workflow.error };
+    workflowIds.push(workflow.workflow.id);
+    if (workflow.workflow.taskId) taskIds.push(workflow.workflow.taskId);
+  }
+  const origin = options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
+  const started = await claimDueWorkflow({
+    sql,
+    organizationId,
+    origin,
+    now,
+    workflowId: workflowIds[0],
+    instruction: output,
+    trigger: "chat",
+    fetchImpl: options.swarm?.fetchImpl,
+    wait: options.swarm?.wait,
+    store: options.swarm?.store,
+  });
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId,
+      kind: "staff.workflow_group",
+      body: groupName,
+      data: { groupId: created.group.id, projectId: requested, sourceWorkflowId: source.id },
+    },
+    now,
+  );
+  if (!started.ok) return started;
+  if (started.none) return { ok: false, error: "missing" };
+  return {
+    ok: true,
+    value: {
+      groupId: created.group.id,
+      workflowIds,
+      taskIds,
+      executionId: started.executionId,
+      status: started.status,
     },
   };
 }

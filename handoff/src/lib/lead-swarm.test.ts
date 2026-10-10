@@ -4,6 +4,7 @@ import {
   followRunningSwarm,
   leadBrief,
   readSwarmArtifacts,
+  readSwarmReport,
   readSwarmRun,
   runLeadSwarm,
   swarmArtifactFiles,
@@ -21,6 +22,22 @@ const template = {
 };
 
 describe("lead swarm", () => {
+  it("reads a PDF report and ignores a page that is not a PDF", async () => {
+    const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]);
+    const report = await readSwarmReport({
+      origin: "https://swarm.example",
+      executionId: "run-1",
+      fetchImpl: (async () => new Response(pdf, { headers: { "content-type": "application/pdf" } })) as typeof fetch,
+    });
+    expect(report).toEqual(pdf);
+    const page = await readSwarmReport({
+      origin: "https://swarm.example",
+      executionId: "run-1",
+      fetchImpl: (async () => new Response("<html></html>")) as typeof fetch,
+    });
+    expect(page).toBeNull();
+  });
+
   it("writes the lead, the site, and the score into the brief", () => {
     expect(leadBrief({ name: "Ada North", website: "northwind.example", score: 42 })).toBe(
       ["Lead: Ada North", "Site: northwind.example", "Readiness score: 42", "Use the schema scan to check AI readiness. The scraped pages are the client's knowledge context."].join("\n"),

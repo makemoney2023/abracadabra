@@ -1,7 +1,7 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
 import { rememberProjectBrief } from "./channel-plan";
-import { leadBrief, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
+import { leadBrief, readSwarmArtifacts, readSwarmReport, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
 import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
@@ -10,7 +10,7 @@ import { templateOnCard } from "./swarm-ready";
 import { markTaskDone } from "./task-done";
 import type { ObjectStore } from "./store/objects";
 import { saveSwarmRun } from "./swarm-runs";
-import { storeWorkflowOutput } from "./workflow-files";
+import { storeWorkflowOutput, workflowSpacePath } from "./workflow-files";
 
 export type WorkflowGroup = {
   id: string;
@@ -441,6 +441,47 @@ async function runnableWorkflow(sql: Sql, organizationId: string, workflowId: st
   return row ?? null;
 }
 
+/** Saves the swarm PDF into the client space once. A second call keeps the same path. */
+export async function storeSwarmReport(input: {
+  sql: Sql;
+  store: ObjectStore;
+  origin: string;
+  organizationId: string;
+  projectId?: string | null;
+  executionId: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+}): Promise<string | null> {
+  const executionId = input.executionId.trim();
+  const relativePath = workflowSpacePath({ workflow: "swarm", run: executionId, node: "report" }, "pdf");
+  if (!relativePath || !input.origin.trim()) return null;
+  const existing = await input.sql.get<{ id: string }>(
+    `SELECT f.id FROM files f
+     JOIN workspaces w ON w.id = f.workspace_id
+     JOIN batches b ON b.id = f.batch_id
+     WHERE w.organization_id = ? AND f.relative_path = ?
+       AND f.object_deleted_at IS NULL AND b.deleted_at IS NULL
+     LIMIT 1`,
+    [input.organizationId, relativePath],
+  );
+  if (existing) return relativePath;
+  const pdf = await readSwarmReport({ origin: input.origin, executionId, fetchImpl: input.fetchImpl });
+  if (!pdf) return null;
+  try {
+    const saved = await storeWorkflowOutput({
+      sql: input.sql,
+      store: input.store,
+      organizationId: input.organizationId,
+      projectId: input.projectId,
+      now: input.now,
+      files: [{ workflow: "swarm", run: executionId, node: "report", body: "", bytes: pdf }],
+    });
+    return saved.stored[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Run the oldest workflow whose time has arrived. A failure leaves the due time so the next cycle retries. */
 export async function claimDueWorkflow(input: {
   sql: Sql;
@@ -619,6 +660,18 @@ export async function claimDueWorkflow(input: {
         projectId: row.project_id,
         files,
         now: input.now,
+      });
+    }
+    if (finished) {
+      await storeSwarmReport({
+        sql: input.sql,
+        store: input.store,
+        origin: input.origin,
+        organizationId: input.organizationId,
+        projectId: row.project_id,
+        executionId: started.executionId,
+        now: input.now,
+        fetchImpl: input.fetchImpl,
       });
     }
   }
@@ -885,6 +938,18 @@ export async function settleRunningSwarms(input: {
           projectId: row.project_id,
           files,
           now: input.now,
+        });
+      }
+      if (finished) {
+        await storeSwarmReport({
+          sql: input.sql,
+          store: input.store,
+          origin: input.origin,
+          organizationId: row.organization_id,
+          projectId: row.project_id,
+          executionId: row.execution_id,
+          now: input.now,
+          fetchImpl: input.fetchImpl,
         });
       }
     }

@@ -53,6 +53,21 @@ describe("workflow space files", () => {
     expect(workflowSpacePath({ workflow: " ", run: "run", node: "copy" })).toBeNull();
   });
 
+  it("stores a PDF report without turning the bytes into markdown", async () => {
+    await space();
+    const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a, 0xff]);
+    const saved = await storeWorkflowOutput({
+      sql,
+      store,
+      organizationId: "org-1",
+      files: [{ workflow: "swarm", run: "run-1", node: "report", body: "", bytes: pdf }],
+      now: NOW,
+    });
+    expect(saved.stored).toEqual(["agent/swarm/run-1/report.pdf"]);
+    const file = await sql.get<{ object_key: string }>("SELECT object_key FROM files");
+    expect(await store.read(file?.object_key ?? "")).toEqual(pdf);
+  });
+
   it("writes the file into the client space and leaves it for the scan", async () => {
     await space();
     const saved = await storeWorkflowOutput({

@@ -2,6 +2,15 @@
 
 ## 2026-10-10
 
+- **What changed** — A finished swarm stores its PDF report in the client space. Staff chat can save that PDF and start the next swarms with the finished output.
+- **Why** — The report stayed on the swarm worker, and the agent could not turn a finished run into the next set of swarm tasks.
+- **Code touchpoints** — `handoff/src/lib/workflow-files.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — Completion writes `agent/swarm/<run>/report.pdf` once. `save_swarm_report` does the same for a workflow that already finished. `queue_followup_swarms` waits for approval, files up to six workflows on the project, and starts the first with the finished text. Later workflows in that new group wait their turn.
+- **API / schema impact** — none. `save_swarm_report` and `queue_followup_swarms` on staff chat.
+- **Verification** — `npx vitest run src/lib/lead-swarm.test.ts src/lib/workflow-files.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/lib/hq-chat-playbook.test.ts` passed 80. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. eslint on the changed files exited 0.
+
+## 2026-10-10
+
 - **What changed** — Staff chat can list and read files in the client's space, including swarm output.
 - **Why** — The chat agent had no tool that opened those files, so a review stopped and asked staff to paste the calendar.
 - **Code touchpoints** — `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`

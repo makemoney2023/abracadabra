@@ -19,6 +19,7 @@ import {
   settleRunningSwarms,
   scheduleTaskSwarm,
   runClientWorkflow,
+  storeSwarmReport,
   workflowTaskPlan,
 } from "./client-workflows";
 
@@ -1317,6 +1318,63 @@ describe("client workflows", () => {
     ]);
     const card = await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = 'task-research'");
     expect(card?.status).toBe("done");
+  });
+
+  it("stores the swarm PDF in the client space once", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+      ) VALUES ('space-1', 'northwind', 'Northwind', 'Northwind', NULL, 'Abra', 'standard', 1000000000, 30, 0, 'active', ?, 'org-1', 'proj-1')`,
+      [NOW],
+    );
+    const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]);
+    const objects = new Map<string, Uint8Array>();
+    const store = {
+      async stat() {
+        return null;
+      },
+      async read(key: string) {
+        return objects.get(key) ?? null;
+      },
+      async remove() {},
+      async put(key: string, bytes: Uint8Array) {
+        objects.set(key, bytes);
+      },
+      async beginUpload() {
+        return "upload-1";
+      },
+      async readUpload() {
+        return null;
+      },
+      async writePart() {},
+      async finishUpload() {},
+    };
+    const saved = await storeSwarmReport({
+      sql,
+      store,
+      origin: "https://swarm.example",
+      organizationId: "org-1",
+      projectId: "proj-1",
+      executionId: "exec-1",
+      now: NOW,
+      fetchImpl: (async () => new Response(pdf)) as typeof fetch,
+    });
+    expect(saved).toBe("agent/swarm/exec-1/report.pdf");
+    const again = await storeSwarmReport({
+      sql,
+      store,
+      origin: "https://swarm.example",
+      organizationId: "org-1",
+      projectId: "proj-1",
+      executionId: "exec-1",
+      now: NOW + 1,
+      fetchImpl: (async () => new Response(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x32]))) as typeof fetch,
+    });
+    expect(again).toBe(saved);
+    const rows = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files");
+    expect(rows.map((row) => row.relative_path)).toEqual(["agent/swarm/exec-1/report.pdf"]);
   });
 });
 
