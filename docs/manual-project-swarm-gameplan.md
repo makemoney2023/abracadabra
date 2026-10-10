@@ -1,7 +1,7 @@
 # Manual projects run the same swarm
 
 **Status:** built on the staff host.
-**Updated:** 2026-10-09.
+**Updated:** 2026-10-10.
 **Amends, when built:** the swarm paragraph in [hq-agent-spec.md](hq-agent-spec.md) section 17.3, and the Work paragraph in [README.md](../README.md).
 
 ## Outcome
@@ -12,7 +12,7 @@ When a card has a pack and no swarm is running, **Run swarm** appears on the car
 
 The client portal does not get this button. Staff publish before the client sees the document.
 
-This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. Workflows in one group run one at a time. Research runs first, and its output is the next workflow's input. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
+This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. Workflows in one group run one at a time. Research runs first, and its output is the next workflow's input. A research pack uses Parallel Search. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
 
 ## What is already true
 

@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — A research pack calls Parallel Search. A swarm step that is still running is left alone for two minutes, retried once, then marked timed out so the later steps can run.
+- **Why** — The buying-psychology research run restarted its reviewer on every status check, so the run never finished and the paper step never called Parallel.
+- **Code touchpoints** — `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/mcp/research-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`
+- **Data-flow impact** — Research workflow nodes receive Parallel tools from the portal when they are listed, and the step is told to call Parallel Search before the final answer. A hung step becomes an error instead of staying `running` forever. HQ still files a project document only when the run completes.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in `swarm/` and the HQ playbook test.
+
 - **What changed** — The merged workflow-order build is on the staff HQ and the agent. Project chat, tasks, and swarm runs were cleared for a fresh test.
 - **Why** — Main's delete tools and the research-first chain needed to be on the same live workers, and the previous social-media run was still in the chat.
 - **Code touchpoints** — none. Deploy of `dedd7b3`.

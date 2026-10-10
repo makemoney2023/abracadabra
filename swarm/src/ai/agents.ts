@@ -1,5 +1,6 @@
 import type { AgentType } from '../types';
 import { formatToolsForPrompt, parseToolCalls, type McpToolDef } from '../mcp/client';
+import { MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE, shouldTryNextModel, withStepTimeout } from '../do/resume';
 import type { LoadedSkill } from './skills';
 
 /** Workers AI defaults to 256 output tokens, which truncates skill deliverables. */
@@ -44,6 +45,10 @@ function extractToken(parsed: any): string {
 }
 
 async function runModelStream(model: string, messages: any[], env: any, onToken?: (token: string) => void): Promise<string> {
+  return withStepTimeout(readModelStream(model, messages, env, onToken), MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE);
+}
+
+async function readModelStream(model: string, messages: any[], env: any, onToken?: (token: string) => void): Promise<string> {
   const stream = await env.AI.run(model, { messages, stream: true, max_tokens: MAX_OUTPUT_TOKENS });
   const reader = stream.getReader();
   const decoder = new TextDecoder();
@@ -76,6 +81,10 @@ async function runModelStream(model: string, messages: any[], env: any, onToken?
 }
 
 async function runModelOnce(model: string, messages: any[], env: any): Promise<string> {
+  return withStepTimeout(readModelOnce(model, messages, env), MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE);
+}
+
+async function readModelOnce(model: string, messages: any[], env: any): Promise<string> {
   const response = await env.AI.run(model, { messages, max_tokens: MAX_OUTPUT_TOKENS });
   const output = extractToken(response)?.trim();
   if (!output) {
@@ -112,6 +121,7 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
           return { output: streamed.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
         }
       } catch (error) {
+        if (!shouldTryNextModel(error)) throw error;
         lastError = error;
       }
 
@@ -119,6 +129,7 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
         const output = await runModelOnce(model, messages, env);
         return { output: output.slice(0, MAX_OUTPUT_CHARS), toolsUsed: [] };
       } catch (error) {
+        if (!shouldTryNextModel(error)) throw error;
         lastError = error;
       }
     }
@@ -212,6 +223,7 @@ async function runOnceChain(messages: { role: string; content: string }[], env: 
       const output = await runModelOnce(model, messages, env);
       if (output) return output.slice(0, MAX_OUTPUT_CHARS);
     } catch (error) {
+      if (!shouldTryNextModel(error)) throw error;
       lastError = error;
     }
   }

@@ -10,6 +10,8 @@ const ALL_TEMPLATES: WorkflowTemplate[] = [...WORKFLOW_TEMPLATES, ...(packTempla
 import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
+import { isResearchWorkflow, researchTaskNote, toolsForResearch } from '../mcp/research-tools';
+import { STEP_TIMEOUT_MESSAGE, classifyResume } from './resume';
 
 export class WorkflowDO {
   private state: DurableObjectState;
@@ -341,18 +343,42 @@ export class WorkflowDO {
       // Topological execution with parallel branches
       const completed = new Set<string>();
       const running = new Set<string>();
+      const inFlight = new Set<string>();
+      const now = Date.now();
+      const researchRun = isResearchWorkflow(workflow);
 
-      // Resume support: finished nodes from a previous isolate keep their
-      // results; release their children into the queue. Stale 'running'
-      // entries are re-run from scratch below.
+      // Resume support: finished nodes keep their results. A running step
+      // that this isolate did not start is left alone until the grace
+      // period ends, retried once, then marked timed out so later steps run.
+      let timedOut = false;
       for (const [nodeId, prior] of Object.entries(execution.results)) {
-        if (prior.status === 'done') {
+        const action = classifyResume(prior, now);
+        if (action === 'done') {
           completed.add(nodeId);
           nodeOutputs[nodeId] = prior.output;
-        } else if (prior.status === 'error') {
+        } else if (action === 'error' || action === 'give-up') {
+          if (action === 'give-up') {
+            timedOut = true;
+            execution.results[nodeId] = {
+              ...prior,
+              status: 'error',
+              error: STEP_TIMEOUT_MESSAGE,
+              finishedAt: now,
+            };
+            this.broadcast(executionId, {
+              type: 'node_error',
+              executionId,
+              nodeId,
+              error: STEP_TIMEOUT_MESSAGE,
+              timestamp: now,
+            });
+          }
           completed.add(nodeId);
+        } else if (action === 'in-flight') {
+          inFlight.add(nodeId);
         }
       }
+      if (timedOut) await this.saveExecution(execution);
       for (const nodeId of completed) {
         for (const childId of adjacency.get(nodeId) || []) {
           const newDeg = (inDegree.get(childId) || 1) - 1;
@@ -362,10 +388,14 @@ export class WorkflowDO {
       }
 
       while (completed.size < workflow.nodes.length) {
-        // Start all ready nodes
-        const ready = queue.filter((id) => !completed.has(id) && !running.has(id));
+        // Start ready nodes. A step another isolate may still be driving stays out of this queue.
+        const ready = queue.filter((id) => !completed.has(id) && !running.has(id) && !inFlight.has(id));
 
         if (ready.length === 0 && running.size === 0) {
+          if (inFlight.size > 0) {
+            await this.saveExecution(execution);
+            return;
+          }
           break; // Deadlock or done
         }
 
@@ -383,12 +413,16 @@ export class WorkflowDO {
             const memKey = memoryKey(workflow.id, node.id);
             const memoryContext = buildMemoryContext(this.memories.get(memKey)?.entries);
 
-            // Mark as running (persisted so a resume can see it started)
+            // Mark as running (persisted so a resume can see it started).
+            // A retry increments attempts so the next wake can time the step out.
+            const priorAttempt = execution.results[nodeId];
+            const attempts = priorAttempt?.status === 'running' ? (priorAttempt.attempts ?? 1) + 1 : 1;
             const startResult: NodeResult = {
               nodeId,
               status: 'running',
               output: '',
               startedAt: Date.now(),
+              attempts,
             };
             execution.results[nodeId] = startResult;
             await this.saveExecution(execution);
@@ -399,20 +433,26 @@ export class WorkflowDO {
               timestamp: Date.now(),
             });
 
+            let settled = false;
             try {
               let output = '';
               const toolsUsed: { server: string; tool: string }[] = [];
 
               // Resolve this node's MCP servers (node selection, else all workflow servers).
               const servers = this.resolveNodeServers(workflow, node);
-              const mcpTools = await this.collectNodeTools(servers);
+              let mcpTools = await this.collectNodeTools(servers);
+              let instructions = node.instructions;
+              if (researchRun) {
+                instructions = `${node.instructions}\n\n${researchTaskNote(mcpTools)}`;
+                mcpTools = toolsForResearch(mcpTools);
+              }
               const skill = await loadSkill(this.env.SKILLS, node.instructions);
 
               const result = await runAgent(
                 node.type,
                 {
                   input: nodeInput + memoryContext,
-                  instructions: node.instructions,
+                  instructions,
                   name: node.name,
                   skill,
                   mcpTools,
@@ -422,6 +462,7 @@ export class WorkflowDO {
                     return new McpClient(server).callTool(tool, args);
                   },
                   onToken: (token) => {
+                    if (settled) return;
                     output += token;
                     this.broadcast(executionId, {
                       type: 'node_output',
@@ -446,6 +487,7 @@ export class WorkflowDO {
                 },
                 this.env,
               );
+              settled = true;
               output = result.output;
               toolsUsed.push(...result.toolsUsed);
 
@@ -486,6 +528,7 @@ export class WorkflowDO {
                 timestamp: Date.now(),
               });
             } catch (error: any) {
+              settled = true;
               const errorResult: NodeResult = {
                 nodeId,
                 status: 'error',
