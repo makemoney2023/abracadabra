@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — Delete work is live. Staff HQ, the client worker, and the agent worker were deployed from the merge. Workers Builds for `handoff` and `handoff-hq` skip the separate `next build` and let `npm run deploy` and `npm run deploy:hq` build OpenNext.
+- **Why** — The delete tools were only on the branch. The separate `next build` failed on the Google font step before deploy could run.
+- **Code touchpoints** — none in git. Deploy of `e468d54`. Workers Builds triggers `2de98be9-149f-4a8b-851f-475f194fed85` and `31f8691a-1a3b-4107-822c-2c64e5faf83d`.
+- **Data-flow impact** — `delete_task` and `delete_project` are on the live MCP route and on HQ chat.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff` version `6577985f-759c-43f3-b57a-394f12719c2e` on `handoff.abra-ca-dabra.app`. Worker `handoff-hq` version `e16f9afa-b94b-43bb-b141-f52a544431d9` on `hq.abra-ca-dabra.app`. Worker `handoff-agent` version `638c4caa-dfad-46de-83e4-8125aba86e66` on `agent.abra-ca-dabra.app`. `GET /api/health` on the staff and client hosts returned 200 `{"database":"d1","ok":true,"visible":0}`.
+
 - **What changed** — The HQ agent can delete a task, or a project and the tasks on it. Staff chat shows an approval card before either delete.
 - **Why** — The agent could create projects and tasks and had no way to remove them.
 - **Code touchpoints** — `handoff/src/db/crm.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/lib/mcp.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`
