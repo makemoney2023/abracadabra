@@ -2,6 +2,13 @@
 
 ## 2026-10-10
 
+- **What changed** — The merged workflow-order build is on the staff HQ and the agent. Project chat, tasks, and swarm runs were cleared for a fresh test.
+- **Why** — Main's delete tools and the research-first chain needed to be on the same live workers, and the previous social-media run was still in the chat.
+- **Code touchpoints** — none. Deploy of `dedd7b3`.
+- **Data-flow impact** — Removed the HQ chat messages, the two tasks, the workflow group, and the swarm runs. The social media project, the client, staff, spaces, and git activity remain. The unattached brief deliverable remains.
+- **API / schema impact** — none.
+- **Verification** — Worker `handoff-agent` version `da00b4ac-1e53-4613-9531-1400b4541e5a` on `agent.abra-ca-dabra.app`. Worker `handoff-hq` version `93884e42-f3eb-48c0-a52d-fe7182df7a7e` on `hq.abra-ca-dabra.app`. `GET /api/health` returned 200 `{"database":"d1","ok":true,"visible":0}`. Tasks 0, swarm runs 0, workflows 0, HQ chat messages 0.
+
 - **What changed** — Workflows in one group run one at a time. Research runs before copy, visuals, or a calendar, and its output is the next workflow's input. A brief added in chat is stored on the project.
 - **Why** — The agent started every swarm together, so research never fed the later work, and the brief was not on the project page.
 - **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `handoff/src/db/agent-work.ts`, `handoff/src/app/projects/[id]/page.tsx`, `handoff/migrations/0021_workflow_chain.sql`
