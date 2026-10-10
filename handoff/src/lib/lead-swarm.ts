@@ -51,6 +51,8 @@ function doneOutput(body: unknown, order: string[]): string {
 export async function runLeadSwarm(input: {
   origin: string;
   workflowId: string;
+  /** Client workflow name. Research detection uses this, not the pack template name. */
+  workflowName?: string;
   brief: string;
   templateId?: string;
   mcpServers?: SwarmMcpServer[];
@@ -72,9 +74,11 @@ export async function runLeadSwarm(input: {
   const headers: Record<string, string> = { "content-type": "application/json" };
   const runSecret = input.runSecret?.trim() ?? "";
   if (runSecret) headers.authorization = `Bearer ${runSecret}`;
+  const workflowName = input.workflowName?.trim() ?? "";
   const workflow = {
     ...template,
     id: input.workflowId,
+    ...(workflowName ? { name: workflowName } : {}),
     createdAt: Date.now(),
     ...(servers.length > 0
       ? {

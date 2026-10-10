@@ -235,6 +235,50 @@ describe("runHqTool", () => {
     expect(description?.description).toContain("Buyer psychology research, then a content calendar");
   });
 
+  it("stores create_project description on the project and does not replace one that is already there", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const created = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_project",
+        input: {
+          organizationId,
+          name: "social media",
+          description: "For Renew Implants, research the audience, competitors, and social media content strategy.",
+        },
+        idempotencyKey: "proj-desc",
+      },
+      NOW,
+    );
+    const projectId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");
+    const description = await sql.get<{ description: string }>("SELECT description FROM projects WHERE id = ?", [projectId]);
+    expect(description?.description).toContain("research the audience, competitors");
+    const brief = await sql.get<{ project_id: string; copy_text: string }>(
+      `SELECT d.project_id, i.copy_text
+       FROM deliverables d
+       JOIN deliverable_items i ON i.deliverable_id = d.id AND i.version = d.version
+       WHERE d.kind = 'brief' AND d.project_id = ?`,
+      [projectId],
+    );
+    expect(brief?.project_id).toBe(projectId);
+    expect(brief?.copy_text).toContain("research the audience, competitors");
+    await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_project",
+        input: { organizationId, name: "social media", description: "A different brief." },
+        idempotencyKey: "proj-desc-2",
+      },
+      NOW + 1,
+    );
+    const kept = await sql.get<{ description: string }>("SELECT description FROM projects WHERE id = ?", [projectId]);
+    expect(kept?.description).toContain("research the audience, competitors");
+    expect(kept?.description).not.toContain("A different brief.");
+  });
+
   it("turns an approved client request into a brief piece and records who decided", async () => {
     const sql = await database();
     const organizationId = await client(sql);
@@ -356,7 +400,11 @@ describe("runHqTool", () => {
       },
       NOW + 1,
     );
-    expect(valueOf(filed)).toMatchObject({ briefUpdated: false });
+    expect(valueOf(filed)).toMatchObject({ briefUpdated: true });
+    const filedBrief = await sql.get<{ copy_text: string }>(
+      "SELECT copy_text FROM deliverable_items WHERE title = 'brief.md'",
+    );
+    expect(filedBrief?.copy_text).toContain("They are ready to start.");
     const tasks = await sql.all<{ title: string }>("SELECT title FROM tasks WHERE organization_id = ? ORDER BY title", [organizationId]);
     expect(tasks.map((row) => row.title)).toEqual(["Open the project", "Turn this lead into a client"]);
   });
@@ -409,9 +457,10 @@ describe("runHqTool", () => {
       },
       NOW + 2,
     );
-    const task = await sql.get<{ assignee_user_id: string; due_at: number; skills_json: string }>(
-      "SELECT assignee_user_id, due_at, skills_json FROM tasks WHERE title = 'Send the contract'",
+    const task = await sql.get<{ assignee_user_id: string; due_at: number; skills_json: string; project_id: string }>(
+      "SELECT assignee_user_id, due_at, skills_json, project_id FROM tasks WHERE title = 'Send the contract'",
     );
+    expect(task?.project_id).toBe(projectId);
     expect(task?.assignee_user_id).toBe("sam");
     expect(task?.due_at).toBe(Date.UTC(2026, 9, 9));
     expect(JSON.parse(task?.skills_json ?? "{}")).toMatchObject({

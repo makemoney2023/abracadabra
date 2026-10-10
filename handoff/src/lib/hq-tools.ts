@@ -22,6 +22,7 @@ import {
   moveDealStage,
   organizationById,
   postStatusUpdate,
+  saveProjectDescription,
   type StatusHealth,
 } from "@/db/crm";
 import { publishDeliverable } from "@/db/deliverables";
@@ -399,10 +400,13 @@ async function perform(
     const brief = text(input, "body") || null;
     const rules = text(input, "rules") || null;
     if (actions.length === 0 && !brief && !rules) return { ok: false, error: "invalid" };
+    const projectId = await projectForBrief(sql, organizationId, text(input, "projectId"));
+    if (projectId === "missing") return { ok: false, error: "missing" };
     const filed = await applyChannelPlan(
       sql,
       {
         organizationId,
+        projectId,
         actions,
         brief,
         rules,
@@ -442,7 +446,9 @@ async function perform(
       ),
     );
   }
-  if (tool === "create_project") return createProjectTool(sql, caller, organizationId, text(input, "name"), now);
+  if (tool === "create_project") {
+    return createProjectTool(sql, caller, organizationId, text(input, "name"), text(input, "description"), now);
+  }
   if (tool === "assign_space_project") {
     return fromCrm(
       await assignSpaceProject(
@@ -640,11 +646,31 @@ async function createProjectTool(
   caller: Caller,
   organizationId: string,
   name: string,
+  description: string,
   now: number,
 ): Promise<HqToolResult> {
   const created = await createProject(sql, caller, { organizationId, name }, now);
   if (!created.ok) return fromCrm(created);
-  return { ok: true, value: { ...created.value, ...(await projectHome(sql, organizationId, created.value.id)) } };
+  const note = description.trim().slice(0, 4_000);
+  let projectDescription = created.value.description;
+  if (note && !projectDescription?.trim() && caller.userId) {
+    try {
+      await saveStaffBrief(
+        sql,
+        { organizationId, userId: caller.userId, title: name.slice(0, 200), bodyMarkdown: note, projectId: created.value.id },
+        now,
+      );
+      projectDescription = note;
+    } catch (error) {
+      if (!(error instanceof AgentWorkError)) throw error;
+      const saved = await saveProjectDescription(sql, caller, { projectId: created.value.id, description: note }, now);
+      if (saved.ok) projectDescription = note;
+    }
+  }
+  return {
+    ok: true,
+    value: { ...created.value, description: projectDescription, ...(await projectHome(sql, organizationId, created.value.id)) },
+  };
 }
 
 function swarmLaunch(options: ToolOptions): ToolOptions["swarm"] | undefined {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MODEL_STEP_TIMEOUT_MS,
+  NODE_BUDGET_MS,
   RUNNING_GRACE_MS,
   RUNNING_GIVE_UP_MS,
   STEP_TIMEOUT_MESSAGE,
@@ -31,6 +32,14 @@ describe('classifyResume', () => {
     expect(classifyResume({ status: 'running', startedAt: NOW - (RUNNING_GRACE_MS + 1), attempts: 2 }, NOW)).toBe('give-up');
     expect(classifyResume({ status: 'running', startedAt: NOW - RUNNING_GIVE_UP_MS, attempts: 1 }, NOW)).toBe('give-up');
     expect(classifyResume({ status: 'running' }, NOW)).toBe('give-up');
+  });
+});
+
+describe('node budget', () => {
+  it('stops one node at the same moment a resume would give up', () => {
+    expect(NODE_BUDGET_MS).toBe(RUNNING_GIVE_UP_MS);
+    expect(NODE_BUDGET_MS).toBeLessThanOrEqual(180_000);
+    expect(MODEL_STEP_TIMEOUT_MS).toBeLessThan(NODE_BUDGET_MS);
   });
 });
 

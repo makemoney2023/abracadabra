@@ -2,6 +2,15 @@
 
 ## 2026-10-10
 
+- **What changed** — A chat brief is stored on the project. A workflow named research keeps Parallel tools only, and each swarm node stops after three minutes.
+- **Why** — Creating a project from staff chat left the requirements empty, so the project page had no brief. The research swarm was saved under the marketing pack name, called image generation, and stayed on that node for about six minutes.
+- **Code touchpoints** — `handoff/src/lib/channel-plan.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/lead-swarm.ts`, `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`
+- **Data-flow impact** — `create_project` description and the first `file_actions` brief become the project requirements and, when the client has a space, a project brief. Tasks from `file_actions` use that project. A swarm run whose project requirements are empty stores its own instruction, not the scraped pages. The saved swarm workflow uses the client workflow name, so a name containing research offers Parallel tools only. One node, including tool rounds, stops at three minutes and the later nodes still run. When the minute cron files a finished swarm, the linked card moves to done.
+- **API / schema impact** — none. `create_project` accepts `description`. `file_actions` accepts `projectId`.
+- **Verification** — `npx vitest run src/lib/channel-plan.test.ts src/lib/hq-tools.test.ts src/lib/lead-swarm.test.ts src/lib/client-workflows.test.ts src/lib/hq-chat-playbook.test.ts src/lib/client-channel.test.ts` passed 103. `npx tsc --noEmit -p tsconfig.json` and `npx tsc --noEmit -p tsconfig.agent.json` exited 0. eslint on the changed handoff files exited 0. `npm test` in `swarm/` passed 50. `npx tsc --noEmit` in `swarm/` exited 0.
+
+## 2026-10-10
+
 - **What changed** — The work wake runs every minute. An open wake older than 15 minutes is abandoned. Each swarm node is saved in the client's file space. A scan-filing error no longer stops that wake.
 - **Why** — A 15-minute cron left a finished research run marked running, and a stale wake row could block the next check. Only the combined result was filed. The minute cron was firing, then dying on a D1 `LIKE` of the scan id before it could wake the agent.
 - **Code touchpoints** — `handoff/wrangler.jsonc`, `handoff/cloudflare-worker.ts`, `handoff/src/lib/scan-context.ts`, `handoff/src/lib/agent-wake.ts`, `handoff/src/lib/lead-swarm.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/mcp-connect.ts`, `handoff/src/agent/worker.ts`, `swarm/src/do/resume.ts`, `swarm/src/do/WorkflowDO.ts`

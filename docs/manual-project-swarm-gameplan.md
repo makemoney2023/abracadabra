@@ -12,7 +12,7 @@ When a card has a pack and no swarm is running, **Run swarm** appears on the car
 
 The client portal does not get this button. Staff publish before the client sees the document.
 
-This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. Workflows in one group run one at a time. Research runs first, and its output is the next workflow's input. A research pack uses Parallel Search. HQ follows a running swarm for about 30 minutes, then checks again. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
+This is built. `createProject` attaches one loose space and one loose repo. Saving requirements stores one pack on each open card that has none. **Run swarm** and chat `run_workflow` move the card to Run and start that workflow. Workflows in one group run one at a time. Research runs first, and its output is the next workflow's input. A workflow whose name contains research is saved under that name and uses Parallel Search. Each node stops after three minutes. HQ follows a running swarm for about 30 minutes, then checks again. An empty project stores the run's own brief, without the scraped pages, as its requirements. A finished run sends the task brief and the latest staff instruction, files the unpublished document on that project, and marks the card done.
 
 ## What is already true
 
@@ -28,7 +28,7 @@ This is built. `createProject` attaches one loose space and one loose repo. Savi
 | A due run whose workflow has a task sends the task title, the task brief, and the project requirements. The draft document uses that project. A workflow with no task still sends the lead brief. | `claimDueWorkflow` |
 | `scheduleTaskSwarm` copies the task's `project_id` onto the workflow. | `scheduleTaskSwarm` |
 | Lead pack choice falls back to the schema readiness pack when nothing overlaps. | `pickSkillPack` in `handoff/src/lib/pack-picker.ts` |
-| `create_project` requires a live client id. A repeated name returns that project and attaches one loose space and one loose repo. | `createProject` in `handoff/src/db/crm.ts` |
+| `create_project` requires a live client id. `description` is stored on the project. A repeated name returns that project, fills an empty description, and attaches one loose space and one loose repo. | `createProject` in `handoff/src/db/crm.ts`, `createProjectTool` in `handoff/src/lib/hq-tools.ts` |
 | Chat can assign one loose space or repo with `assign_space_project` and `assign_repo_project`. The project page uses the same functions. | `handoff/src/lib/hq-tools.ts`, `handoff/src/app/projects/[id]/page.tsx` |
 | The project page lists spaces whose `project_id` is this project. Loose spaces of the client are an assign control. | `handoff/src/app/projects/[id]/page.tsx` |
 

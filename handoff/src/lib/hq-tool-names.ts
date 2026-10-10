@@ -68,7 +68,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   file_actions: {
     label: "File tasks and a brief change",
     description:
-      "One task per line of title, written as Title | person | YYYY-MM-DD | .cursor/skills/path. body is the brief sentence. rules are standing limits, one per line. Fields: organizationId, title, body, rules.",
+      "One task per line of title, written as Title | person | YYYY-MM-DD | .cursor/skills/path. body is the brief sentence and is stored on the project. rules are standing limits, one per line. Pass projectId, or omit it when the client has one open project. Fields: organizationId, projectId, title, body, rules.",
   },
   complete_task: { label: "Complete a task", description: "Mark a task done. Fields: taskId." },
   delete_task: {
@@ -96,7 +96,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   create_project: {
     label: "Create a project",
     description:
-      "New project for a client. A name that already exists returns that project. One loose space and one loose repo on that client are attached. Several stay listed as looseSpaces and looseRepos. Fields: organizationId, name.",
+      "New project for a client. description is the brief in the staff member's words and is stored on the project. A name that already exists returns that project and fills an empty description. One loose space and one loose repo on that client are attached. Several stay listed as looseSpaces and looseRepos. Fields: organizationId, name, description.",
   },
   assign_space_project: {
     label: "Assign a space",
