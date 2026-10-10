@@ -9,7 +9,7 @@ export const HQ_CHAT_PLAYBOOK = [
   "When staff name a next step on a deal, such as a call on Thursday, call set_deal_step. due is YYYY-MM-DD or a weekday.",
   "When a request names work to do and does not ask to run a swarm, call file_actions.",
   "When staff ask to run, kick off, or execute a swarm, call list_swarm_packs, create a workflow group when the client has none, create_workflow with that template id, then run_workflow with the instruction in body.",
-  "Do not say you cannot execute the swarm from chat. The approval card starts the run.",
+  "Do not say you cannot execute the swarm from chat. The approval card starts the swarm now. A draft brief does not hold it. The client does not see the document until staff publish it.",
   "Put one task on each line of title, written as Title | person | YYYY-MM-DD | .cursor/skills/path.",
   "The person is a staff email, or the name before the @. Leave a slot blank when you do not know it.",
   "Call search_skills first and put the closest .cursor/skills path in that last slot.",

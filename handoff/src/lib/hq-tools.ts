@@ -43,6 +43,7 @@ import {
 } from "@/lib/client-workflows";
 import { packsFromTemplates } from "@/lib/pack-picker";
 import { saveSwarmRun } from "@/lib/swarm-runs";
+import type { ObjectStore } from "@/lib/store/objects";
 import { hqToolNeedsApproval } from "@/lib/hq-tool-names";
 import { createInvite } from "@/lib/store/invites";
 import type { OutboundMail } from "@/lib/session";
@@ -62,7 +63,7 @@ type MailGate = {
 type ToolOptions = {
   wake?: (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
   mail?: MailGate;
-  swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void> };
+  swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
   build?: BuildDeps;
   intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
 };
@@ -607,6 +608,17 @@ async function createProjectTool(
   return { ok: true, value: { ...created.value, ...(await projectHome(sql, organizationId, created.value.id)) } };
 }
 
+function swarmLaunch(options: ToolOptions): ToolOptions["swarm"] | undefined {
+  const origin = options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
+  if (!origin.startsWith("https://")) return undefined;
+  return {
+    origin,
+    fetchImpl: options.swarm?.fetchImpl,
+    wait: options.swarm?.wait,
+    store: options.swarm?.store,
+  };
+}
+
 async function runWorkflow(
   sql: Sql,
   caller: Caller,
@@ -627,9 +639,19 @@ async function runWorkflow(
       now,
       actor: { kind: "staff", id: caller.userId },
       wake: options.wake,
+      swarm: swarmLaunch(options),
+      instruction: text(input, "body"),
     });
     if (!moved.ok) return { ok: false, error: moved.error };
-    return { ok: true, value: { workflowId, taskId: row.task_id, stage: "run" } };
+    return {
+      ok: true,
+      value: {
+        workflowId,
+        taskId: row.task_id,
+        stage: "run",
+        ...(moved.executionId ? { executionId: moved.executionId, status: moved.swarmStatus, output: moved.output } : {}),
+      },
+    };
   }
   const swarm = options.swarm;
   const origin = swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
@@ -747,11 +769,22 @@ async function setTaskStage(
     actor: { kind: "staff", id: caller.userId },
     build: options.build ?? defaultBuildDeps(now),
     wake: options.wake,
+    swarm: stage === "run" ? swarmLaunch(options) : undefined,
   });
   if (!moved.ok) return { ok: false, error: moved.error };
   if (moved.waiting) return { ok: true, value: { taskId: task.id, stage: "build", waiting: "cap_reached" } };
   if (moved.runId) return { ok: true, value: { taskId: task.id, stage: "build", runId: moved.runId } };
-  if (stage === "run") return { ok: true, value: { taskId: task.id, stage, workflowId: moved.workflowId ?? null } };
+  if (stage === "run") {
+    return {
+      ok: true,
+      value: {
+        taskId: task.id,
+        stage,
+        workflowId: moved.workflowId ?? null,
+        ...(moved.executionId ? { executionId: moved.executionId, status: moved.swarmStatus, output: moved.output } : {}),
+      },
+    };
+  }
   return { ok: true, value: { taskId: task.id, stage } };
 }
 

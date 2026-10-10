@@ -324,11 +324,16 @@ export async function claimDueWorkflow(input: {
   organizationId: string;
   origin: string;
   now: number;
+  /** Run this workflow now. Omit it to take the oldest workflow that is already due. */
+  workflowId?: string;
+  /** Staff instruction for this run. It is sent ahead of the task brief. */
+  instruction?: string;
   fetchImpl?: typeof fetch;
   wait?: (ms: number) => Promise<void>;
   store?: ObjectStore;
 }): Promise<DueClaim> {
   if (!input.origin.trim()) return { ok: false, error: "invalid" };
+  const targeted = Boolean(input.workflowId);
   const row = await input.sql.get<{
     id: string;
     name: string;
@@ -346,15 +351,15 @@ export async function claimDueWorkflow(input: {
      FROM client_workflows w
      JOIN organizations o ON o.id = w.organization_id
      WHERE w.organization_id = ?
-       AND w.next_run_at IS NOT NULL
-       AND w.next_run_at <= ?
+       AND ${targeted ? "w.id = ?" : "w.next_run_at IS NOT NULL AND w.next_run_at <= ?"}
      ORDER BY w.next_run_at, w.id
      LIMIT 1`,
-    [input.organizationId, input.now],
+    targeted ? [input.organizationId, input.workflowId] : [input.organizationId, input.now],
   );
-  if (!row) return { ok: true, none: true };
+  if (!row) return targeted ? { ok: false, error: "missing" } : { ok: true, none: true };
   const taskBrief = row.task_id ? await taskSwarmBrief(input.sql, row.task_id) : "";
-  const brief = taskBrief || [
+  const instruction = input.instruction?.trim() ?? "";
+  const brief = [instruction, taskBrief].filter((line) => line.trim().length > 0).join("\n\n") || [
     leadBrief({ name: row.org_name, website: row.website, packId: row.template_id }),
     row.industry ? `Industry: ${row.industry}` : "",
     row.notes ?? "",
@@ -480,18 +485,21 @@ export async function claimDueWorkflow(input: {
 }
 
 async function taskSwarmBrief(sql: Sql, taskId: string): Promise<string> {
-  const task = await sql.get<{ title: string; description: string | null; brief: string | null }>(
+  const task = await sql.get<{ title: string; description: string | null; brief: string | null; instruction: string | null }>(
     `SELECT t.title, p.description,
             (SELECT a.body FROM activities a
              WHERE a.kind = 'agent.task_brief' AND json_extract(a.data_json, '$.taskId') = t.id
-             ORDER BY a.created_at DESC LIMIT 1) AS brief
+             ORDER BY a.created_at DESC LIMIT 1) AS brief,
+            (SELECT a.body FROM activities a
+             WHERE a.kind = 'staff.instruction' AND json_extract(a.data_json, '$.taskId') = t.id
+             ORDER BY a.created_at DESC LIMIT 1) AS instruction
      FROM tasks t
      LEFT JOIN projects p ON p.id = t.project_id
      WHERE t.id = ?`,
     [taskId],
   );
   if (!task) return "";
-  return [task.title, task.brief ?? "", task.description ? `Requirements: ${task.description}` : ""]
+  return [task.instruction ?? "", task.title, task.brief ?? "", task.description ? `Requirements: ${task.description}` : ""]
     .filter((line) => line.trim().length > 0)
     .join("\n");
 }
