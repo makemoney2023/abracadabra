@@ -56,8 +56,18 @@ export function deliverableKind(skill: { name: string; path: string }): Delivera
   return "skill";
 }
 
+const SKILL_SHAPE = "Return only what this skill defines. Do not turn the result into a calendar, a campaign, or another skill's job.";
+
 export function outputShape(kind: DeliverableKind): string {
-  return kind === "skill" ? "" : OUTPUT_SHAPES[kind];
+  return kind === "skill" ? SKILL_SHAPE : OUTPUT_SHAPES[kind];
+}
+
+/** An empty query shows the deliverable skills. Any other query searches every skill. */
+export function swarmPackVisible(pack: { id: string; name: string; description: string }, query: string): boolean {
+  const words = query.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 1);
+  if (words.length === 0) return deliverableKind({ name: pack.name, path: pack.id }) !== "skill";
+  const hay = `${pack.id} ${pack.name} ${pack.description}`.toLowerCase();
+  return words.every((word) => hay.includes(word));
 }
 
 /** Copy, visuals, and the language pass need facts and banned lines in the brief. */

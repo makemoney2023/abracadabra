@@ -187,7 +187,8 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   },
   list_swarm_packs: {
     label: "Swarm packs",
-    description: "Pack templates the swarm can run now. Use an id with create_workflow.",
+    description:
+      "Skill templates the swarm can run, one skill each. With no query, returns research, copy, language, and visual skills. Pass query to find any other skill by name. Use an id, or a .cursor/skills path, with create_workflow. Fields: query.",
   },
   create_workflow_group: {
     label: "Create a workflow group",

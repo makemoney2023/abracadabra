@@ -707,6 +707,27 @@ describe("runHqTool", () => {
     expect(valueOf(listed)).toEqual([
       { id: "skill-community-marketingskills-copywriting", name: "copywriting", description: "7 posts" },
     ]);
+    const found = await runHqTool(
+      sql,
+      staff,
+      { tool: "list_swarm_packs", input: { query: "headline" } },
+      NOW,
+      {
+        swarm: {
+          origin: "https://swarm.example",
+          fetchImpl: async () =>
+            new Response(
+              JSON.stringify([
+                { id: "skill-community-marketingskills-copywriting", name: "copywriting", description: "7 posts" },
+                { id: "skill-community-advertising-skills-headline-matrix", name: "headline-matrix", description: "Headlines" },
+              ]),
+            ),
+        },
+      },
+    );
+    expect(valueOf(found)).toEqual([
+      { id: "skill-community-advertising-skills-headline-matrix", name: "headline-matrix", description: "Headlines" },
+    ]);
   });
 
   it("schedules the pack and wakes the client when a skilled task moves to run", async () => {

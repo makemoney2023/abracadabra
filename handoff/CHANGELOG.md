@@ -2,6 +2,15 @@
 
 ## 2026-10-11
 
+- **What changed** — Every skill runs as its own job. Chat finds any skill with `list_swarm_packs` query. Copy, visuals, and the language pass are still the only ones that wait for `Facts:` and `Do not use:`.
+- **Why** — The deliverable list hid every other skill, so a headline or an audit could not be chosen the same way as copy.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `swarm/src/pack-templates.json`
+- **Data-flow impact** — An empty pack list returns research, copy, language, and visual skills. A query returns every matching skill. Each skill brief says to return only what that skill defines.
+- **API / schema impact** — `list_swarm_packs` accepts `query`.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/hq-chat-playbook.test.ts src/lib/hq-tools.test.ts src/lib/client-workflows.test.ts` passed 70. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npx eslint` on the changed TypeScript files exited 0.
+
+## 2026-10-11
+
 - **What changed** — Each swarm template is one skill. Research returns a source table. Copy returns 7 posts for one persona. Copy, visuals, and the generic-language pass do not start until the brief has Facts: and Do not use:.
 - **Why** — A folder chain ran the first four skills in alphabetical order, so a calendar request never reached the copy skill and invented the rest.
 - **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `swarm/src/pack-templates.json`

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deliverableKind, needsSourcePacket, packKey, packTemplateId, packTemplatesFromCatalog, sourcePacketReady } from "./pack-templates";
+import { deliverableKind, needsSourcePacket, packKey, packTemplateId, packTemplatesFromCatalog, sourcePacketReady, swarmPackVisible } from "./pack-templates";
 
 const catalog = [
   {
@@ -71,6 +71,7 @@ describe("pack templates", () => {
     expect(copy?.nodes[0]?.instructions).toContain("Do not invent");
     const audit = templates.find((template) => template.name === "seo-audit");
     expect(audit?.nodes[0]?.type).toBe("researcher");
+    expect(audit?.nodes[0]?.instructions).toContain("Return only what this skill defines");
     expect(templates.some((template) => template.id === "pack-community")).toBe(false);
   });
 
@@ -107,6 +108,9 @@ describe("pack templates", () => {
   it("asks copy and visuals for a source packet and lets research gather sources", () => {
     expect(sourcePacketReady("Facts: Ken Miller smiled.\nDo not use: transform your smile")).toBe(true);
     expect(sourcePacketReady("Write 90 posts")).toBe(false);
+    expect(swarmPackVisible({ id: "skill-copywriting", name: "copywriting", description: "Posts" }, "")).toBe(true);
+    expect(swarmPackVisible({ id: "skill-headline-matrix", name: "headline-matrix", description: "Headlines" }, "")).toBe(false);
+    expect(swarmPackVisible({ id: "skill-headline-matrix", name: "headline-matrix", description: "Headlines" }, "headline")).toBe(true);
     expect(needsSourcePacket(deliverableKind({ name: "copywriting", path: "community/marketingskills/copywriting/SKILL.md" }))).toBe(
       true,
     );
