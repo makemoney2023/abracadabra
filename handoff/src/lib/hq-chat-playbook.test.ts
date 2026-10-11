@@ -36,7 +36,11 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("Parallel Search");
     expect(HQ_CHAT_PLAYBOOK).toContain("create_project with description");
     expect(HQ_CHAT_PLAYBOOK).toContain("file_actions takes that same brief as body and the projectId");
-    expect(HQ_CHAT_PLAYBOOK).toContain("one at a time");
+    expect(HQ_CHAT_PLAYBOOK).toContain("one workflow at a time");
+    expect(HQ_CHAT_PLAYBOOK).toContain("The server does not start the next workflow");
+    expect(HQ_CHAT_PLAYBOOK).toContain("7 posts for one persona");
+    expect(HQ_CHAT_PLAYBOOK).toContain("do not run that pack again");
+    expect(HQ_CHAT_PLAYBOOK).not.toContain("The server runs the later workflows");
     expect(HQ_CHAT_PLAYBOOK).toContain("delete_project");
     expect(HQ_CHAT_PLAYBOOK).toContain("delete_task");
     expect(HQ_CHAT_PLAYBOOK).toContain("Do not say you cannot delete work");

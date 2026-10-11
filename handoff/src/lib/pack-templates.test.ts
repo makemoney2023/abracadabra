@@ -63,6 +63,8 @@ describe("pack templates", () => {
     expect(marketing?.nodes.map((node) => node.name)).toEqual(["copywriting", "seo-audit"]);
     expect(marketing?.nodes[1]?.type).toBe("researcher");
     expect(marketing?.nodes[0]?.instructions).toContain(".cursor/skills/community/marketingskills/copywriting/SKILL.md");
+    expect(marketing?.nodes[0]?.instructions).toContain("at most 7");
+    expect(marketing?.nodes[0]?.instructions).toContain("Do not invent");
     expect(templates.some((template) => template.id === "pack-community")).toBe(false);
     expect(marketing?.edges).toEqual([
       {

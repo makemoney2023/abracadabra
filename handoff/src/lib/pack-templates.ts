@@ -18,6 +18,17 @@ export type PackTemplate = {
 
 const MAX_NODES = 4;
 
+/** Every pack node and every swarm brief. One job, sourced, and short enough to stay specific. */
+export const SWARM_BATCH_CONTRACT =
+  "Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing.";
+
+/** Skill path, a short description, and the batch contract the swarm must follow. */
+export function packSkillInstructions(skill: { path: string; description: string }): string {
+  const path = skill.path.trim().replace(/^\.cursor\/skills\//, "");
+  const description = skill.description.replace(/\s+/g, " ").trim().slice(0, 280);
+  return `Follow .cursor/skills/${path}. ${description} ${SWARM_BATCH_CONTRACT}`.trim();
+}
+
 const SKIP = ["openmontage", "remotion", "img2threejs", "text-to-cad", "openvid", "cursor-managed", "context-engineering"];
 
 /** Folder that groups related skills. The skill's own directory is not the pack. */
@@ -90,7 +101,7 @@ export function packTemplatesFromCatalog(catalog: SkillCard[]): PackTemplate[] {
       id: `${slug(id)}-${index + 1}`,
       type: agentType(skill),
       name: skill.name,
-      instructions: `Follow .cursor/skills/${skill.path}. ${skill.description.replace(/\s+/g, " ").slice(0, 280)}`.trim(),
+      instructions: packSkillInstructions(skill),
       position: { x: 50 + index * 310, y: 120 },
     }));
     const edges = nodes.slice(1).map((node, index) => ({

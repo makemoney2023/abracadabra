@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-11
+
+- **What changed** — Skill packs do one sourced batch of at most 7 items. A finished swarm no longer starts the next workflow. Staff chat reads the output, and runs the next workflow only when that output is specific.
+- **Why** — A 90-day ask made narrow skills invent generic copy, and the next workflow treated that copy as fact.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/mcp.ts`, `swarm/src/pack-templates.json`, `docs/hq-agent-spec.md`, `docs/manual-project-swarm-gameplan.md`
+- **Data-flow impact** — Every pack node and every swarm brief carries the batch contract. The due wake runs only the first workflow in a group. `advance_workflow_chain` saves the output and leaves the rest. Chat calls `run_workflow` for the next one, and that run receives the earlier output.
+- **API / schema impact** — none. `advance_workflow_chain` no longer starts the next workflow.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/hq-chat-playbook.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts` passed 68. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npx eslint` on the changed TypeScript files reported no new errors. `npx tsc --noEmit -p tsconfig.json` still fails on existing `LayoutProps` and `PageProps` names in `src/app/layout.tsx` and `src/app/page.tsx`.
+
 ## 2026-10-10
 
 - **What changed** — Staff chat can list, read, and search a GitHub repo attached to the client.
