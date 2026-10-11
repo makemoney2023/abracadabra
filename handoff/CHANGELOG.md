@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `swarm/src/pack-templates.json`
 - **Data-flow impact** — `list_swarm_packs` returns the research, copy, visual, and language skills. `create_workflow` accepts a `.cursor/skills` path and stores that skill's template. A missing source packet returns status `source` and does not call the swarm. After an accepted copy batch, chat stores the voice with `revise_brief`.
 - **API / schema impact** — none. Pack template ids are now `skill-...` instead of a four-skill folder chain.
-- **Verification** — pending.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/hq-chat-playbook.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/lib/task-packs.test.ts src/lib/pack-picker.test.ts` passed 77. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npx eslint` on the changed TypeScript files exited 0.
 
 ## 2026-10-11
 
