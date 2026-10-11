@@ -2,6 +2,15 @@
 
 ## 2026-10-11
 
+- **What changed** — Each swarm template is one skill. Research returns a source table. Copy returns 7 posts for one persona. Copy, visuals, and the generic-language pass do not start until the brief has Facts: and Do not use:.
+- **Why** — A folder chain ran the first four skills in alphabetical order, so a calendar request never reached the copy skill and invented the rest.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `swarm/src/pack-templates.json`
+- **Data-flow impact** — `list_swarm_packs` returns the research, copy, visual, and language skills. `create_workflow` accepts a `.cursor/skills` path and stores that skill's template. A missing source packet returns status `source` and does not call the swarm. After an accepted copy batch, chat stores the voice with `revise_brief`.
+- **API / schema impact** — none. Pack template ids are now `skill-...` instead of a four-skill folder chain.
+- **Verification** — pending.
+
+## 2026-10-11
+
 - **What changed** — Skill packs do one sourced batch of at most 7 items. A finished swarm no longer starts the next workflow. Staff chat reads the output, and runs the next workflow only when that output is specific.
 - **Why** — A 90-day ask made narrow skills invent generic copy, and the next workflow treated that copy as fact.
 - **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/mcp.ts`, `swarm/src/pack-templates.json`, `docs/hq-agent-spec.md`, `docs/manual-project-swarm-gameplan.md`

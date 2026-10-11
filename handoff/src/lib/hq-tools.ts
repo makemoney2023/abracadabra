@@ -50,6 +50,7 @@ import {
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
 import { packsFromTemplates } from "@/lib/pack-picker";
+import { deliverableKind, packTemplateId } from "@/lib/pack-templates";
 import type { ObjectStore } from "@/lib/store/objects";
 import { installationAccessToken } from "@/lib/github/contents";
 import { listRepoDirectory, readRepoText, searchRepoCode, type RepoBrowseError } from "@/lib/github/browse";
@@ -1167,7 +1168,11 @@ async function makeWorkflow(
 ): Promise<HqToolResult> {
   const organizationId = text(input, "organizationId");
   if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
-  const templateId = text(input, "templateId");
+  const requestedTemplate = text(input, "templateId");
+  const templateId =
+    requestedTemplate.includes("SKILL.md") || requestedTemplate.includes(".cursor/skills/")
+      ? packTemplateId(requestedTemplate) ?? ""
+      : requestedTemplate;
   const dueAt = optionalInteger(input, "dueAt");
   const everyMs = optionalInteger(input, "everyMs");
   const mcpServerIds = optionalStrings(input, "mcpServerIds");
@@ -1400,11 +1405,13 @@ async function listSwarmPacks(swarm: ToolOptions["swarm"]): Promise<HqToolResult
   const load = swarm?.fetchImpl ?? fetch;
   const response = await load(`${origin.replace(/\/$/, "")}/api/templates`);
   if (!response.ok) return { ok: false, error: "invalid" };
-  const packs = packsFromTemplates(await response.json()).map((pack) => ({
-    id: pack.id,
-    name: pack.name,
-    description: pack.description,
-  }));
+  const packs = packsFromTemplates(await response.json())
+    .filter((pack) => deliverableKind({ name: pack.name, path: pack.id }) !== "skill")
+    .map((pack) => ({
+      id: pack.id,
+      name: pack.name,
+      description: pack.description,
+    }));
   return { ok: true, value: packs };
 }
 

@@ -1402,6 +1402,51 @@ describe("client workflows", () => {
     const rows = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files");
     expect(rows.map((row) => row.relative_path)).toEqual(["agent/swarm/exec-1/report.pdf"]);
   });
+
+  it("refuses copy without a source packet and runs it once facts and banned lines are present", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Social", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const copy = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Copy posts",
+      templateId: "skill-community-marketingskills-copywriting",
+      dueAt: NOW,
+      now: NOW,
+    });
+    if (!copy.ok) throw new Error("workflow");
+    let calls = 0;
+    const blocked = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 1,
+      workflowId: copy.workflow.id,
+      instruction: "Write the posts.",
+      fetchImpl: (async () => {
+        calls += 1;
+        return Response.json({});
+      }) as typeof fetch,
+      wait: async () => {},
+    });
+    expect(blocked).toMatchObject({ ok: true, status: "source", executionId: "" });
+    expect(calls).toBe(0);
+    const executed: { workflowId: string; input: string }[] = [];
+    const started = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      workflowId: copy.workflow.id,
+      instruction: "Facts: Ken Miller smiled again.\nDo not use: transform your smile",
+      fetchImpl: chainFetch(executed),
+      wait: async () => {},
+    });
+    expect(started).toMatchObject({ ok: true, status: "completed", workflowId: copy.workflow.id });
+    expect(executed[0]?.input).toContain("Facts:");
+    expect(executed[0]?.input).toContain("platform, type, hook");
+  });
 });
 
 function chainFetch(

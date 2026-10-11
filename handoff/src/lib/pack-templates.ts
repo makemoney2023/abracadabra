@@ -16,17 +16,75 @@ export type PackTemplate = {
   edges: { id: string; source: string; target: string }[];
 };
 
-const MAX_NODES = 4;
-
 /** Every pack node and every swarm brief. One job, sourced, and short enough to stay specific. */
 export const SWARM_BATCH_CONTRACT =
   "Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing.";
 
-/** Skill path, a short description, and the batch contract the swarm must follow. */
-export function packSkillInstructions(skill: { path: string; description: string }): string {
+export type DeliverableKind = "research" | "copy" | "visual" | "language" | "skill";
+
+const OUTPUT_SHAPES: Record<Exclude<DeliverableKind, "skill">, string> = {
+  research: "Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+  copy: "Return exactly 7 rows for one persona. Columns: platform, type, hook, body, hashtags, CTA. A proof row uses a quote from the input. Do not write a 90-day calendar.",
+  visual: "Return one image prompt and one video prompt for each approved post in the input. Use the brand colors and fonts from the input. No placeholder model name.",
+  language: "Return the same 7 rows with repeated and generic lines replaced. Do not add posts.",
+};
+
+/** Which deliverable this skill is allowed to produce. */
+export function deliverableKind(skill: { name: string; path: string }): DeliverableKind {
+  const name = skill.name.toLowerCase();
+  const path = skill.path.toLowerCase();
+  if (name.includes("generic-language") || path.includes("generic-language")) return "language";
+  if (path.includes("visual-skills") || name === "image" || name === "video") return "visual";
+  if (
+    name === "copywriting" ||
+    path.includes("copywriting") ||
+    name === "social" ||
+    path.includes("/social/") ||
+    name === "ad-creative" ||
+    path.includes("ad-creative")
+  ) {
+    return "copy";
+  }
+  if (
+    name === "parallel-web-search" ||
+    name === "parallel-deep-research" ||
+    name === "competitor-teardown" ||
+    path.includes("parallel-web-search")
+  ) {
+    return "research";
+  }
+  return "skill";
+}
+
+export function outputShape(kind: DeliverableKind): string {
+  return kind === "skill" ? "" : OUTPUT_SHAPES[kind];
+}
+
+/** Copy, visuals, and the language pass need facts and banned lines in the brief. */
+export function needsSourcePacket(kind: DeliverableKind): boolean {
+  return kind === "copy" || kind === "visual" || kind === "language";
+}
+
+export function sourcePacketReady(brief: string): boolean {
+  const text = brief.toLowerCase();
+  return text.includes("facts:") && text.includes("do not use:");
+}
+
+/** Skill path, a short description, the batch contract, and the output shape. */
+export function packSkillInstructions(skill: { name: string; path: string; description: string }): string {
   const path = skill.path.trim().replace(/^\.cursor\/skills\//, "");
   const description = skill.description.replace(/\s+/g, " ").trim().slice(0, 280);
-  return `Follow .cursor/skills/${path}. ${description} ${SWARM_BATCH_CONTRACT}`.trim();
+  const shape = outputShape(deliverableKind(skill));
+  return `Follow .cursor/skills/${path}. ${description} ${SWARM_BATCH_CONTRACT}${shape ? ` ${shape}` : ""}`.trim();
+}
+
+/** One swarm template for one skill. A path that is not a pack skill returns null. */
+export function skillTemplateId(skillPath: string): string | null {
+  const relative = skillPath.trim().replace(/^\/+/, "").replace(/^\.cursor\/skills\//, "");
+  if (!relative || !relative.toLowerCase().endsWith("/skill.md")) return null;
+  const pack = packKey(relative);
+  if (!pack || pack.split("/").length < 2 || skipped(pack) || skipped(relative)) return null;
+  return `skill-${slug(relative.replace(/\/skill\.md$/i, ""))}`;
 }
 
 const SKIP = ["openmontage", "remotion", "img2threejs", "text-to-cad", "openvid", "cursor-managed", "context-engineering"];
@@ -47,11 +105,7 @@ function skipped(value: string): boolean {
 
 /** The swarm template id for a task skill path. A path that is not a pack skill returns null. */
 export function packTemplateId(skillPath: string): string | null {
-  const relative = skillPath.trim().replace(/^\/+/, "").replace(/^\.cursor\/skills\//, "");
-  if (!relative) return null;
-  const pack = packKey(relative);
-  if (!pack || pack === "root" || !pack.includes("/")) return null;
-  return `pack-${slug(pack)}`;
+  return skillTemplateId(skillPath);
 }
 
 function slug(value: string): string {
@@ -72,52 +126,32 @@ function agentType(skill: SkillCard): PackAgentType {
   return "writer";
 }
 
-function titleFrom(pack: string): string {
-  const last = pack.split("/").at(-1) ?? pack;
-  return last
-    .replace(/^\d+-/, "")
-    .split("-")
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-/** One chainable template per related pack. A pack needs two skills. Each template keeps four. */
+/** One single-skill template per pack skill. The swarm runs that skill alone. */
 export function packTemplatesFromCatalog(catalog: SkillCard[]): PackTemplate[] {
-  const groups = new Map<string, SkillCard[]>();
-  for (const skill of catalog) {
-    const pack = packKey(skill.path);
-    if (!pack || pack.split("/").length < 2 || skipped(pack) || skipped(skill.path)) continue;
-    const list = groups.get(pack) ?? [];
-    list.push(skill);
-    groups.set(pack, list);
-  }
   const templates: PackTemplate[] = [];
-  for (const [pack, skills] of groups) {
-    const chosen = [...skills].sort((a, b) => a.name.localeCompare(b.name)).slice(0, MAX_NODES);
-    if (chosen.length < 2) continue;
-    const id = `pack-${slug(pack)}`;
-    const nodes = chosen.map((skill, index) => ({
-      id: `${slug(id)}-${index + 1}`,
-      type: agentType(skill),
-      name: skill.name,
-      instructions: packSkillInstructions(skill),
-      position: { x: 50 + index * 310, y: 120 },
-    }));
-    const edges = nodes.slice(1).map((node, index) => ({
-      id: `${slug(id)}-e${index + 1}`,
-      source: nodes[index]!.id,
-      target: node.id,
-    }));
+  for (const skill of catalog) {
+    const id = skillTemplateId(skill.path);
+    if (!id) continue;
+    const kind = deliverableKind(skill);
+    const shape = outputShape(kind);
+    const description = skill.description.replace(/\s+/g, " ").trim().slice(0, 140);
     templates.push({
       id,
-      name: titleFrom(pack),
-      description: `Chain this pack. Skills: ${chosen.map((skill) => skill.name).join(", ")}.`,
-      nodes,
-      edges,
+      name: skill.name,
+      description: shape ? `${skill.name}. ${shape}` : `${skill.name}. ${description}`,
+      nodes: [
+        {
+          id: `${id}-1`,
+          type: agentType(skill),
+          name: skill.name,
+          instructions: packSkillInstructions(skill),
+          position: { x: 50, y: 120 },
+        },
+      ],
+      edges: [],
     });
   }
-  return templates.sort((a, b) => a.name.localeCompare(b.name));
+  return templates.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 
 export const MARKETING_PACK_ID = "pack-community-marketingskills";

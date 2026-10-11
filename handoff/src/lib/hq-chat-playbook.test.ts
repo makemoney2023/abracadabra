@@ -40,6 +40,12 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("The server does not start the next workflow");
     expect(HQ_CHAT_PLAYBOOK).toContain("7 posts for one persona");
     expect(HQ_CHAT_PLAYBOOK).toContain("do not run that pack again");
+    expect(HQ_CHAT_PLAYBOOK).toContain("Each swarm template is one skill");
+    expect(HQ_CHAT_PLAYBOOK).toContain("Facts:");
+    expect(HQ_CHAT_PLAYBOOK).toContain("Do not use:");
+    expect(HQ_CHAT_PLAYBOOK).toContain("generic-language-killer");
+    expect(HQ_CHAT_PLAYBOOK).toContain("name, fact, source, unknown");
+    expect(HQ_CHAT_PLAYBOOK).toContain("revise_brief");
     expect(HQ_CHAT_PLAYBOOK).not.toContain("The server runs the later workflows");
     expect(HQ_CHAT_PLAYBOOK).toContain("delete_project");
     expect(HQ_CHAT_PLAYBOOK).toContain("delete_task");
