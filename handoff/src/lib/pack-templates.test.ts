@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { packKey, packTemplateId, packTemplatesFromCatalog } from "./pack-templates";
+import { deliverableKind, needsSourcePacket, packKey, packTemplateId, packTemplatesFromCatalog, sourcePacketReady, swarmPackVisible } from "./pack-templates";
 
 const catalog = [
   {
@@ -53,24 +53,26 @@ describe("pack templates", () => {
     expect(packKey("community/business-analysis-skills/skills/probe/SKILL.md")).toBe("community/business-analysis-skills");
   });
 
-  it("builds a chain for each related pack and leaves tool trees out", () => {
+  it("builds one skill template per skill and leaves tool trees out", () => {
     const templates = packTemplatesFromCatalog(catalog);
     expect(templates.map((template) => template.id)).toEqual([
-      "pack-community-marketingskills",
-      "pack-community-awesome-claude-corporate-skills-05-sales",
+      "skill-community-awesome-claude-corporate-skills-05-sales-account-research",
+      "skill-community-awesome-claude-corporate-skills-05-sales-call-prep",
+      "skill-community-marketingskills-copywriting",
+      "skill-community-lonely-pack-only",
+      "skill-community-marketingskills-seo-audit",
     ]);
-    const marketing = templates.find((template) => template.id === "pack-community-marketingskills");
-    expect(marketing?.nodes.map((node) => node.name)).toEqual(["copywriting", "seo-audit"]);
-    expect(marketing?.nodes[1]?.type).toBe("researcher");
-    expect(marketing?.nodes[0]?.instructions).toContain(".cursor/skills/community/marketingskills/copywriting/SKILL.md");
+    const copy = templates.find((template) => template.name === "copywriting");
+    expect(copy?.nodes).toHaveLength(1);
+    expect(copy?.edges).toEqual([]);
+    expect(copy?.nodes[0]?.instructions).toContain(".cursor/skills/community/marketingskills/copywriting/SKILL.md");
+    expect(copy?.nodes[0]?.instructions).toContain("at most 7");
+    expect(copy?.nodes[0]?.instructions).toContain("platform, type, hook, body, hashtags, CTA");
+    expect(copy?.nodes[0]?.instructions).toContain("Do not invent");
+    const audit = templates.find((template) => template.name === "seo-audit");
+    expect(audit?.nodes[0]?.type).toBe("researcher");
+    expect(audit?.nodes[0]?.instructions).toContain("Return only what this skill defines");
     expect(templates.some((template) => template.id === "pack-community")).toBe(false);
-    expect(marketing?.edges).toEqual([
-      {
-        id: "pack-community-marketingskills-e1",
-        source: "pack-community-marketingskills-1",
-        target: "pack-community-marketingskills-2",
-      },
-    ]);
   });
 
   it("types a generation skill as a writer even when its text mentions review words", () => {
@@ -86,18 +88,37 @@ describe("pack templates", () => {
         path: "community/marketingskills/page-cro/SKILL.md",
       },
     ]);
-    const nodes = templates[0]?.nodes ?? [];
-    expect(nodes.find((node) => node.name === "ad-creative")?.type).toBe("writer");
-    expect(nodes.find((node) => node.name === "page-cro")?.type).toBe("critic");
+    expect(templates.find((template) => template.name === "ad-creative")?.nodes[0]?.type).toBe("writer");
+    expect(templates.find((template) => template.name === "page-cro")?.nodes[0]?.type).toBe("critic");
+    expect(templates.find((template) => template.name === "ad-creative")?.nodes[0]?.instructions).toContain(
+      "Do not write a 90-day calendar",
+    );
   });
 
   it("maps a task skill path to the live pack id", () => {
     expect(packTemplateId(".cursor/skills/community/marketingskills/ad-creative/SKILL.md")).toBe(
-      "pack-community-marketingskills",
+      "skill-community-marketingskills-ad-creative",
     );
     expect(
       packTemplateId(".cursor/skills/community/advertising-skills/skills/operator-os/scroll-stopping-creative/SKILL.md"),
-    ).toBe("pack-community-advertising-skills-skills-operator-os");
+    ).toBe("skill-community-advertising-skills-skills-operator-os-scroll-stopping-creative");
     expect(packTemplateId("notes.md")).toBeNull();
+  });
+
+  it("asks copy and visuals for a source packet and lets research gather sources", () => {
+    expect(sourcePacketReady("Facts: Ken Miller smiled.\nDo not use: transform your smile")).toBe(true);
+    expect(sourcePacketReady("Write 90 posts")).toBe(false);
+    expect(swarmPackVisible({ id: "skill-copywriting", name: "copywriting", description: "Posts" }, "")).toBe(true);
+    expect(swarmPackVisible({ id: "skill-headline-matrix", name: "headline-matrix", description: "Headlines" }, "")).toBe(false);
+    expect(swarmPackVisible({ id: "skill-headline-matrix", name: "headline-matrix", description: "Headlines" }, "headline")).toBe(true);
+    expect(needsSourcePacket(deliverableKind({ name: "copywriting", path: "community/marketingskills/copywriting/SKILL.md" }))).toBe(
+      true,
+    );
+    expect(needsSourcePacket(deliverableKind({ name: "image", path: "community/visual-skills/image/SKILL.md" }))).toBe(true);
+    expect(
+      needsSourcePacket(
+        deliverableKind({ name: "parallel-web-search", path: "plugins/parallel/parallel-web-search/SKILL.md" }),
+      ),
+    ).toBe(false);
   });
 });

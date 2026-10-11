@@ -5,7 +5,7 @@ import { leadBrief, readSwarmArtifacts, readSwarmReport, readSwarmRun, runLeadSw
 import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
-import { packTemplateId } from "./pack-templates";
+import { deliverableKind, needsSourcePacket, outputShape, packTemplateId, sourcePacketReady, SWARM_BATCH_CONTRACT } from "./pack-templates";
 import { templateOnCard } from "./swarm-ready";
 import { markTaskDone } from "./task-done";
 import type { ObjectStore } from "./store/objects";
@@ -384,11 +384,8 @@ function blockingPredecessor(rows: ChainWorkflow[], workflowId: string): ChainWo
   return ordered.slice(0, index).find((row) => !outputReady(row)) ?? null;
 }
 
-function followingWorkflow(rows: ChainWorkflow[], workflowId: string): ChainWorkflow | null {
-  const ordered = orderedChain(rows);
-  const index = ordered.findIndex((row) => row.id === workflowId);
-  if (index < 0) return null;
-  return ordered[index + 1] ?? null;
+function chainIndex(rows: ChainWorkflow[], workflowId: string): number {
+  return orderedChain(rows).findIndex((row) => row.id === workflowId);
 }
 
 function priorChainText(rows: ChainWorkflow[], workflowId: string): string {
@@ -402,14 +399,18 @@ function priorChainText(rows: ChainWorkflow[], workflowId: string): string {
     .join("\n\n");
 }
 
-function fitSwarmBrief(prior: string, own: string): string {
-  const task = own.trim().slice(0, SWARM_INPUT_LIMIT);
+function fitSwarmBrief(prior: string, own: string, kind: ReturnType<typeof deliverableKind> = "skill"): string {
+  const shape = outputShape(kind);
+  const contract = shape ? `${SWARM_BATCH_CONTRACT} ${shape}` : SWARM_BATCH_CONTRACT;
+  const taskRoom = Math.max(0, SWARM_INPUT_LIMIT - contract.length - 2);
+  const task = own.trim().slice(0, taskRoom);
+  const head = task ? `${contract}\n\n${task}` : contract;
   const research = prior.trim();
-  if (!research) return task;
-  const room = SWARM_INPUT_LIMIT - task.length - 2;
-  if (room <= 0) return task;
+  if (!research) return head.slice(0, SWARM_INPUT_LIMIT);
+  const room = SWARM_INPUT_LIMIT - head.length - 2;
+  if (room <= 0) return head.slice(0, SWARM_INPUT_LIMIT);
   const clipped = research.length > room ? research.slice(0, room) : research;
-  return `${clipped}\n\n${task}`;
+  return `${clipped}\n\n${head}`.slice(0, SWARM_INPUT_LIMIT);
 }
 
 function capWithSpace(brief: string, extra: string): string {
@@ -537,8 +538,10 @@ export async function claimDueWorkflow(input: {
       [input.organizationId, input.now],
     );
     for (const candidate of due) {
-      const blocker = blockingPredecessor(await chainWorkflows(input.sql, candidate.group_id), candidate.id);
+      const chain = await chainWorkflows(input.sql, candidate.group_id);
+      const blocker = blockingPredecessor(chain, candidate.id);
       if (!blocker) {
+        if (chainIndex(chain, candidate.id) > 0) continue;
         row = candidate;
         break;
       }
@@ -577,7 +580,23 @@ export async function claimDueWorkflow(input: {
       // A missing space must not stop the swarm. The description write is already inside the helper.
     }
   }
-  const brief = fitSwarmBrief(priorChainText(chain, row.id), ownBrief);
+  const kind = deliverableKind({ name: row.name, path: row.template_id });
+  if (needsSourcePacket(kind) && !sourcePacketReady(statedBrief || ownBrief)) {
+    return {
+      ok: true,
+      none: false,
+      workflowId: row.id,
+      templateId: row.template_id,
+      packName: row.name,
+      executionId: "",
+      status: "source",
+      output: "This swarm needs a source packet. Put Facts: and Do not use: in the brief, then run it again.",
+      more: false,
+      taskId: row.task_id,
+      projectId: row.project_id,
+    };
+  }
+  const brief = fitSwarmBrief(priorChainText(chain, row.id), ownBrief, kind);
   if (row.task_id) {
     await input.sql.run("UPDATE tasks SET stage = 'run', updated_at = ? WHERE id = ? AND status != 'done'", [
       input.now,
@@ -707,16 +726,6 @@ export async function claimDueWorkflow(input: {
   }
   if (finished) {
     await input.sql.run("UPDATE client_workflows SET last_output = ? WHERE id = ?", [started.output, row.id]);
-    const next = followingWorkflow(await chainWorkflows(input.sql, row.group_id), row.id);
-    if (next && !outputReady(next) && !next.last_execution_id && next.last_status !== "failed") {
-      await input.sql.run(
-        `UPDATE client_workflows
-         SET next_run_at = CASE WHEN next_run_at IS NULL OR next_run_at > ? THEN ? ELSE next_run_at END,
-             updated_at = ?
-         WHERE id = ?`,
-        [input.now, input.now, input.now, next.id],
-      );
-    }
   }
   const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
   await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
@@ -831,7 +840,7 @@ export async function scheduleTaskSwarm(
   return { ok: true, none: false, workflowId: created.workflow.id, organizationId: task.organization_id };
 }
 
-/** Save a finished swarm's output and start the next workflow in that group. */
+/** Save a finished swarm's output. The next workflow stays until chat runs it. */
 export async function advanceWorkflowChain(input: {
   sql: Sql;
   organizationId: string;
@@ -863,28 +872,10 @@ export async function advanceWorkflowChain(input: {
     input.now,
     current.id,
   ]);
-  const next = followingWorkflow(await chainWorkflows(input.sql, current.group_id), current.id);
-  if (!next || outputReady(next) || next.last_execution_id || next.last_status === "failed") return { ok: true, none: true };
-  await input.sql.run(
-    `UPDATE client_workflows
-     SET next_run_at = CASE WHEN next_run_at IS NULL OR next_run_at > ? THEN ? ELSE next_run_at END,
-         updated_at = ?
-     WHERE id = ?`,
-    [input.now, input.now, input.now, next.id],
-  );
-  return claimDueWorkflow({
-    sql: input.sql,
-    organizationId: input.organizationId,
-    origin: input.origin,
-    now: input.now,
-    workflowId: next.id,
-    fetchImpl: input.fetchImpl,
-    wait: input.wait,
-    store: input.store,
-  });
+  return { ok: true, none: true };
 }
 
-/** File a swarm the worker already finished, then start the next workflow in that group. */
+/** File a swarm the worker already finished. The next workflow stays until chat runs it. */
 export async function settleRunningSwarms(input: {
   sql: Sql;
   store?: ObjectStore;

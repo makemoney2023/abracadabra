@@ -156,7 +156,7 @@ const AGENT_TOOLS = [
   },
   {
     name: "advance_workflow_chain",
-    description: "Save a finished swarm's output and start the next workflow in its group. The next run receives that output.",
+    description: "Save a finished swarm's output. The next workflow stays until chat runs it, and that run receives this output.",
     inputSchema: {
       type: "object",
       properties: {

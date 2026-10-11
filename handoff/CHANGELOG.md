@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-10-11
+
+- **What changed** — Every skill runs as its own job. Chat finds any skill with `list_swarm_packs` query. Copy, visuals, and the language pass are still the only ones that wait for `Facts:` and `Do not use:`.
+- **Why** — The deliverable list hid every other skill, so a headline or an audit could not be chosen the same way as copy.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `swarm/src/pack-templates.json`
+- **Data-flow impact** — An empty pack list returns research, copy, language, and visual skills. A query returns every matching skill. Each skill brief says to return only what that skill defines.
+- **API / schema impact** — `list_swarm_packs` accepts `query`.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/hq-chat-playbook.test.ts src/lib/hq-tools.test.ts src/lib/client-workflows.test.ts` passed 70. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npx eslint` on the changed TypeScript files exited 0.
+
+## 2026-10-11
+
+- **What changed** — Each swarm template is one skill. Research returns a source table. Copy returns 7 posts for one persona. Copy, visuals, and the generic-language pass do not start until the brief has Facts: and Do not use:.
+- **Why** — A folder chain ran the first four skills in alphabetical order, so a calendar request never reached the copy skill and invented the rest.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `swarm/src/pack-templates.json`
+- **Data-flow impact** — `list_swarm_packs` returns the research, copy, visual, and language skills. `create_workflow` accepts a `.cursor/skills` path and stores that skill's template. A missing source packet returns status `source` and does not call the swarm. After an accepted copy batch, chat stores the voice with `revise_brief`.
+- **API / schema impact** — none. Pack template ids are now `skill-...` instead of a four-skill folder chain.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/hq-chat-playbook.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/lib/task-packs.test.ts src/lib/pack-picker.test.ts` passed 77. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npx eslint` on the changed TypeScript files exited 0.
+
+## 2026-10-11
+
+- **What changed** — Skill packs do one sourced batch of at most 7 items. A finished swarm no longer starts the next workflow. Staff chat reads the output, and runs the next workflow only when that output is specific.
+- **Why** — A 90-day ask made narrow skills invent generic copy, and the next workflow treated that copy as fact.
+- **Code touchpoints** — `handoff/src/lib/pack-templates.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/mcp.ts`, `swarm/src/pack-templates.json`, `docs/hq-agent-spec.md`, `docs/manual-project-swarm-gameplan.md`
+- **Data-flow impact** — Every pack node and every swarm brief carries the batch contract. The due wake runs only the first workflow in a group. `advance_workflow_chain` saves the output and leaves the rest. Chat calls `run_workflow` for the next one, and that run receives the earlier output.
+- **API / schema impact** — none. `advance_workflow_chain` no longer starts the next workflow.
+- **Verification** — `npx vitest run src/lib/pack-templates.test.ts src/lib/hq-chat-playbook.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts` passed 68. `npx tsc --noEmit -p tsconfig.agent.json` exited 0. `npx eslint` on the changed TypeScript files reported no new errors. `npx tsc --noEmit -p tsconfig.json` still fails on existing `LayoutProps` and `PageProps` names in `src/app/layout.tsx` and `src/app/page.tsx`.
+
 ## 2026-10-10
 
 - **What changed** — Staff chat can list, read, and search a GitHub repo attached to the client.

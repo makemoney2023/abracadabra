@@ -50,6 +50,7 @@ import {
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
 import { packsFromTemplates } from "@/lib/pack-picker";
+import { packTemplateId, swarmPackVisible } from "@/lib/pack-templates";
 import type { ObjectStore } from "@/lib/store/objects";
 import { installationAccessToken } from "@/lib/github/contents";
 import { listRepoDirectory, readRepoText, searchRepoCode, type RepoBrowseError } from "@/lib/github/browse";
@@ -523,7 +524,7 @@ async function perform(
     return fromCrm(await mergeOrganizations(sql, caller, { keepId: text(input, "keepId"), dropId: text(input, "dropId") }, now));
   }
   if (tool === "set_task_stage") return setTaskStage(sql, caller, input, now, options);
-  if (tool === "list_swarm_packs") return listSwarmPacks(options.swarm);
+  if (tool === "list_swarm_packs") return listSwarmPacks(options.swarm, text(input, "query"));
   if (tool === "add_work") return addWork(sql, caller, input, now, options.wake);
   if (tool === "revise_brief") return reviseBrief(sql, caller, input, now);
   if (tool === "instruct_task") return instructTask(sql, caller, input, now);
@@ -1167,7 +1168,11 @@ async function makeWorkflow(
 ): Promise<HqToolResult> {
   const organizationId = text(input, "organizationId");
   if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
-  const templateId = text(input, "templateId");
+  const requestedTemplate = text(input, "templateId");
+  const templateId =
+    requestedTemplate.includes("SKILL.md") || requestedTemplate.includes(".cursor/skills/")
+      ? packTemplateId(requestedTemplate) ?? ""
+      : requestedTemplate;
   const dueAt = optionalInteger(input, "dueAt");
   const everyMs = optionalInteger(input, "everyMs");
   const mcpServerIds = optionalStrings(input, "mcpServerIds");
@@ -1394,17 +1399,19 @@ async function setDealStep(sql: Sql, caller: Caller, input: Record<string, unkno
   return { ok: true, value: { id: deal.id, nextStep: step, nextStepAt } };
 }
 
-async function listSwarmPacks(swarm: ToolOptions["swarm"]): Promise<HqToolResult> {
+async function listSwarmPacks(swarm: ToolOptions["swarm"], query = ""): Promise<HqToolResult> {
   const origin = swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
   if (!origin.startsWith("https://")) return { ok: false, error: "invalid" };
   const load = swarm?.fetchImpl ?? fetch;
   const response = await load(`${origin.replace(/\/$/, "")}/api/templates`);
   if (!response.ok) return { ok: false, error: "invalid" };
-  const packs = packsFromTemplates(await response.json()).map((pack) => ({
-    id: pack.id,
-    name: pack.name,
-    description: pack.description,
-  }));
+  const packs = packsFromTemplates(await response.json())
+    .filter((pack) => swarmPackVisible(pack, query))
+    .map((pack) => ({
+      id: pack.id,
+      name: pack.name,
+      description: pack.description,
+    }));
   return { ok: true, value: packs };
 }
 

@@ -28,7 +28,7 @@ export function packsFromTemplates(payload: unknown): PackCandidate[] {
   for (const row of rows) {
     if (!row || typeof row !== "object") continue;
     const id = "id" in row && typeof row.id === "string" ? row.id : "";
-    if (!id.startsWith("pack-")) continue;
+    if (!id.startsWith("pack-") && !id.startsWith("skill-")) continue;
     const name = "name" in row && typeof row.name === "string" && row.name.trim() ? row.name.trim() : id;
     const description = "description" in row && typeof row.description === "string" ? row.description : name;
     packs.push({ id, name, description });
@@ -63,7 +63,7 @@ export function packIdFromModel(raw: string, packs: PackCandidate[]): string | n
   } catch {
     // The model often returns the id as a sentence.
   }
-  const match = text.match(/pack-[a-z0-9-]+/i);
+  const match = text.match(/(?:pack|skill)-[a-z0-9-]+/i);
   return match && ids.has(match[0]) ? match[0] : null;
 }
 

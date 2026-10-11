@@ -45,8 +45,12 @@ describe("skill pack picker", () => {
       packsFromTemplates([
         { id: "pipeline-intake", name: "Intake" },
         { id: "pack-seo", name: "Seo", description: "Search." },
+        { id: "skill-community-marketingskills-copywriting", name: "copywriting", description: "Posts." },
       ]),
-    ).toEqual([{ id: "pack-seo", name: "Seo", description: "Search." }]);
+    ).toEqual([
+      { id: "pack-seo", name: "Seo", description: "Search." },
+      { id: "skill-community-marketingskills-copywriting", name: "copywriting", description: "Posts." },
+    ]);
     expect(packsFromTemplates({ templates: [] })).toEqual([]);
   });
 });

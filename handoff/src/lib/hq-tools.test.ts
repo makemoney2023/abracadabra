@@ -696,7 +696,8 @@ describe("runHqTool", () => {
           fetchImpl: async () =>
             new Response(
               JSON.stringify([
-                { id: "pack-community-marketingskills", name: "Marketingskills", description: "Ads" },
+                { id: "skill-community-marketingskills-copywriting", name: "copywriting", description: "7 posts" },
+                { id: "skill-community-advertising-skills-headline-matrix", name: "headline-matrix", description: "Headlines" },
                 { id: "pipeline-demo", name: "Pipeline", description: "Not a pack" },
               ]),
             ),
@@ -704,7 +705,28 @@ describe("runHqTool", () => {
       },
     );
     expect(valueOf(listed)).toEqual([
-      { id: "pack-community-marketingskills", name: "Marketingskills", description: "Ads" },
+      { id: "skill-community-marketingskills-copywriting", name: "copywriting", description: "7 posts" },
+    ]);
+    const found = await runHqTool(
+      sql,
+      staff,
+      { tool: "list_swarm_packs", input: { query: "headline" } },
+      NOW,
+      {
+        swarm: {
+          origin: "https://swarm.example",
+          fetchImpl: async () =>
+            new Response(
+              JSON.stringify([
+                { id: "skill-community-marketingskills-copywriting", name: "copywriting", description: "7 posts" },
+                { id: "skill-community-advertising-skills-headline-matrix", name: "headline-matrix", description: "Headlines" },
+              ]),
+            ),
+        },
+      },
+    );
+    expect(valueOf(found)).toEqual([
+      { id: "skill-community-advertising-skills-headline-matrix", name: "headline-matrix", description: "Headlines" },
     ]);
   });
 
@@ -733,7 +755,7 @@ describe("runHqTool", () => {
       "SELECT template_id, next_run_at, task_id FROM client_workflows WHERE task_id = 'task-ads'",
     );
     expect(workflow).toMatchObject({
-      template_id: "pack-community-marketingskills",
+      template_id: "skill-community-marketingskills-ad-creative",
       next_run_at: NOW,
       task_id: "task-ads",
     });
