@@ -1078,7 +1078,22 @@ async function beginPipeline(
     }
     return { ok: false, error: started.error };
   }
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId,
+      kind: "pipeline.started",
+      body: started.stages[0]?.name || groupName(input),
+      data: { groupId: started.groupId, stage: started.stages[0]?.name || groupName(input) },
+    },
+    now,
+  );
   return { ok: true, value: { groupId: started.groupId, stages: started.stages, executionId: started.executionId } };
+}
+
+function groupName(input: Record<string, unknown>): string {
+  return text(input, "name") || "pipeline";
 }
 
 async function appendStage(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
@@ -1092,6 +1107,18 @@ async function appendStage(sql: Sql, caller: Caller, input: Record<string, unkno
     now,
   });
   if (!added.ok) return { ok: false, error: added.error };
+  const stage = skillPath.split("/").at(-2) || skillPath;
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId!,
+      kind: "pipeline.stage_added",
+      body: stage,
+      data: { groupId: text(input, "groupId") || text(input, "id"), stage },
+    },
+    now,
+  );
   return { ok: true, value: added };
 }
 
@@ -1100,7 +1127,23 @@ async function closePipeline(sql: Sql, caller: Caller, input: Record<string, unk
   if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
   const closed = await abandonPipeline(sql, { organizationId, groupId: text(input, "groupId") || text(input, "id"), now });
   if (!closed.ok) return { ok: false, error: closed.error };
-  return { ok: true, value: { groupId: text(input, "groupId") || text(input, "id"), status: "closed" } };
+  const groupId = text(input, "groupId") || text(input, "id");
+  const stage = await sql.get<{ name: string }>(
+    "SELECT name FROM client_workflows WHERE group_id = ? ORDER BY stage_order DESC LIMIT 1",
+    [groupId],
+  );
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId!,
+      kind: "pipeline.abandoned",
+      body: stage?.name || "pipeline",
+      data: { groupId, stage: stage?.name || "pipeline" },
+    },
+    now,
+  );
+  return { ok: true, value: { groupId, status: "closed" } };
 }
 
 async function acceptStage(
@@ -1122,6 +1165,23 @@ async function acceptStage(
     run: options.imageRun,
   });
   if (!accepted.ok) return { ok: false, error: accepted.error };
+  const stage = await sql.get<{ name: string; group_id: string }>(
+    "SELECT name, group_id FROM client_workflows WHERE id = ?",
+    [text(input, "id")],
+  );
+  if (stage && caller.userId) {
+    await logStaff(
+      sql,
+      {
+        organizationId: row.organization_id,
+        userId: caller.userId,
+        kind: "pipeline.stage_accepted",
+        body: stage.name,
+        data: { groupId: stage.group_id, stage: stage.name },
+      },
+      now,
+    );
+  }
   return { ok: true, value: accepted };
 }
 

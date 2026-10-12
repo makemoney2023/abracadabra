@@ -1484,6 +1484,71 @@ it("asks which repo when the client has more than one and does not call GitHub",
   expect(called).toBe(false);
 });
 
+it("writes each pipeline activity once, including when the same key is sent again", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const project = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Launch" }, idempotencyKey: "proj-pipe" },
+    NOW,
+  );
+  const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+  const path = ".cursor/skills/plugins/parallel/parallel-web-search/SKILL.md";
+  const first = await runHqTool(
+    sql,
+    staff,
+    { tool: "start_pipeline", input: { organizationId, projectId, name: "social", paths: path }, idempotencyKey: "pipe-1" },
+    NOW,
+  );
+  await runHqTool(
+    sql,
+    staff,
+    { tool: "start_pipeline", input: { organizationId, projectId, name: "social", paths: path }, idempotencyKey: "pipe-1" },
+    NOW,
+  );
+  const started = valueOf(first) as { groupId?: string; stages?: { id: string; name: string }[] };
+  const stageId = started.stages?.[0]?.id ?? "";
+  await sql.run("UPDATE client_workflows SET last_status = 'completed', last_output = 'The page' WHERE id = ?", [stageId]);
+  const accept = {
+    tool: "accept_workflow",
+    input: { id: stageId },
+    idempotencyKey: "accept-1",
+    approved: true,
+  };
+  await runHqTool(sql, staff, accept, NOW + 1);
+  await runHqTool(sql, staff, accept, NOW + 1);
+  const added = {
+    tool: "append_pipeline_stage",
+    input: { organizationId, groupId: started.groupId, paths: ".cursor/skills/community/marketingskills/seo-audit/SKILL.md" },
+    idempotencyKey: "add-1",
+  };
+  await runHqTool(sql, staff, added, NOW + 2);
+  await runHqTool(sql, staff, added, NOW + 2);
+  const abandoned = {
+    tool: "abandon_pipeline",
+    input: { organizationId, groupId: started.groupId },
+    idempotencyKey: "drop-1",
+    approved: true,
+  };
+  await runHqTool(sql, staff, abandoned, NOW + 3);
+  await runHqTool(sql, staff, abandoned, NOW + 3);
+  const rows = await sql.all<{ kind: string; data_json: string }>(
+    "SELECT kind, data_json FROM activities WHERE kind LIKE 'pipeline.%' ORDER BY kind",
+  );
+  expect(rows.map((row) => row.kind)).toEqual([
+    "pipeline.abandoned",
+    "pipeline.stage_accepted",
+    "pipeline.stage_added",
+    "pipeline.started",
+  ]);
+  for (const row of rows) {
+    const data = JSON.parse(row.data_json) as { groupId?: string; stage?: string };
+    expect(data.groupId).toBe(started.groupId);
+    expect(data.stage?.length).toBeGreaterThan(0);
+  }
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");
