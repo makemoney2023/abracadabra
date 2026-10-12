@@ -49,6 +49,13 @@ import {
   workflowTaskPlan,
   type WorkflowTaskPlan,
 } from "@/lib/client-workflows";
+import {
+  abandonPipeline,
+  acceptWorkflow,
+  appendPipelineStage,
+  pipelineStatus,
+  startPipeline,
+} from "@/lib/specialist-pipeline";
 import { packsFromTemplates } from "@/lib/pack-picker";
 import { packTemplateId, swarmPackVisible } from "@/lib/pack-templates";
 import type { ObjectStore } from "@/lib/store/objects";
@@ -76,6 +83,7 @@ type ToolOptions = {
   wake?: (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
+  imageRun?: (model: string, body: { prompt: string }) => Promise<{ image?: string }>;
   build?: BuildDeps;
   intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
   github?: { fetchImpl?: typeof fetch; secrets?: GithubSecrets | null; now?: number };
@@ -543,6 +551,11 @@ async function perform(
   if (tool === "create_workflow_group") return makeWorkflowGroup(sql, caller, input, now);
   if (tool === "create_workflow") return makeWorkflow(sql, caller, input, now, options);
   if (tool === "assign_workflow") return assignWorkflow(sql, caller, input, now);
+  if (tool === "start_pipeline") return beginPipeline(sql, caller, input, now, options);
+  if (tool === "append_pipeline_stage") return appendStage(sql, caller, input, now);
+  if (tool === "abandon_pipeline") return closePipeline(sql, caller, input, now);
+  if (tool === "accept_workflow") return acceptStage(sql, caller, input, now, options);
+  if (tool === "pipeline_status") return showPipeline(sql, caller, input);
   if (tool === "run_workflow") return runWorkflow(sql, caller, input, now, options);
   if (tool === "save_swarm_report") return saveSwarmReport(sql, caller, input, now, options);
   if (tool === "publish_swarm_report") return publishSwarmReport(sql, caller, input, now, options);
@@ -1030,6 +1043,93 @@ async function saveSwarmReport(
   return { ok: true, value: { path, executionId: row.last_execution_id } };
 }
 
+async function beginPipeline(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId)) || !caller.userId) return { ok: false, error: "missing" };
+  const paths = (text(input, "paths") || text(input, "title")).split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  const started = await startPipeline(sql, {
+    organizationId,
+    projectId: text(input, "projectId"),
+    label: text(input, "name") || "pipeline",
+    paths,
+    startedBy: caller.userId,
+    now,
+    origin: options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "",
+    instruction: text(input, "body"),
+    fetchImpl: options.swarm?.fetchImpl,
+    wait: options.swarm?.wait,
+    store: options.swarm?.store,
+  });
+  if (!started.ok) {
+    if (started.error === "open") {
+      return {
+        ok: true,
+        value: { refused: "A pipeline is still open. Accept the last page or call abandon_pipeline." },
+      };
+    }
+    return { ok: false, error: started.error };
+  }
+  return { ok: true, value: { groupId: started.groupId, stages: started.stages, executionId: started.executionId } };
+}
+
+async function appendStage(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+  const skillPath = (text(input, "paths") || text(input, "title") || text(input, "templateId")).split("\n")[0]?.trim() ?? "";
+  const added = await appendPipelineStage(sql, {
+    organizationId,
+    groupId: text(input, "groupId") || text(input, "id"),
+    skillPath,
+    now,
+  });
+  if (!added.ok) return { ok: false, error: added.error };
+  return { ok: true, value: added };
+}
+
+async function closePipeline(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+  const closed = await abandonPipeline(sql, { organizationId, groupId: text(input, "groupId") || text(input, "id"), now });
+  if (!closed.ok) return { ok: false, error: closed.error };
+  return { ok: true, value: { groupId: text(input, "groupId") || text(input, "id"), status: "closed" } };
+}
+
+async function acceptStage(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions,
+): Promise<HqToolResult> {
+  const row = await sql.get<{ organization_id: string }>("SELECT organization_id FROM client_workflows WHERE id = ?", [
+    text(input, "id"),
+  ]);
+  if (!row || !(await seenOrg(sql, caller, row.organization_id))) return { ok: false, error: "missing" };
+  const accepted = await acceptWorkflow(sql, {
+    organizationId: row.organization_id,
+    workflowId: text(input, "id"),
+    now,
+    store: options.swarm?.store,
+    run: options.imageRun,
+  });
+  if (!accepted.ok) return { ok: false, error: accepted.error };
+  return { ok: true, value: accepted };
+}
+
+async function showPipeline(sql: Sql, caller: Caller, input: Record<string, unknown>): Promise<HqToolResult> {
+  const organizationId = text(input, "organizationId");
+  if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
+  const stages = await pipelineStatus(sql, organizationId, text(input, "groupId") || text(input, "id"));
+  if (stages.length === 0) return { ok: false, error: "missing" };
+  return { ok: true, value: stages };
+}
+
 async function queueFollowupSwarms(
   sql: Sql,
   caller: Caller,
@@ -1083,20 +1183,6 @@ async function queueFollowupSwarms(
     workflowIds.push(workflow.workflow.id);
     if (workflow.workflow.taskId) taskIds.push(workflow.workflow.taskId);
   }
-  const review = text(input, "body");
-  const origin = options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
-  const started = await claimDueWorkflow({
-    sql,
-    organizationId,
-    origin,
-    now,
-    workflowId: workflowIds[0],
-    instruction: review ? `${review}\n\n${output}` : output,
-    trigger: "chat",
-    fetchImpl: options.swarm?.fetchImpl,
-    wait: options.swarm?.wait,
-    store: options.swarm?.store,
-  });
   await logStaff(
     sql,
     {
@@ -1108,16 +1194,14 @@ async function queueFollowupSwarms(
     },
     now,
   );
-  if (!started.ok) return started;
-  if (started.none) return { ok: false, error: "missing" };
   return {
     ok: true,
     value: {
       groupId: created.group.id,
       workflowIds,
       taskIds,
-      executionId: started.executionId,
-      status: started.status,
+      executionId: "",
+      status: "queued",
     },
   };
 }

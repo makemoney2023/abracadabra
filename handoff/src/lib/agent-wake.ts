@@ -161,6 +161,33 @@ export async function wakeOrganization(
   return response.ok;
 }
 
+/** One signed line into the staff member's HQ chat. A refused call returns false. */
+export async function postHqNotice(
+  env: WakeEnv,
+  userId: string,
+  text: string,
+  now: number,
+  fetchImpl: typeof fetch = fetch,
+): Promise<boolean> {
+  const url = env.AGENT_URL?.replace(/\/$/, "");
+  const secret = env.AGENT_WAKE_SECRET ?? "";
+  if (!url || !secret || !userId.trim() || !text.trim()) return false;
+  const body = JSON.stringify({ userId, text, sentAt: now });
+  try {
+    const response = await fetchImpl(`${url}/hq-notice`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-handoff-signature": signWake(secret, body),
+      },
+      body,
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function noteWakeMiss(sql: Sql, organizationId: string, now: number): Promise<void> {
   await sql.run(
     `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)

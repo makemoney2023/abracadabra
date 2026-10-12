@@ -1,5 +1,5 @@
 import type { AgentType } from '../types';
-import { formatToolsForPrompt, parseToolCalls, type McpToolDef } from '../mcp/client';
+import { formatToolsForPrompt, type McpToolDef } from '../mcp/client';
 import { MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE, shouldTryNextModel, withStepTimeout } from '../do/resume';
 import type { LoadedSkill } from './skills';
 
@@ -19,19 +19,22 @@ interface AgentRunOptions {
   maxToolRounds?: number;
   /** Full skill body loaded from R2 when the node's instructions reference a SKILL.md. */
   skill?: LoadedSkill | null;
+  /** Research must call Parallel through function calling. */
+  requireParallel?: boolean;
 }
 
 export interface AgentResult {
   output: string;
   toolsUsed: { server: string; tool: string }[];
+  status?: 'completed' | 'tool_failed' | 'model_failed';
 }
 
-// Primary model first, then fallbacks if a model is unavailable or deprecated.
-const MODELS = [
-  '@cf/meta/llama-3.1-8b-instruct-fp8',
-  '@cf/zai-org/glm-4.7-flash',
-  '@cf/meta/llama-3.2-3b-instruct',
-];
+/** Every specialist. A thrown call retries once on the second model. */
+export function specialistModels(): readonly string[] {
+  return ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/zai-org/glm-4.7-flash'];
+}
+
+const MODELS = specialistModels();
 
 function extractToken(parsed: any): string {
   if (!parsed || typeof parsed !== 'object') return '';
@@ -134,10 +137,10 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
       }
     }
 
-    throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
+    return { output: 'The model did not answer.', toolsUsed: [], status: 'model_failed' };
   }
 
-  // Tool path: ReAct loop (Reason → Act via MCP → Observe), then final answer.
+  // Tool path: native function calls. A printed tool-call block is not a call.
   return runToolLoop(type, options, env, systemPrompt, userPrompt, tools);
 }
 
@@ -167,41 +170,44 @@ async function runToolLoop(
     }
   };
 
-  for (let round = 1; round <= maxRounds; round++) {
-    const text = await runOnceChain(messages, env);
-    const calls = parseToolCalls(text).slice(0, 3);
+  if (options.requireParallel && !tools.some((tool) => /parallel/i.test(`${tool.name} ${tool.serverName}`))) {
+    return { output: 'Parallel Search is not available.', toolsUsed, status: 'tool_failed' };
+  }
 
+  for (let round = 1; round <= maxRounds; round++) {
+    let response: any;
+    try {
+      response = await runOnceRaw(messages, env, tools);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'The model did not answer.';
+      return { output: message, toolsUsed, status: 'model_failed' };
+    }
+    const text = extractToken(response) || (typeof response === 'string' ? response : '');
+    const calls = nativeToolCalls(response, tools).slice(0, 3);
     if (calls.length === 0) {
-      return { output: finalize(text, onToken), toolsUsed };
+      if (options.requireParallel && toolsUsed.length === 0) {
+        return { output: 'Parallel Search was not called.', toolsUsed, status: 'tool_failed' };
+      }
+      try {
+        return { output: finalize(text, onToken), toolsUsed, status: 'completed' };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'The model did not answer.';
+        return { output: message, toolsUsed, status: 'model_failed' };
+      }
     }
 
-    // Keep the model's reasoning + calls in context, then feed observations.
-    messages.push({ role: 'assistant', content: text });
+    messages.push({ role: 'assistant', content: text || JSON.stringify(calls) });
     for (const call of calls) {
-      const known = tools.some((t) => t.serverId === call.server && t.name === call.tool);
-      if (!known) {
-        messages.push({
-          role: 'user',
-          content: `Observation: no such tool "${call.tool}" on server "${call.server}". Use only the listed tools, or answer directly without a tool call.`,
-        });
-        continue;
-      }
       onToolEvent?.({ server: call.server, tool: call.tool, phase: 'call' });
       try {
         const observation = await executeTool!(call.server, call.tool, call.args);
         recordUse(call.server, call.tool);
         onToolEvent?.({ server: call.server, tool: call.tool, phase: 'result', summary: observation.slice(0, 160) });
-        messages.push({
-          role: 'user',
-          content: `Observation from ${call.server}/${call.tool}:\n${observation.slice(0, 3500)}`,
-        });
+        messages.push({ role: 'user', content: `Observation from ${call.server}/${call.tool}:\n${observation.slice(0, 3500)}` });
       } catch (e: any) {
         const msg = e?.message || 'Tool execution failed.';
         onToolEvent?.({ server: call.server, tool: call.tool, phase: 'result', summary: `ERROR: ${msg}` });
-        messages.push({
-          role: 'user',
-          content: `Observation: tool ${call.server}/${call.tool} failed: ${msg}. Try a different tool or answer from what you know.`,
-        });
+        return { output: `Tool ${call.tool} failed: ${msg}`, toolsUsed, status: 'tool_failed' };
       }
     }
   }
@@ -213,6 +219,55 @@ async function runToolLoop(
   });
   const text = await runOnceChain(messages, env);
   return { output: finalize(text, onToken), toolsUsed };
+}
+
+function nativeToolCalls(response: any, tools: McpToolDef[]): { server: string; tool: string; args: Record<string, unknown> }[] {
+  const listed = response?.tool_calls ?? response?.choices?.[0]?.message?.tool_calls ?? [];
+  if (!Array.isArray(listed)) return [];
+  const calls = [];
+  for (const call of listed) {
+    const name = call?.name ?? call?.function?.name;
+    if (typeof name !== 'string') continue;
+    const match = tools.find((tool) => tool.name === name);
+    if (!match) continue;
+    const args = call.arguments ?? call.function?.arguments ?? {};
+    calls.push({
+      server: match.serverId,
+      tool: match.name,
+      args: typeof args === 'string' ? safeJson(args) : (args as Record<string, unknown>),
+    });
+  }
+  return calls;
+}
+
+function safeJson(value: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+async function runOnceRaw(messages: { role: string; content: string }[], env: any, tools: McpToolDef[]): Promise<any> {
+  let lastError: unknown = new Error('No models configured.');
+  for (const model of MODELS) {
+    try {
+      return await env.AI.run(model, {
+        messages,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        tools: tools.map((tool) => ({
+          name: tool.name,
+          description: tool.description ?? tool.name,
+          parameters: tool.inputSchema ?? { type: 'object', properties: {} },
+        })),
+      });
+    } catch (error) {
+      if (!shouldTryNextModel(error)) throw error;
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
 }
 
 /** Non-streaming model call with the standard fallback chain. */

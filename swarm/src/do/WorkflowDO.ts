@@ -11,6 +11,9 @@ import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
 import { isResearchWorkflow, researchTaskNote, toolsForResearch } from '../mcp/research-tools';
+import { assignmentHandoff } from '../ai/check';
+import { settleSpecialist } from './settle-specialist';
+import type { SpecialistKind } from '../ai/check';
 import { NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE, classifyResume, nextResumeAlarm, withStepTimeout } from './resume';
 
 export class WorkflowDO {
@@ -100,7 +103,7 @@ export class WorkflowDO {
     // Execute workflow
     if (url.pathname === '/execute' && request.method === 'POST') {
       const body = await request.json() as { workflowId: string; input: string };
-      if (!body || typeof body.workflowId !== 'string' || typeof body.input !== 'string' || body.input.trim().length === 0 || body.input.length > 8000) {
+      if (!body || typeof body.workflowId !== 'string' || typeof body.input !== 'string' || body.input.trim().length === 0 || body.input.length > 24000) {
         return new Response('Invalid execution request', { status: 400 });
       }
       const executionId = crypto.randomUUID();
@@ -361,9 +364,11 @@ export class WorkflowDO {
       // Topological execution with parallel branches
       const completed = new Set<string>();
       const running = new Set<string>();
+      let specialistStop: WorkflowExecution['status'] | null = null;
       const inFlight = new Set<string>();
       const now = Date.now();
-      const researchRun = isResearchWorkflow(workflow);
+      const workflowKind = workflow.kind;
+      const researchRun = workflowKind === 'research' || isResearchWorkflow(workflow);
 
       // Resume support: finished nodes keep their results. A running step
       // that this isolate did not start is left alone until the grace
@@ -473,6 +478,7 @@ export class WorkflowDO {
                   instructions,
                   name: node.name,
                   skill,
+                  requireParallel: researchRun,
                   mcpTools,
                   executeTool: async (serverId, tool, args) => {
                     const server = servers.find((s) => s.id === serverId);
@@ -508,17 +514,72 @@ export class WorkflowDO {
               settled = true;
               output = result.output;
               toolsUsed.push(...result.toolsUsed);
+              if (workflowKind === 'research' || workflowKind === 'copy' || workflowKind === 'language' || workflowKind === 'visual' || workflowKind === 'skill') {
+                const kind = workflowKind as SpecialistKind;
+                const handoff = assignmentHandoff(nodeInput);
+                const executeTool = async (serverId: string, tool: string, args: Record<string, unknown>) => {
+                  const server = servers.find((s) => s.id === serverId);
+                  if (!server) throw new Error(`Unknown MCP server: ${serverId}`);
+                  return new McpClient(server, 60_000).callTool(tool, args);
+                };
+                let settledPage = settleSpecialist({ kind, draft: result.output, attempt: 1, tools: result.toolsUsed, shape: nodeInput, handoff });
+                if (settledPage.action === 'retry' && result.status !== 'tool_failed' && result.status !== 'model_failed') {
+                  const retryNote = settledPage.note;
+                  try {
+                    const second = await withStepTimeout(runAgent(node.type, {
+                      input: `${nodeInput + memoryContext}\n\nFix: ${retryNote}`,
+                      instructions,
+                      name: node.name,
+                      skill,
+                      requireParallel: researchRun,
+                      mcpTools,
+                      executeTool,
+                    }, this.env), NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE);
+                    toolsUsed.push(...second.toolsUsed);
+                    settledPage = settleSpecialist({
+                      kind,
+                      draft: second.output,
+                      attempt: 2,
+                      tools: toolsUsed,
+                      shape: nodeInput,
+                      handoff,
+                    });
+                  } catch (error) {
+                    specialistStop = 'model_failed';
+                    execution.status = 'model_failed';
+                    execution.receipt = {
+                      tools: result.toolsUsed,
+                      check: { ok: false, errors: [retryNote] },
+                      missing: [error instanceof Error ? error.message : 'retry failed'],
+                    };
+                  }
+                }
+                if (settledPage.action === 'completed') {
+                  output = settledPage.page;
+                  execution.receipt = settledPage.receipt;
+                } else if (settledPage.action === 'check_failed') {
+                  output = settledPage.page;
+                  specialistStop = 'check_failed';
+                  execution.status = 'check_failed';
+                  execution.receipt = settledPage.receipt;
+                }
+                if (result.status === 'tool_failed' || result.status === 'model_failed') {
+                  specialistStop = result.status;
+                  execution.status = result.status;
+                  execution.receipt = { tools: result.toolsUsed, check: { ok: false, errors: [] }, missing: [result.output] };
+                }
+              }
 
               const doneResult: NodeResult = {
                 nodeId,
                 status: 'done',
-                output: result.output,
+                output,
                 startedAt: startResult.startedAt,
                 finishedAt: Date.now(),
                 toolsUsed,
               };
               execution.results[nodeId] = doneResult;
-              nodeOutputs[nodeId] = result.output;
+              nodeOutputs[nodeId] = output;
 
               // Store artifact
               const artifact: Artifact = {
@@ -526,7 +587,7 @@ export class WorkflowDO {
                 executionId,
                 nodeId,
                 nodeName: node.name,
-                content: result.output,
+                content: output,
                 timestamp: Date.now(),
               };
               if (!this.artifacts.has(executionId)) {
@@ -542,7 +603,7 @@ export class WorkflowDO {
                 type: 'node_done',
                 executionId,
                 nodeId,
-                output: result.output,
+                output,
                 timestamp: Date.now(),
               });
             } catch (error: any) {
@@ -586,7 +647,8 @@ export class WorkflowDO {
         }
       }
 
-      execution.status = 'completed';
+      if (specialistStop) execution.status = specialistStop;
+      else execution.status = 'completed';
       execution.finishedAt = Date.now();
       await this.state.storage.put(`ex:${executionId}`, execution);
       await this.backupArtifactsToR2(executionId);

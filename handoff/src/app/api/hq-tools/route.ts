@@ -1,3 +1,4 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
@@ -9,6 +10,21 @@ import { openObjectStore } from "@/lib/store/objects";
 import { parseAllowlist } from "@/lib/store/staff";
 
 export const dynamic = "force-dynamic";
+
+async function fluxRun(): Promise<
+  ((model: string, body: { prompt: string }) => Promise<{ image?: string }>) | undefined
+> {
+  try {
+    const env = (await getCloudflareContext({ async: true })).env as {
+      AI?: { run: (model: string, body: { prompt: string }) => Promise<{ image?: string }> };
+    };
+    if (!env.AI) return undefined;
+    const ai = env.AI;
+    return (model, body) => ai.run(model, body);
+  } catch {
+    return undefined;
+  }
+}
 
 export async function POST(request: Request) {
   const sql = await openHandoffDb();
@@ -35,6 +51,7 @@ export async function POST(request: Request) {
     Date.now(),
     {
       swarm: { origin: process.env.SWARM_ORIGIN ?? "", store: openObjectStore() },
+      imageRun: await fluxRun(),
       mail: {
         origin: publicClientOrigin({
           origin: process.env.HANDOFF_APP_ORIGIN,

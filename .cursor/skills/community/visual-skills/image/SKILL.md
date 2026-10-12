@@ -10,6 +10,12 @@ description: >
   Do NOT use for: video (use video skill), 3D models, audio, non-image tasks.
 ---
 
+## Output schema
+
+```json
+{"type":"object","required":["imagePrompt","videoPrompt"]}
+```
+
 # Image Prompting — Nano Banana & GPT Image 2
 
 This skill writes image prompts. It does not generate images. The output is: model name + quality / size / aspect ratio + the prompt itself.

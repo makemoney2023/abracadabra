@@ -1113,7 +1113,7 @@ describe("client workflows", () => {
       fetchImpl,
       wait: async () => {},
     });
-    expect(queued).toMatchObject({ ok: true, status: "queued", waitingOn: research.workflow.id, workflowId: copy.workflow.id });
+    expect(queued).toMatchObject({ ok: true, status: "running", waitingOn: research.workflow.id, workflowId: copy.workflow.id });
     expect(executed).toHaveLength(1);
     const due = await sql.get<{ next_run_at: number }>("SELECT next_run_at FROM client_workflows WHERE id = ?", [
       copy.workflow.id,
