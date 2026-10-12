@@ -3,7 +3,7 @@
 **Date:** 2026-10-12
 **Product:** Handoff HQ (`hq.abra-ca-dabra.app`), the HQ agent, and the swarm worker
 **Status:** Proposed, implementation-ready
-**Requirements:** SAP-001 through SAP-028
+**Requirements:** SAP-001 through SAP-034
 **Lives in:** [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/)
 **Plan:** [`docs/superpowers/plans/2026-10-12-specialist-pipeline.md`](../plans/2026-10-12-specialist-pipeline.md)
 
@@ -79,7 +79,7 @@ Checked against the code on 2026-10-12.
 | One headline | headline skill | a headline |
 | Call prep | call-prep skill | a call plan |
 | SEO audit | research, then the SEO audit skill | an audit |
-| Homepage copy | research, then the page-copy skill | the page |
+| A homepage | research, then a page skill whose kind is `skill` | the page that skill defines |
 | Social posts | research, copy, language, visuals | prompts for the accepted posts |
 
 The social list is a preset the HQ agent may pass when the work is posts. It is the same `start_pipeline` call as every other job.
@@ -102,35 +102,37 @@ The HQ agent may append another stage later. The new stage gets the next `stage_
 - **SAP-001.** `start_pipeline` creates one workflow group and one workflow per skill path, in the order given. `stage_order` is 0, 1, 2, and so on. `kind` is `deliverableKind` for that skill. `pipeline` stores the label the HQ agent passes, such as `social`, `audit`, or `call-prep`.
 - **SAP-002.** That call starts only stage 0. Later stages have no `next_run_at` and no execution id.
 - **SAP-003.** The group is tied to the client and, when staff named one, to that project.
-- **SAP-004.** A second pipeline on the same project is refused while any stage in the open group is missing `accepted_at`.
-- **SAP-029.** Any catalog skill path can be a stage. A one-skill job is a pipeline of one stage. The social preset is research, copy, language, then visuals, passed as four paths to the same tool.
+- **SAP-004.** A second `start_pipeline` on the same project is refused while that project's group is unfinished. A group is unfinished when a stage is running, when the latest stage is `completed` and not accepted, or when any stage is `check_failed`, `tool_failed`, `model_failed`, `source`, or `stale`.
+- **SAP-029.** Any catalog skill path can be a stage. A one-skill job is a pipeline of one stage. The social preset is four paths, in this order: `.cursor/skills/plugins/parallel/parallel-web-search/SKILL.md`, `.cursor/skills/community/marketingskills/copywriting/SKILL.md`, `.cursor/skills/community/advertising-skills/skills/qa/generic-language-killer/SKILL.md`, `.cursor/skills/community/visual-skills/image/SKILL.md`. The image skill's shape still asks for one image prompt and one video prompt. The video skill is a separate stage when staff ask for video only.
+- **SAP-031.** `abandon_pipeline` marks every unfinished stage `stale` and closes the group. Accepted pages stay. A new `start_pipeline` is then allowed.
+- **SAP-032.** `append_pipeline_stage` adds one skill at the end of the unfinished group and does not start it. `start_pipeline` creates a new group. It does not append.
 
 ### Run one stage
 
 - **SAP-005.** `run_workflow` on a stage whose previous stage is missing `accepted_at` returns status `waiting_accept` and does not call the swarm. The waiting stage id is the previous one.
 - **SAP-006.** The due wake does not start a stage with `stage_order > 0`.
 - **SAP-007.** `advanceWorkflowChain` still saves output and still does not start the next stage.
-- **SAP-008.** One group has at most one stage with an execution in flight.
+- **SAP-008.** One group has at most one stage with an execution in flight. A second `run_workflow` while that stage is running returns `running` and does not call the swarm.
 
 ### Assignment
 
 - **SAP-009.** The text sent to the swarm is an assignment, not the full `SKILL.md`. It contains the one job, the output shape for that skill, the skill path, and at most 1,500 characters of that skill. Copy, language, and visuals also include the facts, the banned lines, and the voice card. A later stage includes the accepted page from the previous stage. A one-skill job has no previous page.
 - **SAP-010.** Copy, language, and visuals do not call the swarm when `Facts:` or `Do not use:` is missing. Status is `source`.
 - **SAP-011.** The handoff is only the previous stage's accepted deliverable. Earlier stages are not pasted again. A rejected or check-failed output is not pasted.
-- **SAP-012.** A handoff longer than the room left under 7,900 characters is cut on a row boundary. The assignment says how many rows were omitted.
-- **SAP-013.** After the first accepted copy stage, `revise_brief` still stores the voice card on the project. The next copy or language assignment includes that card without the HQ agent pasting it.
+- **SAP-012.** The assignment is at most 24,000 characters. The skill excerpt stays at most 1,500. A handoff that does not fit is cut after a whole JSON element. The assignment says how many elements were omitted. The old 7,900 character swarm brief limit does not apply to a stage that has a `kind`.
+- **SAP-013.** The voice card is the latest `revise_brief` body for that client that contains `Voice:`. The next copy or language assignment includes that body. An empty card is omitted.
 
 ### Models and tools
 
-- **SAP-014.** A research stage runs on `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. It calls Parallel through Workers AI function calling. A printed tool-call block is not a tool call. If Parallel is not listed, or the call throws, the stage ends `tool_failed` and does not answer from memory.
-- **SAP-015.** Every specialist, including research, copy, language, visuals, and every other skill, uses `@cf/meta/llama-3.3-70b-instruct-fp8-fast` first. If that call fails, the stage retries once on `@cf/zai-org/glm-4.7-flash`. If the retry fails, the stage ends `model_failed`. `@cf/meta/llama-3.1-8b-instruct-fp8` and `@cf/meta/llama-3.2-3b-instruct` are not in this path. The HQ agent stays on `@cf/moonshotai/kimi-k2.7-code`.
+- **SAP-014.** A research stage runs on `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. Handoff sends `kind: "research"` on the execute request. The swarm attaches Parallel from that kind. The workflow name does not decide it. Parallel is passed as a Workers AI function-calling tool, and the swarm runs the MCP call when the model returns a tool call. A printed tool-call block is not a tool call. If Parallel is not listed, or the call throws, the stage ends `tool_failed` and does not answer from memory.
+- **SAP-015.** Every specialist, including research, copy, language, visuals, and every other skill, uses `@cf/meta/llama-3.3-70b-instruct-fp8-fast` first. If the model call throws, the stage retries once on `@cf/zai-org/glm-4.7-flash`. If the retry throws, the stage ends `model_failed`. Bad JSON is a check failure, not a model failure. `@cf/meta/llama-3.1-8b-instruct-fp8` and `@cf/meta/llama-3.2-3b-instruct` are not in this path. The HQ agent stays on `@cf/moonshotai/kimi-k2.7-code`. A workflow with no `kind` uses these same models and skips the JSON checker, so an older lead run still returns text.
 - **SAP-016.** A stage that is not research does not receive web search. It receives the assignment and the accepted page from the previous stage. Research is the stage that searches.
 - **SAP-017.** When a tool call throws, the stage stops with `tool_failed`. The prompt does not tell the model to answer from what it knows.
 - **SAP-030.** The specialist returns JSON for its kind. The checker reads that JSON. A page that is not JSON fails the check. The archive file may render the same JSON as a readable page.
 
 ### Check, accept, and retry
 
-- **SAP-018.** Before a stage is `completed`, a checker runs on the JSON. Research drops rows with an empty source and fails when no row remains. Copy requires exactly 7 objects and the fields platform, type, hook, body, hashtags, and CTA. Language requires the same 7 objects. Visuals require one image prompt and one video prompt for each accepted post. A banned opener on a copy or language row fails the check. A `skill` stage passes when the JSON matches that skill's shape and the page is non-empty. It fails when the JSON is empty, when it is a 90-day calendar, or when it is a 7-post object and the skill is not copy or language.
+- **SAP-018.** Before a stage with a `kind` is `completed`, a checker runs on the JSON. One leading ` ```json ` fence is removed before parsing. Research drops rows with an empty source and fails when no row remains. Copy requires exactly 7 objects and the fields platform, type, hook, body, hashtags, and CTA. Language requires the same 7 objects. Visuals require one image prompt and one video prompt for each accepted post. A banned opener on a copy or language row fails the check. A `skill` stage passes when the JSON is non-empty and is not a 7-post array or a 90-day calendar. It fails when the JSON is empty, when it is a 90-day calendar, or when it is a 7-post array and the skill is not copy or language. The skill's shape string is included in the assignment. The checker does not invent fields the skill did not name.
 - **SAP-019.** The first failed check is sent back once as the retry note. The second failure stores status `check_failed`, the checker errors in `last_receipt`, and the draft in `last_output`. `accepted_at` stays null. The next stage cannot start.
 - **SAP-020.** `accept_workflow` sets `accepted_at` only when `last_status` is `completed`. It refuses `check_failed`, `tool_failed`, `model_failed`, and `source`.
 - **SAP-021.** Accepting a stage does not start the next stage. The HQ agent calls `run_workflow` on the next stage after accept.
@@ -140,13 +142,15 @@ The HQ agent may append another stage later. The new stage gets the next `stage_
 
 - **SAP-023.** `pipeline_status` returns each stage in order: name, kind, `stage_order`, status, whether it is accepted, the receipt, and the deliverable text when the stage has finished a check.
 - **SAP-024.** The receipt lists tools called, checker errors, and missing facts. The deliverable text is the page. The space file under `agent/swarm/` remains the archive.
-- **SAP-025.** The chat playbook tells the HQ agent to look up the skill for the job with `list_swarm_packs`, then call `start_pipeline` with those paths in order. Posts use the four-stage preset. Every other job uses the skill or skills that job names. The first stage is the only one that starts. Chat calls `pipeline_status` when staff ask for the result, accepts only a `completed` page, and runs the next stage only after accept. A thin page is rewritten into the brief. That skill is not run again for the same page. A specialist does not turn its page into another skill's job.
+- **SAP-025.** The chat playbook tells the HQ agent to look up the skill for the job with `list_swarm_packs`, then call `start_pipeline` with those paths in order. Posts use the four paths in SAP-029. Every other job uses the skill or skills that job names. The first stage is the only one that starts. Chat calls `pipeline_status` when staff ask for the result, accepts only a `completed` page, and runs the next stage only after accept. A thin page is rewritten into the brief. That skill is not run again for the same page. A specialist does not turn its page into another skill's job. `queue_followup_swarms` does not start a swarm. Adding a stage uses `append_pipeline_stage`.
 - **SAP-026.** The approval card for `accept_workflow` is the staff accept. Notes in chat are not an accept.
 
 ### Record
 
 - **SAP-027.** A stage still writes `swarm_runs` and `agent.swarm_run` as it does today.
 - **SAP-028.** `last_output` on an accepted stage is the deliverable the next assignment quotes. The receipt is `last_receipt` and is not pasted into the next assignment.
+- **SAP-033.** `settleRunningSwarms` stores `completed`, `check_failed`, `tool_failed`, and `model_failed` on the workflow. It copies the receipt into `last_receipt`. Any other swarm status stays `running`. `readSwarmRun` returns the receipt and those statuses.
+- **SAP-034.** `accept_workflow` and `abandon_pipeline` wait for the approval card. `start_pipeline`, `append_pipeline_stage`, `pipeline_status`, and `run_workflow` do not.
 
 ## Data model
 
@@ -182,7 +186,7 @@ Pure functions. No network.
 | copy | JSON array of exactly 7 objects. Each object has platform, type, hook, body, hashtags, CTA. No hook or body opens with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. | Any other count. A missing field. A banned opener. |
 | language | JSON array of exactly 7 objects with the same fields. | A new object, a dropped object, a banned opener. |
 | visual | JSON array. For each post in the accepted handoff, one imagePrompt and one videoPrompt. | A missing pair. The words "placeholder model". |
-| skill | JSON object whose keys are the ones named in that skill's shape. The page is non-empty. | Not JSON. Empty page. A 90-day calendar. A 7-post array when this skill is not copy or language. |
+| skill | JSON that is non-empty and is not a 7-post array or a 90-day calendar. | Not JSON. Empty page. A 90-day calendar. A 7-post array when this skill is not copy or language. |
 
 The checker does not call a model.
 
@@ -224,7 +228,11 @@ The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 ch
 | Llama 3.3 70B errors on an audit, a headline, a research table, or a post | One retry on GLM 4.7 Flash. A second failure is `model_failed`. The 8B and 3B models are not tried. |
 | Parallel is down | `tool_failed`. The research stage does not invent sources. |
 | Staff rerun an early stage after a later stage was accepted | The rerun clears `accepted_at`. Every later stage becomes `stale`. |
-| A second pipeline on a project that still has an unaccepted stage | `start_pipeline` is refused. |
+| A second pipeline while the open group is unfinished | `start_pipeline` is refused. `abandon_pipeline` closes it. |
+| Staff add a skill onto the open group | `append_pipeline_stage` adds it and does not start it. |
+| A workflow with no `kind` | Llama 3.3 70B, then GLM 4.7 Flash. No JSON checker. Text is saved as it is today. |
+| The model wraps JSON in a fence | The checker strips one leading ` ```json ` fence, then parses. |
+| The model returns bad JSON and the call itself succeeded | Check retry. The model is not swapped. |
 | A headline skill | One stage, kind `skill`. The page is a headline. Accept still gates any stage added after it. |
 | Research, then an SEO audit | Two stages. The audit assignment contains the accepted source table. The audit page is not 7 posts. |
 | Old groups from before this migration | `stage_order` 0. The due wake can still run that single workflow. |
@@ -236,9 +244,11 @@ The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 ch
 | `handoff/migrations/0022_specialist_pipeline.sql` | New columns |
 | `handoff/src/db/migration-sql.ts`, `handoff/src/db/migrate.ts` | Embed and apply the step |
 | `handoff/src/lib/specialist-assignment.ts` | Build the short assignment and clip on a row boundary |
-| `handoff/src/lib/client-workflows.ts` | Accept gate, any ordered line, stale later stages, handoff is the previous accepted page |
-| `handoff/src/lib/hq-tools.ts` | `start_pipeline`, `accept_workflow`, `pipeline_status` |
-| `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts` | Staff-facing instructions |
+| `handoff/src/lib/client-workflows.ts` | Accept gate, any ordered line, stale later stages, settle copies the receipt, handoff is the previous accepted page |
+| `handoff/src/lib/hq-tools.ts` | `start_pipeline`, `append_pipeline_stage`, `abandon_pipeline`, `accept_workflow`, `pipeline_status` |
+| `handoff/src/lib/hq-tool-names.ts` | Tool text and the approval set |
+| `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts` | Staff-facing instructions |
+| `handoff/src/lib/lead-swarm.ts` | `readSwarmRun` returns receipt and the new statuses |
 | `swarm/src/ai/check.ts` | Checker |
 | `swarm/src/ai/agents.ts` | Llama 3.3 70B, one GLM 4.7 Flash retry, native function calling, tool failure stops the stage. |
 | `swarm/src/do/WorkflowDO.ts` | Run the checker, one retry, store the receipt on the execution |
@@ -255,6 +265,11 @@ The swarm execution response gains `kind`, `receipt`, and `status` of `completed
 
 ## Deferred
 
+These are real improvements. They are not part of this build.
+
 - Pushing a chat message the moment a stage finishes. Until then, staff ask, and `pipeline_status` answers.
-- A second copy batch on a social line. After the first 7 are accepted, the HQ agent may append another copy stage with `start_pipeline` or a later append. Language then reads every accepted copy page since research. That append is a follow-up.
+- A second copy batch on a social line. After the first 7 are accepted, `append_pipeline_stage` can add another copy stage. Language then reads every accepted copy page since research. The first build passes only the previous stage.
 - Client-visible status of the pipeline.
+- Reading a JSON schema out of each `SKILL.md`. This build puts the shape sentence in the assignment and checks the known kinds. A `skill` stage is checked only for empty output, a post array, and a 90-day calendar.
+- A saved set of good pages to compare against before a stage is called premium.
+- Rendering the visual prompts into image files.

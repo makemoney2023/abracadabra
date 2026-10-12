@@ -8,7 +8,7 @@
 
 **Tech stack:** Next.js 16, Vitest, D1 migrations applied in memory by `migrate`, the swarm worker on Workers AI.
 
-**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-030.
+**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-034.
 
 ---
 
@@ -29,9 +29,10 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 | `handoff/src/db/migrate.ts`, `handoff/src/db/migration-sql.ts` | Apply the step |
 | `handoff/src/lib/specialist-assignment.ts` | Short assignment and row-boundary clip |
 | `handoff/src/lib/specialist-assignment.test.ts` | Assignment contents |
-| `handoff/src/lib/client-workflows.ts` | Accept gate, any ordered line, stale later stages, previous accepted page only |
+| `handoff/src/lib/client-workflows.ts` | Accept gate, settle copies the receipt, stale later stages, previous accepted page only |
+| `handoff/src/lib/lead-swarm.ts` | `readSwarmRun` returns the receipt and the new statuses |
 | `handoff/src/lib/client-workflows.test.ts` | Those gates |
-| `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts` | `start_pipeline`, `accept_workflow`, `pipeline_status` |
+| `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts` | `start_pipeline`, `append_pipeline_stage`, `abandon_pipeline`, `accept_workflow`, `pipeline_status`. Accept and abandon wait for the approval card. |
 | `handoff/src/lib/hq-tools.test.ts` | Tool results |
 | `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts` | Pipeline instructions |
 | `handoff/src/lib/hq-chat-playbook.test.ts` | The new sentences |
@@ -55,9 +56,7 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 
 - [ ] **Step 1: Write the failing test**
 
-Cover SAP-018:
-
-Cover SAP-018 and SAP-030. Inputs are JSON, not markdown.
+Cover SAP-018 and SAP-030. Inputs are JSON, not markdown. A string wrapped in one ` ```json ` fence is parsed after the fence is removed.
 
 - A research array with two sourced objects and one empty source returns the two objects and `ok: true`.
 - A research array whose sources are all empty returns `ok: false`.
@@ -113,7 +112,7 @@ Expected: pass.
 
 - [ ] **Step 1: Write the failing test**
 
-SAP-015. `specialistModels()` is `["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/zai-org/glm-4.7-flash"]` for every kind, including research. A failure of both surfaces as `model_failed`. The list does not contain `llama-3.1-8b-instruct-fp8` or `llama-3.2-3b-instruct`. The HQ chat model stays `@cf/moonshotai/kimi-k2.7-code`.
+SAP-015. `specialistModels()` is `["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/zai-org/glm-4.7-flash"]` for every kind, including research. A thrown call uses the second model once. A second throw is `model_failed`. Bad JSON does not change the model. The list does not contain `llama-3.1-8b-instruct-fp8` or `llama-3.2-3b-instruct`. The HQ chat model stays `@cf/moonshotai/kimi-k2.7-code`. A workflow with no `kind` uses these models and skips the checker.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 - [ ] **Step 3: Implement `modelsForKind` and use it in `runOnceChain`**
@@ -167,7 +166,8 @@ SAP-009 through SAP-013.
 - A skill excerpt longer than 1,500 characters is cut.
 - A table that does not fit is cut after a full row, and the text includes `rows omitted`.
 - The voice card is included when provided, and omitted when it is empty.
-- The whole assignment is at most 7,900 characters.
+- The whole assignment is at most 24,000 characters. The skill excerpt is at most 1,500.
+- The voice section is the latest revise_brief body that contains `Voice:`. It is omitted when that body is missing.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 - [ ] **Step 3: Implement `buildSpecialistAssignment`**
@@ -186,9 +186,11 @@ SAP-005, SAP-006, SAP-011, SAP-020, SAP-021, SAP-022.
 - `run_workflow` on stage 1 while stage 0 has `last_status = completed` and `accepted_at` null returns `waiting_accept` and does not fetch the swarm.
 - The same call after `accepted_at` is set fetches the swarm. The body contains the stage 0 deliverable and does not contain an older unaccepted output.
 - The due wake skips `stage_order > 0`.
+- A second `run_workflow` while the stage is running does not fetch the swarm (SAP-008).
 - `acceptWorkflow` sets `accepted_at` for `completed` and returns an error for `check_failed`.
 - Accept does not set `next_run_at` on the next stage.
 - Rerunning stage 0 clears later `accepted_at` and sets those rows to `stale`.
+- `settleRunningSwarms` stores `check_failed` and the receipt. A swarm status of `running` stays running (SAP-033).
 
 - [ ] **Step 2: Run the new tests and confirm they fail**
 - [ ] **Step 3: Implement**
@@ -206,14 +208,17 @@ SAP-005, SAP-006, SAP-011, SAP-020, SAP-021, SAP-022.
 
 - [ ] **Step 1: Write the failing tests**
 
-SAP-001, SAP-002, SAP-004, SAP-023, SAP-026, SAP-029.
+SAP-001, SAP-002, SAP-004, SAP-023, SAP-026, SAP-029, SAP-031, SAP-032, SAP-034.
 
 - `start_pipeline` with one headline path inserts one stage, kind `skill`, and starts it.
-- `start_pipeline` with research then an SEO audit path inserts two stages and starts only research.
-- `start_pipeline` with the social preset inserts four stages, kinds in order, and starts only research.
-- A second call for the same project returns an error while any stage is unaccepted.
+- `start_pipeline` with the parallel-web-search path then an SEO audit path inserts two stages and starts only research.
+- `start_pipeline` with the four social paths in SAP-029 inserts four stages, kinds in order, and starts only research.
+- A second call for the same project returns an error while the group is unfinished.
+- `append_pipeline_stage` adds one stage and does not fetch the swarm.
+- `abandon_pipeline` without approval returns `needsApproval`. After approval, unfinished stages are `stale` and a new `start_pipeline` is allowed.
 - `pipeline_status` lists the stages in order with status and receipt.
-- `accept_workflow` on a `completed` stage sets `accepted_at` and does not call the swarm.
+- `accept_workflow` without approval returns `needsApproval`. After approval, a `completed` stage gets `accepted_at` and the swarm is not called.
+- `queue_followup_swarms` does not fetch the swarm.
 
 - [ ] **Step 2: Run the tests and confirm they fail**
 - [ ] **Step 3: Implement the three tools**
@@ -231,7 +236,7 @@ SAP-001, SAP-002, SAP-004, SAP-023, SAP-026, SAP-029.
 
 - [ ] **Step 1: Extend the playbook test**
 
-The playbook contains `start_pipeline`, `list_swarm_packs`, `pipeline_status`, `accept_workflow`, `waiting_accept`, and the sentence that a rejected page is not given to the next specialist. It says a headline stays a headline and an audit stays an audit. It still contains `Facts:` and `Do not use:` for copy, visuals, and the language pass.
+The playbook contains `start_pipeline`, `append_pipeline_stage`, `abandon_pipeline`, `list_swarm_packs`, `pipeline_status`, `accept_workflow`, `waiting_accept`, and the sentence that a rejected page is not given to the next specialist. It says a headline stays a headline and an audit stays an audit. It still contains `Facts:` and `Do not use:` for copy, visuals, and the language pass. It does not tell chat to start the next swarm from `queue_followup_swarms`.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 - [ ] **Step 3: Update the playbook and the `SYSTEM` string in `hq-chat.ts`**
@@ -265,7 +270,7 @@ Deploy after the tests pass: `handoff-agent`, `handoff-hq`, and `agent-swarm-orc
 
 ## Self-review
 
-- SAP-001 through SAP-030 each appear in a task above.
+- SAP-001 through SAP-034 each appear in a task above.
 - No task asks a specialist to start the next stage.
 - A one-skill job and a research-then-audit job are tested, along with the social preset.
 - Specialists use Llama 3.3 70B and one GLM 4.7 Flash retry. The 8B and 3B models are absent. The HQ agent stays on Kimi K2.7 Code.

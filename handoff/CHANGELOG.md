@@ -2,7 +2,7 @@
 
 ## 2026-10-12
 
-- **What changed** — The specialist-pipeline spec now uses Llama 3.3 70B for every specialist, one GLM 4.7 Flash retry, native Parallel tool calls, and JSON the checker can read. The HQ agent stays on Kimi K2.7 Code. Runtime behavior is unchanged.
+- **What changed** — The specialist-pipeline spec now covers settle, append, abandon, the social skill paths, a 24,000 character assignment, and workflows that have no kind. Runtime behavior is unchanged.
 - **Why** — Kimi K2.7 Code is the manager. The 8B research chain is the model that wrote the thin pages.
 - **Code touchpoints** — `docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`, `docs/superpowers/plans/2026-10-12-specialist-pipeline.md`
 - **Data-flow impact** — none until the plan is implemented.
