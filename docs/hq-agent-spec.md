@@ -864,7 +864,7 @@ The fixed receipt is the reply only until step 34. After that, a known client ge
 
 ## 18. Open decisions
 
-- **Specialist pipeline.** Proposed, not built. [Design](superpowers/specs/2026-10-12-specialist-pipeline-design.md) and [plan](superpowers/plans/2026-10-12-specialist-pipeline.md). The social line is research, copy, language, then visuals. Each stage is one specialist. The next stage starts after the HQ agent accepts the previous page. Research stays on the small model and must call Parallel. Copy, language, and visuals use `@cf/moonshotai/kimi-k2.7-code`. A rejected page is not given to the next specialist.
+- **Specialist pipeline.** Proposed, not built. [Design](superpowers/specs/2026-10-12-specialist-pipeline-design.md) and [plan](superpowers/plans/2026-10-12-specialist-pipeline.md). Every catalog skill is a specialist. A pipeline is those skills in the order the job needs. Posts are one preset: research, copy, language, then visuals. The next stage starts after the HQ agent accepts the previous page. Research stays on the small model and must call Parallel. Every other job uses `@cf/moonshotai/kimi-k2.7-code`. A rejected page is not given to the next specialist.
 
 - **Website fetch from the agent (5.2 step 2).** Closed. `handoff-agent` sets `global_fetch_strictly_public`.
 - **Brief approval default.** `client` is written here. If most clients should not see the PRD, flip the default to `staff` before the migration ships; it is one line.

@@ -2,8 +2,8 @@
 
 ## 2026-10-12
 
-- **What changed** — A design spec and an implementation plan for a specialist pipeline. Runtime behavior is unchanged.
-- **Why** — Swarm packs should be specialists the HQ agent hires in order. The next stage waits until the previous page is accepted.
+- **What changed** — A design spec and an implementation plan for a specialist pipeline. Every catalog skill is a specialist. Posts are one preset, not the only job. Runtime behavior is unchanged.
+- **Why** — Swarm packs should be specialists the HQ agent hires for any job, in order. The next stage waits until the previous page is accepted.
 - **Code touchpoints** — `docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`, `docs/superpowers/plans/2026-10-12-specialist-pipeline.md`
 - **Data-flow impact** — none until the plan is implemented.
 - **API / schema impact** — none yet. The plan adds `pipeline`, `stage_order`, `kind`, `accepted_at`, and `last_receipt`.

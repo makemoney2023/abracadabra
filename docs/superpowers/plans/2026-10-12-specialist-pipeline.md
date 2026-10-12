@@ -2,13 +2,13 @@
 
 > **For agentic workers:** Implement task-by-task. Write the failing test first. Do not start the next task while the current test is red.
 
-**Goal:** The HQ agent runs a social pipeline of four specialists. Each stage checks its own page. The next stage starts only after the HQ agent accepts the previous page, and it receives only that accepted page.
+**Goal:** Every catalog skill is a specialist the HQ agent can run. A pipeline is any ordered list of those skills. Posts are one preset. The next stage starts only after the HQ agent accepts the previous page, and it receives only that accepted page.
 
-**Architecture:** Handoff owns the line: stage order, the short assignment, the accept flag, and the chat tools. The swarm owns the run: the model for that kind, the tool-failure stop, and the checker. A finished swarm still does not start the next stage.
+**Architecture:** Handoff owns the line: stage order, the short assignment, the accept flag, and the chat tools. The swarm owns the run: Kimi for every job except research, the tool-failure stop, and the checker. A finished swarm still does not start the next stage.
 
 **Tech stack:** Next.js 16, Vitest, D1 migrations applied in memory by `migrate`, the swarm worker on Workers AI.
 
-**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-028.
+**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-029.
 
 ---
 
@@ -29,9 +29,9 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 | `handoff/src/db/migrate.ts`, `handoff/src/db/migration-sql.ts` | Apply the step |
 | `handoff/src/lib/specialist-assignment.ts` | Short assignment and row-boundary clip |
 | `handoff/src/lib/specialist-assignment.test.ts` | Assignment contents |
-| `handoff/src/lib/client-workflows.ts` | Accept gate, social line, stale later stages, previous accepted page only |
+| `handoff/src/lib/client-workflows.ts` | Accept gate, any ordered line, stale later stages, previous accepted page only |
 | `handoff/src/lib/client-workflows.test.ts` | Those gates |
-| `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts` | Three tools |
+| `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts` | `start_pipeline`, `accept_workflow`, `pipeline_status` |
 | `handoff/src/lib/hq-tools.test.ts` | Tool results |
 | `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts` | Pipeline instructions |
 | `handoff/src/lib/hq-chat-playbook.test.ts` | The new sentences |
@@ -41,7 +41,7 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 
 - Status values added here: `waiting_accept`, `check_failed`, `tool_failed`, `model_failed`, `stale`. Existing `source`, `completed`, `queued`, and `failed` stay.
 - `accepted_at` is the only flag that unlocks the next stage.
-- Writing kinds never fall through to Llama.
+- Every kind except research uses Kimi and never falls through to Llama.
 - The full `SKILL.md` is not the assignment.
 - Do not let a specialist create or run the next stage.
 
@@ -62,7 +62,7 @@ Cover SAP-018:
 - Copy with 7 complete rows passes. Copy with 6 rows fails. A row that opens with `Unlock` fails.
 - Language with 7 rows passes. Language with 8 rows fails.
 - Visuals with one image prompt and one video prompt per post pass. A missing video prompt fails. The words `placeholder model` fail.
-- An empty skill page fails. A non-empty skill page with no 90-day heading passes.
+- An empty skill page fails. A non-empty call plan passes. A 7-row post table fails when the kind is `skill`. A non-empty page with a 90-day heading fails.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 
@@ -110,7 +110,7 @@ Expected: pass.
 
 - [ ] **Step 1: Write the failing test**
 
-SAP-015. `modelsForKind("copy" | "language" | "visual")` is `["@cf/moonshotai/kimi-k2.7-code"]`. `modelsForKind("research")` is the existing three-model chain. A writer model error surfaces as `model_failed` and does not call Llama.
+SAP-015. `modelsForKind("copy" | "language" | "visual" | "skill")` is `["@cf/moonshotai/kimi-k2.7-code"]`. `modelsForKind("research")` is the existing three-model chain. A Kimi error on a headline or an audit surfaces as `model_failed` and does not call Llama.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 - [ ] **Step 3: Implement `modelsForKind` and use it in `runOnceChain`**
@@ -194,7 +194,7 @@ SAP-005, SAP-006, SAP-011, SAP-020, SAP-021, SAP-022.
 
 - [ ] **Step 4: Re-run `npx vitest run src/lib/client-workflows.test.ts`**
 
-### Task 8: Social pipeline and chat tools
+### Task 8: Any pipeline and chat tools
 
 **Files:**
 - Modify: `handoff/src/lib/hq-tools.ts`
@@ -203,11 +203,13 @@ SAP-005, SAP-006, SAP-011, SAP-020, SAP-021, SAP-022.
 
 - [ ] **Step 1: Write the failing tests**
 
-SAP-001, SAP-002, SAP-004, SAP-023, SAP-026.
+SAP-001, SAP-002, SAP-004, SAP-023, SAP-026, SAP-029.
 
-- `start_social_pipeline` inserts four workflows, kinds in order, and a swarm fetch only for the research stage.
-- A second call for the same project returns an error while research is unaccepted.
-- `pipeline_status` lists the four stages in order with status and receipt.
+- `start_pipeline` with one headline path inserts one stage, kind `skill`, and starts it.
+- `start_pipeline` with research then an SEO audit path inserts two stages and starts only research.
+- `start_pipeline` with the social preset inserts four stages, kinds in order, and starts only research.
+- A second call for the same project returns an error while any stage is unaccepted.
+- `pipeline_status` lists the stages in order with status and receipt.
 - `accept_workflow` on a `completed` stage sets `accepted_at` and does not call the swarm.
 
 - [ ] **Step 2: Run the tests and confirm they fail**
@@ -226,12 +228,12 @@ SAP-001, SAP-002, SAP-004, SAP-023, SAP-026.
 
 - [ ] **Step 1: Extend the playbook test**
 
-The playbook contains `start_social_pipeline`, `pipeline_status`, `accept_workflow`, `waiting_accept`, and the sentence that a rejected page is not given to the next specialist. It still contains `Facts:` and `Do not use:`.
+The playbook contains `start_pipeline`, `list_swarm_packs`, `pipeline_status`, `accept_workflow`, `waiting_accept`, and the sentence that a rejected page is not given to the next specialist. It says a headline stays a headline and an audit stays an audit. It still contains `Facts:` and `Do not use:` for copy, visuals, and the language pass.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 - [ ] **Step 3: Update the playbook and the `SYSTEM` string in `hq-chat.ts`**
 
-Remove the instruction that tells chat not to create the later social stages. The server creates them. Chat runs only the current stage.
+Chat looks up the skills for the job and passes them, in order, to `start_pipeline`. The server creates every stage and runs only the first. Chat runs the next stage after accept.
 
 - [ ] **Step 4: Re-run the playbook test**
 
@@ -242,7 +244,7 @@ Remove the instruction that tells chat not to create the later social stages. Th
 - Modify: `docs/hq-agent-spec.md` section 17, the swarm paragraph
 - Modify: `docs/manual-project-swarm-gameplan.md` if it still says the next workflow starts from any finished output
 
-- [ ] **Step 1: Describe the social line, the accept gate, and the two models**
+- [ ] **Step 1: Describe every skill as a specialist, the accept gate, and Kimi for every job except research**
 - [ ] **Step 2: Changelog entry with date, touchpoints, and the verification commands below**
 
 ### Task 11: Verification
@@ -260,7 +262,8 @@ Deploy after the tests pass: `handoff-agent`, `handoff-hq`, and `agent-swarm-orc
 
 ## Self-review
 
-- SAP-001 through SAP-028 each appear in a task above.
+- SAP-001 through SAP-029 each appear in a task above.
 - No task asks a specialist to start the next stage.
-- Writing kinds have no Llama fallback.
+- A one-skill job and a research-then-audit job are tested, along with the social preset.
+- Every kind except research has no Llama fallback.
 - The assignment builder is the only place that clips the handoff.
