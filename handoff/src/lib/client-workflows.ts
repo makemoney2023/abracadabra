@@ -263,7 +263,7 @@ export async function runClientWorkflow(input: {
   runSecret?: string;
   fetchImpl?: typeof fetch;
   wait?: (ms: number) => Promise<void>;
-}): Promise<{ ok: true; executionId: string; status: string; output: string } | { ok: false; error: "missing" | "invalid" }> {
+}): Promise<{ ok: true; executionId: string; status: string; output: string; receipt: string } | { ok: false; error: "missing" | "invalid" }> {
   const brief = input.brief.trim();
   if (!brief || !input.origin.trim()) return { ok: false, error: "invalid" };
   const workflow = await input.sql.get<{ id: string; organization_id: string; name: string; template_id: string; mcp_server_ids: string | null; kind: string | null }>(
