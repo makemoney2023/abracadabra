@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { assignmentHandoff, checkSpecialist, outputSchemaKeys, stripJsonFence } from './check';
+import { assignmentHandoff, checkSpecialist, extractJson, outputSchemaKeys, stripJsonFence } from './check';
 
 const golden = (name: string) => readFileSync(path.join(__dirname, 'golden', name), 'utf8');
 
@@ -25,6 +25,22 @@ describe('checkSpecialist', () => {
 
   it('fails when the page is not JSON', () => {
     expect(checkSpecialist('research', 'just words').ok).toBe(false);
+  });
+
+  it('finds JSON after prose, inside a string, and as the first of two objects', () => {
+    const row = '[{"name":"A","fact":"one","source":"https://a.example"}]';
+    const fenced = checkSpecialist('research', `Here is the page:\n\`\`\`json\n${row}\n\`\`\``);
+    expect(fenced.ok).toBe(true);
+    expect(fenced.notes).toEqual(['extra text ignored']);
+    const bare = checkSpecialist('research', `Here is the page: ${row}`);
+    expect(bare.ok).toBe(true);
+    expect(bare.notes).toEqual(['extra text ignored']);
+    const braced = extractJson('Note {"fact":"a } brace","name":"A","source":"https://a.example"} tail');
+    expect(JSON.parse(braced?.json ?? '{}')).toMatchObject({ fact: 'a } brace' });
+    expect(braced?.extra).toBe(true);
+    const two = extractJson('{"a":1} {"b":2}');
+    expect(two).toEqual({ json: '{"a":1}', extra: true });
+    expect(checkSpecialist('research', 'no json here').errors).toContain('not json');
   });
 
   it('parses one json fence', () => {

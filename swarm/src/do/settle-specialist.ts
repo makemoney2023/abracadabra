@@ -3,7 +3,7 @@ import { checkSpecialist, type SpecialistKind } from "../ai/check";
 export type SettleAction =
   | { action: "retry"; note: string }
   | { action: "check_failed"; receipt: { tools: { server: string; tool: string }[]; check: { ok: false; errors: string[] }; missing: string[] }; page: string }
-  | { action: "completed"; page: string; receipt: { tools: { server: string; tool: string }[]; check: { ok: true; errors: [] }; missing: [] } };
+  | { action: "completed"; page: string; receipt: { tools: { server: string; tool: string }[]; check: { ok: true; errors: [] }; missing: string[] } };
 
 export function settleSpecialist(input: {
   kind: SpecialistKind;
@@ -18,7 +18,7 @@ export function settleSpecialist(input: {
     return {
       action: "completed",
       page: checked.page,
-      receipt: { tools: input.tools ?? [], check: { ok: true, errors: [] }, missing: [] },
+      receipt: { tools: input.tools ?? [], check: { ok: true, errors: [] }, missing: checked.notes ?? [] },
     };
   }
   if (input.attempt < 2) return { action: "retry", note: checked.errors.join("; ") };

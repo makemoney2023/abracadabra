@@ -4,15 +4,67 @@ export type SpecialistCheck = {
   ok: boolean;
   errors: string[];
   page: string;
+  notes?: string[];
 };
+
+export type ExtractedJson = { json: string; extra: boolean };
 
 const BANNED = [/^\s*transform your/i, /^\s*real smiles/i, /^\s*unlock/i, /^\s*discover the secret/i, /^\s*ready to/i];
 const COPY_FIELDS = ["platform", "type", "hook", "body", "hashtags", "cta"];
 
-export function stripJsonFence(text: string): string {
+function parses(text: string): boolean {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The first JSON value in a reply. Prose around it is marked so the receipt can say it was ignored. */
+export function extractJson(text: string): ExtractedJson | null {
   const trimmed = text.trim();
-  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)```$/i);
-  return fenced ? fenced[1].trim() : trimmed;
+  if (parses(trimmed)) return { json: trimmed, extra: false };
+  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence && parses(fence[1].trim())) {
+    const body = fence[1].trim();
+    const extra = trimmed.replace(fence[0], "").trim().length > 0;
+    return { json: body, extra };
+  }
+  const span = firstBalanced(trimmed);
+  if (span && parses(span)) return { json: span, extra: trimmed !== span };
+  return null;
+}
+
+function firstBalanced(text: string): string | null {
+  const start = text.search(/[{[]/);
+  if (start < 0) return null;
+  const stack: string[] = [];
+  let inString = false;
+  let escape = false;
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index]!;
+    if (inString) {
+      if (escape) escape = false;
+      else if (char === "\\") escape = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === "{" || char === "[") stack.push(char === "{" ? "}" : "]");
+    else if (char === "}" || char === "]") {
+      if (stack.pop() !== char) return null;
+      if (stack.length === 0) return text.slice(start, index + 1);
+    }
+  }
+  return null;
+}
+
+export function stripJsonFence(text: string): string {
+  return extractJson(text)?.json ?? text.trim();
 }
 
 export function outputSchemaKeys(skillBody: string): string[] {
@@ -92,7 +144,14 @@ function copyRows(value: unknown): SpecialistCheck {
 }
 
 export function checkSpecialist(kind: SpecialistKind, raw: string, handoff = "", shape = ""): SpecialistCheck {
-  const text = stripJsonFence(raw);
+  const extracted = extractJson(raw);
+  if (!extracted) return { ok: false, errors: ["not json"], page: "" };
+  const result = checkParsed(kind, extracted.json, handoff, shape);
+  if (!extracted.extra) return result;
+  return { ...result, notes: ["extra text ignored"] };
+}
+
+function checkParsed(kind: SpecialistKind, text: string, handoff: string, shape: string): SpecialistCheck {
   let data: unknown;
   try {
     data = JSON.parse(text);
