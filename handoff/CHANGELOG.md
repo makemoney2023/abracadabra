@@ -7,7 +7,7 @@
 - **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/flux-input.ts`, `handoff/src/lib/skill-library.ts`, `handoff/src/app/api/swarm-settled/route.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `swarm/src/ai/check.ts`, `swarm/src/handoff-callback.ts`, `swarm/wrangler.toml`
 - **Data-flow impact** — `claimDueWorkflow` takes a skill reader. `settleOne` settles one run by id or execution id. The swarm posts `{ runId, sentAt }` to `POST /api/swarm-settled`. The cron still settles anything that post misses.
 - **API / schema impact** — `POST /api/swarm-settled`, signed with `SWARM_RUN_SECRET`. `handoff` and `handoff-hq` gain the `SKILLS` R2 binding. No new tables.
-- **Verification** — handoff and swarm unit tests, plus a production smoke test after deploy.
+- **Verification** — handoff `npm test` and `npx tsc --noEmit` passed. Swarm `npm test` and `npx tsc --noEmit` passed. Deployed `handoff` `f96317de-00be-4a9e-b38d-ea3c84c5d184` (crons present, `SKILLS` bound), `handoff-hq` `018274c2-0e99-474f-b816-87d9c3a149d6`, `handoff-agent` `3d1c62c9-e155-45bd-af34-4e2d3aec159d`, and `agent-swarm-orchestrator` `cbd43677-fd58-43bb-bbe5-a01548b90768`. Unsigned `POST /api/swarm-settled` and `POST /hq-notice` return 401. Health checks return 200. A signed social-preset run was not started here because this session cannot read the staff password. `AGENT_WAKE_SECRET` is set on `handoff`. `AGENT_URL` is set there as a var.
 
 ## 2026-10-12
 
