@@ -191,8 +191,9 @@ export class HqChat extends AIChatAgent<ChatBindings> {
   async postNotice(text: string): Promise<void> {
     const notice = text.trim();
     if (!notice) return;
-    const hydrate = this as unknown as { _hydrateMessages?: () => Promise<void> };
-    if (hydrate._hydrateMessages) await hydrate._hydrateMessages();
+    // AIChatAgent loads this.messages in onStart before an RPC method runs.
+    // persistMessages is the public write. saveMessages would start a model turn.
+    // Checked against @cloudflare/ai-chat 0.12.
     const message = {
       id: crypto.randomUUID(),
       role: "assistant" as const,
