@@ -1066,7 +1066,15 @@ async function beginPipeline(
     wait: options.swarm?.wait,
     store: options.swarm?.store,
   });
-  if (!started.ok) return { ok: false, error: started.error === "open" ? "invalid" : started.error };
+  if (!started.ok) {
+    if (started.error === "open") {
+      return {
+        ok: true,
+        value: { refused: "A pipeline is still open. Accept the last page or call abandon_pipeline." },
+      };
+    }
+    return { ok: false, error: started.error };
+  }
   return { ok: true, value: { groupId: started.groupId, stages: started.stages, executionId: started.executionId } };
 }
 

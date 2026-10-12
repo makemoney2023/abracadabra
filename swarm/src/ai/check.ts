@@ -36,7 +36,25 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function textOf(row: Record<string, unknown>, key: string): string {
   const value = row[key] ?? row[key.toUpperCase()] ?? row[key.toLowerCase()];
-  return typeof value === "string" ? value.trim() : "";
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter((item) => item.length > 0)
+      .join(" ");
+  }
+  return "";
+}
+
+/** The accepted page quoted in a specialist assignment. An assignment without one returns an empty string. */
+export function assignmentHandoff(input: string): string {
+  const marker = "Accepted page:\n";
+  const start = input.indexOf(marker);
+  if (start < 0) return "";
+  let rest = input.slice(start + marker.length);
+  const stop = rest.search(/\n\n(?:Return JSON only\.|\d+ rows omitted)/);
+  if (stop >= 0) rest = rest.slice(0, stop);
+  return rest.trim();
 }
 
 function banned(value: string): boolean {

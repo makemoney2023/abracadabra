@@ -2,6 +2,15 @@
 
 ## 2026-10-12
 
+- **What changed** — A failed specialist start no longer clears an accepted page. A half-built pipeline closes so the project can start again. Abandon does not touch a group that is not a pipeline. Accepting a visual page a second time does not render the images again. A check retry still has the same tools, and a list of hashtags counts as that field.
+- **Why** — Those paths could wipe a finished page, block the project, or fail a good copy page.
+- **Code touchpoints** — `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `swarm/src/ai/check.ts`, `swarm/src/do/WorkflowDO.ts`
+- **Data-flow impact** — `start_pipeline` closes the group if a stage cannot be saved. `claimDueWorkflow` clears later accepts only after the rerun has an execution id. The checker reads the accepted page from the assignment.
+- **API / schema impact** — none. A second `start_pipeline` while one is open returns a refusal the chat can read.
+- **Verification** — `npx vitest run src/lib/specialist-pipeline.test.ts src/lib/client-workflows.test.ts` and `cd swarm && npx vitest run src/ai/check.test.ts`.
+
+## 2026-10-12
+
 - **What changed** — Every catalog skill can run as a specialist in an ordered pipeline. The next stage starts only after the previous page is accepted. Posts are one preset: research, copy, language, then image prompts. Specialists use Llama 3.3 70B, then one GLM 4.7 Flash retry when the call throws. Research must call Parallel. A finished stage posts one line into the staff chat. An accepted visual stage renders image prompts with Flux 2 Klein. Video prompts stay text.
 - **Why** — The old swarm chain wrote thin pages from an 8B model and fed them forward before anyone accepted them.
 - **Code touchpoints** — `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/specialist-assignment.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `swarm/src/ai/check.ts`, `swarm/src/ai/agents.ts`, `swarm/src/do/WorkflowDO.ts`, `handoff/migrations/0022_specialist_pipeline.sql`

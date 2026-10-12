@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { checkSpecialist, outputSchemaKeys, stripJsonFence } from './check';
+import { assignmentHandoff, checkSpecialist, outputSchemaKeys, stripJsonFence } from './check';
 
 const golden = (name: string) => readFileSync(path.join(__dirname, 'golden', name), 'utf8');
 
@@ -31,6 +31,19 @@ describe('checkSpecialist', () => {
     expect(stripJsonFence('```json\n[{"name":"A"}]\n```')).toContain('name');
     const result = checkSpecialist('research', '```json\n[{"name":"A","fact":"one","source":"https://a.example","unknown":""}]\n```');
     expect(result.ok).toBe(true);
+  });
+
+  it('accepts hashtags written as a list', () => {
+    const rows = JSON.parse(golden('copy.json'));
+    rows[0].hashtags = ['#north', '#hours'];
+    expect(checkSpecialist('copy', JSON.stringify(rows)).ok).toBe(true);
+  });
+
+  it('reads the accepted page out of an assignment', () => {
+    const page = '[{"name":"North"}]';
+    const input = `Job: Write\n\nAccepted page:\n${page}\n\nReturn JSON only.`;
+    expect(assignmentHandoff(input)).toBe(page);
+    expect(assignmentHandoff('Job: Write\n\nReturn JSON only.')).toBe('');
   });
 
   it('checks copy rows', () => {

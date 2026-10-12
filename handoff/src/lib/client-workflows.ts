@@ -543,7 +543,7 @@ async function voiceCard(sql: Sql, organizationId: string): Promise<string> {
 
 async function skillExcerpt(skillPath: string | null): Promise<string> {
   const relative = skillPath?.trim() ?? "";
-  if (!relative.endsWith("SKILL.md")) return "";
+  if (!relative.endsWith("SKILL.md") || relative.includes("..")) return "";
   try {
     const { readFile } = await import("node:fs/promises");
     const { join } = await import("node:path");
@@ -724,23 +724,13 @@ export async function claimDueWorkflow(input: {
         handoff: acceptedPage(chain, row.id),
       })
     : fitSwarmBrief(priorChainText(chain, row.id), ownBrief, packetKind);
-  if (
-    specialistKind &&
-    (row.accepted_at ||
-      row.last_output ||
+  const rerun =
+    Boolean(specialistKind) &&
+    (row.accepted_at != null ||
+      Boolean(row.last_output) ||
       row.last_status === "check_failed" ||
       row.last_status === "tool_failed" ||
-      row.last_status === "model_failed")
-  ) {
-    await input.sql.run(
-      "UPDATE client_workflows SET accepted_at = NULL, last_output = NULL, last_receipt = NULL, updated_at = ? WHERE id = ?",
-      [input.now, row.id],
-    );
-    await input.sql.run(
-      "UPDATE client_workflows SET accepted_at = NULL, last_status = 'stale', updated_at = ? WHERE group_id = ? AND stage_order > ?",
-      [input.now, row.group_id, row.stage_order],
-    );
-  }
+      row.last_status === "model_failed");
   if (row.task_id) {
     await input.sql.run("UPDATE tasks SET stage = 'run', updated_at = ? WHERE id = ? AND status != 'done'", [
       input.now,
@@ -783,6 +773,16 @@ export async function claimDueWorkflow(input: {
     now: input.now,
   });
   if (!started.ok) return started;
+  if (rerun) {
+    await input.sql.run(
+      "UPDATE client_workflows SET accepted_at = NULL, last_output = NULL, last_receipt = NULL, updated_at = ? WHERE id = ?",
+      [input.now, row.id],
+    );
+    await input.sql.run(
+      "UPDATE client_workflows SET accepted_at = NULL, last_status = 'stale', updated_at = ? WHERE group_id = ? AND stage_order > ?",
+      [input.now, row.group_id, row.stage_order],
+    );
+  }
   const finished =
     started.status === "completed" && started.output.trim().length > 0 && !started.output.includes("still going");
   if (row.task_id && started.status === "failed") {

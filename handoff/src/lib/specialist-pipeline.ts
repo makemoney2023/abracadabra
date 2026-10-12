@@ -56,6 +56,10 @@ export async function startPipeline(
   const stages: { id: string; kind: string; name: string }[] = [];
   for (let index = 0; index < input.paths.length; index += 1) {
     const skillPath = input.paths[index]!.trim();
+    if (!skillPath || skillPath.includes("..")) {
+      await abandonPipeline(sql, { organizationId: input.organizationId, groupId: created.group.id, now: input.now });
+      return { ok: false, error: "invalid" };
+    }
     const templateId = packTemplateId(skillPath) ?? skillPath;
     const kind = deliverableKind({ name: skillPath, path: skillPath });
     const name = skillPath.split("/").at(-2) || `stage-${index}`;
@@ -68,7 +72,10 @@ export async function startPipeline(
       dueAt: index === 0 ? input.now : null,
       now: input.now + index,
     });
-    if (!workflow.ok) return { ok: false, error: workflow.error };
+    if (!workflow.ok) {
+      await abandonPipeline(sql, { organizationId: input.organizationId, groupId: created.group.id, now: input.now });
+      return { ok: false, error: workflow.error };
+    }
     await sql.run("UPDATE client_workflows SET stage_order = ?, kind = ?, skill_path = ? WHERE id = ?", [
       index,
       kind,
@@ -134,11 +141,11 @@ export async function abandonPipeline(
   sql: Sql,
   input: { organizationId: string; groupId: string; now: number },
 ): Promise<{ ok: true } | { ok: false; error: "missing" }> {
-  const group = await sql.get<{ id: string }>(
-    "SELECT id FROM workflow_groups WHERE id = ? AND organization_id = ?",
+  const group = await sql.get<{ id: string; pipeline: string | null }>(
+    "SELECT id, pipeline FROM workflow_groups WHERE id = ? AND organization_id = ?",
     [input.groupId, input.organizationId],
   );
-  if (!group) return { ok: false, error: "missing" };
+  if (!group?.pipeline || group.pipeline.endsWith(":closed")) return { ok: false, error: "missing" };
   await sql.run(
     "UPDATE client_workflows SET last_status = 'stale', updated_at = ? WHERE group_id = ? AND accepted_at IS NULL",
     [input.now, input.groupId],
@@ -164,24 +171,31 @@ export async function acceptWorkflow(
     kind: string | null;
     last_output: string | null;
     last_receipt: string | null;
+    accepted_at: number | null;
   }>(
-    "SELECT id, project_id, last_status, kind, last_output, last_receipt FROM client_workflows WHERE id = ? AND organization_id = ?",
+    "SELECT id, project_id, last_status, kind, last_output, last_receipt, accepted_at FROM client_workflows WHERE id = ? AND organization_id = ?",
     [input.workflowId, input.organizationId],
   );
   if (!row) return { ok: false, error: "missing" };
   if (row.last_status !== "completed") return { ok: false, error: "invalid" };
+  if (row.accepted_at != null) return { ok: true, kind: row.kind, output: row.last_output ?? "", images: { stored: 0, errors: [] } };
   await sql.run("UPDATE client_workflows SET accepted_at = ?, updated_at = ? WHERE id = ?", [input.now, input.now, row.id]);
   if (row.kind !== "visual" || !input.run) return { ok: true, kind: row.kind, output: row.last_output ?? "" };
-  const images = await renderVisualImages({
-    sql,
-    store: input.store,
-    organizationId: input.organizationId,
-    projectId: row.project_id,
-    workflowId: row.id,
-    output: row.last_output ?? "",
-    now: input.now,
-    run: input.run,
-  });
+  let images: { stored: number; errors: string[] };
+  try {
+    images = await renderVisualImages({
+      sql,
+      store: input.store,
+      organizationId: input.organizationId,
+      projectId: row.project_id,
+      workflowId: row.id,
+      output: row.last_output ?? "",
+      now: input.now,
+      run: input.run,
+    });
+  } catch (error) {
+    images = { stored: 0, errors: [error instanceof Error ? error.message : "image failed"] };
+  }
   if (images.errors.length > 0) {
     const receipt = row.last_receipt ? `${row.last_receipt}\n` : "";
     await sql.run("UPDATE client_workflows SET last_receipt = ? WHERE id = ?", [
@@ -212,7 +226,8 @@ export async function pipelineStatus(sql: Sql, organizationId: string, groupId: 
 const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47];
 
 function decodeBase64(value: string): Uint8Array {
-  const binary = atob(value);
+  const payload = value.includes(",") ? value.slice(value.indexOf(",") + 1) : value;
+  const binary = atob(payload);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
   return bytes;

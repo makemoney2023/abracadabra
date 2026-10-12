@@ -2,8 +2,8 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { claimDueWorkflow, settleRunningSwarms } from "./client-workflows";
-import { acceptWorkflow, appendPipelineStage, SOCIAL_PIPELINE, startPipeline } from "./specialist-pipeline";
+import { claimDueWorkflow, createClientWorkflow, createWorkflowGroup, settleRunningSwarms } from "./client-workflows";
+import { abandonPipeline, acceptWorkflow, appendPipelineStage, SOCIAL_PIPELINE, startPipeline } from "./specialist-pipeline";
 
 const NOW = 1_700_000_000_000;
 
@@ -259,5 +259,95 @@ describe("specialist pipeline", () => {
     );
     expect(still?.accepted_at).toBe(NOW + 2);
     expect(still?.last_receipt).toContain("flux down");
+    const files = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files WHERE relative_path LIKE 'agent/visual/%'");
+    expect(files).toHaveLength(1);
+    const again = await acceptWorkflow(sql, {
+      organizationId: "org-1",
+      workflowId: started.stages[0]?.id ?? "",
+      now: NOW + 3,
+      store,
+      run: async () => ({ image: Buffer.from(png).toString("base64") }),
+    });
+    expect(again).toMatchObject({ ok: true, images: { stored: 0, errors: [] } });
+    const after = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files WHERE relative_path LIKE 'agent/visual/%'");
+    expect(after).toHaveLength(1);
+  });
+
+  it("closes a half-built pipeline so the project can start again", async () => {
+    const sql = await database();
+    const broken = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [SOCIAL_PIPELINE[0], " "],
+      startedBy: "staff-1",
+      now: NOW,
+    });
+    expect(broken.ok).toBe(false);
+    const next = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [SOCIAL_PIPELINE[0]],
+      startedBy: "staff-1",
+      now: NOW + 1,
+    });
+    expect(next.ok).toBe(true);
+  });
+
+  it("does not stale a group that is not a pipeline", async () => {
+    const sql = await database();
+    const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Old", projectId: "proj-1", now: NOW });
+    if (!group.ok) throw new Error("group");
+    const workflow = await createClientWorkflow(sql, {
+      organizationId: "org-1",
+      groupId: group.group.id,
+      name: "Schema",
+      templateId: "pack-schema-readiness",
+      projectId: "proj-1",
+      now: NOW,
+    });
+    if (!workflow.ok) throw new Error("workflow");
+    const closed = await abandonPipeline(sql, { organizationId: "org-1", groupId: group.group.id, now: NOW + 1 });
+    expect(closed).toEqual({ ok: false, error: "missing" });
+    const row = await sql.get<{ last_status: string | null }>("SELECT last_status FROM client_workflows WHERE id = ?", [
+      workflow.workflow.id,
+    ]);
+    expect(row?.last_status ?? null).toBeNull();
+  });
+
+  it("keeps an accepted page when the rerun does not start", async () => {
+    const sql = await database();
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "audit",
+      paths: [".cursor/skills/community/marketingskills/seo-audit/SKILL.md"],
+      startedBy: "staff-1",
+      now: NOW,
+    });
+    if (!started.ok) throw new Error("pipeline");
+    await sql.run("UPDATE client_workflows SET last_status = 'completed', last_output = ?, accepted_at = ? WHERE id = ?", [
+      "The audit page",
+      NOW,
+      started.stages[0]?.id,
+    ]);
+    const rerun = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 1,
+      workflowId: started.stages[0]?.id,
+      fetchImpl: (async () => {
+        throw new Error("swarm down");
+      }) as typeof fetch,
+      wait: async () => {},
+    });
+    expect(rerun).toEqual({ ok: false, error: "invalid" });
+    const row = await sql.get<{ accepted_at: number | null; last_output: string | null; last_status: string | null }>(
+      "SELECT accepted_at, last_output, last_status FROM client_workflows WHERE id = ?",
+      [started.stages[0]?.id],
+    );
+    expect(row).toEqual({ accepted_at: NOW, last_output: "The audit page", last_status: "completed" });
   });
 });
