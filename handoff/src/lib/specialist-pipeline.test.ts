@@ -226,13 +226,18 @@ describe("specialist pipeline", () => {
       async writePart() {},
       async finishUpload() {},
     };
+    const prompts: string[] = [];
     const accepted = await acceptWorkflow(sql, {
       organizationId: "org-1",
       workflowId: started.stages[0]?.id ?? "",
       now: NOW + 1,
       store,
-      run: async () => ({ image: Buffer.from(png).toString("base64") }),
+      run: async (prompt) => {
+        prompts.push(prompt);
+        return { image: Buffer.from(png).toString("base64") };
+      },
     });
+    expect(prompts).toEqual(["A quiet room"]);
     expect(accepted).toMatchObject({ ok: true, images: { stored: 1, errors: [] } });
     const file = await sql.get<{ relative_path: string }>(
       "SELECT relative_path FROM files WHERE relative_path LIKE 'agent/visual/%'",
@@ -258,7 +263,7 @@ describe("specialist pipeline", () => {
       [started.stages[0]?.id],
     );
     expect(still?.accepted_at).toBe(NOW + 2);
-    expect(still?.last_receipt).toContain("flux down");
+    expect(still?.last_receipt).toContain("image: failed — flux down");
     const files = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files WHERE relative_path LIKE 'agent/visual/%'");
     expect(files).toHaveLength(1);
     const again = await acceptWorkflow(sql, {

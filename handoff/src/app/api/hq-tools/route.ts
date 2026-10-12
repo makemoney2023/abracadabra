@@ -4,6 +4,8 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { runHqTool } from "@/lib/hq-tools";
 import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
+import { fluxInput } from "@/lib/flux-input";
+import { VISUAL_MODEL } from "@/lib/specialist-pipeline";
 import { sendHandoffMail } from "@/lib/mail";
 import { publicClientOrigin } from "@/lib/share-link";
 import { staffFromRequest } from "@/lib/staff-request";
@@ -12,16 +14,22 @@ import { parseAllowlist } from "@/lib/store/staff";
 
 export const dynamic = "force-dynamic";
 
-async function fluxRun(): Promise<
-  ((model: string, body: { prompt: string }) => Promise<{ image?: string }>) | undefined
-> {
+async function fluxRun(): Promise<((prompt: string) => Promise<{ image?: string }>) | undefined> {
   try {
     const env = (await getCloudflareContext({ async: true })).env as {
-      AI?: { run: (model: string, body: { prompt: string }) => Promise<{ image?: string }> };
+      AI?: {
+        run: (
+          model: string,
+          body: { multipart: { body: ArrayBuffer; contentType: string } },
+        ) => Promise<{ image?: string }>;
+      };
     };
     if (!env.AI) return undefined;
     const ai = env.AI;
-    return (model, body) => ai.run(model, body);
+    return async (prompt) => {
+      const image = await ai.run(VISUAL_MODEL, await fluxInput(prompt));
+      return { image: image.image };
+    };
   } catch {
     return undefined;
   }

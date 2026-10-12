@@ -4,6 +4,8 @@ import { deliverableKind, packTemplateId } from "@/lib/pack-templates";
 import type { ObjectStore } from "@/lib/store/objects";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
 
+export const VISUAL_MODEL = "@cf/black-forest-labs/flux-2-klein-9b";
+
 export const SOCIAL_PIPELINE = [
   ".cursor/skills/plugins/parallel/parallel-web-search/SKILL.md",
   ".cursor/skills/community/marketingskills/copywriting/SKILL.md",
@@ -163,7 +165,7 @@ export async function acceptWorkflow(
     workflowId: string;
     now: number;
     store?: ObjectStore;
-    run?: (model: string, body: { prompt: string }) => Promise<{ image?: string }>;
+    run?: (prompt: string) => Promise<{ image?: string }>;
   },
 ): Promise<{ ok: true; kind: string | null; output: string; images?: { stored: number; errors: string[] } } | { ok: false; error: "missing" | "invalid" }> {
   const row = await sql.get<{
@@ -201,7 +203,7 @@ export async function acceptWorkflow(
   if (images.errors.length > 0) {
     const receipt = row.last_receipt ? `${row.last_receipt}\n` : "";
     await sql.run("UPDATE client_workflows SET last_receipt = ? WHERE id = ?", [
-      `${receipt}images: ${images.errors.join("; ")}`,
+      `${receipt}image: failed — ${images.errors.join("; ")}`,
       row.id,
     ]);
   }
@@ -243,7 +245,7 @@ export async function renderVisualImages(input: {
   workflowId: string;
   output: string;
   now: number;
-  run: (model: string, body: { prompt: string }) => Promise<{ image?: string }>;
+  run: (prompt: string) => Promise<{ image?: string }>;
 }): Promise<{ stored: number; errors: string[] }> {
   let rows: { imagePrompt?: string; videoPrompt?: string }[] = [];
   try {
@@ -259,7 +261,7 @@ export async function renderVisualImages(input: {
     const prompt = row.imagePrompt?.trim();
     if (!prompt) continue;
     try {
-      const image = await input.run("@cf/black-forest-labs/flux-2-klein-9b", { prompt });
+      const image = await input.run(prompt);
       if (!image.image) {
         errors.push("image missing");
         continue;

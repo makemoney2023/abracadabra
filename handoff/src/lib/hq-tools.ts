@@ -83,7 +83,7 @@ type ToolOptions = {
   wake?: (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
-  imageRun?: (model: string, body: { prompt: string }) => Promise<{ image?: string }>;
+  imageRun?: (prompt: string) => Promise<{ image?: string }>;
   readSkill?: (skillPath: string) => Promise<string | null>;
   build?: BuildDeps;
   intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
