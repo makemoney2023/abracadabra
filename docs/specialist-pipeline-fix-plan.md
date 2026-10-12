@@ -1,6 +1,6 @@
 # Specialist pipeline: fix plan
 
-Status: planned. Follows the specialist pipeline merged in PR #85 (`cda4f2b`).
+Status: implemented on `cursor/pipeline-fixes-1b22`. The production smoke test is the remaining check after deploy. Follows the specialist pipeline merged in PR #85 (`cda4f2b`).
 
 This plan fixes every problem found in the post-merge review. Work runs in the order below. Each step lists the files, the change, the test that proves it, and the check that says it is done.
 

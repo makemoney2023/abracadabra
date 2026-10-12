@@ -2,6 +2,15 @@
 
 ## 2026-10-12
 
+- **What changed** — A specialist stage reads its skill from the skills bucket. Accepting a visual stage sends Flux a multipart image request and records a failed image on the receipt. A mixed model reply keeps the first JSON value. HQ notices use the public chat write. Pipeline stages insert in one transaction. `pipeline_status` stays within a size cap. Pipeline actions write a staff-log row. A finished swarm run can settle immediately through a signed callback. The swarm worker uses Wrangler 4.
+- **Why** — Production was settling with old code, sending Flux the wrong body, and running specialists without their skill text.
+- **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/flux-input.ts`, `handoff/src/lib/skill-library.ts`, `handoff/src/app/api/swarm-settled/route.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `swarm/src/ai/check.ts`, `swarm/src/handoff-callback.ts`, `swarm/wrangler.toml`
+- **Data-flow impact** — `claimDueWorkflow` takes a skill reader. `settleOne` settles one run by id or execution id. The swarm posts `{ runId, sentAt }` to `POST /api/swarm-settled`. The cron still settles anything that post misses.
+- **API / schema impact** — `POST /api/swarm-settled`, signed with `SWARM_RUN_SECRET`. `handoff` and `handoff-hq` gain the `SKILLS` R2 binding. No new tables.
+- **Verification** — handoff and swarm unit tests, plus a production smoke test after deploy.
+
+## 2026-10-12
+
 - **What changed** — A failed specialist start no longer clears an accepted page. A half-built pipeline closes so the project can start again. Abandon does not touch a group that is not a pipeline. Accepting a visual page a second time does not render the images again. A check retry still has the same tools, and a list of hashtags counts as that field.
 - **Why** — Those paths could wipe a finished page, block the project, or fail a good copy page.
 - **Code touchpoints** — `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `swarm/src/ai/check.ts`, `swarm/src/do/WorkflowDO.ts`
