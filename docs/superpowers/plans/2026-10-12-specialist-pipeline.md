@@ -261,7 +261,7 @@ Chat looks up the skills for the job and passes them, in order, to `start_pipeli
 
 ```bash
 cd swarm && npx vitest run src/ai/check.test.ts src/ai/agents.test.ts
-cd handoff && npx vitest run src/db/migrate.test.ts src/lib/specialist-assignment.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/lib/hq-chat-playbook.test.ts
+cd handoff && npx vitest run src/db/migrate.test.ts src/lib/specialist-assignment.test.ts src/lib/client-workflows.test.ts src/lib/hq-tools.test.ts src/lib/hq-chat-playbook.test.ts src/agent/worker.test.ts
 cd handoff && npx tsc --noEmit -p tsconfig.agent.json
 cd handoff && npx eslint src/lib/specialist-assignment.ts src/lib/client-workflows.ts src/lib/hq-tools.ts src/lib/hq-chat-playbook.ts src/agent/hq-chat.ts
 ```
