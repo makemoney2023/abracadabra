@@ -3,7 +3,16 @@ import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
 import { claimDueWorkflow, createClientWorkflow, createWorkflowGroup, settleRunningSwarms } from "./client-workflows";
-import { abandonPipeline, acceptWorkflow, appendPipelineStage, SOCIAL_PIPELINE, startPipeline } from "./specialist-pipeline";
+import {
+  abandonPipeline,
+  acceptWorkflow,
+  appendPipelineStage,
+  clipPipelineView,
+  PIPELINE_RESULT_CAP,
+  PIPELINE_STAGE_CAP,
+  SOCIAL_PIPELINE,
+  startPipeline,
+} from "./specialist-pipeline";
 
 const NOW = 1_700_000_000_000;
 
@@ -276,6 +285,49 @@ describe("specialist pipeline", () => {
     expect(again).toMatchObject({ ok: true, images: { stored: 0, errors: [] } });
     const after = await sql.all<{ relative_path: string }>("SELECT relative_path FROM files WHERE relative_path LIKE 'agent/visual/%'");
     expect(after).toHaveLength(1);
+  });
+
+  it("keeps a long pipeline status under the chat cap", () => {
+    const stages = [0, 1, 2, 3].map((index) => ({
+      id: `stage-${index}`,
+      name: `stage-${index}`,
+      kind: "copy",
+      stage_order: index,
+      last_status: "completed",
+      accepted: false,
+      last_receipt: null,
+      last_output: "p".repeat(5000),
+    }));
+    const view = clipPipelineView(stages);
+    expect(JSON.stringify(view).length).toBeLessThanOrEqual(PIPELINE_RESULT_CAP);
+    for (const stage of view) {
+      expect(stage.last_output?.length ?? 0).toBeLessThanOrEqual(PIPELINE_STAGE_CAP);
+      expect(stage.last_output).toContain("open the workflow to read all");
+    }
+  });
+
+  it("leaves no rows when a later stage insert fails", async () => {
+    const sql = await database();
+    await sql.exec(`
+      CREATE TRIGGER fail_third_stage BEFORE INSERT ON client_workflows
+      WHEN (SELECT COUNT(*) FROM client_workflows) >= 2
+      BEGIN
+        SELECT RAISE(ABORT, 'third insert');
+      END
+    `);
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [...SOCIAL_PIPELINE.slice(0, 3)],
+      startedBy: "staff-1",
+      now: NOW,
+    });
+    expect(started).toEqual({ ok: false, error: "invalid" });
+    const groups = await sql.get<{ n: number }>("SELECT count(*) AS n FROM workflow_groups");
+    const stages = await sql.get<{ n: number }>("SELECT count(*) AS n FROM client_workflows");
+    expect(groups?.n).toBe(0);
+    expect(stages?.n).toBe(0);
   });
 
   it("closes a half-built pipeline so the project can start again", async () => {

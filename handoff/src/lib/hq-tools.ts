@@ -53,6 +53,7 @@ import {
   abandonPipeline,
   acceptWorkflow,
   appendPipelineStage,
+  clipPipelineView,
   pipelineStatus,
   startPipeline,
 } from "@/lib/specialist-pipeline";
@@ -1129,7 +1130,7 @@ async function showPipeline(sql: Sql, caller: Caller, input: Record<string, unkn
   if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
   const stages = await pipelineStatus(sql, organizationId, text(input, "groupId") || text(input, "id"));
   if (stages.length === 0) return { ok: false, error: "missing" };
-  return { ok: true, value: stages };
+  return { ok: true, value: clipPipelineView(stages) };
 }
 
 async function queueFollowupSwarms(

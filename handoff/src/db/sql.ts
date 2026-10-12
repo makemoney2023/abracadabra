@@ -1,10 +1,14 @@
 import type { DatabaseSync } from "node:sqlite";
 
+export type SqlStatement = { statement: string; params?: readonly unknown[] };
+
 export type Sql = {
   exec(statement: string): Promise<void>;
   run(statement: string, params?: readonly unknown[]): Promise<void>;
   all<T>(statement: string, params?: readonly unknown[]): Promise<T[]>;
   get<T>(statement: string, params?: readonly unknown[]): Promise<T | undefined>;
+  /** One transaction. A failed statement leaves none of the writes. */
+  batch(statements: readonly SqlStatement[]): Promise<void>;
 };
 
 export type D1Bound = {
@@ -41,6 +45,16 @@ export function sqliteSql(db: DatabaseSync): Sql {
     async get<T>(statement: string, params: readonly unknown[] = []) {
       const row = db.prepare(statement).get(...params);
       return row == null ? undefined : plainRow(row as T);
+    },
+    async batch(statements) {
+      db.exec("BEGIN");
+      try {
+        for (const entry of statements) db.prepare(entry.statement).run(...(entry.params ?? []));
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
     },
   };
 }
@@ -101,6 +115,19 @@ export function d1Sql(db: D1Like): Sql {
     async get<T>(statement: string, params: readonly unknown[] = []) {
       const row = await db.prepare(statement).bind(...params).first<T>();
       return row ?? undefined;
+    },
+    async batch(statements) {
+      if (buffer) throw new Error("transaction is already open");
+      if (statements.length === 0) return;
+      if (!db.batch) throw new Error("D1 batch is not available");
+      await db.batch(
+        statements.map((entry) =>
+          Object.assign(db.prepare(entry.statement).bind(...(entry.params ?? [])), {
+            statement: entry.statement,
+            params: entry.params ?? [],
+          }),
+        ),
+      );
     },
   };
 }
