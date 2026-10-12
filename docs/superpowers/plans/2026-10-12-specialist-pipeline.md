@@ -4,11 +4,11 @@
 
 **Goal:** Every catalog skill is a specialist the HQ agent can run. A pipeline is any ordered list of those skills. Posts are one preset. The next stage starts only after the HQ agent accepts the previous page, and it receives only that accepted page.
 
-**Architecture:** Handoff owns the line: stage order, the short assignment, the accept flag, and the chat tools. The swarm owns the run: Kimi for every job except research, the tool-failure stop, and the checker. A finished swarm still does not start the next stage.
+**Architecture:** Handoff owns the line: stage order, the short assignment, the accept flag, and the chat tools. The swarm owns the run: Llama 3.3 70B for every specialist, one GLM 4.7 Flash retry, native function calling for research, and a JSON checker. The HQ agent stays on Kimi K2.7 Code. A finished swarm still does not start the next stage.
 
 **Tech stack:** Next.js 16, Vitest, D1 migrations applied in memory by `migrate`, the swarm worker on Workers AI.
 
-**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-029.
+**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-030.
 
 ---
 
@@ -22,7 +22,7 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 | --- | --- |
 | `swarm/src/ai/check.ts` | Pure checker for the five kinds |
 | `swarm/src/ai/check.test.ts` | Pass and fail rows |
-| `swarm/src/ai/agents.ts` | Writer model versus research model. Tool failure stops the stage. |
+| `swarm/src/ai/agents.ts` | Llama 3.3 70B, one GLM 4.7 Flash retry, native function calling, tool failure stops the stage. |
 | `swarm/src/ai/agents.test.ts` | Model id and the failure observation |
 | `swarm/src/do/WorkflowDO.ts` | One retry, then `check_failed` or `completed`, receipt on the execution |
 | `handoff/migrations/0022_specialist_pipeline.sql` | `pipeline`, `stage_order`, `kind`, `accepted_at`, `last_receipt` |
@@ -41,7 +41,7 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 
 - Status values added here: `waiting_accept`, `check_failed`, `tool_failed`, `model_failed`, `stale`. Existing `source`, `completed`, `queued`, and `failed` stay.
 - `accepted_at` is the only flag that unlocks the next stage.
-- Every kind except research uses Kimi and never falls through to Llama.
+- Every specialist uses Llama 3.3 70B, then one GLM 4.7 Flash retry. The 8B and 3B models are not used. The HQ agent stays on Kimi K2.7 Code.
 - The full `SKILL.md` is not the assignment.
 - Do not let a specialist create or run the next stage.
 
@@ -57,12 +57,15 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 
 Cover SAP-018:
 
-- A research table with two sourced rows and one empty source returns the two rows and `ok: true`.
-- A research table whose sources are all empty returns `ok: false` and an error that no sourced row remains.
-- Copy with 7 complete rows passes. Copy with 6 rows fails. A row that opens with `Unlock` fails.
-- Language with 7 rows passes. Language with 8 rows fails.
-- Visuals with one image prompt and one video prompt per post pass. A missing video prompt fails. The words `placeholder model` fail.
-- An empty skill page fails. A non-empty call plan passes. A 7-row post table fails when the kind is `skill`. A non-empty page with a 90-day heading fails.
+Cover SAP-018 and SAP-030. Inputs are JSON, not markdown.
+
+- A research array with two sourced objects and one empty source returns the two objects and `ok: true`.
+- A research array whose sources are all empty returns `ok: false`.
+- A research string that is not JSON fails.
+- Copy with 7 complete objects passes. Copy with 6 objects fails. A hook that opens with `Unlock` fails.
+- Language with 7 objects passes. Language with 8 objects fails.
+- Visuals with one `imagePrompt` and one `videoPrompt` per post pass. A missing video prompt fails. The words `placeholder model` fail.
+- An empty skill object fails. A call-plan object whose keys match that skill's shape passes. A 7-post array fails when the kind is `skill`.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 
@@ -70,9 +73,9 @@ Cover SAP-018:
 cd swarm && npx vitest run src/ai/check.test.ts
 ```
 
-- [ ] **Step 3: Implement `checkSpecialist(kind, page, handoff)`**
+- [ ] **Step 3: Implement `checkSpecialist(kind, json, handoff, shape)`**
 
-Return `{ ok, errors, page }`. Research `page` is the table after empty sources are dropped. Other kinds return the original page when `ok` is true.
+`shape` is the field list for a `skill` stage. Return `{ ok, errors, page }`. Research `page` is the array after empty sources are dropped. Other kinds return the original JSON when `ok` is true.
 
 - [ ] **Step 4: Re-run the test**
 
@@ -86,7 +89,7 @@ Expected: pass.
 
 - [ ] **Step 1: Write the failing test**
 
-SAP-017. A thrown tool produces an observation that names the failure and sets the result status to `tool_failed`. The observation does not contain "what you know". A research run with no Parallel tool returns `tool_failed` and does not return a final answer (SAP-014).
+SAP-014 and SAP-017. Research calls Parallel through the Workers AI tools argument. A model reply that only prints a tool-call block does not count as a call. A thrown tool, or a research run with no Parallel tool, returns `tool_failed` and does not ask the model for a final answer. The result does not contain "what you know".
 
 - [ ] **Step 2: Run the test and confirm it fails**
 
@@ -96,13 +99,13 @@ cd swarm && npx vitest run src/ai/agents.test.ts
 
 - [ ] **Step 3: Implement**
 
-Replace the catch text in `runToolLoop`. When a required tool is missing or a call throws, return `{ output, toolsUsed, status: "tool_failed" }` without another model call.
+Pass Parallel as a function-calling tool on the Llama 3.3 70B request. Stop parsing printed tool-call blocks for research. When a required tool is missing or a call throws, return `{ output, toolsUsed, status: "tool_failed" }` without another model call.
 
 - [ ] **Step 4: Re-run the test**
 
 Expected: pass.
 
-### Task 3: Writer model
+### Task 3: Specialist model
 
 **Files:**
 - Modify: `swarm/src/ai/agents.ts`
@@ -110,7 +113,7 @@ Expected: pass.
 
 - [ ] **Step 1: Write the failing test**
 
-SAP-015. `modelsForKind("copy" | "language" | "visual" | "skill")` is `["@cf/moonshotai/kimi-k2.7-code"]`. `modelsForKind("research")` is the existing three-model chain. A Kimi error on a headline or an audit surfaces as `model_failed` and does not call Llama.
+SAP-015. `specialistModels()` is `["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/zai-org/glm-4.7-flash"]` for every kind, including research. A failure of both surfaces as `model_failed`. The list does not contain `llama-3.1-8b-instruct-fp8` or `llama-3.2-3b-instruct`. The HQ chat model stays `@cf/moonshotai/kimi-k2.7-code`.
 
 - [ ] **Step 2: Run the test and confirm it fails**
 - [ ] **Step 3: Implement `modelsForKind` and use it in `runOnceChain`**
@@ -244,7 +247,7 @@ Chat looks up the skills for the job and passes them, in order, to `start_pipeli
 - Modify: `docs/hq-agent-spec.md` section 17, the swarm paragraph
 - Modify: `docs/manual-project-swarm-gameplan.md` if it still says the next workflow starts from any finished output
 
-- [ ] **Step 1: Describe every skill as a specialist, the accept gate, and Kimi for every job except research**
+- [ ] **Step 1: Describe every skill as a specialist, the accept gate, Llama 3.3 70B for every specialist, and Kimi K2.7 Code for the HQ agent only**
 - [ ] **Step 2: Changelog entry with date, touchpoints, and the verification commands below**
 
 ### Task 11: Verification
@@ -258,12 +261,12 @@ cd handoff && npx eslint src/lib/specialist-assignment.ts src/lib/client-workflo
 
 Expected: vitest pass, agent tsc exit 0, eslint exit 0. `tsc --noEmit -p tsconfig.json` may still fail on the existing `LayoutProps` and `PageProps` names. Do not treat that as a regression from this work.
 
-Deploy after the tests pass: `handoff-agent`, `handoff-hq`, and `agent-swarm-orchestrator`. The columns ship with the HQ worker's migrate-on-request. The checker and the Kimi path ship with the swarm worker.
+Deploy after the tests pass: `handoff-agent`, `handoff-hq`, and `agent-swarm-orchestrator`. The columns ship with the HQ worker's migrate-on-request. The checker, the 70B path, and native tool calling ship with the swarm worker.
 
 ## Self-review
 
-- SAP-001 through SAP-029 each appear in a task above.
+- SAP-001 through SAP-030 each appear in a task above.
 - No task asks a specialist to start the next stage.
 - A one-skill job and a research-then-audit job are tested, along with the social preset.
-- Every kind except research has no Llama fallback.
+- Specialists use Llama 3.3 70B and one GLM 4.7 Flash retry. The 8B and 3B models are absent. The HQ agent stays on Kimi K2.7 Code.
 - The assignment builder is the only place that clips the handoff.

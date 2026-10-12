@@ -11,7 +11,7 @@
 
 Every skill in the catalog is a specialist the HQ agent can hire. A pipeline is those specialists in the order the job needs. Posts are one pipeline. An audit, a call plan, a headline, a homepage, and any other skill are pipelines too. One job is a pipeline of one stage. A job with several skills is several stages. The next stage starts only after the HQ agent accepts the page from the stage before it.
 
-Research looks things up on the small model. Every other job is written by the same strong model the HQ agent already uses.
+Research and every deliverable are written by Llama 3.3 70B. The HQ agent stays on Kimi K2.7 Code, because that model is the manager that calls tools and chooses the next stage. It does not write the specialist page.
 
 ```text
 staff name the work
@@ -51,7 +51,7 @@ Checked against the code on 2026-10-12.
 - Only the HQ agent advances the pipeline, and only after it accepts the current page.
 - The next specialist sees the accepted page from the previous stage, plus the facts and voice card when that job uses them. It does not see a rejected draft.
 - The specialist returns only what its skill defines. A headline skill does not return posts. An audit does not return a calendar.
-- Research searches with Parallel and returns a source table. Every other kind is written by Kimi.
+- Research calls Parallel with native function calling and returns a JSON source table. Every specialist page, including research, is written by Llama 3.3 70B. The HQ agent stays on Kimi K2.7 Code.
 - The assignment is short. The full skill file is not the prompt.
 - The specialist checks its own page. A failed check does not count as accepted work.
 - A failed required tool stops the stage. The model does not fill the gap from memory.
@@ -65,7 +65,8 @@ Checked against the code on 2026-10-12.
 - Showing the pipeline to the client.
 - Replacing the 413 skill files.
 - A general graph editor. The HQ agent submits an ordered list. Stages do not branch.
-- Falling through to Llama when Kimi is down for any job except research.
+- Falling through to Llama 3.1 8B or Llama 3.2 3B when Llama 3.3 70B is down.
+- Generating the image or video file. A visual stage returns the prompts. A later job can render them.
 
 ## Pipeline
 
@@ -85,10 +86,10 @@ The social list is a preset the HQ agent may pass when the work is posts. It is 
 
 | Order | Stage | Kind | Model | Reads | Returns |
 | --- | --- | --- | --- | --- | --- |
-| 0 | Research | `research` | small model, Parallel required | project brief and the notes in the assignment | table: name, fact, source, unknown |
-| 1 | Copy | `copy` | Kimi | accepted research table, `Facts:`, `Do not use:`, voice card when one exists | exactly 7 posts for one persona |
-| 2 | Language | `language` | Kimi | accepted 7 posts, voice card | the same 7 posts with repeated lines replaced |
-| 3 | Visuals | `visual` | Kimi | accepted posts, brand colors and fonts from the assignment | one image prompt and one video prompt per post |
+| 0 | Research | `research` | Llama 3.3 70B, Parallel required | project brief and the notes in the assignment | JSON rows: name, fact, source, unknown |
+| 1 | Copy | `copy` | Llama 3.3 70B | accepted research table, `Facts:`, `Do not use:`, voice card when one exists | JSON of exactly 7 posts for one persona |
+| 2 | Language | `language` | Llama 3.3 70B | accepted 7 posts, voice card | JSON of the same 7 posts with repeated lines replaced |
+| 3 | Visuals | `visual` | Llama 3.3 70B | accepted posts, brand colors and fonts from the assignment | JSON with one image prompt and one video prompt per post |
 
 Copy, language, and visuals still refuse to start without `Facts:` and `Do not use:` in the assignment (SAP-010). A `skill` stage does not need that packet. It needs the brief and the accepted page from the stage before it, when there is one.
 
@@ -121,14 +122,15 @@ The HQ agent may append another stage later. The new stage gets the next `stage_
 
 ### Models and tools
 
-- **SAP-014.** A research stage runs on the existing small-model chain. It must call a Parallel tool before it can finish. If Parallel is not listed, the stage ends `tool_failed` and does not answer from memory.
-- **SAP-015.** Every kind except `research` runs on `@cf/moonshotai/kimi-k2.7-code`. That includes copy, language, visuals, and every other skill. If Kimi fails, the stage ends `model_failed`. The small-model chain is not used for those kinds.
+- **SAP-014.** A research stage runs on `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. It calls Parallel through Workers AI function calling. A printed tool-call block is not a tool call. If Parallel is not listed, or the call throws, the stage ends `tool_failed` and does not answer from memory.
+- **SAP-015.** Every specialist, including research, copy, language, visuals, and every other skill, uses `@cf/meta/llama-3.3-70b-instruct-fp8-fast` first. If that call fails, the stage retries once on `@cf/zai-org/glm-4.7-flash`. If the retry fails, the stage ends `model_failed`. `@cf/meta/llama-3.1-8b-instruct-fp8` and `@cf/meta/llama-3.2-3b-instruct` are not in this path. The HQ agent stays on `@cf/moonshotai/kimi-k2.7-code`.
 - **SAP-016.** A stage that is not research does not receive web search. It receives the assignment and the accepted page from the previous stage. Research is the stage that searches.
-- **SAP-017.** When a tool call throws, the observation reports the failure and the stage stops. The prompt does not tell the model to answer from what it knows.
+- **SAP-017.** When a tool call throws, the stage stops with `tool_failed`. The prompt does not tell the model to answer from what it knows.
+- **SAP-030.** The specialist returns JSON for its kind. The checker reads that JSON. A page that is not JSON fails the check. The archive file may render the same JSON as a readable page.
 
 ### Check, accept, and retry
 
-- **SAP-018.** Before a stage is `completed`, a checker runs. Research drops rows with an empty source and fails when no row remains. Copy requires exactly 7 data rows and the columns platform, type, hook, body, hashtags, and CTA. Language requires the same 7 rows. Visuals require one image prompt and one video prompt for each accepted post. A banned opener on a copy or language row fails the check. A `skill` stage passes when the page is non-empty and does that skill's job. It fails when the page is empty, when it is a 90-day calendar, or when it is a 7-row post table and the skill is not copy or language.
+- **SAP-018.** Before a stage is `completed`, a checker runs on the JSON. Research drops rows with an empty source and fails when no row remains. Copy requires exactly 7 objects and the fields platform, type, hook, body, hashtags, and CTA. Language requires the same 7 objects. Visuals require one image prompt and one video prompt for each accepted post. A banned opener on a copy or language row fails the check. A `skill` stage passes when the JSON matches that skill's shape and the page is non-empty. It fails when the JSON is empty, when it is a 90-day calendar, or when it is a 7-post object and the skill is not copy or language.
 - **SAP-019.** The first failed check is sent back once as the retry note. The second failure stores status `check_failed`, the checker errors in `last_receipt`, and the draft in `last_output`. `accepted_at` stays null. The next stage cannot start.
 - **SAP-020.** `accept_workflow` sets `accepted_at` only when `last_status` is `completed`. It refuses `check_failed`, `tool_failed`, `model_failed`, and `source`.
 - **SAP-021.** Accepting a stage does not start the next stage. The HQ agent calls `run_workflow` on the next stage after accept.
@@ -176,11 +178,11 @@ Pure functions. No network.
 
 | Kind | Pass | Fail |
 | --- | --- | --- |
-| research | At least one row with name, fact, and source. Source is a URL or a named document from the assignment. | No rows left after empty sources are dropped. A post column or a 90-day plan. |
-| copy | Exactly 7 rows. Each row has platform, type, hook, body, hashtags, CTA. No row opens with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. | Any other count. A missing column. A banned opener. |
-| language | Exactly 7 rows with the same shape. | A new row, a dropped row, a banned opener. |
-| visual | For each post in the accepted handoff, one image prompt and one video prompt. | A missing pair. The words "placeholder model". |
-| skill | The page is non-empty and answers that skill. A call plan, an audit, a headline, or a homepage stays in that shape. | Empty page. A 90-day calendar. A 7-row post table when this skill is not copy or language. |
+| research | JSON array. At least one object with name, fact, and source. Source is a URL or a named document from the assignment. | Not JSON. No rows left after empty sources are dropped. A post field or a 90-day plan. |
+| copy | JSON array of exactly 7 objects. Each object has platform, type, hook, body, hashtags, CTA. No hook or body opens with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. | Any other count. A missing field. A banned opener. |
+| language | JSON array of exactly 7 objects with the same fields. | A new object, a dropped object, a banned opener. |
+| visual | JSON array. For each post in the accepted handoff, one imagePrompt and one videoPrompt. | A missing pair. The words "placeholder model". |
+| skill | JSON object whose keys are the ones named in that skill's shape. The page is non-empty. | Not JSON. Empty page. A 90-day calendar. A 7-post array when this skill is not copy or language. |
 
 The checker does not call a model.
 
@@ -198,7 +200,7 @@ Accepted research:
 
 A post stage uses the same frame with `Facts:`, `Do not use:`, `Voice:`, and the 7-row shape. A one-stage headline omits the accepted-page block because there is no previous stage.
 
-The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 characters. The full file stays in R2.
+The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 characters. The full file stays in R2. The assignment ends with the JSON shape the specialist must return. The checker reads that JSON.
 
 ## Chat flow
 
@@ -219,7 +221,7 @@ The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 ch
 | Copy stage started with no `Facts:` | `source`. Swarm is not called. |
 | Research finishes with zero sourced rows | `check_failed` after one retry. Copy stays waiting. |
 | HQ calls `run_workflow` on a later stage while the previous page is unaccepted | `waiting_accept`. That stage does not start. |
-| Kimi errors on an audit, a headline, or a post | `model_failed`. Llama is not tried. |
+| Llama 3.3 70B errors on an audit, a headline, a research table, or a post | One retry on GLM 4.7 Flash. A second failure is `model_failed`. The 8B and 3B models are not tried. |
 | Parallel is down | `tool_failed`. The research stage does not invent sources. |
 | Staff rerun an early stage after a later stage was accepted | The rerun clears `accepted_at`. Every later stage becomes `stale`. |
 | A second pipeline on a project that still has an unaccepted stage | `start_pipeline` is refused. |
@@ -238,7 +240,7 @@ The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 ch
 | `handoff/src/lib/hq-tools.ts` | `start_pipeline`, `accept_workflow`, `pipeline_status` |
 | `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts` | Staff-facing instructions |
 | `swarm/src/ai/check.ts` | Checker |
-| `swarm/src/ai/agents.ts` | Kind picks the model. Tool failure stops the stage. |
+| `swarm/src/ai/agents.ts` | Llama 3.3 70B, one GLM 4.7 Flash retry, native function calling, tool failure stops the stage. |
 | `swarm/src/do/WorkflowDO.ts` | Run the checker, one retry, store the receipt on the execution |
 | `handoff/src/lib/workflow-files.ts` | Archive the deliverable as it does today |
 
