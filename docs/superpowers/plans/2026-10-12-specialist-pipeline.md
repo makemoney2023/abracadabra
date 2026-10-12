@@ -181,7 +181,7 @@ SAP-009 through SAP-013.
 
 - [ ] **Step 1: Write the failing tests**
 
-SAP-005, SAP-006, SAP-011, SAP-020, SAP-021, SAP-022.
+SAP-005, SAP-006, SAP-008, SAP-011, SAP-020, SAP-021, SAP-022, SAP-033.
 
 - `run_workflow` on stage 1 while stage 0 has `last_status = completed` and `accepted_at` null returns `waiting_accept` and does not fetch the swarm.
 - The same call after `accepted_at` is set fetches the swarm. The body contains the stage 0 deliverable and does not contain an older unaccepted output.
