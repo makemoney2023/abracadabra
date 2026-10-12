@@ -12,6 +12,7 @@ import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
 import { isResearchWorkflow, researchTaskNote, toolsForResearch } from '../mcp/research-tools';
 import { assignmentHandoff } from '../ai/check';
+import { notifyHandoffSettled } from '../handoff-callback';
 import { settleSpecialist } from './settle-specialist';
 import type { SpecialistKind } from '../ai/check';
 import { NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE, classifyResume, nextResumeAlarm, withStepTimeout } from './resume';
@@ -658,6 +659,7 @@ export class WorkflowDO {
         executionId,
         timestamp: Date.now(),
       });
+      await notifyHandoffSettled(this.env, executionId);
     } catch (error: any) {
       execution.status = 'failed';
       execution.finishedAt = Date.now();
@@ -669,6 +671,7 @@ export class WorkflowDO {
         error: error.message || 'Workflow failed',
         timestamp: Date.now(),
       });
+      await notifyHandoffSettled(this.env, executionId);
     }
   }
 

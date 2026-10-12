@@ -1029,24 +1029,43 @@ function receiptDetail(receipt: string): string {
   }
 }
 
-/** File a swarm the worker already finished. The next workflow stays until chat runs it. */
-export async function settleRunningSwarms(input: {
+type SettleInput = {
   sql: Sql;
   store?: ObjectStore;
   origin: string;
   now: number;
   fetchImpl?: typeof fetch;
   notify?: (notice: { userId: string; name: string; status: string; detail: string }) => Promise<void>;
-}): Promise<number> {
+};
+
+type RunningSwarm = {
+  id: string;
+  organization_id: string;
+  project_id: string | null;
+  workflow_id: string | null;
+  execution_id: string;
+  template_id: string | null;
+};
+
+/** Settle one finished run. A run that is not still going is left as it is. */
+export async function settleOne(input: SettleInput & { runId: string }): Promise<boolean> {
+  const runId = input.runId.trim();
+  if (!runId || !input.origin.trim()) return false;
+  const row = await input.sql.get<RunningSwarm>(
+    `SELECT id, organization_id, project_id, workflow_id, execution_id, template_id
+     FROM swarm_runs
+     WHERE status = 'running' AND execution_id != '' AND (id = ? OR execution_id = ?)
+     LIMIT 1`,
+    [runId, runId],
+  );
+  if (!row) return false;
+  return settleSwarmRow(input, row);
+}
+
+/** File a swarm the worker already finished. The next workflow stays until chat runs it. */
+export async function settleRunningSwarms(input: SettleInput): Promise<number> {
   if (!input.origin.trim()) return 0;
-  const rows = await input.sql.all<{
-    id: string;
-    organization_id: string;
-    project_id: string | null;
-    workflow_id: string | null;
-    execution_id: string;
-    template_id: string | null;
-  }>(
+  const rows = await input.sql.all<RunningSwarm>(
     `SELECT id, organization_id, project_id, workflow_id, execution_id, template_id
      FROM swarm_runs
      WHERE status = 'running' AND execution_id != ''
@@ -1054,6 +1073,12 @@ export async function settleRunningSwarms(input: {
   );
   let settled = 0;
   for (const row of rows) {
+    if (await settleSwarmRow(input, row)) settled += 1;
+  }
+  return settled;
+}
+
+async function settleSwarmRow(input: SettleInput, row: RunningSwarm): Promise<boolean> {
     const run = await readSwarmRun({
       origin: input.origin,
       executionId: row.execution_id,
@@ -1063,7 +1088,7 @@ export async function settleRunningSwarms(input: {
     const status = ["completed", "failed", "check_failed", "tool_failed", "model_failed"].includes(run.status)
       ? run.status
       : "running";
-    if (status === "running") continue;
+    if (status === "running") return false;
     const finished = status === "completed" && run.output.trim().length > 0 && !run.output.includes("still going");
     if (input.store) {
       const artifacts = await readSwarmArtifacts({
@@ -1162,7 +1187,5 @@ export async function settleRunningSwarms(input: {
         }
       }
     }
-    settled += 1;
-  }
-  return settled;
+    return true;
 }
