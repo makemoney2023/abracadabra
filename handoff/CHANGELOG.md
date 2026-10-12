@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-12
+
+- **What changed** — A design spec and an implementation plan for a specialist pipeline. Runtime behavior is unchanged.
+- **Why** — Swarm packs should be specialists the HQ agent hires in order. The next stage waits until the previous page is accepted.
+- **Code touchpoints** — `docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`, `docs/superpowers/plans/2026-10-12-specialist-pipeline.md`
+- **Data-flow impact** — none until the plan is implemented.
+- **API / schema impact** — none yet. The plan adds `pipeline`, `stage_order`, `kind`, `accepted_at`, and `last_receipt`.
+- **Verification** — docs only.
+
 ## 2026-10-11
 
 - **What changed** — Every skill runs as its own job. Chat finds any skill with `list_swarm_packs` query. Copy, visuals, and the language pass are still the only ones that wait for `Facts:` and `Do not use:`.
