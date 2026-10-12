@@ -113,7 +113,7 @@ The HQ agent may append another stage later. The new stage gets the next `stage_
 
 ### Assignment
 
-- **SAP-009.** The text sent to the swarm is an assignment, not the full `SKILL.md`. It contains the one job, the output shape, the skill path, at most 1,500 characters of that skill, the facts, the banned lines, the voice card, and the accepted page from the previous stage.
+- **SAP-009.** The text sent to the swarm is an assignment, not the full `SKILL.md`. It contains the one job, the output shape for that skill, the skill path, and at most 1,500 characters of that skill. Copy, language, and visuals also include the facts, the banned lines, and the voice card. A later stage includes the accepted page from the previous stage. A one-skill job has no previous page.
 - **SAP-010.** Copy, language, and visuals do not call the swarm when `Facts:` or `Do not use:` is missing. Status is `source`.
 - **SAP-011.** The handoff is only the previous stage's accepted deliverable. Earlier stages are not pasted again. A rejected or check-failed output is not pasted.
 - **SAP-012.** A handoff longer than the room left under 7,900 characters is cut on a row boundary. The assignment says how many rows were omitted.
