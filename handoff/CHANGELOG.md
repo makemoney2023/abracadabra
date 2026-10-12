@@ -2,7 +2,7 @@
 
 ## 2026-10-12
 
-- **What changed** — The specialist-pipeline spec now covers settle, append, abandon, the social skill paths, a 24,000 character assignment, and workflows that have no kind. Runtime behavior is unchanged.
+- **What changed** — The specialist-pipeline spec now includes a chat notice when a stage finishes, an output schema fence on the four social skills, golden JSON pages, and Flux images for accepted image prompts. Runtime behavior is unchanged.
 - **Why** — Kimi K2.7 Code is the manager. The 8B research chain is the model that wrote the thin pages.
 - **Code touchpoints** — `docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`, `docs/superpowers/plans/2026-10-12-specialist-pipeline.md`
 - **Data-flow impact** — none until the plan is implemented.

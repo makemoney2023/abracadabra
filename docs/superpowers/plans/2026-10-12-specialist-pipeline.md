@@ -8,7 +8,7 @@
 
 **Tech stack:** Next.js 16, Vitest, D1 migrations applied in memory by `migrate`, the swarm worker on Workers AI.
 
-**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-034.
+**Design:** [`docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`](../specs/2026-10-12-specialist-pipeline-design.md). Requirements SAP-001 through SAP-038.
 
 ---
 
@@ -36,6 +36,8 @@ Work is in [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/). Do n
 | `handoff/src/lib/hq-tools.test.ts` | Tool results |
 | `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts` | Pipeline instructions |
 | `handoff/src/lib/hq-chat-playbook.test.ts` | The new sentences |
+| `handoff/src/agent/worker.ts` | Notice into the staff HQ chat when a stage settles |
+| `swarm/src/ai/golden/` | One passing JSON page per kind |
 | `handoff/CHANGELOG.md`, `docs/hq-agent-spec.md` | Behavior once the tasks ship |
 
 ## Global constraints
@@ -268,9 +270,74 @@ Expected: vitest pass, agent tsc exit 0, eslint exit 0. `tsc --noEmit -p tsconfi
 
 Deploy after the tests pass: `handoff-agent`, `handoff-hq`, and `agent-swarm-orchestrator`. The columns ship with the HQ worker's migrate-on-request. The checker, the 70B path, and native tool calling ship with the swarm worker.
 
+### Task 12: Chat notice when a stage finishes
+
+**Files:**
+- Modify: `handoff/src/lib/client-workflows.ts`
+- Modify: `handoff/src/agent/worker.ts`
+- Test: `handoff/src/lib/client-workflows.test.ts`
+- Test: `handoff/src/agent/worker.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+SAP-035. `start_pipeline` saves `started_by`. `settleRunningSwarms` calls the agent notice URL with that user id, the stage name, and `completed` or the error. A failed notice call still leaves `last_status` and `last_receipt` saved.
+
+- [ ] **Step 2: Run the test and confirm it fails**
+- [ ] **Step 3: Implement the notice route on `handoff-agent`**
+
+The route checks `AGENT_WAKE_SECRET` and appends one assistant message to the `HqChat` named with that user id.
+
+- [ ] **Step 4: Re-run the tests**
+
+### Task 13: Output schema in the four social skills
+
+**Files:**
+- Modify: the four `SKILL.md` files named in SAP-029
+- Modify: `swarm/src/ai/check.ts`
+- Test: `swarm/src/ai/check.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+SAP-036. A skill body with an `Output schema` JSON fence requires those keys. A skill body without a fence uses the kind rules. The four social files contain the fence.
+
+- [ ] **Step 2: Run the test and confirm it fails**
+- [ ] **Step 3: Add the fences and teach the checker to read one schema fence**
+- [ ] **Step 4: Re-run the test**
+
+### Task 14: Golden pages
+
+**Files:**
+- Create: `swarm/src/ai/golden/*.json`
+- Test: `swarm/src/ai/check.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+SAP-037. Each golden file passes `checkSpecialist`. A copy with a required field removed fails. The assignment builder test asserts the golden JSON is not included in the assignment text.
+
+- [ ] **Step 2: Run the test and confirm it fails**
+- [ ] **Step 3: Add the five JSON files**
+- [ ] **Step 4: Re-run the test**
+
+### Task 15: Render accepted image prompts
+
+**Files:**
+- Modify: `handoff/src/lib/client-workflows.ts` or `handoff/src/lib/hq-tools.ts`
+- Test: `handoff/src/lib/hq-tools.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+SAP-038. Accepting a visual stage with two `imagePrompt` values calls the image model twice and stores two PNG files. A thrown image call leaves `accepted_at` set and records the error on `last_receipt`. A `videoPrompt` does not call an image or video model.
+
+- [ ] **Step 2: Run the test and confirm it fails**
+- [ ] **Step 3: Implement**
+
+Use `@cf/black-forest-labs/flux-2-klein-9b`. Cap at 7 images. Store the files in the client space beside the visual page.
+
+- [ ] **Step 4: Re-run the test**
+
 ## Self-review
 
-- SAP-001 through SAP-034 each appear in a task above.
+- SAP-001 through SAP-038 each appear in a task above.
 - No task asks a specialist to start the next stage.
 - A one-skill job and a research-then-audit job are tested, along with the social preset.
 - Specialists use Llama 3.3 70B and one GLM 4.7 Flash retry. The 8B and 3B models are absent. The HQ agent stays on Kimi K2.7 Code.

@@ -3,7 +3,7 @@
 **Date:** 2026-10-12
 **Product:** Handoff HQ (`hq.abra-ca-dabra.app`), the HQ agent, and the swarm worker
 **Status:** Proposed, implementation-ready
-**Requirements:** SAP-001 through SAP-034
+**Requirements:** SAP-001 through SAP-038
 **Lives in:** [`handoff/`](../../../handoff/) and [`swarm/`](../../../swarm/)
 **Plan:** [`docs/superpowers/plans/2026-10-12-specialist-pipeline.md`](../plans/2026-10-12-specialist-pipeline.md)
 
@@ -151,6 +151,10 @@ The HQ agent may append another stage later. The new stage gets the next `stage_
 - **SAP-028.** `last_output` on an accepted stage is the deliverable the next assignment quotes. The receipt is `last_receipt` and is not pasted into the next assignment.
 - **SAP-033.** `settleRunningSwarms` stores `completed`, `check_failed`, `tool_failed`, and `model_failed` on the workflow. It copies the receipt into `last_receipt`. Any other swarm status stays `running`. `readSwarmRun` returns the receipt and those statuses.
 - **SAP-034.** `accept_workflow` and `abandon_pipeline` wait for the approval card. `start_pipeline`, `append_pipeline_stage`, `pipeline_status`, and `run_workflow` do not.
+- **SAP-035.** `start_pipeline` stores the staff user id on `workflow_groups.started_by`. When `settleRunningSwarms` moves a stage off `running`, it tells that user's HQ chat. The notice names the stage and the status. A `completed` notice asks staff to accept. A failed notice includes the checker or tool error. The chat message is sent through the HQ agent with `AGENT_WAKE_SECRET`. If that call fails, the workflow row is still saved.
+- **SAP-036.** A skill file may contain one fenced JSON schema under the heading `Output schema`. The checker uses that schema's required keys when the fence is present. A missing fence uses the kind rules. The four social preset skills get an `Output schema` fence in this build. The other skill files are not rewritten.
+- **SAP-037.** `swarm/src/ai/golden/` holds one passing JSON page per kind: research, copy, language, visual, and skill. The checker tests accept each file and reject a broken copy of it. These pages are not pasted into a live assignment.
+- **SAP-038.** Accepting a visual stage renders each `imagePrompt` with `@cf/black-forest-labs/flux-2-klein-9b` and stores the PNG in the client space next to the visual page. At most 7 images. A failed render is noted on the receipt and does not clear `accepted_at`. Video prompts stay text. This catalog has no video model.
 
 ## Data model
 
@@ -158,6 +162,7 @@ Migration `0022_specialist_pipeline.sql`.
 
 ```sql
 ALTER TABLE workflow_groups ADD COLUMN pipeline TEXT;
+ALTER TABLE workflow_groups ADD COLUMN started_by TEXT;
 ALTER TABLE client_workflows ADD COLUMN stage_order INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE client_workflows ADD COLUMN kind TEXT;
 ALTER TABLE client_workflows ADD COLUMN accepted_at INTEGER;
@@ -211,7 +216,7 @@ The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 ch
 1. Staff name the work and the project. The work might be posts, an audit, a call plan, a headline, or another skill.
 2. The HQ agent calls `list_swarm_packs` with the job as the query, then `start_pipeline` with those skill paths in order. Posts use the four-stage preset. A headline is one path. An audit is research, then the audit skill.
 3. The tool result lists the stages and the first execution id.
-4. Staff ask how it is going, or the agent calls `pipeline_status` on the next turn.
+4. When the stage finishes, the staff chat receives a notice. Staff can also call `pipeline_status`.
 5. When the stage is `completed`, the agent shows that skill's page and asks to accept.
 6. Staff approve the card. `accept_workflow` sets `accepted_at`.
 7. If another stage is waiting, the agent calls `run_workflow` on it. The assignment includes the accepted page.
@@ -249,6 +254,9 @@ The skill excerpt, when present, sits under `Skill notes:` and stops at 1,500 ch
 | `handoff/src/lib/hq-tool-names.ts` | Tool text and the approval set |
 | `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts` | Staff-facing instructions |
 | `handoff/src/lib/lead-swarm.ts` | `readSwarmRun` returns receipt and the new statuses |
+| `handoff/src/agent/worker.ts` | `POST` notice into the staff HQ chat |
+| `swarm/src/ai/golden/` | One passing JSON page per kind |
+| `.cursor/skills/.../SKILL.md` | `Output schema` fence on the four social preset skills |
 | `swarm/src/ai/check.ts` | Checker |
 | `swarm/src/ai/agents.ts` | Llama 3.3 70B, one GLM 4.7 Flash retry, native function calling, tool failure stops the stage. |
 | `swarm/src/do/WorkflowDO.ts` | Run the checker, one retry, store the receipt on the execution |
@@ -265,11 +273,6 @@ The swarm execution response gains `kind`, `receipt`, and `status` of `completed
 
 ## Deferred
 
-These are real improvements. They are not part of this build.
-
-- Pushing a chat message the moment a stage finishes. Until then, staff ask, and `pipeline_status` answers.
-- A second copy batch on a social line. After the first 7 are accepted, `append_pipeline_stage` can add another copy stage. Language then reads every accepted copy page since research. The first build passes only the previous stage.
+- A second copy batch on a social line. `append_pipeline_stage` can add one, and the first build still hands the next stage only the previous accepted page.
 - Client-visible status of the pipeline.
-- Reading a JSON schema out of each `SKILL.md`. This build puts the shape sentence in the assignment and checks the known kinds. A `skill` stage is checked only for empty output, a post array, and a 90-day calendar.
-- A saved set of good pages to compare against before a stage is called premium.
-- Rendering the visual prompts into image files.
+- A video file for each `videoPrompt`. Workers AI in this catalog has image models and no video model.
