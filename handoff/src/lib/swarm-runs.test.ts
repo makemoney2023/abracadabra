@@ -128,6 +128,7 @@ describe("saveSwarmRun", () => {
     let planted = false;
     const racing: Sql = {
       exec: (statement) => sql.exec(statement),
+      batch: (statements) => sql.batch(statements),
       all: (statement, params) => sql.all(statement, params),
       get: (statement, params) => sql.get(statement, params),
       async run(statement, params) {
@@ -171,6 +172,7 @@ describe("saveSwarmRun", () => {
     let missed = false;
     const racing: Sql = {
       exec: (statement) => sql.exec(statement),
+      batch: (statements) => sql.batch(statements),
       all: (statement, params) => sql.all(statement, params),
       async get(statement, params) {
         if (!missed && statement.includes("FROM swarm_runs WHERE execution_id")) {
