@@ -18,6 +18,7 @@ export const READ_HQ_TOOLS = [
   "list_repo_files",
   "read_repo_file",
   "search_repo",
+  "pipeline_status",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -34,9 +35,10 @@ export const GATED_HQ_TOOLS = new Set([
   "resume_client",
   "decide_work_request",
   "link_slack_channel",
-  "run_workflow",
   "queue_followup_swarms",
   "publish_swarm_report",
+  "accept_workflow",
+  "abandon_pipeline",
   "delete_task",
   "delete_project",
 ]);
@@ -206,7 +208,32 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   run_workflow: {
     label: "Run a workflow",
     description:
-      "Start the first workflow in a group. Research runs before the others. A later workflow waits until that output is ready, then receives it. body is the instruction for this run. Fields: id, body.",
+      "Run one pipeline stage after the previous page is accepted. A stage that is still waiting returns waiting_accept and does not start. body is the instruction, and copy, visuals, and language need Facts: and Do not use:. Fields: id, body.",
+  },
+  start_pipeline: {
+    label: "Start a specialist pipeline",
+    description:
+      "Create one stage per skill path and start only the first. paths is one .cursor/skills path per line. name is the label, such as social or audit. body is the instruction for the first stage. Fields: organizationId, projectId, name, paths, body.",
+  },
+  append_pipeline_stage: {
+    label: "Add a pipeline stage",
+    description:
+      "Add one skill at the end of an open pipeline. It does not start. Fields: organizationId, groupId, paths.",
+  },
+  abandon_pipeline: {
+    label: "Close a pipeline",
+    description:
+      "Mark unfinished stages stale and close the group so a new pipeline can start. Accepted pages stay. Fields: organizationId, groupId.",
+  },
+  accept_workflow: {
+    label: "Accept a specialist page",
+    description:
+      "Accept a completed stage. The next stage stays until run_workflow. A visual stage renders its image prompts. Fields: id.",
+  },
+  pipeline_status: {
+    label: "Pipeline status",
+    description:
+      "List each stage in order with its kind, status, receipt, and whether it is accepted. Fields: organizationId, groupId.",
   },
   publish_swarm_report: {
     label: "Publish the swarm PDF",
@@ -221,7 +248,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   queue_followup_swarms: {
     label: "Queue the next swarms",
     description:
-      "After a swarm finishes, file the next set and start them with that output. body is the review to put ahead of the finished text. title is one line per swarm: Name | pack id. id is the finished workflow. name is the new group. Fields: organizationId, id, title, body, projectId, name.",
+      "After a swarm finishes, file the next set without starting it. title is one line per swarm: Name | pack id. id is the finished workflow. name is the new group. Fields: organizationId, id, title, body, projectId, name.",
   },
   decide_work_request: {
     label: "Decide a client request",

@@ -5,6 +5,12 @@ metadata:
   version: 2.0.1
 ---
 
+## Output schema
+
+```json
+{"type":"object","required":["platform","type","hook","body","hashtags","cta"]}
+```
+
 # Copywriting
 
 You are an expert conversion copywriter. Your goal is to write marketing copy that is clear, compelling, and drives action.

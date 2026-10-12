@@ -1,4 +1,5 @@
 import { Agent, getAgentByName, routeAgentRequest } from "agents";
+import { HqChat } from "./hq-chat";
 import { adaptArtifact } from "../lib/artifact-adapter";
 import { verifyWake } from "../lib/agent-wake";
 import {
@@ -31,7 +32,7 @@ import type { ChatBindings } from "./hq-chat";
 
 export interface AgentBindings extends ChatBindings {
   ClientAgent: DurableObjectNamespace<ClientAgent>;
-  HQ_CHAT?: DurableObjectNamespace;
+  HQ_CHAT?: DurableObjectNamespace<HqChat>;
   EMAIL?: SendEmail;
   SKILLS: R2Bucket;
   AI: Ai;
@@ -664,6 +665,25 @@ const worker = {
         });
       });
     }
+    if (url.pathname === "/hq-notice" && request.method === "POST") {
+      const raw = await request.text();
+      const signature = request.headers.get("x-handoff-signature") ?? "";
+      if (!env.AGENT_WAKE_SECRET || !verifyWake(env.AGENT_WAKE_SECRET, raw, signature, Date.now())) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+      let body: { userId?: unknown; text?: unknown };
+      try {
+        body = JSON.parse(raw) as { userId?: unknown; text?: unknown };
+      } catch {
+        return new Response("Unauthorized", { status: 401 });
+      }
+      if (typeof body.userId !== "string" || typeof body.text !== "string" || !env.HQ_CHAT) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+      const stub = await getAgentByName(env.HQ_CHAT, body.userId);
+      await stub.postNotice(body.text);
+      return Response.json({ ok: true });
+    }
     if (url.pathname === "/wake" && request.method === "POST") {
       const raw = await request.text();
       const signature = request.headers.get("x-handoff-signature") ?? "";
@@ -856,5 +876,5 @@ const worker = {
   },
 };
 
-export { HqChat } from "./hq-chat";
+export { HqChat };
 export default worker;

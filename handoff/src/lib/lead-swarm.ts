@@ -29,7 +29,16 @@ export function leadBrief(lead: LeadFacts): string {
   return lines.join("\n");
 }
 
-type SwarmResult = { executionId: string; status: string; output: string };
+type SwarmResult = { executionId: string; status: string; output: string; receipt: string };
+
+const SETTLED_STATUS = new Set(["completed", "failed", "check_failed", "tool_failed", "model_failed"]);
+
+function receiptOf(body: unknown): string {
+  if (!body || typeof body !== "object" || !("receipt" in body)) return "";
+  const receipt = (body as { receipt?: unknown }).receipt;
+  if (!receipt) return "";
+  return typeof receipt === "string" ? receipt : JSON.stringify(receipt);
+}
 
 function originOf(origin: string): string {
   return origin.replace(/\/$/, "");
@@ -57,6 +66,8 @@ export async function runLeadSwarm(input: {
   templateId?: string;
   mcpServers?: SwarmMcpServer[];
   runSecret?: string;
+  /** Specialist kind. Set on the saved workflow so the swarm runs the checker. */
+  kind?: string;
   fetchImpl?: typeof fetch;
   polls?: number;
   wait?: (ms: number) => Promise<void>;
@@ -79,6 +90,7 @@ export async function runLeadSwarm(input: {
     ...template,
     id: input.workflowId,
     ...(workflowName ? { name: workflowName } : {}),
+    ...(input.kind ? { kind: input.kind } : {}),
     createdAt: Date.now(),
     ...(servers.length > 0
       ? {
@@ -107,18 +119,20 @@ export async function runLeadSwarm(input: {
   const wait = input.wait ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
   let status = "running";
   let output = "";
+  let receipt = "";
   for (let attempt = 0; attempt < polls; attempt += 1) {
     const statusResponse = await fetchImpl(`${base}/api/status?id=${encodeURIComponent(executionId)}`);
     const body = statusResponse.ok ? ((await statusResponse.json()) as { status?: string }) : {};
     status = typeof body.status === "string" ? body.status : "running";
     output = doneOutput(body, template.nodes.map((node) => node.id));
-    if (status === "completed" || status === "failed") break;
+    receipt = receiptOf(body);
+    if (SETTLED_STATUS.has(status)) break;
     if (attempt < polls - 1) await wait(3000);
   }
-  if (status !== "completed" && status !== "failed") {
+  if (!SETTLED_STATUS.has(status)) {
     output = output || `Swarm run ${executionId} is still going.`;
   }
-  return { executionId, status, output };
+  return { executionId, status, output, receipt };
 }
 
 export type SwarmNodeArtifact = {
@@ -218,7 +232,7 @@ export async function readSwarmRun(input: {
   executionId: string;
   templateId: string;
   fetchImpl?: typeof fetch;
-}): Promise<{ status: string; output: string }> {
+}): Promise<{ status: string; output: string; receipt: string }> {
   const fetchImpl = input.fetchImpl ?? fetch;
   const base = originOf(input.origin);
   let order: string[] = [];
@@ -232,7 +246,11 @@ export async function readSwarmRun(input: {
   const status =
     body && typeof body === "object" && "status" in body && typeof body.status === "string" ? body.status : "running";
   const output = doneOutput(body, order);
-  return { status, output: output || (status === "running" ? `Swarm run ${input.executionId} is still going.` : "") };
+  return {
+    status,
+    output: output || (status === "running" ? `Swarm run ${input.executionId} is still going.` : ""),
+    receipt: receiptOf(body),
+  };
 }
 
 /** Forty checks, 45 seconds apart, covers a research pack that runs for about half an hour. */

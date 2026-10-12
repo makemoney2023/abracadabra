@@ -7,6 +7,12 @@ metadata:
   author: parallel
 ---
 
+## Output schema
+
+```json
+{"type":"object","required":["name","fact","source"]}
+```
+
 # Web Search
 
 Search the web for: $ARGUMENTS

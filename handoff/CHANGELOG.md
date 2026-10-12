@@ -2,6 +2,15 @@
 
 ## 2026-10-12
 
+- **What changed** — Every catalog skill can run as a specialist in an ordered pipeline. The next stage starts only after the previous page is accepted. Posts are one preset: research, copy, language, then image prompts. Specialists use Llama 3.3 70B, then one GLM 4.7 Flash retry when the call throws. Research must call Parallel. A finished stage posts one line into the staff chat. An accepted visual stage renders image prompts with Flux 2 Klein. Video prompts stay text.
+- **Why** — The old swarm chain wrote thin pages from an 8B model and fed them forward before anyone accepted them.
+- **Code touchpoints** — `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/specialist-assignment.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/agent/worker.ts`, `swarm/src/ai/check.ts`, `swarm/src/ai/agents.ts`, `swarm/src/do/WorkflowDO.ts`, `handoff/migrations/0022_specialist_pipeline.sql`
+- **Data-flow impact** — `start_pipeline` creates the stages and starts the first. `run_workflow` starts a later stage only after `accepted_at` is set. `settleRunningSwarms` stores `check_failed`, `tool_failed`, and `model_failed` with the receipt. `queue_followup_swarms` files work and does not start a swarm.
+- **API / schema impact** — `client_workflows` gains `stage_order`, `kind`, `skill_path`, `accepted_at`, and `last_receipt`. `workflow_groups` gains `pipeline` and `started_by`. New tools: `start_pipeline`, `append_pipeline_stage`, `abandon_pipeline`, `accept_workflow`, `pipeline_status`. `POST /hq-notice` on the agent worker.
+- **Verification** — specialist checker, assignment, pipeline, client workflow, HQ tool, and playbook tests.
+
+## 2026-10-12
+
 - **What changed** — The specialist-pipeline spec now includes a chat notice when a stage finishes, an output schema fence on the four social skills, golden JSON pages, and Flux images for accepted image prompts. Runtime behavior is unchanged.
 - **Why** — Kimi K2.7 Code is the manager. The 8B research chain is the model that wrote the thin pages.
 - **Code touchpoints** — `docs/superpowers/specs/2026-10-12-specialist-pipeline-design.md`, `docs/superpowers/plans/2026-10-12-specialist-pipeline.md`

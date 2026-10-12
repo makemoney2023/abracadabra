@@ -40,6 +40,8 @@ export interface Workflow {
   createdAt: number;
   /** Remote MCP servers available to this workflow's agents. */
   mcpServers?: McpServerConfig[];
+  /** Specialist kind. Research attaches Parallel from this field. */
+  kind?: string;
 }
 
 export type NodeStatus = 'idle' | 'running' | 'done' | 'error';
@@ -60,12 +62,13 @@ export interface WorkflowExecution {
   id: string;
   workflowId: string;
   input: string;
-  status: 'running' | 'completed' | 'failed';
+  status: 'running' | 'completed' | 'failed' | 'check_failed' | 'tool_failed' | 'model_failed';
   results: Record<string, NodeResult>;
   startedAt: number;
   finishedAt?: number;
   /** True when this run presented SWARM_RUN_SECRET. The secret itself is not stored. */
   portalAllowed?: boolean;
+  receipt?: { tools: { server: string; tool: string }[]; check: { ok: boolean; errors: string[] }; missing: string[] };
 }
 
 export interface WSMessage {

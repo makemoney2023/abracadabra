@@ -1,6 +1,6 @@
 import handler, { DOQueueHandler, DOShardedTagCache } from "./.open-next/worker.js";
 import { d1Sql, type D1Like } from "./src/db/sql";
-import { wakeDueAgents, type WakeEnv } from "./src/lib/agent-wake";
+import { wakeDueAgents, postHqNotice, type WakeEnv } from "./src/lib/agent-wake";
 import { defaultBuildDeps, expireCloudRuns, retryCappedBuilds } from "./src/lib/cursor-build";
 import type { ScanQueue } from "./src/lib/lead-schema";
 import { filePendingScanContexts } from "./src/lib/scan-context";
@@ -39,6 +39,9 @@ export default {
           store: env.FILES ? r2ObjectStore(env.FILES) : undefined,
           origin,
           now,
+          notify: async (notice) => {
+            await postHqNotice(env, notice.userId, notice.detail, now);
+          },
         });
       } catch (error) {
         console.error(error instanceof Error ? error.message : "Swarm follow failed.");

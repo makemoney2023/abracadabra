@@ -25,6 +25,10 @@ function isPdfBytes(bytes: Uint8Array): boolean {
   return bytes.byteLength >= 5 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
 }
 
+function isPngBytes(bytes: Uint8Array): boolean {
+  return bytes.byteLength >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+}
+
 function profileOf(value: string): PolicyProfile | null {
   if (value === "standard" || value === "software") return value;
   return null;
@@ -75,6 +79,11 @@ export async function storeWorkflowOutput(input: {
       const relativePath = workflowSpacePath(file, "pdf");
       if (!relativePath) return [];
       return [{ relativePath, bytes: file.bytes, contentType: "application/pdf" }];
+    }
+    if (file.bytes && isPngBytes(file.bytes)) {
+      const relativePath = workflowSpacePath(file, "png");
+      if (!relativePath) return [];
+      return [{ relativePath, bytes: file.bytes, contentType: "image/png" }];
     }
     const adapted = adaptArtifact(file.body);
     if (!adapted) return [];

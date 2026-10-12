@@ -6,6 +6,12 @@ metadata:
   category: qa
 ---
 
+## Output schema
+
+```json
+{"type":"object","required":["platform","type","hook","body","hashtags","cta"]}
+```
+
 # Role
 You remove weak language.
 

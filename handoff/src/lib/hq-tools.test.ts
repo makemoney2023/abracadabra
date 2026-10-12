@@ -507,7 +507,7 @@ describe("runHqTool", () => {
       { tool: "run_workflow", input: { id: workflowId, body: "Check the site." }, idempotencyKey: "run" },
       NOW,
     );
-    expect(held).toMatchObject({ needsApproval: true });
+    expect(held).toEqual({ ok: false, error: "invalid" });
     const started = await runHqTool(
       sql,
       staff,
@@ -1296,11 +1296,9 @@ it("saves a finished swarm PDF and starts the next swarms with that output", asy
   const value = valueOf(queued) as { workflowIds?: string[]; taskIds?: string[]; status?: string; executionId?: string };
   expect(value.workflowIds).toHaveLength(2);
   expect(value.taskIds?.length).toBeGreaterThan(0);
-  expect(value.executionId).toBe("exec-next");
-  expect(value.status).toBe("running");
-  const started = calls.find((call) => call.url.endsWith("/api/execute"));
-  expect(started?.body).toContain("Fewer carousels.");
-  expect(started?.body).toContain("The calendar is ready.");
+  expect(value.executionId).toBe("");
+  expect(value.status).toBe("queued");
+  expect(calls.find((call) => call.url.endsWith("/api/execute"))).toBeUndefined();
   const heldReport = await runHqTool(
     sql,
     staff,
