@@ -84,6 +84,7 @@ type ToolOptions = {
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
   imageRun?: (model: string, body: { prompt: string }) => Promise<{ image?: string }>;
+  readSkill?: (skillPath: string) => Promise<string | null>;
   build?: BuildDeps;
   intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
   github?: { fetchImpl?: typeof fetch; secrets?: GithubSecrets | null; now?: number };
@@ -1065,6 +1066,7 @@ async function beginPipeline(
     fetchImpl: options.swarm?.fetchImpl,
     wait: options.swarm?.wait,
     store: options.swarm?.store,
+    readSkill: options.readSkill,
   });
   if (!started.ok) {
     if (started.error === "open") {
@@ -1395,6 +1397,7 @@ async function runWorkflow(
       wake: options.wake,
       swarm: swarmLaunch(options),
       instruction: text(input, "body"),
+      readSkill: options.readSkill,
     });
     if (!moved.ok) return { ok: false, error: moved.error };
     return {
@@ -1429,6 +1432,7 @@ async function runWorkflow(
     fetchImpl: swarm?.fetchImpl,
     wait: swarm?.wait,
     store: swarm?.store,
+    readSkill: options.readSkill,
   });
   if (!started.ok) return { ok: false, error: started.error };
   if (started.none) return { ok: false, error: "missing" };
@@ -1525,6 +1529,7 @@ async function setTaskStage(
     build: options.build ?? defaultBuildDeps(now),
     wake: options.wake,
     swarm: stage === "run" ? swarmLaunch(options) : undefined,
+    readSkill: options.readSkill,
   });
   if (!moved.ok) return { ok: false, error: moved.error };
   if (moved.waiting) return { ok: true, value: { taskId: task.id, stage: "build", waiting: "cap_reached" } };

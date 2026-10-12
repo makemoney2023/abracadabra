@@ -94,6 +94,22 @@ export async function searchPublishedSkills(
   return { ok: true, skills: searchSkills(parseSkillCatalog(await object.text()), query) };
 }
 
+/** The skill text stored under the same key the agent worker reads. A bad path returns null. */
+export async function readSkillFromBucket(
+  bucket: SkillBucket | undefined,
+  skillPath: string,
+): Promise<string | null> {
+  if (!bucket) return null;
+  const key = skillObjectKey(skillPath);
+  if (!key) return null;
+  try {
+    const object = await bucket.get(key);
+    return object ? await object.text() : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function readPublishedSkill(
   bucket: SkillBucket | undefined,
   skillPath: string,

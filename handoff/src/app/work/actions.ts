@@ -6,6 +6,7 @@ import { defaultBuildDeps } from "@/lib/cursor-build";
 import { requireHqStaffPage } from "@/lib/current";
 import { moveTaskStage, type TaskColumn } from "@/lib/task-stage";
 import { writeTaskPack } from "@/lib/task-packs";
+import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
 import { openObjectStore } from "@/lib/store/objects";
 
 const COLUMNS = new Set<TaskColumn>(["describe", "engineer", "build", "run", "done"]);
@@ -75,6 +76,7 @@ export async function moveBoardCardAction(formData: FormData): Promise<{ ok: boo
     actor: { kind: "staff", id: caller.userId },
     build: defaultBuildDeps(now),
     swarm: { origin: process.env.SWARM_ORIGIN ?? "", store: openObjectStore() },
+    readSkill: await cloudflareSkillReader(),
     wake: (id, reason) =>
       wakeOrganization(
         { AGENT_URL: process.env.AGENT_URL, AGENT_WAKE_SECRET: process.env.AGENT_WAKE_SECRET },

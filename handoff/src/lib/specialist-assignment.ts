@@ -1,6 +1,18 @@
 export const SPECIALIST_ASSIGNMENT_LIMIT = 24_000;
 const EXCERPT_LIMIT = 1_500;
 
+/** The first 1500 characters of a skill file. A path that leaves the library is ignored. */
+export async function readSkillExcerpt(
+  skillPath: string | null | undefined,
+  readSkill?: (skillPath: string) => Promise<string | null>,
+): Promise<string> {
+  const relative = skillPath?.trim() ?? "";
+  if (!relative.endsWith("SKILL.md") || relative.includes("..")) return "";
+  if (!readSkill) return "";
+  const body = await readSkill(relative);
+  return (body ?? "").slice(0, EXCERPT_LIMIT);
+}
+
 export function buildSpecialistAssignment(input: {
   job: string;
   skillPath: string;

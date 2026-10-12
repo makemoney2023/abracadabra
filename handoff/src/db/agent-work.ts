@@ -26,6 +26,10 @@ export class AgentWorkError extends Error {
 
 export type AgentActor = { keyId: string; organizationId: string };
 
+type AgentWorkDeps = Partial<BuildDeps> & {
+  readSkill?: (skillPath: string) => Promise<string | null>;
+};
+
 type WorkArgs = {
   requestId?: string;
   kind?: string;
@@ -71,7 +75,7 @@ export async function runAgentWork(
   tool: string,
   args: WorkArgs,
   now: number,
-  deps?: BuildDeps,
+  deps?: AgentWorkDeps,
 ): Promise<unknown> {
   const requestId = args.requestId?.trim() ?? "";
   if (!requestId) throw new AgentWorkError("Name a requestId.");
@@ -88,7 +92,14 @@ export async function runAgentWork(
   return result;
 }
 
-async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs, now: number, deps?: BuildDeps): Promise<unknown> {
+async function perform(
+  sql: Sql,
+  actor: AgentActor,
+  tool: string,
+  args: WorkArgs,
+  now: number,
+  deps?: AgentWorkDeps,
+): Promise<unknown> {
   if (tool === "save_brief") return saveBrief(sql, actor, args, now);
   if (tool === "create_task") return createAgentTask(sql, actor, args, now);
   if (tool === "update_task") return updateAgentTask(sql, actor, args, now, deps);
@@ -113,6 +124,7 @@ async function perform(sql: Sql, actor: AgentActor, tool: string, args: WorkArgs
       origin: process.env.SWARM_ORIGIN ?? "",
       now,
       store: openObjectStore(),
+      readSkill: deps?.readSkill,
     });
   }
   if (tool === "running_swarm") return latestRunningSwarm(sql, actor.organizationId);
@@ -573,7 +585,7 @@ async function deleteAgentProject(sql: Sql, actor: AgentActor, args: WorkArgs, n
   return removed.value;
 }
 
-async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number, deps?: BuildDeps): Promise<unknown> {
+async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number, deps?: AgentWorkDeps): Promise<unknown> {
   const taskId = args.taskId?.trim() ?? "";
   if (!taskId) throw new AgentWorkError("Name a task.");
   const task = await taskInOrg(sql, actor.organizationId, taskId);
@@ -583,7 +595,7 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
       to: "build",
       now,
       actor: { kind: "agent", id: actor.keyId },
-      build: deps ?? defaultBuildDeps(now),
+      build: deps?.fetch && deps.put ? (deps as BuildDeps) : defaultBuildDeps(now),
     });
     await writeSkillNote(sql, actor, task, built.ok ? args : { note: args.note }, now);
     const row = await sql.get<{ status: string; stage: string }>("SELECT status, stage FROM tasks WHERE id = ?", [task.id]);

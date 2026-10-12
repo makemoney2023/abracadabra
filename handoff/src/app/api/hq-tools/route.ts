@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { runHqTool } from "@/lib/hq-tools";
+import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
 import { sendHandoffMail } from "@/lib/mail";
 import { publicClientOrigin } from "@/lib/share-link";
 import { staffFromRequest } from "@/lib/staff-request";
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
     {
       swarm: { origin: process.env.SWARM_ORIGIN ?? "", store: openObjectStore() },
       imageRun: await fluxRun(),
+      readSkill: await cloudflareSkillReader(),
       mail: {
         origin: publicClientOrigin({
           origin: process.env.HANDOFF_APP_ORIGIN,

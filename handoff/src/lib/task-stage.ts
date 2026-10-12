@@ -37,6 +37,7 @@ export type MoveTaskInput = {
     store?: ObjectStore;
   };
   instruction?: string;
+  readSkill?: (skillPath: string) => Promise<string | null>;
 };
 
 export type MoveTaskResult =
@@ -274,6 +275,7 @@ async function moveToRun(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Pro
       fetchImpl: input.swarm?.fetchImpl,
       wait: input.swarm?.wait,
       store: input.swarm?.store,
+      readSkill: input.readSkill,
     });
     const follow =
       !started.ok ||

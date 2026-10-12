@@ -6,7 +6,7 @@ import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
 import { deliverableKind, needsSourcePacket, outputShape, packTemplateId, sourcePacketReady, SWARM_BATCH_CONTRACT, type DeliverableKind } from "./pack-templates";
-import { buildSpecialistAssignment, SPECIALIST_ASSIGNMENT_LIMIT } from "./specialist-assignment";
+import { buildSpecialistAssignment, readSkillExcerpt, SPECIALIST_ASSIGNMENT_LIMIT } from "./specialist-assignment";
 import { templateOnCard } from "./swarm-ready";
 import { markTaskDone } from "./task-done";
 import type { ObjectStore } from "./store/objects";
@@ -541,23 +541,10 @@ async function voiceCard(sql: Sql, organizationId: string): Promise<string> {
   return row?.body.replace(/^\s*voice:\s*/i, "").trim() ?? "";
 }
 
-async function skillExcerpt(skillPath: string | null): Promise<string> {
-  const relative = skillPath?.trim() ?? "";
-  if (!relative.endsWith("SKILL.md") || relative.includes("..")) return "";
-  try {
-    const { readFile } = await import("node:fs/promises");
-    const { join } = await import("node:path");
-    for (const candidate of [relative, join(process.cwd(), relative), join(process.cwd(), "..", relative)]) {
-      try {
-        return (await readFile(candidate, "utf8")).slice(0, 1500);
-      } catch {
-        // Try the next place the skill file might live.
-      }
-    }
-  } catch {
-    // A worker without the skill files still runs. The kind rules cover the page.
-  }
-  return "";
+function receiptWithSkillNote(receipt: string, missing: boolean): string {
+  if (!missing) return receipt;
+  if (receipt.includes("skill: missing")) return receipt;
+  return receipt ? `${receipt}\nskill: missing` : "skill: missing";
 }
 
 /** Run the oldest workflow whose time has arrived. A failure leaves the due time so the next cycle retries. */
@@ -575,6 +562,8 @@ export async function claimDueWorkflow(input: {
   fetchImpl?: typeof fetch;
   wait?: (ms: number) => Promise<void>;
   store?: ObjectStore;
+  /** Skill text for a specialist stage. The pipeline passes the R2 reader. */
+  readSkill?: (skillPath: string) => Promise<string | null>;
 }): Promise<DueClaim> {
   if (!input.origin.trim()) return { ok: false, error: "invalid" };
   const targeted = Boolean(input.workflowId);
@@ -696,6 +685,8 @@ export async function claimDueWorkflow(input: {
     }
   }
   const specialistKind = row.kind as DeliverableKind | null;
+  const excerpt = specialistKind ? await readSkillExcerpt(row.skill_path, input.readSkill) : "";
+  const skillMissing = Boolean(specialistKind && row.skill_path?.trim() && !excerpt);
   const packetKind = specialistKind ?? deliverableKind({ name: row.name, path: row.template_id });
   if (needsSourcePacket(packetKind) && !sourcePacketReady(statedBrief || ownBrief)) {
     return {
@@ -717,7 +708,7 @@ export async function claimDueWorkflow(input: {
         job: ownBrief,
         skillPath: row.skill_path || row.template_id,
         shape: outputShape(specialistKind),
-        excerpt: await skillExcerpt(row.skill_path),
+        excerpt,
         facts: labeled(statedBrief || ownBrief, "Facts"),
         banned: labeled(statedBrief || ownBrief, "Do not use"),
         voice: await voiceCard(input.sql, input.organizationId),
@@ -876,8 +867,9 @@ export async function claimDueWorkflow(input: {
   if (pageReady && started.output.trim()) {
     await input.sql.run("UPDATE client_workflows SET last_output = ? WHERE id = ?", [started.output, row.id]);
   }
-  if (started.receipt) {
-    await input.sql.run("UPDATE client_workflows SET last_receipt = ? WHERE id = ?", [started.receipt, row.id]);
+  const receipt = receiptWithSkillNote(started.receipt, skillMissing);
+  if (receipt) {
+    await input.sql.run("UPDATE client_workflows SET last_receipt = ? WHERE id = ?", [receipt, row.id]);
   }
   const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
   await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
@@ -1115,12 +1107,17 @@ export async function settleRunningSwarms(input: {
       row.id,
     ]);
     if (row.workflow_id) {
+      const prior = await input.sql.get<{ last_receipt: string | null }>(
+        "SELECT last_receipt FROM client_workflows WHERE id = ?",
+        [row.workflow_id],
+      );
+      const receipt = receiptWithSkillNote(run.receipt, Boolean(prior?.last_receipt?.includes("skill: missing")));
       await input.sql.run(
         `UPDATE client_workflows
          SET last_status = ?, last_output = COALESCE(?, last_output), last_receipt = COALESCE(?, last_receipt),
              last_execution_id = COALESCE(last_execution_id, ?), updated_at = ?
          WHERE id = ?`,
-        [status, run.output.trim() || null, run.receipt || null, row.execution_id, input.now, row.workflow_id],
+        [status, run.output.trim() || null, receipt || null, row.execution_id, input.now, row.workflow_id],
       );
     }
     if (finished && row.workflow_id) {

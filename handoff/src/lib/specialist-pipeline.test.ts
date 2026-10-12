@@ -350,4 +350,63 @@ describe("specialist pipeline", () => {
     );
     expect(row).toEqual({ accepted_at: NOW, last_output: "The audit page", last_status: "completed" });
   });
+
+  it("sends the skill excerpt and notes a missing skill in the receipt", async () => {
+    const sql = await database();
+    const executed: { workflowId: string; input: string }[] = [];
+    const skill = "n".repeat(1800);
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [".cursor/skills/plugins/parallel/parallel-web-search/SKILL.md"],
+      startedBy: "staff-1",
+      now: NOW,
+      origin: "https://swarm.example",
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+      readSkill: async () => skill,
+    });
+    if (!started.ok) throw new Error("pipeline");
+    expect(executed[0]?.input).toContain("Skill notes:");
+    expect(executed[0]?.input).toContain("n".repeat(1500));
+    expect(executed[0]?.input).not.toContain("n".repeat(1501));
+    const filled = await sql.get<{ last_receipt: string | null }>(
+      "SELECT last_receipt FROM client_workflows WHERE id = ?",
+      [started.stages[0]?.id],
+    );
+    expect(filled?.last_receipt ?? "").not.toContain("skill: missing");
+
+    const missing = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [".cursor/skills/plugins/parallel/parallel-web-search/SKILL.md"],
+      startedBy: "staff-1",
+      now: NOW + 5,
+      origin: "https://swarm.example",
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+    });
+    expect(missing).toEqual({ ok: false, error: "open" });
+    await acceptWorkflow(sql, { organizationId: "org-1", workflowId: started.stages[0]?.id ?? "", now: NOW + 6 });
+    await abandonPipeline(sql, { organizationId: "org-1", groupId: started.groupId, now: NOW + 6 });
+    const bare = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [".cursor/skills/plugins/parallel/parallel-web-search/SKILL.md"],
+      startedBy: "staff-1",
+      now: NOW + 7,
+      origin: "https://swarm.example",
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+    });
+    if (!bare.ok) throw new Error("pipeline");
+    expect(executed.at(-1)?.input).not.toContain("Skill notes:");
+    const row = await sql.get<{ last_receipt: string }>("SELECT last_receipt FROM client_workflows WHERE id = ?", [
+      bare.stages[0]?.id,
+    ]);
+    expect(row?.last_receipt).toContain("skill: missing");
+  });
 });

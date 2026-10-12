@@ -37,6 +37,7 @@ export async function startPipeline(
     wait?: (ms: number) => Promise<void>;
     store?: ObjectStore;
     instruction?: string;
+    readSkill?: (skillPath: string) => Promise<string | null>;
   },
 ): Promise<{ ok: true; groupId: string; stages: { id: string; kind: string; name: string }[]; executionId: string } | { ok: false; error: "invalid" | "missing" | "open" }> {
   if (!input.paths.length || !input.projectId) return { ok: false, error: "invalid" };
@@ -97,6 +98,7 @@ export async function startPipeline(
       fetchImpl: input.fetchImpl,
       wait: input.wait,
       store: input.store,
+      readSkill: input.readSkill,
     });
     if (started.ok && !started.none) executionId = started.executionId;
   }

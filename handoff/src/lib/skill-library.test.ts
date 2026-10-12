@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   clipSkillBody,
   readPublishedSkill,
+  readSkillFromBucket,
   searchPublishedSkills,
   searchSkills,
   skillIndexFromFiles,
@@ -121,6 +122,19 @@ describe("skill library", () => {
     const body = clipSkillBody("a".repeat(20), 8);
     expect(body.startsWith("aaaaaaaa")).toBe(true);
     expect(body).toContain("[truncated]");
+  });
+
+  it("reads one skill object from the bucket", async () => {
+    expect(await readSkillFromBucket(undefined, "community/copywriting/SKILL.md")).toBeNull();
+    expect(await readSkillFromBucket(bucket({ "skills/community/copywriting/SKILL.md": COPY }), "community/copywriting/SKILL.md")).toBe(COPY);
+    expect(await readSkillFromBucket(bucket({}), "community/copywriting/SKILL.md")).toBeNull();
+    expect(await readSkillFromBucket(bucket({ "skills/community/copywriting/SKILL.md": COPY }), "../x/SKILL.md")).toBeNull();
+    const throwing: SkillBucket = {
+      async get() {
+        throw new Error("bucket down");
+      },
+    };
+    expect(await readSkillFromBucket(throwing, "community/copywriting/SKILL.md")).toBeNull();
   });
 
   it("reads SKILL.md files from a tree", async () => {

@@ -70,7 +70,12 @@ describe("lead swarm", () => {
       fetchImpl: fetchImpl as typeof fetch,
       wait: async () => {},
     });
-    expect(result).toEqual({ executionId: "run-1", status: "completed", output: "They sell foam.\n\nHello Ada." });
+    expect(result).toEqual({
+      executionId: "run-1",
+      status: "completed",
+      output: "They sell foam.\n\nHello Ada.",
+      receipt: "",
+    });
     expect(calls.map((call) => call.url)).toEqual([
       `https://swarm.example/api/template?id=${OPENING_PACK_ID}`,
       "https://swarm.example/api/save",
@@ -149,7 +154,7 @@ describe("lead swarm", () => {
         });
       }) as typeof fetch,
     });
-    expect(result).toEqual({ status: "completed", output: "They sell foam.\n\nHello Ada." });
+    expect(result).toEqual({ status: "completed", output: "They sell foam.\n\nHello Ada.", receipt: "" });
     expect(urls.some((url) => url.includes("/api/execute") || url.includes("/api/save"))).toBe(false);
   });
 
