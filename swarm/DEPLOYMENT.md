@@ -77,7 +77,7 @@ Workers AI and R2 are bound via `wrangler.toml`. Secrets:
 |---|---|
 | `RESET_TOKEN` | Enables `POST /api/admin/reset`. Without it the endpoint returns 403. |
 | `SWARM_RUN_SECRET` | Bearer HQ sends before a run may call the MCP portal. The same secret signs `POST /api/swarm-settled`. Without it, a `portal` server is dropped and the settle callback is skipped. |
-| `HANDOFF_ORIGIN` | Public Handoff origin, set in `wrangler.toml` as `https://handoff.abra-ca-dabra.app`. The swarm posts a finished run there. |
+| `HANDOFF_ORIGIN` | Staff host that holds `SWARM_RUN_SECRET`, set in `wrangler.toml` as `https://hq.abra-ca-dabra.app`. The swarm posts a finished run there. |
 | `CF_ACCESS_CLIENT_ID` | Access service token id, added only on an authorized portal call. |
 | `CF_ACCESS_CLIENT_SECRET` | Access service token secret, added only on an authorized portal call. |
 

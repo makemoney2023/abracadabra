@@ -21,7 +21,7 @@ Copy `.env.example` to `.env.local` for the Next app and to `.dev.vars` for Wran
 
 ## Deploy checklist
 
-Cron changes ship with worker `handoff` and `wrangler.jsonc` (`npm run deploy`). They do not ship with `wrangler.hq.jsonc`. That file deploys `handoff-hq` and has no crons, so a settle or wake change that is deployed only there never runs. Deploy `handoff-hq` when HQ chat tools change, `handoff-agent` when notices or skill reads change, and the swarm worker when a run's model or callback changes. `handoff` and `handoff-hq` both bind the `handoff-skills` bucket as `SKILLS`. `AGENT_WAKE_SECRET` and `AGENT_URL` must be set on `handoff` or a finished stage cannot post into HQ chat. `SWARM_RUN_SECRET` on `handoff` must match the swarm so `POST /api/swarm-settled` is accepted. The one-minute cron remains the fallback.
+Cron changes ship with worker `handoff` and `wrangler.jsonc` (`npm run deploy`). They do not ship with `wrangler.hq.jsonc`. That file deploys `handoff-hq` and has no crons, so a settle or wake change that is deployed only there never runs. Deploy `handoff-hq` when HQ chat tools change, `handoff-agent` when notices or skill reads change, and the swarm worker when a run's model or callback changes. `handoff` and `handoff-hq` both bind the `handoff-skills` bucket as `SKILLS`. `AGENT_WAKE_SECRET` and `AGENT_URL` must be set on `handoff` or a finished stage cannot post into HQ chat. `SWARM_RUN_SECRET` is set on `handoff-hq` and the swarm. The swarm posts `POST /api/swarm-settled` to `https://hq.abra-ca-dabra.app`. The one-minute cron on worker `handoff` remains the fallback. Copy `SWARM_RUN_SECRET` onto worker `handoff` as well if that host should accept the callback.
 
 ## Cloudflare
 
