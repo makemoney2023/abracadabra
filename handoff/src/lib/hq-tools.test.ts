@@ -1547,6 +1547,35 @@ it("writes each pipeline activity once, including when the same key is sent agai
   }
 });
 
+it("refuses a pipeline of bare skill names and names the paths to fix", async () => {
+  const sql = await database();
+  const organizationId = await client(sql);
+  const project = await runHqTool(
+    sql,
+    staff,
+    { tool: "create_project", input: { organizationId, name: "Social" }, idempotencyKey: "proj-bare" },
+    NOW,
+  );
+  const projectId = String((valueOf(project) as { id?: string } | undefined)?.id ?? "");
+  const result = await runHqTool(
+    sql,
+    staff,
+    {
+      tool: "start_pipeline",
+      input: { organizationId, projectId, name: "social", paths: "parallel-deep-research\nsocial" },
+      idempotencyKey: "pipe-bare",
+    },
+    NOW,
+  );
+  const value = valueOf(result) as { refused?: string; unknown?: string[] };
+  expect(value.unknown).toEqual(["parallel-deep-research", "social"]);
+  expect(value.refused).toContain(".cursor/skills/");
+  const groups = await sql.get<{ n: number }>("SELECT count(*) AS n FROM workflow_groups WHERE project_id = ?", [projectId]);
+  expect(groups?.n).toBe(0);
+  const logged = await sql.get<{ n: number }>("SELECT count(*) AS n FROM activities WHERE kind = 'pipeline.started'");
+  expect(logged?.n).toBe(0);
+});
+
 async function client(sql: Sql): Promise<string> {
   const created = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Northwind" }, idempotencyKey: "org" }, NOW);
   const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");

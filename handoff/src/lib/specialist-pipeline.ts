@@ -14,6 +14,11 @@ export const SOCIAL_PIPELINE = [
   ".cursor/skills/community/visual-skills/image/SKILL.md",
 ] as const;
 
+/** Paths that do not name a pack skill file, such as a bare skill name. */
+export function unknownSkillPaths(paths: string[]): string[] {
+  return paths.map((path) => path.trim()).filter((path) => !path || path.includes("..") || !packTemplateId(path));
+}
+
 async function groupOpen(sql: Sql, projectId: string): Promise<boolean> {
   const row = await sql.get<{ id: string }>(
     `SELECT g.id FROM workflow_groups g
@@ -58,8 +63,11 @@ export async function startPipeline(
       paused?: { name: string; status: string; output: string };
     }
   | { ok: false; error: "invalid" | "missing" | "open" }
+  | { ok: false; error: "unknown_skill"; unknown: string[] }
 > {
   if (!input.paths.length || !input.projectId) return { ok: false, error: "invalid" };
+  const unknown = unknownSkillPaths(input.paths);
+  if (unknown.length) return { ok: false, error: "unknown_skill", unknown };
   if (await groupOpen(sql, input.projectId)) return { ok: false, error: "open" };
   const project = await sql.get<{ id: string }>("SELECT id FROM projects WHERE id = ? AND organization_id = ?", [
     input.projectId,
@@ -233,7 +241,11 @@ function stageRows(input: {
 export async function appendPipelineStage(
   sql: Sql,
   input: { organizationId: string; groupId: string; skillPath: string; now: number },
-): Promise<{ ok: true; id: string } | { ok: false; error: "invalid" | "missing" }> {
+): Promise<
+  { ok: true; id: string } | { ok: false; error: "invalid" | "missing" } | { ok: false; error: "unknown_skill"; unknown: string[] }
+> {
+  const unknown = unknownSkillPaths([input.skillPath]);
+  if (unknown.length) return { ok: false, error: "unknown_skill", unknown };
   const group = await sql.get<{ id: string; project_id: string | null; pipeline: string | null }>(
     "SELECT id, project_id, pipeline FROM workflow_groups WHERE id = ? AND organization_id = ?",
     [input.groupId, input.organizationId],

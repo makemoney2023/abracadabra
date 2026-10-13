@@ -577,6 +577,40 @@ describe("specialist pipeline", () => {
     expect(next.ok).toBe(true);
   });
 
+  it("refuses bare skill names and writes nothing, so the project can start again", async () => {
+    const sql = await database();
+    const refused = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: ["parallel-deep-research", SOCIAL_PIPELINE[1], "social"],
+      startedBy: "staff-1",
+      now: NOW,
+    });
+    expect(refused).toEqual({ ok: false, error: "unknown_skill", unknown: ["parallel-deep-research", "social"] });
+    const groups = await sql.get<{ n: number }>("SELECT count(*) AS n FROM workflow_groups");
+    const tasks = await sql.get<{ n: number }>("SELECT count(*) AS n FROM tasks");
+    expect(groups?.n).toBe(0);
+    expect(tasks?.n).toBe(0);
+
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [SOCIAL_PIPELINE[0]],
+      startedBy: "staff-1",
+      now: NOW + 1,
+    });
+    if (!started.ok) throw new Error("pipeline");
+    const added = await appendPipelineStage(sql, {
+      organizationId: "org-1",
+      groupId: started.groupId,
+      skillPath: "image",
+      now: NOW + 2,
+    });
+    expect(added).toEqual({ ok: false, error: "unknown_skill", unknown: ["image"] });
+  });
+
   it("does not stale a group that is not a pipeline", async () => {
     const sql = await database();
     const group = await createWorkflowGroup(sql, { organizationId: "org-1", name: "Old", projectId: "proj-1", now: NOW });

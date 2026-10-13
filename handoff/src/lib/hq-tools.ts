@@ -1084,6 +1084,7 @@ async function beginPipeline(
         value: { refused: "A pipeline is still open. Accept the last page or call abandon_pipeline." },
       };
     }
+    if (started.error === "unknown_skill") return unknownSkills(started.unknown);
     return { ok: false, error: started.error };
   }
   await logStaff(
@@ -1112,6 +1113,16 @@ async function beginPipeline(
   };
 }
 
+function unknownSkills(unknown: string[]): HqToolResult {
+  return {
+    ok: true,
+    value: {
+      refused: `Nothing was created. These are not skill paths: ${unknown.join(", ") || "(empty)"}. Pass the full .cursor/skills/.../SKILL.md path from list_swarm_packs or search_skills.`,
+      unknown,
+    },
+  };
+}
+
 function groupName(input: Record<string, unknown>): string {
   return text(input, "name") || "pipeline";
 }
@@ -1126,7 +1137,7 @@ async function appendStage(sql: Sql, caller: Caller, input: Record<string, unkno
     skillPath,
     now,
   });
-  if (!added.ok) return { ok: false, error: added.error };
+  if (!added.ok) return added.error === "unknown_skill" ? unknownSkills(added.unknown) : { ok: false, error: added.error };
   const stage = skillPath.split("/").at(-2) || skillPath;
   await logStaff(
     sql,
