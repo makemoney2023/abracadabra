@@ -21,6 +21,16 @@ describe('settleSpecialist', () => {
     if (result.action === 'completed') expect(result.receipt.missing).toEqual(['extra text ignored']);
   });
 
+  it('stops on a question instead of retrying the page', () => {
+    const result = settleSpecialist({
+      kind: 'visual',
+      draft: JSON.stringify({ questions: ['Which aspect ratio?'] }),
+      attempt: 1,
+    });
+    expect(result.action).toBe('question');
+    if (result.action === 'question') expect(result.questions).toEqual(['Which aspect ratio?']);
+  });
+
   it('accepts a good draft', () => {
     const result = settleSpecialist({ kind: 'copy', draft: copy, attempt: 1 });
     expect(result.action).toBe('completed');
