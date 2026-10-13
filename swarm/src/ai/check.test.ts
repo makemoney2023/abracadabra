@@ -41,6 +41,7 @@ describe('checkSpecialist', () => {
     const two = extractJson('{"a":1} {"b":2}');
     expect(two).toEqual({ json: '{"a":1}', extra: true });
     expect(checkSpecialist('research', 'no json here').errors).toContain('not json');
+    expect(checkSpecialist('copy', '8001: Invalid input').errors).toEqual(['model error: 8001: Invalid input']);
   });
 
   it('parses one json fence', () => {

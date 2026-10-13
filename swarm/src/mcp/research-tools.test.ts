@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { McpToolDef } from './client';
-import { isParallelTool, isResearchWorkflow, researchTaskNote, toolsForResearch } from './research-tools';
+import { isParallelTool, isResearchWorkflow, researchTaskNote, toolsForPage, toolsForResearch } from './research-tools';
 
 const parallel: McpToolDef = {
   serverId: 'portal',
@@ -26,6 +26,12 @@ describe('research tools', () => {
 
   it('keeps only Parallel tools on a research pack when the portal lists them', () => {
     expect(toolsForResearch([other, parallel])).toEqual([parallel]);
+  });
+
+  it('keeps Parallel and drops image generation on a copy or visual stage', () => {
+    const image: McpToolDef = { ...other, name: 'muapi_muapi_image_generate', description: 'Generate an image' };
+    expect(toolsForPage([image, other, parallel])).toEqual([parallel]);
+    expect(toolsForPage([image, other])).toEqual([other]);
   });
 
   it('keeps every tool when Parallel is not listed', () => {

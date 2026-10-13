@@ -15,10 +15,24 @@ export function isParallelTool(tool: Pick<McpToolDef, 'name' | 'description' | '
   return mentionsParallel(tool.name) || mentionsParallel(tool.description) || mentionsParallel(tool.serverName) || mentionsParallel(tool.serverId);
 }
 
+const GENERATION = /image|video|muapi|flux|tts|speech/i;
+
+/** Image and video tools. A text stage that calls one stores the provider error instead of a page. */
+export function isGenerationTool(tool: Pick<McpToolDef, 'name' | 'description'>): boolean {
+  return GENERATION.test(`${tool.name} ${tool.description ?? ''}`);
+}
+
 /** Research steps call Parallel when the portal lists it, and otherwise keep the full tool list. */
 export function toolsForResearch(tools: McpToolDef[]): McpToolDef[] {
   const parallel = tools.filter(isParallelTool);
   return parallel.length > 0 ? parallel : tools;
+}
+
+/** Copy, language, and visual stages keep Parallel and drop image generation. */
+export function toolsForPage(tools: McpToolDef[]): McpToolDef[] {
+  const parallel = tools.filter(isParallelTool);
+  if (parallel.length > 0) return parallel;
+  return tools.filter((tool) => !isGenerationTool(tool));
 }
 
 /** Instruction appended on a research pack so the model cannot skip Parallel. */

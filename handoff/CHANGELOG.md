@@ -2,6 +2,13 @@
 
 ## 2026-10-13
 
+- **What changed** — Copy, language, and visual stages no longer receive image-generation tools. A specialist brief that says `Return JSON only` overrides the skill's prose format. A provider error such as `8001: Invalid input` is not treated as the page, and the HQ notice no longer repeats the same check error twice.
+- **Why** — The copywriting stage called `muapi_muapi_image_generate`, saved `8001: Invalid input`, and HQ reported `check_failed. not json; not json`. Research had already limited itself to Parallel, so it completed.
+- **Code touchpoints** — `swarm/src/mcp/research-tools.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/ai/agents.ts`, `swarm/src/ai/check.ts`, `swarm/src/do/settle-specialist.ts`, `handoff/src/lib/client-workflows.ts`
+- **Data-flow impact** — A copy stage can still call Parallel. It cannot call image generation. The retry asks for one JSON value.
+- **API / schema impact** — None.
+- **Verification** — swarm `npm test` (76 passed) and `npx tsc --noEmit`.
+
 - **What changed** — A specialist stage can stop with `{"questions":[...]}` instead of a page. The stage status becomes `question`, the task waits on staff, and HQ is told to call `open_questions` then `answer_question`. That answer runs the stage again. A visual stage asks when the model, the ratio, or a brand color is missing. Later stages stay queued while it asks. `answer_question` does not wait for an approval card.
 - **Why** — The image skill needs a reply before it can write prompts. A question was a failed check, so the pipeline stopped and HQ had no way to answer and continue.
 - **Code touchpoints** — `swarm/src/ai/check.ts`, `swarm/src/do/settle-specialist.ts`, `swarm/src/do/WorkflowDO.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`

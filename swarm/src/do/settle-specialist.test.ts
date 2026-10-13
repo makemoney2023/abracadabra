@@ -10,6 +10,9 @@ describe('settleSpecialist', () => {
     const first = settleSpecialist({ kind: 'copy', draft: '[]', attempt: 1 });
     expect(first.action).toBe('retry');
     if (first.action === 'retry') expect(first.note.length).toBeGreaterThan(0);
+    const prose = settleSpecialist({ kind: 'copy', draft: '8001: Invalid input', attempt: 1 });
+    expect(prose.action).toBe('retry');
+    if (prose.action === 'retry') expect(prose.note).toMatch(/JSON/);
     const second = settleSpecialist({ kind: 'copy', draft: '[]', attempt: 2 });
     expect(second.action).toBe('check_failed');
   });

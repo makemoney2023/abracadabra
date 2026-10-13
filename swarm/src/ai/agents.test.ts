@@ -9,6 +9,7 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('Check platform character limits.');
     expect(prompt).toContain(skill.path);
     expect(prompt).toMatch(/execute every step/i);
+    expect(prompt).toMatch(/Return JSON only/);
     expect(prompt).not.toMatch(/be concise/i);
   });
 
@@ -24,6 +25,9 @@ describe('buildUserPrompt', () => {
     const prompt = buildUserPrompt('writer', 'the brief', skill);
     expect(prompt).toMatch(/deliverables/i);
     expect(prompt).toContain('the brief');
+    expect(prompt).not.toMatch(/entire reply is one JSON/);
+    const json = buildUserPrompt('writer', 'Return JSON only.', skill);
+    expect(json).toMatch(/entire reply is one JSON/);
   });
 
   it('uses the role action for nodes without a skill', () => {

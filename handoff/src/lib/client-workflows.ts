@@ -1328,7 +1328,9 @@ function receiptDetail(receipt: string): string {
   if (!receipt) return "";
   try {
     const parsed = JSON.parse(receipt) as { check?: { errors?: string[] }; missing?: string[] };
-    return [...(parsed.check?.errors ?? []), ...(parsed.missing ?? [])].filter(Boolean).join("; ");
+    const errors = (parsed.check?.errors ?? []).filter(Boolean);
+    const missing = (parsed.missing ?? []).filter((item) => item && !errors.includes(item));
+    return [...errors, ...missing].join("; ");
   } catch {
     return receipt.slice(0, 240);
   }

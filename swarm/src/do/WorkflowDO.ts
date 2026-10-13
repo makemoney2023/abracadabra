@@ -10,7 +10,7 @@ const ALL_TEMPLATES: WorkflowTemplate[] = [...WORKFLOW_TEMPLATES, ...(packTempla
 import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
-import { isResearchWorkflow, researchTaskNote, toolsForResearch } from '../mcp/research-tools';
+import { isResearchWorkflow, researchTaskNote, toolsForPage, toolsForResearch } from '../mcp/research-tools';
 import { assignmentHandoff } from '../ai/check';
 import { notifyHandoffSettled } from '../handoff-callback';
 import { settleSpecialist } from './settle-specialist';
@@ -469,6 +469,8 @@ export class WorkflowDO {
               if (researchRun) {
                 instructions = `${node.instructions}\n\n${researchTaskNote(mcpTools)}`;
                 mcpTools = toolsForResearch(mcpTools);
+              } else if (workflowKind === 'copy' || workflowKind === 'language' || workflowKind === 'visual' || workflowKind === 'skill') {
+                mcpTools = toolsForPage(mcpTools);
               }
               const skill = await loadSkill(this.env.SKILLS, node.instructions);
 

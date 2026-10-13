@@ -1,6 +1,7 @@
 import type { AgentType } from '../types';
 import { formatToolsForPrompt, type McpToolDef } from '../mcp/client';
 import { MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE, shouldTryNextModel, withStepTimeout } from '../do/resume';
+import { providerError } from './check';
 import type { LoadedSkill } from './skills';
 
 /** Workers AI defaults to 256 output tokens, which truncates skill deliverables. */
@@ -120,9 +121,10 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
     for (const model of MODELS) {
       try {
         const streamed = await runModelStream(model, messages, env, onToken);
-        if (streamed) {
+        if (streamed && !providerError(streamed)) {
           return { output: finalAnswer(streamed), toolsUsed: [] };
         }
+        if (streamed) lastError = new Error(streamed);
       } catch (error) {
         if (!shouldTryNextModel(error)) throw error;
         lastError = error;
@@ -130,14 +132,16 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
 
       try {
         const output = await runModelOnce(model, messages, env);
-        return { output: finalAnswer(output), toolsUsed: [] };
+        if (!providerError(output)) return { output: finalAnswer(output), toolsUsed: [] };
+        lastError = new Error(output);
       } catch (error) {
         if (!shouldTryNextModel(error)) throw error;
         lastError = error;
       }
     }
 
-    return { output: 'The model did not answer.', toolsUsed: [], status: 'model_failed' };
+    const message = lastError instanceof Error && providerError(lastError.message) ? lastError.message : 'The model did not answer.';
+    return { output: message, toolsUsed: [], status: 'model_failed' };
   }
 
   // Tool path: native function calls. A printed tool-call block is not a call.
@@ -222,7 +226,9 @@ async function pageFromReply(
   allowRetry: boolean,
 ): Promise<{ ok: true; text: string } | { ok: false; message: string }> {
   try {
-    return { ok: true, text: finalAnswer(text) };
+    const page = finalAnswer(text);
+    if (providerError(page)) throw new Error(page);
+    return { ok: true, text: page };
   } catch (error) {
     if (!allowRetry) {
       return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
@@ -242,7 +248,12 @@ async function pageFromReply(
   let lastError: unknown = new Error('The step ended on a tool call and did not write an answer.');
   for (const model of MODELS) {
     try {
-      return { ok: true, text: finalAnswer(await runModelOnce(model, next, env)) };
+      const page = finalAnswer(await runModelOnce(model, next, env));
+      if (providerError(page)) {
+        lastError = new Error(page);
+        continue;
+      }
+      return { ok: true, text: page };
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('The step ended on a tool call')) {
         lastError = error;
@@ -372,7 +383,8 @@ Rules:
 - Produce the skill's actual deliverables (with the formats, platform specs, limits, and checks it requires) — never summarize, paraphrase, or describe the skill
 - Ground every angle, claim, and example in specifics from the brief (audience, pain points, offer, constraints); no generic placeholders
 - Where the skill requires checks (e.g. character limits), show the check results
-- Return only the deliverables, no meta-commentary`;
+- Return only the deliverables, no meta-commentary
+- If the brief says Return JSON only, that overrides the skill's prose format and any step that says to ask a question. The whole answer is that JSON value`;
   }
 
   return `You are ${name}, ${roleMap[type]}. ${instructions}
@@ -386,7 +398,11 @@ Rules:
 
 export function buildUserPrompt(type: AgentType, input: string, skill?: LoadedSkill | null): string {
   if (skill) {
-    return `Execute the skill step by step on the following input and produce its complete deliverables:\n\n${input}`;
+    const jsonOnly = input.includes('Return JSON only.');
+    const rule = jsonOnly
+      ? '\n\nYour entire reply is one JSON value. No headings, no questions, and no tool-error text.'
+      : '';
+    return `Execute the skill step by step on the following input and produce its complete deliverables:\n\n${input}${rule}`;
   }
 
   const actionMap: Record<AgentType, string> = {

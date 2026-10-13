@@ -14,6 +14,18 @@ export type ExtractedJson = { json: string; extra: boolean };
 const BANNED = [/^\s*transform your/i, /^\s*real smiles/i, /^\s*unlock/i, /^\s*discover the secret/i, /^\s*ready to/i];
 const COPY_FIELDS = ["platform", "type", "hook", "body", "hashtags", "cta"];
 
+/** A short provider failure such as "8001: Invalid input". A real page is longer than this. */
+export function providerError(text: string): string | null {
+  const trimmed = text.trim();
+  if (trimmed.length > 0 && trimmed.length < 80 && /^\d{3,5}:\s+\S/.test(trimmed)) return trimmed;
+  return null;
+}
+
+function jsonMiss(raw: string): string {
+  const error = providerError(raw);
+  return error ? `model error: ${error}` : "not json";
+}
+
 function parses(text: string): boolean {
   try {
     JSON.parse(text);
@@ -173,7 +185,7 @@ export function checkSpecialist(kind: SpecialistKind, raw: string, handoff = "",
     return { ok: false, errors: ["needs an answer"], page: JSON.stringify({ questions }), questions };
   }
   const extracted = extractJson(raw);
-  if (!extracted) return { ok: false, errors: ["not json"], page: "" };
+  if (!extracted) return { ok: false, errors: [jsonMiss(raw)], page: "" };
   const result = checkParsed(kind, extracted.json, handoff, shape);
   if (!extracted.extra) return result;
   return { ...result, notes: ["extra text ignored"] };
