@@ -58,3 +58,15 @@ export function isResearchWorkflow(workflow: ResearchWorkflow): boolean {
   const labels = [workflow.name ?? '', workflow.description ?? '', ...(workflow.nodes ?? []).map((node) => node.name ?? '')];
   return labels.some((label) => /research/i.test(label));
 }
+
+const NON_RESEARCH_KINDS = new Set(['copy', 'language', 'visual', 'skill']);
+
+/**
+ * The workflow kind wins over names. A copy pack whose skill name mentions
+ * "research" still writes copy and must not be forced onto Parallel tools.
+ */
+export function usesResearchTools(workflow: ResearchWorkflow & { kind?: string }): boolean {
+  if (workflow.kind === 'research') return true;
+  if (workflow.kind && NON_RESEARCH_KINDS.has(workflow.kind)) return false;
+  return isResearchWorkflow(workflow);
+}

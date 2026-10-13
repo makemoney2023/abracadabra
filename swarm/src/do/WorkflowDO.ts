@@ -10,8 +10,8 @@ const ALL_TEMPLATES: WorkflowTemplate[] = [...WORKFLOW_TEMPLATES, ...(packTempla
 import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
-import { isResearchWorkflow, researchTaskNote, toolsForPage, toolsForResearch, toolsForWriting } from '../mcp/research-tools';
-import { assignmentHandoff } from '../ai/check';
+import { researchTaskNote, usesResearchTools, toolsForPage, toolsForResearch, toolsForWriting } from '../mcp/research-tools';
+import { assignmentHandoff, nodeFailure } from '../ai/check';
 import { notifyHandoffSettled } from '../handoff-callback';
 import { settleSpecialist } from './settle-specialist';
 import type { SpecialistKind } from '../ai/check';
@@ -369,7 +369,7 @@ export class WorkflowDO {
       const inFlight = new Set<string>();
       const now = Date.now();
       const workflowKind = workflow.kind;
-      const researchRun = workflowKind === 'research' || isResearchWorkflow(workflow);
+      const researchRun = usesResearchTools(workflow);
 
       // Resume support: finished nodes keep their results. A running step
       // that this isolate did not start is left alone until the grace
@@ -557,6 +557,7 @@ export class WorkflowDO {
                       check: { ok: false, errors: [retryNote] },
                       missing: [error instanceof Error ? error.message : 'retry failed'],
                     };
+                    throw error;
                   }
                 }
                 if (settledPage.action === 'completed') {
@@ -583,6 +584,10 @@ export class WorkflowDO {
                   execution.receipt = { tools: result.toolsUsed, check: { ok: false, errors: [] }, missing: [result.output] };
                 }
               }
+
+              const failed = result.status === 'model_failed' || result.status === 'tool_failed';
+              const failure = nodeFailure(result.status, failed ? result.output : output);
+              if (failure) throw new Error(failure);
 
               const doneResult: NodeResult = {
                 nodeId,

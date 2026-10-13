@@ -1,5 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { buildSpecialistAssignment, readSkillExcerpt, SPECIALIST_ASSIGNMENT_LIMIT } from "./specialist-assignment";
+import {
+  buildSpecialistAssignment,
+  labeledSection,
+  readSkillExcerpt,
+  SPECIALIST_ASSIGNMENT_LIMIT,
+  withoutSections,
+} from "./specialist-assignment";
+
+describe("brief sections", () => {
+  const brief = "Write 7 posts for North.\n\nFacts:\nOpen Sundays\n\nAnswers:\nUse a warm tone\n\nDo not use:\nUnlock";
+
+  it("stops a section at the Answers label", () => {
+    expect(labeledSection(brief, "Facts")).toBe("Open Sundays");
+    expect(labeledSection(brief, "Answers")).toBe("Use a warm tone");
+  });
+
+  it("removes repeated sections from the job and keeps the rest", () => {
+    const job = withoutSections(brief, ["Facts", "Do not use", "Answers"]);
+    expect(job).toBe("Write 7 posts for North.");
+  });
+
+  it("puts each fact into the assignment once", () => {
+    const text = buildSpecialistAssignment({
+      job: withoutSections(brief, ["Facts", "Do not use", "Answers"]),
+      skillPath: "copywriting/SKILL.md",
+      shape: "Return exactly 7 rows.",
+      facts: labeledSection(brief, "Facts"),
+    });
+    expect(text.match(/Facts:/g)).toHaveLength(1);
+    expect(text.match(/Open Sundays/g)).toHaveLength(1);
+  });
+});
+
+describe("readSkillExcerpt frontmatter", () => {
+  it("drops YAML frontmatter before the excerpt", async () => {
+    const excerpt = await readSkillExcerpt("x/SKILL.md", async () => "---\nname: copy\ndescription: long\n---\n# Copy\nWrite plainly.");
+    expect(excerpt).toBe("# Copy\nWrite plainly.");
+  });
+});
 
 describe("buildSpecialistAssignment", () => {
   it("includes the source packet, the skill, and the accepted page", () => {

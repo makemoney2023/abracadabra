@@ -204,6 +204,50 @@ describe('runAgent', () => {
     expect(result.output).toContain('instagram');
   });
 
+  it('sends tools in the OpenAI function format with safe names', async () => {
+    const seen: any[] = [];
+    const env = {
+      AI: {
+        run: async (_model: string, params: any) => {
+          if (params.stream) throw new Error('no stream');
+          seen.push(params);
+          return { response: 'done' };
+        },
+      },
+    };
+    await runAgent('researcher', {
+      input: 'brief',
+      instructions: 'search',
+      name: 'research',
+      mcpTools: [{ serverId: 'portal', serverName: 'Parallel', name: 'parallel.search web', inputSchema: { $schema: 'x', type: 'object', properties: { q: { type: 'string' } } } } as any],
+      executeTool: async () => 'ok',
+    }, env);
+    const tool = seen.find((params) => params.tools)?.tools[0];
+    expect(tool.type).toBe('function');
+    expect(tool.function.name).toBe('parallel_search_web');
+    expect(tool.function.parameters.$schema).toBeUndefined();
+    expect(tool.function.parameters.properties.q.type).toBe('string');
+  });
+
+  it('retries the same model with a clipped prompt after 8001', async () => {
+    const sizes: number[] = [];
+    const env = {
+      AI: {
+        run: async (_model: string, params: any) => {
+          if (params.stream) throw new Error('8001: Invalid input');
+          const size = params.messages.reduce((sum: number, message: any) => sum + message.content.length, 0);
+          sizes.push(size);
+          if (size > 30000) throw new Error('8001: Invalid input');
+          return { response: 'clipped answer' };
+        },
+      },
+    };
+    const result = await runAgent('writer', { input: 'x'.repeat(40000), instructions: 'write', name: 'copy' }, env);
+    expect(result.status).toBe('completed');
+    expect(result.output).toContain('clipped answer');
+    expect(sizes.at(-1)).toBeLessThan(30000);
+  });
+
   it('returns model_failed when both specialist models throw', async () => {
     const env = { AI: { run: async () => { throw new Error('down'); } } };
     const result = await runAgent('writer', { input: 'brief', instructions: 'x', name: 'n' }, env);

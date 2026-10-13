@@ -6,7 +6,13 @@ import { clientSpaceContext } from "./scan-context";
 import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
 import { portalRuntime } from "./portal-env";
 import { deliverableKind, needsSourcePacket, outputShape, packTemplateId, sourcePacketReady, SWARM_BATCH_CONTRACT, type DeliverableKind } from "./pack-templates";
-import { buildSpecialistAssignment, readSkillExcerpt, SPECIALIST_ASSIGNMENT_LIMIT } from "./specialist-assignment";
+import {
+  buildSpecialistAssignment,
+  labeledSection,
+  readSkillExcerpt,
+  SPECIALIST_ASSIGNMENT_LIMIT,
+  withoutSections,
+} from "./specialist-assignment";
 import { templateOnCard } from "./swarm-ready";
 import { markTaskDone } from "./task-done";
 import type { ObjectStore } from "./store/objects";
@@ -617,18 +623,7 @@ export async function storeSwarmReport(input: {
   }
 }
 
-function labeled(brief: string, label: string): string {
-  const lines = brief.split("\n");
-  const start = lines.findIndex((line) => line.toLowerCase().startsWith(`${label.toLowerCase()}:`));
-  if (start < 0) return "";
-  const first = lines[start]!.slice(label.length + 1).trim();
-  const rest: string[] = [];
-  for (const line of lines.slice(start + 1)) {
-    if (/^(facts|do not use|voice|job|skill|shape):/i.test(line)) break;
-    rest.push(line);
-  }
-  return [first, ...rest].filter((line) => line.length > 0).join("\n").trim();
-}
+const labeled = labeledSection;
 
 function acceptedPage(rows: ChainWorkflow[], workflowId: string): string {
   const ordered = orderedChain(rows);
@@ -841,7 +836,7 @@ export async function claimDueWorkflow(input: {
   }
   const brief = specialistKind
     ? buildSpecialistAssignment({
-        job: ownBrief,
+        job: withoutSections(ownBrief, ["Facts", "Do not use", "Answers"]) || ownBrief,
         skillPath: row.skill_path || row.template_id,
         shape: outputShape(specialistKind),
         excerpt,

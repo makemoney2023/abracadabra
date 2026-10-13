@@ -21,6 +21,15 @@ export function providerError(text: string): string | null {
   return null;
 }
 
+/**
+ * Why a node must be stored as an error instead of done. A model or tool
+ * failure, or a reply that is only a provider error, is not a deliverable.
+ */
+export function nodeFailure(status: string | undefined, output: string): string | null {
+  if (status === "model_failed" || status === "tool_failed") return output.trim() || status;
+  return providerError(output);
+}
+
 function jsonMiss(raw: string): string {
   const error = providerError(raw);
   return error ? `model error: ${error}` : "not json";
@@ -214,10 +223,15 @@ function jsonValues(text: string): { values: unknown[]; extra: boolean } | null 
 function unwrapRows(value: unknown): unknown {
   const record = asRecord(value);
   if (!record) return value;
-  for (const key of ["posts", "rows", "items", "copy"]) {
+  for (const key of ["posts", "rows", "items", "copy", "research", "facts", "findings", "results", "sources", "visuals", "data"]) {
     if (Array.isArray(record[key])) return record[key];
   }
   return value;
+}
+
+/** A model asked for rows often returns the one row it found as a bare object. */
+function asRows(data: unknown): unknown {
+  return asRecord(data) ? [data] : data;
 }
 
 function pageFromValues(values: unknown[]): unknown {
@@ -254,6 +268,7 @@ function checkParsed(kind: SpecialistKind, text: string, handoff: string, shape:
     return { ok: false, errors: ["90-day calendar"], page: "" };
   }
   if (kind === "research") {
+    data = asRows(data);
     if (!Array.isArray(data)) return { ok: false, errors: ["research must be a JSON array"], page: "" };
     if (data.some((row) => asRecord(row) && textOf(asRecord(row)!, "platform") && textOf(asRecord(row)!, "hook"))) {
       return { ok: false, errors: ["research returned posts"], page: "" };
@@ -281,6 +296,7 @@ function checkParsed(kind: SpecialistKind, text: string, handoff: string, shape:
     return applySchema(checked, shape);
   }
   if (kind === "visual") {
+    data = asRows(data);
     if (!Array.isArray(data)) return { ok: false, errors: ["visuals must be a JSON array"], page: "" };
     let expected = data.length;
     if (handoff.trim()) {

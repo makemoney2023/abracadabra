@@ -1,7 +1,39 @@
 export const SPECIALIST_ASSIGNMENT_LIMIT = 24_000;
 const EXCERPT_LIMIT = 1_500;
+const SECTION_START = /^(facts|do not use|voice|answers|job|skill|shape):/i;
 
-/** The first 1500 characters of a skill file. A path that leaves the library is ignored. */
+/** The body of one labeled section in a brief, stopping at the next known label. */
+export function labeledSection(brief: string, label: string): string {
+  const lines = brief.split("\n");
+  const start = lines.findIndex((line) => line.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+  if (start < 0) return "";
+  const first = lines[start]!.slice(label.length + 1).trim();
+  const rest: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (SECTION_START.test(line)) break;
+    rest.push(line);
+  }
+  return [first, ...rest].filter((line) => line.length > 0).join("\n").trim();
+}
+
+/** The brief with the named sections removed, so they are not repeated in the assignment. */
+export function withoutSections(brief: string, labels: string[]): string {
+  const names = labels.map((label) => `${label.toLowerCase()}:`);
+  const kept: string[] = [];
+  let skipping = false;
+  for (const line of brief.split("\n")) {
+    if (SECTION_START.test(line)) skipping = names.some((name) => line.toLowerCase().startsWith(name));
+    if (!skipping) kept.push(line);
+  }
+  return kept.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function stripFrontmatter(body: string): string {
+  const match = /^\uFEFF?---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(body);
+  return match ? body.slice(match[0].length).trimStart() : body;
+}
+
+/** The first 1500 characters of a skill file after its frontmatter. A path that leaves the library is ignored. */
 export async function readSkillExcerpt(
   skillPath: string | null | undefined,
   readSkill?: (skillPath: string) => Promise<string | null>,
@@ -10,7 +42,7 @@ export async function readSkillExcerpt(
   if (!relative.endsWith("SKILL.md") || relative.includes("..")) return "";
   if (!readSkill) return "";
   const body = await readSkill(relative);
-  return (body ?? "").slice(0, EXCERPT_LIMIT);
+  return stripFrontmatter(body ?? "").slice(0, EXCERPT_LIMIT);
 }
 
 export function buildSpecialistAssignment(input: {

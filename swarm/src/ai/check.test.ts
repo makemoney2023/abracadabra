@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { assignmentHandoff, checkSpecialist, extractJson, outputSchemaKeys, stripJsonFence } from './check';
+import { assignmentHandoff, checkSpecialist, extractJson, nodeFailure, outputSchemaKeys, stripJsonFence } from './check';
 
 const golden = (name: string) => readFileSync(path.join(__dirname, 'golden', name), 'utf8');
 
@@ -146,5 +146,17 @@ describe('outputSchemaKeys', () => {
     const body = '## Output schema\n```json\n{"type":"object","required":["agenda","questions"]}\n```\n';
     expect(outputSchemaKeys(body)).toEqual(['agenda', 'questions']);
     expect(outputSchemaKeys('no schema here')).toEqual([]);
+  });
+});
+
+describe('nodeFailure', () => {
+  it('fails a node whose output is a provider error code', () => {
+    expect(nodeFailure('completed', '8001: Invalid input')).toMatch(/8001/);
+    expect(nodeFailure('model_failed', 'both models down')).toBe('both models down');
+    expect(nodeFailure('tool_failed', '')).toBe('tool_failed');
+  });
+
+  it('passes normal output', () => {
+    expect(nodeFailure('completed', '[{"hook":"Open Sunday"}]')).toBeNull();
   });
 });
