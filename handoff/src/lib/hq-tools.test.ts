@@ -1514,7 +1514,6 @@ it("writes each pipeline activity once, including when the same key is sent agai
     tool: "accept_workflow",
     input: { id: stageId },
     idempotencyKey: "accept-1",
-    approved: true,
   };
   await runHqTool(sql, staff, accept, NOW + 1);
   await runHqTool(sql, staff, accept, NOW + 1);
@@ -1529,7 +1528,6 @@ it("writes each pipeline activity once, including when the same key is sent agai
     tool: "abandon_pipeline",
     input: { organizationId, groupId: started.groupId },
     idempotencyKey: "drop-1",
-    approved: true,
   };
   await runHqTool(sql, staff, abandoned, NOW + 3);
   await runHqTool(sql, staff, abandoned, NOW + 3);
