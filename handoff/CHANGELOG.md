@@ -2,6 +2,13 @@
 
 ## 2026-10-13
 
+- **What changed** — HQ chat now gets `abandon_pipeline`, `accept_workflow`, `run_workflow`, `answer_question`, and `save_swarm_report`, and the chat input passes `auto`, `dueAt`, `everyMs`, and `mcpServerIds` through. `start_pipeline` and `append_pipeline_stage` refuse a path that is not a `.cursor/skills/.../SKILL.md` file, name the bad paths, and write nothing.
+- **Why** — In the Renew Implants chat, HQ started a pipeline with bare names such as `social` and `parallel-deep-research`. The stages were written and never ran, and the open group blocked a new pipeline. The playbook told HQ to call `abandon_pipeline`, but the chat tool list did not include it, so HQ could not close the group. The chat schema also dropped `auto`.
+- **Code touchpoints** — `handoff/src/lib/hq-tool-names.ts` (`CHAT_WRITE_TOOLS`), `handoff/src/agent/hq-chat.ts`, `handoff/src/lib/specialist-pipeline.ts` (`unknownSkillPaths`), `handoff/src/lib/hq-tools.ts`
+- **Data-flow impact** — A refused path leaves no group, stage, or board task. A test fails if a tool with help text is missing from the chat tool list.
+- **API / schema impact** — `start_pipeline` and `append_pipeline_stage` can return `{ refused, unknown }`. No schema change.
+- **Verification** — handoff `npm test` (882 passed), `npx tsc --noEmit`, and `npx tsc --noEmit -p tsconfig.agent.json`.
+
 - **What changed** — A specialist stage can stop with `{"questions":[...]}` instead of a page. The stage status becomes `question`, the task waits on staff, and HQ is told to call `open_questions` then `answer_question`. That answer runs the stage again. A visual stage asks when the model, the ratio, or a brand color is missing. Later stages stay queued while it asks. `answer_question` does not wait for an approval card.
 - **Why** — The image skill needs a reply before it can write prompts. A question was a failed check, so the pipeline stopped and HQ had no way to answer and continue.
 - **Code touchpoints** — `swarm/src/ai/check.ts`, `swarm/src/do/settle-specialist.ts`, `swarm/src/do/WorkflowDO.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
