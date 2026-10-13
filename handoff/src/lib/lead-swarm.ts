@@ -31,7 +31,7 @@ export function leadBrief(lead: LeadFacts): string {
 
 type SwarmResult = { executionId: string; status: string; output: string; receipt: string };
 
-const SETTLED_STATUS = new Set(["completed", "failed", "check_failed", "tool_failed", "model_failed"]);
+const SETTLED_STATUS = new Set(["completed", "failed", "check_failed", "tool_failed", "model_failed", "question"]);
 
 function receiptOf(body: unknown): string {
   if (!body || typeof body !== "object" || !("receipt" in body)) return "";
