@@ -30,6 +30,19 @@ export function nodeFailure(status: string | undefined, output: string): string 
   return providerError(output);
 }
 
+/**
+ * How a specialist retry ended when it did not produce a deliverable.
+ * A tool failure keeps its status; any other model or provider failure is model_failed.
+ */
+export function retryFailure(
+  status: string | undefined,
+  output: string,
+): { stop: "model_failed" | "tool_failed"; reason: string } | null {
+  const reason = nodeFailure(status, output);
+  if (!reason) return null;
+  return { stop: status === "tool_failed" ? "tool_failed" : "model_failed", reason };
+}
+
 function jsonMiss(raw: string): string {
   const error = providerError(raw);
   return error ? `model error: ${error}` : "not json";
