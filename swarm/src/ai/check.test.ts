@@ -81,6 +81,9 @@ describe('checkSpecialist', () => {
   it('checks visual prompts', () => {
     const handoff = JSON.stringify([{ platform: 'instagram', hook: 'Sunday' }]);
     expect(checkSpecialist('visual', golden('visual.json'), handoff).ok).toBe(true);
+    const asked = checkSpecialist('visual', JSON.stringify({ questions: ['Which aspect ratio?', ''] }));
+    expect(asked.questions).toEqual(['Which aspect ratio?']);
+    expect(asked.ok).toBe(false);
     expect(checkSpecialist('visual', JSON.stringify([{ imagePrompt: 'A room' }]), handoff).ok).toBe(false);
     expect(checkSpecialist('visual', JSON.stringify([{ imagePrompt: 'placeholder model', videoPrompt: 'pan' }]), handoff).ok).toBe(false);
   });
