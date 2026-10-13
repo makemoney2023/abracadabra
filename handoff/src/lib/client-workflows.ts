@@ -1,1 +1,1552 @@
-PLACEHOLDER_WILL_NOT_SEND
+import type { Sql } from "../db/sql";
+import { recordAgentRun } from "./agent-activity";
+import { rememberProjectBrief } from "./channel-plan";
+import { leadBrief, readSwarmArtifacts, readSwarmReport, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "./lead-swarm";
+import { clientSpaceContext } from "./scan-context";
+import { allowedMcpIds, mcpServersFor } from "./mcp-catalog";
+import { portalRuntime } from "./portal-env";
+import { deliverableKind, needsSourcePacket, outputShape, packTemplateId, sourcePacketReady, SWARM_BATCH_CONTRACT, type DeliverableKind } from "./pack-templates";
+import { buildSpecialistAssignment, readSkillExcerpt, SPECIALIST_ASSIGNMENT_LIMIT } from "./specialist-assignment";
+import { templateOnCard } from "./swarm-ready";
+import { markTaskDone } from "./task-done";
+import type { ObjectStore } from "./store/objects";
+import { saveSwarmRun } from "./swarm-runs";
+import { storeWorkflowOutput, workflowSpacePath } from "./workflow-files";
+
+export type WorkflowGroup = {
+  id: string;
+  organizationId: string;
+  projectId: string | null;
+  name: string;
+};
+
+export type ClientWorkflow = {
+  id: string;
+  groupId: string;
+  organizationId: string;
+  projectId: string | null;
+  groupProjectId: string | null;
+  name: string;
+  templateId: string;
+  taskId: string | null;
+  nextRunAt: number | null;
+  everyMs: number | null;
+  mcpServerIds: string[];
+  groupName: string;
+};
+
+export type WorkflowTaskPlan = {
+  steps: { path: string; mode: "complete"; status: "todo" }[];
+  edges: { id: string; source: string; target: string }[];
+  current: number;
+};
+
+const SKILL_PATH = /Follow (\.cursor\/skills\/\S+)/;
+
+/** A repeating workflow stays at least 15 minutes apart. The work wake itself runs every minute. */
+export const MIN_SCHEDULE_MS = 15 * 60 * 1000;
+
+function scheduleOf(input: {
+  dueAt?: number | null;
+  everyMs?: number | null;
+  now: number;
+}): { ok: true; nextRunAt: number | null; everyMs: number | null; scheduledAt: number | null } | { ok: false } {
+  const hasDue = input.dueAt != null;
+  const hasEvery = input.everyMs != null;
+  if (!hasDue && !hasEvery) return { ok: true, nextRunAt: null, everyMs: null, scheduledAt: null };
+  if (!hasDue || typeof input.dueAt !== "number" || !Number.isSafeInteger(input.dueAt)) return { ok: false };
+  if (hasEvery && (typeof input.everyMs !== "number" || !Number.isSafeInteger(input.everyMs) || input.everyMs < MIN_SCHEDULE_MS)) {
+    return { ok: false };
+  }
+  return {
+    ok: true,
+    nextRunAt: input.dueAt,
+    everyMs: hasEvery ? input.everyMs! : null,
+    scheduledAt: input.now,
+  };
+}
+
+/** Ordered skill steps from a swarm template. Nodes without a skill path are skipped. */
+export function workflowTaskPlan(template: unknown): WorkflowTaskPlan | null {
+  if (!template || typeof template !== "object") return null;
+  const body = template as { nodes?: unknown; edges?: unknown };
+  const steps = (Array.isArray(body.nodes) ? body.nodes : []).flatMap((node) => {
+    if (!node || typeof node !== "object") return [];
+    const instructions = (node as { instructions?: unknown }).instructions;
+    if (typeof instructions !== "string") return [];
+    const match = SKILL_PATH.exec(instructions);
+    const path = match?.[1]?.replace(/[.,;:]+$/, "");
+    if (!path) return [];
+    return [{ path, mode: "complete" as const, status: "todo" as const }];
+  });
+  if (steps.length === 0) return null;
+  const edges = (Array.isArray(body.edges) ? body.edges : []).flatMap((edge) => {
+    if (!edge || typeof edge !== "object") return [];
+    const row = edge as { id?: unknown; source?: unknown; target?: unknown };
+    if (typeof row.id !== "string" || typeof row.source !== "string" || typeof row.target !== "string") return [];
+    return [{ id: row.id, source: row.source, target: row.target }];
+  });
+  return { steps, edges, current: 0 };
+}
+
+function storedMcpIds(value: string | null): string[] | null {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed) || parsed.some((id) => typeof id !== "string")) return null;
+    return allowedMcpIds(parsed);
+  } catch {
+    return null;
+  }
+}
+
+async function projectInOrg(sql: Sql, organizationId: string, projectId: string): Promise<boolean> {
+  const row = await sql.get<{ id: string }>(
+    "SELECT id FROM projects WHERE id = ? AND organization_id = ?",
+    [projectId, organizationId],
+  );
+  return Boolean(row);
+}
+
+/** A named set of workflows for one client, optionally one project. */
+export async function createWorkflowGroup(
+  sql: Sql,
+  input: { organizationId: string; name: string; projectId?: string | null; now: number },
+): Promise<{ ok: true; group: WorkflowGroup } | { ok: false; error: "invalid" | "missing" }> {
+  const name = input.name.trim().slice(0, 120);
+  if (!input.organizationId || !name) return { ok: false, error: "invalid" };
+  const projectId = input.projectId?.trim() || null;
+  if (projectId && !(await projectInOrg(sql, input.organizationId, projectId))) return { ok: false, error: "missing" };
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO workflow_groups (id, organization_id, project_id, name, created_at) VALUES (?, ?, ?, ?, ?)`,
+    [id, input.organizationId, projectId, name, input.now],
+  );
+  return { ok: true, group: { id, organizationId: input.organizationId, projectId, name } };
+}
+
+/** A workflow inside a client's group. It can be assigned to a project now or later. */
+export async function createClientWorkflow(
+  sql: Sql,
+  input: {
+    organizationId: string;
+    groupId: string;
+    name: string;
+    templateId: string;
+    projectId?: string | null;
+    plan?: WorkflowTaskPlan | null;
+    dueAt?: number | null;
+    everyMs?: number | null;
+    mcpServerIds?: string[] | null;
+    now: number;
+  },
+): Promise<{ ok: true; workflow: { id: string; projectId: string | null; taskId: string | null } } | { ok: false; error: "invalid" | "missing" }> {
+  const name = input.name.trim().slice(0, 120);
+  const templateId = input.templateId.trim().slice(0, 120);
+  if (!name || !templateId) return { ok: false, error: "invalid" };
+  const schedule = scheduleOf(input);
+  if (!schedule.ok) return { ok: false, error: "invalid" };
+  const mcpServerIds = allowedMcpIds(input.mcpServerIds ?? []);
+  if (!mcpServerIds) return { ok: false, error: "invalid" };
+  const group = await sql.get<{ id: string; organization_id: string }>(
+    "SELECT id, organization_id FROM workflow_groups WHERE id = ?",
+    [input.groupId],
+  );
+  if (!group || group.organization_id !== input.organizationId) return { ok: false, error: "missing" };
+  const projectId = input.projectId?.trim() || null;
+  if (projectId && !(await projectInOrg(sql, input.organizationId, projectId))) return { ok: false, error: "missing" };
+  const id = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO client_workflows (
+       id, group_id, organization_id, project_id, name, template_id, last_execution_id, last_status, created_at, updated_at,
+       next_run_at, every_ms, scheduled_at, mcp_server_ids
+     ) VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.groupId,
+      input.organizationId,
+      projectId,
+      name,
+      templateId,
+      input.now,
+      input.now,
+      schedule.nextRunAt,
+      schedule.everyMs,
+      schedule.scheduledAt,
+      mcpServerIds.length > 0 ? JSON.stringify(mcpServerIds) : null,
+    ],
+  );
+  const taskId = input.plan && input.plan.steps.length > 0 ? crypto.randomUUID() : null;
+  if (taskId && input.plan) {
+    await sql.run(
+      `INSERT INTO tasks (
+         id, project_id, organization_id, title, status, created_at, updated_at, stage, skills_json, round, created_by_kind
+       ) VALUES (?, ?, ?, ?, 'todo', ?, ?, 'describe', ?, 1, 'agent')`,
+      [taskId, projectId, input.organizationId, name, input.now, input.now, JSON.stringify(input.plan)],
+    );
+    await sql.run("UPDATE client_workflows SET task_id = ? WHERE id = ?", [taskId, id]);
+  }
+  return { ok: true, workflow: { id, projectId, taskId } };
+}
+
+/** Point one workflow at a project of the same client. */
+export async function assignClientWorkflow(
+  sql: Sql,
+  input: { workflowId: string; projectId: string; now: number },
+): Promise<{ ok: true; workflowId: string; projectId: string } | { ok: false; error: "missing" }> {
+  const workflow = await sql.get<{ id: string; organization_id: string; task_id: string | null }>(
+    "SELECT id, organization_id, task_id FROM client_workflows WHERE id = ?",
+    [input.workflowId],
+  );
+  if (!workflow || !(await projectInOrg(sql, workflow.organization_id, input.projectId))) return { ok: false, error: "missing" };
+  await sql.run("UPDATE client_workflows SET project_id = ?, updated_at = ? WHERE id = ?", [
+    input.projectId,
+    input.now,
+    workflow.id,
+  ]);
+  if (workflow.task_id) {
+    await sql.run("UPDATE tasks SET project_id = ?, updated_at = ? WHERE id = ?", [input.projectId, input.now, workflow.task_id]);
+  }
+  return { ok: true, workflowId: workflow.id, projectId: input.projectId };
+}
+
+/** Workflows for a client. A project filter includes workflows assigned to it and groups tied to it. */
+export async function listClientWorkflows(sql: Sql, organizationId: string, projectId?: string | null): Promise<ClientWorkflow[]> {
+  const project = projectId?.trim() || null;
+  const rows = await sql.all<{
+    id: string;
+    group_id: string;
+    organization_id: string;
+    project_id: string | null;
+    group_project_id: string | null;
+    name: string;
+    template_id: string;
+    task_id: string | null;
+    next_run_at: number | null;
+    every_ms: number | null;
+    mcp_server_ids: string | null;
+    group_name: string;
+  }>(
+    `SELECT w.id, w.group_id, w.organization_id, w.project_id, g.project_id AS group_project_id,
+            w.name, w.template_id, w.task_id, w.next_run_at, w.every_ms, w.mcp_server_ids, g.name AS group_name
+     FROM client_workflows w
+     JOIN workflow_groups g ON g.id = w.group_id
+     WHERE w.organization_id = ?
+       AND (? IS NULL OR w.project_id = ? OR g.project_id = ?)
+       AND (g.pipeline IS NULL OR g.pipeline NOT LIKE '%:closed')
+       AND COALESCE(w.last_status, '') != 'stale'
+     ORDER BY g.name, w.name`,
+    [organizationId, project, project, project],
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    groupId: row.group_id,
+    organizationId: row.organization_id,
+    projectId: row.project_id,
+    groupProjectId: row.group_project_id,
+    name: row.name,
+    templateId: row.template_id,
+    taskId: row.task_id,
+    nextRunAt: row.next_run_at,
+    everyMs: row.every_ms,
+    mcpServerIds: storedMcpIds(row.mcp_server_ids) ?? [],
+    groupName: row.group_name,
+  }));
+}
+
+/** Start the workflow's template on the swarm for this client. */
+export async function runClientWorkflow(input: {
+  sql: Sql;
+  workflowId: string;
+  brief: string;
+  origin: string;
+  now: number;
+  portalUrl?: string;
+  runSecret?: string;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+}): Promise<{ ok: true; executionId: string; status: string; output: string; receipt: string } | { ok: false; error: "missing" | "invalid" }> {
+  const brief = input.brief.trim();
+  if (!brief || !input.origin.trim()) return { ok: false, error: "invalid" };
+  const workflow = await input.sql.get<{ id: string; organization_id: string; name: string; template_id: string; mcp_server_ids: string | null; kind: string | null }>(
+    "SELECT id, organization_id, name, template_id, mcp_server_ids, kind FROM client_workflows WHERE id = ?",
+    [input.workflowId],
+  );
+  if (!workflow) return { ok: false, error: "missing" };
+  const runtime = portalRuntime();
+  const portalUrl = input.portalUrl ?? runtime.MCP_PORTAL_URL ?? "";
+  const runSecret = input.runSecret ?? runtime.runSecret ?? "";
+  const mcpServerIds = storedMcpIds(workflow.mcp_server_ids);
+  if (!mcpServerIds) return { ok: false, error: "invalid" };
+  const ids = mcpServerIds.length > 0 ? mcpServerIds : portalUrl.startsWith("https://") ? ["portal"] : [];
+  const mcpServers = mcpServersFor(ids, input.origin, portalUrl);
+  if (!mcpServers) return { ok: false, error: "invalid" };
+  try {
+    const spaceContext = await clientSpaceContext(input.sql, workflow.organization_id);
+    const result = await runLeadSwarm({
+      origin: input.origin,
+      workflowId: `client-${workflow.id}`,
+      workflowName: workflow.name,
+      brief: workflow.kind ? `${brief}\n\n${spaceContext}`.trim().slice(0, SPECIALIST_ASSIGNMENT_LIMIT) : capWithSpace(brief, spaceContext),
+      templateId: workflow.template_id,
+      kind: workflow.kind ?? undefined,
+      mcpServers,
+      runSecret: mcpServers.some((server) => server.id === "portal") ? runSecret : "",
+      fetchImpl: input.fetchImpl,
+      wait: input.wait,
+    });
+    await input.sql.run("UPDATE client_workflows SET last_execution_id = ?, last_status = ?, updated_at = ? WHERE id = ?", [
+      result.executionId,
+      result.status,
+      input.now,
+      workflow.id,
+    ]);
+    return { ok: true, ...result };
+  } catch {
+    return { ok: false, error: "invalid" };
+  }
+}
+
+export type DueClaim =
+  | { ok: true; none: true }
+  | {
+      ok: true;
+      none: false;
+      workflowId: string;
+      templateId: string;
+      packName: string;
+      executionId: string;
+      status: string;
+      output: string;
+      more: boolean;
+      taskId: string | null;
+      projectId: string | null;
+      waitingOn?: string;
+      paused?: { name: string; status: string; output: string };
+    }
+  | { ok: false; error: "invalid" | "missing" };
+
+/** Questions from a specialist that stopped to ask HQ. A prompt page is not a question. */
+export function stageQuestions(output: string): string[] {
+  const trimmed = output.trim();
+  if (!trimmed.startsWith("{")) return [];
+  try {
+    const data = JSON.parse(trimmed) as { questions?: unknown; imagePrompt?: unknown; videoPrompt?: unknown; hook?: unknown };
+    if (!data || typeof data !== "object" || Array.isArray(data)) return [];
+    if (typeof data.imagePrompt === "string" || typeof data.videoPrompt === "string" || typeof data.hook === "string") return [];
+    if (!Array.isArray(data.questions)) return [];
+    return data.questions
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+      .slice(0, 3);
+  } catch {
+    return [];
+  }
+}
+
+async function holdForQuestions(input: {
+  sql: Sql;
+  organizationId: string;
+  workflowId: string;
+  taskId: string | null;
+  output: string;
+  now: number;
+}): Promise<string> {
+  const questions = stageQuestions(input.output);
+  const body = questions.join("\n");
+  const open = await input.sql.get<{ id: string }>(
+    `SELECT id FROM agent_questions
+     WHERE organization_id = ? AND answered_at IS NULL
+       AND ((? IS NULL AND task_id IS NULL) OR task_id = ?)
+     ORDER BY asked_at DESC LIMIT 1`,
+    [input.organizationId, input.taskId, input.taskId],
+  );
+  if (!open && body) {
+    await input.sql.run(
+      `INSERT INTO agent_questions (id, organization_id, task_id, deliverable_id, question, asked_at)
+       VALUES (?, ?, ?, NULL, ?, ?)`,
+      [crypto.randomUUID(), input.organizationId, input.taskId, body, input.now],
+    );
+  }
+  if (input.taskId) {
+    await input.sql.run(
+      `UPDATE tasks SET status = 'blocked', blocked_reason = 'waiting_on_staff', updated_at = ?
+       WHERE id = ? AND status != 'done'`,
+      [input.now, input.taskId],
+    );
+  }
+  await input.sql.run(
+    "UPDATE client_workflows SET last_status = 'question', last_output = ?, next_run_at = NULL, updated_at = ? WHERE id = ?",
+    [body || input.output.slice(0, 2000), input.now, input.workflowId],
+  );
+  return body;
+}
+
+/** Run a pipeline stage again after HQ answers the question that stopped it. */
+export async function resumeQuestionStage(input: {
+  sql: Sql;
+  organizationId: string;
+  taskId: string | null;
+  answer: string;
+  now: number;
+  origin: string;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+  store?: ObjectStore;
+  readSkill?: (skillPath: string) => Promise<string | null>;
+  imageRun?: (prompt: string) => Promise<{ image?: string }>;
+}): Promise<DueClaim | null> {
+  if (!input.taskId || !input.origin.trim() || !input.answer.trim()) return null;
+  const workflow = await input.sql.get<{ id: string }>(
+    `SELECT id FROM client_workflows
+     WHERE organization_id = ? AND task_id = ? AND last_status = 'question'
+     ORDER BY updated_at DESC LIMIT 1`,
+    [input.organizationId, input.taskId],
+  );
+  if (!workflow) return null;
+  await input.sql.run(
+    "UPDATE tasks SET status = 'todo', blocked_reason = NULL, updated_at = ? WHERE id = ? AND status = 'blocked'",
+    [input.now, input.taskId],
+  );
+  await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
+    input.now,
+    input.now,
+    workflow.id,
+  ]);
+  return claimDueWorkflow({
+    sql: input.sql,
+    organizationId: input.organizationId,
+    origin: input.origin,
+    now: input.now,
+    workflowId: workflow.id,
+    instruction: `Answers:\n${input.answer.trim()}`,
+    trigger: "answer",
+    fetchImpl: input.fetchImpl,
+    wait: input.wait,
+    store: input.store,
+    readSkill: input.readSkill,
+    imageRun: input.imageRun,
+  });
+}
+
+/** Swarm execute rejects a brief longer than 8000 characters. */
+const SWARM_INPUT_LIMIT = 7900;
+
+type ChainWorkflow = {
+  id: string;
+  name: string;
+  template_id: string;
+  created_at: number;
+  next_run_at: number | null;
+  last_status: string | null;
+  last_output: string | null;
+  last_execution_id: string | null;
+  stage_order: number;
+  kind: string | null;
+  accepted_at: number | null;
+};
+
+type RunnableWorkflow = {
+  id: string;
+  group_id: string;
+  name: string;
+  template_id: string;
+  every_ms: number | null;
+  task_id: string | null;
+  project_id: string | null;
+  org_name: string;
+  website: string | null;
+  industry: string | null;
+  notes: string | null;
+  kind: string | null;
+  skill_path: string | null;
+  stage_order: number;
+  last_status: string | null;
+  last_output: string | null;
+  last_execution_id: string | null;
+  accepted_at: number | null;
+  auto_continue?: number | null;
+};
+
+function chainRank(row: { name: string; template_id: string }): number {
+  return `${row.name} ${row.template_id}`.toLowerCase().includes("research") ? 0 : 1;
+}
+
+function compareChain(a: ChainWorkflow, b: ChainWorkflow): number {
+  const rank = chainRank(a) - chainRank(b);
+  if (rank !== 0) return rank;
+  if (a.created_at !== b.created_at) return a.created_at - b.created_at;
+  const aDue = a.next_run_at ?? Number.MAX_SAFE_INTEGER;
+  const bDue = b.next_run_at ?? Number.MAX_SAFE_INTEGER;
+  if (aDue !== bDue) return aDue - bDue;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+function outputReady(row: { last_status: string | null; last_output: string | null }): boolean {
+  const output = row.last_output?.trim() ?? "";
+  return row.last_status === "completed" && output.length > 0 && !output.includes("still going");
+}
+
+function predecessorInFlight(row: ChainWorkflow): boolean {
+  if (stageReady(row) || row.last_status === "failed") return false;
+  return Boolean(row.last_execution_id);
+}
+
+function compareStage(a: ChainWorkflow, b: ChainWorkflow): number {
+  if (a.stage_order !== b.stage_order) return a.stage_order - b.stage_order;
+  if (a.created_at !== b.created_at) return a.created_at - b.created_at;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+function orderedChain(rows: ChainWorkflow[]): ChainWorkflow[] {
+  const byStage = rows.some((row) => row.stage_order !== 0);
+  return [...rows].sort(byStage ? compareStage : compareChain);
+}
+
+function stageReady(row: ChainWorkflow): boolean {
+  if (row.kind) return row.accepted_at != null && row.last_status === "completed";
+  return outputReady(row);
+}
+
+function blockingPredecessor(rows: ChainWorkflow[], workflowId: string): ChainWorkflow | null {
+  const ordered = orderedChain(rows);
+  const index = ordered.findIndex((row) => row.id === workflowId);
+  if (index <= 0) return null;
+  return ordered.slice(0, index).find((row) => !stageReady(row)) ?? null;
+}
+
+function chainIndex(rows: ChainWorkflow[], workflowId: string): number {
+  return orderedChain(rows).findIndex((row) => row.id === workflowId);
+}
+
+function priorChainText(rows: ChainWorkflow[], workflowId: string): string {
+  const ordered = orderedChain(rows);
+  const index = ordered.findIndex((row) => row.id === workflowId);
+  if (index <= 0) return "";
+  return ordered
+    .slice(0, index)
+    .filter((row) => (row.kind ? stageReady(row) : outputReady(row)))
+    .map((row) => `${chainRank(row) === 0 ? "Research" : row.name}:\n${row.last_output?.trim()}`)
+    .join("\n\n");
+}
+
+function fitSwarmBrief(prior: string, own: string, kind: ReturnType<typeof deliverableKind> = "skill"): string {
+  const shape = outputShape(kind);
+  const contract = shape ? `${SWARM_BATCH_CONTRACT} ${shape}` : SWARM_BATCH_CONTRACT;
+  const taskRoom = Math.max(0, SWARM_INPUT_LIMIT - contract.length - 2);
+  const task = own.trim().slice(0, taskRoom);
+  const head = task ? `${contract}\n\n${task}` : contract;
+  const research = prior.trim();
+  if (!research) return head.slice(0, SWARM_INPUT_LIMIT);
+  const room = SWARM_INPUT_LIMIT - head.length - 2;
+  if (room <= 0) return head.slice(0, SWARM_INPUT_LIMIT);
+  const clipped = research.length > room ? research.slice(0, room) : research;
+  return `${clipped}\n\n${head}`.slice(0, SWARM_INPUT_LIMIT);
+}
+
+function capWithSpace(brief: string, extra: string): string {
+  const base = brief.trim().slice(0, SWARM_INPUT_LIMIT);
+  const more = extra.trim();
+  if (!more) return base;
+  const room = SWARM_INPUT_LIMIT - base.length - 2;
+  if (room <= 0) return base;
+  return `${base}\n\n${more.slice(0, room)}`;
+}
+
+async function chainWorkflows(sql: Sql, groupId: string): Promise<ChainWorkflow[]> {
+  return sql.all<ChainWorkflow>(
+    `SELECT id, name, template_id, created_at, next_run_at, last_status, last_output, last_execution_id,
+            stage_order, kind, accepted_at
+     FROM client_workflows WHERE group_id = ?`,
+    [groupId],
+  );
+}
+
+async function runnableWorkflow(sql: Sql, organizationId: string, workflowId: string): Promise<RunnableWorkflow | null> {
+  const row = await sql.get<RunnableWorkflow>(
+    `SELECT w.id, w.group_id, w.name, w.template_id, w.every_ms, w.task_id, w.project_id,
+            o.name AS org_name, o.website, o.industry, o.notes,
+            w.kind, w.skill_path, w.stage_order, w.last_status, w.last_output, w.last_execution_id, w.accepted_at
+     FROM client_workflows w
+     JOIN organizations o ON o.id = w.organization_id
+     WHERE w.organization_id = ? AND w.id = ?`,
+    [organizationId, workflowId],
+  );
+  return row ?? null;
+}
+
+/** Saves the swarm PDF into the client space once. A second call keeps the same path. */
+export async function storeSwarmReport(input: {
+  sql: Sql;
+  store: ObjectStore;
+  origin: string;
+  organizationId: string;
+  projectId?: string | null;
+  executionId: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+}): Promise<string | null> {
+  const executionId = input.executionId.trim();
+  const relativePath = workflowSpacePath({ workflow: "swarm", run: executionId, node: "report" }, "pdf");
+  if (!relativePath || !input.origin.trim()) return null;
+  const existing = await input.sql.get<{ id: string }>(
+    `SELECT f.id FROM files f
+     JOIN workspaces w ON w.id = f.workspace_id
+     JOIN batches b ON b.id = f.batch_id
+     WHERE w.organization_id = ? AND f.relative_path = ?
+       AND f.object_deleted_at IS NULL AND b.deleted_at IS NULL
+     LIMIT 1`,
+    [input.organizationId, relativePath],
+  );
+  if (existing) return relativePath;
+  const pdf = await readSwarmReport({ origin: input.origin, executionId, fetchImpl: input.fetchImpl });
+  if (!pdf) return null;
+  try {
+    const saved = await storeWorkflowOutput({
+      sql: input.sql,
+      store: input.store,
+      organizationId: input.organizationId,
+      projectId: input.projectId,
+      now: input.now,
+      files: [{ workflow: "swarm", run: executionId, node: "report", body: "", bytes: pdf }],
+    });
+    return saved.stored[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function labeled(brief: string, label: string): string {
+  const lines = brief.split("\n");
+  const start = lines.findIndex((line) => line.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+  if (start < 0) return "";
+  const first = lines[start]!.slice(label.length + 1).trim();
+  const rest: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (/^(facts|do not use|voice|job|skill|shape):/i.test(line)) break;
+    rest.push(line);
+  }
+  return [first, ...rest].filter((line) => line.length > 0).join("\n").trim();
+}
+
+function acceptedPage(rows: ChainWorkflow[], workflowId: string): string {
+  const ordered = orderedChain(rows);
+  const index = ordered.findIndex((row) => row.id === workflowId);
+  if (index <= 0) return "";
+  const previous = ordered[index - 1];
+  if (!previous?.accepted_at) return "";
+  return previous.last_output?.trim() ?? "";
+}
+
+async function voiceCard(sql: Sql, organizationId: string): Promise<string> {
+  const row = await sql.get<{ body: string }>(
+    `SELECT body FROM activities
+     WHERE organization_id = ? AND kind = 'staff.brief_changes' AND body LIKE '%Voice:%'
+     ORDER BY created_at DESC LIMIT 1`,
+    [organizationId],
+  );
+  return row?.body.replace(/^\s*voice:\s*/i, "").trim() ?? "";
+}
+
+function receiptWithSkillNote(receipt: string, missing: boolean): string {
+  if (!missing) return receipt;
+  if (receipt.includes("skill: missing")) return receipt;
+  return receipt ? `${receipt}\nskill: missing` : "skill: missing";
+}
+
+/** Run the oldest workflow whose time has arrived. A failure leaves the due time so the next cycle retries. */
+export async function claimDueWorkflow(input: {
+  sql: Sql;
+  organizationId: string;
+  origin: string;
+  now: number;
+  /** Run this workflow now. Omit it to take the oldest workflow that is already due. */
+  workflowId?: string;
+  /** Staff instruction for this run. It is sent ahead of the task brief. */
+  instruction?: string;
+  /** Stored on the swarm run. A chat start uses chat. A wake uses due. */
+  trigger?: string;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+  store?: ObjectStore;
+  /** Skill text for a specialist stage. The pipeline passes the R2 reader. */
+  readSkill?: (skillPath: string) => Promise<string | null>;
+  /** Renders image prompts when an auto pipeline accepts a visual page. */
+  imageRun?: (prompt: string) => Promise<{ image?: string }>;
+  /** Stops a finished chain from starting itself again. */
+  chainDepth?: number;
+}): Promise<DueClaim> {
+  if (!input.origin.trim()) return { ok: false, error: "invalid" };
+  const targeted = Boolean(input.workflowId);
+  const trigger = input.trigger?.trim() || "due";
+  let row: RunnableWorkflow | null = null;
+  if (targeted) {
+    row = await runnableWorkflow(input.sql, input.organizationId, input.workflowId ?? "");
+    if (!row) return { ok: false, error: "missing" };
+    const chain = await chainWorkflows(input.sql, row.group_id);
+    const inflight = chain.find((item) => item.last_status === "running");
+    if (row.last_status === "running" || inflight) {
+      return {
+        ok: true,
+        none: false,
+        workflowId: row.id,
+        templateId: row.template_id,
+        packName: row.name,
+        executionId: row.last_status === "running" ? row.last_execution_id ?? "" : "",
+        status: "running",
+        output: "",
+        more: false,
+        taskId: row.task_id,
+        projectId: row.project_id,
+        ...(inflight && inflight.id !== row.id ? { waitingOn: inflight.id } : {}),
+      };
+    }
+    const blocker = blockingPredecessor(chain, row.id);
+    if (blocker?.kind && blocker.accepted_at == null) {
+      const status = blocker.last_status === "completed" || !blocker.last_status ? "waiting_accept" : blocker.last_status;
+      return {
+        ok: true,
+        none: false,
+        workflowId: row.id,
+        templateId: row.template_id,
+        packName: row.name,
+        executionId: "",
+        status,
+        output: "",
+        more: false,
+        taskId: row.task_id,
+        projectId: row.project_id,
+        waitingOn: blocker.id,
+      };
+    }
+    if (blocker && (predecessorInFlight(blocker) || blocker.last_status === "failed")) {
+      return {
+        ok: true,
+        none: false,
+        workflowId: row.id,
+        templateId: row.template_id,
+        packName: row.name,
+        executionId: "",
+        status: "queued",
+        output: "",
+        more: false,
+        taskId: row.task_id,
+        projectId: row.project_id,
+        waitingOn: blocker.id,
+      };
+    }
+    if (blocker) {
+      row = await runnableWorkflow(input.sql, input.organizationId, blocker.id);
+      if (!row) return { ok: false, error: "missing" };
+    }
+  } else {
+    const due = await input.sql.all<RunnableWorkflow>(
+      `SELECT w.id, w.group_id, w.name, w.template_id, w.every_ms, w.task_id, w.project_id,
+              o.name AS org_name, o.website, o.industry, o.notes,
+              w.kind, w.skill_path, w.stage_order, w.last_status, w.last_output, w.last_execution_id, w.accepted_at,
+              COALESCE(g.auto_continue, 0) AS auto_continue
+       FROM client_workflows w
+       JOIN organizations o ON o.id = w.organization_id
+       LEFT JOIN workflow_groups g ON g.id = w.group_id
+       WHERE w.organization_id = ? AND w.next_run_at IS NOT NULL AND w.next_run_at <= ?
+       ORDER BY w.next_run_at, w.id`,
+      [input.organizationId, input.now],
+    );
+    for (const candidate of due) {
+      const chained = candidate.auto_continue === 1;
+      if (candidate.stage_order > 0 && !chained) continue;
+      if (candidate.kind && candidate.last_status === "running") continue;
+      const chain = await chainWorkflows(input.sql, candidate.group_id);
+      const blocker = blockingPredecessor(chain, candidate.id);
+      if (!blocker) {
+        if (chainIndex(chain, candidate.id) > 0 && !chained) continue;
+        row = candidate;
+        break;
+      }
+      if (!predecessorInFlight(blocker) && blocker.last_status !== "failed") {
+        const earlier = await runnableWorkflow(input.sql, input.organizationId, blocker.id);
+        if (earlier) {
+          row = earlier;
+          break;
+        }
+      }
+    }
+    if (!row) return { ok: true, none: true };
+  }
+  if (!row) return { ok: true, none: true };
+  const chain = await chainWorkflows(input.sql, row.group_id);
+  const taskBrief = row.task_id ? await taskSwarmBrief(input.sql, row.task_id) : "";
+  const instruction = input.instruction?.trim() ?? "";
+  const ownBrief = [instruction, taskBrief].filter((line) => line.trim().length > 0).join("\n\n") || [
+    leadBrief({ name: row.org_name, website: row.website, packId: row.template_id }),
+    row.industry ? `Industry: ${row.industry}` : "",
+    row.notes ?? "",
+    `Scheduled run of ${row.name}.`,
+  ]
+    .filter((line) => line.trim().length > 0)
+    .join("\n");
+  const statedBrief = [instruction, taskBrief].filter((line) => line.trim().length > 0).join("\n\n");
+  if (statedBrief && row.project_id) {
+    try {
+      await rememberProjectBrief(input.sql, {
+        organizationId: input.organizationId,
+        projectId: row.project_id,
+        body: statedBrief,
+        now: input.now,
+      });
+    } catch {
+      // A missing space must not stop the swarm. The description write is already inside the helper.
+    }
+  }
+  const specialistKind = row.kind as DeliverableKind | null;
+  const excerpt = specialistKind ? await readSkillExcerpt(row.skill_path, input.readSkill) : "";
+  const skillMissing = Boolean(specialistKind && row.skill_path?.trim() && !excerpt);
+  const packetKind = specialistKind ?? deliverableKind({ name: row.name, path: row.template_id });
+  if (needsSourcePacket(packetKind) && !sourcePacketReady(statedBrief || ownBrief)) {
+    const output = "This swarm needs a source packet. Put Facts: and Do not use: in the brief, then run it again.";
+    await input.sql.run(
+      "UPDATE client_workflows SET last_status = 'source', next_run_at = NULL, updated_at = ? WHERE id = ?",
+      [input.now, row.id],
+    );
+    await recordAgentRun(input.sql, {
+      organizationId: input.organizationId,
+      kind: "agent.swarm_run",
+      body: `${row.name}: ${output}`,
+      status: "source",
+      data: {
+        requestId: `${trigger}:${row.id}`,
+        trigger,
+        packId: row.template_id,
+        packName: row.name,
+        executionId: "",
+        workflowId: row.id,
+        taskId: row.task_id,
+      },
+      now: input.now,
+    });
+    return {
+      ok: true,
+      none: false,
+      workflowId: row.id,
+      templateId: row.template_id,
+      packName: row.name,
+      executionId: "",
+      status: "source",
+      output,
+      more: false,
+      taskId: row.task_id,
+      projectId: row.project_id,
+    };
+  }
+  const brief = specialistKind
+    ? buildSpecialistAssignment({
+        job: ownBrief,
+        skillPath: row.skill_path || row.template_id,
+        shape: outputShape(specialistKind),
+        excerpt,
+        facts: labeled(statedBrief || ownBrief, "Facts"),
+        banned: labeled(statedBrief || ownBrief, "Do not use"),
+        voice: await voiceCard(input.sql, input.organizationId),
+        handoff: acceptedPage(chain, row.id),
+        answers: labeled(statedBrief || ownBrief, "Answers"),
+      })
+    : fitSwarmBrief(priorChainText(chain, row.id), ownBrief, packetKind);
+  const revising = Boolean(specialistKind) && row.accepted_at != null;
+  const rerun =
+    revising ||
+    (Boolean(specialistKind) &&
+      (Boolean(row.last_output) ||
+        row.last_status === "check_failed" ||
+        row.last_status === "tool_failed" ||
+        row.last_status === "model_failed" ||
+        row.last_status === "question"));
+  if (row.task_id) {
+    await input.sql.run("UPDATE tasks SET stage = 'run', updated_at = ? WHERE id = ? AND status != 'done'", [
+      input.now,
+      row.task_id,
+    ]);
+  }
+  const priorStatus = row.last_status;
+  await input.sql.run("UPDATE client_workflows SET last_status = 'running', updated_at = ? WHERE id = ?", [
+    input.now,
+    row.id,
+  ]);
+  const started = await runClientWorkflow({
+    sql: input.sql,
+    workflowId: row.id,
+    brief,
+    origin: input.origin,
+    now: input.now,
+    fetchImpl: input.fetchImpl,
+    wait: input.wait,
+  });
+  await recordAgentRun(input.sql, {
+    organizationId: input.organizationId,
+    kind: "agent.swarm_run",
+    body: started.ok ? started.output.slice(0, 500) || `${row.name} ${started.status}.` : "The swarm did not start.",
+    status: started.ok ? started.status : "failed",
+    data: {
+      requestId: `${trigger}:${row.id}`,
+      trigger,
+      packId: row.template_id,
+      packName: row.name,
+      executionId: started.ok ? started.executionId : "",
+      workflowId: row.id,
+    },
+    now: input.now,
+  });
+  await saveSwarmRun(input.sql, {
+    organizationId: input.organizationId,
+    workflowId: row.id,
+    swarmWorkflowId: `client-${row.id}`,
+    executionId: started.ok ? started.executionId : "",
+    templateId: row.template_id,
+    name: row.name,
+    status: started.ok ? started.status : "failed",
+    trigger,
+    now: input.now,
+  });
+  if (!started.ok) {
+    await input.sql.run(
+      "UPDATE client_workflows SET last_status = ?, updated_at = ? WHERE id = ? AND last_status = 'running'",
+      [priorStatus, input.now, row.id],
+    );
+    return started;
+  }
+  const asking = started.status === "question" || (started.status !== "completed" && stageQuestions(started.output).length > 0);
+  if (asking && stageQuestions(started.output).length > 0) {
+    const body = await holdForQuestions({
+      sql: input.sql,
+      organizationId: input.organizationId,
+      workflowId: row.id,
+      taskId: row.task_id,
+      output: started.output,
+      now: input.now,
+    });
+    return {
+      ok: true,
+      none: false,
+      workflowId: row.id,
+      templateId: row.template_id,
+      packName: row.name,
+      executionId: started.executionId,
+      status: "question",
+      output: body,
+      more: false,
+      taskId: row.task_id,
+      projectId: row.project_id,
+    };
+  }
+  if (rerun) {
+    await input.sql.run(
+      "UPDATE client_workflows SET accepted_at = NULL, last_output = NULL, last_receipt = NULL, updated_at = ? WHERE id = ?",
+      [input.now, row.id],
+    );
+  }
+  if (revising) {
+    await input.sql.run(
+      "UPDATE client_workflows SET accepted_at = NULL, last_status = 'stale', updated_at = ? WHERE group_id = ? AND stage_order > ?",
+      [input.now, row.group_id, row.stage_order],
+    );
+  }
+  const finished =
+    started.status === "completed" && started.output.trim().length > 0 && !started.output.includes("still going");
+  if (row.task_id && started.status === "failed") {
+    await input.sql.run(
+      `INSERT INTO activities (
+         id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at
+       ) VALUES (?, ?, ?, 'agent.swarm_run', 'agent', 'swarm', ?, ?, ?)`,
+      [
+        crypto.randomUUID(),
+        input.organizationId,
+        row.project_id,
+        started.output.slice(0, 500) || "The swarm failed.",
+        JSON.stringify({ taskId: row.task_id, workflowId: row.id }),
+        input.now,
+      ],
+    );
+  }
+  if (input.store && (finished || started.status === "failed")) {
+    const artifacts = await readSwarmArtifacts({
+      origin: input.origin,
+      executionId: started.executionId,
+      fetchImpl: input.fetchImpl,
+    });
+    const files = swarmArtifactFiles(artifacts).map((file) => ({
+      workflow: "swarm",
+      run: started.executionId,
+      node: file.node,
+      body: file.body,
+    }));
+    if (finished) {
+      files.push({ workflow: "swarm", run: started.executionId, node: "result", body: started.output });
+    }
+    if (files.length > 0) {
+      await storeWorkflowOutput({
+        sql: input.sql,
+        store: input.store,
+        organizationId: input.organizationId,
+        projectId: row.project_id,
+        files,
+        now: input.now,
+      });
+    }
+    if (finished) {
+      await storeSwarmReport({
+        sql: input.sql,
+        store: input.store,
+        origin: input.origin,
+        organizationId: input.organizationId,
+        projectId: row.project_id,
+        executionId: started.executionId,
+        now: input.now,
+        fetchImpl: input.fetchImpl,
+      });
+    }
+  }
+  if (input.store && finished) {
+    const space = await input.sql.get<{ id: string }>(
+      `SELECT id FROM workspaces
+       WHERE organization_id = ? AND status = 'active'
+         AND (? IS NULL OR project_id = ? OR project_id IS NULL)
+       ORDER BY CASE WHEN project_id = ? THEN 0 ELSE 1 END, opened_at
+       LIMIT 1`,
+      [input.organizationId, row.project_id, row.project_id, row.project_id],
+    );
+    if (space) {
+      const deliverableId = crypto.randomUUID();
+      const title = `${row.name} for ${row.org_name}`.slice(0, 200);
+      await input.sql.run(
+        `INSERT INTO deliverables (
+          id, organization_id, project_id, workspace_id, title, kind, status, version,
+          source_repo_id, source_ref, published_at, actor_kind, actor_id, created_at, updated_at, published_version
+        ) VALUES (?, ?, ?, ?, ?, 'document', 'draft', 1, NULL, NULL, NULL, 'agent', 'swarm', ?, ?, NULL)`,
+        [deliverableId, input.organizationId, row.project_id, space.id, title, input.now, input.now],
+      );
+      await input.sql.run(
+        `INSERT INTO deliverable_items (
+          id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+        ) VALUES (?, ?, 1, NULL, 'file', NULL, 'result.md', ?, '[]', NULL, 'pending', 0)`,
+        [crypto.randomUUID(), deliverableId, started.output],
+      );
+    }
+  }
+  if (row.task_id && finished) {
+    await markTaskDone(input.sql, { taskId: row.task_id, now: input.now, actor: { kind: "agent", id: "swarm" } });
+  }
+  const pageReady =
+    finished ||
+    started.status === "check_failed" ||
+    started.status === "tool_failed" ||
+    started.status === "model_failed";
+  if (pageReady && started.output.trim()) {
+    await input.sql.run("UPDATE client_workflows SET last_output = ? WHERE id = ?", [started.output, row.id]);
+  }
+  let paused: { name: string; status: string; output: string } | undefined;
+  if (finished) {
+    const follow = await continueAutoPipeline({
+      sql: input.sql,
+      organizationId: input.organizationId,
+      workflowId: row.id,
+      origin: input.origin,
+      now: input.now,
+      fetchImpl: input.fetchImpl,
+      wait: input.wait,
+      store: input.store,
+      readSkill: input.readSkill,
+      imageRun: input.imageRun,
+      chainDepth: input.chainDepth ?? 0,
+    });
+    if (follow.auto && follow.next?.status === "question") paused = follow.next;
+  }
+  const receipt = receiptWithSkillNote(started.receipt, skillMissing);
+  if (receipt) {
+    await input.sql.run("UPDATE client_workflows SET last_receipt = ? WHERE id = ?", [receipt, row.id]);
+  }
+  const repeating = row.every_ms != null && row.every_ms >= MIN_SCHEDULE_MS;
+  await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
+    repeating ? input.now + row.every_ms! : null,
+    input.now,
+    row.id,
+  ]);
+  const rest = await input.sql.get<{ n: number }>(
+    `SELECT count(*) AS n FROM client_workflows
+     WHERE organization_id = ? AND id != ? AND next_run_at IS NOT NULL AND next_run_at <= ?`,
+    [input.organizationId, row.id, input.now],
+  );
+  return {
+    ok: true,
+    none: false,
+    workflowId: row.id,
+    templateId: row.template_id,
+    packName: row.name,
+    executionId: started.executionId,
+    status: started.status,
+    output: started.output,
+    more: (rest?.n ?? 0) > 0,
+    taskId: row.task_id,
+    projectId: row.project_id,
+    ...(paused ? { paused } : {}),
+  };
+}
+
+async function taskSwarmBrief(sql: Sql, taskId: string): Promise<string> {
+  const task = await sql.get<{ title: string; description: string | null; brief: string | null; instruction: string | null }>(
+    `SELECT t.title, p.description,
+            (SELECT a.body FROM activities a
+             WHERE a.kind = 'agent.task_brief' AND json_extract(a.data_json, '$.taskId') = t.id
+             ORDER BY a.created_at DESC LIMIT 1) AS brief,
+            (SELECT a.body FROM activities a
+             WHERE a.kind = 'staff.instruction' AND json_extract(a.data_json, '$.taskId') = t.id
+             ORDER BY a.created_at DESC LIMIT 1) AS instruction
+     FROM tasks t
+     LEFT JOIN projects p ON p.id = t.project_id
+     WHERE t.id = ?`,
+    [taskId],
+  );
+  if (!task) return "";
+  return [task.instruction ?? "", task.title, task.brief ?? "", task.description ? `Requirements: ${task.description}` : ""]
+    .filter((line) => line.trim().length > 0)
+    .join("\n");
+}
+
+function firstSkillPath(skills: string | null): string {
+  if (!skills) return "";
+  try {
+    const parsed = JSON.parse(skills) as { steps?: { path?: unknown }[] };
+    const path = parsed.steps?.[0]?.path;
+    return typeof path === "string" ? path : "";
+  } catch {
+    return "";
+  }
+}
+
+/** A skilled task that staff move to run becomes a due workflow on that same task. */
+export async function scheduleTaskSwarm(
+  sql: Sql,
+  input: { taskId: string; now: number },
+): Promise<
+  | { ok: true; none: true }
+  | { ok: true; none: false; workflowId: string; organizationId: string }
+  | { ok: false; error: "missing" }
+> {
+  const task = await sql.get<{
+    id: string;
+    organization_id: string | null;
+    project_id: string | null;
+    title: string;
+    skills_json: string | null;
+  }>("SELECT id, organization_id, project_id, title, skills_json FROM tasks WHERE id = ?", [input.taskId]);
+  if (!task?.organization_id) return { ok: false, error: "missing" };
+  const existing = await sql.get<{ id: string }>(
+    "SELECT id FROM client_workflows WHERE task_id = ? ORDER BY created_at LIMIT 1",
+    [task.id],
+  );
+  if (existing) {
+    await sql.run(
+      `UPDATE client_workflows
+       SET next_run_at = ?, project_id = COALESCE(project_id, ?), scheduled_at = COALESCE(scheduled_at, ?), updated_at = ?
+       WHERE id = ?`,
+      [input.now, task.project_id, input.now, input.now, existing.id],
+    );
+    return { ok: true, none: false, workflowId: existing.id, organizationId: task.organization_id };
+  }
+  const templateId = templateOnCard(task.skills_json) ?? packTemplateId(firstSkillPath(task.skills_json));
+  if (!templateId) return { ok: true, none: true };
+  const groupRow = await sql.get<{ id: string }>(
+    "SELECT id FROM workflow_groups WHERE organization_id = ? ORDER BY created_at LIMIT 1",
+    [task.organization_id],
+  );
+  const groupId = groupRow
+    ? groupRow.id
+    : await createWorkflowGroup(sql, { organizationId: task.organization_id, name: "Swarm", now: input.now }).then((created) =>
+        created.ok ? created.group.id : "",
+      );
+  if (!groupId) return { ok: false, error: "missing" };
+  const created = await createClientWorkflow(sql, {
+    organizationId: task.organization_id,
+    groupId,
+    name: task.title,
+    templateId,
+    projectId: task.project_id,
+    dueAt: input.now,
+    now: input.now,
+  });
+  if (!created.ok) return { ok: false, error: "missing" };
+  await sql.run("UPDATE client_workflows SET task_id = ? WHERE id = ?", [task.id, created.workflow.id]);
+  return { ok: true, none: false, workflowId: created.workflow.id, organizationId: task.organization_id };
+}
+
+type AutoFollow =
+  | { auto: false }
+  | { auto: true; next: { name: string; status: string; output: string } | null };
+
+/** When the pipeline was started with auto, accept the finished page and start the next stage. */
+async function continueAutoPipeline(input: {
+  sql: Sql;
+  organizationId: string;
+  workflowId: string;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+  store?: ObjectStore;
+  readSkill?: (skillPath: string) => Promise<string | null>;
+  imageRun?: (prompt: string) => Promise<{ image?: string }>;
+  chainDepth?: number;
+}): Promise<AutoFollow> {
+  if ((input.chainDepth ?? 0) >= 8) return { auto: false };
+  const current = await input.sql.get<{
+    id: string;
+    group_id: string;
+    stage_order: number;
+    last_status: string | null;
+  }>(
+    "SELECT id, group_id, stage_order, last_status FROM client_workflows WHERE id = ? AND organization_id = ?",
+    [input.workflowId, input.organizationId],
+  );
+  if (!current || current.last_status !== "completed") return { auto: false };
+  const group = await input.sql.get<{ auto_continue: number | null; brief: string | null; pipeline: string | null }>(
+    "SELECT auto_continue, brief, pipeline FROM workflow_groups WHERE id = ?",
+    [current.group_id],
+  );
+  if (!group || group.auto_continue !== 1 || (group.pipeline ?? "").endsWith(":closed")) return { auto: false };
+  const { acceptWorkflow } = await import("./specialist-pipeline");
+  const accepted = await acceptWorkflow(input.sql, {
+    organizationId: input.organizationId,
+    workflowId: current.id,
+    now: input.now,
+    store: input.store,
+    run: input.imageRun,
+  });
+  if (!accepted.ok) return { auto: true, next: null };
+  const next = await input.sql.get<{ id: string; name: string }>(
+    `SELECT id, name FROM client_workflows
+     WHERE group_id = ? AND stage_order > ?
+       AND accepted_at IS NULL
+       AND COALESCE(last_status, '') NOT IN ('stale', 'running', 'failed', 'model_failed', 'tool_failed', 'check_failed', 'source')
+     ORDER BY stage_order, created_at
+     LIMIT 1`,
+    [current.group_id, current.stage_order],
+  );
+  if (!next) return { auto: true, next: null };
+  await input.sql.run("UPDATE client_workflows SET next_run_at = ?, updated_at = ? WHERE id = ?", [
+    input.now,
+    input.now,
+    next.id,
+  ]);
+  const started = await claimDueWorkflow({
+    sql: input.sql,
+    organizationId: input.organizationId,
+    origin: input.origin,
+    now: input.now,
+    workflowId: next.id,
+    instruction: group.brief ?? "",
+    trigger: "chain",
+    fetchImpl: input.fetchImpl,
+    wait: input.wait,
+    store: input.store,
+    readSkill: input.readSkill,
+    imageRun: input.imageRun,
+    chainDepth: (input.chainDepth ?? 0) + 1,
+  });
+  if (!started.ok || started.none) return { auto: true, next: { name: next.name, status: "failed", output: "" } };
+  if (started.paused?.status === "question" || started.status === "question") {
+    return {
+      auto: true,
+      next: started.paused ?? { name: started.packName || next.name, status: started.status, output: started.output },
+    };
+  }
+  return {
+    auto: true,
+    next: { name: started.packName || next.name, status: started.status, output: started.output },
+  };
+}
+
+function pipelineNotice(input: {
+  name: string;
+  status: string;
+  executionId: string;
+  detail: string;
+  follow: AutoFollow;
+}): string {
+  if (input.status === "question") {
+    return `${input.name} asked a question. Call open_questions, then answer_question. ${input.detail}`.trim();
+  }
+  if (input.status !== "completed") return `${input.name} ${input.status}. ${input.detail}`.trim();
+  const filed = input.executionId
+    ? `${input.name} is filed under agent/swarm/${input.executionId}/.`
+    : `${input.name} is filed in the space.`;
+  if (!input.follow.auto) return `${filed} Accept it to start the next stage.`;
+  if (!input.follow.next) return `${filed} The pipeline is complete.`;
+  if (input.follow.next.status === "source") {
+    return `${filed} ${input.follow.next.name} needs Facts: and Do not use: in the brief.`;
+  }
+  if (input.follow.next.status === "running" || input.follow.next.status === "completed" || input.follow.next.status === "queued") {
+    return `${filed} ${input.follow.next.name} started.`;
+  }
+  return `${filed} ${input.follow.next.name} ${input.follow.next.status}.`;
+}
+
+/** Save a finished swarm's output. An auto pipeline starts the next stage. */
+export async function advanceWorkflowChain(input: {
+  sql: Sql;
+  organizationId: string;
+  workflowId?: string;
+  executionId?: string;
+  output: string;
+  status: string;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+  wait?: (ms: number) => Promise<void>;
+  store?: ObjectStore;
+}): Promise<DueClaim> {
+  const output = input.output.trim();
+  const finished = input.status === "completed" && output.length > 0 && !output.includes("still going");
+  if (!finished) return { ok: true, none: true };
+  const workflowId = input.workflowId?.trim() ?? "";
+  const executionId = input.executionId?.trim() ?? "";
+  const current = await input.sql.get<{ id: string; organization_id: string; group_id: string }>(
+    `SELECT id, organization_id, group_id FROM client_workflows
+     WHERE organization_id = ? AND (id = ? OR (? != '' AND last_execution_id = ?))
+     ORDER BY CASE WHEN id = ? THEN 0 ELSE 1 END
+     LIMIT 1`,
+    [input.organizationId, workflowId, executionId, executionId, workflowId],
+  );
+  if (!current) return { ok: false, error: "missing" };
+  await input.sql.run("UPDATE client_workflows SET last_output = ?, last_status = 'completed', updated_at = ? WHERE id = ?", [
+    output,
+    input.now,
+    current.id,
+  ]);
+  return { ok: true, none: true };
+}
+
+function receiptDetail(receipt: string): string {
+  if (!receipt) return "";
+  try {
+    const parsed = JSON.parse(receipt) as { check?: { errors?: string[] }; missing?: string[] };
+    return [...(parsed.check?.errors ?? []), ...(parsed.missing ?? [])].filter(Boolean).join("; ");
+  } catch {
+    return receipt.slice(0, 240);
+  }
+}
+
+type SettleInput = {
+  sql: Sql;
+  store?: ObjectStore;
+  origin: string;
+  now: number;
+  fetchImpl?: typeof fetch;
+  readSkill?: (skillPath: string) => Promise<string | null>;
+  imageRun?: (prompt: string) => Promise<{ image?: string }>;
+  notify?: (notice: { userId: string; name: string; status: string; detail: string }) => Promise<void>;
+};
+
+type RunningSwarm = {
+  id: string;
+  organization_id: string;
+  project_id: string | null;
+  workflow_id: string | null;
+  execution_id: string;
+  template_id: string | null;
+};
+
+/** Settle one finished run. A run that is not still going is left as it is. */
+export async function settleOne(input: SettleInput & { runId: string }): Promise<boolean> {
+  const runId = input.runId.trim();
+  if (!runId || !input.origin.trim()) return false;
+  const row = await input.sql.get<RunningSwarm>(
+    `SELECT id, organization_id, project_id, workflow_id, execution_id, template_id
+     FROM swarm_runs
+     WHERE status = 'running' AND execution_id != '' AND (id = ? OR execution_id = ?)
+     LIMIT 1`,
+    [runId, runId],
+  );
+  if (!row) return false;
+  return settleSwarmRow(input, row);
+}
+
+/** File a swarm the worker already finished. The next workflow stays until chat runs it. */
+export async function settleRunningSwarms(input: SettleInput): Promise<number> {
+  if (!input.origin.trim()) return 0;
+  const rows = await input.sql.all<RunningSwarm>(
+    `SELECT id, organization_id, project_id, workflow_id, execution_id, template_id
+     FROM swarm_runs
+     WHERE status = 'running' AND execution_id != ''
+     ORDER BY started_at, id`,
+  );
+  let settled = 0;
+  for (const row of rows) {
+    if (await settleSwarmRow(input, row)) settled += 1;
+  }
+  return settled;
+}
+
+async function settleSwarmRow(input: SettleInput, row: RunningSwarm): Promise<boolean> {
+    const run = await readSwarmRun({
+      origin: input.origin,
+      executionId: row.execution_id,
+      templateId: row.template_id ?? "",
+      fetchImpl: input.fetchImpl,
+    });
+    const status = ["completed", "failed", "check_failed", "tool_failed", "model_failed", "question"].includes(run.status)
+      ? run.status
+      : "running";
+    if (status === "running") return false;
+    const questions = stageQuestions(run.output);
+    if ((status === "question" || status !== "completed") && questions.length > 0 && row.workflow_id) {
+      const linked = await input.sql.get<{ task_id: string | null }>(
+        "SELECT task_id FROM client_workflows WHERE id = ?",
+        [row.workflow_id],
+      );
+      const body = await holdForQuestions({
+        sql: input.sql,
+        organizationId: row.organization_id,
+        workflowId: row.workflow_id,
+        taskId: linked?.task_id ?? null,
+        output: run.output,
+        now: input.now,
+      });
+      await input.sql.run("UPDATE swarm_runs SET status = 'failed', finished_at = ? WHERE id = ? AND status = 'running'", [
+        input.now,
+        row.id,
+      ]);
+      if (input.notify) {
+        const stage = await input.sql.get<{ name: string; started_by: string | null }>(
+          `SELECT w.name, g.started_by FROM client_workflows w JOIN workflow_groups g ON g.id = w.group_id WHERE w.id = ?`,
+          [row.workflow_id],
+        );
+        if (stage?.started_by) {
+          try {
+            await input.notify({
+              userId: stage.started_by,
+              name: stage.name,
+              status: "question",
+              detail: pipelineNotice({ name: stage.name, status: "question", executionId: row.execution_id, detail: body, follow: { auto: false } }),
+            });
+          } catch {
+            // The question is already saved. A missed chat line does not roll it back.
+          }
+        }
+      }
+      return true;
+    }
+    const finished = status === "completed" && run.output.trim().length > 0 && !run.output.includes("still going");
+    if (input.store) {
+      const artifacts = await readSwarmArtifacts({
+        origin: input.origin,
+        executionId: row.execution_id,
+        fetchImpl: input.fetchImpl,
+      });
+      const files = swarmArtifactFiles(artifacts).map((file) => ({
+        workflow: "swarm",
+        run: row.execution_id,
+        node: file.node,
+        body: file.body,
+      }));
+      if (finished) files.push({ workflow: "swarm", run: row.execution_id, node: "result", body: run.output });
+      if (files.length > 0) {
+        await storeWorkflowOutput({
+          sql: input.sql,
+          store: input.store,
+          organizationId: row.organization_id,
+          projectId: row.project_id,
+          files,
+          now: input.now,
+        });
+      }
+      if (finished) {
+        await storeSwarmReport({
+          sql: input.sql,
+          store: input.store,
+          origin: input.origin,
+          organizationId: row.organization_id,
+          projectId: row.project_id,
+          executionId: row.execution_id,
+          now: input.now,
+          fetchImpl: input.fetchImpl,
+        });
+      }
+    }
+    await input.sql.run("UPDATE swarm_runs SET status = ?, finished_at = ? WHERE id = ? AND status = 'running'", [
+      status === "completed" ? "completed" : "failed",
+      input.now,
+      row.id,
+    ]);
+    if (row.workflow_id) {
+      const prior = await input.sql.get<{ last_receipt: string | null }>(
+        "SELECT last_receipt FROM client_workflows WHERE id = ?",
+        [row.workflow_id],
+      );
+      const receipt = receiptWithSkillNote(run.receipt, Boolean(prior?.last_receipt?.includes("skill: missing")));
+      await input.sql.run(
+        `UPDATE client_workflows
+         SET last_status = ?, last_output = COALESCE(?, last_output), last_receipt = COALESCE(?, last_receipt),
+             last_execution_id = COALESCE(last_execution_id, ?), updated_at = ?
+         WHERE id = ?`,
+        [status, run.output.trim() || null, receipt || null, row.execution_id, input.now, row.workflow_id],
+      );
+    }
+    let follow: AutoFollow = { auto: false };
+    if (finished && row.workflow_id) {
+      const linked = await input.sql.get<{ task_id: string | null }>(
+        "SELECT task_id FROM client_workflows WHERE id = ?",
+        [row.workflow_id],
+      );
+      if (linked?.task_id) {
+        await markTaskDone(input.sql, { taskId: linked.task_id, now: input.now, actor: { kind: "agent", id: "swarm" } });
+      }
+      await advanceWorkflowChain({
+        sql: input.sql,
+        organizationId: row.organization_id,
+        workflowId: row.workflow_id,
+        executionId: row.execution_id,
+        output: run.output,
+        status,
+        origin: input.origin,
+        now: input.now,
+        fetchImpl: input.fetchImpl,
+        wait: async () => {},
+        store: input.store,
+      });
+      follow = await continueAutoPipeline({
+        sql: input.sql,
+        organizationId: row.organization_id,
+        workflowId: row.workflow_id,
+        origin: input.origin,
+        now: input.now,
+        fetchImpl: input.fetchImpl,
+        wait: async () => {},
+        store: input.store,
+        readSkill: input.readSkill,
+        imageRun: input.imageRun,
+      });
+    }
+    if (row.workflow_id && input.notify) {
+      const stage = await input.sql.get<{ name: string; started_by: string | null }>(
+        `SELECT w.name, g.started_by
+         FROM client_workflows w JOIN workflow_groups g ON g.id = w.group_id
+         WHERE w.id = ?`,
+        [row.workflow_id],
+      );
+      if (stage?.started_by) {
+        const detail = status === "completed" ? "" : receiptDetail(run.receipt);
+        const text = pipelineNotice({
+          name: stage.name,
+          status,
+          executionId: row.execution_id,
+          detail,
+          follow,
+        });
+        try {
+          await input.notify({ userId: stage.started_by, name: stage.name, status, detail: text });
+        } catch {
+          // The workflow row is already saved. A missed chat line does not roll it back.
+        }
+      }
+    }
+    return true;
+}
