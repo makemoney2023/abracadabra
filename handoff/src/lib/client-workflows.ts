@@ -233,6 +233,8 @@ export async function listClientWorkflows(sql: Sql, organizationId: string, proj
      JOIN workflow_groups g ON g.id = w.group_id
      WHERE w.organization_id = ?
        AND (? IS NULL OR w.project_id = ? OR g.project_id = ?)
+       AND (g.pipeline IS NULL OR g.pipeline NOT LIKE '%:closed')
+       AND COALESCE(w.last_status, '') != 'stale'
      ORDER BY g.name, w.name`,
     [organizationId, project, project, project],
   );
@@ -689,6 +691,27 @@ export async function claimDueWorkflow(input: {
   const skillMissing = Boolean(specialistKind && row.skill_path?.trim() && !excerpt);
   const packetKind = specialistKind ?? deliverableKind({ name: row.name, path: row.template_id });
   if (needsSourcePacket(packetKind) && !sourcePacketReady(statedBrief || ownBrief)) {
+    const output = "This swarm needs a source packet. Put Facts: and Do not use: in the brief, then run it again.";
+    await input.sql.run(
+      "UPDATE client_workflows SET last_status = 'source', next_run_at = NULL, updated_at = ? WHERE id = ?",
+      [input.now, row.id],
+    );
+    await recordAgentRun(input.sql, {
+      organizationId: input.organizationId,
+      kind: "agent.swarm_run",
+      body: `${row.name}: ${output}`,
+      status: "source",
+      data: {
+        requestId: `${trigger}:${row.id}`,
+        trigger,
+        packId: row.template_id,
+        packName: row.name,
+        executionId: "",
+        workflowId: row.id,
+        taskId: row.task_id,
+      },
+      now: input.now,
+    });
     return {
       ok: true,
       none: false,
@@ -697,7 +720,7 @@ export async function claimDueWorkflow(input: {
       packName: row.name,
       executionId: "",
       status: "source",
-      output: "This swarm needs a source packet. Put Facts: and Do not use: in the brief, then run it again.",
+      output,
       more: false,
       taskId: row.task_id,
       projectId: row.project_id,

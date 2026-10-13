@@ -2,7 +2,13 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { claimDueWorkflow, createClientWorkflow, createWorkflowGroup, settleRunningSwarms } from "./client-workflows";
+import {
+  claimDueWorkflow,
+  createClientWorkflow,
+  createWorkflowGroup,
+  listClientWorkflows,
+  settleRunningSwarms,
+} from "./client-workflows";
 import {
   abandonPipeline,
   acceptWorkflow,
@@ -465,5 +471,72 @@ describe("specialist pipeline", () => {
       bare.stages[0]?.id,
     ]);
     expect(row?.last_receipt).toContain("skill: missing");
+  });
+
+  it("puts every stage on the board and removes only the tasks that never ran", async () => {
+    const sql = await database();
+    const executed: { workflowId: string; input: string; kind?: string }[] = [];
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [...SOCIAL_PIPELINE.slice(0, 2)],
+      startedBy: "staff-1",
+      now: NOW,
+      origin: "https://swarm.example",
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+    });
+    if (!started.ok) throw new Error("pipeline");
+    expect(started.status).toBe("completed");
+    const added = await appendPipelineStage(sql, {
+      organizationId: "org-1",
+      groupId: started.groupId,
+      skillPath: ".cursor/skills/community/marketingskills/seo-audit/SKILL.md",
+      now: NOW + 1,
+    });
+    expect(added.ok).toBe(true);
+    const tasks = await sql.all<{ id: string; stage: string; status: string; position: number; workflow: string }>(
+      `SELECT t.id, t.stage, t.status, t.position, w.id AS workflow FROM tasks t
+       JOIN client_workflows w ON w.task_id = t.id WHERE t.project_id = 'proj-1' ORDER BY t.position`,
+    );
+    expect(tasks).toHaveLength(3);
+    expect(tasks.slice(1).every((task) => task.stage === "describe" && task.status === "todo")).toBe(true);
+    expect(new Set(tasks.map((task) => task.position)).size).toBe(3);
+    expect(tasks[0]?.workflow).toBe(started.stages[0]?.id);
+
+    const closed = await abandonPipeline(sql, { organizationId: "org-1", groupId: started.groupId, now: NOW + 2 });
+    expect(closed).toEqual({ ok: true });
+    const kept = await sql.all<{ id: string }>("SELECT id FROM tasks WHERE project_id = 'proj-1'");
+    expect(kept.map((task) => task.id)).toEqual([started.stages[0]?.taskId]);
+    expect(await listClientWorkflows(sql, "org-1", "proj-1")).toHaveLength(0);
+  });
+
+  it("records a missing source packet instead of saying the swarm is running", async () => {
+    const sql = await database();
+    const executed: { workflowId: string; input: string; kind?: string }[] = [];
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "copy",
+      paths: [SOCIAL_PIPELINE[1]],
+      startedBy: "staff-1",
+      now: NOW,
+      origin: "https://swarm.example",
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+    });
+    if (!started.ok) throw new Error("pipeline");
+    expect(started.status).toBe("source");
+    expect(started.output).toContain("Facts:");
+    expect(executed).toHaveLength(0);
+    const row = await sql.get<{ last_status: string }>("SELECT last_status FROM client_workflows WHERE id = ?", [
+      started.stages[0]?.id,
+    ]);
+    expect(row?.last_status).toBe("source");
+    const activity = await sql.get<{ status: string }>(
+      "SELECT json_extract(data_json, '$.status') AS status FROM activities WHERE kind = 'agent.swarm_run' ORDER BY created_at DESC LIMIT 1",
+    );
+    expect(activity?.status).toBe("source");
   });
 });

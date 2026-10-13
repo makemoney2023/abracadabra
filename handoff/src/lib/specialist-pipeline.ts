@@ -2,6 +2,7 @@ import type { Sql, SqlStatement } from "@/db/sql";
 import { claimDueWorkflow } from "@/lib/client-workflows";
 import { deliverableKind, packTemplateId } from "@/lib/pack-templates";
 import type { ObjectStore } from "@/lib/store/objects";
+import { nextColumnPosition } from "@/lib/task-position";
 import { storeWorkflowOutput } from "@/lib/workflow-files";
 
 export const VISUAL_MODEL = "@cf/black-forest-labs/flux-2-klein-9b";
@@ -41,7 +42,18 @@ export async function startPipeline(
     instruction?: string;
     readSkill?: (skillPath: string) => Promise<string | null>;
   },
-): Promise<{ ok: true; groupId: string; stages: { id: string; kind: string; name: string }[]; executionId: string } | { ok: false; error: "invalid" | "missing" | "open" }> {
+): Promise<
+  | {
+      ok: true;
+      groupId: string;
+      stages: { id: string; kind: string; name: string; taskId: string }[];
+      executionId: string;
+      status: string;
+      output: string;
+      waitingOn?: string;
+    }
+  | { ok: false; error: "invalid" | "missing" | "open" }
+> {
   if (!input.paths.length || !input.projectId) return { ok: false, error: "invalid" };
   if (await groupOpen(sql, input.projectId)) return { ok: false, error: "open" };
   const project = await sql.get<{ id: string }>("SELECT id FROM projects WHERE id = ? AND organization_id = ?", [
@@ -52,7 +64,12 @@ export async function startPipeline(
   const groupName = (input.label || "Pipeline").trim().slice(0, 120);
   if (!groupName) return { ok: false, error: "invalid" };
   const groupId = crypto.randomUUID();
-  const stages: { id: string; kind: string; name: string }[] = [];
+  const stages: { id: string; kind: string; name: string; taskId: string }[] = [];
+  const firstPosition = await nextColumnPosition(sql, {
+    organizationId: input.organizationId,
+    projectId: input.projectId,
+    column: "describe",
+  });
   const statements: SqlStatement[] = [
     {
       statement: "INSERT INTO workflow_groups (id, organization_id, project_id, name, created_at) VALUES (?, ?, ?, ?, ?)",
@@ -67,6 +84,7 @@ export async function startPipeline(
     const skillPath = input.paths[index]!.trim();
     if (!skillPath || skillPath.includes("..")) return { ok: false, error: "invalid" };
     const id = crypto.randomUUID();
+    const taskId = crypto.randomUUID();
     const templateId = (packTemplateId(skillPath) ?? skillPath).slice(0, 120);
     const kind = deliverableKind({ name: skillPath, path: skillPath });
     const name = (skillPath.split("/").at(-2) || `stage-${index}`).slice(0, 120);
@@ -83,9 +101,11 @@ export async function startPipeline(
         stageOrder: index,
         kind,
         skillPath,
+        taskId,
+        position: firstPosition + index,
       }),
     );
-    stages.push({ id, kind, name });
+    stages.push({ id, kind, name, taskId });
   }
   try {
     await sql.batch(statements);
@@ -93,6 +113,9 @@ export async function startPipeline(
     return { ok: false, error: "invalid" };
   }
   let executionId = "";
+  let status = "none";
+  let output = "";
+  let waitingOn: string | undefined;
   if (input.origin && stages[0]) {
     const started = await claimDueWorkflow({
       sql,
@@ -107,9 +130,17 @@ export async function startPipeline(
       store: input.store,
       readSkill: input.readSkill,
     });
-    if (started.ok && !started.none) executionId = started.executionId;
+    if (!started.ok) {
+      status = "error";
+      output = started.error;
+    } else if (!started.none) {
+      executionId = started.executionId;
+      status = started.status;
+      output = started.output;
+      waitingOn = started.waitingOn;
+    }
   }
-  return { ok: true, groupId, stages, executionId };
+  return { ok: true, groupId, stages, executionId, status, output, ...(waitingOn ? { waitingOn } : {}) };
 }
 
 function stageRows(input: {
@@ -124,8 +155,32 @@ function stageRows(input: {
   stageOrder: number;
   kind: string;
   skillPath: string;
+  taskId: string | null;
+  position: number;
 }): SqlStatement[] {
+  const task: SqlStatement[] =
+    input.projectId && input.taskId
+      ? [
+          {
+            statement: `INSERT INTO tasks (
+               id, project_id, organization_id, title, status, created_at, updated_at, stage, skills_json, round, created_by_kind, position
+             ) VALUES (?, ?, ?, ?, 'todo', ?, ?, 'describe', ?, 1, 'agent', ?)`,
+            params: [
+              input.taskId,
+              input.projectId,
+              input.organizationId,
+              input.name,
+              input.now,
+              input.now,
+              JSON.stringify({ steps: [{ path: input.skillPath, mode: "complete", status: "todo" }], edges: [], current: 0 }),
+              input.position,
+            ],
+          },
+        ]
+      : [];
+  const taskId = task.length ? input.taskId : null;
   return [
+    ...task,
     {
       statement: `INSERT INTO client_workflows (
          id, group_id, organization_id, project_id, name, template_id, last_execution_id, last_status, created_at, updated_at,
@@ -145,8 +200,8 @@ function stageRows(input: {
       ],
     },
     {
-      statement: "UPDATE client_workflows SET stage_order = ?, kind = ?, skill_path = ? WHERE id = ?",
-      params: [input.stageOrder, input.kind, input.skillPath, input.id],
+      statement: "UPDATE client_workflows SET stage_order = ?, kind = ?, skill_path = ?, task_id = ? WHERE id = ?",
+      params: [input.stageOrder, input.kind, input.skillPath, taskId, input.id],
     },
   ];
 }
@@ -170,6 +225,9 @@ export async function appendPipelineStage(
   const kind = deliverableKind({ name: skillPath, path: skillPath });
   const name = (skillPath.split("/").at(-2) || "stage").slice(0, 120);
   const id = crypto.randomUUID();
+  const position = group.project_id
+    ? await nextColumnPosition(sql, { organizationId: input.organizationId, projectId: group.project_id, column: "describe" })
+    : 0;
   try {
     await sql.batch([
       ...stageRows({
@@ -184,6 +242,8 @@ export async function appendPipelineStage(
         stageOrder: (last?.stage_order ?? -1) + 1,
         kind,
         skillPath,
+        taskId: crypto.randomUUID(),
+        position,
       }),
       {
         statement: "UPDATE workflow_groups SET pipeline = pipeline WHERE id = ?",
@@ -205,11 +265,25 @@ export async function abandonPipeline(
     [input.groupId, input.organizationId],
   );
   if (!group?.pipeline || group.pipeline.endsWith(":closed")) return { ok: false, error: "missing" };
-  await sql.run(
-    "UPDATE client_workflows SET last_status = 'stale', updated_at = ? WHERE group_id = ? AND accepted_at IS NULL",
-    [input.now, input.groupId],
+  const orphans = await sql.all<{ id: string; task_id: string }>(
+    `SELECT w.id, w.task_id FROM client_workflows w JOIN tasks t ON t.id = w.task_id
+     WHERE w.group_id = ? AND w.accepted_at IS NULL AND COALESCE(w.last_execution_id, '') = ''
+       AND t.status = 'todo' AND t.stage = 'describe'
+       AND NOT EXISTS (SELECT 1 FROM agent_questions q WHERE q.task_id = t.id)
+       AND NOT EXISTS (SELECT 1 FROM cloud_runs r WHERE r.task_id = t.id)`,
+    [input.groupId],
   );
-  await sql.run("UPDATE workflow_groups SET pipeline = pipeline || ':closed' WHERE id = ?", [input.groupId]);
+  await sql.batch([
+    {
+      statement: "UPDATE client_workflows SET last_status = 'stale', updated_at = ? WHERE group_id = ? AND accepted_at IS NULL",
+      params: [input.now, input.groupId],
+    },
+    ...orphans.flatMap((row) => [
+      { statement: "UPDATE client_workflows SET task_id = NULL WHERE id = ?", params: [row.id] },
+      { statement: "DELETE FROM tasks WHERE id = ?", params: [row.task_id] },
+    ]),
+    { statement: "UPDATE workflow_groups SET pipeline = pipeline || ':closed' WHERE id = ?", params: [input.groupId] },
+  ]);
   return { ok: true };
 }
 

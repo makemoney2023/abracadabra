@@ -1089,7 +1089,17 @@ async function beginPipeline(
     },
     now,
   );
-  return { ok: true, value: { groupId: started.groupId, stages: started.stages, executionId: started.executionId } };
+  return {
+    ok: true,
+    value: {
+      groupId: started.groupId,
+      stages: started.stages,
+      executionId: started.executionId,
+      status: started.status,
+      output: started.output,
+      ...(started.waitingOn ? { waitingOn: started.waitingOn } : {}),
+    },
+  };
 }
 
 function groupName(input: Record<string, unknown>): string {

@@ -213,7 +213,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   start_pipeline: {
     label: "Start a specialist pipeline",
     description:
-      "Create one stage per skill path and start only the first. paths is one .cursor/skills path per line. name is the label, such as social or audit. body is the instruction for the first stage. Fields: organizationId, projectId, name, paths, body.",
+      "Create one stage per skill path and start only the first. paths is one .cursor/skills path per line. name is the label, such as social or audit. body is the instruction for the first stage. Each stage gets a task on the project board. The result has status and output. Only running or completed means the first stage started. source means the brief lacks Facts: and Do not use:, so tell staff what output says. Fields: organizationId, projectId, name, paths, body.",
   },
   append_pipeline_stage: {
     label: "Add a pipeline stage",
@@ -223,7 +223,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   abandon_pipeline: {
     label: "Close a pipeline",
     description:
-      "Mark unfinished stages stale and close the group so a new pipeline can start. Accepted pages stay. Fields: organizationId, groupId.",
+      "Mark unfinished stages stale and close the group so a new pipeline can start. Accepted pages stay. Board tasks for stages that never started are removed. Fields: organizationId, groupId.",
   },
   accept_workflow: {
     label: "Accept a specialist page",
