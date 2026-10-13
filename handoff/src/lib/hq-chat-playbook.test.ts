@@ -36,8 +36,14 @@ describe("channel instructions", () => {
     expect(HQ_CHAT_PLAYBOOK).toContain("Parallel Search");
     expect(HQ_CHAT_PLAYBOOK).toContain("create_project with description");
     expect(HQ_CHAT_PLAYBOOK).toContain("file_actions takes that same brief as body and the projectId");
-    expect(HQ_CHAT_PLAYBOOK).toContain("one workflow at a time");
-    expect(HQ_CHAT_PLAYBOOK).toContain("The server does not start the next workflow");
+    expect(HQ_CHAT_PLAYBOOK).toContain("one stage at a time");
+    expect(HQ_CHAT_PLAYBOOK).toContain("auto true");
+    expect(HQ_CHAT_PLAYBOOK).toContain("files each finished page");
+    expect(HQ_CHAT_PLAYBOOK).toContain("do not ask staff to accept each page");
+    expect(HQ_CHAT_PLAYBOOK).toContain("open_questions");
+    expect(HQ_CHAT_PLAYBOOK).toContain("answer_question");
+    expect(HQ_CHAT_PLAYBOOK).toContain("at most 3 questions");
+    expect(HQ_CHAT_PLAYBOOK).toContain("Without auto, the server starts only the first stage");
     expect(HQ_CHAT_PLAYBOOK).toContain("7 posts for one persona");
     expect(HQ_CHAT_PLAYBOOK).toContain("do not run that pack again");
     expect(HQ_CHAT_PLAYBOOK).toContain("Each swarm template is one skill, for every job");
