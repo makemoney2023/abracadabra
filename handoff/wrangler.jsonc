@@ -28,6 +28,10 @@
       "bucket_name": "handoff"
     },
     {
+      "binding": "SKILLS",
+      "bucket_name": "handoff-skills"
+    },
+    {
       "binding": "BRANDING",
       "bucket_name": "handoff"
     }

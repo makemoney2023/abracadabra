@@ -3,7 +3,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { env, exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { signWake } from "../lib/agent-wake";
-import { parseSkillIndex, toolNamesFrom, type ClientAgent } from "./worker";
+import { parseSkillIndex, toolNamesFrom, type ClientAgent, type HqChat } from "./worker";
 
 const SECRET = "test-wake-secret";
 
@@ -86,6 +86,36 @@ describe("handoff agent", () => {
       instance.handoffArguments({ organizationId: "other", title: "Home" }),
     );
     expect(args).toEqual({ organizationId: "org-stamp", title: "Home" });
+  });
+
+  it("stores a signed HQ notice and rejects an unsigned one", async () => {
+    const unsigned = await exports.default.fetch(
+      new Request("https://agent.example/hq-notice", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userId: "user-notice", text: "Stage 1 is ready.", sentAt: Date.now() }),
+      }),
+    );
+    expect(unsigned.status).toBe(401);
+    const body = JSON.stringify({ userId: "user-notice", text: "Stage 1 is ready.", sentAt: Date.now() });
+    const signed = await exports.default.fetch(
+      new Request("https://agent.example/hq-notice", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-handoff-signature": signWake(SECRET, body),
+        },
+        body,
+      }),
+    );
+    expect(signed.status).toBe(200);
+    const stub = await getAgentByName(env.HQ_CHAT, "user-notice");
+    const texts = await runInDurableObject(stub, (instance: HqChat) =>
+      instance.messages.flatMap((message) =>
+        message.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])),
+      ),
+    );
+    expect(texts).toContain("Stage 1 is ready.");
   });
 
   it("lets the HQ site read chat history", async () => {

@@ -62,7 +62,7 @@ export interface WorkflowExecution {
   id: string;
   workflowId: string;
   input: string;
-  status: 'running' | 'completed' | 'failed' | 'check_failed' | 'tool_failed' | 'model_failed';
+  status: 'running' | 'completed' | 'failed' | 'check_failed' | 'tool_failed' | 'model_failed' | 'question';
   results: Record<string, NodeResult>;
   startedAt: number;
   finishedAt?: number;

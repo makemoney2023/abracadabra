@@ -45,6 +45,7 @@ import {
   createClientWorkflow,
   createWorkflowGroup,
   listClientWorkflows,
+  resumeQuestionStage,
   storeSwarmReport,
   workflowTaskPlan,
   type WorkflowTaskPlan,
@@ -53,6 +54,7 @@ import {
   abandonPipeline,
   acceptWorkflow,
   appendPipelineStage,
+  clipPipelineView,
   pipelineStatus,
   startPipeline,
 } from "@/lib/specialist-pipeline";
@@ -83,7 +85,8 @@ type ToolOptions = {
   wake?: (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
-  imageRun?: (model: string, body: { prompt: string }) => Promise<{ image?: string }>;
+  imageRun?: (prompt: string) => Promise<{ image?: string }>;
+  readSkill?: (skillPath: string) => Promise<string | null>;
   build?: BuildDeps;
   intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
   github?: { fetchImpl?: typeof fetch; secrets?: GithubSecrets | null; now?: number };
@@ -114,6 +117,11 @@ const READS = new Set([
 function text(input: Record<string, unknown>, key: string): string {
   const value = input[key];
   return typeof value === "string" ? value.trim() : "";
+}
+
+function flag(input: Record<string, unknown>, key: string): boolean {
+  const value = input[key];
+  return value === true || value === 1 || value === "true" || value === "1";
 }
 
 /** Absent stays unset. A present value that is not a whole number is invalid. */
@@ -1065,6 +1073,9 @@ async function beginPipeline(
     fetchImpl: options.swarm?.fetchImpl,
     wait: options.swarm?.wait,
     store: options.swarm?.store,
+    readSkill: options.readSkill,
+    auto: flag(input, "auto"),
+    imageRun: options.imageRun,
   });
   if (!started.ok) {
     if (started.error === "open") {
@@ -1073,9 +1084,47 @@ async function beginPipeline(
         value: { refused: "A pipeline is still open. Accept the last page or call abandon_pipeline." },
       };
     }
+    if (started.error === "unknown_skill") return unknownSkills(started.unknown);
     return { ok: false, error: started.error };
   }
-  return { ok: true, value: { groupId: started.groupId, stages: started.stages, executionId: started.executionId } };
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId,
+      kind: "pipeline.started",
+      body: started.stages[0]?.name || groupName(input),
+      data: { groupId: started.groupId, stage: started.stages[0]?.name || groupName(input) },
+    },
+    now,
+  );
+  return {
+    ok: true,
+    value: {
+      groupId: started.groupId,
+      stages: started.stages,
+      executionId: started.executionId,
+      status: started.status,
+      output: started.output,
+      auto: started.auto,
+      ...(started.waitingOn ? { waitingOn: started.waitingOn } : {}),
+      ...(started.paused ? { paused: started.paused } : {}),
+    },
+  };
+}
+
+function unknownSkills(unknown: string[]): HqToolResult {
+  return {
+    ok: true,
+    value: {
+      refused: `Nothing was created. These are not skill paths: ${unknown.join(", ") || "(empty)"}. Pass the full .cursor/skills/.../SKILL.md path from list_swarm_packs or search_skills.`,
+      unknown,
+    },
+  };
+}
+
+function groupName(input: Record<string, unknown>): string {
+  return text(input, "name") || "pipeline";
 }
 
 async function appendStage(sql: Sql, caller: Caller, input: Record<string, unknown>, now: number): Promise<HqToolResult> {
@@ -1088,7 +1137,19 @@ async function appendStage(sql: Sql, caller: Caller, input: Record<string, unkno
     skillPath,
     now,
   });
-  if (!added.ok) return { ok: false, error: added.error };
+  if (!added.ok) return added.error === "unknown_skill" ? unknownSkills(added.unknown) : { ok: false, error: added.error };
+  const stage = skillPath.split("/").at(-2) || skillPath;
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId!,
+      kind: "pipeline.stage_added",
+      body: stage,
+      data: { groupId: text(input, "groupId") || text(input, "id"), stage },
+    },
+    now,
+  );
   return { ok: true, value: added };
 }
 
@@ -1097,7 +1158,23 @@ async function closePipeline(sql: Sql, caller: Caller, input: Record<string, unk
   if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
   const closed = await abandonPipeline(sql, { organizationId, groupId: text(input, "groupId") || text(input, "id"), now });
   if (!closed.ok) return { ok: false, error: closed.error };
-  return { ok: true, value: { groupId: text(input, "groupId") || text(input, "id"), status: "closed" } };
+  const groupId = text(input, "groupId") || text(input, "id");
+  const stage = await sql.get<{ name: string }>(
+    "SELECT name FROM client_workflows WHERE group_id = ? ORDER BY stage_order DESC LIMIT 1",
+    [groupId],
+  );
+  await logStaff(
+    sql,
+    {
+      organizationId,
+      userId: caller.userId!,
+      kind: "pipeline.abandoned",
+      body: stage?.name || "pipeline",
+      data: { groupId, stage: stage?.name || "pipeline" },
+    },
+    now,
+  );
+  return { ok: true, value: { groupId, status: "closed" } };
 }
 
 async function acceptStage(
@@ -1119,6 +1196,23 @@ async function acceptStage(
     run: options.imageRun,
   });
   if (!accepted.ok) return { ok: false, error: accepted.error };
+  const stage = await sql.get<{ name: string; group_id: string }>(
+    "SELECT name, group_id FROM client_workflows WHERE id = ?",
+    [text(input, "id")],
+  );
+  if (stage && caller.userId) {
+    await logStaff(
+      sql,
+      {
+        organizationId: row.organization_id,
+        userId: caller.userId,
+        kind: "pipeline.stage_accepted",
+        body: stage.name,
+        data: { groupId: stage.group_id, stage: stage.name },
+      },
+      now,
+    );
+  }
   return { ok: true, value: accepted };
 }
 
@@ -1127,7 +1221,7 @@ async function showPipeline(sql: Sql, caller: Caller, input: Record<string, unkn
   if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
   const stages = await pipelineStatus(sql, organizationId, text(input, "groupId") || text(input, "id"));
   if (stages.length === 0) return { ok: false, error: "missing" };
-  return { ok: true, value: stages };
+  return { ok: true, value: clipPipelineView(stages) };
 }
 
 async function queueFollowupSwarms(
@@ -1395,6 +1489,7 @@ async function runWorkflow(
       wake: options.wake,
       swarm: swarmLaunch(options),
       instruction: text(input, "body"),
+      readSkill: options.readSkill,
     });
     if (!moved.ok) return { ok: false, error: moved.error };
     return {
@@ -1429,6 +1524,8 @@ async function runWorkflow(
     fetchImpl: swarm?.fetchImpl,
     wait: swarm?.wait,
     store: swarm?.store,
+    readSkill: options.readSkill,
+    imageRun: options.imageRun,
   });
   if (!started.ok) return { ok: false, error: started.error };
   if (started.none) return { ok: false, error: "missing" };
@@ -1525,6 +1622,7 @@ async function setTaskStage(
     build: options.build ?? defaultBuildDeps(now),
     wake: options.wake,
     swarm: stage === "run" ? swarmLaunch(options) : undefined,
+    readSkill: options.readSkill,
   });
   if (!moved.ok) return { ok: false, error: moved.error };
   if (moved.waiting) return { ok: true, value: { taskId: task.id, stage: "build", waiting: "cap_reached" } };
@@ -1637,6 +1735,22 @@ async function answerQuestion(
     row.id,
   ]);
   await unblockAnsweredQuestion(sql, row.id, now, options.wake);
+  const origin = options.swarm?.origin?.trim() || process.env.SWARM_ORIGIN?.trim() || "";
+  if (origin && row.task_id) {
+    await resumeQuestionStage({
+      sql,
+      organizationId: row.organization_id,
+      taskId: row.task_id,
+      answer,
+      now,
+      origin,
+      fetchImpl: options.swarm?.fetchImpl,
+      wait: options.swarm?.wait,
+      store: options.swarm?.store,
+      readSkill: options.readSkill,
+      imageRun: options.imageRun,
+    });
+  }
   await logStaff(
     sql,
     { organizationId: row.organization_id, userId: caller.userId, kind: "staff.question_answered", body: answer, data: { questionId: row.id } },

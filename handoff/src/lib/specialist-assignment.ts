@@ -1,6 +1,18 @@
 export const SPECIALIST_ASSIGNMENT_LIMIT = 24_000;
 const EXCERPT_LIMIT = 1_500;
 
+/** The first 1500 characters of a skill file. A path that leaves the library is ignored. */
+export async function readSkillExcerpt(
+  skillPath: string | null | undefined,
+  readSkill?: (skillPath: string) => Promise<string | null>,
+): Promise<string> {
+  const relative = skillPath?.trim() ?? "";
+  if (!relative.endsWith("SKILL.md") || relative.includes("..")) return "";
+  if (!readSkill) return "";
+  const body = await readSkill(relative);
+  return (body ?? "").slice(0, EXCERPT_LIMIT);
+}
+
 export function buildSpecialistAssignment(input: {
   job: string;
   skillPath: string;
@@ -10,6 +22,7 @@ export function buildSpecialistAssignment(input: {
   banned?: string;
   voice?: string;
   handoff?: string;
+  answers?: string;
   rejected?: string;
 }): string {
   const excerpt = (input.excerpt ?? "").trim().slice(0, EXCERPT_LIMIT);
@@ -21,6 +34,7 @@ export function buildSpecialistAssignment(input: {
     input.facts?.trim() ? `Facts:\n${input.facts.trim()}` : "",
     input.banned?.trim() ? `Do not use:\n${input.banned.trim()}` : "",
     input.voice?.trim() ? `Voice:\n${input.voice.trim()}` : "",
+    input.answers?.trim() ? `Answers:\n${input.answers.trim()}` : "",
   ].filter((line) => line.length > 0);
   const tail = "Return JSON only.";
   const prefix = head.join("\n\n");

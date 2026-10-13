@@ -30,18 +30,45 @@ export const GATED_HQ_TOOLS = new Set([
   "add_work",
   "revise_brief",
   "instruct_task",
-  "answer_question",
   "pause_client",
   "resume_client",
   "decide_work_request",
   "link_slack_channel",
   "queue_followup_swarms",
   "publish_swarm_report",
-  "accept_workflow",
-  "abandon_pipeline",
   "delete_task",
   "delete_project",
 ]);
+
+/** Every tool the chat model may call besides the reads. A tool missing here is invisible to the model. */
+export const CHAT_WRITE_TOOLS = [
+  "create_client",
+  "add_contact",
+  "add_note",
+  "log_call",
+  "create_task",
+  "file_actions",
+  "complete_task",
+  "move_deal",
+  "set_deal_step",
+  "draft_client_status",
+  "create_project",
+  "assign_space_project",
+  "assign_repo_project",
+  "create_workflow_group",
+  "create_workflow",
+  "assign_workflow",
+  "start_pipeline",
+  "append_pipeline_stage",
+  "abandon_pipeline",
+  "accept_workflow",
+  "run_workflow",
+  "answer_question",
+  "save_swarm_report",
+  "create_milestone",
+  "post_internal_status",
+  ...GATED_HQ_TOOLS,
+] as const;
 
 export function hqToolNeedsApproval(name: string): boolean {
   return GATED_HQ_TOOLS.has(name);
@@ -143,7 +170,11 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   },
   revise_brief: { label: "Ask for a brief rewrite", description: "Send changes for the brief. Fields: organizationId, body." },
   instruct_task: { label: "Instruct the agent", description: "Instruction the agent reads on its next run. Fields: taskId, body." },
-  answer_question: { label: "Answer the agent", description: "Answer an open agent question. Fields: id, answer." },
+  answer_question: {
+    label: "Answer the agent",
+    description:
+      "Answer an open agent question. A pipeline stage that asked it runs again with this answer. Fields: id, answer.",
+  },
   pause_client: { label: "Pause the agent", description: "Stop agent work for a client. Fields: organizationId." },
   resume_client: { label: "Resume the agent", description: "Restart agent work for a client. Fields: organizationId." },
   link_slack_channel: {
@@ -213,7 +244,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   start_pipeline: {
     label: "Start a specialist pipeline",
     description:
-      "Create one stage per skill path and start only the first. paths is one .cursor/skills path per line. name is the label, such as social or audit. body is the instruction for the first stage. Fields: organizationId, projectId, name, paths, body.",
+      "Create one stage per skill path, in order, and start the first. paths is one .cursor/skills path per line. Pass every stage in this one call. auto true files each finished page in the space and starts the next stage. Without auto, the next stage waits for accept_workflow. name is the label. body is the instruction, and copy, visuals, and language need Facts: and Do not use:. Each stage gets a task on the project board. The result has status, output, and auto. Only running or completed means the first stage started. source means the brief lacks Facts: and Do not use:. Fields: organizationId, projectId, name, paths, body, auto.",
   },
   append_pipeline_stage: {
     label: "Add a pipeline stage",
@@ -223,12 +254,12 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   abandon_pipeline: {
     label: "Close a pipeline",
     description:
-      "Mark unfinished stages stale and close the group so a new pipeline can start. Accepted pages stay. Fields: organizationId, groupId.",
+      "Mark unfinished stages stale and close the group so a new pipeline can start. Accepted pages stay. Board tasks for stages that never started are removed. Fields: organizationId, groupId.",
   },
   accept_workflow: {
     label: "Accept a specialist page",
     description:
-      "Accept a completed stage. The next stage stays until run_workflow. A visual stage renders its image prompts. Fields: id.",
+      "Accept a completed stage. With auto, the server already accepted it and started the next stage. Without auto, call run_workflow for the next stage. A visual stage renders its image prompts. Fields: id.",
   },
   pipeline_status: {
     label: "Pipeline status",

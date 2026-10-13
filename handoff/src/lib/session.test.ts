@@ -174,6 +174,7 @@ describe("consumeMagicLink and getCaller", () => {
     let gets = 0;
     const counting: Sql = {
       exec: (statement) => sql.exec(statement),
+      batch: (statements) => sql.batch(statements),
       run: (statement, params) => sql.run(statement, params),
       all: (statement, params) => sql.all(statement, params),
       async get(statement, params) {

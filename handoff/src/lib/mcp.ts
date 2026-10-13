@@ -1,4 +1,5 @@
 import { AgentWorkError, runAgentWork } from "@/db/agent-work";
+import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { clientContext, getBrief, listFeedback, liveOrganization, organizationWorkspaceIds, workspaceInOrganization } from "@/lib/agent-context";
@@ -311,7 +312,10 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
 
   if (WORK_TOOLS.has(name)) {
     try {
-      const result = await runAgentWork(sql, { keyId: principal.keyId, organizationId }, name, args, Date.now());
+      const readSkill = await cloudflareSkillReader();
+      const result = await runAgentWork(sql, { keyId: principal.keyId, organizationId }, name, args, Date.now(), {
+        readSkill,
+      });
       return rpcResult(id, jsonText(result));
     } catch (error) {
       if (error instanceof AgentWorkError) return rpcError(id, -32602, error.message);

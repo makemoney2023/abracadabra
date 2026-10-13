@@ -27,7 +27,7 @@ import {
 import { MAILBOX_INSTRUCTIONS, PROSPECT_INSTRUCTIONS, mailboxUserContent } from "../lib/hq-chat-playbook";
 import { handleSlackEvent } from "../lib/slack-channel";
 import { callerForClientWork, handoffWorkCaller, mcpConnectTarget, mcpHttpCaller } from "../lib/mcp-connect";
-import { skillObjectKey } from "../lib/skill-library";
+import { readSkillFromBucket } from "../lib/skill-library";
 import type { ChatBindings } from "./hq-chat";
 
 export interface AgentBindings extends ChatBindings {
@@ -512,14 +512,7 @@ export class ClientAgent extends Agent<AgentBindings> {
   }
 
   private async readSkill(skillPath: string): Promise<string | null> {
-    const key = skillObjectKey(skillPath);
-    if (!key) return null;
-    try {
-      const object = await this.env.SKILLS.get(key);
-      return object ? object.text() : null;
-    } catch {
-      return null;
-    }
+    return readSkillFromBucket(this.env.SKILLS, skillPath);
   }
 
   private recordSkill(taskId: string, skillPath: string): void {

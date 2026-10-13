@@ -12,8 +12,10 @@ export interface Env {
   ASSETS: Fetcher;
   /** Enables POST /api/admin/reset when set (wrangler secret). */
   RESET_TOKEN?: string;
-  /** Required before a run may call the MCP portal. */
+  /** Required before a run may call the MCP portal. Also signs the settle callback. */
   SWARM_RUN_SECRET?: string;
+  /** Handoff origin that receives POST /api/swarm-settled. */
+  HANDOFF_ORIGIN?: string;
   CF_ACCESS_CLIENT_ID?: string;
   CF_ACCESS_CLIENT_SECRET?: string;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSpecialistAssignment, SPECIALIST_ASSIGNMENT_LIMIT } from "./specialist-assignment";
+import { buildSpecialistAssignment, readSkillExcerpt, SPECIALIST_ASSIGNMENT_LIMIT } from "./specialist-assignment";
 
 describe("buildSpecialistAssignment", () => {
   it("includes the source packet, the skill, and the accepted page", () => {
@@ -44,5 +44,42 @@ describe("buildSpecialistAssignment", () => {
     });
     expect(text).not.toContain("Voice:");
     expect(text).not.toContain("Sunday hours");
+  });
+
+  it("puts the first 1500 characters of the skill into the assignment", async () => {
+    const body = "n".repeat(2000);
+    const excerpt = await readSkillExcerpt("community/marketingskills/copywriting/SKILL.md", async () => body);
+    const text = buildSpecialistAssignment({
+      job: "Write 7 posts",
+      skillPath: "community/marketingskills/copywriting/SKILL.md",
+      shape: "Return exactly 7 rows.",
+      excerpt,
+    });
+    expect(text).toContain("Skill notes:");
+    expect(text).toContain("n".repeat(1500));
+    expect(text).not.toContain("n".repeat(1501));
+  });
+
+  it("builds the assignment with no excerpt when the skill reader is absent", async () => {
+    const excerpt = await readSkillExcerpt("community/marketingskills/copywriting/SKILL.md");
+    const text = buildSpecialistAssignment({
+      job: "Write 7 posts",
+      skillPath: "community/marketingskills/copywriting/SKILL.md",
+      shape: "Return exactly 7 rows.",
+      excerpt,
+    });
+    expect(excerpt).toBe("");
+    expect(text).not.toContain("Skill notes:");
+  });
+
+  it("does not read a path that leaves the library", async () => {
+    const calls: string[] = [];
+    const readSkill = async (skillPath: string) => {
+      calls.push(skillPath);
+      return "secret";
+    };
+    expect(await readSkillExcerpt("../x/SKILL.md", readSkill)).toBe("");
+    expect(await readSkillExcerpt("foo.md", readSkill)).toBe("");
+    expect(calls).toEqual([]);
   });
 });

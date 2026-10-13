@@ -188,12 +188,9 @@ async function runToolLoop(
       if (options.requireParallel && toolsUsed.length === 0) {
         return { output: 'Parallel Search was not called.', toolsUsed, status: 'tool_failed' };
       }
-      try {
-        return { output: finalize(text, onToken), toolsUsed, status: 'completed' };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'The model did not answer.';
-        return { output: message, toolsUsed, status: 'model_failed' };
-      }
+      const page = await pageFromReply(text, messages, env, toolsUsed.length > 0);
+      if (page.ok) return { output: finalize(page.text, onToken), toolsUsed, status: 'completed' };
+      return { output: page.message, toolsUsed, status: 'model_failed' };
     }
 
     messages.push({ role: 'assistant', content: text || JSON.stringify(calls) });
@@ -212,13 +209,58 @@ async function runToolLoop(
     }
   }
 
-  // Out of rounds — force a final answer with no more tool calls.
-  messages.push({
-    role: 'user',
-    content: 'No more tool calls are available. Write your final answer now using everything you have learned. Do not emit any [TOOL_CALL] blocks.',
-  });
-  const text = await runOnceChain(messages, env);
-  return { output: finalize(text, onToken), toolsUsed };
+  const page = await pageFromReply('', messages, env, true);
+  if (!page.ok) return { output: page.message, toolsUsed, status: 'model_failed' };
+  return { output: finalize(page.text, onToken), toolsUsed, status: 'completed' };
+}
+
+/** A reply that is only a tool call is not a page. After a real tool result, ask once more with tools closed. */
+async function pageFromReply(
+  text: string,
+  messages: { role: string; content: string }[],
+  env: any,
+  allowRetry: boolean,
+): Promise<{ ok: true; text: string } | { ok: false; message: string }> {
+  try {
+    return { ok: true, text: finalAnswer(text) };
+  } catch (error) {
+    if (!allowRetry) {
+      return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
+    }
+  }
+  const observations = messages
+    .filter((message) => message.role === 'user' && message.content.startsWith('Observation from '))
+    .map((message) => message.content)
+    .join('\n\n');
+  const next = [
+    { role: 'system', content: closeTools(messages[0]?.content ?? '') },
+    {
+      role: 'user',
+      content: `${messages[1]?.content ?? ''}\n\nTool results you already have:\n${observations}\n\nWrite the JSON page now from these results. Do not call a tool. Do not emit [TOOL_CALL] blocks.`,
+    },
+  ];
+  let lastError: unknown = new Error('The step ended on a tool call and did not write an answer.');
+  for (const model of MODELS) {
+    try {
+      return { ok: true, text: finalAnswer(await runModelOnce(model, next, env)) };
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('The step ended on a tool call')) {
+        lastError = error;
+        continue;
+      }
+      if (!shouldTryNextModel(error)) {
+        return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
+      }
+      lastError = error;
+    }
+  }
+  return { ok: false, message: lastError instanceof Error ? lastError.message : 'The model did not answer.' };
+}
+
+function closeTools(content: string): string {
+  const marker = '\n\nYou can access live external data';
+  const head = content.includes(marker) ? content.slice(0, content.indexOf(marker)) : content;
+  return `${head}\n\nWrite the deliverable now. Do not call a tool. Do not emit [TOOL_CALL] blocks.`;
 }
 
 function nativeToolCalls(response: any, tools: McpToolDef[]): { server: string; tool: string; args: Record<string, unknown> }[] {
@@ -270,21 +312,6 @@ async function runOnceRaw(messages: { role: string; content: string }[], env: an
   throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
 }
 
-/** Non-streaming model call with the standard fallback chain. */
-async function runOnceChain(messages: { role: string; content: string }[], env: any): Promise<string> {
-  let lastError: unknown = new Error('No models configured.');
-  for (const model of MODELS) {
-    try {
-      const output = await runModelOnce(model, messages, env);
-      if (output) return output.slice(0, MAX_OUTPUT_CHARS);
-    } catch (error) {
-      if (!shouldTryNextModel(error)) throw error;
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
-}
-
 /** Prose after tool-call blocks are removed. A call with no answer is not a deliverable. */
 export function finalAnswer(text: string): string {
   const clean = text.replace(/\[TOOL_CALL\][\s\S]*?\[\/TOOL_CALL\]/g, '').trim();
@@ -313,13 +340,12 @@ You can access live external data through MCP tools. When you need facts, data, 
 Available tools:
 ${formatToolsForPrompt(tools)}
 
-To call tools, emit one or more blocks EXACTLY like this (and nothing else on those lines):
-[TOOL_CALL]{"server": "<serverId>", "tool": "<toolName>", "arguments": {<args>}}[/TOOL_CALL]
+The tool interface calls these for you. After an observation, write the deliverable. Do not print [TOOL_CALL] blocks.
 
 Rules:
-- Use only the listed server/tool names with plain JSON arguments.
-- After each tool call you will receive an Observation — use it in your reasoning.
-- When you have enough information, write your FINAL answer as normal prose (no [TOOL_CALL] blocks). Weave tool results into the answer naturally.`;
+- Use only the listed tools.
+- After each tool call you will receive an Observation — use it in the deliverable.
+- When you have enough information, write the deliverable and stop.`;
 }
 
 export function buildSystemPrompt(type: AgentType, name: string, instructions: string, skill?: LoadedSkill | null): string {

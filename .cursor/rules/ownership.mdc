@@ -23,3 +23,4 @@ EOF
 ```
 
 - Pull requests, issues, and deploys stay on the `makemoney2023` account.
+- **Merges:** Do not use the GitHub merge button. Merge locally with the `GIT_AUTHOR_*` and `GIT_COMMITTER_*` variables above, then push to `main`. A squash merge must use the same identity. The merge commit `cda4f2b` stays as it is. Rewriting it would need a force-push.

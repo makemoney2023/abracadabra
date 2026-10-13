@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-10-13
+
+- **What changed** — A specialist stage can stop with `{"questions":[...]}` instead of a page. The stage status becomes `question`, the task waits on staff, and HQ is told to call `open_questions` then `answer_question`. That answer runs the stage again. A visual stage asks when the model, the ratio, or a brand color is missing. Later stages stay queued while it asks. `answer_question` does not wait for an approval card.
+- **Why** — The image skill needs a reply before it can write prompts. A question was a failed check, so the pipeline stopped and HQ had no way to answer and continue.
+- **Code touchpoints** — `swarm/src/ai/check.ts`, `swarm/src/do/settle-specialist.ts`, `swarm/src/do/WorkflowDO.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`
+- **Data-flow impact** — `answer_question` claims the waiting stage with `Answers:` in the brief. An auto pipeline accepts the page when the rerun finishes.
+- **API / schema impact** — Swarm execution status can be `question`. No new tables.
+- **Verification** — handoff `npm test` (878 passed), swarm `npm test` (75 passed), `npx tsc --noEmit` in both packages, and handoff `npx tsc --noEmit -p tsconfig.agent.json`.
+
+- **What changed** — `start_pipeline` can take `auto`. It creates every stage in one call, files each finished page in the client space, accepts that page, and starts the next stage. A due wake does the same for a later stage whose previous page is already accepted. `accept_workflow` and `abandon_pipeline` no longer wait for an approval card. Chat is told to pass every skill path once, with `auto` true when staff want the agent to run the chain.
+- **Why** — HQ started one stage at a time, asked staff to accept each page, and the finished swarm page did not move the chain or show up as the thing staff were waiting on.
+- **Code touchpoints** — `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/src/app/api/swarm-settled/route.ts`, `handoff/migrations/0023_pipeline_auto.sql`
+- **Data-flow impact** — A finished auto stage sets `accepted_at`, writes `agent/swarm/<run>/result.md`, and claims the next stage with the original brief. A pipeline without `auto` still waits for accept.
+- **API / schema impact** — `workflow_groups` gains `auto_continue` and `brief`. `start_pipeline` accepts `auto` and returns it.
+- **Verification** — handoff `npm test` (877 passed) and `npx tsc --noEmit` plus `npx tsc --noEmit -p tsconfig.agent.json`.
+
+- **What changed** — The closed-tools turn after a specialist tool call now sends a clean prompt with the tool results instead of replaying the tool-call history, and it tries each specialist model in turn when a reply is still only a tool call.
+- **Why** — The tools-closed turn used only the first model and replayed the earlier calls, so Llama could answer with another tool call and the research stage still failed with "The step ended on a tool call and did not write an answer."
+- **Code touchpoints** — `swarm/src/ai/agents.ts`, `swarm/src/ai/agents.test.ts`
+- **Data-flow impact** — The closed-tools turn gets the brief plus every `Observation from server/tool` result, then Llama, then GLM.
+- **API / schema impact** — none.
+- **Verification** — swarm `npm test` (74 passed) and `npx tsc --noEmit` passed.
+
+- **What changed** — Each specialist stage gets a board task in Describe when the pipeline starts or a stage is appended. A stage that needs a source packet stops with status `source`, writes a staff-log row, and tells HQ what to add. `begin_pipeline` returns the first stage's status and output, so HQ reports what happened instead of saying the swarm is running. `list_workflows` hides closed pipelines and stale stages. Abandoning a pipeline deletes the board tasks of stages that never ran and keeps the rest.
+- **Why** — HQ said a pipeline was running when no swarm ran, the board had no tasks for the stages, and `list_workflows` showed closed and stale items.
+- **Code touchpoints** — `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`
+- **Data-flow impact** — `startPipeline` and `appendPipelineStage` insert a `tasks` row with each `client_workflows` row. `claimDueWorkflow` returns `source` before calling the swarm when the packet is missing.
+- **API / schema impact** — `begin_pipeline` result gains `status`, `output`, and `waitingOn`. No new tables.
+- **Verification** — handoff `npm test` (874 passed), `npx tsc --noEmit`, and `npx tsc --noEmit -p tsconfig.agent.json` passed.
+
+- **What changed** — After a specialist tool returns, a reply that is only another tool call gets one more model turn with tools closed, and that turn must write the page.
+- **Why** — The research stage called Parallel, then failed with `model_failed` and "The step ended on a tool call and did not write an answer."
+- **Code touchpoints** — `swarm/src/ai/agents.ts`
+- **Data-flow impact** — A research run that already has a tool observation asks for the JSON page instead of stopping on the next tool call.
+- **API / schema impact** — none.
+- **Verification** — `cd swarm && npm test -- src/ai/agents.test.ts`
+
+## 2026-10-12
+
+- **What changed** — A specialist stage reads its skill from the skills bucket. Accepting a visual stage sends Flux a multipart image request and records a failed image on the receipt. A mixed model reply keeps the first JSON value. HQ notices use the public chat write. Pipeline stages insert in one transaction. `pipeline_status` stays within a size cap. Pipeline actions write a staff-log row. A finished swarm run can settle immediately through a signed callback. The swarm worker uses Wrangler 4.
+- **Why** — Production was settling with old code, sending Flux the wrong body, and running specialists without their skill text.
+- **Code touchpoints** — `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/flux-input.ts`, `handoff/src/lib/skill-library.ts`, `handoff/src/app/api/swarm-settled/route.ts`, `handoff/src/agent/hq-chat.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `swarm/src/ai/check.ts`, `swarm/src/handoff-callback.ts`, `swarm/wrangler.toml`
+- **Data-flow impact** — `claimDueWorkflow` takes a skill reader. `settleOne` settles one run by id or execution id. The swarm posts `{ runId, sentAt }` to `POST /api/swarm-settled`. The cron still settles anything that post misses.
+- **API / schema impact** — `POST /api/swarm-settled`, signed with `SWARM_RUN_SECRET`. `handoff` and `handoff-hq` gain the `SKILLS` R2 binding. No new tables.
+- **Verification** — handoff `npm test` and `npx tsc --noEmit` passed. Swarm `npm test` and `npx tsc --noEmit` passed. Deployed `handoff` `f96317de-00be-4a9e-b38d-ea3c84c5d184` (crons present, `SKILLS` bound), `handoff-hq` `018274c2-0e99-474f-b816-87d9c3a149d6`, `handoff-agent` `3d1c62c9-e155-45bd-af34-4e2d3aec159d`, and `agent-swarm-orchestrator` `cbd43677-fd58-43bb-bbe5-a01548b90768`. Unsigned `POST /api/swarm-settled` and `POST /hq-notice` return 401. Health checks return 200. A signed social-preset run was not started here because this session cannot read the staff password. `AGENT_WAKE_SECRET` is set on `handoff`. `AGENT_URL` is set there as a var.
+
 ## 2026-10-12
 
 - **What changed** — A failed specialist start no longer clears an accepted page. A half-built pipeline closes so the project can start again. Abandon does not touch a group that is not a pipeline. Accepting a visual page a second time does not render the images again. A check retry still has the same tools, and a list of hashtags counts as that field.
