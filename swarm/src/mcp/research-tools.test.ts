@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { McpToolDef } from './client';
-import { isParallelTool, isResearchWorkflow, researchTaskNote, toolsForPage, toolsForResearch, toolsForWriting } from './research-tools';
+import { isParallelTool, isResearchWorkflow, usesResearchTools, researchTaskNote, toolsForPage, toolsForResearch, toolsForWriting } from './research-tools';
 
 const parallel: McpToolDef = {
   serverId: 'portal',
@@ -79,5 +79,18 @@ describe('isResearchWorkflow', () => {
         nodes: [{ name: 'headline-matrix', instructions: 'Use the research notes.' }],
       }),
     ).toBe(false);
+  });
+});
+
+describe('usesResearchTools', () => {
+  it('follows the stage kind before the name', () => {
+    expect(usesResearchTools({ kind: 'copy', name: 'Copy from research notes', nodes: [{ name: 'deep-research' }] })).toBe(false);
+    expect(usesResearchTools({ kind: 'visual', name: 'research visuals' })).toBe(false);
+    expect(usesResearchTools({ kind: 'research', name: 'Opening' })).toBe(true);
+  });
+
+  it('falls back to the name when there is no kind', () => {
+    expect(usesResearchTools({ name: 'Buying psychology research' })).toBe(true);
+    expect(usesResearchTools({ name: 'Content calendar' })).toBe(false);
   });
 });

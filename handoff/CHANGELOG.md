@@ -2,6 +2,20 @@
 
 ## 2026-10-13
 
+- **What changed** — Research tools are chosen by the stage kind, not by the workflow name. A copy stage whose name or brief mentions "research" gets no tools. Tools are sent to Workers AI in the OpenAI function format with safe names and clean schemas. After `8001: Invalid input`, the same model is retried once with a clipped prompt. A provider error in a node's output marks the node as an error instead of done.
+- **Why** — Copywriting kept failing with `8001: Invalid input`. A brief that mentioned research gave the copy stage research tools with raw names and schemas the model rejected, and the error text was saved as the finished page.
+- **Code touchpoints** — `swarm/src/mcp/research-tools.ts`, `swarm/src/ai/agents.ts`, `swarm/src/ai/check.ts`, `swarm/src/do/WorkflowDO.ts`
+- **Data-flow impact** — A failed model call now stops the node with an error that HQ can rerun.
+- **API / schema impact** — None.
+- **Verification** — swarm `npm test` (85 passed) and `npx tsc --noEmit`.
+
+- **What changed** — A specialist assignment lists each brief section once. The job no longer repeats the Facts, Do not use, and Answers sections. A Facts section stops at `Answers:`. Skill notes skip the YAML frontmatter.
+- **Why** — Facts appeared twice in every assignment, answers were mixed into the facts, and most of the 1500-character skill excerpt was frontmatter.
+- **Code touchpoints** — `handoff/src/lib/specialist-assignment.ts`, `handoff/src/lib/client-workflows.ts`
+- **Data-flow impact** — Specialist prompts are shorter, with each fact listed once.
+- **API / schema impact** — None.
+- **Verification** — handoff `npx vitest run src/lib` (643 passed) and `npx tsc --noEmit`.
+
 - **What changed** — Copy, language, and visual stages no longer call tools. If a tool follow-up is rejected with `8001: Invalid input`, the worker asks for the JSON page in a short prompt with the tool notes clipped.
 - **Why** — Copywriting called Parallel Search, the next model request was rejected, and HQ reported `model_failed. 8001: Invalid input`. Research had already stored the facts.
 - **Code touchpoints** — `swarm/src/mcp/research-tools.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/ai/agents.ts`

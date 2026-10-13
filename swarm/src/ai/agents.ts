@@ -119,20 +119,22 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
     let lastError: unknown = new Error('No models configured.');
 
     for (const model of MODELS) {
+      let attempt = messages;
       try {
         const streamed = await runModelStream(model, messages, env, onToken);
         if (streamed && !providerError(streamed)) {
-          return { output: finalAnswer(streamed), toolsUsed: [] };
+          return { output: finalAnswer(streamed), toolsUsed: [], status: 'completed' };
         }
         if (streamed) lastError = new Error(streamed);
       } catch (error) {
         if (!shouldTryNextModel(error)) throw error;
         lastError = error;
       }
+      if (isInputError(lastError)) attempt = clipMessages(messages);
 
       try {
-        const output = await runModelOnce(model, messages, env);
-        if (!providerError(output)) return { output: finalAnswer(output), toolsUsed: [] };
+        const output = await runModelOnce(model, attempt, env);
+        if (!providerError(output)) return { output: finalAnswer(output), toolsUsed: [], status: 'completed' };
         lastError = new Error(output);
       } catch (error) {
         if (!shouldTryNextModel(error)) throw error;
@@ -285,7 +287,7 @@ function nativeToolCalls(response: any, tools: McpToolDef[]): { server: string; 
   for (const call of listed) {
     const name = call?.name ?? call?.function?.name;
     if (typeof name !== 'string') continue;
-    const match = tools.find((tool) => tool.name === name);
+    const match = tools.find((tool) => tool.name === name) ?? tools.find((tool) => toolFunctionName(tool.name) === name);
     if (!match) continue;
     const args = call.arguments ?? call.function?.arguments ?? {};
     calls.push({
@@ -308,23 +310,79 @@ function safeJson(value: string): Record<string, unknown> {
 
 async function runOnceRaw(messages: { role: string; content: string }[], env: any, tools: McpToolDef[]): Promise<any> {
   let lastError: unknown = new Error('No models configured.');
+  const payloadTools = nativeTools(tools);
   for (const model of MODELS) {
     try {
-      return await env.AI.run(model, {
-        messages,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        tools: tools.map((tool) => ({
-          name: tool.name,
-          description: tool.description ?? tool.name,
-          parameters: tool.inputSchema ?? { type: 'object', properties: {} },
-        })),
-      });
+      return await env.AI.run(model, { messages, max_tokens: MAX_OUTPUT_TOKENS, tools: payloadTools });
+    } catch (error) {
+      if (!shouldTryNextModel(error)) throw error;
+      lastError = error;
+    }
+    if (!isInputError(lastError)) continue;
+    try {
+      return await env.AI.run(model, { messages: clipMessages(messages), max_tokens: MAX_OUTPUT_TOKENS, tools: payloadTools });
     } catch (error) {
       if (!shouldTryNextModel(error)) throw error;
       lastError = error;
     }
   }
   throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
+}
+
+const INPUT_ERROR = /\b(8001|413|5021)\b|invalid input|too long|context length|maximum context/i;
+
+/** Workers AI rejects a request it cannot read (bad schema, prompt over the context window). */
+export function isInputError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  return INPUT_ERROR.test(message);
+}
+
+const PROMPT_CLIP = 14000;
+const TURN_CLIP = 4000;
+
+/** A smaller copy of the conversation for one retry after an input error. */
+export function clipMessages<T extends { role: string; content: string }>(messages: T[]): T[] {
+  return messages.map((message) => ({
+    ...message,
+    content: clip(message.content ?? '', message.role === 'system' || message.role === 'user' ? PROMPT_CLIP : TURN_CLIP),
+  }));
+}
+
+/** Function names Workers AI accepts. MCP names can carry dots, slashes or spaces. */
+export function toolFunctionName(name: string): string {
+  const clean = name.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 64);
+  return clean || 'tool';
+}
+
+/** A JSON Schema object Workers AI accepts: object type, properties present, no $schema or $id keys. */
+export function sanitizeSchema(schema: unknown): Record<string, unknown> {
+  const cleaned = stripSchemaKeys(schema);
+  const base = cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned) ? (cleaned as Record<string, unknown>) : {};
+  const properties = base.properties && typeof base.properties === 'object' && !Array.isArray(base.properties) ? base.properties : {};
+  return { ...base, type: 'object', properties };
+}
+
+function stripSchemaKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripSchemaKeys);
+  if (!value || typeof value !== 'object') return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, inner] of Object.entries(value as Record<string, unknown>)) {
+    if (key === '$schema' || key === '$id') continue;
+    out[key] = stripSchemaKeys(inner);
+  }
+  return out;
+}
+
+/** OpenAI-style function tools, the shape Workers AI documents for function calling. */
+export function nativeTools(tools: McpToolDef[]) {
+  return tools.map((tool) => ({
+    type: 'function' as const,
+    function: {
+      name: toolFunctionName(tool.name),
+      description: clip(tool.description ?? tool.name, 1000),
+      parameters: sanitizeSchema(tool.inputSchema),
+    },
+  }));
 }
 
 /** Prose after tool-call blocks are removed. A call with no answer is not a deliverable. */
