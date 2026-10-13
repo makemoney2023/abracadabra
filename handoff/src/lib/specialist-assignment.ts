@@ -22,6 +22,7 @@ export function buildSpecialistAssignment(input: {
   banned?: string;
   voice?: string;
   handoff?: string;
+  answers?: string;
   rejected?: string;
 }): string {
   const excerpt = (input.excerpt ?? "").trim().slice(0, EXCERPT_LIMIT);
@@ -33,6 +34,7 @@ export function buildSpecialistAssignment(input: {
     input.facts?.trim() ? `Facts:\n${input.facts.trim()}` : "",
     input.banned?.trim() ? `Do not use:\n${input.banned.trim()}` : "",
     input.voice?.trim() ? `Voice:\n${input.voice.trim()}` : "",
+    input.answers?.trim() ? `Answers:\n${input.answers.trim()}` : "",
   ].filter((line) => line.length > 0);
   const tail = "Return JSON only.";
   const prefix = head.join("\n\n");
