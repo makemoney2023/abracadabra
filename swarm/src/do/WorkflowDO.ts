@@ -558,6 +558,15 @@ export class WorkflowDO {
                 if (settledPage.action === 'completed') {
                   output = settledPage.page;
                   execution.receipt = settledPage.receipt;
+                } else if (settledPage.action === 'question') {
+                  output = settledPage.page;
+                  specialistStop = 'question';
+                  execution.status = 'question';
+                  execution.receipt = {
+                    tools: toolsUsed,
+                    check: { ok: false, errors: ['needs an answer'] },
+                    missing: settledPage.questions,
+                  };
                 } else if (settledPage.action === 'check_failed') {
                   output = settledPage.page;
                   specialistStop = 'check_failed';
