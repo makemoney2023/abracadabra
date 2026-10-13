@@ -11,7 +11,7 @@ import { generateReportPdf } from '../pdf/report';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
 import { researchTaskNote, usesResearchTools, toolsForPage, toolsForResearch, toolsForWriting } from '../mcp/research-tools';
-import { assignmentHandoff, nodeFailure } from '../ai/check';
+import { assignmentHandoff, nodeFailure, retryFailure } from '../ai/check';
 import { notifyHandoffSettled } from '../handoff-callback';
 import { settleSpecialist } from './settle-specialist';
 import type { SpecialistKind } from '../ai/check';
@@ -530,6 +530,7 @@ export class WorkflowDO {
                 let settledPage = settleSpecialist({ kind, draft: result.output, attempt: 1, tools: result.toolsUsed, shape: nodeInput, handoff });
                 if (settledPage.action === 'retry' && result.status !== 'tool_failed' && result.status !== 'model_failed') {
                   const retryNote = settledPage.note;
+                  let secondFailure: ReturnType<typeof retryFailure> = null;
                   try {
                     const second = await withStepTimeout(runAgent(node.type, {
                       input: `${nodeInput + memoryContext}\n\nFix: ${retryNote}`,
@@ -541,6 +542,7 @@ export class WorkflowDO {
                       executeTool,
                     }, this.env), NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE);
                     toolsUsed.push(...second.toolsUsed);
+                    secondFailure = retryFailure(second.status, second.output);
                     settledPage = settleSpecialist({
                       kind,
                       draft: second.output,
@@ -558,6 +560,16 @@ export class WorkflowDO {
                       missing: [error instanceof Error ? error.message : 'retry failed'],
                     };
                     throw error;
+                  }
+                  if (secondFailure) {
+                    specialistStop = secondFailure.stop;
+                    execution.status = secondFailure.stop;
+                    execution.receipt = {
+                      tools: toolsUsed,
+                      check: { ok: false, errors: [retryNote] },
+                      missing: [secondFailure.reason],
+                    };
+                    throw new Error(secondFailure.reason);
                   }
                 }
                 if (settledPage.action === 'completed') {

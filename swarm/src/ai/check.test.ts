@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { assignmentHandoff, checkSpecialist, extractJson, nodeFailure, outputSchemaKeys, stripJsonFence } from './check';
+import { assignmentHandoff, checkSpecialist, extractJson, nodeFailure, outputSchemaKeys, retryFailure, stripJsonFence } from './check';
 
 const golden = (name: string) => readFileSync(path.join(__dirname, 'golden', name), 'utf8');
 
@@ -158,5 +158,16 @@ describe('nodeFailure', () => {
 
   it('passes normal output', () => {
     expect(nodeFailure('completed', '[{"hook":"Open Sunday"}]')).toBeNull();
+  });
+});
+
+describe('retryFailure', () => {
+  it('records a failed retry as model_failed or tool_failed', () => {
+    expect(retryFailure('model_failed', 'model down')).toEqual({ stop: 'model_failed', reason: 'model down' });
+    expect(retryFailure('tool_failed', 'search 500')).toEqual({ stop: 'tool_failed', reason: 'search 500' });
+    expect(retryFailure('completed', '8001: Invalid input')?.stop).toBe('model_failed');
+  });
+  it('lets a good retry through', () => {
+    expect(retryFailure('completed', '[{"fact":"x"}]')).toBeNull();
   });
 });
