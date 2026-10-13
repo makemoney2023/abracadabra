@@ -119,6 +119,33 @@ describe('runAgent', () => {
     expect(calls).toBe(1);
   });
 
+  it('writes the page after a tool when the next reply is only a tool call', async () => {
+    let round = 0;
+    const env = {
+      AI: {
+        run: async (_model: string, params: { tools?: unknown }) => {
+          round += 1;
+          if (params.tools) {
+            if (round === 1) return { tool_calls: [{ name: 'parallel_search', arguments: { q: 'ottawa' } }] };
+            return { response: '[TOOL_CALL]{"tool":"parallel_search","arguments":{"q":"again"}}[/TOOL_CALL]' };
+          }
+          return { response: '[{"name":"Ottawa","fact":"Open Sunday","source":"https://ottawa.example"}]' };
+        },
+      },
+    };
+    const result = await runAgent('researcher', {
+      input: 'brief',
+      instructions: 'search',
+      name: 'research',
+      requireParallel: true,
+      mcpTools: [{ serverId: 'portal', serverName: 'Parallel', name: 'parallel_search' }],
+      executeTool: async () => 'Open Sunday. https://ottawa.example',
+    }, env);
+    expect(result.status).toBe('completed');
+    expect(result.output).toContain('Open Sunday');
+    expect(result.toolsUsed).toEqual([{ server: 'portal', tool: 'parallel_search' }]);
+  });
+
   it('returns model_failed when both specialist models throw', async () => {
     const env = { AI: { run: async () => { throw new Error('down'); } } };
     const result = await runAgent('writer', { input: 'brief', instructions: 'x', name: 'n' }, env);

@@ -188,12 +188,9 @@ async function runToolLoop(
       if (options.requireParallel && toolsUsed.length === 0) {
         return { output: 'Parallel Search was not called.', toolsUsed, status: 'tool_failed' };
       }
-      try {
-        return { output: finalize(text, onToken), toolsUsed, status: 'completed' };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'The model did not answer.';
-        return { output: message, toolsUsed, status: 'model_failed' };
-      }
+      const page = await pageFromReply(text, messages, env, toolsUsed.length > 0);
+      if (page.ok) return { output: finalize(page.text, onToken), toolsUsed, status: 'completed' };
+      return { output: page.message, toolsUsed, status: 'model_failed' };
     }
 
     messages.push({ role: 'assistant', content: text || JSON.stringify(calls) });
@@ -212,13 +209,43 @@ async function runToolLoop(
     }
   }
 
-  // Out of rounds — force a final answer with no more tool calls.
-  messages.push({
-    role: 'user',
-    content: 'No more tool calls are available. Write your final answer now using everything you have learned. Do not emit any [TOOL_CALL] blocks.',
-  });
-  const text = await runOnceChain(messages, env);
-  return { output: finalize(text, onToken), toolsUsed };
+  const page = await pageFromReply('', messages, env, true);
+  if (!page.ok) return { output: page.message, toolsUsed, status: 'model_failed' };
+  return { output: finalize(page.text, onToken), toolsUsed, status: 'completed' };
+}
+
+/** A reply that is only a tool call is not a page. After a real tool result, ask once more with tools closed. */
+async function pageFromReply(
+  text: string,
+  messages: { role: string; content: string }[],
+  env: any,
+  allowRetry: boolean,
+): Promise<{ ok: true; text: string } | { ok: false; message: string }> {
+  try {
+    return { ok: true, text: finalAnswer(text) };
+  } catch (error) {
+    if (!allowRetry) {
+      return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
+    }
+  }
+  try {
+    const next = messages.map((message, index) =>
+      index === 0 ? { role: message.role, content: closeTools(message.content) } : message,
+    );
+    next.push({
+      role: 'user',
+      content: 'Write the JSON page now. Do not call a tool. Do not emit [TOOL_CALL] blocks.',
+    });
+    return { ok: true, text: finalAnswer(await runOnceChain(next, env)) };
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
+  }
+}
+
+function closeTools(content: string): string {
+  const marker = '\n\nYou can access live external data';
+  const head = content.includes(marker) ? content.slice(0, content.indexOf(marker)) : content;
+  return `${head}\n\nWrite the deliverable now. Do not call a tool. Do not emit [TOOL_CALL] blocks.`;
 }
 
 function nativeToolCalls(response: any, tools: McpToolDef[]): { server: string; tool: string; args: Record<string, unknown> }[] {
@@ -313,13 +340,12 @@ You can access live external data through MCP tools. When you need facts, data, 
 Available tools:
 ${formatToolsForPrompt(tools)}
 
-To call tools, emit one or more blocks EXACTLY like this (and nothing else on those lines):
-[TOOL_CALL]{"server": "<serverId>", "tool": "<toolName>", "arguments": {<args>}}[/TOOL_CALL]
+The tool interface calls these for you. After an observation, write the deliverable. Do not print [TOOL_CALL] blocks.
 
 Rules:
-- Use only the listed server/tool names with plain JSON arguments.
-- After each tool call you will receive an Observation — use it in your reasoning.
-- When you have enough information, write your FINAL answer as normal prose (no [TOOL_CALL] blocks). Weave tool results into the answer naturally.`;
+- Use only the listed tools.
+- After each tool call you will receive an Observation — use it in the deliverable.
+- When you have enough information, write the deliverable and stop.`;
 }
 
 export function buildSystemPrompt(type: AgentType, name: string, instructions: string, skill?: LoadedSkill | null): string {

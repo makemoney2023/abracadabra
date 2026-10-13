@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-13
+
+- **What changed** — After a specialist tool returns, a reply that is only another tool call gets one more model turn with tools closed, and that turn must write the page.
+- **Why** — The research stage called Parallel, then failed with `model_failed` and "The step ended on a tool call and did not write an answer."
+- **Code touchpoints** — `swarm/src/ai/agents.ts`
+- **Data-flow impact** — A research run that already has a tool observation asks for the JSON page instead of stopping on the next tool call.
+- **API / schema impact** — none.
+- **Verification** — `cd swarm && npm test -- src/ai/agents.test.ts`
+
 ## 2026-10-12
 
 - **What changed** — A specialist stage reads its skill from the skills bucket. Accepting a visual stage sends Flux a multipart image request and records a failed image on the receipt. A mixed model reply keeps the first JSON value. HQ notices use the public chat write. Pipeline stages insert in one transaction. `pipeline_status` stays within a size cap. Pipeline actions write a staff-log row. A finished swarm run can settle immediately through a signed callback. The swarm worker uses Wrangler 4.
