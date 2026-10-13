@@ -63,6 +63,15 @@ describe('checkSpecialist', () => {
     expect(assignmentHandoff('Job: Write\n\nReturn JSON only.')).toBe('');
   });
 
+  it('accepts one JSON object per line and a CTA key', () => {
+    const rows = JSON.parse(golden('copy.json')) as { cta: string }[];
+    const lines = rows.map((row) => JSON.stringify({ ...row, CTA: row.cta, cta: undefined })).join('\n');
+    const skill = readFileSync(path.join(__dirname, '../../../.cursor/skills/community/marketingskills/copywriting/SKILL.md'), 'utf8');
+    const result = checkSpecialist('copy', lines, '', skill);
+    expect(result.ok).toBe(true);
+    expect(JSON.parse(result.page)).toHaveLength(7);
+  });
+
   it('checks copy rows', () => {
     expect(checkSpecialist('copy', golden('copy.json')).ok).toBe(true);
     const short = JSON.parse(golden('copy.json')).slice(0, 6);

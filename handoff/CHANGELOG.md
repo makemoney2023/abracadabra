@@ -2,6 +2,13 @@
 
 ## 2026-10-13
 
+- **What changed** — A copy page made of one JSON object per line is accepted as the row array. `CTA` counts as `cta`.
+- **Why** — Copywriting returned seven post objects and the check kept only the first, then reported `copy must be a JSON array`.
+- **Code touchpoints** — `swarm/src/ai/check.ts`
+- **Data-flow impact** — The saved page is the JSON array. A single object is still rejected.
+- **API / schema impact** — None.
+- **Verification** — swarm `npm test` and `npx tsc --noEmit`.
+
 - **What changed** — Copy, language, and visual stages no longer receive image-generation tools. A specialist brief that says `Return JSON only` overrides the skill's prose format. A provider error such as `8001: Invalid input` is not treated as the page, and the HQ notice no longer repeats the same check error twice.
 - **Why** — The copywriting stage called `muapi_muapi_image_generate`, saved `8001: Invalid input`, and HQ reported `check_failed. not json; not json`. Research had already limited itself to Parallel, so it completed.
 - **Code touchpoints** — `swarm/src/mcp/research-tools.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/ai/agents.ts`, `swarm/src/ai/check.ts`, `swarm/src/do/settle-specialist.ts`, `handoff/src/lib/client-workflows.ts`

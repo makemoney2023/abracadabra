@@ -100,6 +100,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
+function fieldValue(record: Record<string, unknown>, key: string): unknown {
+  if (key in record) return record[key];
+  const match = Object.keys(record).find((name) => name.toLowerCase() === key.toLowerCase());
+  return match ? record[match] : undefined;
+}
+
 function textOf(row: Record<string, unknown>, key: string): string {
   const value = row[key] ?? row[key.toUpperCase()] ?? row[key.toLowerCase()];
   if (typeof value === "string") return value.trim();
@@ -179,12 +185,58 @@ export function specialistQuestions(raw: string): string[] {
     .slice(0, 3);
 }
 
+/** Every top-level JSON value. A reply of one object per line becomes one array. */
+function jsonValues(text: string): { values: unknown[]; extra: boolean } | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  const values: unknown[] = [];
+  let cursor = 0;
+  let extra = false;
+  while (cursor < trimmed.length) {
+    const rest = trimmed.slice(cursor);
+    const start = rest.search(/[{[]/);
+    if (start < 0) {
+      if (rest.trim()) extra = true;
+      break;
+    }
+    if (rest.slice(0, start).trim()) extra = true;
+    const span = firstBalanced(trimmed.slice(cursor + start));
+    if (!span || !parses(span)) {
+      extra = true;
+      break;
+    }
+    values.push(JSON.parse(span));
+    cursor += start + span.length;
+  }
+  return values.length > 0 ? { values, extra } : null;
+}
+
+function unwrapRows(value: unknown): unknown {
+  const record = asRecord(value);
+  if (!record) return value;
+  for (const key of ["posts", "rows", "items", "copy"]) {
+    if (Array.isArray(record[key])) return record[key];
+  }
+  return value;
+}
+
+function pageFromValues(values: unknown[]): unknown {
+  if (values.length === 1) return unwrapRows(values[0]);
+  const listed = values.find((value) => Array.isArray(value));
+  if (listed) return listed;
+  if (values.every((value) => asRecord(value))) return values;
+  return unwrapRows(values[0]);
+}
+
 export function checkSpecialist(kind: SpecialistKind, raw: string, handoff = "", shape = ""): SpecialistCheck {
   const questions = specialistQuestions(raw);
   if (questions.length > 0) {
     return { ok: false, errors: ["needs an answer"], page: JSON.stringify({ questions }), questions };
   }
-  const extracted = extractJson(raw);
+  const found = kind === "skill" ? null : jsonValues(raw);
+  const extracted = found
+    ? { json: JSON.stringify(pageFromValues(found.values)), extra: found.extra }
+    : extractJson(raw);
   if (!extracted) return { ok: false, errors: [jsonMiss(raw)], page: "" };
   const result = checkParsed(kind, extracted.json, handoff, shape);
   if (!extracted.extra) return result;
@@ -287,7 +339,7 @@ function applySchema(result: SpecialistCheck, shape: string): SpecialistCheck {
       continue;
     }
     for (const key of keys) {
-      const value = record[key];
+      const value = fieldValue(record, key);
       if (value == null || (typeof value === "string" && value.trim() === "")) errors.push(`missing ${key}`);
     }
   }
