@@ -7,6 +7,7 @@ import {
   createClientWorkflow,
   createWorkflowGroup,
   listClientWorkflows,
+  resumeQuestionStage,
   settleRunningSwarms,
 } from "./client-workflows";
 import {
@@ -21,6 +22,27 @@ import {
 } from "./specialist-pipeline";
 
 const NOW = 1_700_000_000_000;
+
+function memoryStore() {
+  return {
+    async stat() {
+      return null;
+    },
+    async read() {
+      return null;
+    },
+    async remove() {},
+    async put() {},
+    async beginUpload() {
+      return "upload-1";
+    },
+    async readUpload() {
+      return null;
+    },
+    async writePart() {},
+    async finishUpload() {},
+  };
+}
 
 async function database(): Promise<Sql> {
   const db = new DatabaseSync(":memory:");
@@ -150,6 +172,203 @@ describe("specialist pipeline", () => {
       wait: async () => {},
     });
     expect(due).toEqual({ ok: true, none: true });
+  });
+
+  it("runs the whole chain and files each page when auto is set", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO workspaces (
+        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
+        quota_bytes, retention_days, request_digest, status, opened_at, organization_id, project_id
+      ) VALUES ('space-1', 'northwind', 'Northwind', 'Northwind', NULL, 'Abra', 'standard', 1000000000, 30, 0, 'active', ?, 'org-1', 'proj-1')`,
+      [NOW],
+    );
+    const executed: { workflowId: string; input: string; kind?: string }[] = [];
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [...SOCIAL_PIPELINE],
+      startedBy: "staff-1",
+      now: NOW,
+      origin: "https://swarm.example",
+      instruction: "Facts: Open Sundays\nDo not use: Unlock",
+      auto: true,
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+      store: memoryStore(),
+    });
+    expect(started.ok).toBe(true);
+    if (!started.ok) return;
+    expect(started.auto).toBe(true);
+    expect(executed).toHaveLength(4);
+    expect(executed.map((call) => call.kind)).toEqual(["research", "copy", "language", "visual"]);
+    expect(executed[1]?.input).toContain("https://north.example");
+    expect(executed[1]?.input).toContain("Facts:");
+    const accepted = await sql.get<{ n: number }>(
+      "SELECT count(*) AS n FROM client_workflows WHERE group_id = ? AND accepted_at IS NOT NULL",
+      [started.groupId],
+    );
+    expect(accepted?.n).toBe(4);
+    const files = await sql.all<{ relative_path: string }>(
+      "SELECT relative_path FROM files WHERE relative_path LIKE 'agent/swarm/%/result.json' ORDER BY relative_path",
+    );
+    expect(files.map((file) => file.relative_path)).toEqual([
+      "agent/swarm/exec-1/result.json",
+      "agent/swarm/exec-2/result.json",
+      "agent/swarm/exec-3/result.json",
+      "agent/swarm/exec-4/result.json",
+    ]);
+  });
+
+  it("stops the auto chain when the next stage still needs a source packet", async () => {
+    const sql = await database();
+    const executed: { workflowId: string; input: string; kind?: string }[] = [];
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [...SOCIAL_PIPELINE],
+      startedBy: "staff-1",
+      now: NOW,
+      origin: "https://swarm.example",
+      auto: true,
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+    });
+    expect(started.ok).toBe(true);
+    if (!started.ok) return;
+    expect(executed).toHaveLength(1);
+    expect(executed[0]?.kind).toBe("research");
+    const rows = await sql.all<{ name: string; last_status: string | null; accepted_at: number | null }>(
+      "SELECT name, last_status, accepted_at FROM client_workflows WHERE group_id = ? ORDER BY stage_order",
+      [started.groupId],
+    );
+    expect(rows[0]).toMatchObject({ name: "parallel-web-search", last_status: "completed" });
+    expect(rows[0]?.accepted_at).not.toBeNull();
+    expect(rows[1]).toMatchObject({ name: "copywriting", last_status: "source", accepted_at: null });
+    expect(rows[2]).toMatchObject({ last_status: null, accepted_at: null });
+  });
+
+  it("starts the next due stage of an auto pipeline after the previous page is accepted", async () => {
+    const sql = await database();
+    const executed: { workflowId: string; input: string; kind?: string }[] = [];
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [SOCIAL_PIPELINE[0], SOCIAL_PIPELINE[1]],
+      startedBy: "staff-1",
+      now: NOW,
+      origin: "https://swarm.example",
+      instruction: "Facts: Open Sundays\nDo not use: Unlock",
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+    });
+    if (!started.ok) throw new Error("pipeline");
+    expect(executed).toHaveLength(1);
+    await sql.run("UPDATE workflow_groups SET auto_continue = 1 WHERE id = ?", [started.groupId]);
+    await sql.run("UPDATE client_workflows SET accepted_at = ? WHERE id = ?", [NOW + 1, started.stages[0]?.id]);
+    await sql.run("UPDATE client_workflows SET next_run_at = ? WHERE id = ?", [NOW + 1, started.stages[1]?.id]);
+    const due = await claimDueWorkflow({
+      sql,
+      organizationId: "org-1",
+      origin: "https://swarm.example",
+      now: NOW + 2,
+      fetchImpl: swarmFetch(executed),
+      wait: async () => {},
+    });
+    expect(due).toMatchObject({ ok: true, none: false, status: "completed", workflowId: started.stages[1]?.id });
+    expect(executed).toHaveLength(2);
+  });
+
+  it("pauses a visual stage on a question and runs it again after the answer", async () => {
+    const sql = await database();
+    let round = 0;
+    const prompts = JSON.stringify([{ imagePrompt: "A quiet room in 1:1", videoPrompt: "A slow pan" }]);
+    const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+      const href = String(url);
+      if (href.includes("/api/template")) {
+        return Response.json({
+          id: "skill",
+          name: "Skill",
+          nodes: [{ id: "n1", type: "writer", name: "Page", instructions: "Write.", position: { x: 0, y: 0 } }],
+          edges: [],
+        });
+      }
+      if (href.endsWith("/api/save")) return Response.json({ success: true });
+      if (href.endsWith("/api/execute")) {
+        round += 1;
+        return Response.json({ executionId: `exec-${round}` });
+      }
+      if (round >= 4) {
+        const asking = round === 4;
+        return Response.json({
+          status: asking ? "question" : "completed",
+          results: {
+            n1: {
+              status: "done",
+              output: asking ? JSON.stringify({ questions: ["Which aspect ratio?"] }) : prompts,
+            },
+          },
+        });
+      }
+      return Response.json({
+        status: "completed",
+        receipt: { tools: [], check: { ok: true, errors: [] }, missing: [] },
+        results: { n1: { status: "done", output: JSON.stringify([{ name: "North", fact: "Open Sundays", source: "https://north.example" }]) } },
+      });
+    }) as typeof fetch;
+    const started = await startPipeline(sql, {
+      organizationId: "org-1",
+      projectId: "proj-1",
+      label: "social",
+      paths: [...SOCIAL_PIPELINE],
+      startedBy: "staff-1",
+      now: NOW,
+      origin: "https://swarm.example",
+      instruction: "Facts: Open Sundays\nDo not use: Unlock",
+      auto: true,
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(started.ok).toBe(true);
+    if (!started.ok) return;
+    expect(started.paused).toMatchObject({ status: "question" });
+    expect(started.paused?.output).toContain("Which aspect ratio?");
+    const visual = started.stages[3];
+    const waiting = await sql.get<{ last_status: string; question: string | null }>(
+      `SELECT w.last_status, q.question
+       FROM client_workflows w
+       LEFT JOIN agent_questions q ON q.task_id = w.task_id AND q.answered_at IS NULL
+       WHERE w.id = ?`,
+      [visual?.id],
+    );
+    expect(waiting).toMatchObject({ last_status: "question", question: "Which aspect ratio?" });
+    const task = await sql.get<{ id: string; status: string }>(
+      "SELECT id, status FROM tasks WHERE id = ?",
+      [visual?.taskId],
+    );
+    expect(task?.status).toBe("blocked");
+    const again = await resumeQuestionStage({
+      sql,
+      organizationId: "org-1",
+      taskId: task?.id ?? null,
+      answer: "1:1 square",
+      now: NOW + 5,
+      origin: "https://swarm.example",
+      fetchImpl,
+      wait: async () => {},
+    });
+    expect(again).toMatchObject({ ok: true, status: "completed" });
+    if (!again || !again.ok || again.none) return;
+    expect(again.output).toContain("1:1");
+    const done = await sql.get<{ last_status: string; accepted_at: number | null }>(
+      "SELECT last_status, accepted_at FROM client_workflows WHERE id = ?",
+      [visual?.id],
+    );
+    expect(done?.last_status).toBe("completed");
+    expect(done?.accepted_at).not.toBeNull();
   });
 
   it("keeps a settled receipt when the chat notice fails", async () => {
