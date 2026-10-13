@@ -6,7 +6,7 @@ import { chatContextLine, type ChatPageContext } from "../lib/hq-chat-context";
 import { HQ_CHAT_PLAYBOOK } from "../lib/hq-chat-playbook";
 import { closeDanglingStreamParts, rechunkSseResponse } from "../lib/hq-chat-stream";
 import { hqChatConnectDecision, verifyHqChatToken } from "../lib/hq-chat-token";
-import { GATED_HQ_TOOLS, HQ_TOOL_HELP, READ_HQ_TOOLS } from "../lib/hq-tool-names";
+import { CHAT_WRITE_TOOLS, GATED_HQ_TOOLS, HQ_TOOL_HELP, READ_HQ_TOOLS } from "../lib/hq-tool-names";
 import { readPublishedSkill, searchPublishedSkills } from "../lib/skill-library";
 
 export interface ChatBindings {
@@ -50,31 +50,11 @@ const toolInput = z.object({
   paths: z.string().optional(),
   description: z.string().optional(),
   path: z.string().optional(),
+  auto: z.boolean().optional(),
+  dueAt: z.number().optional(),
+  everyMs: z.number().optional(),
+  mcpServerIds: z.array(z.string()).optional(),
 });
-
-const WRITE_TOOLS = [
-  "create_client",
-  "add_contact",
-  "add_note",
-  "log_call",
-  "create_task",
-  "file_actions",
-  "complete_task",
-  "move_deal",
-  "set_deal_step",
-  "draft_client_status",
-  "create_project",
-  "assign_space_project",
-  "assign_repo_project",
-  "create_workflow_group",
-  "create_workflow",
-  "assign_workflow",
-  "start_pipeline",
-  "append_pipeline_stage",
-  "create_milestone",
-  "post_internal_status",
-  ...GATED_HQ_TOOLS,
-] as const;
 
 async function callHq(origin: string, token: string, name: string, input: Record<string, unknown>, approved: boolean): Promise<unknown> {
   if (!origin || !token) return { ok: false, error: "invalid" };
@@ -87,7 +67,7 @@ async function callHq(origin: string, token: string, name: string, input: Record
 }
 
 function chatTools(origin: string, token: string): ToolSet {
-  const names = [...READ_HQ_TOOLS, ...WRITE_TOOLS];
+  const names = [...READ_HQ_TOOLS, ...CHAT_WRITE_TOOLS];
   const tools: ToolSet = {};
   for (const name of names) {
     const gated = GATED_HQ_TOOLS.has(name);

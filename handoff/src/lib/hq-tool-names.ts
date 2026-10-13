@@ -40,6 +40,36 @@ export const GATED_HQ_TOOLS = new Set([
   "delete_project",
 ]);
 
+/** Every tool the chat model may call besides the reads. A tool missing here is invisible to the model. */
+export const CHAT_WRITE_TOOLS = [
+  "create_client",
+  "add_contact",
+  "add_note",
+  "log_call",
+  "create_task",
+  "file_actions",
+  "complete_task",
+  "move_deal",
+  "set_deal_step",
+  "draft_client_status",
+  "create_project",
+  "assign_space_project",
+  "assign_repo_project",
+  "create_workflow_group",
+  "create_workflow",
+  "assign_workflow",
+  "start_pipeline",
+  "append_pipeline_stage",
+  "abandon_pipeline",
+  "accept_workflow",
+  "run_workflow",
+  "answer_question",
+  "save_swarm_report",
+  "create_milestone",
+  "post_internal_status",
+  ...GATED_HQ_TOOLS,
+] as const;
+
 export function hqToolNeedsApproval(name: string): boolean {
   return GATED_HQ_TOOLS.has(name);
 }
