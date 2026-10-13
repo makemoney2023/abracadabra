@@ -41,6 +41,9 @@ export async function startPipeline(
     store?: ObjectStore;
     instruction?: string;
     readSkill?: (skillPath: string) => Promise<string | null>;
+    /** File each finished page and start the next stage without an accept. */
+    auto?: boolean;
+    imageRun?: (prompt: string) => Promise<{ image?: string }>;
   },
 ): Promise<
   | {
@@ -50,7 +53,9 @@ export async function startPipeline(
       executionId: string;
       status: string;
       output: string;
+      auto: boolean;
       waitingOn?: string;
+      paused?: { name: string; status: string; output: string };
     }
   | { ok: false; error: "invalid" | "missing" | "open" }
 > {
@@ -76,8 +81,14 @@ export async function startPipeline(
       params: [groupId, input.organizationId, input.projectId, groupName, input.now],
     },
     {
-      statement: "UPDATE workflow_groups SET pipeline = ?, started_by = ? WHERE id = ?",
-      params: [input.label || "pipeline", input.startedBy, groupId],
+      statement: "UPDATE workflow_groups SET pipeline = ?, started_by = ?, auto_continue = ?, brief = ? WHERE id = ?",
+      params: [
+        input.label || "pipeline",
+        input.startedBy,
+        input.auto ? 1 : 0,
+        input.instruction?.trim() ? input.instruction.trim().slice(0, 8000) : null,
+        groupId,
+      ],
     },
   ];
   for (let index = 0; index < input.paths.length; index += 1) {
@@ -116,6 +127,7 @@ export async function startPipeline(
   let status = "none";
   let output = "";
   let waitingOn: string | undefined;
+  let paused: { name: string; status: string; output: string } | undefined;
   if (input.origin && stages[0]) {
     const started = await claimDueWorkflow({
       sql,
@@ -129,6 +141,7 @@ export async function startPipeline(
       wait: input.wait,
       store: input.store,
       readSkill: input.readSkill,
+      imageRun: input.imageRun,
     });
     if (!started.ok) {
       status = "error";
@@ -138,9 +151,20 @@ export async function startPipeline(
       status = started.status;
       output = started.output;
       waitingOn = started.waitingOn;
+      paused = started.paused;
     }
   }
-  return { ok: true, groupId, stages, executionId, status, output, ...(waitingOn ? { waitingOn } : {}) };
+  return {
+    ok: true,
+    groupId,
+    stages,
+    executionId,
+    status,
+    output,
+    auto: Boolean(input.auto),
+    ...(waitingOn ? { waitingOn } : {}),
+    ...(paused ? { paused } : {}),
+  };
 }
 
 function stageRows(input: {
