@@ -184,6 +184,11 @@ async function runToolLoop(
       response = await runOnceRaw(messages, env, tools);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The model did not answer.';
+      if (toolsUsed.length > 0 && providerError(message)) {
+        const page = await pageFromReply('', messages, env, true);
+        if (page.ok) return { output: finalize(page.text, onToken), toolsUsed, status: 'completed' };
+        return { output: page.message, toolsUsed, status: 'model_failed' };
+      }
       return { output: message, toolsUsed, status: 'model_failed' };
     }
     const text = extractToken(response) || (typeof response === 'string' ? response : '');
@@ -239,10 +244,10 @@ async function pageFromReply(
     .map((message) => message.content)
     .join('\n\n');
   const next = [
-    { role: 'system', content: closeTools(messages[0]?.content ?? '') },
+    { role: 'system', content: 'Return one JSON value and nothing else. Do not call a tool. Do not emit [TOOL_CALL] blocks.' },
     {
       role: 'user',
-      content: `${messages[1]?.content ?? ''}\n\nTool results you already have:\n${observations}\n\nWrite the JSON page now from these results. Do not call a tool. Do not emit [TOOL_CALL] blocks.`,
+      content: `${clip(messages[1]?.content ?? '', 6000)}\n\nTool results you already have:\n${clip(observations, 3000)}\n\nWrite the JSON page now from these results. Do not call a tool. Do not emit [TOOL_CALL] blocks.`,
     },
   ];
   let lastError: unknown = new Error('The step ended on a tool call and did not write an answer.');
@@ -268,10 +273,9 @@ async function pageFromReply(
   return { ok: false, message: lastError instanceof Error ? lastError.message : 'The model did not answer.' };
 }
 
-function closeTools(content: string): string {
-  const marker = '\n\nYou can access live external data';
-  const head = content.includes(marker) ? content.slice(0, content.indexOf(marker)) : content;
-  return `${head}\n\nWrite the deliverable now. Do not call a tool. Do not emit [TOOL_CALL] blocks.`;
+function clip(text: string, max: number): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max)}\n\n[truncated]`;
 }
 
 function nativeToolCalls(response: any, tools: McpToolDef[]): { server: string; tool: string; args: Record<string, unknown> }[] {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { McpToolDef } from './client';
-import { isParallelTool, isResearchWorkflow, researchTaskNote, toolsForPage, toolsForResearch } from './research-tools';
+import { isParallelTool, isResearchWorkflow, researchTaskNote, toolsForPage, toolsForResearch, toolsForWriting } from './research-tools';
 
 const parallel: McpToolDef = {
   serverId: 'portal',
@@ -28,7 +28,12 @@ describe('research tools', () => {
     expect(toolsForResearch([other, parallel])).toEqual([parallel]);
   });
 
-  it('keeps Parallel and drops image generation on a copy or visual stage', () => {
+  it('gives copy and visual stages no tools', () => {
+    const image: McpToolDef = { ...other, name: 'muapi_muapi_image_generate', description: 'Generate an image' };
+    expect(toolsForWriting([image, other, parallel])).toEqual([]);
+  });
+
+  it('keeps Parallel and drops image generation on a general skill stage', () => {
     const image: McpToolDef = { ...other, name: 'muapi_muapi_image_generate', description: 'Generate an image' };
     expect(toolsForPage([image, other, parallel])).toEqual([parallel]);
     expect(toolsForPage([image, other])).toEqual([other]);

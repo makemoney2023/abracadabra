@@ -182,6 +182,28 @@ describe('runAgent', () => {
     expect(seen[0].prompt).toContain('Open Sunday. https://ottawa.example');
   });
 
+  it('writes the page when the tool follow-up is rejected as invalid input', async () => {
+    const env = {
+      AI: {
+        run: async (_model: string, params: { tools?: unknown; messages: { content: string }[] }) => {
+          const followUp = params.messages.some((message) => message.content.startsWith('Observation from'));
+          if (params.tools && !followUp) return { tool_calls: [{ name: 'parallel_search', arguments: { q: 'ottawa' } }] };
+          if (params.tools && followUp) throw new Error('8001: Invalid input');
+          return { response: '[{"platform":"instagram","type":"post","hook":"Sunday hours","body":"Open.","hashtags":"#n","cta":"Book"}]' };
+        },
+      },
+    };
+    const result = await runAgent('writer', {
+      input: 'Return JSON only.',
+      instructions: 'write',
+      name: 'copy',
+      mcpTools: [{ serverId: 'portal', serverName: 'Parallel', name: 'parallel_search' }],
+      executeTool: async () => 'Open Sunday.',
+    }, env);
+    expect(result.status).toBe('completed');
+    expect(result.output).toContain('instagram');
+  });
+
   it('returns model_failed when both specialist models throw', async () => {
     const env = { AI: { run: async () => { throw new Error('down'); } } };
     const result = await runAgent('writer', { input: 'brief', instructions: 'x', name: 'n' }, env);

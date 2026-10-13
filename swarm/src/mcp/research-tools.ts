@@ -28,7 +28,12 @@ export function toolsForResearch(tools: McpToolDef[]): McpToolDef[] {
   return parallel.length > 0 ? parallel : tools;
 }
 
-/** Copy, language, and visual stages keep Parallel and drop image generation. */
+/** Copy, language, and visual write from the accepted page. A tool call on those stages makes the next model request invalid. */
+export function toolsForWriting(_tools: McpToolDef[]): McpToolDef[] {
+  return [];
+}
+
+/** Other skill stages keep Parallel and drop image generation. */
 export function toolsForPage(tools: McpToolDef[]): McpToolDef[] {
   const parallel = tools.filter(isParallelTool);
   if (parallel.length > 0) return parallel;

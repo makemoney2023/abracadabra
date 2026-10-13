@@ -2,6 +2,13 @@
 
 ## 2026-10-13
 
+- **What changed** — Copy, language, and visual stages no longer call tools. If a tool follow-up is rejected with `8001: Invalid input`, the worker asks for the JSON page in a short prompt with the tool notes clipped.
+- **Why** — Copywriting called Parallel Search, the next model request was rejected, and HQ reported `model_failed. 8001: Invalid input`. Research had already stored the facts.
+- **Code touchpoints** — `swarm/src/mcp/research-tools.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/ai/agents.ts`
+- **Data-flow impact** — A writing stage answers from the brief and the accepted page. It does not search again.
+- **API / schema impact** — None.
+- **Verification** — swarm `npm test` and `npx tsc --noEmit`.
+
 - **What changed** — A copy page made of one JSON object per line is accepted as the row array. `CTA` counts as `cta`.
 - **Why** — Copywriting returned seven post objects and the check kept only the first, then reported `copy must be a JSON array`.
 - **Code touchpoints** — `swarm/src/ai/check.ts`
