@@ -7,7 +7,7 @@
 - **Code touchpoints** — `swarm/src/mcp/research-tools.ts`, `swarm/src/do/WorkflowDO.ts`, `swarm/src/ai/agents.ts`
 - **Data-flow impact** — A writing stage answers from the brief and the accepted page. It does not search again.
 - **API / schema impact** — None.
-- **Verification** — swarm `npm test` and `npx tsc --noEmit`.
+- **Verification** — swarm `npm test` (79 passed) and `npx tsc --noEmit`.
 
 - **What changed** — A copy page made of one JSON object per line is accepted as the row array. `CTA` counts as `cta`.
 - **Why** — Copywriting returned seven post objects and the check kept only the first, then reported `copy must be a JSON array`.
