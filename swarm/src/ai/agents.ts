@@ -228,18 +228,33 @@ async function pageFromReply(
       return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
     }
   }
-  try {
-    const next = messages.map((message, index) =>
-      index === 0 ? { role: message.role, content: closeTools(message.content) } : message,
-    );
-    next.push({
+  const observations = messages
+    .filter((message) => message.role === 'user' && message.content.startsWith('Observation from '))
+    .map((message) => message.content)
+    .join('\n\n');
+  const next = [
+    { role: 'system', content: closeTools(messages[0]?.content ?? '') },
+    {
       role: 'user',
-      content: 'Write the JSON page now. Do not call a tool. Do not emit [TOOL_CALL] blocks.',
-    });
-    return { ok: true, text: finalAnswer(await runOnceChain(next, env)) };
-  } catch (error) {
-    return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
+      content: `${messages[1]?.content ?? ''}\n\nTool results you already have:\n${observations}\n\nWrite the JSON page now from these results. Do not call a tool. Do not emit [TOOL_CALL] blocks.`,
+    },
+  ];
+  let lastError: unknown = new Error('The step ended on a tool call and did not write an answer.');
+  for (const model of MODELS) {
+    try {
+      return { ok: true, text: finalAnswer(await runModelOnce(model, next, env)) };
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('The step ended on a tool call')) {
+        lastError = error;
+        continue;
+      }
+      if (!shouldTryNextModel(error)) {
+        return { ok: false, message: error instanceof Error ? error.message : 'The model did not answer.' };
+      }
+      lastError = error;
+    }
   }
+  return { ok: false, message: lastError instanceof Error ? lastError.message : 'The model did not answer.' };
 }
 
 function closeTools(content: string): string {
@@ -289,21 +304,6 @@ async function runOnceRaw(messages: { role: string; content: string }[], env: an
           parameters: tool.inputSchema ?? { type: 'object', properties: {} },
         })),
       });
-    } catch (error) {
-      if (!shouldTryNextModel(error)) throw error;
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error('Agent failed to produce output.');
-}
-
-/** Non-streaming model call with the standard fallback chain. */
-async function runOnceChain(messages: { role: string; content: string }[], env: any): Promise<string> {
-  let lastError: unknown = new Error('No models configured.');
-  for (const model of MODELS) {
-    try {
-      const output = await runModelOnce(model, messages, env);
-      if (output) return output.slice(0, MAX_OUTPUT_CHARS);
     } catch (error) {
       if (!shouldTryNextModel(error)) throw error;
       lastError = error;

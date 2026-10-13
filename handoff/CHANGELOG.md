@@ -2,6 +2,13 @@
 
 ## 2026-10-13
 
+- **What changed** — Each specialist stage gets a board task in Describe when the pipeline starts or a stage is appended. A stage that needs a source packet stops with status `source`, writes a staff-log row, and tells HQ what to add. `begin_pipeline` returns the first stage's status and output, so HQ reports what happened instead of saying the swarm is running. `list_workflows` hides closed pipelines and stale stages. Abandoning a pipeline deletes the board tasks of stages that never ran and keeps the rest.
+- **Why** — HQ said a pipeline was running when no swarm ran, the board had no tasks for the stages, and `list_workflows` showed closed and stale items.
+- **Code touchpoints** — `handoff/src/lib/specialist-pipeline.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-tool-names.ts`
+- **Data-flow impact** — `startPipeline` and `appendPipelineStage` insert a `tasks` row with each `client_workflows` row. `claimDueWorkflow` returns `source` before calling the swarm when the packet is missing.
+- **API / schema impact** — `begin_pipeline` result gains `status`, `output`, and `waitingOn`. No new tables.
+- **Verification** — handoff `npm test` (874 passed), `npx tsc --noEmit`, and `npx tsc --noEmit -p tsconfig.agent.json` passed.
+
 - **What changed** — After a specialist tool returns, a reply that is only another tool call gets one more model turn with tools closed, and that turn must write the page.
 - **Why** — The research stage called Parallel, then failed with `model_failed` and "The step ended on a tool call and did not write an answer."
 - **Code touchpoints** — `swarm/src/ai/agents.ts`

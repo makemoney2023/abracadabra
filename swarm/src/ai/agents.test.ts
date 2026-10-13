@@ -146,6 +146,38 @@ describe('runAgent', () => {
     expect(result.toolsUsed).toEqual([{ server: 'portal', tool: 'parallel_search' }]);
   });
 
+  it('falls back to the next model when the closed-tools reply is still a tool call', async () => {
+    const seen: { model: string; prompt: string }[] = [];
+    const env = {
+      AI: {
+        run: async (model: string, params: { tools?: unknown; messages: { content: string }[] }) => {
+          if (params.tools) {
+            if (!seen.length && !params.messages.some((m) => m.content.startsWith('Observation from'))) {
+              return { tool_calls: [{ name: 'parallel_search', arguments: { q: 'ottawa' } }] };
+            }
+            return { response: '[TOOL_CALL]{"tool":"parallel_search","arguments":{"q":"again"}}[/TOOL_CALL]' };
+          }
+          seen.push({ model, prompt: params.messages.map((m) => m.content).join('\n') });
+          if (seen.length === 1) return { response: '[TOOL_CALL]{"tool":"parallel_search"}[/TOOL_CALL]' };
+          return { response: '[{"name":"Ottawa","fact":"Open Sunday","source":"https://ottawa.example"}]' };
+        },
+      },
+    };
+    const result = await runAgent('researcher', {
+      input: 'brief',
+      instructions: 'search',
+      name: 'research',
+      requireParallel: true,
+      mcpTools: [{ serverId: 'portal', serverName: 'Parallel', name: 'parallel_search' }],
+      executeTool: async () => 'Open Sunday. https://ottawa.example',
+    }, env);
+    expect(result.status).toBe('completed');
+    expect(result.output).toContain('Open Sunday');
+    expect(seen.map((call) => call.model)).toEqual(specialistModels());
+    expect(seen[0].prompt).toContain('Tool results you already have');
+    expect(seen[0].prompt).toContain('Open Sunday. https://ottawa.example');
+  });
+
   it('returns model_failed when both specialist models throw', async () => {
     const env = { AI: { run: async () => { throw new Error('down'); } } };
     const result = await runAgent('writer', { input: 'brief', instructions: 'x', name: 'n' }, env);
