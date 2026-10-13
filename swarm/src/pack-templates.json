@@ -1496,13 +1496,13 @@
   {
     "id": "skill-community-inference-sh-competitor-teardown",
     "name": "competitor-teardown",
-    "description": "competitor-teardown. Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+    "description": "competitor-teardown. Return a JSON array of objects with name, fact, source, and unknown. One object is valid when the skill schema shows a single object. One row per competitor or persona. Do not write posts.",
     "nodes": [
       {
         "id": "skill-community-inference-sh-competitor-teardown-1",
         "type": "researcher",
         "name": "competitor-teardown",
-        "instructions": "Follow .cursor/skills/community/inference-sh/competitor-teardown/SKILL.md. Structured competitive analysis with feature matrices, SWOT, positioning maps, and UX review. Covers research frameworks, pricing comparison, review mining, and visual deliverables. Use for: market research, competitive intelligence, investor decks, product strategy, sales enable Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing. Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+        "instructions": "Follow .cursor/skills/community/inference-sh/competitor-teardown/SKILL.md. Structured competitive analysis with feature matrices, SWOT, positioning maps, and UX review. Covers research frameworks, pricing comparison, review mining, and visual deliverables. Use for: market research, competitive intelligence, investor decks, product strategy, sales enable Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing. Return a JSON array of objects with name, fact, source, and unknown. One object is valid when the skill schema shows a single object. One row per competitor or persona. Do not write posts.",
         "position": {
           "x": 50,
           "y": 120
@@ -4610,13 +4610,13 @@
   {
     "id": "skill-plugins-parallel-parallel-deep-research",
     "name": "parallel-deep-research",
-    "description": "parallel-deep-research. Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+    "description": "parallel-deep-research. Return a JSON array of objects with name, fact, source, and unknown. One object is valid when the skill schema shows a single object. One row per competitor or persona. Do not write posts.",
     "nodes": [
       {
         "id": "skill-plugins-parallel-parallel-deep-research-1",
         "type": "researcher",
         "name": "parallel-deep-research",
-        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-deep-research/SKILL.md. ONLY use when user explicitly says 'deep research', 'exhaustive', 'comprehensive report', or 'thorough investigation'. Slower and more expensive than parallel-web-search. For normal research/lookup requests, use parallel-web-search instead. Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing. Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-deep-research/SKILL.md. ONLY use when user explicitly says 'deep research', 'exhaustive', 'comprehensive report', or 'thorough investigation'. Slower and more expensive than parallel-web-search. For normal research/lookup requests, use parallel-web-search instead. Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing. Return a JSON array of objects with name, fact, source, and unknown. One object is valid when the skill schema shows a single object. One row per competitor or persona. Do not write posts.",
         "position": {
           "x": 50,
           "y": 120
@@ -4646,13 +4646,13 @@
   {
     "id": "skill-plugins-parallel-parallel-web-search",
     "name": "parallel-web-search",
-    "description": "parallel-web-search. Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+    "description": "parallel-web-search. Return a JSON array of objects with name, fact, source, and unknown. One object is valid when the skill schema shows a single object. One row per competitor or persona. Do not write posts.",
     "nodes": [
       {
         "id": "skill-plugins-parallel-parallel-web-search-1",
         "type": "researcher",
         "name": "parallel-web-search",
-        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-web-search/SKILL.md. DEFAULT for all research and web queries. Use for any lookup, research, investigation, or question needing current info. Fast and cost-effective. Only use parallel-deep-research if user explicitly requests 'deep' or 'exhaustive' research. Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing. Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+        "instructions": "Follow .cursor/skills/plugins/parallel/parallel-web-search/SKILL.md. DEFAULT for all research and web queries. Use for any lookup, research, investigation, or question needing current info. Fast and cost-effective. Only use parallel-deep-research if user explicitly requests 'deep' or 'exhaustive' research. Do this skill's one job. Write at most 7 items, for one persona or one theme. Use only facts in the input and name each source. Do not invent competitors, credentials, testimonials, prices, dates, or KPIs. Do not repeat a phrase. Do not open with Transform your, Real smiles, Unlock, Discover the secret, or Ready to. If a fact is missing, say it is missing. Return a JSON array of objects with name, fact, source, and unknown. One object is valid when the skill schema shows a single object. One row per competitor or persona. Do not write posts.",
         "position": {
           "x": 50,
           "y": 120

@@ -2,6 +2,15 @@
 
 ## 2026-10-13
 
+- **What changed** — A research page that is one object with `name`, `fact`, and `source`, or an object that wraps those rows in `results`, `rows`, `items`, or `data`, is accepted as the research table.
+- **Why** — parallel-web-search followed its skill schema and returned one object. The check required a JSON array, so the stage ended `check_failed` with "research must be a JSON array".
+- **Code touchpoints** — `swarm/src/ai/check.ts`, `handoff/src/lib/pack-templates.ts`, `swarm/src/pack-templates.json`
+- **Data-flow impact** — The stored research page is a JSON array, including when the model wrote a single object.
+- **API / schema impact** — none.
+- **Verification** — swarm `npm test` and `npx tsc --noEmit`.
+
+## 2026-10-13
+
 - **What changed** — A specialist stage can stop with `{"questions":[...]}` instead of a page. The stage status becomes `question`, the task waits on staff, and HQ is told to call `open_questions` then `answer_question`. That answer runs the stage again. A visual stage asks when the model, the ratio, or a brand color is missing. Later stages stay queued while it asks. `answer_question` does not wait for an approval card.
 - **Why** — The image skill needs a reply before it can write prompts. A question was a failed check, so the pipeline stopped and HQ had no way to answer and continue.
 - **Code touchpoints** — `swarm/src/ai/check.ts`, `swarm/src/do/settle-specialist.ts`, `swarm/src/do/WorkflowDO.ts`, `handoff/src/lib/client-workflows.ts`, `handoff/src/lib/hq-tools.ts`, `handoff/src/lib/hq-chat-playbook.ts`, `handoff/src/agent/hq-chat.ts`

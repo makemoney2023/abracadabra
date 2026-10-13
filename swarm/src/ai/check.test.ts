@@ -17,6 +17,41 @@ describe('checkSpecialist', () => {
     expect(JSON.parse(result.page)).toHaveLength(2);
   });
 
+  it('accepts one research object when the skill schema is a single object', () => {
+    const raw = [
+      '```json',
+      JSON.stringify({
+        name: 'Dental Implant Patients',
+        fact: '76.3% of patients are discouraged by cost.',
+        source: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11355290',
+        unknown: null,
+      }),
+      '```',
+    ].join('\n');
+    const shape = '## Output schema\n```json\n{"type":"object","required":["name","fact","source"]}\n```\n';
+    const result = checkSpecialist('research', raw, '', shape);
+    expect(result.ok).toBe(true);
+    expect(JSON.parse(result.page)).toEqual([
+      {
+        name: 'Dental Implant Patients',
+        fact: '76.3% of patients are discouraged by cost.',
+        source: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11355290',
+        unknown: null,
+      },
+    ]);
+  });
+
+  it('reads research rows wrapped in a results object', () => {
+    const result = checkSpecialist(
+      'research',
+      JSON.stringify({
+        results: [{ name: 'A', fact: 'one', source: 'https://a.example' }],
+      }),
+    );
+    expect(result.ok).toBe(true);
+    expect(JSON.parse(result.page)).toHaveLength(1);
+  });
+
   it('fails research when every source is empty', () => {
     const result = checkSpecialist('research', JSON.stringify([{ name: 'A', fact: 'one', source: '', unknown: '' }]));
     expect(result.ok).toBe(false);

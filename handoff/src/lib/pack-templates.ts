@@ -23,7 +23,8 @@ export const SWARM_BATCH_CONTRACT =
 export type DeliverableKind = "research" | "copy" | "visual" | "language" | "skill";
 
 const OUTPUT_SHAPES: Record<Exclude<DeliverableKind, "skill">, string> = {
-  research: "Return a table with columns name, fact, source, and unknown. One row per competitor or persona. Do not write posts.",
+  research:
+    "Return a JSON array of objects with name, fact, source, and unknown. One object is valid when the skill schema shows a single object. One row per competitor or persona. Do not write posts.",
   copy: "Return exactly 7 rows for one persona. Columns: platform, type, hook, body, hashtags, CTA. A proof row uses a quote from the input. Do not write a 90-day calendar.",
   visual:
     "Return one image prompt and one video prompt for each approved post in the input. Use the brand colors and fonts from the input. No placeholder model name. If the model, the aspect ratio, or a brand color is missing, return {\"questions\":[\"...\"]} with at most 3 questions and do not invent the answer. When Answers: is present, write the prompts and do not ask again.",

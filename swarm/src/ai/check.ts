@@ -111,6 +111,17 @@ export function assignmentHandoff(input: string): string {
   return rest.trim();
 }
 
+/** A research page is a list of sourced rows. One object, or an object that wraps that list, is the same page. */
+function researchRows(data: unknown): unknown[] | null {
+  if (Array.isArray(data)) return data;
+  const record = asRecord(data);
+  if (!record) return null;
+  for (const key of ["results", "rows", "items", "data"] as const) {
+    if (Array.isArray(record[key])) return record[key] as unknown[];
+  }
+  return [record];
+}
+
 function banned(value: string): boolean {
   return BANNED.some((pattern) => pattern.test(value));
 }
@@ -190,11 +201,12 @@ function checkParsed(kind: SpecialistKind, text: string, handoff: string, shape:
     return { ok: false, errors: ["90-day calendar"], page: "" };
   }
   if (kind === "research") {
-    if (!Array.isArray(data)) return { ok: false, errors: ["research must be a JSON array"], page: "" };
-    if (data.some((row) => asRecord(row) && textOf(asRecord(row)!, "platform") && textOf(asRecord(row)!, "hook"))) {
+    const rows = researchRows(data);
+    if (!rows) return { ok: false, errors: ["research must be a JSON array"], page: "" };
+    if (rows.some((row) => asRecord(row) && textOf(asRecord(row)!, "platform") && textOf(asRecord(row)!, "hook"))) {
       return { ok: false, errors: ["research returned posts"], page: "" };
     }
-    const kept = data.filter((row) => {
+    const kept = rows.filter((row) => {
       const record = asRecord(row);
       return Boolean(record && textOf(record, "name") && textOf(record, "fact") && textOf(record, "source"));
     });
