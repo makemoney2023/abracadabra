@@ -330,3 +330,56 @@ describe("scoring failure", () => {
     expect(retried).toBe(1);
   });
 });
+
+describe("deal closed", () => {
+  it("signs with OUTREACH_SIGNING_SECRET", async () => {
+    const { POST } = await import("@/app/api/intake/deal-closed/route");
+    process.env.OUTREACH_SIGNING_SECRET = "out-secret";
+    const sent: unknown[] = [];
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { LEAD_INTAKE: { send: async (b: unknown) => void sent.push(b) } } };
+    const body = JSON.stringify({ external_id: "w1", domain: "northwind.example", value_cents: 150000 });
+    const ts = String(Date.now());
+    const call = async (key: string) =>
+      POST(new Request("https://hq.example/api/intake/deal-closed", { method: "POST", body, headers: { "x-intake-signature": await signIntakeBody(key, body), "x-intake-timestamp": ts } }));
+    expect((await call("nope")).status).toBe(401);
+    expect((await call("out-secret")).status).toBe(202);
+    expect(sent).toEqual([{ source: "deal_closed", payload: JSON.parse(body) }]);
+  });
+
+  it("wins the deal, makes a client, dedupes, and exports the full record", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    await sql.run(
+      `INSERT INTO readiness_scans (id, public_token, domain, origin, source, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('s1', 'tok1', 'northwind.example', 'x', 'public', 'complete', ?, 30, ?, ?)`,
+      [org!.id, NOW, NOW],
+    );
+    await applySchemaScore(sql, org!.id, NOW);
+    const deal = await sql.get<{ id: string }>("SELECT id FROM deals");
+    await consumeIntake(sql, { source: "enrichment", payload: { external_id: "e1", deal_id: deal!.id, brief: "b" } }, NOW);
+    await consumeIntake(sql, { source: "outreach", payload: { external_id: "o1", deal_id: deal!.id, channel: "email", summary: "invite" } }, NOW);
+    const won = { external_id: "w1", deal_id: deal!.id, closed_at: "2026-10-14T17:00:00Z", value_cents: 150000, products: ["Schema"], notes: "Paid" };
+    expect(await consumeIntake(sql, { source: "deal_closed", payload: won }, NOW)).toMatchObject({ ok: true, duplicate: false });
+    expect(await consumeIntake(sql, { source: "deal_closed", payload: won }, NOW)).toMatchObject({ duplicate: true });
+    expect(await sql.get("SELECT stage, value_cents FROM deals")).toEqual({ stage: "won", value_cents: 150000 });
+    expect(await sql.get("SELECT kind FROM organizations")).toEqual({ kind: "client" });
+    const act = await sql.get<{ actor_kind: string }>("SELECT actor_kind FROM activities WHERE kind = 'deal.won'");
+    expect(act?.actor_kind).toBe("agent");
+    expect(await exportLeads(sql, { status: "enriched" })).toEqual([]);
+    const out = await exportLeads(sql, { status: "won", since: "2026-10-01T00:00:00Z" });
+    if (!Array.isArray(out)) throw new Error("bad");
+    expect(out[0]).toMatchObject({
+      stage: "won",
+      schema_score: 30,
+      schema_report_url: expect.stringContaining("/scan/tok1"),
+      survey_url: expect.any(String),
+      bdr: { bdr_fit_score: 4 },
+      enrichment: { brief: "b" },
+      contacts: [{ name: "Ada North", email: "ada@northwind.example", is_primary: true }],
+      outreach: [{ channel: "email", summary: "invite" }],
+      closing: { closed_at: "2026-10-14T17:00:00.000Z", value_cents: 150000, products: ["Schema"], notes: "Paid" },
+    });
+    expect(await exportLeads(sql, { status: "won", since: "2026-11-01T00:00:00Z" })).toEqual([]);
+  });
+});

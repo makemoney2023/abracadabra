@@ -53,6 +53,10 @@ export type ExportedLead = {
   readiness: { total_score: number | null; scores_json: unknown; report_url: string | null } | null;
   bdr: Record<string, unknown> | null;
   enrichment: Record<string, unknown> | null;
+  stage: string;
+  contacts: { name: string | null; email: string | null; is_primary: boolean }[];
+  outreach: Record<string, unknown>[];
+  closing: { closed_at: string | null; value_cents: number | null; products: unknown; notes: string | null } | null;
 };
 
 type Row = {
@@ -69,6 +73,10 @@ type Row = {
   contact_email: string | null;
   bdr_json: string | null;
   enrich_json: string | null;
+  stage: string;
+  closed_at: number | null;
+  value_cents: number | null;
+  won_json: string | null;
   a_total: number | null;
   a_scores: string | null;
   a_report: string | null;
@@ -88,22 +96,29 @@ export async function exportLeads(
   sql: Sql,
   input: { status?: string | null; since?: string | null; checkOrigin?: string },
 ): Promise<ExportedLead[] | { error: string }> {
-  const status = input.status?.trim() ? routingStatusOf(input.status.trim()) : "ready_for_outbound";
-  if (!status) return { error: "status must be ready_for_outbound, enriched, or nurture." };
-  const params: unknown[] = [status];
+  const raw = input.status?.trim() || "ready_for_outbound";
+  const won = raw === "won";
+  const status = won ? null : routingStatusOf(raw);
+  if (!won && !status) return { error: "status must be ready_for_outbound, enriched, nurture, scoring_error, or won." };
+  const params: unknown[] = won ? [] : [status];
+  const where = won
+    ? "o.archived_at IS NULL AND d.stage = 'won'"
+    : "o.archived_at IS NULL AND d.stage NOT IN ('won', 'lost') AND d.routing_status = ?";
   let sinceClause = "";
   if (input.since?.trim()) {
     const parsed = Date.parse(input.since.trim());
     if (!Number.isFinite(parsed)) return { error: "since must be an ISO date." };
-    sinceClause = "AND d.scored_at >= ?";
-    params.push(new Date(parsed).toISOString());
+    sinceClause = won ? "AND d.closed_at >= ?" : "AND d.scored_at >= ?";
+    params.push(won ? parsed : new Date(parsed).toISOString());
   }
   const hasScans = await sql.get<{ name: string }>(
     "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'readiness_scans'",
   );
   const rows = await sql.all<Row & { scan_token?: string | null }>(
     `SELECT d.id AS deal_id, o.id AS organization_id, o.name, o.domain, o.website, d.source,
-            d.lead_score, d.scored_at, d.routing_status,
+            d.lead_score, d.scored_at, d.routing_status, d.stage, d.closed_at, d.value_cents,
+            (SELECT data_json FROM activities a WHERE a.deal_id = d.id AND a.kind = 'deal.won'
+              ORDER BY created_at DESC LIMIT 1) AS won_json,
             (SELECT name FROM contacts c WHERE c.organization_id = o.id ORDER BY is_primary DESC, created_at LIMIT 1) AS contact_name,
             (SELECT email FROM contacts c WHERE c.organization_id = o.id ORDER BY is_primary DESC, created_at LIMIT 1) AS contact_email,
             (SELECT data_json FROM activities a WHERE a.organization_id = o.id AND a.kind = 'lead.prospected'
@@ -117,12 +132,27 @@ export async function exportLeads(
                 AND (r.organization_id = o.id OR r.domain = o.domain)
                 ORDER BY COALESCE(r.completed_at, r.created_at) DESC LIMIT 1) AS scan_token` : ""}
      FROM deals d JOIN organizations o ON o.id = d.organization_id
-     WHERE o.archived_at IS NULL AND d.stage NOT IN ('won', 'lost') AND d.routing_status = ? ${sinceClause}
-     ORDER BY d.scored_at DESC
+     WHERE ${where} ${sinceClause}
+     ORDER BY ${won ? "d.closed_at" : "d.scored_at"} DESC
      LIMIT 500`,
     params,
   );
   const origin = input.checkOrigin || CHECK_ORIGIN;
+  const extras = new Map<string, { contacts: ExportedLead["contacts"]; outreach: Record<string, unknown>[] }>();
+  for (const row of rows) {
+    const contacts = await sql.all<{ name: string | null; email: string | null; is_primary: number }>(
+      "SELECT name, email, is_primary FROM contacts WHERE organization_id = ? ORDER BY is_primary DESC, created_at",
+      [row.organization_id],
+    );
+    const sent = await sql.all<{ data_json: string | null }>(
+      "SELECT data_json FROM activities WHERE deal_id = ? AND kind = 'lead.contacted' ORDER BY created_at",
+      [row.deal_id],
+    );
+    extras.set(row.deal_id, {
+      contacts: contacts.map((c) => ({ name: c.name, email: c.email, is_primary: c.is_primary === 1 })),
+      outreach: sent.map((a) => (parse(a.data_json) ?? {}) as Record<string, unknown>),
+    });
+  }
   return rows.map((row) => {
     const bdr = (parse(row.bdr_json) ?? {}) as Record<string, unknown>;
     const str = (value: unknown) => (typeof value === "string" ? value : null);
@@ -151,6 +181,21 @@ export async function exportLeads(
         : null,
       bdr: row.bdr_json ? bdr : null,
       enrichment: (parse(row.enrich_json) as Record<string, unknown> | null) ?? null,
+      stage: row.stage,
+      contacts: extras.get(row.deal_id)?.contacts ?? [],
+      outreach: extras.get(row.deal_id)?.outreach ?? [],
+      closing:
+        row.stage === "won"
+          ? (() => {
+              const w = (parse(row.won_json) ?? {}) as Record<string, unknown>;
+              return {
+                closed_at: row.closed_at == null ? null : new Date(row.closed_at).toISOString(),
+                value_cents: row.value_cents,
+                products: w.products ?? null,
+                notes: typeof w.notes === "string" ? w.notes : null,
+              };
+            })()
+          : null,
     };
   });
 }
