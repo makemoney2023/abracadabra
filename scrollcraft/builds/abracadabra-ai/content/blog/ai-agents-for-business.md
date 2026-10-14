@@ -11,19 +11,19 @@ cta: "An agent without an owner is a risk. Score the people side."
 images:
   - src: /blog/media/ai-agents-for-business/01.png
     file: ai-agents-for-business-01.jpg
-    alt: "Eight job trays in a row, each with its own stop button, the business jobs an agent may run only until a person stops it"
-    caption: "Eight jobs. Each one has a stop."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Exactly eight small trays in a row. Each tray holds a different object: envelopes, a notepad, a quote page, an invoice, a carton, a headset, a clock, a report booklet. Each tray has a round stop button in front. No people, no logos, wide 16:9."
+    alt: "Eight short coral ticks in two rows, standing for eight candidate jobs"
+    caption: "Eight jobs, each with a stop."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Agents for Business: 8 Use Cases by Department, and When Not to Use One”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-agents-for-business/02.png
     file: ai-agents-for-business-02.jpg
-    alt: "The same eight job trays each waiting under an approval stamp, the comparison of what the person still does"
-    caption: "The person still approves the step that matters."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Eight small trays recede in a line, each with a rubber approval stamp resting on its rim, unused. No people, no logos, wide 16:9."
+    alt: "A cyan gate across a path, standing for a human checkpoint"
+    caption: "The checkpoint is the product."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Agents for Business: 8 Use Cases by Department, and When Not to Use One”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
   - src: /blog/media/ai-agents-for-business/03.png
     file: ai-agents-for-business-03.jpg
-    alt: "Four small desk robots, each with a stop button in front of a stack of job papers, an agent job held until a person decides"
-    caption: "One job done. Seven still waiting on a person."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The nearest of eight trays is stamped and lit. The other seven trays sit in a dark queue behind it. No people, no logos, wide 16:9."
+    alt: "A path that stops, standing for a job that should stay a workflow"
+    caption: "Some jobs should stay workflows."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Agents for Business: 8 Use Cases by Department, and When Not to Use One”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "When should a business use an agent instead of a workflow?"
     answer: "When the next step depends on what the last step found, and you cannot write every branch in advance. Anthropic says to start with the simplest system that works."

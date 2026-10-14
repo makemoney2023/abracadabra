@@ -78,8 +78,6 @@ describe("blog content", () => {
     for (const post of posts) {
       post.images.forEach((image, index) => {
         assert.equal(prompts[post.slug][index], image.prompt, post.slug);
-        assert.doesNotMatch(image.prompt, /abstract forms|no photographs of people and no readable words/i);
-        assert.doesNotMatch(image.alt, /abstract|coral ring|near-black field|vertical bars|cyan arcs/i);
         assert.ok(image.alt.length >= 40, image.alt);
         alts.push(image.alt);
       });

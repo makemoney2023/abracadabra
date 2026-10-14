@@ -11,19 +11,19 @@ cta: "A file is not a citation. Check whether the pages themselves can be found.
 images:
   - src: /blog/media/what-is-llms-txt/01.png
     file: what-is-llms-txt-01.jpg
-    alt: "A plain text sheet beside a printed homepage and a separate robots-style card, llms.txt as a file next to the site"
-    caption: "A plain file beside the homepage."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Three papers: a plain text sheet with monospaced gray bars, a colorful homepage printout, and a smaller robots-style card with a few rule lines. No people, no logos, no readable words, wide 16:9."
+    alt: "A small coral sheet on a large near-black field, standing for a root text file"
+    caption: "The file is a list."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “What Is llms.txt, and Does Your Business Website Need One?”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/what-is-llms-txt/02.png
     file: what-is-llms-txt-02.jpg
-    alt: "A magnifying glass over a stack of homepage printouts, only some of which have a plain text sheet attached"
-    caption: "A crawl finds the file on some sites and not others."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A magnifying glass lies over a stack of homepage printouts. Two of the printouts have a plain text sheet paperclipped on. The others do not. No people, no logos, wide 16:9."
+    alt: "A cyan ring with almost no marks inside, standing for files that receive no requests"
+    caption: "Most copies are unread."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “What Is llms.txt, and Does Your Business Website Need One?”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
   - src: /blog/media/what-is-llms-txt/03.png
     file: what-is-llms-txt-03.jpg
-    alt: "The plain text sheet and the homepage printout lying side by side, the file and the page it describes"
-    caption: "The file points at the page. It does not replace it."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The plain monospaced text sheet and the homepage printout lie side by side, equal size, nothing else on the desk. No people, no logos, wide 16:9."
+    alt: "A short row of bot-like ticks, standing for the requests that do arrive"
+    caption: "The requests that arrive are mostly bots."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “What Is llms.txt, and Does Your Business Website Need One?”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What is llms.txt?"
     answer: "A text file, proposed in September 2024, that lists pages you want a model to read. The proposal was updated in August 2026."

@@ -11,19 +11,19 @@ cta: "See whether the site can be cited. Run the Readiness Check."
 images:
   - src: /blog/media/answer-engine-optimization/01.png
     file: answer-engine-optimization-01.jpg
-    alt: "An answer card with three source snippets clipped to it, an answer engine citing pages rather than a list of links"
-    caption: "The answer carries its sources."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A single large answer card in the center has three smaller torn webpage snippets clipped to its edge with binder clips. No people, no logos, no readable sentences, wide 16:9."
+    alt: "A coral ring around a cyan mark, standing for a citation inside an answer"
+    caption: "The citation is the job."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Answer Engine Optimization (AEO): A Small Business Guide”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/answer-engine-optimization/02.png
     file: answer-engine-optimization-02.jpg
-    alt: "A lab notebook, calipers, and printed pages, the research this answer-engine note says was measured"
-    caption: "Measured pages, not a slogan."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. An open lab notebook, a pair of metal calipers, and a short stack of printed pages. No people, no logos, wide 16:9."
+    alt: "Two separated forms, standing for a summary and the click it replaces"
+    caption: "A summary can replace the click."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Answer Engine Optimization (AEO): A Small Business Guide”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
   - src: /blog/media/answer-engine-optimization/03.png
     file: answer-engine-optimization-03.jpg
-    alt: "A webpage rebuilt as layered heading cards, the structure an answer engine can lift"
-    caption: "Headings the answer can lift."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A webpage represented as four layered cards of decreasing size, stacked like a heading outline, with a citation chip on the top card. No people, no logos, wide 16:9."
+    alt: "A short row of cyan ticks, standing for index and snippet eligibility"
+    caption: "Index and snippet still come first."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Answer Engine Optimization (AEO): A Small Business Guide”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What does Google require for generative features?"
     answer: "An indexed page that is eligible for a snippet. Google says answer-engine optimization is still SEO, and that it does not use llms.txt."

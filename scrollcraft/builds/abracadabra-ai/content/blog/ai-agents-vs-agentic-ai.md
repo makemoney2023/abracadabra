@@ -11,19 +11,19 @@ cta: "If you cannot name the checker, you do not have an agent yet."
 images:
   - src: /blog/media/ai-agents-vs-agentic-ai/01.png
     file: ai-agents-vs-agentic-ai-01.jpg
-    alt: "One bounded desk robot beside a web of several robots tied together with thread, an agent versus an agentic system"
-    caption: "One actor, or a system of them."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Left: one small robot inside a drawn circle. Right: four small robots connected to each other with cotton thread. No people, no logos, wide 16:9."
+    alt: "A single coral node with two cyan links, standing for an agent choosing tools"
+    caption: "An agent chooses tools."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Agents vs Agentic AI: What's the Difference for a Business?”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-agents-vs-agentic-ai/02.png
     file: ai-agents-vs-agentic-ai-02.jpg
-    alt: "One small desk robot on a straight path beside a crowd of robots at a branching fork, one agent contrasted with a wider agentic system"
-    caption: "The forecast is a rising count."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Wooden blocks arranged in a clearly rising sequence from left to right, like a forecast. No robots in this frame. No people, no logos, wide 16:9."
+    alt: "A wide ring of many nodes, standing for the agentic category"
+    caption: "Agentic is the wider bet."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Agents vs Agentic AI: What's the Difference for a Business?”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
   - src: /blog/media/ai-agents-vs-agentic-ai/03.png
     file: ai-agents-vs-agentic-ai-03.jpg
-    alt: "A single robot kept inside a coral circle while loose thread lies outside it, the boundary between one agent and a wider system"
-    caption: "Keep the boundary visible."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. One small robot stands inside a coral circle drawn on the desk. Loose cotton thread lies outside the circle, not attached. No people, no logos, wide 16:9."
+    alt: "A path that stops at a gate, standing for a workflow that should stay fixed"
+    caption: "A workflow stays written."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Agents vs Agentic AI: What's the Difference for a Business?”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What is the difference between an agent and a workflow?"
     answer: "A workflow has its steps written in advance. An agent chooses tools as it goes. Anthropic says to start with the simplest of the two."

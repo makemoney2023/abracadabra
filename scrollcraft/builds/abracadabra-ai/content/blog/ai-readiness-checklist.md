@@ -11,19 +11,19 @@ cta: "Want these scored instead of ticked? Run the Readiness Check."
 images:
   - src: /blog/media/ai-readiness-checklist/01.png
     file: ai-readiness-checklist-01.jpg
-    alt: "Clipboard with four checkbox groups sitting in front of an unopened software box, the checklist this note says to finish before buying a tool"
+    alt: "A single coral ring on a near-black field, standing for one checklist before a purchase"
     caption: "Finish the list before you buy the tool."
-    prompt: "Editorial still-life photograph, charcoal desk, near-black background, coral light from the left and a thin cyan rim. A clipboard with four distinct groups of empty checkboxes sits in front of a sealed retail software box that has not been opened. Coral pen beside the clipboard. No people, no logos, no watermarks, wide 16:9."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Checklist: 16 Questions to Answer Before You Buy an AI Tool”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-readiness-checklist/02.png
     file: ai-readiness-checklist-02.jpg
-    alt: "Spreadsheet printout, hand-drawn flowchart, and a blank name badge in a row, the data, process, and people groups on the readiness checklist"
+    alt: "Three vertical bars of different heights, standing for data, process, and people"
     caption: "The first three groups are about the work."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Three objects in a row and nothing else: a thick printout of spreadsheet grids, a sheet of paper with a hand-drawn flowchart of boxes and arrows, and a blank employee name badge on a lanyard. No people, no logos, wide 16:9."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Readiness Checklist: 16 Questions to Answer Before You Buy an AI Tool”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
   - src: /blog/media/ai-readiness-checklist/03.png
     file: ai-readiness-checklist-03.jpg
-    alt: "Approval stamp and a still-closed laptop beside a short checklist, the decision that comes after the readiness questions"
+    alt: "A short row of cyan arcs, standing for the decision that follows the checklist"
     caption: "The last group is the decision."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A rubber approval stamp, an ink pad, and a laptop whose lid is still closed, placed after a short paper checklist. The purchase has not happened. No people, no logos, wide 16:9."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Readiness Checklist: 16 Questions to Answer Before You Buy an AI Tool”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What should an AI readiness checklist cover?"
     answer: "Data, the written process, the people who will use the output, and the decision about what success means. A tool purchase is the last step, not the first."

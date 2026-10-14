@@ -10,20 +10,20 @@ author: christopher-buzny
 cta: "Surveys measure everyone. The Readiness Check measures you."
 images:
   - src: /blog/media/how-can-ai-help-small-businesses/01.png
-    file: how-can-ai-help-small-businesses-01.jpg
-    alt: "Shop counter with invoices, a service bell, and a laptop showing a draft, help sitting next to the actual work"
-    caption: "The help has to reach the counter."
-    prompt: "Editorial still-life of a small shop counter, near-black background, coral and cyan rim light. A stack of paper invoices, a service bell, and an open laptop showing an unsent draft page with no readable words, only soft blocks of type. No people, no logos, wide 16:9."
+    file: help-hero.jpg
+    alt: "Two separate stacks of paper-like planes on a dark field, one tall and one short, standing for two different surveys"
+    caption: "Two surveys, two different questions."
+    prompt: "Editorial diagram on a near-black canvas, no people and no letters. Two separate stacks of thin translucent sheets, one tall and one short, coral light on the left stack and cyan light on the right. Studio still life, 16:9."
   - src: /blog/media/how-can-ai-help-small-businesses/02.png
-    file: how-can-ai-help-small-businesses-02.jpg
-    alt: "Loose printed drafts on the left and a filing tray of finished jobs on the right, generative use beside production use"
-    caption: "A pile of drafts is not a finished job."
-    prompt: "Editorial still-life split scene, charcoal desk, near-black background, coral and cyan rim light. Left: a messy stack of loose draft printouts. Right: a neat filing tray of finished job packets clipped and aligned. No people, no logos, wide 16:9."
+    file: help-surveys.jpg
+    alt: "A split diagram with a chat bubble shape on one side and a workshop bench on the other, no people"
+    caption: "Opening a tool is not the same as using it in the work."
+    prompt: "Editorial diagram on a near-black canvas, no people and no letters. Left side a simple speech-bubble outline in coral. Right side a small workbench of geometric parts in cyan. A gap between them. Soft overhead light, 16:9."
   - src: /blog/media/how-can-ai-help-small-businesses/03.png
-    file: how-can-ai-help-small-businesses-03.jpg
-    alt: "Inbox tray, calendar, quote sheet, and a headset lined up to be handed to a small machine, jobs an owner can pass over"
-    caption: "Name the job before you hand it over."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four work objects in a row facing a small matte machine: an inbox tray of envelopes, a desk calendar, a quote sheet with a price box, and a telephone headset. No people, no logos, wide 16:9."
+    file: help-jobs.jpg
+    alt: "Four small objects in a row, a page, a megaphone shape, a path, and a teaching card, on a dark surface"
+    caption: "The jobs that show up once a firm is already using AI."
+    prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four small objects in a row on a dark table: a folded page, a cone, a winding path, and a small card. Coral and cyan edge light, 16:9."
 faqs:
   - question: Why do small-business AI surveys disagree?
     answer: The Chamber counts generative AI use. Statistics Canada counts AI used to produce goods or deliver services. A firm can say yes to the first and no to the second.

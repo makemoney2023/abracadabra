@@ -11,19 +11,19 @@ cta: "If a product already does the job, the check will not tell you to build it
 images:
   - src: /blog/media/off-the-shelf-ai-or-custom-software/01.png
     file: off-the-shelf-ai-or-custom-software-01.jpg
-    alt: "A sealed retail software box beside an open custom chassis with visible wiring, off-the-shelf versus custom"
-    caption: "Buy the box, or build the chassis."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Left: a sealed retail software box. Right: an open custom metal chassis with visible tidy wiring and no brand marks. No people, no logos, wide 16:9."
+    alt: "A finished cyan block beside an unfinished coral frame, standing for buy versus build"
+    caption: "Buy the finished job."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Off-the-Shelf AI Tools or Custom Software? How a Small Business Should Decide”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/off-the-shelf-ai-or-custom-software/02.png
     file: off-the-shelf-ai-or-custom-software-02.jpg
-    alt: "A survey clipboard standing between a retail box and a custom chassis, the counts this comparison cites"
-    caption: "The surveys sit between the two choices."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A survey clipboard stands in the center between a sealed retail box and an open wired chassis. No people, no logos, wide 16:9."
+    alt: "Two bars of different heights, standing for use and a growing subset"
+    caption: "Use is not a build."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Off-the-Shelf AI Tools or Custom Software? How a Small Business Should Decide”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
   - src: /blog/media/off-the-shelf-ai-or-custom-software/03.png
     file: off-the-shelf-ai-or-custom-software-03.jpg
-    alt: "A balance scale holding a retail software box on one pan and a custom chassis on the other"
-    caption: "The decision is a balance, not a slogan."
-    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small brass balance scale. One pan holds a sealed software box. The other holds a compact open chassis. The scale is nearly level. No people, no logos, wide 16:9."
+    alt: "A single coral key, standing for a job only this business has"
+    caption: "Custom is the job only you have."
+    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Off-the-Shelf AI Tools or Custom Software? How a Small Business Should Decide”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "When should you buy off the shelf?"
     answer: "When a product already does the job and you can name who checks the output. A custom build for a solved job wastes the budget."
