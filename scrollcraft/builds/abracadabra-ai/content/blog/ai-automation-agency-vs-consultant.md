@@ -9,10 +9,10 @@ primaryQuery: "ai automation agency vs consultant"
 author: christopher-buzny
 cta: "Hiring is a decision. Score it before you sign."
 images:
-  - src: /blog/media/ai-automation-agency-vs-consultant/01.png
+  - src: /blog/media/ai-automation-agency-vs-consultant/01.webp
     file: ai-automation-agency-vs-consultant-01.jpg
-    alt: "Two coral figures of different shapes, standing for a consultant and an agency"
-    caption: "Name the job before the build."
+    alt: "A cafe table with an open laptop, a notebook, and two coffee cups, photographed from above with no faces in frame"
+    caption: "The meeting is the laptop and the notebook."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Automation Agency vs Consultant vs In-House: How to Choose”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-automation-agency-vs-consultant/02.png
     file: ai-automation-agency-vs-consultant-02.jpg

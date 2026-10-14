@@ -9,10 +9,10 @@ primaryQuery: "ai consultant for small business"
 author: christopher-buzny
 cta: "If a bought product already does the job, a good consultant says so."
 images:
-  - src: /blog/media/ai-consultant-for-small-business/01.png
+  - src: /blog/media/ai-consultant-for-small-business/01.webp
     file: ai-consultant-for-small-business-01.jpg
-    alt: "A coral gate in front of a cyan path, standing for questions before a hire"
-    caption: "Ask before you hire."
+    alt: "Two people at a small table, one with a laptop and one with a notebook, seen from the side so their faces stay out of view"
+    caption: "A notebook across from a laptop."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Consultant for Small Business: What They Do, What to Ask, and Red Flags”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-consultant-for-small-business/02.png
     file: ai-consultant-for-small-business-02.jpg

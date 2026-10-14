@@ -17,13 +17,13 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 ## Blog voice — 2026-10-14
 
 - All 24 notes were rewritten in a plain first-person plural voice for an owner: a direct answer, a worked example, the steps we would take, common mistakes, and a "What we'd do" section. Headings that the image slots sit under stayed put. Citations, FAQs, dates, and the Readiness Check placements are unchanged. No new statistics were added.
-- `content/blog/image-briefs.json` names each note's three slots (hero, body, closing), the heading that slot belongs to, and the scene the next illustration should show. The pictures on the site are still the previous set. Alt text describes those pictures.
+- `content/blog/image-briefs.json` names each note's three slots (hero, body, closing) and the heading that slot belongs to. The hero photograph is the picture Christopher supplied for that note. The two in-body pictures are still the previous set, waiting on the replacements. Alt text describes the picture that is actually published.
 
 ## Blog layout and images — 2026-10-14
 
 - The index is a hero plus a three-column card grid. Each post page has a split hero, a bold opening sentence, styled comparison tables, a cited percentage callout when the note has one, an FAQ accordion, sources, an author box, related cards, and the sticky Readiness Check.
 - Colours and type stay the studio tokens: canvas `#070706`, surface `#11110F`, ink `#F5F0E8`, accent `#FF4B24`, optic `#8DEBF2`, Tektur and IBM Plex Sans.
-- The 1200×630 card at `blog/og/<slug>.png` is the title plate.
+- Each note's hero and card image is a 1280×720 photograph: WebP first, JPEG if the browser needs it. The 1200×630 card at `blog/og/<slug>.png` is that photograph with the title plate over it. The index and author cards stay on the plain title plate.
 
 ## Blog — 2026-10-14
 

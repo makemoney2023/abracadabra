@@ -9,10 +9,10 @@ primaryQuery: "ai automation for small business"
 author: christopher-buzny
 cta: "Surveys measure everyone. The Readiness Check measures the slow job."
 images:
-  - src: /blog/media/ai-automation-for-small-business/01.png
+  - src: /blog/media/ai-automation-for-small-business/01.webp
     file: ai-automation-for-small-business-01.jpg
-    alt: "Four stacked plates of different thickness, standing for four tests of a job"
-    caption: "Four tests before you automate a job."
+    alt: "A reception desk with a computer, a guest book, and a small bell, and a person standing behind the counter with their face out of frame"
+    caption: "The front desk, before the tool."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Automation for Small Business: Which Jobs to Automate First”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-automation-for-small-business/02.png
     file: ai-automation-for-small-business-02.jpg

@@ -9,10 +9,10 @@ primaryQuery: "what is llms.txt"
 author: christopher-buzny
 cta: "A file is not a citation. Check whether the pages themselves can be found."
 images:
-  - src: /blog/media/what-is-llms-txt/01.png
+  - src: /blog/media/what-is-llms-txt/01.webp
     file: what-is-llms-txt-01.jpg
-    alt: "A small coral sheet on a large near-black field, standing for a root text file"
-    caption: "The file is a list."
+    alt: "A laptop on a desk showing a text file, with a notebook and a pen beside it and no person in the frame"
+    caption: "A plain text file on the laptop."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “What Is llms.txt, and Does Your Business Website Need One?”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/what-is-llms-txt/02.png
     file: what-is-llms-txt-02.jpg

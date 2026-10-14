@@ -9,10 +9,10 @@ primaryQuery: "ai readiness checklist"
 author: christopher-buzny
 cta: "Want these scored instead of ticked? Run the Readiness Check."
 images:
-  - src: /blog/media/ai-readiness-checklist/01.png
+  - src: /blog/media/ai-readiness-checklist/01.webp
     file: ai-readiness-checklist-01.jpg
-    alt: "A single coral ring on a near-black field, standing for one checklist before a purchase"
-    caption: "Finish the list before you buy the tool."
+    alt: "A person holding a clipboard checklist in a stockroom aisle, face turned down toward the page"
+    caption: "The list, in the aisle."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Checklist: 16 Questions to Answer Before You Buy an AI Tool”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-readiness-checklist/02.png
     file: ai-readiness-checklist-02.jpg

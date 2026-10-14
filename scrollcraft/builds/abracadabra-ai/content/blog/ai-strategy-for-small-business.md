@@ -9,10 +9,10 @@ primaryQuery: "ai strategy for small business"
 author: christopher-buzny
 cta: "A one-page plan is a score. Run the Readiness Check."
 images:
-  - src: /blog/media/ai-strategy-for-small-business/01.png
+  - src: /blog/media/ai-strategy-for-small-business/01.webp
     file: ai-strategy-for-small-business-01.jpg
-    alt: "A single coral sheet on a near-black field, standing for a one-page plan"
-    caption: "The plan is one page."
+    alt: "A one-page plan on a cafe table beside a laptop and a coffee cup, with a person's hands on the page and no face shown"
+    caption: "One page, not a deck."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Strategy for Small Business: A One-Page Plan”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-strategy-for-small-business/02.png
     file: ai-strategy-for-small-business-02.jpg

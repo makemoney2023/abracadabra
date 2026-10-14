@@ -9,10 +9,10 @@ primaryQuery: "ai implementation framework"
 author: christopher-buzny
 cta: "Stop at the stage you cannot finish. The check shows which one."
 images:
-  - src: /blog/media/ai-implementation-framework/01.png
+  - src: /blog/media/ai-implementation-framework/01.webp
     file: ai-implementation-framework-01.jpg
-    alt: "Five coral segments in a line, standing for five stages of implementation"
-    caption: "Five stages, in words."
+    alt: "Four numbered steps written on a whiteboard, with two people standing in front of it and their faces turned away"
+    caption: "The steps, written up where the team can see them."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “An AI Implementation Framework for Small Businesses: Five Stages From Pilot to Production”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-implementation-framework/02.png
     file: ai-implementation-framework-02.jpg

@@ -85,6 +85,29 @@ describe("blog content", () => {
     assert.equal(new Set(alts).size, alts.length);
   });
 
+  it("serves each hero photograph as webp with a jpg fallback", async () => {
+    const posts = await loadPosts();
+    const index = await text("blog/index.html");
+    for (const post of posts) {
+      const html = await text(`blog/${post.slug}/index.html`);
+      const webp = `/blog/media/${post.slug}/01.webp`;
+      const jpg = `/blog/media/${post.slug}/01.jpg`;
+      assert.equal(post.images[0].src, webp);
+      const tag = `<picture><source srcset="${webp}" type="image/webp"><img src="${jpg}"`;
+      assert.ok(html.includes(tag), post.slug);
+      assert.ok(index.includes(tag), post.slug);
+      const webpMeta = await sharp(join(root, webp.slice(1))).metadata();
+      const jpgMeta = await sharp(join(root, jpg.slice(1))).metadata();
+      assert.equal(webpMeta.format, "webp", post.slug);
+      assert.equal(webpMeta.width, 1280, post.slug);
+      assert.equal(webpMeta.height, 720, post.slug);
+      assert.equal(jpgMeta.format, "jpeg", post.slug);
+      assert.equal(jpgMeta.width, 1280, post.slug);
+      assert.equal(jpgMeta.height, 720, post.slug);
+      assert.match(html, /<figure class="post-figure"><img src="\/blog\/media\/[^"]+\/02\.png"/);
+    }
+  });
+
   it("publishes 1200×630 previews with alt text", async () => {
     const posts = await loadPosts();
     const stamp = JSON.parse(await text("blog/build-stamp.json"));

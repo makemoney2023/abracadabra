@@ -9,10 +9,10 @@ primaryQuery: "what is an ai agent"
 author: christopher-buzny
 cta: "An agent needs a written process and an owner. Score both."
 images:
-  - src: /blog/media/what-is-an-ai-agent/01.png
+  - src: /blog/media/what-is-an-ai-agent/01.webp
     file: what-is-an-ai-agent-01.jpg
-    alt: "A coral path that branches, standing for an agent choosing its next step"
-    caption: "An agent chooses the next step."
+    alt: "A person at a service counter with a laptop and a notepad, seen from the side so the face stays out of view"
+    caption: "The counter, with a notepad beside the laptop."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “What Is an AI Agent? A Plain-Language Answer for Business Owners”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/what-is-an-ai-agent/02.png
     file: what-is-an-ai-agent-02.jpg

@@ -9,10 +9,10 @@ primaryQuery: "ai readiness framework"
 author: christopher-buzny
 cta: "Score the four groups on your own business."
 images:
-  - src: /blog/media/ai-readiness-framework/01.png
+  - src: /blog/media/ai-readiness-framework/01.webp
     file: ai-readiness-framework-01.jpg
-    alt: "Four coral blocks in a row, standing for data, process, people, and decision"
-    caption: "Four groups, scored in words."
+    alt: "A one-page framework pinned to a workshop wall, with a person standing in front of it and their face out of frame"
+    caption: "The page on the wall."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Framework: Data, Process, People, and Decision”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-readiness-framework/02.png
     file: ai-readiness-framework-02.jpg

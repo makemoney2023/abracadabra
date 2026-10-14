@@ -9,10 +9,10 @@ primaryQuery: "business process automation ai"
 author: christopher-buzny
 cta: "If the steps are not written, the model cannot follow them."
 images:
-  - src: /blog/media/business-process-automation-ai/01.png
+  - src: /blog/media/business-process-automation-ai/01.webp
     file: business-process-automation-ai-01.jpg
-    alt: "A coral path of short segments, standing for a written process"
-    caption: "Write the steps first."
+    alt: "A workshop bench with labeled bins, a clipboard, and a laptop, and a person standing at the bench with their face out of frame"
+    caption: "Labeled bins and a clipboard."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Business Process Automation With AI: Map the Workflow Before You Pick a Tool”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/business-process-automation-ai/02.png
     file: business-process-automation-ai-02.jpg

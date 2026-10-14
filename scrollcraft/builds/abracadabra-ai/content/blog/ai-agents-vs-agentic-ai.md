@@ -9,10 +9,10 @@ primaryQuery: "ai agents vs agentic ai"
 author: christopher-buzny
 cta: "If you cannot name the checker, you do not have an agent yet."
 images:
-  - src: /blog/media/ai-agents-vs-agentic-ai/01.png
+  - src: /blog/media/ai-agents-vs-agentic-ai/01.webp
     file: ai-agents-vs-agentic-ai-01.jpg
-    alt: "A single coral node with two cyan links, standing for an agent choosing tools"
-    caption: "An agent chooses tools."
+    alt: "Two people at a workbench, one holding a pen over a sheet and the other holding a phone, faces turned away"
+    caption: "A pen on paper, a phone in the other hand."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Agents vs Agentic AI: What's the Difference for a Business?”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-agents-vs-agentic-ai/02.png
     file: ai-agents-vs-agentic-ai-02.jpg

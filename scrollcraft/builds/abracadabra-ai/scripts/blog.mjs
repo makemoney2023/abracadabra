@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,7 +15,7 @@ export const ORG_ID = `${SITE}/#org`;
 export const WEBSITE_ID = `${SITE}/#website`;
 
 const imageSchema = z.object({
-  src: z.string().regex(/^\/blog\/media\/[a-z0-9-]+\/0[123]\.png$/),
+  src: z.string().regex(/^\/blog\/media\/[a-z0-9-]+\/0[123]\.(?:png|webp)$/),
   file: z.string().regex(/^[a-z0-9-]+\.jpg$/),
   alt: z.string().min(12),
   caption: z.string().min(8).optional(),
@@ -165,9 +165,28 @@ function ogSvg(title, eyebrow) {
 </svg>`;
 }
 
-async function writeOg(title, eyebrow, dest) {
+const HERO_WIDTH = 1280;
+const HERO_HEIGHT = 720;
+
+function imageSize(image) {
+  return image.src.endsWith(".webp")
+    ? { width: HERO_WIDTH, height: HERO_HEIGHT }
+    : { width: 1600, height: 900 };
+}
+
+function picture(image) {
+  const { width, height } = imageSize(image);
+  const fallback = image.src.endsWith(".webp") ? image.src.replace(/\.webp$/, ".jpg") : image.src;
+  const img = `<img src="${esc(fallback)}" alt="${esc(image.alt)}" width="${width}" height="${height}">`;
+  if (!image.src.endsWith(".webp")) return img;
+  return `<picture><source srcset="${esc(image.src)}" type="image/webp">${img}</picture>`;
+}
+
+async function writeOg(title, eyebrow, dest, photo) {
   const plate = join(root, "content/images/og-plate.jpg");
-  const base = existsSync(plate)
+  const base = photo && existsSync(photo)
+    ? await sharp(photo).resize(1200, 630, { fit: "cover", position: "centre" }).png().toBuffer()
+    : existsSync(plate)
     ? await sharp(plate).resize(1200, 630, { fit: "cover", position: "right" }).png().toBuffer()
     : await sharp({
       create: { width: 1200, height: 630, channels: 3, background: "#070706" },
@@ -186,7 +205,7 @@ async function writeOg(title, eyebrow, dest) {
 function figure(image, kind = "inline") {
   const caption = image.caption ? `<figcaption>${esc(image.caption)}</figcaption>` : "";
   const cls = kind === "hero" ? "content-hero-photo" : "post-figure";
-  return `<figure class="${cls}"><img src="${esc(image.src)}" alt="${esc(image.alt)}" width="1600" height="900">${caption}</figure>`;
+  return `<figure class="${cls}">${picture(image)}${caption}</figure>`;
 }
 
 function headingId(html) {
@@ -219,7 +238,7 @@ function tocFrom(html) {
 }
 
 function postCard(post) {
-  return `<li><a href="/blog/${post.slug}"><span class="post-card-photo"><img src="${esc(post.images[0].src)}" alt="${esc(post.images[0].alt)}" width="1600" height="900"></span><strong>${esc(post.title)}</strong><span class="card-dek">${esc(post.description)}</span></a></li>`;
+  return `<li><a href="/blog/${post.slug}"><span class="post-card-photo">${picture(post.images[0])}</span><strong>${esc(post.title)}</strong><span class="card-dek">${esc(post.description)}</span></a></li>`;
 }
 
 function authorBox() {
@@ -273,13 +292,16 @@ function relatedPosts(post, posts) {
 
 function graphForPost(post, htmlPath) {
   const url = `${SITE}/blog/${post.slug}`;
-  const images = post.images.map((image) => ({
-    "@type": "ImageObject",
-    url: `${SITE}${image.src}`,
-    width: 1600,
-    height: 900,
-    caption: image.alt,
-  }));
+  const images = post.images.map((image) => {
+    const { width, height } = imageSize(image);
+    return {
+      "@type": "ImageObject",
+      url: `${SITE}${image.src}`,
+      width,
+      height,
+      caption: image.alt,
+    };
+  });
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -425,13 +447,22 @@ async function renderPost(post, posts) {
   const live = isPublic(post);
   const ogPath = `/blog/og/${post.slug}.png`;
   const ogAlt = `${post.title} — Abracadabra AI`;
-  await writeOg(post.title, "ABRACADABRA AI", join(root, ogPath.slice(1)));
+  const heroSource = join(root, "content/images", post.images[0].file);
+  await writeOg(post.title, "ABRACADABRA AI", join(root, ogPath.slice(1)), heroSource);
   for (const image of post.images) {
     const source = join(root, "content/images", image.file);
     const dest = join(root, image.src.slice(1));
     if (!existsSync(source)) throw new Error(`Missing image source ${image.file} for ${post.slug}`);
     await mkdir(dirname(dest), { recursive: true });
-    await sharp(source).resize(1600, 900, { fit: "cover" }).png().toFile(dest);
+    if (image.src.endsWith(".webp")) {
+      const sized = sharp(source).resize(HERO_WIDTH, HERO_HEIGHT, { fit: "cover", position: "centre" });
+      await sized.clone().webp({ quality: 76, effort: 4 }).toFile(dest);
+      await sized.clone().jpeg({ quality: 78, mozjpeg: true }).toFile(dest.replace(/\.webp$/, ".jpg"));
+      const stalePng = dest.replace(/\.webp$/, ".png");
+      if (existsSync(stalePng)) await unlink(stalePng);
+    } else {
+      await sharp(source).resize(1600, 900, { fit: "cover" }).png().toFile(dest);
+    }
   }
   const related = relatedPosts(post, posts);
   const sources = post.citations.map((citation) => {

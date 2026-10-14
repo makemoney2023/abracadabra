@@ -9,10 +9,10 @@ primaryQuery: "how to use ai in your business"
 author: christopher-buzny
 cta: "Twelve examples are still a list. Score the one job you would hand over."
 images:
-  - src: /blog/media/how-to-use-ai-in-your-business/01.png
+  - src: /blog/media/how-to-use-ai-in-your-business/01.webp
     file: how-to-use-ai-in-your-business-01.jpg
-    alt: "Twelve short coral ticks in two rows, standing for twelve written jobs"
-    caption: "Twelve jobs, each with a stop."
+    alt: "A person at a laptop in a home office, seen from behind, with a notebook and a mug on the desk"
+    caption: "The desk the owner already uses."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “How to Use AI in Your Business: 12 Examples by Team”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/how-to-use-ai-in-your-business/02.png
     file: how-to-use-ai-in-your-business-02.jpg

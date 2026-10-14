@@ -9,10 +9,10 @@ primaryQuery: "off the shelf ai or custom software"
 author: christopher-buzny
 cta: "If a product already does the job, the check will not tell you to build it."
 images:
-  - src: /blog/media/off-the-shelf-ai-or-custom-software/01.png
+  - src: /blog/media/off-the-shelf-ai-or-custom-software/01.webp
     file: off-the-shelf-ai-or-custom-software-01.jpg
-    alt: "A finished cyan block beside an unfinished coral frame, standing for buy versus build"
-    caption: "Buy the finished job."
+    alt: "A laptop on a wooden desk beside a plain software box, photographed from above with no person in the frame"
+    caption: "A laptop and a box on the desk."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Off-the-Shelf AI Tools or Custom Software? How a Small Business Should Decide”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/off-the-shelf-ai-or-custom-software/02.png
     file: off-the-shelf-ai-or-custom-software-02.jpg

@@ -9,10 +9,10 @@ primaryQuery: ai readiness assessment
 author: christopher-buzny
 cta: "Score your business on all four in five to seven minutes."
 images:
-  - src: /blog/media/ai-readiness-assessment/01.png
+  - src: /blog/media/ai-readiness-assessment/01.webp
     file: readiness-hero.jpg
-    alt: "Dark diagram of four stacked plates standing for data, process, people, and the decision"
-    caption: "Four things a readiness score can name."
+    alt: "A person at a desk with a checklist, a calculator, and a laptop, seen over the shoulder so the face stays out of frame"
+    caption: "A checklist, a calculator, and the books."
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four stacked glass plates in a row, each a different height, lit with a coral edge and a pale cyan rim. Studio product lighting, 16:9."
   - src: /blog/media/ai-readiness-assessment/02.png
     file: readiness-compare.jpg
