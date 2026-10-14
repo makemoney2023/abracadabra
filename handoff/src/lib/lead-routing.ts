@@ -2,8 +2,8 @@ import type { Sql } from "../db/sql";
 
 /**
  * Schema-check score cutoff. A low schema score means the site needs our work,
- * so score < 70 is ready for outbound (Account Research enriches, then Sales Outbound).
- * Score >= 70 is nurture, shown as "C quality" on the leads board.
+ * so score <= 70 is ready for outbound (Account Research enriches, then Sales Outbound).
+ * Score > 70 is nurture, shown as "C quality" on the leads board.
  */
 export const LEAD_READY_THRESHOLD = 70;
 
@@ -18,7 +18,7 @@ export const ROUTING_LABEL: Record<RoutingStatus, string> = {
 
 export function routingFor(score: number | null | undefined): RoutingStatus | null {
   if (typeof score !== "number" || !Number.isFinite(score)) return null;
-  return score < LEAD_READY_THRESHOLD ? "ready_for_outbound" : "nurture";
+  return score <= LEAD_READY_THRESHOLD ? "ready_for_outbound" : "nurture";
 }
 
 export function routingStatusOf(value: string | null | undefined): RoutingStatus | null {

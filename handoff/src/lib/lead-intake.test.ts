@@ -108,11 +108,12 @@ describe("lead consume", () => {
 });
 
 describe("threshold routing", () => {
-  it("score below 70 is ready for outbound, 70 and above is nurture", () => {
+  it("score 70 or lower is ready for outbound, above 70 is nurture", () => {
     expect(LEAD_READY_THRESHOLD).toBe(70);
     expect(routingFor(40)).toBe("ready_for_outbound");
     expect(routingFor(69)).toBe("ready_for_outbound");
-    expect(routingFor(70)).toBe("nurture");
+    expect(routingFor(70)).toBe("ready_for_outbound");
+    expect(routingFor(71)).toBe("nurture");
     expect(routingFor(95)).toBe("nurture");
     expect(routingFor(null)).toBeNull();
   });

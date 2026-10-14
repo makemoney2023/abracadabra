@@ -61,7 +61,7 @@ When a task moves to build, Handoff starts a Cursor cloud run if the brief and t
 
 ### BDR lead intake and scored-lead export
 
-`POST /api/intake/lead` takes a BDR prospect signed the same way as the other intakes, but with `LEAD_AGENT_SIGNING_SECRET`. Required: `external_id`, and `email` or `domain`. It opens a lead and a `bdr` deal, then the queue starts the schema scan. When the scan finishes (`scan_ready`), the deal gets `lead_score`, `scored_at`, and `routing_status`: score below `LEAD_READY_THRESHOLD` (70, `src/lib/lead-routing.ts`) is `ready_for_outbound`; 70 and above is `nurture` ("C quality"). The Readiness Check survey does not set routing.
+`POST /api/intake/lead` takes a BDR prospect signed the same way as the other intakes, but with `LEAD_AGENT_SIGNING_SECRET`. Required: `external_id`, and `email` or `domain`. It opens a lead and a `bdr` deal, then the queue starts the schema scan. When the scan finishes (`scan_ready`), the deal gets `lead_score`, `scored_at`, and `routing_status`: score at or below `LEAD_READY_THRESHOLD` (70, `src/lib/lead-routing.ts`) is `ready_for_outbound`; above 70 is `nurture` ("C quality"). The Readiness Check survey does not set routing.
 
 `GET /api/leads/export?status=ready_for_outbound&since=ISO` is read-only, needs `Authorization: Bearer $LEAD_EXPORT_TOKEN`, and returns each lead with its schema score, schema report link, and a `survey_url` to the Readiness Check with `utm_source=outbound` and `utm_content=deal_<id>`.
 
