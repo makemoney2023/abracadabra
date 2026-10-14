@@ -1,0 +1,410 @@
+{
+  "ai-readiness-checklist": [
+    {
+      "slot": "hero",
+      "heading": "AI Readiness Checklist Before You Buy a Tool",
+      "show": "A clipboard with the checklist still open, sitting in front of a software box that has not been opened."
+    },
+    {
+      "slot": "body1",
+      "heading": "Data and process",
+      "show": "A spreadsheet printout beside a hand-drawn flowchart, the data and the written process before any purchase."
+    },
+    {
+      "slot": "body2",
+      "heading": "People and the decision",
+      "show": "An approval stamp and a still-closed laptop next to a short list, the decision that comes after the people questions."
+    }
+  ],
+  "ai-readiness-assessment": [
+    {
+      "slot": "hero",
+      "heading": "AI Readiness Assessment: What It Measures and How to Score",
+      "show": "Four labeled folders for data, process, people, and the decision, the groups this assessment scores."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the public tools measure",
+      "show": "Four different scorecards side by side, one each for the Cisco index, the OECD list, the AWS checklist, and the Readiness Check."
+    },
+    {
+      "slot": "body2",
+      "heading": "What each band means",
+      "show": "Four stacked bands labeled Early, Forming, Ready, and Running, with the score ranges this note uses."
+    }
+  ],
+  "ai-readiness-assessment-questionnaire": [
+    {
+      "slot": "hero",
+      "heading": "AI Readiness Assessment Questionnaire: The Themes",
+      "show": "A short questionnaire with the themes named and the tool question left blank at the bottom."
+    },
+    {
+      "slot": "body1",
+      "heading": "What a public checklist does not claim",
+      "show": "A public checklist page with the adoption-rate line left empty, because the page does not publish one."
+    },
+    {
+      "slot": "body2",
+      "heading": "What a public checklist does not claim",
+      "show": "The same questionnaire turned over to a blank score line, a list of questions with no published readiness rate."
+    }
+  ],
+  "ai-readiness-framework": [
+    {
+      "slot": "hero",
+      "heading": "An AI Readiness Framework an Owner Can Score",
+      "show": "A one-page scoring sheet with words filled in for data, process, people, and the decision."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the bands mean",
+      "show": "Four bands on a sheet, Early through Running, with a pencil stopped on the band that matches the written answers."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the bands mean",
+      "show": "The scoring sheet next to a closed laptop, the band chosen before any tool is bought."
+    }
+  ],
+  "is-my-business-ready-for-ai": [
+    {
+      "slot": "hero",
+      "heading": "Is My Business Ready for AI? Signs to Read First",
+      "show": "Four everyday signs on a desk, a current file, a written process, a named person, and a stop rule."
+    },
+    {
+      "slot": "body1",
+      "heading": "What a large-firm index is counting",
+      "show": "A thick enterprise index beside a small-shop scorecard, the large-firm count set next to one owner's band."
+    },
+    {
+      "slot": "body2",
+      "heading": "What a large-firm index is counting",
+      "show": "The small-shop scorecard with one band circled, the sign this note says to read before buying."
+    }
+  ],
+  "ai-ready-data": [
+    {
+      "slot": "hero",
+      "heading": "AI-Ready Data: What a Small Business Needs First",
+      "show": "One current labeled folder in front of a stack of unreadable loose papers."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the research counts",
+      "show": "Three states side by side: a clean source of truth, a pile of unreadable documents, and one system that can read the file."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the research counts",
+      "show": "A project folder held back by a paper that a system cannot read, the data gap the research is counting."
+    }
+  ],
+  "ai-implementation-framework": [
+    {
+      "slot": "hero",
+      "heading": "An AI Implementation Framework in Five Stages",
+      "show": "Five stepping stones from a named job to a kept or stopped system."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the numbers say about the middle",
+      "show": "The middle stones crowded with unfinished papers, the stage where use is common and scaling is not."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the numbers say about the middle",
+      "show": "A checklist card on the last stone, the point where someone decides to keep the system or stop it."
+    }
+  ],
+  "why-ai-pilots-stall": [
+    {
+      "slot": "hero",
+      "heading": "Why AI Pilots Stall After the Demo",
+      "show": "A polished demo screen on a laptop and, beside it, an unfinished process still on paper."
+    },
+    {
+      "slot": "body1",
+      "heading": "Use is not scaling",
+      "show": "Many small pilots on the left and one system actually kept in a filing tray on the right."
+    },
+    {
+      "slot": "body2",
+      "heading": "Use is not scaling",
+      "show": "A paper airplane aimed into an open filing tray, a pilot being moved into a record someone will keep."
+    }
+  ],
+  "ai-for-small-business-2027": [
+    {
+      "slot": "hero",
+      "heading": "AI for Small Business: What the Surveys Still Say",
+      "show": "Two survey forms on a desk, each asking a different question about AI."
+    },
+    {
+      "slot": "body1",
+      "heading": "Two questions, two answers",
+      "show": "Two question cards beside two different answer cards, one checked and one barred, the two questions this note will not collapse."
+    },
+    {
+      "slot": "body2",
+      "heading": "Two questions, two answers",
+      "show": "The two answer cards kept apart, generative use on one and production use on the other."
+    }
+  ],
+  "ai-consultant-for-small-business": [
+    {
+      "slot": "hero",
+      "heading": "AI Consultant for Small Business: What to Ask",
+      "show": "A short list of questions an owner would ask across a table before hiring anyone."
+    },
+    {
+      "slot": "body1",
+      "heading": "What gets canceled",
+      "show": "A stack of project folders with several marked canceled, the forecast this note cites."
+    },
+    {
+      "slot": "body2",
+      "heading": "What gets canceled",
+      "show": "An open laptop covered with warning flags, the red flags this consultant note names."
+    }
+  ],
+  "ai-automation-for-small-business": [
+    {
+      "slot": "hero",
+      "heading": "AI Automation for Small Business: Which Job First",
+      "show": "Several job cards on a desk with one pulled forward as the first job to automate."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the surveys already count",
+      "show": "Bar marks beside the jobs the surveys already count, with the first-job card still separate."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the surveys already count",
+      "show": "Clipboards for the counted jobs and a single card held out, the job this note says to pick first."
+    }
+  ],
+  "ai-strategy-for-small-business": [
+    {
+      "slot": "hero",
+      "heading": "AI Strategy for Small Business: Start With the Job",
+      "show": "A one-page plan that names the job, the data, and the person who checks the output."
+    },
+    {
+      "slot": "body1",
+      "heading": "Use is ahead of the plan",
+      "show": "A marked blueprint on the left and a loose pile of tool notes on the right, a written plan set apart from scattered use."
+    },
+    {
+      "slot": "body2",
+      "heading": "Use is ahead of the plan",
+      "show": "Staff already using tools on sticky notes while the written plan page is still mostly blank."
+    }
+  ],
+  "business-process-automation-ai": [
+    {
+      "slot": "hero",
+      "heading": "Business Process Automation With AI: Write the Job",
+      "show": "A process written as boxes and arrows before any software box is opened."
+    },
+    {
+      "slot": "body1",
+      "heading": "The process is the product",
+      "show": "Three interlocking gears with one card held back by a clip, the process step that still waits for a judgment."
+    },
+    {
+      "slot": "body2",
+      "heading": "The process is the product",
+      "show": "The written process pinned above a closed laptop, the job on paper before the model is added."
+    }
+  ],
+  "how-to-use-ai-in-your-business": [
+    {
+      "slot": "hero",
+      "heading": "How to Use AI in Your Business: Twelve Jobs",
+      "show": "A closed laptop ringed with the task objects this note says to write down before using AI."
+    },
+    {
+      "slot": "body1",
+      "heading": "Twelve jobs you can write down",
+      "show": "Labeled trays for invoices, a calendar, quotes, and an inbox, jobs this note says an owner can hand to a system."
+    },
+    {
+      "slot": "body2",
+      "heading": "Twelve jobs you can write down",
+      "show": "One tray pulled out with a person's initials on the check step, the output still waiting for a human."
+    }
+  ],
+  "how-can-ai-help-small-businesses": [
+    {
+      "slot": "hero",
+      "heading": "How Can AI Help a Small Business? What Surveys Count",
+      "show": "Two survey clipboards, one for generative use and one for production use, kept on opposite sides of the desk."
+    },
+    {
+      "slot": "body1",
+      "heading": "Generative use is not production use",
+      "show": "Draft pages in one tray and a filing tray for finished work in the other, drafts kept apart from production."
+    },
+    {
+      "slot": "body2",
+      "heading": "Jobs an owner can hand over",
+      "show": "A row of ordinary job folders an owner can name, each with a space for who still checks the output."
+    }
+  ],
+  "ai-automation-agency-vs-consultant": [
+    {
+      "slot": "hero",
+      "heading": "AI Automation Agency vs Consultant: Who to Hire",
+      "show": "Two chairs and two folders, one for naming the job and one for building it, the hiring split this note makes."
+    },
+    {
+      "slot": "body1",
+      "heading": "Two training figures, two populations",
+      "show": "Two different training charts on the desk, because the two surveys count different groups of people."
+    },
+    {
+      "slot": "body2",
+      "heading": "Two training figures, two populations",
+      "show": "A hiring checklist with the naming work checked and the build work still blank."
+    }
+  ],
+  "off-the-shelf-ai-or-custom-software": [
+    {
+      "slot": "hero",
+      "heading": "Off-the-Shelf AI or Custom Software",
+      "show": "A sealed product box on one side and a custom-built tray of parts on the other."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the surveys count",
+      "show": "Survey tally marks beside the product box, the counts of firms already using generative tools."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the surveys count",
+      "show": "The product box left closed because the job on the card is specific to this one business."
+    }
+  ],
+  "ai-agents-for-business": [
+    {
+      "slot": "hero",
+      "heading": "AI Agents for Business: When to Use One",
+      "show": "Eight job trays in a row, each with a stop button in front, an agent job held until a person decides."
+    },
+    {
+      "slot": "body1",
+      "heading": "Eight jobs, each with a stop",
+      "show": "The eight job trays matching the comparison table, each labeled with the job and what the person still does."
+    },
+    {
+      "slot": "body2",
+      "heading": "Eight jobs, each with a stop",
+      "show": "Four of those jobs paused at a stop button, the point where a person still has to decide."
+    }
+  ],
+  "what-is-an-ai-agent": [
+    {
+      "slot": "hero",
+      "heading": "What Is an AI Agent? A Plain Answer for Owners",
+      "show": "A small desk robot at a fork of paths, inside a boundary an owner set."
+    },
+    {
+      "slot": "body1",
+      "heading": "When a workflow is enough",
+      "show": "Three lanes matching the table: one blank card, a straight path of steps, and a robot at a branching fork."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the survey actually counts",
+      "show": "Wooden bars of different heights beside a closed notebook, the survey counts kept separate from the definition."
+    }
+  ],
+  "ai-agents-vs-agentic-ai": [
+    {
+      "slot": "hero",
+      "heading": "AI Agents vs Agentic AI: A Plain Split",
+      "show": "One small robot on a straight path beside a crowd of robots at a branching fork."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the forecast says",
+      "show": "A forecast sheet with a large share of project folders marked to be canceled."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the forecast says",
+      "show": "The single robot kept, and the wider crowd of robots set aside, the split this note recommends."
+    }
+  ],
+  "answer-engine-optimization": [
+    {
+      "slot": "hero",
+      "heading": "Answer Engine Optimization: What Google Still Requires",
+      "show": "A search results page with an ordinary blue link still present under a short answer summary."
+    },
+    {
+      "slot": "body1",
+      "heading": "What the research measured",
+      "show": "A research sheet counting visibility, set next to a click counter that has dropped."
+    },
+    {
+      "slot": "body2",
+      "heading": "What the research measured",
+      "show": "A well-structured page, headings and a clear answer, the thing Google still says to write."
+    }
+  ],
+  "generative-engine-optimization-vs-seo": [
+    {
+      "slot": "hero",
+      "heading": "Generative Engine Optimization vs SEO",
+      "show": "Two labels, GEO and SEO, pinned to the same page, because this note says the work is still the page."
+    },
+    {
+      "slot": "body1",
+      "heading": "What changes, and what does not",
+      "show": "A page that can be quoted by a summary and still clicked as an ordinary result."
+    },
+    {
+      "slot": "body2",
+      "heading": "What changes, and what does not",
+      "show": "The same page with the click count lower when a summary appears, the Pew finding this note keeps."
+    }
+  ],
+  "how-to-get-your-business-to-show-up-in-chatgpt": [
+    {
+      "slot": "hero",
+      "heading": "How to Show Up in ChatGPT and AI Overviews",
+      "show": "A website folder, a crawler note, and a search box, the indexing problem this note describes."
+    },
+    {
+      "slot": "body1",
+      "heading": "What Google says to do",
+      "show": "Google's ordinary SEO checklist beside an AI overview panel, the advice this note says has not changed."
+    },
+    {
+      "slot": "body2",
+      "heading": "What Google says to do",
+      "show": "A crawler file and a clean page title, the practical steps before anyone chases a new acronym."
+    }
+  ],
+  "what-is-llms-txt": [
+    {
+      "slot": "hero",
+      "heading": "What Is llms.txt, and Who Actually Reads It",
+      "show": "A single text file labeled llms.txt on a desk, with a question mark over who fetches it."
+    },
+    {
+      "slot": "body1",
+      "heading": "What a crawl of the files found",
+      "show": "A large stack of llms.txt files and only a thin few marked as ever requested."
+    },
+    {
+      "slot": "body2",
+      "heading": "What a crawl of the files found",
+      "show": "Google's note that it does not use the file, placed on top of the unread stack."
+    }
+  ]
+}

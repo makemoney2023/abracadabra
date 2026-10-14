@@ -183,9 +183,47 @@ async function writeOg(title, eyebrow, dest) {
   }
 }
 
-function figure(image) {
+function figure(image, kind = "inline") {
   const caption = image.caption ? `<figcaption>${esc(image.caption)}</figcaption>` : "";
-  return `<figure><img src="${esc(image.src)}" alt="${esc(image.alt)}" width="1600" height="900">${caption}</figure>`;
+  const cls = kind === "hero" ? "content-hero-photo" : "post-figure";
+  return `<figure class="${cls}"><img src="${esc(image.src)}" alt="${esc(image.alt)}" width="1600" height="900">${caption}</figure>`;
+}
+
+function headingId(html) {
+  const text = html.replace(/<[^>]+>/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return text || "section";
+}
+
+function decorateProse(html) {
+  html = html.replace(/<p>([^<]{24,}?[.!?])(\s)/, "<p><strong>$1</strong>$2");
+  html = html.replace(/<h2>([\s\S]*?)<\/h2>/g, (_, inner) => `<h2 id="${headingId(inner)}">${inner}</h2>`);
+  html = html.replace(/<table>[\s\S]*?<\/table>/g, (table) => `<div class="extraction-table">${table}</div>`);
+  return html;
+}
+
+function statCallout(post) {
+  const text = post.body
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\[\^[^\]]+\]/g, "");
+  const match = text.match(/[^.!\n]{0,180}\d{1,3}%[^.!\n]{0,180}/);
+  if (!match) return "";
+  const sentence = match[0].replace(/\s+/g, " ").trim();
+  const value = sentence.match(/\d{1,3}%/)[0];
+  return `<figure class="key-stat"><dl><dt>Cited in this note</dt><dd>${esc(value)}</dd></dl><figcaption>${esc(sentence)}</figcaption></figure>`;
+}
+
+function tocFrom(html) {
+  const heads = [...html.matchAll(/<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g)];
+  const items = heads.map(([, id, inner]) => `<li><a href="#${id}">${inner.replace(/<[^>]+>/g, "")}</a></li>`).join("");
+  return `<nav class="post-toc" aria-label="On this page"><p>On this page</p><ol>${items}<li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></nav>`;
+}
+
+function postCard(post) {
+  return `<li><a href="/blog/${post.slug}"><span class="post-card-photo"><img src="${esc(post.images[0].src)}" alt="${esc(post.images[0].alt)}" width="1600" height="900"></span><strong>${esc(post.title)}</strong><span class="card-dek">${esc(post.description)}</span></a></li>`;
+}
+
+function authorBox() {
+  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. The studio builds software around how a company already works. Credentials, education, and personal profile links stay off this page until Christopher confirms them.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
 }
 
 function renderMarkdown(post) {
@@ -214,7 +252,7 @@ function renderMarkdown(post) {
     throw new Error(`${post.slug} is missing the inline CTA marker`);
   }
   html = html.replace("<!--cta:inline-->", ctaBlock(post, "inline"));
-  return html;
+  return decorateProse(html);
 }
 
 function ctaBlock(post, placement) {
@@ -396,36 +434,47 @@ async function renderPost(post, posts) {
     await sharp(source).resize(1600, 900, { fit: "cover" }).png().toFile(dest);
   }
   const related = relatedPosts(post, posts);
-  const sources = post.citations.map((citation, index) => {
+  const sources = post.citations.map((citation) => {
     const date = citation.datePublished ? ` ${esc(citation.datePublished)}.` : "";
     return `<li id="source-${citation.id}"><a href="${esc(citation.url)}">${esc(citation.title)}</a>. ${esc(citation.publisher)}.${date}</li>`;
   }).join("");
-  const faqs = post.faqs.map((faq) => `<h3>${esc(faq.question)}</h3><p>${esc(faq.answer)}</p>`).join("");
-  const relatedHtml = related.map((item) => `<li><a href="/blog/${item.slug}">${esc(item.title)}</a></li>`).join("");
+  const faqs = post.faqs.map((faq) => `<details><summary>${esc(faq.question)}</summary><p>${esc(faq.answer)}</p></details>`).join("");
+  const relatedHtml = related.map((item) => postCard(item)).join("");
   const allNotes = posts
     .filter((item) => item.slug !== post.slug)
     .map((item) => `<li><a href="/blog/${item.slug}">${esc(item.title)}</a></li>`)
     .join("");
-  const body = `<main>
+  const prose = renderMarkdown(post).replace("</p>", `</p>\n${statCallout(post)}`);
+  const body = `<main class="blog-post">
+<header class="content-hero">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }, { name: post.title, href: `/blog/${post.slug}` }])}
-<article>
+<div class="hero-copy">
 <p class="kicker">${esc(post.pillar)} · ${esc(post.primaryQuery)}</p>
 <h1>${esc(post.title)}</h1>
 <p class="dek">${esc(post.description)}</p>
 <p class="byline">By <a href="/about/christopher-buzny">Christopher Buzny</a> · <time datetime="${post.datePublished}">${post.datePublished}</time></p>
 ${live ? "" : `<p class="scheduled">Scheduled for ${esc(post.datePublished)}. This preview is not in the public index yet.</p>`}
-${figure(post.images[0])}
-<div class="prose">
-${renderMarkdown(post)}
 </div>
-<section id="faq"><h2>Questions</h2>${faqs}</section>
+${figure(post.images[0], "hero")}
+</header>
+<div class="post-layout">
+<article>
+<div class="prose post-prose">
+${prose}
+</div>
+<section id="faq"><h2>Questions</h2><div class="faq-list">${faqs}</div></section>
 <section id="sources"><h2>Sources</h2><ol>${sources}</ol></section>
-<section id="related"><h2>Related</h2><ul>${relatedHtml}</ul></section>
+${authorBox()}
+<section id="related" class="post-related"><h2>Related</h2><ul class="cards">${relatedHtml}</ul></section>
 <section id="all-notes"><h2>All notes</h2><ul>${allNotes}</ul></section>
 ${ctaBlock(post, "close")}
 </article>
-${ctaBlock(post, "sticky")}
-</main>`;
+<aside class="post-aside">
+${tocFrom(prose)}
+</aside>
+</div>
+</main>
+${ctaBlock(post, "sticky")}`;
   const html = pageShell({
     title: `${post.title} | Abracadabra AI`,
     description: post.description,
@@ -478,12 +527,17 @@ async function renderIndex(posts) {
   const ogAlt = "Abracadabra AI blog — notes on AI for operators";
   await writeOg("Notes on AI for operators", "BLOG", join(root, "blog/og/index.png"));
   const cards = live.length
-    ? `<ul class="cards">${live.map((post) => `<li><a href="/blog/${post.slug}"><img src="${esc(post.images[0].src)}" alt="${esc(post.images[0].alt)}" width="1600" height="900"><h2>${esc(post.title)}</h2><p>${esc(post.description)}</p></a></li>`).join("")}</ul>`
+    ? `<ul class="cards">${live.map((post) => postCard(post)).join("")}</ul>`
     : `<p class="empty">No note is public yet. Each one appears here on its publish date, with the sources and the Readiness Check link in the page.</p>`;
-  const body = `<main>
+  const body = `<main class="blog-index">
+<header class="content-hero blog-index-hero">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }])}
+<div class="hero-copy">
+<p class="kicker">Notes</p>
 <h1>Blog</h1>
 <p class="dek">Notes for owners who want AI to take a task, and who want the source of every number on the page.</p>
+</div>
+</header>
 ${cards}
 </main>`;
   const html = pageShell({

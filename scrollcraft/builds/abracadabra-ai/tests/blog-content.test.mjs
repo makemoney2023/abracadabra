@@ -73,6 +73,16 @@ describe("blog content", () => {
       assert.equal(prompts[slug]?.length, 3, slug);
       assert.ok(prompts[slug].every((prompt) => prompt.trim().length >= 40));
     }
+    const posts = await loadPosts();
+    const alts = [];
+    for (const post of posts) {
+      post.images.forEach((image, index) => {
+        assert.equal(prompts[post.slug][index], image.prompt, post.slug);
+        assert.ok(image.alt.length >= 40, image.alt);
+        alts.push(image.alt);
+      });
+    }
+    assert.equal(new Set(alts).size, alts.length);
   });
 
   it("publishes 1200×630 previews with alt text", async () => {

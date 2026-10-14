@@ -44,21 +44,70 @@ citations:
     publisher: "U.S. Chamber of Commerce"
     figures: ["58", "40", "23", "2024", "2023", "2025"]
 ---
+AI automation for a small business is a choice of which job goes first, not a catalog of tools. We score a candidate on four things, in words. How often the job happens. How stable the rules are. Whether a system can read the data. What a wrong answer costs. High volume, stable rules, readable data, and a cheap catch belong first. A rare decision with an expensive mistake does not, no matter how glamorous the demo made it look.
 
-AI automation for a small business is a choice of job, not a catalog of tools. Score a candidate on four things, in words: how often it happens, how stable the rules are, whether a system can read the data, and what a wrong answer costs. High volume, stable rules, readable data, and a cheap catch belong first. A rare decision with an expensive mistake does not.
+The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is where we ask the work to show its slow spot. The [mapping note](/blog/business-process-automation-ai) is the step before a tool, when the job is still a story in someone's head. The [agency note](/blog/ai-automation-agency-vs-consultant) is the hiring question that comes after you know the job and not before. If you hire first, you will be sold a stack. The stack is not the decision.
 
-The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) asks where the work slows down. The [mapping note](/blog/business-process-automation-ai) is the step before a tool. The [agency note](/blog/ai-automation-agency-vs-consultant) is the hiring question that comes after.
+Owners tell us they want "automation" the way a person wants a cleaner garage. They want the feeling of less mess. The feeling arrives, if it arrives, after one ugly repeated job gets a written path. It does not arrive because a menu of features was long.
 
 ## What the surveys already count
 
-Statistics Canada, for the second quarter of 2025, found that 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier.[^statcan] Among businesses that used AI, text analytics accounted for 35.7% and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff.
+Statistics Canada, for the second quarter of 2025, found that 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier.[^statcan] Among businesses that used AI, text analytics accounted for 35.7% and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. Read that as a queue, not as a ranking of your character. Sorting text shows up. Marketing that can be counted shows up. New workflows and trained people show up beside the tool, which is the part vendors mention last.
 
 <!--image:2-->
 
-The Chamber's 2025 report says 58% of small businesses use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber] That is a different question. Opening a generative tool is not the same as putting AI inside delivery.
+The Chamber's 2025 report says 58% of small businesses use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber] That is a different question. Opening a generative tool is not the same as putting AI inside delivery. A shop can live inside the Chamber figure and outside the Statistics Canada figure on the same afternoon. If a seller quotes only the larger share, ask them to say the smaller one too. The smaller one is closer to the job you are about to change.
 
 <!--cta:inline-->
 
-Read the StatCan list as the practical queue: sort text, run marketing that can be measured, write a workflow that did not exist, and train the people who will run it. Run the four-part test on each one before you buy anything.
+Read the StatCan list as the practical queue: sort text, run marketing that can be measured, write a workflow that did not exist, and train the people who will run it. Run the four-part test on each one before you buy anything. A job that fails the test can still be done by a person. That is not a defeat. That is the test working.
 
 <!--image:3-->
+
+## A worked example
+
+Come behind the counter of a small distributor that sells parts to repair shops. Walk-through only. We are not claiming a measured outcome. The owner still knows the odd customers by voice. A bookkeeper posts invoices three mornings a week. A floor lead pulls orders. Someone, often the owner's niece, is "in charge of social" in the sense that she feels guilty about it.
+
+Three piles sit on the desk, and only one of them deserves a machine.
+
+The invoice pile is boring and constant. Vendors send scans. The lines repeat. The rules are dull and mostly stable: match the vendor, match the amount, flag a duplicate, do not invent a category the bookkeeper has not approved. The data can be read if the scan is decent, and when it cannot, a person still has the paper. A wrong suggestion costs a correction before anything is posted, as long as the bookkeeper is the one who posts. This pile passes the test. It is the job we would touch first.
+
+The social pile looks easier and is a worse first job than people think. The niece can already draft a caption with a generative tool. That is the Chamber kind of use, and it is fine. Marketing automation, in the Statistics Canada sense among businesses already using AI, is a real category. It still fails our test if nobody knows what a good post is for, or if the product names change every week because the floor lead hears them wrong. Volume is low. Rules are mushy. A wrong caption is usually cheap, which is the only part of the test it passes. Cheap is not enough when the other parts wobble. Leave it as a human draft.
+
+The third pile is a furious one-off. A repair shop claims a part failed and wants a credit, a lecture, and a promise. The rules are not stable because the relationship is the rule. The data is a phone call plus a photo plus ten years of memory in the owner's head. A wrong reply costs the account. This job fails on purpose. We would not automate the apology. We would let the owner make it, and we would keep the tool away from the thread so it cannot sound smooth and be wrong.
+
+Put the bookkeeper in charge of the invoice experiment, not the niece and not the owner. She knows a duplicate when she sees one. The floor lead's role is to say when a vendor name on the scan is the nickname they use in the warehouse, not the legal name. The owner's role is to refuse to add the angry-customer job "while we are at it." That refusal is the whole strategy.
+
+## How we'd run it
+
+We run the choice as a filter. Anything that survives is allowed to become a small install. Anything that does not survive stays manual without shame.
+
+First, we list the candidate jobs in the owner's words, on one page, without tool names. Invoices. Captions. The angry credit. Maybe a mailbox full of "do you have this part" questions. We ask which one happens even when everyone is tired. The tired job is usually the right one. Heroic rare jobs attract software and then starve.
+
+Second, we score each candidate on the four tests, out loud, with the person who does the work. How often. How stable the rules are. Can a system read the source, or is the source a memory. What does a wrong answer cost, and can a named person catch it before it leaves. The invoice passes. The caption is a maybe that we park. The credit fails. We write the fails down so they do not creep back into the proposal as "phase two."
+
+Third, we map the passing job before we look at products. That map is the point of the [mapping note](/blog/business-process-automation-ai). Who touches the scan. Where it is saved. What the bookkeeper changes by hand. What she refuses to let a suggestion decide. If we cannot draw that with her, we are not ready to buy. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is useful here when the owner insists every job is equally slow. It is not. One of them is eating the morning.
+
+Fourth, we pick a tool only after the map exists, and we prefer the dull one that fits the map. A scanner-and-suggest flow the bookkeeper can reject is enough. We do not add a customer-facing bot because the invoice project feels too plain to brag about. Plain is the point. If the owner wants help choosing who should build or advise, that conversation waits until now, and it belongs on the [agency note](/blog/ai-automation-agency-vs-consultant), not at the start.
+
+Fifth, we train the person who will run it, and we count the project as unfinished until she has. Statistics Canada found that, among businesses that used AI, 38.9% had trained staff and 40.1% had developed new workflows. Those are not decorations next to the 12.2% who used AI in production. They are the reason production use is still the smaller fact. We would rather delay the switch-on than hand the bookkeeper a login and a wish.
+
+## Common mistakes
+
+Starting from a tool menu is the mistake the catalogs encourage. The menu has marketing, chat, invoices, and a promise that they share a brain. Your desk does not share a brain. The invoice rules are stable. The angry customer is not. Buying the bundle because it is bundled imports a failing job into a passing one.
+
+Treating generative use as automation is the Chamber trap. 58% of small businesses in the 2025 report use generative AI, up from 40% in 2024 and 23% in 2023. The niece drafting a caption may already be in that crowd. She has not automated delivery. If you report her habit to yourself as "we automated marketing," you will skip the bookkeeper, who was the actual opportunity.
+
+Automating the rare, expensive decision because it is painful is the emotional mistake. Pain is not a test. The credit argument hurts, so the owner wants it gone. Gone, in software, means a smooth reply that might be false. The catch is not cheap. Leave it.
+
+Forgetting training because the interface looks friendly is how the new workflow dies. A friendly screen still has a reject button nobody was taught to trust. 38.9% of the businesses already using AI had trained staff. That is not a high bar and many still miss it. We would miss it too if we let the launch meeting be a tour of buttons.
+
+Copying another firm's first job is the last one. Their text sort might be sacred and yours might be a mess of photos. Their marketing might be a weekly rhythm and yours might be guilt. The surveys describe crowds. The four tests describe your morning. Use the crowd to get ideas. Use the morning to decide.
+
+## What we'd do
+
+We would put the invoice, or whatever your version of the repeated readable pile is, in front of every shinier idea. That is the opinion. Text analytics accounted for 35.7% of the uses among businesses that used AI in the Statistics Canada count, and marketing automation for 23.1%. Both are legitimate. We still start where a wrong line can be caught by the bookkeeper before money moves. Marketing drafts can wait in the niece's hands, edited by a person, until the rules are boring enough to write down.
+
+We would not let the Chamber's 58% set the pace. That figure, and the climb from 23% in 2023 through 40% in 2024, says generative tools spread. It does not say your delivery should be handed to one. The production figure, 12.2% in the second quarter of 2025, up from 6.1% a year earlier, is the stricter crowd. Join it on one job, with a new workflow and a trained person, or do not claim you joined it.
+
+If you are unsure which pile is eating the week, open the [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) and make the slow job confess. Then map it, using the [mapping note](/blog/business-process-automation-ai), before you talk to a builder. When you do need a person, the [agency note](/blog/ai-automation-agency-vs-consultant) will keep you from hiring a platform when you needed a checker. We would rather automate one dull pile well than announce that the company "runs on automation" while the bookkeeper still retypes every scan.
