@@ -9,10 +9,10 @@ primaryQuery: "how to get your business to show up in chatgpt"
 author: christopher-buzny
 cta: "The visibility guide reads the site. The check scores the business."
 images:
-  - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.png
+  - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.webp
     file: how-to-get-your-business-to-show-up-in-chatgpt-01.jpg
-    alt: "Three separate coral marks in a row, standing for three different crawlers"
-    caption: "Three crawlers, three different jobs."
+    alt: "A phone held over a cafe table beside a laptop and a coffee cup, screen lit, with the holder's face out of frame"
+    caption: "The phone, over the table."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “How to Get Your Business to Show Up in ChatGPT and AI Overviews”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/02.png
     file: how-to-get-your-business-to-show-up-in-chatgpt-02.jpg

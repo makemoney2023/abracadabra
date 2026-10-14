@@ -9,10 +9,10 @@ primaryQuery: "generative engine optimization vs seo"
 author: christopher-buzny
 cta: "Visibility starts with a page a person can also read."
 images:
-  - src: /blog/media/generative-engine-optimization-vs-seo/01.png
+  - src: /blog/media/generative-engine-optimization-vs-seo/01.webp
     file: generative-engine-optimization-vs-seo-01.jpg
-    alt: "Two overlapping rings, coral and cyan, standing for SEO and generative answers"
-    caption: "The names overlap."
+    alt: "A laptop and a phone side by side on a wooden desk, both screens on, with no person in the frame"
+    caption: "The laptop and the phone, side by side."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Generative Engine Optimization (GEO) vs SEO: What Actually Changes for Your Website”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/generative-engine-optimization-vs-seo/02.png
     file: generative-engine-optimization-vs-seo-02.jpg

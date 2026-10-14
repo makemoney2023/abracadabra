@@ -9,10 +9,10 @@ primaryQuery: "ai agents for business"
 author: christopher-buzny
 cta: "An agent without an owner is a risk. Score the people side."
 images:
-  - src: /blog/media/ai-agents-for-business/01.png
+  - src: /blog/media/ai-agents-for-business/01.webp
     file: ai-agents-for-business-01.jpg
-    alt: "Eight short coral ticks in two rows, standing for eight candidate jobs"
-    caption: "Eight jobs, each with a stop."
+    alt: "A person seen from behind at a laptop in a workshop, with a second person beside them, looking at a screen together"
+    caption: "Two people looking at one screen."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Agents for Business: 8 Use Cases by Department, and When Not to Use One”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-agents-for-business/02.png
     file: ai-agents-for-business-02.jpg

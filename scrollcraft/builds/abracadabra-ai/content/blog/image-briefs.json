@@ -3,7 +3,7 @@
     {
       "slot": "hero",
       "heading": "AI Readiness Checklist Before You Buy a Tool",
-      "show": "A clipboard with the checklist still open, sitting in front of a software box that has not been opened."
+      "show": "A person in a stockroom aisle holding a clipboard checklist, face turned down to the page."
     },
     {
       "slot": "body1",
@@ -20,7 +20,7 @@
     {
       "slot": "hero",
       "heading": "AI Readiness Assessment: What It Measures and How to Score",
-      "show": "Four labeled folders for data, process, people, and the decision, the groups this assessment scores."
+      "show": "Over the shoulder of a person at a desk with a checklist, a calculator, and a laptop."
     },
     {
       "slot": "body1",
@@ -37,7 +37,7 @@
     {
       "slot": "hero",
       "heading": "AI Readiness Assessment Questionnaire: The Themes",
-      "show": "A short questionnaire with the themes named and the tool question left blank at the bottom."
+      "show": "A clipboard questionnaire on a wooden table beside a pen and a coffee cup, no person in frame."
     },
     {
       "slot": "body1",
@@ -54,7 +54,7 @@
     {
       "slot": "hero",
       "heading": "An AI Readiness Framework an Owner Can Score",
-      "show": "A one-page scoring sheet with words filled in for data, process, people, and the decision."
+      "show": "A one-page framework pinned to a workshop wall, a person standing in front of it, face out of frame."
     },
     {
       "slot": "body1",
@@ -71,7 +71,7 @@
     {
       "slot": "hero",
       "heading": "Is My Business Ready for AI? Signs to Read First",
-      "show": "Four everyday signs on a desk, a current file, a written process, a named person, and a stop rule."
+      "show": "A closed shop door with a hanging sign, photographed from the sidewalk, no person in frame."
     },
     {
       "slot": "body1",
@@ -88,7 +88,7 @@
     {
       "slot": "hero",
       "heading": "AI-Ready Data: What a Small Business Needs First",
-      "show": "One current labeled folder in front of a stack of unreadable loose papers."
+      "show": "Hands arranging printed spreadsheets on a desk beside an open laptop, no face in frame."
     },
     {
       "slot": "body1",
@@ -105,7 +105,7 @@
     {
       "slot": "hero",
       "heading": "An AI Implementation Framework in Five Stages",
-      "show": "Five stepping stones from a named job to a kept or stopped system."
+      "show": "A whiteboard with four numbered steps, two people standing in front of it, faces turned away."
     },
     {
       "slot": "body1",
@@ -122,7 +122,7 @@
     {
       "slot": "hero",
       "heading": "Why AI Pilots Stall After the Demo",
-      "show": "A polished demo screen on a laptop and, beside it, an unfinished process still on paper."
+      "show": "A whiteboard covered in sticky notes, a person standing in front of it, face turned away."
     },
     {
       "slot": "body1",
@@ -139,7 +139,7 @@
     {
       "slot": "hero",
       "heading": "AI for Small Business: What the Surveys Still Say",
-      "show": "Two survey forms on a desk, each asking a different question about AI."
+      "show": "A shop counter with a tablet stand, a card reader, and a plant, the person facing the screen."
     },
     {
       "slot": "body1",
@@ -156,7 +156,7 @@
     {
       "slot": "hero",
       "heading": "AI Consultant for Small Business: What to Ask",
-      "show": "A short list of questions an owner would ask across a table before hiring anyone."
+      "show": "Two people at a small table, laptop opposite a notebook, seen from the side."
     },
     {
       "slot": "body1",
@@ -173,7 +173,7 @@
     {
       "slot": "hero",
       "heading": "AI Automation for Small Business: Which Job First",
-      "show": "Several job cards on a desk with one pulled forward as the first job to automate."
+      "show": "A reception desk with a computer, a guest book, and a bell, the person behind the counter facing away."
     },
     {
       "slot": "body1",
@@ -190,7 +190,7 @@
     {
       "slot": "hero",
       "heading": "AI Strategy for Small Business: Start With the Job",
-      "show": "A one-page plan that names the job, the data, and the person who checks the output."
+      "show": "A one-page plan on a cafe table beside a laptop and a coffee cup, hands on the page."
     },
     {
       "slot": "body1",
@@ -207,7 +207,7 @@
     {
       "slot": "hero",
       "heading": "Business Process Automation With AI: Write the Job",
-      "show": "A process written as boxes and arrows before any software box is opened."
+      "show": "A workshop bench with labeled bins, a clipboard, and a laptop, the person at the bench facing the work."
     },
     {
       "slot": "body1",
@@ -224,7 +224,7 @@
     {
       "slot": "hero",
       "heading": "How to Use AI in Your Business: Twelve Jobs",
-      "show": "A closed laptop ringed with the task objects this note says to write down before using AI."
+      "show": "A person at a laptop in a home office, seen from behind, notebook and mug on the desk."
     },
     {
       "slot": "body1",
@@ -241,7 +241,7 @@
     {
       "slot": "hero",
       "heading": "How Can AI Help a Small Business? What Surveys Count",
-      "show": "Two survey clipboards, one for generative use and one for production use, kept on opposite sides of the desk."
+      "show": "A shopkeeper behind a counter with a laptop and a card reader, face turned down."
     },
     {
       "slot": "body1",
@@ -258,7 +258,7 @@
     {
       "slot": "hero",
       "heading": "AI Automation Agency vs Consultant: Who to Hire",
-      "show": "Two chairs and two folders, one for naming the job and one for building it, the hiring split this note makes."
+      "show": "A cafe table from above: an open laptop, a notebook, and two coffee cups, no faces in frame."
     },
     {
       "slot": "body1",
@@ -275,7 +275,7 @@
     {
       "slot": "hero",
       "heading": "Off-the-Shelf AI or Custom Software",
-      "show": "A sealed product box on one side and a custom-built tray of parts on the other."
+      "show": "A laptop on a wooden desk beside a plain software box, photographed from above."
     },
     {
       "slot": "body1",
@@ -292,7 +292,7 @@
     {
       "slot": "hero",
       "heading": "AI Agents for Business: When to Use One",
-      "show": "Eight job trays in a row, each with a stop button in front, an agent job held until a person decides."
+      "show": "Two people at a workshop laptop, seen from behind, looking at one screen together."
     },
     {
       "slot": "body1",
@@ -309,7 +309,7 @@
     {
       "slot": "hero",
       "heading": "What Is an AI Agent? A Plain Answer for Owners",
-      "show": "A small desk robot at a fork of paths, inside a boundary an owner set."
+      "show": "A person at a service counter with a laptop and a notepad, seen from the side."
     },
     {
       "slot": "body1",
@@ -326,7 +326,7 @@
     {
       "slot": "hero",
       "heading": "AI Agents vs Agentic AI: A Plain Split",
-      "show": "One small robot on a straight path beside a crowd of robots at a branching fork."
+      "show": "Two people at a workbench, one with a pen over paper and one with a phone, faces turned away."
     },
     {
       "slot": "body1",
@@ -343,7 +343,7 @@
     {
       "slot": "hero",
       "heading": "Answer Engine Optimization: What Google Still Requires",
-      "show": "A search results page with an ordinary blue link still present under a short answer summary."
+      "show": "A phone and a laptop open on a cafe table beside a coffee cup, no person in frame."
     },
     {
       "slot": "body1",
@@ -360,7 +360,7 @@
     {
       "slot": "hero",
       "heading": "Generative Engine Optimization vs SEO",
-      "show": "Two labels, GEO and SEO, pinned to the same page, because this note says the work is still the page."
+      "show": "A laptop and a phone side by side on a wooden desk, both screens on, no person in frame."
     },
     {
       "slot": "body1",
@@ -377,7 +377,7 @@
     {
       "slot": "hero",
       "heading": "How to Show Up in ChatGPT and AI Overviews",
-      "show": "A website folder, a crawler note, and a search box, the indexing problem this note describes."
+      "show": "A phone held over a cafe table beside a laptop and a coffee cup, the holder's face out of frame."
     },
     {
       "slot": "body1",
@@ -394,7 +394,7 @@
     {
       "slot": "hero",
       "heading": "What Is llms.txt, and Who Actually Reads It",
-      "show": "A single text file labeled llms.txt on a desk, with a question mark over who fetches it."
+      "show": "A laptop on a desk showing a text file, notebook and pen beside it, no person in frame."
     },
     {
       "slot": "body1",

@@ -9,10 +9,10 @@ primaryQuery: "answer engine optimization"
 author: christopher-buzny
 cta: "See whether the site can be cited. Run the Readiness Check."
 images:
-  - src: /blog/media/answer-engine-optimization/01.png
+  - src: /blog/media/answer-engine-optimization/01.webp
     file: answer-engine-optimization-01.jpg
-    alt: "A coral ring around a cyan mark, standing for a citation inside an answer"
-    caption: "The citation is the job."
+    alt: "A phone and a laptop open on a cafe table beside a coffee cup, screens facing up, with no person in the frame"
+    caption: "A phone and a laptop, both open."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Answer Engine Optimization (AEO): A Small Business Guide”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/answer-engine-optimization/02.png
     file: answer-engine-optimization-02.jpg

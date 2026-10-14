@@ -162,6 +162,9 @@ figure { margin: 1.6rem 0; }
 
 .content-hero-photo { margin: 0; }
 
+.content-hero-photo picture,
+.post-card-photo picture { display: block; }
+
 .content-hero-photo img,
 .post-figure img,
 .post-card-photo img {

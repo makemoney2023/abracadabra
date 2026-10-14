@@ -9,10 +9,10 @@ primaryQuery: "ai readiness assessment questionnaire"
 author: christopher-buzny
 cta: "Themes are not a score. The Readiness Check returns the band."
 images:
-  - src: /blog/media/ai-readiness-assessment-questionnaire/01.png
+  - src: /blog/media/ai-readiness-assessment-questionnaire/01.webp
     file: ai-readiness-assessment-questionnaire-01.jpg
-    alt: "Four coral marks in a column, standing for four question themes"
-    caption: "Four themes, before any tool."
+    alt: "A clipboard questionnaire on a wooden table beside a pen and a coffee cup, with no person in the frame"
+    caption: "The questions, on paper."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Assessment Questionnaire: Every Question We Ask, and Why”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-readiness-assessment-questionnaire/02.png
     file: ai-readiness-assessment-questionnaire-02.jpg

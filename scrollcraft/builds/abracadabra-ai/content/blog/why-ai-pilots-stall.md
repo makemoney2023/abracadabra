@@ -9,10 +9,10 @@ primaryQuery: "why ai pilots stall"
 author: christopher-buzny
 cta: "A stalled pilot is a decision. Score it before you fund another demo."
 images:
-  - src: /blog/media/why-ai-pilots-stall/01.png
+  - src: /blog/media/why-ai-pilots-stall/01.webp
     file: why-ai-pilots-stall-01.jpg
-    alt: "A coral arc that stops short of a circle, standing for a pilot that never shipped"
-    caption: "The demo is not the process."
+    alt: "A whiteboard covered in sticky notes in an office, with a person standing in front of it and their face turned away"
+    caption: "The board, still full of notes."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Why AI Pilots Stall: What 2025-26 Research Says About AI Implementation”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/why-ai-pilots-stall/02.png
     file: why-ai-pilots-stall-02.jpg

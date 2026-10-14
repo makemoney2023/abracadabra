@@ -9,10 +9,10 @@ primaryQuery: "ai for small business"
 author: christopher-buzny
 cta: "A survey is not your score. Run the Readiness Check on this business."
 images:
-  - src: /blog/media/ai-for-small-business-2027/01.png
+  - src: /blog/media/ai-for-small-business-2027/01.webp
     file: ai-for-small-business-2027-01.jpg
-    alt: "Two coral columns of different heights, standing for two surveys that count different work"
-    caption: "Two surveys, two questions."
+    alt: "A shop counter with a tablet in a stand, a card reader, and a small plant, and the back of a person facing the screen"
+    caption: "The counter, with a tablet in a stand."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI for Small Business in 2027: What Changed in 2026 and What to Do First”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-for-small-business-2027/02.png
     file: ai-for-small-business-2027-02.jpg

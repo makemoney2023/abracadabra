@@ -9,10 +9,10 @@ primaryQuery: "ai ready data"
 author: christopher-buzny
 cta: "If the source of truth is unclear, score data before you buy."
 images:
-  - src: /blog/media/ai-ready-data/01.png
+  - src: /blog/media/ai-ready-data/01.webp
     file: ai-ready-data-01.jpg
-    alt: "One coral slab in front of several faint cyan copies, standing for a single source of truth"
-    caption: "One source for the job is enough."
+    alt: "Hands arranging printed spreadsheets on a desk beside an open laptop, with no face in the frame"
+    caption: "The files, on the desk."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI-Ready Data: What a Small Business Needs Before AI Can Help”: one central object that carries the idea, wide 16:9 framing."
   - src: /blog/media/ai-ready-data/02.png
     file: ai-ready-data-02.jpg

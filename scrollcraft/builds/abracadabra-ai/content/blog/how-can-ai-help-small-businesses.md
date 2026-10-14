@@ -9,10 +9,10 @@ primaryQuery: how can ai help small businesses
 author: christopher-buzny
 cta: "Surveys measure everyone. The Readiness Check measures you."
 images:
-  - src: /blog/media/how-can-ai-help-small-businesses/01.png
+  - src: /blog/media/how-can-ai-help-small-businesses/01.webp
     file: help-hero.jpg
-    alt: "Two separate stacks of paper-like planes on a dark field, one tall and one short, standing for two different surveys"
-    caption: "Two surveys, two different questions."
+    alt: "A shopkeeper behind a counter with a laptop and a card reader, face turned down toward the work"
+    caption: "The counter, with the laptop open."
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Two separate stacks of thin translucent sheets, one tall and one short, coral light on the left stack and cyan light on the right. Studio still life, 16:9."
   - src: /blog/media/how-can-ai-help-small-businesses/02.png
     file: help-surveys.jpg
