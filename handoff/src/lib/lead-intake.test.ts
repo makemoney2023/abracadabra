@@ -1,7 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
-import { sqliteSql, type Sql } from "@/db/sql";
+import { d1Sql, sqliteSql, type D1Like, type Sql } from "@/db/sql";
 import { POST as leadPost } from "@/app/api/intake/lead/route";
 import { GET as exportGet } from "@/app/api/leads/export/route";
 import { consumeIntake } from "./intake/consume";
@@ -31,6 +31,37 @@ async function database(): Promise<Sql> {
     source TEXT NOT NULL, status TEXT NOT NULL, organization_id TEXT, score_total INTEGER,
     error_message TEXT, created_at INTEGER NOT NULL, completed_at INTEGER)`);
   return sql;
+}
+
+/** D1-shaped wrapper so writes inside BEGIN/COMMIT are buffered like production. */
+function d1Over(db: DatabaseSync): D1Like {
+  const prepare = (statement: string) => ({
+    bind: (...params: unknown[]) => {
+      const stmt = db.prepare(statement);
+      const args = params as never[];
+      return {
+        run: async () => stmt.run(...args),
+        all: async <T>() => ({ results: stmt.all(...args) as T[] }),
+        first: async <T>() => (stmt.get(...args) as T | undefined) ?? null,
+        stmt,
+        args,
+      };
+    },
+  });
+  return {
+    prepare,
+    exec: async (statement: string) => db.exec(statement),
+    batch: async (statements: unknown[]) => {
+      db.exec("BEGIN");
+      try {
+        for (const entry of statements as { stmt: { run: (...a: never[]) => unknown }; args: never[] }[]) entry.stmt.run(...entry.args);
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+    },
+  } as unknown as D1Like;
 }
 
 const lead = {
@@ -104,6 +135,21 @@ describe("lead consume", () => {
     expect(await sql.all("SELECT organization_id, stage FROM deals")).toEqual([{ organization_id: "old-org", stage: "new" }]);
     expect(await sql.get("SELECT external_id FROM intake_receipts WHERE source = 'lead'")).toEqual({ external_id: "bdr-1" });
     expect(await sql.get("SELECT kind FROM activities WHERE kind = 'org.reopened'")).toEqual({ kind: "org.reopened" });
+  });
+
+  it("reopens an archived org under D1's buffered transactions", async () => {
+    const db = new DatabaseSync(":memory:");
+    db.exec("PRAGMA foreign_keys = ON");
+    await migrate(sqliteSql(db));
+    const sql = d1Sql(d1Over(db));
+    await sql.run(
+      `INSERT INTO organizations (id, name, domain, kind, created_at, updated_at, archived_at)
+       VALUES ('old-org', 'Old Northwind', 'northwind.example', 'lead', 1, 1, 2)`,
+    );
+    const res = await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    expect(res).toMatchObject({ ok: true, duplicate: false, leadOrganizationId: "old-org" });
+    expect(await sql.get("SELECT archived_at FROM organizations WHERE id = 'old-org'")).toEqual({ archived_at: null });
+    expect(await sql.all("SELECT organization_id FROM deals")).toEqual([{ organization_id: "old-org" }]);
   });
 
   it("surfaces a non-receipt UNIQUE error instead of acking it as a duplicate", async () => {
