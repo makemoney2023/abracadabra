@@ -9,15 +9,26 @@ export type LeadFilterRow = {
   owner_user_id: string | null;
   next_step: string | null;
   contact?: string | null;
+  routing_status?: string | null;
 };
 
 export type LeadFilters = {
   stage?: string;
   owner?: string;
   q?: string;
+  routing?: string;
 };
 
 export type LeadsView = "list" | "board";
+
+export const ROUTING_FILTERS = ["ready_for_outbound", "nurture", "unscored"] as const;
+export type RoutingFilter = (typeof ROUTING_FILTERS)[number];
+
+/** Known routing filter or blank. */
+export function routingFilter(value: string | undefined): RoutingFilter | "" {
+  const v = value?.trim() ?? "";
+  return (ROUTING_FILTERS as readonly string[]).includes(v) ? (v as RoutingFilter) : "";
+}
 
 const STAGE_SET = new Set<string>(DEAL_STAGES);
 
@@ -42,7 +53,10 @@ export function filterDeals<T extends LeadFilterRow>(deals: T[], filters: LeadFi
   const knownStage = STAGE_SET.has(stage) ? stage : "";
   const owner = filters.owner?.trim() ?? "";
   const q = (filters.q ?? "").trim().toLowerCase();
+  const routing = routingFilter(filters.routing);
   return deals.filter((deal) => {
+    if (routing === "unscored" && deal.routing_status) return false;
+    if (routing && routing !== "unscored" && deal.routing_status !== routing) return false;
     if (knownStage && deal.stage !== knownStage) return false;
     if (owner && deal.owner_user_id !== owner) return false;
     if (!q) return true;
@@ -60,6 +74,7 @@ export function leadsHref(input: {
   owner?: string;
   q?: string;
   sort?: string;
+  routing?: string;
 }): string {
   const params = new URLSearchParams();
   if (leadsView(input.view) === "board") params.set("view", "board");
@@ -71,6 +86,8 @@ export function leadsHref(input: {
   if (owner) params.set("owner", owner);
   if (q) params.set("q", q);
   if (sort) params.set("sort", sort);
+  const routing = routingFilter(input.routing);
+  if (routing) params.set("routing", routing);
   const text = params.toString();
   return text.length > 0 ? `/leads?${text}` : "/leads";
 }

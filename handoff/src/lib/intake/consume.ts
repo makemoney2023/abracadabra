@@ -579,6 +579,95 @@ async function confirmLiveBooking(
   );
 }
 
+function textList(raw: unknown): string[] {
+  if (typeof raw === "string") return raw.trim() ? [raw.trim().slice(0, 500)] : [];
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .map((item) => item.trim().slice(0, 500))
+    .slice(0, 50);
+}
+
+/** A BDR agent prospect. Opens a lead and a deal from source bdr. The schema scan starts in the queue handler. */
+async function consumeLead(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+  const body = asRecord(payload);
+  const externalId = typeof body?.external_id === "string" ? body.external_id.trim().slice(0, 200) : "";
+  if (!externalId) return { ok: false, error: "invalid", retry: false };
+  const email = cleanEmail(body?.email);
+  const domain = companyDomain(body?.domain ?? body?.website, email);
+  if (!email && !domain) return { ok: false, error: "invalid", retry: false };
+  const receipt = await sql.get<{ external_id: string }>(
+    "SELECT external_id FROM intake_receipts WHERE source = 'lead' AND external_id = ?",
+    [externalId],
+  );
+  if (receipt) return { ok: true, duplicate: true };
+  const company = cleanName(body?.company) ?? cleanName(body?.name);
+  const contactName = cleanName(body?.contact_name);
+  const source = cleanName(body?.source) ?? "bdr";
+  const fit = typeof body?.bdr_fit_score === "number" ? body.bdr_fit_score : null;
+  const data = {
+    external_id: externalId,
+    company,
+    website: cleanName(body?.website),
+    industry: cleanName(body?.industry),
+    location: cleanName(body?.location),
+    contact_name: contactName,
+    contact_title: cleanName(body?.contact_title),
+    fit_reasons: textList(body?.fit_reasons),
+    signals: textList(body?.signals),
+    source_urls: textList(body?.source_urls),
+    bdr_fit_score: fit,
+    source,
+  };
+  let leadOrganizationId: string | undefined;
+  try {
+    await withTx(sql, async () => {
+      const placed = await placeLead(sql, { email, name: contactName ?? company, domain, now });
+      if (placed.created && company) {
+        await sql.run("UPDATE organizations SET name = ?, updated_at = ? WHERE id = ?", [company, now, placed.organizationId]);
+      }
+      if (placed.created && data.website) {
+        const site = /^https?:\/\//i.test(data.website) ? data.website : `https://${data.website}`;
+        await sql.run("UPDATE organizations SET website = ? WHERE id = ?", [site, placed.organizationId]);
+      }
+      let deal = await openDeal(sql, placed.organizationId);
+      if (!deal) {
+        leadOrganizationId = placed.organizationId;
+        const dealId = await insertDeal(sql, {
+          organizationId: placed.organizationId,
+          title: `${company ?? leadName(contactName, domain)} prospect`,
+          stage: "new",
+          source,
+          now,
+        });
+        deal = { id: dealId, stage: "new" };
+      }
+      await sql.run(
+        `INSERT INTO activities (
+           id, organization_id, contact_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at
+         ) VALUES (?, ?, ?, ?, 'lead.prospected', 'agent', 'bdr', ?, ?, ?)`,
+        [
+          crypto.randomUUID(),
+          placed.organizationId,
+          placed.contactId,
+          deal.id,
+          "BDR found this prospect.",
+          JSON.stringify(data),
+          now,
+        ],
+      );
+      await sql.run(
+        "INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('lead', ?, ?)",
+        [externalId, now],
+      );
+    });
+  } catch (error) {
+    if (isUnique(error)) return { ok: true, duplicate: true };
+    throw error;
+  }
+  return { ok: true, duplicate: false, leadOrganizationId };
+}
+
 export async function consumeIntake(
   sql: Sql,
   message: { source: string; payload: unknown },
@@ -587,6 +676,7 @@ export async function consumeIntake(
 ): Promise<ConsumeResult> {
   if (message.source === "assessment") return consumeAssessment(sql, message.payload, now);
   if (message.source === "booking") return consumeBooking(sql, message.payload, now, mailer);
+  if (message.source === "lead") return consumeLead(sql, message.payload, now);
   if (message.source === "schema") return fileSchemaPackage(sql, message.payload, now);
   return { ok: false, error: "invalid", retry: false };
 }

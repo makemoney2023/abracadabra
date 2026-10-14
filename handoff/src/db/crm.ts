@@ -1804,6 +1804,8 @@ export type DealCard = {
   next_step_at: number | null;
   owner_user_id: string | null;
   score: number | null;
+  lead_score: number | null;
+  routing_status: string | null;
   last_touch: number | null;
 };
 
@@ -1861,7 +1863,7 @@ export async function listDeals(sql: Sql, caller: Caller, filter: {
   }
   return sql.all<DealCard>(
     `SELECT d.id, d.organization_id, o.name AS organization_name, d.title, d.stage, d.source,
-            d.next_step, d.next_step_at, d.owner_user_id,
+            d.next_step, d.next_step_at, d.owner_user_id, d.lead_score, d.routing_status,
             (
               SELECT total_score FROM assessments
               WHERE deal_id = d.id

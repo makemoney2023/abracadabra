@@ -11,12 +11,14 @@ import { StaffShell } from "../staff-shell";
 import { DealBoard, type BoardDeal } from "./board";
 import { LeadsToolbar } from "./filters";
 import { NewLeadDrawer } from "./lead-form";
-import { filterDeals, leadsHref, leadsView, ownerInitials, stageCounts, type LeadFilterRow } from "./view";
+import { ROUTING_LABEL, routingStatusOf } from "@/lib/lead-routing";
+import { filterDeals, routingFilter, leadsHref, leadsView, ownerInitials, stageCounts, type LeadFilterRow } from "./view";
 
 type LeadRow = LeadFilterRow & {
   organizationId: string;
   company: string;
   score: number | null;
+  schemaScore: number | null;
   nextStep: string;
   ownerLabel: string;
   updated: number | null;
@@ -32,6 +34,8 @@ function sortValue(row: LeadRow, key: string): string | number | null {
   if (key === "contact") return row.contact ?? "";
   if (key === "stage") return DEAL_STAGE_LABEL[row.stage];
   if (key === "score") return row.score;
+  if (key === "schema") return row.schemaScore;
+  if (key === "routing") return row.routing_status ?? "";
   if (key === "next") return row.nextStep;
   if (key === "owner") return row.ownerLabel;
   if (key === "updated") return row.updated;
@@ -66,6 +70,22 @@ function leadColumns(now: number): Column<LeadRow>[] {
       cell: (row) => (row.score === null ? null : <span className="tabular-nums">{row.score}</span>),
     },
     {
+      key: "schema",
+      header: "Schema",
+      sortable: true,
+      align: "right",
+      cell: (row) => (row.schemaScore === null ? null : <span className="tabular-nums">{row.schemaScore}</span>),
+    },
+    {
+      key: "routing",
+      header: "Routing",
+      sortable: true,
+      cell: (row) => {
+        const status = routingStatusOf(row.routing_status);
+        return status ? ROUTING_LABEL[status] : null;
+      },
+    },
+    {
       key: "next",
       header: "Next step",
       sortable: true,
@@ -89,7 +109,7 @@ function leadColumns(now: number): Column<LeadRow>[] {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; stage?: string; owner?: string; q?: string; sort?: string }>;
+  searchParams: Promise<{ view?: string; stage?: string; owner?: string; q?: string; sort?: string; routing?: string }>;
 }) {
   const query = await searchParams;
   const view = leadsView(query.view);
@@ -97,6 +117,7 @@ export default async function LeadsPage({
   const owner = query.owner?.trim() ?? "";
   const q = query.q?.trim() ?? "";
   const sort = query.sort?.trim() || undefined;
+  const routing = routingFilter(query.routing);
   const { sql, caller } = await requireHqStaffPage();
   const now = clock();
   const [deals, owners, contacts] = await Promise.all([
@@ -128,15 +149,17 @@ export default async function LeadsPage({
     organizationId: deal.organization_id,
     company: deal.organization_name,
     score: deal.score,
+    schemaScore: deal.lead_score,
+    routing_status: deal.routing_status,
     nextStep: deal.next_step?.trim() ?? "",
     ownerLabel: ownerInitials(deal.owner_user_id ? emailOf.get(deal.owner_user_id) : null),
     updated: deal.last_touch,
   }));
-  const scoped = filterDeals(rows, { owner, q });
+  const scoped = filterDeals(rows, { owner, q, routing });
   const counts = stageCounts(scoped);
   const visible = sortRows(filterDeals(scoped, { stage }), sort, sortValue);
-  const filtered = Boolean(stage || owner || q);
-  const basePath = leadsHref({ view, stage, owner, q });
+  const filtered = Boolean(stage || owner || q || routing);
+  const basePath = leadsHref({ view, stage, owner, q, routing });
   const boardDeals: BoardDeal[] = visible.map((row) => ({
     id: row.id,
     organizationId: row.organizationId,
@@ -161,6 +184,7 @@ export default async function LeadsPage({
           owner={owner}
           q={q}
           sort={sort}
+          routing={routing}
           counts={counts}
           owners={owners.map((person) => ({ userId: person.user_id, email: person.email }))}
         />
