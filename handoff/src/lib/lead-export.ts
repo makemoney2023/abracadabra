@@ -22,11 +22,11 @@ export function exportAuthorized(header: string | null, token: string): boolean 
 }
 
 /**
- * Link to the "Are you ready for AI" Readiness Check survey. /check/start only keeps utm_* params,
- * so the deal ref rides in utm_content and comes back in the assessment's utm_json.
+ * Link to the "Are you ready for AI" Readiness Check survey. The /check landing (GET) passes utm_*
+ * params through to the survey (/check/start is POST-only), so the deal ref rides in utm_content and comes back in the assessment's utm_json.
  */
 export function surveyUrl(dealId: string, origin = CHECK_ORIGIN): string {
-  const url = new URL("/check/start", origin);
+  const url = new URL("/check", origin);
   url.searchParams.set("utm_source", "outbound");
   url.searchParams.set("utm_medium", "email");
   url.searchParams.set("utm_campaign", "schema_score");

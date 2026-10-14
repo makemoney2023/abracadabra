@@ -92,6 +92,31 @@ describe("lead consume", () => {
     expect(JSON.parse(act!.data_json)).toMatchObject({ industry: "Dental", bdr_fit_score: 4 });
   });
 
+  it("reopens an archived org with the same domain and opens a deal", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO organizations (id, name, domain, kind, created_at, updated_at, archived_at)
+       VALUES ('old-org', 'Old Northwind', 'northwind.example', 'lead', 1, 1, 2)`,
+    );
+    const res = await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    expect(res).toMatchObject({ ok: true, duplicate: false, leadOrganizationId: "old-org" });
+    expect(await sql.get("SELECT archived_at FROM organizations WHERE id = 'old-org'")).toEqual({ archived_at: null });
+    expect(await sql.all("SELECT organization_id, stage FROM deals")).toEqual([{ organization_id: "old-org", stage: "new" }]);
+    expect(await sql.get("SELECT external_id FROM intake_receipts WHERE source = 'lead'")).toEqual({ external_id: "bdr-1" });
+    expect(await sql.get("SELECT kind FROM activities WHERE kind = 'org.reopened'")).toEqual({ kind: "org.reopened" });
+  });
+
+  it("surfaces a non-receipt UNIQUE error instead of acking it as a duplicate", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    await sql.exec("CREATE UNIQUE INDEX test_one_deal_title ON deals(title)");
+    await sql.run("UPDATE deals SET stage = 'lost'");
+    await expect(
+      consumeIntake(sql, { source: "lead", payload: { ...lead, external_id: "bdr-2" } }, NOW + 1),
+    ).rejects.toThrow(/UNIQUE/);
+    expect(await sql.get("SELECT external_id FROM intake_receipts WHERE external_id = 'bdr-2'")).toBeUndefined();
+  });
+
   it("queues the schema scan, not the readiness survey", async () => {
     const sql = await database();
     const scans: unknown[] = [];
@@ -174,7 +199,7 @@ describe("export auth", () => {
 
   it("survey link carries outbound utm and the deal ref", () => {
     const url = new URL(surveyUrl("d1"));
-    expect(url.origin + url.pathname).toBe("https://check.abra-ca-dabra.app/check/start");
+    expect(url.origin + url.pathname).toBe("https://check.abra-ca-dabra.app/check");
     expect(url.searchParams.get("utm_source")).toBe("outbound");
     expect(url.searchParams.get("utm_content")).toBe("deal_d1");
   });

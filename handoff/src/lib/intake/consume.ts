@@ -195,6 +195,26 @@ async function orgByDomain(
   );
 }
 
+/** Unarchives an archived org and logs it. Returns true when one was reopened. */
+async function reopenArchivedOrg(
+  sql: Sql,
+  input: { where: "domain" | "id"; value: string; now: number },
+): Promise<boolean> {
+  const row = await sql.get<{ id: string }>(
+    `SELECT id FROM organizations WHERE ${input.where} = ? AND archived_at IS NOT NULL`,
+    [input.value],
+  );
+  if (!row) return false;
+  await sql.run("UPDATE organizations SET archived_at = NULL, updated_at = ? WHERE id = ?", [input.now, row.id]);
+  await sql.run(
+    `INSERT INTO activities (
+       id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
+     ) VALUES (?, ?, 'org.reopened', 'agent', 'bdr', ?, ?, ?)`,
+    [crypto.randomUUID(), row.id, "Reopened an archived org for a new BDR lead.", JSON.stringify({ reason: "bdr_lead" }), input.now],
+  );
+  return true;
+}
+
 async function openDeal(sql: Sql, organizationId: string): Promise<DealRow | undefined> {
   return sql.get<DealRow>(
     `SELECT id, stage FROM deals
@@ -622,7 +642,14 @@ async function consumeLead(sql: Sql, payload: unknown, now: number): Promise<Con
   let leadOrganizationId: string | undefined;
   try {
     await withTx(sql, async () => {
+      // An archived org still owns its domain (organizations.domain is UNIQUE), so reopen it
+      // instead of inserting a second org and tripping the constraint.
+      if (domain && !(await orgByDomain(sql, domain))) {
+        await reopenArchivedOrg(sql, { where: "domain", value: domain, now });
+      }
       const placed = await placeLead(sql, { email, name: contactName ?? company, domain, now });
+      // A known contact email can point at an archived org too.
+      await reopenArchivedOrg(sql, { where: "id", value: placed.organizationId, now });
       if (placed.created && company) {
         await sql.run("UPDATE organizations SET name = ?, updated_at = ? WHERE id = ?", [company, now, placed.organizationId]);
       }
@@ -662,7 +689,20 @@ async function consumeLead(sql: Sql, payload: unknown, now: number): Promise<Con
       );
     });
   } catch (error) {
-    if (isUnique(error)) return { ok: true, duplicate: true };
+    // Only a receipt that landed concurrently is a real duplicate. Anything else must surface
+    // so the queue retries it instead of acking a lead that was never stored.
+    if (isUnique(error)) {
+      const raced = await sql.get<{ external_id: string }>(
+        "SELECT external_id FROM intake_receipts WHERE source = 'lead' AND external_id = ?",
+        [externalId],
+      );
+      if (raced) return { ok: true, duplicate: true };
+    }
+    console.error("lead intake insert failed", {
+      external_id: externalId,
+      domain,
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
   return { ok: true, duplicate: false, leadOrganizationId };
