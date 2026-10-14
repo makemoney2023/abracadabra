@@ -215,6 +215,27 @@ describe("blog content", () => {
     }
   });
 
+  it("gives the index a featured note, a pillar filter, and a date plus reading time on every card", async () => {
+    const posts = await loadPosts();
+    const index = await text("blog/index.html");
+    assert.match(index, /<a class="featured-post" data-pillar="AI readiness" href="\/blog\/ai-readiness-assessment">/);
+    assert.match(index, /<fieldset class="pillar-filter"><legend>Filter by pillar<\/legend>/);
+    assert.match(index, /<input type="radio" name="pillar" id="pillar-all" checked>/);
+    const times = index.match(/<time datetime="2026-10-14">October 14, 2026<\/time>/g) ?? [];
+    const reads = index.match(/\d+ min read/g) ?? [];
+    assert.equal(times.length, posts.length);
+    assert.equal(reads.length, posts.length);
+    for (const post of posts) {
+      assert.match(index, new RegExp(`data-pillar="${post.pillar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+      assert.ok(index.includes(`>${post.pillar}</label>`) || post.pillar === "AI readiness", post.pillar);
+      assert.ok(index.includes(`/blog/${post.slug}`), post.slug);
+    }
+    const pillars = [...new Set(posts.map((post) => post.pillar))];
+    for (const pillar of pillars) {
+      assert.ok(index.includes(`>${pillar}</label>`), pillar);
+    }
+  });
+
   it("blocks training crawlers and keeps the privacy draft offline", async () => {
     const robots = await text("robots.txt");
     assert.match(robots, /User-agent: CCBot\nDisallow: \//);
