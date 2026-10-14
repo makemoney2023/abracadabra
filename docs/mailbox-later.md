@@ -113,15 +113,15 @@ Deployed worker versions for this behavior are in `handoff/CHANGELOG.md`.
 
 **Today.** `consumeBooking` upserts `appointments` (`provider = calcom`), writes a `call` activity, and moves a deal from `new` or `contacted` to `call_booked` for a live booking (`booked` or `rescheduled`). Duplicate deliveries return `{ duplicate: true }` from the appointment id plus `starts_at` and status, and from `intake_receipts` (`source = booking`, `external_id`). It does not send mail. `starts_at` is unix milliseconds.
 
-**Change.** After a non-duplicate live booking that resolved an organization, send one mail from `Magic at Abracadabra <magic@abra-ca-dabra.app>` to the booking email. The body confirms the `starts_at` time in UTC, in the form `YYYY-MM-DD HH:mm UTC`. Subject is `Your working session`. Find the latest email `work_requests` thread for that organization and set `In-Reply-To` when that thread id exists, so the note lands in the same thread. Record an `agent.reply` activity whose `data_json` includes `external_id`, so a retry that inserts a new receipt still does not send a second confirmation.
+**Change.** After a non-duplicate live booking that resolved an organization, send one mail from `Abracadabra HQ <HANDOFF_FROM_EMAIL>` (hq@mail.abra-ca-dabra.app; was magic@abra-ca-dabra.app) to the booking email. The body confirms the `starts_at` time in UTC, in the form `YYYY-MM-DD HH:mm UTC`. Subject is `Your working session`. Find the latest email `work_requests` thread for that organization and set `In-Reply-To` when that thread id exists, so the note lands in the same thread. Record an `agent.reply` activity whose `data_json` includes `external_id`, so a retry that inserts a new receipt still does not send a second confirmation.
 
 A `cancelled` booking sends nothing in this change. A reschedule sends one new confirmation because `starts_at` changed and the duplicate check does not treat it as the same slot.
 
-**Do not.** Use `HANDOFF_FROM_EMAIL` or the product From name. Create an appointment from the mailbox. Confirm when `consumeBooking` returns `duplicate: true`.
+**Do not.** Use the product From name. Create an appointment from the mailbox. Confirm when `consumeBooking` returns `duplicate: true`.
 
 **Tests.** A first `booked` payload sends one message and one reply activity. The same payload again sends nothing. A new `starts_at` with the same external id sends one more message. A booking with no email sends nothing.
 
-**Touch.** `handoff/src/lib/intake/consume.ts`. Send through the HQ `EMAIL` binding with From `magic@abra-ca-dabra.app` (the binding on `handoff-hq` is unrestricted). Keep the send after the transaction commits.
+**Touch.** `handoff/src/lib/intake/consume.ts`. Send through the HQ `EMAIL` binding with From `Abracadabra HQ <HANDOFF_FROM_EMAIL>` (the binding on `handoff-hq` is unrestricted). Keep the send after the transaction commits.
 
 ## Implementation order
 

@@ -2,7 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { consumeIntake, formatSessionUtc, type BookingMail } from "./consume";
+import { bookingFrom, consumeIntake, formatSessionUtc, type BookingMail } from "./consume";
 
 const NOW = 1_700_000_000_000;
 
@@ -227,7 +227,7 @@ describe("intake consumer", () => {
     };
     await consumeIntake(sql, { source: "booking", payload }, NOW + 2, mailer);
     expect(sent).toHaveLength(1);
-    expect(sent[0]?.from).toBe("Magic at Abracadabra <magic@abra-ca-dabra.app>");
+    expect(sent[0]?.from).toMatch(/^Abracadabra HQ <[^>]+@[^>]+>$/);
     expect(sent[0]?.to).toBe("ada@northwind.example");
     expect(sent[0]?.subject).toBe("Your working session");
     expect(sent[0]?.text).toBe(`Your working session is ${formatSessionUtc(NOW + 86_400_000)}.`);
@@ -324,5 +324,20 @@ describe("intake consumer", () => {
     expect(missingMatch).toEqual({ ok: false, error: "invalid", retry: false });
     const orgs = await sql.all<{ id: string }>("SELECT id FROM organizations");
     expect(orgs).toHaveLength(0);
+  });
+});
+
+describe("bookingFrom", () => {
+  it("uses HANDOFF_FROM_EMAIL and falls back to hq@mail", () => {
+    const before = process.env.HANDOFF_FROM_EMAIL;
+    try {
+      process.env.HANDOFF_FROM_EMAIL = " hq@mail.abra-ca-dabra.app ";
+      expect(bookingFrom()).toBe("Abracadabra HQ <hq@mail.abra-ca-dabra.app>");
+      delete process.env.HANDOFF_FROM_EMAIL;
+      expect(bookingFrom()).toBe("Abracadabra HQ <hq@mail.abra-ca-dabra.app>");
+    } finally {
+      if (before === undefined) delete process.env.HANDOFF_FROM_EMAIL;
+      else process.env.HANDOFF_FROM_EMAIL = before;
+    }
   });
 });

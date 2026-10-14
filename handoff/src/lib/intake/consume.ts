@@ -112,7 +112,13 @@ export type BookingMailer = {
   send(message: BookingMail): Promise<void>;
 };
 
-const MAGIC_FROM = "Magic at Abracadabra <magic@abra-ca-dabra.app>";
+const APP_ADDRESS = "hq@mail.abra-ca-dabra.app";
+
+/** Booking confirmations come from the app address in HANDOFF_FROM_EMAIL, named Abracadabra HQ. */
+export function bookingFrom(): string {
+  const address = process.env.HANDOFF_FROM_EMAIL?.trim() || APP_ADDRESS;
+  return `Abracadabra HQ <${address}>`;
+}
 
 /** UTC clock time for a booking confirmation. Seconds are dropped. */
 export function formatSessionUtc(startsAt: number): string {
@@ -144,7 +150,7 @@ async function sendBookingConfirmation(
   );
   const text = `Your working session is ${formatSessionUtc(input.startsAt)}.`;
   await mailer.send({
-    from: MAGIC_FROM,
+    from: bookingFrom(),
     to: input.email,
     subject: "Your working session",
     text,
