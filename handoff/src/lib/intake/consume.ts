@@ -579,6 +579,276 @@ async function confirmLiveBooking(
   );
 }
 
+function textList(raw: unknown): string[] {
+  if (typeof raw === "string") return raw.trim() ? [raw.trim().slice(0, 500)] : [];
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .map((item) => item.trim().slice(0, 500))
+    .slice(0, 50);
+}
+
+/** A BDR agent prospect. Opens a lead and a deal from source bdr. The schema scan starts in the queue handler. */
+async function consumeLead(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+  const body = asRecord(payload);
+  const externalId = typeof body?.external_id === "string" ? body.external_id.trim().slice(0, 200) : "";
+  if (!externalId) return { ok: false, error: "invalid", retry: false };
+  const email = cleanEmail(body?.email);
+  const domain = companyDomain(body?.domain ?? body?.website, email);
+  if (!email && !domain) return { ok: false, error: "invalid", retry: false };
+  const receipt = await sql.get<{ external_id: string }>(
+    "SELECT external_id FROM intake_receipts WHERE source = 'lead' AND external_id = ?",
+    [externalId],
+  );
+  if (receipt) return { ok: true, duplicate: true };
+  const company = cleanName(body?.company) ?? cleanName(body?.name);
+  const contactName = cleanName(body?.contact_name);
+  const source = cleanName(body?.source) ?? "bdr";
+  const fit = typeof body?.bdr_fit_score === "number" ? body.bdr_fit_score : null;
+  const data = {
+    external_id: externalId,
+    company,
+    website: cleanName(body?.website),
+    industry: cleanName(body?.industry),
+    location: cleanName(body?.location),
+    contact_name: contactName,
+    contact_title: cleanName(body?.contact_title),
+    fit_reasons: textList(body?.fit_reasons),
+    signals: textList(body?.signals),
+    source_urls: textList(body?.source_urls),
+    bdr_fit_score: fit,
+    source,
+  };
+  let leadOrganizationId: string | undefined;
+  try {
+    await withTx(sql, async () => {
+      const placed = await placeLead(sql, { email, name: contactName ?? company, domain, now });
+      if (placed.created && company) {
+        await sql.run("UPDATE organizations SET name = ?, updated_at = ? WHERE id = ?", [company, now, placed.organizationId]);
+      }
+      if (placed.created && data.website) {
+        const site = /^https?:\/\//i.test(data.website) ? data.website : `https://${data.website}`;
+        await sql.run("UPDATE organizations SET website = ? WHERE id = ?", [site, placed.organizationId]);
+      }
+      let deal = await openDeal(sql, placed.organizationId);
+      if (!deal) {
+        leadOrganizationId = placed.organizationId;
+        const dealId = await insertDeal(sql, {
+          organizationId: placed.organizationId,
+          title: `${company ?? leadName(contactName, domain)} prospect`,
+          stage: "new",
+          source,
+          now,
+        });
+        deal = { id: dealId, stage: "new" };
+      }
+      await sql.run(
+        `INSERT INTO activities (
+           id, organization_id, contact_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at
+         ) VALUES (?, ?, ?, ?, 'lead.prospected', 'agent', 'bdr', ?, ?, ?)`,
+        [
+          crypto.randomUUID(),
+          placed.organizationId,
+          placed.contactId,
+          deal.id,
+          "BDR found this prospect.",
+          JSON.stringify(data),
+          now,
+        ],
+      );
+      await sql.run(
+        "INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('lead', ?, ?)",
+        [externalId, now],
+      );
+    });
+  } catch (error) {
+    if (isUnique(error)) return { ok: true, duplicate: true };
+    throw error;
+  }
+  return { ok: true, duplicate: false, leadOrganizationId };
+}
+
+function plainValue(raw: unknown, depth = 0): unknown {
+  if (raw == null || depth > 4) return null;
+  if (typeof raw === "string") return raw.slice(0, 4000);
+  if (typeof raw === "number" || typeof raw === "boolean") return raw;
+  if (Array.isArray(raw)) return raw.slice(0, 100).map((item) => plainValue(item, depth + 1));
+  if (typeof raw === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>).slice(0, 50)) {
+      out[key.slice(0, 100)] = plainValue(value, depth + 1);
+    }
+    return out;
+  }
+  return null;
+}
+
+const ENRICHMENT_FIELDS = ["company_summary", "decision_makers", "pain_points", "tech_stack", "talking_points", "sources"] as const;
+
+/** Account Research enrichment. Logs lead.enriched and moves ready_for_outbound to enriched. */
+async function consumeEnrichment(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+  const body = asRecord(payload);
+  const externalId = typeof body?.external_id === "string" ? body.external_id.trim().slice(0, 200) : "";
+  const dealId = typeof body?.deal_id === "string" ? body.deal_id.trim() : "";
+  const domain = typeof body?.domain === "string" ? normalizeDomain(body.domain) : null;
+  if (!externalId || (!dealId && !domain)) return { ok: false, error: "invalid", retry: false };
+  const receipt = await sql.get<{ external_id: string }>(
+    "SELECT external_id FROM intake_receipts WHERE source = 'enrichment' AND external_id = ?",
+    [externalId],
+  );
+  if (receipt) return { ok: true, duplicate: true };
+  const deal = dealId
+    ? await sql.get<{ id: string; organization_id: string; routing_status: string | null }>(
+        "SELECT id, organization_id, routing_status FROM deals WHERE id = ?",
+        [dealId],
+      )
+    : await sql.get<{ id: string; organization_id: string; routing_status: string | null }>(
+        `SELECT d.id, d.organization_id, d.routing_status FROM deals d
+         JOIN organizations o ON o.id = d.organization_id
+         WHERE o.domain = ? AND o.archived_at IS NULL AND d.stage NOT IN ('won', 'lost')
+         ORDER BY d.updated_at DESC LIMIT 1`,
+        [domain],
+      );
+  if (!deal) return { ok: false, error: "invalid", retry: false };
+  const data: Record<string, unknown> = {
+    external_id: externalId,
+    deal_id: deal.id,
+    brief: typeof body?.brief === "string" ? body.brief.slice(0, 20000) : null,
+    enriched_at: typeof body?.enriched_at === "string" ? body.enriched_at : new Date(now).toISOString(),
+  };
+  for (const field of ENRICHMENT_FIELDS) data[field] = plainValue(body?.[field]);
+  try {
+    await withTx(sql, async () => {
+      await sql.run(
+        `INSERT INTO activities (
+           id, organization_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at
+         ) VALUES (?, ?, ?, 'lead.enriched', 'agent', 'account-research', ?, ?, ?)`,
+        [crypto.randomUUID(), deal.organization_id, deal.id, "Account Research enriched this lead.", JSON.stringify(data), now],
+      );
+      if (deal.routing_status === "ready_for_outbound") {
+        await sql.run("UPDATE deals SET routing_status = 'enriched', updated_at = ? WHERE id = ?", [now, deal.id]);
+      }
+      await sql.run(
+        "INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('enrichment', ?, ?)",
+        [externalId, now],
+      );
+    });
+  } catch (error) {
+    if (isUnique(error)) return { ok: true, duplicate: true };
+    throw error;
+  }
+  return { ok: true, duplicate: false };
+}
+
+type TargetDeal = { id: string; organization_id: string; stage: string };
+
+async function targetDeal(sql: Sql, body: Record<string, unknown> | null): Promise<TargetDeal | undefined> {
+  const dealId = typeof body?.deal_id === "string" ? body.deal_id.trim() : "";
+  if (dealId) {
+    return sql.get<TargetDeal>("SELECT id, organization_id, stage FROM deals WHERE id = ?", [dealId]);
+  }
+  const domain = typeof body?.domain === "string" ? normalizeDomain(body.domain) : null;
+  if (!domain) return undefined;
+  return sql.get<TargetDeal>(
+    `SELECT d.id, d.organization_id, d.stage FROM deals d
+     JOIN organizations o ON o.id = d.organization_id
+     WHERE o.domain = ? AND o.archived_at IS NULL AND d.stage NOT IN ('won', 'lost')
+     ORDER BY d.updated_at DESC LIMIT 1`,
+    [domain],
+  );
+}
+
+async function seenReceipt(sql: Sql, source: string, externalId: string): Promise<boolean> {
+  const row = await sql.get<{ external_id: string }>(
+    "SELECT external_id FROM intake_receipts WHERE source = ? AND external_id = ?",
+    [source, externalId],
+  );
+  return Boolean(row);
+}
+
+/** Sales Outbound reports a send. Moves new to contacted and logs lead.contacted. */
+async function consumeOutreach(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+  const body = asRecord(payload);
+  const externalId = typeof body?.external_id === "string" ? body.external_id.trim().slice(0, 200) : "";
+  const channel = body?.channel === "email" || body?.channel === "linkedin" ? body.channel : null;
+  if (!externalId || !channel) return { ok: false, error: "invalid", retry: false };
+  if (await seenReceipt(sql, "outreach", externalId)) return { ok: true, duplicate: true };
+  const deal = await targetDeal(sql, body);
+  if (!deal) return { ok: false, error: "invalid", retry: false };
+  const sentAt = typeof body?.sent_at === "string" ? body.sent_at : new Date(now).toISOString();
+  const summary = typeof body?.summary === "string" ? body.summary.slice(0, 4000) : null;
+  try {
+    await withTx(sql, async () => {
+      if (deal.stage === "new") {
+        await sql.run("UPDATE deals SET stage = 'contacted', updated_at = ? WHERE id = ?", [now, deal.id]);
+      }
+      await sql.run(
+        `INSERT INTO activities (
+           id, organization_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at
+         ) VALUES (?, ?, ?, 'lead.contacted', 'agent', 'sales-outbound', ?, ?, ?)`,
+        [
+          crypto.randomUUID(),
+          deal.organization_id,
+          deal.id,
+          summary ?? `Contacted by ${channel}.`,
+          JSON.stringify({ external_id: externalId, deal_id: deal.id, channel, sent_at: sentAt, summary }),
+          now,
+        ],
+      );
+      await sql.run("INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('outreach', ?, ?)", [externalId, now]);
+    });
+  } catch (error) {
+    if (isUnique(error)) return { ok: true, duplicate: true };
+    throw error;
+  }
+  return { ok: true, duplicate: false };
+}
+
+/** Sales Outbound reports a won deal. Stage won, org becomes a client, logs deal.won. */
+async function consumeDealClosed(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+  const body = asRecord(payload);
+  const externalId = typeof body?.external_id === "string" ? body.external_id.trim().slice(0, 200) : "";
+  if (!externalId) return { ok: false, error: "invalid", retry: false };
+  if (await seenReceipt(sql, "deal_closed", externalId)) return { ok: true, duplicate: true };
+  const deal = await targetDeal(sql, body);
+  if (!deal || deal.stage === "lost") return { ok: false, error: "invalid", retry: false };
+  const closedRaw = typeof body?.closed_at === "string" ? Date.parse(body.closed_at) : NaN;
+  const closedAt = Number.isFinite(closedRaw) ? closedRaw : now;
+  const valueCents = typeof body?.value_cents === "number" && Number.isInteger(body.value_cents) ? body.value_cents : null;
+  const data = {
+    external_id: externalId,
+    deal_id: deal.id,
+    closed_at: new Date(closedAt).toISOString(),
+    value_cents: valueCents,
+    products: plainValue(body?.products ?? body?.services ?? null),
+    notes: typeof body?.notes === "string" ? body.notes.slice(0, 20000) : null,
+  };
+  try {
+    await withTx(sql, async () => {
+      await sql.run(
+        `UPDATE deals SET stage = 'won', closed_at = ?, value_cents = COALESCE(?, value_cents), updated_at = ?
+         WHERE id = ?`,
+        [closedAt, valueCents, now, deal.id],
+      );
+      await sql.run("UPDATE organizations SET kind = 'client', updated_at = ? WHERE id = ? AND kind = 'lead'", [
+        now,
+        deal.organization_id,
+      ]);
+      await sql.run(
+        `INSERT INTO activities (
+           id, organization_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at
+         ) VALUES (?, ?, ?, 'deal.won', 'agent', 'sales-outbound', ?, ?, ?)`,
+        [crypto.randomUUID(), deal.organization_id, deal.id, "Deal won.", JSON.stringify(data), now],
+      );
+      await sql.run("INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('deal_closed', ?, ?)", [externalId, now]);
+    });
+  } catch (error) {
+    if (isUnique(error)) return { ok: true, duplicate: true };
+    throw error;
+  }
+  return { ok: true, duplicate: false };
+}
+
 export async function consumeIntake(
   sql: Sql,
   message: { source: string; payload: unknown },
@@ -587,6 +857,10 @@ export async function consumeIntake(
 ): Promise<ConsumeResult> {
   if (message.source === "assessment") return consumeAssessment(sql, message.payload, now);
   if (message.source === "booking") return consumeBooking(sql, message.payload, now, mailer);
+  if (message.source === "lead") return consumeLead(sql, message.payload, now);
+  if (message.source === "outreach") return consumeOutreach(sql, message.payload, now);
+  if (message.source === "deal_closed") return consumeDealClosed(sql, message.payload, now);
+  if (message.source === "enrichment") return consumeEnrichment(sql, message.payload, now);
   if (message.source === "schema") return fileSchemaPackage(sql, message.payload, now);
   return { ok: false, error: "invalid", retry: false };
 }

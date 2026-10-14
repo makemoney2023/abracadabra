@@ -8,6 +8,9 @@ type QueueBinding = { send(body: unknown): Promise<void> };
 type CloudflareEnv = {
   LEAD_INTAKE?: QueueBinding;
   INTAKE_SIGNING_SECRET?: string;
+  LEAD_AGENT_SIGNING_SECRET?: string;
+  ENRICHMENT_SIGNING_SECRET?: string;
+  OUTREACH_SIGNING_SECRET?: string;
 };
 
 function cloudflareEnv(): CloudflareEnv {
@@ -23,6 +26,27 @@ export function intakeSecret(): string {
   return cloudflareEnv().INTAKE_SIGNING_SECRET?.trim() ?? "";
 }
 
+/** BDR agent key. Separate from INTAKE_SIGNING_SECRET so it can be revoked on its own. */
+export function leadAgentSecret(): string {
+  const fromProcess = process.env.LEAD_AGENT_SIGNING_SECRET?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  return cloudflareEnv().LEAD_AGENT_SIGNING_SECRET?.trim() ?? "";
+}
+
+/** Account Research key for enrichment intake. Separate so it can be revoked on its own. */
+export function enrichmentSecret(): string {
+  const fromProcess = process.env.ENRICHMENT_SIGNING_SECRET?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  return cloudflareEnv().ENRICHMENT_SIGNING_SECRET?.trim() ?? "";
+}
+
+/** Sales Outbound key for outreach and deal-closed intake. Separate so it can be revoked on its own. */
+export function outreachSecret(): string {
+  const fromProcess = process.env.OUTREACH_SIGNING_SECRET?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  return cloudflareEnv().OUTREACH_SIGNING_SECRET?.trim() ?? "";
+}
+
 export function intakeQueue(): QueueBinding | undefined {
   return cloudflareEnv().LEAD_INTAKE;
 }
@@ -30,13 +54,18 @@ export function intakeQueue(): QueueBinding | undefined {
 /** Check the signature, then the body, then put the message on the queue. */
 export async function acceptIntake(
   request: Request,
-  source: "assessment" | "booking" | "schema",
+  source: "assessment" | "booking" | "schema" | "lead" | "enrichment" | "outreach" | "deal_closed",
   ready: (payload: unknown) => boolean,
   now = Date.now(),
+  secret: string = source === "lead" ? leadAgentSecret() : source === "enrichment"
+      ? enrichmentSecret()
+      : source === "outreach" || source === "deal_closed"
+        ? outreachSecret()
+        : intakeSecret(),
 ): Promise<Response> {
   const raw = await request.text();
   const verdict = await verifyIntakeRequest({
-    secret: intakeSecret(),
+    secret,
     body: raw,
     signature: request.headers.get("x-intake-signature") ?? "",
     timestamp: request.headers.get("x-intake-timestamp") ?? "",
@@ -87,4 +116,35 @@ export function bookingBodyReady(payload: unknown): boolean {
   const starts = body.starts_at;
   const hasStart = typeof starts === "number" || (typeof starts === "string" && starts.trim().length > 0);
   return id.length > 0 && hasStart;
+}
+
+export function leadBodyReady(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  const body = payload as Record<string, unknown>;
+  const id = typeof body.external_id === "string" ? body.external_id.trim() : "";
+  const email = typeof body.email === "string" ? body.email.trim() : "";
+  const domain = typeof body.domain === "string" ? body.domain.trim() : "";
+  if (!id || (!email && !domain)) return false;
+  const fit = body.bdr_fit_score;
+  if (fit != null && !(typeof fit === "number" && Number.isInteger(fit) && fit >= 1 && fit <= 5)) return false;
+  return true;
+}
+
+export function enrichmentBodyReady(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  const body = payload as Record<string, unknown>;
+  const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  return text(body.external_id).length > 0 && (text(body.deal_id).length > 0 || text(body.domain).length > 0);
+}
+
+export function outreachBodyReady(payload: unknown): boolean {
+  if (!enrichmentBodyReady(payload)) return false;
+  const channel = (payload as Record<string, unknown>).channel;
+  return channel === "email" || channel === "linkedin";
+}
+
+export function dealClosedBodyReady(payload: unknown): boolean {
+  if (!enrichmentBodyReady(payload)) return false;
+  const value = (payload as Record<string, unknown>).value_cents;
+  return value == null || (typeof value === "number" && Number.isInteger(value) && value >= 0);
 }

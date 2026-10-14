@@ -1,6 +1,7 @@
 import { migrate } from "../../db/migrate";
 import { d1Sql, type D1Like } from "../../db/sql";
 import { noteWakeMiss, wakeOrganization, type WakeEnv } from "../agent-wake";
+import { applySchemaScore } from "../lead-routing";
 import { startLeadSchemaScan, type ScanQueue } from "../lead-schema";
 import { storeScanContext } from "../scan-context";
 import type { ObjectStore } from "../store/objects";
@@ -75,7 +76,10 @@ function scanReady(body: unknown): { organizationId: string } | null {
 function messageShape(body: unknown): { source: string; payload: unknown } | null {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
   const source = "source" in body ? body.source : null;
-  if (source !== "assessment" && source !== "booking" && source !== "schema") return null;
+  if (source !== "assessment" && source !== "booking" && source !== "schema" && source !== "lead" && source !== "enrichment" &&
+    source !== "outreach" &&
+    source !== "deal_closed"
+  ) return null;
   const payload = "payload" in body ? body.payload : null;
   return { source, payload };
 }
@@ -95,6 +99,7 @@ export async function handleLeadIntakeBatch(
     const ready = scanReady(message.body);
     if (ready) {
       try {
+        await applySchemaScore(sql, ready.organizationId, now);
         if (store) {
           await storeScanContext({ sql, store, organizationId: ready.organizationId, now });
         }
