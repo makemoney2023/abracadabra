@@ -6,6 +6,7 @@ export type CheckGuide = {
   strong: string;
   first: string;
   faq: Array<{ q: string; a: string }>;
+  furtherReading?: { href: string; label: string };
 };
 
 export const CHECK_GUIDES: CheckGuide[] = [
@@ -16,6 +17,10 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "answer": "The pressure section asks which jobs already hurt: experts as the queue, a sale that needs a visit, claims that drift, a site answer engines cannot read. Severity says whether it is a nuisance or a ceiling.",
     "strong": "A strong answer names one or two jobs that cap growth, not a dozen mild annoyances.",
     "first": "Pick the single job that, if it moved this month, would change the week.",
+    "furtherReading": {
+      "href": "https://abra-ca-dabra.app/blog/how-can-ai-help-small-businesses",
+      "label": "How surveys count AI in a small business"
+    },
     "faq": [
       {
         "q": "Where does the work slow down?",
@@ -30,6 +35,10 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "answer": "Readiness scores four things: where the knowledge lives, whether the workflow is written down, who would own a new system, and who decides. A low score is a state, not a grade.",
     "strong": "Strong looks like one system of record, a written workflow someone owns, a named day-to-day owner, and a decision inside the month.",
     "first": "Write the core workflow on one page before you buy or build anything.",
+    "furtherReading": {
+      "href": "https://abra-ca-dabra.app/blog/ai-readiness-assessment",
+      "label": "What an AI readiness assessment measures"
+    },
     "faq": [
       {
         "q": "Could AI do real work here?",

@@ -4,7 +4,7 @@
 
 Site: https://abra-ca-dabra.app/
 Contact: dev@pirx.ca
-Last updated: 2026-10-07
+Last updated: 2026-10-14
 
 ## What we do
 
@@ -55,6 +55,9 @@ If a product you can buy already does the job, we say so and send you there.
 - Catalog and argument (home): https://abra-ca-dabra.app/
 - The walkthrough, one continuous flight through four shipped systems: https://abra-ca-dabra.app/walkthrough.html
 - The films on file, source cuts, live captures, and eight Super Funnel associate tours: https://abra-ca-dabra.app/films.html
+- Blog, notes with named sources. A post is listed below only on or after its publish date: https://abra-ca-dabra.app/blog
+- Christopher Buzny, founder: https://abra-ca-dabra.app/about/christopher-buzny
+- Privacy draft, not in force until reviewed: https://abra-ca-dabra.app/privacy
 - Readiness Check, a five-to-seven-minute score of pressure, readiness, growth, and site visibility, hosted with Schema: https://check.abra-ca-dabra.app/check
 
 ## Rules for quoting this site
@@ -62,3 +65,36 @@ If a product you can buy already does the job, we say so and send you there.
 - Use the figures above with the date they were pulled (2026-09-23). Do not extrapolate them.
 - Wellness and clinical-style tools built by the studio are non-diagnostic.
 - Primary action: "Show us how it works" (mailto:dev@pirx.ca). Secondary: "See what we've built". The AEO chapter links to "Run the Readiness Check" (https://check.abra-ca-dabra.app/check) and "Open Schema" (https://schema-two.vercel.app/).
+
+<!-- blog-live:start -->
+## Blog
+
+Index: https://abra-ca-dabra.app/blog
+Author: https://abra-ca-dabra.app/about/christopher-buzny
+Privacy draft (not in force): https://abra-ca-dabra.app/privacy
+
+- AI Agents for Business: When to Use One: https://abra-ca-dabra.app/blog/ai-agents-for-business
+- AI Agents vs Agentic AI: A Plain Split: https://abra-ca-dabra.app/blog/ai-agents-vs-agentic-ai
+- AI Automation Agency vs Consultant: Who to Hire: https://abra-ca-dabra.app/blog/ai-automation-agency-vs-consultant
+- AI Automation for Small Business: Which Job First: https://abra-ca-dabra.app/blog/ai-automation-for-small-business
+- AI Consultant for Small Business: What to Ask: https://abra-ca-dabra.app/blog/ai-consultant-for-small-business
+- AI for Small Business: What the Surveys Still Say: https://abra-ca-dabra.app/blog/ai-for-small-business-2027
+- An AI Implementation Framework in Five Stages: https://abra-ca-dabra.app/blog/ai-implementation-framework
+- AI Readiness Assessment Questionnaire: The Themes: https://abra-ca-dabra.app/blog/ai-readiness-assessment-questionnaire
+- AI Readiness Assessment: What It Measures and How to Score: https://abra-ca-dabra.app/blog/ai-readiness-assessment
+- AI Readiness Checklist Before You Buy a Tool: https://abra-ca-dabra.app/blog/ai-readiness-checklist
+- An AI Readiness Framework an Owner Can Score: https://abra-ca-dabra.app/blog/ai-readiness-framework
+- AI-Ready Data: What a Small Business Needs First: https://abra-ca-dabra.app/blog/ai-ready-data
+- AI Strategy for Small Business: Start With the Job: https://abra-ca-dabra.app/blog/ai-strategy-for-small-business
+- Answer Engine Optimization: What Google Still Requires: https://abra-ca-dabra.app/blog/answer-engine-optimization
+- Business Process Automation With AI: Write the Job: https://abra-ca-dabra.app/blog/business-process-automation-ai
+- Generative Engine Optimization vs SEO: https://abra-ca-dabra.app/blog/generative-engine-optimization-vs-seo
+- How Can AI Help a Small Business? What Surveys Count: https://abra-ca-dabra.app/blog/how-can-ai-help-small-businesses
+- How to Show Up in ChatGPT and AI Overviews: https://abra-ca-dabra.app/blog/how-to-get-your-business-to-show-up-in-chatgpt
+- How to Use AI in Your Business: Twelve Jobs: https://abra-ca-dabra.app/blog/how-to-use-ai-in-your-business
+- Is My Business Ready for AI? Signs to Read First: https://abra-ca-dabra.app/blog/is-my-business-ready-for-ai
+- Off-the-Shelf AI or Custom Software: https://abra-ca-dabra.app/blog/off-the-shelf-ai-or-custom-software
+- What Is an AI Agent? A Plain Answer for Owners: https://abra-ca-dabra.app/blog/what-is-an-ai-agent
+- What Is llms.txt, and Who Actually Reads It: https://abra-ca-dabra.app/blog/what-is-llms-txt
+- Why AI Pilots Stall After the Demo: https://abra-ca-dabra.app/blog/why-ai-pilots-stall
+<!-- blog-live:end -->

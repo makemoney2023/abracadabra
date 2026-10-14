@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Is an AI Agent? A Plain Answer for Owners | Abracadabra AI</title>
+<meta name="description" content="An agent picks its own next step. A workflow follows a path you wrote. This note uses Anthropic&#39;s distinction and McKinsey&#39;s survey of who is scaling.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://abra-ca-dabra.app/blog/what-is-an-ai-agent">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Abracadabra AI">
+<meta property="og:url" content="https://abra-ca-dabra.app/blog/what-is-an-ai-agent">
+<meta property="og:title" content="What Is an AI Agent? A Plain Answer for Owners | Abracadabra AI">
+<meta property="og:description" content="An agent picks its own next step. A workflow follows a path you wrote. This note uses Anthropic&#39;s distinction and McKinsey&#39;s survey of who is scaling.">
+<meta property="og:image" content="https://abra-ca-dabra.app/blog/og/what-is-an-ai-agent.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="What Is an AI Agent? A Plain Answer for Owners — Abracadabra AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="What Is an AI Agent? A Plain Answer for Owners | Abracadabra AI">
+<meta name="twitter:description" content="An agent picks its own next step. A workflow follows a path you wrote. This note uses Anthropic&#39;s distinction and McKinsey&#39;s survey of who is scaling.">
+<meta name="twitter:image" content="https://abra-ca-dabra.app/blog/og/what-is-an-ai-agent.png">
+<meta name="twitter:image:alt" content="What Is an AI Agent? A Plain Answer for Owners — Abracadabra AI">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Tektur:wght@500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/blog/blog.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070706'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23FF4B24'%3EA%3C/text%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://abra-ca-dabra.app/#org",
+      "name": "Abracadabra AI",
+      "url": "https://abra-ca-dabra.app/",
+      "email": "dev@pirx.ca",
+      "slogan": "From thought to working software"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://abra-ca-dabra.app/#website",
+      "url": "https://abra-ca-dabra.app/",
+      "name": "Abra-ca-dabra",
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "Person",
+      "@id": "https://abra-ca-dabra.app/#christopher-buzny",
+      "name": "Christopher Buzny",
+      "jobTitle": "Founder",
+      "url": "https://abra-ca-dabra.app/about/christopher-buzny",
+      "worksFor": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      }
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://abra-ca-dabra.app/blog/what-is-an-ai-agent#post",
+      "headline": "What Is an AI Agent? A Plain Answer for Owners",
+      "description": "An agent picks its own next step. A workflow follows a path you wrote. This note uses Anthropic's distinction and McKinsey's survey of who is scaling.",
+      "datePublished": "2026-10-14",
+      "dateModified": "2026-10-14",
+      "mainEntityOfPage": "https://abra-ca-dabra.app/blog/what-is-an-ai-agent",
+      "url": "https://abra-ca-dabra.app/blog/what-is-an-ai-agent",
+      "inLanguage": "en",
+      "keywords": "what is an ai agent",
+      "articleSection": "AI agents",
+      "image": [
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/what-is-an-ai-agent/01.png",
+          "width": 1600,
+          "height": 900,
+          "caption": "A coral path that branches, standing for an agent choosing its next step"
+        },
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/what-is-an-ai-agent/02.png",
+          "width": 1600,
+          "height": 900,
+          "caption": "Two separate tracks, one fixed and one branching, on a dark field"
+        },
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/what-is-an-ai-agent/03.png",
+          "width": 1600,
+          "height": 900,
+          "caption": "A small cyan gate at the end of a path, standing for a human checkpoint"
+        }
+      ],
+      "author": {
+        "@id": "https://abra-ca-dabra.app/#christopher-buzny"
+      },
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      },
+      "citation": [
+        {
+          "@type": "CreativeWork",
+          "name": "Building effective agents",
+          "url": "https://www.anthropic.com/research/building-effective-agents",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Anthropic"
+          },
+          "datePublished": "2024-12-19"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "The state of AI in 2025: Agents, innovation, and transformation",
+          "url": "https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai/november%202025/the-state-of-ai-2025-agents-innovation_cmyk-v1.pdf",
+          "publisher": {
+            "@type": "Organization",
+            "name": "McKinsey"
+          }
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://abra-ca-dabra.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Blog",
+          "item": "https://abra-ca-dabra.app/blog"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "What Is an AI Agent? A Plain Answer for Owners",
+          "item": "https://abra-ca-dabra.app/blog/what-is-an-ai-agent"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is an AI agent in plain language?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Anthropic describes an agent as a system where the model directs its own process and tool use. A workflow, by contrast, follows a path the builder wrote in advance."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Should a small business start with an agent?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Anthropic's December 2024 essay says to start with the simplest solution that works. A fixed workflow is enough when the steps do not change."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How many firms are scaling agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "McKinsey's 2025 survey says 23% of respondents are scaling an agentic system somewhere in the enterprise, and 39% are experimenting. In any one function, no more than 10% say they are scaling agents."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="top">
+  <a class="mark" href="/">Abracadabra AI</a>
+  <nav aria-label="Site">
+    <a href="/blog">Blog</a>
+    <a href="/about/christopher-buzny">Christopher Buzny</a>
+    <a href="/privacy">Privacy</a>
+  </nav>
+</header>
+
+<main>
+<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">What Is an AI Agent? A Plain Answer for Owners</li></ol></nav>
+<article>
+<p class="kicker">AI agents · what is an ai agent</p>
+<h1>What Is an AI Agent? A Plain Answer for Owners</h1>
+<p class="dek">An agent picks its own next step. A workflow follows a path you wrote. This note uses Anthropic&#39;s distinction and McKinsey&#39;s survey of who is scaling.</p>
+<p class="byline">By <a href="/about/christopher-buzny">Christopher Buzny</a> · <time datetime="2026-10-14">2026-10-14</time></p>
+
+<figure><img src="/blog/media/what-is-an-ai-agent/01.png" alt="A coral path that branches, standing for an agent choosing its next step" width="1600" height="900"><figcaption>An agent chooses the next step.</figcaption></figure>
+<div class="prose">
+<p>An AI agent is not a chatbot with a longer prompt. Anthropic&#39;s December 2024 essay draws the line this way: a workflow runs large language models and tools on a path the builder defined, and an agent lets the model direct its own process and its own tool use.<sup><a href="#source-anthropic">1</a></sup> The essay also says to start with the simplest solution, and to add complexity only when the simpler system fails.</p>
+<p>The <a href="https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low">process guide</a> is the matching check when the steps are still in someone&#39;s head. The <a href="/blog/ai-agents-for-business">use-case note</a> lists jobs. The <a href="/blog/ai-agents-vs-agentic-ai">comparison note</a> stays on the vocabulary.</p>
+<h2>When a workflow is enough</h2>
+<p>Use a workflow when the steps are known: take the email, extract the fields, write the draft, wait for a person. Use an agent when the next step depends on what the last step found, and you cannot write every branch in advance. If you cannot name the stop condition, you do not have either one yet.</p>
+<figure><img src="/blog/media/what-is-an-ai-agent/02.png" alt="Two separate tracks, one fixed and one branching, on a dark field" width="1600" height="900"><figcaption>A workflow stays on the path you wrote.</figcaption></figure>
+
+<table>
+<thead>
+<tr>
+<th>Kind of system</th>
+<th>Who picks the next step</th>
+<th>When it fits</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>One prompt</td>
+<td>The person at the keyboard</td>
+<td>A single draft or a single answer</td>
+</tr>
+<tr>
+<td>Workflow</td>
+<td>The path you wrote</td>
+<td>The steps rarely change</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>The model, inside bounds you set</td>
+<td>The path depends on what it finds</td>
+</tr>
+</tbody></table>
+<h2>What the survey actually counts</h2>
+<p>McKinsey&#39;s 2025 survey says 88% of respondents report regular AI use in at least one business function, compared with 78% a year earlier.<sup><a href="#source-mckinsey">2</a></sup> 23% say their organizations are scaling an agentic system somewhere in the enterprise. An additional 39% are experimenting with agents. In any one function, no more than 10% say they are scaling agents. Firms under $100 million in revenue are less often at the scaling stage: 29%, against nearly half of firms over $5 billion.</p>
+<aside class="cta cta-inline"><p>An agent needs a written process and an owner. Score both.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="inline" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=inline">Run the Readiness Check</a></aside>
+
+<p>Those are enterprise survey shares. They are not a score for one small business. An agent still needs a written process and a person who can stop it.</p>
+<figure><img src="/blog/media/what-is-an-ai-agent/03.png" alt="A small cyan gate at the end of a path, standing for a human checkpoint" width="1600" height="900"><figcaption>Someone still owns the stop.</figcaption></figure>
+</div>
+<section id="faq"><h2>Questions</h2><h3>What is an AI agent in plain language?</h3><p>Anthropic describes an agent as a system where the model directs its own process and tool use. A workflow, by contrast, follows a path the builder wrote in advance.</p><h3>Should a small business start with an agent?</h3><p>Anthropic&#39;s December 2024 essay says to start with the simplest solution that works. A fixed workflow is enough when the steps do not change.</p><h3>How many firms are scaling agents?</h3><p>McKinsey&#39;s 2025 survey says 23% of respondents are scaling an agentic system somewhere in the enterprise, and 39% are experimenting. In any one function, no more than 10% say they are scaling agents.</p></section>
+<section id="sources"><h2>Sources</h2><ol><li id="source-anthropic"><a href="https://www.anthropic.com/research/building-effective-agents">Building effective agents</a>. Anthropic. 2024-12-19.</li><li id="source-mckinsey"><a href="https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai/november%202025/the-state-of-ai-2025-agents-innovation_cmyk-v1.pdf">The state of AI in 2025: Agents, innovation, and transformation</a>. McKinsey.</li></ol></section>
+<section id="related"><h2>Related</h2><ul><li><a href="/blog/ai-agents-for-business">AI Agents for Business: When to Use One</a></li><li><a href="/blog/ai-agents-vs-agentic-ai">AI Agents vs Agentic AI: A Plain Split</a></li><li><a href="/blog/ai-automation-agency-vs-consultant">AI Automation Agency vs Consultant: Who to Hire</a></li></ul></section>
+<section id="all-notes"><h2>All notes</h2><ul><li><a href="/blog/ai-agents-for-business">AI Agents for Business: When to Use One</a></li><li><a href="/blog/ai-agents-vs-agentic-ai">AI Agents vs Agentic AI: A Plain Split</a></li><li><a href="/blog/ai-automation-agency-vs-consultant">AI Automation Agency vs Consultant: Who to Hire</a></li><li><a href="/blog/ai-automation-for-small-business">AI Automation for Small Business: Which Job First</a></li><li><a href="/blog/ai-consultant-for-small-business">AI Consultant for Small Business: What to Ask</a></li><li><a href="/blog/ai-for-small-business-2027">AI for Small Business: What the Surveys Still Say</a></li><li><a href="/blog/ai-implementation-framework">An AI Implementation Framework in Five Stages</a></li><li><a href="/blog/ai-readiness-assessment-questionnaire">AI Readiness Assessment Questionnaire: The Themes</a></li><li><a href="/blog/ai-readiness-assessment">AI Readiness Assessment: What It Measures and How to Score</a></li><li><a href="/blog/ai-readiness-checklist">AI Readiness Checklist Before You Buy a Tool</a></li><li><a href="/blog/ai-readiness-framework">An AI Readiness Framework an Owner Can Score</a></li><li><a href="/blog/ai-ready-data">AI-Ready Data: What a Small Business Needs First</a></li><li><a href="/blog/ai-strategy-for-small-business">AI Strategy for Small Business: Start With the Job</a></li><li><a href="/blog/answer-engine-optimization">Answer Engine Optimization: What Google Still Requires</a></li><li><a href="/blog/business-process-automation-ai">Business Process Automation With AI: Write the Job</a></li><li><a href="/blog/generative-engine-optimization-vs-seo">Generative Engine Optimization vs SEO</a></li><li><a href="/blog/how-can-ai-help-small-businesses">How Can AI Help a Small Business? What Surveys Count</a></li><li><a href="/blog/how-to-get-your-business-to-show-up-in-chatgpt">How to Show Up in ChatGPT and AI Overviews</a></li><li><a href="/blog/how-to-use-ai-in-your-business">How to Use AI in Your Business: Twelve Jobs</a></li><li><a href="/blog/is-my-business-ready-for-ai">Is My Business Ready for AI? Signs to Read First</a></li><li><a href="/blog/off-the-shelf-ai-or-custom-software">Off-the-Shelf AI or Custom Software</a></li><li><a href="/blog/what-is-llms-txt">What Is llms.txt, and Who Actually Reads It</a></li><li><a href="/blog/why-ai-pilots-stall">Why AI Pilots Stall After the Demo</a></li></ul></section>
+<aside class="cta cta-close"><p>An agent needs a written process and an owner. Score both.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="close" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=close">Run the Readiness Check</a></aside>
+</article>
+<aside class="cta cta-sticky"><p>An agent needs a written process and an owner. Score both.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="sticky" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=sticky">Take the Readiness Check</a></aside>
+</main>
+</body>
+</html>

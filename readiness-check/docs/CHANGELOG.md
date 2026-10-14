@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-14 — The check declares its sitemap
+
+- **What changed** — `robots.ts` allows crawlers and points them at `${checkUrl()}/sitemap.xml`. The pressure and readiness guides link to the matching studio notes.
+- **Why** — The check app had a sitemap and no robots file, so crawlers were not told where the sitemap lived.
+- **Code touchpoints** — `src/app/robots.ts`, `src/content/check-guides/index.ts`, `src/components/check/GuideArticle.tsx`
+- **Data-flow impact** — none
+- **API / schema impact** — none
+- **Verification** — `npx vitest run tests/unit/robots.test.ts tests/unit/assessment-config.test.ts`
+
 ## 2026-10-08 — A finished staff scan wakes the lead
 
 - **What changed** — A completed or failed scan that belongs to an organization sends `scan_ready` on `lead-intake`. A finished scan stays finished if a later step throws. Only scans with no organization count toward the public daily cap.
