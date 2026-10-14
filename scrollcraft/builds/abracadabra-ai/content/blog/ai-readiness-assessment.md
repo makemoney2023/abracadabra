@@ -1,7 +1,7 @@
 ---
 title: "AI Readiness Assessment: What It Measures and How to Score"
 description: "An AI readiness assessment scores data, process, people, and decisions. Compare public tools, then read what each Readiness Check band means."
-datePublished: "2026-10-20"
+datePublished: "2026-10-14"
 dateModified: "2026-10-14"
 pillar: AI readiness
 cluster: assessment

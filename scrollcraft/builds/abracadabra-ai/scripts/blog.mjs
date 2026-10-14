@@ -76,8 +76,16 @@ export function asOf() {
   return process.env.BLOG_AS_OF || new Date().toISOString().slice(0, 10);
 }
 
+export function previewMode() {
+  return process.env.BLOG_PREVIEW === "1";
+}
+
 export function isPublic(post, day = asOf()) {
-  return post.datePublished <= day;
+  return previewMode() || post.datePublished <= day;
+}
+
+function publicRobots(value) {
+  return previewMode() ? "noindex,nofollow" : value;
 }
 
 export function ctaHref(slug, placement) {
@@ -358,6 +366,7 @@ ${jsonLd(json)}
     <a href="/privacy">Privacy</a>
   </nav>
 </header>
+${previewMode() ? `<p class="preview-banner">Preview build. Scheduled notes are included here so they can be reviewed before their publish date. Search engines are asked not to index this copy.</p>` : ""}
 ${body}
 </body>
 </html>
@@ -393,6 +402,10 @@ async function renderPost(post, posts) {
   }).join("");
   const faqs = post.faqs.map((faq) => `<h3>${esc(faq.question)}</h3><p>${esc(faq.answer)}</p>`).join("");
   const relatedHtml = related.map((item) => `<li><a href="/blog/${item.slug}">${esc(item.title)}</a></li>`).join("");
+  const allNotes = posts
+    .filter((item) => item.slug !== post.slug)
+    .map((item) => `<li><a href="/blog/${item.slug}">${esc(item.title)}</a></li>`)
+    .join("");
   const body = `<main>
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }, { name: post.title, href: `/blog/${post.slug}` }])}
 <article>
@@ -408,6 +421,7 @@ ${renderMarkdown(post)}
 <section id="faq"><h2>Questions</h2>${faqs}</section>
 <section id="sources"><h2>Sources</h2><ol>${sources}</ol></section>
 <section id="related"><h2>Related</h2><ul>${relatedHtml}</ul></section>
+<section id="all-notes"><h2>All notes</h2><ul>${allNotes}</ul></section>
 ${ctaBlock(post, "close")}
 </article>
 ${ctaBlock(post, "sticky")}
@@ -416,7 +430,7 @@ ${ctaBlock(post, "sticky")}
     title: `${post.title} | Abracadabra AI`,
     description: post.description,
     canonical: url,
-    robots: live ? "index,follow,max-image-preview:large" : "noindex,nofollow",
+    robots: publicRobots(live ? "index,follow,max-image-preview:large" : "noindex,nofollow"),
     ogImage: `${SITE}${ogPath}`,
     ogAlt,
     ogType: "article",
@@ -476,7 +490,7 @@ ${cards}
     title: "Blog | Abracadabra AI",
     description: "Notes on AI readiness and small-business adoption from Abracadabra AI. Sources are named. The Readiness Check educates and routes.",
     canonical: `${SITE}/blog`,
-    robots: "index,follow,max-image-preview:large",
+    robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/index.png`,
     ogAlt,
     ogType: "website",
@@ -515,7 +529,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/abou
     title: "Christopher Buzny | Abracadabra AI",
     description: "Christopher Buzny is the founder of Abracadabra AI. Credentials and personal profile links stay blank until he confirms them.",
     canonical: `${SITE}/about/christopher-buzny`,
-    robots: "index,follow,max-image-preview:large",
+    robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/author.png`,
     ogAlt,
     ogType: "profile",
@@ -752,7 +766,7 @@ export async function build() {
   await writeSitemap(posts);
   await writeLlms(posts);
   await injectSitewidePerson();
-  await writeFile(join(root, "blog/build-stamp.json"), `${JSON.stringify({ asOf: asOf() }, null, 2)}\n`);
+  await writeFile(join(root, "blog/build-stamp.json"), `${JSON.stringify({ asOf: asOf(), preview: previewMode() }, null, 2)}\n`);
   const relativeRoot = relative(process.cwd(), root) || ".";
   console.log(`blog build ${asOf()} (${posts.length} posts) in ${relativeRoot}`);
 }

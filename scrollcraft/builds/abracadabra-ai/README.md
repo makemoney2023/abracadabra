@@ -17,10 +17,10 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 ## Blog — 2026-10-14
 
 - `npm test` runs `node scripts/build-blog.mjs` before the Playwright suite. `npm run deploy` stays `wrangler deploy`. Generated HTML, RSS, sitemap entries, OG images, and redirects are committed so a folder deploy still works.
-- Posts live in `content/blog/*.md`. A note with `datePublished` after the build date is written with `noindex` and left out of the index, sitemap, RSS, and the live list in `llms.txt`.
+- Posts live in `content/blog/*.md`. A note with `datePublished` after the build date is written with `noindex` and left out of the index, sitemap, RSS, and the live list in `llms.txt`. `BLOG_PREVIEW=1 node scripts/build-blog.mjs` includes those scheduled notes and marks every generated page `noindex`. Leave the variable unset for `npm test` and for the files committed here.
 - Each post has three images and a 1200×630 title card at `blog/og/<slug>.png`. The blog index and the author page use `blog/og/index.png` and `blog/og/author.png`.
 - `content/` and `scripts/` are in `.assetsignore`. `robots.txt` disallows CCBot and Bytespider and allows the other named answer-engine crawlers.
-- The first two notes publish on 2026-10-20 and 2026-10-22.
+- All 24 calendar notes are dated 2026-10-14, so a build on or after that day lists them on `/blog`, in the sitemap, in RSS, and in the live block of `llms.txt`, with `index,follow`. A later `datePublished` would still stay out of those surfaces until that day. Census BTOS, the Census CES function shares, BDC profitability shares, the pirx.ca impression count, the Chamber “four or more platforms” line, and two Microsoft paraphrases that were not on the fetched Work Trend Index page are omitted.
 
 ## Work rail — 2026-10-07: Getting started
 

@@ -1,7 +1,7 @@
 ---
 title: "How Can AI Help a Small Business? What Surveys Count"
 description: "Two 2025 surveys count different work. This note separates generative-AI use from AI in production, then names the jobs owners hand over."
-datePublished: "2026-10-22"
+datePublished: "2026-10-14"
 dateModified: "2026-10-14"
 pillar: AI for small business
 cluster: adoption
@@ -51,7 +51,7 @@ Two surveys from 2025 count AI in small firms, and they count different work. Th
 
 ## Generative use is not production use
 
-The Chamber's Empowering Small Business report says 58% of small businesses self-identified that they use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber] A separate line in the same report says 58% of small businesses use four or more tech platforms. Those are two different facts. The first is about generative AI. The second is about how many platforms a firm already runs.
+The Chamber's Empowering Small Business report says 58% of small businesses self-identified that they use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber] That question asks about generative AI. It does not ask whether AI produces the goods or the service.
 
 Statistics Canada, in the Canadian Survey on Business Conditions for the second quarter of 2025, found that 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% in the second quarter of 2024.[^statcan] The release is dated 16 June 2025. Collection ran from 1 April to 5 May 2025. The agency received 21,357 responses, of which 9,103 came from businesses that used AI.
 

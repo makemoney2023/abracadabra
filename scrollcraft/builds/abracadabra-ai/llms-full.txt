@@ -2,4 +2,525 @@
 
 Generated 2026-10-14. Only posts with datePublished on or before that day are included.
 
-No live posts.
+## AI Agents for Business: When to Use One
+
+An agent earns a place in the business only when the job branches and a person still checks the output. Anthropic's December 2024 essay says to start with the simplest solution, and it separates a fixed workflow from an agent that directs its own tools.[^anthropic] If the steps do not change, write the workflow and stop.
+
+The [people guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-people-low) is the matching fix. The [definition](/blog/what-is-an-ai-agent) is the vocabulary. The [agentic comparison](/blog/ai-agents-vs-agentic-ai) is the next distinction.
+
+## Eight jobs, each with a stop
+
+Inbox triage waits for a person before anything is sent. Meeting notes wait before they become tasks. Quote follow-up waits before a price goes out. Invoice questions wait before a payment promise. Inventory exceptions wait before a purchase. Support replies wait before they reach the customer. Schedule changes wait before a customer is told. A weekly report waits before it is treated as the record.
+
+<!--image:2-->
+
+| Job | What the person still does |
+| --- | --- |
+| Inbox triage | Decides what is actually sent |
+| Meeting notes | Accepts the tasks |
+| Quote follow-up | Approves the price |
+| Invoice questions | Approves any promise to pay |
+| Inventory exceptions | Approves the order |
+| Support replies | Approves what the customer sees |
+| Schedule changes | Approves the message |
+| Weekly report | Accepts it as the record |
+
+<!--cta:inline-->
+
+Gartner said in June 2025 that over 40% of agentic AI projects will be canceled by the end of 2027.[^gartner-agentic] The reasons are cost, unclear value, and inadequate risk controls. A job from the list above without a named checker is a candidate for that pile.
+
+<!--image:3-->
+
+## AI Agents vs Agentic AI: A Plain Split
+
+An AI agent, in Anthropic's December 2024 essay, is a system that directs its own tools toward a goal.[^anthropic] A workflow is the opposite: the steps are written in advance. Agentic AI is the category vendors use when they mean many such systems, often across a company. The words are not interchangeable.
+
+The [definition](/blog/what-is-an-ai-agent) is the short version. The [jobs list](/blog/ai-agents-for-business) is where an agent might sit. The [people guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-people-mid) is who has to check the output.
+
+## What the forecast says
+
+Gartner said in June 2025 that over 40% of agentic AI projects will be canceled by the end of 2027.[^gartner-agentic] The reasons are cost, unclear business value, and inadequate risk controls. The same note said 15% of day-to-day work decisions will be made autonomously by 2028, up from 0% in 2024, and that 33% of enterprise software will include agentic AI by 2028, up from less than 1% in 2024.
+
+<!--image:2-->
+
+<!--cta:inline-->
+
+If you can write the steps, you want a workflow. If the next step depends on what the last step found, you may want an agent, and you still want a person who can stop it. Calling that agentic does not change the checkpoint.
+
+<!--image:3-->
+
+## AI Automation Agency vs Consultant: Who to Hire
+
+An AI consultant names the job, the data, and the stop. An automation agency builds the system after that naming is done. Hiring the agency first produces a build with no owner. The [consultant note](/blog/ai-consultant-for-small-business) is the question list. The [buy-or-build note](/blog/off-the-shelf-ai-or-custom-software) is whether to build at all. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-mid) is the matching score.
+
+## Two training figures, two populations
+
+Microsoft's 2024 index says only 25% of companies were planning to offer generative AI training.[^microsoft] Statistics Canada's 2025 brief says 38.9% of Canadian businesses that already use AI had trained staff.[^statcan] Those are different populations. One is a plan among companies. The other is training among businesses that already use AI. Do not average them.
+
+<!--image:2-->
+
+McKinsey's 2025 survey says 23% are scaling an agentic system somewhere, and 39% are experimenting.[^mckinsey] An agency pitch that quotes only a use figure is selling the experiment.
+
+<!--cta:inline-->
+
+Pay a consultant to refuse the work that a product already does. Pay an agency when the process is written and the checker is named.
+
+<!--image:3-->
+
+## AI Automation for Small Business: Which Job First
+
+AI automation for a small business is a choice of job, not a catalog of tools. Score a candidate on four things, in words: how often it happens, how stable the rules are, whether a system can read the data, and what a wrong answer costs. High volume, stable rules, readable data, and a cheap catch belong first. A rare decision with an expensive mistake does not.
+
+The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) asks where the work slows down. The [mapping note](/blog/business-process-automation-ai) is the step before a tool. The [agency note](/blog/ai-automation-agency-vs-consultant) is the hiring question that comes after.
+
+## What the surveys already count
+
+Statistics Canada, for the second quarter of 2025, found that 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier.[^statcan] Among businesses that used AI, text analytics accounted for 35.7% and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff.
+
+<!--image:2-->
+
+The Chamber's 2025 report says 58% of small businesses use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber] That is a different question. Opening a generative tool is not the same as putting AI inside delivery.
+
+<!--cta:inline-->
+
+Read the StatCan list as the practical queue: sort text, run marketing that can be measured, write a workflow that did not exist, and train the people who will run it. Run the four-part test on each one before you buy anything.
+
+<!--image:3-->
+
+## AI Consultant for Small Business: What to Ask
+
+An AI consultant for a small business should be able to say which job changes, which data it needs, and who can stop the work. If an off-the-shelf product already does that job, the honest answer is to buy the product. The [studio](/) works that way. The [agency comparison](/blog/ai-automation-agency-vs-consultant) is the hiring split. The [stall note](/blog/why-ai-pilots-stall) is what happens when the proof never becomes a process.
+
+## What gets canceled
+
+Gartner said in June 2025 that over 40% of agentic AI projects will be canceled by the end of 2027, citing cost, unclear business value, and inadequate risk controls.[^gartner-agentic] In a poll of 3,412 respondents, 19% said their organization had made significant investments in agentic AI, 42% had made conservative investments, 8% had made none, and 31% were waiting or unsure. Gartner also said only about 130 vendors offered what it considered real agentic products.
+
+<!--image:2-->
+
+McKinsey's 2025 survey puts the same gap in different numbers. 88% report regular AI use in at least one function, up from 78% a year earlier.[^mckinsey] 23% are scaling an agentic system somewhere, and 39% are experimenting. A consultant who quotes only the first figure is describing use, not a finished system.
+
+<!--cta:inline-->
+
+Red flags are specific. Guaranteed rankings ignore Google's guide, which says generative features are still SEO.[^google] No data plan means the source of truth was never named. No handover means the business cannot run the thing after the invoice.
+
+<!--image:3-->
+
+## AI for Small Business: What the Surveys Still Say
+
+The useful question for a small business is still which job changes. Two 2025 surveys remain the clean public counts, and they do not measure the same thing.
+
+The [help note](/blog/how-can-ai-help-small-businesses) is the full split. The [strategy note](/blog/ai-strategy-for-small-business) is what to do with the gap. The [assessment](/blog/ai-readiness-assessment) is how to score one firm.
+
+## Two questions, two answers
+
+The Chamber's 2025 report says 58% of small businesses use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber]
+
+<!--image:2-->
+
+Statistics Canada, for 2025, found 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier.[^statcan]
+
+<!--cta:inline-->
+
+A firm can say yes to the Chamber question and no to the Statistics Canada question. Plan from the job you can name. Do not average the two percentages into a single readiness rate. This site does not publish an aggregate score from the Readiness Check.
+
+<!--image:3-->
+
+## An AI Implementation Framework in Five Stages
+
+An implementation framework is the order of work after you know the job. NIST names Govern, Map, Measure, and Manage.[^nist] This note uses five stages in words: name the job, score the data, write the process, assign a checker, then keep or stop.
+
+The [Forming band](https://check.abra-ca-dabra.app/band/forming) is where many businesses sit while this is unfinished. The [stall note](/blog/why-ai-pilots-stall) is what happens if you skip a stage. The [readiness framework](/blog/ai-readiness-framework) is the score that comes first.
+
+## What the numbers say about the middle
+
+McKinsey's 2025 survey says 88% report regular AI use in at least one function.[^mckinsey] 23% are scaling an agentic system somewhere, and 39% are experimenting. 29% of firms under $100 million are scaling, against nearly half of firms over $5 billion. No more than 10% scale agents in any one function.
+
+<!--image:2-->
+
+Cisco's 2025 survey of 8,000 leaders found pacesetters, near 13% of that sample, were 4 times more likely to move a pilot into production.[^cisco] Those leaders work in organizations with more than 500 employees. A small business can still copy the sequence: a written process, then production.
+
+<!--cta:inline-->
+
+Stop at the stage you cannot finish. A checker you cannot name means you are not ready to keep the work.
+
+<!--image:3-->
+
+## AI Readiness Assessment Questionnaire: The Themes
+
+An AI readiness questionnaire should force four themes into the open: where the data lives, whether the process is written, who checks the output, and what decision success means. NIST groups the risk work as Govern, Map, Measure, and Manage.[^nist] A questionnaire that starts with a product name has skipped those themes.
+
+The [framework](/blog/ai-readiness-framework) is how to score the answers. The [assessment](/blog/ai-readiness-assessment) is the longer reading. The [growth guide](https://check.abra-ca-dabra.app/check/guide/growth) is what the check does after the score.
+
+## What a public checklist does not claim
+
+The AWS checklist for small and midsize businesses, updated in September 2025, walks an owner through readiness questions.[^aws] It does not publish a percentage of businesses that are ready. The OECD SME AI adoption tool, current in 2026, is a self-assessment aid for smaller firms.[^oecd] It is not a national adoption rate.
+
+<!--image:2-->
+
+<!--cta:inline-->
+
+Ask where the record of truth lives. Ask which step is written and which step is habit. Ask who can reject the output. Ask what you will stop doing if the answer is weak. Those four questions are the questionnaire.
+
+<!--image:3-->
+
+## AI Readiness Assessment: What It Measures and How to Score
+
+An AI readiness assessment asks whether a business can put a tool to work. Public indexes and checklists answer that for different audiences. This note compares them, then states what the [Readiness Check guide](https://check.abra-ca-dabra.app/check/guide/readiness) scores.
+
+## What the public tools measure
+
+Cisco's third annual AI Readiness Index, released 14 October 2025, surveyed 8,000 senior leaders in organizations with more than 500 employees, across 30 markets and 26 industries.[^cisco] Pacesetters stayed near 13% for three years. Those organizations were 4 times more likely to move a pilot into production, and 50% more likely to see measurable value. 83% of respondents plan to deploy AI agents, and nearly 40% expect agents to work alongside employees within a year. That sample is not a small-business survey.
+
+Gartner reported on 26 February 2025 that 63% of respondents do not have, or are unsure they have, the data management practices AI needs.[^gartner] The same note predicts that through 2026 organizations will abandon 60% of AI projects that lack AI-ready data.
+
+The OECD SME AI adoption tool, part of the 2026 French Group of Seven Presidency work, is a short self-check for smaller firms.[^oecd] It takes about five minutes, stores no data, and keeps answers in the browser. As of May 2026 it is a pilot, with preliminary validation by Group of Seven governments. It does not publish an adoption rate.
+
+AWS published an AI readiness checklist in September 2025.[^aws] It walks five steps and sorts a business into four stages: Not yet ready, Emerging, Operational, and Scaling. The stages cover data, the use case, the stack, governance, and the metrics you will watch. The page does not cite an adoption percentage.
+
+<!--image:2-->
+
+| Tool | Who it describes | What you leave with |
+| --- | --- | --- |
+| Cisco AI Readiness Index | Organizations with more than 500 employees | A comparison with pacesetters, not a score for one small firm |
+| OECD SME tool | Smaller firms in the Group of Seven pilot | A short self-check that stays in the browser |
+| AWS checklist | A small or midsize business working through stages | Five steps and four stage names |
+| Readiness Check | The business taking it | Four scores, a band, and three suggestions per section |
+
+The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. [Christopher Buzny](/about/christopher-buzny) publishes the method on the [studio site](/).
+
+<!--cta:inline-->
+
+## What each band means
+
+The check scores from 0 to 100. Bands are Early (0–39), Forming (40–59), Ready (60–79), and Running (80–100).[^check]
+
+- Early: The work that matters still lives in people's heads. The first useful move is to write one workflow down and name who owns it.
+- Forming: Pieces of the work are written down. A named owner and one system of record are what turn that into something a team can run.
+- Ready: The business can put a new system to work. The open question is which workflow to start with, and who owns it day to day.
+- Running: A real workflow already uses the tools. The next gain is the job that still waits on one person.
+
+<!--image:3-->
+
+A band is a state, not a grade. The four scores behind it are data, process, people, and the decision. The check takes five to seven minutes, one question per screen, and returns three suggestions for each section.
+
+The next note looks at [how surveys count AI in small businesses](/blog/how-can-ai-help-small-businesses), which is a different question from whether one firm is ready.
+
+## AI Readiness Checklist Before You Buy a Tool
+
+An AI readiness checklist is the list you finish before you pay for a tool. This note groups it into data, process, people, and the decision. The [Readiness Check](https://check.abra-ca-dabra.app/check) scores the same four. The [assessment note](/blog/ai-readiness-assessment) compares the public tools. The [data note](/blog/ai-ready-data) stays on the first group. The [process guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low) is the matching fix when that score is low.
+
+## Data and process
+
+Can you name the source of truth for the job? Is it current, and can a system read it without someone retyping it? Is the job written down, including the exceptions, and does one person own the handoff?
+
+Gartner reported in February 2025 that 63% of respondents do not have, or are unsure they have, the data management practices AI needs.[^gartner-data] The same note says that through 2026 organizations will abandon 60% of AI projects that lack AI-ready data.
+
+AWS published a checklist in September 2025.[^aws] It walks five steps and sorts a business into four stages: Not yet ready, Emerging, Operational, and Scaling. The page does not cite an adoption percentage.
+
+<!--image:2-->
+
+## People and the decision
+
+Who may use a tool, and who may send its output to a customer? Microsoft's 2024 Work Trend Index says 75% of knowledge workers use AI at work, and 46% of those users started less than six months earlier.[^microsoft] 78% of AI users bring their own tools. At small and midsize companies that share is 80%. 60% of leaders worry their organization's leadership lacks a plan and vision to implement AI.
+
+The decision questions are separate. What would count as success, who can stop the experiment, and what happens if the tool is wrong?
+
+<!--cta:inline-->
+
+A tick list does not say which gap is largest. The Readiness Check turns the same four groups into a band.
+
+<!--image:3-->
+
+## An AI Readiness Framework an Owner Can Score
+
+An AI readiness framework is a way to score the business before you score a tool. NIST groups AI risk work as Govern, Map, Measure, and Manage.[^nist] This note uses four groups an owner can see: data, process, people, and the decision. Each group is absent, partial, in place, or running. Those words are anchors. They are not a percentage.
+
+The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) is the matching page. The [assessment](/blog/ai-readiness-assessment) is the longer note. The [questionnaire](/blog/ai-readiness-assessment-questionnaire) is the question list.
+
+## What the bands mean
+
+The Readiness Check scores 0 to 39 as Early, 40 to 59 as Forming, 60 to 79 as Ready, and 80 to 100 as Running.[^check] The check educates and routes. It does not certify a business.
+
+<!--image:2-->
+
+Gartner said in February 2025 that 63% of respondents do not have, or are unsure they have, the data management practices AI needs.[^gartner-data] Through 2026, organizations will abandon 60% of AI projects that lack AI-ready data. A framework that scores data as running while the source of truth is a shared inbox is scoring a wish.
+
+Cisco's 2025 index surveyed 8,000 senior leaders in organizations with more than 500 employees.[^cisco] Pacesetters stayed near 13%. Those organizations were 4 times more likely to move a pilot into production. That sample is not a small business. The pattern still matters: production follows a written process, not a demo.
+
+<!--cta:inline-->
+
+Score the four groups in words first. Then run the check if you want the band.
+
+<!--image:3-->
+
+## AI-Ready Data: What a Small Business Needs First
+
+AI-ready data, for a small business, is not a warehouse. It is one current source for the job you want a tool to do, in a form a system can read, with a person who knows which fields lie. If the answer lives only in someone's head, the tool will invent a second version of it.
+
+The [low-data guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-data-low) and the [mid-data guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-data-mid) are the matching fixes. The [checklist](/blog/ai-readiness-checklist) asks the same question before a purchase.
+
+## What the research counts
+
+Gartner reported in February 2025 that 63% of respondents do not have, or are unsure they have, the data management practices AI needs.[^gartner-data] Through 2026, the same note says, organizations will abandon 60% of AI projects unsupported by AI-ready data. The page's sample size is not cited here, because the article and its structured data do not agree.
+
+A later Gartner article, from January 2026, says that by the end of last year at least 50% of generative AI projects were abandoned after proof of concept.[^gartner-fail] The reasons it names are poor data quality, inadequate risk controls, escalating costs, and unclear business value.
+
+<!--image:2-->
+
+| Where the knowledge lives | What a tool can do with it |
+| --- | --- |
+| One person's head | Almost nothing repeatable |
+| Documents no system can read | A person still has to retype |
+| One system with a current record | The job can be tried |
+
+<!--cta:inline-->
+
+Pick one job. Name its source. If you cannot, stop the purchase and fix the source. That is the whole data test.
+
+<!--image:3-->
+
+## AI Strategy for Small Business: Start With the Job
+
+An AI strategy for a small business is a short list: the job that changes, the data it needs, and the person who checks the output. It is not a tool catalog. The [assessment](/blog/ai-readiness-assessment) scores the same groups. The [implementation framework](/blog/ai-implementation-framework) is the sequence after the job is named. The [readiness framework](/blog/ai-readiness-framework) is the scoring sheet.
+
+## Use is ahead of the plan
+
+Microsoft's 2024 Work Trend Index says 75% of knowledge workers use AI at work.[^microsoft] 46% of those users started less than six months before the survey. 60% of leaders worry their organization's leadership lacks a plan and vision to implement AI. 78% of AI users bring their own tools, and that share is 80% at small and midsize businesses. 55% of leaders are concerned about talent. Only 25% of companies were planning to offer generative AI training.
+
+NIST's risk framework groups the work as Govern, Map, Measure, and Manage.[^nist] A strategy that cannot point at those jobs has not started.
+
+<!--image:2-->
+
+Salesforce surveyed 3,350 leaders at firms of 200 employees and under.[^salesforce] The fieldwork ran through August and September 2024. 75% said they were at least experimenting with AI. Among growing small and midsize businesses, 83% said that. 78% of growing firms planned to increase AI investment, against 55% of firms that were declining. 91% of those already using AI said it boosts revenue.
+
+<!--cta:inline-->
+
+Those figures describe different populations. Microsoft asked knowledge workers and leaders. Salesforce asked small-business leaders. Neither figure is a substitute for the job you can name on one page.
+
+<!--image:3-->
+
+## Answer Engine Optimization: What Google Still Requires
+
+Answer engine optimization is the work of being cited when a generative answer is written. Google's guide says that work is still SEO.[^google] The page has to be indexed, and it has to be eligible for a snippet. Google says it does not use llms.txt, and it says there is no special chunking requirement. No extra schema is required for those features.
+
+The [visibility guide](https://check.abra-ca-dabra.app/check/guide/visibility) is the matching check. The [ChatGPT note](/blog/how-to-get-your-business-to-show-up-in-chatgpt) covers crawler files. The [GEO comparison](/blog/generative-engine-optimization-vs-seo) is the research split.
+
+## What the research measured
+
+A 2024 paper on generative engine optimization reports visibility gains of up to 40%.[^geo] Methods that add citations, quotations, and statistics were associated with gains over 40%. On Perplexity the reported gain reached 37%. Position-adjusted word count rose 41%, and a subjective impression score rose 28%. The benchmark used 10,000 queries.
+
+<!--image:2-->
+
+<!--cta:inline-->
+
+Pew, in July 2025, found that visits with an AI summary produced a click 8% of the time, against 15% when no summary appeared.[^pew] A citation that nobody clicks is still a citation. Write the page so the click is worth taking.
+
+<!--image:3-->
+
+## Business Process Automation With AI: Write the Job
+
+Business process automation with AI starts as a written job. Anthropic's December 2024 essay says to start with the simplest solution that works, and to prefer a fixed workflow until the next step actually depends on the last one.[^anthropic]
+
+The [process guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-process-mid) is the matching fix. The [automation note](/blog/ai-automation-for-small-business) is which job to pick. The [agents note](/blog/ai-agents-for-business) is when a workflow is not enough.
+
+## The process is the product
+
+Microsoft's 2024 index says 75% of knowledge workers use AI, and 46% of those users started less than six months earlier.[^microsoft] 60% of leaders worry leadership lacks a plan and vision. 78% of AI users bring their own tools, and 80% do so at small and midsize businesses. 60% of time in the work apps was spent in email, chat, and meetings, and 40% in creation apps. Only 25% of companies were planning generative AI training. 55% of leaders were concerned about talent.
+
+<!--image:2-->
+
+Gartner's January 2026 article says at least 50% of generative AI projects were abandoned after proof of concept by the end of the prior year, citing poor data quality, inadequate risk controls, escalating costs, and unclear value.[^gartner-fail]
+
+<!--cta:inline-->
+
+Write the steps a person already follows. Mark the step that waits for a judgment. Automate the steps that do not. If every step needs a judgment, you do not have a process yet.
+
+<!--image:3-->
+
+## Generative Engine Optimization vs SEO
+
+Generative engine optimization and SEO are not rival crafts in Google's guide. Google says answer-engine optimization and generative-engine optimization are still SEO.[^google] The page must be indexed and eligible for a snippet. Google does not use llms.txt. There is no special chunking requirement.
+
+The [visibility guide](https://check.abra-ca-dabra.app/check/guide/visibility) is the check. The [answer-engine note](/blog/answer-engine-optimization) is the tactic list. The [llms.txt note](/blog/what-is-llms-txt) is the file Google says it ignores.
+
+## What changes, and what does not
+
+The 2024 paper reports visibility gains of up to 40% when the page is written for a generative answer.[^geo] Citations, quotations, and statistics were associated with gains over 40%. Perplexity showed gains up to 37%. Position-adjusted word count rose 41%, and subjective impression rose 28%, on a benchmark of 10,000 queries.
+
+<!--image:2-->
+
+<!--cta:inline-->
+
+Pew found, in July 2025, that a visit with an AI summary was followed by a click 8% of the time, against 15% with no summary.[^pew] SEO still gets the page indexed. The generative layer still has to be worth the click.
+
+<!--image:3-->
+
+## How Can AI Help a Small Business? What Surveys Count
+
+Two surveys from 2025 count AI in small firms, and they count different work. The U.S. Chamber asked who uses generative AI. Statistics Canada asked who used AI to produce goods or deliver services. This note keeps those claims apart, then names the jobs owners hand over. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is the matching question for one business. [Christopher Buzny](/about/christopher-buzny) writes these notes from the [studio site](/).
+
+## Generative use is not production use
+
+The Chamber's Empowering Small Business report says 58% of small businesses self-identified that they use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber] That question asks about generative AI. It does not ask whether AI produces the goods or the service.
+
+Statistics Canada, in the Canadian Survey on Business Conditions for the second quarter of 2025, found that 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% in the second quarter of 2024.[^statcan] The release is dated 16 June 2025. Collection ran from 1 April to 5 May 2025. The agency received 21,357 responses, of which 9,103 came from businesses that used AI.
+
+<!--image:2-->
+
+Among businesses that used AI, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff.
+
+<!--cta:inline-->
+
+## Jobs an owner can hand over
+
+The Chamber figure describes a tool someone opens. The StatCan figure describes AI inside the delivery of the product or the service. A small business can do the first for a long time without the second.
+
+The jobs that show up in the StatCan breakdown are the practical list: reading and sorting text, sending and measuring marketing, writing a workflow that did not exist, and training the people who will run it. None of those is a promise that the tool will run the company.
+
+The [readiness note](/blog/ai-readiness-assessment) asks a different question: whether this firm, not the average firm, has the data, the process, the people, and the decision in place.
+
+<!--image:3-->
+
+## How to Show Up in ChatGPT and AI Overviews
+
+Getting a business to show up in ChatGPT search starts with the crawler that search actually uses. OpenAI documents separate crawlers.[^openai] OAI-SearchBot fetches pages for search results. Opting that crawler out keeps the pages out of ChatGPT search answers. GPTBot is the training crawler. ChatGPT-User fetches when a person triggers a look-up, and robots.txt may not apply to it. They are not one switch.
+
+The [visibility guide](https://check.abra-ca-dabra.app/check/guide/visibility) reads the site. The [answer-engine note](/blog/answer-engine-optimization) and the [generative-engine note](/blog/generative-engine-optimization-vs-seo) stay on the vocabulary.
+
+## What Google says to do
+
+Google's guide for generative features says the work is still SEO.[^google] It says answer-engine optimization and generative-engine optimization are still SEO from Google's point of view. It says Google does not use llms.txt. It says there is no special chunking requirement. The page has to be indexed, and it has to be eligible for a snippet. No extra schema is required for those features.
+
+<!--image:2-->
+
+A page that is blocked, thin, or ineligible for a snippet will not become an overview because a new file was added. Allow the search crawler, keep the page indexable, and write the answer where a person can also read it.
+
+<!--cta:inline-->
+
+Pew, in July 2025, found that visits with an AI summary produced a click 8% of the time, against 15% when no summary appeared.[^pew] Showing up is not the same as being clicked. Write the page so the citation is worth the click.
+
+<!--image:3-->
+
+## How to Use AI in Your Business: Twelve Jobs
+
+How to use AI in a business is a job list, not a model list. Statistics Canada's 2025 brief asked businesses that already use AI which tools they use and what they changed.[^statcan] Among those businesses, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. In the same period, 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier.
+
+The [help note](/blog/how-can-ai-help-small-businesses) separates that production question from generative-AI use. The [automation note](/blog/ai-automation-for-small-business) is how to pick the first job. The [agents note](/blog/ai-agents-for-business) is when the steps branch.
+
+## Twelve jobs you can write down
+
+Draft the customer reply, then a person sends it. Summarize the meeting, then a person accepts the tasks. Turn notes into a quote, then a person sets the price. Sort the inbox, then a person decides what is answered. Flag the late invoice, then a person decides the chase. Describe the product, then a person approves the page. Group support tickets, then a person picks the answer. Check the inventory exception, then a person orders. Rewrite the policy in plain language, then a person publishes it. Compare two supplier notes, then a person chooses. Draft the weekly report, then a person accepts the numbers. Prepare the staff answer, then a person trains the team.
+
+<!--image:2-->
+
+<!--cta:inline-->
+
+The survey shares above are about businesses that already use AI, except the 12.2% figure, which is all businesses in that Canadian survey. Do not treat a text-analytics share as a share of every firm.
+
+<!--image:3-->
+
+## Is My Business Ready for AI? Signs to Read First
+
+A business is ready for AI when a named job can move to a tool without inventing the process on the way. The [Readiness Check](https://check.abra-ca-dabra.app/check) scores that as four bands. Early is 0–39, Forming is 40–59, Ready is 60–79, and Running is 80–100.[^check] Each sentence on the check describes a state. The check does not diagnose.
+
+The [Early band](https://check.abra-ca-dabra.app/check/guide/band/early) and the [Ready band](https://check.abra-ca-dabra.app/check/guide/band/ready) spell those states out. The [assessment note](/blog/ai-readiness-assessment) compares the public tools.
+
+## What a large-firm index is counting
+
+Cisco's 2025 AI Readiness Index surveyed 8,000 senior leaders at organizations with more than 500 employees, across 30 markets and 26 industries.[^cisco] Pacesetters stayed near 13% of that sample. Those organizations were 4 times more likely to move a pilot into production. That sample is not a small-business census. A small firm can be Ready on the check and still look nothing like a pacesetter.
+
+<!--image:2-->
+
+The OECD SME AI adoption tool, part of 2026 Group of Seven work, is a short self-check for smaller firms.[^oecd] It takes about five minutes, keeps answers in the browser, and does not publish an adoption rate. Use it as a second set of questions, not as a national share.
+
+<!--cta:inline-->
+
+Four signs the work can move: the source of truth is named, the steps are written, a person owns the output, and someone can stop the experiment. Four signs it cannot: the knowledge is only in one head, the exceptions are unwritten, nobody may send the output to a customer, and success has no definition.
+
+<!--image:3-->
+
+## Off-the-Shelf AI or Custom Software
+
+Off-the-shelf AI is the right buy when a product already does the job. Custom software is the right build when the job is specific to how this business works, and no product covers it. The [studio](/) takes the work that products do not cover. The [consultant note](/blog/ai-consultant-for-small-business) is what to ask before either path. The [agency comparison](/blog/ai-automation-agency-vs-consultant) is who you hire.
+
+## What the surveys count
+
+The Chamber's 2025 report says 58% of small businesses use generative AI, up from 40% in 2024 and 23% in 2023.[^chamber] That is a use claim. It is not a claim that those firms built custom software.
+
+<!--image:2-->
+
+Salesforce surveyed 3,350 leaders at firms of 200 employees and under.[^salesforce] 75% were at least experimenting. 83% of growing small and midsize businesses said that. 91% of those already using AI said it boosts revenue. The survey does not say whether the tool was bought or built.
+
+<!--cta:inline-->
+
+If a bought product covers the job, buy it. If the job depends on your records, your exceptions, and your checker, the product will not invent those. That is the custom case.
+
+<!--image:3-->
+
+## What Is an AI Agent? A Plain Answer for Owners
+
+An AI agent is not a chatbot with a longer prompt. Anthropic's December 2024 essay draws the line this way: a workflow runs large language models and tools on a path the builder defined, and an agent lets the model direct its own process and its own tool use.[^anthropic] The essay also says to start with the simplest solution, and to add complexity only when the simpler system fails.
+
+The [process guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low) is the matching check when the steps are still in someone's head. The [use-case note](/blog/ai-agents-for-business) lists jobs. The [comparison note](/blog/ai-agents-vs-agentic-ai) stays on the vocabulary.
+
+## When a workflow is enough
+
+Use a workflow when the steps are known: take the email, extract the fields, write the draft, wait for a person. Use an agent when the next step depends on what the last step found, and you cannot write every branch in advance. If you cannot name the stop condition, you do not have either one yet.
+
+<!--image:2-->
+
+| Kind of system | Who picks the next step | When it fits |
+| --- | --- | --- |
+| One prompt | The person at the keyboard | A single draft or a single answer |
+| Workflow | The path you wrote | The steps rarely change |
+| Agent | The model, inside bounds you set | The path depends on what it finds |
+
+## What the survey actually counts
+
+McKinsey's 2025 survey says 88% of respondents report regular AI use in at least one business function, compared with 78% a year earlier.[^mckinsey] 23% say their organizations are scaling an agentic system somewhere in the enterprise. An additional 39% are experimenting with agents. In any one function, no more than 10% say they are scaling agents. Firms under $100 million in revenue are less often at the scaling stage: 29%, against nearly half of firms over $5 billion.
+
+<!--cta:inline-->
+
+Those are enterprise survey shares. They are not a score for one small business. An agent still needs a written process and a person who can stop it.
+
+<!--image:3-->
+
+## What Is llms.txt, and Who Actually Reads It
+
+llms.txt is a proposed text file at the root of a site. Jeremy Howard published the proposal in September 2024, and the page was updated in August 2026.[^llmstxt] The idea is a short list of the pages you want a model to read. This site already publishes [its own file](/llms.txt). That is a fact about this site, not a traffic statistic.
+
+Google's guide says Google does not use llms.txt for generative features in search.[^google]
+
+The [missing-file guide](https://check.abra-ca-dabra.app/check/guide/fix/missing-llms-txt) is the check. The [answer-engine note](/blog/answer-engine-optimization) is what Google does require. The [GEO comparison](/blog/generative-engine-optimization-vs-seo) is the research.
+
+## What a crawl of the files found
+
+Ahrefs, in a study published in June 2026, looked at 137,210 domains in its web analytics that had traffic in May 2026.[^ahrefs] 28% published an llms.txt file, about 38,000 valid files. 97% of those files received zero requests in May. 96% of the requests that did arrive were bots. 19.5% of requests came from named AI tools, and 12% from audit or scanner tools.
+
+<!--image:2-->
+
+<!--cta:inline-->
+
+Publish the file if you want a clean list of your pages. Do not expect Google to read it. Keep the pages indexed and worth citing either way.
+
+<!--image:3-->
+
+## Why AI Pilots Stall After the Demo
+
+An AI pilot stalls when the demo worked and the process did not. Gartner's January 2026 article says at least 50% of generative AI projects were abandoned after proof of concept, because of poor data quality, inadequate risk controls, escalating costs, or unclear value.[^gartner-fail]
+
+The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-low) is the matching fix. The [implementation framework](/blog/ai-implementation-framework) is the sequence. The [data note](/blog/ai-ready-data) is the first failure.
+
+## Use is not scaling
+
+McKinsey's 2025 survey says 88% of respondents report regular AI use in at least one function, up from 78% a year earlier.[^mckinsey] About one third of organizations are scaling. 23% are scaling an agentic system somewhere, and 39% are experimenting. No more than 10% are scaling agents in any one function. 29% of firms under $100 million in revenue are at the scaling stage, against nearly half of firms over $5 billion.
+
+<!--image:2-->
+
+Gartner said in June 2025 that over 40% of agentic AI projects will be canceled by the end of 2027.[^gartner-agentic]
+
+<!--cta:inline-->
+
+A pilot that cannot name the data, the checker, and the value is already in the abandoned pile. Move it into a written process or stop it.
+
+<!--image:3-->

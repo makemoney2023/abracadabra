@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import sharp from "sharp";
-import { BANNED, FORBIDDEN_CLAIMS, loadPosts } from "../scripts/blog.mjs";
+import { BANNED, FORBIDDEN_CLAIMS, isPublic, loadPosts } from "../scripts/blog.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 
@@ -53,7 +53,7 @@ function graph(html) {
 describe("blog content", () => {
   it("validates frontmatter, three images, and sourced numbers", async () => {
     const posts = await loadPosts();
-    assert.equal(posts.length, 2);
+    assert.equal(posts.length, 24);
     for (const post of posts) {
       assert.equal(post.images.length, 3);
       assert.ok(post.images.every((image) => image.alt.trim().length >= 12));
@@ -99,6 +99,24 @@ describe("blog content", () => {
       assert.match(html, new RegExp(`<meta name="twitter:image:alt" content="${alt.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}">`));
     }
     assert.match(stamp.asOf, /^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("includes future posts only when BLOG_PREVIEW is set", () => {
+    const future = { datePublished: "2099-01-01" };
+    const past = { datePublished: "2020-01-01" };
+    const previous = process.env.BLOG_PREVIEW;
+    delete process.env.BLOG_PREVIEW;
+    try {
+      assert.equal(isPublic(future, "2026-10-14"), false);
+      assert.equal(isPublic(past, "2026-10-14"), true);
+      process.env.BLOG_PREVIEW = "1";
+      assert.equal(isPublic(future, "2026-10-14"), true);
+      process.env.BLOG_PREVIEW = "0";
+      assert.equal(isPublic(future, "2026-10-14"), false);
+    } finally {
+      if (previous === undefined) delete process.env.BLOG_PREVIEW;
+      else process.env.BLOG_PREVIEW = previous;
+    }
   });
 
   it("hides future posts from the public surfaces and keeps their pages reviewable", async () => {

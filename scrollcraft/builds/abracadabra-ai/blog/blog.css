@@ -58,7 +58,7 @@ h1 { font-size: clamp(2rem, 5vw, 3.25rem); margin: 0.4rem 0 1rem; }
 
 h2 { font-size: 1.6rem; margin-top: 2.4rem; }
 
-.kicker, .byline, .dek, .scheduled, .draft, .todo, .empty {
+.kicker, .byline, .dek, .scheduled, .draft, .todo, .empty, .preview-banner {
   color: var(--ink-soft);
 }
 
@@ -78,7 +78,7 @@ h2 { font-size: 1.6rem; margin-top: 2.4rem; }
 
 .crumbs li:not(:last-child)::after { content: "/"; margin-left: 0.4rem; color: var(--ink-soft); }
 
-.scheduled, .draft, .todo {
+.scheduled, .draft, .todo, .preview-banner {
   border-left: 3px solid var(--accent);
   padding: 0.6rem 0.9rem;
   background: var(--surface);
@@ -127,3 +127,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.4rem; }
 .cards h2 { margin: 0.6rem 0 0.3rem; }
 
 #sources a { overflow-wrap: anywhere; }
+
+#all-notes ul { columns: 2; padding-left: 1.1rem; }
+
+#all-notes li { break-inside: avoid; margin: 0.25rem 0; }
