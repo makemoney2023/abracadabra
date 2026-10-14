@@ -249,3 +249,84 @@ describe("enrichment", () => {
     expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: "nurture" });
   });
 });
+
+describe("outreach", () => {
+  it("signs with OUTREACH_SIGNING_SECRET and needs a channel", async () => {
+    const { POST } = await import("@/app/api/intake/outreach/route");
+    process.env.OUTREACH_SIGNING_SECRET = "out-secret";
+    process.env.ENRICHMENT_SIGNING_SECRET = "enrich-secret";
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { LEAD_INTAKE: { send: async () => {} } } };
+    const ts = String(Date.now());
+    const good = JSON.stringify({ external_id: "o1", domain: "northwind.example", channel: "email" });
+    const call = async (body: string, key: string) =>
+      POST(new Request("https://hq.example/api/intake/outreach", { method: "POST", body, headers: { "x-intake-signature": await signIntakeBody(key, body), "x-intake-timestamp": ts } }));
+    expect((await call(good, "enrich-secret")).status).toBe(401);
+    expect((await call(good, "out-secret")).status).toBe(202);
+    const noChannel = JSON.stringify({ external_id: "o1", domain: "northwind.example", channel: "fax" });
+    expect((await call(noChannel, "out-secret")).status).toBe(400);
+  });
+
+  it("moves new to contacted, logs lead.contacted, dedupes, never moves backward", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    const deal = await sql.get<{ id: string }>("SELECT id FROM deals");
+    const payload = { external_id: "o1", deal_id: deal!.id, channel: "linkedin", sent_at: "2026-10-14T16:00:00Z", summary: "Invite sent" };
+    expect(await consumeIntake(sql, { source: "outreach", payload }, NOW)).toMatchObject({ ok: true, duplicate: false });
+    expect(await consumeIntake(sql, { source: "outreach", payload }, NOW)).toMatchObject({ duplicate: true });
+    expect(await sql.get("SELECT stage FROM deals")).toEqual({ stage: "contacted" });
+    const act = await sql.get<{ actor_kind: string; data_json: string }>("SELECT actor_kind, data_json FROM activities WHERE kind = 'lead.contacted'");
+    expect(act?.actor_kind).toBe("agent");
+    expect(JSON.parse(act!.data_json)).toMatchObject({ channel: "linkedin", summary: "Invite sent" });
+    await sql.run("UPDATE deals SET stage = 'proposal'");
+    await consumeIntake(sql, { source: "outreach", payload: { ...payload, external_id: "o2" } }, NOW);
+    expect(await sql.get("SELECT stage FROM deals")).toEqual({ stage: "proposal" });
+  });
+});
+
+describe("scoring failure", () => {
+  it("missing readiness_scans marks scoring_error, logs once, and throws", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    await expect(applySchemaScore(sql, org!.id, NOW)).rejects.toThrow(/readiness_scans/);
+    await expect(applySchemaScore(sql, org!.id, NOW)).rejects.toThrow();
+    expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: "scoring_error" });
+    expect(await sql.get("SELECT count(*) AS n FROM activities WHERE kind = 'lead.scoring_failed'")).toEqual({ n: 1 });
+  });
+
+  it("scan_ready retries the queue message when scoring fails", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    let retried = 0;
+    let acked = 0;
+    const d1 = {
+      prepare(statement: string) {
+        return {
+          bind(...params: unknown[]) {
+            return {
+              async all<T>() { return { results: db.prepare(statement).all(...(params as never[])) as T[] }; },
+              async first<T>() { return (db.prepare(statement).get(...(params as never[])) ?? null) as T | null; },
+              async run() { db.prepare(statement).run(...(params as never[])); },
+              statement,
+              params,
+            };
+          },
+        };
+      },
+      async exec(statement: string) { db.exec(statement); },
+      async batch() {},
+    };
+    await handleLeadIntakeBatch(
+      [{ body: { source: "scan_ready", organizationId: org!.id }, ack: () => void acked++, retry: () => void retried++ }],
+      d1 as never,
+      NOW,
+    );
+    expect(acked).toBe(0);
+    expect(retried).toBe(1);
+  });
+});

@@ -76,7 +76,10 @@ function scanReady(body: unknown): { organizationId: string } | null {
 function messageShape(body: unknown): { source: string; payload: unknown } | null {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
   const source = "source" in body ? body.source : null;
-  if (source !== "assessment" && source !== "booking" && source !== "schema" && source !== "lead" && source !== "enrichment") return null;
+  if (source !== "assessment" && source !== "booking" && source !== "schema" && source !== "lead" && source !== "enrichment" &&
+    source !== "outreach" &&
+    source !== "deal_closed"
+  ) return null;
   const payload = "payload" in body ? body.payload : null;
   return { source, payload };
 }

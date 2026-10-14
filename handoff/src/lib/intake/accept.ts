@@ -10,6 +10,7 @@ type CloudflareEnv = {
   INTAKE_SIGNING_SECRET?: string;
   LEAD_AGENT_SIGNING_SECRET?: string;
   ENRICHMENT_SIGNING_SECRET?: string;
+  OUTREACH_SIGNING_SECRET?: string;
 };
 
 function cloudflareEnv(): CloudflareEnv {
@@ -39,6 +40,13 @@ export function enrichmentSecret(): string {
   return cloudflareEnv().ENRICHMENT_SIGNING_SECRET?.trim() ?? "";
 }
 
+/** Sales Outbound key for outreach and deal-closed intake. Separate so it can be revoked on its own. */
+export function outreachSecret(): string {
+  const fromProcess = process.env.OUTREACH_SIGNING_SECRET?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  return cloudflareEnv().OUTREACH_SIGNING_SECRET?.trim() ?? "";
+}
+
 export function intakeQueue(): QueueBinding | undefined {
   return cloudflareEnv().LEAD_INTAKE;
 }
@@ -46,10 +54,14 @@ export function intakeQueue(): QueueBinding | undefined {
 /** Check the signature, then the body, then put the message on the queue. */
 export async function acceptIntake(
   request: Request,
-  source: "assessment" | "booking" | "schema" | "lead" | "enrichment",
+  source: "assessment" | "booking" | "schema" | "lead" | "enrichment" | "outreach" | "deal_closed",
   ready: (payload: unknown) => boolean,
   now = Date.now(),
-  secret: string = source === "lead" ? leadAgentSecret() : source === "enrichment" ? enrichmentSecret() : intakeSecret(),
+  secret: string = source === "lead" ? leadAgentSecret() : source === "enrichment"
+      ? enrichmentSecret()
+      : source === "outreach" || source === "deal_closed"
+        ? outreachSecret()
+        : intakeSecret(),
 ): Promise<Response> {
   const raw = await request.text();
   const verdict = await verifyIntakeRequest({
@@ -123,4 +135,16 @@ export function enrichmentBodyReady(payload: unknown): boolean {
   const body = payload as Record<string, unknown>;
   const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
   return text(body.external_id).length > 0 && (text(body.deal_id).length > 0 || text(body.domain).length > 0);
+}
+
+export function outreachBodyReady(payload: unknown): boolean {
+  if (!enrichmentBodyReady(payload)) return false;
+  const channel = (payload as Record<string, unknown>).channel;
+  return channel === "email" || channel === "linkedin";
+}
+
+export function dealClosedBodyReady(payload: unknown): boolean {
+  if (!enrichmentBodyReady(payload)) return false;
+  const value = (payload as Record<string, unknown>).value_cents;
+  return value == null || (typeof value === "number" && Number.isInteger(value) && value >= 0);
 }
