@@ -84,6 +84,7 @@ export function LeadsToolbar({
           <SelectContent>
             <SelectItem value="all">Any routing</SelectItem>
             <SelectItem value="ready_for_outbound">Ready for outbound</SelectItem>
+            <SelectItem value="enriched">Enriched</SelectItem>
             <SelectItem value="nurture">C quality</SelectItem>
             <SelectItem value="unscored">Not scored</SelectItem>
           </SelectContent>

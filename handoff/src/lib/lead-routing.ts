@@ -7,11 +7,12 @@ import type { Sql } from "../db/sql";
  */
 export const LEAD_READY_THRESHOLD = 70;
 
-export type RoutingStatus = "ready_for_outbound" | "nurture";
+export type RoutingStatus = "ready_for_outbound" | "nurture" | "enriched";
 
 export const ROUTING_LABEL: Record<RoutingStatus, string> = {
   ready_for_outbound: "Ready for outbound",
   nurture: "C quality",
+  enriched: "Enriched",
 };
 
 export function routingFor(score: number | null | undefined): RoutingStatus | null {
@@ -20,7 +21,7 @@ export function routingFor(score: number | null | undefined): RoutingStatus | nu
 }
 
 export function routingStatusOf(value: string | null | undefined): RoutingStatus | null {
-  return value === "ready_for_outbound" || value === "nurture" ? value : null;
+  return value === "ready_for_outbound" || value === "nurture" || value === "enriched" ? value : null;
 }
 
 /** Copy the latest complete schema scan score onto the org's open deal. Readiness Check surveys are not used. */
@@ -49,8 +50,10 @@ export async function applySchemaScore(
   );
   if (!deal) return null;
   await sql.run(
-    "UPDATE deals SET lead_score = ?, scored_at = ?, routing_status = ?, updated_at = ? WHERE id = ?",
-    [scan.score_total, new Date(now).toISOString(), status, now, deal.id],
+    `UPDATE deals SET lead_score = ?, scored_at = ?,
+       routing_status = CASE WHEN routing_status = 'enriched' AND ? = 'ready_for_outbound' THEN 'enriched' ELSE ? END,
+       updated_at = ? WHERE id = ?`,
+    [scan.score_total, new Date(now).toISOString(), status, status, now, deal.id],
   );
   return { dealId: deal.id, score: scan.score_total, status };
 }

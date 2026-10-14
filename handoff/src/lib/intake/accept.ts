@@ -9,6 +9,7 @@ type CloudflareEnv = {
   LEAD_INTAKE?: QueueBinding;
   INTAKE_SIGNING_SECRET?: string;
   LEAD_AGENT_SIGNING_SECRET?: string;
+  ENRICHMENT_SIGNING_SECRET?: string;
 };
 
 function cloudflareEnv(): CloudflareEnv {
@@ -31,6 +32,13 @@ export function leadAgentSecret(): string {
   return cloudflareEnv().LEAD_AGENT_SIGNING_SECRET?.trim() ?? "";
 }
 
+/** Account Research key for enrichment intake. Separate so it can be revoked on its own. */
+export function enrichmentSecret(): string {
+  const fromProcess = process.env.ENRICHMENT_SIGNING_SECRET?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  return cloudflareEnv().ENRICHMENT_SIGNING_SECRET?.trim() ?? "";
+}
+
 export function intakeQueue(): QueueBinding | undefined {
   return cloudflareEnv().LEAD_INTAKE;
 }
@@ -38,10 +46,10 @@ export function intakeQueue(): QueueBinding | undefined {
 /** Check the signature, then the body, then put the message on the queue. */
 export async function acceptIntake(
   request: Request,
-  source: "assessment" | "booking" | "schema" | "lead",
+  source: "assessment" | "booking" | "schema" | "lead" | "enrichment",
   ready: (payload: unknown) => boolean,
   now = Date.now(),
-  secret: string = source === "lead" ? leadAgentSecret() : intakeSecret(),
+  secret: string = source === "lead" ? leadAgentSecret() : source === "enrichment" ? enrichmentSecret() : intakeSecret(),
 ): Promise<Response> {
   const raw = await request.text();
   const verdict = await verifyIntakeRequest({
@@ -108,4 +116,11 @@ export function leadBodyReady(payload: unknown): boolean {
   const fit = body.bdr_fit_score;
   if (fit != null && !(typeof fit === "number" && Number.isInteger(fit) && fit >= 1 && fit <= 5)) return false;
   return true;
+}
+
+export function enrichmentBodyReady(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  const body = payload as Record<string, unknown>;
+  const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  return text(body.external_id).length > 0 && (text(body.deal_id).length > 0 || text(body.domain).length > 0);
 }

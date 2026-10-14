@@ -668,6 +668,78 @@ async function consumeLead(sql: Sql, payload: unknown, now: number): Promise<Con
   return { ok: true, duplicate: false, leadOrganizationId };
 }
 
+function plainValue(raw: unknown, depth = 0): unknown {
+  if (raw == null || depth > 4) return null;
+  if (typeof raw === "string") return raw.slice(0, 4000);
+  if (typeof raw === "number" || typeof raw === "boolean") return raw;
+  if (Array.isArray(raw)) return raw.slice(0, 100).map((item) => plainValue(item, depth + 1));
+  if (typeof raw === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>).slice(0, 50)) {
+      out[key.slice(0, 100)] = plainValue(value, depth + 1);
+    }
+    return out;
+  }
+  return null;
+}
+
+const ENRICHMENT_FIELDS = ["company_summary", "decision_makers", "pain_points", "tech_stack", "talking_points", "sources"] as const;
+
+/** Account Research enrichment. Logs lead.enriched and moves ready_for_outbound to enriched. */
+async function consumeEnrichment(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+  const body = asRecord(payload);
+  const externalId = typeof body?.external_id === "string" ? body.external_id.trim().slice(0, 200) : "";
+  const dealId = typeof body?.deal_id === "string" ? body.deal_id.trim() : "";
+  const domain = typeof body?.domain === "string" ? normalizeDomain(body.domain) : null;
+  if (!externalId || (!dealId && !domain)) return { ok: false, error: "invalid", retry: false };
+  const receipt = await sql.get<{ external_id: string }>(
+    "SELECT external_id FROM intake_receipts WHERE source = 'enrichment' AND external_id = ?",
+    [externalId],
+  );
+  if (receipt) return { ok: true, duplicate: true };
+  const deal = dealId
+    ? await sql.get<{ id: string; organization_id: string; routing_status: string | null }>(
+        "SELECT id, organization_id, routing_status FROM deals WHERE id = ?",
+        [dealId],
+      )
+    : await sql.get<{ id: string; organization_id: string; routing_status: string | null }>(
+        `SELECT d.id, d.organization_id, d.routing_status FROM deals d
+         JOIN organizations o ON o.id = d.organization_id
+         WHERE o.domain = ? AND o.archived_at IS NULL AND d.stage NOT IN ('won', 'lost')
+         ORDER BY d.updated_at DESC LIMIT 1`,
+        [domain],
+      );
+  if (!deal) return { ok: false, error: "invalid", retry: false };
+  const data: Record<string, unknown> = {
+    external_id: externalId,
+    deal_id: deal.id,
+    brief: typeof body?.brief === "string" ? body.brief.slice(0, 20000) : null,
+    enriched_at: typeof body?.enriched_at === "string" ? body.enriched_at : new Date(now).toISOString(),
+  };
+  for (const field of ENRICHMENT_FIELDS) data[field] = plainValue(body?.[field]);
+  try {
+    await withTx(sql, async () => {
+      await sql.run(
+        `INSERT INTO activities (
+           id, organization_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at
+         ) VALUES (?, ?, ?, 'lead.enriched', 'agent', 'account-research', ?, ?, ?)`,
+        [crypto.randomUUID(), deal.organization_id, deal.id, "Account Research enriched this lead.", JSON.stringify(data), now],
+      );
+      if (deal.routing_status === "ready_for_outbound") {
+        await sql.run("UPDATE deals SET routing_status = 'enriched', updated_at = ? WHERE id = ?", [now, deal.id]);
+      }
+      await sql.run(
+        "INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('enrichment', ?, ?)",
+        [externalId, now],
+      );
+    });
+  } catch (error) {
+    if (isUnique(error)) return { ok: true, duplicate: true };
+    throw error;
+  }
+  return { ok: true, duplicate: false };
+}
+
 export async function consumeIntake(
   sql: Sql,
   message: { source: string; payload: unknown },
@@ -677,6 +749,7 @@ export async function consumeIntake(
   if (message.source === "assessment") return consumeAssessment(sql, message.payload, now);
   if (message.source === "booking") return consumeBooking(sql, message.payload, now, mailer);
   if (message.source === "lead") return consumeLead(sql, message.payload, now);
+  if (message.source === "enrichment") return consumeEnrichment(sql, message.payload, now);
   if (message.source === "schema") return fileSchemaPackage(sql, message.payload, now);
   return { ok: false, error: "invalid", retry: false };
 }

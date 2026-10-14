@@ -41,6 +41,7 @@ export type ExportedLead = {
   domain: string | null;
   website: string | null;
   industry: string | null;
+  location: string | null;
   primary_contact: { name: string | null; email: string | null; title: string | null } | null;
   source: string | null;
   lead_score: number | null;
@@ -50,6 +51,8 @@ export type ExportedLead = {
   schema_report_url: string | null;
   survey_url: string;
   readiness: { total_score: number | null; scores_json: unknown; report_url: string | null } | null;
+  bdr: Record<string, unknown> | null;
+  enrichment: Record<string, unknown> | null;
 };
 
 type Row = {
@@ -65,6 +68,7 @@ type Row = {
   contact_name: string | null;
   contact_email: string | null;
   bdr_json: string | null;
+  enrich_json: string | null;
   a_total: number | null;
   a_scores: string | null;
   a_report: string | null;
@@ -85,7 +89,7 @@ export async function exportLeads(
   input: { status?: string | null; since?: string | null; checkOrigin?: string },
 ): Promise<ExportedLead[] | { error: string }> {
   const status = input.status?.trim() ? routingStatusOf(input.status.trim()) : "ready_for_outbound";
-  if (!status) return { error: "status must be ready_for_outbound or nurture." };
+  if (!status) return { error: "status must be ready_for_outbound, enriched, or nurture." };
   const params: unknown[] = [status];
   let sinceClause = "";
   if (input.since?.trim()) {
@@ -104,6 +108,8 @@ export async function exportLeads(
             (SELECT email FROM contacts c WHERE c.organization_id = o.id ORDER BY is_primary DESC, created_at LIMIT 1) AS contact_email,
             (SELECT data_json FROM activities a WHERE a.organization_id = o.id AND a.kind = 'lead.prospected'
               ORDER BY created_at DESC LIMIT 1) AS bdr_json,
+            (SELECT data_json FROM activities a WHERE a.deal_id = d.id AND a.kind = 'lead.enriched'
+              ORDER BY created_at DESC LIMIT 1) AS enrich_json,
             (SELECT total_score FROM assessments s WHERE s.organization_id = o.id ORDER BY completed_at DESC LIMIT 1) AS a_total,
             (SELECT scores_json FROM assessments s WHERE s.organization_id = o.id ORDER BY completed_at DESC LIMIT 1) AS a_scores,
             (SELECT report_url FROM assessments s WHERE s.organization_id = o.id ORDER BY completed_at DESC LIMIT 1) AS a_report
@@ -128,6 +134,7 @@ export async function exportLeads(
       domain: row.domain,
       website: row.website,
       industry: str(bdr.industry),
+      location: str(bdr.location),
       primary_contact:
         row.contact_name || row.contact_email
           ? { name: row.contact_name, email: row.contact_email, title: str(bdr.contact_title) }
@@ -142,6 +149,8 @@ export async function exportLeads(
       readiness: hasReadiness
         ? { total_score: row.a_total, scores_json: parse(row.a_scores), report_url: row.a_report }
         : null,
+      bdr: row.bdr_json ? bdr : null,
+      enrichment: (parse(row.enrich_json) as Record<string, unknown> | null) ?? null,
     };
   });
 }

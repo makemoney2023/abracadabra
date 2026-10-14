@@ -178,3 +178,74 @@ describe("export auth", () => {
     expect(url.searchParams.get("utm_content")).toBe("deal_d1");
   });
 });
+
+describe("enrichment", () => {
+  async function scoredLead() {
+    const sql = await database();
+    await consumeIntake(sql, { source: "lead", payload: { ...lead, location: "Toronto", fit_reasons: ["local dentist"] } }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    await sql.run(
+      `INSERT INTO readiness_scans (id, public_token, domain, origin, source, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('s1', 'tok1', 'northwind.example', 'x', 'public', 'complete', ?, 30, ?, ?)`,
+      [org!.id, NOW, NOW],
+    );
+    await applySchemaScore(sql, org!.id, NOW);
+    const deal = await sql.get<{ id: string }>("SELECT id FROM deals");
+    return { sql, dealId: deal!.id, orgId: org!.id };
+  }
+
+  it("signs with ENRICHMENT_SIGNING_SECRET only", async () => {
+    const { POST } = await import("@/app/api/intake/enrichment/route");
+    process.env.ENRICHMENT_SIGNING_SECRET = "enrich-secret";
+    process.env.LEAD_AGENT_SIGNING_SECRET = "bdr-secret";
+    const sent: unknown[] = [];
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { LEAD_INTAKE: { send: async (b: unknown) => void sent.push(b) } } };
+    const body = JSON.stringify({ external_id: "e1", domain: "northwind.example", brief: "x" });
+    const ts = String(Date.now());
+    const wrong = await POST(new Request("https://hq.example/api/intake/enrichment", { method: "POST", body, headers: { "x-intake-signature": await signIntakeBody("bdr-secret", body), "x-intake-timestamp": ts } }));
+    expect(wrong.status).toBe(401);
+    const ok = await POST(new Request("https://hq.example/api/intake/enrichment", { method: "POST", body, headers: { "x-intake-signature": await signIntakeBody("enrich-secret", body), "x-intake-timestamp": ts } }));
+    expect(ok.status).toBe(202);
+    expect(sent).toEqual([{ source: "enrichment", payload: JSON.parse(body) }]);
+  });
+
+  it("logs lead.enriched, moves ready to enriched, dedupes, and exports everything", async () => {
+    const { sql, dealId } = await scoredLead();
+    const payload = {
+      external_id: "e1",
+      deal_id: dealId,
+      brief: "Family dental clinic, no schema.",
+      company_summary: "Two locations",
+      decision_makers: [{ name: "Ada North", title: "Owner" }],
+      pain_points: ["no AI visibility"],
+      tech_stack: ["WordPress"],
+      talking_points: ["schema score 30"],
+      sources: ["https://northwind.example/about"],
+      enriched_at: "2026-10-14T16:00:00Z",
+    };
+    expect(await consumeIntake(sql, { source: "enrichment", payload }, NOW)).toMatchObject({ ok: true, duplicate: false });
+    expect(await consumeIntake(sql, { source: "enrichment", payload }, NOW)).toMatchObject({ ok: true, duplicate: true });
+    expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: "enriched" });
+    expect(await exportLeads(sql, {})).toEqual([]);
+    const out = await exportLeads(sql, { status: "enriched" });
+    if (!Array.isArray(out)) throw new Error("bad");
+    expect(out[0]).toMatchObject({
+      schema_score: 30,
+      schema_report_url: "https://check.abra-ca-dabra.app/scan/tok1",
+      location: "Toronto",
+      survey_url: expect.stringContaining("utm_source=outbound"),
+      bdr: { fit_reasons: ["local dentist"], signals: ["no schema"], bdr_fit_score: 4, contact_name: "Ada North" },
+      enrichment: { brief: "Family dental clinic, no schema.", tech_stack: ["WordPress"], decision_makers: [{ name: "Ada North", title: "Owner" }] },
+    });
+  });
+
+  it("does not move nurture leads and a rescan keeps enriched", async () => {
+    const { sql, orgId } = await scoredLead();
+    await consumeIntake(sql, { source: "enrichment", payload: { external_id: "e2", domain: "northwind.example" } }, NOW);
+    await applySchemaScore(sql, orgId, NOW + 5);
+    expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: "enriched" });
+    await sql.run("UPDATE deals SET routing_status = 'nurture'");
+    await consumeIntake(sql, { source: "enrichment", payload: { external_id: "e3", domain: "northwind.example" } }, NOW);
+    expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: "nurture" });
+  });
+});
