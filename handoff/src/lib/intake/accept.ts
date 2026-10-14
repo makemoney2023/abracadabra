@@ -11,6 +11,7 @@ type CloudflareEnv = {
   LEAD_AGENT_SIGNING_SECRET?: string;
   ENRICHMENT_SIGNING_SECRET?: string;
   OUTREACH_SIGNING_SECRET?: string;
+  CLIENT_SERVICES_SIGNING_SECRET?: string;
 };
 
 function cloudflareEnv(): CloudflareEnv {
@@ -47,6 +48,13 @@ export function outreachSecret(): string {
   return cloudflareEnv().OUTREACH_SIGNING_SECRET?.trim() ?? "";
 }
 
+/** Client Services key for work-request intake. Separate so it can be revoked on its own. */
+export function clientServicesSecret(): string {
+  const fromProcess = process.env.CLIENT_SERVICES_SIGNING_SECRET?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  return cloudflareEnv().CLIENT_SERVICES_SIGNING_SECRET?.trim() ?? "";
+}
+
 export function intakeQueue(): QueueBinding | undefined {
   return cloudflareEnv().LEAD_INTAKE;
 }
@@ -54,14 +62,16 @@ export function intakeQueue(): QueueBinding | undefined {
 /** Check the signature, then the body, then put the message on the queue. */
 export async function acceptIntake(
   request: Request,
-  source: "assessment" | "booking" | "schema" | "lead" | "enrichment" | "outreach" | "deal_closed",
+  source: "assessment" | "booking" | "schema" | "lead" | "enrichment" | "outreach" | "deal_closed" | "work_request",
   ready: (payload: unknown) => boolean,
   now = Date.now(),
   secret: string = source === "lead" ? leadAgentSecret() : source === "enrichment"
       ? enrichmentSecret()
       : source === "outreach" || source === "deal_closed"
         ? outreachSecret()
-        : intakeSecret(),
+        : source === "work_request"
+          ? clientServicesSecret()
+          : intakeSecret(),
 ): Promise<Response> {
   const raw = await request.text();
   const verdict = await verifyIntakeRequest({
