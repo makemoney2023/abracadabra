@@ -233,6 +233,13 @@ export function classifyClientNote(text: string, questionCount: number): Classif
   return { kind, state: "proposed", question: null, goal, due };
 }
 
+/** Addresses the app has sent from. magic@ stays until the move to hq@mail is finished. */
+export const LEGACY_APP_ADDRESSES = ["magic@abra-ca-dabra.app"] as const;
+
+function ownAddresses(own: string | string[]): string[] {
+  return (Array.isArray(own) ? own : [own]).map((address) => address.trim().toLowerCase()).filter(Boolean);
+}
+
 export async function handleInboundEmail(
   message: InboundEmail,
   deps: {
@@ -241,7 +248,8 @@ export async function handleInboundEmail(
     ) => Promise<{ organizationId: string | null; organizations?: ListedOrg[]; authenticated: boolean; optedOut?: boolean } | "down">;
     thread: (organizationId: string, threadId: string) => Promise<ThreadState>;
     remembered?: (threadId: string) => Promise<string | null>;
-    ownAddress: string;
+    /** The agent's own address(es). Mail from any of them is ignored so replies never loop. */
+    ownAddress: string | string[];
     /** Public Cal.com link. Empty means the prompt asks for two times. */
     bookingUrl?: string;
     openProspect?: (input: {
@@ -257,7 +265,7 @@ export async function handleInboundEmail(
 ): Promise<ChannelReply> {
   const sender = addressOf(message.from);
   if (message.autoSubmitted && message.autoSubmitted.toLowerCase() !== "no") return quiet();
-  if (message.precedence === "bulk" || message.precedence === "list" || sender === deps.ownAddress.toLowerCase()) {
+  if (message.precedence === "bulk" || message.precedence === "list" || ownAddresses(deps.ownAddress).includes(sender)) {
     return quiet();
   }
   if (message.bytes > 25 * 1024 * 1024) return held(TOO_BIG, null);

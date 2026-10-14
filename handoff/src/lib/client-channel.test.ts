@@ -105,6 +105,20 @@ describe("client email", () => {
     expect(raw.endsWith("\r\n\r\nGot it.")).toBe(true);
   });
 
+  it("ignores mail from any of its own addresses during the hq@mail move", async () => {
+    const own = ["hq@mail.abra-ca-dabra.app", "magic@abra-ca-dabra.app"];
+    for (const from of ["Abracadabra HQ <hq@mail.abra-ca-dabra.app>", "Magic <MAGIC@abra-ca-dabra.app>"]) {
+      const looped = await handleInboundEmail({ ...message, from }, { lookup: async () => "down", thread: async () => fresh(), ownAddress: own });
+      expect(looped.skip).toBe(true);
+    }
+    const client = await handleInboundEmail(message, {
+      lookup: async () => ({ organizationId: "org-1", authenticated: true }),
+      thread: async () => fresh(),
+      ownAddress: own,
+    });
+    expect(client.skip).not.toBe(true);
+  });
+
   it("asks for a goal, skips mailers, and refuses an unknown sender", async () => {
     expect(classifyClientNote("Please add a page", 0).question).toBe("What should this achieve?");
     expect(classifyClientNote("Please add a page so that buyers can enquire by Friday", 0).state).toBe("proposed");

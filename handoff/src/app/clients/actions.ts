@@ -268,7 +268,7 @@ export async function decideRequestAction(_previous: FormState, formData: FormDa
     try {
       await sendHandoffMail({
         to: row.sender,
-        from: process.env.HANDOFF_FROM_EMAIL ?? "magic@abra-ca-dabra.app",
+        from: process.env.HANDOFF_FROM_EMAIL || "hq@mail.abra-ca-dabra.app",
         subject: "Re: your request",
         text: row.decline_reason ?? "We can't take this on.",
       });
@@ -297,7 +297,7 @@ export async function replyToThreadAction(
     try {
       await sendHandoffMail({
         to: sender,
-        from: process.env.HANDOFF_FROM_EMAIL ?? "magic@abra-ca-dabra.app",
+        from: process.env.HANDOFF_FROM_EMAIL || "hq@mail.abra-ca-dabra.app",
         subject: "Re: your note",
         text: body,
       });

@@ -210,7 +210,7 @@ async function createLead(
       `INSERT INTO activities (
          id, organization_id, contact_id, deal_id, kind, actor_kind, body, data_json, created_at
        ) VALUES (?, ?, ?, ?, 'email', 'system', ?, '{}', ?)`,
-      [crypto.randomUUID(), organizationId, contactId, dealId, "Opened from an email to magic@.", input.now],
+      [crypto.randomUUID(), organizationId, contactId, dealId, "Opened from an email to the HQ mailbox.", input.now],
     );
   });
   return { organizationId, name: input.orgName, created: true, kind: "lead", pending: false };

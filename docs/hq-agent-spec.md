@@ -819,7 +819,9 @@ CREATE TABLE slack_channel_links (
 );
 ```
 
-### 17.6 Email channel (`magic@abra-ca-dabra.app`)
+### 17.6 Email channel (`hq@mail.abra-ca-dabra.app`)
+
+> **Address move (2026-10-14).** The app address is now `hq@mail.abra-ca-dabra.app` (Cloudflare Email Routing on the `mail.` subdomain → Worker `handoff-agent`). `magic@abra-ca-dabra.app` becomes a client-facing Google Workspace inbox once the root MX moves to Google. During the move the agent treats both addresses as its own (no reply loops), and booking confirmations come from `Abracadabra HQ <HANDOFF_FROM_EMAIL>`. Mentions of `magic@` below describe the original setup.
 
 - **Zone state (2026-10-07):** Email Routing is on and reports `ready`.
   - The apex has MX `route1/2/3.mx.cloudflare.net`, SPF `v=spf1 include:_spf.mx.cloudflare.net ~all` (replacing `v=spf1 -all`), and DKIM `cf2024-1._domainkey`.

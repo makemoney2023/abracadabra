@@ -18,6 +18,7 @@ import {
   bytesToBase64,
   clientTurnFromModel,
   handleInboundEmail,
+  LEGACY_APP_ADDRESSES,
   parseInboundEmail,
   replyMime,
   replyToClient,
@@ -705,7 +706,7 @@ const worker = {
     const raw = await new Response(message.raw).text();
     const parsed = await parseInboundEmail(raw);
     if (typeof message.rawSize === "number") parsed.bytes = message.rawSize;
-    const own = env.MAGIC_EMAIL_FROM || "magic@abra-ca-dabra.app";
+    const own = env.MAGIC_EMAIL_FROM || "hq@mail.abra-ca-dabra.app";
     const reply = await handleInboundEmail(parsed, {
       lookup: async (email) => {
         const body = (await hqChannel(env, {
@@ -741,7 +742,7 @@ const worker = {
         } | null;
         return body?.value ?? null;
       },
-      ownAddress: own,
+      ownAddress: [own, ...LEGACY_APP_ADDRESSES],
       bookingUrl: env.BOOKING_URL ?? "",
       openProspect: async (input) => {
         const body = (await hqChannel(env, {
