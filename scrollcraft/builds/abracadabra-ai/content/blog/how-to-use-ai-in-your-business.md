@@ -11,19 +11,19 @@ cta: "Twelve examples are still a list. Score the one job you would hand over."
 images:
   - src: /blog/media/how-to-use-ai-in-your-business/01.png
     file: how-to-use-ai-in-your-business-01.jpg
-    alt: "Twelve short coral ticks in two rows, standing for twelve written jobs"
-    caption: "Twelve jobs, each with a stop."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “How to Use AI in Your Business: 12 Examples by Team”: one central object that carries the idea, wide 16:9 framing."
+    alt: "A closed laptop ringed with distinct task objects, the jobs this note says to write down before using AI"
+    caption: "Name twelve jobs before you open a tool."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Twelve small distinct objects in a grid around a closed laptop: envelope, calendar, quote page, invoice, cardboard carton, headset, clock, report booklet, key, stamp, folder, and a checklist card. No people, no logos, wide 16:9."
   - src: /blog/media/how-to-use-ai-in-your-business/02.png
     file: how-to-use-ai-in-your-business-02.jpg
-    alt: "Two cyan bars of different heights, standing for text analytics and marketing automation"
-    caption: "The survey counts uses."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “How to Use AI in Your Business: 12 Examples by Team”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Four labeled trays for invoices, a calendar, quotes, and an inbox, jobs this note says an owner can hand to a system"
+    caption: "Each tile is a job with an edge."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A tight overhead grid of exactly twelve different miniature work objects, evenly spaced, no laptop this time. No people, no logos, wide 16:9."
   - src: /blog/media/how-to-use-ai-in-your-business/03.png
     file: how-to-use-ai-in-your-business-03.jpg
-    alt: "A coral gate after the ticks, standing for a person who still approves the output"
-    caption: "A person still approves."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “How to Use AI in Your Business: 12 Examples by Team”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "One task card moved into a running tray while the other cards stay in a waiting stack, using AI on one job first"
+    caption: "Run one job. Leave the rest in the stack."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A single task card sits in a shallow running tray under a cyan light, while a tall stack of the other cards waits in shadow. No people, no logos, wide 16:9."
 faqs:
   - question: "Which uses show up among Canadian businesses that use AI?"
     answer: "In the 2025 Statistics Canada brief, 35.7% of those businesses used text analytics and 23.1% used marketing automation."

@@ -11,19 +11,19 @@ cta: "Visibility starts with a page a person can also read."
 images:
   - src: /blog/media/generative-engine-optimization-vs-seo/01.png
     file: generative-engine-optimization-vs-seo-01.jpg
-    alt: "Two overlapping rings, coral and cyan, standing for SEO and generative answers"
-    caption: "The names overlap."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Generative Engine Optimization (GEO) vs SEO: What Actually Changes for Your Website”: one central object that carries the idea, wide 16:9 framing."
+    alt: "A search-results printout of link rows beside a single cited answer card, SEO contrasted with a generative answer"
+    caption: "A list of links, or one cited answer."
+    prompt: "Editorial still-life split scene, charcoal desk, near-black background, coral and cyan rim light. Left: a printout that looks like a search results page, rows of short bars only, no readable words. Right: one answer card with a small citation chip. No people, no logos, wide 16:9."
   - src: /blog/media/generative-engine-optimization-vs-seo/02.png
     file: generative-engine-optimization-vs-seo-02.jpg
-    alt: "A row of short marks, standing for citations inside a generated answer"
-    caption: "Citations are the measured change."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Generative Engine Optimization (GEO) vs SEO: What Actually Changes for Your Website”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "One shared webpage printout with two different tops, a search magnifier and an answer card, what changes and what does not"
+    caption: "Same page. Two ways it gets used."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. One printed webpage lies flat. On its left edge sits a magnifying glass. On its right edge sits an answer card. The page itself is unchanged. No people, no logos, wide 16:9."
   - src: /blog/media/generative-engine-optimization-vs-seo/03.png
     file: generative-engine-optimization-vs-seo-03.jpg
-    alt: "A thin cyan line under a coral block, standing for the click that remains"
-    caption: "The click is smaller."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Generative Engine Optimization (GEO) vs SEO: What Actually Changes for Your Website”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "A webpage feeding both a magnifying glass and an answer card through two paper arrows"
+    caption: "The page still has to exist for both."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A central webpage printout with two paper arrows, one pointing to a magnifying glass and one pointing to an answer card. No people, no logos, wide 16:9."
 faqs:
   - question: "Does Google treat generative engine optimization as separate from SEO?"
     answer: "No. Google's guide says answer-engine optimization and generative-engine optimization are still SEO, and that Google does not use llms.txt."

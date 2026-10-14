@@ -11,19 +11,19 @@ cta: "Surveys measure everyone. The Readiness Check measures the slow job."
 images:
   - src: /blog/media/ai-automation-for-small-business/01.png
     file: ai-automation-for-small-business-01.jpg
-    alt: "Four stacked plates of different thickness, standing for four tests of a job"
-    caption: "Four tests before you automate a job."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Automation for Small Business: Which Jobs to Automate First”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Invoice stack under a small stamp machine while the inbox and calendar wait behind it, the job to automate first"
+    caption: "Automate the repeated job first."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small automatic stamp machine is pressing a stack of invoices in the foreground. An inbox tray and a calendar sit further back, waiting. No people, no logos, wide 16:9."
   - src: /blog/media/ai-automation-for-small-business/02.png
     file: ai-automation-for-small-business-02.jpg
-    alt: "Two columns, one tall and one short, standing for production use versus a longer list"
-    caption: "Production use is the shorter column."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Automation for Small Business: Which Jobs to Automate First”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Survey clipboards beside wooden bars of different heights, the adoption counts this automation note cites"
+    caption: "The surveys already counted the work."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two clipboards of survey forms stand next to a row of wooden bars at clearly different heights. No people, no logos, wide 16:9."
   - src: /blog/media/ai-automation-for-small-business/03.png
     file: ai-automation-for-small-business-03.jpg
-    alt: "A single coral thread through a row of cyan marks, standing for the first job to automate"
-    caption: "Start with one job, not the whole firm."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Automation for Small Business: Which Jobs to Automate First”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Three job trays with only the front tray lit, choosing which small-business job to automate first"
+    caption: "One job in front. The others wait."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Three identical job trays recede into the dark. Only the nearest tray is lit coral and holds a stack of repetitive forms. No people, no logos, wide 16:9."
 faqs:
   - question: "Which job should a small business automate first?"
     answer: "The one with high volume, stable rules, data a system can read, and a wrong answer that a person can catch cheaply. A rare, high-stakes decision fails that test."

@@ -11,19 +11,19 @@ cta: "Stop at the stage you cannot finish. The check shows which one."
 images:
   - src: /blog/media/ai-implementation-framework/01.png
     file: ai-implementation-framework-01.jpg
-    alt: "Five coral segments in a line, standing for five stages of implementation"
-    caption: "Five stages, in words."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “An AI Implementation Framework for Small Businesses: Five Stages From Pilot to Production”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Four stair trays labeled by objects as plan, data, pilot, and run, the implementation framework in order"
+    caption: "Plan, data, a bounded pilot, then the run."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four trays arranged as ascending stairs. Top step holds a blank plan sheet, next a data folder, next a tiny paper airplane, bottom a running small machine with a steady cyan light. No people, no logos, wide 16:9."
   - src: /blog/media/ai-implementation-framework/02.png
     file: ai-implementation-framework-02.jpg
-    alt: "A tall bar and a short bar, standing for regular use versus scaling"
-    caption: "Use outruns scaling."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “An AI Implementation Framework for Small Businesses: Five Stages From Pilot to Production”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Five stepping stones with a checklist card on the last one, the sequence from a written process into production"
+    caption: "The middle is where the count falls."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Wooden blocks arranged as a funnel, many at the wide top, few squeezed through a narrow middle, a handful at the bottom. No people, no logos, wide 16:9."
   - src: /blog/media/ai-implementation-framework/03.png
     file: ai-implementation-framework-03.jpg
-    alt: "A cyan stop at the end of the line, standing for the keep-or-stop decision"
-    caption: "The last stage is a stop."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “An AI Implementation Framework for Small Businesses: Five Stages From Pilot to Production”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Checklist clipboard resting on the last stair of the implementation model, the close of the framework"
+    caption: "The last step is still a list you can run."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A clipboard checklist rests on the lowest of four stair-like trays, the upper trays already holding a plan, a folder, and a paper airplane. No people, no logos, wide 16:9."
 faqs:
   - question: "What are the five stages?"
     answer: "Name the job, score the data, write the process, assign a checker, then keep or stop. NIST's names for the risk work are Govern, Map, Measure, and Manage."

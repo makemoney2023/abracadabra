@@ -11,19 +11,19 @@ cta: "Hiring is a decision. Score it before you sign."
 images:
   - src: /blog/media/ai-automation-agency-vs-consultant/01.png
     file: ai-automation-agency-vs-consultant-01.jpg
-    alt: "Two coral figures of different shapes, standing for a consultant and an agency"
-    caption: "Name the job before the build."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Automation Agency vs Consultant vs In-House: How to Choose”: one central object that carries the idea, wide 16:9 framing."
+    alt: "A rack of many client folders on the left and one briefcase with a single notebook on the right, agency versus consultant"
+    caption: "Many clients, or one engagement."
+    prompt: "Editorial still-life split desk, near-black background, coral and cyan rim light. Left: a tall rack packed with many different client folders. Right: one briefcase and a single notebook. No people, no logos, wide 16:9."
   - src: /blog/media/ai-automation-agency-vs-consultant/02.png
     file: ai-automation-agency-vs-consultant-02.jpg
-    alt: "A short cyan bar beside a taller one, standing for training versus use"
-    caption: "Training lags use."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Automation Agency vs Consultant vs In-House: How to Choose”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Two stacks of training manuals in different heights, the two training figures counted on different populations"
+    caption: "Two stacks. Two populations."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two separate stacks of training manuals, clearly different heights, with a gap between them and a small divider card. No people, no logos, wide 16:9."
   - src: /blog/media/ai-automation-agency-vs-consultant/03.png
     file: ai-automation-agency-vs-consultant-03.jpg
-    alt: "A gate between the two figures, standing for a named job before a build"
-    caption: "The gate is the job."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Automation Agency vs Consultant vs In-House: How to Choose”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "A wall of team badges opposite a single briefcase, the choice between an agency bench and a consultant"
+    caption: "A bench of people, or one person."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. On the left a board of many blank badges. On the right a single closed briefcase. No people, no logos, wide 16:9."
 faqs:
   - question: "When do you hire a consultant instead of an agency?"
     answer: "When the job, the data, and the checker are not yet named. An agency build before that naming has nothing to implement."

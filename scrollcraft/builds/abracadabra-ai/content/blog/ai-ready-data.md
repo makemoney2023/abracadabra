@@ -11,19 +11,19 @@ cta: "If the source of truth is unclear, score data before you buy."
 images:
   - src: /blog/media/ai-ready-data/01.png
     file: ai-ready-data-01.jpg
-    alt: "One coral slab in front of several faint cyan copies, standing for a single source of truth"
-    caption: "One source for the job is enough."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI-Ready Data: What a Small Business Needs Before AI Can Help”: one central object that carries the idea, wide 16:9 framing."
+    alt: "One orderly record tray beside a scatter of sticky notes, a single source of truth versus knowledge that is not in a system"
+    caption: "One current record, or a pile of notes."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. On the left, one neat metal tray holding a single organized record folder. On the right, a scatter of loose sticky notes. No people, no logos, wide 16:9."
   - src: /blog/media/ai-ready-data/02.png
     file: ai-ready-data-02.jpg
-    alt: "A broken line beside a continuous line, standing for data that cannot be read"
-    caption: "Readable beats collected."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI-Ready Data: What a Small Business Needs Before AI Can Help”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Empty head-shaped cutout, a locked document box, and an open connected record tray, the three rows of the data comparison table"
+    caption: "Where the knowledge lives decides what a tool can do."
+    prompt: "Editorial still-life comparison in three stations on a charcoal desk, near-black background, coral and cyan rim light. Left: a flat head-shaped silhouette cutout with nothing inside. Middle: a locked document box. Right: an open tray of records with a cable plugged into it. No people, no logos, wide 16:9."
   - src: /blog/media/ai-ready-data/03.png
     file: ai-ready-data-03.jpg
-    alt: "A small stack of plates, standing for where the knowledge actually lives"
-    caption: "Heads, documents, and systems are different places."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI-Ready Data: What a Small Business Needs Before AI Can Help”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "The open record tray cabled into a small machine, data a system can read without retyping"
+    caption: "Readable records are what the job can start from."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The open record tray is now connected by a short cable to a small matte machine. Sticky notes are absent. No people, no logos, wide 16:9."
 faqs:
   - question: "What is AI-ready data for a small business?"
     answer: "One current source for the job you want done, in a form a system can read, with someone who knows which fields are wrong. A data lake is not the requirement."

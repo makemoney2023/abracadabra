@@ -11,19 +11,19 @@ cta: "The visibility guide reads the site. The check scores the business."
 images:
   - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.png
     file: how-to-get-your-business-to-show-up-in-chatgpt-01.jpg
-    alt: "Three separate coral marks in a row, standing for three different crawlers"
-    caption: "Three crawlers, three different jobs."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “How to Get Your Business to Show Up in ChatGPT and AI Overviews”: one central object that carries the idea, wide 16:9 framing."
+    alt: "A small storefront card being placed onto a chat answer card that already holds a citation chip"
+    caption: "The shop shows up inside the answer."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small storefront model card is being set onto a larger chat-style answer card that already has a citation chip clipped to it. No people, no logos, no readable words, wide 16:9."
   - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/02.png
     file: how-to-get-your-business-to-show-up-in-chatgpt-02.jpg
-    alt: "A page shape with a cyan edge, standing for a page that can be indexed"
-    caption: "The page still has to be indexed."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “How to Get Your Business to Show Up in ChatGPT and AI Overviews”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "A search-console style chart printout next to a webpage with clear heading layers, what the note says Google asks for"
+    caption: "A page a crawler can read, then measure."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Left: a printout of a simple line chart with no brand marks. Right: a webpage built from clear stacked heading cards. No people, no logos, wide 16:9."
   - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/03.png
     file: how-to-get-your-business-to-show-up-in-chatgpt-03.jpg
-    alt: "A short bar beside a taller bar, standing for fewer clicks when a summary shows"
-    caption: "A summary changes the click."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “How to Get Your Business to Show Up in ChatGPT and AI Overviews”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "The storefront card visible inside the answer panel with its citation chip attached"
+    caption: "Visible, and attached to a source."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The storefront card now sits inside the answer panel, citation chip attached, the chart printout closed beside it. No people, no logos, wide 16:9."
 faqs:
   - question: "Which crawler does ChatGPT search use?"
     answer: "OpenAI separates OAI-SearchBot, which fetches pages for search, from GPTBot, which is the training crawler, and from ChatGPT-User, which fetches because a person asked. Blocking the training crawler is not the same switch."

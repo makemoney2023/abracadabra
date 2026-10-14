@@ -11,19 +11,19 @@ cta: "Score the four groups on your own business."
 images:
   - src: /blog/media/ai-readiness-framework/01.png
     file: ai-readiness-framework-01.jpg
-    alt: "Four coral blocks in a row, standing for data, process, people, and decision"
-    caption: "Four groups, scored in words."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Framework: Data, Process, People, and Decision”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Four physical pillars standing on one base plate, the readiness framework holding data, process, people, and the decision"
+    caption: "One frame, four supports."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four short matte pillars standing on a single dark base plate, evenly spaced, like a framework. No people, no logos, wide 16:9."
   - src: /blog/media/ai-readiness-framework/02.png
     file: ai-readiness-framework-02.jpg
-    alt: "A cyan arc over a short coral bar, standing for a band on a score"
-    caption: "The band is a state."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Readiness Framework: Data, Process, People, and Decision”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Four horizontal bands from thin coral to full cyan, the readiness bands explained in this framework note"
+    caption: "Bands are widths of readiness, not grades."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four horizontal strips of material on the desk, each a different width, from a thin coral strip to a wide cyan strip. No people, no logos, wide 16:9."
   - src: /blog/media/ai-readiness-framework/03.png
     file: ai-readiness-framework-03.jpg
-    alt: "A broken block beside a solid one, standing for data that is not ready"
-    caption: "Data is the first gap."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Readiness Framework: Data, Process, People, and Decision”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Score sheet with four filled bars under the pillar model, how the framework turns into a result"
+    caption: "The frame ends as four bars."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small model of four pillars sits behind a paper score sheet that shows four horizontal bars of different lengths. No people, no logos, wide 16:9."
 faqs:
   - question: "How do you score a group without a fake percentage?"
     answer: "Call it absent, partial, in place, or running. Do not invent a percentage for a group you have not measured."

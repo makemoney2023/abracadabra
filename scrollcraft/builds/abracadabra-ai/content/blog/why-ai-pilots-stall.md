@@ -11,19 +11,19 @@ cta: "A stalled pilot is a decision. Score it before you fund another demo."
 images:
   - src: /blog/media/why-ai-pilots-stall/01.png
     file: why-ai-pilots-stall-01.jpg
-    alt: "A coral arc that stops short of a circle, standing for a pilot that never shipped"
-    caption: "The demo is not the process."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Why AI Pilots Stall: What 2025-26 Research Says About AI Implementation”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Paper airplane stopped against a wall of unsorted paper where the tape runway ends, a pilot that never scales"
+    caption: "The pilot stops where the mess starts."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small paper airplane has stopped where a strip of runway tape ends, blocked by a tall messy stack of unsorted paper. No people, no logos, wide 16:9."
   - src: /blog/media/why-ai-pilots-stall/02.png
     file: why-ai-pilots-stall-02.jpg
-    alt: "A tall cyan bar and a short coral bar, standing for use versus scaling"
-    caption: "Use is common. Scaling is not."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Why AI Pilots Stall: What 2025-26 Research Says About AI Implementation”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "A paper airplane aimed into an open filing tray, a pilot being moved into a kept record"
+    caption: "Lots of use. One attempt at scale."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Dozens of tiny glowing cyan tokens scattered across the desk, and only one tall coral block standing among them. No people, no logos, wide 16:9."
   - src: /blog/media/why-ai-pilots-stall/03.png
     file: why-ai-pilots-stall-03.jpg
-    alt: "A gate across a path, standing for the decision to keep or stop"
-    caption: "Keep it or stop it."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Why AI Pilots Stall: What 2025-26 Research Says About AI Implementation”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "A gear jammed between two machines, the handoff where an AI pilot stalls"
+    caption: "The stall is in the handoff."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two small machines face each other with a single metal gear jammed and tilted between them, not seated. No people, no logos, wide 16:9."
 faqs:
   - question: "Why do proofs of concept get abandoned?"
     answer: "Gartner's 2026 article names poor data quality, inadequate risk controls, escalating costs, and unclear value, and says at least 50% were abandoned after proof of concept."

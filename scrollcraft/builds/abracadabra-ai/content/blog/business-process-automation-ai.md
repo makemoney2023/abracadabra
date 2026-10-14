@@ -11,19 +11,19 @@ cta: "If the steps are not written, the model cannot follow them."
 images:
   - src: /blog/media/business-process-automation-ai/01.png
     file: business-process-automation-ai-01.jpg
-    alt: "A coral path of short segments, standing for a written process"
-    caption: "Write the steps first."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Business Process Automation With AI: Map the Workflow Before You Pick a Tool”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Hand-drawn process map with a stamp machine on the repeated arrow, automation attached to the process"
+    caption: "The process is what gets automated."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A large hand-drawn process map of boxes and arrows covers the desk, and a small stamp machine sits on the one arrow that repeats. No people, no logos, wide 16:9."
   - src: /blog/media/business-process-automation-ai/02.png
     file: business-process-automation-ai-02.jpg
-    alt: "A cyan gate on that path, standing for a step that waits for a person"
-    caption: "Some steps wait."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Business Process Automation With AI: Map the Workflow Before You Pick a Tool”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Three interlocking gears with one card held back by a clip, the process step that still waits for a judgment"
+    caption: "The map is the product. The box is the tool."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A large process flowchart sheet dominates the frame. A small sealed software box sits off to the side, clearly smaller. No people, no logos, wide 16:9."
   - src: /blog/media/business-process-automation-ai/03.png
     file: business-process-automation-ai-03.jpg
-    alt: "A path that fades, standing for a proof of concept that was abandoned"
-    caption: "A proof is not a process."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Business Process Automation With AI: Map the Workflow Before You Pick a Tool”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Messy paper pile on the left and a straight conveyor of identical packets on the right, before and after the process is automated"
+    caption: "Same work, a path you can repeat."
+    prompt: "Editorial still-life split scene, charcoal desk, near-black background, coral and cyan rim light. Left: a messy pile of dissimilar papers. Right: a short conveyor carrying identical clipped packets in a straight line. No people, no logos, wide 16:9."
 faqs:
   - question: "Should you automate before you write the steps?"
     answer: "No. Anthropic says to start with the simplest system that works. A model on an unwritten job invents the steps."

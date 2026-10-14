@@ -11,19 +11,19 @@ cta: "The bands describe a state. Score your own business."
 images:
   - src: /blog/media/is-my-business-ready-for-ai/01.png
     file: is-my-business-ready-for-ai-01.jpg
-    alt: "Four rising coral arcs on a dark field, standing for four readiness bands"
-    caption: "Four bands, not a pass or a fail."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Is My Business Ready for AI? Four Signs It Is, and Four It Isn't”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Tidy desk with one labeled folder and an open process sheet beside a chaotic pile and an unplugged cable, ready versus not ready"
+    caption: "The signs are visible on the desk."
+    prompt: "Editorial still-life split down the middle, charcoal desk, near-black background, coral and cyan rim light. Left half is tidy: one labeled folder, one open process sheet, one stamp. Right half is chaotic loose paper and an unplugged cable. No people, no logos, wide 16:9."
   - src: /blog/media/is-my-business-ready-for-ai/02.png
     file: is-my-business-ready-for-ai-02.jpg
-    alt: "A short arc beside a long arc, standing for early and ready"
-    caption: "Early and Ready are different states."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Is My Business Ready for AI? Four Signs It Is, and Four It Isn't”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Large office-tower model beside a small shop model, the large-firm index this note says is not a small-business score"
+    caption: "That index is counting a different size of firm."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A tall architectural model of an office tower stands next to a much smaller storefront model. A measuring tape lies between them. No people, no logos, wide 16:9."
   - src: /blog/media/is-my-business-ready-for-ai/03.png
     file: is-my-business-ready-for-ai-03.jpg
-    alt: "A closed cyan ring, standing for a business already running the work"
-    caption: "Running means the work already repeats."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Is My Business Ready for AI? Four Signs It Is, and Four It Isn't”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Four toggle switches, two on and two off, the signs that a business is ready and the signs that it is not"
+    caption: "Four on, four off."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A row of four heavy toggle switches. Two are flipped up and lit coral, two are down and dark. No people, no logos, wide 16:9."
 faqs:
   - question: "What does ready for AI mean here?"
     answer: "It means the data, the process, the people, and the decision are in a state where a tool can do a named job. It is not a claim that the business has bought a product."

@@ -11,19 +11,19 @@ cta: "A survey is not your score. Run the Readiness Check on this business."
 images:
   - src: /blog/media/ai-for-small-business-2027/01.png
     file: ai-for-small-business-2027-01.jpg
-    alt: "Two coral columns of different heights, standing for two surveys that count different work"
-    caption: "Two surveys, two questions."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI for Small Business in 2027: What Changed in 2026 and What to Do First”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Desk calendar turned forward beside a small shop model and a rising block chart, the 2027 question for a small business"
+    caption: "The year ahead is a shop, not a slogan."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A desk calendar flipped several pages ahead, a small storefront model, and a rising chart built from wooden blocks. No people, no logos, no readable year text, wide 16:9."
   - src: /blog/media/ai-for-small-business-2027/02.png
     file: ai-for-small-business-2027-02.jpg
-    alt: "A cyan split between the columns, standing for the question each survey asks"
-    caption: "Do not average them."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI for Small Business in 2027: What Changed in 2026 and What to Do First”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Two question-mark cards beside two different answer cards, one checked and one barred, the two questions this note will not collapse"
+    caption: "Two questions, two answers."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two blank question-mark cards on the left face two different answer objects on the right: a survey clipboard and a small working machine. No people, no logos, wide 16:9."
   - src: /blog/media/ai-for-small-business-2027/03.png
     file: ai-for-small-business-2027-03.jpg
-    alt: "A single gate after the columns, standing for the job one business can name"
-    caption: "Name the job instead."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI for Small Business in 2027: What Changed in 2026 and What to Do First”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Stepping stones leading to a small shop model, the path from today's use to a later operating year"
+    caption: "The path is a sequence of jobs, not a leap."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Five flat stones form a path toward a small shop model at the far end. No people, no logos, wide 16:9."
 faqs:
   - question: "Why do the two surveys disagree?"
     answer: "They ask different questions. The Chamber counts generative AI use. Statistics Canada counts AI used to produce goods or deliver services."

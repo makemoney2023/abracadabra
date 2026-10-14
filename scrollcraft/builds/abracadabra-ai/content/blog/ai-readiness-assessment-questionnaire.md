@@ -11,19 +11,19 @@ cta: "Themes are not a score. The Readiness Check returns the band."
 images:
   - src: /blog/media/ai-readiness-assessment-questionnaire/01.png
     file: ai-readiness-assessment-questionnaire-01.jpg
-    alt: "Four coral marks in a column, standing for four question themes"
-    caption: "Four themes, before any tool."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Assessment Questionnaire: Every Question We Ask, and Why”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Unscored questionnaire with answer bubbles and a pencil, the assessment form before any band is assigned"
+    caption: "The form comes before the score."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A printed questionnaire with rows of empty answer bubbles and a pencil lying across it. No score stamp yet. No people, no logos, wide 16:9."
   - src: /blog/media/ai-readiness-assessment-questionnaire/02.png
     file: ai-readiness-assessment-questionnaire-02.jpg
-    alt: "An empty cyan frame, standing for a checklist with no adoption rate"
-    caption: "A checklist is not a rate."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Readiness Assessment Questionnaire: Every Question We Ask, and Why”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "Public checklist page with a question-mark stamp and no percentage badge, what a published checklist does not claim"
+    caption: "A checklist is not an adoption rate."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A public checklist printout stamped with a large question mark, and an empty circle where a percentage badge would sit, deliberately blank. No people, no logos, wide 16:9."
   - src: /blog/media/ai-readiness-assessment-questionnaire/03.png
     file: ai-readiness-assessment-questionnaire-03.jpg
-    alt: "A short path from the marks to a gate, standing for the decision after the questions"
-    caption: "The decision comes last."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Readiness Assessment Questionnaire: Every Question We Ask, and Why”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Completed questionnaire sliding toward a small four-slot scoring tray, the handoff from questions to a band"
+    caption: "Answers become a band only after they are scored."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A filled bubble questionnaire is halfway into a small wooden tray that has exactly four slots. No people, no logos, wide 16:9."
 faqs:
   - question: "What themes belong on the questionnaire?"
     answer: "Data, process, people, and the decision. A tool question comes after those four themes are answered."

@@ -1,0 +1,410 @@
+{
+  "ai-readiness-checklist": [
+    {
+      "alt": "Clipboard with four checkbox groups sitting in front of an unopened software box, the checklist this note says to finish before buying a tool",
+      "caption": "Finish the list before you buy the tool.",
+      "prompt": "Editorial still-life photograph, charcoal desk, near-black background, coral light from the left and a thin cyan rim. A clipboard with four distinct groups of empty checkboxes sits in front of a sealed retail software box that has not been opened. Coral pen beside the clipboard. No people, no logos, no watermarks, wide 16:9."
+    },
+    {
+      "alt": "Spreadsheet printout, hand-drawn flowchart, and a blank name badge in a row, the data, process, and people groups on the readiness checklist",
+      "caption": "The first three groups are about the work.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Three objects in a row and nothing else: a thick printout of spreadsheet grids, a sheet of paper with a hand-drawn flowchart of boxes and arrows, and a blank employee name badge on a lanyard. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Approval stamp and a still-closed laptop beside a short checklist, the decision that comes after the readiness questions",
+      "caption": "The last group is the decision.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A rubber approval stamp, an ink pad, and a laptop whose lid is still closed, placed after a short paper checklist. The purchase has not happened. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-readiness-assessment": [
+    {
+      "alt": "Four gauge cards on a desk with one gauge filled in coral, a readiness assessment scored across four measures",
+      "caption": "Four scores, then a band.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four separate cardstock gauges lying in a row, each with an arc meter. Only the third gauge is filled with coral; the others are empty cyan outlines. A pencil rests on a scoring sheet. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Corporate binder, small booklet, staged checklist card, and a four-bar score sheet side by side, the four tools compared in this assessment note",
+      "caption": "Four public tools, four different leaves-with.",
+      "prompt": "Editorial still-life comparison on a charcoal desk, near-black background, coral and cyan rim light. Four objects held apart in a row matching a comparison: a thick corporate binder, a small saddle-stitched booklet, a single staged checklist card with step blocks, and a score sheet showing four horizontal bars. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Four trays stacked from nearly empty to full, the readiness bands from not ready through scaling",
+      "caption": "The band is how full the work is.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four shallow trays in a row, the first almost empty, the second with a few cards, the third half full, the fourth full of neatly stacked cards. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-readiness-assessment-questionnaire": [
+    {
+      "alt": "Unscored questionnaire with answer bubbles and a pencil, the assessment form before any band is assigned",
+      "caption": "The form comes before the score.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A printed questionnaire with rows of empty answer bubbles and a pencil lying across it. No score stamp yet. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Public checklist page with a question-mark stamp and no percentage badge, what a published checklist does not claim",
+      "caption": "A checklist is not an adoption rate.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A public checklist printout stamped with a large question mark, and an empty circle where a percentage badge would sit, deliberately blank. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Completed questionnaire sliding toward a small four-slot scoring tray, the handoff from questions to a band",
+      "caption": "Answers become a band only after they are scored.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A filled bubble questionnaire is halfway into a small wooden tray that has exactly four slots. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-readiness-framework": [
+    {
+      "alt": "Four physical pillars standing on one base plate, the readiness framework holding data, process, people, and the decision",
+      "caption": "One frame, four supports.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four short matte pillars standing on a single dark base plate, evenly spaced, like a framework. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Four horizontal bands from thin coral to full cyan, the readiness bands explained in this framework note",
+      "caption": "Bands are widths of readiness, not grades.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four horizontal strips of material on the desk, each a different width, from a thin coral strip to a wide cyan strip. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Score sheet with four filled bars under the pillar model, how the framework turns into a result",
+      "caption": "The frame ends as four bars.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small model of four pillars sits behind a paper score sheet that shows four horizontal bars of different lengths. No people, no logos, wide 16:9."
+    }
+  ],
+  "is-my-business-ready-for-ai": [
+    {
+      "alt": "Tidy desk with one labeled folder and an open process sheet beside a chaotic pile and an unplugged cable, ready versus not ready",
+      "caption": "The signs are visible on the desk.",
+      "prompt": "Editorial still-life split down the middle, charcoal desk, near-black background, coral and cyan rim light. Left half is tidy: one labeled folder, one open process sheet, one stamp. Right half is chaotic loose paper and an unplugged cable. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Large office-tower model beside a small shop model, the large-firm index this note says is not a small-business score",
+      "caption": "That index is counting a different size of firm.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A tall architectural model of an office tower stands next to a much smaller storefront model. A measuring tape lies between them. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Four toggle switches, two on and two off, the signs that a business is ready and the signs that it is not",
+      "caption": "Four on, four off.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A row of four heavy toggle switches. Two are flipped up and lit coral, two are down and dark. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-ready-data": [
+    {
+      "alt": "One orderly record tray beside a scatter of sticky notes, a single source of truth versus knowledge that is not in a system",
+      "caption": "One current record, or a pile of notes.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. On the left, one neat metal tray holding a single organized record folder. On the right, a scatter of loose sticky notes. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Empty head-shaped cutout, a locked document box, and an open connected record tray, the three rows of the data comparison table",
+      "caption": "Where the knowledge lives decides what a tool can do.",
+      "prompt": "Editorial still-life comparison in three stations on a charcoal desk, near-black background, coral and cyan rim light. Left: a flat head-shaped silhouette cutout with nothing inside. Middle: a locked document box. Right: an open tray of records with a cable plugged into it. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "The open record tray cabled into a small machine, data a system can read without retyping",
+      "caption": "Readable records are what the job can start from.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The open record tray is now connected by a short cable to a small matte machine. Sticky notes are absent. No people, no logos, wide 16:9."
+    }
+  ],
+  "why-ai-pilots-stall": [
+    {
+      "alt": "Paper airplane stopped against a wall of unsorted paper where the tape runway ends, a pilot that never scales",
+      "caption": "The pilot stops where the mess starts.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small paper airplane has stopped where a strip of runway tape ends, blocked by a tall messy stack of unsorted paper. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A paper airplane aimed into an open filing tray, a pilot being moved into a kept record",
+      "caption": "Lots of use. One attempt at scale.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Dozens of tiny glowing cyan tokens scattered across the desk, and only one tall coral block standing among them. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A gear jammed between two machines, the handoff where an AI pilot stalls",
+      "caption": "The stall is in the handoff.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two small machines face each other with a single metal gear jammed and tilted between them, not seated. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-implementation-framework": [
+    {
+      "alt": "Four stair trays labeled by objects as plan, data, pilot, and run, the implementation framework in order",
+      "caption": "Plan, data, a bounded pilot, then the run.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four trays arranged as ascending stairs. Top step holds a blank plan sheet, next a data folder, next a tiny paper airplane, bottom a running small machine with a steady cyan light. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Five stepping stones with a checklist card on the last one, the sequence from a written process into production",
+      "caption": "The middle is where the count falls.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Wooden blocks arranged as a funnel, many at the wide top, few squeezed through a narrow middle, a handful at the bottom. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Checklist clipboard resting on the last stair of the implementation model, the close of the framework",
+      "caption": "The last step is still a list you can run.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A clipboard checklist rests on the lowest of four stair-like trays, the upper trays already holding a plan, a folder, and a paper airplane. No people, no logos, wide 16:9."
+    }
+  ],
+  "how-can-ai-help-small-businesses": [
+    {
+      "alt": "Shop counter with invoices, a service bell, and a laptop showing a draft, help sitting next to the actual work",
+      "caption": "The help has to reach the counter.",
+      "prompt": "Editorial still-life of a small shop counter, near-black background, coral and cyan rim light. A stack of paper invoices, a service bell, and an open laptop showing an unsent draft page with no readable words, only soft blocks of type. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Loose printed drafts on the left and a filing tray of finished jobs on the right, generative use beside production use",
+      "caption": "A pile of drafts is not a finished job.",
+      "prompt": "Editorial still-life split scene, charcoal desk, near-black background, coral and cyan rim light. Left: a messy stack of loose draft printouts. Right: a neat filing tray of finished job packets clipped and aligned. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Inbox tray, calendar, quote sheet, and a headset lined up to be handed to a small machine, jobs an owner can pass over",
+      "caption": "Name the job before you hand it over.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four work objects in a row facing a small matte machine: an inbox tray of envelopes, a desk calendar, a quote sheet with a price box, and a telephone headset. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-for-small-business-2027": [
+    {
+      "alt": "Desk calendar turned forward beside a small shop model and a rising block chart, the 2027 question for a small business",
+      "caption": "The year ahead is a shop, not a slogan.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A desk calendar flipped several pages ahead, a small storefront model, and a rising chart built from wooden blocks. No people, no logos, no readable year text, wide 16:9."
+    },
+    {
+      "alt": "Two question-mark cards beside two different answer cards, one checked and one barred, the two questions this note will not collapse",
+      "caption": "Two questions, two answers.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two blank question-mark cards on the left face two different answer objects on the right: a survey clipboard and a small working machine. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Stepping stones leading to a small shop model, the path from today's use to a later operating year",
+      "caption": "The path is a sequence of jobs, not a leap.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Five flat stones form a path toward a small shop model at the far end. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-automation-for-small-business": [
+    {
+      "alt": "Invoice stack under a small stamp machine while the inbox and calendar wait behind it, the job to automate first",
+      "caption": "Automate the repeated job first.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small automatic stamp machine is pressing a stack of invoices in the foreground. An inbox tray and a calendar sit further back, waiting. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Survey clipboards beside wooden bars of different heights, the adoption counts this automation note cites",
+      "caption": "The surveys already counted the work.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two clipboards of survey forms stand next to a row of wooden bars at clearly different heights. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Three job trays with only the front tray lit, choosing which small-business job to automate first",
+      "caption": "One job in front. The others wait.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Three identical job trays recede into the dark. Only the nearest tray is lit coral and holds a stack of repetitive forms. No people, no logos, wide 16:9."
+    }
+  ],
+  "business-process-automation-ai": [
+    {
+      "alt": "Hand-drawn process map with a stamp machine on the repeated arrow, automation attached to the process",
+      "caption": "The process is what gets automated.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A large hand-drawn process map of boxes and arrows covers the desk, and a small stamp machine sits on the one arrow that repeats. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Three interlocking gears with one card held back by a clip, the process step that still waits for a judgment",
+      "caption": "The map is the product. The box is the tool.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A large process flowchart sheet dominates the frame. A small sealed software box sits off to the side, clearly smaller. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Messy paper pile on the left and a straight conveyor of identical packets on the right, before and after the process is automated",
+      "caption": "Same work, a path you can repeat.",
+      "prompt": "Editorial still-life split scene, charcoal desk, near-black background, coral and cyan rim light. Left: a messy pile of dissimilar papers. Right: a short conveyor carrying identical clipped packets in a straight line. No people, no logos, wide 16:9."
+    }
+  ],
+  "how-to-use-ai-in-your-business": [
+    {
+      "alt": "A closed laptop ringed with distinct task objects, the jobs this note says to write down before using AI",
+      "caption": "Name twelve jobs before you open a tool.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Twelve small distinct objects in a grid around a closed laptop: envelope, calendar, quote page, invoice, cardboard carton, headset, clock, report booklet, key, stamp, folder, and a checklist card. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Four labeled trays for invoices, a calendar, quotes, and an inbox, jobs this note says an owner can hand to a system",
+      "caption": "Each tile is a job with an edge.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A tight overhead grid of exactly twelve different miniature work objects, evenly spaced, no laptop this time. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "One task card moved into a running tray while the other cards stay in a waiting stack, using AI on one job first",
+      "caption": "Run one job. Leave the rest in the stack.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A single task card sits in a shallow running tray under a cyan light, while a tall stack of the other cards waits in shadow. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-strategy-for-small-business": [
+    {
+      "alt": "One-page strategy map in front of a small shop model, with an unopened tool box behind it",
+      "caption": "The map comes before the tools.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A single one-page map with a few large blocks and arrows lies in front of a small shop model. A sealed tool box is behind the map, unopened. No people, no logos, no readable sentences, wide 16:9."
+    },
+    {
+      "alt": "A marked blueprint on the left and a loose pile of reports on the right, a written plan set apart from scattered research",
+      "caption": "Use is already on the desk. The plan is still blank.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Several colorful blank app-like cards are scattered and clearly in use in the foreground. Behind them a large plan sheet is still blank. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "The plan sheet pulled in front of the scattered app cards, strategy put ahead of the tools",
+      "caption": "Put the plan back in front.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The one-page plan sheet is now in front, coral light on it, and the scattered app cards are pushed into a single stack behind it. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-consultant-for-small-business": [
+    {
+      "alt": "Consultant notebook and a canceled cardboard prototype beside a finished installed device that stayed",
+      "caption": "Advice that leaves, and a system that stays.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A leather notebook and a canceled cardboard prototype tied with red string sit on the left. A finished small installed device with a steady light sits on the right. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "An open laptop covered with red warning flags and a standing warning sign, the red flags this consultant note names",
+      "caption": "What gets canceled is the thing that never ran.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A reject tray holds a broken cardboard prototype. Next to it a compact device remains plugged into a power brick and switched on. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A contract folio and a shipped product box, the engagement that ends in something the team can run",
+      "caption": "The engagement should leave a box the team can run.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A slim contract folio lies next to a shipped product box with the lid open to show a working device inside. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-automation-agency-vs-consultant": [
+    {
+      "alt": "A rack of many client folders on the left and one briefcase with a single notebook on the right, agency versus consultant",
+      "caption": "Many clients, or one engagement.",
+      "prompt": "Editorial still-life split desk, near-black background, coral and cyan rim light. Left: a tall rack packed with many different client folders. Right: one briefcase and a single notebook. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Two stacks of training manuals in different heights, the two training figures counted on different populations",
+      "caption": "Two stacks. Two populations.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Two separate stacks of training manuals, clearly different heights, with a gap between them and a small divider card. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A wall of team badges opposite a single briefcase, the choice between an agency bench and a consultant",
+      "caption": "A bench of people, or one person.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. On the left a board of many blank badges. On the right a single closed briefcase. No people, no logos, wide 16:9."
+    }
+  ],
+  "off-the-shelf-ai-or-custom-software": [
+    {
+      "alt": "A sealed retail software box beside an open custom chassis with visible wiring, off-the-shelf versus custom",
+      "caption": "Buy the box, or build the chassis.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Left: a sealed retail software box. Right: an open custom metal chassis with visible tidy wiring and no brand marks. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A survey clipboard standing between a retail box and a custom chassis, the counts this comparison cites",
+      "caption": "The surveys sit between the two choices.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A survey clipboard stands in the center between a sealed retail box and an open wired chassis. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A balance scale holding a retail software box on one pan and a custom chassis on the other",
+      "caption": "The decision is a balance, not a slogan.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small brass balance scale. One pan holds a sealed software box. The other holds a compact open chassis. The scale is nearly level. No people, no logos, wide 16:9."
+    }
+  ],
+  "what-is-an-ai-agent": [
+    {
+      "alt": "A small desk robot choosing among three branching paper paths inside a coral boundary, an agent working within limits",
+      "caption": "It picks the next step, inside bounds you set.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small matte desk robot sits at a fork of three paper paths. A coral rope marks a boundary around the robot and the paths. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A single blank card, a straight taped path of steps, and a robot at a fork, the prompt versus workflow versus agent table",
+      "caption": "One prompt, a fixed path, or a choice at the fork.",
+      "prompt": "Editorial still-life in three lanes on a charcoal desk, near-black background, coral and cyan rim light. Lane one: a single blank card. Lane two: a straight line of taped paper steps. Lane three: a small robot standing at a branching fork. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Wooden bars of different heights beside a closed notebook, the survey counts in the agent note",
+      "caption": "The survey is a count, not a definition.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A row of wooden bars at different heights stands beside a closed notebook. The small robot from the other frame is absent. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-agents-vs-agentic-ai": [
+    {
+      "alt": "One bounded desk robot beside a web of several robots tied together with thread, an agent versus an agentic system",
+      "caption": "One actor, or a system of them.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Left: one small robot inside a drawn circle. Right: four small robots connected to each other with cotton thread. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "One small desk robot on a straight path beside a crowd of robots at a branching fork, one agent contrasted with a wider agentic system",
+      "caption": "The forecast is a rising count.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Wooden blocks arranged in a clearly rising sequence from left to right, like a forecast. No robots in this frame. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A single robot kept inside a coral circle while loose thread lies outside it, the boundary between one agent and a wider system",
+      "caption": "Keep the boundary visible.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. One small robot stands inside a coral circle drawn on the desk. Loose cotton thread lies outside the circle, not attached. No people, no logos, wide 16:9."
+    }
+  ],
+  "ai-agents-for-business": [
+    {
+      "alt": "Eight job trays in a row, each with its own stop button, the business jobs an agent may run only until a person stops it",
+      "caption": "Eight jobs. Each one has a stop.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Exactly eight small trays in a row. Each tray holds a different object: envelopes, a notepad, a quote page, an invoice, a carton, a headset, a clock, a report booklet. Each tray has a round stop button in front. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "The same eight job trays each waiting under an approval stamp, the comparison of what the person still does",
+      "caption": "The person still approves the step that matters.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Eight small trays recede in a line, each with a rubber approval stamp resting on its rim, unused. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "Four small desk robots, each with a stop button in front of a stack of job papers, an agent job held until a person decides",
+      "caption": "One job done. Seven still waiting on a person.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The nearest of eight trays is stamped and lit. The other seven trays sit in a dark queue behind it. No people, no logos, wide 16:9."
+    }
+  ],
+  "answer-engine-optimization": [
+    {
+      "alt": "An answer card with three source snippets clipped to it, an answer engine citing pages rather than a list of links",
+      "caption": "The answer carries its sources.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A single large answer card in the center has three smaller torn webpage snippets clipped to its edge with binder clips. No people, no logos, no readable sentences, wide 16:9."
+    },
+    {
+      "alt": "A lab notebook, calipers, and printed pages, the research this answer-engine note says was measured",
+      "caption": "Measured pages, not a slogan.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. An open lab notebook, a pair of metal calipers, and a short stack of printed pages. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A webpage rebuilt as layered heading cards, the structure an answer engine can lift",
+      "caption": "Headings the answer can lift.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A webpage represented as four layered cards of decreasing size, stacked like a heading outline, with a citation chip on the top card. No people, no logos, wide 16:9."
+    }
+  ],
+  "generative-engine-optimization-vs-seo": [
+    {
+      "alt": "A search-results printout of link rows beside a single cited answer card, SEO contrasted with a generative answer",
+      "caption": "A list of links, or one cited answer.",
+      "prompt": "Editorial still-life split scene, charcoal desk, near-black background, coral and cyan rim light. Left: a printout that looks like a search results page, rows of short bars only, no readable words. Right: one answer card with a small citation chip. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "One shared webpage printout with two different tops, a search magnifier and an answer card, what changes and what does not",
+      "caption": "Same page. Two ways it gets used.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. One printed webpage lies flat. On its left edge sits a magnifying glass. On its right edge sits an answer card. The page itself is unchanged. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "A webpage feeding both a magnifying glass and an answer card through two paper arrows",
+      "caption": "The page still has to exist for both.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A central webpage printout with two paper arrows, one pointing to a magnifying glass and one pointing to an answer card. No people, no logos, wide 16:9."
+    }
+  ],
+  "how-to-get-your-business-to-show-up-in-chatgpt": [
+    {
+      "alt": "A small storefront card being placed onto a chat answer card that already holds a citation chip",
+      "caption": "The shop shows up inside the answer.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small storefront model card is being set onto a larger chat-style answer card that already has a citation chip clipped to it. No people, no logos, no readable words, wide 16:9."
+    },
+    {
+      "alt": "A search-console style chart printout next to a webpage with clear heading layers, what the note says Google asks for",
+      "caption": "A page a crawler can read, then measure.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Left: a printout of a simple line chart with no brand marks. Right: a webpage built from clear stacked heading cards. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "The storefront card visible inside the answer panel with its citation chip attached",
+      "caption": "Visible, and attached to a source.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The storefront card now sits inside the answer panel, citation chip attached, the chart printout closed beside it. No people, no logos, wide 16:9."
+    }
+  ],
+  "what-is-llms-txt": [
+    {
+      "alt": "A plain text sheet beside a printed homepage and a separate robots-style card, llms.txt as a file next to the site",
+      "caption": "A plain file beside the homepage.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Three papers: a plain text sheet with monospaced gray bars, a colorful homepage printout, and a smaller robots-style card with a few rule lines. No people, no logos, no readable words, wide 16:9."
+    },
+    {
+      "alt": "A magnifying glass over a stack of homepage printouts, only some of which have a plain text sheet attached",
+      "caption": "A crawl finds the file on some sites and not others.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A magnifying glass lies over a stack of homepage printouts. Two of the printouts have a plain text sheet paperclipped on. The others do not. No people, no logos, wide 16:9."
+    },
+    {
+      "alt": "The plain text sheet and the homepage printout lying side by side, the file and the page it describes",
+      "caption": "The file points at the page. It does not replace it.",
+      "prompt": "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The plain monospaced text sheet and the homepage printout lie side by side, equal size, nothing else on the desk. No people, no logos, wide 16:9."
+    }
+  ]
+}

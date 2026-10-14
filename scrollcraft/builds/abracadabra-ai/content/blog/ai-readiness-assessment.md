@@ -10,20 +10,20 @@ author: christopher-buzny
 cta: "Score your business on all four in five to seven minutes."
 images:
   - src: /blog/media/ai-readiness-assessment/01.png
-    file: readiness-hero.jpg
-    alt: "Dark diagram of four stacked plates standing for data, process, people, and the decision"
-    caption: "Four things a readiness score can name."
-    prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four stacked glass plates in a row, each a different height, lit with a coral edge and a pale cyan rim. Studio product lighting, 16:9."
+    file: ai-readiness-assessment-01.jpg
+    alt: "Four gauge cards on a desk with one gauge filled in coral, a readiness assessment scored across four measures"
+    caption: "Four scores, then a band."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four separate cardstock gauges lying in a row, each with an arc meter. Only the third gauge is filled with coral; the others are empty cyan outlines. A pencil rests on a scoring sheet. No people, no logos, wide 16:9."
   - src: /blog/media/ai-readiness-assessment/02.png
-    file: readiness-compare.jpg
-    alt: "Four abstract columns comparing a large-firm index, a short self-check, a stage list, and a scored band"
-    caption: "The public tools do not describe the same firm."
-    prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four vertical columns of different widths, made of thin coral and cyan lines, like a comparison without a table. Soft side light, 16:9."
+    file: ai-readiness-assessment-02.jpg
+    alt: "Corporate binder, small booklet, staged checklist card, and a four-bar score sheet side by side, the four tools compared in this assessment note"
+    caption: "Four public tools, four different leaves-with."
+    prompt: "Editorial still-life comparison on a charcoal desk, near-black background, coral and cyan rim light. Four objects held apart in a row matching a comparison: a thick corporate binder, a small saddle-stitched booklet, a single staged checklist card with step blocks, and a score sheet showing four horizontal bars. No people, no logos, wide 16:9."
   - src: /blog/media/ai-readiness-assessment/03.png
-    file: readiness-bands.jpg
-    alt: "Four rising arcs on a dark field, from a short arc to a full circle, standing for score bands"
-    caption: "A band is a state, not a grade."
-    prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four rising arcs from a short stroke to a nearly closed ring, coral on the leading edge and cyan behind. Quiet studio light, 16:9."
+    file: ai-readiness-assessment-03.jpg
+    alt: "Four trays stacked from nearly empty to full, the readiness bands from not ready through scaling"
+    caption: "The band is how full the work is."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Four shallow trays in a row, the first almost empty, the second with a few cards, the third half full, the fourth full of neatly stacked cards. No people, no logos, wide 16:9."
 faqs:
   - question: What does an AI readiness assessment measure?
     answer: It names whether the data, the process, the people, and the decision are in a state where a tool can do a job. Public tools measure different populations. The Readiness Check scores the business taking it.

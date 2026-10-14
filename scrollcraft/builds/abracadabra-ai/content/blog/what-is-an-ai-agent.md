@@ -11,19 +11,19 @@ cta: "An agent needs a written process and an owner. Score both."
 images:
   - src: /blog/media/what-is-an-ai-agent/01.png
     file: what-is-an-ai-agent-01.jpg
-    alt: "A coral path that branches, standing for an agent choosing its next step"
-    caption: "An agent chooses the next step."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “What Is an AI Agent? A Plain-Language Answer for Business Owners”: one central object that carries the idea, wide 16:9 framing."
+    alt: "A small desk robot choosing among three branching paper paths inside a coral boundary, an agent working within limits"
+    caption: "It picks the next step, inside bounds you set."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A small matte desk robot sits at a fork of three paper paths. A coral rope marks a boundary around the robot and the paths. No people, no logos, wide 16:9."
   - src: /blog/media/what-is-an-ai-agent/02.png
     file: what-is-an-ai-agent-02.jpg
-    alt: "Two separate tracks, one fixed and one branching, on a dark field"
-    caption: "A workflow stays on the path you wrote."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “What Is an AI Agent? A Plain-Language Answer for Business Owners”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "A single blank card, a straight taped path of steps, and a robot at a fork, the prompt versus workflow versus agent table"
+    caption: "One prompt, a fixed path, or a choice at the fork."
+    prompt: "Editorial still-life in three lanes on a charcoal desk, near-black background, coral and cyan rim light. Lane one: a single blank card. Lane two: a straight line of taped paper steps. Lane three: a small robot standing at a branching fork. No people, no logos, wide 16:9."
   - src: /blog/media/what-is-an-ai-agent/03.png
     file: what-is-an-ai-agent-03.jpg
-    alt: "A small cyan gate at the end of a path, standing for a human checkpoint"
-    caption: "Someone still owns the stop."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “What Is an AI Agent? A Plain-Language Answer for Business Owners”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "Wooden bars of different heights beside a closed notebook, the survey counts in the agent note"
+    caption: "The survey is a count, not a definition."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A row of wooden bars at different heights stands beside a closed notebook. The small robot from the other frame is absent. No people, no logos, wide 16:9."
 faqs:
   - question: "What is an AI agent in plain language?"
     answer: "Anthropic describes an agent as a system where the model directs its own process and tool use. A workflow, by contrast, follows a path the builder wrote in advance."

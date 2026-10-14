@@ -11,19 +11,19 @@ cta: "If a bought product already does the job, a good consultant says so."
 images:
   - src: /blog/media/ai-consultant-for-small-business/01.png
     file: ai-consultant-for-small-business-01.jpg
-    alt: "A coral gate in front of a cyan path, standing for questions before a hire"
-    caption: "Ask before you hire."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Consultant for Small Business: What They Do, What to Ask, and Red Flags”: one central object that carries the idea, wide 16:9 framing."
+    alt: "Consultant notebook and a canceled cardboard prototype beside a finished installed device that stayed"
+    caption: "Advice that leaves, and a system that stays."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A leather notebook and a canceled cardboard prototype tied with red string sit on the left. A finished small installed device with a steady light sits on the right. No people, no logos, wide 16:9."
   - src: /blog/media/ai-consultant-for-small-business/02.png
     file: ai-consultant-for-small-business-02.jpg
-    alt: "Two stacks, one high and one low, standing for use versus scaling"
-    caption: "Use is common. Scaling is not."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Consultant for Small Business: What They Do, What to Ask, and Red Flags”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "An open laptop covered with red warning flags and a standing warning sign, the red flags this consultant note names"
+    caption: "What gets canceled is the thing that never ran."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A reject tray holds a broken cardboard prototype. Next to it a compact device remains plugged into a power brick and switched on. No people, no logos, wide 16:9."
   - src: /blog/media/ai-consultant-for-small-business/03.png
     file: ai-consultant-for-small-business-03.jpg
-    alt: "A broken ring, standing for a project canceled before it ran"
-    caption: "A canceled project is a known outcome."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Consultant for Small Business: What They Do, What to Ask, and Red Flags”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "A contract folio and a shipped product box, the engagement that ends in something the team can run"
+    caption: "The engagement should leave a box the team can run."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A slim contract folio lies next to a shipped product box with the lid open to show a working device inside. No people, no logos, wide 16:9."
 faqs:
   - question: "What should you ask an AI consultant first?"
     answer: "What job will change, where the data lives, who checks the output, and how you will know it failed. A pitch that starts with a tool name has skipped the work."

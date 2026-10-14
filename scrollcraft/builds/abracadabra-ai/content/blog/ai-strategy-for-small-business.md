@@ -11,19 +11,19 @@ cta: "A one-page plan is a score. Run the Readiness Check."
 images:
   - src: /blog/media/ai-strategy-for-small-business/01.png
     file: ai-strategy-for-small-business-01.jpg
-    alt: "A single coral sheet on a near-black field, standing for a one-page plan"
-    caption: "The plan is one page."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Strategy for Small Business: A One-Page Plan”: one central object that carries the idea, wide 16:9 framing."
+    alt: "One-page strategy map in front of a small shop model, with an unopened tool box behind it"
+    caption: "The map comes before the tools."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. A single one-page map with a few large blocks and arrows lies in front of a small shop model. A sealed tool box is behind the map, unopened. No people, no logos, no readable sentences, wide 16:9."
   - src: /blog/media/ai-strategy-for-small-business/02.png
     file: ai-strategy-for-small-business-02.jpg
-    alt: "Two bars, one tall and one short, standing for use versus a written plan"
-    caption: "Use is ahead of the plan."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Strategy for Small Business: A One-Page Plan”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
+    alt: "A marked blueprint on the left and a loose pile of reports on the right, a written plan set apart from scattered research"
+    caption: "Use is already on the desk. The plan is still blank."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. Several colorful blank app-like cards are scattered and clearly in use in the foreground. Behind them a large plan sheet is still blank. No people, no logos, wide 16:9."
   - src: /blog/media/ai-strategy-for-small-business/03.png
     file: ai-strategy-for-small-business-03.jpg
-    alt: "A cyan check beside a coral gap, standing for training that was never planned"
-    caption: "Training is the thin bar."
-    prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Strategy for Small Business: A One-Page Plan”: a small row of objects that suggests the next action, wide 16:9 framing."
+    alt: "The plan sheet pulled in front of the scattered app cards, strategy put ahead of the tools"
+    caption: "Put the plan back in front."
+    prompt: "Editorial still-life, charcoal desk, near-black background, coral and cyan rim light. The one-page plan sheet is now in front, coral light on it, and the scattered app cards are pushed into a single stack behind it. No people, no logos, wide 16:9."
 faqs:
   - question: "What belongs in a small-business AI strategy?"
     answer: "The job that changes, the data it needs, who checks the output, and how you will know it failed. A tool name comes after those answers."

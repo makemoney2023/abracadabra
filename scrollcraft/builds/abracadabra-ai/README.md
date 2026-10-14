@@ -14,6 +14,12 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Blog layout and images — 2026-10-14
+
+- The index is a hero plus a three-column card grid. Each post page has a split hero, a bold opening sentence, styled comparison tables, a cited percentage callout when the note has one, an FAQ accordion, sources, an author box, related cards, and the sticky Readiness Check.
+- Colours and type stay the studio tokens: canvas `#070706`, surface `#11110F`, ink `#F5F0E8`, accent `#FF4B24`, optic `#8DEBF2`, Tektur and IBM Plex Sans.
+- Each of the three images is a still life of that note and the section beside it. Alt text names the objects in that frame. The 1200×630 card at `blog/og/<slug>.png` is still the title plate.
+
 ## Blog — 2026-10-14
 
 - `npm test` runs `node scripts/build-blog.mjs` before the Playwright suite. `npm run deploy` stays `wrangler deploy`. Generated HTML, RSS, sitemap entries, OG images, and redirects are committed so a folder deploy still works.
