@@ -384,3 +384,56 @@ describe("deal closed", () => {
     expect(await exportLeads(sql, { status: "won", since: "2026-11-01T00:00:00Z" })).toEqual([]);
   });
 });
+
+describe("failed scan", () => {
+  it("marks a BDR deal scoring_error once with the reason, without throwing", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    await sql.run(
+      `INSERT INTO readiness_scans (id, public_token, domain, origin, source, status, organization_id, error_message, created_at, completed_at)
+       VALUES ('f1', 'tf1', 'northwind.example', 'x', 'public', 'failed', ?, 'no fetchable home page', ?, ?)`,
+      [org!.id, NOW, NOW],
+    );
+    expect(await applySchemaScore(sql, org!.id, NOW)).toBeNull();
+    expect(await applySchemaScore(sql, org!.id, NOW + 1)).toBeNull();
+    expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: "scoring_error" });
+    const rows = await sql.all<{ data_json: string }>("SELECT data_json FROM activities WHERE kind = 'lead.scoring_failed'");
+    expect(rows).toHaveLength(1);
+    expect(JSON.parse(rows[0].data_json).reason).toContain("no fetchable home page");
+    const out = await exportLeads(sql, { status: "scoring_error" });
+    expect(Array.isArray(out) && out.length).toBe(1);
+  });
+
+  it("a later complete scan clears the error and routes", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "lead", payload: lead }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    await sql.run(
+      `INSERT INTO readiness_scans (id, public_token, domain, origin, source, status, organization_id, created_at, completed_at)
+       VALUES ('f1', 'tf1', 'northwind.example', 'x', 'public', 'failed', ?, ?, ?)`,
+      [org!.id, NOW, NOW],
+    );
+    await applySchemaScore(sql, org!.id, NOW);
+    await sql.run(
+      `INSERT INTO readiness_scans (id, public_token, domain, origin, source, status, organization_id, score_total, created_at, completed_at)
+       VALUES ('c1', 'tc1', 'northwind.example', 'x', 'public', 'complete', ?, 50, ?, ?)`,
+      [org!.id, NOW + 10, NOW + 10],
+    );
+    await applySchemaScore(sql, org!.id, NOW + 10);
+    expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: "ready_for_outbound" });
+  });
+
+  it("leaves non-BDR deals alone on a failed scan", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "lead", payload: { ...lead, source: "readiness_check" } }, NOW);
+    const org = await sql.get<{ id: string }>("SELECT id FROM organizations");
+    await sql.run(
+      `INSERT INTO readiness_scans (id, public_token, domain, origin, source, status, organization_id, created_at, completed_at)
+       VALUES ('f1', 'tf1', 'northwind.example', 'x', 'public', 'failed', ?, ?, ?)`,
+      [org!.id, NOW, NOW],
+    );
+    await applySchemaScore(sql, org!.id, NOW);
+    expect(await sql.get("SELECT routing_status FROM deals")).toEqual({ routing_status: null });
+  });
+});

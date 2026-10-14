@@ -47,7 +47,7 @@ export async function recordScoringFailure(sql: Sql, organizationId: string, rea
   await sql.run(
     `INSERT INTO activities (id, organization_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at)
      VALUES (?, ?, ?, 'lead.scoring_failed', 'system', 'schema', ?, ?, ?)`,
-    [crypto.randomUUID(), organizationId, deal.id, "Schema score could not be read.", JSON.stringify({ reason }), now],
+    [crypto.randomUUID(), organizationId, deal.id, `Schema score could not be read. ${reason}`.slice(0, 600), JSON.stringify({ reason }), now],
   );
 }
 
@@ -68,6 +68,23 @@ export async function applySchemaScore(
   if (!table) {
     await recordScoringFailure(sql, organizationId, "readiness_scans table is missing; schema score could not be read.", now);
     throw new ScoringError("readiness_scans table is missing");
+  }
+  const latest = await sql.get<{ status: string; error_message: string | null }>(
+    `SELECT status, error_message FROM readiness_scans
+     WHERE status IN ('complete', 'failed')
+       AND (organization_id = ? OR domain = (SELECT domain FROM organizations WHERE id = ?))
+     ORDER BY COALESCE(completed_at, created_at) DESC LIMIT 1`,
+    [organizationId, organizationId],
+  );
+  if (latest?.status === "failed") {
+    const bdr = await sql.get<{ id: string }>(
+      "SELECT id FROM deals WHERE organization_id = ? AND source = 'bdr' AND stage NOT IN ('won', 'lost') LIMIT 1",
+      [organizationId],
+    );
+    if (bdr) {
+      await recordScoringFailure(sql, organizationId, `Schema scan failed: ${latest.error_message ?? "no reason given"}`.slice(0, 500), now);
+    }
+    return null;
   }
   const scan = await sql.get<{ score_total: number | null }>(
     `SELECT score_total FROM readiness_scans
