@@ -41,6 +41,7 @@ describe("statementsFromMigration", () => {
       "0022_specialist_pipeline.sql",
       "0023_pipeline_auto.sql",
       "0024_lead_scores.sql",
+      "0025_client_work.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);

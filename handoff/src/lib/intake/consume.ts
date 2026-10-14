@@ -1,9 +1,11 @@
 import { normalizeDomain } from "../../db/crm";
 import type { Sql } from "../../db/sql";
 import { fileSchemaPackage } from "../schema-work";
+import { consumeWorkRequest } from "../client-work";
+import { planProjectSpace } from "../project-space";
 
 export type ConsumeResult =
-  | { ok: true; duplicate: boolean; filled_email?: boolean; leadOrganizationId?: string }
+  | { ok: true; duplicate: boolean; filled_email?: boolean; leadOrganizationId?: string; kickoffOrganizationId?: string }
   | { ok: false; error: "invalid"; retry: false };
 
 const FREEMAIL = new Set([
@@ -45,7 +47,7 @@ function isUnique(error: unknown): boolean {
   return error instanceof Error && error.message.includes("UNIQUE");
 }
 
-function cleanEmail(raw: unknown): string | null {
+export function cleanEmail(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const email = raw.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
@@ -59,7 +61,7 @@ function cleanName(raw: unknown): string | null {
   return name.slice(0, 200);
 }
 
-function companyDomain(raw: unknown, email: string | null): string | null {
+export function companyDomain(raw: unknown, email: string | null): string | null {
   const fromField = typeof raw === "string" ? normalizeDomain(raw) : null;
   if (fromField && !FREEMAIL.has(fromField)) return fromField;
   if (!email) return null;
@@ -865,8 +867,24 @@ async function consumeDealClosed(sql: Sql, payload: unknown, now: number): Promi
     products: plainValue(body?.products ?? body?.services ?? null),
     notes: typeof body?.notes === "string" ? body.notes.slice(0, 20000) : null,
   };
+  // A won deal gets its project and Space the same way a client work request does. Reads happen
+  // before the transaction because D1 buffers writes until COMMIT.
+  const dealProject = await sql.get<{ id: string }>(
+    "SELECT id FROM projects WHERE deal_id = ? AND status != 'cancelled' ORDER BY created_at LIMIT 1",
+    [deal.id],
+  );
+  const dealTitle = await sql.get<{ title: string }>("SELECT title FROM deals WHERE id = ?", [deal.id]);
+  const plan = await planProjectSpace(sql, {
+    organizationId: deal.organization_id,
+    name: dealTitle?.title ?? "Client project",
+    projectId: dealProject?.id ?? null,
+    dealId: deal.id,
+    status: "planned",
+    now,
+  });
   try {
     await withTx(sql, async () => {
+      for (const write of plan.writes) await sql.run(write.statement, write.params);
       await sql.run(
         `UPDATE deals SET stage = 'won', closed_at = ?, value_cents = COALESCE(?, value_cents), updated_at = ?
          WHERE id = ?`,
@@ -880,7 +898,14 @@ async function consumeDealClosed(sql: Sql, payload: unknown, now: number): Promi
         `INSERT INTO activities (
            id, organization_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at
          ) VALUES (?, ?, ?, 'deal.won', 'agent', 'sales-outbound', ?, ?, ?)`,
-        [crypto.randomUUID(), deal.organization_id, deal.id, "Deal won.", JSON.stringify(data), now],
+        [
+          crypto.randomUUID(),
+          deal.organization_id,
+          deal.id,
+          "Deal won.",
+          JSON.stringify({ ...data, project_id: plan.projectId, workspace_id: plan.workspaceId, created_project: plan.createdProject, created_space: plan.createdSpace }),
+          now,
+        ],
       );
       await sql.run("INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('deal_closed', ?, ?)", [externalId, now]);
     });
@@ -904,5 +929,6 @@ export async function consumeIntake(
   if (message.source === "deal_closed") return consumeDealClosed(sql, message.payload, now);
   if (message.source === "enrichment") return consumeEnrichment(sql, message.payload, now);
   if (message.source === "schema") return fileSchemaPackage(sql, message.payload, now);
+  if (message.source === "work_request") return consumeWorkRequest(sql, message.payload, now);
   return { ok: false, error: "invalid", retry: false };
 }

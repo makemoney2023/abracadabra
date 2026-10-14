@@ -6,6 +6,8 @@ import { PageFrame } from "@/components/page-frame";
 import { StaffShell } from "../staff-shell";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { WorkBoard } from "./board";
+import { ClientRequests } from "./client-requests";
+import { listPendingWorkRequests } from "@/lib/client-work";
 import { WorkToolbar } from "./filters";
 import { filterWork, workCounts, workHref } from "./query";
 
@@ -22,7 +24,7 @@ export default async function WorkPage({
   const project = query.project ?? "";
   const { sql, caller } = await requireHqStaffPage();
   const now = clock();
-  const [cards, chips, projects, capRow, runsOpen, swarm] = await Promise.all([
+  const [cards, chips, projects, capRow, runsOpen, swarm, pending] = await Promise.all([
     listBoard(sql, caller, {
       organizationId: client || undefined,
       projectId: project && project !== "none" ? project : undefined,
@@ -34,6 +36,7 @@ export default async function WorkPage({
     sql.get<{ value: string }>("SELECT value FROM agent_settings WHERE key = 'max_cloud_runs'"),
     openCloudRunCount(sql, caller),
     boardSwarmExtras(sql),
+    listPendingWorkRequests(sql).catch(() => []),
   ]);
   const open = cards.filter((card) => card.status !== "done");
   const counts = workCounts(open, now);
@@ -49,6 +52,7 @@ export default async function WorkPage({
   return (
     <StaffShell>
       <PageFrame title="Work" description="Cards for every client. The agent takes the top card in Describe or Engineer.">
+        <ClientRequests rows={pending} />
         <WorkToolbar late={late} week={week} blocked={blocked} client={client || undefined} project={project || undefined} counts={counts} />
         <div className="flex flex-wrap gap-2">
           <Link href={workHref({ late, week, blocked })} className={client ? "text-sm text-muted-foreground" : "text-sm font-medium"}>

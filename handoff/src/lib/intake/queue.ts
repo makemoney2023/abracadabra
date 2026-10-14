@@ -6,6 +6,7 @@ import { startLeadSchemaScan, type ScanQueue } from "../lead-schema";
 import { storeScanContext } from "../scan-context";
 import type { ObjectStore } from "../store/objects";
 import { consumeIntake, type BookingMailer } from "./consume";
+import { noteKickoff } from "../client-work";
 import type { Sql } from "../../db/sql";
 
 type EmailBinding = { send(message: unknown): Promise<unknown> };
@@ -78,7 +79,8 @@ function messageShape(body: unknown): { source: string; payload: unknown } | nul
   const source = "source" in body ? body.source : null;
   if (source !== "assessment" && source !== "booking" && source !== "schema" && source !== "lead" && source !== "enrichment" &&
     source !== "outreach" &&
-    source !== "deal_closed"
+    source !== "deal_closed" &&
+    source !== "work_request"
   ) return null;
   const payload = "payload" in body ? body.payload : null;
   return { source, payload };
@@ -128,6 +130,15 @@ export async function handleLeadIntakeBatch(
           const woke = await wakeOrganization(env, result.leadOrganizationId, "lead_created", now, fetchImpl);
           if (!woke) await noteWakeMiss(sql, result.leadOrganizationId, now);
         }
+      }
+      if (result.kickoffOrganizationId) {
+        let woke = false;
+        try {
+          woke = await wakeOrganization(env, result.kickoffOrganizationId, "work", now, fetchImpl);
+        } catch {
+          woke = false;
+        }
+        await noteKickoff(sql, result.kickoffOrganizationId, woke, now);
       }
       message.ack();
     } catch {
