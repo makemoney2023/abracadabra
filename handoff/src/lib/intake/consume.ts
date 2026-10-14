@@ -639,17 +639,19 @@ async function consumeLead(sql: Sql, payload: unknown, now: number): Promise<Con
     bdr_fit_score: fit,
     source,
   };
+  // An archived org still owns its domain (organizations.domain is UNIQUE), so reopen it
+  // instead of inserting a second org and tripping the constraint. This runs before the
+  // transaction because D1 buffers writes until COMMIT, so reads inside it see the old row.
+  const knownContact = email ? await contactByEmail(sql, email) : undefined;
+  if (knownContact?.organization_id) {
+    await reopenArchivedOrg(sql, { where: "id", value: knownContact.organization_id, now });
+  } else if (domain && !(await orgByDomain(sql, domain))) {
+    await reopenArchivedOrg(sql, { where: "domain", value: domain, now });
+  }
   let leadOrganizationId: string | undefined;
   try {
     await withTx(sql, async () => {
-      // An archived org still owns its domain (organizations.domain is UNIQUE), so reopen it
-      // instead of inserting a second org and tripping the constraint.
-      if (domain && !(await orgByDomain(sql, domain))) {
-        await reopenArchivedOrg(sql, { where: "domain", value: domain, now });
-      }
       const placed = await placeLead(sql, { email, name: contactName ?? company, domain, now });
-      // A known contact email can point at an archived org too.
-      await reopenArchivedOrg(sql, { where: "id", value: placed.organizationId, now });
       if (placed.created && company) {
         await sql.run("UPDATE organizations SET name = ?, updated_at = ? WHERE id = ?", [company, now, placed.organizationId]);
       }
