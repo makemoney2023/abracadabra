@@ -163,11 +163,13 @@ figure { margin: 1.6rem 0; }
 .content-hero-photo { margin: 0; }
 
 .content-hero-photo picture,
-.post-card-photo picture { display: block; }
+.post-card-photo picture,
+.featured-photo picture { display: block; }
 
 .content-hero-photo img,
 .post-figure img,
-.post-card-photo img {
+.post-card-photo img,
+.featured-photo img {
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
@@ -288,6 +290,97 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 
 .author-box p:last-of-type { color: var(--ink-soft); }
 
+.pillar-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  border: 0;
+  margin: 0 0 1.35rem;
+  padding: 0;
+}
+
+.pillar-filter legend {
+  width: 100%;
+  margin: 0 0 0.15rem;
+  padding: 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pillar-filter input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+
+.pillar-filter label {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.pillar-filter input:checked + label {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: #1c120f;
+}
+
+.pillar-filter input:focus-visible + label {
+  outline: 2px solid var(--optic);
+  outline-offset: 2px;
+}
+
+.featured-post {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 1.25rem 1.75rem;
+  align-items: end;
+  margin: 0 0 1.5rem;
+  padding: 0.55rem;
+  color: inherit;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.featured-post:hover { border-color: rgba(255, 75, 36, 0.55); }
+
+.featured-photo { display: block; overflow: hidden; }
+
+.featured-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.35rem 0.55rem 0.7rem;
+}
+
+.featured-copy strong {
+  font-family: Tektur, sans-serif;
+  font-weight: 500;
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
 .cards {
   list-style: none;
   padding: 0;
@@ -327,6 +420,8 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 
 .post-card-photo { display: block; overflow: hidden; }
 
+.cards .kicker { padding: 0 0.25rem; }
+
 #sources a { overflow-wrap: anywhere; }
 
 #all-notes ul { columns: 2; padding-left: 1.1rem; }
@@ -336,6 +431,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 @media (max-width: 980px) {
   .content-hero,
   .post-layout,
+  .featured-post,
   .cards { grid-template-columns: 1fr; }
   .post-aside { position: static; }
   .cta-sticky { flex-direction: column; align-items: stretch; }

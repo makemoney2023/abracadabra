@@ -237,8 +237,60 @@ function tocFrom(html) {
   return `<nav class="post-toc" aria-label="On this page"><p>On this page</p><ol>${items}<li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></nav>`;
 }
 
+const FEATURED_SLUG = "ai-readiness-assessment";
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+function formatDate(iso) {
+  const [year, month, day] = iso.split("-").map(Number);
+  return `${MONTHS[month - 1]} ${day}, ${year}`;
+}
+
+function readingMinutes(post) {
+  const words = post.body.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
+function cardMeta(post) {
+  const minutes = readingMinutes(post);
+  const label = minutes === 1 ? "1 min read" : `${minutes} min read`;
+  return `<span class="card-meta"><time datetime="${esc(post.datePublished)}">${esc(formatDate(post.datePublished))}</time><span aria-hidden="true">·</span><span>${label}</span></span>`;
+}
+
+function pillarId(pillar) {
+  return `pillar-${pillar.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
+}
+
 function postCard(post) {
-  return `<li><a href="/blog/${post.slug}"><span class="post-card-photo">${picture(post.images[0])}</span><strong>${esc(post.title)}</strong><span class="card-dek">${esc(post.description)}</span></a></li>`;
+  return `<li data-pillar="${esc(post.pillar)}"><a href="/blog/${post.slug}"><span class="post-card-photo">${picture(post.images[0])}</span><span class="kicker">${esc(post.pillar)}</span><strong>${esc(post.title)}</strong><span class="card-dek">${esc(post.description)}</span>${cardMeta(post)}</a></li>`;
+}
+
+function featuredPost(post) {
+  return `<a class="featured-post" data-pillar="${esc(post.pillar)}" href="/blog/${post.slug}"><span class="featured-photo">${picture(post.images[0])}</span><span class="featured-copy"><span class="kicker">Featured · ${esc(post.pillar)}</span><strong>${esc(post.title)}</strong><span class="card-dek">${esc(post.description)}</span>${cardMeta(post)}</span></a>`;
+}
+
+function pillarFilter(posts) {
+  const pillars = [...new Set(posts.map((post) => post.pillar))].sort((a, b) => a.localeCompare(b));
+  const controls = [
+    `<input type="radio" name="pillar" id="pillar-all" checked>`,
+    `<label for="pillar-all">All</label>`,
+    ...pillars.flatMap((pillar) => {
+      const id = pillarId(pillar);
+      return [
+        `<input type="radio" name="pillar" id="${id}">`,
+        `<label for="${id}">${esc(pillar)}</label>`,
+      ];
+    }),
+  ].join("");
+  const rules = pillars.map((pillar) => {
+    const id = pillarId(pillar);
+    const value = pillar.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+    return `.blog-index:has(#${id}:checked) .featured-post:not([data-pillar="${value}"]),.blog-index:has(#${id}:checked) .cards > li:not([data-pillar="${value}"]){display:none}`;
+  }).join("");
+  return `<fieldset class="pillar-filter"><legend>Filter by pillar</legend>${controls}</fieldset><style>${rules}</style>`;
 }
 
 function authorBox() {
@@ -557,8 +609,10 @@ async function renderIndex(posts) {
   const live = posts.filter((post) => isPublic(post));
   const ogAlt = "Abracadabra AI blog — notes on AI for operators";
   await writeOg("Notes on AI for operators", "BLOG", join(root, "blog/og/index.png"));
-  const cards = live.length
-    ? `<ul class="cards">${live.map((post) => postCard(post)).join("")}</ul>`
+  const featured = live.find((post) => post.slug === FEATURED_SLUG) ?? live[0];
+  const rest = featured ? live.filter((post) => post.slug !== featured.slug) : [];
+  const board = live.length
+    ? `${pillarFilter(live)}${featuredPost(featured)}<ul class="cards">${rest.map((post) => postCard(post)).join("")}</ul>`
     : `<p class="empty">No note is public yet. Each one appears here on its publish date, with the sources and the Readiness Check link in the page.</p>`;
   const body = `<main class="blog-index">
 <header class="content-hero blog-index-hero">
@@ -569,7 +623,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }])}
 <p class="dek">Notes for owners who want AI to take a task, and who want the source of every number on the page.</p>
 </div>
 </header>
-${cards}
+${board}
 </main>`;
   const html = pageShell({
     title: "Blog | Abracadabra AI",

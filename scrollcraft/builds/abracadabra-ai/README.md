@@ -21,7 +21,7 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 ## Blog layout and images — 2026-10-14
 
-- The index is a hero plus a three-column card grid. Each post page has a split hero, a bold opening sentence, styled comparison tables, a cited percentage callout when the note has one, an FAQ accordion, sources, an author box, related cards, and the sticky Readiness Check.
+- The index opens with a featured note (the readiness assessment), a filter for each pillar, then a three-column card grid. Every card shows the hero photograph, the excerpt, the publish date, and the reading time. Each post page has a split hero, a bold opening sentence, styled comparison tables, a cited percentage callout when the note has one, an FAQ accordion, sources, an author box, related cards, and the sticky Readiness Check.
 - Colours and type stay the studio tokens: canvas `#070706`, surface `#11110F`, ink `#F5F0E8`, accent `#FF4B24`, optic `#8DEBF2`, Tektur and IBM Plex Sans.
 - Each note's hero and card image is a 1280×720 photograph: WebP first, JPEG if the browser needs it. The 1200×630 card at `blog/og/<slug>.png` is that photograph with the title plate over it. The index and author cards stay on the plain title plate.
 
