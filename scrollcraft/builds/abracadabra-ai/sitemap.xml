@@ -125,4 +125,13 @@
       <video:publication_date>2026-10-07</video:publication_date>
     </video:video>
   </url>
+  <!-- blog-urls -->
+  <url>
+    <loc>https://abra-ca-dabra.app/blog</loc>
+    <lastmod>2026-10-14</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/about/christopher-buzny</loc>
+    <lastmod>2026-10-14</lastmod>
+  </url>
 </urlset>

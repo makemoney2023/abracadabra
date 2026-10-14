@@ -14,6 +14,14 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Blog — 2026-10-14
+
+- `npm test` runs `node scripts/build-blog.mjs` before the Playwright suite. `npm run deploy` stays `wrangler deploy`. Generated HTML, RSS, sitemap entries, OG images, and redirects are committed so a folder deploy still works.
+- Posts live in `content/blog/*.md`. A note with `datePublished` after the build date is written with `noindex` and left out of the index, sitemap, RSS, and the live list in `llms.txt`.
+- Each post has three images and a 1200×630 title card at `blog/og/<slug>.png`. The blog index and the author page use `blog/og/index.png` and `blog/og/author.png`.
+- `content/` and `scripts/` are in `.assetsignore`. `robots.txt` disallows CCBot and Bytespider and allows the other named answer-engine crawlers.
+- The first two notes publish on 2026-10-20 and 2026-10-22.
+
 ## Work rail — 2026-10-07: Getting started
 
 - The homepage horizontal pan (`#iii`, “Working systems, already in the world”) now includes one Super Funnel player: Getting started, 66 seconds, `assets/films/superfunnel-getting-started.mp4`, poster `assets/superfunnel-getting-started.webp`.

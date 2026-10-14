@@ -2,3 +2,14 @@
 # html_handling is none, so the apex needs an explicit rewrite to index.html.
 /index.html / 301
 / /index.html 200
+# blog-redirects
+/blog /blog/index.html 200
+/blog/ /blog/index.html 200
+/blog/ai-readiness-assessment /blog/ai-readiness-assessment/index.html 200
+/blog/ai-readiness-assessment/ /blog/ai-readiness-assessment/index.html 200
+/blog/how-can-ai-help-small-businesses /blog/how-can-ai-help-small-businesses/index.html 200
+/blog/how-can-ai-help-small-businesses/ /blog/how-can-ai-help-small-businesses/index.html 200
+/about/christopher-buzny /about/christopher-buzny/index.html 200
+/about/christopher-buzny/ /about/christopher-buzny/index.html 200
+/privacy /privacy/index.html 200
+/privacy/ /privacy/index.html 200

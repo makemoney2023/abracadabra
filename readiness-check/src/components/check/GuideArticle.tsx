@@ -28,6 +28,11 @@ export function GuideArticle({ guide, path, howTo }: { guide: CheckGuide; path: 
         <h2 className="font-heading text-3xl">What to do first</h2>
         <p className="text-sm text-muted-foreground">{guide.first}</p>
       </section>
+      {guide.furtherReading ? (
+        <p>
+          <a href={guide.furtherReading.href}>{guide.furtherReading.label}</a>
+        </p>
+      ) : null}
       <Link href="/check" className="studio-cta-primary">
         Start the check
       </Link>
