@@ -77,6 +77,8 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.equal(/"offers"\s*:/.test(json), false, path);
     for (const type of types) assert.match(json, new RegExp(`"@type": "${type}"|"@type": \\[[^\\]]*${type}`), `${path} ${type}`);
     assert.match(html, /class="site-nav"/);
+    assert.match(html, /class="site-nav__menu"/);
+    assert.match(html, /class="site-nav__toggle"/);
     assert.match(html, /Start a brief/);
   }
   const offering = read("services/ai-assistants-and-agents/index.html");

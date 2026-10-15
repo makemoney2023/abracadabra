@@ -393,18 +393,18 @@
   .hero-backdrop__scrim {
     position: absolute; inset: 0;
     background:
-      linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 56%, transparent) 0%, color-mix(in oklab, var(--sc-canvas) 30%, transparent) 44%, color-mix(in oklab, var(--sc-canvas) 78%, transparent) 100%),
-      radial-gradient(circle at 50% 45%, transparent 0 18%, color-mix(in oklab, var(--sc-canvas) 42%, transparent) 72%);
+      linear-gradient(to right, color-mix(in oklab, var(--sc-canvas) 84%, transparent) 0%, color-mix(in oklab, var(--sc-canvas) 46%, transparent) 36%, transparent 68%),
+      linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 64%, transparent) 0%, transparent 42%, color-mix(in oklab, var(--sc-canvas) 72%, transparent) 100%);
   }
   .hero {
     position: relative; z-index: 1; min-height: 100svh;
-    display: grid; place-items: center; text-align: center;
+    display: grid; place-items: center start; text-align: left;
     padding: 6.5rem var(--sc-gutter) 4.5rem;
   }
   .hero__copy {
-    display: grid; justify-items: center;
+    display: grid; justify-items: start;
     gap: clamp(1rem, 2.2vw, 1.75rem);
-    width: min(100%, 46rem); margin-inline: auto;
+    width: min(100%, 40rem); margin-inline: 0;
   }
   .hero__eyebrow { color: var(--sc-accent); margin: 0; }
   .hero__copy h1 {
@@ -412,9 +412,14 @@
     font-size: clamp(2.35rem, 1rem + 4.6vw, 6.2rem); line-height: 0.92;
     letter-spacing: -0.055em; margin: 0; text-wrap: balance;
   }
-  .hero__support { width: min(100%, 38rem); }
-  .hero__support .sc-lede { max-width: 38rem; margin: 0 auto; }
-  .hero__copy .cta { margin: 0; justify-content: center; }
+  .hero__support { width: min(100%, 36rem); }
+  .hero__support .sc-lede { max-width: 36rem; margin: 0; }
+  .hero__copy .cta { margin: 0; justify-content: flex-start; width: 100%; }
+  @media (max-width: 1023px) {
+    .hero__copy, .hero__support { width: 100%; }
+    .hero__copy .cta { flex-direction: column; align-items: stretch; }
+    .hero__copy .cta a { width: 100%; justify-content: center; }
+  }
   .compiler-shell {
     height: 100%; max-width: var(--sc-maxw); margin-inline: auto; width: 100%;
     display: flex; align-items: stretch; justify-content: center;
@@ -1232,10 +1237,13 @@
     .film-toggle { display: inline-flex; float: right; margin: 0 0 var(--sc-2) var(--sc-3); }
     .film-details { clear: both; max-height: 36vh; overflow: auto; }
     #film .film-details .sc-body { font-size: var(--sc-t-sm); }
-    .inquiry { padding: 4rem var(--sc-gutter) 6rem; }
+    .inquiry { padding: 4rem var(--sc-gutter) 2rem; }
     .inquiry .label { padding: var(--sc-5); }
     .inquiry h2 { font-size: var(--sc-t-xl); }
-    .foot { bottom: 3rem; }
+    .foot, .site-foot {
+      position: static; inset: auto; justify-content: flex-start;
+      padding: 0.4rem var(--sc-gutter) 2.5rem;
+    }
   }
 
   @media (max-width: 360px) {
@@ -1303,13 +1311,38 @@
     font-family: var(--sc-font-display); color: var(--sc-ink); text-decoration: none;
     letter-spacing: 0.02em; text-transform: none; white-space: nowrap;
   }
-  .site-nav__links { display: flex; gap: 0.85rem; align-items: center; overflow-x: auto; flex-wrap: nowrap; min-width: 0; max-width: 100%; }
+  .site-nav__menu { display: none; align-items: center; }
+  .site-nav__toggle {
+    display: none; list-style: none; cursor: pointer;
+    min-height: 44px; min-width: 44px; align-items: center; justify-content: center;
+    padding: 0 0.75rem; border: 1px solid var(--sc-hairline); color: var(--sc-ink);
+  }
+  .site-nav__toggle::-webkit-details-marker { display: none; }
+  .site-nav__toggle:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 3px; }
+  .site-nav__links { display: flex; gap: 0.85rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0; }
   .site-nav__links a {
     color: var(--sc-ink-soft); text-decoration: none; white-space: nowrap;
     min-height: 44px; display: inline-flex; align-items: center;
   }
   .site-nav__links a:hover, .site-nav__links a:focus-visible { color: var(--sc-ink); }
   .site-nav__cta { color: var(--sc-ink); border: 1px solid var(--sc-accent); padding: 0 0.7rem; }
+  @media (max-width: 900px) and (min-width: 768px) {
+    .site-nav { letter-spacing: 0.02em; gap: 0.6rem; }
+    .site-nav__links { gap: 0.4rem; }
+  }
+  @media (max-width: 767px) {
+    .site-nav__menu { display: flex; }
+    .site-nav__toggle { display: inline-flex; }
+    .site-nav__links { display: none; }
+    .site-nav__menu[open] ~ .site-nav__links {
+      display: flex; flex-direction: column; align-items: stretch;
+      position: absolute; top: 100%; right: 0; left: auto;
+      width: min(18rem, calc(100vw - 1.5rem)); max-width: 100%;
+      margin: 0; padding: 0.35rem 0.85rem 0.6rem; overflow: visible;
+      background: color-mix(in oklab, var(--sc-canvas) 96%, transparent);
+      border: 1px solid var(--sc-hairline); z-index: 2;
+    }
+  }
   h1, h2, h3, .sc-display { text-wrap: balance; hyphens: auto; }
   .sc-body, .time-panel p, .range-panel p, .aeo-panel p:not(.sc-label), .benefits__set p, .build-brief p {
     color: var(--sc-ink); font-size: var(--sc-t-sm); max-width: 65ch; text-wrap: pretty;
@@ -1366,7 +1399,6 @@
   }
   @media (max-width: 860px) {
     .services__grid { grid-template-columns: 1fr; }
-    .site-nav__links { max-width: 68vw; }
   }
   @media (prefers-reduced-motion: reduce) {
     .marquee { mask-image: none; overflow: visible; }
@@ -1386,6 +1418,9 @@
 <!-- SITE-NAV -->
 <header class="site-nav">
   <a class="site-nav__mark" href="/">Abracadabra AI</a>
+  <details class="site-nav__menu">
+    <summary class="site-nav__toggle">Menu</summary>
+  </details>
   <nav class="site-nav__links" aria-label="Site">
     <a href="/services/">Services</a>
     <a href="/portfolio/">Portfolio</a>
@@ -1395,6 +1430,15 @@
     <a class="site-nav__cta" href="/#brief">Start a brief</a>
   </nav>
 </header>
+<script>
+  document.querySelectorAll(".site-nav").forEach(function (bar) {
+    var menu = bar.querySelector(".site-nav__menu");
+    if (!menu) return;
+    bar.addEventListener("click", function (event) {
+      if (event.target.closest("a")) menu.open = false;
+    });
+  });
+</script>
 <!-- /SITE-NAV -->
 
 <div class="signal-rail" aria-hidden="true"><span></span></div>

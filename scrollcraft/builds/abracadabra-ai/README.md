@@ -10,9 +10,21 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital film plus the promise and the two actions, centered. The compiler section sits directly under it and demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The Aramaic origin of the name follows the compiler. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the model strip moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The models are next." The model strip names the gateway providers and the Workers AI families. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. Services, portfolio, products, and the LLM Leverage course are linked from the site header. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital film plus the promise and the two actions in a left column. From 1024px the actions sit side by side; below that they stack full width, still left-aligned. The compiler section sits directly under it and demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The Aramaic origin of the name follows the compiler. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the model strip moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The models are next." The model strip names the gateway providers and the Workers AI families. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. Services, portfolio, products, and the LLM Leverage course are linked from the site header. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+
+## Mobile nav and hero column — 2026-10-15
+
+- From 1024px the homepage hero copy and the two actions sit in a left column over the film, with the actions side by side. Below 1024px the actions stack full width under the text, still left-aligned. Service, portfolio, product, course, and blog opening copy uses the same column. Later section headings stay centered.
+- Under 768px the header is a Menu control and the link list opens under the bar. From 768px the six links stay in one row, including Course and Blog.
+- On screens up to 1100px the footer stays in normal flow at the end of the brief, so it no longer paints over the hero. The compiler stays in `#compiler`, under the hero.
+- **What changed** — the hero column, the compact menu, and the phone footer.
+- **Why** — Christopher asked for a left column on desktop and stacked full-width actions on smaller screens, and the phone preview showed the footer and the nav overflowing the hero.
+- **Code touchpoints** — `index.html`, `blog/blog.css`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — generated page headers.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in this folder.
 
 ## PiRX screenshots — 2026-10-15
 
@@ -38,8 +50,8 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 
 ## Layout — 2026-10-15
 
-- The homepage hero is only the full-bleed orbital video, the headline, the subhead, and the two actions, centered. The "Thought → working software" compiler moved into `#compiler`, the next section. Tokens are unchanged.
-- Homepage shells that were two columns at 1024 now stack at 1100px and below. Service, portfolio, product, course, and blog pages center their headings and keep body copy in a 46rem measure. Card grids stay two columns until 700px.
+- The homepage hero is only the full-bleed orbital video, the headline, the subhead, and the two actions. The "Thought → working software" compiler moved into `#compiler`, the next section. Tokens are unchanged. A later note the same day moved that opening copy into a left column.
+- Homepage shells that were two columns at 1024 now stack at 1100px and below. Service, portfolio, product, course, and blog pages keep body copy in a 46rem measure. Card grids stay two columns until 700px. Opening titles were centered in this pass and moved to the left column in the note above.
 - **What changed** — text no longer sits in a leftover side column, and the required widths do not grow the page sideways.
 - **Why** — Christopher reported the layout broken across viewports.
 - **Code touchpoints** — `index.html`, `blog/blog.css`, `tests/marketing-site.test.mjs`.
