@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Safe execution of AI-written code | Abracadabra AI</title>
-<meta name="description" content="Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in">
+<title>Approved tasks, inside a limit | Abracadabra AI</title>
+<meta name="description" content="The assistant runs a task you approved, inside a limit you set. It ships with the assistant.">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://abra-ca-dabra.app/services/safe-code-execution/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Abracadabra AI">
 <meta property="og:url" content="https://abra-ca-dabra.app/services/safe-code-execution/">
-<meta property="og:title" content="Safe execution of AI-written code | Abracadabra AI">
-<meta property="og:description" content="Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in">
+<meta property="og:title" content="Approved tasks, inside a limit | Abracadabra AI">
+<meta property="og:description" content="The assistant runs a task you approved, inside a limit you set. It ships with the assistant.">
 <meta property="og:image" content="https://abra-ca-dabra.app/assets/og/safe-code-execution.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Safe execution of AI-written code, Abracadabra AI">
+<meta property="og:image:alt" content="The assistant runs a task you approved, inside a limit you set, Abracadabra AI">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Safe execution of AI-written code | Abracadabra AI">
-<meta name="twitter:description" content="Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in">
+<meta name="twitter:title" content="Approved tasks, inside a limit | Abracadabra AI">
+<meta name="twitter:description" content="The assistant runs a task you approved, inside a limit you set. It ships with the assistant.">
 <meta name="twitter:image" content="https://abra-ca-dabra.app/assets/og/safe-code-execution.png">
-<meta name="twitter:image:alt" content="Safe execution of AI-written code, Abracadabra AI">
+<meta name="twitter:image:alt" content="The assistant runs a task you approved, inside a limit you set, Abracadabra AI">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Tektur:wght@500;600&amp;display=swap" rel="stylesheet">
@@ -62,8 +63,8 @@
       "@type": "WebPage",
       "@id": "https://abra-ca-dabra.app/services/safe-code-execution/#webpage",
       "url": "https://abra-ca-dabra.app/services/safe-code-execution/",
-      "name": "Safe execution of AI-written code",
-      "description": "Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in the box.",
+      "name": "The assistant runs a task you approved, inside a limit you set",
+      "description": "The assistant runs a task you approved, inside a limit you set. It ships with the assistant.",
       "isPartOf": {
         "@id": "https://abra-ca-dabra.app/#website"
       },
@@ -91,7 +92,7 @@
         {
           "@type": "ListItem",
           "position": 3,
-          "name": "Safe execution of AI-written code",
+          "name": "The assistant runs a task you approved, inside a limit you set",
           "item": "https://abra-ca-dabra.app/services/safe-code-execution/"
         }
       ]
@@ -99,9 +100,9 @@
     {
       "@type": "Service",
       "@id": "https://abra-ca-dabra.app/services/safe-code-execution/#service",
-      "name": "Safe execution of AI-written code",
-      "serviceType": "Safe execution of AI-written code",
-      "description": "Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in the box.",
+      "name": "The assistant runs a task you approved, inside a limit you set",
+      "serviceType": "Safe code execution",
+      "description": "The assistant runs a task you approved, inside a limit you set. It ships with the assistant.",
       "provider": {
         "@id": "https://abra-ca-dabra.app/#org"
       },
@@ -114,34 +115,50 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "Can the code reach our email or our files?",
+          "name": "Is this a server we rent and forget?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Only the files you pass into that run. It does not inherit someone's login."
+            "text": "No. It is a task the assistant runs, with a limit, on Cloudflare. You do not get an open machine and a password."
           }
         },
         {
           "@type": "Question",
-          "name": "What if the code is wrong?",
+          "name": "Can it install whatever package it wants?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The box still contains it. You get the output to check, and a bad result does not change live records unless you built that step on purpose."
+            "text": "No. Dependencies are the ones you approved. A request to fetch something new stops."
           }
         },
         {
           "@type": "Question",
-          "name": "Do we review every program?",
+          "name": "Can it reach our production records?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "You review the job and the boundary. You do not have to review every line for the wall to hold."
+            "text": "Only the read or write you named. A wide credential is a failed brief. We would rather the task be unable to see a table than able to see all of them."
           }
         },
         {
           "@type": "Question",
-          "name": "Is this only for developers?",
+          "name": "What if the model writes bad code?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "It is for any job where the useful output is a calculation or a file, and the risk is letting that program wander."
+            "text": "The task still runs inside the limit, and the result is not sent until the approval you set. A crash is a log line, not a change to the record."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do we have to read code?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You have to read the task in plain language: what it may open, what it may write, and when it must stop. The code is ours to maintain. The permission is yours."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can we buy this without an assistant?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The page stays up so the limit is easy to find. The thing we ship is the assistant with this capability turned on for the tasks you listed. If there is no assistant, there is nothing to fence."
           }
         }
       ]
@@ -162,10 +179,14 @@
     <a class="site-nav__cta" href="/#brief">Start a brief</a>
   </nav>
 </header>
-<main class="site-page">
-<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><a href="/services/">Services</a></li><li aria-current="page">Safe execution of AI-written code</li></ol></nav>
+<main class="site-page sales">
+<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><a href="/services/">Services</a></li><li aria-current="page">The assistant runs a task you approved, inside a limit you set</li></ol></nav>
 <p class="kicker">Built and deployed on Cloudflare&#39;s global network.</p>
-<h1>Safe execution of AI-written code</h1>
+<h1>The assistant runs a task you approved, inside a limit you set</h1>
+<p class="sales-dek">This is part of an AI assistant, not a separate product you buy on its own. The assistant may run a task you already approved. The task runs inside a limit: time, files, and what it is allowed to touch.</p>
+<p class="sales-lead">Read it with the assistant it belongs to. <a href="/services/ai-assistants-and-agents/">AI assistants and agents</a> If you only need the assistant to talk, you do not need this.</p>
+<p class="sales-actions"><a class="sales-primary" href="/#brief">Show us how it works</a><a class="sales-secondary" href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a></p>
+<ul class="proof-strip"><li><a href="/services/ai-assistants-and-agents/">AI assistants</a></li></ul>
 <figure class="content-hero-photo">
   <picture>
     <source srcset="/blog/media/services/safe-code-execution/01.webp" type="image/webp">
@@ -174,12 +195,13 @@
   <figcaption>PLACEHOLDER — needs Christopher. Hero image for this service.</figcaption>
 </figure>
 <section>
-<h2>What it is</h2>
-<p>Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in the box.</p>
+<h2>A chat reply is not a finished task</h2>
+<p>Some jobs are not a sentence. They are a calculation, a file checked against a rule, a draft built from rows you already have. A person copies the numbers out, runs them, and pastes the result back. The assistant could do that step. Giving it a whole computer is how a small task becomes an incident.</p>
+<p>The useful version is narrow. The assistant may run the task you named, on the files you named, for a length of time you named. When it hits the fence, it stops and tells a person. The page you are reading is that fence. The assistant page is the thing that talks to the customer or the team.</p>
 </section>
 <section>
-<h2>What it looks like in your business</h2>
-<ul><li>Turning a weekly spreadsheet into a calculated report, with the formula run in a box</li><li>Checking a file the model produced before anyone downloads it</li><li>Letting a teammate ask for a one-off calculation without handing over the keys to the business</li></ul>
+<h2>What changes</h2>
+<ul class="outcome-grid"><li><h3>A task, not a blank console</h3><p>You approve the job: this calculation, this check, this draft. A request to do something else is refused.</p></li><li><h3>A limit you can point at</h3><p>Time, memory, and which files it may read or write are set before it runs. The limit is part of the brief, not a hope.</p></li><li><h3>A result a person can read</h3><p>The output comes back to the assistant with what it used. A person can rerun it or throw it out.</p></li><li><h3>A stop that is loud</h3><p>If the task exceeds the limit or asks for something off the list, it stops. The log says why. It does not retry its way around the fence.</p></li></ul>
 </section>
 <figure class="post-figure">
   <picture>
@@ -189,12 +211,22 @@
   <figcaption>PLACEHOLDER — needs Christopher. Image for this service.</figcaption>
 </figure>
 <section>
-<h2>How it works</h2>
-<ol><li>We decide which jobs may write code, and what that code is allowed to see.</li><li>The code runs on Cloudflare, inside a sandbox, with no path to the rest of your systems unless you open one.</li><li>The result comes back as a file or a number. The box is thrown away.</li><li>You see what ran. You do not have to read the program to trust the boundary.</li></ol>
+<h2>Three places it shows up</h2>
+<ul class="use-grid"><li><h3>A calculation from rows you trust</h3><p>The assistant takes numbers already in the file and returns the total the rule describes. It does not pull a different spreadsheet because the first one was inconvenient.</p></li><li><h3>A check before something is sent</h3><p>A file is tested against the rule you wrote: required fields, a total that matches, a name that exists. Failures go to a person with the reason.</p></li><li><h3>A draft from a template</h3><p>The task fills a template you approved. It does not invent a new template, and it does not send the result. Sending stays a separate approval.</p></li></ul>
+</section>
+
+<section>
+<h2>How it gets built</h2>
+<p>The order is the same on every service. The job is what changes.</p>
+<ol class="process"><li><h3>Brief</h3><p>You tell us the job, the rules, and the moment a person has to say yes. We write that list before anyone builds. A step that is not on the list does not ship.</p></li><li><h3>Build</h3><p>We build it on Cloudflare and connect it to the records you already keep. The new system should not be a second place to type the same fact.</p></li><li><h3>People approve</h3><p>Your team runs last week&#39;s real work through it and marks what may go live. We do not put a customer-facing step in front of people on our say-so alone.</p></li><li><h3>Launch and run</h3><p>It goes live. We watch the first runs with you, fix what the real work shows, and leave the rules where your team can change them.</p></li></ol>
 </section>
 <section>
-<h2>What you get</h2>
-<ul><li>A sandbox for the jobs that need generated code</li><li>A list of what the code may read and write</li><li>The result of the run, and a record that it ran</li><li>A stop if the code asks for something outside the list</li></ul>
+<h2>Off the shelf, a hire, or us</h2>
+<p>Letting a model loose on a laptop, hiring someone to run the sheet, and a fenced task are different risks.</p>
+<div class="extraction-table"><table>
+<thead><tr><th></th><th>Off the shelf</th><th>Hire in-house</th><th>Abracadabra</th></tr></thead>
+<tbody><tr><th scope="row">What it can touch</th><td>Whatever the plugin or the laptop can touch.</td><td>Whatever that person can open.</td><td>The files and the actions on the list, for the time you set.</td></tr><tr><th scope="row">When it fails</th><td>You may not notice until later.</td><td>They notice if they are looking.</td><td>The run stops and the reason is in the log.</td></tr><tr><th scope="row">Who sends the result</th><td>Sometimes the tool does, if the toggle was on.</td><td>The person, if you trust them to.</td><td>A person, unless you explicitly approved a send.</td></tr><tr><th scope="row">When off the shelf wins</th><td>The assistant only needs to talk, or the task is one formula in a sheet a person already opens. Do not put a code runner behind a conversation that never needed one.</td><td>A person running a weekly sheet by hand is fine when the sheet is small and the stakes of a miss are low.</td><td>We will leave this out of the assistant when the job is conversation only. The fence earns its place when a task is repeated and a wrong write would be expensive.</td></tr></tbody>
+</table></div>
 </section>
 <figure class="post-figure">
   <picture>
@@ -204,25 +236,35 @@
   <figcaption>PLACEHOLDER — needs Christopher. Image for this service.</figcaption>
 </figure>
 <section>
-<h2>Who it's for</h2>
-<p>Owners who want the speed of generated code and a hard wall around everything else.</p>
-<h3>Signs you need it</h3>
-<ul><li>A model is already writing snippets that someone pastes into a live tool</li><li>You want calculations on your files without uploading the whole business</li><li>You do not want a generated script sitting on a laptop with saved passwords</li></ul>
+<h2>Work we can name</h2>
+<article class="proof-card"><h3>It ships inside the assistant</h3><p>There is no separate client story for a code runner, and we will not invent one. The public shape is the assistant that remembers the customer and takes the next step. This page is the limit on the step that runs.</p><p><a href="/services/ai-assistants-and-agents/">Read the assistant page</a></p></article>
 </section>
-<p class="tag">Built on Sandboxes, Containers. Built and deployed on Cloudflare&#39;s global network.</p>
+<p class="cloud-line">It runs on Cloudflare&#39;s global network. The request, the memory, and the files stay on infrastructure you can name. Built on Sandboxes, Containers. Built and deployed on Cloudflare&#39;s global network.</p>
+<section class="price-block">
+<h2>Pricing</h2>
+<p>Contact for pricing. We price the job after the brief, not from a public rate card.</p>
+<p><a href="/#brief">Show us how it works</a></p>
+</section>
 <section>
 <h2>Questions</h2>
-<h3>Can the code reach our email or our files?</h3>
-<p>Only the files you pass into that run. It does not inherit someone&#39;s login.</p>
-<h3>What if the code is wrong?</h3>
-<p>The box still contains it. You get the output to check, and a bad result does not change live records unless you built that step on purpose.</p>
-<h3>Do we review every program?</h3>
-<p>You review the job and the boundary. You do not have to review every line for the wall to hold.</p>
-<h3>Is this only for developers?</h3>
-<p>It is for any job where the useful output is a calculation or a file, and the risk is letting that program wander.</p>
+<h3>Is this a server we rent and forget?</h3>
+<p>No. It is a task the assistant runs, with a limit, on Cloudflare. You do not get an open machine and a password.</p>
+<h3>Can it install whatever package it wants?</h3>
+<p>No. Dependencies are the ones you approved. A request to fetch something new stops.</p>
+<h3>Can it reach our production records?</h3>
+<p>Only the read or write you named. A wide credential is a failed brief. We would rather the task be unable to see a table than able to see all of them.</p>
+<h3>What if the model writes bad code?</h3>
+<p>The task still runs inside the limit, and the result is not sent until the approval you set. A crash is a log line, not a change to the record.</p>
+<h3>Do we have to read code?</h3>
+<p>You have to read the task in plain language: what it may open, what it may write, and when it must stop. The code is ours to maintain. The permission is yours.</p>
+<h3>Can we buy this without an assistant?</h3>
+<p>The page stays up so the limit is easy to find. The thing we ship is the assistant with this capability turned on for the tasks you listed. If there is no assistant, there is nothing to fence.</p>
 </section>
-<aside class="placeholder"><strong>PLACEHOLDER — needs Christopher</strong><p>Price, timeline, and a client example for this service are not on the site yet.</p></aside>
-<p><a href="/#brief">Start a brief</a></p>
+<section class="sales-close">
+<h2>See it on your work</h2>
+<p>Name one task a person copies out of a thread and runs by hand. We will show the fence around it, and whether it belongs in the assistant at all.</p>
+<p class="sales-actions"><a class="sales-primary" href="/#brief">Show us how it works</a><a class="sales-secondary" href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a></p>
+</section>
 </main>
 <footer class="site-foot">
   <a href="/services/">Services</a>

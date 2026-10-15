@@ -14,6 +14,14 @@ Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates t
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Service sales pages — 2026-10-15
+
+- Each `/services/<slug>/` page is a sales page: outcome headline, "Show us how it works" (`/#brief`) and "AI Readiness Check", a proof strip, the problem, outcome cards, three generic business uses, the shared four-step process (brief, build, people approve, launch and run), a comparison of off-the-shelf / hire in-house / Abracadabra with an honest row for when off the shelf wins, a named proof card, the Cloudflare line, "Contact for pricing" with no numbers, five to seven questions, and a closing CTA. Copy lives in `scripts/service-sales.mjs`. Visible length is about 900–1300 words.
+- Safe code execution stays at `/services/safe-code-execution/` and is written as a capability of AI assistants. The assistants page and the safe-code page link to each other. The hub ItemList still lists all ten.
+- Portfolio notes added for SuperPatch products, the StrongFoam website, the StrongFoam CRM/ERP, and Renew Implants (site, social, blogs). The pirx.ca note now covers the app and the blogs. Search Console figures stay the 2026-09-23 pull; a fresh pull was not available. No testimonials.
+- JSON-LD on each service page is Service, FAQPage, and BreadcrumbList. The hub adds an ItemList. There is no Offer and no AggregateRating. The Google Search Console verification meta is an HTML comment, `PLACEHOLDER — needs Christopher`, and is not a token.
+- Hero and two body image slots stay at `/blog/media/services/<slug>/01|02|03` until photographs are attached.
+
 ## Site pages — 2026-10-15
 
 - The public label is Services. The header and footer link `/services/`. `#services` follows the work rail. Old `/offerings/` and `/offerings/<slug>/` URLs 301 to the new paths. Each service page has a plain "What it is", three generic business examples, the steps, the deliverables, who it is for, and real questions. Examples name a job (after-hours questions, a document lookup, a weekly report), not an industry. Named portfolio items stay as they are. A hero slot and two in-body slots point at `/blog/media/services/<slug>/01|02|03` for photographs Christopher will supply. Price, timeline, and a client example stay in the visible `PLACEHOLDER — needs Christopher` block.

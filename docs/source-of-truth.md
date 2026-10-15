@@ -266,6 +266,22 @@ These four can be named and linked today. They're the ones already cleared to na
 
 Repo brief for that catalog: quiet conjure, museum of working software, physical proof. The marketing site leads with the benefit argument in this file. The catalog stays the room where the films play.
 
+### Named on the service pages — 2026-10-15
+
+Christopher cleared these names for the public service pages and `/portfolio/`. No testimonials. No metrics except the pirx.ca Search Console set already in this file.
+
+| Name | What may be said | Service pages |
+|---|---|---|
+| SuperPatch products | Public product pages a buyer can read. Do not name SuperPatch AI, distributors, or any internal system. | AI assistants, custom apps |
+| StrongFoam website | The public site takes an estimate and a booking. Do not say "insulation contractor." | Custom apps, web automation |
+| StrongFoam CRM/ERP | The operating record beside the website. No figures. | Custom apps |
+| Renew Implants | The website, the social posts, and the blogs. No patient, clinic, or metric language. | Custom apps; social on AI media; blogs on AI visibility |
+| pirx.ca | The app and the blogs. Search Console figures stay on the portfolio note and the AI visibility page only. | Custom apps, AI visibility, search-grounded research |
+
+Answers from your documents and voice have no named case. Any model, one bill points at the homepage model gateway and states no client spend. Safe code execution is a capability of the assistants; its URL stays, and both pages link to each other. It is not a client case.
+
+A Google Search Console re-pull was attempted on 2026-10-15 and could not run: this environment has no Search Console credentials. The published digits stay the 2026-09-23 pull (201K impressions, 1.1K clicks, 21.8K Generative AI / AI Overviews impressions, one post over 5,400, a daily AI-surface peak over 1,600). Do not replace 5,400+ with a later digit from an older changelog line.
+
 ### Answers and knowledge
 
 | Work | Path | Outcome | Tag |
@@ -381,14 +397,14 @@ These are sourced on disk. They are not approved public claims.
 
 **Safe to say without those numbers.** Live URLs. "Several languages" or "twenty locales" where the app README states the locale list. "Non-diagnostic wellness assessment." "Film, one-pager, and demo script from the same footage." "A second product on a shared platform."
 
-**Already cleared, unlike the table above.** The pirx.ca AEO/GEO/SEO numbers in the zero-to-scale case (201K impressions, 21.8K on the Generative AI surface, 1.1K clicks) are our own analytics on our own domain — approved for public use. Re-pull the exact digits close to publish, since they're climbing weekly; the trend is the durable claim, not the specific number captured on 2026-09-23.
+**Already cleared, unlike the table above.** The pirx.ca AEO/GEO/SEO numbers in the zero-to-scale case (201K impressions, 21.8K on the Generative AI surface, 1.1K clicks) are our own analytics on our own domain — approved for public use. The 2026-10-15 re-pull could not run (no Search Console credentials in the build environment). Keep the 2026-09-23 digits, including "over 5,400" for the one post. Do not promote a later exact count until a fresh pull exists.
 
 ---
 
 ## What stays off the public site
 
 - Unconfirmed metrics in the table above.
-- SuperPatch internal system names, until naming is cleared. Use the outcome sentences. Exception, 2026-10-07: the eight Super Funnel associate walkthroughs are on `/films.html` under that name. They are not a leg of the four-system walkthrough flight, and they are not on the homepage.
+- SuperPatch internal system names, until naming is cleared. Use the outcome sentences. Exception, 2026-10-07: the eight Super Funnel associate walkthroughs are on `/films.html` under that name. They are not a leg of the four-system walkthrough flight, and they are not on the homepage. Exception, 2026-10-15: "SuperPatch products" may be named as public product pages. Internal system names stay off.
 - Vendor ROI calculators inside `Intercom` as if they were our measured savings.
 - Medical outcomes. Assessments educate and route. They do not diagnose.
 - `ai-toolkit`, `Agent-Skills-for-Context-Engineering`, and the tutorial clones under `Desktop/Development/` (`langgraph-cua-py`, `pydantic-ai`, `trustcall`, `langmem`, `elevenlabs-cookbook` / `langsmith-cookbook`, `elevenlabs-examples`, `ai-chatbot`, `gen-ui-computer-use`, `executive-ai-assistant`, `msgraph-sample-pythondjangoapp`, upstream `translation-agent`).

@@ -17,6 +17,7 @@ import {
   placeholders,
   products,
 } from "./site-data.mjs";
+import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -147,7 +148,10 @@ function modelsHtml() {
 }
 
 function offeringsHtml() {
-  const cards = offerings.map((item) => `<li><a href="/services/${item.slug}/"><h3>${esc(item.outcome)}</h3><p>${esc(item.card)}</p><p class="services__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`).join("");
+  const cards = offerings.map((item) => {
+    const page = salesPages[item.slug];
+    return `<li><a href="/services/${item.slug}/"><h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p><p class="services__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`;
+  }).join("");
   return `<section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
       <p class="services__kicker">${esc(OFFERINGS_KICKER)}</p>
@@ -213,6 +217,7 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
@@ -298,22 +303,56 @@ async function plateOrPhoto(key, label, title, photo) {
   };
 }
 
+function salesActions() {
+  return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Show us how it works</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
+}
+
+function proofStrip(items) {
+  return `<ul class="proof-strip">${items.map((item) => `<li><a href="${esc(item.href)}">${esc(item.label)}</a></li>`).join("")}</ul>`;
+}
+
+function cardGrid(className, items) {
+  return `<ul class="${className}">${items.map((item) => `<li><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></li>`).join("")}</ul>`;
+}
+
+function comparisonTable(rows) {
+  const body = rows.map((row) => `<tr><th scope="row">${esc(row.label)}</th><td>${esc(row.shelf)}</td><td>${esc(row.hire)}</td><td>${esc(row.us)}</td></tr>`).join("");
+  return `<div class="extraction-table"><table>
+<thead><tr><th></th><th>Off the shelf</th><th>Hire in-house</th><th>Abracadabra</th></tr></thead>
+<tbody>${body}</tbody>
+</table></div>`;
+}
+
+function leadHtml(lead) {
+  if (!lead) return "";
+  return `<p class="sales-lead">${esc(lead.before)} <a href="${esc(lead.href)}">${esc(lead.label)}</a>${esc(lead.after)}</p>`;
+}
+
+function capabilityHtml(block) {
+  if (!block) return "";
+  return `<section>
+<h2>${esc(block.title)}</h2>
+<p>${esc(block.text)} <a href="${esc(block.href)}">${esc(block.label)}</a></p>
+</section>`;
+}
+
 async function renderOffering(item) {
+  const page = salesPages[item.slug];
+  if (!page) throw new Error(`Missing sales page for ${item.slug}`);
   const path = `/services/${item.slug}/`;
   const url = `${SITE}${path}`;
-  const title = pageTitle(item.outcome);
-  const description = clip(item.whatItIs, 155);
+  const title = pageTitle(page.title);
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Services", href: "/services/", url: `${SITE}/services/` },
-    { name: item.outcome, href: path, url },
+    { name: page.headline, href: path, url },
   ];
   const service = {
     "@type": "Service",
     "@id": `${url}#service`,
-    name: item.outcome,
-    serviceType: item.outcome,
-    description: item.whatItIs,
+    name: page.headline,
+    serviceType: page.short,
+    description: page.description,
     provider: { "@id": ORG_ID },
     areaServed: "Worldwide",
     url,
@@ -321,17 +360,19 @@ async function renderOffering(item) {
   const faq = {
     "@type": "FAQPage",
     "@id": `${url}#faq`,
-    mainEntity: item.faqs.map(([name, text]) => ({
+    mainEntity: page.faqs.map(([name, text]) => ({
       "@type": "Question",
       name,
       acceptedAnswer: { "@type": "Answer", text },
     })),
   };
-  const og = await plateOrPhoto(item.slug, "Service", item.outcome, null);
-  const questions = item.faqs.map(([name, text]) => `<h3>${esc(name)}</h3>\n<p>${esc(text)}</p>`).join("\n");
+  const og = await plateOrPhoto(item.slug, "Service", page.headline, null);
+  const questions = page.faqs.map(([name, text]) => `<h3>${esc(name)}</h3>\n<p>${esc(text)}</p>`).join("\n");
+  const steps = processSteps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
+  const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p><p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
   const html = shell({
     title,
-    description,
+    description: page.description,
     canonical: url,
     robots: "index,follow",
     ogImage: og.url,
@@ -342,45 +383,62 @@ async function renderOffering(item) {
       type: "WebPage",
       id: `${url}#webpage`,
       url,
-      name: item.outcome,
-      description: item.whatItIs,
+      name: page.headline,
+      description: page.description,
     }), [crumbList(crumbs), service, faq]),
-    body: `<main class="site-page">
+    body: `<main class="site-page sales">
 ${visibleCrumbs(crumbs)}
 <p class="kicker">${esc(OFFERINGS_KICKER)}</p>
-<h1>${esc(item.outcome)}</h1>
+<h1>${esc(page.headline)}</h1>
+<p class="sales-dek">${esc(page.dek)}</p>
+${leadHtml(page.lead)}
+${salesActions()}
+${proofStrip(page.strip)}
 ${mediaSlot(item.slug, 1, "hero")}
 <section>
-<h2>What it is</h2>
-<p>${esc(item.whatItIs)}</p>
+<h2>${esc(page.problemTitle)}</h2>
+${page.problem.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
 </section>
 <section>
-<h2>What it looks like in your business</h2>
-${list("ul", item.examples)}
+<h2>What changes</h2>
+${cardGrid("outcome-grid", page.outcomes)}
 </section>
 ${mediaSlot(item.slug, 2, "body")}
 <section>
-<h2>How it works</h2>
-${list("ol", item.steps)}
+<h2>Three places it shows up</h2>
+${cardGrid("use-grid", page.uses)}
+</section>
+${capabilityHtml(page.capability)}
+<section>
+<h2>How it gets built</h2>
+<p>${esc(processIntro)}</p>
+<ol class="process">${steps}</ol>
 </section>
 <section>
-<h2>What you get</h2>
-${list("ul", item.deliverables)}
+<h2>Off the shelf, a hire, or us</h2>
+<p>${esc(page.compareIntro)}</p>
+${comparisonTable(page.rows)}
 </section>
 ${mediaSlot(item.slug, 3, "body")}
 <section>
-<h2>Who it's for</h2>
-<p>${esc(item.who)}</p>
-<h3>Signs you need it</h3>
-${list("ul", item.signs)}
+<h2>Work we can name</h2>
+${proofs}
 </section>
-<p class="tag">${esc(builtOn(item.builtOn))}</p>
+<p class="cloud-line">${esc(page.cloudflare)} ${esc(builtOn(item.builtOn))}</p>
+<section class="price-block">
+<h2>Pricing</h2>
+<p>Contact for pricing. We price the job after the brief, not from a public rate card.</p>
+<p><a href="/#brief">Show us how it works</a></p>
+</section>
 <section>
 <h2>Questions</h2>
 ${questions}
 </section>
-${placeholder(placeholders.offering)}
-<p><a href="/#brief">Start a brief</a></p>
+<section class="sales-close">
+<h2>See it on your work</h2>
+<p>${esc(page.close)}</p>
+${salesActions()}
+</section>
 </main>`,
   });
   await writePage(`services/${item.slug}/index.html`, html);
@@ -389,7 +447,7 @@ ${placeholder(placeholders.offering)}
 async function renderOfferingsHub() {
   const url = `${SITE}/services/`;
   const title = "What we build and run | Abracadabra AI";
-  const description = "Ten systems Abracadabra AI builds and runs on Cloudflare's global network, from agents to search-grounded research.";
+  const description = "Ten systems Abracadabra AI builds and runs on Cloudflare's global network. Safe code execution ships inside AI assistants.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Services", href: "/services/", url },
@@ -404,13 +462,17 @@ async function renderOfferingsHub() {
       position: index + 1,
       item: {
         "@type": "Service",
-        name: item.outcome,
+        name: salesPages[item.slug].headline,
         url: `${SITE}/services/${item.slug}/`,
       },
     })),
   };
   const og = await plateOrPhoto("services", "Services", OFFERINGS_HEADING, null);
-  const cards = offerings.map((item) => `<li><a href="/services/${item.slug}/"><strong>${esc(item.outcome)}</strong><span>${esc(item.card)}</span></a></li>`).join("");
+  const cards = offerings.map((item) => {
+    const page = salesPages[item.slug];
+    const note = item.slug === "safe-code-execution" ? " Part of AI assistants." : "";
+    return `<li><a href="/services/${item.slug}/"><strong>${esc(page.headline)}</strong><span>${esc(page.description)}${esc(note)}</span></a></li>`;
+  }).join("");
   const html = shell({
     title,
     description,
@@ -431,6 +493,7 @@ async function renderOfferingsHub() {
 ${visibleCrumbs(crumbs)}
 <p class="kicker">${esc(OFFERINGS_KICKER)}</p>
 <h1>${esc(OFFERINGS_HEADING)}</h1>
+<p>Ten systems we build and run. Safe code execution is a capability of the assistants, and it keeps its own page so the limit can be read on its own.</p>
 <ul class="cards">${cards}</ul>
 </main>`,
   });
@@ -446,6 +509,14 @@ function caseAbout(item, url) {
       url,
       provider: { "@id": ORG_ID },
       sameAs: item.sameAs,
+    };
+  }
+  if (item.kind === "work") {
+    return {
+      "@type": "CreativeWork",
+      name: item.name,
+      description: item.summary,
+      url,
     };
   }
   if (item.kind === "site" || item.kind === "proof") {
@@ -486,6 +557,12 @@ async function renderCase(item) {
     ? `<p><a href="/course/llm-leverage/">Course page</a></p>`
     : "";
   const live = item.sameAs ? `<p><a href="${esc(item.sameAs)}">Open the live system</a></p>` : "";
+  const related = (item.services || []).map((slug) => {
+    const page = salesPages[slug];
+    if (!page) throw new Error(`Missing service ${slug} for ${item.slug}`);
+    return `<li><a href="/services/${esc(slug)}/">${esc(page.short)}</a></li>`;
+  }).join("");
+  const relatedHtml = related ? `<h2>Related services</h2><ul>${related}</ul>` : "";
   const html = shell({
     title,
     description,
@@ -509,6 +586,7 @@ ${visibleCrumbs(crumbs)}
 <h1>${esc(item.name)}</h1>
 ${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
 ${live}
+${relatedHtml}
 ${productLink}
 ${courseLink}
 ${placeholder(placeholders.portfolio)}
@@ -520,7 +598,7 @@ ${placeholder(placeholders.portfolio)}
 async function renderPortfolioHub() {
   const url = `${SITE}/portfolio/`;
   const title = "Portfolio | Abracadabra AI";
-  const description = "Named systems already on the studio site: Showdesk, Schema, LLM Leverage, Canadian Discount Appliances, Super Funnel, and pirx.ca.";
+  const description = "Named work we can show, including SuperPatch products, StrongFoam, Renew Implants, and pirx.ca.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Portfolio", href: "/portfolio/", url },
@@ -763,7 +841,7 @@ function siteRedirects() {
 function llmsPages() {
   const lines = [
     `- Services: ${SITE}/services/`,
-    ...offerings.map((item) => `- ${item.outcome}: ${SITE}/services/${item.slug}/`),
+    ...offerings.map((item) => `- ${salesPages[item.slug].headline}: ${SITE}/services/${item.slug}/`),
     `- Portfolio: ${SITE}/portfolio/`,
     ...cases.map((item) => `- ${item.name}: ${SITE}/portfolio/${item.slug}/`),
     `- Products: ${SITE}/products/`,

@@ -68,16 +68,16 @@ If a product you can buy already does the job, we say so and send you there.
 
 <!-- site-pages:start -->
 - Services: https://abra-ca-dabra.app/services/
-- AI assistants and agents that remember customers and take actions: https://abra-ca-dabra.app/services/ai-assistants-and-agents/
-- Answers from your own documents: https://abra-ca-dabra.app/services/answers-from-your-documents/
-- Any model, one controlled bill: https://abra-ca-dabra.app/services/any-model-one-bill/
-- Voice and real-time AI agents: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
-- Web automation, scraping, PDFs and reports: https://abra-ca-dabra.app/services/web-automation/
-- Safe execution of AI-written code: https://abra-ca-dabra.app/services/safe-code-execution/
-- Custom apps and back offices: https://abra-ca-dabra.app/services/custom-apps/
-- AI media: images, video, transcripts: https://abra-ca-dabra.app/services/ai-media/
-- AI visibility and crawler control: https://abra-ca-dabra.app/services/ai-visibility/
-- Search-grounded research tools: https://abra-ca-dabra.app/services/search-grounded-research/
+- An assistant that remembers the customer and does the next step you approved: https://abra-ca-dabra.app/services/ai-assistants-and-agents/
+- An answer from your own files, with the page it came from: https://abra-ca-dabra.app/services/answers-from-your-documents/
+- The model that fits the job, on one bill you can stop: https://abra-ca-dabra.app/services/any-model-one-bill/
+- A voice line that answers from your facts and hands the call to a person: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
+- The repeated browser work, done the same way every time: https://abra-ca-dabra.app/services/web-automation/
+- The assistant runs a task you approved, inside a limit you set: https://abra-ca-dabra.app/services/safe-code-execution/
+- The app your team actually works in, built around the job: https://abra-ca-dabra.app/services/custom-apps/
+- Images, voice, and video that stay on the brief you approved: https://abra-ca-dabra.app/services/ai-media/
+- Show up in the answers people already ask: https://abra-ca-dabra.app/services/ai-visibility/
+- A research answer with the sources underneath it: https://abra-ca-dabra.app/services/search-grounded-research/
 - Portfolio: https://abra-ca-dabra.app/portfolio/
 - Showdesk: https://abra-ca-dabra.app/portfolio/showdesk/
 - Schema: https://abra-ca-dabra.app/portfolio/schema/
@@ -85,6 +85,10 @@ If a product you can buy already does the job, we say so and send you there.
 - Canadian Discount Appliances: https://abra-ca-dabra.app/portfolio/canadian-discount-appliances/
 - Super Funnel: https://abra-ca-dabra.app/portfolio/super-funnel/
 - pirx.ca: https://abra-ca-dabra.app/portfolio/pirx/
+- SuperPatch products: https://abra-ca-dabra.app/portfolio/superpatch-products/
+- StrongFoam website: https://abra-ca-dabra.app/portfolio/strongfoam-website/
+- StrongFoam CRM/ERP: https://abra-ca-dabra.app/portfolio/strongfoam-crm/
+- Renew Implants: https://abra-ca-dabra.app/portfolio/renew-implants/
 - Products: https://abra-ca-dabra.app/products/
 - Showdesk: https://abra-ca-dabra.app/products/showdesk/
 - Schema: https://abra-ca-dabra.app/products/schema/
