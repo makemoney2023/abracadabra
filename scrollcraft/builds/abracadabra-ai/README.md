@@ -14,6 +14,17 @@ Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Finish system — 2026-10-15
+
+- Inner pages and the homepage now share one control radius, one card radius, and one accent button: dark ink `#170804` on `#ff4b24`. The graph-paper field is gone from catalog pages. Section headings sit closer to their own block than to the block above. Cards clip their photographs. The dashed “PLACEHOLDER” shout is a quiet note with the existing factual sentence and a link to the brief. The about page states what is not published, and the footer on catalog pages names the studio.
+- The homepage keeps the film, the left-column hero, and the absolute footer. Its primary actions and the nav brief button use the same accent pair. Service cards on the homepage are left-aligned and framed.
+- **What changed** — spacing, type, buttons, cards, notes, nav, and footer read as one product.
+- **Why** — the live site at `5baac92` looked unfinished next to a finished dark product.
+- **Code touchpoints** — `blog/blog.css`, `index.html`, `films.html`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`.
+- **Data-flow impact** — regenerated service, portfolio, product, course, blog, about, and privacy HTML, plus the homepage chrome.
+- **API / schema impact** — none.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder: 41 passed.
+
 ## Service photographs and shared heroes — 2026-10-15
 
 - Each service page uses the supplied photograph: the hero sits behind the left column, the first body photograph sits beside “Three places it shows up,” and the second sits beside “Work we can name.” The same hero is the card image on `/services/` and on the homepage services grid.

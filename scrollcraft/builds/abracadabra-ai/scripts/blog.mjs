@@ -523,7 +523,7 @@ async function renderPost(post, posts) {
     .map((item) => `<li><a href="/blog/${item.slug}">${esc(item.title)}</a></li>`)
     .join("");
   const prose = renderMarkdown(post).replace("</p>", `</p>\n${statCallout(post)}`);
-  const body = `<main class="blog-post">
+  const body = `<main id="top" class="blog-post">
 <header class="content-hero">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }, { name: post.title, href: `/blog/${post.slug}` }])}
 <div class="hero-copy">
@@ -609,7 +609,7 @@ async function renderIndex(posts) {
   const board = live.length
     ? `${pillarFilter(live)}${featuredPost(featured)}<ul class="cards">${rest.map((post) => postCard(post)).join("")}</ul>`
     : `<p class="empty">No note is public yet. Each one appears here on its publish date, with the sources and the Readiness Check link in the page.</p>`;
-  const body = `<main class="blog-index">
+  const body = `<main id="top" class="blog-index">
 <header class="content-hero blog-index-hero">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }])}
 <div class="hero-copy">
@@ -638,7 +638,7 @@ ${board}
 async function renderAuthor() {
   const ogAlt = "Christopher Buzny, founder of Abracadabra AI";
   await writeOg("Christopher Buzny", "FOUNDER", join(root, "blog/og/author.png"));
-  const body = `<main class="site-page">
+  const body = `<main id="top" class="site-page">
 <header class="page-hero">
 <div class="page-hero__copy">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/about/christopher-buzny" }])}
@@ -649,9 +649,9 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/abou
 </header>
 <article>
 <!-- TODO(christopher): confirm credentials, education, years in practice, and certifications. Do not invent them. -->
-<p class="todo">Credentials, education, years in practice, and certifications are not listed. Christopher still has to confirm them. This page will not grow a biography ahead of that.</p>
+<aside class="note"><p>Credentials, education, and certifications are not published on this page.</p></aside>
 <!-- TODO(christopher): confirm personal LinkedIn, X, and GitHub URLs before adding sameAs. -->
-<p class="todo">Personal profile links are omitted until Christopher confirms the LinkedIn, X, and GitHub URLs. The studio inbox is <a href="mailto:dev@pirx.ca">dev@pirx.ca</a>. That address is the studio contact, not a personal email published as one.</p>
+<aside class="note"><p>Personal profile links are not published. The studio inbox is <a href="mailto:dev@pirx.ca">dev@pirx.ca</a>.</p></aside>
 <h2>Systems the studio has shipped</h2>
 <ul>
 <li><a href="https://www.showdesk-app.com/">Showdesk</a> runs a live event from entry through review, placements, and reports.</li>
@@ -665,7 +665,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/abou
 </main>`;
   const html = pageShell({
     title: "Christopher Buzny | Abracadabra AI",
-    description: "Christopher Buzny is the founder of Abracadabra AI. Credentials and personal profile links stay blank until he confirms them.",
+    description: "Christopher Buzny is the founder of Abracadabra AI. The studio inbox is dev@pirx.ca.",
     canonical: `${SITE}/about/christopher-buzny`,
     robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/author.png`,
@@ -705,7 +705,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/abou
 async function renderPrivacy() {
   const ogAlt = "Abracadabra AI privacy draft, not in force until review";
   await writeOg("Privacy draft", "FOR REVIEW", join(root, "blog/og/privacy.png"));
-  const body = `<main>
+  const body = `<main id="top">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
 <article>
 <p class="draft">Draft for review. Not in force until Christopher approves it.</p>

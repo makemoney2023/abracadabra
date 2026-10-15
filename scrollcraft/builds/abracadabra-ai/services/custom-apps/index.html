@@ -172,6 +172,7 @@
 </script>
 </head>
 <body>
+<a class="skip" href="#top">Skip to content</a>
 <header class="site-nav">
   <a class="site-nav__mark" href="/">Abracadabra AI</a>
   <details class="site-nav__menu">
@@ -195,7 +196,7 @@
     });
   });
 </script>
-<main class="site-page sales">
+<main id="top" class="site-page sales">
 <header class="page-hero page-hero--photo">
 <figure class="page-hero__media"><picture>
 <source type="image/avif" srcset="/blog/media/services/custom-apps/hero-640.avif 640w, /blog/media/services/custom-apps/hero-960.avif 960w, /blog/media/services/custom-apps/hero-1280.avif 1280w" sizes="(min-width: 1024px) 72rem, 100vw">
@@ -289,13 +290,16 @@
 </section>
 </main>
 <footer class="site-foot">
-  <a href="/services/">Services</a>
-  <a href="/portfolio/">Portfolio</a>
-  <a href="/products/">Products</a>
-  <a href="/course/llm-leverage/">Course</a>
-  <a href="/blog">Blog</a>
-  <a href="/#brief">Start a brief</a>
-  <a href="/privacy">Privacy</a>
+  <p class="site-foot__brand">Abracadabra AI</p>
+  <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/">Services</a>
+    <a href="/portfolio/">Portfolio</a>
+    <a href="/products/">Products</a>
+    <a href="/course/llm-leverage/">Course</a>
+    <a href="/blog">Blog</a>
+    <a href="/#brief">Start a brief</a>
+    <a href="/privacy">Privacy</a>
+  </nav>
 </footer>
 </body>
 </html>

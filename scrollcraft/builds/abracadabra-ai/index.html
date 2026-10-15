@@ -280,7 +280,7 @@
     --sc-optic: #8DEBF2;
     --sc-phosphor: #C6FFB3;
     --sc-glass: color-mix(in oklab, var(--sc-surface) 72%, transparent);
-    --sc-accent-ink: #F3EEE4;
+    --sc-accent-ink: #170804;
     --sc-font-display: "Tektur", "IBM Plex Sans", system-ui, sans-serif;
     --sc-font-body: "IBM Plex Sans", system-ui, sans-serif;
     --page-progress: 0;
@@ -300,7 +300,9 @@
     background: repeating-linear-gradient(to bottom, transparent 0 3px, color-mix(in oklab, var(--sc-ink) 7%, transparent) 4px);
     mix-blend-mode: soft-light;
   }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; color-scheme: dark; }
+  ::selection { background: var(--sc-accent); color: #170804; }
+  h1, h2, h3 { scroll-margin-top: 5.5rem; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   a { color: var(--sc-ink); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
   a:hover { color: var(--sc-accent); }
@@ -368,12 +370,16 @@
   .cta a {
     min-height: 44px; display: inline-flex; align-items: center; text-decoration: none;
     font-family: var(--sc-font-body); font-weight: 500; font-size: var(--sc-t-sm);
-    padding: 0.78em 1.3em; border: 1px solid var(--sc-hairline); border-radius: 2px;
-    transition: border-color 200ms var(--sc-ease-out), background-color 200ms var(--sc-ease-out), color 200ms var(--sc-ease-out);
+    padding: 0.78em 1.3em; border: 1px solid var(--sc-hairline); border-radius: 10px;
+    transition: border-color 160ms var(--sc-ease-out), background-color 160ms var(--sc-ease-out), color 160ms var(--sc-ease-out), transform 160ms var(--sc-ease-out);
   }
   .cta a:hover { border-color: var(--sc-ink); color: var(--sc-ink); }
+  .cta a:active { transform: translateY(1px); }
   .cta .cta--primary { background: var(--sc-accent); border-color: var(--sc-accent); color: var(--sc-accent-ink); }
-  .cta .cta--primary:hover { background: color-mix(in oklab, var(--sc-accent) 86%, var(--sc-ink)); border-color: transparent; }
+  .cta .cta--primary:hover { background: var(--sc-signal); border-color: var(--sc-signal); color: #170804; }
+  @media (hover: hover) and (pointer: fine) {
+    .cta a:hover { transform: translateY(-1px); }
+  }
 
   /* the hero is the film and the promise; the compiler is the next section */
   #i > [data-sc-stage] {
@@ -1092,6 +1098,8 @@
   .inquiry dl { margin-top: var(--sc-5); }
   .inquiry .cta { margin-top: var(--sc-5); }
   .foot, .site-foot { position: absolute; inset: auto 0 5.8rem 0; display: flex; justify-content: center; gap: var(--sc-4); font-size: 0.75rem; color: var(--sc-ink-soft); font-family: var(--sc-font-mono); letter-spacing: var(--sc-track-wide); text-transform: uppercase; padding-inline: var(--sc-gutter); flex-wrap: wrap; margin: 0; }
+  .site-foot__brand { display: none; }
+  .site-foot__links { display: contents; }
   .foot a, .site-foot a { color: inherit; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
   .foot a:hover, .site-foot a:hover { color: var(--sc-accent); }
 
@@ -1325,7 +1333,20 @@
     min-height: 44px; display: inline-flex; align-items: center;
   }
   .site-nav__links a:hover, .site-nav__links a:focus-visible { color: var(--sc-ink); }
-  .site-nav__cta { color: var(--sc-ink); border: 1px solid var(--sc-accent); padding: 0 0.7rem; }
+  .site-nav__links a.site-nav__cta {
+    color: #170804; background: var(--sc-accent); border: 1px solid var(--sc-accent);
+    border-radius: 10px; padding: 0 0.7rem;
+    transition: background-color 160ms var(--sc-ease-out), transform 160ms var(--sc-ease-out);
+  }
+  .site-nav__links a.site-nav__cta:hover,
+  .site-nav__links a.site-nav__cta:focus-visible { color: #170804; background: var(--sc-signal); }
+  .site-nav__links a.site-nav__cta:active { transform: translateY(1px); }
+  .skip {
+    position: absolute; left: 1rem; top: -4rem; z-index: 80;
+    background: var(--sc-accent); color: #170804; text-decoration: none;
+    padding: 0.6rem 0.9rem; border-radius: 10px; font-family: var(--sc-font-body);
+  }
+  .skip:focus { top: 0.6rem; }
   @media (max-width: 900px) and (min-width: 768px) {
     .site-nav { letter-spacing: 0.02em; gap: 0.6rem; }
     .site-nav__links { gap: 0.4rem; }
@@ -1382,29 +1403,36 @@
   .services { padding: 5rem 0 4rem; }
   .services__kicker {
     font-family: var(--sc-font-mono); font-size: 0.75rem; letter-spacing: var(--sc-track-wide);
-    text-transform: uppercase; color: var(--sc-optic); margin: 0 0 0.8rem; text-align: center;
+    text-transform: uppercase; color: var(--sc-optic); margin: 0 0 0.8rem; text-align: left;
   }
-  .services .sc-display { text-align: center; margin-inline: auto; max-width: 18ch; }
+  .services .sc-display { text-align: left; margin-inline: 0; max-width: 18ch; }
   .services__grid { list-style: none; margin: var(--sc-6) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
   .services__grid a {
-    display: block; min-height: 44px; padding: 1.2rem 1.15rem; text-decoration: none; color: inherit;
-    border: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-surface) 72%, transparent);
+    display: block; min-height: 44px; padding: 0 0 1.15rem; text-decoration: none; color: inherit;
+    border: 1px solid var(--sc-hairline); border-radius: 12px; overflow: hidden;
+    background: color-mix(in oklab, var(--sc-surface) 72%, transparent);
+    transition: border-color 160ms var(--sc-ease-out), transform 160ms var(--sc-ease-out);
   }
   .services__grid a:hover, .services__grid a:focus-visible { border-color: var(--sc-accent); }
-  .services__grid picture { display: block; min-width: 0; margin: -1.2rem -1.15rem 0.9rem; }
+  .services__grid picture { display: block; min-width: 0; margin: 0 0 0.9rem; overflow: hidden; }
   .services__grid img {
     width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; display: block;
   }
+  .services__grid h3, .services__grid p, .services__tag { padding-inline: 1.15rem; }
   .services__grid h3 { margin: 0 0 0.55rem; font-size: var(--sc-t-lg); text-wrap: balance; overflow-wrap: anywhere; }
   .services__grid p { margin: 0 0 0.85rem; }
   .services__tag {
     margin: 0; color: var(--sc-optic); font-family: var(--sc-font-mono); font-size: 0.75rem;
     letter-spacing: var(--sc-track-wide); text-transform: uppercase;
   }
+  @media (hover: hover) and (pointer: fine) {
+    .services__grid a:hover { transform: translateY(-2px); }
+  }
   @media (max-width: 860px) {
     .services__grid { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
+    .cta a, .services__grid a, .site-nav__cta { transform: none; }
     .marquee { mask-image: none; overflow: visible; }
     .marquee__track { animation: none; flex-wrap: wrap; width: auto; }
     .marquee__list[aria-hidden="true"] { display: none; }
@@ -1420,6 +1448,7 @@
 <body>
 
 <!-- SITE-NAV -->
+<a class="skip" href="#top">Skip to content</a>
 <header class="site-nav">
   <a class="site-nav__mark" href="/">Abracadabra AI</a>
   <details class="site-nav__menu">
@@ -2121,13 +2150,16 @@
       </div>
 <!-- SITE-FOOT -->
 <footer class="site-foot">
-  <a href="/services/">Services</a>
-  <a href="/portfolio/">Portfolio</a>
-  <a href="/products/">Products</a>
-  <a href="/course/llm-leverage/">Course</a>
-  <a href="/blog">Blog</a>
-  <a href="/#brief">Start a brief</a>
-  <a href="/privacy">Privacy</a>
+  <p class="site-foot__brand">Abracadabra AI</p>
+  <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/">Services</a>
+    <a href="/portfolio/">Portfolio</a>
+    <a href="/products/">Products</a>
+    <a href="/course/llm-leverage/">Course</a>
+    <a href="/blog">Blog</a>
+    <a href="/#brief">Start a brief</a>
+    <a href="/privacy">Privacy</a>
+  </nav>
 </footer>
 <!-- /SITE-FOOT -->
     </div>

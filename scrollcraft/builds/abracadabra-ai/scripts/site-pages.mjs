@@ -113,7 +113,7 @@ function visibleCrumbs(items) {
 }
 
 function placeholder(text) {
-  return `<aside class="placeholder"><strong>${esc(PLACEHOLDER)}</strong><p>${esc(text)}</p></aside>`;
+  return `<aside class="note"><!-- ${PLACEHOLDER} --><p>${esc(text)}</p><p><a href="/#brief">Start a brief</a></p></aside>`;
 }
 
 function builtOn(tags) {
@@ -424,7 +424,7 @@ async function renderOffering(item) {
       description: page.description,
       image: og.url,
     }), [crumbList(crumbs), service, faq]),
-    body: `<main class="site-page sales">
+    body: `<main id="top" class="site-page sales">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
@@ -533,7 +533,7 @@ async function renderOfferingsHub() {
       name: OFFERINGS_HEADING,
       description,
     }), [crumbList(crumbs), listNode]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
@@ -626,7 +626,7 @@ async function renderCase(item) {
       description: item.summary,
       image: item.image ? `${SITE}${item.image}` : undefined,
     }), [crumbList(crumbs), caseAbout(item, url)]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
@@ -690,7 +690,7 @@ async function renderPortfolioHub() {
       name: "Portfolio",
       description,
     }), [crumbList(crumbs), list]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
@@ -742,7 +742,7 @@ async function renderProduct(item) {
       description: item.description,
       image: `${SITE}${item.image}`,
     }), [crumbList(crumbs), app]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Product",
@@ -796,7 +796,7 @@ async function renderProductsHub() {
       name: "Products",
       description,
     }), [crumbList(crumbs), list]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
@@ -849,7 +849,7 @@ async function renderCourse() {
       description: course.description,
       image: `${SITE}${course.image}`,
     }), [crumbList(crumbs), node]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Course",
