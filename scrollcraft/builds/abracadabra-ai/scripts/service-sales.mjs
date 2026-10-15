@@ -25,19 +25,17 @@ export const processSteps = [
   },
 ];
 
-const cloud = "It runs on Cloudflare's global network. The request, the memory, and the files stay on infrastructure you can name.";
-
 function page(entry) {
-  return { cloudflare: cloud, ...entry };
+  return entry;
 }
 
 export const salesPages = {
   "ai-assistants-and-agents": page({
     short: "AI assistants",
-    title: "Assistants that remember and act",
-    headline: "An assistant that remembers the customer and does the next step you approved",
-    description: "An assistant that keeps the customer thread and takes only the next step you approved.",
-    dek: "Customers should not have to repeat themselves, and your team should not retype a request that is already clear. The assistant keeps the thread, follows the rules you wrote down, and takes only the next step you approved.",
+    title: "Customers get an answer, then a filing",
+    headline: "Customers get an answer, and the request gets filed.",
+    description: "Customers get an answer from your rules, and the booking or follow-up gets filed where the team already works.",
+    dek: "Customers should not have to repeat themselves, and your team should not retype a request that is already clear. The assistant remembers who they are, answers from the rules you wrote down, and files the booking or the follow-up.",
     strip: [
       { href: "/portfolio/superpatch-products/", label: "SuperPatch products" },
       { href: "/services/safe-code-execution/", label: "Safe code execution" },
@@ -45,11 +43,11 @@ export const salesPages = {
     problemTitle: "The thread starts over, then someone retypes it",
     problem: [
       "The same questions land every day, and the person who knows the answer is already in another thread or has gone home. A new message starts from nothing: who this is, what they asked last time, and which rule applies now. Staff paste a paragraph they have sent before, then copy the details into a second tool so the job actually happens. The customer waits. The record is only as good as the person who remembered to type it.",
-      "A chat box on the site can talk. It does not know this customer, and it cannot file the request where the team already works. When it guesses, you find out from the customer. The gap is the next step: a booking, a status, a callback, or a clean handoff, done the way you already decided.",
+      "A chat box on the site can talk. It does not know this customer, and it cannot file the request where the team already works. When it guesses, you find out from the customer. The missing piece is the filing: a booking, a status, a callback, or a clean handoff, done the way you already decided.",
     ],
     outcomes: [
       { title: "A thread that continues", text: "The next reply knows what was already said, for that customer only. A different person does not see the history." },
-      { title: "A next step you named", text: "A booking, a status, a callback, or a form is filed where the team already looks. Anything else waits." },
+      { title: "The request gets filed", text: "A booking, a status, a callback, or a form is filed where the team already looks. Anything else waits." },
       { title: "A handoff with the context", text: "When the question is outside the rules, a person gets the thread and the facts already collected, not a blank ticket." },
       { title: "A record of what it did", text: "You can see the action, the rule it followed, and the moment it stopped and asked for a person." },
     ],
@@ -59,8 +57,8 @@ export const salesPages = {
       { title: "A routine request, filed once", text: "A booking, a callback, or a form lands in the tool the team already uses. The customer is not asked to repeat it, and staff are not asked to retype it." },
     ],
     capability: {
-      title: "It can run a task you approved",
-      text: "Safe code execution ships inside this assistant. The assistant can run a task you already approved, inside a limit you set: a calculation, a file check, a draft. It does not get a blank permission to do anything on the machine.",
+      title: "It can run a small job you listed",
+      text: "Safe code execution ships inside this assistant. The assistant can run a small job you already listed, inside a limit you set: a calculation, a file check, a draft. It does not get a blank permission to do anything on the machine.",
       href: "/services/safe-code-execution/",
       label: "Read how the limit works",
     },
@@ -91,9 +89,9 @@ export const salesPages = {
   }),
   "answers-from-your-documents": page({
     short: "Answers from your documents",
-    title: "Answers from your own documents",
-    headline: "An answer from your own files, with the page it came from",
-    description: "Ask in plain language and get an answer from your own files, with the page it came from.",
+    title: "Answers from your own files",
+    headline: "Ask a question. Get the answer from your own files.",
+    description: "Ask a question in plain language. Get the answer from your own files, with the page it came from.",
     dek: "The answer is already in a handbook, a policy, or a price sheet. People still interrupt each other to find the paragraph. Ask in plain language and get the answer with the page it came from.",
     strip: [
       { href: "/portfolio/", label: "Portfolio" },
@@ -141,9 +139,9 @@ export const salesPages = {
   }),
   "any-model-one-bill": page({
     short: "Any model, one bill",
-    title: "Any model, one bill",
-    headline: "The model that fits the job, on one bill you can stop",
-    description: "Pick the model that fits the job. One gateway, one bill you can stop, no second account.",
+    title: "One model bill you can stop",
+    headline: "Pick the model for the job. One bill you can stop.",
+    description: "Pick the model that fits the job. One bill you can stop, and no second account to manage.",
     dek: "The right model for a draft is often the wrong model for a careful answer. You should be able to switch without a second account, a second key, and a bill you cannot trace.",
     strip: [
       { href: "/#models", label: "Models on this site" },
@@ -191,9 +189,9 @@ export const salesPages = {
   }),
   "voice-and-realtime-agents": page({
     short: "Voice",
-    title: "Voice that hands off to a person",
-    headline: "A voice line that answers from your facts and hands the call to a person",
-    description: "A voice line that answers from your facts and hands the call to a person when it should.",
+    title: "Callers get an answer",
+    headline: "Callers get the answer. A person takes the call when they should.",
+    description: "Callers get the answer from the facts you already keep. A person takes the call when the question needs one.",
     dek: "A caller should get the fact you already keep, in a voice that can pause and hand the call to a person. A script that cannot see your record just keeps them on the line.",
     strip: [
       { href: "/portfolio/", label: "Portfolio" },
@@ -241,9 +239,9 @@ export const salesPages = {
   }),
   "web-automation": page({
     short: "Web automation",
-    title: "Web work, done the same way",
-    headline: "The repeated browser work, done the same way every time",
-    description: "The repeated browser work, done the same way every time, with a person on the exceptions.",
+    title: "The weekly paste job runs itself",
+    headline: "The weekly copy-and-paste job runs on its own.",
+    description: "The weekly copy-and-paste job runs the same way every time. A person sees the exceptions.",
     dek: "Someone on the team logs into the same site, copies the same fields, and pastes them somewhere else. The steps are stable. The person is not. We run that path the same way every time and hand you the exceptions.",
     strip: [
       { href: "/portfolio/strongfoam-website/", label: "StrongFoam website" },
@@ -291,10 +289,10 @@ export const salesPages = {
   }),
   "safe-code-execution": page({
     short: "Safe code execution",
-    title: "Approved tasks, inside a limit",
-    headline: "The assistant runs a task you approved, inside a limit you set",
-    description: "The assistant runs a task you approved, inside a limit you set. It ships with the assistant.",
-    dek: "This is part of an AI assistant, not a separate product you buy on its own. The assistant may run a task you already approved. The task runs inside a limit: time, files, and what it is allowed to touch.",
+    title: "A small program, in a limit",
+    headline: "A small program can run without touching the rest of the business.",
+    description: "A small program runs inside a limit you set. It cannot touch the rest of the business. It ships with the assistant.",
+    dek: "This is part of an AI assistant, not a separate product you buy on its own. The assistant may run a small job you already listed. The job runs inside a limit: time, files, and what it is allowed to touch.",
     lead: {
       before: "Read it with the assistant it belongs to.",
       href: "/services/ai-assistants-and-agents/",
@@ -330,7 +328,7 @@ export const salesPages = {
     proofs: [
       {
         title: "It ships inside the assistant",
-        text: "There is no separate client story for a code runner, and we will not invent one. The public shape is the assistant that remembers the customer and takes the next step. This page is the limit on the step that runs.",
+        text: "There is no separate client story for a code runner, and we will not invent one. The public shape is the assistant that answers and files the request. This page is the limit on the job that runs.",
         href: "/services/ai-assistants-and-agents/",
         link: "Read the assistant page",
       },
@@ -347,9 +345,9 @@ export const salesPages = {
   }),
   "custom-apps": page({
     short: "Custom apps",
-    title: "Apps built around the job",
-    headline: "The app your team actually works in, built around the job",
-    description: "The app your team actually works in, built around the job instead of a generic screen.",
+    title: "A screen that follows your order",
+    headline: "A screen that follows the order your team already uses.",
+    description: "A screen that follows the order your team already uses, instead of a generic app you work around.",
     dek: "The work has an order. The tools you rented were built for a different order, so the team keeps a side sheet where the real job happens. We build the screen around the job you already do.",
     strip: [
       { href: "/portfolio/superpatch-products/", label: "SuperPatch products" },
@@ -426,9 +424,9 @@ export const salesPages = {
   }),
   "ai-media": page({
     short: "AI media",
-    title: "Media that stays on the brief",
-    headline: "Images, voice, and video that stay on the brief you approved",
-    description: "Images, voice, and video drafted from your brief. A person approves what goes out.",
+    title: "Drafts you check before they go out",
+    headline: "Draft the picture, the clip, or the transcript. You decide what goes out.",
+    description: "Draft the picture, the clip, or the transcript from material you already have. You decide what goes out.",
     dek: "The page needs a picture, the recording needs a transcript, the post needs a clip. A model can draft those. A person still decides what is allowed to leave the building.",
     strip: [
       { href: "/portfolio/renew-implants/", label: "Renew Implants" },
@@ -476,9 +474,9 @@ export const salesPages = {
   }),
   "ai-visibility": page({
     short: "AI visibility",
-    title: "Show up in the answers",
-    headline: "Show up in the answers people already ask",
-    description: "Show up in the answers people already ask, and decide which pages a crawler may read.",
+    title: "See who is reading the site",
+    headline: "See who is reading the site, and point them at the right pages.",
+    description: "See which answer engines read the site, and point them at the pages you want quoted.",
     dek: "People ask a question and get an answer without opening your site. You can still decide which pages are worth quoting, and you can see which crawlers actually came.",
     strip: [
       { href: "/portfolio/pirx/", label: "pirx.ca" },
@@ -535,9 +533,9 @@ export const salesPages = {
   }),
   "search-grounded-research": page({
     short: "Search-grounded research",
-    title: "Research with the sources",
-    headline: "A research answer with the sources underneath it",
-    description: "A research answer with the sources underneath it, so you can open the page and check.",
+    title: "A brief with the links under it",
+    headline: "A research brief with the links under it, so you can check.",
+    description: "A research brief with the links under each claim, so you can open the page and check.",
     dek: "A question your files do not cover still needs an answer you can check. The brief comes with the links underneath the claims. If there is no page, there is no answer.",
     strip: [
       { href: "/portfolio/pirx/", label: "pirx.ca blogs" },

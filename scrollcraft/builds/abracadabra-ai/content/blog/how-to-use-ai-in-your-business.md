@@ -7,7 +7,7 @@ pillar: "AI for small business"
 cluster: "use"
 primaryQuery: "how to use ai in your business"
 author: christopher-buzny
-cta: "Twelve examples are still a list. Score the one job you would hand over."
+cta: "Twelve examples are still a list. Run the check on the one job you would hand over."
 images:
   - src: /blog/media/how-to-use-ai-in-your-business/01.webp
     file: how-to-use-ai-in-your-business-01.jpg

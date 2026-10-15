@@ -14,6 +14,17 @@ Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Plain copy — 2026-10-15
+
+- Headlines name a result an owner can picture. Subheads say what the thing is in one or two sentences. Stack names sit on a single “Under the hood” line on service pages. Homepage cards no longer say “Built on.”
+- The visible homepage headline is “Software for the way your company already works.” The schema slogan stays “From thought to working software.” Blog index, post intros and check prompts, films, privacy draft wording, the 404 page, walkthrough buttons, product and portfolio hubs, meta descriptions, and `llms.txt` use the same plain voice.
+- **What changed** — owner-facing copy on every public page.
+- **Why** — the previous lines named a mechanism (“the next step you approved,” “Built on Agents SDK”) instead of the result.
+- **Code touchpoints** — `index.html`, `films.html`, `404.html`, `walkthrough.html`, `llms.txt`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `content/blog/`, `docs/source-of-truth.md`.
+- **Data-flow impact** — regenerated service, portfolio, product, course, blog, about, privacy, and homepage offerings HTML, plus the blog block of `llms.txt`.
+- **API / schema impact** — WebPage headline matches the visible homepage h1. Organization slogan is unchanged.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
+
 ## Finish system — 2026-10-15
 
 - Inner pages and the homepage now share one control radius, one card radius, and one accent button: dark ink `#170804` on `#ff4b24`. The graph-paper field is gone from catalog pages. Section headings sit closer to their own block than to the block above. Cards clip their photographs. The dashed “PLACEHOLDER” shout is a quiet note with the existing factual sentence and a link to the brief. The about page states what is not published, and the footer on catalog pages names the studio.

@@ -7,7 +7,7 @@ pillar: "AI for small business"
 cluster: "strategy"
 primaryQuery: "ai strategy for small business"
 author: christopher-buzny
-cta: "A one-page plan is a score. Run the Readiness Check."
+cta: "Write the job on one page, then run the Readiness Check."
 images:
   - src: /blog/media/ai-strategy-for-small-business/01.webp
     file: ai-strategy-for-small-business-01.jpg

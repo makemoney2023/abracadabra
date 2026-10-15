@@ -7,7 +7,7 @@ pillar: "AI for small business"
 cluster: "adoption"
 primaryQuery: "ai for small business"
 author: christopher-buzny
-cta: "A survey is not your score. Run the Readiness Check on this business."
+cta: "A survey is not this business. Run the Readiness Check."
 images:
   - src: /blog/media/ai-for-small-business-2027/01.webp
     file: ai-for-small-business-2027-01.jpg

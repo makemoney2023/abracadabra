@@ -7,7 +7,7 @@ pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "ai agents for business"
 author: christopher-buzny
-cta: "An agent without an owner is a risk. Score the people side."
+cta: "An agent without an owner is a risk. See whether your team can check the work."
 images:
   - src: /blog/media/ai-agents-for-business/01.webp
     file: ai-agents-for-business-01.jpg

@@ -7,7 +7,7 @@ pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "is my business ready for ai"
 author: christopher-buzny
-cta: "The bands describe a state. Score your own business."
+cta: "The bands describe a state. See where this business sits."
 images:
   - src: /blog/media/is-my-business-ready-for-ai/01.webp
     file: is-my-business-ready-for-ai-01.jpg

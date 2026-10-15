@@ -7,7 +7,7 @@ pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "ai readiness checklist"
 author: christopher-buzny
-cta: "Want these scored instead of ticked? Run the Readiness Check."
+cta: "A tick list is not a decision. Run the Readiness Check."
 images:
   - src: /blog/media/ai-readiness-checklist/01.webp
     file: ai-readiness-checklist-01.jpg

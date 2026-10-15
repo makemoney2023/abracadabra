@@ -3,7 +3,7 @@
   <channel>
     <title>Abracadabra AI blog</title>
     <link>https://abra-ca-dabra.app/blog</link>
-    <description>Notes on AI readiness and small-business adoption. A post appears here on its publish date.</description>
+    <description>Notes for owners on when to buy a tool, when to build, and whether the business is ready. A post appears here on its publish date.</description>
     <lastBuildDate>Wed, 14 Oct 2026 00:00:00 GMT</lastBuildDate>
     <item>
       <title>AI Agents for Business: When to Use One</title>
@@ -157,7 +157,7 @@
       <link>https://abra-ca-dabra.app/blog/what-is-an-ai-agent</link>
       <guid>https://abra-ca-dabra.app/blog/what-is-an-ai-agent</guid>
       <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
-      <description>An agent picks its own next step. A workflow follows a path you wrote. This note uses Anthropic&#39;s distinction and McKinsey&#39;s survey of who is scaling.</description>
+      <description>An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic&#39;s split and McKinsey&#39;s count of who is scaling.</description>
     </item>
     <item>
       <title>What Is llms.txt, and Who Actually Reads It</title>

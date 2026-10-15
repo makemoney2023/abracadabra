@@ -80,17 +80,17 @@ Paste-ready. Section order is the page.
 
 ### 1. Hero
 
-**Eyebrow:** Software at the speed of thought
+**Eyebrow:** For owners, not engineers
 
-**Headline:** From thought to working software.
+**Headline:** Software for the way your company already works.
 
-**Subhead:** Tell us what should exist. We engineer the intent and context behind it. Coordinated AI agents design, build, and test in parallel, while experienced people direct every decision.
+**Subhead:** Tell us the job your team already does. We build the software that does it that way. You still approve what goes live.
 
 **Tag:** We write the brief before anyone builds. Five workstreams. One running system.
 
 **Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build brief**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered brief. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example.
 
-**Claim boundary:** “At the speed of thought” describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence.
+**Claim boundary:** “At the speed of thought” is the brand premise in the schema slogan and the name chapter. It describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence. It is not the visible homepage headline.
 
 **Primary CTA:** Show us how it works
 **Secondary CTA:** See what we've built
@@ -99,10 +99,10 @@ Paste-ready. Section order is the page.
 
 | Option | Line | Why it exists |
 |---|---|---|
-| A (use this) | From thought to working software. | Restores the brand premise and names the transformation plainly. |
-| B | Software for the way your company actually works. | More literal alternative for acquisition pages. |
+| A | From thought to working software. | Brand slogan. Stays in JSON-LD `slogan`. Not the visible homepage headline. |
+| B (page headline) | Software for the way your company already works. | The visible homepage h1. Names the outcome for a non-technical owner. |
 | C | From a blank page to a system your team can demo. | Strong on the leave-behind. Weaker on fit. |
-| D | We shrink the gap between what you meant and what's running. | Leads with the mechanism, not the product. Test against A. |
+| D | We shrink the gap between what you meant and what's running. | Leads with the mechanism, not the product. |
 
 ### 2. Proof bar
 
@@ -162,7 +162,7 @@ We close it. The steps stay yours. The software is built to carry them, at whate
 5. **A new market is a production run.** Channel, language, and creative from a system that already knows the claims you allow.
 6. **The first yes happens on the screen.** Fit, price, booking, and trust before anyone gets in a car.
 7. **The capability stays when the invoice would have grown.** Answers, agreements, content, and the customer record live on your side of the wall.
-8. **Complexity doesn't get quietly declined.** Everything above is proof we can build, not the edge of what we'll take on. Going deep on intent and context before a line of code gets written is the actual product — it's what lets us say yes to the request other shops pass on.
+8. **Complexity doesn't get quietly declined.** Everything above is proof we can build, not the edge of what we'll take on. We write down how the work already happens before anyone writes code. That is the product. It is what lets us say yes to the request other shops pass on.
 
 **CTA:** Describe how you work
 
@@ -178,7 +178,7 @@ We close it. The steps stay yours. The software is built to carry them, at whate
 
 ### 7. Selected work
 
-**Header:** Working systems, already in the world.
+**Header:** Work you can open.
 
 - **Run the event from the floor.** Showdesk takes a live show from entry through placements and reports.
 - **See the gap, then the fix.** Schema scores how visible you are to answer engines and generates the repair.
@@ -193,23 +193,23 @@ Use the three arrivals — plus the fourth — in **Who it is for** above.
 
 ### 9. Fit
 
-**Header:** A good brief sounds like your Tuesday.
+**Header:** Show us one job.
 
-Bring the workflow, the words, and the outcome you want on the other side — no matter how big or unusual it is. We will tell you if a product you can buy already does that job. When it does not, we build the one that does.
+Bring the steps, the exceptions, and the result you want. We will show you the system, or tell you when a product you can buy already fits.
 
 ### 10. Close
 
-**Header:** Say what you want built. We'll build it.
+The close is the same block as Fit. The visible heading is **Show us one job.**
 
-**Body:** Bring one operation, however complex. We will map it to something already in the catalog, or record the version that should exist. You leave knowing what ships, what your team will demo, and how fast zero becomes scale.
+**Body:** Bring the steps, the exceptions, and the result you want. We will show you the system, or tell you when a product you can buy already fits.
 
-**CTA:** Describe how you work
-**Secondary:** Watch the catalog
+**CTA:** Show us how it works
+**Secondary:** See what we've built
 
 ### Meta
 
-- **Title:** Abra-ca-dabra: From thought to working software
-- **Description:** AI agents map, design, build, and test bespoke software in parallel—directed by experienced people and grounded in working product proof.
+- **Title:** Abra-ca-dabra: Software for the way your company already works
+- **Description:** We build software that follows the way your team already works. You tell us the job. You approve what goes live.
 - **Canonical:** `https://abra-ca-dabra.app/`
 - **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo, live captures, and Super Funnel"), `/blog` (notes with named sources; a post is public only on or after `datePublished`, unless a preview build sets `BLOG_PREVIEW=1`), `/about/christopher-buzny`, `/privacy` (draft, not in force).
 - **Crawler files:** `/robots.txt` allows named answer-engine crawlers and disallows CCBot and Bytespider, `/sitemap.xml` (image and video extensions, plus the blog index and author page), `/llms.txt` (a quotable summary with the dated pirx.ca figures, the non-diagnostic rule, and only the posts that are already public).

@@ -7,7 +7,7 @@ pillar: "AI consulting and implementation"
 cluster: "consulting"
 primaryQuery: "ai automation agency vs consultant"
 author: christopher-buzny
-cta: "Hiring is a decision. Score it before you sign."
+cta: "Hiring is a decision. Run the check before you sign."
 images:
   - src: /blog/media/ai-automation-agency-vs-consultant/01.webp
     file: ai-automation-agency-vs-consultant-01.jpg

@@ -116,8 +116,8 @@ function placeholder(text) {
   return `<aside class="note"><!-- ${PLACEHOLDER} --><p>${esc(text)}</p><p><a href="/#brief">Start a brief</a></p></aside>`;
 }
 
-function builtOn(tags) {
-  return `Built on ${tags.join(", ")}. ${OFFERINGS_KICKER}`;
+function underTheHood(tags) {
+  return `Under the hood: ${tags.join(", ")}. It runs on Cloudflare.`;
 }
 
 function logoItem(item) {
@@ -185,7 +185,7 @@ function offeringsHtml() {
   const cards = offerings.map((item) => {
     const page = salesPages[item.slug];
     const photo = servicePicture(item.slug, "hero", { lazy: true, sizes: HOME_CARD_SIZES });
-    return `<li><a href="/services/${item.slug}/">${photo}<h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p><p class="services__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`;
+    return `<li><a href="/services/${item.slug}/">${photo}<h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p></a></li>`;
   }).join("");
   return `<section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
@@ -467,7 +467,7 @@ ${proofs}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body2", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
-<p class="cloud-line">${esc(page.cloudflare)} ${esc(builtOn(item.builtOn))}</p>
+<p class="cloud-line">${esc(underTheHood(item.builtOn))}</p>
 <section class="price-block">
 <h2>Pricing</h2>
 <p>Contact for pricing. We price the job after the brief, not from a public rate card.</p>
@@ -490,7 +490,7 @@ ${salesActions()}
 async function renderOfferingsHub() {
   const url = `${SITE}/services/`;
   const title = "What we build and run | Abracadabra AI";
-  const description = "Ten systems Abracadabra AI builds and runs on Cloudflare's global network. Safe code execution ships inside AI assistants.";
+  const description = "Ten jobs we build and run. Safe code execution ships inside the assistants, and it keeps its own page so you can read the limit.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Services", href: "/services/", url },
@@ -538,7 +538,7 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
   title: esc(OFFERINGS_HEADING),
-  dek: "<p>Ten systems we build and run. Safe code execution is a capability of the assistants, and it keeps its own page so the limit can be read on its own.</p>",
+  dek: "<p>Ten jobs we build and run. Safe code execution sits inside the assistants, and it keeps its own page so you can read the limit.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -665,7 +665,7 @@ async function renderPortfolioHub() {
       url: `${SITE}/portfolio/${item.slug}/`,
     })),
   };
-  const og = await plateOrPhoto("portfolio", "Portfolio", "Working systems", null);
+  const og = await plateOrPhoto("portfolio", "Portfolio", "Work you can open", null);
   const cards = cases.map((item) => {
     const photo = item.cardImage
       ? shotImg(item.cardImage, { lazy: true })
@@ -694,7 +694,8 @@ async function renderPortfolioHub() {
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
-  title: "Working systems, already in the world.",
+  title: "Work you can open.",
+  dek: "<p>Named systems you can open, including SuperPatch products, StrongFoam, Renew Implants, and pirx.ca.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -759,7 +760,7 @@ ${placeholder(placeholders.product)}
 async function renderProductsHub() {
   const url = `${SITE}/products/`;
   const title = "Products | Abracadabra AI";
-  const description = "Showdesk, Schema, and Super Funnel. Public prices are not listed because none are published.";
+  const description = "Showdesk, Schema, and Super Funnel. Open the live system or the film. Prices are not listed here.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Products", href: "/products/", url },
@@ -778,7 +779,7 @@ async function renderProductsHub() {
       },
     })),
   };
-  const og = await plateOrPhoto("products", "Products", "Products", null);
+  const og = await plateOrPhoto("products", "Products", "Three systems you can open", null);
   const cards = products.map((item) => `<li><a href="/products/${item.slug}/">${assetMedia(item.image, item.imageAlt, { lazy: true })}<strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
   const html = shell({
     title,
@@ -800,7 +801,8 @@ async function renderProductsHub() {
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
-  title: "Products",
+  title: "Three systems you can open.",
+  dek: "<p>Showdesk, Schema, and Super Funnel. Open the live system or the film. Prices are not listed here.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,

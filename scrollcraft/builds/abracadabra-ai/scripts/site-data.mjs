@@ -7,8 +7,8 @@ export const MODIFIED = "2026-10-15";
 export const offerings = [
   {
     slug: "ai-assistants-and-agents",
-    outcome: "AI assistants and agents that remember customers and take actions",
-    card: "A helper that remembers the customer and can take the next step, instead of starting from zero every time.",
+    outcome: "An assistant that answers and files the request",
+    card: "It remembers who they are, answers from your rules, and files the booking or the follow-up. A person steps in when the question is outside those rules.",
     whatItIs: "An assistant your customers or your team can talk to. It keeps the thread, follows the rules you set, and can do a small job when the answer is clear: book a time, send a follow-up, or hand the conversation to a person.",
     examples: [
       "Answering common customer questions after hours, and handing off when the question needs a person",
@@ -367,7 +367,7 @@ export const offerings = [
   },
 ];
 
-export const OFFERINGS_KICKER = "Built and deployed on Cloudflare's global network.";
+export const OFFERINGS_KICKER = "The jobs we build and run.";
 export const OFFERINGS_HEADING = "What we build and run for you.";
 
 /** Cloudflare AI Gateway providers, checked against the Provider Native docs. */
@@ -438,7 +438,7 @@ export const cases = [
     sameAs: "https://schema-two.vercel.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
-    summary: "An AI-search visibility scorer. Measured scan output stays separate from generated recommendations.",
+    summary: "Scores whether answer engines can find a site, and writes the fix. What the scan measured stays separate from the suggested fix.",
     body: [
       "Schema scores how visible a site is to answer engines and generates the repair.",
       "Measured scan output stays separate from generated recommendations, so the result never claims more than the scan observed.",
@@ -568,7 +568,7 @@ export const products = [
     sameAs: "https://schema-two.vercel.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
-    description: "Scores how visible a site is to answer engines and generates the repair. Measured scan output stays separate from generated recommendations.",
+    description: "Scores whether answer engines can find a site, and writes the fix. What the scan measured stays separate from the suggested fix.",
     caseSlug: "schema",
   },
   {

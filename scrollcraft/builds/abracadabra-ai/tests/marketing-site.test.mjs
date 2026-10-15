@@ -66,15 +66,13 @@ async function openPage({ width = 1280, height = 800, reducedMotion = 'no-prefer
   return { context, page };
 }
 
-test('hero states the speed-of-thought promise with two clear actions', async () => {
+test('hero states the owner outcome with two clear actions', async () => {
   const { context, page } = await openPage();
   const actions = await page.locator('#i .hero__copy .cta a').allTextContents();
 
-  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'From thought to working software.');
-  assert.match(await page.locator('#i .hero__copy').textContent(), /speed of thought/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /AI agents/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /engineer the intent and context/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /experienced people direct every decision/i);
+  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Software for the way your company already works.');
+  assert.match(await page.locator('#i .hero__copy').textContent(), /job your team already does/i);
+  assert.match(await page.locator('#i .hero__copy').textContent(), /approve what goes live/i);
   assert.deepEqual(actions.map((action) => action.trim()), [
     'Show us how it works',
     "See what we've built",
