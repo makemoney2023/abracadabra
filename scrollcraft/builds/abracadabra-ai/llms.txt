@@ -1,32 +1,32 @@
 # Abracadabra AI
 
-> We build software for the way a company already works. You tell us the job your team already does. We build the software that does it that way. You approve what goes live. Every delivery includes the live system, a film cut from the real screens, and the words the team uses to show it.
+> Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the language the team uses to show it.
 
 Site: https://abra-ca-dabra.app/
 Contact: dev@pirx.ca
 Last updated: 2026-10-15
 
-## What we do
+## What the studio builds
 
-- Software built around the steps, the exceptions, and the words a team already uses. AI takes a task. People keep the relationship.
-- Five workstreams (Workflow, Experience, Engineering, Quality, and Launch) start from one written brief, so the later work runs together instead of one after another. The brief is written before anything is built. That is the operating premise. It is not an elapsed-time guarantee.
-- The calendar gets shorter because the brief is written first and the later work runs at the same time. The work does not shrink. The waiting between the work does. Abracadabra AI does not publish a duration or a percentage for this.
-- The brief and the build ship as working systems, not slide decks.
+- Software follows the steps, the exceptions, and the words a team already uses. AI takes a task. People keep the relationship.
+- Five workstreams (Workflow, Experience, Engineering, Quality, and Launch) start from one written plan, so the later work runs together instead of one after another. The plan is written before anything is built. That is the operating premise. It is not an elapsed-time guarantee.
+- The calendar gets shorter because the plan is written first and the later work runs at the same time. The work does not shrink. The waiting between the work does. Abracadabra AI does not publish a duration or a percentage for this.
+- The plan and the build ship as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
-- A menu of services: marketing, applications, machine-learning products, systems of record (CRM/ERP), and stores and lead generation. Pick one or all of them. Each is built around how the company already works. If you can describe the job, we can build it. Measured visibility proof stays in the pirx.ca block below.
-- Each project leaves with the live system, the film, and the words the team uses to show it. The client's team can demo it without us in the room.
+- A menu of services: marketing, applications, machine-learning products, systems of record (CRM/ERP), and stores and lead generation. One service, or the whole menu. Each one is built around the way the company already works. A job that can be described can be built. Measured visibility proof stays in the pirx.ca block below.
+- Each project leaves with the live system, the film, and the words the team uses to show it. The client's team can demo the system without the studio in the room.
 
 ## Answer Engine Optimization
 
-Abracadabra AI maps the questions buyers ask, publishes direct answers with supporting evidence, connects the page, entity, schema, and source signals, then measures indexed demand, clicks, and observed AI-search visibility. The studio does not guarantee placement or claim that every answer engine retrieves information the same way. Measured scan output stays separate from generated recommendations.
+Abracadabra maps the questions buyers ask, publishes direct answers with supporting evidence, connects the page, entity, schema, and source signals, then measures indexed demand, clicks, and observed AI-search visibility. The studio does not guarantee placement or claim that every answer engine retrieves information the same way. Measured scan output stays separate from generated recommendations.
 
 ## Who it is for
 
-Operators and founders whose real process does not fit a product built for someone else's company. Three arrivals: you already have customers and a way of working that no off-the-shelf product was drawn for; you are replacing a pile of tools that each hold a piece of the customer; or you need the product and the way your team sells it in the same delivery. A fourth: a problem nobody else wanted to take on because it is too big, too specific, or too dependent on context.
+Operators and founders whose real process does not fit a product built for someone else's company. Three arrivals: a company that already has customers and a way of working no off-the-shelf product was drawn for; a company replacing a pile of tools that each hold a piece of the customer; or a company that needs the product and the way the team sells it in the same delivery. A fourth: a problem nobody else wanted to take on because it is too big, too specific, or too dependent on context.
 
 ## The name
 
-Abracadabra, traced back far enough, is Aramaic, roughly "avra kadavra": I will create as I speak. You say what the work is. We build the software. The result can feel like magic because the waiting is removed. There is a system behind it.
+Abracadabra, traced back far enough, is Aramaic, roughly "avra kadavra": I will create as I speak. A description of the work becomes production software. The result can feel like magic because the waiting is removed. There is a system behind it.
 
 ## Proof: from zero to scale
 
@@ -37,18 +37,18 @@ From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90
 - Showdesk, live-event operations from entry through review, placements, and reports: https://www.showdesk-app.com/
 - Schema, scores how visible a site is to answer engines and generates the repair: https://schema-two.vercel.app/
 - LLM Leverage, a self-paced course for better answers from any model, plus a workshop path for a team rollout: https://llm-leverage-course.vercel.app
-- Canadian Discount Appliances, a Kitchener appliance warehouse store that answers condition, warranty, and whether it fits the door, then offers a delivery you can book: https://cdastore.vercel.app/
+- Canadian Discount Appliances answers condition, warranty, and whether it fits the door, then offers a delivery that can be booked: https://cdastore.vercel.app/
 - Super Funnel, one associate app. The homepage shows the Getting started film (home dashboard, setup, pipeline, and nav, 66 seconds). The other seven tours are on the films page. There is no separate public app URL: https://abra-ca-dabra.app/films.html
 
 Also shipped, named when the client allows: clinical-style assessments (non-diagnostic; they educate and route, they do not diagnose), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, and the pirx.ca Search Console record dated above. The list is a sample of what shipped, not a ceiling on what the studio will take on.
 
 ## How a project works
 
-1. You walk us through the operation: the steps, the exceptions, the sentence a good rep already says.
-2. We build the software around those steps. AI where it removes a task, a person where the relationship matters.
-3. You leave with the live system, the film, and the script.
+1. The operation arrives in the team's own words: the steps, the exceptions, and the sentence a good rep already says.
+2. The software is built around those steps. AI removes a task. A person stays where the relationship matters.
+3. The company leaves with the live system, the film, and the words.
 
-If a product you can buy already does the job, we say so and send you there.
+When a product already on the market does the job, the reply says so and points there.
 
 ## Pages
 
@@ -68,16 +68,16 @@ If a product you can buy already does the job, we say so and send you there.
 
 <!-- site-pages:start -->
 - Services: https://abra-ca-dabra.app/services/
-- Customers get an answer, and the request gets filed.: https://abra-ca-dabra.app/services/ai-assistants-and-agents/
-- Ask a question. Get the answer from your own files.: https://abra-ca-dabra.app/services/answers-from-your-documents/
-- Pick the model for the job. One bill you can stop.: https://abra-ca-dabra.app/services/any-model-one-bill/
-- Callers get the answer. A person takes the call when they should.: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
-- The weekly copy-and-paste job runs on its own.: https://abra-ca-dabra.app/services/web-automation/
-- A small program can run without touching the rest of the business.: https://abra-ca-dabra.app/services/safe-code-execution/
-- A screen that follows the order your team already uses.: https://abra-ca-dabra.app/services/custom-apps/
-- Draft the picture, the clip, or the transcript. You decide what goes out.: https://abra-ca-dabra.app/services/ai-media/
-- See who is reading the site, and point them at the right pages.: https://abra-ca-dabra.app/services/ai-visibility/
-- A research brief with the links under it, so you can check.: https://abra-ca-dabra.app/services/search-grounded-research/
+- An assistant that finishes the request.: https://abra-ca-dabra.app/services/ai-assistants-and-agents/
+- Answers from the company's own files, with the page attached.: https://abra-ca-dabra.app/services/answers-from-your-documents/
+- The right model for each job, on one bill.: https://abra-ca-dabra.app/services/any-model-one-bill/
+- A voice line that answers from the record.: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
+- The repeated browser job, run the same way every time.: https://abra-ca-dabra.app/services/web-automation/
+- A small program, inside a limit the rest of the business cannot feel.: https://abra-ca-dabra.app/services/safe-code-execution/
+- An application built around the order the team already trusts.: https://abra-ca-dabra.app/services/custom-apps/
+- Pictures, clips, and transcripts from material the company already holds.: https://abra-ca-dabra.app/services/ai-media/
+- A clear say in which pages answer engines are invited to read.: https://abra-ca-dabra.app/services/ai-visibility/
+- Research with the sources under every claim.: https://abra-ca-dabra.app/services/search-grounded-research/
 - Portfolio: https://abra-ca-dabra.app/portfolio/
 - Showdesk: https://abra-ca-dabra.app/portfolio/showdesk/
 - Schema: https://abra-ca-dabra.app/portfolio/schema/

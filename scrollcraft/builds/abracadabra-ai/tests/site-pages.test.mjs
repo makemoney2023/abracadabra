@@ -41,7 +41,7 @@ test("the model strip sits between the menu and the answer chapter", () => {
   assert.equal(index.includes("0.58rem"), false);
   assert.equal(index.includes("The next room is the receipt"), false);
   assert.match(index, /Every major model, one gateway/);
-  assert.match(index, /What we build and run for you\./);
+  assert.match(index, /Software for the jobs a company already runs\./);
   const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="benefits"'));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
   assert.match(index, /href="\/services\/">Services/);
@@ -79,19 +79,19 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(html, /class="site-nav"/);
     assert.match(html, /class="site-nav__menu"/);
     assert.match(html, /class="site-nav__toggle"/);
-    assert.match(html, /Start a brief/);
+    assert.match(html, /Start a project/);
   }
   const offering = read("services/ai-assistants-and-agents/index.html");
   assert.match(offering, /PLACEHOLDER — needs Christopher/);
   assert.match(offering, /class="sales-primary" href="\/#brief">Show us how it works/);
   assert.match(offering, /AI Readiness Check/);
   assert.match(offering, /https:\/\/check\.abra-ca-dabra\.app\/check/);
-  assert.match(offering, /What changes/);
-  assert.match(offering, /Three places it shows up/);
-  assert.match(offering, /How it gets built/);
-  assert.match(offering, /<h3>Brief<\/h3>/);
-  assert.match(offering, /<h3>People approve<\/h3>/);
-  assert.match(offering, /Off the shelf, a hire, or us/);
+  assert.match(offering, /What the system delivers/);
+  assert.match(offering, /Where it earns its place/);
+  assert.match(offering, /From the operation to a live system/);
+  assert.match(offering, /<h3>Plan<\/h3>/);
+  assert.match(offering, /<h3>Review<\/h3>/);
+  assert.match(offering, /A product, a hire, or a system built for the job/);
   assert.match(offering, /When off the shelf wins/);
   assert.match(offering, /Contact for pricing/);
   assert.match(offering, /href="\/services\/safe-code-execution\/"/);

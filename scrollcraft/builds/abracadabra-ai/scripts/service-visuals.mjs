@@ -24,7 +24,7 @@ export const SERVICE_FOLDERS = {
 export const SERVICE_ALTS = {
   "ai-assistants-and-agents": {
     hero: "Dark chat console with a customer thread, a reply field, and a checklist of next steps.",
-    body1: "Three task cards for a follow-up, an order lookup, and a booking, each with an approved step.",
+    body1: "Three task cards for a follow-up, an order lookup, and a booking, each with a checked step.",
     body2: "Workflow timeline from a customer message through a checked step to a completed action.",
   },
   "answers-from-your-documents": {
@@ -70,7 +70,7 @@ export const SERVICE_ALTS = {
   "search-grounded-research": {
     hero: "Research desk with a question, source cards, and a grounded answer.",
     body1: "Source stack with titles and the line each one contributes.",
-    body2: "Brief with the answer and the sources named under it.",
+    body2: "Research answer with the sources named under it.",
   },
 };
 

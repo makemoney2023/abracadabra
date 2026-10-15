@@ -13,7 +13,7 @@ The local folder `Desktop/abracadbra` is not yet a clone of that repo. When the 
 
 ## The name
 
-Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. Not a spell: you say what you mean, and that description becomes production software.
+Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. It is not a spell. A description of the work becomes production software.
 
 ---
 
@@ -52,7 +52,7 @@ Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. Not a s
 - Wellness tools are non-diagnostic. Say that whenever an assessment is described.
 - The name explains the magic: Aramaic *avra kadavra*, "I will create as I speak." The delivery chapter may say the result feels like magic, and must say there is a system behind it. Do not claim the model is magic with no system behind it.
 
-**We sound like this.** "Your people keep the order of work they already trust. The screen follows that order." / "Tell us what you want built. We'll tell you what it takes to build it."
+**The page sounds like this.** "Abracadabra builds software around the way a company already works." / "The system follows the order the team already uses." Product is the subject. Sentences are complete. The page does not use the "You do X. We do Y." cadence.
 
 **We do not sound like this.** Streamline, leverage, innovative, transformational, or a claim that the model is magic with no system behind it.
 
@@ -70,7 +70,7 @@ Three arrivals, one page:
 
 A fourth, less obvious arrival: you've got a problem nobody else wanted to take on — too big, too specific, too dependent on context a generic team won't sit still long enough to learn. That's the one we actually enjoy.
 
-**A good brief** sounds like a Tuesday: the workflow, the words, and the outcome on the other side. If a product they can buy already does that job, we say so.
+**A good project** sounds like a Tuesday: the workflow, the words, and the outcome on the other side. If a product already on the market does that job, the reply says so.
 
 ---
 
@@ -80,15 +80,15 @@ Paste-ready. Section order is the page.
 
 ### 1. Hero
 
-**Eyebrow:** For owners, not engineers
+**Eyebrow:** Production software
 
-**Headline:** Software for the way your company already works.
+**Headline:** Abracadabra builds software around the way a company already works.
 
-**Subhead:** Tell us the job your team already does. We build the software that does it that way. You still approve what goes live.
+**Subhead:** The system follows the order the team already uses. Delivery includes the live product, a film of the screens, and the language that explains it.
 
-**Tag:** We write the brief before anyone builds. Five workstreams. One running system.
+**Tag:** The job and the rules are written down before anything is built. Five workstreams. One running system.
 
-**Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build brief**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered brief. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example.
+**Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build plan**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered plan. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example. The visible action is **Start a project**. The anchor stays `#brief`.
 
 **Claim boundary:** “At the speed of thought” is the brand premise in the schema slogan and the name chapter. It describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence. It is not the visible homepage headline.
 
@@ -100,7 +100,7 @@ Paste-ready. Section order is the page.
 | Option | Line | Why it exists |
 |---|---|---|
 | A | From thought to working software. | Brand slogan. Stays in JSON-LD `slogan`. Not the visible homepage headline. |
-| B (page headline) | Software for the way your company already works. | The visible homepage h1. Names the outcome for a non-technical owner. |
+| B (page headline) | Abracadabra builds software around the way a company already works. | The visible homepage h1. The product is the subject. |
 | C | From a blank page to a system your team can demo. | Strong on the leave-behind. Weaker on fit. |
 | D | We shrink the gap between what you meant and what's running. | Leads with the mechanism, not the product. |
 
@@ -111,7 +111,7 @@ Four live lines. No client logos until permission exists.
 - Showdesk — live events, from entry to the report — [showdesk-app.com](https://www.showdesk-app.com/)
 - Schema — where AI search cannot find you — [schema-two.vercel.app](https://schema-two.vercel.app/)
 - LLM Leverage — a team trained on any model — [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app)
-- A Kitchener appliance warehouse — "will it fit?" before the drive — [cdastore.vercel.app](https://cdastore.vercel.app/)
+- Canadian Discount Appliances — "will it fit?" before the drive — [cdastore.vercel.app](https://cdastore.vercel.app/)
 
 ### 3. The zero-to-scale case
 
@@ -193,23 +193,23 @@ Use the three arrivals — plus the fourth — in **Who it is for** above.
 
 ### 9. Fit
 
-**Header:** Show us one job.
+**Header:** Start with one job.
 
-Bring the steps, the exceptions, and the result you want. We will show you the system, or tell you when a product you can buy already fits.
+The steps, the exceptions, and the result come in the team's own words. The reply is the system, or a recommendation to buy a product that already fits.
 
 ### 10. Close
 
-The close is the same block as Fit. The visible heading is **Show us one job.**
+The close is the same block as Fit. The visible heading is **Start with one job.** The label above it is **The project**.
 
-**Body:** Bring the steps, the exceptions, and the result you want. We will show you the system, or tell you when a product you can buy already fits.
+**Body:** The steps, the exceptions, and the result come in the team's own words. The reply is the system, or a recommendation to buy a product that already fits.
 
 **CTA:** Show us how it works
 **Secondary:** See what we've built
 
 ### Meta
 
-- **Title:** Abra-ca-dabra: Software for the way your company already works
-- **Description:** We build software that follows the way your team already works. You tell us the job. You approve what goes live.
+- **Title:** Abra-ca-dabra: Software around the way a company works
+- **Description:** Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the language the team uses to show it.
 - **Canonical:** `https://abra-ca-dabra.app/`
 - **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo, live captures, and Super Funnel"), `/blog` (notes with named sources; a post is public only on or after `datePublished`, unless a preview build sets `BLOG_PREVIEW=1`), `/about/christopher-buzny`, `/privacy` (draft, not in force).
 - **Crawler files:** `/robots.txt` allows named answer-engine crawlers and disallows CCBot and Bytespider, `/sitemap.xml` (image and video extensions, plus the blog index and author page), `/llms.txt` (a quotable summary with the dated pirx.ca figures, the non-diagnostic rule, and only the posts that are already public).
@@ -421,14 +421,14 @@ These are sourced on disk. They are not approved public claims.
 |---|---|
 | This file | Source of truth for Abracadabra / abra-ca-dabra.app |
 | `Desktop/business value/01-messaging-pillars.md` through `06-case-study-index.md` | Earlier Chris Buzny / Velocity / Director-of-AI packaging. Mine it for proof. Do not publish a second homepage from it without deciding whether Velocity remains a name |
-| `github.com/makemoney2023/abracadabra` README, `docs/video-pipeline-targets.md`, `docs/scroll-world-review.md`, `scrollcraft/builds/abracadabra-ai/BRIEF.md`, `outputs/sales-enablement/agency/one-pager.md` | The showroom. Facts, films, "open a brief." This file adds the benefit argument those pages do not yet make |
+| `github.com/makemoney2023/abracadabra` README, `docs/video-pipeline-targets.md`, `docs/scroll-world-review.md`, `scrollcraft/builds/abracadabra-ai/BRIEF.md`, `outputs/sales-enablement/agency/one-pager.md` | The showroom. Facts, films, and the project action. This file adds the benefit argument those pages do not yet make |
 
 **One-sentence variants**
 
-1. **Site:** We build software around how you already run the business, however big or complex it is, then leave the film and the script your team can run.
-2. **Catalog label:** Working systems you can watch. The word finishes as you pass them.
-3. **Conversation:** Bring one operation. We will show you the matching system, or build the one that fits.
-4. **Etymology:** Abracadabra, translated, means "I create as I speak." Tell us how you work — we'll build what you meant, at whatever scale it needs to run.
+1. **Site:** Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the language the team uses to show it.
+2. **Catalog label:** Working systems, open on the page. The word finishes as the page moves past them.
+3. **Conversation:** One operation is enough. The reply is the matching system, or the system built to fit.
+4. **Etymology:** Abracadabra, translated, means "I create as I speak." A description of the work becomes production software.
 
 ---
 

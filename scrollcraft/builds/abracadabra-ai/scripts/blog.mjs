@@ -295,7 +295,7 @@ function pillarFilter(posts) {
 }
 
 function authorBox() {
-  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. We build software around the way a company already works, then hand over the live system, a film of the screens, and the words the team uses to show it. Credentials, education, and personal profile links stay off this page until Christopher confirms them.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
+  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the words the team uses to show it. Credentials, education, and personal profile links stay off this page until Christopher confirms them.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
 }
 
 function renderMarkdown(post) {
@@ -603,7 +603,7 @@ function blogIndexGraph(livePosts) {
 async function renderIndex(posts) {
   const live = posts.filter((post) => isPublic(post));
   const ogAlt = "Abracadabra AI blog — notes on AI for operators";
-  await writeOg("Notes for owners", "BLOG", join(root, "blog/og/index.png"));
+  await writeOg("Notes for operators", "BLOG", join(root, "blog/og/index.png"));
   const featured = live.find((post) => post.slug === FEATURED_SLUG) ?? live[0];
   const rest = featured ? live.filter((post) => post.slug !== featured.slug) : [];
   const board = live.length
@@ -614,15 +614,15 @@ async function renderIndex(posts) {
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }])}
 <div class="hero-copy">
 <p class="kicker">Notes</p>
-<h1>When to buy a tool, and when to build.</h1>
-<p class="dek">Short notes for owners. Every number names its source.</p>
+<h1>When a product already fits, and when the company needs a system.</h1>
+<p class="dek">Notes for operators on buying a product that already fits, and on building a system of the company's own. Every number names its source.</p>
 </div>
 </header>
 ${board}
 </main>`;
   const html = pageShell({
     title: "Blog | Abracadabra AI",
-    description: "Notes for owners on when to buy a tool, when to build, and whether the business is ready. Sources are named.",
+    description: "Notes for operators on when a product already fits, and when the company needs a system of its own. Every number names its source.",
     canonical: `${SITE}/blog`,
     robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/index.png`,
@@ -644,7 +644,7 @@ async function renderAuthor() {
 ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/about/christopher-buzny" }])}
 <p class="kicker">Founder</p>
 <h1>Christopher Buzny</h1>
-<p class="dek">Founder of Abracadabra AI. We build software around the way a company already works, then hand over the live system, a film of the screens, and the words the team uses to show it.</p>
+<p class="dek">Founder of Abracadabra AI. Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the words the team uses to show it.</p>
 </div>
 </header>
 <article>
@@ -708,13 +708,13 @@ async function renderPrivacy() {
   const body = `<main id="top">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
 <article>
-<p class="draft">Draft for review. Not in force until Christopher approves it.</p>
+<p class="draft">Draft for review. Not in force until Christopher signs it.</p>
 <h1>Privacy</h1>
 <p class="dek">This draft says what the marketing site and the Readiness Check will collect. It is not the policy, and it is not in force.</p>
 <h2>What this draft covers</h2>
-<p>The marketing site at abra-ca-dabra.app is static. It does not run an analytics script. The Readiness Check at check.abra-ca-dabra.app stores the answers you submit so it can show a band and four scores. That product educates and routes. It does not diagnose.</p>
+<p>The marketing site at abra-ca-dabra.app is static. It does not run an analytics script. The Readiness Check at check.abra-ca-dabra.app stores the answers submitted so it can show a band and four scores. That product educates and routes. It does not diagnose.</p>
 <h2>Analytics after consent</h2>
-<p>PostHog is the analytics tool the studio intends to use, and only after a visitor consents. This draft does not install a PostHog script. No pageview, click, or session is sent to PostHog from this site until a consent step exists and Christopher has approved this page.</p>
+<p>PostHog is the analytics tool the studio intends to use, and only after a visitor consents. This draft does not install a PostHog script. No pageview, click, or session is sent to PostHog from this site until a consent step exists and Christopher has signed this page.</p>
 <p>The blog's Readiness Check links include a label so the check can record which note the visit came from. The label is part of the link. It is not a tracker on this page.</p>
 <h2>Contact</h2>
 <p>Questions about this draft go to the studio inbox, <a href="mailto:dev@pirx.ca">dev@pirx.ca</a>.</p>
@@ -738,7 +738,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
           "@type": "WebPage",
           url: `${SITE}/privacy`,
           name: "Privacy (draft)",
-          description: "Draft privacy note. Not in force until approved.",
+          description: "Draft privacy note. Not in force until signed.",
           isPartOf: { "@id": WEBSITE_ID },
         },
       ],

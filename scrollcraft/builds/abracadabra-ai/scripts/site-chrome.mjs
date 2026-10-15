@@ -11,7 +11,7 @@ export function siteHeader() {
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#brief">Start a brief</a>
+    <a class="site-nav__cta" href="/#brief">Start a project</a>
   </nav>
 </header>
 <script>
@@ -34,7 +34,7 @@ export function siteFooter() {
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#brief">Start a brief</a>
+    <a href="/#brief">Start a project</a>
     <a href="/privacy">Privacy</a>
   </nav>
 </footer>`;

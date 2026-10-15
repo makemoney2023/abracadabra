@@ -70,9 +70,9 @@ test('hero states the owner outcome with two clear actions', async () => {
   const { context, page } = await openPage();
   const actions = await page.locator('#i .hero__copy .cta a').allTextContents();
 
-  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Software for the way your company already works.');
-  assert.match(await page.locator('#i .hero__copy').textContent(), /job your team already does/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /approve what goes live/i);
+  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Abracadabra builds software around the way a company already works.');
+  assert.match(await page.locator('#i .hero__copy').textContent(), /order the team already uses/i);
+  assert.match(await page.locator('#i .hero__copy').textContent(), /film of the screens/i);
   assert.deepEqual(actions.map((action) => action.trim()), [
     'Show us how it works',
     "See what we've built",
@@ -243,9 +243,9 @@ test('operation compiler engineers intent and context before the parallel agent 
   );
   assert.equal(await engineer.locator('[data-context-stream="intent"] li').count(), 3);
   assert.equal(await engineer.locator('[data-context-stream="context"] li').count(), 3);
-  assert.match(await engineer.locator('[data-build-brief]').textContent(), /build brief/i);
+  assert.match(await engineer.locator('[data-build-brief]').textContent(), /build plan/i);
   assert.match(await engineer.textContent(), /before anything is built/i);
-  assert.match(await page.locator('[data-compiler-panel="build"]').textContent(), /engineered brief/i);
+  assert.match(await page.locator('[data-compiler-panel="build"]').textContent(), /engineered plan/i);
   assert.equal(await page.locator('[data-agent-track]').count(), 5);
   assert.deepEqual(
     (await page.locator('[data-agent-track] [data-agent-role]').allTextContents()).map((label) => label.trim()),
@@ -371,7 +371,7 @@ test('site nav uses a compact menu under 768px and a full bar from 768px', async
       viewport: innerWidth,
     };
   }));
-  for (const name of ['Course', 'Blog', 'Start a brief']) {
+  for (const name of ['Course', 'Blog', 'Start a project']) {
     const link = opened.find((item) => item.text === name);
     assert.ok(link, name);
     assert.ok(link.left >= 0 && link.right <= link.viewport + 1, `${name} is clipped`);
@@ -413,7 +413,7 @@ test('site nav uses a compact menu under 768px and a full bar from 768px', async
       viewport: innerWidth,
     };
   }));
-  for (const name of ['Services', 'Portfolio', 'Products', 'Course', 'Blog', 'Start a brief']) {
+  for (const name of ['Services', 'Portfolio', 'Products', 'Course', 'Blog', 'Start a project']) {
     const link = bar.find((item) => item.text === name);
     assert.ok(link, name);
     assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
@@ -565,7 +565,7 @@ test('time travel chapter compresses the delivery calendar without inventing dur
   );
   assert.equal(await time.locator('[data-time-panel]').count(), 4);
   assert.match(await time.locator('[data-time-panel="conventional"]').textContent(), /handoff/i);
-  assert.match(await time.locator('[data-time-panel="engineer"]').textContent(), /one engineered brief/i);
+  assert.match(await time.locator('[data-time-panel="engineer"]').textContent(), /one engineered plan/i);
   assert.match(await time.locator('[data-time-panel="parallel"]').textContent(), /five workstreams/i);
   assert.match(await time.locator('[data-time-panel="arrive"]').textContent(), /feels like magic/i);
   assert.equal(await engine.getAttribute('data-active-state'), 'conventional');
@@ -656,11 +656,11 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.equal(await range.getAttribute('data-specimen'), null);
   assert.equal(
     (await range.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'The only limit is what you can think of.',
+    'The only limit is the work the company can describe.',
   );
   const rangeCopy = await range.locator('.range-copy').innerText();
   assert.match(rangeCopy, /The menu/i);
-  assert.match(rangeCopy, /If you can describe it, we can build it/);
+  assert.match(rangeCopy, /A job that can be described can be built/);
   assert.doesNotMatch(rangeCopy, /one shape|still in range|work we have shipped/);
   assert.deepEqual(
     (await range.locator('[data-range-state]').allTextContents()).map((label) => label.trim()),
