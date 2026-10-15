@@ -14,15 +14,13 @@ images:
     alt: "A phone held over a cafe table beside a laptop and a coffee cup, screen lit, with the holder's face out of frame"
     caption: "The phone, over the table."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “How to Get Your Business to Show Up in ChatGPT and AI Overviews”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/02.png
+  - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/02.webp
     file: how-to-get-your-business-to-show-up-in-chatgpt-02.jpg
-    alt: "A page shape with a cyan edge, standing for a page that can be indexed"
-    caption: "The page still has to be indexed."
+    alt: "An owner reads a printed search guide beside a laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “How to Get Your Business to Show Up in ChatGPT and AI Overviews”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/03.png
+  - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/03.webp
     file: how-to-get-your-business-to-show-up-in-chatgpt-03.jpg
-    alt: "A short bar beside a taller bar, standing for fewer clicks when a summary shows"
-    caption: "A summary changes the click."
+    alt: "A designer adjusts a web page layout in a small studio"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “How to Get Your Business to Show Up in ChatGPT and AI Overviews”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Which crawler does ChatGPT search use?"

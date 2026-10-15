@@ -14,15 +14,13 @@ images:
     alt: "A shop counter with a tablet in a stand, a card reader, and a small plant, and the back of a person facing the screen"
     caption: "The counter, with a tablet in a stand."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI for Small Business in 2027: What Changed in 2026 and What to Do First”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-for-small-business-2027/02.png
+  - src: /blog/media/ai-for-small-business-2027/02.webp
     file: ai-for-small-business-2027-02.jpg
-    alt: "A cyan split between the columns, standing for the question each survey asks"
-    caption: "Do not average them."
+    alt: "A boutique owner drafts a product description on a laptop beside product samples"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI for Small Business in 2027: What Changed in 2026 and What to Do First”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-for-small-business-2027/03.png
+  - src: /blog/media/ai-for-small-business-2027/03.webp
     file: ai-for-small-business-2027-03.jpg
-    alt: "A single gate after the columns, standing for the job one business can name"
-    caption: "Name the job instead."
+    alt: "Handmade goods on shop shelves with a customer picking up an item"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI for Small Business in 2027: What Changed in 2026 and What to Do First”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Why do the two surveys disagree?"

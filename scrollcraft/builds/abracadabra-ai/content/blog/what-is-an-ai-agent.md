@@ -14,15 +14,13 @@ images:
     alt: "A person at a service counter with a laptop and a notepad, seen from the side so the face stays out of view"
     caption: "The counter, with a notepad beside the laptop."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “What Is an AI Agent? A Plain-Language Answer for Business Owners”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/what-is-an-ai-agent/02.png
+  - src: /blog/media/what-is-an-ai-agent/02.webp
     file: what-is-an-ai-agent-02.jpg
-    alt: "Two separate tracks, one fixed and one branching, on a dark field"
-    caption: "A workflow stays on the path you wrote."
+    alt: "A plumbing company dispatch desk with a headset, call notes, and a laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “What Is an AI Agent? A Plain-Language Answer for Business Owners”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/what-is-an-ai-agent/03.png
+  - src: /blog/media/what-is-an-ai-agent/03.webp
     file: what-is-an-ai-agent-03.jpg
-    alt: "A small cyan gate at the end of a path, standing for a human checkpoint"
-    caption: "Someone still owns the stop."
+    alt: "A person pastes a quote into a chat window on an office laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “What Is an AI Agent? A Plain-Language Answer for Business Owners”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What is an AI agent in plain language?"

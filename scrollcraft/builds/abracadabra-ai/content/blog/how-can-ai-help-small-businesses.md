@@ -14,15 +14,13 @@ images:
     alt: "A shopkeeper behind a counter with a laptop and a card reader, face turned down toward the work"
     caption: "The counter, with the laptop open."
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Two separate stacks of thin translucent sheets, one tall and one short, coral light on the left stack and cyan light on the right. Studio still life, 16:9."
-  - src: /blog/media/how-can-ai-help-small-businesses/02.png
+  - src: /blog/media/how-can-ai-help-small-businesses/02.webp
     file: help-surveys.jpg
-    alt: "A split diagram with a chat bubble shape on one side and a workshop bench on the other, no people"
-    caption: "Opening a tool is not the same as using it in the work."
+    alt: "An owner edits a printed email draft by hand, rewriting half of it"
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Left side a simple speech-bubble outline in coral. Right side a small workbench of geometric parts in cyan. A gap between them. Soft overhead light, 16:9."
-  - src: /blog/media/how-can-ai-help-small-businesses/03.png
+  - src: /blog/media/how-can-ai-help-small-businesses/03.webp
     file: help-jobs.jpg
-    alt: "Four small objects in a row, a page, a megaphone shape, a path, and a teaching card, on a dark surface"
-    caption: "The jobs that show up once a firm is already using AI."
+    alt: "A bakery worker boxes pastries while an order tablet shows the queue"
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four small objects in a row on a dark table: a folded page, a cone, a winding path, and a small card. Coral and cyan edge light, 16:9."
 faqs:
   - question: Why do small-business AI surveys disagree?

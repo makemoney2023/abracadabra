@@ -17,7 +17,7 @@ Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). I
 ## Blog voice — 2026-10-14
 
 - All 24 notes were rewritten in a plain first-person plural voice for an owner: a direct answer, a worked example, the steps we would take, common mistakes, and a "What we'd do" section. Headings that the image slots sit under stayed put. Citations, FAQs, dates, and the Readiness Check placements are unchanged. No new statistics were added.
-- `content/blog/image-briefs.json` names each note's three slots (hero, body, closing) and the heading that slot belongs to. The hero photograph is the picture Christopher supplied for that note. The two in-body pictures are still the previous set, waiting on the replacements. Alt text describes the picture that is actually published.
+- `content/blog/image-briefs.json` names each note's three slots (hero, body, closing) and the heading that slot belongs to. The hero photograph and the two in-body photographs are the pictures Christopher supplied for that note. Each in-body picture is 1280×720, served as WebP with a JPEG fallback, and the alt text is the line in `content/blog/body-alt.json`. The in-body figures have no caption. Alt text describes the picture that is actually published.
 
 ## Blog layout and images — 2026-10-14
 

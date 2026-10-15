@@ -14,15 +14,13 @@ images:
     alt: "A cafe table with an open laptop, a notebook, and two coffee cups, photographed from above with no faces in frame"
     caption: "The meeting is the laptop and the notebook."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Automation Agency vs Consultant vs In-House: How to Choose”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-automation-agency-vs-consultant/02.png
+  - src: /blog/media/ai-automation-agency-vs-consultant/02.webp
     file: ai-automation-agency-vs-consultant-02.jpg
-    alt: "A short cyan bar beside a taller one, standing for training versus use"
-    caption: "Training lags use."
+    alt: "Through a doorway, a corporate boardroom and a small shop break room sit side by side"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Automation Agency vs Consultant vs In-House: How to Choose”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-automation-agency-vs-consultant/03.png
+  - src: /blog/media/ai-automation-agency-vs-consultant/03.webp
     file: ai-automation-agency-vs-consultant-03.jpg
-    alt: "A gate between the two figures, standing for a named job before a build"
-    caption: "The gate is the job."
+    alt: "A staff member takes notes during a training video in a break room"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Automation Agency vs Consultant vs In-House: How to Choose”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "When do you hire a consultant instead of an agency?"

@@ -14,15 +14,13 @@ images:
     alt: "A workshop bench with labeled bins, a clipboard, and a laptop, and a person standing at the bench with their face out of frame"
     caption: "Labeled bins and a clipboard."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Business Process Automation With AI: Map the Workflow Before You Pick a Tool”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/business-process-automation-ai/02.png
+  - src: /blog/media/business-process-automation-ai/02.webp
     file: business-process-automation-ai-02.jpg
-    alt: "A cyan gate on that path, standing for a step that waits for a person"
-    caption: "Some steps wait."
+    alt: "A hand-drawn process map taped to the wall of a print shop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Business Process Automation With AI: Map the Workflow Before You Pick a Tool”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/business-process-automation-ai/03.png
+  - src: /blog/media/business-process-automation-ai/03.webp
     file: business-process-automation-ai-03.jpg
-    alt: "A path that fades, standing for a proof of concept that was abandoned"
-    caption: "A proof is not a process."
+    alt: "Order tickets lined up evenly on a rail behind a deli counter"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Business Process Automation With AI: Map the Workflow Before You Pick a Tool”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Should you automate before you write the steps?"

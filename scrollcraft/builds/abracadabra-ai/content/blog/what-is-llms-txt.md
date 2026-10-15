@@ -14,15 +14,13 @@ images:
     alt: "A laptop on a desk showing a text file, with a notebook and a pen beside it and no person in the frame"
     caption: "A plain text file on the laptop."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “What Is llms.txt, and Does Your Business Website Need One?”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/what-is-llms-txt/02.png
+  - src: /blog/media/what-is-llms-txt/02.webp
     file: what-is-llms-txt-02.jpg
-    alt: "A cyan ring with almost no marks inside, standing for files that receive no requests"
-    caption: "Most copies are unread."
+    alt: "Unopened mail piling up at a small office mailbox"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “What Is llms.txt, and Does Your Business Website Need One?”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/what-is-llms-txt/03.png
+  - src: /blog/media/what-is-llms-txt/03.webp
     file: what-is-llms-txt-03.jpg
-    alt: "A short row of bot-like ticks, standing for the requests that do arrive"
-    caption: "The requests that arrive are mostly bots."
+    alt: "A small business network closet with blinking router and switch lights"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “What Is llms.txt, and Does Your Business Website Need One?”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What is llms.txt?"

@@ -14,15 +14,13 @@ images:
     alt: "A clipboard questionnaire on a wooden table beside a pen and a coffee cup, with no person in the frame"
     caption: "The questions, on paper."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Assessment Questionnaire: Every Question We Ask, and Why”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-readiness-assessment-questionnaire/02.png
+  - src: /blog/media/ai-readiness-assessment-questionnaire/02.webp
     file: ai-readiness-assessment-questionnaire-02.jpg
-    alt: "An empty cyan frame, standing for a checklist with no adoption rate"
-    caption: "A checklist is not a rate."
+    alt: "An owner filling in a printed self-assessment questionnaire at a kitchen table"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Readiness Assessment Questionnaire: Every Question We Ask, and Why”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-readiness-assessment-questionnaire/03.png
+  - src: /blog/media/ai-readiness-assessment-questionnaire/03.webp
     file: ai-readiness-assessment-questionnaire-03.jpg
-    alt: "A short path from the marks to a gate, standing for the decision after the questions"
-    caption: "The decision comes last."
+    alt: "Hands set aside a headline clipping and work from a notebook of the business's own notes"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Readiness Assessment Questionnaire: Every Question We Ask, and Why”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What themes belong on the questionnaire?"

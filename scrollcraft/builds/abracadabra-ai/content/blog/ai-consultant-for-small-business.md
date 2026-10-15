@@ -14,15 +14,13 @@ images:
     alt: "Two people at a small table, one with a laptop and one with a notebook, seen from the side so their faces stay out of view"
     caption: "A notebook across from a laptop."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Consultant for Small Business: What They Do, What to Ask, and Red Flags”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-consultant-for-small-business/02.png
+  - src: /blog/media/ai-consultant-for-small-business/02.webp
     file: ai-consultant-for-small-business-02.jpg
-    alt: "Two stacks, one high and one low, standing for use versus scaling"
-    caption: "Use is common. Scaling is not."
+    alt: "A thick consultant proposal binder on a desk beside a red pen and calculator"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Consultant for Small Business: What They Do, What to Ask, and Red Flags”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-consultant-for-small-business/03.png
+  - src: /blog/media/ai-consultant-for-small-business/03.webp
     file: ai-consultant-for-small-business-03.jpg
-    alt: "A broken ring, standing for a project canceled before it ran"
-    caption: "A canceled project is a known outcome."
+    alt: "An owner sets aside a stack of vendor brochures beside the desk"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Consultant for Small Business: What They Do, What to Ask, and Red Flags”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What should you ask an AI consultant first?"

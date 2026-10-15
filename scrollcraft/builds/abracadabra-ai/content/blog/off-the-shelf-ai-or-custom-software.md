@@ -14,15 +14,13 @@ images:
     alt: "A laptop on a wooden desk beside a plain software box, photographed from above with no person in the frame"
     caption: "A laptop and a box on the desk."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Off-the-Shelf AI Tools or Custom Software? How a Small Business Should Decide”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/off-the-shelf-ai-or-custom-software/02.png
+  - src: /blog/media/off-the-shelf-ai-or-custom-software/02.webp
     file: off-the-shelf-ai-or-custom-software-02.jpg
-    alt: "Two bars of different heights, standing for use and a growing subset"
-    caption: "Use is not a build."
+    alt: "A laptop running an off-the-shelf app on a small office table"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Off-the-Shelf AI Tools or Custom Software? How a Small Business Should Decide”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/off-the-shelf-ai-or-custom-software/03.png
+  - src: /blog/media/off-the-shelf-ai-or-custom-software/03.webp
     file: off-the-shelf-ai-or-custom-software-03.jpg
-    alt: "A single coral key, standing for a job only this business has"
-    caption: "Custom is the job only you have."
+    alt: "Through a shop window, a concrete foundation being poured outside at dusk"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Off-the-Shelf AI Tools or Custom Software? How a Small Business Should Decide”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "When should you buy off the shelf?"

@@ -14,15 +14,13 @@ images:
     alt: "Hands arranging printed spreadsheets on a desk beside an open laptop, with no face in the frame"
     caption: "The files, on the desk."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI-Ready Data: What a Small Business Needs Before AI Can Help”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-ready-data/02.png
+  - src: /blog/media/ai-ready-data/02.webp
     file: ai-ready-data-02.jpg
-    alt: "A broken line beside a continuous line, standing for data that cannot be read"
-    caption: "Readable beats collected."
+    alt: "Banker's boxes of mismatched paper files stacked in a small office storeroom"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI-Ready Data: What a Small Business Needs Before AI Can Help”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-ready-data/03.png
+  - src: /blog/media/ai-ready-data/03.webp
     file: ai-ready-data-03.jpg
-    alt: "A small stack of plates, standing for where the knowledge actually lives"
-    caption: "Heads, documents, and systems are different places."
+    alt: "Hands enter paper invoice details into a spreadsheet on a laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI-Ready Data: What a Small Business Needs Before AI Can Help”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What is AI-ready data for a small business?"
