@@ -10,9 +10,69 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The Aramaic origin of the name sits directly under the hero. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the receipt moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The next room is the receipt." The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital film plus the promise and the two actions in a left column. From 1024px the actions sit side by side; below that they stack full width, still left-aligned. The compiler section sits directly under it and demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The Aramaic origin of the name follows the compiler. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the model strip moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The models are next." The model strip names the gateway providers and the Workers AI families. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. Services, portfolio, products, and the LLM Leverage course are linked from the site header. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+
+## Mobile nav and hero column — 2026-10-15
+
+- From 1024px the homepage hero copy and the two actions sit in a left column over the film, with the actions side by side. Below 1024px the actions stack full width under the text, still left-aligned. Service, portfolio, product, course, and blog opening copy uses the same column. Later section headings stay centered.
+- Under 768px the header is a Menu control and the link list opens under the bar. From 768px the six links stay in one row, including Course and Blog.
+- On screens up to 1100px the footer stays in normal flow at the end of the brief, so it no longer paints over the hero. The compiler stays in `#compiler`, under the hero.
+- **What changed** — the hero column, the compact menu, and the phone footer.
+- **Why** — Christopher asked for a left column on desktop and stacked full-width actions on smaller screens, and the phone preview showed the footer and the nav overflowing the hero.
+- **Code touchpoints** — `index.html`, `blog/blog.css`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — generated page headers.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in this folder.
+
+## PiRX screenshots — 2026-10-15
+
+- Self-hosted pirx.ca screenshots now sit on the portfolio card, the case study, the custom-apps proof, and the AI visibility proof. Alt text describes the screen. PiRX's own on-site claims are not copied into Abracadabra copy.
+- **What changed** — the home hero is the portfolio card and the case-study hero. The race predictor is the custom-apps proof. Accuracy, the marathon predictor, and the blog index are the AI visibility proof. The full home page and a blog post sit in the case-study body.
+- **Why** — Christopher supplied web-optimized screenshots as proof of the live product.
+- **Code touchpoints** — `scripts/pirx-shots.mjs`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `blog/blog.css`, `assets/pirx/`.
+- **Data-flow impact** — generated service and portfolio HTML.
+- **API / schema impact** — the pirx.ca page's primary image is the home-hero screenshot.
+- **Verification** — `npm test` in this folder.
+
+## PiRX proof — 2026-10-15
+
+- The public pirx.ca Search Console claim is now the Christopher-approved window Jul 14 to Oct 13, 2026: 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions as a separate report. The lead line is "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days."
+- The AI visibility proof card and the pirx.ca portfolio note carry that copy plus an illustrative two-curve chart in the brand tokens. The chart is labelled "Source: Google Search Console, Jul 14 to Oct 13, 2026" and is not a daily export. Top AI-feature pages stay on the portfolio note.
+- The homepage measure panel, the matching FAQ, and `llms.txt` use the same window. Research and custom apps still do not repeat the figures. The page does not mention CTR and does not claim a traffic or revenue result.
+- **What changed** — the 2026-09-23 pull is no longer the public figure.
+- **Why** — Christopher cleared the three-month Search Console window.
+- **Code touchpoints** — `scripts/pirx-chart.mjs`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `blog/blog.css`, `index.html`, `llms.txt`.
+- **Data-flow impact** — generated service and portfolio HTML.
+- **API / schema impact** — FAQ JSON-LD text on the homepage and the AI visibility page.
+- **Verification** — `npm test` in this folder.
+
+## Layout — 2026-10-15
+
+- The homepage hero is only the full-bleed orbital video, the headline, the subhead, and the two actions. The "Thought → working software" compiler moved into `#compiler`, the next section. Tokens are unchanged. A later note the same day moved that opening copy into a left column.
+- Homepage shells that were two columns at 1024 now stack at 1100px and below. Service, portfolio, product, course, and blog pages keep body copy in a 46rem measure. Card grids stay two columns until 700px. Opening titles were centered in this pass and moved to the left column in the note above.
+- **What changed** — text no longer sits in a leftover side column, and the required widths do not grow the page sideways.
+- **Why** — Christopher reported the layout broken across viewports.
+- **Code touchpoints** — `index.html`, `blog/blog.css`, `tests/marketing-site.test.mjs`.
+- **Data-flow impact** — none.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in this folder.
+
+## Service sales pages — 2026-10-15
+
+- Each `/services/<slug>/` page is a sales page: outcome headline, "Show us how it works" (`/#brief`) and "AI Readiness Check", a proof strip, the problem, outcome cards, three generic business uses, the shared four-step process (brief, build, people approve, launch and run), a comparison of off-the-shelf / hire in-house / Abracadabra with an honest row for when off the shelf wins, a named proof card, the Cloudflare line, "Contact for pricing" with no numbers, five to seven questions, and a closing CTA. Copy lives in `scripts/service-sales.mjs`. Visible length is about 900–1300 words.
+- Safe code execution stays at `/services/safe-code-execution/` and is written as a capability of AI assistants. The assistants page and the safe-code page link to each other. The hub ItemList still lists all ten.
+- Portfolio notes added for SuperPatch products, the StrongFoam website, the StrongFoam CRM/ERP, and Renew Implants (site, social, blogs). The pirx.ca note covers the app, the blogs, and the Jul 14 to Oct 13, 2026 Search Console window. No testimonials.
+- JSON-LD on each service page is Service, FAQPage, and BreadcrumbList. The hub adds an ItemList. There is no Offer and no AggregateRating. The Google Search Console verification meta is an HTML comment, `PLACEHOLDER — needs Christopher`, and is not a token.
+- Hero and two body image slots stay at `/blog/media/services/<slug>/01|02|03` until photographs are attached.
+
+## Site pages — 2026-10-15
+
+- The public label is Services. The header and footer link `/services/`. `#services` follows the work rail. Old `/offerings/` and `/offerings/<slug>/` URLs 301 to the new paths. Each service page has a plain "What it is", three generic business examples, the steps, the deliverables, who it is for, and real questions. Examples name a job (after-hours questions, a document lookup, a weekly report), not an industry. Named portfolio items stay as they are. A hero slot and two in-body slots point at `/blog/media/services/<slug>/01|02|03` for photographs Christopher will supply. Price, timeline, and a client example stay in the visible `PLACEHOLDER — needs Christopher` block.
+- `#models` sits between the menu and the answer chapter: two CSS marquees, original brand colours, white marks on `#070706`. The seventeen former wordmarks are now files in `assets/logos/`. Baseten, Cerebras (letter), Cohere, Fal AI, Ideogram, xAI, Zhipu GLM, Stability, and BAAI are from `@lobehub/icons-static-svg` 1.95.1, with monochrome marks painted white. Cartesia and Groq are the official favicons. Parallel is the official mark, painted white. Google Gemma is the DeepMind dark-surface mark. Black Forest Labs FLUX is the official icon with the white plate removed and the mark painted white. Leonardo is the official electric-purple docs icon, a PNG because no SVG was available. gpt-oss and Whisper reuse the OpenAI mark already on the strip, with the name beside it. Earlier marks from Simple Icons are unchanged.
+- `scripts/site-pages.mjs` writes `/services/`, `/portfolio/`, `/products/`, and `/course/llm-leverage/`, plus sitemap, `llms.txt`, and `_redirects` entries outside the blog markers. JSON-LD states only facts already on the site. Price, client approval, and unpublished module names stay in a visible `PLACEHOLDER — needs Christopher` block and stay out of the graph. There is no Offer and no AggregateRating.
+- Panel copy on the homepage is shorter, body text uses the ink colour, and labels that were under 0.75rem are now at least that size.
 
 ## Blog voice — 2026-10-14
 

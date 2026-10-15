@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-blog.mjs",
-    "test": "node scripts/build-blog.mjs && node --test tests/*.test.mjs",
+    "build": "BLOG_AS_OF=2026-10-14 node scripts/build-blog.mjs && node scripts/site-pages.mjs",
+    "test": "BLOG_AS_OF=2026-10-14 node scripts/build-blog.mjs && node scripts/site-pages.mjs && node --test tests/*.test.mjs",
     "preview": "wrangler dev",
     "deploy": "wrangler deploy"
   },

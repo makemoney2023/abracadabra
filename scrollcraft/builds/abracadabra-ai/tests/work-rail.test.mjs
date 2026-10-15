@@ -48,6 +48,7 @@ test("the work rail plays Getting started and no other Super Funnel cut", () => 
 test("the work list counts Super Funnel as the film on file", () => {
   assert.match(index, /"numberOfItems": 5/);
   assert.match(index, /"name": "Super Funnel"/);
-  assert.match(index, /"url": "https:\/\/abra-ca-dabra\.app\/films\.html"/);
-  assert.match(index, /"dateModified": "2026-10-07"/);
+  assert.match(index, /"url": "https:\/\/abra-ca-dabra\.app\/products\/super-funnel\/"/);
+  assert.match(index, /"sameAs": "https:\/\/abra-ca-dabra\.app\/films\.html"/);
+  assert.match(index, /"dateModified": "2026-10-15"/);
 });

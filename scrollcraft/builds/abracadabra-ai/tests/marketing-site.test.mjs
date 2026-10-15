@@ -13,6 +13,9 @@ const mimeTypes = {
   '.js': 'text/javascript; charset=utf-8',
   '.mp4': 'video/mp4',
   '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
 };
 
 let browser;
@@ -179,7 +182,7 @@ test('mobile selected work renders complete vertical cards', async () => {
 });
 
 test('required responsive widths do not create horizontal page overflow', async () => {
-  for (const width of [320, 390, 430, 768, 1280, 1440, 1920]) {
+  for (const width of [320, 375, 390, 430, 768, 1024, 1280, 1440, 1920]) {
     const { context, page } = await openPage({ width, height: width < 500 ? 844 : 1000 });
     const dimensions = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
@@ -190,6 +193,36 @@ test('required responsive widths do not create horizontal page overflow', async 
       dimensions.scrollWidth <= dimensions.clientWidth,
       `${width}px viewport overflows by ${dimensions.scrollWidth - dimensions.clientWidth}px`,
     );
+    await context.close();
+  }
+});
+
+test('inner pages stay inside the viewport at the required widths', async () => {
+  const paths = [
+    '/services/index.html',
+    '/services/ai-assistants-and-agents/index.html',
+    '/services/ai-visibility/index.html',
+    '/portfolio/index.html',
+    '/portfolio/pirx/index.html',
+    '/products/index.html',
+    '/course/llm-leverage/index.html',
+    '/blog/index.html',
+    '/blog/ai-readiness-assessment/index.html',
+  ];
+
+  for (const width of [375, 768, 1024, 1440, 1920]) {
+    const { context, page } = await openPage({ width, height: width < 500 ? 812 : 1000 });
+    for (const path of paths) {
+      await page.goto(`${origin}${path}`, { waitUntil: 'domcontentloaded' });
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      assert.ok(
+        dimensions.scrollWidth <= dimensions.clientWidth,
+        `${path} at ${width}px overflows by ${dimensions.scrollWidth - dimensions.clientWidth}px`,
+      );
+    }
     await context.close();
   }
 });
@@ -240,14 +273,14 @@ test('operation compiler engineers intent and context before the parallel agent 
 test('desktop scroll drives every pinned sequence and page progress', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000 });
   const engines = {
-    '#i': '.compiler',
+    '#compiler': '.compiler',
     '#time': '.time-engine',
     '#range': '.range-engine',
     '#aeo': '.aeo-engine',
   };
 
   for (const [selector, expectedState] of [
-    ['#i', 'run'],
+    ['#compiler', 'run'],
     ['#time', 'arrive'],
     ['#range', 'commerce'],
     ['#aeo', 'measure'],
@@ -284,21 +317,224 @@ test('dedicated AEO chapter explains the mechanism, proof, and next steps', asyn
   );
   assert.equal(await aeo.getByRole('link', { name: 'Run the Readiness Check' }).getAttribute('href'), 'https://check.abra-ca-dabra.app/check');
   assert.equal(await aeo.getByRole('link', { name: 'Open Schema' }).getAttribute('href'), 'https://schema-two.vercel.app/');
-  assert.match(await aeo.textContent(), /201K/);
-  assert.match(await aeo.textContent(), /21\.8K/);
-  assert.match(await aeo.textContent(), /Google Search Console/);
+  const aeoText = await aeo.textContent();
+  assert.match(aeoText, /375K/);
+  assert.match(aeoText, /43\.5K/);
+  assert.match(aeoText, /1\.85K/);
+  assert.match(aeoText, /7\.6/);
+  assert.match(aeoText, /Jul 14 to Oct 13, 2026/);
+  assert.doesNotMatch(aeoText, /201K|21\.8K|\bCTR\b|traffic|revenue/);
 
   await aeo.getByRole('button', { name: 'Measure' }).click();
   assert.equal(await aeo.locator('.aeo-engine').getAttribute('data-active-state'), 'measure');
   await context.close();
 });
 
-test('Aramaic origin sits directly under the hero', async () => {
+test('footer link row stays below the hero on a phone', async () => {
+  const { context, page } = await openPage({ width: 390, height: 844 });
+  const placement = await page.evaluate(() => {
+    const hero = document.querySelector('#i .hero').getBoundingClientRect();
+    const foot = document.querySelector('.site-foot').getBoundingClientRect();
+    const intersects = foot.top < hero.bottom && foot.bottom > hero.top
+      && foot.left < hero.right && foot.right > hero.left;
+    return {
+      footTop: foot.top,
+      heroBottom: hero.bottom,
+      intersects,
+      position: getComputedStyle(document.querySelector('.site-foot')).position,
+    };
+  });
+
+  assert.equal(placement.intersects, false);
+  assert.ok(
+    placement.footTop >= placement.heroBottom - 1,
+    `footer top ${placement.footTop} overlaps hero bottom ${placement.heroBottom} (${placement.position})`,
+  );
+  await context.close();
+});
+
+test('site nav uses a compact menu under 768px and a full bar from 768px', async () => {
+  const phone = await openPage({ width: 390, height: 844 });
+  assert.equal(await phone.page.locator('.site-nav__toggle').count(), 1);
+  const closed = await phone.page.locator('.site-nav__links a', { hasText: 'Course' }).evaluate((link) => {
+    const rect = link.getBoundingClientRect();
+    return rect.width === 0 || rect.height === 0;
+  });
+  assert.equal(closed, true);
+  await phone.page.locator('.site-nav__toggle').click();
+  const opened = await phone.page.locator('.site-nav__links a').evaluateAll((links) => links.map((link) => {
+    const rect = link.getBoundingClientRect();
+    return {
+      bottom: rect.bottom,
+      left: rect.left,
+      right: rect.right,
+      text: link.textContent.trim(),
+      top: rect.top,
+      viewport: innerWidth,
+    };
+  }));
+  for (const name of ['Course', 'Blog', 'Start a brief']) {
+    const link = opened.find((item) => item.text === name);
+    assert.ok(link, name);
+    assert.ok(link.left >= 0 && link.right <= link.viewport + 1, `${name} is clipped`);
+    assert.ok(link.bottom > link.top, `${name} is hidden`);
+  }
+  const phoneOverflow = await phone.page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  assert.ok(phoneOverflow.scrollWidth <= phoneOverflow.clientWidth);
+  await phone.context.close();
+
+  const service = await openPage({ width: 375, height: 812 });
+  await service.page.goto(`${origin}/services/ai-visibility/index.html`, { waitUntil: 'domcontentloaded' });
+  assert.equal(await service.page.locator('.site-nav__toggle').count(), 1);
+  await service.page.locator('.site-nav__toggle').click();
+  const serviceLinks = await service.page.locator('.site-nav__links a').evaluateAll((links) => links.map((link) => {
+    const rect = link.getBoundingClientRect();
+    return { right: rect.right, text: link.textContent.trim(), viewport: innerWidth };
+  }));
+  for (const name of ['Course', 'Blog']) {
+    const link = serviceLinks.find((item) => item.text === name);
+    assert.ok(link && link.right <= link.viewport + 1, name);
+  }
+  await service.context.close();
+
+  const tablet = await openPage({ width: 768, height: 1000 });
+  assert.equal(
+    await tablet.page.locator('.site-nav__toggle').evaluate((toggle) => getComputedStyle(toggle).display),
+    'none',
+  );
+  const bar = await tablet.page.locator('.site-nav__links a').evaluateAll((links) => links.map((link) => {
+    const rect = link.getBoundingClientRect();
+    return {
+      height: rect.height,
+      left: rect.left,
+      right: rect.right,
+      text: link.textContent.trim(),
+      viewport: innerWidth,
+    };
+  }));
+  for (const name of ['Services', 'Portfolio', 'Products', 'Course', 'Blog', 'Start a brief']) {
+    const link = bar.find((item) => item.text === name);
+    assert.ok(link, name);
+    assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
+    assert.ok(link.height >= 44, `${name} target is under 44px`);
+  }
+  await tablet.context.close();
+});
+
+test('hero copy is a left column, with actions in a row from 1024px and stacked below', async () => {
+  const desktop = await openPage({ width: 1280, height: 900 });
+  const wide = await desktop.page.locator('#i .hero').evaluate((hero) => {
+    const copy = hero.querySelector('.hero__copy').getBoundingClientRect();
+    const pad = Number.parseFloat(getComputedStyle(hero).paddingLeft);
+    const buttons = [...hero.querySelectorAll('.cta a')].map((link) => link.getBoundingClientRect());
+    return {
+      align: getComputedStyle(hero).textAlign,
+      buttons: buttons.map((box) => ({ left: box.left, top: box.top, width: box.width })),
+      copyLeft: copy.left,
+      direction: getComputedStyle(hero.querySelector('.cta')).flexDirection,
+      heroLeft: hero.getBoundingClientRect().left,
+      pad,
+    };
+  });
+  assert.equal(wide.align, 'left');
+  assert.equal(wide.direction, 'row');
+  assert.ok(Math.abs(wide.copyLeft - (wide.heroLeft + wide.pad)) < 4);
+  assert.ok(Math.abs(wide.buttons[0].top - wide.buttons[1].top) < 4);
+  assert.ok(wide.buttons[1].left > wide.buttons[0].left + 8);
+  await desktop.context.close();
+
+  for (const width of [375, 768]) {
+    const narrow = await openPage({ width, height: width < 500 ? 812 : 1000 });
+    const stacked = await narrow.page.locator('#i .hero').evaluate((hero) => {
+      const copy = hero.querySelector('.hero__copy').getBoundingClientRect();
+      const buttons = [...hero.querySelectorAll('.cta a')].map((link) => link.getBoundingClientRect());
+      return {
+        align: getComputedStyle(hero).textAlign,
+        buttons: buttons.map((box) => ({ bottom: box.bottom, top: box.top, width: box.width })),
+        copyWidth: copy.width,
+        direction: getComputedStyle(hero.querySelector('.cta')).flexDirection,
+      };
+    });
+    assert.equal(stacked.align, 'left', `${width}px`);
+    assert.equal(stacked.direction, 'column', `${width}px`);
+    assert.ok(stacked.buttons[1].top >= stacked.buttons[0].bottom - 1, `${width}px buttons overlap`);
+    assert.ok(stacked.buttons[0].width >= stacked.copyWidth - 2, `${width}px primary is not full width`);
+    assert.ok(stacked.buttons[1].width >= stacked.copyWidth - 2, `${width}px secondary is not full width`);
+    await narrow.context.close();
+  }
+});
+
+test('service page heroes use the same left column and stacked actions', async () => {
+  const desktop = await openPage({ width: 1024, height: 900 });
+  await desktop.page.goto(`${origin}/services/ai-visibility/index.html`, { waitUntil: 'domcontentloaded' });
+  const wide = await desktop.page.locator('main.site-page').evaluate((main) => {
+    const heading = main.querySelector(':scope > h1').getBoundingClientRect();
+    const actions = main.querySelector('.sales-actions');
+    const buttons = [...actions.querySelectorAll('a')].map((link) => link.getBoundingClientRect());
+    return {
+      align: getComputedStyle(main.querySelector(':scope > h1')).textAlign,
+      direction: getComputedStyle(actions).flexDirection,
+      headingLeft: heading.left,
+      mainLeft: main.getBoundingClientRect().left,
+      secondLeft: buttons[1].left,
+      tops: buttons.map((box) => box.top),
+    };
+  });
+  assert.equal(wide.align, 'left');
+  assert.equal(wide.direction, 'row');
+  assert.ok(Math.abs(wide.headingLeft - wide.mainLeft) < 2);
+  assert.ok(Math.abs(wide.tops[0] - wide.tops[1]) < 4);
+  assert.ok(wide.secondLeft > wide.mainLeft + 8);
+  await desktop.context.close();
+
+  const phone = await openPage({ width: 375, height: 812 });
+  await phone.page.goto(`${origin}/services/ai-assistants-and-agents/index.html`, { waitUntil: 'domcontentloaded' });
+  const stacked = await phone.page.locator('main.site-page').evaluate((main) => {
+    const actions = main.querySelector('.sales-actions');
+    const actionBox = actions.getBoundingClientRect();
+    const buttons = [...actions.querySelectorAll('a')].map((link) => link.getBoundingClientRect());
+    return {
+      align: getComputedStyle(main.querySelector(':scope > h1')).textAlign,
+      direction: getComputedStyle(actions).flexDirection,
+      headingLeft: main.querySelector(':scope > h1').getBoundingClientRect().left,
+      mainLeft: main.getBoundingClientRect().left,
+      primaryWidth: buttons[0].width,
+      secondaryTop: buttons[1].top,
+      primaryBottom: buttons[0].bottom,
+      width: actionBox.width,
+    };
+  });
+  assert.equal(stacked.align, 'left');
+  assert.equal(stacked.direction, 'column');
+  assert.ok(Math.abs(stacked.headingLeft - stacked.mainLeft) < 2);
+  assert.ok(stacked.secondaryTop >= stacked.primaryBottom - 1);
+  assert.ok(stacked.primaryWidth >= stacked.width - 2);
+  await phone.context.close();
+});
+
+test('compiler section paints below the hero on a phone', async () => {
+  const { context, page } = await openPage({ width: 390, height: 844 });
+  const gap = await page.evaluate(() => {
+    const hero = document.querySelector('#i').getBoundingClientRect();
+    const compiler = document.querySelector('#compiler').getBoundingClientRect();
+    return { compilerTop: compiler.top, heroBottom: hero.bottom, insideHero: document.querySelector('#i .compiler') !== null };
+  });
+  assert.equal(gap.insideHero, false);
+  assert.ok(gap.compilerTop >= gap.heroBottom - 1);
+  await context.close();
+});
+
+test('compiler sits directly under the hero, then the Aramaic origin', async () => {
   const { context, page } = await openPage();
   const order = await page.locator('main > section').evaluateAll((sections) =>
     sections.slice(0, 3).map((section) => section.id || section.getAttribute('aria-labelledby')),
   );
-  assert.deepEqual(order, ['i', 'name', 'situation-title']);
+  assert.deepEqual(order, ['i', 'compiler', 'name']);
+  assert.equal(await page.locator('#i .compiler').count(), 0);
+  assert.equal(await page.locator('#compiler .compiler').count(), 1);
 
   const origin = page.locator('#name');
   assert.equal((await origin.getByRole('heading', { level: 2 }).textContent()).trim(), 'I will create as I speak.');
@@ -412,9 +648,11 @@ test('range chapter sits between time and the answer receipt', async () => {
   const ids = await page.locator('main > section').evaluateAll((sections) => sections.map((section) => section.id));
   const timeIndex = ids.indexOf('time');
   const rangeIndex = ids.indexOf('range');
+  const modelsIndex = ids.indexOf('models');
   const aeoIndex = ids.indexOf('aeo');
   assert.equal(rangeIndex, timeIndex + 1);
-  assert.equal(aeoIndex, rangeIndex + 1);
+  assert.equal(modelsIndex, rangeIndex + 1);
+  assert.equal(aeoIndex, modelsIndex + 1);
 
   const range = page.locator('#range');
   assert.equal(await range.getAttribute('data-specimen'), null);
@@ -447,7 +685,6 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.match(plate('model'), /your own data/);
   assert.match(plate('record'), /CRM or ERP/);
   assert.match(plate('commerce'), /lead generation/);
-  assert.match(plate('commerce'), /the next room is the receipt/i);
   assert.doesNotMatch(await page.content(), /ringside/i);
   assert.equal(await range.locator('[data-range-panel] a').count(), 0);
 
@@ -530,7 +767,7 @@ test('reduced motion stacks every range plate and hides its controls', async () 
   );
   assert.match(
     await page.locator('#range [data-range-panel="commerce"]').textContent(),
-    /the next room is the receipt/i,
+    /lead generation/,
   );
   await context.close();
 });

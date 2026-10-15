@@ -5,7 +5,7 @@
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
     <loc>https://abra-ca-dabra.app/</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -125,6 +125,116 @@
       <video:publication_date>2026-10-07</video:publication_date>
     </video:video>
   </url>
+  <!-- site-urls -->
+  <url>
+    <loc>https://abra-ca-dabra.app/services/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/ai-assistants-and-agents/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/answers-from-your-documents/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/any-model-one-bill/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/voice-and-realtime-agents/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/web-automation/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/safe-code-execution/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/custom-apps/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/ai-media/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/ai-visibility/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/services/search-grounded-research/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/showdesk/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/schema/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/llm-leverage/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/canadian-discount-appliances/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/super-funnel/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/pirx/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/superpatch-products/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/strongfoam-website/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/strongfoam-crm/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/renew-implants/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/products/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/products/showdesk/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/products/schema/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/products/super-funnel/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/course/llm-leverage/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+<!-- /site-urls -->
   <!-- blog-urls -->
   <url>
     <loc>https://abra-ca-dabra.app/blog</loc>

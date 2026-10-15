@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Abra-ca-dabra: From thought to working software</title>
-<meta name="description" content="We engineer the intent and context behind your software first, then AI agents design, build, and test it in parallel—directed by experienced people and grounded in working product proof.">
+<meta name="description" content="We engineer the intent and context behind your software first, then AI agents design, build, and test it in parallel, directed by experienced people and grounded in working product proof.">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 <meta name="author" content="Abracadabra AI">
 <meta name="theme-color" content="#0B0A08">
@@ -100,7 +101,7 @@
         "height": 1000
       },
       "datePublished": "2026-09-11",
-      "dateModified": "2026-10-07",
+      "dateModified": "2026-10-15",
       "inLanguage": "en",
       "hasPart": { "@id": "https://abra-ca-dabra.app/#work" },
       "mainEntity": { "@id": "https://abra-ca-dabra.app/#faq" }
@@ -119,7 +120,8 @@
           "item": {
             "@type": "SoftwareApplication",
             "name": "Showdesk",
-            "url": "https://www.showdesk-app.com/",
+            "url": "https://abra-ca-dabra.app/products/showdesk/",
+            "sameAs": "https://www.showdesk-app.com/",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
             "description": "Run a live event from entry through review, placements, and reports.",
@@ -133,7 +135,8 @@
           "item": {
             "@type": "SoftwareApplication",
             "name": "Schema",
-            "url": "https://schema-two.vercel.app/",
+            "url": "https://abra-ca-dabra.app/products/schema/",
+            "sameAs": "https://schema-two.vercel.app/",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
             "description": "Scores how visible a site is to answer engines and generates the repair.",
@@ -147,7 +150,8 @@
           "item": {
             "@type": "Course",
             "name": "LLM Leverage",
-            "url": "https://llm-leverage-course.vercel.app",
+            "url": "https://abra-ca-dabra.app/course/llm-leverage/",
+            "sameAs": "https://llm-leverage-course.vercel.app",
             "description": "A self-paced course for better answers from any model, plus a workshop path for a team rollout.",
             "provider": { "@id": "https://abra-ca-dabra.app/#org" },
             "image": "https://abra-ca-dabra.app/assets/llmcourse-home.webp"
@@ -159,7 +163,8 @@
           "item": {
             "@type": "WebSite",
             "name": "Canadian Discount Appliances",
-            "url": "https://cdastore.vercel.app/",
+            "url": "https://abra-ca-dabra.app/portfolio/canadian-discount-appliances/",
+            "sameAs": "https://cdastore.vercel.app/",
             "description": "A Kitchener appliance warehouse store that answers condition, warranty, and whether it fits the door, then offers a delivery you can book.",
             "creator": { "@id": "https://abra-ca-dabra.app/#org" },
             "image": "https://abra-ca-dabra.app/assets/cda-home.webp"
@@ -171,7 +176,8 @@
           "item": {
             "@type": "SoftwareApplication",
             "name": "Super Funnel",
-            "url": "https://abra-ca-dabra.app/films.html",
+            "url": "https://abra-ca-dabra.app/products/super-funnel/",
+            "sameAs": "https://abra-ca-dabra.app/films.html",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
             "description": "One associate app. The cut on this page is Getting started: home dashboard, setup, pipeline, and nav, 66 seconds.",
@@ -214,7 +220,7 @@
           "name": "What is the proof behind from zero to scale?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "pirx.ca launched with no search history and no answer-engine presence. In the twelve weeks before 2026-09-23, Google Search Console recorded 201K search impressions and 1.1K clicks, with 21.8K of those impressions coming from Google's Generative AI and AI Overviews surface alone, climbing from almost nothing in June to a daily peak over 1,600 by September. One post carried over 5,400 of those AI-surface impressions on its own. AEO, GEO, and SEO were run as one discipline."
+            "text": "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026, recorded 375K search impressions, 1.85K clicks, and an average position of 7.6 for pirx.ca. The Generative AI features report is a separate count of 43.5K impressions and is not added to the search total. Both curves start near zero in mid-July."
           }
         },
         {
@@ -319,7 +325,7 @@
 
   /* object index */
   .index {
-    position: fixed; inset: 0 0 auto 0; z-index: 40;
+    position: fixed; top: 3.25rem; left: 0; right: 0; z-index: 40;
     display: flex; gap: var(--sc-1); justify-content: flex-end;
     padding: var(--sc-3) var(--sc-gutter);
     font-family: var(--sc-font-mono); font-size: var(--sc-t-xs);
@@ -369,9 +375,11 @@
   .cta .cta--primary { background: var(--sc-accent); border-color: var(--sc-accent); color: var(--sc-accent-ink); }
   .cta .cta--primary:hover { background: color-mix(in oklab, var(--sc-accent) 86%, var(--sc-ink)); border-color: transparent; }
 
-  /* the hero behaves like a compiler, not a brochure */
-  #i > .sc-stage {
+  /* the hero is the film and the promise; the compiler is the next section */
+  #i > [data-sc-stage] {
     isolation: isolate;
+    position: relative;
+    min-height: 100svh;
     background: var(--sc-canvas);
   }
   .hero-backdrop {
@@ -385,30 +393,39 @@
   .hero-backdrop__scrim {
     position: absolute; inset: 0;
     background:
-      linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 56%, transparent) 0%, color-mix(in oklab, var(--sc-canvas) 30%, transparent) 44%, color-mix(in oklab, var(--sc-canvas) 78%, transparent) 100%),
-      radial-gradient(circle at 50% 45%, transparent 0 18%, color-mix(in oklab, var(--sc-canvas) 42%, transparent) 72%);
+      linear-gradient(to right, color-mix(in oklab, var(--sc-canvas) 84%, transparent) 0%, color-mix(in oklab, var(--sc-canvas) 46%, transparent) 36%, transparent 68%),
+      linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 64%, transparent) 0%, transparent 42%, color-mix(in oklab, var(--sc-canvas) 72%, transparent) 100%);
   }
   .hero {
-    position: relative; z-index: 1; height: 100%;
-    display: grid; grid-template-rows: auto minmax(0, 1fr);
-    align-items: stretch; gap: clamp(1.4rem, 3vh, 2.5rem);
-    padding: 5.8rem var(--sc-gutter) 4.6rem;
-    max-width: var(--sc-maxw); margin-inline: auto;
+    position: relative; z-index: 1; min-height: 100svh;
+    display: grid; place-items: center start; text-align: left;
+    padding: 6.5rem var(--sc-gutter) 4.5rem;
   }
   .hero__copy {
-    display: grid; grid-template-columns: minmax(8rem, 0.34fr) minmax(24rem, 1.2fr) minmax(18rem, 0.7fr);
-    gap: clamp(1.25rem, 3vw, 3.5rem); align-items: end; max-width: none;
+    display: grid; justify-items: start;
+    gap: clamp(1rem, 2.2vw, 1.75rem);
+    width: min(100%, 40rem); margin-inline: 0;
   }
-  .hero__eyebrow { color: var(--sc-accent); }
+  .hero__eyebrow { color: var(--sc-accent); margin: 0; }
   .hero__copy h1 {
     font-family: var(--sc-font-display); font-weight: 600;
-    font-size: clamp(3rem, 1.2rem + 4.8vw, 6.8rem); line-height: 0.9;
+    font-size: clamp(2.35rem, 1rem + 4.6vw, 6.2rem); line-height: 0.92;
     letter-spacing: -0.055em; margin: 0; text-wrap: balance;
   }
-  .hero__support { align-self: end; }
-  .hero__support .sc-lede { max-width: 32rem; margin: 0; }
-  .hero__copy .cta { margin-top: var(--sc-5); }
-  .hero__tag { display: none; }
+  .hero__support { width: min(100%, 36rem); }
+  .hero__support .sc-lede { max-width: 36rem; margin: 0; }
+  .hero__copy .cta { margin: 0; justify-content: flex-start; width: 100%; }
+  @media (max-width: 1023px) {
+    .hero__copy, .hero__support { width: 100%; }
+    .hero__copy .cta { flex-direction: column; align-items: stretch; }
+    .hero__copy .cta a { width: 100%; justify-content: center; }
+  }
+  .compiler-shell {
+    height: 100%; max-width: var(--sc-maxw); margin-inline: auto; width: 100%;
+    display: flex; align-items: stretch; justify-content: center;
+    padding: 6.2rem var(--sc-gutter) 4.6rem;
+  }
+  .compiler-shell .intent-demo { width: 100%; }
 
   /* signature mechanism: plain intent is engineered into a precise brief, then a parallel build, then product */
   .intent-demo {
@@ -484,7 +501,7 @@
   }
   .context-stream__head { display: grid; gap: var(--sc-2); }
   .context-stream__head [data-stream-name] {
-    font-family: var(--sc-font-mono); font-size: 0.62rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
   }
   .context-stream__head strong { font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15; text-wrap: balance; }
   .context-stream ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-2); }
@@ -494,7 +511,7 @@
   }
   .context-stream li::before {
     content: attr(data-kind); display: block; margin-bottom: var(--sc-2);
-    font-family: var(--sc-font-mono); font-size: 0.58rem; color: var(--sc-ink-soft); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-ink-soft); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
   }
   .context-stream li strong { font-family: var(--sc-font-display); font-size: clamp(0.78rem, 0.95vw, 0.95rem); line-height: 1.15; }
   .build-brief {
@@ -510,7 +527,7 @@
     border-radius: 50%; background: var(--sc-signal); box-shadow: 0 0 1.5rem var(--sc-signal);
   }
   .build-brief span {
-    font-family: var(--sc-font-mono); font-size: 0.62rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
   }
   .build-brief strong { font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15; text-wrap: balance; }
   .build-brief p { margin: 0; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); line-height: 1.4; }
@@ -545,7 +562,7 @@
   .agent-brief::after { left: 100%; }
   .agent-convergence::before { right: 100%; }
   .agent-brief span, .agent-convergence span {
-    font-family: var(--sc-font-mono); font-size: 0.62rem; color: var(--sc-optic);
+    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-optic);
     letter-spacing: var(--sc-track-wide); text-transform: uppercase;
   }
   .agent-brief strong, .agent-convergence strong {
@@ -575,7 +592,7 @@
   }
   .agent-track > * { position: relative; z-index: 1; }
   .agent-track__role {
-    display: grid; gap: 0.1rem; font-family: var(--sc-font-mono); font-size: 0.62rem;
+    display: grid; gap: 0.1rem; font-family: var(--sc-font-mono); font-size: 0.75rem;
     letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-optic);
   }
   .agent-track__role small { color: var(--sc-ink-soft); letter-spacing: 0; text-transform: none; }
@@ -648,8 +665,8 @@
   .receipt .sc-body { max-width: 66ch; }
   .receipt .receipt__source { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); letter-spacing: var(--sc-track-wide); text-transform: uppercase; margin: 0; }
 
-  .origin { max-width: 46rem; }
-  .origin h2 { margin: var(--sc-3) 0 var(--sc-5); max-width: 16ch; text-wrap: balance; }
+  .origin { max-width: 46rem; margin-inline: auto; text-align: center; }
+  .origin h2 { margin: var(--sc-3) auto var(--sc-5); max-width: 16ch; text-wrap: balance; }
   .origin .sc-body + .sc-body { margin-top: var(--sc-4); }
   .origin em { font-style: italic; color: var(--sc-accent); }
 
@@ -994,7 +1011,7 @@
   .item { width: min(42vw, 34rem); flex: none; }
   .item figure { margin: 0 0 var(--sc-4); }
   .item img, .item video { display: block; width: 100%; height: 54vh; object-fit: cover; object-position: top; border: 1px solid var(--sc-hairline); background: #0B0A08; }
-  .item h2 { margin: var(--sc-2) 0 var(--sc-3); }
+  .item h2, .item h3 { margin: var(--sc-2) 0 var(--sc-3); }
   .item .sc-body + .sc-body { margin-top: var(--sc-3); }
   .item--range { align-self: center; padding: var(--sc-6) var(--sc-6); border: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-surface) 70%, transparent); }
   .item--range .sc-lede { margin: 0; }
@@ -1074,28 +1091,23 @@
   .inquiry .label > .sc-body + .sc-body { margin-top: var(--sc-3); }
   .inquiry dl { margin-top: var(--sc-5); }
   .inquiry .cta { margin-top: var(--sc-5); }
-  .foot { position: absolute; inset: auto 0 5.8rem 0; display: flex; justify-content: center; gap: var(--sc-4); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); font-family: var(--sc-font-mono); letter-spacing: var(--sc-track-wide); text-transform: uppercase; padding-inline: var(--sc-gutter); flex-wrap: wrap; margin: 0; }
-  .foot a { color: inherit; text-decoration: none; }
-  .foot a:hover { color: var(--sc-accent); }
+  .foot, .site-foot { position: absolute; inset: auto 0 5.8rem 0; display: flex; justify-content: center; gap: var(--sc-4); font-size: 0.75rem; color: var(--sc-ink-soft); font-family: var(--sc-font-mono); letter-spacing: var(--sc-track-wide); text-transform: uppercase; padding-inline: var(--sc-gutter); flex-wrap: wrap; margin: 0; }
+  .foot a, .site-foot a { color: inherit; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+  .foot a:hover, .site-foot a:hover { color: var(--sc-accent); }
 
-  @media (max-width: 860px) {
+  @media (max-width: 1100px) {
     .index { padding: var(--sc-2) var(--sc-gutter); align-items: center; }
     .index a[data-index] { display: none; }
     .index .index__home { min-width: 44px; font-size: 0; }
     .index .index__home::before { content: "A"; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); color: var(--sc-accent); }
     .index__current { display: block; margin: 0 0 0 auto; color: var(--sc-ink-soft); }
     .utterance { display: none; }
-    #i { height: auto !important; }
-    #i > [data-sc-stage] { position: relative; top: auto; height: auto; }
-    .hero {
-      height: auto; grid-template-rows: auto auto; align-content: start; gap: var(--sc-5);
-      padding: 5rem var(--sc-gutter) 4.6rem; overflow: visible;
-    }
-    .hero__copy { grid-template-columns: 1fr; gap: var(--sc-4); }
-    .hero__copy h1 { font-size: clamp(2rem, 1.2rem + 4.6vw, 2.8rem); }
+    #i, #compiler { height: auto !important; }
+    #i > [data-sc-stage], #compiler > [data-sc-stage] { position: relative; top: auto; height: auto; min-height: 0; }
+    .hero { min-height: 100svh; padding: 5.5rem var(--sc-gutter) 3.5rem; }
+    .hero__copy h1 { font-size: clamp(2.15rem, 8vw, 3.4rem); }
     .hero__copy .sc-lede { font-size: var(--sc-t-base); }
-    .hero__copy .cta { margin-top: var(--sc-5); }
-    .hero__tag { display: block; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-ink-soft); }
+    .compiler-shell { height: auto; padding: 4.2rem var(--sc-gutter); }
     .intent-demo { min-height: 31rem; }
     .intent-demo__viewport { min-height: 22.5rem; }
     .intent-demo__chrome { min-height: 2.75rem; }
@@ -1177,7 +1189,19 @@
     .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-4); }
     .figures dd { font-size: var(--sc-t-2xl); }
     .receipt .sc-body { font-size: var(--sc-t-sm); }
-    .situation, .enable, .faq { grid-template-columns: 1fr; }
+    .situation, .enable, .faq { grid-template-columns: 1fr; justify-items: center; }
+    .situation > *, .enable > *, .faq > * { width: min(100%, 46rem); }
+    .situation { text-align: center; }
+    .situation h2 { margin-inline: auto; }
+    .situation .name { border-left: 0; padding-left: 0; }
+    .situation .sc-body { margin-inline: auto; }
+    .enable h2, .faq > h2 { text-align: center; margin-inline: auto; }
+    .enable .cta, .benefits__head { justify-content: center; }
+    .time-copy, .aeo-copy, .range-copy { margin-inline: auto; text-align: center; }
+    .time-copy .sc-body, .aeo-copy .sc-body, .range-copy .sc-body { margin-inline: auto; }
+    .receipt { text-align: center; }
+    .receipt h2, .receipt .sc-body { margin-inline: auto; }
+    .proofbar li { align-items: center; text-align: center; }
     .proofbar { grid-template-columns: 1fr 1fr; }
     .spread { grid-template-columns: 1fr; min-height: 0; }
     .spread img, .item img, .item video { height: 42vh; }
@@ -1213,10 +1237,13 @@
     .film-toggle { display: inline-flex; float: right; margin: 0 0 var(--sc-2) var(--sc-3); }
     .film-details { clear: both; max-height: 36vh; overflow: auto; }
     #film .film-details .sc-body { font-size: var(--sc-t-sm); }
-    .inquiry { padding: 4rem var(--sc-gutter) 6rem; }
+    .inquiry { padding: 4rem var(--sc-gutter) 2rem; }
     .inquiry .label { padding: var(--sc-5); }
     .inquiry h2 { font-size: var(--sc-t-xl); }
-    .foot { bottom: 3rem; }
+    .foot, .site-foot {
+      position: static; inset: auto; justify-content: flex-start;
+      padding: 0.4rem var(--sc-gutter) 2.5rem;
+    }
   }
 
   @media (max-width: 360px) {
@@ -1270,9 +1297,149 @@
     }
     .range-controls { display: none; }
   }
+
+  .site-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 45; min-width: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    height: 3.25rem; padding: 0 var(--sc-gutter);
+    background: color-mix(in oklab, var(--sc-canvas) 92%, transparent);
+    border-bottom: 1px solid var(--sc-hairline);
+    font-family: var(--sc-font-mono); font-size: 0.75rem;
+    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  .site-nav__mark {
+    font-family: var(--sc-font-display); color: var(--sc-ink); text-decoration: none;
+    letter-spacing: 0.02em; text-transform: none; white-space: nowrap;
+  }
+  .site-nav__menu { display: none; align-items: center; }
+  .site-nav__toggle {
+    display: none; list-style: none; cursor: pointer;
+    min-height: 44px; min-width: 44px; align-items: center; justify-content: center;
+    padding: 0 0.75rem; border: 1px solid var(--sc-hairline); color: var(--sc-ink);
+  }
+  .site-nav__toggle::-webkit-details-marker { display: none; }
+  .site-nav__toggle:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 3px; }
+  .site-nav__links { display: flex; gap: 0.85rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0; }
+  .site-nav__links a {
+    color: var(--sc-ink-soft); text-decoration: none; white-space: nowrap;
+    min-height: 44px; display: inline-flex; align-items: center;
+  }
+  .site-nav__links a:hover, .site-nav__links a:focus-visible { color: var(--sc-ink); }
+  .site-nav__cta { color: var(--sc-ink); border: 1px solid var(--sc-accent); padding: 0 0.7rem; }
+  @media (max-width: 900px) and (min-width: 768px) {
+    .site-nav { letter-spacing: 0.02em; gap: 0.6rem; }
+    .site-nav__links { gap: 0.4rem; }
+  }
+  @media (max-width: 767px) {
+    .site-nav__menu { display: flex; }
+    .site-nav__toggle { display: inline-flex; }
+    .site-nav__links { display: none; }
+    .site-nav__menu[open] ~ .site-nav__links {
+      display: flex; flex-direction: column; align-items: stretch;
+      position: absolute; top: 100%; right: 0; left: auto;
+      width: min(18rem, calc(100vw - 1.5rem)); max-width: 100%;
+      margin: 0; padding: 0.35rem 0.85rem 0.6rem; overflow: visible;
+      background: color-mix(in oklab, var(--sc-canvas) 96%, transparent);
+      border: 1px solid var(--sc-hairline); z-index: 2;
+    }
+  }
+  h1, h2, h3, .sc-display { text-wrap: balance; hyphens: auto; }
+  .sc-body, .time-panel p, .range-panel p, .aeo-panel p:not(.sc-label), .benefits__set p, .build-brief p {
+    color: var(--sc-ink); font-size: var(--sc-t-sm); max-width: 65ch; text-wrap: pretty;
+  }
+  .hero, .time-shell, .aeo-shell, .range-shell, .benefits, .inquiry { padding-top: 8.6rem; }
+  .benefits__set li ul { list-style: disc; margin: var(--sc-3) 0 0; padding-left: 1.2rem; }
+  .benefits__set li li { border-top: 0; padding-top: 0.2rem; color: var(--sc-ink); }
+  .models { padding: 4.5rem 0 2.5rem; }
+  .models__label {
+    font-family: var(--sc-font-display); font-size: 0.75rem; font-weight: 600;
+    letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-optic);
+    margin: 0 auto 1.4rem; text-align: center;
+  }
+  .marquee {
+    --marquee-duration: 90s; overflow: hidden; margin-bottom: 0.85rem;
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee:focus { outline: 1px solid var(--sc-optic); outline-offset: 4px; }
+  .marquee__track {
+    display: flex; width: max-content;
+    animation: models-marquee var(--marquee-duration) linear infinite;
+  }
+  .marquee--reverse .marquee__track { animation-direction: reverse; }
+  .marquee:hover .marquee__track, .marquee:focus-within .marquee__track { animation-play-state: paused; }
+  @keyframes models-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .marquee__list {
+    display: flex; gap: 2.2rem; align-items: center; list-style: none;
+    margin: 0; padding: 0.7rem 1.1rem 0.7rem 0;
+  }
+  .marquee__list li {
+    display: inline-flex; align-items: center; gap: 0.55rem; color: #F5F0E8;
+    white-space: nowrap; font-family: var(--sc-font-display); font-size: 0.95rem;
+  }
+  .marquee__list img { width: 1.6rem; height: 1.6rem; display: block; object-fit: contain; }
+  .marquee__word { color: #F5F0E8; }
+  .marquee__word--light { color: #fff; }
+  .services { padding: 5rem 0 4rem; }
+  .services__kicker {
+    font-family: var(--sc-font-mono); font-size: 0.75rem; letter-spacing: var(--sc-track-wide);
+    text-transform: uppercase; color: var(--sc-optic); margin: 0 0 0.8rem; text-align: center;
+  }
+  .services .sc-display { text-align: center; margin-inline: auto; max-width: 18ch; }
+  .services__grid { list-style: none; margin: var(--sc-6) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .services__grid a {
+    display: block; min-height: 44px; padding: 1.2rem 1.15rem; text-decoration: none; color: inherit;
+    border: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-surface) 72%, transparent);
+  }
+  .services__grid a:hover, .services__grid a:focus-visible { border-color: var(--sc-accent); }
+  .services__grid h3 { margin: 0 0 0.55rem; font-size: var(--sc-t-lg); text-wrap: balance; overflow-wrap: anywhere; }
+  .services__grid p { margin: 0 0 0.85rem; }
+  .services__tag {
+    margin: 0; color: var(--sc-optic); font-family: var(--sc-font-mono); font-size: 0.75rem;
+    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
+  }
+  @media (max-width: 860px) {
+    .services__grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee { mask-image: none; overflow: visible; }
+    .marquee__track { animation: none; flex-wrap: wrap; width: auto; }
+    .marquee__list[aria-hidden="true"] { display: none; }
+  }
+  /* pinned compiler stays one viewport so its controls stay clickable under both bars */
+  @media (min-width: 1101px) {
+    .compiler-shell { min-height: 0; }
+    .compiler-shell .intent-demo { min-height: 0; height: 100%; display: flex; flex-direction: column; }
+    .compiler-shell .intent-demo__viewport { flex: 1 1 auto; min-height: 0; height: auto; }
+  }
 </style>
 </head>
 <body>
+
+<!-- SITE-NAV -->
+<header class="site-nav">
+  <a class="site-nav__mark" href="/">Abracadabra AI</a>
+  <details class="site-nav__menu">
+    <summary class="site-nav__toggle">Menu</summary>
+  </details>
+  <nav class="site-nav__links" aria-label="Site">
+    <a href="/services/">Services</a>
+    <a href="/portfolio/">Portfolio</a>
+    <a href="/products/">Products</a>
+    <a href="/course/llm-leverage/">Course</a>
+    <a href="/blog">Blog</a>
+    <a class="site-nav__cta" href="/#brief">Start a brief</a>
+  </nav>
+</header>
+<script>
+  document.querySelectorAll(".site-nav").forEach(function (bar) {
+    var menu = bar.querySelector(".site-nav__menu");
+    if (!menu) return;
+    bar.addEventListener("click", function (event) {
+      if (event.target.closest("a")) menu.open = false;
+    });
+  });
+</script>
+<!-- /SITE-NAV -->
 
 <div class="signal-rail" aria-hidden="true"><span></span></div>
 
@@ -1296,7 +1463,7 @@
 <main id="top">
 
   <!-- Act 1: the operation compiler -->
-  <section id="i" data-sc-act="pin" data-sc-span="2.35" data-specimen="i" aria-labelledby="hero-title">
+  <section id="i" data-sc-act="flow" data-specimen="i" aria-labelledby="hero-title">
     <div data-sc-stage>
       <div class="hero-backdrop" aria-hidden="true">
         <video class="hero-backdrop__video" autoplay muted loop playsinline preload="metadata">
@@ -1305,21 +1472,27 @@
         <div class="hero-backdrop__scrim"></div>
       </div>
       <div class="hero">
-        <div class="hero__copy" data-sc-cue="0 0.94 0">
+        <div class="hero__copy">
           <p class="sc-label hero__eyebrow">Software at the speed of thought</p>
           <h1 id="hero-title">From thought to working software.</h1>
           <div class="hero__support">
-            <p class="sc-lede">Tell us what should exist. We engineer the intent and context behind it—then coordinated AI agents design, build, and test the system in parallel, while experienced people direct every decision.</p>
+            <p class="sc-lede">Tell us what should exist. We engineer the intent and context behind it. Coordinated AI agents design, build, and test in parallel, while experienced people direct every decision.</p>
             <p class="cta">
               <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Show%20you%20how%20it%20works">Show us how it works</a>
               <a href="#iii">See what we've built</a>
             </p>
-            <p class="hero__tag">Intent and context engineered first. Five coordinated workstreams. One running system.</p>
           </div>
         </div>
-        <div class="intent-demo compiler" data-active-state="describe" data-sc-cue="0 0.94 0" aria-label="How a business operation becomes working software">
+      </div>
+    </div>
+  </section>
+
+  <section id="compiler" data-sc-act="pin" data-sc-span="2.35" aria-labelledby="compiler-heading">
+    <div data-sc-stage>
+      <div class="compiler-shell">
+        <div class="intent-demo compiler" data-active-state="describe" aria-label="How a business operation becomes working software">
           <div class="intent-demo__chrome">
-            <p class="sc-label">Thought → working software</p>
+            <p class="sc-label" id="compiler-heading">Thought → working software</p>
             <p class="sc-label intent-demo__status" data-compiler-status aria-live="polite">Listening</p>
           </div>
           <div class="intent-demo__viewport">
@@ -1429,8 +1602,7 @@
       <div class="origin" data-sc-in>
         <p class="sc-label">The name</p>
         <h2 id="name-title" class="sc-display sc-display--md">I will create as I speak.</h2>
-        <p class="sc-body">Abracadabra, traced back far enough, is Aramaic — roughly <em>avra kadavra</em>. Not a spell. A description of the actual mechanism: you say what you mean, and something real comes into being.</p>
-        <p class="sc-body">That's the business, minus the theatrics. Say the process, the exceptions, the words your team already uses, and we turn that description into a running system. The speech is the brief: the intent, the context, the constraints nobody wrote down. The creation is production software, not a mockup.</p>
+        <p class="sc-body">Abracadabra, traced back far enough, is Aramaic, roughly <em>avra kadavra</em>. Not a spell: you say what you mean, and that description becomes production software.</p>
       </div>
     </div>
   </section>
@@ -1493,19 +1665,19 @@
           <div class="time-captions">
             <section class="time-panel" data-time-panel="conventional" aria-labelledby="time-panel-conventional">
               <h3 id="time-panel-conventional">The serial calendar</h3>
-              <p>Each phase waits for the previous one to finish, then waits again for the <strong>handoff</strong> to be understood. Most of the calendar is dead air between people.</p>
+              <p>Each phase waits on a <strong>handoff</strong>.</p>
             </section>
             <section class="time-panel" data-time-panel="engineer" aria-labelledby="time-panel-engineer">
               <h3 id="time-panel-engineer">Front-load the thinking</h3>
-              <p>Discovery and specification collapse into <strong>one engineered brief</strong>: intent, constraints, acceptance criteria, and the context every agent needs before a single file is written.</p>
+              <p>Discovery and specification collapse into <strong>one engineered brief</strong>.</p>
             </section>
             <section class="time-panel" data-time-panel="parallel" aria-labelledby="time-panel-parallel">
               <h3 id="time-panel-parallel">Run everything at once</h3>
-              <p>With the brief settled, design, build, test, and release stop queueing behind each other. <strong>Five workstreams</strong> move in parallel against the same specification, and the handoff gaps vanish.</p>
+              <p><strong>Five workstreams</strong> move at once against the same brief.</p>
             </section>
             <section class="time-panel" data-time-panel="arrive" aria-labelledby="time-panel-arrive">
               <h3 id="time-panel-arrive">Arrive before you were due</h3>
-              <p>The same scope ships while the conventional plan is still in review. Nothing was skipped. The waiting was removed, and from the outside that <strong>feels like magic</strong>.</p>
+              <p>The same scope ships early, and that <strong>feels like magic</strong>.</p>
             </section>
           </div>
           <div class="time-controls" aria-label="Time travel sequence">
@@ -1528,7 +1700,7 @@
           <h2 id="range-title">The only limit is what you can think of.</h2>
           <p class="sc-body">Pick one service or all of them. Each is built around how your company already works.</p>
           <p class="sc-body">Nothing on this menu is fixed. If you can describe it, we can build it.</p>
-          <p class="range-next"><a href="#aeo">The answer is next</a></p>
+          <p class="range-next"><a href="#models">The models are next</a></p>
         </div>
         <div class="range-engine" data-active-state="market" aria-label="The kinds of digital work Abracadabra builds.">
           <canvas class="range-bg" aria-hidden="true" data-bg-state="market"></canvas>
@@ -1564,7 +1736,6 @@
               <section class="range-panel" data-range-panel="commerce" aria-labelledby="range-panel-commerce">
                 <h3 id="range-panel-commerce">The sale</h3>
                 <p>Online stores and lead generation that answer a buyer's questions and move them to the next step.</p>
-                <p>Getting found works the same way. The next room is the receipt.</p>
               </section>
             </div>
           </div>
@@ -1579,6 +1750,26 @@
       </div>
     </div>
   </section>
+
+<!-- MODELS -->
+<section id="models" class="sc-section models" aria-labelledby="models-title">
+    <div class="sc-wrap">
+      <h2 id="models-title" class="models__label">Every major model, one gateway</h2>
+      <div class="marquee" style="--marquee-duration: 90s" tabindex="0">
+        <div class="marquee__track">
+          <ul class="marquee__list"><li><img src="assets/logos/workers-ai.svg" alt="Workers AI" width="24" height="24"><span>Workers AI</span></li><li><img src="assets/logos/amazon-bedrock.svg" alt="Amazon Bedrock" width="24" height="24"><span>Amazon Bedrock</span></li><li><img src="assets/logos/anthropic.svg" alt="Anthropic" width="24" height="24"><span>Anthropic</span></li><li><img src="assets/logos/azure-openai.svg" alt="Azure OpenAI" width="24" height="24"><span>Azure OpenAI</span></li><li><img src="assets/logos/baseten.svg" alt="Baseten" width="24" height="24"><span>Baseten</span></li><li><img src="assets/logos/cartesia.svg" alt="Cartesia" width="24" height="24"><span>Cartesia</span></li><li><img src="assets/logos/cerebras.svg" alt="Cerebras" width="24" height="24"><span>Cerebras</span></li><li><img src="assets/logos/cohere.svg" alt="Cohere" width="24" height="24"><span>Cohere</span></li><li><img src="assets/logos/deepgram.svg" alt="Deepgram" width="24" height="24"><span>Deepgram</span></li><li><img src="assets/logos/deepseek.svg" alt="DeepSeek" width="24" height="24"><span>DeepSeek</span></li><li><img src="assets/logos/elevenlabs.svg" alt="ElevenLabs" width="24" height="24"><span>ElevenLabs</span></li><li><img src="assets/logos/fal.svg" alt="Fal AI" width="24" height="24"><span>Fal AI</span></li><li><img src="assets/logos/google-ai-studio.svg" alt="Google AI Studio" width="24" height="24"><span>Google AI Studio</span></li><li><img src="assets/logos/google-vertex-ai.svg" alt="Google Vertex AI" width="24" height="24"><span>Google Vertex AI</span></li><li><img src="assets/logos/groq.svg" alt="Groq" width="24" height="24"><span>Groq</span></li><li><img src="assets/logos/hugging-face.svg" alt="Hugging Face" width="24" height="24"><span>Hugging Face</span></li><li><img src="assets/logos/ideogram.svg" alt="Ideogram" width="24" height="24"><span>Ideogram</span></li><li><img src="assets/logos/mistral.svg" alt="Mistral AI" width="24" height="24"><span>Mistral AI</span></li><li><img src="assets/logos/openai.svg" alt="OpenAI" width="24" height="24"><span>OpenAI</span></li><li><img src="assets/logos/openrouter.svg" alt="OpenRouter" width="24" height="24"><span>OpenRouter</span></li><li><img src="assets/logos/parallel.svg" alt="Parallel" width="24" height="24"><span>Parallel</span></li><li><img src="assets/logos/perplexity.svg" alt="Perplexity" width="24" height="24"><span>Perplexity</span></li><li><img src="assets/logos/replicate.svg" alt="Replicate" width="24" height="24"><span>Replicate</span></li><li><img src="assets/logos/xai.svg" alt="xAI" width="24" height="24"><span>xAI</span></li></ul>
+          <ul class="marquee__list" aria-hidden="true"><li><img src="assets/logos/workers-ai.svg" alt="Workers AI" width="24" height="24"><span>Workers AI</span></li><li><img src="assets/logos/amazon-bedrock.svg" alt="Amazon Bedrock" width="24" height="24"><span>Amazon Bedrock</span></li><li><img src="assets/logos/anthropic.svg" alt="Anthropic" width="24" height="24"><span>Anthropic</span></li><li><img src="assets/logos/azure-openai.svg" alt="Azure OpenAI" width="24" height="24"><span>Azure OpenAI</span></li><li><img src="assets/logos/baseten.svg" alt="Baseten" width="24" height="24"><span>Baseten</span></li><li><img src="assets/logos/cartesia.svg" alt="Cartesia" width="24" height="24"><span>Cartesia</span></li><li><img src="assets/logos/cerebras.svg" alt="Cerebras" width="24" height="24"><span>Cerebras</span></li><li><img src="assets/logos/cohere.svg" alt="Cohere" width="24" height="24"><span>Cohere</span></li><li><img src="assets/logos/deepgram.svg" alt="Deepgram" width="24" height="24"><span>Deepgram</span></li><li><img src="assets/logos/deepseek.svg" alt="DeepSeek" width="24" height="24"><span>DeepSeek</span></li><li><img src="assets/logos/elevenlabs.svg" alt="ElevenLabs" width="24" height="24"><span>ElevenLabs</span></li><li><img src="assets/logos/fal.svg" alt="Fal AI" width="24" height="24"><span>Fal AI</span></li><li><img src="assets/logos/google-ai-studio.svg" alt="Google AI Studio" width="24" height="24"><span>Google AI Studio</span></li><li><img src="assets/logos/google-vertex-ai.svg" alt="Google Vertex AI" width="24" height="24"><span>Google Vertex AI</span></li><li><img src="assets/logos/groq.svg" alt="Groq" width="24" height="24"><span>Groq</span></li><li><img src="assets/logos/hugging-face.svg" alt="Hugging Face" width="24" height="24"><span>Hugging Face</span></li><li><img src="assets/logos/ideogram.svg" alt="Ideogram" width="24" height="24"><span>Ideogram</span></li><li><img src="assets/logos/mistral.svg" alt="Mistral AI" width="24" height="24"><span>Mistral AI</span></li><li><img src="assets/logos/openai.svg" alt="OpenAI" width="24" height="24"><span>OpenAI</span></li><li><img src="assets/logos/openrouter.svg" alt="OpenRouter" width="24" height="24"><span>OpenRouter</span></li><li><img src="assets/logos/parallel.svg" alt="Parallel" width="24" height="24"><span>Parallel</span></li><li><img src="assets/logos/perplexity.svg" alt="Perplexity" width="24" height="24"><span>Perplexity</span></li><li><img src="assets/logos/replicate.svg" alt="Replicate" width="24" height="24"><span>Replicate</span></li><li><img src="assets/logos/xai.svg" alt="xAI" width="24" height="24"><span>xAI</span></li></ul>
+        </div>
+      </div>
+      <div class="marquee marquee--reverse" style="--marquee-duration: 70s" tabindex="0">
+        <div class="marquee__track">
+          <ul class="marquee__list"><li><img src="assets/logos/meta-llama.svg" alt="Meta Llama" width="24" height="24"><span>Meta Llama</span></li><li><img src="assets/logos/gemma.svg" alt="Google Gemma" width="24" height="24"><span>Google Gemma</span></li><li><img src="assets/logos/mistral.svg" alt="Mistral" width="24" height="24"><span>Mistral</span></li><li><img src="assets/logos/qwen.svg" alt="Qwen" width="24" height="24"><span>Qwen</span></li><li><img src="assets/logos/deepseek.svg" alt="DeepSeek" width="24" height="24"><span>DeepSeek</span></li><li><img src="assets/logos/gpt-oss.svg" alt="gpt-oss" width="24" height="24"><span>gpt-oss</span></li><li><img src="assets/logos/nvidia-nemotron.svg" alt="NVIDIA Nemotron" width="24" height="24"><span>NVIDIA Nemotron</span></li><li><img src="assets/logos/moonshot-kimi.svg" alt="Moonshot Kimi" width="24" height="24"><span>Moonshot Kimi</span></li><li><img src="assets/logos/zhipu.svg" alt="Zhipu GLM" width="24" height="24"><span>Zhipu GLM</span></li><li><img src="assets/logos/ibm-granite.svg" alt="IBM Granite" width="24" height="24"><span>IBM Granite</span></li><li><img src="assets/logos/flux.svg" alt="Black Forest Labs FLUX" width="24" height="24"><span>Black Forest Labs FLUX</span></li><li><img src="assets/logos/stability.svg" alt="Stability" width="24" height="24"><span>Stability</span></li><li><img src="assets/logos/leonardo.png" alt="Leonardo" width="24" height="24"><span>Leonardo</span></li><li><img src="assets/logos/whisper.svg" alt="Whisper" width="24" height="24"><span>Whisper</span></li><li><img src="assets/logos/baai.svg" alt="BAAI" width="24" height="24"><span>BAAI</span></li></ul>
+          <ul class="marquee__list" aria-hidden="true"><li><img src="assets/logos/meta-llama.svg" alt="Meta Llama" width="24" height="24"><span>Meta Llama</span></li><li><img src="assets/logos/gemma.svg" alt="Google Gemma" width="24" height="24"><span>Google Gemma</span></li><li><img src="assets/logos/mistral.svg" alt="Mistral" width="24" height="24"><span>Mistral</span></li><li><img src="assets/logos/qwen.svg" alt="Qwen" width="24" height="24"><span>Qwen</span></li><li><img src="assets/logos/deepseek.svg" alt="DeepSeek" width="24" height="24"><span>DeepSeek</span></li><li><img src="assets/logos/gpt-oss.svg" alt="gpt-oss" width="24" height="24"><span>gpt-oss</span></li><li><img src="assets/logos/nvidia-nemotron.svg" alt="NVIDIA Nemotron" width="24" height="24"><span>NVIDIA Nemotron</span></li><li><img src="assets/logos/moonshot-kimi.svg" alt="Moonshot Kimi" width="24" height="24"><span>Moonshot Kimi</span></li><li><img src="assets/logos/zhipu.svg" alt="Zhipu GLM" width="24" height="24"><span>Zhipu GLM</span></li><li><img src="assets/logos/ibm-granite.svg" alt="IBM Granite" width="24" height="24"><span>IBM Granite</span></li><li><img src="assets/logos/flux.svg" alt="Black Forest Labs FLUX" width="24" height="24"><span>Black Forest Labs FLUX</span></li><li><img src="assets/logos/stability.svg" alt="Stability" width="24" height="24"><span>Stability</span></li><li><img src="assets/logos/leonardo.png" alt="Leonardo" width="24" height="24"><span>Leonardo</span></li><li><img src="assets/logos/whisper.svg" alt="Whisper" width="24" height="24"><span>Whisper</span></li><li><img src="assets/logos/baai.svg" alt="BAAI" width="24" height="24"><span>BAAI</span></li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+<!-- /MODELS -->
 
   <!-- Act 3: answer engine optimization as an observable system -->
   <section id="aeo" data-sc-act="pin" data-sc-span="2.35" data-sc-drift="#071012" data-specimen="ii" aria-labelledby="aeo-title">
@@ -1629,19 +1820,19 @@
               <p class="sc-label" id="aeo-verify-title">03 / Make it verifiable</p>
               <div class="answer-path">
                 <article><strong>Answer</strong><p>Clear response to one buyer question.</p></article>
-                <article><strong>Structure</strong><p>Page, entity, schema, and relationships agree.</p></article>
+                <article><strong>Structure</strong><p>Every page tells AI the same facts about you.</p></article>
                 <article><strong>Evidence</strong><p>Product, source, and dated proof sit beside the claim.</p></article>
               </div>
-              <p class="intent-demo__reading">No guarantee of placement. No invented visibility score. Measured scan output stays separate from generated recommendations.</p>
+              <p class="intent-demo__reading">No guarantee of placement. Measured scan output stays separate from generated recommendations.</p>
             </section>
             <section class="aeo-panel" data-aeo-panel="measure" aria-labelledby="aeo-measure-title">
               <p class="sc-label" id="aeo-measure-title">04 / Measure the surface</p>
               <div class="aeo-proof">
-                <div class="aeo-proof__metric"><strong>201K</strong><span>search impressions in twelve weeks</span></div>
-                <div class="aeo-proof__metric"><strong>21.8K</strong><span>Google Generative AI / AI Overviews impressions</span></div>
-                <div class="aeo-proof__metric"><strong>1.1K</strong><span>clicks in the same period</span></div>
-                <div class="aeo-proof__metric"><strong>5,400+</strong><span>AI-surface impressions from one article</span></div>
-                <p class="aeo-proof__source">pirx.ca began with no search history or answer-engine presence. Source: Google Search Console, pulled 2026-09-23.</p>
+                <div class="aeo-proof__metric"><strong>375K</strong><span>search impressions, Jul 14 to Oct 13, 2026</span></div>
+                <div class="aeo-proof__metric"><strong>43.5K</strong><span>Generative AI feature impressions, a separate report</span></div>
+                <div class="aeo-proof__metric"><strong>1.85K</strong><span>clicks in the same window</span></div>
+                <div class="aeo-proof__metric"><strong>7.6</strong><span>average position</span></div>
+                <p class="aeo-proof__source">From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Source: Google Search Console, Jul 14 to Oct 13, 2026.</p>
               </div>
             </section>
           </div>
@@ -1661,7 +1852,7 @@
     <div class="sc-wrap spread">
       <div class="label" data-sc-in>
         <p class="sc-label">Specimen II</p>
-        <h2 id="ii-title" class="sc-display sc-display--md">Schema</h2>
+        <h2 id="ii-title" class="sc-display sc-display--md">Where AI search cannot find you.</h2>
         <p class="sc-body">See the gap, then the repair plan. Schema keeps measured scan output separate from generated recommendations, so the result never claims more than the scan observed.</p>
         <dl>
           <dt>Kind</dt><dd>AI-search visibility scorer</dd>
@@ -1689,7 +1880,7 @@
             <img src="assets/llmcourse-home.webp" width="1600" height="1000" loading="lazy" decoding="async" alt="LLM Leverage course home: a lesson preview and a rollout path for training a team on any model.">
           </figure>
           <p class="sc-label">Specimen III</p>
-          <h2 class="sc-display sc-display--md">LLM Leverage</h2>
+          <h3 class="sc-display sc-display--md">LLM Leverage</h3>
           <p class="sc-body"><strong>Teach the team once.</strong> A self-paced course for better answers from any model, plus a workshop path for a rollout. Twelve modules, quiz gated at 75 percent.</p>
           <p class="sc-body"><a href="https://llm-leverage-course.vercel.app/">llm-leverage-course.vercel.app</a></p>
         </article>
@@ -1698,7 +1889,7 @@
             <img src="assets/cda-home.webp" width="1600" height="1000" loading="lazy" decoding="async" alt="Canadian Discount Appliances home: the Kitchener warehouse lot under the headline The appliance warehouse, not the outlet game.">
           </figure>
           <p class="sc-label">Specimen IV</p>
-          <h2 class="sc-display sc-display--md">Canadian Discount Appliances</h2>
+          <h3 class="sc-display sc-display--md">Canadian Discount Appliances</h3>
           <p class="sc-body"><strong>Answer the question that makes the sale.</strong> The appliance warehouse leads with condition, warranty, and whether it fits the door, then a delivery you can book. Phone as a close.</p>
           <p class="sc-body"><a href="https://cdastore.vercel.app/">cdastore.vercel.app</a></p>
         </article>
@@ -1707,7 +1898,7 @@
             <video controls playsinline preload="none" poster="assets/superfunnel-getting-started.webp" src="assets/films/superfunnel-getting-started.mp4" width="1920" height="1080"></video>
           </figure>
           <p class="sc-label">Super Funnel</p>
-          <h2 class="sc-display sc-display--md">Getting started</h2>
+          <h3 class="sc-display sc-display--md">Getting started</h3>
           <p class="sc-body"><strong>One associate app, from the home dashboard.</strong> Setup, pipeline, and nav, in 66 seconds.</p>
           <p class="sc-body"><a href="films.html">The rest of the tour</a></p>
         </article>
@@ -1715,10 +1906,19 @@
           <p class="sc-lede">The same studio has shipped clinical-style assessments (non-diagnostic, built to educate and route), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, an AI-visibility program that took a brand-new domain to real search traffic, and sites for practices that live on the next appointment.</p>
           <p class="sc-body">We name that work when the client says we can. <strong>This page is a sample of what shipped, not a ceiling on what we'll take on.</strong></p>
         </aside>
-        <p class="note">The empty plinth is next. The film after that.</p>
       </div>
     </div>
   </section>
+
+<!-- OFFERINGS -->
+<section id="services" class="sc-section services" aria-labelledby="services-title">
+    <div class="sc-wrap">
+      <p class="services__kicker">Built and deployed on Cloudflare&#39;s global network.</p>
+      <h2 id="services-title" class="sc-display sc-display--md">What we build and run for you.</h2>
+      <ul class="services__grid"><li><a href="/services/ai-assistants-and-agents/"><h3>An assistant that remembers the customer and does the next step you approved</h3><p>A helper that remembers the customer and can take the next step, instead of starting from zero every time.</p><p class="services__tag">Built on Agents SDK, Durable Objects, Agent Memory, Workflows</p></a></li><li><a href="/services/answers-from-your-documents/"><h3>An answer from your own files, with the page it came from</h3><p>Ask a question and get an answer from the files you already keep, with the page it came from.</p><p class="services__tag">Built on AI Search, Vectorize, R2</p></a></li><li><a href="/services/any-model-one-bill/"><h3>The model that fits the job, on one bill you can stop</h3><p>Use the model that fits the job, with one bill you can cap and one place to see the spend.</p><p class="services__tag">Built on AI Gateway, Workers AI</p></a></li><li><a href="/services/voice-and-realtime-agents/"><h3>A voice line that answers from your facts and hands the call to a person</h3><p>A voice line that hears the caller, answers from your facts, and hands off when a person should take over.</p><p class="services__tag">Built on Realtime, Workers AI</p></a></li><li><a href="/services/web-automation/"><h3>The repeated browser work, done the same way every time</h3><p>A weekly job that opens the pages, pulls the numbers, and leaves you a report.</p><p class="services__tag">Built on Browser Run, Workflows</p></a></li><li><a href="/services/safe-code-execution/"><h3>The assistant runs a task you approved, inside a limit you set</h3><p>When a model writes a small program, it runs in a box that cannot touch the rest of the business.</p><p class="services__tag">Built on Sandboxes, Containers</p></a></li><li><a href="/services/custom-apps/"><h3>The app your team actually works in, built around the job</h3><p>A small app that follows the order of work your team already trusts.</p><p class="services__tag">Built on Workers, D1, R2</p></a></li><li><a href="/services/ai-media/"><h3>Images, voice, and video that stay on the brief you approved</h3><p>Draft images, short video, or a transcript from material you already have. A person approves what goes out.</p><p class="services__tag">Built on Workers AI, Images, Stream</p></a></li><li><a href="/services/ai-visibility/"><h3>Show up in the answers people already ask</h3><p>See which answer engines crawl the site, and tell them what you want them to read.</p><p class="services__tag">Built on AI Crawl Control, llms.txt</p></a></li><li><a href="/services/search-grounded-research/"><h3>A research answer with the sources underneath it</h3><p>A research answer that shows the pages it used, so you can check the source.</p><p class="services__tag">Built on Web Search API</p></a></li></ul>
+    </div>
+  </section>
+<!-- /OFFERINGS -->
 
   <!-- Act 6: what changes when the software fits -->
   <section id="benefits" data-sc-act="pin" data-sc-span="2.0" data-sc-drift="#0E0C0A" aria-labelledby="benefits-title">
@@ -1732,7 +1932,14 @@
           <li><strong>Your experts stop being the bottleneck.</strong><p>Customers and new hires get a grounded answer from your science, your product, and your plan, on text or voice, any hour.</p></li>
           <li><strong>Your best rep can be everywhere you sell.</strong><p>The talk track, the booking, the pipeline, and a coach on the real book of business. A new person in a new city sells to the standard.</p></li>
           <li><strong>Interest arrives with a reason attached.</strong><p>A personal result, the customer's language, a practitioner's name, a next step, a cart.</p></li>
-          <li><strong>You see the move in time to make it.</strong><p>What a body can do, what a rate will do, which visit is ready to buy, whether AI search can find you. When it can't yet, we've already shown the fix works. See the receipt above.</p></li>
+          <li><strong>You see the move in time to make it.</strong>
+            <ul>
+              <li>what a body can do</li>
+              <li>what a rate will do</li>
+              <li>which visit is ready to buy</li>
+              <li>whether AI search can find you</li>
+            </ul>
+          </li>
         </ol>
         <ol class="benefits__set" data-sc-cue="0.5 1 0.3 0" start="5">
           <li><strong>A new market is a production run.</strong><p>Channel, language, and creative from a system that already knows the claims you allow.</p></li>
@@ -1822,7 +2029,7 @@
           </details>
           <details>
             <summary>What is the proof behind from zero to scale?</summary>
-            <p class="sc-body">pirx.ca launched with no search history and no answer-engine presence. In the twelve weeks before 2026-09-23, Google Search Console recorded 201K search impressions and 1.1K clicks, with 21.8K of those impressions coming from Google's Generative AI and AI Overviews surface alone, climbing from almost nothing in June to a daily peak over 1,600 by September. One post carried over 5,400 of those AI-surface impressions on its own. AEO, GEO, and SEO were run as one discipline.</p>
+            <p class="sc-body">From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026, recorded 375K search impressions, 1.85K clicks, and an average position of 7.6 for pirx.ca. The Generative AI features report is a separate count of 43.5K impressions and is not added to the search total. Both curves start near zero in mid-July.</p>
           </details>
           <details>
             <summary>How does a project work?</summary>
@@ -1856,7 +2063,7 @@
         <div class="label">
           <p class="sc-label">Specimen ST</p>
           <h2 id="brief-title">Show us one operation.</h2>
-          <p class="sc-body">Bring the handoffs, exceptions, approvals, and outcome. We will show you the system they imply—or tell you when an existing product already fits.</p>
+          <p class="sc-body">Bring the handoffs, exceptions, approvals, and outcome. We will show you the system they imply, or tell you when an existing product already fits.</p>
           <dl>
             <dt>Bring</dt><dd>One operation, in the words your team uses</dd>
             <dt>Leave</dt><dd>A clear system shape and the next decision</dd>
@@ -1868,13 +2075,17 @@
           </p>
         </div>
       </div>
-      <p class="foot">
-        <a href="walkthrough.html">The walkthrough</a>
-        <a href="films.html">The films on file</a>
-        <a href="/blog">Blog</a>
-        <a href="/privacy">Privacy</a>
-        <a href="https://github.com/makemoney2023/abracadabra">Source</a>
-      </p>
+<!-- SITE-FOOT -->
+<footer class="site-foot">
+  <a href="/services/">Services</a>
+  <a href="/portfolio/">Portfolio</a>
+  <a href="/products/">Products</a>
+  <a href="/course/llm-leverage/">Course</a>
+  <a href="/blog">Blog</a>
+  <a href="/#brief">Start a brief</a>
+  <a href="/privacy">Privacy</a>
+</footer>
+<!-- /SITE-FOOT -->
     </div>
   </section>
 
@@ -1897,8 +2108,8 @@
 
   // small screens unpin the staged sections; reduced motion also unpins the
   // time engine so its stacked panels are never clipped by a fixed-height stage
-  var flowIds = matchMedia('(max-width: 860px)').matches
-    ? ['i', 'time', 'range', 'aeo', 'iii']
+  var flowIds = matchMedia('(max-width: 1100px)').matches
+    ? ['i', 'compiler', 'time', 'range', 'aeo', 'iii', 'benefits', 'brief']
     : (matchMedia('(prefers-reduced-motion: reduce)').matches ? ['time', 'range'] : []);
   flowIds.forEach(function (id) {
     var section = document.getElementById(id);
@@ -1984,8 +2195,8 @@
   if (compilerSkip) compilerSkip.addEventListener('click', function () { setCompilerState('run', true); });
 
   function resolveCompilerFromScroll() {
-    if (!compiler || reduceMotion || compilerWasChosen || innerWidth <= 860) return;
-    var act = document.getElementById('i');
+    if (!compiler || reduceMotion || compilerWasChosen || innerWidth <= 1100) return;
+    var act = document.getElementById('compiler');
     var travel = Math.max(1, act.offsetHeight - innerHeight);
     var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
     setCompilerState(
@@ -2022,7 +2233,7 @@
   });
 
   function resolveAeoFromScroll() {
-    if (!aeoEngine || reduceMotion || aeoWasChosen || innerWidth <= 860) return;
+    if (!aeoEngine || reduceMotion || aeoWasChosen || innerWidth <= 1100) return;
     var act = document.getElementById('aeo');
     var travel = Math.max(1, act.offsetHeight - innerHeight);
     var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
@@ -2060,7 +2271,7 @@
   });
 
   function resolveTimeFromScroll() {
-    if (!timeEngine || reduceMotion || timeWasChosen || innerWidth <= 860) return;
+    if (!timeEngine || reduceMotion || timeWasChosen || innerWidth <= 1100) return;
     var act = document.getElementById('time');
     var travel = Math.max(1, act.offsetHeight - innerHeight);
     var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
@@ -2239,7 +2450,7 @@
       canvas.width = Math.max(1, Math.round(w * dpr));
       canvas.height = Math.max(1, Math.round(h * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      density = innerWidth <= 860 ? 0.5 : 1;
+      density = innerWidth <= 1100 ? 0.5 : 1;
     }
 
     function render(now) {
@@ -2312,7 +2523,7 @@
   });
 
   function resolveRangeFromScroll() {
-    if (!rangeEngine || reduceMotion || rangeWasChosen || innerWidth <= 860) return;
+    if (!rangeEngine || reduceMotion || rangeWasChosen || innerWidth <= 1100) return;
     var act = document.getElementById('range');
     var travel = Math.max(1, act.offsetHeight - innerHeight);
     var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));

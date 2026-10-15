@@ -6,6 +6,7 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import sharp from "sharp";
 import { z } from "zod";
+import { siteFooter, siteHeader } from "./site-chrome.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 export const SITE = "https://abra-ca-dabra.app";
@@ -470,16 +471,10 @@ ${jsonLd(json)}
 </script>
 </head>
 <body>
-<header class="top">
-  <a class="mark" href="/">Abracadabra AI</a>
-  <nav aria-label="Site">
-    <a href="/blog">Blog</a>
-    <a href="/about/christopher-buzny">Christopher Buzny</a>
-    <a href="/privacy">Privacy</a>
-  </nav>
-</header>
+${siteHeader()}
 ${previewMode() ? `<p class="preview-banner">Preview build. Scheduled notes are included here so they can be reviewed before their publish date. Search engines are asked not to index this copy.</p>` : ""}
 ${body}
+${siteFooter()}
 </body>
 </html>
 `;
