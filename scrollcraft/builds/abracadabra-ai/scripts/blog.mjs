@@ -638,12 +638,16 @@ ${board}
 async function renderAuthor() {
   const ogAlt = "Christopher Buzny, founder of Abracadabra AI";
   await writeOg("Christopher Buzny", "FOUNDER", join(root, "blog/og/author.png"));
-  const body = `<main>
+  const body = `<main class="site-page">
+<header class="page-hero">
+<div class="page-hero__copy">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/about/christopher-buzny" }])}
-<article>
 <p class="kicker">Founder</p>
 <h1>Christopher Buzny</h1>
 <p class="dek">Founder of Abracadabra AI. The studio builds bespoke software around how a company already works, then ships the system, a film, and the script the team runs.</p>
+</div>
+</header>
+<article>
 <!-- TODO(christopher): confirm credentials, education, years in practice, and certifications. Do not invent them. -->
 <p class="todo">Credentials, education, years in practice, and certifications are not listed. Christopher still has to confirm them. This page will not grow a biography ahead of that.</p>
 <!-- TODO(christopher): confirm personal LinkedIn, X, and GitHub URLs before adding sameAs. -->

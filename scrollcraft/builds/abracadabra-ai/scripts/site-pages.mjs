@@ -19,6 +19,7 @@ import {
 } from "./site-data.mjs";
 import { pirxChartHtml } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
+import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -148,10 +149,43 @@ function modelsHtml() {
   </section>`;
 }
 
+const HUB_SIZES = "(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw";
+const HOME_CARD_SIZES = "(min-width: 860px) 46vw, 100vw";
+const SPLIT_SIZES = "(min-width: 1024px) 46vw, 100vw";
+
+const ASSET_SIZE = {
+  "/assets/showdesk-home.webp": [1600, 1000],
+  "/assets/schema-home.webp": [1600, 1000],
+  "/assets/llmcourse-home.webp": [1600, 1000],
+  "/assets/cda-home.webp": [1600, 1000],
+  "/assets/superfunnel-getting-started.webp": [1920, 1080],
+};
+
+function assetMedia(src, alt, { lazy = false } = {}) {
+  const [width, height] = ASSET_SIZE[src] || [1600, 1000];
+  const priority = lazy ? ' loading="lazy"' : ' fetchpriority="high"';
+  return `<img src="${esc(src)}" alt="${esc(alt)}" width="${width}" height="${height}"${priority} decoding="async">`;
+}
+
+function pageHero({ crumbs = "", kicker, title, dek = "", actions = "", media = "" }) {
+  const photo = media ? `<figure class="page-hero__media">${media}</figure>` : "";
+  return `<header class="page-hero${media ? " page-hero--photo" : ""}">
+${photo}
+<div class="page-hero__copy">
+${crumbs}
+<p class="kicker">${kicker}</p>
+<h1>${title}</h1>
+${dek}
+${actions}
+</div>
+</header>`;
+}
+
 function offeringsHtml() {
   const cards = offerings.map((item) => {
     const page = salesPages[item.slug];
-    return `<li><a href="/services/${item.slug}/"><h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p><p class="services__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`;
+    const photo = servicePicture(item.slug, "hero", { lazy: true, sizes: HOME_CARD_SIZES });
+    return `<li><a href="/services/${item.slug}/">${photo}<h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p><p class="services__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`;
   }).join("");
   return `<section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
@@ -160,19 +194,6 @@ function offeringsHtml() {
       <ul class="services__grid">${cards}</ul>
     </div>
   </section>`;
-}
-
-function mediaSlot(slug, index, kind) {
-  const cls = kind === "hero" ? "content-hero-photo" : "post-figure";
-  const note = kind === "hero" ? "Hero image for this service." : "Image for this service.";
-  const n = String(index).padStart(2, "0");
-  return `<figure class="${cls}">
-  <picture>
-    <source srcset="/blog/media/services/${esc(slug)}/${n}.webp" type="image/webp">
-    <img src="/blog/media/services/${esc(slug)}/${n}.jpg" alt="" width="1600" height="1000">
-  </picture>
-  <figcaption>${esc(PLACEHOLDER)}. ${esc(note)}</figcaption>
-</figure>`;
 }
 
 function list(tag, items) {
@@ -314,10 +335,6 @@ function shotPairHtml(pair) {
   return `<figure class="shot-pair">${shotImg(pair.desktop)}${shotImg(pair.mobile)}</figure>`;
 }
 
-function heroHtml(hero) {
-  return `<figure class="case-hero">${shotImg(hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(hero.mobile, { lazy: false, className: "shot-mobile" })}</figure>`;
-}
-
 function salesActions() {
   return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Show us how it works</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
 }
@@ -381,7 +398,12 @@ async function renderOffering(item) {
       acceptedAnswer: { "@type": "Answer", text },
     })),
   };
-  const og = await plateOrPhoto(item.slug, "Service", page.headline, null);
+  const og = {
+    url: `${SITE}${serviceOgPath(item.slug)}`,
+    width: "1200",
+    height: "630",
+    alt: serviceAlt(item.slug, "hero"),
+  };
   const questions = page.faqs.map(([name, text]) => `<h3>${esc(name)}</h3>\n<p>${esc(text)}</p>`).join("\n");
   const steps = processSteps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
   const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}${(proof.shots || []).map((pair) => shotPairHtml(pair)).join("")}<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
@@ -400,16 +422,18 @@ async function renderOffering(item) {
       url,
       name: page.headline,
       description: page.description,
+      image: og.url,
     }), [crumbList(crumbs), service, faq]),
     body: `<main class="site-page sales">
-${visibleCrumbs(crumbs)}
-<p class="kicker">${esc(OFFERINGS_KICKER)}</p>
-<h1>${esc(page.headline)}</h1>
-<p class="sales-dek">${esc(page.dek)}</p>
-${leadHtml(page.lead)}
-${salesActions()}
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: esc(OFFERINGS_KICKER),
+  title: esc(page.headline),
+  dek: `<p class="sales-dek">${esc(page.dek)}</p>\n${leadHtml(page.lead)}`,
+  actions: salesActions(),
+  media: servicePicture(item.slug, "hero", { sizes: "(min-width: 1024px) 72rem, 100vw" }),
+})}
 ${proofStrip(page.strip)}
-${mediaSlot(item.slug, 1, "hero")}
 <section>
 <h2>${esc(page.problemTitle)}</h2>
 ${page.problem.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
@@ -418,10 +442,12 @@ ${page.problem.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
 <h2>What changes</h2>
 ${cardGrid("outcome-grid", page.outcomes)}
 </section>
-${mediaSlot(item.slug, 2, "body")}
-<section>
+<section class="sales-split">
+<div>
 <h2>Three places it shows up</h2>
 ${cardGrid("use-grid", page.uses)}
+</div>
+<figure class="sales-split__photo">${servicePicture(item.slug, "body1", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
 ${capabilityHtml(page.capability)}
 <section>
@@ -434,10 +460,12 @@ ${capabilityHtml(page.capability)}
 <p>${esc(page.compareIntro)}</p>
 ${comparisonTable(page.rows)}
 </section>
-${mediaSlot(item.slug, 3, "body")}
-<section>
+<section class="sales-split">
+<div>
 <h2>Work we can name</h2>
 ${proofs}
+</div>
+<figure class="sales-split__photo">${servicePicture(item.slug, "body2", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
 <p class="cloud-line">${esc(page.cloudflare)} ${esc(builtOn(item.builtOn))}</p>
 <section class="price-block">
@@ -486,7 +514,8 @@ async function renderOfferingsHub() {
   const cards = offerings.map((item) => {
     const page = salesPages[item.slug];
     const note = item.slug === "safe-code-execution" ? " Part of AI assistants." : "";
-    return `<li><a href="/services/${item.slug}/"><strong>${esc(page.headline)}</strong><span>${esc(page.description)}${esc(note)}</span></a></li>`;
+    const photo = servicePicture(item.slug, "hero", { lazy: true, sizes: HUB_SIZES });
+    return `<li><a href="/services/${item.slug}/">${photo}<strong>${esc(page.headline)}</strong><span>${esc(page.description)}${esc(note)}</span></a></li>`;
   }).join("");
   const html = shell({
     title,
@@ -505,10 +534,12 @@ async function renderOfferingsHub() {
       description,
     }), [crumbList(crumbs), listNode]),
     body: `<main class="site-page">
-${visibleCrumbs(crumbs)}
-<p class="kicker">${esc(OFFERINGS_KICKER)}</p>
-<h1>${esc(OFFERINGS_HEADING)}</h1>
-<p>Ten systems we build and run. Safe code execution is a capability of the assistants, and it keeps its own page so the limit can be read on its own.</p>
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: esc(OFFERINGS_KICKER),
+  title: esc(OFFERINGS_HEADING),
+  dek: "<p>Ten systems we build and run. Safe code execution is a capability of the assistants, and it keeps its own page so the limit can be read on its own.</p>",
+})}
 <ul class="cards">${cards}</ul>
 </main>`,
   });
@@ -596,14 +627,19 @@ async function renderCase(item) {
       image: item.image ? `${SITE}${item.image}` : undefined,
     }), [crumbList(crumbs), caseAbout(item, url)]),
     body: `<main class="site-page">
-${visibleCrumbs(crumbs)}
-<p class="kicker">Portfolio</p>
-<h1>${esc(item.name)}</h1>
-${item.hero ? `${heroHtml(item.hero)}\n` : ""}${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
-${(item.shots || []).length ? `${item.shots.map((pair) => shotPairHtml(pair)).join("\n")}\n` : ""}${item.chart ? `${pirxChartHtml()}\n` : ""}${live}
-${relatedHtml}
-${productLink}
-${courseLink}
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: "Portfolio",
+  title: esc(item.name),
+  dek: `${live}\n${productLink}\n${courseLink}`,
+  media: item.hero
+    ? `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`
+    : item.image
+      ? assetMedia(item.image, item.imageAlt)
+      : "",
+})}
+${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
+${(item.shots || []).length ? `${item.shots.map((pair) => shotPairHtml(pair)).join("\n")}\n` : ""}${item.chart ? `${pirxChartHtml()}\n` : ""}${relatedHtml}
 ${placeholder(placeholders.portfolio)}
 </main>`,
   });
@@ -632,8 +668,10 @@ async function renderPortfolioHub() {
   const og = await plateOrPhoto("portfolio", "Portfolio", "Working systems", null);
   const cards = cases.map((item) => {
     const photo = item.cardImage
-      ? shotImg(item.cardImage, { lazy: false })
-      : "";
+      ? shotImg(item.cardImage, { lazy: true })
+      : item.image
+        ? assetMedia(item.image, item.imageAlt, { lazy: true })
+        : "";
     return `<li><a href="/portfolio/${item.slug}/">${photo}<strong>${esc(item.name)}</strong><span>${esc(item.summary)}</span></a></li>`;
   }).join("");
   const html = shell({
@@ -653,9 +691,11 @@ async function renderPortfolioHub() {
       description,
     }), [crumbList(crumbs), list]),
     body: `<main class="site-page">
-${visibleCrumbs(crumbs)}
-<p class="kicker">Portfolio</p>
-<h1>Working systems, already in the world.</h1>
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: "Portfolio",
+  title: "Working systems, already in the world.",
+})}
 <ul class="cards">${cards}</ul>
 </main>`,
   });
@@ -703,12 +743,13 @@ async function renderProduct(item) {
       image: `${SITE}${item.image}`,
     }), [crumbList(crumbs), app]),
     body: `<main class="site-page">
-${visibleCrumbs(crumbs)}
-<p class="kicker">Product</p>
-<h1>${esc(item.name)}</h1>
-<p>${esc(item.description)}</p>
-<p><a href="${esc(item.sameAs)}">Open the live system</a></p>
-<p><a href="/portfolio/${item.caseSlug}/">Portfolio note</a></p>
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: "Product",
+  title: esc(item.name),
+  dek: `<p>${esc(item.description)}</p>\n<p><a href="${esc(item.sameAs)}">Open the live system</a></p>\n<p><a href="/portfolio/${item.caseSlug}/">Portfolio note</a></p>`,
+  media: assetMedia(item.image, item.imageAlt),
+})}
 ${placeholder(placeholders.product)}
 </main>`,
   });
@@ -738,7 +779,7 @@ async function renderProductsHub() {
     })),
   };
   const og = await plateOrPhoto("products", "Products", "Products", null);
-  const cards = products.map((item) => `<li><a href="/products/${item.slug}/"><strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
+  const cards = products.map((item) => `<li><a href="/products/${item.slug}/">${assetMedia(item.image, item.imageAlt, { lazy: true })}<strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
   const html = shell({
     title,
     description,
@@ -756,9 +797,11 @@ async function renderProductsHub() {
       description,
     }), [crumbList(crumbs), list]),
     body: `<main class="site-page">
-${visibleCrumbs(crumbs)}
-<p class="kicker">Products</p>
-<h1>Products</h1>
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: "Products",
+  title: "Products",
+})}
 <ul class="cards">${cards}</ul>
 </main>`,
   });
@@ -807,13 +850,13 @@ async function renderCourse() {
       image: `${SITE}${course.image}`,
     }), [crumbList(crumbs), node]),
     body: `<main class="site-page">
-${visibleCrumbs(crumbs)}
-<p class="kicker">Course</p>
-<h1>${esc(course.name)}</h1>
-<p>${esc(course.description)}</p>
-<p>The public course site is built for class and self-paced study. It lists 4 workshop decks, static sandboxes, templates, a glossary, and a capstone gallery.</p>
-<p><a href="${esc(course.sameAs)}">Open the course</a></p>
-<p><a href="/portfolio/llm-leverage/">Portfolio note</a></p>
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: "Course",
+  title: esc(course.name),
+  dek: `<p>${esc(course.description)}</p>\n<p>The public course site is built for class and self-paced study. It lists 4 workshop decks, static sandboxes, templates, a glossary, and a capstone gallery.</p>\n<p><a href="${esc(course.sameAs)}">Open the course</a></p>\n<p><a href="/portfolio/llm-leverage/">Portfolio note</a></p>`,
+  media: assetMedia(course.image, course.imageAlt),
+})}
 ${placeholder(placeholders.course)}
 </main>`,
   });
@@ -908,6 +951,7 @@ async function patchLlms() {
 }
 
 export async function buildSitePages() {
+  await writeServiceImages();
   await rm(join(root, "offerings"), { recursive: true, force: true });
   await renderOfferingsHub();
   for (const item of offerings) await renderOffering(item);

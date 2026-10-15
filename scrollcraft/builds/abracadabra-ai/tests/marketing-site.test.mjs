@@ -471,11 +471,11 @@ test('service page heroes use the same left column and stacked actions', async (
   const desktop = await openPage({ width: 1024, height: 900 });
   await desktop.page.goto(`${origin}/services/ai-visibility/index.html`, { waitUntil: 'domcontentloaded' });
   const wide = await desktop.page.locator('main.site-page').evaluate((main) => {
-    const heading = main.querySelector(':scope > h1').getBoundingClientRect();
+    const heading = main.querySelector('h1').getBoundingClientRect();
     const actions = main.querySelector('.sales-actions');
     const buttons = [...actions.querySelectorAll('a')].map((link) => link.getBoundingClientRect());
     return {
-      align: getComputedStyle(main.querySelector(':scope > h1')).textAlign,
+      align: getComputedStyle(main.querySelector('h1')).textAlign,
       direction: getComputedStyle(actions).flexDirection,
       headingLeft: heading.left,
       mainLeft: main.getBoundingClientRect().left,
@@ -497,9 +497,9 @@ test('service page heroes use the same left column and stacked actions', async (
     const actionBox = actions.getBoundingClientRect();
     const buttons = [...actions.querySelectorAll('a')].map((link) => link.getBoundingClientRect());
     return {
-      align: getComputedStyle(main.querySelector(':scope > h1')).textAlign,
+      align: getComputedStyle(main.querySelector('h1')).textAlign,
       direction: getComputedStyle(actions).flexDirection,
-      headingLeft: main.querySelector(':scope > h1').getBoundingClientRect().left,
+      headingLeft: main.querySelector('h1').getBoundingClientRect().left,
       mainLeft: main.getBoundingClientRect().left,
       primaryWidth: buttons[0].width,
       secondaryTop: buttons[1].top,

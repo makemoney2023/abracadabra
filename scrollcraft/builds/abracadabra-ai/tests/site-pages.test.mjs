@@ -95,9 +95,20 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(offering, /When off the shelf wins/);
   assert.match(offering, /Contact for pricing/);
   assert.match(offering, /href="\/services\/safe-code-execution\/"/);
-  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/01\.webp/);
-  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/02\.webp/);
-  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/03\.webp/);
+  assert.match(offering, /class="page-hero page-hero--photo"/);
+  assert.match(offering, /class="sales-split"/);
+  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-640\.avif 640w/);
+  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-1280\.webp 1280w/);
+  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/body1-960\.avif 960w/);
+  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/body2-1280\.webp 1280w/);
+  assert.match(offering, /src="\/blog\/media\/services\/ai-assistants-and-agents\/hero\.jpg"/);
+  assert.match(offering, /width="1280" height="720"/);
+  assert.match(offering, /fetchpriority="high"/);
+  assert.match(offering, /loading="lazy"/);
+  assert.match(offering, /Dark chat console with a customer thread/);
+  assert.match(offering, /property="og:image" content="https:\/\/abra-ca-dabra\.app\/blog\/media\/services\/ai-assistants-and-agents\/og\.jpg"/);
+  assert.match(offering, /property="og:image:width" content="1200"/);
+  assert.match(offering, /property="og:image:height" content="630"/);
   assert.doesNotMatch(offering, industryNoun);
   assert.equal(offering.includes("$"), false);
   assert.match(offering, /href="\/services\/">Services/);
@@ -111,6 +122,11 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   const hubJson = hub.slice(hub.indexOf('<script type="application/ld+json">'), hub.indexOf("</script>"));
   assert.match(hubJson, /"@type": "ItemList"/);
   assert.match(hub, /Part of AI assistants/);
+  assert.match(hub, /\/blog\/media\/services\/ai-visibility\/hero-640\.avif 640w/);
+  assert.match(hub, /loading="lazy"/);
+  assert.match(read("index.html"), /\/blog\/media\/services\/ai-assistants-and-agents\/hero-960\.webp 960w/);
+  assert.match(read("about/christopher-buzny/index.html"), /class="page-hero"/);
+  assert.match(read("about/christopher-buzny/index.html"), /TODO\(christopher\): confirm credentials/);
   assert.match(hub, /<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->/);
   for (const slug of offerings) {
     assert.match(sitemap, new RegExp(`https://abra-ca-dabra.app/services/${slug}/`));
