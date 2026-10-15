@@ -4,12 +4,12 @@
 
 Site: https://abra-ca-dabra.app/
 Contact: dev@pirx.ca
-Last updated: 2026-10-14
+Last updated: 2026-10-15
 
 ## What we do
 
 - Bespoke software built around the steps, the exceptions, and the words a team already uses. AI takes a task; people keep the relationship.
-- Five coordinated workstreams—Workflow, Experience, Engineering, Quality, and Launch—compress the path from one engineered build brief—intent and context engineered first—to working software. “At the speed of thought” is the operating premise, not an elapsed-time guarantee.
+- Five coordinated workstreams (Workflow, Experience, Engineering, Quality, and Launch) compress the path from one engineered build brief, intent and context engineered first, to working software. “At the speed of thought” is the operating premise, not an elapsed-time guarantee.
 - The delivery calendar compresses because the thinking is front-loaded into one engineered brief and the downstream workstreams run at once instead of in sequence. The work does not shrink; the waiting between the work disappears. Abracadabra AI does not publish a duration or percentage for this.
 - Intent, context, and prompt engineering shipped as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
@@ -66,6 +66,31 @@ If a product you can buy already does the job, we say so and send you there.
 - Wellness and clinical-style tools built by the studio are non-diagnostic.
 - Primary action: "Show us how it works" (mailto:dev@pirx.ca). Secondary: "See what we've built". The AEO chapter links to "Run the Readiness Check" (https://check.abra-ca-dabra.app/check) and "Open Schema" (https://schema-two.vercel.app/).
 
+<!-- site-pages:start -->
+- Offerings: https://abra-ca-dabra.app/offerings/
+- AI assistants and agents that remember customers and take actions: https://abra-ca-dabra.app/offerings/ai-assistants-and-agents/
+- Answers from your own documents: https://abra-ca-dabra.app/offerings/answers-from-your-documents/
+- Any model, one controlled bill: https://abra-ca-dabra.app/offerings/any-model-one-bill/
+- Voice and real-time AI agents: https://abra-ca-dabra.app/offerings/voice-and-realtime-agents/
+- Web automation, scraping, PDFs and reports: https://abra-ca-dabra.app/offerings/web-automation/
+- Safe execution of AI-written code: https://abra-ca-dabra.app/offerings/safe-code-execution/
+- Custom apps and back offices: https://abra-ca-dabra.app/offerings/custom-apps/
+- AI media: images, video, transcripts: https://abra-ca-dabra.app/offerings/ai-media/
+- AI visibility and crawler control: https://abra-ca-dabra.app/offerings/ai-visibility/
+- Search-grounded research tools: https://abra-ca-dabra.app/offerings/search-grounded-research/
+- Portfolio: https://abra-ca-dabra.app/portfolio/
+- Showdesk: https://abra-ca-dabra.app/portfolio/showdesk/
+- Schema: https://abra-ca-dabra.app/portfolio/schema/
+- LLM Leverage: https://abra-ca-dabra.app/portfolio/llm-leverage/
+- Canadian Discount Appliances: https://abra-ca-dabra.app/portfolio/canadian-discount-appliances/
+- Super Funnel: https://abra-ca-dabra.app/portfolio/super-funnel/
+- pirx.ca: https://abra-ca-dabra.app/portfolio/pirx/
+- Products: https://abra-ca-dabra.app/products/
+- Showdesk: https://abra-ca-dabra.app/products/showdesk/
+- Schema: https://abra-ca-dabra.app/products/schema/
+- Super Funnel: https://abra-ca-dabra.app/products/super-funnel/
+- LLM Leverage course: https://abra-ca-dabra.app/course/llm-leverage/
+<!-- site-pages:end -->
 <!-- blog-live:start -->
 ## Blog
 

@@ -13,6 +13,7 @@ const mimeTypes = {
   '.js': 'text/javascript; charset=utf-8',
   '.mp4': 'video/mp4',
   '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
 };
 
 let browser;
@@ -412,9 +413,11 @@ test('range chapter sits between time and the answer receipt', async () => {
   const ids = await page.locator('main > section').evaluateAll((sections) => sections.map((section) => section.id));
   const timeIndex = ids.indexOf('time');
   const rangeIndex = ids.indexOf('range');
+  const modelsIndex = ids.indexOf('models');
   const aeoIndex = ids.indexOf('aeo');
   assert.equal(rangeIndex, timeIndex + 1);
-  assert.equal(aeoIndex, rangeIndex + 1);
+  assert.equal(modelsIndex, rangeIndex + 1);
+  assert.equal(aeoIndex, modelsIndex + 1);
 
   const range = page.locator('#range');
   assert.equal(await range.getAttribute('data-specimen'), null);
@@ -447,7 +450,6 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.match(plate('model'), /your own data/);
   assert.match(plate('record'), /CRM or ERP/);
   assert.match(plate('commerce'), /lead generation/);
-  assert.match(plate('commerce'), /the next room is the receipt/i);
   assert.doesNotMatch(await page.content(), /ringside/i);
   assert.equal(await range.locator('[data-range-panel] a').count(), 0);
 
@@ -530,7 +532,7 @@ test('reduced motion stacks every range plate and hides its controls', async () 
   );
   assert.match(
     await page.locator('#range [data-range-panel="commerce"]').textContent(),
-    /the next room is the receipt/i,
+    /lead generation/,
   );
   await context.close();
 });

@@ -2,7 +2,7 @@
 
 **Domain:** [abra-ca-dabra.app](https://abra-ca-dabra.app)
 **Studio:** Abracadabra AI
-**Updated:** 2026-09-25
+**Updated:** 2026-10-15
 **Status:** Working source for site copy, sales language, and what we are willing to say in public.
 
 This file is the argument and the evidence. The GitHub catalog at [makemoney2023/abracadabra](https://github.com/makemoney2023/abracadabra) is the showroom (films, scroll catalog, one-pagers). This document is the front door: who we are, what the work is worth, and what proves it.
@@ -13,9 +13,7 @@ The local folder `Desktop/abracadbra` is not yet a clone of that repo. When the 
 
 ## The name
 
-Abracadabra, traced back far enough, is Aramaic — roughly *avra kadavra*, "I will create as I speak." Not a spell. A description of the actual mechanism: you say what you mean, and something real comes into being.
-
-That's the business, minus the theatrics. Say the process, the exceptions, the words your team already uses — we turn that description into a running system. The "speech" is the brief: the intent, the context, the constraints nobody wrote down. The "creation" is production software, not a mockup. We picked the name because it's literally what happens in the room, not because we wanted to sound magical.
+Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. Not a spell: you say what you mean, and that description becomes production software.
 
 ---
 
@@ -86,9 +84,9 @@ Paste-ready. Section order is the page.
 
 **Headline:** From thought to working software.
 
-**Subhead:** Tell us what should exist. We engineer the intent and context behind it—then coordinated AI agents design, build, and test the system in parallel, while experienced people direct every decision.
+**Subhead:** Tell us what should exist. We engineer the intent and context behind it. Coordinated AI agents design, build, and test in parallel, while experienced people direct every decision.
 
-**Tag:** Intent and context engineered first. Five coordinated workstreams. One running system.
+**Tag:** We write the brief before anyone builds. Five workstreams. One running system.
 
 **Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build brief**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered brief. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example.
 
@@ -160,7 +158,7 @@ We close it. The steps stay yours. The software is built to carry them, at whate
 1. **Your experts stop being the bottleneck.** Customers and new hires get a grounded answer from your science, your product, and your plan, on text or voice, any hour.
 2. **Your best rep can be everywhere you sell.** The talk track, the booking, the pipeline, and a coach on the real book of business. A new person in a new city sells to the standard.
 3. **Interest arrives with a reason attached.** A personal result, the customer's language, a practitioner's name, a next step, a cart.
-4. **You see the move in time to make it.** What a body can do, what a rate will do, which visit is ready to buy, whether AI search can find you — and when it can't yet, we've already shown the fix works (see the zero-to-scale case above).
+4. **You see the move in time to make it.** what a body can do; what a rate will do; which visit is ready to buy; whether AI search can find you.
 5. **A new market is a production run.** Channel, language, and creative from a system that already knows the claims you allow.
 6. **The first yes happens on the screen.** Fit, price, booking, and trust before anyone gets in a car.
 7. **The capability stays when the invoice would have grown.** Answers, agreements, content, and the customer record live on your side of the wall.
@@ -430,7 +428,7 @@ The check is specified in `docs/readiness-check/`. Its shell and the assessment 
 
 The Scrollcraft build at `scrollcraft/builds/abracadabra-ai/` now carries this file's copy end to end. What landed, so nobody re-derives it:
 
-- **Homepage** (`index.html`): hero, the Aramaic origin of the name directly under the hero ("I will create as I speak."), the time travel chapter ("It feels like magic." — a pinned delivery calendar that moves through Conventional → Engineer → Parallel → Arrive to show the serial calendar folding in on itself once the thinking is front-loaded and the workstreams run at once; no duration or percentage is stated, the geometry carries the claim, and the copy says there is no sleight of hand), the range chapter (`#range`, "The only limit is what you can think of." — a menu of services with no named work: marketing, applications, machine learning, the customer record (CRM/ERP), and the sale (stores and lead generation); nothing on the menu is fixed, and the chapter hands off into the answer receipt; since 2026-09-28 a faint decorative canvas behind the menu draws one motif per service and adds no copy; the pirx.ca Search Console figures stay in `#aeo`), catalog, receipt (the pirx.ca figures with source and pull date printed under them), the situation and benefits pin, the Showdesk film scrub, the how-it-works pin, an FAQ in the operator's words, and the brief close. Every FAQ answer opens with the answer, then the qualifier, so an answer engine can lift the first sentence whole. The FAQ "Do you only build software?" answers "No." and names the public examples.
+- **Homepage** (`index.html`): hero, the Aramaic origin of the name directly under the hero ("I will create as I speak."), the time travel chapter ("It feels like magic." — a pinned delivery calendar that moves through Conventional → Engineer → Parallel → Arrive to show the serial calendar folding in on itself once the thinking is front-loaded and the workstreams run at once; no duration or percentage is stated, the geometry carries the claim, and the copy says there is no sleight of hand), the range chapter (`#range`, "The only limit is what you can think of." — a menu of services with no named work: marketing, applications, machine learning, the customer record (CRM/ERP), and the sale (stores and lead generation); nothing on the menu is fixed, and the chapter hands off into the model strip (`#models`); since 2026-09-28 a faint decorative canvas behind the menu draws one motif per service and adds no copy; the pirx.ca Search Console figures stay in `#aeo`), catalog, receipt (the pirx.ca figures with source and pull date printed under them), the situation and benefits pin, the Showdesk film scrub, the how-it-works pin, an FAQ in the operator's words, and the brief close. Every FAQ answer opens with the answer, then the qualifier, so an answer engine can lift the first sentence whole. The FAQ "Do you only build software?" answers "No." and names the public examples.
 - **Search and answer engines**: colon-style title, description under 160 characters, canonical, Open Graph and Twitter cards, and a JSON-LD graph (`Organization`, `WebSite`, `WebPage`, `ItemList` of the named specimens, `FAQPage`). The walkthrough page is rendered by script, so it also ships a hidden `h1`, a `noscript` article with all eight legs, and an `ItemList`. The films page carries a `CollectionPage` and one `VideoObject` per cut. The 44-second Showdesk promo and the eight Super Funnel tours state a duration because those lengths were measured. The other captures do not.
 - **Crawler files**: on 2026-09-23 `robots.txt` named GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended, Bingbot, and CCBot as allowed; `sitemap.xml` lists the three pages with image and video entries; `llms.txt` is the quotable summary, including the rule that the wellness tools are non-diagnostic and the instruction to cite the pirx.ca figures with their date. As of 2026-10-14, CCBot and Bytespider are disallowed, and the other named answer-engine crawlers stay allowed. See Blog and crawlers below.
 - **Held out on purpose**: no counters on the receipt figures, no invented durations, no metrics beyond the pirx.ca set cleared in Confirm before publishing, no product names from What stays off the public site.

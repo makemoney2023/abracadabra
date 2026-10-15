@@ -2,6 +2,54 @@
 # html_handling is none, so the apex needs an explicit rewrite to index.html.
 /index.html / 301
 / /index.html 200
+# site-redirects
+/offerings /offerings/index.html 200
+/offerings/ /offerings/index.html 200
+/offerings/ai-assistants-and-agents /offerings/ai-assistants-and-agents/index.html 200
+/offerings/ai-assistants-and-agents/ /offerings/ai-assistants-and-agents/index.html 200
+/offerings/answers-from-your-documents /offerings/answers-from-your-documents/index.html 200
+/offerings/answers-from-your-documents/ /offerings/answers-from-your-documents/index.html 200
+/offerings/any-model-one-bill /offerings/any-model-one-bill/index.html 200
+/offerings/any-model-one-bill/ /offerings/any-model-one-bill/index.html 200
+/offerings/voice-and-realtime-agents /offerings/voice-and-realtime-agents/index.html 200
+/offerings/voice-and-realtime-agents/ /offerings/voice-and-realtime-agents/index.html 200
+/offerings/web-automation /offerings/web-automation/index.html 200
+/offerings/web-automation/ /offerings/web-automation/index.html 200
+/offerings/safe-code-execution /offerings/safe-code-execution/index.html 200
+/offerings/safe-code-execution/ /offerings/safe-code-execution/index.html 200
+/offerings/custom-apps /offerings/custom-apps/index.html 200
+/offerings/custom-apps/ /offerings/custom-apps/index.html 200
+/offerings/ai-media /offerings/ai-media/index.html 200
+/offerings/ai-media/ /offerings/ai-media/index.html 200
+/offerings/ai-visibility /offerings/ai-visibility/index.html 200
+/offerings/ai-visibility/ /offerings/ai-visibility/index.html 200
+/offerings/search-grounded-research /offerings/search-grounded-research/index.html 200
+/offerings/search-grounded-research/ /offerings/search-grounded-research/index.html 200
+/portfolio /portfolio/index.html 200
+/portfolio/ /portfolio/index.html 200
+/portfolio/showdesk /portfolio/showdesk/index.html 200
+/portfolio/showdesk/ /portfolio/showdesk/index.html 200
+/portfolio/schema /portfolio/schema/index.html 200
+/portfolio/schema/ /portfolio/schema/index.html 200
+/portfolio/llm-leverage /portfolio/llm-leverage/index.html 200
+/portfolio/llm-leverage/ /portfolio/llm-leverage/index.html 200
+/portfolio/canadian-discount-appliances /portfolio/canadian-discount-appliances/index.html 200
+/portfolio/canadian-discount-appliances/ /portfolio/canadian-discount-appliances/index.html 200
+/portfolio/super-funnel /portfolio/super-funnel/index.html 200
+/portfolio/super-funnel/ /portfolio/super-funnel/index.html 200
+/portfolio/pirx /portfolio/pirx/index.html 200
+/portfolio/pirx/ /portfolio/pirx/index.html 200
+/products /products/index.html 200
+/products/ /products/index.html 200
+/products/showdesk /products/showdesk/index.html 200
+/products/showdesk/ /products/showdesk/index.html 200
+/products/schema /products/schema/index.html 200
+/products/schema/ /products/schema/index.html 200
+/products/super-funnel /products/super-funnel/index.html 200
+/products/super-funnel/ /products/super-funnel/index.html 200
+/course/llm-leverage /course/llm-leverage/index.html 200
+/course/llm-leverage/ /course/llm-leverage/index.html 200
+# /site-redirects
 # blog-redirects
 /blog /blog/index.html 200
 /blog/ /blog/index.html 200
