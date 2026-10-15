@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(join(root, path), "utf8");
+
+const industryNoun = /\b(clinics?|dentals?|dentists?|distributors?|restaurants?|warehouses?|hospitals?|hotels?|salons?|grocer(?:y|ies)|cafes?|coffees?|plumbers?|veterinar(?:y|ies)|realtors?|patients?|appliances?|kitchener|front desks?)\b/i;
 
 const offerings = [
   "ai-assistants-and-agents",
@@ -40,14 +42,27 @@ test("the model strip sits between the menu and the answer chapter", () => {
   assert.equal(index.includes("The next room is the receipt"), false);
   assert.match(index, /Every major model, one gateway/);
   assert.match(index, /What we build and run for you\./);
-  const offeringsBlock = index.slice(index.indexOf('id="offerings"'), index.indexOf('id="benefits"'));
-  assert.equal((offeringsBlock.match(/href="\/offerings\//g) || []).length, 10);
+  const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="benefits"'));
+  assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
+  assert.match(index, /href="\/services\/">Services/);
+  assert.equal(index.includes(">Offerings<"), false);
+  assert.equal(modelsBlock.includes("marquee__word"), false);
+  const marks = [
+    "baseten.svg", "cartesia.svg", "cerebras.svg", "cohere.svg", "fal.svg", "groq.svg",
+    "ideogram.svg", "parallel.svg", "xai.svg", "gemma.svg", "gpt-oss.svg", "zhipu.svg",
+    "flux.svg", "stability.svg", "leonardo.png", "whisper.svg", "baai.svg",
+  ];
+  for (const file of marks) {
+    assert.equal(existsSync(join(root, "assets/logos", file)), true, file);
+    assert.match(modelsBlock, new RegExp(`assets/logos/${file.replace(".", "\\.")}`));
+  }
+  assert.doesNotMatch(servicesBlock, industryNoun);
 });
 
 test("generated pages keep placeholders visible and out of JSON-LD", () => {
   const pages = [
-    ["offerings/index.html", ["CollectionPage", "ItemList"]],
-    ["offerings/ai-assistants-and-agents/index.html", ["Service", "FAQPage", "BreadcrumbList"]],
+    ["services/index.html", ["CollectionPage", "ItemList"]],
+    ["services/ai-assistants-and-agents/index.html", ["Service", "FAQPage", "BreadcrumbList"]],
     ["portfolio/index.html", ["CollectionPage"]],
     ["portfolio/canadian-discount-appliances/index.html", ["BreadcrumbList"]],
     ["products/index.html", ["CollectionPage"]],
@@ -64,9 +79,20 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(html, /class="site-nav"/);
     assert.match(html, /Start a brief/);
   }
-  const offering = read("offerings/ai-assistants-and-agents/index.html");
+  const offering = read("services/ai-assistants-and-agents/index.html");
   assert.match(offering, /PLACEHOLDER — needs Christopher/);
-  assert.match(offering, /What do you build\?/);
+  assert.match(offering, /What it is/);
+  assert.match(offering, /What it looks like in your business/);
+  assert.match(offering, /Answering common customer questions after hours/);
+  assert.match(offering, /How it works/);
+  assert.match(offering, /What you get/);
+  assert.match(offering, /Who it's for/);
+  assert.match(offering, /Signs you need it/);
+  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/01\.webp/);
+  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/02\.webp/);
+  assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/03\.webp/);
+  assert.doesNotMatch(offering, industryNoun);
+  assert.match(offering, /href="\/services\/">Services/);
   const product = read("products/schema/index.html");
   assert.match(product, /PLACEHOLDER — needs Christopher/);
   const course = read("course/llm-leverage/index.html");
@@ -74,8 +100,16 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.equal(course.includes("module 1"), false);
   const sitemap = read("sitemap.xml");
   for (const slug of offerings) {
-    assert.match(sitemap, new RegExp(`https://abra-ca-dabra.app/offerings/${slug}/`));
+    assert.match(sitemap, new RegExp(`https://abra-ca-dabra.app/services/${slug}/`));
+    const page = read(`services/${slug}/index.html`);
+    assert.match(page, /What it looks like in your business/);
+    assert.doesNotMatch(page, industryNoun);
+    assert.equal((page.match(/<h3>/g) || []).length >= 4, true, slug);
   }
-  assert.match(read("llms.txt"), /https:\/\/abra-ca-dabra\.app\/offerings\//);
-  assert.match(read("_redirects"), /\/offerings\/ai-assistants-and-agents \/offerings\/ai-assistants-and-agents\/index\.html 200/);
+  assert.doesNotMatch(read("services/index.html"), industryNoun);
+  assert.equal(existsSync(join(root, "offerings")), false);
+  assert.match(read("llms.txt"), /https:\/\/abra-ca-dabra\.app\/services\//);
+  assert.match(read("_redirects"), /\/services\/ai-assistants-and-agents \/services\/ai-assistants-and-agents\/index\.html 200/);
+  assert.match(read("_redirects"), /\/offerings\/ai-assistants-and-agents \/services\/ai-assistants-and-agents\/ 301/);
+  assert.match(read("portfolio/canadian-discount-appliances/index.html"), /Canadian Discount Appliances/);
 });

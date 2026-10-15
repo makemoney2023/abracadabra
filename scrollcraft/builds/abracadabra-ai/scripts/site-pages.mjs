@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -147,14 +147,31 @@ function modelsHtml() {
 }
 
 function offeringsHtml() {
-  const cards = offerings.map((item) => `<li><a href="/offerings/${item.slug}/"><h3>${esc(item.outcome)}</h3><p class="offerings__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`).join("");
-  return `<section id="offerings" class="sc-section offerings" aria-labelledby="offerings-title">
+  const cards = offerings.map((item) => `<li><a href="/services/${item.slug}/"><h3>${esc(item.outcome)}</h3><p>${esc(item.card)}</p><p class="services__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`).join("");
+  return `<section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
-      <p class="offerings__kicker">${esc(OFFERINGS_KICKER)}</p>
-      <h2 id="offerings-title" class="sc-display sc-display--md">${esc(OFFERINGS_HEADING)}</h2>
-      <ul class="offerings__grid">${cards}</ul>
+      <p class="services__kicker">${esc(OFFERINGS_KICKER)}</p>
+      <h2 id="services-title" class="sc-display sc-display--md">${esc(OFFERINGS_HEADING)}</h2>
+      <ul class="services__grid">${cards}</ul>
     </div>
   </section>`;
+}
+
+function mediaSlot(slug, index, kind) {
+  const cls = kind === "hero" ? "content-hero-photo" : "post-figure";
+  const note = kind === "hero" ? "Hero image for this service." : "Image for this service.";
+  const n = String(index).padStart(2, "0");
+  return `<figure class="${cls}">
+  <picture>
+    <source srcset="/blog/media/services/${esc(slug)}/${n}.webp" type="image/webp">
+    <img src="/blog/media/services/${esc(slug)}/${n}.jpg" alt="" width="1600" height="1000">
+  </picture>
+  <figcaption>${esc(PLACEHOLDER)}. ${esc(note)}</figcaption>
+</figure>`;
+}
+
+function list(tag, items) {
+  return `<${tag}>${items.map((item) => `<li>${esc(item)}</li>`).join("")}</${tag}>`;
 }
 
 function wrapLines(text, max = 26) {
@@ -282,13 +299,13 @@ async function plateOrPhoto(key, label, title, photo) {
 }
 
 async function renderOffering(item) {
-  const path = `/offerings/${item.slug}/`;
+  const path = `/services/${item.slug}/`;
   const url = `${SITE}${path}`;
   const title = pageTitle(item.outcome);
-  const description = clip(`${item.outcome}. ${builtOn(item.builtOn)}`, 155);
+  const description = clip(item.whatItIs, 155);
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
-    { name: "Offerings", href: "/offerings/", url: `${SITE}/offerings/` },
+    { name: "Services", href: "/services/", url: `${SITE}/services/` },
     { name: item.outcome, href: path, url },
   ];
   const service = {
@@ -296,7 +313,7 @@ async function renderOffering(item) {
     "@id": `${url}#service`,
     name: item.outcome,
     serviceType: item.outcome,
-    description: item.outcome,
+    description: item.whatItIs,
     provider: { "@id": ORG_ID },
     areaServed: "Worldwide",
     url,
@@ -304,20 +321,14 @@ async function renderOffering(item) {
   const faq = {
     "@type": "FAQPage",
     "@id": `${url}#faq`,
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What do you build?",
-        acceptedAnswer: { "@type": "Answer", text: item.outcome },
-      },
-      {
-        "@type": "Question",
-        name: "What is it built on?",
-        acceptedAnswer: { "@type": "Answer", text: builtOn(item.builtOn) },
-      },
-    ],
+    mainEntity: item.faqs.map(([name, text]) => ({
+      "@type": "Question",
+      name,
+      acceptedAnswer: { "@type": "Answer", text },
+    })),
   };
-  const og = await plateOrPhoto(item.slug, "Offering", item.outcome, null);
+  const og = await plateOrPhoto(item.slug, "Service", item.outcome, null);
+  const questions = item.faqs.map(([name, text]) => `<h3>${esc(name)}</h3>\n<p>${esc(text)}</p>`).join("\n");
   const html = shell({
     title,
     description,
@@ -332,37 +343,58 @@ async function renderOffering(item) {
       id: `${url}#webpage`,
       url,
       name: item.outcome,
-      description: item.outcome,
+      description: item.whatItIs,
     }), [crumbList(crumbs), service, faq]),
     body: `<main class="site-page">
 ${visibleCrumbs(crumbs)}
 <p class="kicker">${esc(OFFERINGS_KICKER)}</p>
 <h1>${esc(item.outcome)}</h1>
-<p>${esc(item.outcome)}</p>
+${mediaSlot(item.slug, 1, "hero")}
+<section>
+<h2>What it is</h2>
+<p>${esc(item.whatItIs)}</p>
+</section>
+<section>
+<h2>What it looks like in your business</h2>
+${list("ul", item.examples)}
+</section>
+${mediaSlot(item.slug, 2, "body")}
+<section>
+<h2>How it works</h2>
+${list("ol", item.steps)}
+</section>
+<section>
+<h2>What you get</h2>
+${list("ul", item.deliverables)}
+</section>
+${mediaSlot(item.slug, 3, "body")}
+<section>
+<h2>Who it's for</h2>
+<p>${esc(item.who)}</p>
+<h3>Signs you need it</h3>
+${list("ul", item.signs)}
+</section>
 <p class="tag">${esc(builtOn(item.builtOn))}</p>
 <section>
 <h2>Questions</h2>
-<h3>What do you build?</h3>
-<p>${esc(item.outcome)}</p>
-<h3>What is it built on?</h3>
-<p>${esc(builtOn(item.builtOn))}</p>
+${questions}
 </section>
 ${placeholder(placeholders.offering)}
 <p><a href="/#brief">Start a brief</a></p>
 </main>`,
   });
-  await writePage(`offerings/${item.slug}/index.html`, html);
+  await writePage(`services/${item.slug}/index.html`, html);
 }
 
 async function renderOfferingsHub() {
-  const url = `${SITE}/offerings/`;
+  const url = `${SITE}/services/`;
   const title = "What we build and run | Abracadabra AI";
   const description = "Ten systems Abracadabra AI builds and runs on Cloudflare's global network, from agents to search-grounded research.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
-    { name: "Offerings", href: "/offerings/", url },
+    { name: "Services", href: "/services/", url },
   ];
-  const list = {
+  const listNode = {
     "@type": "ItemList",
     "@id": `${url}#list`,
     name: OFFERINGS_HEADING,
@@ -373,12 +405,12 @@ async function renderOfferingsHub() {
       item: {
         "@type": "Service",
         name: item.outcome,
-        url: `${SITE}/offerings/${item.slug}/`,
+        url: `${SITE}/services/${item.slug}/`,
       },
     })),
   };
-  const og = await plateOrPhoto("offerings", "Offerings", OFFERINGS_HEADING, null);
-  const cards = offerings.map((item) => `<li><a href="/offerings/${item.slug}/"><strong>${esc(item.outcome)}</strong><span>Built on ${esc(item.builtOn.join(", "))}</span></a></li>`).join("");
+  const og = await plateOrPhoto("services", "Services", OFFERINGS_HEADING, null);
+  const cards = offerings.map((item) => `<li><a href="/services/${item.slug}/"><strong>${esc(item.outcome)}</strong><span>${esc(item.card)}</span></a></li>`).join("");
   const html = shell({
     title,
     description,
@@ -394,7 +426,7 @@ async function renderOfferingsHub() {
       url,
       name: OFFERINGS_HEADING,
       description,
-    }), [crumbList(crumbs), list]),
+    }), [crumbList(crumbs), listNode]),
     body: `<main class="site-page">
 ${visibleCrumbs(crumbs)}
 <p class="kicker">${esc(OFFERINGS_KICKER)}</p>
@@ -402,7 +434,7 @@ ${visibleCrumbs(crumbs)}
 <ul class="cards">${cards}</ul>
 </main>`,
   });
-  await writePage("offerings/index.html", html);
+  await writePage("services/index.html", html);
 }
 
 function caseAbout(item, url) {
@@ -692,8 +724,8 @@ ${placeholder(placeholders.course)}
 
 function siteUrls() {
   const paths = [
-    "/offerings/",
-    ...offerings.map((item) => `/offerings/${item.slug}/`),
+    "/services/",
+    ...offerings.map((item) => `/services/${item.slug}/`),
     "/portfolio/",
     ...cases.map((item) => `/portfolio/${item.slug}/`),
     "/products/",
@@ -705,24 +737,33 @@ function siteUrls() {
 
 function siteRedirects() {
   const paths = [
-    "/offerings",
-    ...offerings.map((item) => `/offerings/${item.slug}`),
+    "/services",
+    ...offerings.map((item) => `/services/${item.slug}`),
     "/portfolio",
     ...cases.map((item) => `/portfolio/${item.slug}`),
     "/products",
     ...products.map((item) => `/products/${item.slug}`),
     "/course/llm-leverage",
   ];
-  return paths.flatMap((path) => [
+  const rewrites = paths.flatMap((path) => [
     `${path} ${path}/index.html 200`,
     `${path}/ ${path}/index.html 200`,
-  ]).join("\n");
+  ]);
+  const moved = [
+    "/offerings /services/ 301",
+    "/offerings/ /services/ 301",
+    ...offerings.flatMap((item) => [
+      `/offerings/${item.slug} /services/${item.slug}/ 301`,
+      `/offerings/${item.slug}/ /services/${item.slug}/ 301`,
+    ]),
+  ];
+  return [...rewrites, ...moved].join("\n");
 }
 
 function llmsPages() {
   const lines = [
-    `- Offerings: ${SITE}/offerings/`,
-    ...offerings.map((item) => `- ${item.outcome}: ${SITE}/offerings/${item.slug}/`),
+    `- Services: ${SITE}/services/`,
+    ...offerings.map((item) => `- ${item.outcome}: ${SITE}/services/${item.slug}/`),
     `- Portfolio: ${SITE}/portfolio/`,
     ...cases.map((item) => `- ${item.name}: ${SITE}/portfolio/${item.slug}/`),
     `- Products: ${SITE}/products/`,
@@ -769,6 +810,7 @@ async function patchLlms() {
 }
 
 export async function buildSitePages() {
+  await rm(join(root, "offerings"), { recursive: true, force: true });
   await renderOfferingsHub();
   for (const item of offerings) await renderOffering(item);
   await renderPortfolioHub();

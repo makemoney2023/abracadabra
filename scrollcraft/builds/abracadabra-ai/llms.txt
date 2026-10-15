@@ -67,17 +67,17 @@ If a product you can buy already does the job, we say so and send you there.
 - Primary action: "Show us how it works" (mailto:dev@pirx.ca). Secondary: "See what we've built". The AEO chapter links to "Run the Readiness Check" (https://check.abra-ca-dabra.app/check) and "Open Schema" (https://schema-two.vercel.app/).
 
 <!-- site-pages:start -->
-- Offerings: https://abra-ca-dabra.app/offerings/
-- AI assistants and agents that remember customers and take actions: https://abra-ca-dabra.app/offerings/ai-assistants-and-agents/
-- Answers from your own documents: https://abra-ca-dabra.app/offerings/answers-from-your-documents/
-- Any model, one controlled bill: https://abra-ca-dabra.app/offerings/any-model-one-bill/
-- Voice and real-time AI agents: https://abra-ca-dabra.app/offerings/voice-and-realtime-agents/
-- Web automation, scraping, PDFs and reports: https://abra-ca-dabra.app/offerings/web-automation/
-- Safe execution of AI-written code: https://abra-ca-dabra.app/offerings/safe-code-execution/
-- Custom apps and back offices: https://abra-ca-dabra.app/offerings/custom-apps/
-- AI media: images, video, transcripts: https://abra-ca-dabra.app/offerings/ai-media/
-- AI visibility and crawler control: https://abra-ca-dabra.app/offerings/ai-visibility/
-- Search-grounded research tools: https://abra-ca-dabra.app/offerings/search-grounded-research/
+- Services: https://abra-ca-dabra.app/services/
+- AI assistants and agents that remember customers and take actions: https://abra-ca-dabra.app/services/ai-assistants-and-agents/
+- Answers from your own documents: https://abra-ca-dabra.app/services/answers-from-your-documents/
+- Any model, one controlled bill: https://abra-ca-dabra.app/services/any-model-one-bill/
+- Voice and real-time AI agents: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
+- Web automation, scraping, PDFs and reports: https://abra-ca-dabra.app/services/web-automation/
+- Safe execution of AI-written code: https://abra-ca-dabra.app/services/safe-code-execution/
+- Custom apps and back offices: https://abra-ca-dabra.app/services/custom-apps/
+- AI media: images, video, transcripts: https://abra-ca-dabra.app/services/ai-media/
+- AI visibility and crawler control: https://abra-ca-dabra.app/services/ai-visibility/
+- Search-grounded research tools: https://abra-ca-dabra.app/services/search-grounded-research/
 - Portfolio: https://abra-ca-dabra.app/portfolio/
 - Showdesk: https://abra-ca-dabra.app/portfolio/showdesk/
 - Schema: https://abra-ca-dabra.app/portfolio/schema/
