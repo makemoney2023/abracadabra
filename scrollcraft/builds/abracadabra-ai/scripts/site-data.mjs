@@ -1,5 +1,7 @@
 /** Facts already published on the studio site, plus the Cloudflare provider list. */
 
+import { pirxCaseShots, pirxHero } from "./pirx-shots.mjs";
+
 export const MODIFIED = "2026-10-15";
 
 export const offerings = [
@@ -486,6 +488,11 @@ export const cases = [
     name: "pirx.ca",
     kind: "proof",
     sameAs: "https://pirx.ca/",
+    image: pirxHero.desktop.src,
+    imageAlt: pirxHero.desktop.alt,
+    cardImage: pirxHero.desktop,
+    hero: pirxHero,
+    shots: pirxCaseShots,
     summary: "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days, Jul 14 to Oct 13, 2026.",
     chart: true,
     services: ["custom-apps", "ai-visibility", "search-grounded-research"],

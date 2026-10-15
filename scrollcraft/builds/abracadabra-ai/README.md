@@ -14,6 +14,16 @@ Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## PiRX screenshots — 2026-10-15
+
+- Self-hosted pirx.ca screenshots now sit on the portfolio card, the case study, the custom-apps proof, and the AI visibility proof. Alt text describes the screen. PiRX's own on-site claims are not copied into Abracadabra copy.
+- **What changed** — the home hero is the portfolio card and the case-study hero. The race predictor is the custom-apps proof. Accuracy, the marathon predictor, and the blog index are the AI visibility proof. The full home page and a blog post sit in the case-study body.
+- **Why** — Christopher supplied web-optimized screenshots as proof of the live product.
+- **Code touchpoints** — `scripts/pirx-shots.mjs`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `blog/blog.css`, `assets/pirx/`.
+- **Data-flow impact** — generated service and portfolio HTML.
+- **API / schema impact** — the pirx.ca page's primary image is the home-hero screenshot.
+- **Verification** — `npm test` in this folder.
+
 ## PiRX proof — 2026-10-15
 
 - The public pirx.ca Search Console claim is now the Christopher-approved window Jul 14 to Oct 13, 2026: 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions as a separate report. The lead line is "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days."

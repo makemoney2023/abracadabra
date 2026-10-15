@@ -1,5 +1,7 @@
 /** Sales copy for /services/. Industry nouns stay off these pages. Named proof is only work Christopher cleared. */
 
+import { pirxCustomAppShots, pirxVisibilityShots } from "./pirx-shots.mjs";
+
 export const READINESS_URL = "https://check.abra-ca-dabra.app/check";
 
 export const processIntro = "The order is the same on every service. The job is what changes.";
@@ -409,6 +411,7 @@ export const salesPages = {
         text: "The app, and the blogs beside it. The search figures for the blogs are on the portfolio note and on the AI visibility page. They are not repeated as a claim about every app.",
         href: "/portfolio/pirx/",
         link: "pirx.ca",
+        shots: pirxCustomAppShots,
       },
     ],
     faqs: [
@@ -511,6 +514,7 @@ export const salesPages = {
         href: "/portfolio/pirx/",
         link: "Read the pirx.ca note",
         chart: true,
+        shots: pirxVisibilityShots,
       },
       {
         title: "Renew Implants",

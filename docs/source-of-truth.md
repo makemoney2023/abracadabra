@@ -397,7 +397,7 @@ These are sourced on disk. They are not approved public claims.
 
 **Safe to say without those numbers.** Live URLs. "Several languages" or "twenty locales" where the app README states the locale list. "Non-diagnostic wellness assessment." "Film, one-pager, and demo script from the same footage." "A second product on a shared platform."
 
-**Already cleared, unlike the table above.** The pirx.ca Search Console window Jul 14 to Oct 13, 2026 is approved for public use: 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions (a separate report). Top AI-feature pages: good-10k-time-by-age 10,451; good-half-marathon-time-by-age 7,758; good-5k-time-by-age 6,104. Do not mention CTR. Do not claim traffic or revenue. Do not add the two impression totals. The earlier 2026-09-23 pull is not the public claim.
+**Already cleared, unlike the table above.** The pirx.ca Search Console window Jul 14 to Oct 13, 2026 is approved for public use: 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions (a separate report). Top AI-feature pages: good-10k-time-by-age 10,451; good-half-marathon-time-by-age 7,758; good-5k-time-by-age 6,104. Do not mention CTR. Do not claim traffic or revenue. Do not add the two impression totals. The earlier 2026-09-23 pull is not the public claim. Self-hosted page screenshots may be shown; do not copy PiRX's own on-site claims (370K+, 4.9/5, 97.4%, Olympians) into Abracadabra text.
 
 ---
 

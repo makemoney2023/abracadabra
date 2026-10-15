@@ -624,8 +624,36 @@ body { text-wrap: pretty; }
   margin: 0.35rem 0 0.6rem;
 }
 
+.shot-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 0.72fr);
+  gap: 0.75rem;
+  align-items: start;
+  margin: 1rem 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.shot-pair img,
+.case-hero img,
+.cards img {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  display: block;
+  border: 1px solid var(--line);
+}
+
+.case-hero { margin: 0 0 1.2rem; }
+
+.case-hero .shot-mobile { display: none; }
+
 @media (max-width: 700px) {
-  .pirx-chart__pair { grid-template-columns: 1fr; }
+  .pirx-chart__pair,
+  .shot-pair { grid-template-columns: 1fr; }
+  .case-hero .shot-desktop { display: none; }
+  .case-hero .shot-mobile { display: block; }
 }
 
 .cloud-line { color: var(--optic); }

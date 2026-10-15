@@ -162,6 +162,49 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(pirx, /class="pirx-chart"/);
   assert.doesNotMatch(pirx, /\bCTR\b/i);
   assert.doesNotMatch(pirx, /201K|21\.8K|2026-09-23|traffic|revenue|418/);
+  const siteClaims = /370K|4\.9\/5|97\.4|Olympian/i;
+  const portfolioHub = read("portfolio/index.html");
+  assert.doesNotMatch(visibility, siteClaims);
+  assert.doesNotMatch(customApps, siteClaims);
+  assert.doesNotMatch(pirx, siteClaims);
+  assert.doesNotMatch(portfolioHub, siteClaims);
+  assert.match(portfolioHub, /assets\/pirx\/pirx-home-hero-desktop\.jpg/);
+  assert.match(portfolioHub, /alt="pirx\.ca home page, with a race time predictor/);
+  assert.match(pirx, /assets\/pirx\/pirx-home-hero-desktop\.jpg/);
+  assert.match(pirx, /assets\/pirx\/pirx-home-hero-mobile\.jpg/);
+  assert.match(pirx, /assets\/pirx\/pirx-home-full-desktop\.jpg/);
+  assert.match(pirx, /assets\/pirx\/pirx-home-full-mobile\.jpg/);
+  assert.match(pirx, /assets\/pirx\/pirx-blog-post-full-desktop\.jpg/);
+  assert.match(pirx, /assets\/pirx\/pirx-blog-post-full-mobile\.jpg/);
+  assert.match(customApps, /assets\/pirx\/pirx-race-predictor-full-desktop\.jpg/);
+  assert.match(customApps, /assets\/pirx\/pirx-race-predictor-full-mobile\.jpg/);
+  assert.doesNotMatch(customApps, /pirx-accuracy-full|pirx-blog-full|pirx-home-full|pirx-blog-post/);
+  assert.match(visibility, /pirx-accuracy-full-desktop\.jpg/);
+  assert.match(visibility, /pirx-accuracy-full-mobile\.jpg/);
+  assert.match(visibility, /pirx-race-predictor-marathon-full-desktop\.jpg/);
+  assert.match(visibility, /pirx-race-predictor-marathon-full-mobile\.jpg/);
+  assert.match(visibility, /pirx-blog-full-desktop\.jpg/);
+  assert.match(visibility, /pirx-blog-full-mobile\.jpg/);
+  assert.doesNotMatch(visibility, /pirx-race-predictor-full-|pirx-home-full|pirx-blog-post/);
+  assert.doesNotMatch(research, /assets\/pirx\//);
+  for (const file of [
+    "pirx-home-hero-desktop.jpg",
+    "pirx-home-hero-mobile.jpg",
+    "pirx-home-full-desktop.jpg",
+    "pirx-home-full-mobile.jpg",
+    "pirx-race-predictor-full-desktop.jpg",
+    "pirx-race-predictor-full-mobile.jpg",
+    "pirx-race-predictor-marathon-full-desktop.jpg",
+    "pirx-race-predictor-marathon-full-mobile.jpg",
+    "pirx-accuracy-full-desktop.jpg",
+    "pirx-accuracy-full-mobile.jpg",
+    "pirx-blog-full-desktop.jpg",
+    "pirx-blog-full-mobile.jpg",
+    "pirx-blog-post-full-desktop.jpg",
+    "pirx-blog-post-full-mobile.jpg",
+  ]) {
+    assert.equal(existsSync(join(root, "assets/pirx", file)), true, file);
+  }
   assert.match(read("llms.txt"), windowLabel);
   assert.match(read("llms.txt"), /375K/);
   assert.doesNotMatch(read("llms.txt"), /201K|21\.8K|2026-09-23/);

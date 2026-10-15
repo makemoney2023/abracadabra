@@ -304,6 +304,20 @@ async function plateOrPhoto(key, label, title, photo) {
   };
 }
 
+function shotImg(image, { lazy = true, className = "" } = {}) {
+  const loading = lazy ? ' loading="lazy" decoding="async"' : "";
+  const cls = className ? ` class="${className}"` : "";
+  return `<img${cls} src="${esc(image.src)}" alt="${esc(image.alt)}" width="${image.width}" height="${image.height}"${loading}>`;
+}
+
+function shotPairHtml(pair) {
+  return `<figure class="shot-pair">${shotImg(pair.desktop)}${shotImg(pair.mobile)}</figure>`;
+}
+
+function heroHtml(hero) {
+  return `<figure class="case-hero">${shotImg(hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(hero.mobile, { lazy: false, className: "shot-mobile" })}</figure>`;
+}
+
 function salesActions() {
   return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Show us how it works</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
 }
@@ -370,7 +384,7 @@ async function renderOffering(item) {
   const og = await plateOrPhoto(item.slug, "Service", page.headline, null);
   const questions = page.faqs.map(([name, text]) => `<h3>${esc(name)}</h3>\n<p>${esc(text)}</p>`).join("\n");
   const steps = processSteps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
-  const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
+  const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}${(proof.shots || []).map((pair) => shotPairHtml(pair)).join("")}<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
   const html = shell({
     title,
     description: page.description,
@@ -585,8 +599,8 @@ async function renderCase(item) {
 ${visibleCrumbs(crumbs)}
 <p class="kicker">Portfolio</p>
 <h1>${esc(item.name)}</h1>
-${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
-${item.chart ? `${pirxChartHtml()}\n` : ""}${live}
+${item.hero ? `${heroHtml(item.hero)}\n` : ""}${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
+${(item.shots || []).length ? `${item.shots.map((pair) => shotPairHtml(pair)).join("\n")}\n` : ""}${item.chart ? `${pirxChartHtml()}\n` : ""}${live}
 ${relatedHtml}
 ${productLink}
 ${courseLink}
@@ -616,7 +630,12 @@ async function renderPortfolioHub() {
     })),
   };
   const og = await plateOrPhoto("portfolio", "Portfolio", "Working systems", null);
-  const cards = cases.map((item) => `<li><a href="/portfolio/${item.slug}/"><strong>${esc(item.name)}</strong><span>${esc(item.summary)}</span></a></li>`).join("");
+  const cards = cases.map((item) => {
+    const photo = item.cardImage
+      ? shotImg(item.cardImage, { lazy: false })
+      : "";
+    return `<li><a href="/portfolio/${item.slug}/">${photo}<strong>${esc(item.name)}</strong><span>${esc(item.summary)}</span></a></li>`;
+  }).join("");
   const html = shell({
     title,
     description,
