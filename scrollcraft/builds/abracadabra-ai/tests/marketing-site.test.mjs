@@ -180,7 +180,7 @@ test('mobile selected work renders complete vertical cards', async () => {
 });
 
 test('required responsive widths do not create horizontal page overflow', async () => {
-  for (const width of [320, 390, 430, 768, 1280, 1440, 1920]) {
+  for (const width of [320, 375, 390, 430, 768, 1024, 1280, 1440, 1920]) {
     const { context, page } = await openPage({ width, height: width < 500 ? 844 : 1000 });
     const dimensions = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
@@ -191,6 +191,34 @@ test('required responsive widths do not create horizontal page overflow', async 
       dimensions.scrollWidth <= dimensions.clientWidth,
       `${width}px viewport overflows by ${dimensions.scrollWidth - dimensions.clientWidth}px`,
     );
+    await context.close();
+  }
+});
+
+test('inner pages stay inside the viewport at the required widths', async () => {
+  const paths = [
+    '/services/index.html',
+    '/services/ai-assistants-and-agents/index.html',
+    '/portfolio/index.html',
+    '/products/index.html',
+    '/course/llm-leverage/index.html',
+    '/blog/index.html',
+    '/blog/ai-readiness-assessment/index.html',
+  ];
+
+  for (const width of [375, 768, 1024, 1440, 1920]) {
+    const { context, page } = await openPage({ width, height: width < 500 ? 812 : 1000 });
+    for (const path of paths) {
+      await page.goto(`${origin}${path}`, { waitUntil: 'domcontentloaded' });
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      assert.ok(
+        dimensions.scrollWidth <= dimensions.clientWidth,
+        `${path} at ${width}px overflows by ${dimensions.scrollWidth - dimensions.clientWidth}px`,
+      );
+    }
     await context.close();
   }
 });
@@ -241,14 +269,14 @@ test('operation compiler engineers intent and context before the parallel agent 
 test('desktop scroll drives every pinned sequence and page progress', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000 });
   const engines = {
-    '#i': '.compiler',
+    '#compiler': '.compiler',
     '#time': '.time-engine',
     '#range': '.range-engine',
     '#aeo': '.aeo-engine',
   };
 
   for (const [selector, expectedState] of [
-    ['#i', 'run'],
+    ['#compiler', 'run'],
     ['#time', 'arrive'],
     ['#range', 'commerce'],
     ['#aeo', 'measure'],
@@ -294,12 +322,14 @@ test('dedicated AEO chapter explains the mechanism, proof, and next steps', asyn
   await context.close();
 });
 
-test('Aramaic origin sits directly under the hero', async () => {
+test('compiler sits directly under the hero, then the Aramaic origin', async () => {
   const { context, page } = await openPage();
   const order = await page.locator('main > section').evaluateAll((sections) =>
     sections.slice(0, 3).map((section) => section.id || section.getAttribute('aria-labelledby')),
   );
-  assert.deepEqual(order, ['i', 'name', 'situation-title']);
+  assert.deepEqual(order, ['i', 'compiler', 'name']);
+  assert.equal(await page.locator('#i .compiler').count(), 0);
+  assert.equal(await page.locator('#compiler .compiler').count(), 1);
 
   const origin = page.locator('#name');
   assert.equal((await origin.getByRole('heading', { level: 2 }).textContent()).trim(), 'I will create as I speak.');

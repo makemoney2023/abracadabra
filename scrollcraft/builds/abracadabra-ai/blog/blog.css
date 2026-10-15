@@ -39,6 +39,7 @@ a:hover { color: var(--ink); }
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
+  min-width: 0;
   padding: 1.1rem 1.5rem;
   border-bottom: 1px solid var(--line);
   background: rgba(7, 7, 6, 0.92);
@@ -54,7 +55,7 @@ a:hover { color: var(--ink); }
   letter-spacing: 0.02em;
 }
 
-.top nav { display: flex; gap: 1rem; }
+.top nav { display: flex; gap: 1rem; min-width: 0; overflow-x: auto; }
 
 .top nav a { color: var(--ink-soft); text-decoration: none; }
 
@@ -93,7 +94,13 @@ h2 { font-size: 1.55rem; margin-top: 2.4rem; }
   margin-bottom: 2.5rem;
 }
 
-.blog-index-hero { grid-template-columns: minmax(0, 40rem); align-items: start; }
+.blog-index-hero {
+  grid-template-columns: minmax(0, 44rem);
+  justify-content: center;
+  justify-items: center;
+  text-align: center;
+  margin-inline: auto;
+}
 
 .content-hero .crumbs { grid-column: 1 / -1; }
 
@@ -433,6 +440,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
   justify-content: space-between;
   gap: 1rem;
   align-items: center;
+  min-width: 0;
   min-height: 3.25rem;
   padding: 0.55rem 1.25rem;
   border-bottom: 1px solid var(--line);
@@ -456,6 +464,8 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
   align-items: center;
   overflow-x: auto;
   flex-wrap: nowrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .site-nav__links a {
@@ -514,13 +524,19 @@ body { text-wrap: pretty; }
 
 .tag { color: var(--optic); }
 
-.sales-dek { font-size: 1.15rem; max-width: 42rem; }
+.sales-dek, .sales-lead {
+  font-size: 1.15rem;
+  max-width: 44rem;
+  margin-inline: auto;
+  text-align: center;
+}
 
 .sales-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
-  margin: 1.1rem 0 1.25rem;
+  margin: 1.1rem auto 1.25rem;
 }
 
 .sales-actions a {
@@ -543,10 +559,11 @@ body { text-wrap: pretty; }
 .proof-strip {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.4rem 1rem;
   list-style: none;
   padding: 0;
-  margin: 0 0 1.2rem;
+  margin: 0 auto 1.2rem;
 }
 
 .proof-strip a { color: var(--optic); }
@@ -590,16 +607,74 @@ body { text-wrap: pretty; }
   margin: 1.2rem 0;
 }
 
-@media (max-width: 980px) {
+main.site-page > .kicker,
+main.site-page > h1,
+main.blog-index > .kicker,
+main.blog-index h1,
+.blog-index-hero .kicker,
+.blog-index-hero h1 {
+  text-align: center;
+}
+
+main.site-page > h1,
+main.blog-index h1,
+.blog-index-hero h1 {
+  max-width: 22ch;
+  margin-inline: auto;
+}
+
+main.site-page > p,
+main.site-page section > p,
+main.site-page section > h2,
+.sales-close,
+.price-block {
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+main.site-page section > h2,
+.sales-close,
+.price-block,
+.cloud-line {
+  text-align: center;
+}
+
+main.site-page .crumbs ol { justify-content: center; }
+
+main.site-page section:has(.outcome-grid),
+main.site-page section:has(.use-grid),
+main.site-page section:has(.extraction-table),
+main.site-page section:has(.process) {
+  max-width: none;
+}
+
+.outcome-grid,
+.use-grid,
+.extraction-table,
+.process,
+.cards {
+  max-width: none;
+  width: 100%;
+}
+
+h1, h2, h3 { overflow-wrap: anywhere; }
+
+@media (max-width: 1100px) {
   .content-hero,
   .post-layout,
-  .featured-post,
-  .cards,
-  .outcome-grid,
-  .use-grid { grid-template-columns: 1fr; }
-  .sales-actions { flex-direction: column; align-items: stretch; }
+  .featured-post { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .content-hero .hero-copy,
+  .featured-copy { text-align: center; }
   .post-aside { position: static; }
   .cta-sticky { flex-direction: column; align-items: stretch; }
   .cta-sticky a { text-align: center; }
   #all-notes ul { columns: 1; }
+}
+
+@media (max-width: 700px) {
+  .cards,
+  .outcome-grid,
+  .use-grid { grid-template-columns: 1fr; }
+  .sales-actions { flex-direction: column; align-items: stretch; }
 }
