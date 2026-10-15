@@ -54,7 +54,7 @@ export const SERVICE_ALTS = {
   },
   "custom-apps": {
     hero: "App canvas with a sidebar, a main workspace, and a status strip.",
-    body1: "Custom screen with a form, a record list, and the action the team uses.",
+    body1: "Custom screen with a form, a record list, and the action you use.",
     body2: "Shipped app view with the workflow the screen is built around.",
   },
   "ai-media": {

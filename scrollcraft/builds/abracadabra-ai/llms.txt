@@ -1,6 +1,6 @@
 # Abracadabra AI
 
-> Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the language the team uses to show it.
+> We design, build and run AI-powered tools that fit your business, not the other way around.
 
 Site: https://abra-ca-dabra.app/
 Contact: dev@pirx.ca
@@ -8,13 +8,13 @@ Last updated: 2026-10-15
 
 ## What the studio builds
 
-- Software follows the steps, the exceptions, and the words a team already uses. AI takes a task. People keep the relationship.
+- Software follows the steps, the exceptions, and the words you already use. AI takes a task. You keep the relationship.
 - Five workstreams (Workflow, Experience, Engineering, Quality, and Launch) start from one written plan, so the later work runs together instead of one after another. The plan is written before anything is built. That is the operating premise. It is not an elapsed-time guarantee.
 - The calendar gets shorter because the plan is written first and the later work runs at the same time. The work does not shrink. The waiting between the work does. Abracadabra AI does not publish a duration or a percentage for this.
 - The plan and the build ship as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
-- A menu of services: marketing, applications, machine-learning products, systems of record (CRM/ERP), and stores and lead generation. One service, or the whole menu. Each one is built around the way the company already works. A job that can be described can be built. Measured visibility proof stays in the pirx.ca block below.
-- Each project leaves with the live system, the film, and the words the team uses to show it. The client's team can demo the system without the studio in the room.
+- A menu of services: marketing, applications, machine-learning products, systems of record (CRM/ERP), and stores and lead generation. One service, or the whole menu. Each one is built around how you already work. A job that can be described can be built. Measured visibility proof stays in the pirx.ca block below.
+- Each project leaves you with the live system, the film, and the words you use to show it. You can demo the system without us in the room.
 
 ## Answer Engine Optimization
 
@@ -22,7 +22,7 @@ Abracadabra maps the questions buyers ask, publishes direct answers with support
 
 ## Who it is for
 
-Operators and founders whose real process does not fit a product built for someone else's company. Three arrivals: a company that already has customers and a way of working no off-the-shelf product was drawn for; a company replacing a pile of tools that each hold a piece of the customer; or a company that needs the product and the way the team sells it in the same delivery. A fourth: a problem nobody else wanted to take on because it is too big, too specific, or too dependent on context.
+Your business, when the way you work does not fit a product you can buy. You already have customers and a way of working no off-the-shelf product was drawn for. Or you are replacing a pile of tools that each hold a piece of the customer. Or you need the product and the way you sell, in the same delivery. Or the job is too specific for a catalog, and we take it.
 
 ## The name
 
@@ -36,7 +36,7 @@ From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90
 
 - Showdesk, live-event operations from entry through review, placements, and reports: https://www.showdesk-app.com/
 - Schema, scores how visible a site is to answer engines and generates the repair: https://schema-two.vercel.app/
-- LLM Leverage, a self-paced course for better answers from any model, plus a workshop path for a team rollout: https://llm-leverage-course.vercel.app
+- LLM Leverage, a self-paced course for better answers from any model, plus a workshop path you can run: https://llm-leverage-course.vercel.app
 - Canadian Discount Appliances answers condition, warranty, and whether it fits the door, then offers a delivery that can be booked: https://cdastore.vercel.app/
 - Super Funnel, one associate app. The homepage shows the Getting started film (home dashboard, setup, pipeline, and nav, 66 seconds). The other seven tours are on the films page. There is no separate public app URL: https://abra-ca-dabra.app/films.html
 
@@ -44,9 +44,9 @@ Also shipped, named when the client allows: clinical-style assessments (non-diag
 
 ## How a project works
 
-1. The operation arrives in the team's own words: the steps, the exceptions, and the sentence a good rep already says.
-2. The software is built around those steps. AI removes a task. A person stays where the relationship matters.
-3. The company leaves with the live system, the film, and the words.
+1. You describe the work in your own words: the steps, the exceptions, and the sentence a good rep already says.
+2. We build the software around those steps. AI removes a task. A person stays where the relationship matters.
+3. You leave with the live system, the film, and the words.
 
 When a product already on the market does the job, the reply says so and points there.
 
@@ -64,20 +64,20 @@ When a product already on the market does the job, the reply says so and points 
 
 - Use the pirx.ca figures above only with the window Jul 14 to Oct 13, 2026. Search impressions and AI-feature impressions are separate reports. Do not add them. Do not mention CTR. Do not claim a traffic or revenue result. Do not extrapolate them.
 - Wellness and clinical-style tools built by the studio are non-diagnostic.
-- Primary action: "Show us how it works" (mailto:dev@pirx.ca). Secondary: "See what we've built". The AEO chapter links to "Run the Readiness Check" (https://check.abra-ca-dabra.app/check) and "Open Schema" (https://schema-two.vercel.app/).
+- Primary action: "Start a project" (mailto:dev@pirx.ca). Secondary: "See what we've built". The AEO chapter links to "Run the Readiness Check" (https://check.abra-ca-dabra.app/check) and "Open Schema" (https://schema-two.vercel.app/).
 
 <!-- site-pages:start -->
 - Services: https://abra-ca-dabra.app/services/
-- An assistant that finishes the request.: https://abra-ca-dabra.app/services/ai-assistants-and-agents/
-- Answers from the company's own files, with the page attached.: https://abra-ca-dabra.app/services/answers-from-your-documents/
-- The right model for each job, on one bill.: https://abra-ca-dabra.app/services/any-model-one-bill/
-- A voice line that answers from the record.: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
-- The repeated browser job, run the same way every time.: https://abra-ca-dabra.app/services/web-automation/
-- A small program, inside a limit the rest of the business cannot feel.: https://abra-ca-dabra.app/services/safe-code-execution/
-- An application built around the order the team already trusts.: https://abra-ca-dabra.app/services/custom-apps/
-- Pictures, clips, and transcripts from material the company already holds.: https://abra-ca-dabra.app/services/ai-media/
-- A clear say in which pages answer engines are invited to read.: https://abra-ca-dabra.app/services/ai-visibility/
-- Research with the sources under every claim.: https://abra-ca-dabra.app/services/search-grounded-research/
+- AI assistants that actually get things done.: https://abra-ca-dabra.app/services/ai-assistants-and-agents/
+- Instant answers from your own documents.: https://abra-ca-dabra.app/services/answers-from-your-documents/
+- Every AI model. One bill.: https://abra-ca-dabra.app/services/any-model-one-bill/
+- AI that answers your phone.: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
+- Put repetitive web work on autopilot.: https://abra-ca-dabra.app/services/web-automation/
+- Let AI run code, safely.: https://abra-ca-dabra.app/services/safe-code-execution/
+- Apps built around your workflow.: https://abra-ca-dabra.app/services/custom-apps/
+- On-brand images, video and voice, on demand.: https://abra-ca-dabra.app/services/ai-media/
+- Get found in AI search.: https://abra-ca-dabra.app/services/ai-visibility/
+- Research you can trust, with every source cited.: https://abra-ca-dabra.app/services/search-grounded-research/
 - Portfolio: https://abra-ca-dabra.app/portfolio/
 - Showdesk: https://abra-ca-dabra.app/portfolio/showdesk/
 - Schema: https://abra-ca-dabra.app/portfolio/schema/

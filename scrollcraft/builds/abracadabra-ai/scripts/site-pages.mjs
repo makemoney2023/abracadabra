@@ -336,7 +336,7 @@ function shotPairHtml(pair) {
 }
 
 function salesActions() {
-  return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Show us how it works</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
+  return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Start a project</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
 }
 
 function proofStrip(items) {
@@ -439,30 +439,30 @@ ${proofStrip(page.strip)}
 ${page.problem.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
 </section>
 <section>
-<h2>What the system delivers</h2>
+<h2>What you get</h2>
 ${cardGrid("outcome-grid", page.outcomes)}
 </section>
 <section class="sales-split">
 <div>
-<h2>Where it earns its place</h2>
+<h2>Use cases</h2>
 ${cardGrid("use-grid", page.uses)}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body1", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
 ${capabilityHtml(page.capability)}
 <section>
-<h2>From the operation to a live system</h2>
+<h2>How it works</h2>
 <p>${esc(processIntro)}</p>
 <ol class="process">${steps}</ol>
 </section>
 <section>
-<h2>A product, a hire, or a system built for the job</h2>
+<h2>How it compares</h2>
 <p>${esc(page.compareIntro)}</p>
 ${comparisonTable(page.rows)}
 </section>
 <section class="sales-split">
 <div>
-<h2>Named work</h2>
+<h2>Proof</h2>
 ${proofs}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body2", { lazy: true, sizes: SPLIT_SIZES })}</figure>
@@ -471,14 +471,14 @@ ${proofs}
 <section class="price-block">
 <h2>Pricing</h2>
 <p>Contact for pricing. The price follows the job, not a public rate card.</p>
-<p><a href="/#brief">Show us how it works</a></p>
+<p><a href="/#brief">Start a project</a></p>
 </section>
 <section>
-<h2>Questions</h2>
+<h2>FAQ</h2>
 ${questions}
 </section>
 <section class="sales-close">
-<h2>Start with one job</h2>
+<h2>Start a project</h2>
 <p>${esc(page.close)}</p>
 ${salesActions()}
 </section>
@@ -489,8 +489,8 @@ ${salesActions()}
 
 async function renderOfferingsHub() {
   const url = `${SITE}/services/`;
-  const title = "Software for the jobs a company runs | Abracadabra AI";
-  const description = "Ten services, each built around a job the company already runs. Safe code execution ships inside the assistants and keeps its own page, so the limit is easy to read.";
+  const title = "Software for how you work | Abracadabra AI";
+  const description = "Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Services", href: "/services/", url },
@@ -538,7 +538,7 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
   title: esc(OFFERINGS_HEADING),
-  dek: "<p>Ten services, each built around a job the company already runs. Safe code execution ships inside the assistants and keeps its own page, so the limit is easy to read.</p>",
+  dek: "<p>Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,

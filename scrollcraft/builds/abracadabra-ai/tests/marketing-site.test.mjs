@@ -70,11 +70,11 @@ test('hero states the owner outcome with two clear actions', async () => {
   const { context, page } = await openPage();
   const actions = await page.locator('#i .hero__copy .cta a').allTextContents();
 
-  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Abracadabra builds software around the way a company already works.');
-  assert.match(await page.locator('#i .hero__copy').textContent(), /order the team already uses/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /film of the screens/i);
+  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Custom software, built for how you work.');
+  assert.match(await page.locator('#i .hero__copy').textContent(), /fit your business/i);
+  assert.match(await page.locator('#i .hero__copy').textContent(), /not the other way around/i);
   assert.deepEqual(actions.map((action) => action.trim()), [
-    'Show us how it works',
+    'Start a project',
     "See what we've built",
   ]);
   assert.equal(await page.locator('#i .hero__copy .cta .cta--primary').count(), 1);
@@ -656,7 +656,7 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.equal(await range.getAttribute('data-specimen'), null);
   assert.equal(
     (await range.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'The only limit is the work the company can describe.',
+    'If you can describe the job, we can build it.',
   );
   const rangeCopy = await range.locator('.range-copy').innerText();
   assert.match(rangeCopy, /The menu/i);

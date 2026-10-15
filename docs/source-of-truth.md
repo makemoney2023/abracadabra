@@ -34,13 +34,13 @@ Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. It is n
 
 **Promise.** We go deep on the intent behind the request, the context underneath it, and the words your people already use, then we ship the system, the film, and the script your team runs. We shrink the gap between what's in your head and what's actually running in production. From zero to scale, at the speed of thought.
 
-**The offer underneath.** Bespoke software for the way the company already works — any company, any complexity. The operation stays intact. The software is cut to fit it. AI takes a task. People keep the relationship. The same delivery includes something the team can demo.
+**The offer underneath.** Custom software, built for how you work. The operation stays intact. The software is cut to fit it. AI takes a task. You keep the relationship. You leave with something you can demo.
 
 **What makes this different.** Most shops turn down the request that doesn't fit a template. We take it, because the actual skill isn't "write code" — it's reading intent and context correctly, then turning that read into the right prompts, the right architecture, and a system that actually ships. Big, ambiguous, half-documented problems are the ones this studio is built for. If a product already exists that solves it off the shelf, we say so and send you there instead.
 
 **Atmosphere.** Where thought becomes a working system. The grasp of the technology should feel like magic. The page should still read like an operator: a live product, a film, a next step.
 
-**Primary action.** Show us how it works.
+**Primary action.** Start a project.
 
 **Secondary action.** See what we've built.
 
@@ -52,7 +52,7 @@ Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. It is n
 - Wellness tools are non-diagnostic. Say that whenever an assessment is described.
 - The name explains the magic: Aramaic *avra kadavra*, "I will create as I speak." The delivery chapter may say the result feels like magic, and must say there is a system behind it. Do not claim the model is magic with no system behind it.
 
-**The page sounds like this.** "Abracadabra builds software around the way a company already works." / "The system follows the order the team already uses." Product is the subject. Sentences are complete. The page does not use the "You do X. We do Y." cadence.
+**The page sounds like this.** "Custom software, built for how you work." / "We design, build and run AI-powered tools that fit your business, not the other way around." Second person and we. Short, confident, benefit-led sentences. Do not write "the company" or "the team." Do not use the visible product word "brief."
 
 **We do not sound like this.** Streamline, leverage, innovative, transformational, or a claim that the model is magic with no system behind it.
 
@@ -60,15 +60,15 @@ Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. It is n
 
 ## Who it is for
 
-Operators and founders whose real process — however big, however tangled — doesn't fit a product built for someone else's company.
+Your business, when the way you work does not fit a product you can buy.
 
 Three arrivals, one page:
 
 1. You already have customers and a way of working that no off-the-shelf product was drawn for.
 2. You are replacing a pile of tools that each hold a piece of the customer.
-3. You need the product and the way your team sells it, in the same delivery.
+3. You need the product and the way you sell, in the same delivery.
 
-A fourth, less obvious arrival: you've got a problem nobody else wanted to take on — too big, too specific, too dependent on context a generic team won't sit still long enough to learn. That's the one we actually enjoy.
+A fourth arrival: the job is too specific for a catalog, and we take it.
 
 **A good project** sounds like a Tuesday: the workflow, the words, and the outcome on the other side. If a product already on the market does that job, the reply says so.
 
@@ -80,11 +80,11 @@ Paste-ready. Section order is the page.
 
 ### 1. Hero
 
-**Eyebrow:** Production software
+**Eyebrow:** Custom software
 
-**Headline:** Abracadabra builds software around the way a company already works.
+**Headline:** Custom software, built for how you work.
 
-**Subhead:** The system follows the order the team already uses. Delivery includes the live product, a film of the screens, and the language that explains it.
+**Subhead:** We design, build and run AI-powered tools that fit your business, not the other way around.
 
 **Tag:** The job and the rules are written down before anything is built. Five workstreams. One running system.
 
@@ -92,7 +92,7 @@ Paste-ready. Section order is the page.
 
 **Claim boundary:** “At the speed of thought” is the brand premise in the schema slogan and the name chapter. It describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence. It is not the visible homepage headline.
 
-**Primary CTA:** Show us how it works
+**Primary CTA:** Start a project
 **Secondary CTA:** See what we've built
 
 **Headline alternatives**
@@ -100,7 +100,7 @@ Paste-ready. Section order is the page.
 | Option | Line | Why it exists |
 |---|---|---|
 | A | From thought to working software. | Brand slogan. Stays in JSON-LD `slogan`. Not the visible homepage headline. |
-| B (page headline) | Abracadabra builds software around the way a company already works. | The visible homepage h1. The product is the subject. |
+| B (page headline) | Custom software, built for how you work. | The visible homepage h1. Approved verbatim. |
 | C | From a blank page to a system your team can demo. | Strong on the leave-behind. Weaker on fit. |
 | D | We shrink the gap between what you meant and what's running. | Leads with the mechanism, not the product. |
 
@@ -182,7 +182,7 @@ We close it. The steps stay yours. The software is built to carry them, at whate
 
 - **Run the event from the floor.** Showdesk takes a live show from entry through placements and reports.
 - **See the gap, then the fix.** Schema scores how visible you are to answer engines and generates the repair.
-- **Teach the team once.** LLM Leverage is a self-paced course for better answers from any model, plus a workshop path for a rollout.
+- **Better answers from any model.** LLM Leverage is a self-paced course, plus a workshop path you can run.
 - **Answer the question that makes the sale.** The appliance warehouse leads with condition, warranty, and whether it fits the door, then a delivery you can book.
 
 **Range line:** The same studio has shipped clinical-style assessments, direct-sales floors, coaching agents, signed agreements, fraud review on live orders, an AI-visibility program that took a brand-new domain to real search traffic, and sites for practices that live on the next appointment. We name that work when the client says we can. **This page is a sample of what shipped, not a ceiling on what we'll take on.**
@@ -193,23 +193,23 @@ Use the three arrivals — plus the fourth — in **Who it is for** above.
 
 ### 9. Fit
 
-**Header:** Start with one job.
+**Header:** Start a project
 
-The steps, the exceptions, and the result come in the team's own words. The reply is the system, or a recommendation to buy a product that already fits.
+Tell us the steps, the exceptions, and the result. We reply with the system, or with a product you can buy that already fits.
 
 ### 10. Close
 
-The close is the same block as Fit. The visible heading is **Start with one job.** The label above it is **The project**.
+The close is the same block as Fit. The visible heading is **Start a project.** The label above it is **The project**.
 
-**Body:** The steps, the exceptions, and the result come in the team's own words. The reply is the system, or a recommendation to buy a product that already fits.
+**Body:** Tell us the steps, the exceptions, and the result. We reply with the system, or with a product you can buy that already fits.
 
-**CTA:** Show us how it works
+**CTA:** Start a project
 **Secondary:** See what we've built
 
 ### Meta
 
-- **Title:** Abra-ca-dabra: Software around the way a company works
-- **Description:** Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the language the team uses to show it.
+- **Title:** Custom software, built for how you work.
+- **Description:** We design, build and run AI-powered tools that fit your business, not the other way around.
 - **Canonical:** `https://abra-ca-dabra.app/`
 - **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo, live captures, and Super Funnel"), `/blog` (notes with named sources; a post is public only on or after `datePublished`, unless a preview build sets `BLOG_PREVIEW=1`), `/about/christopher-buzny`, `/privacy` (draft, not in force).
 - **Crawler files:** `/robots.txt` allows named answer-engine crawlers and disallows CCBot and Bytespider, `/sitemap.xml` (image and video extensions, plus the blog index and author page), `/llms.txt` (a quotable summary with the dated pirx.ca figures, the non-diagnostic rule, and only the posts that are already public).
@@ -425,7 +425,7 @@ These are sourced on disk. They are not approved public claims.
 
 **One-sentence variants**
 
-1. **Site:** Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the language the team uses to show it.
+1. **Site:** Custom software, built for how you work. We design, build and run AI-powered tools that fit your business, not the other way around.
 2. **Catalog label:** Working systems, open on the page. The word finishes as the page moves past them.
 3. **Conversation:** One operation is enough. The reply is the matching system, or the system built to fit.
 4. **Etymology:** Abracadabra, translated, means "I create as I speak." A description of the work becomes production software.

@@ -8,7 +8,7 @@ export const offerings = [
   {
     slug: "ai-assistants-and-agents",
     outcome: "An assistant that finishes the request",
-    card: "The assistant keeps the conversation, answers from the company's rules, and completes the request in the system the team already uses.",
+    card: "Your assistant keeps the conversation, follows your rules, and finishes the request in the tools you already use.",
     whatItIs: "An assistant your customers or your team can talk to. It keeps the thread, follows the rules you set, and can do a small job when the answer is clear: book a time, send a follow-up, or hand the conversation to a person.",
     examples: [
       "Answering common customer questions after hours, and handing off when the question needs a person",
@@ -44,7 +44,7 @@ export const offerings = [
   {
     slug: "answers-from-your-documents",
     outcome: "Answers from your own documents",
-    card: "A plain question returns an answer from the files the company already keeps, with the page attached so the sentence can be checked.",
+    card: "Ask in plain language. We answer from your files, and every answer carries the page it came from.",
     whatItIs: "A way to ask a plain question and get an answer from your own files: handbooks, policies, price sheets, manuals. The answer points back to the page it came from.",
     examples: [
       "Looking up a part or policy in your own documents",
@@ -80,7 +80,7 @@ export const offerings = [
   {
     slug: "any-model-one-bill",
     outcome: "Any model, one controlled bill",
-    card: "Each job uses the model that fits it, through one gateway, on one bill the company can cap and stop.",
+    card: "Each job uses the model that fits it. You get one gateway and one bill you can cap and stop.",
     whatItIs: "Different jobs want different models. This puts them behind one door: you pick the model per job, you see the spend in one place, and you can stop a runaway bill.",
     examples: [
       "Sending everyday questions to a smaller model and harder questions to a stronger one",
@@ -116,7 +116,7 @@ export const offerings = [
   {
     slug: "voice-and-realtime-agents",
     outcome: "Voice and real-time AI agents",
-    card: "The line answers from the record the company already keeps, and reaches a person when the question leaves that ground.",
+    card: "Callers hear an answer from your records. When the call needs a person, we hand it over with a note of what was already said.",
     whatItIs: "A phone or voice conversation that answers in the moment. It listens, replies from the facts you provide, and passes the call to a person when the request needs one.",
     examples: [
       "Answering common customer questions after hours, by voice",
@@ -152,7 +152,7 @@ export const offerings = [
   {
     slug: "web-automation",
     outcome: "Web automation, scraping, PDFs and reports",
-    card: "The weekly browser job follows the same path every time and leaves a report the team can open. Exceptions land with a person.",
+    card: "The weekly browser job opens the same pages, collects the same numbers, and leaves a report you can open.",
     whatItIs: "A repeatable job that visits the sites or files you name, collects what you asked for, and turns it into a spreadsheet or a report. It runs on a schedule, or when you press go.",
     examples: [
       "Turning a weekly spreadsheet into a report",
@@ -188,7 +188,7 @@ export const offerings = [
   {
     slug: "safe-code-execution",
     outcome: "Safe execution of AI-written code",
-    card: "A small program written by the assistant runs inside a limit the rest of the business cannot feel.",
+    card: "When your assistant needs to run a small program, it runs inside a sandbox. Time, files, and access are set before it starts.",
     whatItIs: "Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in the box.",
     examples: [
       "Turning a weekly spreadsheet into a calculated report, with the formula run in a box",
@@ -224,7 +224,7 @@ export const offerings = [
   {
     slug: "custom-apps",
     outcome: "Custom apps and back offices",
-    card: "The application follows the order the team already trusts, so the real job is the product.",
+    card: "We build the app around the way you already work, so the real job is the product.",
     whatItIs: "An app built around the way your team already works: the screens, the order, the handoff. It replaces the pile of sheets and inboxes that grew up around that work.",
     examples: [
       "A back office where a request moves from intake to done, in the order your team already uses",
@@ -260,7 +260,7 @@ export const offerings = [
   {
     slug: "ai-media",
     outcome: "AI media: images, video, transcripts",
-    card: "Pictures, clips, and transcripts start from material the company already holds, and a named person clears each public file.",
+    card: "We draft images, video, and voice from material you already have, and a named person clears each file before it goes public.",
     whatItIs: "Pictures, short clips, and transcripts drafted from material the company already has. A named person clears each file before it is public.",
     examples: [
       "A first draft of an image for a page you are about to publish",
@@ -296,7 +296,7 @@ export const offerings = [
   {
     slug: "ai-visibility",
     outcome: "AI visibility and crawler control",
-    card: "The company decides which pages answer engines are invited to read, and which crawlers stay away.",
+    card: "You decide which pages answer engines may read, and which crawlers stay out.",
     whatItIs: "A clear view of which automated visitors read the site, plus a plain file that tells answer engines what the business is and which pages matter. You decide what is open and what is off limits.",
     examples: [
       "Seeing which crawlers fetched your pages last week",
@@ -332,7 +332,7 @@ export const offerings = [
   {
     slug: "search-grounded-research",
     outcome: "Search-grounded research tools",
-    card: "A research answer carries the public pages under every claim, so the source can be opened and checked.",
+    card: "A research answer carries the public pages under every claim, so you can open the source and check it.",
     whatItIs: "A tool that answers a research question from current pages on the web, and shows the links it used. It is for questions your own documents do not cover.",
     examples: [
       "Checking a public claim against pages published this month",
@@ -367,8 +367,8 @@ export const offerings = [
   },
 ];
 
-export const OFFERINGS_KICKER = "Production software";
-export const OFFERINGS_HEADING = "Software for the jobs a company already runs.";
+export const OFFERINGS_KICKER = "Custom software";
+export const OFFERINGS_HEADING = "Software for how you work.";
 
 /** Cloudflare AI Gateway providers, checked against the Provider Native docs. */
 export const gatewayLogos = [
@@ -531,10 +531,10 @@ export const cases = [
     slug: "strongfoam-crm",
     name: "StrongFoam CRM/ERP",
     kind: "app",
-    summary: "The record the team works in: the customer, the job, and the numbers, in one place.",
+    summary: "The record you work in: the customer, the job, and the numbers, in one place.",
     services: ["custom-apps"],
     body: [
-      "The StrongFoam CRM/ERP is the record the team works in.",
+      "The StrongFoam CRM/ERP is the record you work in.",
       "The customer, the job, and the numbers live in one place.",
     ],
   },

@@ -41,7 +41,7 @@ test("the model strip sits between the menu and the answer chapter", () => {
   assert.equal(index.includes("0.58rem"), false);
   assert.equal(index.includes("The next room is the receipt"), false);
   assert.match(index, /Every major model, one gateway/);
-  assert.match(index, /Software for the jobs a company already runs\./);
+  assert.match(index, /Software for how you work\./);
   const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="benefits"'));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
   assert.match(index, /href="\/services\/">Services/);
@@ -83,15 +83,15 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   }
   const offering = read("services/ai-assistants-and-agents/index.html");
   assert.match(offering, /PLACEHOLDER — needs Christopher/);
-  assert.match(offering, /class="sales-primary" href="\/#brief">Show us how it works/);
+  assert.match(offering, /class="sales-primary" href="\/#brief">Start a project/);
   assert.match(offering, /AI Readiness Check/);
   assert.match(offering, /https:\/\/check\.abra-ca-dabra\.app\/check/);
-  assert.match(offering, /What the system delivers/);
-  assert.match(offering, /Where it earns its place/);
-  assert.match(offering, /From the operation to a live system/);
+  assert.match(offering, /What you get/);
+  assert.match(offering, /Use cases/);
+  assert.match(offering, /How it works/);
   assert.match(offering, /<h3>Plan<\/h3>/);
   assert.match(offering, /<h3>Review<\/h3>/);
-  assert.match(offering, /A product, a hire, or a system built for the job/);
+  assert.match(offering, /How it compares/);
   assert.match(offering, /When off the shelf wins/);
   assert.match(offering, /Contact for pricing/);
   assert.match(offering, /href="\/services\/safe-code-execution\/"/);
@@ -134,7 +134,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     const main = page.slice(page.indexOf("<main"), page.indexOf("</main>"));
     const words = main.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/g, " ").split(/\s+/).filter(Boolean);
     assert.equal(words.length >= 900 && words.length <= 1300, true, `${slug} ${words.length} words`);
-    assert.match(page, /Show us how it works/);
+    assert.match(page, /Start a project/);
     assert.match(page, /When off the shelf wins/);
     assert.match(page, /Contact for pricing/);
     assert.match(page, /<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->/);

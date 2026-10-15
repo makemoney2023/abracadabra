@@ -14,6 +14,17 @@ Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Approved voice — 2026-10-15
+
+- Public pages speak in second person and we. Sentences are short and benefit-led. "the company," "the team," and the visible product word "brief" stay off the page. The project action is **Start a project**. The homepage anchor stays `#brief`.
+- The visible homepage headline is "Custom software, built for how you work." The lede is "We design, build and run AI-powered tools that fit your business, not the other way around." Service headlines are the approved lines: AI assistants that actually get things done; Instant answers from your own documents; Every AI model. One bill; AI that answers your phone; Put repetitive web work on autopilot; Let AI run code, safely; Apps built around your workflow; On-brand images, video and voice, on demand; Get found in AI search; Research you can trust, with every source cited. Section headers are What you get, Use cases, How it works, How it compares, Proof, and FAQ.
+- **What changed** — voice on every public marketing surface, including films, the walkthrough, the blog chrome, about, meta, JSON-LD, and `llms.txt`.
+- **Why** — Christopher rejected the third-person product voice.
+- **Code touchpoints** — `index.html`, `films.html`, `walkthrough.html`, `llms.txt`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `scripts/service-visuals.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — regenerated service, hub, portfolio, product, course, blog, about, privacy, and homepage chrome and offerings HTML, plus the service block of `llms.txt`.
+- **API / schema impact** — WebPage headline matches the visible homepage h1. Service names match the approved headlines.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
+
 ## Product voice — 2026-10-15
 
 - Public pages now speak in a product-led register. The product or the system is the subject. Sentences are complete. The "You do X. We do Y." cadence, process-talk, and the visible product word "brief" are gone. The project action is **Start a project**. The homepage anchor stays `#brief`.

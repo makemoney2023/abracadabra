@@ -295,7 +295,7 @@ function pillarFilter(posts) {
 }
 
 function authorBox() {
-  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the words the team uses to show it. Credentials, education, and personal profile links stay off this page until Christopher confirms them.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
+  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. We design, build and run AI-powered tools that fit your business. You leave with the live system, a film of the screens, and the words you use to show it. Credentials, education, and personal profile links stay off this page until Christopher confirms them.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
 }
 
 function renderMarkdown(post) {
@@ -614,15 +614,15 @@ async function renderIndex(posts) {
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }])}
 <div class="hero-copy">
 <p class="kicker">Notes</p>
-<h1>When a product already fits, and when the company needs a system.</h1>
-<p class="dek">Notes for operators on buying a product that already fits, and on building a system of the company's own. Every number names its source.</p>
+<h1>When a product already fits, and when you need a system.</h1>
+<p class="dek">Notes on buying a product that already fits, and on building a system of your own. Every number names its source.</p>
 </div>
 </header>
 ${board}
 </main>`;
   const html = pageShell({
     title: "Blog | Abracadabra AI",
-    description: "Notes for operators on when a product already fits, and when the company needs a system of its own. Every number names its source.",
+    description: "Notes on buying a product that already fits, and on building a system of your own. Every number names its source.",
     canonical: `${SITE}/blog`,
     robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/index.png`,
@@ -644,7 +644,7 @@ async function renderAuthor() {
 ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/about/christopher-buzny" }])}
 <p class="kicker">Founder</p>
 <h1>Christopher Buzny</h1>
-<p class="dek">Founder of Abracadabra AI. Abracadabra builds software around the way a company already works. The delivery is the live system, a film of the screens, and the words the team uses to show it.</p>
+<p class="dek">Founder of Abracadabra AI. We design, build and run AI-powered tools that fit your business. You leave with the live system, a film of the screens, and the words you use to show it.</p>
 </div>
 </header>
 <article>
@@ -656,7 +656,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/abou
 <ul>
 <li><a href="https://www.showdesk-app.com/">Showdesk</a> runs a live event from entry through review, placements, and reports.</li>
 <li><a href="https://schema-two.vercel.app/">Schema</a> scores whether answer engines can find a site, and writes the fix.</li>
-<li><a href="https://llm-leverage-course.vercel.app">The self-paced course</a> is for better answers from any model, plus a workshop path for a team.</li>
+<li><a href="https://llm-leverage-course.vercel.app">The self-paced course</a> is for better answers from any model, plus a workshop path you can run.</li>
 <li><a href="https://cdastore.vercel.app/">Canadian Discount Appliances</a> answers condition, warranty, and whether it fits the door.</li>
 <li><a href="/films.html">Super Funnel</a> is the associate film set. The other tours stay on the films page.</li>
 </ul>
