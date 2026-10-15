@@ -17,6 +17,7 @@ import {
   placeholders,
   products,
 } from "./site-data.mjs";
+import { pirxChartHtml } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -369,7 +370,7 @@ async function renderOffering(item) {
   const og = await plateOrPhoto(item.slug, "Service", page.headline, null);
   const questions = page.faqs.map(([name, text]) => `<h3>${esc(name)}</h3>\n<p>${esc(text)}</p>`).join("\n");
   const steps = processSteps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
-  const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p><p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
+  const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
   const html = shell({
     title,
     description: page.description,
@@ -585,7 +586,7 @@ ${visibleCrumbs(crumbs)}
 <p class="kicker">Portfolio</p>
 <h1>${esc(item.name)}</h1>
 ${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
-${live}
+${item.chart ? `${pirxChartHtml()}\n` : ""}${live}
 ${relatedHtml}
 ${productLink}
 ${courseLink}

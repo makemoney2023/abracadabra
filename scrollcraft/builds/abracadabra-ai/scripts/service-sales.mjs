@@ -507,9 +507,10 @@ export const salesPages = {
     proofs: [
       {
         title: "pirx.ca",
-        text: "pirx.ca launched with no search history and no answer-engine presence. Google Search Console, pulled 2026-09-23, recorded 201K search impressions in twelve weeks, 21.8K impressions from Google's Generative AI and AI Overviews surface, and 1.1K clicks. One article carried 5,400+ AI-surface impressions. The AI-surface count rose from near zero in June to a daily peak over 1,600 by September. Those figures are this domain's, dated, and not a promise for the next one. A fresh pull was not available while this page was written.",
+        text: "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026, also recorded 1.85K clicks and an average position of 7.6. The Generative AI features report is a separate count and is not added to the search total. Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K in search and about 1.2-1.8K in AI features by mid-September. Those figures are this domain's, dated, and not a promise for the next one.",
         href: "/portfolio/pirx/",
         link: "Read the pirx.ca note",
+        chart: true,
       },
       {
         title: "Renew Implants",
@@ -524,7 +525,7 @@ export const salesPages = {
       ["What is the plain-text note?", "A file on the site that introduces the business and lists the pages worth reading. People can read it too. We do not hide claims there that are not on the site."],
       ["Do we need new pages?", "Only if the current ones do not answer the question. We do not publish filler to chase a crawler."],
       ["Can you use another client's numbers on our site?", "No. The pirx.ca figures stay attached to pirx.ca and to the date they were pulled. Your report will be yours."],
-      ["How often do the figures move?", "Often. The number on this page is the pull from 2026-09-23. We do not refresh it from memory."],
+      ["How often do the figures move?", "The number on this page is the Google Search Console window Jul 14 to Oct 13, 2026. We do not refresh it from memory."],
     ],
     close: "Show us the question buyers already ask and the page you wish was quoted. We will say whether the page is ready, and what we would tell a crawler to read.",
   }),

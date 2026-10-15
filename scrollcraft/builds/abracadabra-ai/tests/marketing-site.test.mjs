@@ -199,7 +199,9 @@ test('inner pages stay inside the viewport at the required widths', async () => 
   const paths = [
     '/services/index.html',
     '/services/ai-assistants-and-agents/index.html',
+    '/services/ai-visibility/index.html',
     '/portfolio/index.html',
+    '/portfolio/pirx/index.html',
     '/products/index.html',
     '/course/llm-leverage/index.html',
     '/blog/index.html',
@@ -313,9 +315,13 @@ test('dedicated AEO chapter explains the mechanism, proof, and next steps', asyn
   );
   assert.equal(await aeo.getByRole('link', { name: 'Run the Readiness Check' }).getAttribute('href'), 'https://check.abra-ca-dabra.app/check');
   assert.equal(await aeo.getByRole('link', { name: 'Open Schema' }).getAttribute('href'), 'https://schema-two.vercel.app/');
-  assert.match(await aeo.textContent(), /201K/);
-  assert.match(await aeo.textContent(), /21\.8K/);
-  assert.match(await aeo.textContent(), /Google Search Console/);
+  const aeoText = await aeo.textContent();
+  assert.match(aeoText, /375K/);
+  assert.match(aeoText, /43\.5K/);
+  assert.match(aeoText, /1\.85K/);
+  assert.match(aeoText, /7\.6/);
+  assert.match(aeoText, /Jul 14 to Oct 13, 2026/);
+  assert.doesNotMatch(aeoText, /201K|21\.8K|\bCTR\b|traffic|revenue/);
 
   await aeo.getByRole('button', { name: 'Measure' }).click();
   assert.equal(await aeo.locator('.aeo-engine').getAttribute('data-active-state'), 'measure');

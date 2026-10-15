@@ -117,9 +117,9 @@ Four live lines. No client logos until permission exists.
 
 **Header:** "From zero to scale" isn't a slogan. Here's the receipt.
 
-**Body:** pirx.ca launched with no search history and no answer-engine presence. In the twelve weeks before this was written: 201K search impressions, 1.1K clicks — and 21.8K of those impressions came from Google's Generative AI / AI Overviews surface alone, climbing from almost nothing in June to a daily peak north of 1,600 by September. One post carried over 5,400 of those AI-surface impressions on its own. That's AEO, GEO, and SEO run as one discipline instead of three separate vendors: a brand-new domain answering real questions inside the AI layer of search, inside a single season.
+**Body:** From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026: 375K search impressions, 1.85K clicks, average position 7.6. The Generative AI features report is separate and is not added to the search total: 43.5K impressions. Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K (search) and about 1.2-1.8K (AI features) by mid-September.
 
-**Small print (internal, not for the page):** figures pulled from Google Search Console on the date above. These are live, climbing numbers — re-pull before locking them into paid media or an investor deck. The shape of the curve is the durable claim; the exact digit will be higher by the time anyone reads this.
+**Small print (internal, not for the page):** Christopher approved this window on 2026-10-15. Do not mention CTR. Do not claim a traffic or revenue result. Do not add the two impression totals. The chart on the site is illustrative of the shape, not a daily export. The 2026-09-23 pull (201K / 21.8K / 1.1K) is superseded and must not stay on a public page.
 
 ### 3A. Answer Engine Optimization
 
@@ -136,7 +136,7 @@ Four live lines. No client logos until permission exists.
 3. **Make it legible to machines.** Connect the page, entity, schema, and source signals without inventing a score or claim.
 4. **Measure the surface.** Track indexed demand, clicks, and observed AI-search visibility; revise where the evidence is weak.
 
-**Proof:** pirx.ca began with no search history and no answer-engine presence. In twelve weeks it earned 201K search impressions, 1.1K clicks, and 21.8K impressions on Google's Generative AI / AI Overviews surface. One article generated more than 5,400 AI-surface impressions. Source: Google Search Console, pulled 2026-09-23.
+**Proof:** From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Source: Google Search Console, Jul 14 to Oct 13, 2026. Search: 375K impressions, 1.85K clicks, average position 7.6. Generative AI features (separate report): 43.5K impressions. Top pages: good-10k-time-by-age 10,451; good-half-marathon-time-by-age 7,758; good-5k-time-by-age 6,104.
 
 **Primary CTA:** Run the Readiness Check
 **Secondary CTA:** Open Schema
@@ -268,7 +268,7 @@ Repo brief for that catalog: quiet conjure, museum of working software, physical
 
 ### Named on the service pages — 2026-10-15
 
-Christopher cleared these names for the public service pages and `/portfolio/`. No testimonials. No metrics except the pirx.ca Search Console set already in this file.
+Christopher cleared these names for the public service pages and `/portfolio/`. No testimonials. No metrics except the pirx.ca Search Console window Jul 14 to Oct 13, 2026, already in this file.
 
 | Name | What may be said | Service pages |
 |---|---|---|
@@ -280,7 +280,7 @@ Christopher cleared these names for the public service pages and `/portfolio/`. 
 
 Answers from your documents and voice have no named case. Any model, one bill points at the homepage model gateway and states no client spend. Safe code execution is a capability of the assistants; its URL stays, and both pages link to each other. It is not a client case.
 
-A Google Search Console re-pull was attempted on 2026-10-15 and could not run: this environment has no Search Console credentials. The published digits stay the 2026-09-23 pull (201K impressions, 1.1K clicks, 21.8K Generative AI / AI Overviews impressions, one post over 5,400, a daily AI-surface peak over 1,600). Do not replace 5,400+ with a later digit from an older changelog line.
+Christopher approved a fresh Google Search Console window on 2026-10-15: Jul 14 to Oct 13, 2026. Publish 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions as a separate report. Lead with "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days." Always show the date range. The 2026-09-23 digits are retired.
 
 ### Answers and knowledge
 
@@ -397,7 +397,7 @@ These are sourced on disk. They are not approved public claims.
 
 **Safe to say without those numbers.** Live URLs. "Several languages" or "twenty locales" where the app README states the locale list. "Non-diagnostic wellness assessment." "Film, one-pager, and demo script from the same footage." "A second product on a shared platform."
 
-**Already cleared, unlike the table above.** The pirx.ca AEO/GEO/SEO numbers in the zero-to-scale case (201K impressions, 21.8K on the Generative AI surface, 1.1K clicks) are our own analytics on our own domain — approved for public use. The 2026-10-15 re-pull could not run (no Search Console credentials in the build environment). Keep the 2026-09-23 digits, including "over 5,400" for the one post. Do not promote a later exact count until a fresh pull exists.
+**Already cleared, unlike the table above.** The pirx.ca Search Console window Jul 14 to Oct 13, 2026 is approved for public use: 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions (a separate report). Top AI-feature pages: good-10k-time-by-age 10,451; good-half-marathon-time-by-age 7,758; good-5k-time-by-age 6,104. Do not mention CTR. Do not claim traffic or revenue. Do not add the two impression totals. The earlier 2026-09-23 pull is not the public claim.
 
 ---
 

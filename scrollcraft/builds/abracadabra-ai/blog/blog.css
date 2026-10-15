@@ -599,6 +599,35 @@ body { text-wrap: pretty; }
   margin: 0.8rem 0;
 }
 
+.pirx-chart {
+  margin: 1rem 0 1.2rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 0.75rem 0.75rem 0.2rem;
+}
+
+.pirx-chart__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.pirx-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.pirx-chart__source {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin: 0.35rem 0 0.6rem;
+}
+
+@media (max-width: 700px) {
+  .pirx-chart__pair { grid-template-columns: 1fr; }
+}
+
 .cloud-line { color: var(--optic); }
 
 .price-block {
