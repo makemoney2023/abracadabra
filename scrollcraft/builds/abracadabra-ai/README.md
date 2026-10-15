@@ -14,6 +14,17 @@ Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
 
+## Service photographs and shared heroes — 2026-10-15
+
+- Each service page uses the supplied photograph: the hero sits behind the left column, the first body photograph sits beside “Three places it shows up,” and the second sits beside “Work we can name.” The same hero is the card image on `/services/` and on the homepage services grid.
+- Derivatives are AVIF and WebP at 640, 960, and 1280, with a JPEG fallback, width and height, and lazy loading on the body and card images. Each service page points `og:image` at a 1200×630 JPEG. Portfolio, products, the course, the blog, a blog post, and the about page open on the same left column. Section headings on those pages are left-aligned with that column.
+- **What changed** — real service photographs replaced the empty image slots, and the inner-page heroes share one left-column pattern.
+- **Why** — Christopher supplied the service stills and asked the catalog pages to use the same hero column.
+- **Code touchpoints** — `content/service-images/`, `scripts/service-visuals.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `blog/blog.css`, `blog/media/services/`, `index.html`, `tests/site-pages.test.mjs`, `tests/marketing-site.test.mjs`.
+- **Data-flow impact** — generated service, hub, portfolio, product, course, blog, and about HTML, plus the homepage offerings block.
+- **API / schema impact** — each service page’s primary image is its `og.jpg`.
+- **Verification** — `npm test` in this folder.
+
 ## Mobile nav and hero column — 2026-10-15
 
 - From 1024px the homepage hero copy and the two actions sit in a left column over the film, with the actions side by side. Below 1024px the actions stack full width under the text, still left-aligned. Service, portfolio, product, course, and blog opening copy uses the same column. Later section headings stay centered.
