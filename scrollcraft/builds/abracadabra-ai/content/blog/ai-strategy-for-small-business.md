@@ -14,15 +14,13 @@ images:
     alt: "A one-page plan on a cafe table beside a laptop and a coffee cup, with a person's hands on the page and no face shown"
     caption: "One page, not a deck."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Strategy for Small Business: A One-Page Plan”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-strategy-for-small-business/02.png
+  - src: /blog/media/ai-strategy-for-small-business/02.webp
     file: ai-strategy-for-small-business-02.jpg
-    alt: "Two bars, one tall and one short, standing for use versus a written plan"
-    caption: "Use is ahead of the plan."
+    alt: "A contractor's truck cab with a phone on the dash and a clipboard on the seat"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Strategy for Small Business: A One-Page Plan”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-strategy-for-small-business/03.png
+  - src: /blog/media/ai-strategy-for-small-business/03.webp
     file: ai-strategy-for-small-business-03.jpg
-    alt: "A cyan check beside a coral gap, standing for training that was never planned"
-    caption: "Training is the thin bar."
+    alt: "Three personal laptops open on one office table, each running different tools"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Strategy for Small Business: A One-Page Plan”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What belongs in a small-business AI strategy?"

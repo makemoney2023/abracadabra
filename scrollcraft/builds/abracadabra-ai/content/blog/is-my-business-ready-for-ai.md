@@ -14,15 +14,13 @@ images:
     alt: "A closed shop door with a hanging sign, photographed from the sidewalk, with no person in the frame"
     caption: "The door, before anyone buys a tool."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Is My Business Ready for AI? Four Signs It Is, and Four It Isn't”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/is-my-business-ready-for-ai/02.png
+  - src: /blog/media/is-my-business-ready-for-ai/02.webp
     file: is-my-business-ready-for-ai-02.jpg
-    alt: "A short arc beside a long arc, standing for early and ready"
-    caption: "Early and Ready are different states."
+    alt: "A large corporate office tower lobby, the kind of organization big readiness surveys measure"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Is My Business Ready for AI? Four Signs It Is, and Four It Isn't”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/is-my-business-ready-for-ai/03.png
+  - src: /blog/media/is-my-business-ready-for-ai/03.webp
     file: is-my-business-ready-for-ai-03.jpg
-    alt: "A closed cyan ring, standing for a business already running the work"
-    caption: "Running means the work already repeats."
+    alt: "A neighbourhood florist works an order at a worktable with a tablet propped beside the flowers"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Is My Business Ready for AI? Four Signs It Is, and Four It Isn't”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What does ready for AI mean here?"

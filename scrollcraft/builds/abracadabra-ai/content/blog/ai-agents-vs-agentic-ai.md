@@ -14,15 +14,13 @@ images:
     alt: "Two people at a workbench, one holding a pen over a sheet and the other holding a phone, faces turned away"
     caption: "A pen on paper, a phone in the other hand."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Agents vs Agentic AI: What's the Difference for a Business?”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-agents-vs-agentic-ai/02.png
+  - src: /blog/media/ai-agents-vs-agentic-ai/02.webp
     file: ai-agents-vs-agentic-ai-02.jpg
-    alt: "A wide ring of many nodes, standing for the agentic category"
-    caption: "Agentic is the wider bet."
+    alt: "A hand on a workshop machine's stop button"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Agents vs Agentic AI: What's the Difference for a Business?”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-agents-vs-agentic-ai/03.png
+  - src: /blog/media/ai-agents-vs-agentic-ai/03.webp
     file: ai-agents-vs-agentic-ai-03.jpg
-    alt: "A path that stops at a gate, standing for a workflow that should stay fixed"
-    caption: "A workflow stays written."
+    alt: "Unopened software boxes stacked on a desk next to an invoice and calculator"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Agents vs Agentic AI: What's the Difference for a Business?”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What is the difference between an agent and a workflow?"

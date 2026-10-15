@@ -14,15 +14,13 @@ images:
     alt: "A person holding a clipboard checklist in a stockroom aisle, face turned down toward the page"
     caption: "The list, in the aisle."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Checklist: 16 Questions to Answer Before You Buy an AI Tool”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-readiness-checklist/02.png
+  - src: /blog/media/ai-readiness-checklist/02.webp
     file: ai-readiness-checklist-02.jpg
-    alt: "Three vertical bars of different heights, standing for data, process, and people"
-    caption: "The first three groups are about the work."
+    alt: "A shop owner and a counter employee compare a handwritten process notebook with records on a laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Readiness Checklist: 16 Questions to Answer Before You Buy an AI Tool”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-readiness-checklist/03.png
+  - src: /blog/media/ai-readiness-checklist/03.webp
     file: ai-readiness-checklist-03.jpg
-    alt: "A short row of cyan arcs, standing for the decision that follows the checklist"
-    caption: "The last group is the decision."
+    alt: "A one-page staff policy on tool use pinned beside a team schedule in a back office"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Readiness Checklist: 16 Questions to Answer Before You Buy an AI Tool”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What should an AI readiness checklist cover?"

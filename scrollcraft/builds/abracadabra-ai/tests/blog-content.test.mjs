@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, it } from "node:test";
@@ -9,6 +10,16 @@ const root = new URL("..", import.meta.url).pathname;
 
 async function text(path) {
   return readFile(join(root, path), "utf8");
+}
+
+function escAttr(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[char]);
 }
 
 function parseCsv(raw) {
@@ -74,13 +85,17 @@ describe("blog content", () => {
       assert.ok(prompts[slug].every((prompt) => prompt.trim().length >= 40));
     }
     const posts = await loadPosts();
+    const supplied = JSON.parse(await text("content/blog/body-alt.json"));
+    const altBySlot = new Map(supplied.map((entry) => [`${entry.slug}:${entry.slot}`, entry.alt]));
     const alts = [];
     for (const post of posts) {
       post.images.forEach((image, index) => {
         assert.equal(prompts[post.slug][index], image.prompt, post.slug);
-        assert.ok(image.alt.length >= 40, image.alt);
+        if (index === 0) assert.ok(image.alt.length >= 40, image.alt);
         alts.push(image.alt);
       });
+      assert.equal(post.images[1].alt, altBySlot.get(`${post.slug}:body1`), post.slug);
+      assert.equal(post.images[2].alt, altBySlot.get(`${post.slug}:body2`), post.slug);
     }
     assert.equal(new Set(alts).size, alts.length);
   });
@@ -104,7 +119,35 @@ describe("blog content", () => {
       assert.equal(jpgMeta.format, "jpeg", post.slug);
       assert.equal(jpgMeta.width, 1280, post.slug);
       assert.equal(jpgMeta.height, 720, post.slug);
-      assert.match(html, /<figure class="post-figure"><img src="\/blog\/media\/[^"]+\/02\.png"/);
+    }
+  });
+
+  it("serves each in-article photograph as webp with the supplied alt", async () => {
+    const posts = await loadPosts();
+    const supplied = JSON.parse(await text("content/blog/body-alt.json"));
+    const altBySlot = new Map(supplied.map((entry) => [`${entry.slug}:${entry.slot}`, entry.alt]));
+    for (const post of posts) {
+      const html = await text(`blog/${post.slug}/index.html`);
+      for (const [slot, name] of [["body1", "02"], ["body2", "03"]]) {
+        const webp = `/blog/media/${post.slug}/${name}.webp`;
+        const jpg = `/blog/media/${post.slug}/${name}.jpg`;
+        const image = slot === "body1" ? post.images[1] : post.images[2];
+        const alt = altBySlot.get(`${post.slug}:${slot}`);
+        assert.equal(image.src, webp, post.slug);
+        assert.equal(image.alt, alt, post.slug);
+        assert.equal(image.caption, undefined, post.slug);
+        const tag = `<picture><source srcset="${webp}" type="image/webp"><img src="${jpg}" alt="${escAttr(alt)}" width="1280" height="720">`;
+        assert.ok(html.includes(tag), `${post.slug} ${slot}`);
+        assert.equal(html.includes(`<figure class="post-figure"><img src="/blog/media/${post.slug}/${name}.png"`), false);
+        for (const file of [webp, jpg]) {
+          const meta = await sharp(join(root, file.slice(1))).metadata();
+          assert.equal(meta.width, 1280, file);
+          assert.equal(meta.height, 720, file);
+        }
+        assert.equal(existsSync(join(root, `blog/media/${post.slug}/${name}.png`)), false, post.slug);
+      }
+      assert.equal(html.includes("/02.png"), false, post.slug);
+      assert.equal(html.includes("/03.png"), false, post.slug);
     }
   });
 

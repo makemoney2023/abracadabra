@@ -14,15 +14,13 @@ images:
     alt: "A one-page framework pinned to a workshop wall, with a person standing in front of it and their face out of frame"
     caption: "The page on the wall."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Readiness Framework: Data, Process, People, and Decision”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-readiness-framework/02.png
+  - src: /blog/media/ai-readiness-framework/02.webp
     file: ai-readiness-framework-02.jpg
-    alt: "A cyan arc over a short coral bar, standing for a band on a score"
-    caption: "The band is a state."
+    alt: "A workshop whiteboard with four columns and sticky notes moving from one to the next"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Readiness Framework: Data, Process, People, and Decision”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-readiness-framework/03.png
+  - src: /blog/media/ai-readiness-framework/03.webp
     file: ai-readiness-framework-03.jpg
-    alt: "A broken block beside a solid one, standing for data that is not ready"
-    caption: "Data is the first gap."
+    alt: "A measuring tape across a tailor's workbench beside fabric and a tablet"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Readiness Framework: Data, Process, People, and Decision”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "How do you score a group without a fake percentage?"

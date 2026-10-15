@@ -14,15 +14,13 @@ images:
     alt: "A laptop and a phone side by side on a wooden desk, both screens on, with no person in the frame"
     caption: "The laptop and the phone, side by side."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Generative Engine Optimization (GEO) vs SEO: What Actually Changes for Your Website”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/generative-engine-optimization-vs-seo/02.png
+  - src: /blog/media/generative-engine-optimization-vs-seo/02.webp
     file: generative-engine-optimization-vs-seo-02.jpg
-    alt: "A row of short marks, standing for citations inside a generated answer"
-    caption: "Citations are the measured change."
+    alt: "Citation notes added to a printed web page draft"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Generative Engine Optimization (GEO) vs SEO: What Actually Changes for Your Website”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/generative-engine-optimization-vs-seo/03.png
+  - src: /blog/media/generative-engine-optimization-vs-seo/03.webp
     file: generative-engine-optimization-vs-seo-03.jpg
-    alt: "A thin cyan line under a coral block, standing for the click that remains"
-    caption: "The click is smaller."
+    alt: "A small shop's lit storefront at dusk"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Generative Engine Optimization (GEO) vs SEO: What Actually Changes for Your Website”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Does Google treat generative engine optimization as separate from SEO?"

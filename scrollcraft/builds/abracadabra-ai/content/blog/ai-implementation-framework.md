@@ -14,15 +14,13 @@ images:
     alt: "Four numbered steps written on a whiteboard, with two people standing in front of it and their faces turned away"
     caption: "The steps, written up where the team can see them."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “An AI Implementation Framework for Small Businesses: Five Stages From Pilot to Production”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-implementation-framework/02.png
+  - src: /blog/media/ai-implementation-framework/02.webp
     file: ai-implementation-framework-02.jpg
-    alt: "A tall bar and a short bar, standing for regular use versus scaling"
-    caption: "Use outruns scaling."
+    alt: "A cafe worker checks a phone between orders, everyday tool use at the counter"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “An AI Implementation Framework for Small Businesses: Five Stages From Pilot to Production”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-implementation-framework/03.png
+  - src: /blog/media/ai-implementation-framework/03.webp
     file: ai-implementation-framework-03.jpg
-    alt: "A cyan stop at the end of the line, standing for the keep-or-stop decision"
-    caption: "The last stage is a stop."
+    alt: "A clinic front desk where one scheduling system runs on a single monitor"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “An AI Implementation Framework for Small Businesses: Five Stages From Pilot to Production”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What are the five stages?"

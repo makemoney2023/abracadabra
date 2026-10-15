@@ -14,15 +14,13 @@ images:
     alt: "A person at a desk with a checklist, a calculator, and a laptop, seen over the shoulder so the face stays out of frame"
     caption: "A checklist, a calculator, and the books."
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four stacked glass plates in a row, each a different height, lit with a coral edge and a pale cyan rim. Studio product lighting, 16:9."
-  - src: /blog/media/ai-readiness-assessment/02.png
+  - src: /blog/media/ai-readiness-assessment/02.webp
     file: readiness-compare.jpg
-    alt: "Four abstract columns comparing a large-firm index, a short self-check, a stage list, and a scored band"
-    caption: "The public tools do not describe the same firm."
+    alt: "A small bakery office desk in the foreground with a large corporate building visible through the window"
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four vertical columns of different widths, made of thin coral and cyan lines, like a comparison without a table. Soft side light, 16:9."
-  - src: /blog/media/ai-readiness-assessment/03.png
+  - src: /blog/media/ai-readiness-assessment/03.webp
     file: readiness-bands.jpg
-    alt: "Four rising arcs on a dark field, from a short arc to a full circle, standing for score bands"
-    caption: "A band is a state, not a grade."
+    alt: "Four desk trays holding paperwork that gets more organized from one tray to the next"
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four rising arcs from a short stroke to a nearly closed ring, coral on the leading edge and cyan behind. Quiet studio light, 16:9."
 faqs:
   - question: What does an AI readiness assessment measure?

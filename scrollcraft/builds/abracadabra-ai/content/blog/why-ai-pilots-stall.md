@@ -14,15 +14,13 @@ images:
     alt: "A whiteboard covered in sticky notes in an office, with a person standing in front of it and their face turned away"
     caption: "The board, still full of notes."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Why AI Pilots Stall: What 2025-26 Research Says About AI Implementation”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/why-ai-pilots-stall/02.png
+  - src: /blog/media/why-ai-pilots-stall/02.webp
     file: why-ai-pilots-stall-02.jpg
-    alt: "A tall cyan bar and a short coral bar, standing for use versus scaling"
-    caption: "Use is common. Scaling is not."
+    alt: "A tablet left unused on a workshop shelf among tools"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Why AI Pilots Stall: What 2025-26 Research Says About AI Implementation”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/why-ai-pilots-stall/03.png
+  - src: /blog/media/why-ai-pilots-stall/03.webp
     file: why-ai-pilots-stall-03.jpg
-    alt: "A gate across a path, standing for the decision to keep or stop"
-    caption: "Keep it or stop it."
+    alt: "Two stacks of paper of very different heights on a planning table with a tape measure"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Why AI Pilots Stall: What 2025-26 Research Says About AI Implementation”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Why do proofs of concept get abandoned?"

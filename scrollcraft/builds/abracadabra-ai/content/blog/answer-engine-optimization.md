@@ -14,15 +14,13 @@ images:
     alt: "A phone and a laptop open on a cafe table beside a coffee cup, screens facing up, with no person in the frame"
     caption: "A phone and a laptop, both open."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “Answer Engine Optimization (AEO): A Small Business Guide”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/answer-engine-optimization/02.png
+  - src: /blog/media/answer-engine-optimization/02.webp
     file: answer-engine-optimization-02.jpg
-    alt: "Two separated forms, standing for a summary and the click it replaces"
-    caption: "A summary can replace the click."
+    alt: "A boxed faucet beside a laptop and product catalogue on a hardware store counter"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “Answer Engine Optimization (AEO): A Small Business Guide”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/answer-engine-optimization/03.png
+  - src: /blog/media/answer-engine-optimization/03.webp
     file: answer-engine-optimization-03.jpg
-    alt: "A short row of cyan ticks, standing for index and snippet eligibility"
-    caption: "Index and snippet still come first."
+    alt: "Printed research papers with highlighted passages beside a laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “Answer Engine Optimization (AEO): A Small Business Guide”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "What does Google require for generative features?"

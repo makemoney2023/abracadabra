@@ -14,15 +14,13 @@ images:
     alt: "A person at a laptop in a home office, seen from behind, with a notebook and a mug on the desk"
     caption: "The desk the owner already uses."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “How to Use AI in Your Business: 12 Examples by Team”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/how-to-use-ai-in-your-business/02.png
+  - src: /blog/media/how-to-use-ai-in-your-business/02.webp
     file: how-to-use-ai-in-your-business-02.jpg
-    alt: "Two cyan bars of different heights, standing for text analytics and marketing automation"
-    caption: "The survey counts uses."
+    alt: "A person reviews a drafted customer reply on a laptop before sending it"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “How to Use AI in Your Business: 12 Examples by Team”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/how-to-use-ai-in-your-business/03.png
+  - src: /blog/media/how-to-use-ai-in-your-business/03.webp
     file: how-to-use-ai-in-your-business-03.jpg
-    alt: "A coral gate after the ticks, standing for a person who still approves the output"
-    caption: "A person still approves."
+    alt: "A bookkeeper's desk with one invoice flagged by an orange clip"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “How to Use AI in Your Business: 12 Examples by Team”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Which uses show up among Canadian businesses that use AI?"

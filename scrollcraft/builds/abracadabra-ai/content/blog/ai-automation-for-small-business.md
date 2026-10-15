@@ -14,15 +14,13 @@ images:
     alt: "A reception desk with a computer, a guest book, and a small bell, and a person standing behind the counter with their face out of frame"
     caption: "The front desk, before the tool."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Automation for Small Business: Which Jobs to Automate First”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-automation-for-small-business/02.png
+  - src: /blog/media/ai-automation-for-small-business/02.webp
     file: ai-automation-for-small-business-02.jpg
-    alt: "Two columns, one tall and one short, standing for production use versus a longer list"
-    caption: "Production use is the shorter column."
+    alt: "Printed customer feedback cards being sorted next to a laptop inbox in a small office"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Automation for Small Business: Which Jobs to Automate First”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-automation-for-small-business/03.png
+  - src: /blog/media/ai-automation-for-small-business/03.webp
     file: ai-automation-for-small-business-03.jpg
-    alt: "A single coral thread through a row of cyan marks, standing for the first job to automate"
-    caption: "Start with one job, not the whole firm."
+    alt: "One coworker walks another through a new workflow on a laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Automation for Small Business: Which Jobs to Automate First”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Which job should a small business automate first?"

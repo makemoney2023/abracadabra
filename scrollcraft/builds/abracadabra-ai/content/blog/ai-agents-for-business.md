@@ -14,15 +14,13 @@ images:
     alt: "A person seen from behind at a laptop in a workshop, with a second person beside them, looking at a screen together"
     caption: "Two people looking at one screen."
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas, coral rim light, pale cyan fill. Hero image for the note “AI Agents for Business: 8 Use Cases by Department, and When Not to Use One”: one central object that carries the idea, wide 16:9 framing."
-  - src: /blog/media/ai-agents-for-business/02.png
+  - src: /blog/media/ai-agents-for-business/02.webp
     file: ai-agents-for-business-02.jpg
-    alt: "A cyan gate across a path, standing for a human checkpoint"
-    caption: "The checkpoint is the product."
+    alt: "A trades office desk with a schedule book and a draft waiting for approval on the laptop"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. In-body comparison for “AI Agents for Business: 8 Use Cases by Department, and When Not to Use One”: two or three abstract forms held apart so the difference is visible, wide 16:9 framing."
-  - src: /blog/media/ai-agents-for-business/03.png
+  - src: /blog/media/ai-agents-for-business/03.webp
     file: ai-agents-for-business-03.jpg
-    alt: "A path that stops, standing for a job that should stay a workflow"
-    caption: "Some jobs should stay workflows."
+    alt: "A hand checks stockroom shelves against a tablet before placing an order"
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “AI Agents for Business: 8 Use Cases by Department, and When Not to Use One”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "When should a business use an agent instead of a workflow?"
