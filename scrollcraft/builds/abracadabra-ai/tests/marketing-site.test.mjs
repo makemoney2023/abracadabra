@@ -5,6 +5,7 @@ import { extname, join, normalize } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const mimeTypes = {
@@ -16,6 +17,8 @@ const mimeTypes = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.json': 'application/json',
 };
 
 let browser;
@@ -62,6 +65,16 @@ async function openPage({ width = 1280, height = 800, reducedMotion = 'no-prefer
     reducedMotion,
   });
   const page = await context.newPage();
+  const requests = [];
+  const errors = [];
+  page.on('request', (request) => {
+    requests.push(new URL(request.url()).pathname);
+  });
+  page.on('pageerror', (error) => {
+    errors.push(String(error));
+  });
+  page.requests = requests;
+  page.errors = errors;
   await page.goto(origin, { waitUntil: 'networkidle' });
   return { context, page };
 }
@@ -81,53 +94,152 @@ test('hero states the owner outcome with two clear actions', async () => {
   await context.close();
 });
 
-test('orbital horizon video covers the hero behind the copy', async () => {
+test('wordmark is an outlined Abra-ca-dabra with sparkle hyphens', async () => {
+  const accent = await readFile(join(root, 'assets/wordmark/abra-ca-dabra-accent.svg'), 'utf8');
+  const ink = await readFile(join(root, 'assets/wordmark/abra-ca-dabra.svg'), 'utf8');
+  const light = await readFile(join(root, 'assets/wordmark/abra-ca-dabra-light.svg'), 'utf8');
+  const lightAccent = await readFile(join(root, 'assets/wordmark/abra-ca-dabra-light-accent.svg'), 'utf8');
+
+  for (const svg of [accent, ink, light, lightAccent]) {
+    assert.match(svg, /<title>Abra-ca-dabra<\/title>/);
+    assert.equal(svg.match(/data-accent="star"/g)?.length, 2);
+    assert.doesNotMatch(svg, /<(text|tspan)[\s>]/i);
+    assert.doesNotMatch(svg, /crescent|moon/i);
+    assert.match(svg, /<path\b/i);
+  }
+  assert.match(accent, /#F5F1E8/i);
+  assert.match(accent, /#FF4B24/i);
+  assert.match(ink, /#F5F1E8/i);
+  assert.doesNotMatch(ink, /#FF4B24/i);
+  assert.match(light, /#070706/i);
+  assert.match(lightAccent, /#070706/i);
+  assert.match(lightAccent, /#FF4B24/i);
+
+  for (const name of [
+    'abra-ca-dabra-dark-ink-512.png',
+    'abra-ca-dabra-dark-ink-2048.png',
+    'abra-ca-dabra-dark-accent-512.png',
+    'abra-ca-dabra-dark-accent-2048.png',
+    'abra-ca-dabra-light-ink-512.png',
+    'abra-ca-dabra-light-ink-2048.png',
+    'abra-ca-dabra-light-accent-512.png',
+    'abra-ca-dabra-light-accent-2048.png',
+  ]) {
+    const meta = await sharp(join(root, 'assets/wordmark', name)).metadata();
+    assert.equal(meta.width, name.includes('2048') ? 2048 : 512, name);
+    assert.ok(meta.height > 32, name);
+  }
+
+  const samples = JSON.parse(await readFile(join(root, 'assets/wordmark/abra-ca-dabra-samples.json'), 'utf8'));
+  assert.ok(Array.isArray(samples.points));
+  assert.ok(samples.points.length >= 2000 && samples.points.length <= 8000);
+  const starCount = samples.points.filter((point) => point[2] === 1).length;
+  assert.ok(starCount >= 80, `star samples ${starCount}`);
+  assert.ok(samples.points.length - starCount > starCount);
+  for (const point of samples.points) {
+    assert.equal(point.length, 3);
+    assert.ok(Math.abs(point[0]) <= 0.55);
+    assert.ok(Math.abs(point[1]) <= 0.25);
+    assert.ok(point[2] === 0 || point[2] === 1);
+  }
+});
+
+test('hero headline is real HTML and readable on the first screen', async () => {
   for (const viewport of [
     { width: 1440, height: 1000 },
     { width: 390, height: 844 },
   ]) {
     const { context, page } = await openPage(viewport);
-    const video = page.locator('#hero .hero__video');
-    const source = video.locator('source');
+    assert.equal(await page.locator('#hero video').count(), 0);
+    assert.equal(page.requests.some((path) => path.endsWith('orbital-horizon.mp4')), false);
 
-    assert.equal(await source.getAttribute('src'), 'assets/orbital-horizon.mp4');
-    assert.equal(await source.getAttribute('type'), 'video/mp4');
-    assert.equal(await video.getAttribute('autoplay'), '');
-    assert.equal(await video.getAttribute('loop'), '');
-    assert.equal(await video.getAttribute('playsinline'), '');
-    assert.equal(await video.evaluate((element) => element.muted), true);
+    const title = page.locator('#hero-title');
+    const box = await title.boundingBox();
+    assert.equal(await title.evaluate((element) => getComputedStyle(element).opacity), '1');
+    assert.ok(box && box.width > 40 && box.height > 10, 'headline has no box');
+    assert.ok(box.y >= 0 && box.y + box.height < viewport.height, `${viewport.width}px headline is outside the first screen`);
 
-    const coverage = await page.locator('#hero').evaluate((hero) => {
-      const heroRect = hero.getBoundingClientRect();
-      const videoRect = hero.querySelector('.hero__video').getBoundingClientRect();
-      const copy = hero.querySelector('.hero__copy');
-      const film = hero.querySelector('.hero__video');
-
-      return {
-        filmBehindCopy: Number.parseInt(getComputedStyle(film).zIndex, 10)
-          < Number.parseInt(getComputedStyle(copy).zIndex, 10),
-        bottomGap: Math.abs(heroRect.bottom - videoRect.bottom),
-        leftGap: Math.abs(heroRect.left - videoRect.left),
-        rightGap: Math.abs(heroRect.right - videoRect.right),
-        topGap: Math.abs(heroRect.top - videoRect.top),
-      };
-    });
-
-    assert.equal(coverage.filmBehindCopy, true);
-    assert.ok(coverage.topGap <= 1);
-    assert.ok(coverage.rightGap <= 1);
-    assert.ok(coverage.bottomGap <= 1);
-    assert.ok(coverage.leftGap <= 1);
+    const stage = await page.locator('#hero .hero__stage').boundingBox();
+    assert.ok(stage && stage.height >= 200, 'stage did not reserve height');
+    const shift = await page.locator('#hero .hero__stage').evaluate((element) => new Promise((resolve) => {
+      const before = element.getBoundingClientRect().height;
+      requestAnimationFrame(() => {
+        resolve(Math.abs(element.getBoundingClientRect().height - before));
+      });
+    }));
+    assert.ok(shift < 1, `stage height moved ${shift}px`);
+    assert.deepEqual(page.errors, []);
     await context.close();
   }
 });
 
-test('orbital horizon video pauses when reduced motion is requested', async () => {
-  const { context, page } = await openPage({ reducedMotion: 'reduce' });
-  const video = page.locator('#hero .hero__video');
+test('reduced motion shows the settled orb and does not load the 3D code', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800, reducedMotion: 'reduce' });
+  assert.equal(
+    await page.evaluate(() => document.documentElement.classList.contains('hero-settled')),
+    true,
+  );
+  assert.equal(page.requests.some((path) => path.includes('hero-three.js')), false);
+  assert.equal(await page.locator('#hero .hero__canvas').count(), 0);
+  assert.equal(await page.locator('#hero .hero__orb').evaluate((element) => getComputedStyle(element).opacity), '1');
+  assert.equal(await page.locator('#hero .hero__wordmark').evaluate((element) => getComputedStyle(element).opacity), '0');
+  assert.deepEqual(page.errors, []);
+  await context.close();
+});
 
-  await page.waitForTimeout(100);
-  assert.equal(await video.evaluate((element) => element.paused), true);
+test('the reveal lazy-loads 3D, plays once per session, and skips', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800 });
+  assert.equal(page.requests.some((path) => path.includes('hero-three.js')), true);
+  assert.equal(
+    page.requests.some((path) => path.includes('three.module.js') || path.includes('three.core.js')),
+    false,
+  );
+  await page.waitForSelector('#hero .hero__canvas', { timeout: 5000 });
+  await page.locator('#hero .hero__skip').click();
+  await page.waitForFunction(() => document.documentElement.classList.contains('hero-settled'));
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('abra-hero-reveal')), '1');
+  assert.equal(await page.locator('#hero .hero__canvas').count(), 0);
+  assert.equal(await page.locator('#hero .hero__orb').evaluate((element) => getComputedStyle(element).opacity), '1');
+
+  const threeLoads = page.requests.filter((path) => path.includes('hero-three.js')).length;
+  await page.goto(origin, { waitUntil: 'networkidle' });
+  assert.equal(page.requests.filter((path) => path.includes('hero-three.js')).length, threeLoads);
+  assert.equal(
+    await page.evaluate(() => document.documentElement.classList.contains('hero-settled')),
+    true,
+  );
+  assert.equal(await page.locator('#hero .hero__canvas').count(), 0);
+  assert.deepEqual(page.errors, []);
+  await context.close();
+});
+
+test('scrolling skips the reveal', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800 });
+  await page.waitForSelector('#hero .hero__canvas', { timeout: 5000 });
+  await page.mouse.wheel(0, 700);
+  await page.waitForFunction(() => document.documentElement.classList.contains('hero-settled'), { timeout: 2000 });
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('abra-hero-reveal')), '1');
+  assert.deepEqual(page.errors, []);
+  await context.close();
+});
+
+test('without WebGL the static wordmark and orb stay visible', async () => {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await context.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function getContext(kind) {
+      if (String(kind).includes('webgl')) return null;
+      return original.apply(this, arguments);
+    };
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(String(error)));
+  await page.goto(origin, { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => document.documentElement.classList.contains('hero-static'), { timeout: 5000 });
+  assert.equal(await page.locator('#hero .hero__wordmark').evaluate((element) => getComputedStyle(element).opacity), '1');
+  assert.equal(await page.locator('#hero .hero__orb').evaluate((element) => getComputedStyle(element).opacity), '1');
+  assert.deepEqual(errors, []);
   await context.close();
 });
 

@@ -16,6 +16,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "opentype.js": "^2.0.0",
+    "three": "^0.186.1",
     "wrangler": "^4.147.0"
   }
 }
