@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI readiness"
 cluster: "data"
 primaryQuery: "ai ready data"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "If the source of truth is unclear, check the data before you buy."
 images:
   - src: /blog/media/ai-ready-data/01.webp
@@ -82,29 +82,29 @@ Two phrases we will not use as substitutes for the source. "We have a lot of dat
 
 ## A worked example
 
-Say we are in the office of a small landscaping company on a weekday morning. Theo owns it. Bea schedules. Imani leads a crew. This is an example we walk through. We are not reporting their routes or their revenue. There is no measured before and after. There is a job, and a question about where its record lives.
+Say we are in the office of a small landscaping company on a weekday morning. One person schedules. Another leads a crew. This is an example we walk through. We are not reporting their routes or their revenue. There is no measured before and after. There is a job, and a question about where its record lives.
 
-The job Theo wants a tool to do is the customer update: what the crew did, what is left, and whether the customer owes a decision about extra work. A vendor showed a draft that sounded like Imani, only smoother. Theo liked the sound. We asked where the facts in that draft would come from.
+The job the owner wants a tool to do is the customer update: what the crew did, what is left, and whether the customer owes a decision about extra work. A vendor showed a draft that sounded like the crew lead, only smoother. The owner liked the sound. We asked where the facts in that draft would come from.
 
-Bea says the booking tool is the source. It knows the address and the window. Imani says the truth is the note she writes in a group text after the crew walks the yard. Theo keeps a spreadsheet of who has approved extras, because he does not trust the booking tool with money questions. Three homes for one update. A draft from the booking tool alone will miss the yard note and may invent the approval. That second version will sound like Imani and be wrong in the way that costs trust.
+The scheduler says the booking tool is the source. It knows the address and the window. The crew lead says the truth is the note she writes in a group text after the crew walks the yard. The owner keeps a spreadsheet of who has approved extras, because he does not trust the booking tool with money questions. Three homes for one update. A draft from the booking tool alone will miss the yard note and may invent the approval. That second version will sound like the crew lead and be wrong in the way that costs trust.
 
-Where the knowledge lives, in the table's words: partly in one person's head, Imani's, until she texts; partly in documents the booking tool does not read, the group text and Theo's spreadsheet; not yet in one system with a current record of the whole job. A system could read the address. It could not read "the side bed was wetter than expected, so we stopped and need a yes on the extra drainage" unless someone retypes that into a field. So the middle row is the honest row. A person still has to retype. Buying the draft tool now adds a voice to the retype. It does not remove it.
+Where the knowledge lives, in the table's words: partly in one person's head, the crew lead's, until she texts; partly in documents the booking tool does not read, the group text and the owner's spreadsheet; not yet in one system with a current record of the whole job. A system could read the address. It could not read "the side bed was wetter than expected, so we stopped and need a yes on the extra drainage" unless someone retypes that into a field. So the middle row is the honest row. A person still has to retype. Buying the draft tool now adds a voice to the retype. It does not remove it.
 
-We ask who knows which fields lie. Imani knows the yard. Bea knows which customers answer. Theo knows the spreadsheet falls behind whenever he is on a job himself. The record is split across a text, a schedule, and a sheet, and current means something different in each. For the customer update, current has to mean this morning's yard plus whether the extra is approved. They do not have one place that means both.
+We ask who knows which fields lie. The crew lead knows the yard. The scheduler knows which customers answer. The owner knows the spreadsheet falls behind whenever he is on a job himself. The record is split across a text, a schedule, and a sheet, and current means something different in each. For the customer update, current has to mean this morning's yard plus whether the extra is approved. They do not have one place that means both.
 
-What we would not do is start a proof of concept on last month's cleanest jobs. If the proof only runs on yards Bea already tidied, it is a performance. The test is a messy yard Imani has not typed up yet. That is how a flattering demo joins the projects abandoned after proof of concept.
+What we would not do is start a proof of concept on last month's cleanest jobs. If the proof only runs on yards the scheduler already tidied, it is a performance. The test is a messy yard the crew lead has not typed up yet. That is how a flattering demo joins the projects abandoned after proof of concept.
 
-The fix is boring, which is why it works. Pick the customer update as the only job. Pick one place the yard note and the approval must both land before a message goes out. Imani's text can stay a scratch pad if Bea or Imani moves the real sentence into that place the same day. Theo's spreadsheet can stay his private worry list until the approval is also in the shared record. Then a tool can be tried, because there is one current source. Until then, the low-data guide is the right page, not the vendor's order form.
+The fix is boring, which is why it works. Pick the customer update as the only job. Pick one place the yard note and the approval must both land before a message goes out. The crew lead's text can stay a scratch pad if the scheduler or the crew lead moves the real sentence into that place the same day. The owner's spreadsheet can stay his private worry list until the approval is also in the shared record. Then a tool can be tried, because there is one current source. Until then, the low-data guide is the right page, not the vendor's order form.
 
 ## How we'd run it
 
-First we name the job in one sentence. Not "our data." The customer update, or the open order, or the recall. If the sentence needs a comma splice of every service the company sells, we have not named a job. Data readiness without a job is a storage conversation, and storage is how you buy a warehouse you do not need.
+First we name the job in one sentence. Not "our data." The customer update, or the open order, or the recall. If the sentence needs a comma splice of every service you sell, we have not named a job. Data readiness without a job is a storage conversation, and storage is how you buy a warehouse you do not need.
 
-Second we ask each person where they would look if the owner were unreachable. Bea's answer, Imani's answer, and Theo's answer go on one sheet. If the answers match, we still ask whether a system can read that place or whether someone retypes. If the answers do not match, the source is not named, and we stop pretending the booking tool won because it has a logo.
+Second we ask each person where they would look if the owner were unreachable. The scheduler's answer, the crew lead's answer, and the owner's answer go on one sheet. If the answers match, we still ask whether a system can read that place or whether someone retypes. If the answers do not match, the source is not named, and we stop pretending the booking tool won because it has a logo.
 
 Third we mark the table's row in ink. One person's head, documents no system can read, or one system with a current record. We do not invent a fourth row called "we are getting there." Getting there is the middle row plus a plan. The plan is a person and a place, not a purchase.
 
-Fourth we name who knows which fields lie, and we write the fields. For the crew, the lie is often an approval that was verbal on site and never reached Theo's sheet. That field does not go into a customer message until it is in the shared record. This is the risk-control reason from the later Gartner article, in small clothes: somebody can say the output is not allowed to include a guess.
+Fourth we name who knows which fields lie, and we write the fields. For the crew, the lie is often an approval that was verbal on site and never reached the owner's sheet. That field does not go into a customer message until it is in the shared record. This is the risk-control reason from the later Gartner article, in small clothes: somebody can say the output is not allowed to include a guess.
 
 Fifth we decide low or mid before we decide tool or no tool. If we cannot name the source, we are in the low-data guide and the purchase stops. If we can name it and a person still retypes the part the tool would need, we are in the mid-data guide and the work is to make that part readable. Only the bottom row of the table gets a trial, and the trial has to use the ugly records, not a cleaned sample.
 
@@ -112,18 +112,18 @@ Sixth we reread the research as a brake. 63% without the practices, or unsure th
 
 ## Common mistakes
 
-The mistake we see most is calling an export the source of truth. Bea can pull a schedule file any morning. By the time Imani is in the yard, the file is a souvenir. The source is whatever will still be right when the customer calls at the end of the day. If that thing is Imani's head, say so.
+The mistake we see most is calling an export the source of truth. The scheduler can pull a schedule file any morning. By the time the crew lead is in the yard, the file is a souvenir. The source is whatever will still be right when the customer calls at the end of the day. If that thing is the crew lead's head, say so.
 
 Another mistake is cleaning the data for the demo. Tidy jobs are not the business. A proof of concept that only sees them will pass, then fail when poor data quality shows up. Use a record you are slightly ashamed of.
 
 A third mistake is treating "a lot of history" as readiness. Old invoices in a folder are documents. If no system can read them, a person retypes, and you are in the middle row no matter how many years the folder represents. Volume is not a source.
 
-We also watch owners skip the person who knows which fields lie. Theo knows the approval column goes stale. If he is not in the conversation, the tool will treat that column as fact. The research can talk about data quality. In the room, data quality is a person with a grudge against a specific field. Find that person.
+We also watch owners skip the person who knows which fields lie. The owner knows the approval column goes stale. If he is not in the conversation, the tool will treat that column as fact. The research can talk about data quality. In the room, data quality is a person with a grudge against a specific field. Find that person.
 
 The last mistake is citing a sample size these pages do not give you. The February 2025 page's sample size is not cited here, because the article and its structured data do not agree. Do not fill that gap with a number you heard elsewhere.
 
 ## What we'd do
 
-We would not buy the drafting tool for Theo until the yard note and the approval live in one place a message can read. Our opinion is stubborn on this. A smoother voice on a split record is how you send a confident update that Imani would not sign. The customer will not blame the data model. They will blame the crew.
+We would not buy the drafting tool for the owner until the yard note and the approval live in one place a message can read. Our opinion is stubborn on this. A smoother voice on a split record is how you send a confident update that the crew lead would not sign. The customer will not blame the data model. They will blame the crew.
 
-If we were Theo, we would pick the update job only, make one shared note the place Imani's sentence and the yes on extra work must land the same day, and leave the spreadsheet until it matches that note. Then we would try a tool on a messy yard. If we still cannot name the source, we would stay on the low-data guide and keep the money. One current record is the requirement. A warehouse can wait.
+If we were the owner, we would pick the update job only, make one shared note the place the crew lead's sentence and the yes on extra work must land the same day, and leave the spreadsheet until it matches that note. Then we would try a tool on a messy yard. If we still cannot name the source, we would stay on the low-data guide and keep the money. One current record is the requirement. A warehouse can wait.

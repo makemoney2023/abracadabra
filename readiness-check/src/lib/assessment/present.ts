@@ -61,7 +61,7 @@ export function buildBooking(input: {
       band: input.band,
       pressure: input.pressure,
     },
-    mailto: `mailto:dev@pirx.ca?subject=${subject}&body=${body}`,
+    mailto: `mailto:houdini@abra-ca-dabra.app?subject=${subject}&body=${body}`,
   };
 }
 

@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: AI for small business
 cluster: adoption
 primaryQuery: how can ai help small businesses
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Surveys measure everyone. The Readiness Check measures you."
 images:
   - src: /blog/media/how-can-ai-help-small-businesses/01.webp
@@ -44,9 +44,9 @@ citations:
     datePublished: "2025-06-16"
     figures: ["12.2", "6.1", "35.7", "23.1", "40.1", "38.9", "21357", "9103", "1", "5", "16", "2025", "2024"]
 ---
-AI helps a small business by taking a named job a person already does. It does not help by moving you closer to a headline. Two surveys from 2025 count AI in small firms, and they count different work. The U.S. Chamber asked who uses generative AI. Statistics Canada asked who used AI to produce goods or deliver services. A firm can say yes to the first and no to the second, and both answers can be honest. This note keeps those claims apart, then names the jobs owners hand over. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is the matching question for one business. [Christopher Buzny](/about/christopher-buzny) writes these notes from the [studio site](/).
+AI helps a small business by taking a named job a person already does. It does not help by moving you closer to a headline. Two surveys from 2025 count AI in small firms, and they count different work. The U.S. Chamber asked who uses generative AI. Statistics Canada asked who used AI to produce goods or deliver services. A firm can say yes to the first and no to the second, and both answers can be honest. This note keeps those claims apart, then names the jobs owners hand over. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is the matching question for one business. We write these notes on [our site](/).
 
-We sit with owners who have already been told they are late. The number they heard was usually the larger one. Our job in that first conversation is to slow the number down until it has a population attached. Help, for a shop or a clinic or a trades desk, is a draft someone checks, a sort someone trusts, a reminder someone still sends. Help is not a rank on a national chart.
+We sit with owners who have already been told they are late. The number they heard was usually the larger one. First, we figure out what the number actually measures. Help, for a shop or a clinic or a trades desk, is a draft someone checks, a sort someone trusts, a reminder someone still sends. Help is not a rank on a national chart.
 
 ## Generative use is not production use
 
@@ -56,7 +56,7 @@ Statistics Canada, in the Canadian Survey on Business Conditions for the second 
 
 <!--image:2-->
 
-Among businesses that used AI, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. Those shares sit inside the group that already uses AI. They are not shares of every firm in the country, and they are not shares of the Chamber's generative question. Text analytics is reading and sorting language. Marketing automation is sending and measuring. A new workflow is a path that wasn't written before. Training is a person who was shown the path. Put that way, the list is practical. It is also modest. None of those four is a claim that the company now runs itself.
+Among businesses that used AI, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. Those shares sit inside the group that already uses AI. They are not shares of every firm in the country, and they are not shares of the Chamber's generative question. Text analytics is reading and sorting language. Marketing automation is sending and measuring. A new workflow is a path that wasn't written before. Training is a person who was shown the path. Put that way, the list is practical. It is also modest. None of those four is a claim that the business now runs itself.
 
 <!--cta:inline-->
 
@@ -64,7 +64,7 @@ Among businesses that used AI, text analytics accounted for 35.7%, and marketing
 
 The Chamber figure describes a tool someone opens. The StatCan figure describes AI inside the delivery of the product or the service. A small business can do the first for a long time without the second. We think that is a sane order. Open the tool on a job you can check. Let production use be a later question, asked only when the goods or the service actually depend on the system. Most owners we sit with are nowhere near that later question, and they don't need to pretend they are.
 
-The jobs that show up in the StatCan breakdown are the practical list: reading and sorting text, sending and measuring marketing, writing a workflow that did not exist, and training the people who will run it. None of those is a promise that the tool will run the company. Reading text looks like an inbox, a pile of referrals, a supplier sheet. Sending marketing looks like a note to people who already bought, not a brand campaign with a film crew. A new workflow looks like a page the front desk can follow when the owner is in a room with a patient. Training looks like sitting with that person once on a real message, not a slide deck titled for a company with a department you don't have.
+The jobs that show up in the StatCan breakdown are the practical list: reading and sorting text, sending and measuring marketing, writing a workflow that did not exist, and training the people who will run it. None of those is a promise that the tool will run the business. Reading text looks like an inbox, a pile of referrals, a supplier sheet. Sending marketing looks like a note to people who already bought, not a brand campaign with a film crew. A new workflow looks like a page the front desk can follow when the owner is in a room with a patient. Training looks like sitting with that person once on a real message, not a slide deck titled for a company with a department you don't have.
 
 The [readiness note](/blog/ai-readiness-assessment) asks a different question: whether this firm, not the average firm, has the data, the process, the people, and the decision in place. Average firms are what surveys are for. Your firm is a counter, a desk, a schedule. If the readiness questions fail, the survey percentages will not save the project. If they pass, you still don't need the larger percentage as a goal. You need the job.
 

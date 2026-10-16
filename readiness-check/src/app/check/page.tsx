@@ -12,7 +12,7 @@ export const metadata = checkPageMetadata({
 });
 
 const MEASURE = [
-  { title: "Pressure", body: "Which jobs already cap the week, and how costly each one is." },
+  { title: "Pressure", body: "The jobs that eat your week, and what they cost." },
   { title: "Readiness", body: "Whether the data, the workflow, the owner, and the decision can support real work." },
   { title: "Growth", body: "Where new customers come from, and whether that path is something you control." },
   { title: "Visibility", body: "A live read of how answer engines can find and quote the public site." },

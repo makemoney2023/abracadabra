@@ -305,7 +305,7 @@ Headline "Your check is scored." Band name shown greyed with the sentence "Where
 2. Four section cards: Readiness (ring + four `PillarMeter`s), Visibility (Schema ring + five pillars, link to `/scan/[token]`), Growth (ring), Pressure (ordered list with severity chips).
 3. Three suggestions per section (`FindingsList` styling), each linking to its guide.
 4. "How we can help": one block per selected pressure, top three by severity, from the offer map. If none selected, the `custom_fit` block.
-5. Primary CTA card: "Book a working session — thirty minutes, bring the workflow, we leave with a brief." Cal.com inline embed with prefill (`name`, `email`, `metadata[assessment]=token`, `metadata[domain]`, `metadata[band]`, `metadata[pressure]`). A `mailto:dev@pirx.ca` line sits under the embed.
+5. Primary CTA card: "Book a working session — thirty minutes, bring the workflow, we leave with a brief." Cal.com inline embed with prefill (`name`, `email`, `metadata[assessment]=token`, `metadata[domain]`, `metadata[band]`, `metadata[pressure]`). A `mailto:houdini@abra-ca-dabra.app` line sits under the embed.
 6. Secondary: "Download report" (PDF), "Open the full site scan".
 7. Visibility pending: card shows a spinner and the page polls `GET /api/assessments/[token]` every 5 s for up to 3 min, then shows `VIS_UNAVAILABLE` copy without blocking anything else.
 
@@ -360,7 +360,7 @@ Inngest: existing `scan/requested` unchanged. New event `assessment/completed` e
 
 Cal.com hosted account, event type `working-session` (30 min), host = studio calendar. Embed via `@calcom/embed-react` inline on results; prefill from the assessment. Webhook subscription on the event type to `${NEXT_PUBLIC_APP_URL}/api/webhooks/booking` with a secret. Cal.com sends host and attendee confirmations; Schema does not send email in v1.
 
-Fallback when `NEXT_PUBLIC_CAL_LINK` is unset: the CTA card renders "Open a brief" as `mailto:dev@pirx.ca?subject=Working%20session%20—%20{domain}` with the band in the body.
+Fallback when `NEXT_PUBLIC_CAL_LINK` is unset: the CTA card renders "Open a brief" as `mailto:houdini@abra-ca-dabra.app?subject=Working%20session%20—%20{domain}` with the band in the body.
 
 ## 14. Error handling and limits
 

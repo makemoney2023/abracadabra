@@ -56,7 +56,7 @@ const results: ResultsPayload = {
       band: "forming",
       pressure: "",
     },
-    mailto: "mailto:dev@pirx.ca",
+    mailto: "mailto:houdini@abra-ca-dabra.app",
   },
 };
 
