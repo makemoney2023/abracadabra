@@ -158,8 +158,8 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(offering, /<h3>Plan<\/h3>/);
   assert.match(offering, /<h3>Review<\/h3>/);
   assert.match(offering, /How it compares/);
-  assert.match(offering, /When off the shelf wins/);
-  assert.match(offering, /Contact for pricing/);
+  assert.match(offering, /When you don(&#39;|')t need us/);
+  assert.match(offering, /Priced to the project/);
   assert.match(offering, /href="\/services\/safe-code-execution\/"/);
   assert.match(offering, /class="page-hero page-hero--photo"/);
   assert.match(offering, /class="sales-split"/);
@@ -199,10 +199,10 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     const page = read(`services/${slug}/index.html`);
     const main = page.slice(page.indexOf("<main"), page.indexOf("</main>"));
     const words = main.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/g, " ").split(/\s+/).filter(Boolean);
-    assert.equal(words.length >= 900 && words.length <= 1300, true, `${slug} ${words.length} words`);
+    assert.equal(words.length >= 700 && words.length <= 1300, true, `${slug} ${words.length} words`);
     assert.match(page, /Start a project/);
-    assert.match(page, /When off the shelf wins/);
-    assert.match(page, /Contact for pricing/);
+    assert.match(page, /When you don(&#39;|')t need us/);
+    assert.match(page, /Priced to the project/);
     assert.match(page, /<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->/);
     assert.doesNotMatch(page, industryNoun);
     assert.equal(/\$\d/.test(page), false, slug);

@@ -118,7 +118,7 @@ function placeholder(text) {
 }
 
 function underTheHood() {
-  return "The system runs in production, with the same care as the live work.";
+  return "Running in production today.";
 }
 
 function logoItem(item) {
@@ -353,8 +353,26 @@ function salesActions() {
   return `<p class="sales-actions"><a class="sales-primary" href="/#start">Start a project</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
 }
 
+const SERVICE_GROUPS = {
+  "ai-visibility": "Search & AI visibility",
+  "ai-media": "Marketing",
+  "search-grounded-research": "Marketing",
+  "ai-assistants-and-agents": "Sales",
+  "voice-and-realtime-agents": "Customer service",
+  "web-automation": "Operations",
+  "answers-from-your-documents": "Operations",
+  "custom-apps": "Operations",
+  "any-model-one-bill": "Platform",
+  "safe-code-execution": "Platform",
+};
+
 function proofStrip(items) {
-  return `<ul class="proof-strip">${items.map((item) => `<li><a href="${esc(item.href)}">${esc(item.label)}</a></li>`).join("")}</ul>`;
+  const isCase = (item) => /^\/portfolio\/[^/]+\/?$/.test(item.href);
+  const cases = items.filter(isCase);
+  const rest = items.filter((item) => !isCase(item));
+  const link = (item) => `<li><a href="${esc(item.href)}">${esc(item.label)}</a></li>`;
+  const label = cases.length ? `<li class="proof-strip__label">See it in action:</li>` : "";
+  return `<ul class="proof-strip">${label}${cases.map(link).join("")}${rest.map(link).join("")}</ul>`;
 }
 
 function cardGrid(className, items) {
@@ -441,7 +459,7 @@ async function renderOffering(item) {
     body: `<main id="top" class="site-page sales">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
-  kicker: esc(OFFERINGS_KICKER),
+  kicker: esc(SERVICE_GROUPS[item.slug] || OFFERINGS_KICKER),
   title: esc(page.headline),
   dek: `<p class="sales-dek">${esc(page.dek)}</p>\n${leadHtml(page.lead)}`,
   actions: salesActions(),
@@ -484,7 +502,7 @@ ${proofs}
 <p class="cloud-line">${esc(underTheHood())}</p>
 <section class="price-block">
 <h2>Pricing</h2>
-<p>Contact for pricing. The price follows the job, not a public rate card.</p>
+<p>Priced to the project. Tell us what you need and we'll quote it.</p>
 <p><a href="/#start">Start a project</a></p>
 </section>
 <section>

@@ -1453,3 +1453,5 @@ input, textarea, select { border-radius: var(--ui-r-control); }
   -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
           mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
 }
+
+.proof-strip__label { color: var(--ink-soft); }
