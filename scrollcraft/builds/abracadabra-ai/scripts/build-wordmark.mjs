@@ -1,30 +1,109 @@
 /**
  * Outlined "Abra-ca-dabra" wordmark.
- * The letterforms come from an AI-generated wordmark (Cloudflare Workers AI,
- * @cf/black-forest-labs/flux-2-dev, seed 11; source in scripts/wordmark-source),
- * traced to vector paths with vtracer. The two sparkle-star hyphens are kept as
- * separate accent paths. Run from this folder: node scripts/build-wordmark.mjs
+ * Tektur 700 (the site's display face, SIL OFL; static instance in
+ * scripts/fonts) converted to outlines, with four-point stars replacing both
+ * hyphens. Run from this folder: node scripts/build-wordmark.mjs
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import opentype from 'opentype.js';
 import sharp from 'sharp';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'assets/wordmark');
+const fontPath = join(root, 'scripts/fonts/Tektur-Bold.ttf');
+const fontSize = 240;
 const ink = '#F5F1E8';
 const accent = '#FF4B24';
 const canvas = '#070706';
 
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function commandsToPath(commands, rng, amp, bounds) {
+  let d = '';
+  for (const cmd of commands) {
+    const jitter = (value) => {
+      if (typeof value !== 'number') return value;
+      const next = value + (rng() - 0.5) * 2 * amp;
+      return next;
+    };
+    const note = (x, y) => {
+      bounds.minX = Math.min(bounds.minX, x);
+      bounds.minY = Math.min(bounds.minY, y);
+      bounds.maxX = Math.max(bounds.maxX, x);
+      bounds.maxY = Math.max(bounds.maxY, y);
+    };
+    if (cmd.type === 'M') {
+      const x = jitter(cmd.x);
+      const y = jitter(cmd.y);
+      note(x, y);
+      d += `M${x.toFixed(2)} ${y.toFixed(2)}`;
+    } else if (cmd.type === 'L') {
+      const x = jitter(cmd.x);
+      const y = jitter(cmd.y);
+      note(x, y);
+      d += `L${x.toFixed(2)} ${y.toFixed(2)}`;
+    } else if (cmd.type === 'C') {
+      const x1 = jitter(cmd.x1);
+      const y1 = jitter(cmd.y1);
+      const x2 = jitter(cmd.x2);
+      const y2 = jitter(cmd.y2);
+      const x = jitter(cmd.x);
+      const y = jitter(cmd.y);
+      note(x1, y1);
+      note(x2, y2);
+      note(x, y);
+      d += `C${x1.toFixed(2)} ${y1.toFixed(2)} ${x2.toFixed(2)} ${y2.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    } else if (cmd.type === 'Q') {
+      const x1 = jitter(cmd.x1);
+      const y1 = jitter(cmd.y1);
+      const x = jitter(cmd.x);
+      const y = jitter(cmd.y);
+      note(x1, y1);
+      note(x, y);
+      d += `Q${x1.toFixed(2)} ${y1.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    } else if (cmd.type === 'Z') {
+      d += 'Z';
+    }
+  }
+  return d;
+}
+
+function starPath(cx, cy, radius, bounds) {
+  const inner = radius * 0.42;
+  let d = '';
+  for (let i = 0; i < 8; i += 1) {
+    const angle = -Math.PI / 2 + (i * Math.PI) / 4;
+    const arm = i % 2 === 0 ? radius : inner;
+    const x = cx + Math.cos(angle) * arm;
+    const y = cy + Math.sin(angle) * arm;
+    bounds.minX = Math.min(bounds.minX, x);
+    bounds.minY = Math.min(bounds.minY, y);
+    bounds.maxX = Math.max(bounds.maxX, x);
+    bounds.maxY = Math.max(bounds.maxY, y);
+    d += `${i === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`;
+  }
+  return `${d}Z`;
+}
+
 function buildSvg({ letterFill, starFill, letters, stars, bounds }) {
-  const pad = 0;
+  const pad = fontSize * 0.08;
   const minX = bounds.minX - pad;
   const minY = bounds.minY - pad;
   const width = bounds.maxX - bounds.minX + pad * 2;
   const height = bounds.maxY - bounds.minY + pad * 2;
-  const letterPaths = letters.map((p) => `<path fill="${letterFill}" transform="${p.transform}" d="${p.d}"/>`).join('');
-  const starPaths = stars.map((p) => `<path data-accent="star" fill="${starFill}" transform="${p.transform}" d="${p.d}"/>`).join('');
+  const letterPaths = letters.map((d) => `<path fill="${letterFill}" d="${d}"/>`).join('');
+  const starPaths = stars.map((d) => `<path data-accent="star" fill="${starFill}" d="${d}"/>`).join('');
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX.toFixed(2)} ${minY.toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)}" role="img">
 <title>Abra-ca-dabra</title>
@@ -35,11 +114,35 @@ ${starPaths}
   return { svg, width, height };
 }
 
-const traced = JSON.parse(readFileSync(join(root, 'scripts/wordmark-source/abra-ca-dabra-ai-traced.json'), 'utf8'));
-const toPath = ([d, tx, ty]) => ({ d, transform: `translate(${tx} ${ty})` });
-const letters = traced.letters.map(toPath);
-const stars = traced.stars.map(toPath);
-const bounds = { minX: 0, minY: 0, maxX: traced.width, maxY: traced.height };
+const font = opentype.parse(readFileSync(fontPath).buffer);
+const rng = mulberry32(0xab7aca);
+const amp = 0;
+const bounds = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+const baseline = fontSize * 0.82;
+const scale = fontSize / font.unitsPerEm;
+const xHeight = (font.tables.os2.sxHeight || font.unitsPerEm * 0.48) * scale;
+const starRadius = fontSize * 0.125;
+const slot = starRadius * 2.35;
+let cursor = 0;
+const letters = [];
+const stars = [];
+
+function addWord(text) {
+  const wobble = (rng() - 0.5) * amp;
+  const path = font.getPath(text, cursor, baseline + wobble, fontSize);
+  letters.push(commandsToPath(path.commands, rng, amp, bounds));
+  cursor += font.getAdvanceWidth(text, fontSize);
+}
+
+addWord('Abra');
+cursor += slot * 0.15;
+stars.push(starPath(cursor + starRadius, baseline - xHeight * 0.52, starRadius, bounds));
+cursor += starRadius * 2 + slot * 0.15;
+addWord('ca');
+cursor += slot * 0.15;
+stars.push(starPath(cursor + starRadius, baseline - xHeight * 0.52, starRadius, bounds));
+cursor += starRadius * 2 + slot * 0.15;
+addWord('dabra');
 
 const variants = [
   ['abra-ca-dabra.svg', ink, ink],
