@@ -528,3 +528,81 @@ a { color: var(--ink); }
   .marquee__track { animation: none; flex-wrap: wrap; width: auto; }
   .marquee__list[aria-hidden="true"] { display: none; }
 }
+
+/* ---- Premium UI tokens (derived from the service imagery) ---- */
+:root {
+  --ui-surface-0: #070706;
+  --ui-surface-1: #11110F;
+  --ui-surface-2: #1A1A17;
+  --ui-border: 1px solid rgba(245, 240, 232, 0.08);
+  --ui-border-color: rgba(245, 240, 232, 0.08);
+  --ui-border-hover: rgba(245, 240, 232, 0.14);
+  --ui-r-card: 8px;
+  --ui-r-control: 6px;
+  --ui-r-pill: 999px;
+  --ui-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 1px rgba(0, 0, 0, 0.35), 0 18px 48px -12px rgba(0, 0, 0, 0.6);
+  --ui-done: #C6FFB3;
+  --ui-progress: #8DEBF2;
+  --ui-action: #FF4B24;
+  --ui-grid: linear-gradient(rgba(245, 240, 232, 0.04) 1px, transparent 1px) 0 0 / 32px 32px,
+             linear-gradient(90deg, rgba(245, 240, 232, 0.04) 1px, transparent 1px) 0 0 / 32px 32px;
+}
+.ui-pill { display: inline-flex; align-items: center; gap: .4em; padding: .15em .65em; border-radius: var(--ui-r-pill); font-size: .8em; border: 1px solid currentColor; }
+.ui-pill--done { color: var(--ui-done); background: color-mix(in oklab, var(--ui-done) 12%, transparent); border-color: color-mix(in oklab, var(--ui-done) 40%, transparent); }
+.ui-pill--progress { color: var(--ui-progress); background: color-mix(in oklab, var(--ui-progress) 12%, transparent); border-color: color-mix(in oklab, var(--ui-progress) 40%, transparent); }
+.ui-pill--action { color: var(--ui-action); background: color-mix(in oklab, var(--ui-action) 12%, transparent); border-color: color-mix(in oklab, var(--ui-action) 40%, transparent); }
+.ui-connector { position: relative; height: 1px; background: var(--ui-action); }
+.ui-connector--cyan { background: var(--ui-progress); }
+.ui-connector::before, .ui-connector::after { content: ""; position: absolute; top: -2.5px; width: 6px; height: 6px; border-radius: 50%; background: inherit; }
+.ui-connector::before { left: 0; } .ui-connector::after { right: 0; }
+
+/* Cards */
+.fn-card, .cards > li, .proof-card, .pirx-chart {
+  background: var(--ui-surface-1);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+  box-shadow: var(--ui-shadow);
+  overflow: hidden;
+  transition: border-color .2s ease;
+}
+.proof-card { border-left: 2px solid var(--ui-action); }
+.fn-card:hover, .cards > li:hover { border-color: var(--ui-border-hover); }
+.fn-card__links a { border-top: var(--ui-border); }
+.btn { border-radius: var(--ui-r-control); }
+input, textarea, select { border-radius: var(--ui-r-control); }
+
+/* Services menu */
+.site-nav__services[open] > .site-nav__mega {
+  background: var(--ui-surface-1);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+  box-shadow: var(--ui-shadow);
+}
+.site-nav__group { position: relative; padding-left: .9rem; border-left: 1px solid color-mix(in oklab, var(--ui-progress) 35%, transparent); }
+.site-nav__group::before { content: ""; position: absolute; left: -3.5px; top: .85rem; width: 6px; height: 6px; border-radius: 50%; background: var(--ui-progress); }
+.site-nav__links .site-nav__mega a:not(.site-nav__fn-name):hover { color: var(--ink); }
+
+/* FAQ */
+.faq details, .faq-list details {
+  background: var(--ui-surface-1);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+  padding: 0 1rem;
+  margin: 0 0 .6rem;
+  transition: border-color .2s ease;
+}
+.faq details:last-of-type { border-bottom: var(--ui-border); }
+.faq details:hover, .faq-list details:hover { border-color: var(--ui-border-hover); }
+.faq details[open], .faq-list details[open] { background: var(--ui-surface-2); box-shadow: var(--ui-shadow); }
+.faq summary, .faq-list summary { position: relative; padding-left: 1.1rem; }
+.faq summary::before, .faq-list summary::before { content: ""; position: absolute; left: 0; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--ui-action); }
+.faq details[open] summary::before, .faq-list details[open] summary::before { background: var(--ui-done); }
+
+/* Faint grid behind hero and feature sections */
+.hero, .page-hero, .sales-split, .models, .notes, #proof { position: relative; isolation: isolate; }
+.hero::after, .page-hero::after, .sales-split::after, .models::after, .notes::after, #proof::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--ui-grid);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
+          mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
+}
