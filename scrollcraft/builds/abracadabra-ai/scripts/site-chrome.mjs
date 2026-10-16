@@ -21,10 +21,14 @@ function functionLinks(fn) {
   return `${services}${work}`;
 }
 
-function functionNav() {
-  return businessFunctions.map((fn) => (
-    `<details class="site-nav__fn"><summary>${esc(fn.name)}</summary><div class="site-nav__panel">${functionLinks(fn)}</div></details>`
-  )).join("\n    ");
+function functionGroup(fn) {
+  const href = fn.services.length ? `/services/#${fn.id}` : "/portfolio/";
+  return `<div class="site-nav__group"><a class="site-nav__fn-name" href="${href}">${esc(fn.name)}</a>${functionLinks(fn)}</div>`;
+}
+
+function servicesNav() {
+  const groups = businessFunctions.map(functionGroup).join("");
+  return `<details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega">${groups}</div></details>`;
 }
 
 function functionFoot() {
@@ -42,7 +46,7 @@ export function siteHeader() {
     <summary class="site-nav__toggle">Menu</summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    ${functionNav()}
+    ${servicesNav()}
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
@@ -53,9 +57,30 @@ export function siteHeader() {
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
-    if (!menu) return;
+    var services = bar.querySelector(".site-nav__services");
     bar.addEventListener("click", function (event) {
-      if (event.target.closest("a")) menu.open = false;
+      if (!event.target.closest("a")) return;
+      if (menu) menu.open = false;
+      if (services) services.open = false;
+    });
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.querySelectorAll("video.loop-film").forEach(function (video) {
+      function stop() { video.pause(); }
+      if (reduce.matches) {
+        stop();
+        video.addEventListener("play", stop);
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (reduce.matches || !entry.isIntersecting) stop();
+          else video.play().catch(function () {});
+        });
+      }, { threshold: 0.35 });
+      observer.observe(video);
     });
   });
 </script>`;

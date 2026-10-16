@@ -130,13 +130,7 @@
     <summary class="site-nav__toggle">Menu</summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <details class="site-nav__fn"><summary>Search &amp; AI visibility</summary><div class="site-nav__panel"><a href="/services/ai-visibility/">Get found in AI search.</a></div></details>
-    <details class="site-nav__fn"><summary>Marketing</summary><div class="site-nav__panel"><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div></details>
-    <details class="site-nav__fn"><summary>Sales</summary><div class="site-nav__panel"><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div></details>
-    <details class="site-nav__fn"><summary>Customer service</summary><div class="site-nav__panel"><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div></details>
-    <details class="site-nav__fn"><summary>Operations</summary><div class="site-nav__panel"><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div></details>
-    <details class="site-nav__fn"><summary>Design</summary><div class="site-nav__panel"><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div></details>
-    <details class="site-nav__fn"><summary>Platform</summary><div class="site-nav__panel"><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></details>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
@@ -147,9 +141,30 @@
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
-    if (!menu) return;
+    var services = bar.querySelector(".site-nav__services");
     bar.addEventListener("click", function (event) {
-      if (event.target.closest("a")) menu.open = false;
+      if (!event.target.closest("a")) return;
+      if (menu) menu.open = false;
+      if (services) services.open = false;
+    });
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.querySelectorAll("video.loop-film").forEach(function (video) {
+      function stop() { video.pause(); }
+      if (reduce.matches) {
+        stop();
+        video.addEventListener("play", stop);
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (reduce.matches || !entry.isIntersecting) stop();
+          else video.play().catch(function () {});
+        });
+      }, { threshold: 0.35 });
+      observer.observe(video);
     });
   });
 </script>

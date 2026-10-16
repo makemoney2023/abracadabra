@@ -90,6 +90,10 @@ Functions come from one list, `businessFunctions` in `scripts/site-data.mjs`:
 | Design | Live portfolio work: StrongFoam, Milrcorr, pirx.ca. No separate service URL. |
 | Platform | Every AI model. One bill. Let AI run code, safely. |
 
+**Nav.** The top bar is Services, Portfolio, Products, Course, Blog, and Start a project. Services opens one menu. Each function name links to its hub section, with that function's services listed under the name. Design links to the portfolio. The phone menu uses the same grouping. The footer still lists each function.
+
+**Showcase.** Operate plays the StrongFoam website loop and links to `/portfolio/strongfoam-website/`. Build plays the Milrcorr loop and links to `/portfolio/milrcorr/`. The same films are the heroes on those two portfolio pages. Files live at `assets/video/strongfoam-loop` and `assets/video/milrcorr-loop` (mp4, webm, and a jpg poster). They are v1 silent loops. Sharper v2 renders replace those filenames in place. The poster shows first. The film stays muted, plays inline, and loops only while it is in view. Reduced motion keeps the poster.
+
 **Cloudflare.** After the model band, the proof, and the notes, and before the FAQ. Official light wordmark on the dark canvas, with clear space around the mark. Headline: Apps that scale, proudly built with Cloudflare. Supporting line: They grow with your business, from the first user to millions, without a rebuild, and stay fast, secure, and available wherever your customers are. No other stack name appears as a visible label.
 
 ### 1. Hero

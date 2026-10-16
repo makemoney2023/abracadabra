@@ -161,6 +161,10 @@ const ASSET_SIZE = {
   "/assets/superfunnel-getting-started.webp": [1920, 1080],
 };
 
+function loopFilm(loop) {
+  return `<video class="loop-film" muted playsinline loop preload="none" poster="${esc(loop.base)}.jpg" width="1280" height="720" aria-label="${esc(loop.label)}"><source src="${esc(loop.base)}.webm" type="video/webm"><source src="${esc(loop.base)}.mp4" type="video/mp4"></video>`;
+}
+
 function assetMedia(src, alt, { lazy = false } = {}) {
   const [width, height] = ASSET_SIZE[src] || [1600, 1000];
   const priority = lazy ? ' loading="lazy"' : ' fetchpriority="high"';
@@ -646,11 +650,13 @@ ${pageHero({
   kicker: "Portfolio",
   title: esc(item.name),
   dek: `${live}\n${productLink}\n${courseLink}`,
-  media: item.hero
-    ? `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`
-    : item.image
-      ? assetMedia(item.image, item.imageAlt)
-      : "",
+  media: item.loop
+    ? loopFilm(item.loop)
+    : item.hero
+      ? `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`
+      : item.image
+        ? assetMedia(item.image, item.imageAlt)
+        : "",
 })}
 ${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
 ${(item.shots || []).length ? `${item.shots.map((pair) => shotPairHtml(pair)).join("\n")}\n` : ""}${item.chart ? `${pirxChartHtml()}\n` : ""}${relatedHtml}

@@ -269,7 +269,75 @@ test('site nav uses a compact menu below 1100px and a full bar from 1280px', asy
     assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
     assert.ok(link.height >= 44, `${name} target is under 44px`);
   }
+  const services = await desktop.page.locator('.site-nav__services > summary').evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return { height: rect.height, right: rect.right, text: node.textContent.trim(), viewport: innerWidth };
+  });
+  assert.equal(services.text, 'Services');
+  assert.ok(services.height >= 44, 'Services target is under 44px');
+  assert.ok(services.right <= services.viewport + 1, 'Services overflows the bar');
+  assert.equal(await desktop.page.locator('.site-nav__mega').evaluate((node) => getComputedStyle(node).display), 'none');
   await desktop.context.close();
+});
+
+test('open Services menu stacks page links under the function list on a phone', async () => {
+  const { context, page } = await openPage({ width: 375, height: 812 });
+  await page.locator('.site-nav__toggle').click();
+  await page.locator('.site-nav__services > summary').click();
+  const layout = await page.evaluate(() => {
+    const menu = document.querySelector('.site-nav__links');
+    const services = document.querySelector('.site-nav__services');
+    const platform = document.querySelector('.site-nav__fn-name[href="/services/#platform"]');
+    const portfolio = [...menu.querySelectorAll(':scope > a')].find((link) => link.textContent.trim() === 'Portfolio');
+    const cta = menu.querySelector('.site-nav__cta');
+    const place = (node) => {
+      const box = node.getBoundingClientRect();
+      const menuBox = menu.getBoundingClientRect();
+      return {
+        bottom: box.bottom - menuBox.top + menu.scrollTop,
+        left: box.left,
+        top: box.top - menuBox.top + menu.scrollTop,
+      };
+    };
+    const servicesPlace = place(services);
+    const platformPlace = place(platform);
+    const portfolioPlace = place(portfolio);
+    const ctaPlace = place(cta);
+    menu.scrollTop = menu.scrollHeight;
+    const ctaVisible = cta.getBoundingClientRect();
+    const menuAfter = menu.getBoundingClientRect();
+    return {
+      ctaTop: ctaPlace.top,
+      ctaVisibleBottom: ctaVisible.bottom,
+      ctaVisibleTop: ctaVisible.top,
+      menuBottom: menuAfter.bottom,
+      menuTop: menuAfter.top,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      platformBottom: platformPlace.bottom,
+      portfolioLeft: portfolioPlace.left,
+      portfolioTop: portfolioPlace.top,
+      scrollHeight: menu.scrollHeight,
+      clientHeight: menu.clientHeight,
+      servicesBottom: servicesPlace.bottom,
+      servicesLeft: servicesPlace.left,
+    };
+  });
+  assert.ok(
+    layout.portfolioTop >= layout.servicesBottom - 1,
+    `Portfolio top ${layout.portfolioTop} overlaps services bottom ${layout.servicesBottom}`,
+  );
+  assert.ok(
+    Math.abs(layout.portfolioLeft - layout.servicesLeft) < 8,
+    `Portfolio left ${layout.portfolioLeft} is not in the services column ${layout.servicesLeft}`,
+  );
+  assert.ok(layout.ctaTop >= layout.platformBottom - 1, 'Start a project is not below Platform');
+  assert.ok(
+    layout.ctaVisibleTop >= layout.menuTop - 1 && layout.ctaVisibleBottom <= layout.menuBottom + 1,
+    'Start a project is outside the scrolled menu',
+  );
+  assert.ok(layout.scrollHeight > layout.clientHeight, 'open menu does not scroll');
+  assert.ok(layout.pageOverflow <= 1, `page overflows by ${layout.pageOverflow}px`);
+  await context.close();
 });
 
 test('hero copy is a left column, with actions in a row from 1024px and stacked below', async () => {

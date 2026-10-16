@@ -550,6 +550,7 @@ export const cases = [
     name: "Milrcorr",
     kind: "site",
     sameAs: "https://milrcorr.com",
+    loop: { base: "/assets/video/milrcorr-loop", label: "Milrcorr website" },
     summary: "The public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate.",
     services: ["custom-apps", "web-automation"],
     body: [
@@ -563,6 +564,7 @@ export const cases = [
     name: "StrongFoam website",
     kind: "site",
     sameAs: "https://strongfoam.com/",
+    loop: { base: "/assets/video/strongfoam-loop", label: "StrongFoam website" },
     summary: "A public site where a visitor can start an estimate and book, so the request stays with the page.",
     services: ["custom-apps", "web-automation"],
     body: [

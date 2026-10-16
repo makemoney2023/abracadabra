@@ -61,6 +61,28 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
     assert.match(modelsBlock, new RegExp(`assets/logos/${file.replace(".", "\\.")}`));
   }
   assert.doesNotMatch(servicesBlock, industryNoun);
+  assert.match(index, /class="site-nav__services"/);
+  assert.equal((index.match(/class="site-nav__fn"/g) || []).length, 0);
+  assert.equal(index.includes("Recording coming"), false);
+  assert.match(index, /assets\/video\/strongfoam-loop\.webm/);
+  assert.match(index, /assets\/video\/milrcorr-loop\.mp4/);
+  assert.match(index, /muted playsinline loop preload="none"/);
+  for (const [page, file] of [
+    ["portfolio/strongfoam-website/index.html", "strongfoam-loop"],
+    ["portfolio/milrcorr/index.html", "milrcorr-loop"],
+  ]) {
+    const html = read(page);
+    assert.match(html, /class="loop-film"/, page);
+    assert.match(html, new RegExp(`/assets/video/${file}\\.webm`), page);
+    assert.match(html, new RegExp(`/assets/video/${file}\\.mp4`), page);
+    assert.match(html, new RegExp(`/assets/video/${file}\\.jpg`), page);
+  }
+  for (const file of [
+    "strongfoam-loop.mp4", "strongfoam-loop.webm", "strongfoam-loop.jpg",
+    "milrcorr-loop.mp4", "milrcorr-loop.webm", "milrcorr-loop.jpg",
+  ]) {
+    assert.equal(existsSync(join(root, "assets/video", file)), true, file);
+  }
 });
 
 test("generated pages keep placeholders visible and out of JSON-LD", () => {

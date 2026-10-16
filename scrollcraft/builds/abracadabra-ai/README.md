@@ -10,9 +10,20 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. From 1024px the actions sit side by side; below that they stack full width. The model strip is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs use the recordings we have and marked poster slots for the ones still coming. A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is **Start a project** at `#start`. The footer wordmark is Tektur. Reduced motion pauses video and stops the marquee.
+Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Portfolio, Products, Course, Blog, and **Start a project**. Services opens one menu: each function name, with that function's services under it. The phone menu uses the same grouping. The model strip is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (v1 silent loops; sharper v2 renders replace the same filenames). A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is **Start a project** at `#start`. The footer wordmark is Tektur. Reduced motion pauses video and stops the marquee.
 
 If the page and the source-of-truth file disagree, fix the file first, then the page.
+
+## Showcase loops and Services menu — 2026-10-16
+
+- Operate plays the StrongFoam website loop. Build plays the Milrcorr loop. The same films are the heroes on `/portfolio/strongfoam-website/` and `/portfolio/milrcorr/`. Each film is a silent mp4, a webm, and a jpg poster in `assets/video/`. They load on the poster until the film is in view, stay muted, and stay paused when reduced motion is on. These files are v1. Sharper v2 renders will replace them under the same names.
+- The top bar folds the seven functions into one Services menu. Portfolio, Products, Course, Blog, and Start a project stay beside it. The phone menu uses that same grouping. The footer still lists each function.
+- **What changed** — showcase and portfolio films, and the site menu.
+- **Why** — Christopher supplied the first loops and asked for a quieter nav.
+- **Code touchpoints** — `index.html`, `assets/video/`, `assets/site.css`, `blog/blog.css`, `scripts/site-chrome.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — regenerated page chrome, and the StrongFoam and Milrcorr portfolio heroes.
+- **API / schema impact** — none. Homepage ItemList and `dateModified` stay as they were.
+- **Verification** — `npm test` in this folder.
 
 ## Runway homepage — 2026-10-16
 
