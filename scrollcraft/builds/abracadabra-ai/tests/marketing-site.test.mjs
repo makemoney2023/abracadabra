@@ -68,26 +68,26 @@ async function openPage({ width = 1280, height = 800, reducedMotion = 'no-prefer
 
 test('hero states the owner outcome with two clear actions', async () => {
   const { context, page } = await openPage();
-  const actions = await page.locator('#i .hero__copy .cta a').allTextContents();
+  const actions = await page.locator('#hero .hero__actions a').allTextContents();
 
   assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Custom software, built for how you work.');
-  assert.match(await page.locator('#i .hero__copy').textContent(), /fit your business/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /not the other way around/i);
+  assert.match(await page.locator('#hero .hero__copy').textContent(), /fit your business/i);
+  assert.match(await page.locator('#hero .hero__copy').textContent(), /not the other way around/i);
   assert.deepEqual(actions.map((action) => action.trim()), [
     'Start a project',
-    "See what we've built",
+    'See the work',
   ]);
-  assert.equal(await page.locator('#i .hero__copy .cta .cta--primary').count(), 1);
+  assert.equal(await page.locator('#hero .hero__actions .btn--primary').count(), 1);
   await context.close();
 });
 
-test('orbital horizon video covers the full hero stage behind the compiler', async () => {
+test('orbital horizon video covers the hero behind the copy', async () => {
   for (const viewport of [
     { width: 1440, height: 1000 },
     { width: 390, height: 844 },
   ]) {
     const { context, page } = await openPage(viewport);
-    const video = page.locator('#i .hero-backdrop__video');
+    const video = page.locator('#hero .hero__video');
     const source = video.locator('source');
 
     assert.equal(await source.getAttribute('src'), 'assets/orbital-horizon.mp4');
@@ -97,23 +97,23 @@ test('orbital horizon video covers the full hero stage behind the compiler', asy
     assert.equal(await video.getAttribute('playsinline'), '');
     assert.equal(await video.evaluate((element) => element.muted), true);
 
-    const coverage = await page.locator('#i > [data-sc-stage]').evaluate((stage) => {
-      const stageRect = stage.getBoundingClientRect();
-      const videoRect = stage.querySelector('.hero-backdrop__video').getBoundingClientRect();
-      const hero = stage.querySelector('.hero');
-      const backdrop = stage.querySelector('.hero-backdrop');
+    const coverage = await page.locator('#hero').evaluate((hero) => {
+      const heroRect = hero.getBoundingClientRect();
+      const videoRect = hero.querySelector('.hero__video').getBoundingClientRect();
+      const copy = hero.querySelector('.hero__copy');
+      const film = hero.querySelector('.hero__video');
 
       return {
-        backdropBehindHero: Number.parseInt(getComputedStyle(backdrop).zIndex, 10)
-          < Number.parseInt(getComputedStyle(hero).zIndex, 10),
-        bottomGap: Math.abs(stageRect.bottom - videoRect.bottom),
-        leftGap: Math.abs(stageRect.left - videoRect.left),
-        rightGap: Math.abs(stageRect.right - videoRect.right),
-        topGap: Math.abs(stageRect.top - videoRect.top),
+        filmBehindCopy: Number.parseInt(getComputedStyle(film).zIndex, 10)
+          < Number.parseInt(getComputedStyle(copy).zIndex, 10),
+        bottomGap: Math.abs(heroRect.bottom - videoRect.bottom),
+        leftGap: Math.abs(heroRect.left - videoRect.left),
+        rightGap: Math.abs(heroRect.right - videoRect.right),
+        topGap: Math.abs(heroRect.top - videoRect.top),
       };
     });
 
-    assert.equal(coverage.backdropBehindHero, true);
+    assert.equal(coverage.filmBehindCopy, true);
     assert.ok(coverage.topGap <= 1);
     assert.ok(coverage.rightGap <= 1);
     assert.ok(coverage.bottomGap <= 1);
@@ -124,58 +124,10 @@ test('orbital horizon video covers the full hero stage behind the compiler', asy
 
 test('orbital horizon video pauses when reduced motion is requested', async () => {
   const { context, page } = await openPage({ reducedMotion: 'reduce' });
-  const video = page.locator('#i .hero-backdrop__video');
+  const video = page.locator('#hero .hero__video');
 
   await page.waitForTimeout(100);
   assert.equal(await video.evaluate((element) => element.paused), true);
-  await context.close();
-});
-
-test('chapter navigation exposes labels and 44px targets', async () => {
-  const { context, page } = await openPage();
-  const targets = await page.locator('.index a[data-index]').evaluateAll((links) =>
-    links.map((link) => {
-      const rect = link.getBoundingClientRect();
-      return {
-        current: link.getAttribute('aria-current'),
-        height: rect.height,
-        label: link.getAttribute('aria-label'),
-        width: rect.width,
-      };
-    }),
-  );
-
-  assert.ok(targets.every(({ label }) => label && label.includes('—')));
-  assert.ok(targets.every(({ height, width }) => height >= 44 && width >= 44));
-  assert.ok(targets.some(({ current }) => current === 'location'));
-  await context.close();
-});
-
-test('mobile selected work renders complete vertical cards', async () => {
-  const { context, page } = await openPage({ width: 390, height: 844 });
-  const layout = await page.locator('#iii').evaluate((section) => {
-    const rail = section.querySelector('.rail');
-    const cards = [...section.querySelectorAll('.item')].map((card) => {
-      const rect = card.getBoundingClientRect();
-      return {
-        bottom: rect.bottom,
-        left: rect.left,
-        right: rect.right,
-        top: rect.top,
-      };
-    });
-    return {
-      cards,
-      railTransform: getComputedStyle(rail).transform,
-      railWidth: rail.getBoundingClientRect().width,
-      viewportWidth: innerWidth,
-    };
-  });
-
-  assert.equal(layout.railTransform, 'none');
-  assert.ok(layout.railWidth <= layout.viewportWidth);
-  assert.ok(layout.cards.every(({ left, right }) => left >= 0 && right <= layout.viewportWidth));
-  assert.ok(layout.cards.every((card, index, cards) => index === 0 || card.top >= cards[index - 1].bottom));
   await context.close();
 });
 
@@ -193,6 +145,41 @@ test('required responsive widths do not create horizontal page overflow', async 
     );
     await context.close();
   }
+});
+
+test('restored motion sits under the hero and keeps the original sweep and calendars', async () => {
+  const { context, page } = await openPage({ width: 1440, height: 1000 });
+  const order = await page.evaluate(() => {
+    const ids = ['hero', 'compiler', 'gantt', 'time', 'models'];
+    return ids.map((id) => document.getElementById(id).getBoundingClientRect().top);
+  });
+  for (let i = 1; i < order.length; i += 1) {
+    assert.ok(order[i] > order[i - 1], `section order broke at index ${i}`);
+  }
+  assert.equal(await page.locator('#compiler .agent-track').count(), 5);
+  await page.locator('#compiler [data-compiler-state="build"]').click();
+  assert.equal(await page.locator('#gantt .time-lane').count(), 8);
+  assert.equal(await page.locator('#time .time-lane').count(), 6);
+  const sweep = await page.locator('#compiler .agent-track').first().evaluate((track) => (
+    getComputedStyle(track, '::before').animationName
+  ));
+  assert.equal(sweep, 'agent-sweep');
+  await page.locator('#gantt [data-time-state="parallel"]').click();
+  await page.locator('#time [data-time-state="parallel"]').click();
+  assert.equal(await page.locator('#gantt .time-engine').getAttribute('data-active-state'), 'parallel');
+  assert.equal(await page.locator('#time .time-engine').getAttribute('data-active-state'), 'parallel');
+  await context.close();
+});
+
+test('reduced motion keeps a static calendar and a still sweep', async () => {
+  const { context, page } = await openPage({ width: 1440, height: 1000, reducedMotion: 'reduce' });
+  const sweep = await page.locator('#compiler .agent-track').first().evaluate((track) => (
+    getComputedStyle(track, '::before').animationName
+  ));
+  assert.equal(sweep, 'none');
+  assert.equal(await page.locator('#gantt .time-engine').getAttribute('data-active-state'), 'arrive');
+  assert.equal(await page.locator('#time .time-engine').getAttribute('data-active-state'), 'arrive');
+  await context.close();
 });
 
 test('inner pages stay inside the viewport at the required widths', async () => {
@@ -225,113 +212,10 @@ test('inner pages stay inside the viewport at the required widths', async () => 
   }
 });
 
-test('operation compiler engineers intent and context before the parallel agent build', async () => {
-  const { context, page } = await openPage();
-  const stateLabels = await page.locator('[data-compiler-state]').allTextContents();
-  const engineer = page.locator('[data-compiler-panel="engineer"]');
-
-  assert.deepEqual(stateLabels.map((label) => label.trim()), [
-    'Describe',
-    'Engineer',
-    'Build',
-    'Run it',
-  ]);
-  assert.match(await page.locator('[data-compiler-panel="describe"]').textContent(), /customer makes a request/i);
-  assert.deepEqual(
-    (await engineer.locator('[data-context-stream] [data-stream-name]').allTextContents()).map((label) => label.trim()),
-    ['Intent', 'Context'],
-  );
-  assert.equal(await engineer.locator('[data-context-stream="intent"] li').count(), 3);
-  assert.equal(await engineer.locator('[data-context-stream="context"] li').count(), 3);
-  assert.match(await engineer.locator('[data-build-brief]').textContent(), /build plan/i);
-  assert.match(await engineer.textContent(), /before anything is built/i);
-  assert.match(await page.locator('[data-compiler-panel="build"]').textContent(), /engineered plan/i);
-  assert.equal(await page.locator('[data-agent-track]').count(), 5);
-  assert.deepEqual(
-    (await page.locator('[data-agent-track] [data-agent-role]').allTextContents()).map((label) => label.trim()),
-    ['Workflow', 'Experience', 'Engineering', 'Quality', 'Launch'],
-  );
-  assert.deepEqual(
-    (await page.locator('[data-agent-track] [data-agent-output]').allTextContents()).map((label) => label.trim()),
-    ['Rules mapped', 'Interface shaped', 'System assembled', 'Exceptions tested', 'Demo prepared'],
-  );
-  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /one real example/i);
-  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /became Milrcorr/i);
-
-  await page.getByRole('button', { name: 'Build' }).click();
-  assert.equal(await page.locator('.compiler').getAttribute('data-active-state'), 'build');
-  assert.equal((await page.locator('[data-compiler-status]').textContent()).trim(), 'Agents building in parallel');
-
-  await page.getByRole('button', { name: 'Skip to working product' }).click();
-  assert.equal(await page.locator('.compiler').getAttribute('data-active-state'), 'run');
-  assert.equal((await page.locator('[data-compiler-status]').textContent()).trim(), 'System live');
-  await context.close();
-});
-
-test('desktop scroll drives every pinned sequence and page progress', async () => {
-  const { context, page } = await openPage({ width: 1440, height: 1000 });
-  const engines = {
-    '#compiler': '.compiler',
-    '#time': '.time-engine',
-    '#range': '.range-engine',
-    '#aeo': '.aeo-engine',
-  };
-
-  for (const [selector, expectedState] of [
-    ['#compiler', 'run'],
-    ['#time', 'arrive'],
-    ['#range', 'commerce'],
-    ['#aeo', 'measure'],
-  ]) {
-    await page.evaluate(({ selector }) => {
-      const section = document.querySelector(selector);
-      const travel = section.offsetHeight - innerHeight;
-      scrollTo({
-        top: section.offsetTop + travel * 0.86,
-        behavior: 'instant',
-      });
-    }, { selector });
-    await page.waitForTimeout(80);
-
-    const engine = engines[selector];
-    assert.equal(await page.locator(engine).getAttribute('data-active-state'), expectedState);
-  }
-
-  const progress = await page.evaluate(() =>
-    Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--page-progress')),
-  );
-  assert.ok(progress > 0 && progress < 1);
-  await context.close();
-});
-
-test('dedicated AEO chapter explains the mechanism, proof, and next steps', async () => {
-  const { context, page } = await openPage();
-  const aeo = page.locator('#aeo');
-
-  assert.equal((await aeo.getByRole('heading', { level: 2 }).first().textContent()).trim(), 'Be the answer AI can verify.');
-  assert.deepEqual(
-    (await aeo.locator('[data-aeo-state]').allTextContents()).map((label) => label.trim()),
-    ['Question', 'Answer', 'Verify', 'Measure'],
-  );
-  assert.equal(await aeo.getByRole('link', { name: 'Run the Readiness Check' }).getAttribute('href'), 'https://check.abra-ca-dabra.app/check');
-  assert.equal(await aeo.getByRole('link', { name: 'Open Schema' }).getAttribute('href'), 'https://schema-two.vercel.app/');
-  const aeoText = await aeo.textContent();
-  assert.match(aeoText, /375K/);
-  assert.match(aeoText, /43\.5K/);
-  assert.match(aeoText, /1\.85K/);
-  assert.match(aeoText, /7\.6/);
-  assert.match(aeoText, /Jul 14 to Oct 13, 2026/);
-  assert.doesNotMatch(aeoText, /201K|21\.8K|\bCTR\b|traffic|revenue/);
-
-  await aeo.getByRole('button', { name: 'Measure' }).click();
-  assert.equal(await aeo.locator('.aeo-engine').getAttribute('data-active-state'), 'measure');
-  await context.close();
-});
-
 test('footer link row stays below the hero on a phone', async () => {
   const { context, page } = await openPage({ width: 390, height: 844 });
   const placement = await page.evaluate(() => {
-    const hero = document.querySelector('#i .hero').getBoundingClientRect();
+    const hero = document.querySelector('#hero').getBoundingClientRect();
     const foot = document.querySelector('.site-foot').getBoundingClientRect();
     const intersects = foot.top < hero.bottom && foot.bottom > hero.top
       && foot.left < hero.right && foot.right > hero.left;
@@ -339,56 +223,57 @@ test('footer link row stays below the hero on a phone', async () => {
       footTop: foot.top,
       heroBottom: hero.bottom,
       intersects,
-      position: getComputedStyle(document.querySelector('.site-foot')).position,
     };
   });
 
   assert.equal(placement.intersects, false);
   assert.ok(
     placement.footTop >= placement.heroBottom - 1,
-    `footer top ${placement.footTop} overlaps hero bottom ${placement.heroBottom} (${placement.position})`,
+    `footer top ${placement.footTop} overlaps hero bottom ${placement.heroBottom}`,
   );
   await context.close();
 });
 
-test('site nav uses a compact menu under 768px and a full bar from 768px', async () => {
-  const phone = await openPage({ width: 390, height: 844 });
-  assert.equal(await phone.page.locator('.site-nav__toggle').count(), 1);
-  const closed = await phone.page.locator('.site-nav__links a', { hasText: 'Course' }).evaluate((link) => {
-    const rect = link.getBoundingClientRect();
-    return rect.width === 0 || rect.height === 0;
-  });
-  assert.equal(closed, true);
-  await phone.page.locator('.site-nav__toggle').click();
-  const opened = await phone.page.locator('.site-nav__links a').evaluateAll((links) => links.map((link) => {
-    const rect = link.getBoundingClientRect();
-    return {
-      bottom: rect.bottom,
-      left: rect.left,
-      right: rect.right,
-      text: link.textContent.trim(),
-      top: rect.top,
-      viewport: innerWidth,
-    };
-  }));
-  for (const name of ['Course', 'Blog', 'Start a project']) {
-    const link = opened.find((item) => item.text === name);
-    assert.ok(link, name);
-    assert.ok(link.left >= 0 && link.right <= link.viewport + 1, `${name} is clipped`);
-    assert.ok(link.bottom > link.top, `${name} is hidden`);
+test('site nav uses a compact menu below 1100px and a full bar from 1280px', async () => {
+  for (const width of [390, 1024]) {
+    const compact = await openPage({ width, height: width < 500 ? 844 : 1000 });
+    assert.equal(await compact.page.locator('.site-nav__toggle').count(), 1);
+    const closed = await compact.page.locator('.site-nav__links a', { hasText: 'Course' }).evaluate((link) => {
+      const rect = link.getBoundingClientRect();
+      return rect.width === 0 || rect.height === 0;
+    });
+    assert.equal(closed, true, `${width}px Course is visible before Menu`);
+    await compact.page.locator('.site-nav__toggle').click();
+    const opened = await compact.page.locator('.site-nav__links > a').evaluateAll((links) => links.map((link) => {
+      const rect = link.getBoundingClientRect();
+      return {
+        bottom: rect.bottom,
+        left: rect.left,
+        right: rect.right,
+        text: link.textContent.trim(),
+        top: rect.top,
+        viewport: innerWidth,
+      };
+    }));
+    for (const name of ['Portfolio', 'Products', 'Course', 'Blog', 'Start a project']) {
+      const link = opened.find((item) => item.text === name);
+      assert.ok(link, `${width}px ${name}`);
+      assert.ok(link.left >= 0 && link.right <= link.viewport + 1, `${width}px ${name} is clipped`);
+      assert.ok(link.bottom > link.top, `${width}px ${name} is hidden`);
+    }
+    const overflow = await compact.page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    assert.ok(overflow.scrollWidth <= overflow.clientWidth, `${width}px menu overflows`);
+    await compact.context.close();
   }
-  const phoneOverflow = await phone.page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  assert.ok(phoneOverflow.scrollWidth <= phoneOverflow.clientWidth);
-  await phone.context.close();
 
   const service = await openPage({ width: 375, height: 812 });
   await service.page.goto(`${origin}/services/ai-visibility/index.html`, { waitUntil: 'domcontentloaded' });
   assert.equal(await service.page.locator('.site-nav__toggle').count(), 1);
   await service.page.locator('.site-nav__toggle').click();
-  const serviceLinks = await service.page.locator('.site-nav__links a').evaluateAll((links) => links.map((link) => {
+  const serviceLinks = await service.page.locator('.site-nav__links > a').evaluateAll((links) => links.map((link) => {
     const rect = link.getBoundingClientRect();
     return { right: rect.right, text: link.textContent.trim(), viewport: innerWidth };
   }));
@@ -398,12 +283,12 @@ test('site nav uses a compact menu under 768px and a full bar from 768px', async
   }
   await service.context.close();
 
-  const tablet = await openPage({ width: 768, height: 1000 });
+  const desktop = await openPage({ width: 1280, height: 1000 });
   assert.equal(
-    await tablet.page.locator('.site-nav__toggle').evaluate((toggle) => getComputedStyle(toggle).display),
+    await desktop.page.locator('.site-nav__toggle').evaluate((toggle) => getComputedStyle(toggle).display),
     'none',
   );
-  const bar = await tablet.page.locator('.site-nav__links a').evaluateAll((links) => links.map((link) => {
+  const bar = await desktop.page.locator('.site-nav__links > a').evaluateAll((links) => links.map((link) => {
     const rect = link.getBoundingClientRect();
     return {
       height: rect.height,
@@ -413,26 +298,95 @@ test('site nav uses a compact menu under 768px and a full bar from 768px', async
       viewport: innerWidth,
     };
   }));
-  for (const name of ['Services', 'Portfolio', 'Products', 'Course', 'Blog', 'Start a project']) {
+  for (const name of ['Portfolio', 'Products', 'Course', 'Blog', 'Start a project']) {
     const link = bar.find((item) => item.text === name);
     assert.ok(link, name);
     assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
     assert.ok(link.height >= 44, `${name} target is under 44px`);
   }
-  await tablet.context.close();
+  const services = await desktop.page.locator('.site-nav__services > summary').evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return { height: rect.height, right: rect.right, text: node.textContent.trim(), viewport: innerWidth };
+  });
+  assert.equal(services.text, 'Services');
+  assert.ok(services.height >= 44, 'Services target is under 44px');
+  assert.ok(services.right <= services.viewport + 1, 'Services overflows the bar');
+  assert.equal(await desktop.page.locator('.site-nav__mega').evaluate((node) => getComputedStyle(node).display), 'none');
+  await desktop.context.close();
+});
+
+test('open Services menu stacks page links under the function list on a phone', async () => {
+  const { context, page } = await openPage({ width: 375, height: 812 });
+  await page.locator('.site-nav__toggle').click();
+  await page.locator('.site-nav__services > summary').click();
+  const layout = await page.evaluate(() => {
+    const menu = document.querySelector('.site-nav__links');
+    const services = document.querySelector('.site-nav__services');
+    const platform = document.querySelector('.site-nav__fn-name[href="/services/#platform"]');
+    const portfolio = [...menu.querySelectorAll(':scope > a')].find((link) => link.textContent.trim() === 'Portfolio');
+    const cta = menu.querySelector('.site-nav__cta');
+    const place = (node) => {
+      const box = node.getBoundingClientRect();
+      const menuBox = menu.getBoundingClientRect();
+      return {
+        bottom: box.bottom - menuBox.top + menu.scrollTop,
+        left: box.left,
+        top: box.top - menuBox.top + menu.scrollTop,
+      };
+    };
+    const servicesPlace = place(services);
+    const platformPlace = place(platform);
+    const portfolioPlace = place(portfolio);
+    const ctaPlace = place(cta);
+    menu.scrollTop = menu.scrollHeight;
+    const ctaVisible = cta.getBoundingClientRect();
+    const menuAfter = menu.getBoundingClientRect();
+    return {
+      ctaTop: ctaPlace.top,
+      ctaVisibleBottom: ctaVisible.bottom,
+      ctaVisibleTop: ctaVisible.top,
+      menuBottom: menuAfter.bottom,
+      menuTop: menuAfter.top,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      platformBottom: platformPlace.bottom,
+      portfolioLeft: portfolioPlace.left,
+      portfolioTop: portfolioPlace.top,
+      scrollHeight: menu.scrollHeight,
+      clientHeight: menu.clientHeight,
+      servicesBottom: servicesPlace.bottom,
+      servicesLeft: servicesPlace.left,
+    };
+  });
+  assert.ok(
+    layout.portfolioTop >= layout.servicesBottom - 1,
+    `Portfolio top ${layout.portfolioTop} overlaps services bottom ${layout.servicesBottom}`,
+  );
+  assert.ok(
+    Math.abs(layout.portfolioLeft - layout.servicesLeft) < 8,
+    `Portfolio left ${layout.portfolioLeft} is not in the services column ${layout.servicesLeft}`,
+  );
+  assert.ok(layout.ctaTop >= layout.platformBottom - 1, 'Start a project is not below Platform');
+  assert.ok(
+    layout.ctaVisibleTop >= layout.menuTop - 1 && layout.ctaVisibleBottom <= layout.menuBottom + 1,
+    'Start a project is outside the scrolled menu',
+  );
+  assert.ok(layout.scrollHeight > layout.clientHeight, 'open menu does not scroll');
+  assert.ok(layout.pageOverflow <= 1, `page overflows by ${layout.pageOverflow}px`);
+  await context.close();
 });
 
 test('hero copy is a left column, with actions in a row from 1024px and stacked below', async () => {
   const desktop = await openPage({ width: 1280, height: 900 });
-  const wide = await desktop.page.locator('#i .hero').evaluate((hero) => {
+  const wide = await desktop.page.locator('#hero').evaluate((hero) => {
     const copy = hero.querySelector('.hero__copy').getBoundingClientRect();
     const pad = Number.parseFloat(getComputedStyle(hero).paddingLeft);
-    const buttons = [...hero.querySelectorAll('.cta a')].map((link) => link.getBoundingClientRect());
+    const actions = hero.querySelector('.hero__actions');
+    const buttons = [...actions.querySelectorAll('a')].map((link) => link.getBoundingClientRect());
     return {
       align: getComputedStyle(hero).textAlign,
       buttons: buttons.map((box) => ({ left: box.left, top: box.top, width: box.width })),
       copyLeft: copy.left,
-      direction: getComputedStyle(hero.querySelector('.cta')).flexDirection,
+      direction: getComputedStyle(actions).flexDirection,
       heroLeft: hero.getBoundingClientRect().left,
       pad,
     };
@@ -446,21 +400,22 @@ test('hero copy is a left column, with actions in a row from 1024px and stacked 
 
   for (const width of [375, 768]) {
     const narrow = await openPage({ width, height: width < 500 ? 812 : 1000 });
-    const stacked = await narrow.page.locator('#i .hero').evaluate((hero) => {
-      const copy = hero.querySelector('.hero__copy').getBoundingClientRect();
-      const buttons = [...hero.querySelectorAll('.cta a')].map((link) => link.getBoundingClientRect());
+    const stacked = await narrow.page.locator('#hero').evaluate((hero) => {
+      const actions = hero.querySelector('.hero__actions');
+      const actionBox = actions.getBoundingClientRect();
+      const buttons = [...actions.querySelectorAll('a')].map((link) => link.getBoundingClientRect());
       return {
         align: getComputedStyle(hero).textAlign,
         buttons: buttons.map((box) => ({ bottom: box.bottom, top: box.top, width: box.width })),
-        copyWidth: copy.width,
-        direction: getComputedStyle(hero.querySelector('.cta')).flexDirection,
+        direction: getComputedStyle(actions).flexDirection,
+        width: actionBox.width,
       };
     });
     assert.equal(stacked.align, 'left', `${width}px`);
     assert.equal(stacked.direction, 'column', `${width}px`);
     assert.ok(stacked.buttons[1].top >= stacked.buttons[0].bottom - 1, `${width}px buttons overlap`);
-    assert.ok(stacked.buttons[0].width >= stacked.copyWidth - 2, `${width}px primary is not full width`);
-    assert.ok(stacked.buttons[1].width >= stacked.copyWidth - 2, `${width}px secondary is not full width`);
+    assert.ok(stacked.buttons[0].width >= stacked.width - 2, `${width}px primary is not full width`);
+    assert.ok(stacked.buttons[1].width >= stacked.width - 2, `${width}px secondary is not full width`);
     await narrow.context.close();
   }
 });
@@ -511,292 +466,4 @@ test('service page heroes use the same left column and stacked actions', async (
   assert.ok(stacked.secondaryTop >= stacked.primaryBottom - 1);
   assert.ok(stacked.primaryWidth >= stacked.width - 2);
   await phone.context.close();
-});
-
-test('compiler section paints below the hero on a phone', async () => {
-  const { context, page } = await openPage({ width: 390, height: 844 });
-  const gap = await page.evaluate(() => {
-    const hero = document.querySelector('#i').getBoundingClientRect();
-    const compiler = document.querySelector('#compiler').getBoundingClientRect();
-    return { compilerTop: compiler.top, heroBottom: hero.bottom, insideHero: document.querySelector('#i .compiler') !== null };
-  });
-  assert.equal(gap.insideHero, false);
-  assert.ok(gap.compilerTop >= gap.heroBottom - 1);
-  await context.close();
-});
-
-test('compiler sits directly under the hero, then the Aramaic origin', async () => {
-  const { context, page } = await openPage();
-  const order = await page.locator('main > section').evaluateAll((sections) =>
-    sections.slice(0, 3).map((section) => section.id || section.getAttribute('aria-labelledby')),
-  );
-  assert.deepEqual(order, ['i', 'compiler', 'name']);
-  assert.equal(await page.locator('#i .compiler').count(), 0);
-  assert.equal(await page.locator('#compiler .compiler').count(), 1);
-
-  const origin = page.locator('#name');
-  assert.equal((await origin.getByRole('heading', { level: 2 }).textContent()).trim(), 'I will create as I speak.');
-  assert.match(await origin.textContent(), /Aramaic/i);
-  assert.match(await origin.textContent(), /avra kadavra/i);
-  assert.match(await origin.textContent(), /not a spell/i);
-  assert.match(await origin.textContent(), /production software/i);
-  await context.close();
-});
-
-test('time travel chapter compresses the delivery calendar without inventing durations', async () => {
-  const { context, page } = await openPage();
-  const time = page.locator('#time');
-  const engine = time.locator('.time-engine');
-
-  assert.equal(await time.getAttribute('data-sc-act'), 'pin');
-  assert.equal(
-    (await time.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'It feels like magic.',
-  );
-  assert.match(await time.locator('.time-copy').textContent(), /mostly waiting/i);
-  assert.match(await time.locator('.time-copy').textContent(), /no sleight of hand/i);
-  assert.deepEqual(
-    (await time.locator('[data-time-state]').allTextContents()).map((label) => label.trim()),
-    ['Conventional', 'Engineer', 'Parallel', 'Arrive'],
-  );
-  assert.deepEqual(
-    (await time.locator('[data-time-phase]').allTextContents()).map((label) => label.trim()),
-    ['Discover', 'Specify', 'Design', 'Build', 'Test', 'Release'],
-  );
-  assert.equal(await time.locator('[data-time-panel]').count(), 4);
-  assert.match(await time.locator('[data-time-panel="conventional"]').textContent(), /handoff/i);
-  assert.match(await time.locator('[data-time-panel="engineer"]').textContent(), /one engineered plan/i);
-  assert.match(await time.locator('[data-time-panel="parallel"]').textContent(), /five workstreams/i);
-  assert.match(await time.locator('[data-time-panel="arrive"]').textContent(), /feels like magic/i);
-  assert.equal(await engine.getAttribute('data-active-state'), 'conventional');
-  assert.doesNotMatch(await engine.textContent(), /\d+\s*(weeks?|months?|days?|hours?|%)/i);
-
-  await time.getByRole('button', { name: 'Arrive' }).click();
-  assert.equal(await engine.getAttribute('data-active-state'), 'arrive');
-  assert.equal((await time.locator('[data-time-status]').textContent()).trim(), 'Arrived early');
-  assert.equal(await time.locator('[data-time-state="arrive"]').getAttribute('aria-pressed'), 'true');
-  await context.close();
-});
-
-test('direct navigation keeps the closing brief visible', async () => {
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 800 },
-  });
-  const page = await context.newPage();
-
-  await page.goto(`${origin}/#brief`, { waitUntil: 'networkidle' });
-  const brief = page.locator('#brief .label');
-  const visibility = await brief.evaluate((element) => {
-    const rect = element.getBoundingClientRect();
-    return {
-      bottom: rect.bottom,
-      opacity: Number.parseFloat(getComputedStyle(element).opacity),
-      top: rect.top,
-    };
-  });
-
-  assert.ok(visibility.opacity > 0.85);
-  assert.ok(visibility.top < 800 && visibility.bottom > 0);
-  await context.close();
-});
-
-test('reduced motion exposes every compiler, time travel, and AEO state', async () => {
-  const { context, page } = await openPage({
-    width: 390,
-    height: 844,
-    reducedMotion: 'reduce',
-  });
-  const states = page.locator('[data-compiler-panel]');
-
-  assert.equal(await states.count(), 4);
-  for (const state of await states.all()) {
-    assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
-    assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
-  }
-  const aeoStates = page.locator('[data-aeo-panel]');
-  assert.equal(await aeoStates.count(), 4);
-  for (const state of await aeoStates.all()) {
-    assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
-    assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
-  }
-  const timeStates = page.locator('[data-time-panel]');
-  assert.equal(await timeStates.count(), 4);
-  for (const state of await timeStates.all()) {
-    assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
-    assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
-  }
-  await context.close();
-});
-
-test('range chapter sits between time and the answer receipt', async () => {
-  const { context, page } = await openPage();
-  const ids = await page.locator('main > section').evaluateAll((sections) => sections.map((section) => section.id));
-  const timeIndex = ids.indexOf('time');
-  const rangeIndex = ids.indexOf('range');
-  const modelsIndex = ids.indexOf('models');
-  const aeoIndex = ids.indexOf('aeo');
-  assert.equal(rangeIndex, timeIndex + 1);
-  assert.equal(modelsIndex, rangeIndex + 1);
-  assert.equal(aeoIndex, modelsIndex + 1);
-
-  const range = page.locator('#range');
-  assert.equal(await range.getAttribute('data-specimen'), null);
-  assert.equal(
-    (await range.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'If you can describe the job, we can build it.',
-  );
-  const rangeCopy = await range.locator('.range-copy').innerText();
-  assert.match(rangeCopy, /The menu/i);
-  assert.match(rangeCopy, /A job that can be described can be built/);
-  assert.doesNotMatch(rangeCopy, /one shape|still in range|work we have shipped/);
-  assert.deepEqual(
-    (await range.locator('[data-range-state]').allTextContents()).map((label) => label.trim()),
-    ['Marketing', 'Applications', 'Machine learning', 'The record', 'The sale'],
-  );
-  assert.equal(
-    await range.locator('.range-engine').getAttribute('aria-label'),
-    'The kinds of digital work Abracadabra builds.',
-  );
-
-  const plates = await range.locator('[data-range-panel]').evaluateAll((panels) =>
-    panels.map((panel) => ({
-      state: panel.getAttribute('data-range-panel'),
-      text: panel.textContent,
-    })),
-  );
-  const plate = (state) => plates.find((item) => item.state === state).text;
-  assert.match(plate('market'), /websites/);
-  assert.match(plate('product'), /web apps, mobile apps, internal tools/);
-  assert.match(plate('model'), /your own data/);
-  assert.match(plate('record'), /CRM or ERP/);
-  assert.match(plate('commerce'), /lead generation/);
-  assert.doesNotMatch(await page.content(), /ringside/i);
-  assert.equal(await range.locator('[data-range-panel] a').count(), 0);
-
-  const chapterText = await range.textContent();
-  assert.doesNotMatch(
-    chapterText,
-    /Showdesk|PIRX|Canadian Discount Appliances|Schema|LLM Leverage|201K|21\.8K|SuperPatch|SPSign|S\.T\.A\.R\.|%/,
-  );
-
-  const labels = await page.locator('.index a[data-index]').evaluateAll((links) =>
-    links.map((link) => link.getAttribute('aria-label')),
-  );
-  const rangeLabel = labels.indexOf('III — Range');
-  assert.equal(labels[rangeLabel + 1], 'IV — Answer');
-
-  const answer = (await page.locator('.faq details').filter({
-    has: page.getByText('Do you only build software?', { exact: true }),
-  }).locator('p').textContent()).trim();
-  assert.match(answer, /^No\./);
-  assert.match(await page.locator('script[type="application/ld+json"]').textContent(), /Do you only build software\?/);
-
-  await range.getByRole('button', { name: 'The record' }).click();
-  assert.equal(await range.locator('.range-engine').getAttribute('data-active-state'), 'record');
-  const pressed = await range.locator('[data-range-state]').evaluateAll((buttons) =>
-    buttons.filter((button) => button.getAttribute('aria-pressed') === 'true').map((button) => button.textContent.trim()),
-  );
-  assert.deepEqual(pressed, ['The record']);
-  const controlHeights = await range.locator('[data-range-state]').evaluateAll((buttons) =>
-    buttons.map((button) => button.getBoundingClientRect().height),
-  );
-  assert.ok(controlHeights.every((height) => height >= 44));
-  await context.close();
-
-  const mobile = await openPage({ width: 390, height: 844 });
-  const stack = await mobile.page.locator('#range .range-shell > *').evaluateAll((nodes) =>
-    nodes.map((node) => ({
-      kind: node.classList.contains('range-engine') ? 'engine' : 'copy',
-      top: node.getBoundingClientRect().top,
-    })),
-  );
-  assert.ok(stack.find((node) => node.kind === 'engine').top < stack.find((node) => node.kind === 'copy').top);
-  assert.equal(await mobile.page.locator('#range [data-range-state]').count(), 5);
-  await mobile.context.close();
-});
-
-test('reduced motion stacks every range plate and hides its controls', async () => {
-  const { context, page } = await openPage({
-    width: 1280,
-    height: 800,
-    reducedMotion: 'reduce',
-  });
-  const plates = page.locator('#range [data-range-panel]');
-
-  assert.equal(await plates.count(), 5);
-  for (const plate of await plates.all()) {
-    const box = await plate.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        display: style.display,
-        height: element.getBoundingClientRect().height,
-        opacity: Number.parseFloat(style.opacity),
-        position: style.position,
-        visibility: style.visibility,
-      };
-    });
-    assert.notEqual(box.display, 'none');
-    assert.equal(box.visibility, 'visible');
-    assert.equal(box.position, 'relative');
-    assert.ok(box.opacity > 0.9);
-    assert.ok(box.height > 24);
-  }
-
-  assert.notEqual(
-    await page.locator('#range .range-engine').evaluate((element) => getComputedStyle(element).overflow),
-    'hidden',
-  );
-  assert.equal(
-    await page.locator('#range .range-controls').evaluate((element) => getComputedStyle(element).display),
-    'none',
-  );
-  assert.match(
-    await page.locator('#range [data-range-panel="commerce"]').textContent(),
-    /lead generation/,
-  );
-  await context.close();
-});
-
-test('range background canvas follows the active service and stays decorative', async () => {
-  const { context, page } = await openPage({ width: 1280, height: 800 });
-  const errors = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  const canvas = page.locator('#range canvas.range-bg');
-  assert.equal(await canvas.count(), 1);
-  assert.equal(await canvas.getAttribute('aria-hidden'), 'true');
-  const box = await canvas.evaluate((element) => {
-    const canvasRect = element.getBoundingClientRect();
-    const engine = element.closest('.range-engine');
-    const engineRect = engine?.getBoundingClientRect();
-    return {
-      containedByMenu: Boolean(engine)
-        && canvasRect.left >= engineRect.left - 1
-        && canvasRect.top >= engineRect.top - 1
-        && canvasRect.right <= engineRect.right + 1
-        && canvasRect.bottom <= engineRect.bottom + 1,
-      opacity: Number.parseFloat(getComputedStyle(element).opacity),
-      parentClass: element.parentElement?.className,
-      pointerEvents: getComputedStyle(element).pointerEvents,
-      width: element.width,
-      height: element.height,
-    };
-  });
-  assert.equal(box.parentClass, 'range-engine');
-  assert.equal(box.containedByMenu, true);
-  assert.equal(box.pointerEvents, 'none');
-  assert.ok(box.opacity >= 0.75);
-  assert.ok(box.width > 0 && box.height > 0);
-
-  await page.locator('#range').scrollIntoViewIfNeeded();
-  await page.locator('#range').getByRole('button', { name: 'The record' }).click();
-  assert.equal(await canvas.getAttribute('data-bg-state'), 'record');
-  await page.waitForFunction(() => document.querySelector('.range-bg').getAttribute('data-bg-running') === 'true');
-  assert.deepEqual(errors, []);
-  await context.close();
-
-  const still = await openPage({ width: 1280, height: 800, reducedMotion: 'reduce' });
-  await still.page.locator('#range').scrollIntoViewIfNeeded();
-  await still.page.waitForTimeout(200);
-  assert.equal(await still.page.locator('#range canvas.range-bg').getAttribute('data-bg-running'), 'false');
-  await still.context.close();
 });

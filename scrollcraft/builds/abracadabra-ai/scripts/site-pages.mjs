@@ -9,6 +9,7 @@ import {
   OFFERINGS_HEADING,
   OFFERINGS_KICKER,
   PLACEHOLDER,
+  businessFunctions,
   cases,
   course,
   familyLogos,
@@ -113,11 +114,11 @@ function visibleCrumbs(items) {
 }
 
 function placeholder(text) {
-  return `<aside class="note"><!-- ${PLACEHOLDER} --><p>${esc(text)}</p><p><a href="/#brief">Start a project</a></p></aside>`;
+  return `<aside class="note"><!-- ${PLACEHOLDER} --><p>${esc(text)}</p><p><a href="/#start">Start a project</a></p></aside>`;
 }
 
-function underTheHood(tags) {
-  return `It runs on Cloudflare: ${tags.join(", ")}.`;
+function underTheHood() {
+  return "The system runs in production, with the same care as the live work.";
 }
 
 function logoItem(item) {
@@ -142,7 +143,8 @@ function marquee(items, duration, reverse) {
 function modelsHtml() {
   return `<section id="models" class="sc-section models" aria-labelledby="models-title">
     <div class="sc-wrap">
-      <h2 id="models-title" class="models__label">Every major model, one gateway</h2>
+      <p class="kicker">Models</p>
+      <h2 id="models-title" class="models__label">The models behind the work</h2>
       ${marquee(gatewayLogos, "90s", false)}
       ${marquee(familyLogos, "70s", true)}
     </div>
@@ -158,6 +160,10 @@ const ASSET_SIZE = {
   "/assets/llmcourse-home.webp": [1600, 1000],
   "/assets/superfunnel-getting-started.webp": [1920, 1080],
 };
+
+function loopFilm(loop) {
+  return `<video class="loop-film" muted playsinline loop preload="none" poster="${esc(loop.base)}.jpg" width="1280" height="720" aria-label="${esc(loop.label)}"><source src="${esc(loop.base)}.webm" type="video/webm"><source src="${esc(loop.base)}.mp4" type="video/mp4"></video>`;
+}
 
 function assetMedia(src, alt, { lazy = false } = {}) {
   const [width, height] = ASSET_SIZE[src] || [1600, 1000];
@@ -179,17 +185,27 @@ ${actions}
 </header>`;
 }
 
+function functionPhoto(fn) {
+  if (fn.services[0]) return servicePicture(fn.services[0], "hero", { lazy: true, sizes: HOME_CARD_SIZES });
+  return `<img src="/assets/og/portfolio-strongfoam-website.png" alt="StrongFoam website" width="1200" height="630" loading="lazy" decoding="async">`;
+}
+
+function functionLinkList(fn) {
+  const services = fn.services.map((slug) => `<li><a href="/services/${slug}/">${esc(salesPages[slug].headline)}</a></li>`).join("");
+  const work = (fn.work || []).map((item) => `<li><a href="${esc(item.href)}">${esc(item.label)}</a></li>`).join("");
+  return `<ul class="fn-card__links">${services}${work}</ul>`;
+}
+
 function offeringsHtml() {
-  const cards = offerings.map((item) => {
-    const page = salesPages[item.slug];
-    const photo = servicePicture(item.slug, "hero", { lazy: true, sizes: HOME_CARD_SIZES });
-    return `<li><a href="/services/${item.slug}/">${photo}<h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p></a></li>`;
+  const cards = businessFunctions.map((fn) => {
+    const proof = fn.proof ? `<p class="fn-card__proof">${esc(fn.proof)}</p>` : "";
+    return `<li class="fn-card" id="fn-${esc(fn.id)}">${functionPhoto(fn)}<h3>${esc(fn.name)}</h3><p>${esc(fn.promise)}</p>${proof}${functionLinkList(fn)}</li>`;
   }).join("");
   return `<section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
-      <p class="services__kicker">${esc(OFFERINGS_KICKER)}</p>
-      <h2 id="services-title" class="sc-display sc-display--md">${esc(OFFERINGS_HEADING)}</h2>
-      <ul class="services__grid">${cards}</ul>
+      <p class="kicker">${esc(OFFERINGS_KICKER)}</p>
+      <h2 id="services-title">Everything you need to put AI to work in your business.</h2>
+      <div class="fn-scroller"><ul class="fn-grid">${cards}</ul></div>
     </div>
   </section>`;
 }
@@ -334,7 +350,7 @@ function shotPairHtml(pair) {
 }
 
 function salesActions() {
-  return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Start a project</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
+  return `<p class="sales-actions"><a class="sales-primary" href="/#start">Start a project</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
 }
 
 function proofStrip(items) {
@@ -465,11 +481,11 @@ ${proofs}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body2", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
-<p class="cloud-line">${esc(underTheHood(item.builtOn))}</p>
+<p class="cloud-line">${esc(underTheHood())}</p>
 <section class="price-block">
 <h2>Pricing</h2>
 <p>Contact for pricing. The price follows the job, not a public rate card.</p>
-<p><a href="/#brief">Start a project</a></p>
+<p><a href="/#start">Start a project</a></p>
 </section>
 <section>
 <h2>FAQ</h2>
@@ -487,8 +503,8 @@ ${salesActions()}
 
 async function renderOfferingsHub() {
   const url = `${SITE}/services/`;
-  const title = "Software for how you work | Abracadabra AI";
-  const description = "Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.";
+  const title = `${OFFERINGS_HEADING} | Abracadabra AI`;
+  const description = "Search, marketing, sales, customer service, operations, design, and the platform underneath. Safe code execution ships inside the assistants and keeps its own page.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Services", href: "/services/", url },
@@ -509,12 +525,16 @@ async function renderOfferingsHub() {
     })),
   };
   const og = await plateOrPhoto("services", "Services", OFFERINGS_HEADING, null);
-  const cards = offerings.map((item) => {
-    const page = salesPages[item.slug];
-    const note = item.slug === "safe-code-execution" ? " Part of AI assistants." : "";
-    const photo = servicePicture(item.slug, "hero", { lazy: true, sizes: HUB_SIZES });
-    return `<li><a href="/services/${item.slug}/">${photo}<strong>${esc(page.headline)}</strong><span>${esc(page.description)}${esc(note)}</span></a></li>`;
-  }).join("");
+  const groups = businessFunctions.map((fn) => {
+    const cards = fn.services.map((slug) => {
+      const page = salesPages[slug];
+      const note = slug === "safe-code-execution" ? " Part of AI assistants." : "";
+      const photo = servicePicture(slug, "hero", { lazy: true, sizes: HUB_SIZES });
+      return `<li><a href="/services/${slug}/">${photo}<strong>${esc(page.headline)}</strong><span>${esc(page.description)}${esc(note)}</span></a></li>`;
+    }).join("");
+    const work = (fn.work || []).map((item) => `<li><a href="${esc(item.href)}"><strong>${esc(item.label)}</strong><span>${esc(fn.promise)}</span></a></li>`).join("");
+    return `<section id="${esc(fn.id)}" class="fn-group"><h2>${esc(fn.name)}</h2><p>${esc(fn.promise)}</p><ul class="cards">${cards}${work}</ul></section>`;
+  }).join("\n");
   const html = shell({
     title,
     description,
@@ -536,9 +556,9 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
   title: esc(OFFERINGS_HEADING),
-  dek: "<p>Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.</p>",
+  dek: `<p>${esc(description)}</p>`,
 })}
-<ul class="cards">${cards}</ul>
+${groups}
 </main>`,
   });
   await writePage("services/index.html", html);
@@ -630,11 +650,13 @@ ${pageHero({
   kicker: "Portfolio",
   title: esc(item.name),
   dek: `${live}\n${productLink}\n${courseLink}`,
-  media: item.hero
-    ? `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`
-    : item.image
-      ? assetMedia(item.image, item.imageAlt)
-      : "",
+  media: item.loop
+    ? loopFilm(item.loop)
+    : item.hero
+      ? `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`
+      : item.image
+        ? assetMedia(item.image, item.imageAlt)
+        : "",
 })}
 ${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
 ${(item.shots || []).length ? `${item.shots.map((pair) => shotPairHtml(pair)).join("\n")}\n` : ""}${item.chart ? `${pirxChartHtml()}\n` : ""}${relatedHtml}
@@ -692,7 +714,7 @@ async function renderPortfolioHub() {
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
-  title: "Named systems, open and running.",
+  title: "Work that's live.",
   dek: "<p>Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.</p>",
 })}
 <ul class="cards">${cards}</ul>
@@ -799,7 +821,7 @@ async function renderProductsHub() {
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
-  title: "Two systems, live.",
+  title: "Software you can use today.",
   dek: "<p>Schema and Super Funnel can each be opened as a live system or a film. Prices stay off this page.</p>",
 })}
 <ul class="cards">${cards}</ul>
@@ -852,8 +874,8 @@ async function renderCourse() {
     body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
-  kicker: "Course",
-  title: esc(course.name),
+  kicker: "LLM Leverage",
+  title: "Learn to get real work done with AI.",
   dek: `<p>${esc(course.description)}</p>\n<p>The public course site is built for class and self-paced study. It lists 4 workshop decks, static sandboxes, templates, a glossary, and a capstone gallery.</p>\n<p><a href="${esc(course.sameAs)}">Open the course</a></p>\n<p><a href="/portfolio/llm-leverage/">Portfolio note</a></p>`,
   media: assetMedia(course.image, course.imageAlt),
 })}

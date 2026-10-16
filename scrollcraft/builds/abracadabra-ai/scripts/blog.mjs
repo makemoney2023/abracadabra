@@ -614,8 +614,8 @@ async function renderIndex(posts) {
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }])}
 <div class="hero-copy">
 <p class="kicker">Notes</p>
-<h1>When a product already fits, and when you need a system.</h1>
-<p class="dek">Notes on buying a product that already fits, and on building a system of your own. Every number names its source.</p>
+<h1>Notes on putting AI to work.</h1>
+<p class="dek">When a product already fits, and when you need a system of your own. Every number names its source.</p>
 </div>
 </header>
 ${board}

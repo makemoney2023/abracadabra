@@ -8,7 +8,7 @@
 <meta name="description" content="We design, build and run AI-powered tools that fit your business, not the other way around.">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 <meta name="author" content="Abracadabra AI">
-<meta name="theme-color" content="#0B0A08">
+<meta name="theme-color" content="#070706">
 <link rel="canonical" href="https://abra-ca-dabra.app/">
 <link rel="alternate" type="text/plain" href="https://abra-ca-dabra.app/llms.txt" title="Plain-text summary for language models">
 
@@ -31,7 +31,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Tektur:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="scrollcraft.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/restored-motion.css">
+<style>
+@media (prefers-reduced-motion: reduce) {
+  .marquee__list[aria-hidden="true"] { display: none; }
+}
+</style>
 
 <script type="application/ld+json">
 {
@@ -263,1184 +269,7 @@
 }
 </script>
 
-<style>
-  :root {
-    --sc-canvas: #070706;
-    --sc-surface: #11110F;
-    --sc-ink: #F5F0E8;
-    --sc-ink-soft: #AAA49A;
-    --sc-accent: #FF4B24;
-    --sc-signal: #FF6B3D;
-    --sc-optic: #8DEBF2;
-    --sc-phosphor: #C6FFB3;
-    --sc-glass: color-mix(in oklab, var(--sc-surface) 72%, transparent);
-    --sc-accent-ink: #170804;
-    --sc-font-display: "Tektur", "IBM Plex Sans", system-ui, sans-serif;
-    --sc-font-body: "IBM Plex Sans", system-ui, sans-serif;
-    --page-progress: 0;
-  }
-  body::before {
-    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background-image:
-      radial-gradient(circle at 72% 12%, color-mix(in oklab, var(--sc-optic) 8%, transparent), transparent 28rem),
-      radial-gradient(circle at 18% 48%, color-mix(in oklab, var(--sc-signal) 8%, transparent), transparent 34rem),
-      linear-gradient(color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklab, var(--sc-ink) 3%, transparent) 1px, transparent 1px);
-    background-size: auto, auto, 4rem 4rem, 4rem 4rem;
-    mask-image: linear-gradient(to bottom, black, black 76%, transparent);
-  }
-  body::after {
-    content: ""; position: fixed; inset: 0; z-index: 60; pointer-events: none; opacity: 0.14;
-    background: repeating-linear-gradient(to bottom, transparent 0 3px, color-mix(in oklab, var(--sc-ink) 7%, transparent) 4px);
-    mix-blend-mode: soft-light;
-  }
-  html { scroll-behavior: smooth; color-scheme: dark; }
-  ::selection { background: var(--sc-accent); color: #170804; }
-  h1, h2, h3 { scroll-margin-top: 5.5rem; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-  a { color: var(--sc-ink); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
-  a:hover { color: var(--sc-accent); }
-  a:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 3px; }
-
-  .signal-rail {
-    position: fixed; z-index: 50; left: max(0.55rem, env(safe-area-inset-left)); top: 5rem; bottom: 4rem;
-    width: 2px; background: color-mix(in oklab, var(--sc-ink) 10%, transparent); pointer-events: none;
-  }
-  .signal-rail span {
-    display: block; width: 100%; height: calc(var(--page-progress) * 100%);
-    background: linear-gradient(to bottom, var(--sc-optic), var(--sc-signal));
-    box-shadow: 0 0 1rem color-mix(in oklab, var(--sc-signal) 75%, transparent);
-    transition: height 80ms linear;
-  }
-  .signal-rail span::after {
-    content: ""; position: absolute; left: 50%; top: calc(var(--page-progress) * 100%);
-    width: 9px; height: 9px; border: 1px solid var(--sc-signal); background: var(--sc-canvas);
-    transform: translate(-50%, -50%) rotate(45deg);
-    box-shadow: 0 0 1.5rem var(--sc-signal);
-  }
-
-  /* object index */
-  .index {
-    position: fixed; top: 3.25rem; left: 0; right: 0; z-index: 40;
-    display: flex; gap: var(--sc-1); justify-content: flex-end;
-    padding: var(--sc-3) var(--sc-gutter);
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs);
-    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-    pointer-events: none;
-    background: linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 94%, transparent), transparent);
-  }
-  .index a {
-    min-width: 44px; min-height: 44px; padding: 0 var(--sc-3);
-    display: inline-flex; align-items: center; justify-content: center; gap: var(--sc-2);
-    pointer-events: auto; text-decoration: none; color: var(--sc-ink); opacity: 0.58;
-    border: 1px solid transparent; background: transparent;
-    transition: opacity 180ms var(--sc-ease-out), border-color 180ms var(--sc-ease-out), background-color 180ms var(--sc-ease-out);
-  }
-  .index a[aria-current="location"] {
-    opacity: 1; border-color: var(--sc-hairline-strong);
-    background: color-mix(in oklab, var(--sc-surface) 78%, transparent);
-  }
-  .index a:hover, .index a:focus-visible { opacity: 1; border-color: var(--sc-hairline-strong); }
-  .index .index__home { margin-right: auto; opacity: 0.9; justify-content: flex-start; padding-inline: 0; border: 0; }
-  .index__label { max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width 260ms var(--sc-ease-out), opacity 180ms var(--sc-ease-out); }
-  .index a:hover .index__label, .index a:focus-visible .index__label, .index a[aria-current="location"] .index__label { max-width: 8rem; opacity: 1; }
-  .index__current { display: none; }
-
-  /* the utterance */
-  .utterance {
-    position: fixed; inset: auto 0 0 0; z-index: 40;
-    display: flex; justify-content: center; gap: 0.4em;
-    padding: var(--sc-3) var(--sc-gutter);
-    font-family: var(--sc-font-display); font-weight: 600;
-    font-size: var(--sc-t-sm); letter-spacing: var(--sc-track-wide);
-    pointer-events: none; margin: 0;
-  }
-  .utterance span { color: color-mix(in oklab, var(--sc-ink) 18%, transparent); transition: color 600ms var(--sc-ease-out); }
-  .utterance span.is-inked { color: var(--sc-accent); }
-  @media (prefers-reduced-motion: reduce) { .utterance span { transition: none; } }
-
-  /* actions */
-  .cta { display: flex; flex-wrap: wrap; gap: var(--sc-3); margin: 0; }
-  .cta a {
-    min-height: 44px; display: inline-flex; align-items: center; text-decoration: none;
-    font-family: var(--sc-font-body); font-weight: 500; font-size: var(--sc-t-sm);
-    padding: 0.78em 1.3em; border: 1px solid var(--sc-hairline); border-radius: 10px;
-    transition: border-color 160ms var(--sc-ease-out), background-color 160ms var(--sc-ease-out), color 160ms var(--sc-ease-out), transform 160ms var(--sc-ease-out);
-  }
-  .cta a:hover { border-color: var(--sc-ink); color: var(--sc-ink); }
-  .cta a:active { transform: translateY(1px); }
-  .cta .cta--primary { background: var(--sc-accent); border-color: var(--sc-accent); color: var(--sc-accent-ink); }
-  .cta .cta--primary:hover { background: var(--sc-signal); border-color: var(--sc-signal); color: #170804; }
-  @media (hover: hover) and (pointer: fine) {
-    .cta a:hover { transform: translateY(-1px); }
-  }
-
-  /* the hero is the film and the promise; the compiler is the next section */
-  #i > [data-sc-stage] {
-    isolation: isolate;
-    position: relative;
-    min-height: 100svh;
-    background: var(--sc-canvas);
-  }
-  .hero-backdrop {
-    position: absolute; inset: 0; z-index: 0; overflow: hidden;
-    pointer-events: none; background: var(--sc-canvas);
-  }
-  .hero-backdrop__video {
-    display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%;
-    opacity: 0.7; filter: saturate(0.88) contrast(1.08);
-  }
-  .hero-backdrop__scrim {
-    position: absolute; inset: 0;
-    background:
-      linear-gradient(to right, color-mix(in oklab, var(--sc-canvas) 84%, transparent) 0%, color-mix(in oklab, var(--sc-canvas) 46%, transparent) 36%, transparent 68%),
-      linear-gradient(to bottom, color-mix(in oklab, var(--sc-canvas) 64%, transparent) 0%, transparent 42%, color-mix(in oklab, var(--sc-canvas) 72%, transparent) 100%);
-  }
-  .hero {
-    position: relative; z-index: 1; min-height: 100svh;
-    display: grid; place-items: center start; text-align: left;
-    padding: 6.5rem var(--sc-gutter) 4.5rem;
-  }
-  .hero__copy {
-    display: grid; justify-items: start;
-    gap: clamp(1rem, 2.2vw, 1.75rem);
-    width: min(100%, 40rem); margin-inline: 0;
-  }
-  .hero__eyebrow { color: var(--sc-accent); margin: 0; }
-  .hero__copy h1 {
-    font-family: var(--sc-font-display); font-weight: 600;
-    font-size: clamp(2.35rem, 1rem + 4.6vw, 6.2rem); line-height: 0.92;
-    letter-spacing: -0.055em; margin: 0; text-wrap: balance;
-  }
-  .hero__support { width: min(100%, 36rem); }
-  .hero__support .sc-lede { max-width: 36rem; margin: 0; }
-  .hero__copy .cta { margin: 0; justify-content: flex-start; width: 100%; }
-  @media (max-width: 1023px) {
-    .hero__copy, .hero__support { width: 100%; }
-    .hero__copy .cta { flex-direction: column; align-items: stretch; }
-    .hero__copy .cta a { width: 100%; justify-content: center; }
-  }
-  .compiler-shell {
-    height: 100%; max-width: var(--sc-maxw); margin-inline: auto; width: 100%;
-    display: flex; align-items: stretch; justify-content: center;
-    padding: 6.2rem var(--sc-gutter) 4.6rem;
-  }
-  .compiler-shell .intent-demo { width: 100%; }
-
-  /* signature mechanism: plain intent is engineered into a precise brief, then a parallel build, then product */
-  .intent-demo {
-    position: relative; min-height: min(58vh, 40rem); overflow: hidden;
-    border: 1px solid color-mix(in oklab, var(--sc-ink) 26%, transparent);
-    clip-path: polygon(0 0, calc(100% - 1.15rem) 0, 100% 1.15rem, 100% 100%, 1.15rem 100%, 0 calc(100% - 1.15rem));
-    background:
-      linear-gradient(115deg, color-mix(in oklab, var(--sc-surface) 96%, transparent), color-mix(in oklab, var(--sc-optic) 5%, var(--sc-canvas))),
-      var(--sc-canvas);
-    box-shadow: 0 2.5rem 8rem color-mix(in oklab, black 60%, transparent), inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 13%, transparent);
-    isolation: isolate;
-  }
-  .intent-demo::after {
-    content: ""; position: absolute; z-index: 2; inset: -30% auto -30% 54%; width: 1px; pointer-events: none;
-    background: linear-gradient(transparent, var(--sc-optic), var(--sc-signal), transparent);
-    box-shadow: 0 0 2.5rem color-mix(in oklab, var(--sc-optic) 65%, transparent);
-    transform: rotate(17deg); opacity: 0.48;
-  }
-  .intent-demo::before {
-    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-    background:
-      linear-gradient(color-mix(in oklab, var(--sc-optic) 7%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklab, var(--sc-optic) 7%, transparent) 1px, transparent 1px);
-    background-size: 2rem 2rem;
-    mask-image: linear-gradient(120deg, transparent 5%, black 35%, black 72%, transparent 96%);
-  }
-  .intent-demo__chrome {
-    min-height: 3rem; padding: 0 var(--sc-4); display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
-    border-bottom: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 82%, transparent);
-  }
-  .intent-demo__chrome p { margin: 0; }
-  .intent-demo__status { color: var(--sc-phosphor); }
-  .intent-demo__viewport { position: relative; min-height: calc(min(58vh, 40rem) - 7.5rem); }
-  .intent-demo__state {
-    position: absolute; inset: 0; padding: clamp(1.25rem, 3vw, 2.2rem);
-    opacity: 0; visibility: hidden; transform: translate3d(0, 1rem, 0);
-    transition: opacity 420ms var(--sc-ease-out), transform 520ms var(--sc-ease-out), visibility 0s linear 520ms;
-  }
-  .intent-demo[data-active-state="describe"] [data-compiler-panel="describe"],
-  .intent-demo[data-active-state="engineer"] [data-compiler-panel="engineer"],
-  .intent-demo[data-active-state="build"] [data-compiler-panel="build"],
-  .intent-demo[data-active-state="run"] [data-compiler-panel="run"] {
-    opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
-  }
-  .intent-demo__phase { color: var(--sc-accent); margin: 0 0 var(--sc-4); }
-  .intent-demo__quote {
-    margin: 0; max-width: 24ch; font-family: var(--sc-font-display); font-size: clamp(1.5rem, 2.6vw, 2.65rem);
-    line-height: 1.16; letter-spacing: var(--sc-track-snug); text-wrap: balance;
-  }
-  .intent-demo__quote mark {
-    color: var(--sc-ink); background: transparent; border-bottom: 2px solid var(--sc-signal);
-  }
-  .intent-demo__reading { margin: var(--sc-6) 0 0; max-width: 48ch; color: var(--sc-ink-soft); }
-  /* intent and context are engineered into one brief before any agent builds */
-  .context-engineering {
-    display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(11rem, 0.8fr); grid-auto-rows: minmax(0, 1fr);
-    gap: var(--sc-3); align-items: stretch; min-height: 15rem;
-  }
-  .context-stream {
-    --stream-delay: 0ms;
-    position: relative; display: grid; grid-template-columns: minmax(9rem, 0.9fr) minmax(0, 1.5fr); gap: var(--sc-3);
-    align-items: center; padding: var(--sc-3); border: 1px solid var(--sc-hairline-strong);
-    background: color-mix(in oklab, var(--sc-surface) 80%, transparent);
-    box-shadow: inset 0 1px 0 color-mix(in oklab, var(--sc-ink) 8%, transparent);
-    opacity: 0; transform: translate3d(-0.75rem, 0, 0);
-    transition: opacity 460ms var(--sc-ease-out) var(--stream-delay), transform 560ms var(--sc-ease-out) var(--stream-delay);
-  }
-  .context-stream[data-context-stream="context"] { --stream-delay: 160ms; }
-  .context-stream::after {
-    content: ""; position: absolute; top: 50%; left: 100%; width: var(--sc-3); height: 1px;
-    background: var(--sc-signal); box-shadow: 0 0 1.25rem color-mix(in oklab, var(--sc-signal) 70%, transparent);
-    transform: scaleX(0); transform-origin: left; transition: transform 420ms var(--sc-ease-out) calc(var(--stream-delay) + 320ms);
-  }
-  .context-stream__head { display: grid; gap: var(--sc-2); }
-  .context-stream__head [data-stream-name] {
-    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .context-stream__head strong { font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15; text-wrap: balance; }
-  .context-stream ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-2); }
-  .context-stream li {
-    padding: var(--sc-2) var(--sc-3); border: 1px solid var(--sc-hairline);
-    background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
-  }
-  .context-stream li::before {
-    content: attr(data-kind); display: block; margin-bottom: var(--sc-2);
-    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-ink-soft); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .context-stream li strong { font-family: var(--sc-font-display); font-size: clamp(0.78rem, 0.95vw, 0.95rem); line-height: 1.15; }
-  .build-brief {
-    position: relative; grid-column: 2; grid-row: 1 / span 2;
-    display: grid; align-content: center; gap: var(--sc-2); padding: var(--sc-3);
-    border: 1px solid var(--sc-signal); background: color-mix(in oklab, var(--sc-canvas) 90%, transparent);
-    box-shadow: 0 0 2.5rem color-mix(in oklab, var(--sc-signal) 18%, transparent);
-    opacity: 0; transform: translate3d(0.75rem, 0, 0);
-    transition: opacity 460ms var(--sc-ease-out) 380ms, transform 560ms var(--sc-ease-out) 380ms;
-  }
-  .build-brief::before {
-    content: ""; width: 0.55rem; aspect-ratio: 1; position: absolute; left: -0.3rem; top: calc(50% - 0.275rem);
-    border-radius: 50%; background: var(--sc-signal); box-shadow: 0 0 1.5rem var(--sc-signal);
-  }
-  .build-brief span {
-    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-optic); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .build-brief strong { font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15; text-wrap: balance; }
-  .build-brief p { margin: 0; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); line-height: 1.4; }
-  .intent-demo[data-active-state="engineer"] .context-stream,
-  .intent-demo[data-active-state="engineer"] .build-brief { opacity: 1; transform: none; }
-  .intent-demo[data-active-state="engineer"] .context-stream::after { transform: scaleX(1); }
-  .blueprint { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-3); }
-  .blueprint li {
-    min-height: 7rem; padding: var(--sc-3); position: relative;
-    border: 1px solid var(--sc-hairline-strong); background: var(--sc-glass);
-  }
-  .blueprint li::after {
-    content: ""; position: absolute; top: 50%; left: 100%; width: var(--sc-3); height: 1px; background: var(--sc-signal);
-  }
-  .blueprint li:nth-child(3n)::after, .blueprint li:last-child::after { display: none; }
-  .blueprint span { display: block; color: var(--sc-ink-soft); font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase; }
-  .blueprint strong { display: block; margin-top: var(--sc-2); font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.2; }
-  .blueprint .blueprint__gate { border-color: color-mix(in oklab, var(--sc-signal) 60%, var(--sc-hairline)); }
-  .agent-orchestration {
-    min-height: 17rem; display: grid;
-    grid-template-columns: minmax(8rem, 0.72fr) minmax(24rem, 2.2fr) minmax(8rem, 0.8fr);
-    gap: var(--sc-3); align-items: stretch;
-  }
-  .agent-brief, .agent-convergence {
-    position: relative; display: grid; align-content: center; gap: var(--sc-2); padding: var(--sc-3);
-    border: 1px solid var(--sc-hairline-strong); background: color-mix(in oklab, var(--sc-canvas) 90%, transparent);
-  }
-  .agent-brief::after, .agent-convergence::before {
-    content: ""; position: absolute; top: 50%; width: var(--sc-3); height: 1px;
-    background: var(--sc-signal); box-shadow: 0 0 1.25rem color-mix(in oklab, var(--sc-signal) 70%, transparent);
-  }
-  .agent-brief::after { left: 100%; }
-  .agent-convergence::before { right: 100%; }
-  .agent-brief span, .agent-convergence span {
-    font-family: var(--sc-font-mono); font-size: 0.75rem; color: var(--sc-optic);
-    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .agent-brief strong, .agent-convergence strong {
-    font-family: var(--sc-font-display); font-size: var(--sc-t-base); line-height: 1.15;
-  }
-  .agent-convergence { border-color: var(--sc-signal); }
-  .agent-convergence::after {
-    content: ""; width: 0.55rem; aspect-ratio: 1; position: absolute; left: -0.3rem; top: calc(50% - 0.275rem);
-    border-radius: 50%; background: var(--sc-signal); box-shadow: 0 0 1.5rem var(--sc-signal);
-  }
-  .agent-tracks { display: grid; gap: 0.42rem; align-content: center; }
-  .agent-track {
-    --agent-delay: calc(var(--agent-index) * 90ms);
-    --agent-duration: calc(1.5s + (var(--agent-index) * 90ms));
-    position: relative; min-height: 2.75rem; overflow: hidden;
-    display: grid; grid-template-columns: minmax(6rem, 0.65fr) minmax(7rem, 1fr) minmax(7.5rem, 0.8fr);
-    gap: var(--sc-3); align-items: center; padding: 0.45rem var(--sc-3);
-    border: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-surface) 74%, transparent);
-  }
-  .agent-track::before {
-    content: ""; position: absolute; z-index: 0; inset: 0 auto 0 -35%; width: 28%;
-    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--sc-optic) 24%, transparent), transparent);
-    transform: skewX(-16deg); opacity: 0;
-  }
-  .intent-demo[data-active-state="build"] .agent-track::before {
-    animation: agent-sweep var(--agent-duration) var(--sc-ease-out) var(--agent-delay) infinite;
-  }
-  .agent-track > * { position: relative; z-index: 1; }
-  .agent-track__role {
-    display: grid; gap: 0.1rem; font-family: var(--sc-font-mono); font-size: 0.75rem;
-    letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-optic);
-  }
-  .agent-track__role small { color: var(--sc-ink-soft); letter-spacing: 0; text-transform: none; }
-  .agent-track__activity { color: var(--sc-ink-soft); font-size: var(--sc-t-xs); }
-  .agent-track [data-agent-output] {
-    justify-self: end; font-family: var(--sc-font-display); font-size: var(--sc-t-sm); line-height: 1.1; text-align: right;
-  }
-  @keyframes agent-sweep {
-    0% { left: -35%; opacity: 0; }
-    16% { opacity: 1; }
-    70% { opacity: 0.8; }
-    100% { left: 112%; opacity: 0; }
-  }
-  .intent-demo__product { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100%; padding: 0; }
-  .intent-demo__product figure { margin: 0; overflow: hidden; min-height: 0; }
-  .intent-demo__product img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-  .intent-demo__proof {
-    display: grid; grid-template-columns: 1fr auto; gap: var(--sc-4); align-items: end;
-    padding: var(--sc-4); border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 91%, transparent);
-  }
-  .intent-demo__proof p { margin: 0; }
-  .intent-demo__proof strong { display: block; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); line-height: 1.15; }
-  .intent-demo__proof a { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); }
-  .intent-demo__controls {
-    position: relative; z-index: 4;
-    min-height: 4.5rem; padding: var(--sc-3) var(--sc-4); display: flex; align-items: center; gap: var(--sc-2);
-    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 88%, transparent);
-  }
-  .intent-demo__controls button {
-    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; color: var(--sc-ink-soft); background: transparent; cursor: pointer;
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .intent-demo__controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
-  .intent-demo__skip { margin-left: auto; color: var(--sc-ink) !important; text-transform: none !important; letter-spacing: 0 !important; }
-
-  /* labels */
-  .label {
-    width: min(34ch, 78vw);
-    padding: var(--sc-4) var(--sc-5);
-    background: color-mix(in oklab, var(--sc-canvas) 82%, transparent);
-    border: 1px solid var(--sc-hairline);
-  }
-  .label > * + * { margin-top: var(--sc-3); }
-  .label h2, .label h1 { margin: 0; }
-  .label dl { display: grid; grid-template-columns: 7.5ch 1fr; gap: var(--sc-1) var(--sc-3); margin: 0; font-size: var(--sc-t-sm); }
-  .label dt { color: var(--sc-ink-soft); font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide); padding-top: 0.2em; }
-  .label dd { margin: 0; }
-  [data-sc-stage] > .label { position: absolute; left: var(--sc-gutter); bottom: 6.4rem; z-index: var(--sc-z-copy); }
-  [data-sc-stage] > .label--trail { left: auto; right: var(--sc-gutter); }
-
-  /* the receipt */
-  .receipt {
-    height: 100%; display: grid; align-content: center; gap: var(--sc-6);
-    max-width: 74rem; margin-inline: auto; padding: 5rem var(--sc-gutter) 4.5rem;
-  }
-  .receipt h2 { margin: 0; max-width: 30ch; text-wrap: balance; }
-  .figures {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sc-5);
-    margin: 0; padding-top: var(--sc-5); border-top: 1px solid var(--sc-hairline);
-  }
-  .figures > div { display: flex; flex-direction: column; }
-  .figures dd {
-    order: -1; margin: 0;
-    font-family: var(--sc-font-display); font-weight: 600;
-    font-size: var(--sc-t-3xl); line-height: 1; letter-spacing: var(--sc-track-tight);
-    font-variant-numeric: tabular-nums;
-  }
-  .figures dd small { font-size: 0.42em; font-weight: 500; color: var(--sc-ink-soft); letter-spacing: 0; margin-left: 0.15em; }
-  .figures dt { margin-top: var(--sc-2); font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide); color: var(--sc-ink-soft); }
-  .receipt .sc-body { max-width: 66ch; }
-  .receipt .receipt__source { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); letter-spacing: var(--sc-track-wide); text-transform: uppercase; margin: 0; }
-
-  .origin { max-width: 46rem; margin-inline: auto; text-align: center; }
-  .origin h2 { margin: var(--sc-3) auto var(--sc-5); max-width: 16ch; text-wrap: balance; }
-  .origin .sc-body + .sc-body { margin-top: var(--sc-4); }
-  .origin em { font-style: italic; color: var(--sc-accent); }
-
-  /* the situation, the name, the proof bar */
-  .situation { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
-  .situation h2 { margin: 0 0 var(--sc-5); max-width: 22ch; text-wrap: balance; }
-  .situation .sc-body + .sc-body { margin-top: var(--sc-4); }
-  .name { border-left: 2px solid var(--sc-accent); padding: var(--sc-2) 0 var(--sc-2) var(--sc-5); }
-  .name > * + * { margin-top: var(--sc-4); }
-  .name .name__word { font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-xl); letter-spacing: var(--sc-track-tight); margin: 0; }
-  .name .name__word em { font-style: italic; color: var(--sc-accent); font-weight: 500; }
-  .proofbar {
-    list-style: none; margin: var(--sc-9) 0 0; padding: var(--sc-5) 0 0;
-    border-top: 1px solid var(--sc-hairline);
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sc-5);
-  }
-  .proofbar li { display: flex; flex-direction: column; gap: var(--sc-1); font-size: var(--sc-t-sm); }
-  .proofbar strong { font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-base); color: var(--sc-ink); }
-  .proofbar span { color: var(--sc-ink-soft); }
-  .proofbar a { font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: lowercase; margin-top: var(--sc-1); }
-
-  /* answer engine: a buyer question becomes a verifiable answer surface */
-  .aeo-shell {
-    height: 100%; max-width: var(--sc-maxw); margin-inline: auto; padding: 5.8rem var(--sc-gutter) 4.6rem;
-    display: grid; grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 6rem); align-items: stretch;
-  }
-  .aeo-copy { align-self: center; max-width: 31rem; }
-  .aeo-copy h2 {
-    margin: var(--sc-3) 0 var(--sc-4); font-family: var(--sc-font-display); font-size: clamp(2.5rem, 5vw, 5.8rem);
-    line-height: 0.92; letter-spacing: -0.05em; text-wrap: balance;
-  }
-  .aeo-copy .sc-label { color: var(--sc-optic); }
-  .aeo-copy .cta { margin-top: var(--sc-5); }
-  .aeo-copy .cta a { padding-inline: 1rem; }
-  .aeo-engine {
-    position: relative; min-height: 35rem; overflow: hidden; isolation: isolate;
-    border: 1px solid color-mix(in oklab, var(--sc-optic) 35%, var(--sc-hairline));
-    clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
-    background:
-      radial-gradient(circle at 70% 20%, color-mix(in oklab, var(--sc-optic) 11%, transparent), transparent 40%),
-      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
-  }
-  .aeo-engine::before {
-    content: ""; position: absolute; inset: 0; z-index: -1;
-    background-image:
-      linear-gradient(color-mix(in oklab, var(--sc-optic) 6%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklab, var(--sc-optic) 6%, transparent) 1px, transparent 1px);
-    background-size: 2.25rem 2.25rem;
-  }
-  .aeo-engine__chrome {
-    min-height: 3rem; display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
-    padding: 0 var(--sc-4); border-bottom: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
-  }
-  .aeo-engine__chrome p { margin: 0; }
-  .aeo-engine__status { color: var(--sc-optic); }
-  .aeo-engine__viewport { position: relative; min-height: 27.5rem; }
-  .aeo-panel {
-    position: absolute; inset: 0; padding: clamp(1.25rem, 3vw, 2.5rem);
-    opacity: 0; visibility: hidden; transform: translate3d(1.25rem, 0, 0) scale(0.985);
-    transition: opacity 420ms var(--sc-ease-out), transform 560ms var(--sc-ease-out), visibility 0s linear 560ms;
-  }
-  .aeo-engine[data-active-state="question"] [data-aeo-panel="question"],
-  .aeo-engine[data-active-state="answer"] [data-aeo-panel="answer"],
-  .aeo-engine[data-active-state="verify"] [data-aeo-panel="verify"],
-  .aeo-engine[data-active-state="measure"] [data-aeo-panel="measure"] {
-    opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
-  }
-  .aeo-prompt {
-    display: grid; min-height: 20rem; align-content: center; max-width: 40rem; margin-inline: auto;
-  }
-  .aeo-prompt blockquote {
-    margin: 0; font-family: var(--sc-font-display); font-size: clamp(1.8rem, 4vw, 4.4rem);
-    line-height: 1.02; letter-spacing: -0.04em; text-wrap: balance;
-  }
-  .surface-list { list-style: none; padding: 0; margin: var(--sc-6) 0 0; display: flex; flex-wrap: wrap; gap: var(--sc-2); }
-  .surface-list li {
-    padding: 0.6rem 0.8rem; border: 1px solid var(--sc-hairline-strong);
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft);
-  }
-  .answer-stack { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: var(--sc-3); }
-  .answer-block, .answer-asset {
-    padding: var(--sc-4); border: 1px solid var(--sc-hairline-strong); background: color-mix(in oklab, var(--sc-canvas) 82%, transparent);
-  }
-  .answer-block { grid-row: span 3; }
-  .answer-block p:last-child { font-family: var(--sc-font-display); font-size: clamp(1.35rem, 2.1vw, 2.2rem); line-height: 1.18; }
-  .answer-asset strong { display: block; margin-top: var(--sc-2); font-family: var(--sc-font-display); font-size: var(--sc-t-base); }
-  .answer-path {
-    position: relative; min-height: 20rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sc-5); align-items: center;
-  }
-  .answer-path::before {
-    content: ""; position: absolute; left: 12%; right: 12%; top: 50%; height: 1px;
-    background: linear-gradient(90deg, var(--sc-signal), var(--sc-optic));
-  }
-  .answer-path article {
-    position: relative; z-index: 1; min-height: 9rem; padding: var(--sc-4);
-    border: 1px solid var(--sc-hairline-strong); background: var(--sc-canvas);
-  }
-  .answer-path article:nth-child(2) { transform: translateY(-2.5rem); }
-  .answer-path article:nth-child(3) { transform: translateY(1.5rem); }
-  .answer-path strong { display: block; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); }
-  .answer-path p { margin: var(--sc-2) 0 0; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); }
-  .aeo-proof {
-    min-height: 20rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-5); align-content: center;
-  }
-  .aeo-proof__metric { border-top: 1px solid var(--sc-hairline-strong); padding-top: var(--sc-3); }
-  .aeo-proof__metric strong {
-    display: block; font-family: var(--sc-font-display); font-size: clamp(2.7rem, 5vw, 5.5rem); line-height: 0.95; letter-spacing: -0.05em;
-  }
-  .aeo-proof__metric span { display: block; margin-top: var(--sc-2); color: var(--sc-ink-soft); }
-  .aeo-proof__source { grid-column: 1 / -1; margin: 0; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); color: var(--sc-ink-soft); }
-  .aeo-controls {
-    min-height: 4.5rem; display: flex; align-items: center; gap: var(--sc-2); padding: var(--sc-3) var(--sc-4);
-    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 86%, transparent);
-  }
-  .aeo-controls button {
-    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; background: transparent; color: var(--sc-ink-soft); cursor: pointer;
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide);
-  }
-  .aeo-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
-
-  /* time travel: the delivery calendar compressing */
-  .time-shell {
-    height: 100%; max-width: var(--sc-maxw); margin-inline: auto; padding: 5.8rem var(--sc-gutter) 4.6rem;
-    display: grid; grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
-    gap: clamp(2rem, 5vw, 6rem); align-items: stretch;
-  }
-  .time-copy { align-self: center; max-width: 31rem; min-height: 0; }
-  .time-copy h2 {
-    margin: var(--sc-3) 0 var(--sc-4); font-family: var(--sc-font-display); font-size: clamp(2.5rem, 5vw, 5.8rem);
-    line-height: 0.92; letter-spacing: -0.05em; text-wrap: balance;
-  }
-  .time-copy .sc-label { color: var(--sc-signal); }
-  .time-engine {
-    position: relative; min-height: 0; max-height: calc(100vh - 10.4rem); overflow: hidden; isolation: isolate;
-    border: 1px solid color-mix(in oklab, var(--sc-signal) 32%, var(--sc-hairline));
-    clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
-    background:
-      radial-gradient(circle at 20% 15%, color-mix(in oklab, var(--sc-signal) 10%, transparent), transparent 42%),
-      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
-    display: flex; flex-direction: column;
-  }
-  .time-engine::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
-    background:
-      linear-gradient(90deg, var(--sc-hairline) 1px, transparent 1px) 0 0 / 2.25rem 100%,
-      linear-gradient(0deg, var(--sc-hairline) 1px, transparent 1px) 0 0 / 100% 2.25rem;
-    mask-image: linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
-  }
-  .time-engine__chrome {
-    min-height: 3rem; display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
-    padding: 0 var(--sc-4); border-bottom: 1px solid var(--sc-hairline);
-    background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
-  }
-  .time-engine__status { color: var(--sc-signal); }
-  .time-track { position: relative; padding: clamp(1.25rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.5rem) 0.75rem; }
-  .time-axis {
-    display: flex; justify-content: space-between; margin: 0 0 var(--sc-3) 7.5rem; color: var(--sc-ink-soft);
-  }
-  .time-lanes { position: relative; display: grid; gap: 0.8rem; margin: 0; padding: 0; list-style: none; }
-  .time-lane { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: center; gap: var(--sc-3); }
-  .time-lane .sc-label { color: var(--sc-ink-soft); }
-  .time-lane__rail { position: relative; height: 1.15rem; }
-  .time-lane__wait {
-    position: absolute; inset: 50% auto auto 0; width: calc(var(--start) * 100%); height: 0; transform: translateY(-50%);
-    border-top: 1px dashed color-mix(in oklab, var(--sc-ink-soft) 55%, transparent);
-    transition: width 900ms var(--sc-ease-out), opacity 600ms var(--sc-ease-out);
-  }
-  .time-lane__bar {
-    position: absolute; inset: 0 auto 0 calc(var(--start) * 100%); width: calc(var(--span) * 100%);
-    background: linear-gradient(90deg, color-mix(in oklab, var(--sc-signal) 70%, var(--sc-accent)), var(--sc-signal));
-    box-shadow: 0 0 0.9rem color-mix(in oklab, var(--sc-signal) 30%, transparent);
-    transition: left 900ms var(--sc-ease-out), width 900ms var(--sc-ease-out), background 600ms var(--sc-ease-out);
-  }
-  .time-lanes::after {
-    content: ""; position: absolute; top: -1.75rem; bottom: -0.5rem; left: calc(7.5rem + var(--sc-3) + (100% - 7.5rem - var(--sc-3)) * var(--arrive));
-    width: 1px; background: var(--sc-optic);
-    box-shadow: 0 0 1rem color-mix(in oklab, var(--sc-optic) 70%, transparent);
-    transition: left 900ms var(--sc-ease-out);
-  }
-  .time-arrival {
-    position: absolute; top: -1.75rem; left: calc(7.5rem + var(--sc-3) + (100% - 7.5rem - var(--sc-3)) * var(--arrive));
-    transform: translate(0.6rem, -100%); color: var(--sc-optic); white-space: nowrap;
-    transition: left 900ms var(--sc-ease-out);
-  }
-  .time-returned {
-    position: absolute; top: -0.35rem; bottom: -0.5rem; right: 0;
-    left: calc(7.5rem + var(--sc-3) + (100% - 7.5rem - var(--sc-3)) * var(--arrive));
-    background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--sc-optic) 22%, transparent) 0 2px, transparent 2px 9px);
-    opacity: 0; transition: opacity 700ms var(--sc-ease-out), left 900ms var(--sc-ease-out); pointer-events: none;
-  }
-  .time-returned .sc-label { position: absolute; right: 0; bottom: -1.7rem; color: var(--sc-optic); white-space: nowrap; }
-  .time-engine[data-active-state="arrive"] .time-returned { opacity: 1; }
-  .time-engine[data-active-state="arrive"] .time-lane__bar { background: var(--sc-optic); box-shadow: 0 0 1rem color-mix(in oklab, var(--sc-optic) 40%, transparent); }
-  .time-engine[data-active-state="arrive"] .time-lane__wait { opacity: 0; }
-
-  /* per-state geometry: start / span are fractions of the calendar */
-  .time-engine { --arrive: 1; }
-  .time-lane[data-time-phase="Discover"] { --start: 0; --span: 0.12; }
-  .time-lane[data-time-phase="Specify"] { --start: 0.16; --span: 0.11; }
-  .time-lane[data-time-phase="Design"] { --start: 0.31; --span: 0.13; }
-  .time-lane[data-time-phase="Build"] { --start: 0.48; --span: 0.22; }
-  .time-lane[data-time-phase="Test"] { --start: 0.74; --span: 0.12; }
-  .time-lane[data-time-phase="Release"] { --start: 0.9; --span: 0.1; }
-  .time-engine[data-active-state="engineer"] { --arrive: 0.58; }
-  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Discover"],
-  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Specify"],
-  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Design"] { --start: 0; --span: 0.08; }
-  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Build"] { --start: 0.1; --span: 0.22; }
-  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Test"] { --start: 0.34; --span: 0.12; }
-  .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Release"] { --start: 0.48; --span: 0.1; }
-  .time-engine[data-active-state="parallel"], .time-engine[data-active-state="arrive"] { --arrive: 0.33; }
-  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Discover"],
-  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Discover"],
-  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Specify"],
-  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Specify"],
-  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Design"],
-  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Design"] { --start: 0; --span: 0.07; }
-  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Build"],
-  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Build"] { --start: 0.08; --span: 0.18; }
-  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Test"],
-  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Test"] { --start: 0.1; --span: 0.17; }
-  .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Release"],
-  .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Release"] { --start: 0.27; --span: 0.06; }
-
-  .time-captions { position: relative; flex: 1; min-height: 7rem; margin-top: var(--sc-3); }
-  .time-panel {
-    position: absolute; inset: 0; padding: 0 clamp(1.25rem, 3vw, 2.5rem) clamp(1.25rem, 3vw, 2rem);
-    display: grid; align-content: end; gap: var(--sc-2);
-    opacity: 0; visibility: hidden; transform: translate3d(0, 0.75rem, 0);
-    transition: opacity 420ms var(--sc-ease-out), transform 560ms var(--sc-ease-out), visibility 0s linear 560ms;
-  }
-  .time-panel h3 { margin: 0; font-family: var(--sc-font-display); font-size: clamp(1.4rem, 2.2vw, 2rem); line-height: 1.05; letter-spacing: -0.03em; }
-  .time-panel p { margin: 0; max-width: 46ch; color: var(--sc-ink-soft); }
-  .time-panel strong { color: var(--sc-ink); font-weight: 500; }
-  .time-engine[data-active-state="conventional"] [data-time-panel="conventional"],
-  .time-engine[data-active-state="engineer"] [data-time-panel="engineer"],
-  .time-engine[data-active-state="parallel"] [data-time-panel="parallel"],
-  .time-engine[data-active-state="arrive"] [data-time-panel="arrive"] { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-  .time-controls {
-    min-height: 4.5rem; display: flex; align-items: center; gap: var(--sc-2); padding: var(--sc-3) var(--sc-4);
-    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 86%, transparent);
-  }
-  .time-controls button {
-    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; background: transparent; color: var(--sc-ink-soft); cursor: pointer;
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide);
-  }
-  .time-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
-
-  /* range: five surfaces of one digital operation */
-  .range-bg {
-    position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
-    pointer-events: none; opacity: 0.82;
-    -webkit-mask-image: radial-gradient(120% 90% at 62% 50%, #000 35%, transparent 85%);
-            mask-image: radial-gradient(120% 90% at 62% 50%, #000 35%, transparent 85%);
-  }
-  .range-shell {
-    position: relative; z-index: 1; height: 100%; max-width: var(--sc-maxw); margin-inline: auto; padding: 5.8rem var(--sc-gutter) 4.6rem;
-    display: grid; grid-template-columns: minmax(16rem, 0.42fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
-    gap: clamp(2rem, 5vw, 6rem); align-items: stretch;
-  }
-  .range-copy { align-self: center; max-width: 31rem; min-height: 0; }
-  .range-copy h2 {
-    margin: var(--sc-3) 0 var(--sc-4); font-family: var(--sc-font-display); font-size: clamp(2.5rem, 5vw, 5.8rem);
-    line-height: 0.92; letter-spacing: -0.05em; text-wrap: balance;
-  }
-  .range-copy .sc-label { color: var(--sc-signal); }
-  .range-next {
-    margin: var(--sc-4) 0 0; font-family: var(--sc-font-mono); font-size: var(--sc-t-xs);
-    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .range-next a { min-height: 44px; display: inline-flex; align-items: center; color: var(--sc-ink-soft); text-decoration: none; border-bottom: 1px solid var(--sc-hairline); }
-  .range-next a:hover, .range-next a:focus-visible { color: var(--sc-ink); border-color: var(--sc-signal); }
-  .range-engine {
-    position: relative; min-height: 0; max-height: calc(100vh - 10.4rem); overflow: hidden; isolation: isolate;
-    border: 1px solid color-mix(in oklab, var(--sc-signal) 32%, var(--sc-hairline));
-    clip-path: polygon(1.1rem 0, 100% 0, 100% calc(100% - 1.1rem), calc(100% - 1.1rem) 100%, 0 100%, 0 1.1rem);
-    background:
-      radial-gradient(circle at 18% 12%, color-mix(in oklab, var(--sc-signal) 10%, transparent), transparent 42%),
-      color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
-    display: flex; flex-direction: column;
-  }
-  .range-engine__chrome,
-  .range-body,
-  .range-controls { position: relative; z-index: 1; }
-  .range-engine__chrome {
-    min-height: 3rem; display: flex; align-items: center; justify-content: space-between; gap: var(--sc-3);
-    padding: 0 var(--sc-4); border-bottom: 1px solid var(--sc-hairline);
-    background: color-mix(in oklab, var(--sc-canvas) 78%, transparent);
-  }
-  .range-engine__status { color: var(--sc-signal); margin: 0; }
-  .range-body {
-    flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(8.5rem, 0.34fr) minmax(0, 1fr);
-    gap: var(--sc-4); padding: clamp(1.1rem, 2.4vw, 1.8rem) clamp(1.1rem, 2.4vw, 1.8rem) 0.4rem;
-  }
-  .range-stack { display: flex; flex-direction: column; gap: 0.45rem; margin: 0; padding: 0; list-style: none; }
-  .range-stack li {
-    order: 1; margin: 0; padding: 0.7rem 0.75rem; color: var(--sc-ink-soft);
-    border: 1px solid var(--sc-hairline); background: transparent;
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .range-engine[data-active-state="market"] [data-range-ticket="market"],
-  .range-engine[data-active-state="product"] [data-range-ticket="product"],
-  .range-engine[data-active-state="model"] [data-range-ticket="model"],
-  .range-engine[data-active-state="record"] [data-range-ticket="record"],
-  .range-engine[data-active-state="commerce"] [data-range-ticket="commerce"] {
-    order: 0; color: var(--sc-ink); border-color: var(--sc-signal); border-left-width: 3px;
-    background: color-mix(in oklab, var(--sc-signal) 12%, transparent);
-  }
-  .range-viewport { position: relative; min-height: 12rem; }
-  .range-panel {
-    position: absolute; inset: 0; display: grid; align-content: end; gap: var(--sc-3);
-    opacity: 0; visibility: hidden; transform: translate3d(0, 0.75rem, 0);
-    transition: opacity 420ms var(--sc-ease-out), transform 560ms var(--sc-ease-out), visibility 0s linear 560ms;
-  }
-  .range-panel h3 { margin: 0; font-family: var(--sc-font-display); font-size: clamp(1.4rem, 2.2vw, 2rem); line-height: 1.05; letter-spacing: -0.03em; }
-  .range-panel p { margin: 0; max-width: 46ch; color: var(--sc-ink-soft); }
-  .range-panel a { color: var(--sc-ink); }
-  .range-engine[data-active-state="market"] [data-range-panel="market"],
-  .range-engine[data-active-state="product"] [data-range-panel="product"],
-  .range-engine[data-active-state="model"] [data-range-panel="model"],
-  .range-engine[data-active-state="record"] [data-range-panel="record"],
-  .range-engine[data-active-state="commerce"] [data-range-panel="commerce"] { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-  .range-controls {
-    min-height: 4.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: var(--sc-2); padding: var(--sc-3) var(--sc-4);
-    border-top: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-canvas) 86%, transparent);
-  }
-  .range-controls button {
-    min-height: 44px; padding: 0 var(--sc-3); border: 1px solid transparent; background: transparent; color: var(--sc-ink-soft); cursor: pointer;
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); text-transform: uppercase; letter-spacing: var(--sc-track-wide);
-  }
-  .range-controls button[aria-pressed="true"] { color: var(--sc-ink); border-color: var(--sc-hairline-strong); background: var(--sc-glass); }
-
-  /* spread */
-  .spread { display: grid; grid-template-columns: 34ch minmax(0, 1fr); gap: var(--sc-7); align-items: center; min-height: 78vh; }
-  .spread figure { margin: 0; }
-  .spread img { display: block; width: 100%; height: 54vh; object-fit: cover; object-position: top; border: 1px solid var(--sc-hairline); }
-
-  /* rail */
-  .rail { display: flex; align-items: flex-start; gap: 2.4rem; padding: 18vh var(--sc-gutter) 8vh; width: max-content; }
-  .rail__lead { width: min(28vw, 22rem); align-self: center; }
-  .rail__lead h2 { margin: 0; }
-  .item { width: min(42vw, 34rem); flex: none; }
-  .item figure { margin: 0 0 var(--sc-4); }
-  .item img, .item video { display: block; width: 100%; height: 54vh; object-fit: cover; object-position: top; border: 1px solid var(--sc-hairline); background: #0B0A08; }
-  .item h2, .item h3 { margin: var(--sc-2) 0 var(--sc-3); }
-  .item .sc-body + .sc-body { margin-top: var(--sc-3); }
-  .item--range { align-self: center; padding: var(--sc-6) var(--sc-6); border: 1px solid var(--sc-hairline); background: color-mix(in oklab, var(--sc-surface) 70%, transparent); }
-  .item--range .sc-lede { margin: 0; }
-  .item--range .sc-body { margin-top: var(--sc-4); }
-  .item--range strong { color: var(--sc-ink); }
-  .note { width: 22rem; flex: none; align-self: flex-end; color: var(--sc-ink-soft); font-size: var(--sc-t-sm); padding-bottom: 6vh; }
-
-  /* benefits */
-  .benefits {
-    position: relative; height: 100%;
-    display: grid; grid-template-rows: auto minmax(0, 1fr);
-    max-width: var(--sc-maxw); margin-inline: auto;
-    padding: 5.5rem var(--sc-gutter) 4.5rem; gap: var(--sc-6);
-  }
-  .benefits__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sc-4) var(--sc-6); }
-  .benefits__head h2 { margin: 0; max-width: 20ch; text-wrap: balance; }
-  .benefits__set {
-    grid-area: 2 / 1; align-self: center; list-style: none; margin: 0; padding: 0;
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-5) var(--sc-8);
-  }
-  .benefits__set li { border-top: 1px solid var(--sc-hairline); padding-top: var(--sc-4); }
-  .benefits__set strong { display: block; font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-lg); line-height: 1.15; letter-spacing: var(--sc-track-snug); color: var(--sc-ink); }
-  .benefits__set p { margin: var(--sc-2) 0 0; color: var(--sc-ink-soft); max-width: 36rem; }
-
-  /* the plinth */
-  .plinth { min-height: 70vh; display: grid; place-items: center; }
-  .plinth__box {
-    position: relative; width: min(36rem, 80vw); height: 38vh; border: 1px solid var(--sc-hairline);
-    display: grid; place-items: end start; padding: var(--sc-4);
-  }
-  .plinth__box::before {
-    content: ""; position: absolute; left: -1px; top: 50%; width: 22%; height: 1px; background: var(--sc-signal);
-  }
-  .plinth__box::after {
-    content: ""; position: absolute; left: calc(22% - 1px); top: calc(50% - 4px); width: 8px; height: 8px;
-    border: 1px solid var(--sc-signal); background: var(--sc-canvas);
-  }
-  .plinth__box p { margin: 0; }
-
-  /* film controls remain semantic even though the wheel is the cinematic input */
-  .film-toggle {
-    min-width: 44px; min-height: 44px; margin: 0 0 var(--sc-3); padding: 0 var(--sc-3);
-    display: none; align-items: center; justify-content: center;
-    border: 1px solid var(--sc-hairline-strong); background: var(--sc-glass); color: var(--sc-ink); cursor: pointer;
-    font-family: var(--sc-font-mono); font-size: var(--sc-t-xs); letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .film-details > * + * { margin-top: var(--sc-3); }
-  .film-details[hidden] { display: none; }
-  .film-transcript { margin-top: var(--sc-3); border-top: 1px solid var(--sc-hairline); padding-top: var(--sc-3); }
-  .film-transcript summary { cursor: pointer; color: var(--sc-ink); }
-
-  /* specimen v: moves, the deliverable, the questions */
-  .enable { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; min-height: 68vh; }
-  .enable .label { width: auto; max-width: 40ch; }
-  .enable ol { margin: 0; padding: 0; list-style: none; counter-reset: none; }
-  .enable ol li + li { margin-top: var(--sc-5); padding-top: var(--sc-5); border-top: 1px solid var(--sc-hairline); }
-  .enable ol strong { display: block; font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-xl); letter-spacing: var(--sc-track-snug); line-height: 1.12; color: var(--sc-ink); margin-bottom: var(--sc-2); }
-  .enable .cta { margin-top: var(--sc-6); }
-  .faq { margin-top: var(--sc-10); padding-top: var(--sc-7); border-top: 1px solid var(--sc-hairline); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
-  .faq h2 { margin: 0; max-width: 16ch; text-wrap: balance; }
-  .faq__list > * + * { border-top: 1px solid var(--sc-hairline); }
-  .faq details { padding: var(--sc-4) 0; }
-  .faq summary {
-    cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: var(--sc-4); align-items: baseline;
-    font-family: var(--sc-font-display); font-weight: 600; font-size: var(--sc-t-lg); letter-spacing: var(--sc-track-snug); line-height: 1.2; color: var(--sc-ink);
-  }
-  .faq summary::-webkit-details-marker { display: none; }
-  .faq summary::after { content: "+"; flex: none; font-family: var(--sc-font-mono); font-weight: 400; color: var(--sc-accent); }
-  .faq details[open] summary::after { content: "\2212"; }
-  .faq summary:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 4px; }
-  .faq details .sc-body { margin-top: var(--sc-3); }
-
-  /* the brief */
-  .inquiry { height: 100%; display: grid; place-items: center; padding: 5rem var(--sc-gutter) 6rem; }
-  .inquiry .label { position: static; width: min(50ch, 88vw); padding: var(--sc-6) var(--sc-6); }
-  .inquiry h2 { font-size: var(--sc-t-2xl); font-family: var(--sc-font-display); font-weight: 600; letter-spacing: var(--sc-track-tight); line-height: 1.05; text-wrap: balance; }
-  .inquiry .label > .sc-body + .sc-body { margin-top: var(--sc-3); }
-  .inquiry dl { margin-top: var(--sc-5); }
-  .inquiry .cta { margin-top: var(--sc-5); }
-  .foot, .site-foot { position: absolute; inset: auto 0 5.8rem 0; display: flex; justify-content: center; gap: var(--sc-4); font-size: 0.75rem; color: var(--sc-ink-soft); font-family: var(--sc-font-mono); letter-spacing: var(--sc-track-wide); text-transform: uppercase; padding-inline: var(--sc-gutter); flex-wrap: wrap; margin: 0; }
-  .site-foot__brand { display: none; }
-  .site-foot__links { display: contents; }
-  .foot a, .site-foot a { color: inherit; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
-  .foot a:hover, .site-foot a:hover { color: var(--sc-accent); }
-
-  @media (max-width: 1100px) {
-    .index { padding: var(--sc-2) var(--sc-gutter); align-items: center; }
-    .index a[data-index] { display: none; }
-    .index .index__home { min-width: 44px; font-size: 0; }
-    .index .index__home::before { content: "A"; font-family: var(--sc-font-display); font-size: var(--sc-t-lg); color: var(--sc-accent); }
-    .index__current { display: block; margin: 0 0 0 auto; color: var(--sc-ink-soft); }
-    .utterance { display: none; }
-    #i, #compiler { height: auto !important; }
-    #i > [data-sc-stage], #compiler > [data-sc-stage] { position: relative; top: auto; height: auto; min-height: 0; }
-    .hero { min-height: 100svh; padding: 5.5rem var(--sc-gutter) 3.5rem; }
-    .hero__copy h1 { font-size: clamp(2.15rem, 8vw, 3.4rem); }
-    .hero__copy .sc-lede { font-size: var(--sc-t-base); }
-    .compiler-shell { height: auto; padding: 4.2rem var(--sc-gutter); }
-    .intent-demo { min-height: 31rem; }
-    .intent-demo__viewport { min-height: 22.5rem; }
-    .intent-demo__chrome { min-height: 2.75rem; }
-    .intent-demo__state { padding: var(--sc-4); }
-    .intent-demo__quote { font-size: clamp(1.25rem, 6vw, 1.65rem); }
-    .intent-demo__reading { margin-top: var(--sc-4); font-size: var(--sc-t-sm); }
-    .context-engineering { grid-template-columns: 1fr; grid-auto-rows: auto; min-height: 0; gap: var(--sc-2); }
-    .context-stream { grid-template-columns: 1fr; gap: var(--sc-2); }
-    .context-stream::after { display: none; }
-    .build-brief { grid-column: auto; grid-row: auto; }
-    .build-brief::before { left: calc(50% - 0.275rem); top: -0.3rem; }
-    .intent-demo[data-active-state="engineer"] { min-height: 42rem; }
-    .intent-demo[data-active-state="engineer"] .intent-demo__viewport { min-height: 33.5rem; }
-    .intent-demo[data-active-state="build"] { min-height: 44rem; }
-    .intent-demo[data-active-state="build"] .intent-demo__viewport { min-height: 35.5rem; }
-    .agent-orchestration { min-height: 0; grid-template-columns: 1fr; gap: var(--sc-2); }
-    .agent-brief, .agent-convergence { min-height: 3.6rem; padding: var(--sc-2) var(--sc-3); }
-    .agent-brief::after, .agent-convergence::before { display: none; }
-    .agent-convergence::after { left: calc(50% - 0.275rem); top: -0.3rem; }
-    .agent-tracks { gap: 0.3rem; }
-    .agent-track {
-      min-height: 2.55rem; grid-template-columns: minmax(5.5rem, 0.7fr) minmax(0, 1fr);
-      gap: var(--sc-2); padding: 0.35rem var(--sc-2);
-    }
-    .agent-track__activity { display: none; }
-    .agent-track [data-agent-output] { font-size: var(--sc-t-xs); }
-    .blueprint { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-2); }
-    .blueprint li { min-height: 5.5rem; padding: var(--sc-2); }
-    .blueprint li::after { display: none; }
-    .intent-demo__proof { grid-template-columns: 1fr; gap: var(--sc-2); }
-    .intent-demo__proof strong { font-size: var(--sc-t-base); }
-    .intent-demo__controls { overflow-x: auto; padding-inline: var(--sc-2); }
-    .intent-demo__controls button { white-space: nowrap; padding-inline: var(--sc-2); }
-    .intent-demo__skip { font-size: 0 !important; min-width: 44px; }
-    .intent-demo__skip::after { content: "Run"; font-size: var(--sc-t-xs); }
-    #aeo { height: auto !important; }
-    #aeo > .sc-stage { position: relative; top: auto; height: auto; }
-    .aeo-shell { height: auto; grid-template-columns: 1fr; padding: 4.6rem var(--sc-gutter); gap: var(--sc-5); }
-    .aeo-copy h2 { font-size: clamp(2.3rem, 12vw, 4rem); }
-    .aeo-engine { min-height: 33rem; }
-    .aeo-engine__viewport { min-height: 25.5rem; }
-    .aeo-panel { padding: var(--sc-4); }
-    .aeo-prompt { min-height: 18rem; }
-    .aeo-prompt blockquote { font-size: clamp(1.5rem, 8vw, 2.5rem); }
-    .answer-stack { grid-template-columns: 1fr; max-height: 23rem; overflow: auto; }
-    .answer-block { grid-row: auto; }
-    .answer-block p:last-child { font-size: var(--sc-t-base); }
-    .answer-path { min-height: 22rem; grid-template-columns: 1fr; gap: var(--sc-2); align-content: center; }
-    .answer-path::before { left: 1.5rem; right: auto; top: 12%; bottom: 12%; width: 1px; height: auto; }
-    .answer-path article { min-height: 5rem; margin-left: var(--sc-5); padding: var(--sc-3); }
-    .answer-path article:nth-child(2), .answer-path article:nth-child(3) { transform: none; }
-    .aeo-proof { min-height: 22rem; gap: var(--sc-3); }
-    .aeo-proof__metric strong { font-size: clamp(2.2rem, 12vw, 3.7rem); }
-    .aeo-controls { overflow-x: auto; padding-inline: var(--sc-2); }
-    .aeo-controls button { white-space: nowrap; padding-inline: var(--sc-2); }
-    #time { height: auto !important; }
-    #time > .sc-stage { position: relative; top: auto; height: auto; }
-    .time-shell { height: auto; grid-template-columns: 1fr; padding: 4.6rem var(--sc-gutter); gap: var(--sc-5); }
-    .time-copy h2 { font-size: clamp(2.3rem, 12vw, 4rem); }
-    .time-engine { min-height: 31rem; max-height: none; }
-    .time-axis { margin-left: 5rem; }
-    .time-lane { grid-template-columns: 5rem minmax(0, 1fr); gap: var(--sc-2); }
-    .time-lanes::after, .time-arrival, .time-returned { left: calc(5rem + var(--sc-2) + (100% - 5rem - var(--sc-2)) * var(--arrive)); }
-    .time-captions { min-height: 11rem; }
-    .time-controls { overflow-x: auto; padding-inline: var(--sc-2); }
-    .time-controls button { white-space: nowrap; padding-inline: var(--sc-2); }
-    #range { height: auto !important; }
-    #range > .sc-stage { position: relative; top: auto; height: auto; }
-    .range-shell { height: auto; grid-template-columns: 1fr; padding: 4.6rem var(--sc-gutter); gap: var(--sc-5); }
-    .range-engine { order: -1; min-height: 28rem; max-height: none; }
-    .range-copy h2 { font-size: clamp(2.3rem, 12vw, 4rem); }
-    .range-body { grid-template-columns: 1fr; }
-    .range-stack { display: none; }
-    .range-viewport { min-height: 16rem; }
-    .range-controls { flex-wrap: wrap; padding-inline: var(--sc-2); }
-    .range-controls button { padding-inline: var(--sc-2); }
-    .receipt { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-5); }
-    .receipt .sc-display--md { font-size: var(--sc-t-xl); }
-    .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sc-4); }
-    .figures dd { font-size: var(--sc-t-2xl); }
-    .receipt .sc-body { font-size: var(--sc-t-sm); }
-    .situation, .enable, .faq { grid-template-columns: 1fr; justify-items: center; }
-    .situation > *, .enable > *, .faq > * { width: min(100%, 46rem); }
-    .situation { text-align: center; }
-    .situation h2 { margin-inline: auto; }
-    .situation .name { border-left: 0; padding-left: 0; }
-    .situation .sc-body { margin-inline: auto; }
-    .enable h2, .faq > h2 { text-align: center; margin-inline: auto; }
-    .enable .cta, .benefits__head { justify-content: center; }
-    .time-copy, .aeo-copy, .range-copy { margin-inline: auto; text-align: center; }
-    .time-copy .sc-body, .aeo-copy .sc-body, .range-copy .sc-body { margin-inline: auto; }
-    .receipt { text-align: center; }
-    .receipt h2, .receipt .sc-body { margin-inline: auto; }
-    .proofbar li { align-items: center; text-align: center; }
-    .proofbar { grid-template-columns: 1fr 1fr; }
-    .spread { grid-template-columns: 1fr; min-height: 0; }
-    .spread img, .item img, .item video { height: 42vh; }
-    #iii { height: auto !important; }
-    #iii > .sc-stage {
-      position: relative; top: auto; height: auto; overflow: visible;
-    }
-    #iii .rail {
-      width: 100%; padding: var(--sc-section) var(--sc-gutter); gap: var(--sc-8);
-      display: grid; grid-template-columns: minmax(0, 1fr); transform: none !important;
-      will-change: auto;
-    }
-    .rail__lead { width: auto; }
-    .item { width: auto; }
-    .item figure { margin-bottom: var(--sc-4); }
-    .item img, .item video { height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
-    .item--range { padding: var(--sc-5); }
-    .note { width: auto; padding-bottom: 0; }
-    .benefits { padding: 4.2rem var(--sc-gutter) 4rem; gap: var(--sc-4); }
-    .benefits__head h2 { font-size: var(--sc-t-xl); }
-    .benefits__set { grid-template-columns: 1fr; gap: var(--sc-3); }
-    .benefits__set li { padding-top: var(--sc-3); }
-    .benefits__set strong { font-size: var(--sc-t-base); }
-    .benefits__set p { font-size: var(--sc-t-sm); }
-    .label { width: min(34ch, 86vw); }
-    [data-sc-stage] > .label, [data-sc-stage] > .label--trail { left: var(--sc-gutter); right: auto; bottom: 5.4rem; }
-    #film [data-sc-stage] > .label {
-      width: auto; max-width: calc(100vw - 2 * var(--sc-gutter)); bottom: var(--sc-4);
-      padding: var(--sc-3) var(--sc-4);
-    }
-    #film .label > .sc-label, #film .label > h2 { display: inline; }
-    #film .label > h2 { margin-left: var(--sc-2); font-size: var(--sc-t-base); }
-    .film-toggle { display: inline-flex; float: right; margin: 0 0 var(--sc-2) var(--sc-3); }
-    .film-details { clear: both; max-height: 36vh; overflow: auto; }
-    #film .film-details .sc-body { font-size: var(--sc-t-sm); }
-    .inquiry { padding: 4rem var(--sc-gutter) 2rem; }
-    .inquiry .label { padding: var(--sc-5); }
-    .inquiry h2 { font-size: var(--sc-t-xl); }
-    .foot, .site-foot {
-      position: static; inset: auto; justify-content: flex-start;
-      padding: 0.4rem var(--sc-gutter) 2.5rem;
-    }
-  }
-
-  @media (max-width: 360px) {
-    .proofbar { grid-template-columns: 1fr; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hero-backdrop__video { opacity: 0.56; }
-    .intent-demo { min-height: 0; }
-    .intent-demo__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
-    .intent-demo__state {
-      position: relative; inset: auto; padding: var(--sc-4); opacity: 1; visibility: visible; transform: none;
-      border: 1px solid var(--sc-hairline); transition: none;
-    }
-    .intent-demo__product { min-height: 24rem; }
-    .intent-demo__controls { display: none; }
-    .intent-demo[data-active-state="engineer"],
-    .intent-demo[data-active-state="build"] { min-height: 0; }
-    .intent-demo[data-active-state="engineer"] .intent-demo__viewport,
-    .intent-demo[data-active-state="build"] .intent-demo__viewport { min-height: 0; }
-    .context-stream, .build-brief { opacity: 1; transform: none; transition: none; }
-    .context-stream::after { transform: none; transition: none; }
-    .agent-track::before { animation: none !important; opacity: 0; }
-    .aeo-engine { min-height: 0; clip-path: none; }
-    .aeo-engine__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
-    .aeo-panel {
-      position: relative; inset: auto; padding: var(--sc-4); opacity: 1; visibility: visible; transform: none;
-      border: 1px solid var(--sc-hairline); transition: none;
-    }
-    .aeo-controls { display: none; }
-    .answer-path article:nth-child(2), .answer-path article:nth-child(3) { transform: none; }
-    .signal-rail span { transition: none; }
-    #time { height: auto !important; }
-    #time > .sc-stage { position: relative; top: auto; height: auto; }
-    .time-shell { height: auto; grid-template-rows: auto; }
-    .time-engine { min-height: 0; max-height: none; overflow: visible; clip-path: none; }
-    .time-captions { position: relative; inset: auto; display: grid; gap: var(--sc-4); padding: var(--sc-4); min-height: 0; }
-    .time-panel { position: relative; inset: auto; padding: var(--sc-4); opacity: 1; visibility: visible; transform: none; border: 1px solid var(--sc-hairline); transition: none; }
-    .time-controls { display: none; }
-    .time-lane__wait, .time-lane__bar, .time-lanes::after, .time-arrival, .time-returned { transition: none; }
-    #range { height: auto !important; }
-    #range > .sc-stage { position: relative; top: auto; height: auto; }
-    .range-shell { height: auto; grid-template-rows: auto; }
-    .range-engine { min-height: 0; max-height: none; overflow: visible; clip-path: none; }
-    .range-stack { display: none; }
-    .range-body { display: block; padding: var(--sc-4); }
-    .range-viewport { position: relative; min-height: 0; display: grid; gap: var(--sc-4); }
-    .range-panel {
-      position: relative; inset: auto; opacity: 1; visibility: visible; transform: none;
-      border: 1px solid var(--sc-hairline); padding: var(--sc-4); transition: none;
-    }
-    .range-controls { display: none; }
-  }
-
-  .site-nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 45; min-width: 0;
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    height: 3.25rem; padding: 0 var(--sc-gutter);
-    background: color-mix(in oklab, var(--sc-canvas) 92%, transparent);
-    border-bottom: 1px solid var(--sc-hairline);
-    font-family: var(--sc-font-mono); font-size: 0.75rem;
-    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  .site-nav__mark {
-    font-family: var(--sc-font-display); color: var(--sc-ink); text-decoration: none;
-    letter-spacing: 0.02em; text-transform: none; white-space: nowrap;
-  }
-  .site-nav__menu { display: none; align-items: center; }
-  .site-nav__toggle {
-    display: none; list-style: none; cursor: pointer;
-    min-height: 44px; min-width: 44px; align-items: center; justify-content: center;
-    padding: 0 0.75rem; border: 1px solid var(--sc-hairline); color: var(--sc-ink);
-  }
-  .site-nav__toggle::-webkit-details-marker { display: none; }
-  .site-nav__toggle:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 3px; }
-  .site-nav__links { display: flex; gap: 0.85rem; align-items: center; flex-wrap: nowrap; flex-shrink: 0; }
-  .site-nav__links a {
-    color: var(--sc-ink-soft); text-decoration: none; white-space: nowrap;
-    min-height: 44px; display: inline-flex; align-items: center;
-  }
-  .site-nav__links a:hover, .site-nav__links a:focus-visible { color: var(--sc-ink); }
-  .site-nav__links a.site-nav__cta {
-    color: #170804; background: var(--sc-accent); border: 1px solid var(--sc-accent);
-    border-radius: 10px; padding: 0 0.7rem;
-    transition: background-color 160ms var(--sc-ease-out), transform 160ms var(--sc-ease-out);
-  }
-  .site-nav__links a.site-nav__cta:hover,
-  .site-nav__links a.site-nav__cta:focus-visible { color: #170804; background: var(--sc-signal); }
-  .site-nav__links a.site-nav__cta:active { transform: translateY(1px); }
-  .skip {
-    position: absolute; left: 1rem; top: -4rem; z-index: 80;
-    background: var(--sc-accent); color: #170804; text-decoration: none;
-    padding: 0.6rem 0.9rem; border-radius: 10px; font-family: var(--sc-font-body);
-  }
-  .skip:focus { top: 0.6rem; }
-  @media (max-width: 900px) and (min-width: 768px) {
-    .site-nav { letter-spacing: 0.02em; gap: 0.6rem; }
-    .site-nav__links { gap: 0.4rem; }
-  }
-  @media (max-width: 767px) {
-    .site-nav__menu { display: flex; }
-    .site-nav__toggle { display: inline-flex; }
-    .site-nav__links { display: none; }
-    .site-nav__menu[open] ~ .site-nav__links {
-      display: flex; flex-direction: column; align-items: stretch;
-      position: absolute; top: 100%; right: 0; left: auto;
-      width: min(18rem, calc(100vw - 1.5rem)); max-width: 100%;
-      margin: 0; padding: 0.35rem 0.85rem 0.6rem; overflow: visible;
-      background: color-mix(in oklab, var(--sc-canvas) 96%, transparent);
-      border: 1px solid var(--sc-hairline); z-index: 2;
-    }
-  }
-  h1, h2, h3, .sc-display { text-wrap: balance; hyphens: auto; }
-  .sc-body, .time-panel p, .range-panel p, .aeo-panel p:not(.sc-label), .benefits__set p, .build-brief p {
-    color: var(--sc-ink); font-size: var(--sc-t-sm); max-width: 65ch; text-wrap: pretty;
-  }
-  .hero, .time-shell, .aeo-shell, .range-shell, .benefits, .inquiry { padding-top: 8.6rem; }
-  .benefits__set li ul { list-style: disc; margin: var(--sc-3) 0 0; padding-left: 1.2rem; }
-  .benefits__set li li { border-top: 0; padding-top: 0.2rem; color: var(--sc-ink); }
-  .models { padding: 4.5rem 0 2.5rem; }
-  .models__label {
-    font-family: var(--sc-font-display); font-size: 0.75rem; font-weight: 600;
-    letter-spacing: var(--sc-track-wide); text-transform: uppercase; color: var(--sc-optic);
-    margin: 0 auto 1.4rem; text-align: center;
-  }
-  .marquee {
-    --marquee-duration: 90s; overflow: hidden; margin-bottom: 0.85rem;
-    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-  }
-  .marquee:focus { outline: 1px solid var(--sc-optic); outline-offset: 4px; }
-  .marquee__track {
-    display: flex; width: max-content;
-    animation: models-marquee var(--marquee-duration) linear infinite;
-  }
-  .marquee--reverse .marquee__track { animation-direction: reverse; }
-  .marquee:hover .marquee__track, .marquee:focus-within .marquee__track { animation-play-state: paused; }
-  @keyframes models-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  .marquee__list {
-    display: flex; gap: 2.2rem; align-items: center; list-style: none;
-    margin: 0; padding: 0.7rem 1.1rem 0.7rem 0;
-  }
-  .marquee__list li {
-    display: inline-flex; align-items: center; gap: 0.55rem; color: #F5F0E8;
-    white-space: nowrap; font-family: var(--sc-font-display); font-size: 0.95rem;
-  }
-  .marquee__list img { width: 1.6rem; height: 1.6rem; display: block; object-fit: contain; }
-  .marquee__word { color: #F5F0E8; }
-  .marquee__word--light { color: #fff; }
-  .services { padding: 5rem 0 4rem; }
-  .services__kicker {
-    font-family: var(--sc-font-mono); font-size: 0.75rem; letter-spacing: var(--sc-track-wide);
-    text-transform: uppercase; color: var(--sc-optic); margin: 0 0 0.8rem; text-align: left;
-  }
-  .services .sc-display { text-align: left; margin-inline: 0; max-width: 18ch; }
-  .services__grid { list-style: none; margin: var(--sc-6) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-  .services__grid a {
-    display: block; min-height: 44px; padding: 0 0 1.15rem; text-decoration: none; color: inherit;
-    border: 1px solid var(--sc-hairline); border-radius: 12px; overflow: hidden;
-    background: color-mix(in oklab, var(--sc-surface) 72%, transparent);
-    transition: border-color 160ms var(--sc-ease-out), transform 160ms var(--sc-ease-out);
-  }
-  .services__grid a:hover, .services__grid a:focus-visible { border-color: var(--sc-accent); }
-  .services__grid picture { display: block; min-width: 0; margin: 0 0 0.9rem; overflow: hidden; }
-  .services__grid img {
-    width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; display: block;
-  }
-  .services__grid h3, .services__grid p, .services__tag { padding-inline: 1.15rem; }
-  .services__grid h3 { margin: 0 0 0.55rem; font-size: var(--sc-t-lg); text-wrap: balance; overflow-wrap: anywhere; }
-  .services__grid p { margin: 0 0 0.85rem; }
-  .services__tag {
-    margin: 0; color: var(--sc-optic); font-family: var(--sc-font-mono); font-size: 0.75rem;
-    letter-spacing: var(--sc-track-wide); text-transform: uppercase;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .services__grid a:hover { transform: translateY(-2px); }
-  }
-  @media (max-width: 860px) {
-    .services__grid { grid-template-columns: 1fr; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .cta a, .services__grid a, .site-nav__cta { transform: none; }
-    .marquee { mask-image: none; overflow: visible; }
-    .marquee__track { animation: none; flex-wrap: wrap; width: auto; }
-    .marquee__list[aria-hidden="true"] { display: none; }
-  }
-  /* pinned compiler stays one viewport so its controls stay clickable under both bars */
-  @media (min-width: 1101px) {
-    .compiler-shell { min-height: 0; }
-    .compiler-shell .intent-demo { min-height: 0; height: 100%; display: flex; flex-direction: column; }
-    .compiler-shell .intent-demo__viewport { flex: 1 1 auto; min-height: 0; height: auto; }
-  }
-</style>
-</head>
 <body>
-
 <!-- SITE-NAV -->
 <a class="skip" href="#top">Skip to content</a>
 <header class="site-nav">
@@ -1449,83 +278,74 @@
     <summary class="site-nav__toggle">Menu</summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <a href="/services/">Services</a>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#brief">Start a project</a>
+    <a class="site-nav__cta" href="/#start">Start a project</a>
   </nav>
 </header>
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
-    if (!menu) return;
+    var services = bar.querySelector(".site-nav__services");
     bar.addEventListener("click", function (event) {
-      if (event.target.closest("a")) menu.open = false;
+      if (!event.target.closest("a")) return;
+      if (menu) menu.open = false;
+      if (services) services.open = false;
+    });
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.querySelectorAll("video.loop-film").forEach(function (video) {
+      function stop() { video.pause(); }
+      if (reduce.matches) {
+        stop();
+        video.addEventListener("play", stop);
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (reduce.matches || !entry.isIntersecting) stop();
+          else video.play().catch(function () {});
+        });
+      }, { threshold: 0.35 });
+      observer.observe(video);
     });
   });
 </script>
 <!-- /SITE-NAV -->
-
-<div class="signal-rail" aria-hidden="true"><span></span></div>
-
-<nav class="index" aria-label="Page chapters">
-  <a class="index__home" href="#top">Abracadabra AI</a>
-  <a href="#i" data-index="i" aria-label="I — Compile"><span aria-hidden="true">I</span><span class="index__label">Compile</span></a>
-  <a href="#time" data-index="time" aria-label="II — Time"><span aria-hidden="true">II</span><span class="index__label">Time</span></a>
-  <a href="#range" data-index="range" aria-label="III — Range"><span aria-hidden="true">III</span><span class="index__label">Range</span></a>
-  <a href="#aeo" data-index="aeo" aria-label="IV — Answer"><span aria-hidden="true">IV</span><span class="index__label">Answer</span></a>
-  <a href="#iii" data-index="iii" aria-label="V — Proof"><span aria-hidden="true">V</span><span class="index__label">Proof</span></a>
-  <a href="#v" data-index="v" aria-label="VI — Build"><span aria-hidden="true">VI</span><span class="index__label">Build</span></a>
-  <a href="#brief" data-index="brief" aria-label="ST — Start"><span aria-hidden="true">ST</span><span class="index__label">Start</span></a>
-  <p class="index__current" aria-live="polite">I — Compile</p>
-</nav>
-
-<p class="utterance" data-utterance aria-hidden="true">
-  <span data-syl="i">A</span><span data-syl="ii">BRA</span><span data-syl="iii">CA</span><span data-syl="iv">DA</span><span data-syl="v">BRA</span>
-</p>
-
 <main id="top">
-
-  <!-- Act 1: the operation compiler -->
-  <section id="i" data-sc-act="flow" data-specimen="i" aria-labelledby="hero-title">
-    <div data-sc-stage>
-      <div class="hero-backdrop" aria-hidden="true">
-        <video class="hero-backdrop__video" autoplay muted loop playsinline preload="metadata">
-          <source src="assets/orbital-horizon.mp4" type="video/mp4">
-        </video>
-        <div class="hero-backdrop__scrim"></div>
-      </div>
-      <div class="hero">
-        <div class="hero__copy">
-          <p class="sc-label hero__eyebrow">Custom software</p>
-          <h1 id="hero-title">Custom software, built for how you work.</h1>
-          <div class="hero__support">
-            <p class="sc-lede">We design, build and run AI-powered tools that fit your business, not the other way around.</p>
-            <p class="cta">
-              <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Start%20a%20project">Start a project</a>
-              <a href="#iii">See what we've built</a>
-            </p>
-          </div>
-        </div>
-      </div>
+<section id="hero" class="hero" aria-labelledby="hero-title">
+  <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="assets/schema-home.webp">
+    <source src="assets/orbital-horizon.mp4" type="video/mp4">
+  </video>
+  <div class="hero__copy">
+    <p class="kicker">Custom software</p>
+    <h1 id="hero-title">Custom software, built for how you work.</h1>
+    <p class="lede">We design, build and run AI-powered tools that fit your business, not the other way around.</p>
+    <div class="hero__actions">
+      <a class="btn btn--primary" href="#start">Start a project</a>
+      <a class="btn" href="#services">See the work</a>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section id="compiler" data-sc-act="pin" data-sc-span="2.35" aria-labelledby="compiler-heading">
-    <div data-sc-stage>
+<section id="compiler" class="restored restored-pin" aria-labelledby="compiler-heading">
+    <div class="sc-stage">
       <div class="compiler-shell">
-        <div class="intent-demo compiler" data-active-state="describe" aria-label="How a business operation becomes working software">
+        <div class="intent-demo compiler" data-active-state="describe" aria-label="How your requirements become working software">
           <div class="intent-demo__chrome">
             <p class="sc-label" id="compiler-heading">Thought → working software</p>
             <p class="sc-label intent-demo__status" data-compiler-status aria-live="polite">Listening</p>
           </div>
           <div class="intent-demo__viewport">
             <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
-              <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Describe</p>
+              <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Requirements</p>
               <p class="intent-demo__quote">“A <mark>customer makes a request</mark>. The right person reviews it. If something is missing, it comes back. When it is complete, the customer gets the result.”</p>
-              <p class="intent-demo__reading">You describe the work in your own words, without a feature list and without software vocabulary.</p>
+              <p class="intent-demo__reading">Describe the work in your own words, without a feature list or software vocabulary.</p>
             </section>
             <section class="intent-demo__state" data-compiler-panel="engineer" aria-labelledby="compiler-engineer-title">
               <p class="sc-label intent-demo__phase" id="compiler-engineer-title">02 / Engineer intent and context</p>
@@ -1544,7 +364,7 @@
                 <div class="context-stream" data-context-stream="context">
                   <div class="context-stream__head">
                     <span data-stream-name>Context</span>
-                    <strong>How the business already works</strong>
+                    <strong>How you already work</strong>
                   </div>
                   <ul>
                     <li data-kind="People"><strong>Customer · reviewer · owner</strong></li>
@@ -1552,18 +372,18 @@
                     <li data-kind="Exceptions"><strong>Missing info comes back</strong></li>
                   </ul>
                 </div>
-                <div class="build-brief" data-build-brief>
+                <div class="build-plan" data-build-plan>
                   <span>Engineered build plan</span>
                   <strong>One precise model of the operation</strong>
-                  <p>Shared by every agent. Reviewed by people before anything is built.</p>
+                  <p>Every agent shares it, and you review it before anything is built.</p>
                 </div>
               </div>
-              <p class="intent-demo__reading">We write the job and the rules before anything is built, so every part of the build follows the same picture of your business.</p>
+              <p class="intent-demo__reading">The job and the rules are written first, so every part of the build follows the same picture of how you work.</p>
             </section>
             <section class="intent-demo__state" data-compiler-panel="build" aria-labelledby="compiler-build-title">
               <p class="sc-label intent-demo__phase" id="compiler-build-title">03 / Build in parallel</p>
               <div class="agent-orchestration" aria-label="Five coordinated AI agent workstreams build the system in parallel">
-                <div class="agent-brief">
+                <div class="agent-plan">
                   <span>Engineered plan</span>
                   <strong>Request → finished outcome</strong>
                 </div>
@@ -1599,17 +419,17 @@
                   <strong>One coordinated build</strong>
                 </div>
               </div>
-              <p class="intent-demo__reading">Five workstreams move together. We hold the intent and direct the decisions that shape what ships.</p>
+              <p class="intent-demo__reading">Five workstreams move together, and you direct every decision that shapes what ships.</p>
             </section>
             <section class="intent-demo__state intent-demo__product" data-compiler-panel="run" aria-labelledby="compiler-run-title">
               <div class="intent-demo__proof">
-                <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong>One real example: this site became Milrcorr.</strong></p>
+                <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong>See it live: Milrcorr runs on software built this way.</strong></p>
                 <p><a href="https://milrcorr.com">Open the live site</a></p>
               </div>
             </section>
           </div>
           <div class="intent-demo__controls" aria-label="Operation compiler states">
-            <button type="button" data-compiler-state="describe" aria-pressed="true">Describe</button>
+            <button type="button" data-compiler-state="describe" aria-pressed="true">Requirements</button>
             <button type="button" data-compiler-state="engineer" aria-pressed="false">Engineer</button>
             <button type="button" data-compiler-state="build" aria-pressed="false">Build</button>
             <button type="button" data-compiler-state="run" aria-pressed="false">Run it</button>
@@ -1620,164 +440,217 @@
     </div>
   </section>
 
-  <section id="name" class="sc-section" aria-labelledby="name-title">
-    <div class="sc-wrap">
-      <div class="origin" data-sc-in>
-        <p class="sc-label">The name</p>
-        <h2 id="name-title" class="sc-display sc-display--md">I will create as I speak.</h2>
-        <p class="sc-body">Abracadabra, traced back far enough, is Aramaic, roughly <em>avra kadavra</em>. It is not a spell. A description of the work becomes production software.</p>
+<section id="gantt" class="restored restored-pin restored-pin--gantt" aria-labelledby="gantt-title">
+  <div class="sc-stage">
+    <div class="time-shell">
+      <div class="time-copy">
+        <p class="sc-label">The build</p>
+        <h2 id="gantt-title">Every function, on one calendar.</h2>
+        <p class="sc-body">Each row is a function. The gaps are the wait. Run them together and the gaps close.</p>
       </div>
-    </div>
-  </section>
-
-  <!-- Act 2: the situation, the name, four live lines -->
-  <section class="sc-section" aria-labelledby="situation-title">
-    <div class="sc-wrap">
-      <div class="situation">
-        <div data-sc-in>
-          <h2 id="situation-title" class="sc-display sc-display--md">Most software asks the operation to adapt.</h2>
-          <p class="sc-body">The real process survives in inboxes, spreadsheets, and the exceptions experienced people remember.</p>
-          <p class="sc-body">We build the system around that process, so the steps you already trust become the product.</p>
+      <div class="time-engine" data-active-state="conventional" aria-label="Eight functions on one delivery calendar">
+        <div class="time-engine__chrome" aria-hidden="true">
+          <p class="sc-label">Function calendar / same scope</p>
+          <p class="sc-label time-engine__status" data-time-status>Serial calendar</p>
         </div>
-        <aside class="name" data-sc-in aria-label="The operating rule">
-          <p class="sc-label">The operating rule</p>
-          <p class="name__word">The software follows the operation.</p>
-          <p class="sc-body">AI removes a task. You keep the relationship. The moments that need a person stay visible.</p>
-        </aside>
+        <div class="time-track">
+          <div class="time-axis" aria-hidden="true">
+            <span class="sc-label">Kickoff</span>
+            <span class="sc-label">Conventional ship date</span>
+          </div>
+          <div class="time-lanes" role="list" aria-label="Business functions">
+            <div class="time-lane" role="listitem" data-time-phase="Search"><span class="sc-label">Search &amp; AI visibility</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Marketing"><span class="sc-label">Marketing</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Social"><span class="sc-label">Social media</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Sales"><span class="sc-label">Sales</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Service"><span class="sc-label">Customer service</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Operations"><span class="sc-label">Operations</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Design"><span class="sc-label">Design</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Platform"><span class="sc-label">Platform</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-arrival" aria-hidden="true"><span class="sc-label">Arrives</span></div>
+            <div class="time-returned" aria-hidden="true"><span class="sc-label">Time returned</span></div>
+          </div>
+        </div>
+        <div class="time-captions">
+          <section class="time-panel" data-time-panel="conventional" aria-labelledby="gantt-panel-conventional">
+            <h3 id="gantt-panel-conventional">Each function waits its turn</h3>
+            <p>The gaps are the wait.</p>
+          </section>
+          <section class="time-panel" data-time-panel="engineer" aria-labelledby="gantt-panel-engineer">
+            <h3 id="gantt-panel-engineer">Front-load the thinking</h3>
+            <p>The first functions share a start. The rest move up.</p>
+          </section>
+          <section class="time-panel" data-time-panel="parallel" aria-labelledby="gantt-panel-parallel">
+            <h3 id="gantt-panel-parallel">Run everything at once</h3>
+            <p>Search, marketing, social, sales, service, operations, design, and platform overlap.</p>
+          </section>
+          <section class="time-panel" data-time-panel="arrive" aria-labelledby="gantt-panel-arrive">
+            <h3 id="gantt-panel-arrive">Arrive before the due date</h3>
+            <p>The same work finishes early.</p>
+          </section>
+        </div>
+        <div class="time-controls" aria-label="Function calendar sequence">
+          <button type="button" data-time-state="conventional" aria-pressed="true">Conventional</button>
+          <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
+          <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
+          <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
+        </div>
       </div>
-      <ul class="proofbar" data-sc-in data-sc-stagger="70" aria-label="Work you can open">
-        <li><strong>Milrcorr</strong><span>Commercial fit-outs, with an estimate you can request.</span><a href="https://milrcorr.com">milrcorr.com</a></li>
-        <li><strong>StrongFoam</strong><span>The public site, with an estimate you can start.</span><a href="https://strongfoam.com/">strongfoam.com</a></li>
-        <li><strong>Schema</strong><span>Where answer engines cannot find the site.</span><a href="https://schema-two.vercel.app/">schema-two.vercel.app</a></li>
-        <li><strong>LLM Leverage</strong><span>Better answers from any model.</span><a href="https://llm-leverage-course.vercel.app">llm-leverage-course.vercel.app</a></li>
-      </ul>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Act 2: time travel — the delivery calendar compressing -->
-  <section id="time" data-sc-act="pin" data-sc-span="2.35" data-sc-drift="#0A0912" aria-labelledby="time-title">
-    <div data-sc-stage>
-      <div class="time-shell">
-        <div class="time-copy" data-sc-cue="0 0.96 0">
-    <p class="sc-label">Time travel</p>
+<section id="time" class="restored restored-pin" aria-labelledby="time-title">
+  <div class="sc-stage">
+    <div class="time-shell">
+      <div class="time-copy">
+        <p class="sc-label">Time travel</p>
         <h2 id="time-title">It feels like magic.</h2>
         <p class="sc-body">A conventional software calendar is mostly waiting: for the plan to be understood, for a handoff to land, before the next workstream can start. Remove the waiting and the calendar folds in on itself.</p>
         <p class="sc-body"><strong>There is no sleight of hand.</strong> The thinking is written into one engineered plan, and every downstream workstream runs at once. The work does not shrink. The gaps between the work disappear.</p>
+      </div>
+      <div class="time-engine" data-active-state="conventional" aria-label="How a software delivery calendar compresses">
+        <div class="time-engine__chrome" aria-hidden="true">
+          <p class="sc-label">Delivery calendar / same scope</p>
+          <p class="sc-label time-engine__status" data-time-status>Serial calendar</p>
         </div>
-        <div class="time-engine" data-active-state="conventional" aria-label="How Abracadabra compresses a software delivery calendar">
-          <div class="time-engine__chrome" aria-hidden="true">
-            <p class="sc-label">Delivery calendar / same scope</p>
-            <p class="sc-label time-engine__status" data-time-status>Serial calendar</p>
+        <div class="time-track">
+          <div class="time-axis" aria-hidden="true">
+            <span class="sc-label">Kickoff</span>
+            <span class="sc-label">Conventional ship date</span>
           </div>
-          <div class="time-track">
-            <div class="time-axis" aria-hidden="true">
-              <span class="sc-label">Kickoff</span>
-              <span class="sc-label">Conventional ship date</span>
-            </div>
-            <div class="time-lanes" role="list" aria-label="Delivery phases">
-              <div class="time-lane" role="listitem" data-time-phase="Discover"><span class="sc-label">Discover</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-              <div class="time-lane" role="listitem" data-time-phase="Specify"><span class="sc-label">Specify</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-              <div class="time-lane" role="listitem" data-time-phase="Design"><span class="sc-label">Design</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-              <div class="time-lane" role="listitem" data-time-phase="Build"><span class="sc-label">Build</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-              <div class="time-lane" role="listitem" data-time-phase="Test"><span class="sc-label">Test</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-              <div class="time-lane" role="listitem" data-time-phase="Release"><span class="sc-label">Release</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-              <div class="time-arrival" aria-hidden="true"><span class="sc-label">Arrives</span></div>
-              <div class="time-returned" aria-hidden="true"><span class="sc-label">Time returned</span></div>
-            </div>
+          <div class="time-lanes" role="list" aria-label="Delivery phases">
+            <div class="time-lane" role="listitem" data-time-phase="Discover"><span class="sc-label">Discover</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Specify"><span class="sc-label">Specify</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Design"><span class="sc-label">Design</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Build"><span class="sc-label">Build</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Test"><span class="sc-label">Test</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Release"><span class="sc-label">Release</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-arrival" aria-hidden="true"><span class="sc-label">Arrives</span></div>
+            <div class="time-returned" aria-hidden="true"><span class="sc-label">Time returned</span></div>
           </div>
-          <div class="time-captions">
-            <section class="time-panel" data-time-panel="conventional" aria-labelledby="time-panel-conventional">
-              <h3 id="time-panel-conventional">The serial calendar</h3>
-              <p>Each phase waits on a <strong>handoff</strong>.</p>
-            </section>
-            <section class="time-panel" data-time-panel="engineer" aria-labelledby="time-panel-engineer">
-              <h3 id="time-panel-engineer">Front-load the thinking</h3>
-              <p>Discovery and specification collapse into <strong>one engineered plan</strong>.</p>
-            </section>
-            <section class="time-panel" data-time-panel="parallel" aria-labelledby="time-panel-parallel">
-              <h3 id="time-panel-parallel">Run everything at once</h3>
-              <p><strong>Five workstreams</strong> move at once against the same plan.</p>
-            </section>
-            <section class="time-panel" data-time-panel="arrive" aria-labelledby="time-panel-arrive">
-              <h3 id="time-panel-arrive">Arrive before the due date</h3>
-              <p>The same scope ships early, and that <strong>feels like magic</strong>.</p>
-            </section>
-          </div>
-          <div class="time-controls" aria-label="Time travel sequence">
-            <button type="button" data-time-state="conventional" aria-pressed="true">Conventional</button>
-            <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
-            <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
-            <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
-          </div>
+        </div>
+        <div class="time-captions">
+          <section class="time-panel" data-time-panel="conventional" aria-labelledby="time-panel-conventional">
+            <h3 id="time-panel-conventional">The serial calendar</h3>
+            <p>Each phase waits on a <strong>handoff</strong>.</p>
+          </section>
+          <section class="time-panel" data-time-panel="engineer" aria-labelledby="time-panel-engineer">
+            <h3 id="time-panel-engineer">Front-load the thinking</h3>
+            <p>Discovery and specification collapse into <strong>one engineered plan</strong>.</p>
+          </section>
+          <section class="time-panel" data-time-panel="parallel" aria-labelledby="time-panel-parallel">
+            <h3 id="time-panel-parallel">Run everything at once</h3>
+            <p><strong>Every workstream</strong> moves at once against the same plan. Search, marketing, social, sales, service, operations, design, and platform can share that same calendar.</p>
+          </section>
+          <section class="time-panel" data-time-panel="arrive" aria-labelledby="time-panel-arrive">
+            <h3 id="time-panel-arrive">Arrive before the due date</h3>
+            <p>The same scope ships early, and that <strong>feels like magic</strong>.</p>
+          </section>
+        </div>
+        <div class="time-controls" aria-label="Time travel sequence">
+          <button type="button" data-time-state="conventional" aria-pressed="true">Conventional</button>
+          <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
+          <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
+          <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- The range: a menu of services, then the receipt -->
-  <section id="range" data-sc-act="pin" data-sc-span="2.6" data-sc-drift="#0C0B10" aria-labelledby="range-title">
-    <div data-sc-stage>
-      <div class="range-shell">
-        <div class="range-copy" data-sc-cue="0 0.96 0">
+<section id="name" class="restored sc-section" aria-labelledby="name-title">
+  <div class="sc-wrap">
+    <div class="origin">
+      <p class="sc-label">The name</p>
+      <h2 id="name-title" class="sc-display sc-display--md">I will create as I speak.</h2>
+      <p class="sc-body">Abracadabra, traced back far enough, is Aramaic, roughly <em>avra kadavra</em>. It is not a spell. A description of the work becomes production software.</p>
+    </div>
+  </div>
+</section>
+
+<section id="range" class="restored restored-pin restored-pin--range" aria-labelledby="range-title">
+  <div class="sc-stage">
+    <div class="range-shell">
+      <div class="range-copy">
+        <p class="sc-label">The menu</p>
+        <h2 id="range-title">Any job you can describe can be built.</h2>
+        <p class="sc-body">One service, or the whole menu. Each one is built around how you already work.</p>
+        <p class="sc-body">A job that can be described can be built.</p>
+        <p class="range-next"><a href="#models">The models are next</a></p>
+      </div>
+      <div class="range-engine" data-active-state="search" aria-label="Eight functions on the menu">
+        <canvas class="range-bg" aria-hidden="true" data-bg-state="search"></canvas>
+        <div class="range-engine__chrome">
           <p class="sc-label">The menu</p>
-          <h2 id="range-title">If you can describe the job, we can build it.</h2>
-          <p class="sc-body">One service, or the whole menu. Each one is built around how you already work.</p>
-          <p class="sc-body">A job that can be described can be built.</p>
-          <p class="range-next"><a href="#models">The models are next</a></p>
+          <p class="sc-label range-engine__status" data-range-status aria-live="polite">Show up in answers</p>
         </div>
-        <div class="range-engine" data-active-state="market" aria-label="The kinds of digital work Abracadabra builds.">
-          <canvas class="range-bg" aria-hidden="true" data-bg-state="market"></canvas>
-          <div class="range-engine__chrome">
-            <p class="sc-label">The menu</p>
-            <p class="sc-label range-engine__status" data-range-status aria-live="polite">Get the word out</p>
+        <div class="range-body">
+          <ol class="range-stack" aria-hidden="true">
+            <li data-range-ticket="search">Search &amp; AI visibility</li>
+            <li data-range-ticket="marketing">Marketing</li>
+            <li data-range-ticket="social">Social media</li>
+            <li data-range-ticket="sales">Sales</li>
+            <li data-range-ticket="service">Customer service</li>
+            <li data-range-ticket="operations">Operations</li>
+            <li data-range-ticket="design">Design</li>
+            <li data-range-ticket="platform">Platform</li>
+          </ol>
+          <div class="range-viewport">
+            <section class="range-panel" data-range-panel="search" aria-labelledby="range-panel-search">
+              <h3 id="range-panel-search"><a href="/services/ai-visibility/">Search &amp; AI visibility</a></h3>
+              <p>Show up when someone asks.</p>
+            </section>
+            <section class="range-panel" data-range-panel="marketing" aria-labelledby="range-panel-marketing">
+              <h3 id="range-panel-marketing"><a href="/services/ai-media/">Marketing</a></h3>
+              <p>On-brand media and research you can check.</p>
+            </section>
+            <section class="range-panel" data-range-panel="social" aria-labelledby="range-panel-social">
+              <h3 id="range-panel-social"><a href="/services/ai-media/">Social media</a></h3>
+              <p>Posts in your voice, ready to go out.</p>
+            </section>
+            <section class="range-panel" data-range-panel="sales" aria-labelledby="range-panel-sales">
+              <h3 id="range-panel-sales"><a href="/services/ai-assistants-and-agents/">Sales</a></h3>
+              <p>Keep the conversation, and finish the request.</p>
+            </section>
+            <section class="range-panel" data-range-panel="service" aria-labelledby="range-panel-service">
+              <h3 id="range-panel-service"><a href="/services/voice-and-realtime-agents/">Customer service</a></h3>
+              <p>Answer callers from your records, with a person when needed.</p>
+            </section>
+            <section class="range-panel" data-range-panel="operations" aria-labelledby="range-panel-operations">
+              <h3 id="range-panel-operations"><a href="/services/web-automation/">Operations</a></h3>
+              <p>The repeated steps run on their own.</p>
+            </section>
+            <section class="range-panel" data-range-panel="design" aria-labelledby="range-panel-design">
+              <h3 id="range-panel-design"><a href="/portfolio/">Design</a></h3>
+              <p>Screens that follow the way you work.</p>
+            </section>
+            <section class="range-panel" data-range-panel="platform" aria-labelledby="range-panel-platform">
+              <h3 id="range-panel-platform"><a href="/services/any-model-one-bill/">Platform</a></h3>
+              <p>One bill, and apps that grow.</p>
+            </section>
           </div>
-          <div class="range-body">
-            <ol class="range-stack" aria-hidden="true">
-              <li data-range-ticket="market">Marketing</li>
-              <li data-range-ticket="product">Applications</li>
-              <li data-range-ticket="model">Machine learning</li>
-              <li data-range-ticket="record">The record</li>
-              <li data-range-ticket="commerce">The sale</li>
-            </ol>
-            <div class="range-viewport">
-              <section class="range-panel" data-range-panel="market" aria-labelledby="range-panel-market">
-                <h3 id="range-panel-market">Marketing</h3>
-                <p>Campaigns, films, websites, and content, written in the words customers already use.</p>
-              </section>
-              <section class="range-panel" data-range-panel="product" aria-labelledby="range-panel-product">
-                <h3 id="range-panel-product">Applications</h3>
-                <p>Custom software for the steps you already run: web apps, mobile apps, internal tools, and portals.</p>
-              </section>
-              <section class="range-panel" data-range-panel="model" aria-labelledby="range-panel-model">
-                <h3 id="range-panel-model">Machine learning</h3>
-                <p>Models trained on your own data that predict, sort, and recommend, so a decision arrives with the evidence beside it.</p>
-              </section>
-              <section class="range-panel" data-range-panel="record" aria-labelledby="range-panel-record">
-                <h3 id="range-panel-record">The record</h3>
-                <p>A CRM or ERP built around the business: the pipeline, agreements, orders, inventory, and customer history in one place.</p>
-              </section>
-              <section class="range-panel" data-range-panel="commerce" aria-labelledby="range-panel-commerce">
-                <h3 id="range-panel-commerce">The sale</h3>
-                <p>Online stores and lead generation that answer a buyer's questions and move them to the next step.</p>
-              </section>
-            </div>
-          </div>
-          <div class="range-controls" aria-label="Digital range">
-            <button type="button" data-range-state="market" aria-pressed="true">Marketing</button>
-            <button type="button" data-range-state="product" aria-pressed="false">Applications</button>
-            <button type="button" data-range-state="model" aria-pressed="false">Machine learning</button>
-            <button type="button" data-range-state="record" aria-pressed="false">The record</button>
-            <button type="button" data-range-state="commerce" aria-pressed="false">The sale</button>
-          </div>
+        </div>
+        <div class="range-controls" aria-label="Function menu">
+          <button type="button" data-range-state="search" aria-pressed="true">Search</button>
+          <button type="button" data-range-state="marketing" aria-pressed="false">Marketing</button>
+          <button type="button" data-range-state="social" aria-pressed="false">Social</button>
+          <button type="button" data-range-state="sales" aria-pressed="false">Sales</button>
+          <button type="button" data-range-state="service" aria-pressed="false">Service</button>
+          <button type="button" data-range-state="operations" aria-pressed="false">Operations</button>
+          <button type="button" data-range-state="design" aria-pressed="false">Design</button>
+          <button type="button" data-range-state="platform" aria-pressed="false">Platform</button>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
 <!-- MODELS -->
 <section id="models" class="sc-section models" aria-labelledby="models-title">
     <div class="sc-wrap">
-      <h2 id="models-title" class="models__label">Every major model, one gateway</h2>
+      <p class="kicker">Models</p>
+      <h2 id="models-title" class="models__label">The models behind the work</h2>
       <div class="marquee" style="--marquee-duration: 90s" tabindex="0">
         <div class="marquee__track">
           <ul class="marquee__list"><li><img src="assets/logos/workers-ai.svg" alt="Workers AI" width="24" height="24"><span>Workers AI</span></li><li><img src="assets/logos/amazon-bedrock.svg" alt="Amazon Bedrock" width="24" height="24"><span>Amazon Bedrock</span></li><li><img src="assets/logos/anthropic.svg" alt="Anthropic" width="24" height="24"><span>Anthropic</span></li><li><img src="assets/logos/azure-openai.svg" alt="Azure OpenAI" width="24" height="24"><span>Azure OpenAI</span></li><li><img src="assets/logos/baseten.svg" alt="Baseten" width="24" height="24"><span>Baseten</span></li><li><img src="assets/logos/cartesia.svg" alt="Cartesia" width="24" height="24"><span>Cartesia</span></li><li><img src="assets/logos/cerebras.svg" alt="Cerebras" width="24" height="24"><span>Cerebras</span></li><li><img src="assets/logos/cohere.svg" alt="Cohere" width="24" height="24"><span>Cohere</span></li><li><img src="assets/logos/deepgram.svg" alt="Deepgram" width="24" height="24"><span>Deepgram</span></li><li><img src="assets/logos/deepseek.svg" alt="DeepSeek" width="24" height="24"><span>DeepSeek</span></li><li><img src="assets/logos/elevenlabs.svg" alt="ElevenLabs" width="24" height="24"><span>ElevenLabs</span></li><li><img src="assets/logos/fal.svg" alt="Fal AI" width="24" height="24"><span>Fal AI</span></li><li><img src="assets/logos/google-ai-studio.svg" alt="Google AI Studio" width="24" height="24"><span>Google AI Studio</span></li><li><img src="assets/logos/google-vertex-ai.svg" alt="Google Vertex AI" width="24" height="24"><span>Google Vertex AI</span></li><li><img src="assets/logos/groq.svg" alt="Groq" width="24" height="24"><span>Groq</span></li><li><img src="assets/logos/hugging-face.svg" alt="Hugging Face" width="24" height="24"><span>Hugging Face</span></li><li><img src="assets/logos/ideogram.svg" alt="Ideogram" width="24" height="24"><span>Ideogram</span></li><li><img src="assets/logos/mistral.svg" alt="Mistral AI" width="24" height="24"><span>Mistral AI</span></li><li><img src="assets/logos/openai.svg" alt="OpenAI" width="24" height="24"><span>OpenAI</span></li><li><img src="assets/logos/openrouter.svg" alt="OpenRouter" width="24" height="24"><span>OpenRouter</span></li><li><img src="assets/logos/parallel.svg" alt="Parallel" width="24" height="24"><span>Parallel</span></li><li><img src="assets/logos/perplexity.svg" alt="Perplexity" width="24" height="24"><span>Perplexity</span></li><li><img src="assets/logos/replicate.svg" alt="Replicate" width="24" height="24"><span>Replicate</span></li><li><img src="assets/logos/xai.svg" alt="xAI" width="24" height="24"><span>xAI</span></li></ul>
@@ -1794,820 +667,224 @@
   </section>
 <!-- /MODELS -->
 
-  <!-- Act 3: answer engine optimization as an observable system -->
-  <section id="aeo" data-sc-act="pin" data-sc-span="2.35" data-sc-drift="#071012" data-specimen="ii" aria-labelledby="aeo-title">
-    <div data-sc-stage>
-      <div class="aeo-shell">
-        <div class="aeo-copy" data-sc-cue="0 0.96 0">
-          <p class="sc-label">Answer Engine Optimization</p>
-          <h2 id="aeo-title">Be the answer AI can verify.</h2>
-          <p class="sc-body">Buyer questions become direct answers, with clear entities, structured data, and evidence an answer engine can check. The measurement follows.</p>
-          <p class="sc-body"><strong>AEO, GEO, and SEO. One discipline.</strong></p>
-          <p class="cta">
-            <a class="cta--primary" href="https://check.abra-ca-dabra.app/check">Run the Readiness Check</a>
-            <a href="https://schema-two.vercel.app/">Open Schema</a>
-          </p>
-        </div>
-        <div class="aeo-engine" data-active-state="question" aria-label="How a buyer question becomes a verifiable answer">
-          <div class="aeo-engine__chrome" aria-hidden="true">
-            <p class="sc-label">Answer surface / live model</p>
-            <p class="sc-label aeo-engine__status" data-aeo-status>Question mapped</p>
-          </div>
-          <div class="aeo-engine__viewport">
-            <section class="aeo-panel" data-aeo-panel="question" aria-labelledby="aeo-question-title">
-              <div class="aeo-prompt">
-                <p class="sc-label" id="aeo-question-title">01 / Map the question</p>
-                <blockquote>“Which pages can an answer engine find?”</blockquote>
-                <ul class="surface-list" aria-label="Answer surfaces buyers use">
-                  <li>AI Overviews</li>
-                  <li>ChatGPT</li>
-                  <li>Perplexity</li>
-                  <li>Claude</li>
-                  <li>Search</li>
-                </ul>
-              </div>
-            </section>
-            <section class="aeo-panel" data-aeo-panel="answer" aria-labelledby="aeo-answer-title">
-              <p class="sc-label" id="aeo-answer-title">02 / Build the answer</p>
-              <div class="answer-stack">
-                <article class="answer-block">
-                  <p class="sc-label">Direct answer</p>
-                  <p>Schema scores whether answer engines can find a site, and writes the fix.</p>
-                </article>
-                <article class="answer-asset"><span class="sc-label">Entity</span><strong>Schema / visibility check</strong></article>
-                <article class="answer-asset"><span class="sc-label">Evidence</span><strong>Live product, with the measured scan kept separate from the fix.</strong></article>
-                <article class="answer-asset"><span class="sc-label">Supporting detail</span><strong>Roles, actions, outputs</strong></article>
-              </div>
-            </section>
-            <section class="aeo-panel" data-aeo-panel="verify" aria-labelledby="aeo-verify-title">
-              <p class="sc-label" id="aeo-verify-title">03 / Make it verifiable</p>
-              <div class="answer-path">
-                <article><strong>Answer</strong><p>Clear response to one buyer question.</p></article>
-                <article><strong>Structure</strong><p>Every page tells an answer engine the same facts.</p></article>
-                <article><strong>Evidence</strong><p>Product, source, and dated proof sit beside the claim.</p></article>
-              </div>
-              <p class="intent-demo__reading">No guarantee of placement. Measured scan output stays separate from generated recommendations.</p>
-            </section>
-            <section class="aeo-panel" data-aeo-panel="measure" aria-labelledby="aeo-measure-title">
-              <p class="sc-label" id="aeo-measure-title">04 / Measure the surface</p>
-              <div class="aeo-proof">
-                <div class="aeo-proof__metric"><strong>375K</strong><span>search impressions, Jul 14 to Oct 13, 2026</span></div>
-                <div class="aeo-proof__metric"><strong>43.5K</strong><span>Generative AI feature impressions, a separate report</span></div>
-                <div class="aeo-proof__metric"><strong>1.85K</strong><span>clicks in the same window</span></div>
-                <div class="aeo-proof__metric"><strong>7.6</strong><span>average position</span></div>
-                <p class="aeo-proof__source">From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Source: Google Search Console, Jul 14 to Oct 13, 2026.</p>
-              </div>
-            </section>
-          </div>
-          <div class="aeo-controls" aria-label="Answer Engine Optimization sequence">
-            <button type="button" data-aeo-state="question" aria-pressed="true">Question</button>
-            <button type="button" data-aeo-state="answer" aria-pressed="false">Answer</button>
-            <button type="button" data-aeo-state="verify" aria-pressed="false">Verify</button>
-            <button type="button" data-aeo-state="measure" aria-pressed="false">Measure</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Act 4: the real AEO product -->
-  <section id="ii" class="sc-section" data-specimen="ii" aria-labelledby="ii-title">
-    <div class="sc-wrap spread">
-      <div class="label" data-sc-in>
-        <p class="sc-label">Specimen II</p>
-        <h2 id="ii-title" class="sc-display sc-display--md">Where answer engines cannot find the site.</h2>
-        <p class="sc-body">Schema shows the gap, then the repair plan. Measured scan output stays separate from generated recommendations, so the result never claims more than the scan observed.</p>
-        <dl>
-          <dt>Kind</dt><dd>AI-search visibility scorer</dd>
-          <dt>Output</dt><dd>Measured findings, then generated recommendations</dd>
-          <dt>Live</dt><dd><a href="https://schema-two.vercel.app/">schema-two.vercel.app</a></dd>
-        </dl>
-      </div>
-      <figure data-sc-reveal="left" data-sc-reveal-at="0.12 0.72">
-        <img src="assets/schema-home.webp" width="1600" height="1000" loading="lazy" decoding="async" alt="Schema home page: a URL field and an AI visibility check that scores how findable a site is to answer engines.">
-      </figure>
-    </div>
-  </section>
-
-  <!-- Act 5: selected work, walked sideways -->
-  <section id="iii" data-sc-act="pan" data-sc-span="1.7" data-sc-drift="#0B0A08" aria-labelledby="work-title">
-    <div data-sc-stage>
-      <div class="rail" data-sc-pan="0.06">
-        <div class="rail__lead sc-stack">
-          <p class="sc-label">Selected work</p>
-          <h2 id="work-title" class="sc-display sc-display--md">Work that can be opened.</h2>
-          <p class="sc-body">Each interface is live. Each one began as an operation that could be explained and could not be bought off the shelf.</p>
-        </div>
-        <article class="item" data-specimen="iii" id="obj-iii">
-          <figure>
-            <img src="assets/llmcourse-home.webp" width="1600" height="1000" loading="lazy" decoding="async" alt="LLM Leverage course home: a lesson preview and a rollout path.">
-          </figure>
-          <p class="sc-label">Course</p>
-          <h3 class="sc-display sc-display--md">LLM Leverage</h3>
-          <p class="sc-body"><strong>Better answers from any model.</strong> A self-paced course, with a workshop path you can run. Twelve modules, with the quiz gated at 75 percent.</p>
-          <p class="sc-body"><a href="https://llm-leverage-course.vercel.app/">llm-leverage-course.vercel.app</a></p>
-        </article>
-        <article class="item" data-specimen="iv" id="iv">
-          <p class="sc-label">Client site</p>
-          <h3 class="sc-display sc-display--md">Milrcorr</h3>
-          <p class="sc-body"><strong>See the work, then request an estimate.</strong> Milrcorr is the public site for StrongFoam's sister commercial fit-out work. A visitor can see office, retail, and hospitality fit-outs across Southwestern Ontario, and request an estimate.</p>
-          <p class="sc-body"><a href="https://milrcorr.com">milrcorr.com</a></p>
-        </article>
-        <article class="item">
-          <p class="sc-label">Client site</p>
-          <h3 class="sc-display sc-display--md">StrongFoam</h3>
-          <p class="sc-body"><strong>Start an estimate on the page.</strong> The StrongFoam website walks through the offer, an estimate a visitor can start, and a booking. The request stays with the visit.</p>
-          <p class="sc-body"><a href="https://strongfoam.com/">strongfoam.com</a></p>
-        </article>
-        <article class="item" id="superfunnel">
-          <figure>
-            <video controls playsinline preload="none" poster="assets/superfunnel-getting-started.webp" src="assets/films/superfunnel-getting-started.mp4" width="1920" height="1080"></video>
-          </figure>
-          <p class="sc-label">Super Funnel</p>
-          <h3 class="sc-display sc-display--md">Getting started</h3>
-          <p class="sc-body"><strong>One associate app, from the home dashboard.</strong> Setup, pipeline, and nav, in 66 seconds.</p>
-          <p class="sc-body"><a href="films.html">The rest of the tour</a></p>
-        </article>
-        <aside class="item item--range" aria-label="Range">
-          <p class="sc-lede">The same studio has shipped clinical-style assessments that educate and route without diagnosing, direct-sales floors, coaching agents, signed agreements, fraud review on live orders, and an AI-visibility program with a dated Search Console record.</p>
-          <p class="sc-body">That work is named when the client allows it. <strong>This page is a sample of what shipped, and the studio still takes the job that does not fit a catalog.</strong></p>
-        </aside>
-      </div>
-    </div>
-  </section>
-
 <!-- OFFERINGS -->
 <section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
-      <p class="services__kicker">Custom software</p>
-      <h2 id="services-title" class="sc-display sc-display--md">Software for how you work.</h2>
-      <ul class="services__grid"><li><a href="/services/ai-assistants-and-agents/"><picture>
-<source type="image/avif" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.avif 640w, /blog/media/services/ai-assistants-and-agents/hero-960.avif 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.webp 640w, /blog/media/services/ai-assistants-and-agents/hero-960.webp 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/ai-assistants-and-agents/hero.jpg" alt="Dark chat console with a customer thread, a reply field, and a checklist of next steps." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>AI assistants that actually get things done.</h3><p>Your assistant keeps the conversation, follows your rules, and finishes the request in the tools you already use.</p></a></li><li><a href="/services/answers-from-your-documents/"><picture>
-<source type="image/avif" srcset="/blog/media/services/answers-from-your-documents/hero-640.avif 640w, /blog/media/services/answers-from-your-documents/hero-960.avif 960w, /blog/media/services/answers-from-your-documents/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/answers-from-your-documents/hero-640.webp 640w, /blog/media/services/answers-from-your-documents/hero-960.webp 960w, /blog/media/services/answers-from-your-documents/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/answers-from-your-documents/hero.jpg" alt="Search panel with a question, an answer, and a cited page from a document stack." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Instant answers from your own documents.</h3><p>Ask in plain language. We answer from your files, and every answer carries the page it came from.</p></a></li><li><a href="/services/any-model-one-bill/"><picture>
-<source type="image/avif" srcset="/blog/media/services/any-model-one-bill/hero-640.avif 640w, /blog/media/services/any-model-one-bill/hero-960.avif 960w, /blog/media/services/any-model-one-bill/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/any-model-one-bill/hero-640.webp 640w, /blog/media/services/any-model-one-bill/hero-960.webp 960w, /blog/media/services/any-model-one-bill/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/any-model-one-bill/hero.jpg" alt="Model picker with several model names and one usage meter for the bill." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Every AI model. One bill.</h3><p>Each job uses the model that fits it. You get one gateway and one bill you can cap and stop.</p></a></li><li><a href="/services/voice-and-realtime-agents/"><picture>
-<source type="image/avif" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.avif 640w, /blog/media/services/voice-and-realtime-agents/hero-960.avif 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.webp 640w, /blog/media/services/voice-and-realtime-agents/hero-960.webp 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/voice-and-realtime-agents/hero.jpg" alt="Voice console with a live waveform, a transcript, and a hold-to-talk control." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>AI that answers your phone.</h3><p>Callers hear an answer from your records. When the call needs a person, we hand it over with a note of what was already said.</p></a></li><li><a href="/services/web-automation/"><picture>
-<source type="image/avif" srcset="/blog/media/services/web-automation/hero-640.avif 640w, /blog/media/services/web-automation/hero-960.avif 960w, /blog/media/services/web-automation/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/web-automation/hero-640.webp 640w, /blog/media/services/web-automation/hero-960.webp 960w, /blog/media/services/web-automation/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/web-automation/hero.jpg" alt="Browser window with a recorded step list and a highlighted control on the page." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Put repetitive web work on autopilot.</h3><p>The weekly browser job opens the same pages, collects the same numbers, and leaves a report you can open.</p></a></li><li><a href="/services/safe-code-execution/"><picture>
-<source type="image/avif" srcset="/blog/media/services/safe-code-execution/hero-640.avif 640w, /blog/media/services/safe-code-execution/hero-960.avif 960w, /blog/media/services/safe-code-execution/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/safe-code-execution/hero-640.webp 640w, /blog/media/services/safe-code-execution/hero-960.webp 960w, /blog/media/services/safe-code-execution/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/safe-code-execution/hero.jpg" alt="Sandbox window with a code pane, a run button, and an isolated output panel." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Let AI run code, safely.</h3><p>When your assistant needs to run a small program, it runs inside a sandbox. Time, files, and access are set before it starts.</p></a></li><li><a href="/services/custom-apps/"><picture>
-<source type="image/avif" srcset="/blog/media/services/custom-apps/hero-640.avif 640w, /blog/media/services/custom-apps/hero-960.avif 960w, /blog/media/services/custom-apps/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/custom-apps/hero-640.webp 640w, /blog/media/services/custom-apps/hero-960.webp 960w, /blog/media/services/custom-apps/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/custom-apps/hero.jpg" alt="App canvas with a sidebar, a main workspace, and a status strip." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Apps built around your workflow.</h3><p>We build the app around the way you already work, so the real job is the product.</p></a></li><li><a href="/services/ai-media/"><picture>
-<source type="image/avif" srcset="/blog/media/services/ai-media/hero-640.avif 640w, /blog/media/services/ai-media/hero-960.avif 960w, /blog/media/services/ai-media/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/ai-media/hero-640.webp 640w, /blog/media/services/ai-media/hero-960.webp 960w, /blog/media/services/ai-media/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/ai-media/hero.jpg" alt="Media board with a generated still, a timeline, and a prompt field." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>On-brand images, video and voice, on demand.</h3><p>We draft images, video, and voice from material you already have, and a named person clears each file before it goes public.</p></a></li><li><a href="/services/ai-visibility/"><picture>
+      <p class="kicker">Custom software</p>
+      <h2 id="services-title">Everything you need to put AI to work in your business.</h2>
+      <div class="fn-scroller"><ul class="fn-grid"><li class="fn-card" id="fn-search"><picture>
 <source type="image/avif" srcset="/blog/media/services/ai-visibility/hero-640.avif 640w, /blog/media/services/ai-visibility/hero-960.avif 960w, /blog/media/services/ai-visibility/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
 <source type="image/webp" srcset="/blog/media/services/ai-visibility/hero-640.webp 640w, /blog/media/services/ai-visibility/hero-960.webp 960w, /blog/media/services/ai-visibility/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
 <img src="/blog/media/services/ai-visibility/hero.jpg" alt="Visibility dashboard with a query, an answer preview, and a measure of where the page shows." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Get found in AI search.</h3><p>You decide which pages answer engines may read, and which crawlers stay out.</p></a></li><li><a href="/services/search-grounded-research/"><picture>
-<source type="image/avif" srcset="/blog/media/services/search-grounded-research/hero-640.avif 640w, /blog/media/services/search-grounded-research/hero-960.avif 960w, /blog/media/services/search-grounded-research/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/search-grounded-research/hero-640.webp 640w, /blog/media/services/search-grounded-research/hero-960.webp 960w, /blog/media/services/search-grounded-research/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<img src="/blog/media/services/search-grounded-research/hero.jpg" alt="Research desk with a question, source cards, and a grounded answer." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Research you can trust, with every source cited.</h3><p>A research answer carries the public pages under every claim, so you can open the source and check it.</p></a></li></ul>
+</picture><h3>Search &amp; AI visibility</h3><p>Show up when someone asks a search engine or an AI assistant for what you do.</p><p class="fn-card__proof">PiRX went from near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days.</p><ul class="fn-card__links"><li><a href="/services/ai-visibility/">Get found in AI search.</a></li></ul></li><li class="fn-card" id="fn-marketing"><picture>
+<source type="image/avif" srcset="/blog/media/services/ai-media/hero-640.avif 640w, /blog/media/services/ai-media/hero-960.avif 960w, /blog/media/services/ai-media/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/ai-media/hero-640.webp 640w, /blog/media/services/ai-media/hero-960.webp 960w, /blog/media/services/ai-media/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<img src="/blog/media/services/ai-media/hero.jpg" alt="Media board with a generated still, a timeline, and a prompt field." width="1280" height="720" loading="lazy" decoding="async">
+</picture><h3>Marketing</h3><p>Ship on-brand images, video, and voice, and research you can open and check.</p><ul class="fn-card__links"><li><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a></li><li><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></li></ul></li><li class="fn-card" id="fn-sales"><picture>
+<source type="image/avif" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.avif 640w, /blog/media/services/ai-assistants-and-agents/hero-960.avif 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.webp 640w, /blog/media/services/ai-assistants-and-agents/hero-960.webp 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<img src="/blog/media/services/ai-assistants-and-agents/hero.jpg" alt="Dark chat console with a customer thread, a reply field, and a checklist of next steps." width="1280" height="720" loading="lazy" decoding="async">
+</picture><h3>Sales</h3><p>An assistant that keeps the conversation and finishes the request in the tools you already use.</p><ul class="fn-card__links"><li><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></li></ul></li><li class="fn-card" id="fn-service"><picture>
+<source type="image/avif" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.avif 640w, /blog/media/services/voice-and-realtime-agents/hero-960.avif 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.webp 640w, /blog/media/services/voice-and-realtime-agents/hero-960.webp 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<img src="/blog/media/services/voice-and-realtime-agents/hero.jpg" alt="Voice console with a live waveform, a transcript, and a hold-to-talk control." width="1280" height="720" loading="lazy" decoding="async">
+</picture><h3>Customer service</h3><p>Callers get an answer from your records, and a person when the call needs one.</p><ul class="fn-card__links"><li><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></li></ul></li><li class="fn-card" id="fn-operations"><picture>
+<source type="image/avif" srcset="/blog/media/services/web-automation/hero-640.avif 640w, /blog/media/services/web-automation/hero-960.avif 960w, /blog/media/services/web-automation/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/web-automation/hero-640.webp 640w, /blog/media/services/web-automation/hero-960.webp 960w, /blog/media/services/web-automation/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<img src="/blog/media/services/web-automation/hero.jpg" alt="Browser window with a recorded step list and a highlighted control on the page." width="1280" height="720" loading="lazy" decoding="async">
+</picture><h3>Operations</h3><p>Turn the way you already work into software, answers from your files, and web jobs that run themselves.</p><ul class="fn-card__links"><li><a href="/services/web-automation/">Put repetitive web work on autopilot.</a></li><li><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a></li><li><a href="/services/custom-apps/">Apps built around your workflow.</a></li></ul></li><li class="fn-card" id="fn-design"><img src="/assets/og/portfolio-strongfoam-website.png" alt="StrongFoam website" width="1200" height="630" loading="lazy" decoding="async"><h3>Design</h3><p>Sites and product pages shaped around the work, already live for StrongFoam, Milrcorr, and pirx.ca.</p><ul class="fn-card__links"><li><a href="/portfolio/strongfoam-website/">StrongFoam</a></li><li><a href="/portfolio/milrcorr/">Milrcorr</a></li><li><a href="/portfolio/pirx/">pirx.ca</a></li></ul></li><li class="fn-card" id="fn-platform"><picture>
+<source type="image/avif" srcset="/blog/media/services/any-model-one-bill/hero-640.avif 640w, /blog/media/services/any-model-one-bill/hero-960.avif 960w, /blog/media/services/any-model-one-bill/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/any-model-one-bill/hero-640.webp 640w, /blog/media/services/any-model-one-bill/hero-960.webp 960w, /blog/media/services/any-model-one-bill/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+<img src="/blog/media/services/any-model-one-bill/hero.jpg" alt="Model picker with several model names and one usage meter for the bill." width="1280" height="720" loading="lazy" decoding="async">
+</picture><h3>Platform</h3><p>Use the best model for every job, on one bill, and let code run only inside the limits you set.</p><ul class="fn-card__links"><li><a href="/services/any-model-one-bill/">Every AI model. One bill.</a></li><li><a href="/services/safe-code-execution/">Let AI run code, safely.</a></li></ul></li></ul></div>
     </div>
   </section>
 <!-- /OFFERINGS -->
 
-  <!-- Act 6: what changes when the software fits -->
-  <section id="benefits" data-sc-act="pin" data-sc-span="2.0" data-sc-drift="#0E0C0A" aria-labelledby="benefits-title">
-    <div data-sc-stage>
-      <div class="benefits">
-        <div class="benefits__head" data-sc-cue="0 1 0 0">
-          <h2 id="benefits-title" class="sc-display sc-display--md">What you get when the software fits.</h2>
-          <p class="cta"><a class="cta--primary" href="mailto:dev@pirx.ca?subject=Start%20a%20project">Start a project</a></p>
-        </div>
-        <ol class="benefits__set" data-sc-cue="0 0.5 0">
-          <li><strong>The experts stay on the work only they can do.</strong><p>Customers and new hires get a grounded answer from your product, plan, and records, on text or voice, at any hour.</p></li>
-          <li><strong>The standard travels with the sale.</strong><p>The talk track, the booking, the pipeline, and a coach on the real book of business let a new person in a new city sell to the same standard.</p></li>
-          <li><strong>Interest arrives with a reason attached.</strong><p>A personal result, the customer's language, a named specialist, a next step, and a cart sit on the same path.</p></li>
-          <li><strong>The next move is visible in time to make it.</strong>
-            <ul>
-              <li>what a person can do</li>
-              <li>what a rate will do</li>
-              <li>which conversation is ready to buy</li>
-              <li>whether an answer engine can find the site</li>
-            </ul>
-          </li>
-        </ol>
-        <ol class="benefits__set" data-sc-cue="0.5 1 0.3 0" start="5">
-          <li><strong>A new market is a production run.</strong><p>Channel, language, and creative come from a system that already knows the claims you allow.</p></li>
-          <li><strong>The first yes happens on the screen.</strong><p>Fit, price, booking, and trust are settled before anyone makes the trip.</p></li>
-          <li><strong>The capability stays with you.</strong><p>Answers, agreements, content, and the customer record stay on your side.</p></li>
-          <li><strong>A complicated job still gets a system.</strong><p>We write the job down before any code is written. That is how we take the request other shops pass on.</p></li>
-        </ol>
+<section id="showcase" class="showcase" aria-labelledby="showcase-title">
+  <div class="wrap">
+    <p class="kicker">Work</p>
+    <h2 id="showcase-title">Work that's already running.</h2>
+    <div class="tablist" role="tablist" aria-label="Work">
+      <button type="button" role="tab" id="tab-sell" aria-selected="true" aria-controls="panel-sell">Sell</button>
+      <button type="button" role="tab" id="tab-operate" aria-selected="false" aria-controls="panel-operate">Operate</button>
+      <button type="button" role="tab" id="tab-build" aria-selected="false" aria-controls="panel-build">Build</button>
+      <button type="button" role="tab" id="tab-find" aria-selected="false" aria-controls="panel-find">Find</button>
+      <button type="button" role="tab" id="tab-teach" aria-selected="false" aria-controls="panel-teach">Teach</button>
+    </div>
+    <div id="panel-sell" class="tab-panel" role="tabpanel" aria-labelledby="tab-sell">
+      <p class="kicker">Sell</p>
+      <h3>Super Funnel</h3>
+      <video controls playsinline preload="none" poster="assets/superfunnel-getting-started.webp" src="assets/films/superfunnel-getting-started.mp4"></video>
+      <p><a href="films.html">Super Funnel</a></p>
+    </div>
+    <div id="panel-operate" class="tab-panel" role="tabpanel" aria-labelledby="tab-operate" hidden>
+      <p class="kicker">Operate</p>
+      <h3>StrongFoam</h3>
+      <video class="loop-film" muted playsinline loop preload="none" poster="assets/video/strongfoam-loop.jpg" width="1280" height="720" aria-label="StrongFoam website"><source src="assets/video/strongfoam-loop.webm" type="video/webm"><source src="assets/video/strongfoam-loop.mp4" type="video/mp4"></video>
+      <p><a href="/portfolio/strongfoam-website/">StrongFoam website</a></p>
+    </div>
+    <div id="panel-build" class="tab-panel" role="tabpanel" aria-labelledby="tab-build" hidden>
+      <p class="kicker">Build</p>
+      <h3>Milrcorr</h3>
+      <video class="loop-film" muted playsinline loop preload="none" poster="assets/video/milrcorr-loop.jpg" width="1280" height="720" aria-label="Milrcorr website"><source src="assets/video/milrcorr-loop.webm" type="video/webm"><source src="assets/video/milrcorr-loop.mp4" type="video/mp4"></video>
+      <p><a href="/portfolio/milrcorr/">Milrcorr</a></p>
+    </div>
+    <div id="panel-find" class="tab-panel" role="tabpanel" aria-labelledby="tab-find" hidden>
+      <p class="kicker">Find</p>
+      <h3>pirx.ca</h3>
+      <div class="shot-row">
+        <img src="assets/pirx/pirx-home-hero-desktop.jpg" alt="pirx.ca home page" width="1440" height="900" loading="lazy" decoding="async">
+        <img src="assets/pirx/pirx-accuracy-full-desktop.jpg" alt="pirx.ca accuracy page" width="1440" height="900" loading="lazy" decoding="async">
       </div>
     </div>
-  </section>
-
-  <!-- Act 7: the empty plinth, authored silence -->
-  <section class="sc-section plinth" aria-label="An empty plinth">
-    <div class="sc-wrap plinth" data-sc-in>
-      <div class="plinth__box">
-        <p class="sc-label">Reserved. The next one is the system you already run.</p>
-      </div>
+    <div id="panel-teach" class="tab-panel" role="tabpanel" aria-labelledby="tab-teach" hidden>
+      <p class="kicker">Teach</p>
+      <h3>LLM Leverage</h3>
+      <video controls playsinline preload="none" poster="assets/llmcourse-home.webp" src="assets/films/llmcourse-home-lesson.mp4"></video>
+      <p><a href="/course/llm-leverage/">Learn to get real work done with AI.</a></p>
     </div>
-  </section>
+  </div>
+</section>
 
-  </section>
+<section id="models-band" class="band" aria-labelledby="models-band-title">
+  <div class="wrap">
+    <p class="kicker">Models</p>
+    <h2 id="models-band-title">Every AI model. One bill.</h2>
+    <p>Use the model that fits the job. The invoice stays one.</p>
+    <p><a href="/services/any-model-one-bill/">Every AI model. One bill.</a></p>
+  </div>
+</section>
 
-  <!-- Act 9: specimen V, the three moves, the deliverable, the questions -->
-  <section id="v" class="sc-section" data-specimen="v" aria-labelledby="v-title">
-    <div class="sc-wrap">
-      <div class="enable">
-        <div class="label" data-sc-in>
-          <p class="sc-label">How it leaves the room</p>
-          <h2 id="v-title" class="sc-display sc-display--md">How a project works.</h2>
-          <p class="sc-body">Every system on this page left the room the same way: a live system, a film cut from the real screens, and the words you use to show it.</p>
-          <dl>
-            <dt>Kind</dt><dd>The delivery</dd>
-            <dt>Contains</dt><dd>The live system, the film, and the words, for each system</dd>
-            <dt>Rule</dt><dd>Same footage, same claims, no invented numbers</dd>
-          </dl>
-        </div>
-        <div data-sc-in data-sc-stagger="70">
-          <ol>
-            <li><strong>You describe the work.</strong><p class="sc-body">The steps, the exceptions, and the sentence a good rep already says, however complicated the work actually is.</p></li>
-            <li><strong>We build the software around those steps.</strong><p class="sc-body">The intent and the context become the prompts and the architecture. AI removes a task, and a person stays where the relationship matters.</p></li>
-            <li><strong>You leave with a live system, a film, and the words.</strong><p class="sc-body">You can demo it without us in the room.</p></li>
-          </ol>
-          <p class="cta"><a class="cta--primary" href="mailto:dev@pirx.ca?subject=Start%20a%20project">Start a project</a></p>
-        </div>
-      </div>
+<section id="proof" aria-labelledby="proof-title">
+  <div class="wrap">
+    <p class="kicker">Search &amp; AI visibility</p>
+    <h2 id="proof-title">Get found in AI search.</h2>
+    <p>PiRX went from near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days.</p>
+    <p class="fine">Google Search Console, Jul 14 to Oct 13, 2026. The AI-feature count is separate and is not added to the search total.</p>
+    <p>Search engines, answer engines, and generative engines are three ways someone looks you up. The work is the same: the page that should answer is the one they can read.</p>
+    <p><a href="/services/ai-visibility/">Get found in AI search.</a></p>
+  </div>
+</section>
 
-      <div class="faq" data-sc-in>
-        <h2 class="sc-display sc-display--md">FAQ</h2>
-        <div class="faq__list">
-          <details>
-            <summary>What does Abracadabra AI build?</summary>
-            <p class="sc-body">We design, build and run AI-powered tools that fit your business. AI takes a task. You keep the relationship. You leave with the live system, a film of the screens, and the words you use to show it. Shipped examples include Milrcorr, the StrongFoam website, Schema, LLM Leverage, and an associate app shown here as the Getting started film (Super Funnel).</p>
-          </details>
-          <details>
-            <summary>Do you only build software?</summary>
-            <p class="sc-body">No. Marketing, the application, the model, the customer record, and the work that gets you found ship with the product, fitted to how you already work. Public examples on this page include Milrcorr, StrongFoam, Schema, LLM Leverage, Super Funnel, and PIRX. Other work is named when you allow it.</p>
-          </details>
-          <details>
-            <summary>What does the name Abracadabra mean?</summary>
-            <p class="sc-body">Traced back far enough, Abracadabra is Aramaic, roughly <em>avra kadavra</em>: I will create as I speak. The steps, the exceptions, and the words you already use become a running system. The creation is production software, not a mockup.</p>
-          </details>
-          <details>
-            <summary>What is the proof behind from zero to scale?</summary>
-            <p class="sc-body">From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026, recorded 375K search impressions, 1.85K clicks, and an average position of 7.6 for pirx.ca. The Generative AI features report is a separate count of 43.5K impressions and is not added to the search total. Both curves start near zero in mid-July.</p>
-          </details>
-          <details>
-            <summary>How does a project work?</summary>
-            <p class="sc-body">You tell us the steps, the exceptions, and the sentence a good rep already says. We build the software around those steps, with AI where it removes a task and a person where the relationship matters. You leave with the live system, the film, and the script, and you can demo it without us in the room.</p>
-          </details>
-          <details>
-            <summary>Who is Abracadabra AI for?</summary>
-            <p class="sc-body">Your business, when the way you work does not fit a product you can buy. You already have customers and a way of working no off-the-shelf product was drawn for. Or you are replacing a pile of tools that each hold a piece of the customer. Or you need the product and the way you sell, in the same delivery. Or the job is too specific for a catalog, and we take it.</p>
-          </details>
-          <details>
-            <summary>What if a product I can buy already does the job?</summary>
-            <p class="sc-body">Buy it. When it does not fit, we build the one that does.</p>
-          </details>
-          <details>
-            <summary>Are the wellness assessments you build diagnostic?</summary>
-            <p class="sc-body">No. The clinical-style assessments we have shipped are non-diagnostic. They educate and route a person to a next step. They do not diagnose.</p>
-          </details>
-          <details>
-            <summary>How do I know if my business is ready to put AI to work?</summary>
-            <p class="sc-body">Take the Readiness Check. It shows where the work slows down: whether the data, the workflow, the owner, and the decision can support real work, and how visible the public site is to answer engines. Five to seven minutes, then a thirty-minute working session if you want one. <a href="https://check.abra-ca-dabra.app/check">Start at check.abra-ca-dabra.app/check</a>.</p>
-          </details>
-        </div>
-      </div>
+<section id="notes" class="notes" aria-labelledby="notes-title">
+  <div class="wrap">
+    <p class="kicker">Notes</p>
+    <h2 id="notes-title">Notes on putting AI to work.</h2>
+    <ul class="note-grid">
+      <li><a href="/blog/ai-agents-for-business">AI Agents for Business: When to Use One</a></li>
+      <li><a href="/blog/ai-agents-vs-agentic-ai">AI Agents vs Agentic AI: A Plain Split</a></li>
+      <li><a href="/blog/ai-automation-agency-vs-consultant">AI Automation Agency vs Consultant: Who to Hire</a></li>
+      <li><a href="/blog/ai-automation-for-small-business">AI Automation for Small Business: Which Job First</a></li>
+    </ul>
+  </div>
+</section>
+
+<section id="cloudflare" class="cloudflare" aria-labelledby="cloudflare-title">
+  <div class="wrap">
+    <div class="cloudflare__mark">
+      <img class="cloudflare__logo" src="assets/logos/cloudflare.svg" alt="Cloudflare" width="218" height="81">
     </div>
-  </section>
+    <h2 id="cloudflare-title">Apps that scale, proudly built with Cloudflare.</h2>
+    <p>They grow with your business, from the first user to millions, without a rebuild, and stay fast, secure, and available wherever your customers are.</p>
+  </div>
+</section>
 
-  <!-- Act 10: the brief, the last label in the room -->
-  <section id="brief" data-sc-act="pin" data-sc-span="1.3" data-sc-drift="#0B0A08" aria-labelledby="brief-title">
-    <div data-sc-stage>
-      <div class="inquiry">
-        <div class="label">
-          <p class="sc-label">The project</p>
-          <h2 id="brief-title">Start a project</h2>
-          <p class="sc-body">Tell us the steps, the exceptions, and the result. We reply with the system, or with a product you can buy that already fits.</p>
-          <dl>
-            <dt>Bring</dt><dd>One job, in your own words</dd>
-            <dt>Leave</dt><dd>A clear system shape and the next decision</dd>
-            <dt>Write</dt><dd><a href="mailto:dev@pirx.ca?subject=Start%20a%20project">dev@pirx.ca</a></dd>
-          </dl>
-          <p class="cta">
-            <a class="cta--primary" href="mailto:dev@pirx.ca?subject=Start%20a%20project">Start a project</a>
-            <a href="walkthrough.html">See what we've built</a>
-          </p>
-        </div>
-      </div>
+<section id="faq" class="faq" aria-labelledby="faq-title">
+  <div class="wrap">
+    <h2 id="faq-title">Questions</h2>
+    <details>
+      <summary>What does Abracadabra AI build?</summary>
+      <p>We design, build and run AI-powered tools that fit your business. AI takes a task. You keep the relationship. You leave with the live system, a film of the screens, and the words you use to show it. Shipped examples include Milrcorr, the StrongFoam website, Schema, LLM Leverage, and an associate app shown here as the Getting started film (Super Funnel).</p>
+    </details>
+    <details>
+      <summary>Do you only build software?</summary>
+      <p>No. Marketing, the application, the model, the customer record, and the work that gets you found ship with the product, fitted to how you already work. Public examples on this page include Milrcorr, StrongFoam, Schema, LLM Leverage, Super Funnel, and PIRX. Other work is named when you allow it.</p>
+    </details>
+    <details>
+      <summary>What does the name Abracadabra mean?</summary>
+      <p>Traced back far enough, Abracadabra is Aramaic, roughly avra kadavra: I will create as I speak. The steps, the exceptions, and the words you already use become a running system. The creation is production software, not a mockup.</p>
+    </details>
+    <details>
+      <summary>What is the proof behind from zero to scale?</summary>
+      <p>From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026, recorded 375K search impressions, 1.85K clicks, and an average position of 7.6 for pirx.ca. The Generative AI features report is a separate count of 43.5K impressions and is not added to the search total. Both curves start near zero in mid-July.</p>
+    </details>
+    <details>
+      <summary>How does a project work?</summary>
+      <p>You tell us the steps, the exceptions, and the sentence a good rep already says. We build the software around those steps, with AI where it removes a task and a person where the relationship matters. You leave with the live system, the film, and the script, and you can demo it without us in the room.</p>
+    </details>
+    <details>
+      <summary>Who is Abracadabra AI for?</summary>
+      <p>Your business, when the way you work does not fit a product you can buy. You already have customers and a way of working no off-the-shelf product was drawn for. Or you are replacing a pile of tools that each hold a piece of the customer. Or you need the product and the way you sell, in the same delivery. Or the job is too specific for a catalog, and we take it.</p>
+    </details>
+    <details>
+      <summary>What if a product I can buy already does the job?</summary>
+      <p>Buy it. When it does not fit, we build the one that does.</p>
+    </details>
+    <details>
+      <summary>Are the wellness assessments you build diagnostic?</summary>
+      <p>No. The clinical-style assessments we have shipped are non-diagnostic. They educate and route a person to a next step. They do not diagnose.</p>
+    </details>
+    <details>
+      <summary>How do I know if my business is ready to put AI to work?</summary>
+      <p>Take the Readiness Check at https://check.abra-ca-dabra.app/check. It shows where the work slows down: whether the data, the workflow, the owner, and the decision can support real work, and how visible the public site is to answer engines. Five to seven minutes, then a thirty-minute working session if you want one.</p>
+    </details>
+  </div>
+</section>
+
+<section id="start" class="start" aria-labelledby="start-title">
+  <div class="wrap">
+    <p class="kicker">Start</p>
+    <h2 id="start-title">Start a project</h2>
+    <p>Tell us the steps, the exceptions, and the sentence a good rep already says. We build the software around that.</p>
+    <p><a class="btn btn--primary" href="mailto:dev@pirx.ca">dev@pirx.ca</a></p>
+  </div>
+</section>
+</main>
 <!-- SITE-FOOT -->
 <footer class="site-foot">
-  <p class="site-foot__brand">Abracadabra AI</p>
+  <p class="site-foot__word">Abracadabra</p>
   <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/#search">Search &amp; AI visibility</a>
+    <a href="/services/#marketing">Marketing</a>
+    <a href="/services/#sales">Sales</a>
+    <a href="/services/#service">Customer service</a>
+    <a href="/services/#operations">Operations</a>
+    <a href="/portfolio/">Design</a>
+    <a href="/services/#platform">Platform</a>
     <a href="/services/">Services</a>
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#brief">Start a project</a>
+    <a href="/#start">Start a project</a>
     <a href="/privacy">Privacy</a>
   </nav>
 </footer>
 <!-- /SITE-FOOT -->
-    </div>
-  </section>
-
-</main>
-
-<script src="scrollcraft.js"></script>
 <script>
-  // A cold visit to a chapter hash must land on that chapter. The stylesheet
-  // glides with scroll-behavior:smooth, and the range pin makes that glide
-  // long enough that the target is still below the fold when the document is
-  // ready. Hold an instant scroll until load, then return the glide to
-  // in-page links.
-  function placeHash() {
-    var id = location.hash.slice(1);
-    if (!id) return;
-    var target = document.getElementById(id);
-    if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
-  }
-  if (location.hash) document.documentElement.style.scrollBehavior = 'auto';
-
-  // small screens unpin the staged sections; reduced motion also unpins the
-  // time engine so its stacked panels are never clipped by a fixed-height stage
-  var flowIds = matchMedia('(max-width: 1100px)').matches
-    ? ['i', 'compiler', 'time', 'range', 'aeo', 'iii', 'benefits', 'brief']
-    : (matchMedia('(prefers-reduced-motion: reduce)').matches ? ['time', 'range'] : []);
-  flowIds.forEach(function (id) {
-    var section = document.getElementById(id);
-    if (section) section.setAttribute('data-sc-act', 'flow');
-  });
-  ScrollCraft.mount(document.body);
-  placeHash();
-  if (location.hash) {
-    addEventListener('load', function () {
-      placeHash();
-      document.documentElement.style.scrollBehavior = '';
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) {
+    document.querySelectorAll("video").forEach(function (video) {
+      video.autoplay = false;
+      video.pause();
+      video.addEventListener("play", function () { video.pause(); });
     });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeHash);
   }
-
-  // the utterance inks one syllable per specimen as the reader passes it
-  var syl = {};
-  Array.prototype.forEach.call(document.querySelectorAll('[data-syl]'), function (s) { syl[s.getAttribute('data-syl')] = s; });
-  function ink(id) { if (syl[id]) syl[id].classList.add('is-inked'); }
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) ink(e.target.getAttribute('data-specimen')); });
-    }, { threshold: 0.35 });
-    Array.prototype.forEach.call(document.querySelectorAll('[data-specimen]'), function (el) { io.observe(el); });
-  } else {
-    Object.keys(syl).forEach(ink);
-  }
-
-  // the object index follows the reader
-  var links = Array.prototype.slice.call(document.querySelectorAll('.index a[data-index]'));
-  var nodes = ['i', 'time', 'range', 'aeo', 'iii', 'film', 'v', 'brief'].map(function (id) { return document.getElementById(id); });
-  var currentLabel = document.querySelector('.index__current');
-  function spy() {
-    var y = window.scrollY + window.innerHeight * 0.42, current = 0;
-    nodes.forEach(function (n, k) { if (n && n.getBoundingClientRect().top + window.scrollY <= y) current = k; });
-    links.forEach(function (a, k) { if (k === current) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
-    if (currentLabel && links[current]) currentLabel.textContent = links[current].getAttribute('aria-label');
-  }
-  spy();
-  addEventListener('scroll', spy, { passive: true });
-  addEventListener('resize', spy);
-
-  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var orbitalVideo = document.querySelector('.hero-backdrop__video');
-  if (orbitalVideo) {
-    if (reduceMotion) {
-      orbitalVideo.pause();
-    } else {
-      orbitalVideo.play().catch(function () {
-        // The first frame remains a useful backdrop when autoplay is blocked.
-        orbitalVideo.pause();
+  var tabs = document.querySelectorAll('[role="tab"]');
+  tabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      tabs.forEach(function (other) {
+        var on = other === tab;
+        other.setAttribute("aria-selected", on ? "true" : "false");
+        var panel = document.getElementById(other.getAttribute("aria-controls"));
+        if (panel) panel.hidden = !on;
       });
-    }
-  }
-
-  // One understandable mechanism: an operation compiles into a running product.
-  var compiler = document.querySelector('.compiler');
-  var compilerButtons = Array.prototype.slice.call(document.querySelectorAll('[data-compiler-state]'));
-  var compilerStatus = document.querySelector('[data-compiler-status]');
-  var compilerStates = ['describe', 'engineer', 'build', 'run'];
-  var compilerStatuses = {
-    describe: 'Listening',
-    engineer: 'Intent and context engineered',
-    build: 'Agents building in parallel',
-    run: 'System live'
-  };
-  var compilerWasChosen = false;
-
-  function setCompilerState(state, chosen) {
-    if (!compiler || compilerStates.indexOf(state) < 0) return;
-    compiler.setAttribute('data-active-state', state);
-    compilerButtons.forEach(function (button) {
-      button.setAttribute('aria-pressed', button.getAttribute('data-compiler-state') === state ? 'true' : 'false');
     });
-    if (compilerStatus) compilerStatus.textContent = compilerStatuses[state];
-    if (chosen) compilerWasChosen = true;
-  }
-
-  compilerButtons.forEach(function (button) {
-    button.addEventListener('click', function () { setCompilerState(button.getAttribute('data-compiler-state'), true); });
   });
-  var compilerSkip = document.querySelector('[data-compiler-skip]');
-  if (compilerSkip) compilerSkip.addEventListener('click', function () { setCompilerState('run', true); });
-
-  function resolveCompilerFromScroll() {
-    if (!compiler || reduceMotion || compilerWasChosen || innerWidth <= 1100) return;
-    var act = document.getElementById('compiler');
-    var travel = Math.max(1, act.offsetHeight - innerHeight);
-    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
-    setCompilerState(
-      progress < 0.24 ? 'describe' : progress < 0.49 ? 'engineer' : progress < 0.74 ? 'build' : 'run',
-      false
-    );
-  }
-
-  // A buyer question resolves into an answer, evidence path, and measured surface.
-  var aeoEngine = document.querySelector('.aeo-engine');
-  var aeoButtons = Array.prototype.slice.call(document.querySelectorAll('[data-aeo-state]'));
-  var aeoStatus = document.querySelector('[data-aeo-status]');
-  var aeoStates = ['question', 'answer', 'verify', 'measure'];
-  var aeoStatuses = {
-    question: 'Question mapped',
-    answer: 'Answer assembled',
-    verify: 'Evidence connected',
-    measure: 'Surface measured'
-  };
-  var aeoWasChosen = false;
-
-  function setAeoState(state, chosen) {
-    if (!aeoEngine || aeoStates.indexOf(state) < 0) return;
-    aeoEngine.setAttribute('data-active-state', state);
-    aeoButtons.forEach(function (button) {
-      button.setAttribute('aria-pressed', button.getAttribute('data-aeo-state') === state ? 'true' : 'false');
-    });
-    if (aeoStatus) aeoStatus.textContent = aeoStatuses[state];
-    if (chosen) aeoWasChosen = true;
-  }
-
-  aeoButtons.forEach(function (button) {
-    button.addEventListener('click', function () { setAeoState(button.getAttribute('data-aeo-state'), true); });
-  });
-
-  function resolveAeoFromScroll() {
-    if (!aeoEngine || reduceMotion || aeoWasChosen || innerWidth <= 1100) return;
-    var act = document.getElementById('aeo');
-    var travel = Math.max(1, act.offsetHeight - innerHeight);
-    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
-    setAeoState(
-      progress < 0.24 ? 'question' : progress < 0.49 ? 'answer' : progress < 0.74 ? 'verify' : 'measure',
-      false
-    );
-  }
-
-  var timeEngine = document.querySelector('.time-engine');
-  var timeButtons = Array.prototype.slice.call(document.querySelectorAll('[data-time-state]'));
-  var timeStatus = document.querySelector('[data-time-status]');
-  var timeStates = ['conventional', 'engineer', 'parallel', 'arrive'];
-  var timeStatuses = {
-    conventional: 'Serial calendar',
-    engineer: 'Front-loaded',
-    parallel: 'Workstreams overlapping',
-    arrive: 'Arrived early'
-  };
-  var timeWasChosen = false;
-
-  function setTimeState(state, chosen) {
-    if (!timeEngine || timeStates.indexOf(state) === -1) return;
-    if (chosen) timeWasChosen = true;
-    if (timeEngine.getAttribute('data-active-state') === state) return;
-    timeEngine.setAttribute('data-active-state', state);
-    timeButtons.forEach(function (button) {
-      button.setAttribute('aria-pressed', button.getAttribute('data-time-state') === state ? 'true' : 'false');
-    });
-    if (timeStatus) timeStatus.textContent = timeStatuses[state];
-  }
-
-  timeButtons.forEach(function (button) {
-    button.addEventListener('click', function () { setTimeState(button.getAttribute('data-time-state'), true); });
-  });
-
-  function resolveTimeFromScroll() {
-    if (!timeEngine || reduceMotion || timeWasChosen || innerWidth <= 1100) return;
-    var act = document.getElementById('time');
-    var travel = Math.max(1, act.offsetHeight - innerHeight);
-    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
-    setTimeState(
-      progress < 0.22 ? 'conventional' : progress < 0.47 ? 'engineer' : progress < 0.72 ? 'parallel' : 'arrive',
-      false
-    );
-  }
-
-  var rangeEngine = document.querySelector('.range-engine');
-  var rangeButtons = Array.prototype.slice.call(document.querySelectorAll('[data-range-state]'));
-  var rangeStatus = document.querySelector('[data-range-status]');
-  var rangeStates = ['market', 'product', 'model', 'record', 'commerce'];
-  var rangeStatuses = {
-    market: 'Get the word out',
-    product: 'Built around your steps',
-    model: 'Decisions from your data',
-    record: 'One place for every customer',
-    commerce: 'From question to sale'
-  };
-  var rangeWasChosen = false;
-
-  // Background texture for the range chapter: one quiet motif per service, crossfaded and scrubbed.
-  var rangeBg = (function () {
-    var canvas = document.querySelector('.range-bg');
-    if (!canvas || !canvas.getContext) return null;
-    var ctx = canvas.getContext('2d');
-    var SIGNAL = '255,107,61';
-    var OPTIC = '141,235,242';
-    var FADE = 600;
-    var state = canvas.getAttribute('data-bg-state') || 'market';
-    var prev = null;
-    var fadeStart = 0;
-    var progress = 0.5;
-    var w = 0;
-    var h = 0;
-    var density = 1;
-    var visible = false;
-    var frame = 0;
-    var lastDraw = 0;
-    var startedAt = performance.now();
-
-    function seeded(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
-    function rgba(rgb, alpha) { return 'rgba(' + rgb + ',' + Math.max(0, alpha).toFixed(3) + ')'; }
-    function dot(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
-
-    function market(t, p, a) {
-      var cx = w * 0.7, cy = h * 0.5, max = Math.hypot(w, h) * 0.55;
-      var rings = Math.round(7 * density) + 2;
-      ctx.lineWidth = 1;
-      for (var i = 0; i < rings; i++) {
-        var f = (t * 0.06 + i / rings + p * 0.25) % 1;
-        ctx.strokeStyle = rgba(SIGNAL, a * (1 - f) * 0.85);
-        ctx.beginPath(); ctx.arc(cx, cy, f * max, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = rgba(OPTIC, a * (1 - f) * 0.9);
-        var angle = seeded(i + 7) * Math.PI * 2 + t * 0.05;
-        dot(cx + Math.cos(angle) * f * max, cy + Math.sin(angle) * f * max, 1.8);
-      }
-    }
-
-    function product(t, p, a) {
-      var size = density < 1 ? 56 : 44;
-      var cols = Math.ceil(w / size), rows = Math.ceil(h / size);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = rgba(OPTIC, a * 0.2);
-      ctx.beginPath();
-      for (var x = 0; x <= cols; x++) { ctx.moveTo(x * size + 0.5, 0); ctx.lineTo(x * size + 0.5, h); }
-      for (var y = 0; y <= rows; y++) { ctx.moveTo(0, y * size + 0.5); ctx.lineTo(w, y * size + 0.5); }
-      ctx.stroke();
-      var fill = 0.06 + p * 0.16;
-      for (var c = 0; c < cols; c++) {
-        for (var r = 0; r < rows; r++) {
-          var s = seeded(c * 97 + r * 13 + 1);
-          if (s > fill) continue;
-          var pulse = 0.5 + 0.5 * Math.sin(t * 0.8 + s * 40);
-          var inset = 4 + (1 - pulse) * 6;
-          ctx.fillStyle = rgba(SIGNAL, a * (0.14 + 0.32 * pulse));
-          ctx.fillRect(c * size + inset, r * size + inset, size - inset * 2, size - inset * 2);
-        }
-      }
-    }
-
-    function model(t, p, a) {
-      var n = Math.round(46 * density), pts = [];
-      var link = Math.min(w, h) * 0.2 * (0.8 + p * 0.5);
-      for (var i = 0; i < n; i++) {
-        var speed = 0.5 + seeded(i * 3 + 3);
-        pts.push([
-          (seeded(i * 3 + 1) + 0.03 * Math.sin(t * 0.3 * speed + i)) * w,
-          (seeded(i * 3 + 2) + 0.03 * Math.cos(t * 0.25 * speed + i)) * h
-        ]);
-      }
-      ctx.lineWidth = 1;
-      for (i = 0; i < n; i++) {
-        for (var j = i + 1; j < n; j++) {
-          var d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
-          if (d >= link) continue;
-          ctx.strokeStyle = rgba(OPTIC, a * 0.4 * (1 - d / link));
-          ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[j][0], pts[j][1]); ctx.stroke();
-        }
-      }
-      ctx.fillStyle = rgba(SIGNAL, a * 0.7);
-      for (i = 0; i < n; i++) dot(pts[i][0], pts[i][1], 1.7);
-    }
-
-    function quad(x0, y0, cx, cy, x1, y1, f) {
-      var g = 1 - f;
-      return [g * g * x0 + 2 * g * f * cx + f * f * x1, g * g * y0 + 2 * g * f * cy + f * f * y1];
-    }
-
-    function record(t, p, a) {
-      var rowH = 18, total = Math.round(10 * density) + 4;
-      var filled = 3 + Math.round(p * (total - 3));
-      // Rows span the full stage so they read in the gutters around the opaque engine panel.
-      var x0 = 24, ledgerW = Math.max(w - 48, 0);
-      var top = h * 0.5 - total * rowH / 2;
-      ctx.lineWidth = 1;
-      for (var r = 0; r < total; r++) {
-        var on = r < filled, ry = top + r * rowH;
-        ctx.strokeStyle = rgba(OPTIC, a * (on ? 0.6 : 0.22));
-        ctx.strokeRect(x0 + 0.5, ry + 0.5, ledgerW, rowH - 6);
-        if (on) {
-          ctx.fillStyle = rgba(SIGNAL, a * 0.65);
-          ctx.fillRect(x0 + 4, ry + 4, 6, rowH - 14);
-          ctx.fillRect(x0 + ledgerW - 10, ry + 4, 6, rowH - 14);
-        }
-      }
-      var streams = Math.round(14 * density);
-      for (var s = 0; s < streams; s++) {
-        var fromTop = s % 2 === 0, rightSide = s % 4 < 2;
-        var sx = rightSide ? w * (0.72 + 0.26 * seeded(s + 50)) : w * 0.28 * seeded(s + 50);
-        var sy = fromTop ? 0 : h;
-        var ex = rightSide ? x0 + ledgerW - 14 : x0 + 14, ey = top + (s % filled) * rowH + (rowH - 6) / 2;
-        var cx = sx, cy = (sy + ey) / 2;
-        ctx.strokeStyle = rgba(OPTIC, a * 0.18);
-        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
-        var head = quad(sx, sy, cx, cy, ex, ey, (t * 0.12 + seeded(s + 80)) % 1);
-        ctx.fillStyle = rgba(SIGNAL, a * 0.7);
-        dot(head[0], head[1], 1.8);
-      }
-    }
-
-    function cubic(p0, p1, p2, p3, f) {
-      var g = 1 - f;
-      return g * g * g * p0 + 3 * g * g * f * p1 + 3 * g * f * f * p2 + f * f * f * p3;
-    }
-
-    function commerce(t, p, a) {
-      var ex = w * 0.78, ey = h * 0.52;
-      var paths = Math.round(5 * density) + 1;
-      ctx.lineWidth = 1;
-      for (var k = 0; k < paths; k++) {
-        var sx = w * (0.05 + seeded(k + 200) * 0.25), sy = h * (0.15 + 0.7 * seeded(k + 210));
-        var c1x = w * 0.4, c2x = w * 0.58;
-        ctx.strokeStyle = rgba(OPTIC, a * 0.22);
-        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.bezierCurveTo(c1x, sy, c2x, ey, ex, ey); ctx.stroke();
-        var f = (t * 0.1 + k / paths) % 1;
-        ctx.fillStyle = rgba(SIGNAL, a * 0.75);
-        dot(cubic(sx, c1x, c2x, ex, f), cubic(sy, sy, ey, ey, f), 2);
-      }
-      for (var i = 0; i < 3; i++) {
-        var beat = (t * 0.45 + i / 3) % 1;
-        ctx.strokeStyle = rgba(SIGNAL, a * (1 - beat) * 0.55);
-        ctx.beginPath(); ctx.arc(ex, ey, 6 + beat * 48 * (1 + p), 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.fillStyle = rgba(SIGNAL, a * 0.55);
-      ctx.fillRect(ex - 5, ey - 5, 10, 10);
-    }
-
-    var motifs = { market: market, product: product, model: model, record: record, commerce: commerce };
-
-    function resize() {
-      var dpr = Math.min(1.5, devicePixelRatio || 1);
-      w = canvas.clientWidth;
-      h = canvas.clientHeight;
-      canvas.width = Math.max(1, Math.round(w * dpr));
-      canvas.height = Math.max(1, Math.round(h * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      density = innerWidth <= 1100 ? 0.5 : 1;
-    }
-
-    function render(now) {
-      var t = (now - startedAt) / 1000;
-      var mix = prev ? Math.min(1, (now - fadeStart) / FADE) : 1;
-      ctx.clearRect(0, 0, w, h);
-      if (prev && mix < 1) motifs[prev](t, progress, 1 - mix);
-      else prev = null;
-      motifs[state](t, progress, mix);
-    }
-
-    function running() { return visible && !document.hidden && !reduceMotion; }
-
-    function loop(now) {
-      if (!running()) { frame = 0; canvas.setAttribute('data-bg-running', 'false'); return; }
-      frame = requestAnimationFrame(loop);
-      if (now - lastDraw < 33) return;
-      lastDraw = now;
-      render(now);
-    }
-
-    function kick() {
-      canvas.setAttribute('data-bg-running', running() ? 'true' : 'false');
-      if (running() && !frame) frame = requestAnimationFrame(loop);
-    }
-
-    function redrawStill() {
-      prev = null;
-      render(reduceMotion ? startedAt + 12000 : performance.now());
-    }
-
-    if ('ResizeObserver' in window) new ResizeObserver(function () { resize(); if (!running()) redrawStill(); }).observe(canvas);
-    else addEventListener('resize', function () { resize(); if (!running()) redrawStill(); });
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; kick(); }).observe(canvas);
-    } else {
-      visible = true;
-    }
-    document.addEventListener('visibilitychange', kick);
-    resize();
-    redrawStill();
-    kick();
-
-    return {
-      setState: function (next) {
-        if (next === state || !motifs[next]) return;
-        prev = state;
-        fadeStart = performance.now();
-        state = next;
-        canvas.setAttribute('data-bg-state', next);
-        if (!running()) redrawStill();
-      },
-      setProgress: function (value) { progress = Math.min(1, Math.max(0, value)); }
-    };
-  })();
-
-  function setRangeState(state, chosen) {
-    if (!rangeEngine || rangeStates.indexOf(state) < 0) return;
-    rangeEngine.setAttribute('data-active-state', state);
-    if (rangeBg) rangeBg.setState(state);
-    rangeButtons.forEach(function (button) {
-      button.setAttribute('aria-pressed', button.getAttribute('data-range-state') === state ? 'true' : 'false');
-    });
-    if (rangeStatus) rangeStatus.textContent = rangeStatuses[state];
-    if (chosen) rangeWasChosen = true;
-  }
-
-  rangeButtons.forEach(function (button) {
-    button.addEventListener('click', function () { setRangeState(button.getAttribute('data-range-state'), true); });
-  });
-
-  function resolveRangeFromScroll() {
-    if (!rangeEngine || reduceMotion || rangeWasChosen || innerWidth <= 1100) return;
-    var act = document.getElementById('range');
-    var travel = Math.max(1, act.offsetHeight - innerHeight);
-    var progress = Math.min(1, Math.max(0, -act.getBoundingClientRect().top / travel));
-    var cuts = [0.18, 0.38, 0.58, 0.78, 1];
-    var index = 0;
-    while (index < 4 && progress >= cuts[index]) index++;
-    var from = index ? cuts[index - 1] : 0;
-    if (rangeBg) rangeBg.setProgress((progress - from) / (cuts[index] - from));
-    setRangeState(rangeStates[index], false);
-  }
-
-  function updatePageProgress() {
-    var root = document.documentElement;
-    var travel = Math.max(1, root.scrollHeight - innerHeight);
-    var progress = Math.min(1, Math.max(0, scrollY / travel));
-    root.style.setProperty('--page-progress', progress.toFixed(4));
-  }
-
-  function updateScrollStates() {
-    resolveCompilerFromScroll();
-    resolveAeoFromScroll();
-    resolveTimeFromScroll();
-    resolveRangeFromScroll();
-    updatePageProgress();
-  }
-
-  updateScrollStates();
-  addEventListener('scroll', updateScrollStates, { passive: true });
-  addEventListener('resize', updateScrollStates);
-
-  // The mobile film label yields the product view without removing its explanation.
-  var filmToggle = document.querySelector('.film-toggle');
-  var filmDetails = document.getElementById('film-details');
-  if (filmToggle && filmDetails) {
-    filmToggle.addEventListener('click', function () {
-      var isOpen = filmToggle.getAttribute('aria-expanded') === 'true';
-      filmToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-      filmToggle.textContent = isOpen ? 'Show film details' : 'Minimize film details';
-      filmDetails.hidden = isOpen;
-    });
-  }
+})();
 </script>
+<script src="assets/restored-motion.js"></script>
 </body>
 </html>

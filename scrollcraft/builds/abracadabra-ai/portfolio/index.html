@@ -164,20 +164,41 @@
     <summary class="site-nav__toggle">Menu</summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <a href="/services/">Services</a>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#brief">Start a project</a>
+    <a class="site-nav__cta" href="/#start">Start a project</a>
   </nav>
 </header>
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
-    if (!menu) return;
+    var services = bar.querySelector(".site-nav__services");
     bar.addEventListener("click", function (event) {
-      if (event.target.closest("a")) menu.open = false;
+      if (!event.target.closest("a")) return;
+      if (menu) menu.open = false;
+      if (services) services.open = false;
+    });
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.querySelectorAll("video.loop-film").forEach(function (video) {
+      function stop() { video.pause(); }
+      if (reduce.matches) {
+        stop();
+        video.addEventListener("play", stop);
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (reduce.matches || !entry.isIntersecting) stop();
+          else video.play().catch(function () {});
+        });
+      }, { threshold: 0.35 });
+      observer.observe(video);
     });
   });
 </script>
@@ -187,7 +208,7 @@
 <div class="page-hero__copy">
 <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li aria-current="page">Portfolio</li></ol></nav>
 <p class="kicker">Portfolio</p>
-<h1>Named systems, open and running.</h1>
+<h1>Work that's live.</h1>
 <p>Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.</p>
 
 </div>
@@ -195,14 +216,21 @@
 <ul class="cards"><li><a href="/portfolio/schema/"><img src="/assets/schema-home.webp" alt="Schema home page: a URL field and an AI visibility check." width="1600" height="1000" loading="lazy" decoding="async"><strong>Schema</strong><span>Scores whether answer engines can find a site, and writes the fix. What the scan measured stays separate from the suggested fix.</span></a></li><li><a href="/portfolio/llm-leverage/"><img src="/assets/llmcourse-home.webp" alt="LLM Leverage course home: a lesson preview and a rollout path." width="1600" height="1000" loading="lazy" decoding="async"><strong>LLM Leverage</strong><span>A self-paced course for better answers from any model, plus a workshop path.</span></a></li><li><a href="/portfolio/super-funnel/"><img src="/assets/superfunnel-getting-started.webp" alt="Super Funnel Getting started film poster." width="1920" height="1080" loading="lazy" decoding="async"><strong>Super Funnel</strong><span>One associate app. The Getting started film covers the home dashboard, setup, pipeline, and nav in 66 seconds.</span></a></li><li><a href="/portfolio/pirx/"><img src="/assets/pirx/pirx-home-hero-desktop.jpg" alt="pirx.ca home page, with a race time predictor: recent race, goal race, and race date." width="1440" height="900" loading="lazy" decoding="async"><strong>pirx.ca</strong><span>From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days, Jul 14 to Oct 13, 2026.</span></a></li><li><a href="/portfolio/superpatch-products/"><strong>SuperPatch products</strong><span>Public product pages: the offer, the comparison, and the questions a buyer asks.</span></a></li><li><a href="/portfolio/milrcorr/"><strong>Milrcorr</strong><span>The public site for StrongFoam&#39;s sister commercial fit-out work. A visitor can see the work and request an estimate.</span></a></li><li><a href="/portfolio/strongfoam-website/"><strong>StrongFoam website</strong><span>A public site where a visitor can start an estimate and book, so the request stays with the page.</span></a></li><li><a href="/portfolio/strongfoam-crm/"><strong>StrongFoam CRM/ERP</strong><span>The record you work in: the customer, the job, and the numbers, in one place.</span></a></li><li><a href="/portfolio/renew-implants/"><strong>Renew Implants</strong><span>The website, the social posts, and the blogs.</span></a></li></ul>
 </main>
 <footer class="site-foot">
-  <p class="site-foot__brand">Abracadabra AI</p>
+  <p class="site-foot__word">Abracadabra</p>
   <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/#search">Search &amp; AI visibility</a>
+    <a href="/services/#marketing">Marketing</a>
+    <a href="/services/#sales">Sales</a>
+    <a href="/services/#service">Customer service</a>
+    <a href="/services/#operations">Operations</a>
+    <a href="/portfolio/">Design</a>
+    <a href="/services/#platform">Platform</a>
     <a href="/services/">Services</a>
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#brief">Start a project</a>
+    <a href="/#start">Start a project</a>
     <a href="/privacy">Privacy</a>
   </nav>
 </footer>

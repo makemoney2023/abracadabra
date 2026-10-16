@@ -22,27 +22,31 @@ const offerings = [
   "search-grounded-research",
 ];
 
-test("the model strip sits between the menu and the answer chapter", () => {
+test("the homepage runs hero, models, functions, then Cloudflare before the FAQ", () => {
   const index = read("index.html");
   const ids = [...index.matchAll(/<section id="([^"]+)"/g)].map((match) => match[1]);
-  const range = ids.indexOf("range");
-  const models = ids.indexOf("models");
-  const aeo = ids.indexOf("aeo");
-  assert.equal(models, range + 1);
-  assert.equal(aeo, models + 1);
-  assert.match(index, /The models are next/);
-  assert.match(index, /href="#models"/);
+  const order = ["hero", "models", "services", "showcase", "models-band", "proof", "notes", "cloudflare", "faq", "start"];
+  let last = -1;
+  for (const id of order) {
+    const at = ids.indexOf(id);
+    assert.ok(at > last, id);
+    last = at;
+  }
+  assert.match(index, /Custom software, built for how you work\./);
+  assert.match(index, /Every AI model\. One bill\./);
+  assert.match(index, /Apps that scale, proudly built with Cloudflare\./);
+  assert.match(index, /from the first user to millions, without a rebuild/);
+  assert.match(index, /assets\/logos\/cloudflare\.svg/);
+  assert.equal(/\bbrief\b/i.test(index), false);
   assert.equal((index.match(/aria-hidden="true"/g) || []).length > 0, true);
-  const modelsBlock = index.slice(index.indexOf('id="models"'), index.indexOf('id="aeo"'));
+  const modelsBlock = index.slice(index.indexOf('id="models"'), index.indexOf('id="services"'));
   assert.equal((modelsBlock.match(/<ul class="marquee__list" aria-hidden="true">/g) || []).length, 2);
   assert.match(index, /prefers-reduced-motion: reduce/);
   assert.match(index, /\.marquee__list\[aria-hidden="true"\] \{ display: none; \}/);
   assert.equal(index.includes("0.62rem"), false);
   assert.equal(index.includes("0.58rem"), false);
   assert.equal(index.includes("The next room is the receipt"), false);
-  assert.match(index, /Every major model, one gateway/);
-  assert.match(index, /Software for how you work\./);
-  const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="benefits"'));
+  const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="showcase"'));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
   assert.match(index, /href="\/services\/">Services/);
   assert.equal(index.includes(">Offerings<"), false);
@@ -57,6 +61,68 @@ test("the model strip sits between the menu and the answer chapter", () => {
     assert.match(modelsBlock, new RegExp(`assets/logos/${file.replace(".", "\\.")}`));
   }
   assert.doesNotMatch(servicesBlock, industryNoun);
+  assert.match(index, /class="site-nav__services"/);
+  assert.equal((index.match(/class="site-nav__fn"/g) || []).length, 0);
+  assert.equal(index.includes("Recording coming"), false);
+  assert.match(index, /assets\/video\/strongfoam-loop\.webm/);
+  assert.match(index, /assets\/video\/milrcorr-loop\.mp4/);
+  assert.match(index, /muted playsinline loop preload="none"/);
+  assert.match(index, /assets\/restored-motion\.css/);
+  assert.match(index, /assets\/restored-motion\.js/);
+  const motionOrder = ["hero", "compiler", "gantt", "time", "name", "range", "models"];
+  let motionAt = -1;
+  for (const id of motionOrder) {
+    const at = ids.indexOf(id);
+    assert.ok(at > motionAt, id);
+    motionAt = at;
+  }
+  const agents = index.slice(index.indexOf('id="compiler"'), index.indexOf('id="gantt"'));
+  const gantt = index.slice(index.indexOf('id="gantt"'), index.indexOf('id="time"'));
+  const time = index.slice(index.indexOf('id="time"'), index.indexOf('id="name"'));
+  for (const label of [
+    "Search &amp; AI visibility",
+    "Marketing",
+    "Social media",
+    "Sales",
+    "Customer service",
+    "Operations",
+    "Design",
+    "Platform",
+  ]) {
+    assert.equal(gantt.includes(label), true, `gantt ${label}`);
+  }
+  assert.equal((agents.match(/class="agent-track"/g) || []).length, 5);
+  for (const lane of ["Workflow", "Experience", "Engineering", "Quality", "Launch"]) {
+    assert.equal(agents.includes(`<span data-agent-role>${lane}</span>`), true, lane);
+  }
+  assert.match(agents, />Requirements<\/button>/);
+  assert.equal(index.includes('id="agents"'), false);
+  assert.equal((gantt.match(/class="time-lane"/g) || []).length, 8);
+  for (const phase of ["Discover", "Specify", "Design", "Build", "Test", "Release"]) {
+    assert.equal(time.includes(`data-time-phase="${phase}"`), true, phase);
+  }
+  assert.match(time, /It feels like magic\./);
+  const nav = index.slice(index.indexOf("<!-- SITE-NAV -->"), index.indexOf("<!-- /SITE-NAV -->"));
+  const foot = index.slice(index.indexOf("<!-- SITE-FOOT -->"), index.indexOf("<!-- /SITE-FOOT -->"));
+  assert.equal(nav.includes("Social media"), false);
+  assert.equal(foot.includes("Social media"), false);
+  assert.equal(index.includes("Social media"), true);
+  for (const [page, file] of [
+    ["portfolio/strongfoam-website/index.html", "strongfoam-loop"],
+    ["portfolio/milrcorr/index.html", "milrcorr-loop"],
+  ]) {
+    const html = read(page);
+    assert.match(html, /class="loop-film"/, page);
+    assert.match(html, new RegExp(`/assets/video/${file}\\.webm`), page);
+    assert.match(html, new RegExp(`/assets/video/${file}\\.mp4`), page);
+    assert.match(html, new RegExp(`/assets/video/${file}\\.jpg`), page);
+  }
+  for (const file of [
+    "strongfoam-loop.mp4", "strongfoam-loop.webm", "strongfoam-loop.jpg",
+    "milrcorr-loop.mp4", "milrcorr-loop.webm", "milrcorr-loop.jpg",
+  ]) {
+    assert.equal(existsSync(join(root, "assets/video", file)), true, file);
+  }
 });
 
 test("generated pages keep placeholders visible and out of JSON-LD", () => {
@@ -83,7 +149,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   }
   const offering = read("services/ai-assistants-and-agents/index.html");
   assert.match(offering, /PLACEHOLDER — needs Christopher/);
-  assert.match(offering, /class="sales-primary" href="\/#brief">Start a project/);
+  assert.match(offering, /class="sales-primary" href="\/#start">Start a project/);
   assert.match(offering, /AI Readiness Check/);
   assert.match(offering, /https:\/\/check\.abra-ca-dabra\.app\/check/);
   assert.match(offering, /What you get/);

@@ -4,24 +4,24 @@
 <meta charset="utf-8">
 <!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Software for how you work | Abracadabra AI</title>
-<meta name="description" content="Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.">
+<title>Everything you need to put AI to work. | Abracadabra AI</title>
+<meta name="description" content="Search, marketing, sales, customer service, operations, design, and the platform underneath. Safe code execution ships inside the assistants and keeps its own page.">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://abra-ca-dabra.app/services/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Abracadabra AI">
 <meta property="og:url" content="https://abra-ca-dabra.app/services/">
-<meta property="og:title" content="Software for how you work | Abracadabra AI">
-<meta property="og:description" content="Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.">
+<meta property="og:title" content="Everything you need to put AI to work. | Abracadabra AI">
+<meta property="og:description" content="Search, marketing, sales, customer service, operations, design, and the platform underneath. Safe code execution ships inside the assistants and keeps its own page.">
 <meta property="og:image" content="https://abra-ca-dabra.app/assets/og/services.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Software for how you work., Abracadabra AI">
+<meta property="og:image:alt" content="Everything you need to put AI to work., Abracadabra AI">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Software for how you work | Abracadabra AI">
-<meta name="twitter:description" content="Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.">
+<meta name="twitter:title" content="Everything you need to put AI to work. | Abracadabra AI">
+<meta name="twitter:description" content="Search, marketing, sales, customer service, operations, design, and the platform underneath. Safe code execution ships inside the assistants and keeps its own page.">
 <meta name="twitter:image" content="https://abra-ca-dabra.app/assets/og/services.png">
-<meta name="twitter:image:alt" content="Software for how you work., Abracadabra AI">
+<meta name="twitter:image:alt" content="Everything you need to put AI to work., Abracadabra AI">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Tektur:wght@500;600&amp;display=swap" rel="stylesheet">
@@ -63,8 +63,8 @@
       "@type": "CollectionPage",
       "@id": "https://abra-ca-dabra.app/services/#webpage",
       "url": "https://abra-ca-dabra.app/services/",
-      "name": "Software for how you work.",
-      "description": "Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.",
+      "name": "Everything you need to put AI to work.",
+      "description": "Search, marketing, sales, customer service, operations, design, and the platform underneath. Safe code execution ships inside the assistants and keeps its own page.",
       "isPartOf": {
         "@id": "https://abra-ca-dabra.app/#website"
       },
@@ -94,7 +94,7 @@
     {
       "@type": "ItemList",
       "@id": "https://abra-ca-dabra.app/services/#list",
-      "name": "Software for how you work.",
+      "name": "Everything you need to put AI to work.",
       "numberOfItems": 10,
       "itemListElement": [
         {
@@ -201,20 +201,41 @@
     <summary class="site-nav__toggle">Menu</summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <a href="/services/">Services</a>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#brief">Start a project</a>
+    <a class="site-nav__cta" href="/#start">Start a project</a>
   </nav>
 </header>
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
-    if (!menu) return;
+    var services = bar.querySelector(".site-nav__services");
     bar.addEventListener("click", function (event) {
-      if (event.target.closest("a")) menu.open = false;
+      if (!event.target.closest("a")) return;
+      if (menu) menu.open = false;
+      if (services) services.open = false;
+    });
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.querySelectorAll("video.loop-film").forEach(function (video) {
+      function stop() { video.pause(); }
+      if (reduce.matches) {
+        stop();
+        video.addEventListener("play", stop);
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (reduce.matches || !entry.isIntersecting) stop();
+          else video.play().catch(function () {});
+        });
+      }, { threshold: 0.35 });
+      observer.observe(video);
     });
   });
 </script>
@@ -224,62 +245,75 @@
 <div class="page-hero__copy">
 <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li aria-current="page">Services</li></ol></nav>
 <p class="kicker">Custom software</p>
-<h1>Software for how you work.</h1>
-<p>Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.</p>
+<h1>Everything you need to put AI to work.</h1>
+<p>Search, marketing, sales, customer service, operations, design, and the platform underneath. Safe code execution ships inside the assistants and keeps its own page.</p>
 
 </div>
 </header>
-<ul class="cards"><li><a href="/services/ai-assistants-and-agents/"><picture>
-<source type="image/avif" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.avif 640w, /blog/media/services/ai-assistants-and-agents/hero-960.avif 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.webp 640w, /blog/media/services/ai-assistants-and-agents/hero-960.webp 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/ai-assistants-and-agents/hero.jpg" alt="Dark chat console with a customer thread, a reply field, and a checklist of next steps." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>AI assistants that actually get things done.</strong><span>Your assistant keeps the conversation, follows your rules, and finishes the request in the tools you already use.</span></a></li><li><a href="/services/answers-from-your-documents/"><picture>
-<source type="image/avif" srcset="/blog/media/services/answers-from-your-documents/hero-640.avif 640w, /blog/media/services/answers-from-your-documents/hero-960.avif 960w, /blog/media/services/answers-from-your-documents/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/answers-from-your-documents/hero-640.webp 640w, /blog/media/services/answers-from-your-documents/hero-960.webp 960w, /blog/media/services/answers-from-your-documents/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/answers-from-your-documents/hero.jpg" alt="Search panel with a question, an answer, and a cited page from a document stack." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>Instant answers from your own documents.</strong><span>Ask in plain language. We answer from your files, and every answer carries the page it came from.</span></a></li><li><a href="/services/any-model-one-bill/"><picture>
-<source type="image/avif" srcset="/blog/media/services/any-model-one-bill/hero-640.avif 640w, /blog/media/services/any-model-one-bill/hero-960.avif 960w, /blog/media/services/any-model-one-bill/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/any-model-one-bill/hero-640.webp 640w, /blog/media/services/any-model-one-bill/hero-960.webp 960w, /blog/media/services/any-model-one-bill/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/any-model-one-bill/hero.jpg" alt="Model picker with several model names and one usage meter for the bill." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>Every AI model. One bill.</strong><span>Each job uses the model that fits it. You get one gateway and one bill you can cap and stop.</span></a></li><li><a href="/services/voice-and-realtime-agents/"><picture>
-<source type="image/avif" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.avif 640w, /blog/media/services/voice-and-realtime-agents/hero-960.avif 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.webp 640w, /blog/media/services/voice-and-realtime-agents/hero-960.webp 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/voice-and-realtime-agents/hero.jpg" alt="Voice console with a live waveform, a transcript, and a hold-to-talk control." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>AI that answers your phone.</strong><span>Callers hear an answer from your records. When the call needs a person, we hand it over with a note of what was already said.</span></a></li><li><a href="/services/web-automation/"><picture>
-<source type="image/avif" srcset="/blog/media/services/web-automation/hero-640.avif 640w, /blog/media/services/web-automation/hero-960.avif 960w, /blog/media/services/web-automation/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/web-automation/hero-640.webp 640w, /blog/media/services/web-automation/hero-960.webp 960w, /blog/media/services/web-automation/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/web-automation/hero.jpg" alt="Browser window with a recorded step list and a highlighted control on the page." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>Put repetitive web work on autopilot.</strong><span>The weekly browser job opens the same pages, collects the same numbers, and leaves a report you can open.</span></a></li><li><a href="/services/safe-code-execution/"><picture>
-<source type="image/avif" srcset="/blog/media/services/safe-code-execution/hero-640.avif 640w, /blog/media/services/safe-code-execution/hero-960.avif 960w, /blog/media/services/safe-code-execution/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/safe-code-execution/hero-640.webp 640w, /blog/media/services/safe-code-execution/hero-960.webp 960w, /blog/media/services/safe-code-execution/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/safe-code-execution/hero.jpg" alt="Sandbox window with a code pane, a run button, and an isolated output panel." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>Let AI run code, safely.</strong><span>When your assistant needs to run a small program, it runs inside a sandbox. Time, files, and access are set before it starts. Part of AI assistants.</span></a></li><li><a href="/services/custom-apps/"><picture>
-<source type="image/avif" srcset="/blog/media/services/custom-apps/hero-640.avif 640w, /blog/media/services/custom-apps/hero-960.avif 960w, /blog/media/services/custom-apps/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/custom-apps/hero-640.webp 640w, /blog/media/services/custom-apps/hero-960.webp 960w, /blog/media/services/custom-apps/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/custom-apps/hero.jpg" alt="App canvas with a sidebar, a main workspace, and a status strip." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>Apps built around your workflow.</strong><span>We build the app around the way you already work, so the real job is the product.</span></a></li><li><a href="/services/ai-media/"><picture>
-<source type="image/avif" srcset="/blog/media/services/ai-media/hero-640.avif 640w, /blog/media/services/ai-media/hero-960.avif 960w, /blog/media/services/ai-media/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/ai-media/hero-640.webp 640w, /blog/media/services/ai-media/hero-960.webp 960w, /blog/media/services/ai-media/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
-<img src="/blog/media/services/ai-media/hero.jpg" alt="Media board with a generated still, a timeline, and a prompt field." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>On-brand images, video and voice, on demand.</strong><span>We draft images, video, and voice from material you already have, and a named person clears each file before it goes public.</span></a></li><li><a href="/services/ai-visibility/"><picture>
+<section id="search" class="fn-group"><h2>Search &amp; AI visibility</h2><p>Show up when someone asks a search engine or an AI assistant for what you do.</p><ul class="cards"><li><a href="/services/ai-visibility/"><picture>
 <source type="image/avif" srcset="/blog/media/services/ai-visibility/hero-640.avif 640w, /blog/media/services/ai-visibility/hero-960.avif 960w, /blog/media/services/ai-visibility/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
 <source type="image/webp" srcset="/blog/media/services/ai-visibility/hero-640.webp 640w, /blog/media/services/ai-visibility/hero-960.webp 960w, /blog/media/services/ai-visibility/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
 <img src="/blog/media/services/ai-visibility/hero.jpg" alt="Visibility dashboard with a query, an answer preview, and a measure of where the page shows." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>Get found in AI search.</strong><span>You decide which pages answer engines may read, and which crawlers stay out.</span></a></li><li><a href="/services/search-grounded-research/"><picture>
+</picture><strong>Get found in AI search.</strong><span>You decide which pages answer engines may read, and which crawlers stay out.</span></a></li></ul></section>
+<section id="marketing" class="fn-group"><h2>Marketing</h2><p>Ship on-brand images, video, and voice, and research you can open and check.</p><ul class="cards"><li><a href="/services/ai-media/"><picture>
+<source type="image/avif" srcset="/blog/media/services/ai-media/hero-640.avif 640w, /blog/media/services/ai-media/hero-960.avif 960w, /blog/media/services/ai-media/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/ai-media/hero-640.webp 640w, /blog/media/services/ai-media/hero-960.webp 960w, /blog/media/services/ai-media/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/ai-media/hero.jpg" alt="Media board with a generated still, a timeline, and a prompt field." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>On-brand images, video and voice, on demand.</strong><span>We draft images, video, and voice from material you already have, and a named person clears each file before it goes public.</span></a></li><li><a href="/services/search-grounded-research/"><picture>
 <source type="image/avif" srcset="/blog/media/services/search-grounded-research/hero-640.avif 640w, /blog/media/services/search-grounded-research/hero-960.avif 960w, /blog/media/services/search-grounded-research/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
 <source type="image/webp" srcset="/blog/media/services/search-grounded-research/hero-640.webp 640w, /blog/media/services/search-grounded-research/hero-960.webp 960w, /blog/media/services/search-grounded-research/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
 <img src="/blog/media/services/search-grounded-research/hero.jpg" alt="Research desk with a question, source cards, and a grounded answer." width="1280" height="720" loading="lazy" decoding="async">
-</picture><strong>Research you can trust, with every source cited.</strong><span>A research answer carries the public pages under every claim, so you can open the source and check it.</span></a></li></ul>
+</picture><strong>Research you can trust, with every source cited.</strong><span>A research answer carries the public pages under every claim, so you can open the source and check it.</span></a></li></ul></section>
+<section id="sales" class="fn-group"><h2>Sales</h2><p>An assistant that keeps the conversation and finishes the request in the tools you already use.</p><ul class="cards"><li><a href="/services/ai-assistants-and-agents/"><picture>
+<source type="image/avif" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.avif 640w, /blog/media/services/ai-assistants-and-agents/hero-960.avif 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.webp 640w, /blog/media/services/ai-assistants-and-agents/hero-960.webp 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/ai-assistants-and-agents/hero.jpg" alt="Dark chat console with a customer thread, a reply field, and a checklist of next steps." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>AI assistants that actually get things done.</strong><span>Your assistant keeps the conversation, follows your rules, and finishes the request in the tools you already use.</span></a></li></ul></section>
+<section id="service" class="fn-group"><h2>Customer service</h2><p>Callers get an answer from your records, and a person when the call needs one.</p><ul class="cards"><li><a href="/services/voice-and-realtime-agents/"><picture>
+<source type="image/avif" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.avif 640w, /blog/media/services/voice-and-realtime-agents/hero-960.avif 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.webp 640w, /blog/media/services/voice-and-realtime-agents/hero-960.webp 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/voice-and-realtime-agents/hero.jpg" alt="Voice console with a live waveform, a transcript, and a hold-to-talk control." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>AI that answers your phone.</strong><span>Callers hear an answer from your records. When the call needs a person, we hand it over with a note of what was already said.</span></a></li></ul></section>
+<section id="operations" class="fn-group"><h2>Operations</h2><p>Turn the way you already work into software, answers from your files, and web jobs that run themselves.</p><ul class="cards"><li><a href="/services/web-automation/"><picture>
+<source type="image/avif" srcset="/blog/media/services/web-automation/hero-640.avif 640w, /blog/media/services/web-automation/hero-960.avif 960w, /blog/media/services/web-automation/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/web-automation/hero-640.webp 640w, /blog/media/services/web-automation/hero-960.webp 960w, /blog/media/services/web-automation/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/web-automation/hero.jpg" alt="Browser window with a recorded step list and a highlighted control on the page." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>Put repetitive web work on autopilot.</strong><span>The weekly browser job opens the same pages, collects the same numbers, and leaves a report you can open.</span></a></li><li><a href="/services/answers-from-your-documents/"><picture>
+<source type="image/avif" srcset="/blog/media/services/answers-from-your-documents/hero-640.avif 640w, /blog/media/services/answers-from-your-documents/hero-960.avif 960w, /blog/media/services/answers-from-your-documents/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/answers-from-your-documents/hero-640.webp 640w, /blog/media/services/answers-from-your-documents/hero-960.webp 960w, /blog/media/services/answers-from-your-documents/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/answers-from-your-documents/hero.jpg" alt="Search panel with a question, an answer, and a cited page from a document stack." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>Instant answers from your own documents.</strong><span>Ask in plain language. We answer from your files, and every answer carries the page it came from.</span></a></li><li><a href="/services/custom-apps/"><picture>
+<source type="image/avif" srcset="/blog/media/services/custom-apps/hero-640.avif 640w, /blog/media/services/custom-apps/hero-960.avif 960w, /blog/media/services/custom-apps/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/custom-apps/hero-640.webp 640w, /blog/media/services/custom-apps/hero-960.webp 960w, /blog/media/services/custom-apps/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/custom-apps/hero.jpg" alt="App canvas with a sidebar, a main workspace, and a status strip." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>Apps built around your workflow.</strong><span>We build the app around the way you already work, so the real job is the product.</span></a></li></ul></section>
+<section id="design" class="fn-group"><h2>Design</h2><p>Sites and product pages shaped around the work, already live for StrongFoam, Milrcorr, and pirx.ca.</p><ul class="cards"><li><a href="/portfolio/strongfoam-website/"><strong>StrongFoam</strong><span>Sites and product pages shaped around the work, already live for StrongFoam, Milrcorr, and pirx.ca.</span></a></li><li><a href="/portfolio/milrcorr/"><strong>Milrcorr</strong><span>Sites and product pages shaped around the work, already live for StrongFoam, Milrcorr, and pirx.ca.</span></a></li><li><a href="/portfolio/pirx/"><strong>pirx.ca</strong><span>Sites and product pages shaped around the work, already live for StrongFoam, Milrcorr, and pirx.ca.</span></a></li></ul></section>
+<section id="platform" class="fn-group"><h2>Platform</h2><p>Use the best model for every job, on one bill, and let code run only inside the limits you set.</p><ul class="cards"><li><a href="/services/any-model-one-bill/"><picture>
+<source type="image/avif" srcset="/blog/media/services/any-model-one-bill/hero-640.avif 640w, /blog/media/services/any-model-one-bill/hero-960.avif 960w, /blog/media/services/any-model-one-bill/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/any-model-one-bill/hero-640.webp 640w, /blog/media/services/any-model-one-bill/hero-960.webp 960w, /blog/media/services/any-model-one-bill/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/any-model-one-bill/hero.jpg" alt="Model picker with several model names and one usage meter for the bill." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>Every AI model. One bill.</strong><span>Each job uses the model that fits it. You get one gateway and one bill you can cap and stop.</span></a></li><li><a href="/services/safe-code-execution/"><picture>
+<source type="image/avif" srcset="/blog/media/services/safe-code-execution/hero-640.avif 640w, /blog/media/services/safe-code-execution/hero-960.avif 960w, /blog/media/services/safe-code-execution/hero-1280.avif 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<source type="image/webp" srcset="/blog/media/services/safe-code-execution/hero-640.webp 640w, /blog/media/services/safe-code-execution/hero-960.webp 960w, /blog/media/services/safe-code-execution/hero-1280.webp 1280w" sizes="(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw">
+<img src="/blog/media/services/safe-code-execution/hero.jpg" alt="Sandbox window with a code pane, a run button, and an isolated output panel." width="1280" height="720" loading="lazy" decoding="async">
+</picture><strong>Let AI run code, safely.</strong><span>When your assistant needs to run a small program, it runs inside a sandbox. Time, files, and access are set before it starts. Part of AI assistants.</span></a></li></ul></section>
 </main>
 <footer class="site-foot">
-  <p class="site-foot__brand">Abracadabra AI</p>
+  <p class="site-foot__word">Abracadabra</p>
   <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/#search">Search &amp; AI visibility</a>
+    <a href="/services/#marketing">Marketing</a>
+    <a href="/services/#sales">Sales</a>
+    <a href="/services/#service">Customer service</a>
+    <a href="/services/#operations">Operations</a>
+    <a href="/portfolio/">Design</a>
+    <a href="/services/#platform">Platform</a>
     <a href="/services/">Services</a>
     <a href="/portfolio/">Portfolio</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#brief">Start a project</a>
+    <a href="/#start">Start a project</a>
     <a href="/privacy">Privacy</a>
   </nav>
 </footer>

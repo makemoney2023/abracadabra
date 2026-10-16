@@ -9,7 +9,7 @@ Last updated: 2026-10-15
 ## What the studio builds
 
 - Software follows the steps, the exceptions, and the words you already use. AI takes a task. You keep the relationship.
-- Five workstreams (Workflow, Experience, Engineering, Quality, and Launch) start from one written plan, so the later work runs together instead of one after another. The plan is written before anything is built. That is the operating premise. It is not an elapsed-time guarantee.
+- Eight functions (Search & AI visibility, Marketing, Social media, Sales, Customer service, Operations, Design, and Platform) start from one written plan, so the later work runs together instead of one after another. The plan is written before anything is built. That is the operating premise. It is not an elapsed-time guarantee.
 - The calendar gets shorter because the plan is written first and the later work runs at the same time. The work does not shrink. The waiting between the work does. Abracadabra AI does not publish a duration or a percentage for this.
 - The plan and the build ship as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).

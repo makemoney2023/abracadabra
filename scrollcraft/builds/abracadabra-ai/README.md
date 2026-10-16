@@ -1,6 +1,6 @@
 # Abracadabra AI catalog
 
-One-page Scrollcraft gallery of shipped work. Brief is in `BRIEF.md`. Footage and sales packs live in `/outputs`.
+Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). The project brief is in `BRIEF.md`. Footage and sales packs live in `/outputs`.
 
 ```bash
 # from this folder
@@ -10,9 +10,54 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital film plus the promise and the two actions in a left column. From 1024px the actions sit side by side; below that they stack full width, still left-aligned. The compiler section sits directly under it and demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build plan before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that plan and converges their outputs into a working system. The Aramaic origin of the name follows the compiler. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the model strip moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The models are next." The model strip names the gateway providers and the Workers AI families. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. Services, portfolio, products, and the LLM Leverage course are linked from the site header. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Super Funnel Getting started film in the selected-work rail is the only video on the page.
+Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. Under the hero, the original parallel-agent sweep, function calendar, and time-travel calendar return, then the operation compiler, the name, and the menu. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Portfolio, Products, Course, Blog, and **Start a project**. Services opens one menu: each function name, with that function's services under it. The phone menu uses the same grouping. The model strip is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (silent v2 renders). A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is **Start a project** at `#start`. The footer wordmark is Tektur. Reduced motion pauses video and stops the marquee.
 
-Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+If the page and the source-of-truth file disagree, fix the file first, then the page.
+
+## Restored homepage motion — 2026-10-16
+
+- Under the hero, the original parallel-agent sweep, the function calendar, and the time-travel calendar are back, then the operation compiler, the name line, and the range menu. The hero stays the orbital film with **Start a project** and **See the work**.
+- Social media is a visible beat in those animations, mapped to Marketing and `/services/ai-media/`. It is not a nav function. Whether it should join `businessFunctions` and the Services menu is still open.
+- **What changed** — homepage motion under the hero, restyled to the current colour and type tokens.
+- **Why** — Christopher asked for the pre-redesign motion back, retargeted to the business functions, without changing the Runway hero.
+- **Code touchpoints** — `index.html`, `assets/restored-motion.css`, `assets/restored-motion.js`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — none. `businessFunctions` is unchanged. Social media is animation copy only.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in this folder.
+
+## Showcase loop v2 — 2026-10-16
+
+- The StrongFoam and Milrcorr films in `assets/video/` are the v2 renders. Filenames are unchanged: `strongfoam-loop` and `milrcorr-loop`, each as mp4, webm, and a jpg poster. Nothing was re-encoded.
+- **What changed** — the six media files only.
+- **Why** — Christopher supplied the sharper loops to replace v1 in place.
+- **Code touchpoints** — `assets/video/strongfoam-loop.{mp4,webm,jpg}`, `assets/video/milrcorr-loop.{mp4,webm,jpg}`.
+- **Data-flow impact** — none. The homepage work rail and the two portfolio heroes still point at those names.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in this folder.
+
+## Showcase loops and Services menu — 2026-10-16
+
+- Operate plays the StrongFoam website loop. Build plays the Milrcorr loop. The same films are the heroes on `/portfolio/strongfoam-website/` and `/portfolio/milrcorr/`. Each film is a silent mp4, a webm, and a jpg poster in `assets/video/`. They load on the poster until the film is in view, stay muted, and stay paused when reduced motion is on. These files are v1. Sharper v2 renders will replace them under the same names.
+- The top bar folds the seven functions into one Services menu. Portfolio, Products, Course, Blog, and Start a project stay beside it. The phone menu uses that same grouping. The footer still lists each function.
+- **What changed** — showcase and portfolio films, and the site menu.
+- **Why** — Christopher supplied the first loops and asked for a quieter nav.
+- **Code touchpoints** — `index.html`, `assets/video/`, `assets/site.css`, `blog/blog.css`, `scripts/site-chrome.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — regenerated page chrome, and the StrongFoam and Milrcorr portfolio heroes.
+- **API / schema impact** — none. Homepage ItemList and `dateModified` stay as they were.
+- **Verification** — `npm test` in this folder.
+
+## Runway homepage — 2026-10-16
+
+- The homepage is a short left-aligned page: hero, model logos, function cards, showcase tabs, the model band, the PiRX proof, a notes grid, Cloudflare, the FAQ, and `#start`.
+- Search & AI visibility is its own function and owns “Get found in AI search.” Marketing keeps media and research. Sales and Customer service are separate. Design links to live portfolio work. Platform keeps one bill and safe code.
+- The Cloudflare section uses the official light wordmark. The headline is “Apps that scale, proudly built with Cloudflare.” The supporting line says the apps grow from the first user to millions without a rebuild, and stay fast, secure, and available wherever customers are.
+- The project action is **Start a project** at `/#start`. The word “brief” is off the public page. Showdesk and appliance-store media files are gone. Their old URLs still 301 to `/portfolio/`.
+- **What changed** — homepage structure, type, function grouping, and the Cloudflare section.
+- **Why** — Christopher asked for a Runway-calm page that groups the work by business function and says the apps scale on Cloudflare.
+- **Code touchpoints** — `index.html`, `assets/site.css`, `assets/logos/cloudflare.svg`, `blog/blog.css`, `scrollcraft.css`, `scripts/site-data.mjs`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`, `tests/work-rail.test.mjs`.
+- **Data-flow impact** — regenerated service, hub, portfolio, product, course, blog, about, and homepage chrome from `businessFunctions`.
+- **API / schema impact** — homepage ItemList stays five items. `dateModified` stays 2026-10-15. FAQ answers are unchanged.
+- **Verification** — `npm test` in this folder.
 
 ## Client sites — 2026-10-16
 
