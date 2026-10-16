@@ -45,13 +45,13 @@ export function BookingCard({ token, booking }: { token: string; booking: Bookin
           onClick={markOpened}
           className="studio-cta-primary"
         >
-          Open a brief
+          Email us to book
         </a>
       )}
       <p className="text-sm text-muted-foreground">
         Prefer email?{" "}
         <a className="underline" href={booking.mailto} onClick={markOpened}>
-          Write dev@pirx.ca
+          Write houdini@abra-ca-dabra.app
         </a>
       </p>
     </section>

@@ -409,7 +409,7 @@ export const businessFunctions = [
   {
     id: "design",
     name: "Design",
-    promise: "Sites and product pages shaped around the work, already live for StrongFoam, Milrcorr, and pirx.ca.",
+    promise: "Websites and product pages built to sell, live today for StrongFoam, Milrcorr and pirx.ca.",
     services: [],
     work: [
       { href: "/portfolio/strongfoam-website/", label: "StrongFoam" },
@@ -420,7 +420,7 @@ export const businessFunctions = [
   {
     id: "platform",
     name: "Platform",
-    promise: "Use the best model for every job, on one bill, and let code run only inside the limits you set.",
+    promise: "Use the best model for every job, on one bill, and let AI do real work, safely.",
     services: ["any-model-one-bill", "safe-code-execution"],
   },
 ];
@@ -480,10 +480,9 @@ export const cases = [
     sameAs: "https://schema-two.vercel.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
-    summary: "Scores whether answer engines can find a site, and writes the fix. What the scan measured stays separate from the suggested fix.",
+    summary: "See how easily AI search can find your site, and get the fixes to improve it.",
     body: [
       "Schema scores how visible a site is to answer engines and generates the repair.",
-      "Measured scan output stays separate from generated recommendations, so the result never claims more than the scan observed.",
     ],
   },
   {
@@ -496,7 +495,7 @@ export const cases = [
     summary: "A self-paced course for better answers from any model, plus a workshop path.",
     body: [
       "LLM Leverage is a self-paced course for better answers from any model, plus a workshop path for a rollout.",
-      "The studio homepage states twelve modules, quiz gated at 75 percent.",
+      "Twelve modules, each with a quiz you pass at 75%.",
     ],
   },
   {
@@ -506,7 +505,7 @@ export const cases = [
     sameAs: "https://abra-ca-dabra.app/films.html",
     image: "/assets/superfunnel-getting-started.webp",
     imageAlt: "Super Funnel Getting started film poster.",
-    summary: "One associate app. The Getting started film covers the home dashboard, setup, pipeline, and nav in 66 seconds.",
+    summary: "A sales app for associates, shown in a 66-second tour.",
     body: [
       "Super Funnel is one associate app, shown as a film rather than a separate public URL.",
       "The homepage carries the Getting started film: the home dashboard, setup, pipeline, and nav, in 66 seconds. The other seven tours are on the films page.",
@@ -530,8 +529,8 @@ export const cases = [
       "The app is the product people use. The blogs are the public pages behind the search record below.",
       "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days.",
       "Google Search Console, Jul 14 to Oct 13, 2026, recorded 375K search impressions, 1.85K clicks, and an average position of 7.6. The count starts near zero in mid-July.",
-      "The Generative AI features report is a separate number and is not added to the search total. It recorded 43.5K impressions in the same window. The top pages are the blog guides: good-10k-time-by-age 10,451; good-half-marathon-time-by-age 7,758; good-5k-time-by-age 6,104.",
-      "Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K in search and about 1.2-1.8K in AI features by mid-September. The chart is illustrative of that shape. These figures belong to pirx.ca for this window, and they are not a promise for the next domain.",
+      "The Generative AI features report is a separate number and is not added to the search total. It recorded 43.5K impressions in the same window. The top pages are the blog guides: Good 10K time by age (10,451), Good half marathon time by age (7,758), and Good 5K time by age (6,104).",
+      "Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K in search and about 1.2-1.8K in AI features by mid-September. The chart shows that shape. Results vary by site; these are pirx.ca's own numbers.",
     ],
   },
   {
@@ -542,7 +541,6 @@ export const cases = [
     services: ["ai-assistants-and-agents", "custom-apps"],
     body: [
       "SuperPatch products are the public product pages: the offer, the comparison, and the questions a buyer asks before they decide.",
-      "Internal system names and performance figures stay off this page.",
     ],
   },
   {
@@ -569,7 +567,7 @@ export const cases = [
     services: ["custom-apps", "web-automation"],
     body: [
       "The StrongFoam website walks through the offer, an estimate a visitor can start, and a booking.",
-      "The request is captured on the page, so it stays with the visit.",
+      "Visitors can get an estimate and book without picking up the phone.",
     ],
   },
   {
@@ -579,7 +577,7 @@ export const cases = [
     summary: "The record you work in: the customer, the job, and the numbers, in one place.",
     services: ["custom-apps"],
     body: [
-      "The StrongFoam CRM/ERP is the record you work in.",
+      "One place for customers, jobs and numbers, built around how StrongFoam works.",
       "The customer, the job, and the numbers live in one place.",
     ],
   },
@@ -592,7 +590,6 @@ export const cases = [
     body: [
       "Renew Implants is the website, the social posts, and the blogs, as one public presence.",
       "The site says what the work is, and the posts and the blogs are what a person can read before they enquire.",
-      "No performance figure is attached to this work.",
     ],
   },
 ];
@@ -604,7 +601,7 @@ export const products = [
     sameAs: "https://schema-two.vercel.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
-    description: "Scores whether answer engines can find a site, and writes the fix. What the scan measured stays separate from the suggested fix.",
+    description: "See how easily AI search can find your site, and get the fixes to improve it.",
     caseSlug: "schema",
   },
   {
@@ -613,7 +610,7 @@ export const products = [
     sameAs: "https://abra-ca-dabra.app/films.html",
     image: "/assets/superfunnel-getting-started.webp",
     imageAlt: "Super Funnel Getting started film poster.",
-    description: "One associate app, shown as the Getting started film: the home dashboard, setup, pipeline, and nav, in 66 seconds.",
+    description: "A sales app for associates, shown in a 66-second tour of the dashboard, setup and pipeline.",
     caseSlug: "super-funnel",
   },
 ];
@@ -624,14 +621,14 @@ export const course = {
   sameAs: "https://llm-leverage-course.vercel.app",
   image: "/assets/llmcourse-home.webp",
   imageAlt: "LLM Leverage course home: a lesson preview and a rollout path.",
-  description: "A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, with the quiz gated at 75 percent.",
+  description: "A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, each with a quiz you pass at 75%.",
 };
 
 export const PLACEHOLDER = "PLACEHOLDER — needs Christopher";
 
 export const placeholders = {
   offering: "Price, timeline, and a client example for this service are not on the site yet.",
-  portfolio: "Permission to publish additional results, quotes, or a longer case study is not on file.",
-  product: "A public price is not on the site, so this page does not list an offer.",
-  course: "The public course site says there are 12 modules, but it does not list the module names. The syllabus stays off this page until those names are public.",
+  portfolio: "Want something like this for your business?",
+  product: "Pricing on request. Start a project to talk it through.",
+  course: "Open the course to see every module, or start a project to bring it to your staff.",
 };

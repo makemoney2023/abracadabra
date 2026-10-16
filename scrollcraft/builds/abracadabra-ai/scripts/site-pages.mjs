@@ -65,7 +65,7 @@ function orgNode() {
     "@id": ORG_ID,
     name: "Abracadabra AI",
     url: `${SITE}/`,
-    email: "dev@pirx.ca",
+    email: "houdini@abra-ca-dabra.app",
     slogan: "From thought to working software",
   };
 }
@@ -687,7 +687,7 @@ ${placeholder(placeholders.portfolio)}
 async function renderPortfolioHub() {
   const url = `${SITE}/portfolio/`;
   const title = "Portfolio | Abracadabra AI";
-  const description = "Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.";
+  const description = "Live work you can open and try, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants and pirx.ca.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Portfolio", href: "/portfolio/", url },
@@ -733,7 +733,7 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
   title: "Work that's live.",
-  dek: "<p>Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.</p>",
+  dek: "<p>Live work you can open and try, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants and pirx.ca.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -798,7 +798,7 @@ ${placeholder(placeholders.product)}
 async function renderProductsHub() {
   const url = `${SITE}/products/`;
   const title = "Products | Abracadabra AI";
-  const description = "Schema and Super Funnel can each be opened as a live system or a film. Prices stay off this page.";
+  const description = "Ready-made tools you can try today: Schema and Super Funnel.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Products", href: "/products/", url },
@@ -840,7 +840,7 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
   title: "Software you can use today.",
-  dek: "<p>Schema and Super Funnel can each be opened as a live system or a film. Prices stay off this page.</p>",
+  dek: "<p>Ready-made tools you can try today: Schema and Super Funnel.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -894,7 +894,7 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "LLM Leverage",
   title: "Learn to get real work done with AI.",
-  dek: `<p>${esc(course.description)}</p>\n<p>The public course site is built for class and self-paced study. It lists 4 workshop decks, static sandboxes, templates, a glossary, and a capstone gallery.</p>\n<p><a href="${esc(course.sameAs)}">Open the course</a></p>\n<p><a href="/portfolio/llm-leverage/">Portfolio note</a></p>`,
+  dek: `<p>${esc(course.description)}</p>\n<p>Built for class or self-paced study. Includes four workshop decks, practice exercises, templates, a glossary and a capstone gallery.</p>\n<p><a href="${esc(course.sameAs)}">Open the course</a></p>\n<p><a href="/portfolio/llm-leverage/">Portfolio note</a></p>`,
   media: assetMedia(course.image, course.imageAlt),
 })}
 ${placeholder(placeholders.course)}

@@ -60,7 +60,7 @@ Cisco's 2025 AI Readiness Index surveyed 8,000 senior leaders at organizations w
 
 We say the last part slowly, because it is the part owners miss. Ready on our check means the named job can carry a tool. A pacesetter in Cisco's index is a large organization in a sample of senior leaders. Near 13% of that sample is about those organizations. It is not a report card for a shop, a clinic, or a trades desk. If a salesperson says you should buy now to catch up with pacesetters, they have glued a large-firm statistic to a small-firm fear. The 4 times production gap is real inside that sample. It does not mean your service writer is late.
 
-Use the index as a picture of a different size of firm. The useful rhyme is that moving a pilot into production follows a written process. The useless move is to decide you are behind a company that staffs a team for the pilot. You have a bay, a desk, and a person who knows the customers. Readiness is whether that person can hand the job to a tool without the job falling apart.
+Use the index as a picture of a different size of firm. The useful rhyme is that moving a pilot into production follows a written process. The useless move is to decide you are behind a business that staffs a whole crew for the pilot. You have a bay, a desk, and a person who knows the customers. Readiness is whether that person can hand the job to a tool without the job falling apart.
 
 <!--image:2-->
 
@@ -76,33 +76,33 @@ The negative signs are the same facts turned around. Knowledge in one head feels
 
 <!--image:3-->
 
-A small firm can show the positive signs on one job and the negative signs on another. That is normal, and it is why "is my business ready?" is a slightly dishonest question. The honest question is which job. The check's bands describe the state you are in for the way you answered, not a tattoo on the company. Early and Forming are 0–39 and 40–59. They are descriptions. Ready and Running are 60–79 and 80–100. They are also descriptions. None of them means you have purchased a product, and none of them means you have failed as an owner.
+A small firm can show the positive signs on one job and the negative signs on another. That is normal, and it is why "is my business ready?" is the wrong question. The honest question is which job. The check's bands describe the state you are in for the way you answered, not a tattoo on the business. Early and Forming are 0–39 and 40–59. They are descriptions. Ready and Running are 60–79 and 80–100. They are also descriptions. None of them means you have purchased a product, and none of them means you have failed as an owner.
 
 ## A worked example
 
-Say we are in an independent auto shop on a slow afternoon. Denise owns it. Paul writes the service tickets. Rosa is the lead tech. This is an example we walk through. We are not reporting their revenue, their comeback rate, or any other figure, because we did not measure them and we will not fake it.
+Say we are in an independent auto shop on a slow afternoon. One person writes the service tickets. Another is the lead tech. This is an example we walk through. We are not reporting their revenue, their comeback rate, or any other figure, because we did not measure them and we will not fake it.
 
-Denise asked after a vendor showed a tool that drafts customer updates from the ticket. We split the question. Ready for which job? The job on offer is the status text: diagnosed, the customer hears what is wrong, says yes or no, Rosa proceeds or does not.
+The owner asked after a vendor showed a tool that drafts customer updates from the ticket. We split the question. Ready for which job? The job on offer is the status text: diagnosed, the customer hears what is wrong, says yes or no, the lead tech proceeds or does not.
 
-Walk the positive signs. Is the source of truth named? Paul says the shop system. Rosa says she writes the real finding on the paper that stays on the dash, because the system ticket is what Paul had time to type, and Paul is often still with the previous customer. Denise says she trusts whatever Paul texts her. Three candidates. The source is not named. First negative sign, already. Knowledge of the true finding sits with Rosa's paper and Rosa's head. That is the "one head" sign, even though Paul has a system. A system that is not believed is not the source of truth.
+Walk the positive signs. Is the source of truth named? The ticket writer says the shop system. The lead tech says she writes the real finding on the paper that stays on the dash, because the system ticket is what the ticket writer had time to type, and the ticket writer is often still with the previous customer. The owner says she trusts whatever the ticket writer texts her. Three candidates. The source is not named. First negative sign, already. Knowledge of the true finding sits with the lead tech's paper and the lead tech's head. That is the "one head" sign, even though the ticket writer has a system. A system that is not believed is not the source of truth.
 
-Are the steps written? The sunny path is. Car in, inspect, call, approve, repair, car out. The exceptions are not. What if the customer does not answer and the bay is needed? What if Rosa finds a second problem after the yes? What if Paul is off and the other writer does not know Rosa's shorthand? Unwritten exceptions. Second negative sign.
+Are the steps written? The sunny path is. Car in, inspect, call, approve, repair, car out. The exceptions are not. What if the customer does not answer and the bay is needed? What if the lead tech finds a second problem after the yes? What if the ticket writer is off and the other writer does not know the lead tech's shorthand? Unwritten exceptions. Second negative sign.
 
-Does a person own the output? The vendor's tool would send a text. Paul assumes he would glance at it. Rosa says she would not see it until the customer called angry. Denise says she wants to approve "the important ones," which means there is no rule. Nobody owns the output in a way that survives a busy morning. Third gap.
+Does a person own the output? The vendor's tool would send a text. The ticket writer assumes he would glance at it. The lead tech says she would not see it until the customer called angry. The owner says she wants to approve "the important ones," which means there is no rule. Nobody owns the output in a way that survives a busy morning. Third gap.
 
-Can someone stop the experiment? Denise says she could cancel the subscription. That is a commercial stop, not an operational one. An operational stop is: this text does not go out, today, because it is wrong, and the person who sees that is allowed to halt it without a meeting. They do not have that person. Fourth gap.
+Can someone stop the experiment? The owner says she could cancel the subscription. That is a commercial stop, not an operational one. An operational stop is: this text does not go out, today, because it is wrong, and the person who sees that is allowed to halt it without a meeting. They do not have that person. Fourth gap.
 
-So the shop is not ready for this job. That is not an insult. Denise runs a respected bay. The signs say the status text would invent a process Paul, Rosa, and Denise do not currently share. If we put the same shop on the check, we would not be surprised to land in Early or Forming. We would be surprised, and suspicious, if the answers came back Ready while the dash paper still beats the ticket.
+So the shop is not ready for this job. That is not an insult. The owner runs a respected bay. The signs say the status text would invent a process the ticket writer, the lead tech, and the owner do not currently share. If we put the same shop on the check, we would not be surprised to land in Early or Forming. We would be surprised, and suspicious, if the answers came back Ready while the dash paper still beats the ticket.
 
-What would ready look like, without pretending we watched it happen? Paul and Rosa agree the ticket is the record, and the dash paper is a scratch pad that gets typed before anyone is texted. The no-answer case and the second-problem case are written where the other writer can find them. Paul owns the text, Rosa can reject a finding that is not what she saw, and Denise can halt a wrong text the same day. Success means the customer hears the finding Rosa actually made. That is Ready in the ordinary sense. It does not look like a pacesetter. It looks like a shop that stopped inventing the process inside the tool.
+What would ready look like, without pretending we watched it happen? The ticket writer and the lead tech agree the ticket is the record, and the dash paper is a scratch pad that gets typed before anyone is texted. The no-answer case and the second-problem case are written where the other writer can find them. The ticket writer owns the text, the lead tech can reject a finding that is not what she saw, and the owner can halt a wrong text the same day. Success means the customer hears the finding the lead tech actually made. That is Ready in the ordinary sense. It does not look like a pacesetter. It looks like a shop that stopped inventing the process inside the tool.
 
 ## How we'd run it
 
-First we refuse the wide question. "Is my business ready?" becomes "is this job ready?" Denise does not get to mean the whole shop. She gets the status text, because that is what the vendor is selling. A yes about a different job is a way of changing the subject.
+First we refuse the wide question. "Is my business ready?" becomes "is this job ready?" The owner does not get to mean the whole shop. She gets the status text, because that is what the vendor is selling. A yes about a different job is a way of changing the subject.
 
 Second we read the large-firm index for what it counted, then say out loud that the shop is not in that census. The fear of being behind pacesetters does not get a vote.
 
-Third we walk the four positive signs and the four negative signs as pairs. Named source or one head. Written steps or unwritten exceptions. A person who owns the output, or nobody who may send. A stopper, or success with no definition. Paul, Rosa, and Denise each answer. We write conflicts instead of smoothing them. Rosa's paper versus Paul's ticket is the conflict that matters.
+Third we walk the four positive signs and the four negative signs as pairs. Named source or one head. Written steps or unwritten exceptions. A person who owns the output, or nobody who may send. A stopper, or success with no definition. The ticket writer, the lead tech, and the owner each answer. We write conflicts instead of smoothing them. The lead tech's paper versus the ticket writer's ticket is the conflict that matters.
 
 Fourth we open the band pages if a label will help. Early and Ready are states with sentences, not prizes. If the signs are negative, we expect Early or Forming, and we treat a Ready result as a reason to reread the answers, not as a reason to celebrate. The check does not diagnose. Neither do we.
 
@@ -112,18 +112,18 @@ Sixth we only talk about the vendor after the signs are honest. If the signs are
 
 ## Common mistakes
 
-The mistake we see most is hearing "ready" as a personality. Denise is decisive, Rosa is skilled, Paul is careful. None of that answers the signs. A careful writer with two records is not ready for a tool that needs one. Character is not a band.
+The mistake we see most is hearing "ready" as a personality. The owner is decisive, the lead tech is skilled, the ticket writer is careful. None of that answers the signs. A careful writer with two records is not ready for a tool that needs one. Character is not a band.
 
 Another mistake is using Cisco's 13% as a small-business failure rate. It is the share of pacesetters in a sample of large organizations. Quoting it to scare a shop owner is a category error. The sample is not a census of bays and storefronts. We will not nod along when a pitch does it.
 
-A third mistake is counting a subscription cancel button as the ability to stop. Denise can always call the vendor later. The sign we want is someone on the floor who can block a bad customer message today. Later is how a wrong text sits in a customer's phone all afternoon.
+A third mistake is counting a subscription cancel button as the ability to stop. The owner can always call the vendor later. The sign we want is someone on the floor who can block a bad customer message today. Later is how a wrong text sits in a customer's phone all afternoon.
 
-We also see owners collect the positive signs as adjectives and skip the negatives. They can name a system, so they ignore that Rosa does not believe it. Naming a system you do not trust is the one-head problem in a nicer outfit. Look at the negative list on purpose. It is ruder, and it is clearer.
+We also see owners collect the positive signs as adjectives and skip the negatives. They can name a system, so they ignore that the lead tech does not believe it. Naming a system you do not trust is the one-head problem in a nicer outfit. Look at the negative list on purpose. It is ruder, and it is clearer.
 
 The last mistake is treating the OECD tool's missing rate as bad news. It does not publish an adoption rate. That is restraint. Do not fill the silence with a guess and then feel behind the guess.
 
 ## What we'd do
 
-We would answer Denise with the signs, not with a pep talk. Our opinion: most shops that ask "are we ready?" are asking for permission to buy, and the honest answer is often that one job is Forming and the rest of the question is too big. We would rather shrink the question than inflate the readiness.
+We would answer the owner with the signs, not with a pep talk. Our opinion: most shops that ask "are we ready?" are asking for permission to buy, and the honest answer is often that one job is Forming and the rest of the question is too big. We would rather shrink the question than inflate the readiness.
 
-If we were Denise, we would make the ticket the only record Rosa is willing to have texted, write the no-answer case where the other writer can see it, and give Rosa a plain way to kill a message that does not match her finding. Then we would take the check and read the band as a state. If it says Ready, we would still start with one job and a person who can stop it. If it says Early, we would believe the dash paper over the demo.
+If we were the owner, we would make the ticket the only record the lead tech is willing to have texted, write the no-answer case where the other writer can see it, and give the lead tech a plain way to kill a message that does not match her finding. Then we would take the check and read the band as a state. If it says Ready, we would still start with one job and a person who can stop it. If it says Early, we would believe the dash paper over the demo.

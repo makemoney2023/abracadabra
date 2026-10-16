@@ -262,7 +262,7 @@ describe("blog content", () => {
     const posts = await loadPosts();
     const index = await text("blog/index.html");
     assert.match(index, /<a class="featured-post" data-pillar="AI readiness" href="\/blog\/ai-readiness-assessment">/);
-    assert.match(index, /<fieldset class="pillar-filter"><legend>Filter by pillar<\/legend>/);
+    assert.match(index, /<fieldset class="pillar-filter"><legend>Filter by topic<\/legend>/);
     assert.match(index, /<input type="radio" name="pillar" id="pillar-all" checked>/);
     const times = index.match(/<time datetime="2026-10-14">October 14, 2026<\/time>/g) ?? [];
     const reads = index.match(/\d+ min read/g) ?? [];
@@ -287,13 +287,13 @@ describe("blog content", () => {
     assert.match(robots, /User-agent: ClaudeBot\nAllow: \//);
     assert.match(robots, /Sitemap: https:\/\/abra-ca-dabra\.app\/sitemap\.xml/);
     const privacy = await text("privacy/index.html");
-    assert.match(privacy, /Draft for review/);
+    assert.match(privacy, /Effective date/);
     assert.match(privacy, /noindex,nofollow/);
-    assert.match(privacy, /after a visitor consents/);
+    assert.match(privacy, /only after you consent/);
     assert.doesNotMatch(privacy, /<script[^>]+posthog/i);
     assert.doesNotMatch(privacy, /posthog\.com/);
     const llms = await text("llms.txt");
-    assert.match(llms, /Privacy draft \(not in force\)/);
+    assert.match(llms, /Privacy: /);
     assert.match(llms, /No post is public on this date|https:\/\/abra-ca-dabra\.app\/blog\//);
   });
 });

@@ -235,11 +235,11 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(pirx, cleared);
   assert.match(pirx, windowLabel);
   assert.match(pirx, source);
-  assert.match(pirx, /good-10k-time-by-age/);
+  assert.match(pirx, /Good 10K time by age/);
   assert.match(pirx, /10,451/);
-  assert.match(pirx, /good-half-marathon-time-by-age/);
+  assert.match(pirx, /Good half marathon time by age/);
   assert.match(pirx, /7,758/);
-  assert.match(pirx, /good-5k-time-by-age/);
+  assert.match(pirx, /Good 5K time by age/);
   assert.match(pirx, /6,104/);
   assert.match(pirx, /1\.85K/);
   assert.match(pirx, /7\.6/);

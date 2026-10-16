@@ -47,7 +47,7 @@ citations:
     publisher: "Google Search Central"
     figures: []
 ---
-A useful AI consultant for a small business can name the job, the data, and the person who is allowed to stop the work. If an off-the-shelf product already does that job, the honest sentence is to buy the product and skip the custom project. We would rather lose the engagement than invent a build to justify a fee. That is how the [studio](/) works. The hiring split, consultant versus a firm that wants to own the install, is the [agency comparison](/blog/ai-automation-agency-vs-consultant). What happens when a pretty proof never becomes a process is the [stall note](/blog/why-ai-pilots-stall).
+A useful AI consultant for a small business can name the job, the data, and the person who is allowed to stop the work. If an off-the-shelf product already does that job, the honest advice is to buy the product and skip the custom project. We would rather lose the engagement than invent a build to justify a fee. That is how the [studio](/) works. The hiring split, consultant versus a firm that wants to own the install, is the [agency comparison](/blog/ai-automation-agency-vs-consultant). What happens when a pretty proof never becomes a process is the [stall note](/blog/why-ai-pilots-stall).
 
 Bring the person who does the job into the first meeting. An owner alone will be sold a platform. The office manager, the bookkeeper, or the dispatcher will ask where the file lives, and that question is worth more than the slide with the architecture. If the consultant looks annoyed by it, you have learned something cheap.
 

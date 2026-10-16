@@ -51,7 +51,7 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "kind": "section",
     "title": "Where do new customers come from?",
     "answer": "Growth asks how buyers arrive, whether anyone has checked AI answer engines, and who can change the website. A URL at the end starts a structure scan.",
-    "strong": "Strong looks like more than one measured channel, a habit of checking how you show up in answers, and a site the team can change.",
+    "strong": "Strong looks like more than one measured channel, a habit of checking how you show up in answers, and a site your staff can change.",
     "first": "Search your own product question in one answer engine and save the result.",
     "faq": [
       {
@@ -92,13 +92,13 @@ export const CHECK_GUIDES: CheckGuide[] = [
     "slug": "band/forming",
     "kind": "band",
     "title": "What does a Forming readiness score mean?",
-    "answer": "Pieces of the work are written down. A named owner and one system of record are what turn that into something a team can run.",
+    "answer": "Some of your work is written down. Name an owner and keep one source of truth, and you're ready to build.",
     "strong": "The band describes the state of the business today. It is not a grade and it is not a diagnosis.",
     "first": "Read the three suggestions under your lowest section and do the first one before you book anything.",
     "faq": [
       {
         "q": "What does Forming mean?",
-        "a": "Pieces of the work are written down. A named owner and one system of record are what turn that into something a team can run."
+        "a": "Some of your work is written down. Name an owner and keep one source of truth, and you're ready to build."
       }
     ]
   },

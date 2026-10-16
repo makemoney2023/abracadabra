@@ -72,7 +72,7 @@ Gartner reported in February 2025 that 63% of respondents do not have, or are un
 
 AWS published a checklist in September 2025.[^aws] It walks five steps and sorts a business into four stages: Not yet ready, Emerging, Operational, and Scaling. The page does not cite an adoption percentage. We like that restraint. A stage name is a description you can argue with. If a page will not tell you how many firms it counted, do not borrow its silence and turn it into a rate.
 
-We use those stage names as labels, not as a grade. Not yet ready means the job is still in one person's head. Emerging means some of it is written and a lot of it is habit. Operational means a team can run the job without a hero. Scaling means you are repeating a pattern, not discovering it. You do not have to adopt the labels. You do have to say which one fits.
+We use those stage names as labels, not as a grade. Not yet ready means the job is still in one person's head. Emerging means some of it is written and a lot of it is habit. Operational means your staff can run the job without a hero. Scaling means you are repeating a pattern, not discovering it. You do not have to adopt the labels. You do have to say which one fits.
 
 <!--image:2-->
 
@@ -80,7 +80,7 @@ The process guide we linked above is what we open when this half of the list is 
 
 ## People and the decision
 
-Who may use a tool, and who may send its output to a customer? Those are the people questions, and they are where checklists go soft. "The team will use it" is not an answer. A name is an answer. A rule about what can leave the building is an answer.
+Who may use a tool, and who may send its output to a customer? Those are the people questions, and they are where checklists go soft. "Everyone will use it" is not an answer. A name is an answer. A rule about what can leave the building is an answer.
 
 Microsoft's 2024 Work Trend Index says 75% of knowledge workers use AI at work, and 46% of those users started less than six months earlier.[^microsoft] 78% of AI users bring their own tools. At small and midsize companies that share is 80%. 60% of leaders worry their organization's leadership lacks a plan and vision to implement AI.
 
@@ -100,17 +100,17 @@ One more decision question we add when the room is being polite. What will you s
 
 ## A worked example
 
-Say we are sitting after close with the owner of a neighborhood hardware shop. We will call the owner June, the counter lead Chris, and the bookkeeper Anita. This is an example we walk through. It is not a report of a shop we measured.
+Say we are sitting after close with the owner of a neighborhood hardware shop. There is an owner, a counter lead, and a bookkeeper. This is an example we walk through. It is not a report of a shop we measured.
 
-June wants a tool that drafts the message saying a special order is in, and that suggests which supplier to chase. The demo was slick. The checklist is the part where we ignore the demo.
+The owner wants a tool that drafts the message saying a special order is in, and that suggests which supplier to chase. The demo was slick. The checklist is the part where we ignore the demo.
 
-We start with data. June says the source of truth is the computer. Chris keeps a notebook because the computer is wrong when a quantity changes at the counter. Anita trusts a spreadsheet she updates from supplier emails, because the other two disagree and she has to pay someone. The box for one source of truth stays blank. Asked which record he would trust if June were out, Chris says the notebook, then says he would call Anita. The source of truth is a person. A person can be the bridge. A person cannot be the record a tool reads.
+We start with data. The owner says the source of truth is the computer. The counter lead keeps a notebook because the computer is wrong when a quantity changes at the counter. The bookkeeper trusts a spreadsheet she updates from supplier emails, because the other two disagree and she has to pay someone. The box for one source of truth stays blank. Asked which record he would trust if the owner were out, the counter lead says the notebook, then says he would call the bookkeeper. The source of truth is a person. A person can be the bridge. A person cannot be the record a tool reads.
 
-Then the process. A part arrives, someone calls, the customer picks up, Anita marks it paid. That happy path is easy. A damaged part goes on the back shelf until Chris "deals with it." A customer who does not answer gets one more try, then the order sits. None of that is written, and on days Chris is at the other site the handoff has no owner. We refuse to count the happy path as the whole process.
+Then the process. A part arrives, someone calls, the customer picks up, the bookkeeper marks it paid. That happy path is easy. A damaged part goes on the back shelf until the counter lead "deals with it." A customer who does not answer gets one more try, then the order sits. None of that is written, and on days the counter lead is at the other site the handoff has no owner. We refuse to count the happy path as the whole process.
 
-Then people. Chris already uses a chat tool on his phone to rewrite messages when he is tired of sounding stiff. June did not know. We do not scold him. We write the question the checklist was for. Who may send those words to a customer, and who may not?
+Then people. The counter lead already uses a chat tool on his phone to rewrite messages when he is tired of sounding stiff. The owner did not know. We do not scold him. We write the question the checklist was for. Who may send those words to a customer, and who may not?
 
-Then the decision. June says success is less chaos. We push once. Success is that a customer hears about an arrival from the record, not from Chris's memory, and that Anita can see the same status Chris sees. If a message goes out wrong, June can stop the trial herself. She does not wait for a vendor. That line is what lets her buy later without betting the shop on a login.
+Then the decision. The owner says success is less chaos. We push once. Success is that a customer hears about an arrival from the record, not from the counter lead's memory, and that the bookkeeper can see the same status the counter lead sees. If a message goes out wrong, the owner can stop the trial herself. She does not wait for a vendor. That line is what lets her buy later without betting the shop on a login.
 
 We leave with blanks on data and process, a surprise on people, and a decision that is finally a sentence. Nobody bought anything. That is the checklist working.
 
@@ -124,15 +124,15 @@ Second we put the people who touch that job in the room. The owner alone will de
 
 Third we walk data, then process, then people, then the decision, and we write blanks in ink. We do not shop for tools in the middle. If someone says the new software would handle that, we write "not handled today" and keep going.
 
-Fourth we read the blanks back and name one owner for the next change. If the source of truth is the blank that matters, Anita and Chris agree what they will treat as the record on ordinary days. June's job is to back that choice when it is inconvenient.
+Fourth we read the blanks back and name one owner for the next change. If the source of truth is the blank that matters, the bookkeeper and the counter lead agree what they will treat as the record on ordinary days. The owner's job is to back that choice when it is inconvenient.
 
 Fifth we only then look at tools, with the sheet on the table. Any feature that does not touch a ticked box or a named blank is a distraction. If the blanks are still the whole story, we stop. A process blank goes to the process guide. The same four groups go to the check when we want a band instead of ticks.
 
-We book the session after the rush, short enough that Chris is not watching the door. A checklist filled by the owner alone at midnight will be full, and it will be wrong.
+We book the session after the rush, short enough that the counter lead is not watching the door. A checklist filled by the owner alone at midnight will be full, and it will be wrong.
 
 ## Common mistakes
 
-The mistake we see most is ticking the box you hope is true. "We have a process" often means a binder from a quieter year. If Chris cannot find the page that covers a damaged part, you do not have a process for the job you are buying for.
+The mistake we see most is ticking the box you hope is true. "We have a process" often means a binder from a quieter year. If the counter lead cannot find the page that covers a damaged part, you do not have a process for the job you are buying for.
 
 Another mistake is letting the vendor's questionnaire replace yours. Their questions ask whether you can be a customer. Yours ask whether the job can survive contact with a tool. Keep yours, even if yours is a notebook page.
 
@@ -142,8 +142,8 @@ We also watch owners score their own confidence and write only the happy path. C
 
 ## What we'd do
 
-We would not buy in the meeting where the checklist is first filled in. We would buy later, for one job, after the source of truth has a name and the handoff has a person. Our opinion is blunt. A tool on top of three records will make another record, and you will pay a fee for the privilege of still calling Anita.
+We would not buy in the meeting where the checklist is first filled in. We would buy later, for one job, after the source of truth has a name and the handoff has a person. Our opinion is blunt. A tool on top of three records will make another record, and you will pay a fee for the privilege of still calling the bookkeeper.
 
-If we were June, we would spend the next stretch of ordinary days making Chris and Anita write status in one place, including the damaged-part case, and we would pause Chris's phone tool for customer messages until June has said what may be sent. That is a smaller project than a new platform. It is the project the checklist was trying to start.
+If we were the owner, we would spend the next stretch of ordinary days making the counter lead and the bookkeeper write status in one place, including the damaged-part case, and we would pause the counter lead's phone tool for customer messages until the owner has said what may be sent. That is a smaller project than a new platform. It is the project the checklist was trying to start.
 
 We would treat a full page of ticks with suspicion, and a short page of blanks with respect. The blanks are the work. The tool can wait.

@@ -1,6 +1,6 @@
 ---
 title: "AI Automation Agency vs Consultant: Who to Hire"
-description: "Hire a consultant to name the job. Hire an agency to build after the job is named. Training plans and scaling rates are both thinner than use."
+description: "Hire a consultant to name the job. Hire an agency to build after the job is named. Who to hire first, and why the order matters."
 datePublished: "2026-10-14"
 dateModified: "2026-10-14"
 pillar: "AI consulting and implementation"
@@ -48,13 +48,13 @@ citations:
     publisher: "McKinsey"
     figures: ["2025", "88", "78", "23", "39", "10", "29", "100", "5"]
 ---
-Hire a consultant to name the job, and hire an agency only after that naming is done. An AI consultant names the job, the data, and the stop. An automation agency builds the system after that naming is done. Hiring the agency first produces a build with no owner. We've watched that sequence in the wrong order more than once. The proposal arrives with a team, a stack, and a start date. Nobody in the room can say which output a person still has to check. The build proceeds anyway, because the calendar was the only decision anyone made.
+Hire a consultant to name the job, and hire an agency only after that naming is done. An AI consultant names the job, the data, and the stop. An automation agency builds the system after that naming is done. Hiring the agency first produces a build with no owner. We've watched that sequence in the wrong order more than once. The proposal arrives with staff, a toolset, and a start date. Nobody in the room can say which output a person still has to check. The build proceeds anyway, because the calendar was the only decision anyone made.
 
 The [consultant note](/blog/ai-consultant-for-small-business) is the question list we wish owners had in their pocket before the first sales call. The [buy-or-build note](/blog/off-the-shelf-ai-or-custom-software) is whether to build at all. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-mid) is the matching score when the choice itself is the thing you're avoiding. Hiring is a decision. Score it before you sign. A signature on a vague scope is not a strategy. It's a hope with a payment schedule.
 
 ## Two training figures, two populations
 
-Microsoft's 2024 index says only 25% of companies were planning to offer generative AI training.[^microsoft] Statistics Canada's 2025 brief says 38.9% of Canadian businesses that already use AI had trained staff.[^statcan] Those are different populations. One is a plan among companies. The other is training among businesses that already use AI. Do not average them. A pitch that slides the two numbers into "about a third of firms train people" has invented a fact. The plan figure is about companies that were intending to offer training. The Canadian figure is about businesses already using AI that had actually trained staff. Intending and having done it are different. Companies and AI-using businesses are different. Countries and survey windows are different. If a consultant or an agency treats them as one knob, they are not reading. They are decorating.
+Microsoft's 2024 index says only 25% of companies were planning to offer generative AI training.[^microsoft] Statistics Canada's 2025 report says 38.9% of Canadian businesses that already use AI had trained staff.[^statcan] Those are different populations. One is a plan among companies. The other is training among businesses that already use AI. Do not average them. A pitch that slides the two numbers into "about a third of firms train people" has invented a fact. The plan figure is about companies that were intending to offer training. The Canadian figure is about businesses already using AI that had actually trained staff. Intending and having done it are different. Companies and AI-using businesses are different. Countries and survey windows are different. If a consultant or an agency treats them as one knob, they are not reading. They are decorating.
 
 <!--image:2-->
 
@@ -82,7 +82,7 @@ First, write the job in one sentence a new hire could read. Not "AI for the fron
 
 Second, write the data the job may touch and the data it may not. Reminders can see the time and the place. They can't see the clinical note unless a named practitioner says so. Quotes can see the site measurements. They can't invent a price. If the data line is "whatever the model needs," you don't have a boundary. You have a hope that the vendor will be careful. Vendors are careful about their scope. You have to be careful about yours.
 
-Third, name the checker in the same sentence as the job. A person, a place where the output waits, and what happens if it's wrong. A checkpoint nobody owns is not a checkpoint. We'd rather delay the hire than sign a scope where "the team will review" is the only human. The team is not a name. The team goes home.
+Third, name the checker in the same sentence as the job. A person, a place where the output waits, and what happens if it's wrong. A checkpoint nobody owns is not a checkpoint. We'd rather delay the hire than sign a scope where "someone will review" is the only human. Someone is not a name. Everyone goes home.
 
 Fourth, ask whether a product already does this. The consultant is paid to refuse that work. If the booking tool already sends the plain reminder, stop. If the books already flag the late invoice, stop. Bring an agency in only for the gap that remains after that refusal. The buy-or-build note is the longer version of this step. Don't skip it because an agency proposal is already pretty.
 
@@ -94,7 +94,7 @@ Sixth, if the proposal mentions agents, ask whether they are scaling or experime
 
 Hiring the agency because the proposal had more pages is the mistake with the nicest stationery. Pages are not a named job. A bench of people is not a checker. We've sat with owners who chose the thicker folder because it felt like seriousness. Seriousness is a person who will tell you not to start. The thinner conversation is often the one that saves the quarter. We don't mean a cheap conversation. We mean a conversation that is allowed to end in no.
 
-Averaging the training figures is the mistake that makes everyone sound informed. Someone says firms don't train, and someone else quotes the other survey as if it were the same study, and the room nods. They aren't. One is a plan in a 2024 index of companies. One is training already done among Canadian businesses that use AI, in a 2025 brief. Use either number alone, with its population, or use neither. The fake average will be repeated to your staff as if it were a law. It isn't.
+Averaging the training figures is the mistake that makes everyone sound informed. Someone says firms don't train, and someone else quotes the other survey as if it were the same study, and the room nods. They aren't. One is a plan in a 2024 index of companies. One is training already done among Canadian businesses that use AI, in a 2025 report. Use either number alone, with its population, or use neither. The fake average will be repeated to your staff as if it were a law. It isn't.
 
 Buying the experiment under a scaling headline is how agent language gets into a clinic that needed a reminder. McKinsey's split is the antidote if you actually say it out loud in the meeting. Most of the respondents in that survey were not scaling. If your seller only quotes a use number, ask what happened to the people who were still experimenting. Then ask which group the proposal belongs to. Silence is an answer. Treat it as one.
 
@@ -106,6 +106,6 @@ Skipping the owner of the output is the last one, and it survives all the others
 
 We'd hire the namer first, almost every time, and we'd pay them to be willing to end the engagement with a refusal. That's the opinion. A clinic that can't say what the front desk is allowed to send doesn't need an agency yet. A shop whose late invoices already live in the bookkeeping product doesn't need either of them. A trades desk with the steps written, the price owned by a named person, and a gap no product covers is the rare room where we'd call a builder. Even there, the builder doesn't get to rename the job.
 
-We wouldn't let a single training statistic into the proposal without its population sitting next to it. We wouldn't let "agent" into the scope unless someone can show the step that branches and the person who stops it. We wouldn't sign a start date that arrives before the page. Dates are easy. Pages are the work. If the seller needs the date to hold a team together, that is their problem to solve after you know what you're buying.
+We wouldn't let a single training statistic into the proposal without its population sitting next to it. We wouldn't let "agent" into the scope unless someone can show the step that branches and the person who stops it. We wouldn't sign a start date that arrives before the page. Dates are easy. Pages are the work. If the seller needs the date to hold their staff together, that is their problem to solve after you know what you're buying.
 
 If you only do one thing before the next call, write the sentence with the job and the checker, and ask the seller to repeat it without adding a platform. If they can't, you are not late. You are early, which is the correct time to be early. The experiment will still be there next month. Your name on a vague scope is harder to get back.
