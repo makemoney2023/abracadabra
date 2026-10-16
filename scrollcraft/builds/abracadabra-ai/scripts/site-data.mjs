@@ -419,19 +419,6 @@ export const familyLogos = [
 
 export const cases = [
   {
-    slug: "showdesk",
-    name: "Showdesk",
-    kind: "product",
-    sameAs: "https://www.showdesk-app.com/",
-    image: "/assets/showdesk-home.webp",
-    imageAlt: "Showdesk, a live-event operations app.",
-    summary: "A live event, from entry through review, placements, and reports.",
-    body: [
-      "Showdesk runs a live event from entry through review, placements, and reports.",
-      "The homepage film is 44 seconds. One real example on the studio homepage: this operation became Showdesk.",
-    ],
-  },
-  {
     slug: "schema",
     name: "Schema",
     kind: "product",
@@ -455,19 +442,6 @@ export const cases = [
     body: [
       "LLM Leverage is a self-paced course for better answers from any model, plus a workshop path for a rollout.",
       "The studio homepage states twelve modules, quiz gated at 75 percent.",
-    ],
-  },
-  {
-    slug: "canadian-discount-appliances",
-    name: "Canadian Discount Appliances",
-    kind: "site",
-    sameAs: "https://cdastore.vercel.app/",
-    image: "/assets/cda-home.webp",
-    imageAlt: "Canadian Discount Appliances home: the Kitchener warehouse lot.",
-    summary: "Canadian Discount Appliances answers condition, warranty, and fit, then offers a delivery that can be booked.",
-    body: [
-      "Canadian Discount Appliances answers condition, warranty, and whether a piece fits the door, then offers a delivery that can be booked.",
-      "The phone call closes the sale.",
     ],
   },
   {
@@ -517,9 +491,23 @@ export const cases = [
     ],
   },
   {
+    slug: "milrcorr",
+    name: "Milrcorr",
+    kind: "site",
+    sameAs: "https://milrcorr.com",
+    summary: "The public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate.",
+    services: ["custom-apps", "web-automation"],
+    body: [
+      "Milrcorr is the public site for StrongFoam's sister commercial fit-out work.",
+      "A visitor can see office, retail, and hospitality fit-outs across Southwestern Ontario, and request an estimate.",
+      "Project photos on the site show finished reception rooms and glass-walled offices.",
+    ],
+  },
+  {
     slug: "strongfoam-website",
     name: "StrongFoam website",
     kind: "site",
+    sameAs: "https://strongfoam.com/",
     summary: "A public site where a visitor can start an estimate and book, so the request stays with the page.",
     services: ["custom-apps", "web-automation"],
     body: [
@@ -553,15 +541,6 @@ export const cases = [
 ];
 
 export const products = [
-  {
-    slug: "showdesk",
-    name: "Showdesk",
-    sameAs: "https://www.showdesk-app.com/",
-    image: "/assets/showdesk-home.webp",
-    imageAlt: "Showdesk, a live-event operations app.",
-    description: "Showdesk runs a live event from entry through review, placements, and reports.",
-    caseSlug: "showdesk",
-  },
   {
     slug: "schema",
     name: "Schema",

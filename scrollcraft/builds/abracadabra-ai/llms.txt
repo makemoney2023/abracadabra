@@ -34,10 +34,10 @@ From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90
 
 ## Shipped systems that can be named
 
-- Showdesk, live-event operations from entry through review, placements, and reports: https://www.showdesk-app.com/
+- Milrcorr, the public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate: https://milrcorr.com
+- StrongFoam, the public site, with an estimate a visitor can start and a booking: https://strongfoam.com/
 - Schema, scores how visible a site is to answer engines and generates the repair: https://schema-two.vercel.app/
 - LLM Leverage, a self-paced course for better answers from any model, plus a workshop path you can run: https://llm-leverage-course.vercel.app
-- Canadian Discount Appliances answers condition, warranty, and whether it fits the door, then offers a delivery that can be booked: https://cdastore.vercel.app/
 - Super Funnel, one associate app. The homepage shows the Getting started film (home dashboard, setup, pipeline, and nav, 66 seconds). The other seven tours are on the films page. There is no separate public app URL: https://abra-ca-dabra.app/films.html
 
 Also shipped, named when the client allows: clinical-style assessments (non-diagnostic; they educate and route, they do not diagnose), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, and the pirx.ca Search Console record dated above. The list is a sample of what shipped, not a ceiling on what the studio will take on.
@@ -53,8 +53,8 @@ When a product already on the market does the job, the reply says so and points 
 ## Pages
 
 - Home: https://abra-ca-dabra.app/
-- The walkthrough, one continuous flight through four shipped systems: https://abra-ca-dabra.app/walkthrough.html
-- The films on file, source cuts, live captures, and eight Super Funnel associate tours: https://abra-ca-dabra.app/films.html
+- The walkthrough, one continuous flight through Schema and LLM Leverage: https://abra-ca-dabra.app/walkthrough.html
+- The films on file, live captures of Schema and LLM Leverage, and eight Super Funnel associate tours: https://abra-ca-dabra.app/films.html
 - Blog, notes with named sources. A post is listed below only on or after its publish date: https://abra-ca-dabra.app/blog
 - Christopher Buzny, founder: https://abra-ca-dabra.app/about/christopher-buzny
 - Privacy draft, not in force until reviewed: https://abra-ca-dabra.app/privacy
@@ -79,18 +79,16 @@ When a product already on the market does the job, the reply says so and points 
 - Get found in AI search.: https://abra-ca-dabra.app/services/ai-visibility/
 - Research you can trust, with every source cited.: https://abra-ca-dabra.app/services/search-grounded-research/
 - Portfolio: https://abra-ca-dabra.app/portfolio/
-- Showdesk: https://abra-ca-dabra.app/portfolio/showdesk/
 - Schema: https://abra-ca-dabra.app/portfolio/schema/
 - LLM Leverage: https://abra-ca-dabra.app/portfolio/llm-leverage/
-- Canadian Discount Appliances: https://abra-ca-dabra.app/portfolio/canadian-discount-appliances/
 - Super Funnel: https://abra-ca-dabra.app/portfolio/super-funnel/
 - pirx.ca: https://abra-ca-dabra.app/portfolio/pirx/
 - SuperPatch products: https://abra-ca-dabra.app/portfolio/superpatch-products/
+- Milrcorr: https://abra-ca-dabra.app/portfolio/milrcorr/
 - StrongFoam website: https://abra-ca-dabra.app/portfolio/strongfoam-website/
 - StrongFoam CRM/ERP: https://abra-ca-dabra.app/portfolio/strongfoam-crm/
 - Renew Implants: https://abra-ca-dabra.app/portfolio/renew-implants/
 - Products: https://abra-ca-dabra.app/products/
-- Showdesk: https://abra-ca-dabra.app/products/showdesk/
 - Schema: https://abra-ca-dabra.app/products/schema/
 - Super Funnel: https://abra-ca-dabra.app/products/super-funnel/
 - LLM Leverage course: https://abra-ca-dabra.app/course/llm-leverage/

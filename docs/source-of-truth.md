@@ -88,7 +88,7 @@ Paste-ready. Section order is the page.
 
 **Tag:** The job and the rules are written down before anything is built. Five workstreams. One running system.
 
-**Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build plan**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered plan. Their outputs converge into the working system. Showdesk appears only in the Run state as one real example. The visible action is **Start a project**. The anchor stays `#brief`.
+**Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build plan**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered plan. Their outputs converge into the working system. Milrcorr appears only in the Run state as one real example: this site became Milrcorr, at [milrcorr.com](https://milrcorr.com). The visible action is **Start a project**. The anchor stays `#brief`.
 
 **Claim boundary:** “At the speed of thought” is the brand premise in the schema slogan and the name chapter. It describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence. It is not the visible homepage headline.
 
@@ -108,10 +108,10 @@ Paste-ready. Section order is the page.
 
 Four live lines. No client logos until permission exists.
 
-- Showdesk — live events, from entry to the report — [showdesk-app.com](https://www.showdesk-app.com/)
+- Milrcorr — commercial fit-outs, with an estimate you can request — [milrcorr.com](https://milrcorr.com)
+- StrongFoam — the public site, with an estimate you can start — [strongfoam.com](https://strongfoam.com/)
 - Schema — where AI search cannot find you — [schema-two.vercel.app](https://schema-two.vercel.app/)
 - LLM Leverage — a team trained on any model — [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app)
-- Canadian Discount Appliances — "will it fit?" before the drive — [cdastore.vercel.app](https://cdastore.vercel.app/)
 
 ### 3. The zero-to-scale case
 
@@ -180,10 +180,10 @@ We close it. The steps stay yours. The software is built to carry them, at whate
 
 **Header:** Work you can open.
 
-- **Run the event from the floor.** Showdesk takes a live show from entry through placements and reports.
-- **See the gap, then the fix.** Schema scores how visible you are to answer engines and generates the repair.
 - **Better answers from any model.** LLM Leverage is a self-paced course, plus a workshop path you can run.
-- **Answer the question that makes the sale.** The appliance warehouse leads with condition, warranty, and whether it fits the door, then a delivery you can book.
+- **See the work, then request an estimate.** Milrcorr is the public site for StrongFoam's sister commercial fit-out work. A visitor can see office, retail, and hospitality fit-outs across Southwestern Ontario, and request an estimate. [milrcorr.com](https://milrcorr.com)
+- **Start an estimate on the page.** The StrongFoam website walks through the offer, an estimate a visitor can start, and a booking. [strongfoam.com](https://strongfoam.com/)
+- **One associate app, from the home dashboard.** Super Funnel Getting started: setup, pipeline, and nav, in 66 seconds. The rest of the tour is on `/films.html`.
 
 **Range line:** The same studio has shipped clinical-style assessments, direct-sales floors, coaching agents, signed agreements, fraud review on live orders, an AI-visibility program that took a brand-new domain to real search traffic, and sites for practices that live on the next appointment. We name that work when the client says we can. **This page is a sample of what shipped, not a ceiling on what we'll take on.**
 
@@ -211,7 +211,7 @@ The close is the same block as Fit. The visible heading is **Start a project.** 
 - **Title:** Custom software, built for how you work.
 - **Description:** We design, build and run AI-powered tools that fit your business, not the other way around.
 - **Canonical:** `https://abra-ca-dabra.app/`
-- **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through four shipped systems"), `/films.html` ("The films on file: Showdesk promo, live captures, and Super Funnel"), `/blog` (notes with named sources; a post is public only on or after `datePublished`, unless a preview build sets `BLOG_PREVIEW=1`), `/about/christopher-buzny`, `/privacy` (draft, not in force).
+- **Companion pages:** `/walkthrough.html` ("The walkthrough: one flight through Schema and LLM Leverage"), `/films.html` ("The films on file: Schema, LLM Leverage, and Super Funnel"), `/blog` (notes with named sources; a post is public only on or after `datePublished`, unless a preview build sets `BLOG_PREVIEW=1`), `/about/christopher-buzny`, `/privacy` (draft, not in force). `/portfolio/showdesk`, `/portfolio/canadian-discount-appliances`, and `/products/showdesk` 301 to `/portfolio/`.
 - **Crawler files:** `/robots.txt` allows named answer-engine crawlers and disallows CCBot and Bytespider, `/sitemap.xml` (image and video extensions, plus the blog index and author page), `/llms.txt` (a quotable summary with the dated pirx.ca figures, the non-diagnostic rule, and only the posts that are already public).
 
 Title uses a colon, not a dash, so it survives snippet rendering intact. Description is held under 160 characters. (Updated 2026-09-23 for the site build; the earlier 47-word description was too long to show whole.)
@@ -259,10 +259,10 @@ These four can be named and linked today. They're the ones already cleared to na
 
 | Work | Buyer outcome | Live |
 |---|---|---|
-| Showdesk | Run a live event from entry through review, placements, and reports | https://www.showdesk-app.com/ |
+| Milrcorr | The public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate. | https://milrcorr.com |
+| StrongFoam | The public site, with an estimate a visitor can start and a booking. Do not say "insulation contractor." | https://strongfoam.com/ |
 | Schema | See where answer engines cannot find you, then generate the fix. Internal inbox for prospecting | https://schema-two.vercel.app/ |
 | LLM Leverage | Teach a team one method for better answers from any model, with workshops and a certificate path | https://llm-leverage-course.vercel.app |
-| Canadian Discount Appliances | A warehouse store that answers condition, warranty, and "will it fit?" then offers delivery and a visit | https://cdastore.vercel.app/ |
 
 Repo brief for that catalog: quiet conjure, museum of working software, physical proof. The marketing site leads with the benefit argument in this file. The catalog stays the room where the films play.
 
@@ -273,7 +273,8 @@ Christopher cleared these names for the public service pages and `/portfolio/`. 
 | Name | What may be said | Service pages |
 |---|---|---|
 | SuperPatch products | Public product pages a buyer can read. Do not name SuperPatch AI, distributors, or any internal system. | AI assistants, custom apps |
-| StrongFoam website | The public site takes an estimate and a booking. Do not say "insulation contractor." | Custom apps, web automation |
+| Milrcorr | The public site for StrongFoam's sister commercial fit-out work. Office, retail, and hospitality fit-outs across Southwestern Ontario, and an estimate a visitor can request. https://milrcorr.com | Custom apps, web automation |
+| StrongFoam website | The public site takes an estimate and a booking. Live at https://strongfoam.com/. Do not say "insulation contractor." | Custom apps, web automation |
 | StrongFoam CRM/ERP | The operating record beside the website. No figures. | Custom apps |
 | Renew Implants | The website, the social posts, and the blogs. No patient, clinic, or metric language. | Custom apps; social on AI media; blogs on AI visibility |
 | pirx.ca | The app and the blogs. Search Console figures stay on the portfolio note and the AI visibility page only. | Custom apps, AI visibility, search-grounded research |
@@ -439,6 +440,10 @@ Showdesk, on the public site and in the lines this file gives that site, is a li
 ## Readiness Check (2026-09-23)
 
 The check is specified in `docs/readiness-check/`. Its shell and the assessment PDF use the studio homepage colour and type roles (`scrollcraft/builds/abracadabra-ai/index.html`: canvas, Tektur, IBM Plex Sans, accent `#FF4B24`). The app that serves it is `readiness-check/` in this repo: the Schema scanner plus the check, copied here so it can deploy. GitHub would not accept a push to `makemoney2023/schema`. The public host is a Cloudflare Worker. The Vercel project `readiness-check` still lists that hostname. The folder stays separate from the studio site at `scrollcraft/builds/abracadabra-ai/`. The studio homepage links it from the hero, the situation section, the close, and the FAQ "How do I know if my business is ready to put AI to work?". The public host is `https://check.abra-ca-dabra.app/check`. Guide URLs are listed on the check app's own sitemap and `llms.txt`, because a sitemap may only name URLs on its own host. The check is a score of the current state of the business. It is not a diagnosis, and it does not publish a number the scan did not measure. When the website scan finishes, the same generator writes the full schema package and Handoff files it as finished work on the Space for that domain, with a task on the Work board. Starting a check still needs the Supabase admin env on that project. Booking still needs a Cal.com event.
+
+## Client sites (2026-10-16)
+
+Milrcorr (https://milrcorr.com) is the public site for StrongFoam's sister commercial fit-out work. It sits beside StrongFoam (https://strongfoam.com/) on the homepage proof bar, the selected-work rail, and `/portfolio/`. Showdesk and Canadian Discount Appliances are off the public site. Their old URLs 301 to `/portfolio/`. The products hub lists Schema and Super Funnel. The homepage has no film scrub. The walkthrough is Schema and LLM Leverage (three legs, `dateModified` 2026-09-23). The films page is Schema, two LLM Leverage captures, and eight Super Funnel tours (`dateModified` 2026-10-07). The paragraphs below dated 2026-09-23 and 2026-09-26 describe the earlier public set.
 
 ## Site build (2026-09-23, after the positioning rewrite)
 

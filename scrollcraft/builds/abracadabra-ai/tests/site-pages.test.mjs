@@ -64,9 +64,9 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     ["services/index.html", ["CollectionPage", "ItemList"]],
     ["services/ai-assistants-and-agents/index.html", ["Service", "FAQPage", "BreadcrumbList"]],
     ["portfolio/index.html", ["CollectionPage"]],
-    ["portfolio/canadian-discount-appliances/index.html", ["BreadcrumbList"]],
+    ["portfolio/milrcorr/index.html", ["BreadcrumbList", "WebSite"]],
     ["products/index.html", ["CollectionPage"]],
-    ["products/showdesk/index.html", ["SoftwareApplication", "Product"]],
+    ["products/schema/index.html", ["SoftwareApplication", "Product"]],
     ["course/llm-leverage/index.html", ["Course"]],
   ];
   for (const [path, types] of pages) {
@@ -231,6 +231,16 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(read("llms.txt"), /https:\/\/abra-ca-dabra\.app\/services\//);
   assert.match(read("_redirects"), /\/services\/ai-assistants-and-agents \/services\/ai-assistants-and-agents\/index\.html 200/);
   assert.match(read("_redirects"), /\/offerings\/ai-assistants-and-agents \/services\/ai-assistants-and-agents\/ 301/);
-  assert.match(read("portfolio/canadian-discount-appliances/index.html"), /Canadian Discount Appliances/);
+  assert.match(read("portfolio/milrcorr/index.html"), /Milrcorr/);
+  assert.match(read("portfolio/milrcorr/index.html"), /https:\/\/milrcorr\.com/);
+  assert.match(read("portfolio/strongfoam-website/index.html"), /https:\/\/strongfoam\.com\//);
+  assert.match(read("_redirects"), /\/portfolio\/showdesk \/portfolio\/ 301/);
+  assert.match(read("_redirects"), /\/portfolio\/showdesk\/ \/portfolio\/ 301/);
+  assert.match(read("_redirects"), /\/portfolio\/canadian-discount-appliances \/portfolio\/ 301/);
+  assert.match(read("_redirects"), /\/portfolio\/canadian-discount-appliances\/ \/portfolio\/ 301/);
+  assert.match(read("_redirects"), /\/products\/showdesk \/portfolio\/ 301/);
+  assert.match(read("_redirects"), /\/products\/showdesk\/ \/portfolio\/ 301/);
+  assert.doesNotMatch(read("sitemap.xml"), /portfolio\/showdesk|portfolio\/canadian-discount-appliances|products\/showdesk/);
+  assert.match(read("sitemap.xml"), /portfolio\/milrcorr/);
   assert.match(read("index.html"), /<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->/);
 });

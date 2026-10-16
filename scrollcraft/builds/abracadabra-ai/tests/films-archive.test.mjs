@@ -70,7 +70,7 @@ test("films archive plays the eight Super Funnel walkthroughs", () => {
     `description is ${description.length} characters`,
   );
   assert.match(html, /dateModified": "2026-10-07"/);
-  assert.equal((html.match(/"@type": "VideoObject"/g) || []).length, 17);
+  assert.equal((html.match(/"@type": "VideoObject"/g) || []).length, 11);
 
   for (const cut of cuts) {
     const src = `assets/films/${cut.slug}.mp4`;
@@ -85,7 +85,7 @@ test("films archive plays the eight Super Funnel walkthroughs", () => {
   }
 });
 
-test("the scroll flight stays the four shipped systems", () => {
+test("the scroll flight stays Schema and LLM Leverage", () => {
   const html = readFileSync(join(root, "walkthrough.html"), "utf8");
   assert.equal(html.includes("superfunnel"), false);
 });

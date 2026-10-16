@@ -154,10 +154,8 @@ const HOME_CARD_SIZES = "(min-width: 860px) 46vw, 100vw";
 const SPLIT_SIZES = "(min-width: 1024px) 46vw, 100vw";
 
 const ASSET_SIZE = {
-  "/assets/showdesk-home.webp": [1600, 1000],
   "/assets/schema-home.webp": [1600, 1000],
   "/assets/llmcourse-home.webp": [1600, 1000],
-  "/assets/cda-home.webp": [1600, 1000],
   "/assets/superfunnel-getting-started.webp": [1920, 1080],
 };
 
@@ -649,7 +647,7 @@ ${placeholder(placeholders.portfolio)}
 async function renderPortfolioHub() {
   const url = `${SITE}/portfolio/`;
   const title = "Portfolio | Abracadabra AI";
-  const description = "Named systems that can be opened, including SuperPatch products, StrongFoam, Renew Implants, and pirx.ca.";
+  const description = "Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Portfolio", href: "/portfolio/", url },
@@ -695,7 +693,7 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
   title: "Named systems, open and running.",
-  dek: "<p>Named systems that can be opened, including SuperPatch products, StrongFoam, Renew Implants, and pirx.ca.</p>",
+  dek: "<p>Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -760,7 +758,7 @@ ${placeholder(placeholders.product)}
 async function renderProductsHub() {
   const url = `${SITE}/products/`;
   const title = "Products | Abracadabra AI";
-  const description = "Showdesk, Schema, and Super Funnel can each be opened as a live system or a film. Prices stay off this page.";
+  const description = "Schema and Super Funnel can each be opened as a live system or a film. Prices stay off this page.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Products", href: "/products/", url },
@@ -779,7 +777,7 @@ async function renderProductsHub() {
       },
     })),
   };
-  const og = await plateOrPhoto("products", "Products", "Three systems, live", null);
+  const og = await plateOrPhoto("products", "Products", "Two systems, live", null);
   const cards = products.map((item) => `<li><a href="/products/${item.slug}/">${assetMedia(item.image, item.imageAlt, { lazy: true })}<strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
   const html = shell({
     title,
@@ -801,8 +799,8 @@ async function renderProductsHub() {
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
-  title: "Three systems, live.",
-  dek: "<p>Showdesk, Schema, and Super Funnel can each be opened as a live system or a film. Prices stay off this page.</p>",
+  title: "Two systems, live.",
+  dek: "<p>Schema and Super Funnel can each be opened as a live system or a film. Prices stay off this page.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -899,6 +897,12 @@ function siteRedirects() {
       `/offerings/${item.slug} /services/${item.slug}/ 301`,
       `/offerings/${item.slug}/ /services/${item.slug}/ 301`,
     ]),
+    "/portfolio/showdesk /portfolio/ 301",
+    "/portfolio/showdesk/ /portfolio/ 301",
+    "/portfolio/canadian-discount-appliances /portfolio/ 301",
+    "/portfolio/canadian-discount-appliances/ /portfolio/ 301",
+    "/products/showdesk /portfolio/ 301",
+    "/products/showdesk/ /portfolio/ 301",
   ];
   return [...rewrites, ...moved].join("\n");
 }

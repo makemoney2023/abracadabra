@@ -256,7 +256,7 @@ test('operation compiler engineers intent and context before the parallel agent 
     ['Rules mapped', 'Interface shaped', 'System assembled', 'Exceptions tested', 'Demo prepared'],
   );
   assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /one real example/i);
-  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /became Showdesk/i);
+  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /became Milrcorr/i);
 
   await page.getByRole('button', { name: 'Build' }).click();
   assert.equal(await page.locator('.compiler').getAttribute('data-active-state'), 'build');
@@ -600,19 +600,7 @@ test('direct navigation keeps the closing brief visible', async () => {
   await context.close();
 });
 
-test('film caption minimizes on mobile without hiding its explanation', async () => {
-  const { context, page } = await openPage({ width: 390, height: 844 });
-  const toggle = page.locator('.film-toggle');
-
-  await page.locator('#film').scrollIntoViewIfNeeded();
-  assert.equal((await toggle.textContent()).trim(), 'Minimize film details');
-  await toggle.click();
-  assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
-  assert.ok(await page.locator('#film .film-details').getAttribute('hidden') !== null);
-  await context.close();
-});
-
-test('reduced motion exposes every compiler, time travel, and AEO state and keeps film unloaded', async () => {
+test('reduced motion exposes every compiler, time travel, and AEO state', async () => {
   const { context, page } = await openPage({
     width: 390,
     height: 844,
@@ -637,7 +625,6 @@ test('reduced motion exposes every compiler, time travel, and AEO state and keep
     assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
     assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
   }
-  assert.equal(await page.locator('#film video').getAttribute('src'), null);
   await context.close();
 });
 

@@ -27,20 +27,18 @@
 /services/search-grounded-research/ /services/search-grounded-research/index.html 200
 /portfolio /portfolio/index.html 200
 /portfolio/ /portfolio/index.html 200
-/portfolio/showdesk /portfolio/showdesk/index.html 200
-/portfolio/showdesk/ /portfolio/showdesk/index.html 200
 /portfolio/schema /portfolio/schema/index.html 200
 /portfolio/schema/ /portfolio/schema/index.html 200
 /portfolio/llm-leverage /portfolio/llm-leverage/index.html 200
 /portfolio/llm-leverage/ /portfolio/llm-leverage/index.html 200
-/portfolio/canadian-discount-appliances /portfolio/canadian-discount-appliances/index.html 200
-/portfolio/canadian-discount-appliances/ /portfolio/canadian-discount-appliances/index.html 200
 /portfolio/super-funnel /portfolio/super-funnel/index.html 200
 /portfolio/super-funnel/ /portfolio/super-funnel/index.html 200
 /portfolio/pirx /portfolio/pirx/index.html 200
 /portfolio/pirx/ /portfolio/pirx/index.html 200
 /portfolio/superpatch-products /portfolio/superpatch-products/index.html 200
 /portfolio/superpatch-products/ /portfolio/superpatch-products/index.html 200
+/portfolio/milrcorr /portfolio/milrcorr/index.html 200
+/portfolio/milrcorr/ /portfolio/milrcorr/index.html 200
 /portfolio/strongfoam-website /portfolio/strongfoam-website/index.html 200
 /portfolio/strongfoam-website/ /portfolio/strongfoam-website/index.html 200
 /portfolio/strongfoam-crm /portfolio/strongfoam-crm/index.html 200
@@ -49,8 +47,6 @@
 /portfolio/renew-implants/ /portfolio/renew-implants/index.html 200
 /products /products/index.html 200
 /products/ /products/index.html 200
-/products/showdesk /products/showdesk/index.html 200
-/products/showdesk/ /products/showdesk/index.html 200
 /products/schema /products/schema/index.html 200
 /products/schema/ /products/schema/index.html 200
 /products/super-funnel /products/super-funnel/index.html 200
@@ -79,6 +75,12 @@
 /offerings/ai-visibility/ /services/ai-visibility/ 301
 /offerings/search-grounded-research /services/search-grounded-research/ 301
 /offerings/search-grounded-research/ /services/search-grounded-research/ 301
+/portfolio/showdesk /portfolio/ 301
+/portfolio/showdesk/ /portfolio/ 301
+/portfolio/canadian-discount-appliances /portfolio/ 301
+/portfolio/canadian-discount-appliances/ /portfolio/ 301
+/products/showdesk /portfolio/ 301
+/products/showdesk/ /portfolio/ 301
 # /site-redirects
 # blog-redirects
 /blog /blog/index.html 200
