@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI for small business"
 cluster: "adoption"
 primaryQuery: "ai for small business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "A survey is not this business. Run the Readiness Check."
 images:
   - src: /blog/media/ai-for-small-business-2027/01.webp

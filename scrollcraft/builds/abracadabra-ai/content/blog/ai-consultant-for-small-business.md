@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI consulting and implementation"
 cluster: "consulting"
 primaryQuery: "ai consultant for small business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "If a bought product already does the job, a good consultant says so."
 images:
   - src: /blog/media/ai-consultant-for-small-business/01.webp

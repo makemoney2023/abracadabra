@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "ai agents for business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "An agent without an owner is a risk. See whether your team can check the work."
 images:
   - src: /blog/media/ai-agents-for-business/01.webp

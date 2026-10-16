@@ -1,4 +1,4 @@
-/** Sales copy for /services/. Industry nouns stay off these pages. Named proof is only work Christopher cleared. */
+/** Sales copy for /services/. Industry nouns stay off these pages. Named proof is only work the owner cleared. */
 
 import { pirxCustomAppShots, pirxVisibilityShots } from "./pirx-shots.mjs";
 

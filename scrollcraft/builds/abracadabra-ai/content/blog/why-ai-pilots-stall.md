@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI consulting and implementation"
 cluster: "implementation"
 primaryQuery: "why ai pilots stall"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "A stalled pilot is a decision. Run the check before you fund another demo."
 images:
   - src: /blog/media/why-ai-pilots-stall/01.webp

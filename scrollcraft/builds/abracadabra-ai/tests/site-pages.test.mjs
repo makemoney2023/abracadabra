@@ -148,7 +148,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(html, /Start a project/);
   }
   const offering = read("services/ai-assistants-and-agents/index.html");
-  assert.match(offering, /PLACEHOLDER — needs Christopher/);
+  assert.match(offering, /PLACEHOLDER — needs owner sign-off/);
   assert.match(offering, /class="sales-primary" href="\/#start">Start a project/);
   assert.match(offering, /AI Readiness Check/);
   assert.match(offering, /https:\/\/check\.abra-ca-dabra\.app\/check/);
@@ -179,9 +179,9 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.equal(offering.includes("$"), false);
   assert.match(offering, /href="\/services\/">Services/);
   const product = read("products/schema/index.html");
-  assert.match(product, /PLACEHOLDER — needs Christopher/);
+  assert.match(product, /PLACEHOLDER — needs owner sign-off/);
   const course = read("course/llm-leverage/index.html");
-  assert.match(course, /PLACEHOLDER — needs Christopher/);
+  assert.match(course, /PLACEHOLDER — needs owner sign-off/);
   assert.equal(course.includes("module 1"), false);
   const sitemap = read("sitemap.xml");
   const hub = read("services/index.html");
@@ -191,9 +191,9 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(hub, /\/blog\/media\/services\/ai-visibility\/hero-640\.avif 640w/);
   assert.match(hub, /loading="lazy"/);
   assert.match(read("index.html"), /\/blog\/media\/services\/ai-assistants-and-agents\/hero-960\.webp 960w/);
-  assert.match(read("about/christopher-buzny/index.html"), /class="page-hero"/);
-  assert.match(read("about/christopher-buzny/index.html"), /TODO\(christopher\): confirm credentials/);
-  assert.match(hub, /<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->/);
+  assert.match(read("about/index.html"), /class="page-hero"/);
+  assert.equal(/christopher|buzny|founder/i.test(read("about/index.html")), false);
+  assert.match(hub, /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
   for (const slug of offerings) {
     assert.match(sitemap, new RegExp(`https://abra-ca-dabra.app/services/${slug}/`));
     const page = read(`services/${slug}/index.html`);
@@ -203,7 +203,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(page, /Start a project/);
     assert.match(page, /When you don(&#39;|')t need us/);
     assert.match(page, /Priced to the project/);
-    assert.match(page, /<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->/);
+    assert.match(page, /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
     assert.doesNotMatch(page, industryNoun);
     assert.equal(/\$\d/.test(page), false, slug);
     assert.equal((page.match(/<h3>/g) || []).length >= 4, true, slug);
@@ -308,5 +308,5 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(read("_redirects"), /\/products\/showdesk\/ \/portfolio\/ 301/);
   assert.doesNotMatch(read("sitemap.xml"), /portfolio\/showdesk|portfolio\/canadian-discount-appliances|products\/showdesk/);
   assert.match(read("sitemap.xml"), /portfolio\/milrcorr/);
-  assert.match(read("index.html"), /<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->/);
+  assert.match(read("index.html"), /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
 });

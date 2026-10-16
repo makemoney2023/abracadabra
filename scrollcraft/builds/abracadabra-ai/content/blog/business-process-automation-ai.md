@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI automation"
 cluster: "automation"
 primaryQuery: "business process automation ai"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "If the steps are not written, the model cannot follow them."
 images:
   - src: /blog/media/business-process-automation-ai/01.webp

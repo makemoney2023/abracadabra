@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI search visibility"
 cluster: "search"
 primaryQuery: "what is llms.txt"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "A file is not a citation. Check whether the pages themselves can be found."
 images:
   - src: /blog/media/what-is-llms-txt/01.webp

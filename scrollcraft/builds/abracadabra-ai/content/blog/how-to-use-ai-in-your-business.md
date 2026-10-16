@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI for small business"
 cluster: "use"
 primaryQuery: "how to use ai in your business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Twelve examples are still a list. Run the check on the one job you would hand over."
 images:
   - src: /blog/media/how-to-use-ai-in-your-business/01.webp

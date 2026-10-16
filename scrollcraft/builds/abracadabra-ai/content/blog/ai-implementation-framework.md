@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI consulting and implementation"
 cluster: "implementation"
 primaryQuery: "ai implementation framework"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Stop at the stage you cannot finish. The check shows which one."
 images:
   - src: /blog/media/ai-implementation-framework/01.webp

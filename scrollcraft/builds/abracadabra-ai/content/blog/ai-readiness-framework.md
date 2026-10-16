@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI readiness"
 cluster: "framework"
 primaryQuery: "ai readiness framework"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "See how this business scores on data, process, people, and the decision."
 images:
   - src: /blog/media/ai-readiness-framework/01.webp

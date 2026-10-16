@@ -156,7 +156,7 @@ describe("blog content", () => {
     const stamp = JSON.parse(await text("blog/build-stamp.json"));
     const pages = [
       ["blog/index.html", "blog/og/index.png", "Abracadabra AI blog — notes on AI for operators"],
-      ["about/christopher-buzny/index.html", "blog/og/author.png", "Christopher Buzny, founder of Abracadabra AI"],
+      ["about/index.html", "blog/og/author.png", "About Abracadabra"],
       ...posts.map((post) => [
         `blog/${post.slug}/index.html`,
         `blog/og/${post.slug}.png`,
@@ -250,7 +250,11 @@ describe("blog content", () => {
       for (const claim of FORBIDDEN_CLAIMS) assert.equal(prose.includes(claim), false, claim);
       const others = [...slugs].filter((slug) => slug !== post.slug);
       assert.ok(others.every((slug) => html.includes(`/blog/${slug}`)));
-      assert.match(html, /href="\/about\/christopher-buzny"/);
+      assert.match(html, /href="\/about\/"/);
+      assert.match(html, /By <a href="\/about\/">Abracadabra Studio<\/a>/);
+      assert.match(html, /<meta name="author" content="Abracadabra Studio">/);
+      assert.match(html, /"@type": "Organization",\s*"@id": "[^"]+#studio",\s*"name": "Abracadabra Studio",\s*"url": "https:\/\/abra-ca-dabra.app"/);
+      assert.equal(/christopher|buzny|"Person"/i.test(html), false);
       assert.match(html, /href="\/"/);
       for (const slug of calendar) {
         if (!slugs.has(slug)) assert.equal(html.includes(`/blog/${slug}`), false, slug);

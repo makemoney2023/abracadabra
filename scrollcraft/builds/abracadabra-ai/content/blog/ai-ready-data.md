@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI readiness"
 cluster: "data"
 primaryQuery: "ai ready data"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "If the source of truth is unclear, check the data before you buy."
 images:
   - src: /blog/media/ai-ready-data/01.webp

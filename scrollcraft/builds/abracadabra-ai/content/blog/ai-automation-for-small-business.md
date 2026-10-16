@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI automation"
 cluster: "automation"
 primaryQuery: "ai automation for small business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Surveys measure everyone. The Readiness Check measures the slow job."
 images:
   - src: /blog/media/ai-automation-for-small-business/01.webp

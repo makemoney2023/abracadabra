@@ -11,7 +11,9 @@ import { siteFooter, siteHeader } from "./site-chrome.mjs";
 const root = fileURLToPath(new URL("..", import.meta.url));
 export const SITE = "https://abra-ca-dabra.app";
 export const CHECK = "https://check.abra-ca-dabra.app/check";
-export const PERSON_ID = `${SITE}/#christopher-buzny`;
+/** House byline. Change it here and every byline, author box, meta author, and JSON-LD author follows. */
+export const AUTHOR = { name: "Abracadabra Studio", url: "https://abra-ca-dabra.app", id: `${SITE}/#studio` };
+export const AUTHOR_ID = AUTHOR.id;
 export const ORG_ID = `${SITE}/#org`;
 export const WEBSITE_ID = `${SITE}/#website`;
 
@@ -40,7 +42,7 @@ export const postSchema = z.object({
   pillar: z.string().min(3),
   cluster: z.string().min(3),
   primaryQuery: z.string().min(8),
-  author: z.literal("christopher-buzny"),
+  author: z.literal("abracadabra-studio"),
   cta: z.string().min(12),
   images: z.array(imageSchema).length(3),
   faqs: z.array(z.object({
@@ -295,7 +297,7 @@ function pillarFilter(posts) {
 }
 
 function authorBox() {
-  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. We design, build and run AI-powered tools that fit your business. Every system ships with a short film of the real screens.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
+  return `<aside class="author-box"><p class="kicker">Author</p><h2>${esc(AUTHOR.name)}</h2><p>The notes are written by the people who design, build and run AI-powered tools at Abracadabra. Every number names its source.</p><a href="/about/">About us</a></aside>`;
 }
 
 function renderMarkdown(post) {
@@ -360,7 +362,7 @@ function graphForPost(post, htmlPath) {
     "@graph": [
       orgNode(),
       websiteNode(),
-      personNode(),
+      authorNode(),
       {
         "@type": "BlogPosting",
         "@id": `${url}#post`,
@@ -374,7 +376,7 @@ function graphForPost(post, htmlPath) {
         keywords: post.primaryQuery,
         articleSection: post.pillar,
         image: images,
-        author: { "@id": PERSON_ID },
+        author: { "@id": AUTHOR_ID },
         publisher: { "@id": ORG_ID },
         citation: post.citations.map((citation) => ({
           "@type": "CreativeWork",
@@ -426,14 +428,13 @@ function websiteNode() {
   };
 }
 
-function personNode() {
+function authorNode() {
   return {
-    "@type": "Person",
-    "@id": PERSON_ID,
-    name: "Christopher Buzny",
-    jobTitle: "Founder",
-    url: `${SITE}/about/christopher-buzny`,
-    worksFor: { "@id": ORG_ID },
+    "@type": "Organization",
+    "@id": AUTHOR_ID,
+    name: AUTHOR.name,
+    url: AUTHOR.url,
+    parentOrganization: { "@id": ORG_ID },
   };
 }
 
@@ -443,6 +444,7 @@ function pageShell({ title, description, canonical, robots, ogImage, ogAlt, ogTy
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="${esc(AUTHOR.name)}">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="robots" content="${robots}">
@@ -530,7 +532,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }, { name: 
 <p class="kicker">${esc(post.pillar)} · ${esc(post.primaryQuery)}</p>
 <h1>${esc(post.title)}</h1>
 <p class="dek">${esc(post.description)}</p>
-<p class="byline">By <a href="/about/christopher-buzny">Christopher Buzny</a> · <time datetime="${post.datePublished}">${post.datePublished}</time></p>
+<p class="byline">By <a href="/about/">${esc(AUTHOR.name)}</a> · <time datetime="${post.datePublished}">${post.datePublished}</time></p>
 ${live ? "" : `<p class="scheduled">Scheduled for ${esc(post.datePublished)}. This preview is not in the public index yet.</p>`}
 </div>
 ${figure(post.images[0], "hero")}
@@ -575,7 +577,7 @@ function blogIndexGraph(livePosts) {
     "@graph": [
       orgNode(),
       websiteNode(),
-      personNode(),
+      authorNode(),
       {
         "@type": "Blog",
         "@id": `${SITE}/blog#blog`,
@@ -636,22 +638,21 @@ ${board}
 }
 
 async function renderAuthor() {
-  const ogAlt = "Christopher Buzny, founder of Abracadabra AI";
-  await writeOg("Christopher Buzny", "FOUNDER", join(root, "blog/og/author.png"));
+  const ogAlt = "About Abracadabra";
+  await writeOg("About Abracadabra", "ABRACADABRA", join(root, "blog/og/author.png"));
   const body = `<main id="top" class="site-page">
 <header class="page-hero">
 <div class="page-hero__copy">
-${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/about/christopher-buzny" }])}
-<p class="kicker">Founder</p>
-<h1>Christopher Buzny</h1>
-<p class="dek">I run Abracadabra AI. We design, build and run AI-powered tools that fit how your business already works, and every system ships with a short film of the real screens.</p>
+${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
+<p class="kicker">About</p>
+<h1>We build software around how you work.</h1>
+<p class="dek">Abracadabra designs, builds and runs AI-powered tools for businesses whose work doesn't fit off-the-shelf software. Every system we ship comes with a short film of the real screens.</p>
 </div>
 </header>
 <article>
-<!-- TODO(christopher): confirm credentials, education, years in practice, and certifications. Do not invent them. -->
-<!-- TODO(christopher): confirm personal LinkedIn, X, and GitHub URLs before adding sameAs. -->
-<p>Reach me at <a href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a>.</p>
-<h2>Work I've shipped</h2>
+<h2>How we work</h2>
+<p>We start with how the work gets done today, write it down, and agree on it with you before anything is built. Then we build on Cloudflare, test on your real work, and keep the system running after launch.</p>
+<h2>Work we've shipped</h2>
 <ul>
 <li><a href="https://milrcorr.com">Milrcorr</a>: the website for StrongFoam's sister commercial fit-out business, where visitors see the work and request an estimate.</li>
 <li><a href="https://strongfoam.com/">StrongFoam</a>: a website where visitors can start an estimate and book.</li>
@@ -659,44 +660,42 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/abou
 <li><a href="https://llm-leverage-course.vercel.app">LLM Leverage</a>: a self-paced course for getting real work done with AI, plus workshops you can run.</li>
 <li><a href="/films.html">Super Funnel</a>: a sales app for independent associates, shown in eight short films.</li>
 </ul>
-<p><a href="/">See the work</a>, or <a href="/blog">read the notes</a>.</p>
+<h2>Contact</h2>
+<p>Reach us at <a href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a>, or <a href="/#start">start a project</a>.</p>
 </article>
 </main>`;
   const html = pageShell({
-    title: "Christopher Buzny | Abracadabra AI",
-    description: "Christopher Buzny is the founder of Abracadabra AI. The studio inbox is houdini@abra-ca-dabra.app.",
-    canonical: `${SITE}/about/christopher-buzny`,
+    title: "About | Abracadabra AI",
+    description: "Abracadabra designs, builds and runs AI-powered tools that fit how your business already works.",
+    canonical: `${SITE}/about/`,
     robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/author.png`,
     ogAlt,
-    ogType: "profile",
+    ogType: "website",
     json: {
       "@context": "https://schema.org",
       "@graph": [
         orgNode(),
         websiteNode(),
+        authorNode(),
         {
-          ...personNode(),
-          description: "Founder of Abracadabra AI. Credentials and personal profile URLs are unpublished until confirmed.",
-        },
-        {
-          "@type": "ProfilePage",
-          url: `${SITE}/about/christopher-buzny`,
-          mainEntity: { "@id": PERSON_ID },
+          "@type": "AboutPage",
+          url: `${SITE}/about/`,
+          mainEntity: { "@id": ORG_ID },
           isPartOf: { "@id": WEBSITE_ID },
         },
         {
           "@type": "BreadcrumbList",
           itemListElement: [
             { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
-            { "@type": "ListItem", position: 2, name: "Christopher Buzny", item: `${SITE}/about/christopher-buzny` },
+            { "@type": "ListItem", position: 2, name: "About", item: `${SITE}/about/` },
           ],
         },
       ],
     },
     body,
   });
-  const dest = join(root, "about/christopher-buzny/index.html");
+  const dest = join(root, "about/index.html");
   await mkdir(dirname(dest), { recursive: true });
   await writeFile(dest, html);
 }
@@ -709,7 +708,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
 <article>
 <h1>Privacy</h1>
 <p class="dek">What abra-ca-dabra.app and the Readiness Check collect, why, and how to reach us.</p>
-<p><strong>Effective date:</strong> <!-- PLACEHOLDER — needs Christopher: effective date --> [to be confirmed]</p>
+<p><strong>Effective date:</strong> <!-- PLACEHOLDER — needs owner sign-off: effective date --> [to be confirmed]</p>
 <h2>This website</h2>
 <p>abra-ca-dabra.app is a static website hosted on Cloudflare. It does not use analytics, advertising or tracking scripts, and the site itself does not set cookies. Like any host, Cloudflare processes standard request data, such as IP address and browser type, to deliver and protect the site.</p>
 <p>The site has no forms. If you email us, we receive your address and whatever you include, and we use it only to reply.</p>
@@ -738,7 +737,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
       "@graph": [
         orgNode(),
         websiteNode(),
-        personNode(),
+        authorNode(),
         {
           "@type": "WebPage",
           url: `${SITE}/privacy`,
@@ -787,8 +786,10 @@ async function writeRedirects(posts) {
       `/blog/${post.slug} /blog/${post.slug}/index.html 200`,
       `/blog/${post.slug}/ /blog/${post.slug}/index.html 200`,
     ]),
-    "/about/christopher-buzny /about/christopher-buzny/index.html 200",
-    "/about/christopher-buzny/ /about/christopher-buzny/index.html 200",
+    "/about/christopher-buzny /about/ 301",
+    "/about/christopher-buzny/ /about/ 301",
+    "/about /about/index.html 200",
+    "/about/ /about/index.html 200",
     "/privacy /privacy/index.html 200",
     "/privacy/ /privacy/index.html 200",
   ];
@@ -807,7 +808,7 @@ async function writeSitemap(posts) {
   const live = posts.filter((post) => isPublic(post));
   const urls = [
     [`${SITE}/blog`, asOf()],
-    [`${SITE}/about/christopher-buzny`, asOf()],
+    [`${SITE}/about/`, asOf()],
     ...live.map((post) => [`${SITE}/blog/${post.slug}`, post.dateModified]),
   ];
   const block = `  <!-- blog-urls -->\n${urls.map(([loc, lastmod]) => `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`).join("\n")}\n`;
@@ -826,7 +827,7 @@ async function writeLlms(posts) {
   const lines = live.length
     ? live.map((post) => `- ${post.title}: ${SITE}/blog/${post.slug}`)
     : ["- No post is public on this date. Scheduled notes stay out of this list until datePublished."];
-  const inner = `\n## Blog\n\nIndex: ${SITE}/blog\nAuthor: ${SITE}/about/christopher-buzny\nPrivacy: ${SITE}/privacy\n\n${lines.join("\n")}\n`;
+  const inner = `\n## Blog\n\nIndex: ${SITE}/blog\nAbout: ${SITE}/about/\nPrivacy: ${SITE}/privacy\n\n${lines.join("\n")}\n`;
   const path = join(root, "llms.txt");
   let text = await readFile(path, "utf8");
   const start = "<!-- blog-live:start -->";
@@ -842,17 +843,8 @@ async function writeLlms(posts) {
 }
 
 function injectPerson(html) {
-  if (html.includes(PERSON_ID)) return html;
-  const block = `{
-      "@type": "Person",
-      "@id": "${PERSON_ID}",
-      "name": "Christopher Buzny",
-      "jobTitle": "Founder",
-      "url": "${SITE}/about/christopher-buzny",
-      "worksFor": { "@id": "${ORG_ID}" }
-    },`;
-  if (!html.includes('"@graph": [')) return html;
-  return html.replace('"@graph": [', `"@graph": [\n    ${block}`);
+  // Remove any legacy Person node; the house byline lives on blog pages only.
+  return html.replace(/\{\s*"@type": "Person",[\s\S]*?"worksFor": \{ "@id": "[^"]+" \}\s*\},\s*/g, "");
 }
 
 async function injectSitewidePerson() {

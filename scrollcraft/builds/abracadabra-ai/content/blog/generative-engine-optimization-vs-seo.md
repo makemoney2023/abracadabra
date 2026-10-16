@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI search visibility"
 cluster: "search"
 primaryQuery: "generative engine optimization vs seo"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Visibility starts with a page a person can also read."
 images:
   - src: /blog/media/generative-engine-optimization-vs-seo/01.webp

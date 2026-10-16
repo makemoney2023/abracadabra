@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI for small business"
 cluster: "strategy"
 primaryQuery: "ai strategy for small business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Write the job on one page, then run the Readiness Check."
 images:
   - src: /blog/media/ai-strategy-for-small-business/01.webp

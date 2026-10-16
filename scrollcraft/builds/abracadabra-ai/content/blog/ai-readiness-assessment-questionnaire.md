@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "ai readiness assessment questionnaire"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Themes are not a score. The Readiness Check returns the band."
 images:
   - src: /blog/media/ai-readiness-assessment-questionnaire/01.webp

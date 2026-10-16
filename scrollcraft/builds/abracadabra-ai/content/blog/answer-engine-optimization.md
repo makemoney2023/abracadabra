@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI search visibility"
 cluster: "search"
 primaryQuery: "answer engine optimization"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "See whether the site can be cited. Run the Readiness Check."
 images:
   - src: /blog/media/answer-engine-optimization/01.webp
