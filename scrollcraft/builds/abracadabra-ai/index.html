@@ -32,6 +32,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Tektur:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/restored-motion.css">
 <style>
 @media (prefers-reduced-motion: reduce) {
   .marquee__list[aria-hidden="true"] { display: none; }
@@ -332,6 +333,319 @@
   </div>
 </section>
 
+<section id="compiler" class="restored restored-pin" aria-labelledby="compiler-heading">
+    <div class="sc-stage">
+      <div class="compiler-shell">
+        <div class="intent-demo compiler" data-active-state="describe" aria-label="How your requirements become working software">
+          <div class="intent-demo__chrome">
+            <p class="sc-label" id="compiler-heading">Thought → working software</p>
+            <p class="sc-label intent-demo__status" data-compiler-status aria-live="polite">Listening</p>
+          </div>
+          <div class="intent-demo__viewport">
+            <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
+              <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Requirements</p>
+              <p class="intent-demo__quote">“A <mark>customer makes a request</mark>. The right person reviews it. If something is missing, it comes back. When it is complete, the customer gets the result.”</p>
+              <p class="intent-demo__reading">Describe the work in your own words, without a feature list or software vocabulary.</p>
+            </section>
+            <section class="intent-demo__state" data-compiler-panel="engineer" aria-labelledby="compiler-engineer-title">
+              <p class="sc-label intent-demo__phase" id="compiler-engineer-title">02 / Engineer intent and context</p>
+              <div class="context-engineering" aria-label="Intent and context engineered into one build plan">
+                <div class="context-stream" data-context-stream="intent">
+                  <div class="context-stream__head">
+                    <span data-stream-name>Intent</span>
+                    <strong>What must be true when it ships</strong>
+                  </div>
+                  <ul>
+                    <li data-kind="Outcome"><strong>Finished result delivered</strong></li>
+                    <li data-kind="Authority"><strong>Right person decides</strong></li>
+                    <li data-kind="Trade-off"><strong>Speed without skipping review</strong></li>
+                  </ul>
+                </div>
+                <div class="context-stream" data-context-stream="context">
+                  <div class="context-stream__head">
+                    <span data-stream-name>Context</span>
+                    <strong>How you already work</strong>
+                  </div>
+                  <ul>
+                    <li data-kind="People"><strong>Customer · reviewer · owner</strong></li>
+                    <li data-kind="Words"><strong>Your terms</strong></li>
+                    <li data-kind="Exceptions"><strong>Missing info comes back</strong></li>
+                  </ul>
+                </div>
+                <div class="build-plan" data-build-plan>
+                  <span>Engineered build plan</span>
+                  <strong>One precise model of the operation</strong>
+                  <p>Every agent shares it, and you review it before anything is built.</p>
+                </div>
+              </div>
+              <p class="intent-demo__reading">The job and the rules are written first, so every part of the build follows the same picture of how you work.</p>
+            </section>
+            <section class="intent-demo__state" data-compiler-panel="build" aria-labelledby="compiler-build-title">
+              <p class="sc-label intent-demo__phase" id="compiler-build-title">03 / Build in parallel</p>
+              <div class="agent-orchestration" aria-label="Five coordinated AI agent workstreams build the system in parallel">
+                <div class="agent-plan">
+                  <span>Engineered plan</span>
+                  <strong>Request → finished outcome</strong>
+                </div>
+                <div class="agent-tracks">
+                  <article class="agent-track" data-agent-track style="--agent-index:0">
+                    <span class="agent-track__role"><span data-agent-role>Workflow</span><small>Agent 01</small></span>
+                    <span class="agent-track__activity">Rules · owners · handoffs</span>
+                    <strong data-agent-output>Rules mapped</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:1">
+                    <span class="agent-track__role"><span data-agent-role>Experience</span><small>Agent 02</small></span>
+                    <span class="agent-track__activity">Screens · actions · states</span>
+                    <strong data-agent-output>Interface shaped</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:2">
+                    <span class="agent-track__role"><span data-agent-role>Engineering</span><small>Agent 03</small></span>
+                    <span class="agent-track__activity">Data · logic · integrations</span>
+                    <strong data-agent-output>System assembled</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:3">
+                    <span class="agent-track__role"><span data-agent-role>Quality</span><small>Agent 04</small></span>
+                    <span class="agent-track__activity">Main path · edge cases</span>
+                    <strong data-agent-output>Exceptions tested</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:4">
+                    <span class="agent-track__role"><span data-agent-role>Launch</span><small>Agent 05</small></span>
+                    <span class="agent-track__activity">Demo · operating script</span>
+                    <strong data-agent-output>Demo prepared</strong>
+                  </article>
+                </div>
+                <div class="agent-convergence">
+                  <span>Human directed</span>
+                  <strong>One coordinated build</strong>
+                </div>
+              </div>
+              <p class="intent-demo__reading">Five workstreams move together, and you direct every decision that shapes what ships.</p>
+            </section>
+            <section class="intent-demo__state intent-demo__product" data-compiler-panel="run" aria-labelledby="compiler-run-title">
+              <div class="intent-demo__proof">
+                <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong>See it live: Milrcorr runs on software built this way.</strong></p>
+                <p><a href="https://milrcorr.com">Open the live site</a></p>
+              </div>
+            </section>
+          </div>
+          <div class="intent-demo__controls" aria-label="Operation compiler states">
+            <button type="button" data-compiler-state="describe" aria-pressed="true">Requirements</button>
+            <button type="button" data-compiler-state="engineer" aria-pressed="false">Engineer</button>
+            <button type="button" data-compiler-state="build" aria-pressed="false">Build</button>
+            <button type="button" data-compiler-state="run" aria-pressed="false">Run it</button>
+            <button class="intent-demo__skip" type="button" data-compiler-skip>Skip to working product</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="gantt" class="restored restored-pin restored-pin--gantt" aria-labelledby="gantt-title">
+  <div class="sc-stage">
+    <div class="time-shell">
+      <div class="time-copy">
+        <p class="sc-label">The build</p>
+        <h2 id="gantt-title">Every function, on one calendar.</h2>
+        <p class="sc-body">Each row is a function. The gaps are the wait. Run them together and the gaps close.</p>
+      </div>
+      <div class="time-engine" data-active-state="conventional" aria-label="Eight functions on one delivery calendar">
+        <div class="time-engine__chrome" aria-hidden="true">
+          <p class="sc-label">Function calendar / same scope</p>
+          <p class="sc-label time-engine__status" data-time-status>Serial calendar</p>
+        </div>
+        <div class="time-track">
+          <div class="time-axis" aria-hidden="true">
+            <span class="sc-label">Kickoff</span>
+            <span class="sc-label">Conventional ship date</span>
+          </div>
+          <div class="time-lanes" role="list" aria-label="Business functions">
+            <div class="time-lane" role="listitem" data-time-phase="Search"><span class="sc-label">Search &amp; AI visibility</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Marketing"><span class="sc-label">Marketing</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Social"><span class="sc-label">Social media</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Sales"><span class="sc-label">Sales</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Service"><span class="sc-label">Customer service</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Operations"><span class="sc-label">Operations</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Design"><span class="sc-label">Design</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Platform"><span class="sc-label">Platform</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-arrival" aria-hidden="true"><span class="sc-label">Arrives</span></div>
+            <div class="time-returned" aria-hidden="true"><span class="sc-label">Time returned</span></div>
+          </div>
+        </div>
+        <div class="time-captions">
+          <section class="time-panel" data-time-panel="conventional" aria-labelledby="gantt-panel-conventional">
+            <h3 id="gantt-panel-conventional">Each function waits its turn</h3>
+            <p>The gaps are the wait.</p>
+          </section>
+          <section class="time-panel" data-time-panel="engineer" aria-labelledby="gantt-panel-engineer">
+            <h3 id="gantt-panel-engineer">Front-load the thinking</h3>
+            <p>The first functions share a start. The rest move up.</p>
+          </section>
+          <section class="time-panel" data-time-panel="parallel" aria-labelledby="gantt-panel-parallel">
+            <h3 id="gantt-panel-parallel">Run everything at once</h3>
+            <p>Search, marketing, social, sales, service, operations, design, and platform overlap.</p>
+          </section>
+          <section class="time-panel" data-time-panel="arrive" aria-labelledby="gantt-panel-arrive">
+            <h3 id="gantt-panel-arrive">Arrive before the due date</h3>
+            <p>The same work finishes early.</p>
+          </section>
+        </div>
+        <div class="time-controls" aria-label="Function calendar sequence">
+          <button type="button" data-time-state="conventional" aria-pressed="true">Conventional</button>
+          <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
+          <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
+          <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="time" class="restored restored-pin" aria-labelledby="time-title">
+  <div class="sc-stage">
+    <div class="time-shell">
+      <div class="time-copy">
+        <p class="sc-label">Time travel</p>
+        <h2 id="time-title">It feels like magic.</h2>
+        <p class="sc-body">A conventional software calendar is mostly waiting: for the plan to be understood, for a handoff to land, before the next workstream can start. Remove the waiting and the calendar folds in on itself.</p>
+        <p class="sc-body"><strong>There is no sleight of hand.</strong> The thinking is written into one engineered plan, and every downstream workstream runs at once. The work does not shrink. The gaps between the work disappear.</p>
+      </div>
+      <div class="time-engine" data-active-state="conventional" aria-label="How a software delivery calendar compresses">
+        <div class="time-engine__chrome" aria-hidden="true">
+          <p class="sc-label">Delivery calendar / same scope</p>
+          <p class="sc-label time-engine__status" data-time-status>Serial calendar</p>
+        </div>
+        <div class="time-track">
+          <div class="time-axis" aria-hidden="true">
+            <span class="sc-label">Kickoff</span>
+            <span class="sc-label">Conventional ship date</span>
+          </div>
+          <div class="time-lanes" role="list" aria-label="Delivery phases">
+            <div class="time-lane" role="listitem" data-time-phase="Discover"><span class="sc-label">Discover</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Specify"><span class="sc-label">Specify</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Design"><span class="sc-label">Design</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Build"><span class="sc-label">Build</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Test"><span class="sc-label">Test</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-lane" role="listitem" data-time-phase="Release"><span class="sc-label">Release</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
+            <div class="time-arrival" aria-hidden="true"><span class="sc-label">Arrives</span></div>
+            <div class="time-returned" aria-hidden="true"><span class="sc-label">Time returned</span></div>
+          </div>
+        </div>
+        <div class="time-captions">
+          <section class="time-panel" data-time-panel="conventional" aria-labelledby="time-panel-conventional">
+            <h3 id="time-panel-conventional">The serial calendar</h3>
+            <p>Each phase waits on a <strong>handoff</strong>.</p>
+          </section>
+          <section class="time-panel" data-time-panel="engineer" aria-labelledby="time-panel-engineer">
+            <h3 id="time-panel-engineer">Front-load the thinking</h3>
+            <p>Discovery and specification collapse into <strong>one engineered plan</strong>.</p>
+          </section>
+          <section class="time-panel" data-time-panel="parallel" aria-labelledby="time-panel-parallel">
+            <h3 id="time-panel-parallel">Run everything at once</h3>
+            <p><strong>Every workstream</strong> moves at once against the same plan. Search, marketing, social, sales, service, operations, design, and platform can share that same calendar.</p>
+          </section>
+          <section class="time-panel" data-time-panel="arrive" aria-labelledby="time-panel-arrive">
+            <h3 id="time-panel-arrive">Arrive before the due date</h3>
+            <p>The same scope ships early, and that <strong>feels like magic</strong>.</p>
+          </section>
+        </div>
+        <div class="time-controls" aria-label="Time travel sequence">
+          <button type="button" data-time-state="conventional" aria-pressed="true">Conventional</button>
+          <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
+          <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
+          <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="name" class="restored sc-section" aria-labelledby="name-title">
+  <div class="sc-wrap">
+    <div class="origin">
+      <p class="sc-label">The name</p>
+      <h2 id="name-title" class="sc-display sc-display--md">I will create as I speak.</h2>
+      <p class="sc-body">Abracadabra, traced back far enough, is Aramaic, roughly <em>avra kadavra</em>. It is not a spell. A description of the work becomes production software.</p>
+    </div>
+  </div>
+</section>
+
+<section id="range" class="restored restored-pin restored-pin--range" aria-labelledby="range-title">
+  <div class="sc-stage">
+    <div class="range-shell">
+      <div class="range-copy">
+        <p class="sc-label">The menu</p>
+        <h2 id="range-title">Any job you can describe can be built.</h2>
+        <p class="sc-body">One service, or the whole menu. Each one is built around how you already work.</p>
+        <p class="sc-body">A job that can be described can be built.</p>
+        <p class="range-next"><a href="#models">The models are next</a></p>
+      </div>
+      <div class="range-engine" data-active-state="search" aria-label="Eight functions on the menu">
+        <canvas class="range-bg" aria-hidden="true" data-bg-state="search"></canvas>
+        <div class="range-engine__chrome">
+          <p class="sc-label">The menu</p>
+          <p class="sc-label range-engine__status" data-range-status aria-live="polite">Show up in answers</p>
+        </div>
+        <div class="range-body">
+          <ol class="range-stack" aria-hidden="true">
+            <li data-range-ticket="search">Search &amp; AI visibility</li>
+            <li data-range-ticket="marketing">Marketing</li>
+            <li data-range-ticket="social">Social media</li>
+            <li data-range-ticket="sales">Sales</li>
+            <li data-range-ticket="service">Customer service</li>
+            <li data-range-ticket="operations">Operations</li>
+            <li data-range-ticket="design">Design</li>
+            <li data-range-ticket="platform">Platform</li>
+          </ol>
+          <div class="range-viewport">
+            <section class="range-panel" data-range-panel="search" aria-labelledby="range-panel-search">
+              <h3 id="range-panel-search"><a href="/services/ai-visibility/">Search &amp; AI visibility</a></h3>
+              <p>Show up when someone asks.</p>
+            </section>
+            <section class="range-panel" data-range-panel="marketing" aria-labelledby="range-panel-marketing">
+              <h3 id="range-panel-marketing"><a href="/services/ai-media/">Marketing</a></h3>
+              <p>On-brand media and research you can check.</p>
+            </section>
+            <section class="range-panel" data-range-panel="social" aria-labelledby="range-panel-social">
+              <h3 id="range-panel-social"><a href="/services/ai-media/">Social media</a></h3>
+              <p>Posts in your voice, ready to go out.</p>
+            </section>
+            <section class="range-panel" data-range-panel="sales" aria-labelledby="range-panel-sales">
+              <h3 id="range-panel-sales"><a href="/services/ai-assistants-and-agents/">Sales</a></h3>
+              <p>Keep the conversation, and finish the request.</p>
+            </section>
+            <section class="range-panel" data-range-panel="service" aria-labelledby="range-panel-service">
+              <h3 id="range-panel-service"><a href="/services/voice-and-realtime-agents/">Customer service</a></h3>
+              <p>Answer callers from your records, with a person when needed.</p>
+            </section>
+            <section class="range-panel" data-range-panel="operations" aria-labelledby="range-panel-operations">
+              <h3 id="range-panel-operations"><a href="/services/web-automation/">Operations</a></h3>
+              <p>The repeated steps run on their own.</p>
+            </section>
+            <section class="range-panel" data-range-panel="design" aria-labelledby="range-panel-design">
+              <h3 id="range-panel-design"><a href="/portfolio/">Design</a></h3>
+              <p>Screens that follow the way you work.</p>
+            </section>
+            <section class="range-panel" data-range-panel="platform" aria-labelledby="range-panel-platform">
+              <h3 id="range-panel-platform"><a href="/services/any-model-one-bill/">Platform</a></h3>
+              <p>One bill, and apps that grow.</p>
+            </section>
+          </div>
+        </div>
+        <div class="range-controls" aria-label="Function menu">
+          <button type="button" data-range-state="search" aria-pressed="true">Search</button>
+          <button type="button" data-range-state="marketing" aria-pressed="false">Marketing</button>
+          <button type="button" data-range-state="social" aria-pressed="false">Social</button>
+          <button type="button" data-range-state="sales" aria-pressed="false">Sales</button>
+          <button type="button" data-range-state="service" aria-pressed="false">Service</button>
+          <button type="button" data-range-state="operations" aria-pressed="false">Operations</button>
+          <button type="button" data-range-state="design" aria-pressed="false">Design</button>
+          <button type="button" data-range-state="platform" aria-pressed="false">Platform</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- MODELS -->
 <section id="models" class="sc-section models" aria-labelledby="models-title">
     <div class="sc-wrap">
@@ -571,5 +885,6 @@
   });
 })();
 </script>
+<script src="assets/restored-motion.js"></script>
 </body>
 </html>
