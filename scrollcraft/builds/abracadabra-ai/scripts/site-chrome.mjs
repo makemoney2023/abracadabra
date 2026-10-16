@@ -1,5 +1,6 @@
 export function siteHeader() {
-  return `<header class="site-nav">
+  return `<a class="skip" href="#top">Skip to content</a>
+<header class="site-nav">
   <a class="site-nav__mark" href="/">Abracadabra AI</a>
   <details class="site-nav__menu">
     <summary class="site-nav__toggle">Menu</summary>
@@ -10,7 +11,7 @@ export function siteHeader() {
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#brief">Start a brief</a>
+    <a class="site-nav__cta" href="/#brief">Start a project</a>
   </nav>
 </header>
 <script>
@@ -26,12 +27,15 @@ export function siteHeader() {
 
 export function siteFooter() {
   return `<footer class="site-foot">
-  <a href="/services/">Services</a>
-  <a href="/portfolio/">Portfolio</a>
-  <a href="/products/">Products</a>
-  <a href="/course/llm-leverage/">Course</a>
-  <a href="/blog">Blog</a>
-  <a href="/#brief">Start a brief</a>
-  <a href="/privacy">Privacy</a>
+  <p class="site-foot__brand">Abracadabra AI</p>
+  <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/">Services</a>
+    <a href="/portfolio/">Portfolio</a>
+    <a href="/products/">Products</a>
+    <a href="/course/llm-leverage/">Course</a>
+    <a href="/blog">Blog</a>
+    <a href="/#brief">Start a project</a>
+    <a href="/privacy">Privacy</a>
+  </nav>
 </footer>`;
 }

@@ -9,10 +9,6 @@
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://abra-ca-dabra.app/assets/showdesk-home.webp</image:loc>
-      <image:title>Showdesk, Specimen I</image:title>
-    </image:image>
-    <image:image>
       <image:loc>https://abra-ca-dabra.app/assets/schema-home.webp</image:loc>
       <image:title>Schema, Specimen II</image:title>
     </image:image>
@@ -20,18 +16,6 @@
       <image:loc>https://abra-ca-dabra.app/assets/llmcourse-home.webp</image:loc>
       <image:title>LLM Leverage, Specimen III</image:title>
     </image:image>
-    <image:image>
-      <image:loc>https://abra-ca-dabra.app/assets/cda-home.webp</image:loc>
-      <image:title>Canadian Discount Appliances, Specimen IV</image:title>
-    </image:image>
-    <video:video>
-      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/showdesk-promo.webp</video:thumbnail_loc>
-      <video:title>Showdesk, in 44 seconds</video:title>
-      <video:description>Official Showdesk promo: entry, review, placements, reports.</video:description>
-      <video:content_loc>https://abra-ca-dabra.app/assets/showdesk-promo.mp4</video:content_loc>
-      <video:duration>44</video:duration>
-      <video:publication_date>2026-09-11</video:publication_date>
-    </video:video>
     <video:video>
       <video:thumbnail_loc>https://abra-ca-dabra.app/assets/superfunnel-getting-started.webp</video:thumbnail_loc>
       <video:title>Super Funnel, Getting started</video:title>
@@ -52,14 +36,6 @@
     <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
-    <video:video>
-      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/showdesk-promo.webp</video:thumbnail_loc>
-      <video:title>Showdesk promo, 44 seconds</video:title>
-      <video:description>Official Showdesk marketing cut: entry, review, placements, reports.</video:description>
-      <video:content_loc>https://abra-ca-dabra.app/assets/showdesk-promo.mp4</video:content_loc>
-      <video:duration>44</video:duration>
-      <video:publication_date>2026-09-11</video:publication_date>
-    </video:video>
     <video:video>
       <video:thumbnail_loc>https://abra-ca-dabra.app/assets/superfunnel-getting-started.webp</video:thumbnail_loc>
       <video:title>Super Funnel: Getting started</video:title>
@@ -175,19 +151,11 @@
     <lastmod>2026-10-15</lastmod>
   </url>
   <url>
-    <loc>https://abra-ca-dabra.app/portfolio/showdesk/</loc>
-    <lastmod>2026-10-15</lastmod>
-  </url>
-  <url>
     <loc>https://abra-ca-dabra.app/portfolio/schema/</loc>
     <lastmod>2026-10-15</lastmod>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/portfolio/llm-leverage/</loc>
-    <lastmod>2026-10-15</lastmod>
-  </url>
-  <url>
-    <loc>https://abra-ca-dabra.app/portfolio/canadian-discount-appliances/</loc>
     <lastmod>2026-10-15</lastmod>
   </url>
   <url>
@@ -200,6 +168,10 @@
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/portfolio/superpatch-products/</loc>
+    <lastmod>2026-10-15</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/portfolio/milrcorr/</loc>
     <lastmod>2026-10-15</lastmod>
   </url>
   <url>
@@ -216,10 +188,6 @@
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/products/</loc>
-    <lastmod>2026-10-15</lastmod>
-  </url>
-  <url>
-    <loc>https://abra-ca-dabra.app/products/showdesk/</loc>
     <lastmod>2026-10-15</lastmod>
   </url>
   <url>

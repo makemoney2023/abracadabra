@@ -7,7 +7,7 @@ pillar: "AI consulting and implementation"
 cluster: "implementation"
 primaryQuery: "why ai pilots stall"
 author: christopher-buzny
-cta: "A stalled pilot is a decision. Score it before you fund another demo."
+cta: "A stalled pilot is a decision. Run the check before you fund another demo."
 images:
   - src: /blog/media/why-ai-pilots-stall/01.webp
     file: why-ai-pilots-stall-01.jpg

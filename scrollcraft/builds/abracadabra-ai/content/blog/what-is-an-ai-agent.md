@@ -1,13 +1,13 @@
 ---
 title: "What Is an AI Agent? A Plain Answer for Owners"
-description: "An agent picks its own next step. A workflow follows a path you wrote. This note uses Anthropic's distinction and McKinsey's survey of who is scaling."
+description: "An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic's split and McKinsey's count of who is scaling."
 datePublished: "2026-10-14"
 dateModified: "2026-10-14"
 pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "what is an ai agent"
 author: christopher-buzny
-cta: "An agent needs a written process and an owner. Score both."
+cta: "An agent needs a written process and a person who checks it. The Readiness Check covers both."
 images:
   - src: /blog/media/what-is-an-ai-agent/01.webp
     file: what-is-an-ai-agent-01.jpg
@@ -42,7 +42,7 @@ citations:
     publisher: "McKinsey"
     figures: ["2025", "88", "78", "23", "39", "10", "29", "100", "5"]
 ---
-An AI agent chooses its own next step inside bounds you set. A workflow does the steps in an order you already wrote. We use that split every time an owner asks whether the new line on the invoice is an agent or a form with a louder name.
+An AI agent looks at what it just found and chooses a step inside bounds you set. A workflow does the steps in an order you already wrote. We use that split every time an owner asks whether the new line on the invoice is an agent or a form with a louder name.
 
 Anthropic's December 2024 essay draws the line in those terms. A workflow runs large language models and tools on a path the builder defined, and an agent lets the model direct its own process and its own tool use.[^anthropic] The essay also says to start with the simplest solution, and to add complexity only when the simpler system fails. We keep that sentence on the table during these conversations. Most of the businesses we sit with are not stuck because the software is too plain. They are stuck because the work still lives in one person's memory, and a vendor asked a model to invent a process nobody had written down.
 

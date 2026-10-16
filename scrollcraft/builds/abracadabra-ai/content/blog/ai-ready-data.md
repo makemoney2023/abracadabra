@@ -7,7 +7,7 @@ pillar: "AI readiness"
 cluster: "data"
 primaryQuery: "ai ready data"
 author: christopher-buzny
-cta: "If the source of truth is unclear, score data before you buy."
+cta: "If the source of truth is unclear, check the data before you buy."
 images:
   - src: /blog/media/ai-ready-data/01.webp
     file: ai-ready-data-01.jpg

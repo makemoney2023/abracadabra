@@ -295,7 +295,7 @@ function pillarFilter(posts) {
 }
 
 function authorBox() {
-  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. The studio builds software around how a company already works. Credentials, education, and personal profile links stay off this page until Christopher confirms them.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
+  return `<aside class="author-box"><p class="kicker">Author</p><h2>Christopher Buzny</h2><p>Founder of Abracadabra AI. We design, build and run AI-powered tools that fit your business. You leave with the live system, a film of the screens, and the words you use to show it. Credentials, education, and personal profile links stay off this page until Christopher confirms them.</p><a href="/about/christopher-buzny">About Christopher</a></aside>`;
 }
 
 function renderMarkdown(post) {
@@ -523,7 +523,7 @@ async function renderPost(post, posts) {
     .map((item) => `<li><a href="/blog/${item.slug}">${esc(item.title)}</a></li>`)
     .join("");
   const prose = renderMarkdown(post).replace("</p>", `</p>\n${statCallout(post)}`);
-  const body = `<main class="blog-post">
+  const body = `<main id="top" class="blog-post">
 <header class="content-hero">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }, { name: post.title, href: `/blog/${post.slug}` }])}
 <div class="hero-copy">
@@ -581,7 +581,7 @@ function blogIndexGraph(livePosts) {
         "@id": `${SITE}/blog#blog`,
         name: "Abracadabra AI blog",
         url: `${SITE}/blog`,
-        description: "Notes on AI readiness, small-business adoption, and the work an owner can hand to a system.",
+        description: "Short notes for owners on when to buy a tool, when to build, and whether the business is ready. Every number names its source.",
         publisher: { "@id": ORG_ID },
         inLanguage: "en",
       },
@@ -603,26 +603,26 @@ function blogIndexGraph(livePosts) {
 async function renderIndex(posts) {
   const live = posts.filter((post) => isPublic(post));
   const ogAlt = "Abracadabra AI blog — notes on AI for operators";
-  await writeOg("Notes on AI for operators", "BLOG", join(root, "blog/og/index.png"));
+  await writeOg("Notes for operators", "BLOG", join(root, "blog/og/index.png"));
   const featured = live.find((post) => post.slug === FEATURED_SLUG) ?? live[0];
   const rest = featured ? live.filter((post) => post.slug !== featured.slug) : [];
   const board = live.length
     ? `${pillarFilter(live)}${featuredPost(featured)}<ul class="cards">${rest.map((post) => postCard(post)).join("")}</ul>`
     : `<p class="empty">No note is public yet. Each one appears here on its publish date, with the sources and the Readiness Check link in the page.</p>`;
-  const body = `<main class="blog-index">
+  const body = `<main id="top" class="blog-index">
 <header class="content-hero blog-index-hero">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Blog", href: "/blog" }])}
 <div class="hero-copy">
 <p class="kicker">Notes</p>
-<h1>Blog</h1>
-<p class="dek">Notes for owners who want AI to take a task, and who want the source of every number on the page.</p>
+<h1>When a product already fits, and when you need a system.</h1>
+<p class="dek">Notes on buying a product that already fits, and on building a system of your own. Every number names its source.</p>
 </div>
 </header>
 ${board}
 </main>`;
   const html = pageShell({
     title: "Blog | Abracadabra AI",
-    description: "Notes on AI readiness and small-business adoption from Abracadabra AI. Sources are named. The Readiness Check educates and routes.",
+    description: "Notes on buying a product that already fits, and on building a system of your own. Every number names its source.",
     canonical: `${SITE}/blog`,
     robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/index.png`,
@@ -638,34 +638,34 @@ ${board}
 async function renderAuthor() {
   const ogAlt = "Christopher Buzny, founder of Abracadabra AI";
   await writeOg("Christopher Buzny", "FOUNDER", join(root, "blog/og/author.png"));
-  const body = `<main class="site-page">
+  const body = `<main id="top" class="site-page">
 <header class="page-hero">
 <div class="page-hero__copy">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/about/christopher-buzny" }])}
 <p class="kicker">Founder</p>
 <h1>Christopher Buzny</h1>
-<p class="dek">Founder of Abracadabra AI. The studio builds bespoke software around how a company already works, then ships the system, a film, and the script the team runs.</p>
+<p class="dek">Founder of Abracadabra AI. We design, build and run AI-powered tools that fit your business. You leave with the live system, a film of the screens, and the words you use to show it.</p>
 </div>
 </header>
 <article>
 <!-- TODO(christopher): confirm credentials, education, years in practice, and certifications. Do not invent them. -->
-<p class="todo">Credentials, education, years in practice, and certifications are not listed. Christopher still has to confirm them. This page will not grow a biography ahead of that.</p>
+<aside class="note"><p>Credentials, education, and certifications are not published on this page.</p></aside>
 <!-- TODO(christopher): confirm personal LinkedIn, X, and GitHub URLs before adding sameAs. -->
-<p class="todo">Personal profile links are omitted until Christopher confirms the LinkedIn, X, and GitHub URLs. The studio inbox is <a href="mailto:dev@pirx.ca">dev@pirx.ca</a>. That address is the studio contact, not a personal email published as one.</p>
+<aside class="note"><p>Personal profile links are not published. The studio inbox is <a href="mailto:dev@pirx.ca">dev@pirx.ca</a>.</p></aside>
 <h2>Systems the studio has shipped</h2>
 <ul>
-<li><a href="https://www.showdesk-app.com/">Showdesk</a> runs a live event from entry through review, placements, and reports.</li>
-<li><a href="https://schema-two.vercel.app/">Schema</a> scores how visible a site is to answer engines and generates the repair.</li>
-<li><a href="https://llm-leverage-course.vercel.app">The self-paced course</a> is for better answers from any model, plus a workshop path for a team.</li>
-<li><a href="https://cdastore.vercel.app/">Canadian Discount Appliances</a> answers condition, warranty, and whether it fits the door.</li>
+<li><a href="https://milrcorr.com">Milrcorr</a> is the public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate.</li>
+<li><a href="https://strongfoam.com/">StrongFoam</a> is the public site, with an estimate a visitor can start and a booking.</li>
+<li><a href="https://schema-two.vercel.app/">Schema</a> scores whether answer engines can find a site, and writes the fix.</li>
+<li><a href="https://llm-leverage-course.vercel.app">The self-paced course</a> is for better answers from any model, plus a workshop path you can run.</li>
 <li><a href="/films.html">Super Funnel</a> is the associate film set. The other tours stay on the films page.</li>
 </ul>
-<p>The catalog argument is on the <a href="/">home page</a>. The notes are on the <a href="/blog">blog</a>.</p>
+<p>The work is on the <a href="/">home page</a>. The notes are on the <a href="/blog">blog</a>.</p>
 </article>
 </main>`;
   const html = pageShell({
     title: "Christopher Buzny | Abracadabra AI",
-    description: "Christopher Buzny is the founder of Abracadabra AI. Credentials and personal profile links stay blank until he confirms them.",
+    description: "Christopher Buzny is the founder of Abracadabra AI. The studio inbox is dev@pirx.ca.",
     canonical: `${SITE}/about/christopher-buzny`,
     robots: publicRobots("index,follow,max-image-preview:large"),
     ogImage: `${SITE}/blog/og/author.png`,
@@ -705,17 +705,17 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Christopher Buzny", href: "/abou
 async function renderPrivacy() {
   const ogAlt = "Abracadabra AI privacy draft, not in force until review";
   await writeOg("Privacy draft", "FOR REVIEW", join(root, "blog/og/privacy.png"));
-  const body = `<main>
+  const body = `<main id="top">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
 <article>
-<p class="draft">Draft for review. Not in force until Christopher approves it.</p>
+<p class="draft">Draft for review. Not in force until Christopher signs it.</p>
 <h1>Privacy</h1>
-<p class="dek">This page is a draft so the studio can say, in public, what the marketing site and the Readiness Check will collect. It is not the policy yet.</p>
+<p class="dek">This draft says what the marketing site and the Readiness Check will collect. It is not the policy, and it is not in force.</p>
 <h2>What this draft covers</h2>
-<p>The marketing site at abra-ca-dabra.app is static. It does not run an analytics script. The Readiness Check at check.abra-ca-dabra.app stores the answers you submit so it can show a band and four scores. That product educates and routes. It does not diagnose.</p>
+<p>The marketing site at abra-ca-dabra.app is static. It does not run an analytics script. The Readiness Check at check.abra-ca-dabra.app stores the answers submitted so it can show a band and four scores. That product educates and routes. It does not diagnose.</p>
 <h2>Analytics after consent</h2>
-<p>PostHog is the analytics tool the studio intends to use, and only after a visitor consents. This draft does not install a PostHog script. No pageview, click, or session is sent to PostHog from this site until a consent step exists and Christopher has approved this page.</p>
-<p>The blog's Readiness Check links carry campaign parameters so the check can record which note the visit came from. Those parameters are part of the link. They are not a tracker on this page.</p>
+<p>PostHog is the analytics tool the studio intends to use, and only after a visitor consents. This draft does not install a PostHog script. No pageview, click, or session is sent to PostHog from this site until a consent step exists and Christopher has signed this page.</p>
+<p>The blog's Readiness Check links include a label so the check can record which note the visit came from. The label is part of the link. It is not a tracker on this page.</p>
 <h2>Contact</h2>
 <p>Questions about this draft go to the studio inbox, <a href="mailto:dev@pirx.ca">dev@pirx.ca</a>.</p>
 </article>
@@ -738,7 +738,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
           "@type": "WebPage",
           url: `${SITE}/privacy`,
           name: "Privacy (draft)",
-          description: "Draft privacy note. Not in force until approved.",
+          description: "Draft privacy note. Not in force until signed.",
           isPartOf: { "@id": WEBSITE_ID },
         },
       ],
@@ -764,7 +764,7 @@ async function writeFeed(posts) {
   <channel>
     <title>Abracadabra AI blog</title>
     <link>${SITE}/blog</link>
-    <description>Notes on AI readiness and small-business adoption. A post appears here on its publish date.</description>
+    <description>Notes for owners on when to buy a tool, when to build, and whether the business is ready. A post appears here on its publish date.</description>
     <lastBuildDate>${new Date(`${asOf()}T00:00:00Z`).toUTCString()}</lastBuildDate>
 ${items}
   </channel>

@@ -7,8 +7,8 @@ export const MODIFIED = "2026-10-15";
 export const offerings = [
   {
     slug: "ai-assistants-and-agents",
-    outcome: "AI assistants and agents that remember customers and take actions",
-    card: "A helper that remembers the customer and can take the next step, instead of starting from zero every time.",
+    outcome: "An assistant that finishes the request",
+    card: "Your assistant keeps the conversation, follows your rules, and finishes the request in the tools you already use.",
     whatItIs: "An assistant your customers or your team can talk to. It keeps the thread, follows the rules you set, and can do a small job when the answer is clear: book a time, send a follow-up, or hand the conversation to a person.",
     examples: [
       "Answering common customer questions after hours, and handing off when the question needs a person",
@@ -44,7 +44,7 @@ export const offerings = [
   {
     slug: "answers-from-your-documents",
     outcome: "Answers from your own documents",
-    card: "Ask a question and get an answer from the files you already keep, with the page it came from.",
+    card: "Ask in plain language. We answer from your files, and every answer carries the page it came from.",
     whatItIs: "A way to ask a plain question and get an answer from your own files: handbooks, policies, price sheets, manuals. The answer points back to the page it came from.",
     examples: [
       "Looking up a part or policy in your own documents",
@@ -80,7 +80,7 @@ export const offerings = [
   {
     slug: "any-model-one-bill",
     outcome: "Any model, one controlled bill",
-    card: "Use the model that fits the job, with one bill you can cap and one place to see the spend.",
+    card: "Each job uses the model that fits it. You get one gateway and one bill you can cap and stop.",
     whatItIs: "Different jobs want different models. This puts them behind one door: you pick the model per job, you see the spend in one place, and you can stop a runaway bill.",
     examples: [
       "Sending everyday questions to a smaller model and harder questions to a stronger one",
@@ -116,7 +116,7 @@ export const offerings = [
   {
     slug: "voice-and-realtime-agents",
     outcome: "Voice and real-time AI agents",
-    card: "A voice line that hears the caller, answers from your facts, and hands off when a person should take over.",
+    card: "Callers hear an answer from your records. When the call needs a person, we hand it over with a note of what was already said.",
     whatItIs: "A phone or voice conversation that answers in the moment. It listens, replies from the facts you provide, and passes the call to a person when the request needs one.",
     examples: [
       "Answering common customer questions after hours, by voice",
@@ -152,7 +152,7 @@ export const offerings = [
   {
     slug: "web-automation",
     outcome: "Web automation, scraping, PDFs and reports",
-    card: "A weekly job that opens the pages, pulls the numbers, and leaves you a report.",
+    card: "The weekly browser job opens the same pages, collects the same numbers, and leaves a report you can open.",
     whatItIs: "A repeatable job that visits the sites or files you name, collects what you asked for, and turns it into a spreadsheet or a report. It runs on a schedule, or when you press go.",
     examples: [
       "Turning a weekly spreadsheet into a report",
@@ -188,7 +188,7 @@ export const offerings = [
   {
     slug: "safe-code-execution",
     outcome: "Safe execution of AI-written code",
-    card: "When a model writes a small program, it runs in a box that cannot touch the rest of the business.",
+    card: "When your assistant needs to run a small program, it runs inside a sandbox. Time, files, and access are set before it starts.",
     whatItIs: "Some jobs ask a model to write a small program: a calculation, a file transform, a check. This runs that program in a closed box, so a mistake stays in the box.",
     examples: [
       "Turning a weekly spreadsheet into a calculated report, with the formula run in a box",
@@ -224,7 +224,7 @@ export const offerings = [
   {
     slug: "custom-apps",
     outcome: "Custom apps and back offices",
-    card: "A small app that follows the order of work your team already trusts.",
+    card: "We build the app around the way you already work, so the real job is the product.",
     whatItIs: "An app built around the way your team already works: the screens, the order, the handoff. It replaces the pile of sheets and inboxes that grew up around that work.",
     examples: [
       "A back office where a request moves from intake to done, in the order your team already uses",
@@ -260,8 +260,8 @@ export const offerings = [
   {
     slug: "ai-media",
     outcome: "AI media: images, video, transcripts",
-    card: "Draft images, short video, or a transcript from material you already have. A person approves what goes out.",
-    whatItIs: "Help making the pictures, the short clips, and the transcripts the business already needs. A person still approves what gets published. The model drafts. You decide.",
+    card: "We draft images, video, and voice from material you already have, and a named person clears each file before it goes public.",
+    whatItIs: "Pictures, short clips, and transcripts drafted from material the company already has. A named person clears each file before it is public.",
     examples: [
       "A first draft of an image for a page you are about to publish",
       "A transcript of a call or a recording the team needs to read",
@@ -270,14 +270,14 @@ export const offerings = [
     steps: [
       "You tell us the asset and the rule: what it is for, and what must not appear.",
       "A draft is made on Cloudflare from your prompt or your file.",
-      "You approve, reject, or ask for another pass before anything is public.",
-      "The approved file is stored where the rest of the site or the team can use it.",
+      "The named person clears the draft, rejects it, or asks for another pass before anything is public.",
+      "The cleared file is stored where the rest of the site or the team can use it.",
     ],
     deliverables: [
       "Drafts of images, transcripts, or short video from your own inputs",
-      "An approval step before anything is published",
+      "A review before anything is published",
       "The finished file, in a format the site or the team can use",
-      "A record of which draft you approved",
+      "A record of which draft was chosen",
     ],
     who: "Owners who need more visuals or transcripts than the team can make by hand, and who still want a person on the publish button.",
     signs: [
@@ -296,7 +296,7 @@ export const offerings = [
   {
     slug: "ai-visibility",
     outcome: "AI visibility and crawler control",
-    card: "See which answer engines crawl the site, and tell them what you want them to read.",
+    card: "You decide which pages answer engines may read, and which crawlers stay out.",
     whatItIs: "A clear view of which automated visitors read the site, plus a plain file that tells answer engines what the business is and which pages matter. You decide what is open and what is off limits.",
     examples: [
       "Seeing which crawlers fetched your pages last week",
@@ -332,23 +332,23 @@ export const offerings = [
   {
     slug: "search-grounded-research",
     outcome: "Search-grounded research tools",
-    card: "A research answer that shows the pages it used, so you can check the source.",
+    card: "A research answer carries the public pages under every claim, so you can open the source and check it.",
     whatItIs: "A tool that answers a research question from current pages on the web, and shows the links it used. It is for questions your own documents do not cover.",
     examples: [
       "Checking a public claim against pages published this month",
-      "Pulling a short brief before a meeting, with the links underneath",
+      "Pulling a short answer before a meeting, with the links underneath",
       "Comparing two public sources side by side instead of trusting one summary",
     ],
     steps: [
       "You ask the question in plain language, and you say what a useful answer includes.",
-      "The tool searches the web, reads the pages, and writes the brief with links.",
+      "The tool searches the web, reads the pages, and writes the answer with links.",
       "The search runs on Cloudflare. The links stay attached to the sentences they support.",
-      "You open the links that matter. The brief is a start, not a source.",
+      "The links that matter can be opened. The answer is a start, not a source.",
     ],
     deliverables: [
       "A research tool the team can ask",
       "Answers with the links beside the claims",
-      "A way to save a brief you want to keep",
+      "A way to save an answer worth keeping",
       "A reminder, on the page, that the links are the source",
     ],
     who: "Owners who need a current answer from the public web and do not want an unsourced paragraph.",
@@ -361,14 +361,14 @@ export const offerings = [
       ["How is this different from asking a chatbot?", "The answer has to point at pages. If it cannot find a page, it says so."],
       ["Can it read pages behind a login?", "No. It reads public pages. Private files belong in the document search, not here."],
       ["Will it cite a page it did not open?", "No. Every claim you are meant to trust carries a link, and you can open it."],
-      ["Is the brief advice?", "It is a reading list with a summary. Decisions stay with you."],
+      ["Is the answer advice?", "It is a reading list with a summary. The decision stays with the company."],
     ],
     builtOn: ["Web Search API"],
   },
 ];
 
-export const OFFERINGS_KICKER = "Built and deployed on Cloudflare's global network.";
-export const OFFERINGS_HEADING = "What we build and run for you.";
+export const OFFERINGS_KICKER = "Custom software";
+export const OFFERINGS_HEADING = "Software for how you work.";
 
 /** Cloudflare AI Gateway providers, checked against the Provider Native docs. */
 export const gatewayLogos = [
@@ -419,26 +419,13 @@ export const familyLogos = [
 
 export const cases = [
   {
-    slug: "showdesk",
-    name: "Showdesk",
-    kind: "product",
-    sameAs: "https://www.showdesk-app.com/",
-    image: "/assets/showdesk-home.webp",
-    imageAlt: "Showdesk, a live-event operations app.",
-    summary: "Live events from entry through review, placements, and reports.",
-    body: [
-      "Showdesk runs a live event from entry through review, placements, and reports.",
-      "The homepage film is 44 seconds. One real example on the studio homepage: this operation became Showdesk.",
-    ],
-  },
-  {
     slug: "schema",
     name: "Schema",
     kind: "product",
     sameAs: "https://schema-two.vercel.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
-    summary: "An AI-search visibility scorer. Measured scan output stays separate from generated recommendations.",
+    summary: "Scores whether answer engines can find a site, and writes the fix. What the scan measured stays separate from the suggested fix.",
     body: [
       "Schema scores how visible a site is to answer engines and generates the repair.",
       "Measured scan output stays separate from generated recommendations, so the result never claims more than the scan observed.",
@@ -458,29 +445,16 @@ export const cases = [
     ],
   },
   {
-    slug: "canadian-discount-appliances",
-    name: "Canadian Discount Appliances",
-    kind: "site",
-    sameAs: "https://cdastore.vercel.app/",
-    image: "/assets/cda-home.webp",
-    imageAlt: "Canadian Discount Appliances home: the Kitchener warehouse lot.",
-    summary: "A Kitchener appliance warehouse. Condition, warranty, whether it fits the door, delivery you can book, phone as a close.",
-    body: [
-      "Canadian Discount Appliances is a Kitchener appliance warehouse.",
-      "The store answers condition, warranty, and whether it fits the door, then offers a delivery you can book. Phone is a close.",
-    ],
-  },
-  {
     slug: "super-funnel",
     name: "Super Funnel",
     kind: "product",
     sameAs: "https://abra-ca-dabra.app/films.html",
     image: "/assets/superfunnel-getting-started.webp",
     imageAlt: "Super Funnel Getting started film poster.",
-    summary: "One associate app. The Getting started film is 66 seconds. The other seven tours are on the films page.",
+    summary: "One associate app. The Getting started film covers the home dashboard, setup, pipeline, and nav in 66 seconds.",
     body: [
-      "Super Funnel is one associate app.",
-      "The homepage shows the Getting started film: home dashboard, setup, pipeline, and nav, 66 seconds. The other seven tours are on the films page. There is no separate public app URL.",
+      "Super Funnel is one associate app, shown as a film rather than a separate public URL.",
+      "The homepage carries the Getting started film: the home dashboard, setup, pipeline, and nav, in 66 seconds. The other seven tours are on the films page.",
     ],
   },
   {
@@ -517,25 +491,39 @@ export const cases = [
     ],
   },
   {
+    slug: "milrcorr",
+    name: "Milrcorr",
+    kind: "site",
+    sameAs: "https://milrcorr.com",
+    summary: "The public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate.",
+    services: ["custom-apps", "web-automation"],
+    body: [
+      "Milrcorr is the public site for StrongFoam's sister commercial fit-out work.",
+      "A visitor can see office, retail, and hospitality fit-outs across Southwestern Ontario, and request an estimate.",
+      "Project photos on the site show finished reception rooms and glass-walled offices.",
+    ],
+  },
+  {
     slug: "strongfoam-website",
     name: "StrongFoam website",
     kind: "site",
-    summary: "A public site where a visitor can start an estimate and book, so the request is not retyped.",
+    sameAs: "https://strongfoam.com/",
+    summary: "A public site where a visitor can start an estimate and book, so the request stays with the page.",
     services: ["custom-apps", "web-automation"],
     body: [
-      "The StrongFoam website is a scroll through the offer, an estimate a visitor can start, and a booking.",
-      "The request is captured once, so it does not have to be retyped into a second tool.",
+      "The StrongFoam website walks through the offer, an estimate a visitor can start, and a booking.",
+      "The request is captured on the page, so it stays with the visit.",
     ],
   },
   {
     slug: "strongfoam-crm",
     name: "StrongFoam CRM/ERP",
     kind: "app",
-    summary: "The record the team works in: the customer, the job, and the numbers, in one place.",
+    summary: "The record you work in: the customer, the job, and the numbers, in one place.",
     services: ["custom-apps"],
     body: [
-      "The StrongFoam CRM/ERP is the record the team works in.",
-      "The customer, the job, and the numbers sit in one place instead of a pile of sheets.",
+      "The StrongFoam CRM/ERP is the record you work in.",
+      "The customer, the job, and the numbers live in one place.",
     ],
   },
   {
@@ -545,8 +533,8 @@ export const cases = [
     summary: "The website, the social posts, and the blogs.",
     services: ["custom-apps", "ai-media", "ai-visibility"],
     body: [
-      "Renew Implants is the website, the social posts, and the blogs.",
-      "The site says what the work is. The posts and the blogs are what a person can read before they enquire.",
+      "Renew Implants is the website, the social posts, and the blogs, as one public presence.",
+      "The site says what the work is, and the posts and the blogs are what a person can read before they enquire.",
       "No performance figure is attached to this work.",
     ],
   },
@@ -554,21 +542,12 @@ export const cases = [
 
 export const products = [
   {
-    slug: "showdesk",
-    name: "Showdesk",
-    sameAs: "https://www.showdesk-app.com/",
-    image: "/assets/showdesk-home.webp",
-    imageAlt: "Showdesk, a live-event operations app.",
-    description: "Run a live event from entry through review, placements, and reports.",
-    caseSlug: "showdesk",
-  },
-  {
     slug: "schema",
     name: "Schema",
     sameAs: "https://schema-two.vercel.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
-    description: "Scores how visible a site is to answer engines and generates the repair. Measured scan output stays separate from generated recommendations.",
+    description: "Scores whether answer engines can find a site, and writes the fix. What the scan measured stays separate from the suggested fix.",
     caseSlug: "schema",
   },
   {
@@ -577,7 +556,7 @@ export const products = [
     sameAs: "https://abra-ca-dabra.app/films.html",
     image: "/assets/superfunnel-getting-started.webp",
     imageAlt: "Super Funnel Getting started film poster.",
-    description: "One associate app. The Getting started film covers the home dashboard, setup, pipeline, and nav in 66 seconds.",
+    description: "One associate app, shown as the Getting started film: the home dashboard, setup, pipeline, and nav, in 66 seconds.",
     caseSlug: "super-funnel",
   },
 ];
@@ -588,14 +567,14 @@ export const course = {
   sameAs: "https://llm-leverage-course.vercel.app",
   image: "/assets/llmcourse-home.webp",
   imageAlt: "LLM Leverage course home: a lesson preview and a rollout path.",
-  description: "A self-paced course for better answers from any model, plus a workshop path. Twelve modules, quiz gated at 75 percent.",
+  description: "A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, with the quiz gated at 75 percent.",
 };
 
 export const PLACEHOLDER = "PLACEHOLDER — needs Christopher";
 
 export const placeholders = {
   offering: "Price, timeline, and a client example for this service are not on the site yet.",
-  portfolio: "Client approval to publish additional results, quotes, or a longer case study is not on file.",
+  portfolio: "Permission to publish additional results, quotes, or a longer case study is not on file.",
   product: "A public price is not on the site, so this page does not list an offer.",
   course: "The public course site says there are 12 modules, but it does not list the module names. The syllabus stays off this page until those names are public.",
 };

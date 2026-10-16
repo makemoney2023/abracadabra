@@ -40,5 +40,6 @@ test('Cloudflare Workers serves the catalog as static assets and keeps .html URL
   const missing = await readFile(join(root, '404.html'), 'utf8');
   assert.match(missing, /<meta name="robots" content="noindex">/);
   assert.match(missing, /href="\/"/);
-  assert.match(missing, /From thought to working software/);
+  assert.match(missing, /This page is not here/);
+  assert.match(missing, /Back to the homepage/);
 });

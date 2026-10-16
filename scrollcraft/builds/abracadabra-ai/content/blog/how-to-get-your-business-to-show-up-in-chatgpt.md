@@ -7,7 +7,7 @@ pillar: "AI search visibility"
 cluster: "visibility"
 primaryQuery: "how to get your business to show up in chatgpt"
 author: christopher-buzny
-cta: "The visibility guide reads the site. The check scores the business."
+cta: "The visibility guide reads the site. The Readiness Check reads the business."
 images:
   - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.webp
     file: how-to-get-your-business-to-show-up-in-chatgpt-01.jpg

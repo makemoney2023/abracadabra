@@ -66,17 +66,15 @@ async function openPage({ width = 1280, height = 800, reducedMotion = 'no-prefer
   return { context, page };
 }
 
-test('hero states the speed-of-thought promise with two clear actions', async () => {
+test('hero states the owner outcome with two clear actions', async () => {
   const { context, page } = await openPage();
   const actions = await page.locator('#i .hero__copy .cta a').allTextContents();
 
-  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'From thought to working software.');
-  assert.match(await page.locator('#i .hero__copy').textContent(), /speed of thought/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /AI agents/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /engineer the intent and context/i);
-  assert.match(await page.locator('#i .hero__copy').textContent(), /experienced people direct every decision/i);
+  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Custom software, built for how you work.');
+  assert.match(await page.locator('#i .hero__copy').textContent(), /fit your business/i);
+  assert.match(await page.locator('#i .hero__copy').textContent(), /not the other way around/i);
   assert.deepEqual(actions.map((action) => action.trim()), [
-    'Show us how it works',
+    'Start a project',
     "See what we've built",
   ]);
   assert.equal(await page.locator('#i .hero__copy .cta .cta--primary').count(), 1);
@@ -245,9 +243,9 @@ test('operation compiler engineers intent and context before the parallel agent 
   );
   assert.equal(await engineer.locator('[data-context-stream="intent"] li').count(), 3);
   assert.equal(await engineer.locator('[data-context-stream="context"] li').count(), 3);
-  assert.match(await engineer.locator('[data-build-brief]').textContent(), /build brief/i);
+  assert.match(await engineer.locator('[data-build-brief]').textContent(), /build plan/i);
   assert.match(await engineer.textContent(), /before anything is built/i);
-  assert.match(await page.locator('[data-compiler-panel="build"]').textContent(), /engineered brief/i);
+  assert.match(await page.locator('[data-compiler-panel="build"]').textContent(), /engineered plan/i);
   assert.equal(await page.locator('[data-agent-track]').count(), 5);
   assert.deepEqual(
     (await page.locator('[data-agent-track] [data-agent-role]').allTextContents()).map((label) => label.trim()),
@@ -258,7 +256,7 @@ test('operation compiler engineers intent and context before the parallel agent 
     ['Rules mapped', 'Interface shaped', 'System assembled', 'Exceptions tested', 'Demo prepared'],
   );
   assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /one real example/i);
-  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /became Showdesk/i);
+  assert.match(await page.locator('[data-compiler-panel="run"]').textContent(), /became Milrcorr/i);
 
   await page.getByRole('button', { name: 'Build' }).click();
   assert.equal(await page.locator('.compiler').getAttribute('data-active-state'), 'build');
@@ -373,7 +371,7 @@ test('site nav uses a compact menu under 768px and a full bar from 768px', async
       viewport: innerWidth,
     };
   }));
-  for (const name of ['Course', 'Blog', 'Start a brief']) {
+  for (const name of ['Course', 'Blog', 'Start a project']) {
     const link = opened.find((item) => item.text === name);
     assert.ok(link, name);
     assert.ok(link.left >= 0 && link.right <= link.viewport + 1, `${name} is clipped`);
@@ -415,7 +413,7 @@ test('site nav uses a compact menu under 768px and a full bar from 768px', async
       viewport: innerWidth,
     };
   }));
-  for (const name of ['Services', 'Portfolio', 'Products', 'Course', 'Blog', 'Start a brief']) {
+  for (const name of ['Services', 'Portfolio', 'Products', 'Course', 'Blog', 'Start a project']) {
     const link = bar.find((item) => item.text === name);
     assert.ok(link, name);
     assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
@@ -567,7 +565,7 @@ test('time travel chapter compresses the delivery calendar without inventing dur
   );
   assert.equal(await time.locator('[data-time-panel]').count(), 4);
   assert.match(await time.locator('[data-time-panel="conventional"]').textContent(), /handoff/i);
-  assert.match(await time.locator('[data-time-panel="engineer"]').textContent(), /one engineered brief/i);
+  assert.match(await time.locator('[data-time-panel="engineer"]').textContent(), /one engineered plan/i);
   assert.match(await time.locator('[data-time-panel="parallel"]').textContent(), /five workstreams/i);
   assert.match(await time.locator('[data-time-panel="arrive"]').textContent(), /feels like magic/i);
   assert.equal(await engine.getAttribute('data-active-state'), 'conventional');
@@ -602,19 +600,7 @@ test('direct navigation keeps the closing brief visible', async () => {
   await context.close();
 });
 
-test('film caption minimizes on mobile without hiding its explanation', async () => {
-  const { context, page } = await openPage({ width: 390, height: 844 });
-  const toggle = page.locator('.film-toggle');
-
-  await page.locator('#film').scrollIntoViewIfNeeded();
-  assert.equal((await toggle.textContent()).trim(), 'Minimize film details');
-  await toggle.click();
-  assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
-  assert.ok(await page.locator('#film .film-details').getAttribute('hidden') !== null);
-  await context.close();
-});
-
-test('reduced motion exposes every compiler, time travel, and AEO state and keeps film unloaded', async () => {
+test('reduced motion exposes every compiler, time travel, and AEO state', async () => {
   const { context, page } = await openPage({
     width: 390,
     height: 844,
@@ -639,7 +625,6 @@ test('reduced motion exposes every compiler, time travel, and AEO state and keep
     assert.notEqual(await state.evaluate((element) => getComputedStyle(element).display), 'none');
     assert.equal(await state.evaluate((element) => getComputedStyle(element).visibility), 'visible');
   }
-  assert.equal(await page.locator('#film video').getAttribute('src'), null);
   await context.close();
 });
 
@@ -658,11 +643,11 @@ test('range chapter sits between time and the answer receipt', async () => {
   assert.equal(await range.getAttribute('data-specimen'), null);
   assert.equal(
     (await range.getByRole('heading', { level: 2 }).first().textContent()).trim(),
-    'The only limit is what you can think of.',
+    'If you can describe the job, we can build it.',
   );
   const rangeCopy = await range.locator('.range-copy').innerText();
   assert.match(rangeCopy, /The menu/i);
-  assert.match(rangeCopy, /If you can describe it, we can build it/);
+  assert.match(rangeCopy, /A job that can be described can be built/);
   assert.doesNotMatch(rangeCopy, /one shape|still in range|work we have shipped/);
   assert.deepEqual(
     (await range.locator('[data-range-state]').allTextContents()).map((label) => label.trim()),

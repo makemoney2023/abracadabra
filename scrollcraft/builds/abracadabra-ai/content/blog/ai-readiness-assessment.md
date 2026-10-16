@@ -7,7 +7,7 @@ pillar: AI readiness
 cluster: assessment
 primaryQuery: ai readiness assessment
 author: christopher-buzny
-cta: "Score your business on all four in five to seven minutes."
+cta: "Run the check on data, process, people, and the decision. It takes five to seven minutes."
 images:
   - src: /blog/media/ai-readiness-assessment/01.webp
     file: readiness-hero.jpg

@@ -113,11 +113,11 @@ function visibleCrumbs(items) {
 }
 
 function placeholder(text) {
-  return `<aside class="placeholder"><strong>${esc(PLACEHOLDER)}</strong><p>${esc(text)}</p></aside>`;
+  return `<aside class="note"><!-- ${PLACEHOLDER} --><p>${esc(text)}</p><p><a href="/#brief">Start a project</a></p></aside>`;
 }
 
-function builtOn(tags) {
-  return `Built on ${tags.join(", ")}. ${OFFERINGS_KICKER}`;
+function underTheHood(tags) {
+  return `It runs on Cloudflare: ${tags.join(", ")}.`;
 }
 
 function logoItem(item) {
@@ -154,10 +154,8 @@ const HOME_CARD_SIZES = "(min-width: 860px) 46vw, 100vw";
 const SPLIT_SIZES = "(min-width: 1024px) 46vw, 100vw";
 
 const ASSET_SIZE = {
-  "/assets/showdesk-home.webp": [1600, 1000],
   "/assets/schema-home.webp": [1600, 1000],
   "/assets/llmcourse-home.webp": [1600, 1000],
-  "/assets/cda-home.webp": [1600, 1000],
   "/assets/superfunnel-getting-started.webp": [1920, 1080],
 };
 
@@ -185,7 +183,7 @@ function offeringsHtml() {
   const cards = offerings.map((item) => {
     const page = salesPages[item.slug];
     const photo = servicePicture(item.slug, "hero", { lazy: true, sizes: HOME_CARD_SIZES });
-    return `<li><a href="/services/${item.slug}/">${photo}<h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p><p class="services__tag">Built on ${esc(item.builtOn.join(", "))}</p></a></li>`;
+    return `<li><a href="/services/${item.slug}/">${photo}<h3>${esc(page.headline)}</h3><p>${esc(item.card)}</p></a></li>`;
   }).join("");
   return `<section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
@@ -336,7 +334,7 @@ function shotPairHtml(pair) {
 }
 
 function salesActions() {
-  return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Show us how it works</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
+  return `<p class="sales-actions"><a class="sales-primary" href="/#brief">Start a project</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
 }
 
 function proofStrip(items) {
@@ -424,7 +422,7 @@ async function renderOffering(item) {
       description: page.description,
       image: og.url,
     }), [crumbList(crumbs), service, faq]),
-    body: `<main class="site-page sales">
+    body: `<main id="top" class="site-page sales">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
@@ -439,46 +437,46 @@ ${proofStrip(page.strip)}
 ${page.problem.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
 </section>
 <section>
-<h2>What changes</h2>
+<h2>What you get</h2>
 ${cardGrid("outcome-grid", page.outcomes)}
 </section>
 <section class="sales-split">
 <div>
-<h2>Three places it shows up</h2>
+<h2>Use cases</h2>
 ${cardGrid("use-grid", page.uses)}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body1", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
 ${capabilityHtml(page.capability)}
 <section>
-<h2>How it gets built</h2>
+<h2>How it works</h2>
 <p>${esc(processIntro)}</p>
 <ol class="process">${steps}</ol>
 </section>
 <section>
-<h2>Off the shelf, a hire, or us</h2>
+<h2>How it compares</h2>
 <p>${esc(page.compareIntro)}</p>
 ${comparisonTable(page.rows)}
 </section>
 <section class="sales-split">
 <div>
-<h2>Work we can name</h2>
+<h2>Proof</h2>
 ${proofs}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body2", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
-<p class="cloud-line">${esc(page.cloudflare)} ${esc(builtOn(item.builtOn))}</p>
+<p class="cloud-line">${esc(underTheHood(item.builtOn))}</p>
 <section class="price-block">
 <h2>Pricing</h2>
-<p>Contact for pricing. We price the job after the brief, not from a public rate card.</p>
-<p><a href="/#brief">Show us how it works</a></p>
+<p>Contact for pricing. The price follows the job, not a public rate card.</p>
+<p><a href="/#brief">Start a project</a></p>
 </section>
 <section>
-<h2>Questions</h2>
+<h2>FAQ</h2>
 ${questions}
 </section>
 <section class="sales-close">
-<h2>See it on your work</h2>
+<h2>Start a project</h2>
 <p>${esc(page.close)}</p>
 ${salesActions()}
 </section>
@@ -489,8 +487,8 @@ ${salesActions()}
 
 async function renderOfferingsHub() {
   const url = `${SITE}/services/`;
-  const title = "What we build and run | Abracadabra AI";
-  const description = "Ten systems Abracadabra AI builds and runs on Cloudflare's global network. Safe code execution ships inside AI assistants.";
+  const title = "Software for how you work | Abracadabra AI";
+  const description = "Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Services", href: "/services/", url },
@@ -533,12 +531,12 @@ async function renderOfferingsHub() {
       name: OFFERINGS_HEADING,
       description,
     }), [crumbList(crumbs), listNode]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
   title: esc(OFFERINGS_HEADING),
-  dek: "<p>Ten systems we build and run. Safe code execution is a capability of the assistants, and it keeps its own page so the limit can be read on its own.</p>",
+  dek: "<p>Ten services, each built around how you work. Safe code execution ships inside the assistants and keeps its own page.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -626,7 +624,7 @@ async function renderCase(item) {
       description: item.summary,
       image: item.image ? `${SITE}${item.image}` : undefined,
     }), [crumbList(crumbs), caseAbout(item, url)]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
@@ -649,7 +647,7 @@ ${placeholder(placeholders.portfolio)}
 async function renderPortfolioHub() {
   const url = `${SITE}/portfolio/`;
   const title = "Portfolio | Abracadabra AI";
-  const description = "Named work we can show, including SuperPatch products, StrongFoam, Renew Implants, and pirx.ca.";
+  const description = "Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Portfolio", href: "/portfolio/", url },
@@ -665,7 +663,7 @@ async function renderPortfolioHub() {
       url: `${SITE}/portfolio/${item.slug}/`,
     })),
   };
-  const og = await plateOrPhoto("portfolio", "Portfolio", "Working systems", null);
+  const og = await plateOrPhoto("portfolio", "Portfolio", "Named systems, open and running", null);
   const cards = cases.map((item) => {
     const photo = item.cardImage
       ? shotImg(item.cardImage, { lazy: true })
@@ -690,11 +688,12 @@ async function renderPortfolioHub() {
       name: "Portfolio",
       description,
     }), [crumbList(crumbs), list]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
-  title: "Working systems, already in the world.",
+  title: "Named systems, open and running.",
+  dek: "<p>Named systems that can be opened, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants, and pirx.ca.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -742,7 +741,7 @@ async function renderProduct(item) {
       description: item.description,
       image: `${SITE}${item.image}`,
     }), [crumbList(crumbs), app]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Product",
@@ -759,7 +758,7 @@ ${placeholder(placeholders.product)}
 async function renderProductsHub() {
   const url = `${SITE}/products/`;
   const title = "Products | Abracadabra AI";
-  const description = "Showdesk, Schema, and Super Funnel. Public prices are not listed because none are published.";
+  const description = "Schema and Super Funnel can each be opened as a live system or a film. Prices stay off this page.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Products", href: "/products/", url },
@@ -778,7 +777,7 @@ async function renderProductsHub() {
       },
     })),
   };
-  const og = await plateOrPhoto("products", "Products", "Products", null);
+  const og = await plateOrPhoto("products", "Products", "Two systems, live", null);
   const cards = products.map((item) => `<li><a href="/products/${item.slug}/">${assetMedia(item.image, item.imageAlt, { lazy: true })}<strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
   const html = shell({
     title,
@@ -796,11 +795,12 @@ async function renderProductsHub() {
       name: "Products",
       description,
     }), [crumbList(crumbs), list]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
-  title: "Products",
+  title: "Two systems, live.",
+  dek: "<p>Schema and Super Funnel can each be opened as a live system or a film. Prices stay off this page.</p>",
 })}
 <ul class="cards">${cards}</ul>
 </main>`,
@@ -849,7 +849,7 @@ async function renderCourse() {
       description: course.description,
       image: `${SITE}${course.image}`,
     }), [crumbList(crumbs), node]),
-    body: `<main class="site-page">
+    body: `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Course",
@@ -897,6 +897,12 @@ function siteRedirects() {
       `/offerings/${item.slug} /services/${item.slug}/ 301`,
       `/offerings/${item.slug}/ /services/${item.slug}/ 301`,
     ]),
+    "/portfolio/showdesk /portfolio/ 301",
+    "/portfolio/showdesk/ /portfolio/ 301",
+    "/portfolio/canadian-discount-appliances /portfolio/ 301",
+    "/portfolio/canadian-discount-appliances/ /portfolio/ 301",
+    "/products/showdesk /portfolio/ 301",
+    "/products/showdesk/ /portfolio/ 301",
   ];
   return [...rewrites, ...moved].join("\n");
 }

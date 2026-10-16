@@ -10,9 +10,65 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital film plus the promise and the two actions in a left column. From 1024px the actions sit side by side; below that they stack full width, still left-aligned. The compiler section sits directly under it and demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build brief before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that brief and converges their outputs into a working system. The Aramaic origin of the name follows the compiler. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the model strip moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The models are next." The model strip names the gateway providers and the Workers AI families. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. Services, portfolio, products, and the LLM Leverage course are linked from the site header. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Showdesk promo remains the only video scrub on the page.
+Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital film plus the promise and the two actions in a left column. From 1024px the actions sit side by side; below that they stack full width, still left-aligned. The compiler section sits directly under it and demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build plan before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that plan and converges their outputs into a working system. The Aramaic origin of the name follows the compiler. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the model strip moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The models are next." The model strip names the gateway providers and the Workers AI families. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. Services, portfolio, products, and the LLM Leverage course are linked from the site header. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Super Funnel Getting started film in the selected-work rail is the only video on the page.
 
 Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+
+## Client sites — 2026-10-16
+
+- Milrcorr (https://milrcorr.com) is the public site for StrongFoam's sister commercial fit-out work, named beside StrongFoam (https://strongfoam.com/) on the homepage proof bar, the selected-work rail, and `/portfolio/`.
+- Showdesk and Canadian Discount Appliances are off the public site. `/portfolio/showdesk`, `/portfolio/canadian-discount-appliances`, and `/products/showdesk` 301 to `/portfolio/`. The products hub still lists Schema and Super Funnel.
+- The homepage film scrub is gone. The walkthrough is Schema and LLM Leverage. The films page is Schema, LLM Leverage, and the eight Super Funnel tours.
+- **What changed** — client proof and the retired specimens.
+- **Why** — Christopher named Milrcorr as the sister site built for StrongFoam, and removed the appliance store and Showdesk from the public catalog.
+- **Code touchpoints** — `index.html`, `films.html`, `walkthrough.html`, `sitemap.xml`, `llms.txt`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`, `tests/films-archive.test.mjs`.
+- **Data-flow impact** — regenerated portfolio, products, about, sitemap site URLs, `llms.txt` site pages, and `_redirects`.
+- **API / schema impact** — homepage ItemList stays five items: Milrcorr, Schema, LLM Leverage, StrongFoam, Super Funnel. Films `dateModified` stays 2026-10-07. Walkthrough `dateModified` stays 2026-09-23.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
+
+## Approved voice — 2026-10-15
+
+- Public pages speak in second person and we. Sentences are short and benefit-led. "the company," "the team," and the visible product word "brief" stay off the page. The project action is **Start a project**. The homepage anchor stays `#brief`.
+- The visible homepage headline is "Custom software, built for how you work." The lede is "We design, build and run AI-powered tools that fit your business, not the other way around." Service headlines are the approved lines: AI assistants that actually get things done; Instant answers from your own documents; Every AI model. One bill; AI that answers your phone; Put repetitive web work on autopilot; Let AI run code, safely; Apps built around your workflow; On-brand images, video and voice, on demand; Get found in AI search; Research you can trust, with every source cited. Section headers are What you get, Use cases, How it works, How it compares, Proof, and FAQ.
+- **What changed** — voice on every public marketing surface, including films, the walkthrough, the blog chrome, about, meta, JSON-LD, and `llms.txt`.
+- **Why** — Christopher rejected the third-person product voice.
+- **Code touchpoints** — `index.html`, `films.html`, `walkthrough.html`, `llms.txt`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `scripts/service-visuals.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — regenerated service, hub, portfolio, product, course, blog, about, privacy, and homepage chrome and offerings HTML, plus the service block of `llms.txt`.
+- **API / schema impact** — WebPage headline matches the visible homepage h1. Service names match the approved headlines.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
+
+## Product voice — 2026-10-15
+
+- Public pages now speak in a product-led register. The product or the system is the subject. Sentences are complete. The "You do X. We do Y." cadence, process-talk, and the visible product word "brief" are gone. The project action is **Start a project**. The homepage anchor stays `#brief`.
+- The visible homepage headline is "Abracadabra builds software around the way a company already works." The document title is "Abra-ca-dabra: Software around the way a company works." Service sections are "What the system delivers," "Where it earns its place," "From the operation to a live system," "A product, a hire, or a system built for the job," and "Named work." Process steps are Plan, Build, Review, and Launch and run.
+- **What changed** — voice on every public marketing surface, including films, the walkthrough, the blog chrome, the privacy draft, the 404 page, and `llms.txt`.
+- **Why** — the previous plain lines were still short fragments and a transactional cadence.
+- **Code touchpoints** — `index.html`, `films.html`, `404.html`, `walkthrough.html`, `llms.txt`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `scripts/site-chrome.mjs`, `scripts/blog.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — regenerated service, hub, portfolio, product, course, blog, about, privacy, and homepage chrome and offerings HTML, plus the service block of `llms.txt`.
+- **API / schema impact** — WebPage headline matches the visible homepage h1. Walkthrough item names match the visible titles.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
+
+## Plain copy — 2026-10-15
+
+- Headlines name a result an owner can picture. Subheads say what the thing is in one or two sentences. Stack names sit on a single “Under the hood” line on service pages. Homepage cards no longer say “Built on.”
+- The visible homepage headline is “Software for the way your company already works.” The schema slogan stays “From thought to working software.” Blog index, post intros and check prompts, films, privacy draft wording, the 404 page, walkthrough buttons, product and portfolio hubs, meta descriptions, and `llms.txt` use the same plain voice.
+- **What changed** — owner-facing copy on every public page.
+- **Why** — the previous lines named a mechanism (“the next step you approved,” “Built on Agents SDK”) instead of the result.
+- **Code touchpoints** — `index.html`, `films.html`, `404.html`, `walkthrough.html`, `llms.txt`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `content/blog/`, `docs/source-of-truth.md`.
+- **Data-flow impact** — regenerated service, portfolio, product, course, blog, about, privacy, and homepage offerings HTML, plus the blog block of `llms.txt`.
+- **API / schema impact** — WebPage headline matches the visible homepage h1. Organization slogan is unchanged.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
+
+## Finish system — 2026-10-15
+
+- Inner pages and the homepage now share one control radius, one card radius, and one accent button: dark ink `#170804` on `#ff4b24`. The graph-paper field is gone from catalog pages. Section headings sit closer to their own block than to the block above. Cards clip their photographs. The dashed “PLACEHOLDER” shout is a quiet note with the existing factual sentence and a link to the brief. The about page states what is not published, and the footer on catalog pages names the studio.
+- The homepage keeps the film, the left-column hero, and the absolute footer. Its primary actions and the nav brief button use the same accent pair. Service cards on the homepage are left-aligned and framed.
+- **What changed** — spacing, type, buttons, cards, notes, nav, and footer read as one product.
+- **Why** — the live site at `5baac92` looked unfinished next to a finished dark product.
+- **Code touchpoints** — `blog/blog.css`, `index.html`, `films.html`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`.
+- **Data-flow impact** — regenerated service, portfolio, product, course, blog, about, and privacy HTML, plus the homepage chrome.
+- **API / schema impact** — none.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder: 41 passed.
 
 ## Service photographs and shared heroes — 2026-10-15
 

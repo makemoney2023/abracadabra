@@ -7,7 +7,7 @@ pillar: "AI readiness"
 cluster: "framework"
 primaryQuery: "ai readiness framework"
 author: christopher-buzny
-cta: "Score the four groups on your own business."
+cta: "See how this business scores on data, process, people, and the decision."
 images:
   - src: /blog/media/ai-readiness-framework/01.webp
     file: ai-readiness-framework-01.jpg
