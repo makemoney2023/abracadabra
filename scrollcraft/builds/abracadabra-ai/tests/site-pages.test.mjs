@@ -67,6 +67,42 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.match(index, /assets\/video\/strongfoam-loop\.webm/);
   assert.match(index, /assets\/video\/milrcorr-loop\.mp4/);
   assert.match(index, /muted playsinline loop preload="none"/);
+  assert.match(index, /assets\/restored-motion\.css/);
+  assert.match(index, /assets\/restored-motion\.js/);
+  const motionOrder = ["hero", "agents", "gantt", "time", "compiler", "name", "range", "models"];
+  let motionAt = -1;
+  for (const id of motionOrder) {
+    const at = ids.indexOf(id);
+    assert.ok(at > motionAt, id);
+    motionAt = at;
+  }
+  const agents = index.slice(index.indexOf('id="agents"'), index.indexOf('id="gantt"'));
+  const gantt = index.slice(index.indexOf('id="gantt"'), index.indexOf('id="time"'));
+  const time = index.slice(index.indexOf('id="time"'), index.indexOf('id="compiler"'));
+  for (const label of [
+    "Search &amp; AI visibility",
+    "Marketing",
+    "Social media",
+    "Sales",
+    "Customer service",
+    "Operations",
+    "Design",
+    "Platform",
+  ]) {
+    assert.equal(agents.includes(label), true, `agents ${label}`);
+    assert.equal(gantt.includes(label), true, `gantt ${label}`);
+  }
+  assert.equal((agents.match(/class="agent-track"/g) || []).length, 8);
+  assert.equal((gantt.match(/class="time-lane"/g) || []).length, 8);
+  for (const phase of ["Discover", "Specify", "Design", "Build", "Test", "Release"]) {
+    assert.equal(time.includes(`data-time-phase="${phase}"`), true, phase);
+  }
+  assert.match(time, /It feels like magic\./);
+  const nav = index.slice(index.indexOf("<!-- SITE-NAV -->"), index.indexOf("<!-- /SITE-NAV -->"));
+  const foot = index.slice(index.indexOf("<!-- SITE-FOOT -->"), index.indexOf("<!-- /SITE-FOOT -->"));
+  assert.equal(nav.includes("Social media"), false);
+  assert.equal(foot.includes("Social media"), false);
+  assert.equal(index.includes("Social media"), true);
   for (const [page, file] of [
     ["portfolio/strongfoam-website/index.html", "strongfoam-loop"],
     ["portfolio/milrcorr/index.html", "milrcorr-loop"],
