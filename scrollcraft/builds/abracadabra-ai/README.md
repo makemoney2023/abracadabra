@@ -1,6 +1,6 @@
 # Abracadabra AI catalog
 
-One-page Scrollcraft gallery of shipped work. Brief is in `BRIEF.md`. Footage and sales packs live in `/outputs`.
+Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). The project brief is in `BRIEF.md`. Footage and sales packs live in `/outputs`.
 
 ```bash
 # from this folder
@@ -10,9 +10,22 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. Scroll is the timeline. The hero is the orbital film plus the promise and the two actions in a left column. From 1024px the actions sit side by side; below that they stack full width, still left-aligned. The compiler section sits directly under it and demonstrates the core mechanism in four explicit states: **Describe → Engineer → Build → Run it**. Its Engineer state converges an Intent stream and a Context stream into one engineered build plan before anything is built; its Build state dispatches five coordinated AI-agent workstreams from that plan and converges their outputs into a working system. The Aramaic origin of the name follows the compiler. The time travel chapter that follows moves a delivery calendar through **Conventional → Engineer → Parallel → Arrive** to show the serial calendar folding in on itself, without stating a duration, and names the result: **It feels like magic.** The range chapter between that calendar and the model strip moves through **Marketing → Applications → Machine learning → The record → The sale** and hands off with "The models are next." The model strip names the gateway providers and the Workers AI families. The dedicated AEO chapter follows **Question → Answer → Verify → Measure**. Services, portfolio, products, and the LLM Leverage course are linked from the site header. On desktop these sequences resolve as their chapters scroll; on mobile they use direct controls in normal document flow; reduced motion presents every state as a static sequence. The fixed signal rail reports page progress, the utterance strip inks one syllable per specimen on larger screens, and the Super Funnel Getting started film in the selected-work rail is the only video on the page.
+Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. From 1024px the actions sit side by side; below that they stack full width. The model strip is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs use the recordings we have and marked poster slots for the ones still coming. A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is **Start a project** at `#start`. The footer wordmark is Tektur. Reduced motion pauses video and stops the marquee.
 
-Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). If the page and that file disagree, fix the file first, then the page.
+If the page and the source-of-truth file disagree, fix the file first, then the page.
+
+## Runway homepage — 2026-10-16
+
+- The homepage is a short left-aligned page: hero, model logos, function cards, showcase tabs, the model band, the PiRX proof, a notes grid, Cloudflare, the FAQ, and `#start`.
+- Search & AI visibility is its own function and owns “Get found in AI search.” Marketing keeps media and research. Sales and Customer service are separate. Design links to live portfolio work. Platform keeps one bill and safe code.
+- The Cloudflare section uses the official light wordmark. The headline is “Apps that scale, proudly built with Cloudflare.” The supporting line says the apps grow from the first user to millions without a rebuild, and stay fast, secure, and available wherever customers are.
+- The project action is **Start a project** at `/#start`. The word “brief” is off the public page. Showdesk and appliance-store media files are gone. Their old URLs still 301 to `/portfolio/`.
+- **What changed** — homepage structure, type, function grouping, and the Cloudflare section.
+- **Why** — Christopher asked for a Runway-calm page that groups the work by business function and says the apps scale on Cloudflare.
+- **Code touchpoints** — `index.html`, `assets/site.css`, `assets/logos/cloudflare.svg`, `blog/blog.css`, `scrollcraft.css`, `scripts/site-data.mjs`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `docs/source-of-truth.md`, `tests/marketing-site.test.mjs`, `tests/site-pages.test.mjs`, `tests/work-rail.test.mjs`.
+- **Data-flow impact** — regenerated service, hub, portfolio, product, course, blog, about, and homepage chrome from `businessFunctions`.
+- **API / schema impact** — homepage ItemList stays five items. `dateModified` stays 2026-10-15. FAQ answers are unchanged.
+- **Verification** — `npm test` in this folder.
 
 ## Client sites — 2026-10-16
 

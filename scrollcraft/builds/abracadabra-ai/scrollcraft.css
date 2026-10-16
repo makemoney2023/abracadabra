@@ -17,20 +17,20 @@
 /* ---------------------------------------------------------------- tokens -- */
 :root {
   /* --- colour roles. Override these six and the page is rebranded. -------- */
-  --sc-canvas:      #08090b;   /* the page ground. Drift interpolates this.   */
-  --sc-surface:     #101217;   /* anything raised off the ground             */
-  --sc-ink:         #f4f2ef;   /* primary text                               */
-  --sc-ink-soft:    #9a9ba1;   /* secondary text. Tinted, never flat gray.   */
-  --sc-accent:      #d8ff3e;   /* ONE accent. It owns a region, not confetti. */
-  --sc-accent-ink:  #08090b;   /* text that sits on the accent               */
+  --sc-canvas:      #070706;   /* the page ground. Drift interpolates this.   */
+  --sc-surface:     #11110F;   /* anything raised off the ground             */
+  --sc-ink:         #F5F0E8;   /* primary text                               */
+  --sc-ink-soft:    #AAA49A;   /* secondary text. Tinted, never flat gray.   */
+  --sc-accent:      #FF4B24;   /* ONE accent. It owns a region, not confetti. */
+  --sc-accent-ink:  #070706;   /* text that sits on the accent               */
 
   --sc-hairline:    color-mix(in oklab, var(--sc-ink) 12%, transparent);
   --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 22%, transparent);
 
   /* --- type. Two families max. Display carries voice, text carries prose. - */
-  --sc-font-display: "Instrument Sans", "Geist", system-ui, sans-serif;
-  --sc-font-text:    "Geist", system-ui, sans-serif;
-  --sc-font-mono:    "Geist Mono", ui-monospace, monospace;
+  --sc-font-display: "IBM Plex Sans", system-ui, sans-serif;
+  --sc-font-text:    "IBM Plex Sans", system-ui, sans-serif;
+  --sc-font-mono:    ui-monospace, monospace;
 
   /* Fluid ramp. Tracking tightens as size grows because a face set at 6rem
      with 0 tracking reads loose; this is optical correction, not decoration. */

@@ -22,27 +22,31 @@ const offerings = [
   "search-grounded-research",
 ];
 
-test("the model strip sits between the menu and the answer chapter", () => {
+test("the homepage runs hero, models, functions, then Cloudflare before the FAQ", () => {
   const index = read("index.html");
   const ids = [...index.matchAll(/<section id="([^"]+)"/g)].map((match) => match[1]);
-  const range = ids.indexOf("range");
-  const models = ids.indexOf("models");
-  const aeo = ids.indexOf("aeo");
-  assert.equal(models, range + 1);
-  assert.equal(aeo, models + 1);
-  assert.match(index, /The models are next/);
-  assert.match(index, /href="#models"/);
+  const order = ["hero", "models", "services", "showcase", "models-band", "proof", "notes", "cloudflare", "faq", "start"];
+  let last = -1;
+  for (const id of order) {
+    const at = ids.indexOf(id);
+    assert.ok(at > last, id);
+    last = at;
+  }
+  assert.match(index, /Custom software, built for how you work\./);
+  assert.match(index, /Every AI model\. One bill\./);
+  assert.match(index, /Apps that scale, proudly built with Cloudflare\./);
+  assert.match(index, /from the first user to millions, without a rebuild/);
+  assert.match(index, /assets\/logos\/cloudflare\.svg/);
+  assert.equal(/\bbrief\b/i.test(index), false);
   assert.equal((index.match(/aria-hidden="true"/g) || []).length > 0, true);
-  const modelsBlock = index.slice(index.indexOf('id="models"'), index.indexOf('id="aeo"'));
+  const modelsBlock = index.slice(index.indexOf('id="models"'), index.indexOf('id="services"'));
   assert.equal((modelsBlock.match(/<ul class="marquee__list" aria-hidden="true">/g) || []).length, 2);
   assert.match(index, /prefers-reduced-motion: reduce/);
   assert.match(index, /\.marquee__list\[aria-hidden="true"\] \{ display: none; \}/);
   assert.equal(index.includes("0.62rem"), false);
   assert.equal(index.includes("0.58rem"), false);
   assert.equal(index.includes("The next room is the receipt"), false);
-  assert.match(index, /Every major model, one gateway/);
-  assert.match(index, /Software for how you work\./);
-  const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="benefits"'));
+  const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="showcase"'));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
   assert.match(index, /href="\/services\/">Services/);
   assert.equal(index.includes(">Offerings<"), false);
@@ -83,7 +87,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   }
   const offering = read("services/ai-assistants-and-agents/index.html");
   assert.match(offering, /PLACEHOLDER — needs Christopher/);
-  assert.match(offering, /class="sales-primary" href="\/#brief">Start a project/);
+  assert.match(offering, /class="sales-primary" href="\/#start">Start a project/);
   assert.match(offering, /AI Readiness Check/);
   assert.match(offering, /https:\/\/check\.abra-ca-dabra\.app\/check/);
   assert.match(offering, /What you get/);

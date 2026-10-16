@@ -2,7 +2,7 @@
 
 **Domain:** [abra-ca-dabra.app](https://abra-ca-dabra.app)
 **Studio:** Abracadabra AI
-**Updated:** 2026-10-15
+**Updated:** 2026-10-16
 **Status:** Working source for site copy, sales language, and what we are willing to say in public.
 
 This file is the argument and the evidence. The GitHub catalog at [makemoney2023/abracadabra](https://github.com/makemoney2023/abracadabra) is the showroom (films, scroll catalog, one-pagers). This document is the front door: who we are, what the work is worth, and what proves it.
@@ -42,7 +42,7 @@ Abracadabra, traced back far enough, is Aramaic, roughly *avra kadavra*. It is n
 
 **Primary action.** Start a project.
 
-**Secondary action.** See what we've built.
+**Secondary action.** See the work.
 
 **Voice.**
 
@@ -76,7 +76,21 @@ A fourth arrival: the job is too specific for a catalog, and we take it.
 
 ## Homepage copy
 
-Paste-ready. Section order is the page.
+Paste-ready. The live page order, as of 2026-10-16, is: hero, AI model logos, business-function cards, showcase tabs, the model band, Search & AI visibility (the PiRX proof), notes, Cloudflare, the FAQ accordion, then the close.
+
+Functions come from one list, `businessFunctions` in `scripts/site-data.mjs`:
+
+| Function | Owns |
+|---|---|
+| Search & AI visibility | Get found in AI search. PiRX: 375K search impressions and 43.5K AI-feature impressions in 90 days (Jul 14 to Oct 13, 2026). |
+| Marketing | On-brand images, video and voice, on demand. Research you can trust, with every source cited. |
+| Sales | AI assistants that actually get things done. |
+| Customer service | AI that answers your phone. |
+| Operations | Put repetitive web work on autopilot. Instant answers from your own documents. Apps built around your workflow. |
+| Design | Live portfolio work: StrongFoam, Milrcorr, pirx.ca. No separate service URL. |
+| Platform | Every AI model. One bill. Let AI run code, safely. |
+
+**Cloudflare.** After the model band, the proof, and the notes, and before the FAQ. Official light wordmark on the dark canvas, with clear space around the mark. Headline: Apps that scale, proudly built with Cloudflare. Supporting line: They grow with your business, from the first user to millions, without a rebuild, and stay fast, secure, and available wherever your customers are. No other stack name appears as a visible label.
 
 ### 1. Hero
 
@@ -86,14 +100,14 @@ Paste-ready. Section order is the page.
 
 **Subhead:** We design, build and run AI-powered tools that fit your business, not the other way around.
 
-**Tag:** The job and the rules are written down before anything is built. Five workstreams. One running system.
+**Primary action:** Start a project. The anchor is `/#start`.
 
-**Demonstration:** A general customer request resolves through **Describe → Engineer → Build → Run it**. The Engineer state shows two streams—**Intent** (what must be true when it ships) and **Context** (how the business already works)—converging into one **Engineered build plan**. The Build state dispatches Workflow, Experience, Engineering, Quality, and Launch agents from that engineered plan. Their outputs converge into the working system. Milrcorr appears only in the Run state as one real example: this site became Milrcorr, at [milrcorr.com](https://milrcorr.com). The visible action is **Start a project**. The anchor stays `#brief`.
+**Secondary action:** See the work. It points at the function cards.
 
 **Claim boundary:** “At the speed of thought” is the brand premise in the schema slogan and the name chapter. It describes the compressed gap and parallel delivery model. Do not attach an elapsed-time guarantee, fabricated completion percentage, commit count, or test count without measured project evidence. It is not the visible homepage headline.
 
 **Primary CTA:** Start a project
-**Secondary CTA:** See what we've built
+**Secondary CTA:** See the work
 
 **Headline alternatives**
 
@@ -204,7 +218,7 @@ The close is the same block as Fit. The visible heading is **Start a project.** 
 **Body:** Tell us the steps, the exceptions, and the result. We reply with the system, or with a product you can buy that already fits.
 
 **CTA:** Start a project
-**Secondary:** See what we've built
+**Secondary:** See the work
 
 ### Meta
 

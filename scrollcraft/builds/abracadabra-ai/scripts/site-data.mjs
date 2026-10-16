@@ -368,7 +368,62 @@ export const offerings = [
 ];
 
 export const OFFERINGS_KICKER = "Custom software";
-export const OFFERINGS_HEADING = "Software for how you work.";
+export const OFFERINGS_HEADING = "Everything you need to put AI to work.";
+
+/**
+ * One grouping for the homepage cards, the services hub, the nav, and the footer.
+ * Design has no service URL. It points at live portfolio work.
+ */
+export const businessFunctions = [
+  {
+    id: "search",
+    name: "Search & AI visibility",
+    promise: "Show up when someone asks a search engine or an AI assistant for what you do.",
+    proof: "PiRX went from near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days.",
+    services: ["ai-visibility"],
+  },
+  {
+    id: "marketing",
+    name: "Marketing",
+    promise: "Ship on-brand images, video, and voice, and research you can open and check.",
+    services: ["ai-media", "search-grounded-research"],
+  },
+  {
+    id: "sales",
+    name: "Sales",
+    promise: "An assistant that keeps the conversation and finishes the request in the tools you already use.",
+    services: ["ai-assistants-and-agents"],
+  },
+  {
+    id: "service",
+    name: "Customer service",
+    promise: "Callers get an answer from your records, and a person when the call needs one.",
+    services: ["voice-and-realtime-agents"],
+  },
+  {
+    id: "operations",
+    name: "Operations",
+    promise: "Turn the way you already work into software, answers from your files, and web jobs that run themselves.",
+    services: ["web-automation", "answers-from-your-documents", "custom-apps"],
+  },
+  {
+    id: "design",
+    name: "Design",
+    promise: "Sites and product pages shaped around the work, already live for StrongFoam, Milrcorr, and pirx.ca.",
+    services: [],
+    work: [
+      { href: "/portfolio/strongfoam-website/", label: "StrongFoam" },
+      { href: "/portfolio/milrcorr/", label: "Milrcorr" },
+      { href: "/portfolio/pirx/", label: "pirx.ca" },
+    ],
+  },
+  {
+    id: "platform",
+    name: "Platform",
+    promise: "Use the best model for every job, on one bill, and let code run only inside the limits you set.",
+    services: ["any-model-one-bill", "safe-code-execution"],
+  },
+];
 
 /** Cloudflare AI Gateway providers, checked against the Provider Native docs. */
 export const gatewayLogos = [

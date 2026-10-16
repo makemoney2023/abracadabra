@@ -9,9 +9,9 @@ const index = readFileSync(join(root, "index.html"), "utf8");
 
 test("the work rail plays Getting started and no other Super Funnel cut", () => {
   const rail = index.match(
-    /<section id="iii"[\s\S]*?<div class="rail"[\s\S]*?<\/div>\s*<\/div>\s*<\/section>/,
+    /<div id="panel-sell"[\s\S]*?<\/div>/,
   );
-  assert.ok(rail, "section #iii rail is present");
+  assert.ok(rail, "Sell panel is present");
   const videos = [...rail[0].matchAll(/<video\b[^>]*>/g)].map((match) => match[0]);
   assert.equal(videos.length, 1);
   assert.match(videos[0], /controls/);
