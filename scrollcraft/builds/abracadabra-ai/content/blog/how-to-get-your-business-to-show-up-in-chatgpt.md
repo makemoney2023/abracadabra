@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI search visibility"
 cluster: "visibility"
 primaryQuery: "how to get your business to show up in chatgpt"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "The visibility guide reads the site. The Readiness Check reads the business."
 images:
   - src: /blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.webp

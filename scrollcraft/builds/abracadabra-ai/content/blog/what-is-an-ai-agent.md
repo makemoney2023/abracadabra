@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "what is an ai agent"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "An agent needs a written process and a person who checks it. The Readiness Check covers both."
 images:
   - src: /blog/media/what-is-an-ai-agent/01.webp

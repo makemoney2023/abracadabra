@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: AI readiness
 cluster: assessment
 primaryQuery: ai readiness assessment
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Run the check on data, process, people, and the decision. It takes five to seven minutes."
 images:
   - src: /blog/media/ai-readiness-assessment/01.webp
@@ -85,7 +85,7 @@ AWS published an AI readiness checklist in September 2025.[^aws] It walks five s
 | AWS checklist | A small or midsize business working through stages | Five steps and four stage names |
 | Readiness Check | The business taking it | Four scores, a band, and three suggestions per section |
 
-The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. [Christopher Buzny](/about/christopher-buzny) publishes the method on the [studio site](/).
+The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. We publish the method on [our site](/).
 
 We draw that line on purpose. A diagnosis says what is wrong with you. A route says where to look next. Owners sometimes want the diagnosis because it sounds more serious. Serious is not the same as useful. If we told a clinic it had failed readiness, we would be borrowing a clinical tone for a business conversation. The check describes a state and points at a next page. That is the promise, and we would not widen it.
 

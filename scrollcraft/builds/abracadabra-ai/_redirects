@@ -133,7 +133,9 @@
 /blog/what-is-llms-txt/ /blog/what-is-llms-txt/index.html 200
 /blog/why-ai-pilots-stall /blog/why-ai-pilots-stall/index.html 200
 /blog/why-ai-pilots-stall/ /blog/why-ai-pilots-stall/index.html 200
-/about/christopher-buzny /about/christopher-buzny/index.html 200
-/about/christopher-buzny/ /about/christopher-buzny/index.html 200
+/about/christopher-buzny /about/ 301
+/about/christopher-buzny/ /about/ 301
+/about /about/index.html 200
+/about/ /about/index.html 200
 /privacy /privacy/index.html 200
 /privacy/ /privacy/index.html 200

@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI consulting and implementation"
 cluster: "consulting"
 primaryQuery: "ai automation agency vs consultant"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Hiring is a decision. Run the check before you sign."
 images:
   - src: /blog/media/ai-automation-agency-vs-consultant/01.webp

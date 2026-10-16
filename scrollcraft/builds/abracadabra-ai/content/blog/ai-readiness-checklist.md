@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "ai readiness checklist"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "A tick list is not a decision. Run the Readiness Check."
 images:
   - src: /blog/media/ai-readiness-checklist/01.webp

@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "ai agents vs agentic ai"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "If you cannot name the checker, you do not have an agent yet."
 images:
   - src: /blog/media/ai-agents-vs-agentic-ai/01.webp

@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "is my business ready for ai"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "The bands describe a state. See where this business sits."
 images:
   - src: /blog/media/is-my-business-ready-for-ai/01.webp

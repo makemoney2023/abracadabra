@@ -56,7 +56,7 @@ When a product already on the market does the job, the reply says so and points 
 - The walkthrough, one continuous flight through Schema and LLM Leverage: https://abra-ca-dabra.app/walkthrough.html
 - The films on file, live captures of Schema and LLM Leverage, and eight Super Funnel associate tours: https://abra-ca-dabra.app/films.html
 - Blog, notes with named sources. A post is listed below only on or after its publish date: https://abra-ca-dabra.app/blog
-- Christopher Buzny, founder: https://abra-ca-dabra.app/about/christopher-buzny
+- About: https://abra-ca-dabra.app/about/
 - Privacy: https://abra-ca-dabra.app/privacy
 - Readiness Check, a five-to-seven-minute score of pressure, readiness, growth, and site visibility, hosted with Schema: https://check.abra-ca-dabra.app/check
 
@@ -97,7 +97,7 @@ When a product already on the market does the job, the reply says so and points 
 ## Blog
 
 Index: https://abra-ca-dabra.app/blog
-Author: https://abra-ca-dabra.app/about/christopher-buzny
+About: https://abra-ca-dabra.app/about/
 Privacy: https://abra-ca-dabra.app/privacy
 
 - AI Agents for Business: When to Use One: https://abra-ca-dabra.app/blog/ai-agents-for-business

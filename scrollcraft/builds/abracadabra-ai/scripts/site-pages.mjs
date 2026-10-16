@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { ORG_ID, PERSON_ID, SITE, WEBSITE_ID } from "./blog.mjs";
+import { ORG_ID, SITE, WEBSITE_ID } from "./blog.mjs";
 import { siteFooter, siteHeader } from "./site-chrome.mjs";
 import {
   MODIFIED,
@@ -81,16 +81,6 @@ function websiteNode() {
   };
 }
 
-function personNode() {
-  return {
-    "@type": "Person",
-    "@id": PERSON_ID,
-    name: "Christopher Buzny",
-    jobTitle: "Founder",
-    url: `${SITE}/about/christopher-buzny`,
-    worksFor: { "@id": ORG_ID },
-  };
-}
 
 function crumbList(items) {
   return {
@@ -253,7 +243,7 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!-- PLACEHOLDER — needs Christopher: Google Search Console verification meta -->
+<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
@@ -300,7 +290,7 @@ async function writePage(relativePath, html) {
 function baseGraph(pageNode, extra) {
   return {
     "@context": "https://schema.org",
-    "@graph": [orgNode(), websiteNode(), personNode(), pageNode, ...extra],
+    "@graph": [orgNode(), websiteNode(), pageNode, ...extra],
   };
 }
 

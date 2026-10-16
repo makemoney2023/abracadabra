@@ -624,7 +624,7 @@ export const course = {
   description: "A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, each with a quiz you pass at 75%.",
 };
 
-export const PLACEHOLDER = "PLACEHOLDER — needs Christopher";
+export const PLACEHOLDER = "PLACEHOLDER — needs owner sign-off";
 
 export const placeholders = {
   offering: "Price, timeline, and a client example for this service are not on the site yet.",

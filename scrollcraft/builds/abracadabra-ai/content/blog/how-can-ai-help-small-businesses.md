@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: AI for small business
 cluster: adoption
 primaryQuery: how can ai help small businesses
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Surveys measure everyone. The Readiness Check measures you."
 images:
   - src: /blog/media/how-can-ai-help-small-businesses/01.webp
@@ -44,7 +44,7 @@ citations:
     datePublished: "2025-06-16"
     figures: ["12.2", "6.1", "35.7", "23.1", "40.1", "38.9", "21357", "9103", "1", "5", "16", "2025", "2024"]
 ---
-AI helps a small business by taking a named job a person already does. It does not help by moving you closer to a headline. Two surveys from 2025 count AI in small firms, and they count different work. The U.S. Chamber asked who uses generative AI. Statistics Canada asked who used AI to produce goods or deliver services. A firm can say yes to the first and no to the second, and both answers can be honest. This note keeps those claims apart, then names the jobs owners hand over. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is the matching question for one business. [Christopher Buzny](/about/christopher-buzny) writes these notes from the [studio site](/).
+AI helps a small business by taking a named job a person already does. It does not help by moving you closer to a headline. Two surveys from 2025 count AI in small firms, and they count different work. The U.S. Chamber asked who uses generative AI. Statistics Canada asked who used AI to produce goods or deliver services. A firm can say yes to the first and no to the second, and both answers can be honest. This note keeps those claims apart, then names the jobs owners hand over. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is the matching question for one business. We write these notes on [our site](/).
 
 We sit with owners who have already been told they are late. The number they heard was usually the larger one. First, we figure out what the number actually measures. Help, for a shop or a clinic or a trades desk, is a draft someone checks, a sort someone trusts, a reminder someone still sends. Help is not a rank on a national chart.
 
