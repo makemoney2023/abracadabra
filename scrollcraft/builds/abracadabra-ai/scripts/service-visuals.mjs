@@ -126,7 +126,7 @@ export async function writeServiceImages() {
       await writeRole(source, destDir, role);
     }
     await sharp(join(root, "content/service-images", folder, "hero.jpg"))
-      .resize(1200, 630, { fit: "cover", position: "attention" })
+      .resize(1200, 630, { fit: "cover", position: "centre" })
       .jpeg({ quality: 80, mozjpeg: true })
       .toFile(join(destDir, "og.jpg"));
   }
