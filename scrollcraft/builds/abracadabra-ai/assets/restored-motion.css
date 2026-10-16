@@ -981,7 +981,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .compiler-requests { display: grid; }
-  #compiler .intent-demo__quote { display: none; }
+
   .intent-demo { min-height: 0; }
   .intent-demo__viewport { min-height: 0; padding: var(--sc-4); display: grid; gap: var(--sc-4); }
   .intent-demo__state {

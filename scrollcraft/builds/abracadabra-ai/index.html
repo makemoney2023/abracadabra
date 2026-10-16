@@ -333,78 +333,112 @@
   </div>
 </section>
 
-<section id="agents" class="restored" aria-labelledby="agents-title">
-  <div class="agents-shell">
-    <div class="agents-copy">
-      <p class="kicker">Parallel agents</p>
-      <h2 id="agents-title">Eight functions, building at once.</h2>
-      <p class="sc-body">Search, marketing, social, sales, service, operations, design, and platform move together. You direct what ships.</p>
-    </div>
-    <div class="intent-demo" data-active-state="build" aria-label="Eight functions building in parallel">
-      <div class="intent-demo__chrome">
-        <p class="sc-label">Parallel agents</p>
-        <p class="sc-label intent-demo__status">Agents building in parallel</p>
-      </div>
-      <div class="intent-demo__viewport">
-        <section class="intent-demo__state" data-compiler-panel="build" aria-labelledby="agents-build-title">
-          <p class="sc-label intent-demo__phase" id="agents-build-title">Build in parallel</p>
-          <div class="agent-orchestration" aria-label="Eight functions build in parallel">
-            <div class="agent-plan">
-              <span>Eight functions</span>
-              <strong>Working at once</strong>
-            </div>
-            <div class="agent-tracks">
-              <article class="agent-track" data-agent-track style="--agent-index:0">
-                <span class="agent-track__role"><span data-agent-role>Search &amp; AI visibility</span><small>Agent 01</small></span>
-                <span class="agent-track__activity">Show up in answers</span>
-                <strong data-agent-output>Found when asked</strong>
-              </article>
-              <article class="agent-track" data-agent-track style="--agent-index:1">
-                <span class="agent-track__role"><span data-agent-role>Marketing</span><small>Agent 02</small></span>
-                <span class="agent-track__activity">Campaigns you can check</span>
-                <strong data-agent-output>Research cited</strong>
-              </article>
-              <article class="agent-track" data-agent-track style="--agent-index:2">
-                <span class="agent-track__role"><span data-agent-role>Social media</span><small>Agent 03</small></span>
-                <span class="agent-track__activity">Posts in your voice</span>
-                <strong data-agent-output>Posted on schedule</strong>
-              </article>
-              <article class="agent-track" data-agent-track style="--agent-index:3">
-                <span class="agent-track__role"><span data-agent-role>Sales</span><small>Agent 04</small></span>
-                <span class="agent-track__activity">Conversations that finish</span>
-                <strong data-agent-output>Request finished</strong>
-              </article>
-              <article class="agent-track" data-agent-track style="--agent-index:4">
-                <span class="agent-track__role"><span data-agent-role>Customer service</span><small>Agent 05</small></span>
-                <span class="agent-track__activity">Calls answered from your records</span>
-                <strong data-agent-output>A person when needed</strong>
-              </article>
-              <article class="agent-track" data-agent-track style="--agent-index:5">
-                <span class="agent-track__role"><span data-agent-role>Operations</span><small>Agent 06</small></span>
-                <span class="agent-track__activity">Repetitive steps, automated</span>
-                <strong data-agent-output>Work runs itself</strong>
-              </article>
-              <article class="agent-track" data-agent-track style="--agent-index:6">
-                <span class="agent-track__role"><span data-agent-role>Design</span><small>Agent 07</small></span>
-                <span class="agent-track__activity">Screens that fit the work</span>
-                <strong data-agent-output>Interface shaped</strong>
-              </article>
-              <article class="agent-track" data-agent-track style="--agent-index:7">
-                <span class="agent-track__role"><span data-agent-role>Platform</span><small>Agent 08</small></span>
-                <span class="agent-track__activity">One bill, safe code</span>
-                <strong data-agent-output>Apps that scale</strong>
-              </article>
-            </div>
-            <div class="agent-convergence">
-              <span>One build</span>
-              <strong>Directed by you</strong>
-            </div>
+<section id="compiler" class="restored restored-pin" aria-labelledby="compiler-heading">
+    <div class="sc-stage">
+      <div class="compiler-shell">
+        <div class="intent-demo compiler" data-active-state="describe" aria-label="How your requirements become working software">
+          <div class="intent-demo__chrome">
+            <p class="sc-label" id="compiler-heading">Thought → working software</p>
+            <p class="sc-label intent-demo__status" data-compiler-status aria-live="polite">Listening</p>
           </div>
-        </section>
+          <div class="intent-demo__viewport">
+            <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
+              <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Requirements</p>
+              <p class="intent-demo__quote">“A <mark>customer makes a request</mark>. The right person reviews it. If something is missing, it comes back. When it is complete, the customer gets the result.”</p>
+              <p class="intent-demo__reading">Describe the work in your own words, without a feature list or software vocabulary.</p>
+            </section>
+            <section class="intent-demo__state" data-compiler-panel="engineer" aria-labelledby="compiler-engineer-title">
+              <p class="sc-label intent-demo__phase" id="compiler-engineer-title">02 / Engineer intent and context</p>
+              <div class="context-engineering" aria-label="Intent and context engineered into one build plan">
+                <div class="context-stream" data-context-stream="intent">
+                  <div class="context-stream__head">
+                    <span data-stream-name>Intent</span>
+                    <strong>What must be true when it ships</strong>
+                  </div>
+                  <ul>
+                    <li data-kind="Outcome"><strong>Finished result delivered</strong></li>
+                    <li data-kind="Authority"><strong>Right person decides</strong></li>
+                    <li data-kind="Trade-off"><strong>Speed without skipping review</strong></li>
+                  </ul>
+                </div>
+                <div class="context-stream" data-context-stream="context">
+                  <div class="context-stream__head">
+                    <span data-stream-name>Context</span>
+                    <strong>How you already work</strong>
+                  </div>
+                  <ul>
+                    <li data-kind="People"><strong>Customer · reviewer · owner</strong></li>
+                    <li data-kind="Words"><strong>Your terms</strong></li>
+                    <li data-kind="Exceptions"><strong>Missing info comes back</strong></li>
+                  </ul>
+                </div>
+                <div class="build-plan" data-build-plan>
+                  <span>Engineered build plan</span>
+                  <strong>One precise model of the operation</strong>
+                  <p>Every agent shares it, and you review it before anything is built.</p>
+                </div>
+              </div>
+              <p class="intent-demo__reading">The job and the rules are written first, so every part of the build follows the same picture of how you work.</p>
+            </section>
+            <section class="intent-demo__state" data-compiler-panel="build" aria-labelledby="compiler-build-title">
+              <p class="sc-label intent-demo__phase" id="compiler-build-title">03 / Build in parallel</p>
+              <div class="agent-orchestration" aria-label="Five coordinated AI agent workstreams build the system in parallel">
+                <div class="agent-plan">
+                  <span>Engineered plan</span>
+                  <strong>Request → finished outcome</strong>
+                </div>
+                <div class="agent-tracks">
+                  <article class="agent-track" data-agent-track style="--agent-index:0">
+                    <span class="agent-track__role"><span data-agent-role>Workflow</span><small>Agent 01</small></span>
+                    <span class="agent-track__activity">Rules · owners · handoffs</span>
+                    <strong data-agent-output>Rules mapped</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:1">
+                    <span class="agent-track__role"><span data-agent-role>Experience</span><small>Agent 02</small></span>
+                    <span class="agent-track__activity">Screens · actions · states</span>
+                    <strong data-agent-output>Interface shaped</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:2">
+                    <span class="agent-track__role"><span data-agent-role>Engineering</span><small>Agent 03</small></span>
+                    <span class="agent-track__activity">Data · logic · integrations</span>
+                    <strong data-agent-output>System assembled</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:3">
+                    <span class="agent-track__role"><span data-agent-role>Quality</span><small>Agent 04</small></span>
+                    <span class="agent-track__activity">Main path · edge cases</span>
+                    <strong data-agent-output>Exceptions tested</strong>
+                  </article>
+                  <article class="agent-track" data-agent-track style="--agent-index:4">
+                    <span class="agent-track__role"><span data-agent-role>Launch</span><small>Agent 05</small></span>
+                    <span class="agent-track__activity">Demo · operating script</span>
+                    <strong data-agent-output>Demo prepared</strong>
+                  </article>
+                </div>
+                <div class="agent-convergence">
+                  <span>Human directed</span>
+                  <strong>One coordinated build</strong>
+                </div>
+              </div>
+              <p class="intent-demo__reading">Five workstreams move together, and you direct every decision that shapes what ships.</p>
+            </section>
+            <section class="intent-demo__state intent-demo__product" data-compiler-panel="run" aria-labelledby="compiler-run-title">
+              <div class="intent-demo__proof">
+                <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong>See it live: Milrcorr runs on software built this way.</strong></p>
+                <p><a href="https://milrcorr.com">Open the live site</a></p>
+              </div>
+            </section>
+          </div>
+          <div class="intent-demo__controls" aria-label="Operation compiler states">
+            <button type="button" data-compiler-state="describe" aria-pressed="true">Requirements</button>
+            <button type="button" data-compiler-state="engineer" aria-pressed="false">Engineer</button>
+            <button type="button" data-compiler-state="build" aria-pressed="false">Build</button>
+            <button type="button" data-compiler-state="run" aria-pressed="false">Run it</button>
+            <button class="intent-demo__skip" type="button" data-compiler-skip>Skip to working product</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
 <section id="gantt" class="restored restored-pin restored-pin--gantt" aria-labelledby="gantt-title">
   <div class="sc-stage">
@@ -519,138 +553,6 @@
           <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
           <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
           <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="compiler" class="restored restored-pin" aria-labelledby="compiler-heading">
-  <div class="sc-stage">
-    <div class="compiler-shell">
-      <div class="intent-demo compiler" data-active-state="describe" aria-label="How an operation becomes working software">
-        <div class="intent-demo__chrome">
-          <p class="sc-label" id="compiler-heading">Thought to working software</p>
-          <p class="sc-label intent-demo__status" data-compiler-status aria-live="polite">Listening</p>
-        </div>
-        <div class="intent-demo__viewport">
-          <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
-            <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Describe</p>
-            <p class="intent-demo__quote">“<mark data-compiler-request>Show up when someone asks an AI for what you do.</mark>”</p>
-            <p class="intent-demo__reading">Describe the work in your own words, one function at a time.</p>
-            <ul class="compiler-requests">
-              <li><a href="/services/ai-visibility/">Show up when someone asks an AI for what you do.</a><span>A page an answer engine can check, with the question and the evidence beside it.</span></li>
-              <li><a href="/services/ai-media/">Ship on-brand images, video, and voice, and research you can open.</a><span>Media and cited research, ready to publish.</span></li>
-              <li><a href="/services/ai-media/">Post in your voice, on the channels you already use.</a><span>Social posts written, scheduled, and ready to go out.</span></li>
-              <li><a href="/services/ai-assistants-and-agents/">Keep the conversation and finish the request in the tools you already use.</a><span>An assistant that stays in the thread and completes the next step.</span></li>
-              <li><a href="/services/voice-and-realtime-agents/">Answer callers from your records, and hand off when a person is needed.</a><span>The call is answered from your records. A person takes the ones that need one.</span></li>
-              <li><a href="/services/web-automation/">Take the repetitive web work off your plate.</a><span>The repeated steps run on their own. You see what happened.</span></li>
-              <li><a href="/portfolio/">Make the screens follow the way you already work.</a><span>An interface shaped around your steps, not a generic template.</span></li>
-              <li><a href="/services/any-model-one-bill/">Run the apps on one bill, and let them grow without a rebuild.</a><span>The same apps, from the first user onward, fast and available.</span></li>
-            </ul>
-          </section>
-          <section class="intent-demo__state" data-compiler-panel="engineer" aria-labelledby="compiler-engineer-title">
-            <p class="sc-label intent-demo__phase" id="compiler-engineer-title">02 / Engineer intent and context</p>
-            <div class="context-engineering" aria-label="Intent and context engineered into one build plan">
-              <div class="context-stream" data-context-stream="intent">
-                <div class="context-stream__head">
-                  <span data-stream-name>Intent</span>
-                  <strong>What must be true when it ships</strong>
-                </div>
-                <ul>
-                  <li data-kind="Outcome"><strong>Finished result delivered</strong></li>
-                  <li data-kind="Authority"><strong>You decide</strong></li>
-                  <li data-kind="Trade-off"><strong>Speed without skipping review</strong></li>
-                </ul>
-              </div>
-              <div class="context-stream" data-context-stream="context">
-                <div class="context-stream__head">
-                  <span data-stream-name>Context</span>
-                  <strong>How you already work</strong>
-                </div>
-                <ul>
-                  <li data-kind="People"><strong>You, and the handoff</strong></li>
-                  <li data-kind="Words"><strong>Your terms</strong></li>
-                  <li data-kind="Exceptions"><strong>Missing info comes back</strong></li>
-                </ul>
-              </div>
-              <div class="build-plan" data-build-plan>
-                <span>Engineered build plan</span>
-                <strong>One precise model of the operation</strong>
-                <p>Shared by every agent. Reviewed by you before anything is built.</p>
-              </div>
-            </div>
-            <p class="intent-demo__reading">The job and the rules are written before anything is built, so every part of the build follows the same picture of how you work.</p>
-          </section>
-          <section class="intent-demo__state" data-compiler-panel="build" aria-labelledby="compiler-build-title">
-            <p class="sc-label intent-demo__phase" id="compiler-build-title">03 / Build in parallel</p>
-            <div class="agent-orchestration" aria-label="Eight functions build in parallel">
-              <div class="agent-plan">
-                <span>Eight functions</span>
-                <strong>Working at once</strong>
-              </div>
-              <div class="agent-tracks">
-                <article class="agent-track" data-agent-track style="--agent-index:0">
-                  <span class="agent-track__role"><span data-agent-role>Search &amp; AI visibility</span><small>Agent 01</small></span>
-                  <span class="agent-track__activity">Show up in answers</span>
-                  <strong data-agent-output>Found when asked</strong>
-                </article>
-                <article class="agent-track" data-agent-track style="--agent-index:1">
-                  <span class="agent-track__role"><span data-agent-role>Marketing</span><small>Agent 02</small></span>
-                  <span class="agent-track__activity">Campaigns you can check</span>
-                  <strong data-agent-output>Research cited</strong>
-                </article>
-                <article class="agent-track" data-agent-track style="--agent-index:2">
-                  <span class="agent-track__role"><span data-agent-role>Social media</span><small>Agent 03</small></span>
-                  <span class="agent-track__activity">Posts in your voice</span>
-                  <strong data-agent-output>Posted on schedule</strong>
-                </article>
-                <article class="agent-track" data-agent-track style="--agent-index:3">
-                  <span class="agent-track__role"><span data-agent-role>Sales</span><small>Agent 04</small></span>
-                  <span class="agent-track__activity">Conversations that finish</span>
-                  <strong data-agent-output>Request finished</strong>
-                </article>
-                <article class="agent-track" data-agent-track style="--agent-index:4">
-                  <span class="agent-track__role"><span data-agent-role>Customer service</span><small>Agent 05</small></span>
-                  <span class="agent-track__activity">Calls answered from your records</span>
-                  <strong data-agent-output>A person when needed</strong>
-                </article>
-                <article class="agent-track" data-agent-track style="--agent-index:5">
-                  <span class="agent-track__role"><span data-agent-role>Operations</span><small>Agent 06</small></span>
-                  <span class="agent-track__activity">Repetitive steps, automated</span>
-                  <strong data-agent-output>Work runs itself</strong>
-                </article>
-                <article class="agent-track" data-agent-track style="--agent-index:6">
-                  <span class="agent-track__role"><span data-agent-role>Design</span><small>Agent 07</small></span>
-                  <span class="agent-track__activity">Screens that fit the work</span>
-                  <strong data-agent-output>Interface shaped</strong>
-                </article>
-                <article class="agent-track" data-agent-track style="--agent-index:7">
-                  <span class="agent-track__role"><span data-agent-role>Platform</span><small>Agent 08</small></span>
-                  <span class="agent-track__activity">One bill, safe code</span>
-                  <strong data-agent-output>Apps that scale</strong>
-                </article>
-              </div>
-              <div class="agent-convergence">
-                <span>One build</span>
-                <strong>Directed by you</strong>
-              </div>
-            </div>
-            <p class="intent-demo__reading">Eight functions move together. You hold the intent and direct the decisions that shape what ships.</p>
-          </section>
-          <section class="intent-demo__state intent-demo__product" data-compiler-panel="run" aria-labelledby="compiler-run-title">
-            <div class="intent-demo__proof">
-              <p><span class="sc-label" id="compiler-run-title">04 / Run</span><strong data-compiler-result>A page an answer engine can check, with the question and the evidence beside it.</strong></p>
-              <p><a data-compiler-result-link href="/services/ai-visibility/">Open the work</a></p>
-            </div>
-          </section>
-        </div>
-        <div class="intent-demo__controls" aria-label="Operation compiler states">
-          <button type="button" data-compiler-state="describe" aria-pressed="true">Describe</button>
-          <button type="button" data-compiler-state="engineer" aria-pressed="false">Engineer</button>
-          <button type="button" data-compiler-state="build" aria-pressed="false">Build</button>
-          <button type="button" data-compiler-state="run" aria-pressed="false">Run it</button>
-          <button class="intent-demo__skip" type="button" data-compiler-skip>Skip to working product</button>
         </div>
       </div>
     </div>
