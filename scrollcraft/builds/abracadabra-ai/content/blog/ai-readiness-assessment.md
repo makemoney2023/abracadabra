@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: AI readiness
 cluster: assessment
 primaryQuery: ai readiness assessment
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Run the check on data, process, people, and the decision. It takes five to seven minutes."
 images:
   - src: /blog/media/ai-readiness-assessment/01.webp
@@ -85,7 +85,7 @@ AWS published an AI readiness checklist in September 2025.[^aws] It walks five s
 | AWS checklist | A small or midsize business working through stages | Five steps and four stage names |
 | Readiness Check | The business taking it | Four scores, a band, and three suggestions per section |
 
-The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. [Christopher Buzny](/about/christopher-buzny) publishes the method on the [studio site](/).
+The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. We publish the method on [our site](/).
 
 We draw that line on purpose. A diagnosis says what is wrong with you. A route says where to look next. Owners sometimes want the diagnosis because it sounds more serious. Serious is not the same as useful. If we told a clinic it had failed readiness, we would be borrowing a clinical tone for a business conversation. The check describes a state and points at a next page. That is the promise, and we would not widen it.
 
@@ -104,7 +104,7 @@ The check scores from 0 to 100. Bands are Early (0–39), Forming (40–59), Rea
 
 A band is a state, not a grade. The four scores behind it are data, process, people, and the decision. The check takes five to seven minutes, one question per screen, and returns three suggestions for each section.
 
-Say the bands in speech, not as a ladder to climb. Early is heads, not systems, so you write one workflow and name the owner before you shop. Forming is partial writing. The missing pieces are a named owner and one system of record, and without those the team cannot run the job when the usual person is out. Ready means a new system can land. The argument left is which workflow goes first, and who lives with it on an ordinary day. Running means a real workflow already uses the tools. The gain left is the job that still waits on one person, the one everyone routes around because it is "easier to ask her."
+Each band describes where you are today. Early means the know-how is still in people's heads, so you write one workflow and name the owner before you shop. Forming is partial writing. The missing pieces are a named owner and one system of record, and without those nobody else can run the job when the usual person is out. Ready means a new system can land. The argument left is which workflow goes first, and who lives with it on an ordinary day. Running means a real workflow already uses the tools. The gain left is the job that still waits on one person, the one everyone routes around because it is "easier to ask her."
 
 People treat Running as the compliment and Early as the scolding. We do not. Early is a clear description, and it is often the honest one. A clinic can be excellent at care and Early at the paperwork around recalls. Those are different skills. The band is about whether a tool has anything solid to stand on. It is not a review of the owner's character.
 
@@ -112,31 +112,31 @@ The next note looks at [how surveys count AI in small businesses](/blog/how-can-
 
 ## A worked example
 
-Say we are in a small physiotherapy clinic after the last patient. Priya owns the practice. Sam runs the front desk. Andre is the clinician who sees most of the repeat visits. This is an example we walk through, not a clinic we measured.
+Say we are in a small physiotherapy clinic after the last patient. One person runs the front desk. One clinician sees most of the repeat visits. This is an example we walk through, not a clinic we measured.
 
-Priya has been shown a tool that would draft recall messages and summarize visit notes. She wants to know if the practice is "ready" before she signs. We refuse to start with the tool. We start with the four scores, in words, the way the check will later put them in a band.
+The owner has been shown a tool that would draft recall messages and summarize visit notes. She wants to know if the practice is "ready" before she signs. We refuse to start with the tool. We start with the four scores, in words, the way the check will later put them in a band.
 
-Data, for the recall job, is a mess in the ordinary sense. Sam has a list in the booking screen. Andre keeps a notebook of people he meant to see again. Priya trusts a spreadsheet she built when the booking screen lost a column. Asked which list is true, they look at each other. That is not a failure of care. It is an absent source of truth. We would not call data "in place" while three lists can disagree and nobody is embarrassed.
+Data, for the recall job, is a mess in the ordinary sense. The front desk lead has a list in the booking screen. The clinician keeps a notebook of people he meant to see again. The owner trusts a spreadsheet she built when the booking screen lost a column. Asked which list is true, they look at each other. That is not a failure of care. It is an absent source of truth. We would not call data "in place" while three lists can disagree and nobody is embarrassed.
 
-Process is partial. The happy path is spoken: Andre finishes, Sam books the next visit, the patient leaves with a card. The exception is not spoken. What if the patient will not book today? What if Andre wants a recall in six weeks but Sam only sees open slots this month? What if the note is not finished before the patient reaches the desk? Priya says they "work it out." Working it out is Forming at best. It is not a process a tool can follow without inventing the rest.
+Process is partial. The happy path is spoken: The clinician finishes, the front desk lead books the next visit, the patient leaves with a card. The exception is not spoken. What if the patient will not book today? What if the clinician wants a recall in six weeks but the front desk lead only sees open slots this month? What if the note is not finished before the patient reaches the desk? The owner says they "work it out." Working it out is Forming at best. It is not a process a tool can follow without inventing the rest.
 
-People are the surprise, same as in most rooms. Sam already pastes awkward wording into a personal chat tool so the recall text sounds less cold. Andre did not know. Priya did not know. Nobody has said whether those words may go to a patient. The people score is not about enthusiasm. It is about permission.
+People are the surprise, same as in most rooms. The front desk lead already pastes awkward wording into a personal chat tool so the recall text sounds less cold. The clinician did not know. The owner did not know. Nobody has said whether those words may go to a patient. The people score is not about enthusiasm. It is about permission.
 
-The decision is a blank. Priya says success would be "fewer no-shows" and then cannot say who would turn the tool off if a message went to the wrong person. Until that sentence exists, we will not talk about agents, pilots, or pacesetters. Cisco's large-firm picture is interesting and irrelevant to whether Sam and Andre share a list.
+The decision is a blank. The owner says success would be "fewer no-shows" and then cannot say who would turn the tool off if a message went to the wrong person. Until that sentence exists, we will not talk about agents, pilots, or pacesetters. Cisco's large-firm picture is interesting and irrelevant to whether the front desk lead and the clinician share a list.
 
 If we scored this room in the check's language, we would expect Early or Forming, and we would say so without flinching. The work that matters for this job still lives in heads and side lists. The useful move is to write the recall workflow down and name who owns it. That is the Early sentence, and it fits.
 
 ## How we'd run it
 
-First we name the job. One job. At the clinic it is the recall, from Andre deciding someone should come back to the patient actually having a time. If Priya says "everything," we shrink it until it has a start and a finish.
+First we name the job. One job. At the clinic it is the recall, from the clinician deciding someone should come back to the patient actually having a time. If the owner says "everything," we shrink it until it has a start and a finish.
 
 Second we pull the public tools apart so nobody borrows the wrong population. Cisco describes organizations with more than 500 employees. The OECD tool is a short self-check that stays in the browser and publishes no rate. AWS offers stage names and does not cite an adoption percentage. None of those is a score for this clinic. We say that before anyone feels behind.
 
-Third we score data, process, people, and the decision in words, using absent, partial, in place, or running only if we can point. Sam, Andre, and Priya each answer. Disagreement is the finding. We write it down instead of averaging it into a mood.
+Third we score data, process, people, and the decision in words, using absent, partial, in place, or running only if we can point. The front desk lead, the clinician, and the owner each answer. Disagreement is the finding. We write it down instead of averaging it into a mood.
 
 Fourth we take the check if they want the band. Five to seven minutes, one question per screen, three suggestions per section. We read Early, Forming, Ready, or Running as a state. We do not add a pep talk that turns Early into "almost Ready."
 
-Fifth we pick one next page, not five projects. If the record is the blank, we fix the list Sam and Andre will both believe. If the writing is the blank, we write the exception for the patient who will not book today. The tool demo can wait until that page exists.
+Fifth we pick one next page, not five projects. If the record is the blank, we fix the list the front desk lead and the clinician will both believe. If the writing is the blank, we write the exception for the patient who will not book today. The tool demo can wait until that page exists.
 
 ## Common mistakes
 
@@ -150,6 +150,6 @@ We also watch owners skip from a band to a purchase in the same sitting. Ready s
 
 ## What we'd do
 
-We would score the clinic in front of us and leave Cisco in the footnote where it belongs. Our opinion: a small practice does not need to know whether it is a pacesetter. It needs to know whether Sam's list and Andre's notebook are the same list. Until they are, a recall tool will write confident messages from a record nobody owns.
+We would score the clinic in front of us and leave Cisco in the footnote where it belongs. Our opinion: a small practice does not need to know whether it is a pacesetter. It needs to know whether the front desk lead's list and the clinician's notebook are the same list. Until they are, a recall tool will write confident messages from a record nobody owns.
 
-If we were Priya, we would spend the next ordinary weeks on one written recall path, including the patient who will not book at the desk, and we would tell Sam to stop sending patient wording from a personal account until Priya has said what may go out. Then we would take the check again and read the band as a state, not as a prize. If it is still Early, we would believe it.
+If we were the owner, we would spend the next ordinary weeks on one written recall path, including the patient who will not book at the desk, and we would tell the front desk lead to stop sending patient wording from a personal account until the owner has said what may go out. Then we would take the check again and read the band as a state, not as a prize. If it is still Early, we would believe it.

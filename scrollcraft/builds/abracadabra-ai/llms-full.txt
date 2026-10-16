@@ -65,7 +65,7 @@ Starting from the model instead of the branch is how pilots get expensive and va
 
 Ignoring the cancellation forecast because it sounds like someone else's enterprise problem is how small firms get a smaller version of the same ending. Over 40% is not a large-company-only weather report. Cost, unclear value, and inadequate risk controls fit a clinic and a trades desk perfectly well. Your version won't make the newspaper. It will make a monthly bill and a queue of drafts nobody trusts. That's an adequate disaster. You don't need a bigger one to take the warning.
 
-Staffing the check with a committee is the polite version of having no checker. "The team will review" means the draft sits until it doesn't. Write one name. Give that person the authority to say no without a meeting. If the job is important enough for an agent, it's important enough for a name. If it isn't important enough for a name, it isn't important enough for an agent.
+Staffing the check with a committee is the polite version of having no checker. "Someone will review" means the draft sits until it doesn't. Write one name. Give that person the authority to say no without a meeting. If the job is important enough for an agent, it's important enough for a name. If it isn't important enough for a name, it isn't important enough for an agent.
 
 ## What we'd do
 
@@ -79,7 +79,7 @@ We wouldn't run the whole list to feel modern. One job, held at the stop, beats 
 
 An AI agent directs its own tools toward a goal, and agentic AI is the wider label for many of those systems across a company. The words get sold as if they were the same purchase. They are not.
 
-An AI agent, in Anthropic's December 2024 essay, is a system that directs its own tools toward a goal.[^anthropic] A workflow is the opposite: the steps are written in advance. Agentic AI is the category vendors use when they mean many such systems, often across a company. The words are not interchangeable. We repeat that in kitchens and clinic break rooms because a deck will use the wider word for a single inbox rule, and the owner walks out thinking they bought a workforce.
+An AI agent, in Anthropic's December 2024 essay, is a system that directs its own tools toward a goal.[^anthropic] A workflow is the opposite: the steps are written in advance. Agentic AI is the category vendors use when they mean many such systems, often across a company. The words are not interchangeable. We repeat that often because a deck will use the wider word for a single inbox rule, and the owner walks out thinking they bought a workforce.
 
 The [definition](/blog/what-is-an-ai-agent) is the short version of the split between a path you wrote and a model that chooses. The [jobs list](/blog/ai-agents-for-business) is where one agent might actually sit. The [people guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-people-mid) is who has to check the output. If you cannot name that person, the rest of the vocabulary does not matter yet.
 
@@ -101,15 +101,15 @@ We use the forecast as a brake, not as a scare. Cancellation is what happens whe
 
 ## A worked example
 
-Walk a small clinic with us. This is a scene, not a study, and it has no score attached. Nora owns the practice. Jules runs the front desk. Dr. Patel sees patients. The phones pile up after lunch, mostly people who want to know whether a symptom can wait, whether a form was received, and whether tomorrow's visit is still on.
+Walk a small clinic with us. This is a scene, not a study, and it has no score attached. Nora owns the practice. One person runs the front desk. Dr. Patel sees patients. The phones pile up after lunch, mostly people who want to know whether a symptom can wait, whether a form was received, and whether tomorrow's visit is still on.
 
-A workflow can carry the parts that do not change. A missed call becomes a task. The form either arrived or it did not. A reminder goes out the afternoon before, with the address and what to bring. Jules already does this. Writing it down does not require a new category of software. It requires Jules's order, and a screen that will not skip the "what to bring" line when the day gets rude.
+A workflow can carry the parts that do not change. A missed call becomes a task. The form either arrived or it did not. A reminder goes out the afternoon before, with the address and what to bring. The front desk lead already does this. Writing it down does not require a new category of software. It requires the front desk lead's order, and a screen that will not skip the "what to bring" line when the day gets rude.
 
-An agent is the narrower ask. A patient writes that the rash spread and they also have a fever, and they want to know if they should come in today. The next step depends on what the note contains. A model could draft a reply that offers the urgent slot and tells them what to watch for, using only the phrases Dr. Patel has approved. Jules still sends it. Dr. Patel still owns anything that sounds like a diagnosis. The agent picked a tool, the template and the schedule, inside bounds. That is one agent. It is not an agentic program.
+An agent is the narrower ask. A patient writes that the rash spread and they also have a fever, and they want to know if they should come in today. The next step depends on what the note contains. A model could draft a reply that offers the urgent slot and tells them what to watch for, using only the phrases Dr. Patel has approved. The front desk lead still sends it. Dr. Patel still owns anything that sounds like a diagnosis. The agent picked a tool, the template and the schedule, inside bounds. That is one agent. It is not an agentic program.
 
-Agentic AI, the way the word gets used on calls, would be the bigger bet. One system talks to the schedule, another drafts the chart note, another chases the referral, another updates the billing code, and they hand work to each other while Nora is with a patient. That is the shape of the projects in the cancellation forecast. Cost shows up as four subscriptions and a person whose job becomes watching them. Value stays unclear because nobody can say which decision got better. Risk control fails the first time a draft implies a diagnosis and leaves the building. We would not start there. We would start with Jules's reminder path, then one draft on the fever note, with send still human.
+Agentic AI, the way the word gets used on calls, would be the bigger bet. One system talks to the schedule, another drafts the chart note, another chases the referral, another updates the billing code, and they hand work to each other while Nora is with a patient. That is the shape of the projects in the cancellation forecast. Cost shows up as four subscriptions and a person whose job becomes watching them. Value stays unclear because nobody can say which decision got better. Risk control fails the first time a draft implies a diagnosis and leaves the building. We would not start there. We would start with the front desk lead's reminder path, then one draft on the fever note, with send still human.
 
-The roles are the point of the walk-through. Nora decides which phrases are allowed. Jules is the checker who can throw a draft away. Dr. Patel is the only person who closes a clinical question. A vendor who cannot point at those three seats, and who calls the whole bundle agentic because it sounds larger, is selling the category. They are not selling the checkpoint.
+The roles are the point of the walk-through. Nora decides which phrases are allowed. The front desk lead is the checker who can throw a draft away. Dr. Patel is the only person who closes a clinical question. A vendor who cannot point at those three seats, and who calls the whole bundle agentic because it sounds larger, is selling the category. They are not selling the checkpoint.
 
 ## How we'd run it
 
@@ -117,15 +117,15 @@ We would separate the words on a single page before anyone signs an order.
 
 First, write the job as one decision. "Reply to a same-day symptom note with an approved phrase, or book the urgent slot, and never invent a diagnosis." If the job is "make the clinic agentic," throw it out and start again.
 
-Second, list the steps Jules already does that never change. Log the call, check the form, send the reminder, hold the chart for the clinician. That list is a workflow. Build it. Do not wait for a platform to discover it.
+Second, list the steps the front desk lead already does that never change. Log the call, check the form, send the reminder, hold the chart for the clinician. That list is a workflow. Build it. Do not wait for a platform to discover it.
 
 Third, circle the one place where the next step depends on what the message says. Symptom plus fever is a fork. A reminder is not. The fork is the only candidate for an agent. Everything else stays on the path you wrote.
 
-Fourth, write the bounds in Jules's language. Allowed tools: the approved phrases and the urgent column on the schedule. Forbidden: naming a condition, promising a medication, telling someone to stay home. If a phrase is not on the card, the draft does not use it.
+Fourth, write the bounds in the front desk lead's language. Allowed tools: the approved phrases and the urgent column on the schedule. Forbidden: naming a condition, promising a medication, telling someone to stay home. If a phrase is not on the card, the draft does not use it.
 
-Fifth, name the checker on the rota, not in a policy PDF. Jules on the desk days. The backup coordinator when Jules is out. Dr. Patel for anything the card does not cover. The stop condition is simple. Missing fever detail, an angry message, or a phrase that is not on the card, and the draft dies.
+Fifth, name the checker on the rota, not in a policy PDF. The front desk lead on the desk days. The backup coordinator when the front desk lead is out. Dr. Patel for anything the card does not cover. The stop condition is simple. Missing fever detail, an angry message, or a phrase that is not on the card, and the draft dies.
 
-Sixth, run last week's real messages with the names removed. Nora and Jules mark the drafts they would have refused. Fix the card until the refusals match their judgment. Only then let it draft against today's inbox. Calling the result agentic adds nothing. The checkpoint is the same either way.
+Sixth, run last week's real messages with the names removed. Nora and the front desk lead mark the drafts they would have refused. Fix the card until the refusals match their judgment. Only then let it draft against today's inbox. Calling the result agentic adds nothing. The checkpoint is the same either way.
 
 ## Common mistakes
 
@@ -133,7 +133,7 @@ The first mistake is using the wide word for a narrow tool. A reminder sequence 
 
 The second mistake is starting with the constellation. Several tools, several handoffs, nobody who can draw the path on a whiteboard. That is the shape Gartner expects a large share of projects to abandon by the end of 2027, for cost, unclear business value, and inadequate risk controls. A clinic does not need to donate itself to that share.
 
-The third mistake is treating the 2028 lines as a deadline for your front desk. 15% of day-to-day work decisions made autonomously, and 33% of enterprise software including agentic AI, are statements about a market. They are not a due date for Nora. Software you already own may grow a feature. You still choose whether Jules is allowed to rely on it.
+The third mistake is treating the 2028 lines as a deadline for your front desk. 15% of day-to-day work decisions made autonomously, and 33% of enterprise software including agentic AI, are statements about a market. They are not a due date for Nora. Software you already own may grow a feature. You still choose whether the front desk lead is allowed to rely on it.
 
 The fourth mistake is a checker who exists only on paper. "The clinical lead reviews outputs" means nothing on a Tuesday when the lead is in a room and the draft is in the outbox. If the person who can stop it is not at the desk, you do not have the control. You have a sentence.
 
@@ -143,19 +143,19 @@ The sixth mistake is buying because 0% feels embarrassing. The note said autonom
 
 ## What we'd do
 
-We would buy the workflow first and the single agent second, and we would leave the agentic program unsold. Our opinion is that the wider word is doing sales work. It makes a reminder bot sound like a strategy, and it makes a careful one-agent pilot sound small. Small is the correct size until Jules can refuse a draft without calling a vendor.
+We would buy the workflow first and the single agent second, and we would leave the agentic program unsold. Our opinion is that the wider word is doing sales work. It makes a reminder bot sound like a strategy, and it makes a careful one-agent pilot sound small. Small is the correct size until the front desk lead can refuse a draft without calling a vendor.
 
-If the next step truly depends on what the note found, one agent, one card of phrases, one person who can stop it. If the steps are already writable, stay with the workflow and spend the money on the afternoon Jules is underwater. The June 2025 forecast is not a reason to hide from the tool. It is a reason to refuse a project that cannot name its checker. We would rather be the clinic that canceled nothing, because we never started the project that deserved canceling.
+If the next step truly depends on what the note found, one agent, one card of phrases, one person who can stop it. If the steps are already writable, stay with the workflow and spend the money on the afternoon the front desk lead is underwater. The June 2025 forecast is not a reason to hide from the tool. It is a reason to refuse a project that cannot name its checker. We would rather be the clinic that canceled nothing, because we never started the project that deserved canceling.
 
 ## AI Automation Agency vs Consultant: Who to Hire
 
-Hire a consultant to name the job, and hire an agency only after that naming is done. An AI consultant names the job, the data, and the stop. An automation agency builds the system after that naming is done. Hiring the agency first produces a build with no owner. We've watched that sequence in the wrong order more than once. The proposal arrives with a team, a stack, and a start date. Nobody in the room can say which output a person still has to check. The build proceeds anyway, because the calendar was the only decision anyone made.
+Hire a consultant to name the job, and hire an agency only after that naming is done. An AI consultant names the job, the data, and the stop. An automation agency builds the system after that naming is done. Hiring the agency first produces a build with no owner. We've watched that sequence in the wrong order more than once. The proposal arrives with staff, a toolset, and a start date. Nobody in the room can say which output a person still has to check. The build proceeds anyway, because the calendar was the only decision anyone made.
 
 The [consultant note](/blog/ai-consultant-for-small-business) is the question list we wish owners had in their pocket before the first sales call. The [buy-or-build note](/blog/off-the-shelf-ai-or-custom-software) is whether to build at all. The [decision guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-decision-mid) is the matching score when the choice itself is the thing you're avoiding. Hiring is a decision. Score it before you sign. A signature on a vague scope is not a strategy. It's a hope with a payment schedule.
 
 ## Two training figures, two populations
 
-Microsoft's 2024 index says only 25% of companies were planning to offer generative AI training.[^microsoft] Statistics Canada's 2025 brief says 38.9% of Canadian businesses that already use AI had trained staff.[^statcan] Those are different populations. One is a plan among companies. The other is training among businesses that already use AI. Do not average them. A pitch that slides the two numbers into "about a third of firms train people" has invented a fact. The plan figure is about companies that were intending to offer training. The Canadian figure is about businesses already using AI that had actually trained staff. Intending and having done it are different. Companies and AI-using businesses are different. Countries and survey windows are different. If a consultant or an agency treats them as one knob, they are not reading. They are decorating.
+Microsoft's 2024 index says only 25% of companies were planning to offer generative AI training.[^microsoft] Statistics Canada's 2025 report says 38.9% of Canadian businesses that already use AI had trained staff.[^statcan] Those are different populations. One is a plan among companies. The other is training among businesses that already use AI. Do not average them. A pitch that slides the two numbers into "about a third of firms train people" has invented a fact. The plan figure is about companies that were intending to offer training. The Canadian figure is about businesses already using AI that had actually trained staff. Intending and having done it are different. Companies and AI-using businesses are different. Countries and survey windows are different. If a consultant or an agency treats them as one knob, they are not reading. They are decorating.
 
 <!--image:2-->
 
@@ -183,7 +183,7 @@ First, write the job in one sentence a new hire could read. Not "AI for the fron
 
 Second, write the data the job may touch and the data it may not. Reminders can see the time and the place. They can't see the clinical note unless a named practitioner says so. Quotes can see the site measurements. They can't invent a price. If the data line is "whatever the model needs," you don't have a boundary. You have a hope that the vendor will be careful. Vendors are careful about their scope. You have to be careful about yours.
 
-Third, name the checker in the same sentence as the job. A person, a place where the output waits, and what happens if it's wrong. A checkpoint nobody owns is not a checkpoint. We'd rather delay the hire than sign a scope where "the team will review" is the only human. The team is not a name. The team goes home.
+Third, name the checker in the same sentence as the job. A person, a place where the output waits, and what happens if it's wrong. A checkpoint nobody owns is not a checkpoint. We'd rather delay the hire than sign a scope where "someone will review" is the only human. Someone is not a name. Everyone goes home.
 
 Fourth, ask whether a product already does this. The consultant is paid to refuse that work. If the booking tool already sends the plain reminder, stop. If the books already flag the late invoice, stop. Bring an agency in only for the gap that remains after that refusal. The buy-or-build note is the longer version of this step. Don't skip it because an agency proposal is already pretty.
 
@@ -195,7 +195,7 @@ Sixth, if the proposal mentions agents, ask whether they are scaling or experime
 
 Hiring the agency because the proposal had more pages is the mistake with the nicest stationery. Pages are not a named job. A bench of people is not a checker. We've sat with owners who chose the thicker folder because it felt like seriousness. Seriousness is a person who will tell you not to start. The thinner conversation is often the one that saves the quarter. We don't mean a cheap conversation. We mean a conversation that is allowed to end in no.
 
-Averaging the training figures is the mistake that makes everyone sound informed. Someone says firms don't train, and someone else quotes the other survey as if it were the same study, and the room nods. They aren't. One is a plan in a 2024 index of companies. One is training already done among Canadian businesses that use AI, in a 2025 brief. Use either number alone, with its population, or use neither. The fake average will be repeated to your staff as if it were a law. It isn't.
+Averaging the training figures is the mistake that makes everyone sound informed. Someone says firms don't train, and someone else quotes the other survey as if it were the same study, and the room nods. They aren't. One is a plan in a 2024 index of companies. One is training already done among Canadian businesses that use AI, in a 2025 report. Use either number alone, with its population, or use neither. The fake average will be repeated to your staff as if it were a law. It isn't.
 
 Buying the experiment under a scaling headline is how agent language gets into a clinic that needed a reminder. McKinsey's split is the antidote if you actually say it out loud in the meeting. Most of the respondents in that survey were not scaling. If your seller only quotes a use number, ask what happened to the people who were still experimenting. Then ask which group the proposal belongs to. Silence is an answer. Treat it as one.
 
@@ -207,7 +207,7 @@ Skipping the owner of the output is the last one, and it survives all the others
 
 We'd hire the namer first, almost every time, and we'd pay them to be willing to end the engagement with a refusal. That's the opinion. A clinic that can't say what the front desk is allowed to send doesn't need an agency yet. A shop whose late invoices already live in the bookkeeping product doesn't need either of them. A trades desk with the steps written, the price owned by a named person, and a gap no product covers is the rare room where we'd call a builder. Even there, the builder doesn't get to rename the job.
 
-We wouldn't let a single training statistic into the proposal without its population sitting next to it. We wouldn't let "agent" into the scope unless someone can show the step that branches and the person who stops it. We wouldn't sign a start date that arrives before the page. Dates are easy. Pages are the work. If the seller needs the date to hold a team together, that is their problem to solve after you know what you're buying.
+We wouldn't let a single training statistic into the proposal without its population sitting next to it. We wouldn't let "agent" into the scope unless someone can show the step that branches and the person who stops it. We wouldn't sign a start date that arrives before the page. Dates are easy. Pages are the work. If the seller needs the date to hold their staff together, that is their problem to solve after you know what you're buying.
 
 If you only do one thing before the next call, write the sentence with the job and the checker, and ask the seller to repeat it without adding a platform. If they can't, you are not late. You are early, which is the correct time to be early. The experiment will still be there next month. Your name on a vague scope is harder to get back.
 
@@ -279,11 +279,11 @@ We would put the invoice, or whatever your version of the repeated readable pile
 
 We would not let the Chamber's 58% set the pace. That figure, and the climb from 23% in 2023 through 40% in 2024, says generative tools spread. It does not say your delivery should be handed to one. The production figure, 12.2% in the second quarter of 2025, up from 6.1% a year earlier, is the stricter crowd. Join it on one job, with a new workflow and a trained person, or do not claim you joined it.
 
-If you are unsure which pile is eating the week, open the [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) and make the slow job confess. Then map it, using the [mapping note](/blog/business-process-automation-ai), before you talk to a builder. When you do need a person, the [agency note](/blog/ai-automation-agency-vs-consultant) will keep you from hiring a platform when you needed a checker. We would rather automate one dull pile well than announce that the company "runs on automation" while the bookkeeper still retypes every scan.
+If you are unsure which pile is eating the week, open the [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) and make the slow job confess. Then map it, using the [mapping note](/blog/business-process-automation-ai), before you talk to a builder. When you do need a person, the [agency note](/blog/ai-automation-agency-vs-consultant) will keep you from hiring a platform when you needed a checker. We would rather automate one dull pile well than announce that you "run on automation" while the bookkeeper still retypes every scan.
 
 ## AI Consultant for Small Business: What to Ask
 
-A useful AI consultant for a small business can name the job, the data, and the person who is allowed to stop the work. If an off-the-shelf product already does that job, the honest sentence is to buy the product and skip the custom project. We would rather lose the engagement than invent a build to justify a fee. That is how the [studio](/) works. The hiring split, consultant versus a firm that wants to own the install, is the [agency comparison](/blog/ai-automation-agency-vs-consultant). What happens when a pretty proof never becomes a process is the [stall note](/blog/why-ai-pilots-stall).
+A useful AI consultant for a small business can name the job, the data, and the person who is allowed to stop the work. If an off-the-shelf product already does that job, the honest advice is to buy the product and skip the custom project. We would rather lose the engagement than invent a build to justify a fee. That is how the [studio](/) works. The hiring split, consultant versus a firm that wants to own the install, is the [agency comparison](/blog/ai-automation-agency-vs-consultant). What happens when a pretty proof never becomes a process is the [stall note](/blog/why-ai-pilots-stall).
 
 Bring the person who does the job into the first meeting. An owner alone will be sold a platform. The office manager, the bookkeeper, or the dispatcher will ask where the file lives, and that question is worth more than the slide with the architecture. If the consultant looks annoyed by it, you have learned something cheap.
 
@@ -533,33 +533,33 @@ NIST's four words help us check that we did not drift into product trivia. If th
 
 ## A worked example
 
-Say we are at the desk of a small electrical contractor, late afternoon, phones finally quiet. Ruth owns the company. Malik dispatches. Helen is the lead who actually walks the jobs. This is an example we walk through. It is not a firm we audited, and we are not going to pretend we counted their jobs.
+Say we are at the desk of a small electrical contractor, late afternoon, phones finally quiet. There is an owner, a dispatcher, and a lead who actually walks the jobs. This is an example we walk through. It is not a firm we audited, and we are not going to pretend we counted their jobs.
 
-Ruth was handed a questionnaire by a software seller. It opened with the product name and asked how many users she might want, whether she liked dashboards, and how soon she could start. None of that is a readiness question. We set it aside and ask our four.
+The owner was handed a questionnaire by a software seller. It opened with the product name and asked how many users she might want, whether she liked dashboards, and how soon she could start. None of that is a readiness question. We set it aside and ask our four.
 
-Where does the record of truth live for a booked job? Ruth says the job system. Malik says he keeps a whiteboard because the system is wrong by the time a customer changes a time. Helen says she trusts the text Malik sends her in the morning, because the whiteboard and the system have both lied. Three answers. The questionnaire does not get to average them. The record of truth is unresolved, and that is the answer we write.
+Where does the record of truth live for a booked job? The owner says the job system. The dispatcher says he keeps a whiteboard because the system is wrong by the time a customer changes a time. The lead says she trusts the text the dispatcher sends her in the morning, because the whiteboard and the system have both lied. Three answers. The questionnaire does not get to average them. The record of truth is unresolved, and that is the answer we write.
 
-Which step is written, and which step is habit? The written step is the quote. Ruth is proud of the quote template, and she should be. The habit is everything after the customer says yes. Who tells Helen the parking note? Who calls the customer when the part slips? Who decides a job is done enough to invoice? Malik says "we just do it." Helen says she calls Ruth when she is unsure, which means Ruth's phone is the process. A step that lives in a phone is not a written step. We mark it as habit.
+Which step is written, and which step is habit? The written step is the quote. The owner is proud of the quote template, and she should be. The habit is everything after the customer says yes. Who tells the lead the parking note? Who calls the customer when the part slips? Who decides a job is done enough to invoice? The dispatcher says "we just do it." The lead says she calls the owner when she is unsure, which means the owner's phone is the process. A step that lives in a phone is not a written step. We mark it as habit.
 
-Who can reject the output? This is the question that makes the room go quiet, in a good way. If a tool drafted the morning text to Helen, who could say it is wrong and stop it? Malik assumes he would notice. Helen says she would notice on site, which is late. Ruth says she would want to approve messages at first, then admits she will not read them once the week gets loud. So nobody currently has a real reject button. The people theme is blank. We do not fill it with optimism.
+Who can reject the output? This is the question that makes the room go quiet, in a good way. If a tool drafted the morning text to the lead, who could say it is wrong and stop it? The dispatcher assumes he would notice. The lead says she would notice on site, which is late. The owner says she would want to approve messages at first, then admits she will not read them once the week gets loud. So nobody currently has a real reject button. The people theme is blank. We do not fill it with optimism.
 
-What will they stop doing if the answer is weak? Ruth wants to stop repeating the same parking notes. That is a real stop. Malik wants to stop rebuilding the day from scratch each morning. Also real. Helen wants to stop arriving without the part. If the questionnaire cannot connect a tool to one of those stops, the tool is a hobby. We write the stop next to the blank, so the blank has a cost they can feel.
+What will they stop doing if the answer is weak? The owner wants to stop repeating the same parking notes. That is a real stop. The dispatcher wants to stop rebuilding the day from scratch each morning. Also real. The lead wants to stop arriving without the part. If the questionnaire cannot connect a tool to one of those stops, the tool is a hobby. We write the stop next to the blank, so the blank has a cost they can feel.
 
-We do not end this example with a score. Themes are not a score. The [framework](/blog/ai-readiness-framework) is where those answers get words like absent or partial. The [assessment](/blog/ai-readiness-assessment) is where a band gets explained. What this conversation produced is a form with blanks Ruth cannot talk her way out of. That is a finished questionnaire. A finished sale would have been a different meeting, and a worse one.
+We do not end this example with a score. Themes are not a score. The [framework](/blog/ai-readiness-framework) is where those answers get words like absent or partial. The [assessment](/blog/ai-readiness-assessment) is where a band gets explained. What this conversation produced is a form with blanks the owner cannot talk her way out of. That is a finished questionnaire. A finished sale would have been a different meeting, and a worse one.
 
 ## How we'd run it
 
-First we throw out any question that starts with a product. If the sentence can be answered by a vendor's brochure, it is not on our form. Ruth's seller asked about dashboards. Dashboards are a feature. Features are what you discuss after the themes, and only if the themes survived.
+First we throw out any question that starts with a product. If the sentence can be answered by a vendor's brochure, it is not on our form. The owner's seller asked about dashboards. Dashboards are a feature. Features are what you discuss after the themes, and only if the themes survived.
 
-Second we ask the four questions in job language, one job only. At this desk the job is a booked call from the yes to Helen packing the van. We do not questionnaire the whole company. A form about "the business" produces slogans. A form about one job produces places, names, and blanks.
+Second we ask the four questions in job language, one job only. At this desk the job is a booked call from the yes to the lead packing the van. We do not questionnaire the whole company. A form about "the business" produces slogans. A form about one job produces places, names, and blanks.
 
-Third we ask each person separately before we let them repair each other's answers. Malik will defer to Ruth if she is in the room from the start. Helen will go quiet if the form starts to sound like a test of her. We want the first answer, the one they would give a new hire. Then we put the answers side by side and let the conflict stand.
+Third we ask each person separately before we let them repair each other's answers. The dispatcher will defer to the owner if she is in the room from the start. The lead will go quiet if the form starts to sound like a test of her. We want the first answer, the one they would give a new hire. Then we put the answers side by side and let the conflict stand.
 
-Fourth we map the answers onto Govern, Map, Measure, and Manage without making anyone say those words out loud. Who decides is Govern. The steps of the booked job are Map. How Helen would know the morning text is wrong is Measure. What Malik does when it is wrong is Manage. If one of those is missing, the questionnaire is not done, no matter how many other boxes are ticked.
+Fourth we map the answers onto Govern, Map, Measure, and Manage without making anyone say those words out loud. Who decides is Govern. The steps of the booked job are Map. How the lead would know the morning text is wrong is Measure. What the dispatcher does when it is wrong is Manage. If one of those is missing, the questionnaire is not done, no matter how many other boxes are ticked.
 
 Fifth we decide whether a score is even useful yet. If the record of truth is still three answers, a band will only decorate the confusion. We stay with the questions. If the four themes have answers we can point at, we move to the check and then to the growth guide, which is about what to do after you know the state. The guide is not a way to skip the form.
 
-We keep the session short enough that Helen is not late to a job and Malik is not dispatching from the hallway. A questionnaire completed by Ruth alone on a Sunday night will be complete and fictional. The person who does the step has to be in the room.
+We keep the session short enough that the lead is not late to a job and the dispatcher is not dispatching from the hallway. A questionnaire completed by the owner alone on a Sunday night will be complete and fictional. The person who does the step has to be in the room.
 
 ## Common mistakes
 
@@ -567,15 +567,15 @@ The mistake we see most is starting with the tool. The seller's form feels effic
 
 Another mistake is treating a public checklist as a readiness rate. The AWS page, updated in September 2025, does not publish a percentage of businesses that are ready. The OECD aid, current in 2026, is not a national adoption rate. If your notes say "we are ahead of most firms," you wrote a sentence your sources refused to write.
 
-A third mistake is smoothing disagreement. When Ruth, Malik, and Helen name different records, the honest questionnaire shows the split. A single tick marked "system of record: yes" is a fiction they agreed to so the meeting could end. The meeting ending is not the goal. The blank is the goal.
+A third mistake is smoothing disagreement. When the owner, the dispatcher, and the lead name different records, the honest questionnaire shows the split. A single tick marked "system of record: yes" is a fiction they agreed to so the meeting could end. The meeting ending is not the goal. The blank is the goal.
 
-We also see forms that ask about attitude. "How excited is your team about AI?" is not a theme. Excitement does not locate the record. A skeptical Helen who can reject a bad text is more ready than a cheerful room with no reject button. Ask about permission, not mood.
+We also see forms that ask about attitude. "How excited is your team about AI?" is not a theme. Excitement does not locate the record. A skeptical the lead who can reject a bad text is more ready than a cheerful room with no reject button. Ask about permission, not mood.
 
 The last mistake is a questionnaire with no "stop doing" line. If nothing will be stopped, nothing was decided. You gathered opinions. You did not assess the job.
 
 ## What we'd do
 
-We would use a one-page form with those four questions and a place to write two names when the answers conflict. Our opinion is that a long assessment questionnaire is often a way to feel serious without naming the whiteboard. Ruth does not need more questions. She needs Malik's answer and Helen's answer on the same sheet, in ink, where a dashboard question used to be.
+We would use a one-page form with those four questions and a place to write two names when the answers conflict. Our opinion is that a long assessment questionnaire is often a way to feel serious without naming the whiteboard. The owner does not need more questions. She needs the dispatcher's answer and the lead's answer on the same sheet, in ink, where a dashboard question used to be.
 
 If we were sitting with them next week, we would not bring a tool. We would bring the four questions again and see if the record of truth has become one place. If it has, we would score it. If it has not, we would still not buy. A questionnaire that cannot produce a no is not an assessment. It is a path to a signature.
 
@@ -606,7 +606,7 @@ AWS published an AI readiness checklist in September 2025.[^aws] It walks five s
 | AWS checklist | A small or midsize business working through stages | Five steps and four stage names |
 | Readiness Check | The business taking it | Four scores, a band, and three suggestions per section |
 
-The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. [Christopher Buzny](/about/christopher-buzny) publishes the method on the [studio site](/).
+The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. We publish the method on [our site](/).
 
 We draw that line on purpose. A diagnosis says what is wrong with you. A route says where to look next. Owners sometimes want the diagnosis because it sounds more serious. Serious is not the same as useful. If we told a clinic it had failed readiness, we would be borrowing a clinical tone for a business conversation. The check describes a state and points at a next page. That is the promise, and we would not widen it.
 
@@ -625,7 +625,7 @@ The check scores from 0 to 100. Bands are Early (0–39), Forming (40–59), Rea
 
 A band is a state, not a grade. The four scores behind it are data, process, people, and the decision. The check takes five to seven minutes, one question per screen, and returns three suggestions for each section.
 
-Say the bands in speech, not as a ladder to climb. Early is heads, not systems, so you write one workflow and name the owner before you shop. Forming is partial writing. The missing pieces are a named owner and one system of record, and without those the team cannot run the job when the usual person is out. Ready means a new system can land. The argument left is which workflow goes first, and who lives with it on an ordinary day. Running means a real workflow already uses the tools. The gain left is the job that still waits on one person, the one everyone routes around because it is "easier to ask her."
+Each band describes where you are today. Early means the know-how is still in people's heads, so you write one workflow and name the owner before you shop. Forming is partial writing. The missing pieces are a named owner and one system of record, and without those nobody else can run the job when the usual person is out. Ready means a new system can land. The argument left is which workflow goes first, and who lives with it on an ordinary day. Running means a real workflow already uses the tools. The gain left is the job that still waits on one person, the one everyone routes around because it is "easier to ask her."
 
 People treat Running as the compliment and Early as the scolding. We do not. Early is a clear description, and it is often the honest one. A clinic can be excellent at care and Early at the paperwork around recalls. Those are different skills. The band is about whether a tool has anything solid to stand on. It is not a review of the owner's character.
 
@@ -633,31 +633,31 @@ The next note looks at [how surveys count AI in small businesses](/blog/how-can-
 
 ## A worked example
 
-Say we are in a small physiotherapy clinic after the last patient. Priya owns the practice. Sam runs the front desk. Andre is the clinician who sees most of the repeat visits. This is an example we walk through, not a clinic we measured.
+Say we are in a small physiotherapy clinic after the last patient. One person runs the front desk. One clinician sees most of the repeat visits. This is an example we walk through, not a clinic we measured.
 
-Priya has been shown a tool that would draft recall messages and summarize visit notes. She wants to know if the practice is "ready" before she signs. We refuse to start with the tool. We start with the four scores, in words, the way the check will later put them in a band.
+The owner has been shown a tool that would draft recall messages and summarize visit notes. She wants to know if the practice is "ready" before she signs. We refuse to start with the tool. We start with the four scores, in words, the way the check will later put them in a band.
 
-Data, for the recall job, is a mess in the ordinary sense. Sam has a list in the booking screen. Andre keeps a notebook of people he meant to see again. Priya trusts a spreadsheet she built when the booking screen lost a column. Asked which list is true, they look at each other. That is not a failure of care. It is an absent source of truth. We would not call data "in place" while three lists can disagree and nobody is embarrassed.
+Data, for the recall job, is a mess in the ordinary sense. The front desk lead has a list in the booking screen. The clinician keeps a notebook of people he meant to see again. The owner trusts a spreadsheet she built when the booking screen lost a column. Asked which list is true, they look at each other. That is not a failure of care. It is an absent source of truth. We would not call data "in place" while three lists can disagree and nobody is embarrassed.
 
-Process is partial. The happy path is spoken: Andre finishes, Sam books the next visit, the patient leaves with a card. The exception is not spoken. What if the patient will not book today? What if Andre wants a recall in six weeks but Sam only sees open slots this month? What if the note is not finished before the patient reaches the desk? Priya says they "work it out." Working it out is Forming at best. It is not a process a tool can follow without inventing the rest.
+Process is partial. The happy path is spoken: The clinician finishes, the front desk lead books the next visit, the patient leaves with a card. The exception is not spoken. What if the patient will not book today? What if the clinician wants a recall in six weeks but the front desk lead only sees open slots this month? What if the note is not finished before the patient reaches the desk? The owner says they "work it out." Working it out is Forming at best. It is not a process a tool can follow without inventing the rest.
 
-People are the surprise, same as in most rooms. Sam already pastes awkward wording into a personal chat tool so the recall text sounds less cold. Andre did not know. Priya did not know. Nobody has said whether those words may go to a patient. The people score is not about enthusiasm. It is about permission.
+People are the surprise, same as in most rooms. The front desk lead already pastes awkward wording into a personal chat tool so the recall text sounds less cold. The clinician did not know. The owner did not know. Nobody has said whether those words may go to a patient. The people score is not about enthusiasm. It is about permission.
 
-The decision is a blank. Priya says success would be "fewer no-shows" and then cannot say who would turn the tool off if a message went to the wrong person. Until that sentence exists, we will not talk about agents, pilots, or pacesetters. Cisco's large-firm picture is interesting and irrelevant to whether Sam and Andre share a list.
+The decision is a blank. The owner says success would be "fewer no-shows" and then cannot say who would turn the tool off if a message went to the wrong person. Until that sentence exists, we will not talk about agents, pilots, or pacesetters. Cisco's large-firm picture is interesting and irrelevant to whether the front desk lead and the clinician share a list.
 
 If we scored this room in the check's language, we would expect Early or Forming, and we would say so without flinching. The work that matters for this job still lives in heads and side lists. The useful move is to write the recall workflow down and name who owns it. That is the Early sentence, and it fits.
 
 ## How we'd run it
 
-First we name the job. One job. At the clinic it is the recall, from Andre deciding someone should come back to the patient actually having a time. If Priya says "everything," we shrink it until it has a start and a finish.
+First we name the job. One job. At the clinic it is the recall, from the clinician deciding someone should come back to the patient actually having a time. If the owner says "everything," we shrink it until it has a start and a finish.
 
 Second we pull the public tools apart so nobody borrows the wrong population. Cisco describes organizations with more than 500 employees. The OECD tool is a short self-check that stays in the browser and publishes no rate. AWS offers stage names and does not cite an adoption percentage. None of those is a score for this clinic. We say that before anyone feels behind.
 
-Third we score data, process, people, and the decision in words, using absent, partial, in place, or running only if we can point. Sam, Andre, and Priya each answer. Disagreement is the finding. We write it down instead of averaging it into a mood.
+Third we score data, process, people, and the decision in words, using absent, partial, in place, or running only if we can point. The front desk lead, the clinician, and the owner each answer. Disagreement is the finding. We write it down instead of averaging it into a mood.
 
 Fourth we take the check if they want the band. Five to seven minutes, one question per screen, three suggestions per section. We read Early, Forming, Ready, or Running as a state. We do not add a pep talk that turns Early into "almost Ready."
 
-Fifth we pick one next page, not five projects. If the record is the blank, we fix the list Sam and Andre will both believe. If the writing is the blank, we write the exception for the patient who will not book today. The tool demo can wait until that page exists.
+Fifth we pick one next page, not five projects. If the record is the blank, we fix the list the front desk lead and the clinician will both believe. If the writing is the blank, we write the exception for the patient who will not book today. The tool demo can wait until that page exists.
 
 ## Common mistakes
 
@@ -671,9 +671,9 @@ We also watch owners skip from a band to a purchase in the same sitting. Ready s
 
 ## What we'd do
 
-We would score the clinic in front of us and leave Cisco in the footnote where it belongs. Our opinion: a small practice does not need to know whether it is a pacesetter. It needs to know whether Sam's list and Andre's notebook are the same list. Until they are, a recall tool will write confident messages from a record nobody owns.
+We would score the clinic in front of us and leave Cisco in the footnote where it belongs. Our opinion: a small practice does not need to know whether it is a pacesetter. It needs to know whether the front desk lead's list and the clinician's notebook are the same list. Until they are, a recall tool will write confident messages from a record nobody owns.
 
-If we were Priya, we would spend the next ordinary weeks on one written recall path, including the patient who will not book at the desk, and we would tell Sam to stop sending patient wording from a personal account until Priya has said what may go out. Then we would take the check again and read the band as a state, not as a prize. If it is still Early, we would believe it.
+If we were the owner, we would spend the next ordinary weeks on one written recall path, including the patient who will not book at the desk, and we would tell the front desk lead to stop sending patient wording from a personal account until the owner has said what may go out. Then we would take the check again and read the band as a state, not as a prize. If it is still Early, we would believe it.
 
 ## AI Readiness Checklist Before You Buy a Tool
 
@@ -699,7 +699,7 @@ Gartner reported in February 2025 that 63% of respondents do not have, or are un
 
 AWS published a checklist in September 2025.[^aws] It walks five steps and sorts a business into four stages: Not yet ready, Emerging, Operational, and Scaling. The page does not cite an adoption percentage. We like that restraint. A stage name is a description you can argue with. If a page will not tell you how many firms it counted, do not borrow its silence and turn it into a rate.
 
-We use those stage names as labels, not as a grade. Not yet ready means the job is still in one person's head. Emerging means some of it is written and a lot of it is habit. Operational means a team can run the job without a hero. Scaling means you are repeating a pattern, not discovering it. You do not have to adopt the labels. You do have to say which one fits.
+We use those stage names as labels, not as a grade. Not yet ready means the job is still in one person's head. Emerging means some of it is written and a lot of it is habit. Operational means your staff can run the job without a hero. Scaling means you are repeating a pattern, not discovering it. You do not have to adopt the labels. You do have to say which one fits.
 
 <!--image:2-->
 
@@ -707,7 +707,7 @@ The process guide we linked above is what we open when this half of the list is 
 
 ## People and the decision
 
-Who may use a tool, and who may send its output to a customer? Those are the people questions, and they are where checklists go soft. "The team will use it" is not an answer. A name is an answer. A rule about what can leave the building is an answer.
+Who may use a tool, and who may send its output to a customer? Those are the people questions, and they are where checklists go soft. "Everyone will use it" is not an answer. A name is an answer. A rule about what can leave the building is an answer.
 
 Microsoft's 2024 Work Trend Index says 75% of knowledge workers use AI at work, and 46% of those users started less than six months earlier.[^microsoft] 78% of AI users bring their own tools. At small and midsize companies that share is 80%. 60% of leaders worry their organization's leadership lacks a plan and vision to implement AI.
 
@@ -727,17 +727,17 @@ One more decision question we add when the room is being polite. What will you s
 
 ## A worked example
 
-Say we are sitting after close with the owner of a neighborhood hardware shop. We will call the owner June, the counter lead Chris, and the bookkeeper Anita. This is an example we walk through. It is not a report of a shop we measured.
+Say we are sitting after close with the owner of a neighborhood hardware shop. There is an owner, a counter lead, and a bookkeeper. This is an example we walk through. It is not a report of a shop we measured.
 
-June wants a tool that drafts the message saying a special order is in, and that suggests which supplier to chase. The demo was slick. The checklist is the part where we ignore the demo.
+The owner wants a tool that drafts the message saying a special order is in, and that suggests which supplier to chase. The demo was slick. The checklist is the part where we ignore the demo.
 
-We start with data. June says the source of truth is the computer. Chris keeps a notebook because the computer is wrong when a quantity changes at the counter. Anita trusts a spreadsheet she updates from supplier emails, because the other two disagree and she has to pay someone. The box for one source of truth stays blank. Asked which record he would trust if June were out, Chris says the notebook, then says he would call Anita. The source of truth is a person. A person can be the bridge. A person cannot be the record a tool reads.
+We start with data. The owner says the source of truth is the computer. The counter lead keeps a notebook because the computer is wrong when a quantity changes at the counter. The bookkeeper trusts a spreadsheet she updates from supplier emails, because the other two disagree and she has to pay someone. The box for one source of truth stays blank. Asked which record he would trust if the owner were out, the counter lead says the notebook, then says he would call the bookkeeper. The source of truth is a person. A person can be the bridge. A person cannot be the record a tool reads.
 
-Then the process. A part arrives, someone calls, the customer picks up, Anita marks it paid. That happy path is easy. A damaged part goes on the back shelf until Chris "deals with it." A customer who does not answer gets one more try, then the order sits. None of that is written, and on days Chris is at the other site the handoff has no owner. We refuse to count the happy path as the whole process.
+Then the process. A part arrives, someone calls, the customer picks up, the bookkeeper marks it paid. That happy path is easy. A damaged part goes on the back shelf until the counter lead "deals with it." A customer who does not answer gets one more try, then the order sits. None of that is written, and on days the counter lead is at the other site the handoff has no owner. We refuse to count the happy path as the whole process.
 
-Then people. Chris already uses a chat tool on his phone to rewrite messages when he is tired of sounding stiff. June did not know. We do not scold him. We write the question the checklist was for. Who may send those words to a customer, and who may not?
+Then people. The counter lead already uses a chat tool on his phone to rewrite messages when he is tired of sounding stiff. The owner did not know. We do not scold him. We write the question the checklist was for. Who may send those words to a customer, and who may not?
 
-Then the decision. June says success is less chaos. We push once. Success is that a customer hears about an arrival from the record, not from Chris's memory, and that Anita can see the same status Chris sees. If a message goes out wrong, June can stop the trial herself. She does not wait for a vendor. That line is what lets her buy later without betting the shop on a login.
+Then the decision. The owner says success is less chaos. We push once. Success is that a customer hears about an arrival from the record, not from the counter lead's memory, and that the bookkeeper can see the same status the counter lead sees. If a message goes out wrong, the owner can stop the trial herself. She does not wait for a vendor. That line is what lets her buy later without betting the shop on a login.
 
 We leave with blanks on data and process, a surprise on people, and a decision that is finally a sentence. Nobody bought anything. That is the checklist working.
 
@@ -751,15 +751,15 @@ Second we put the people who touch that job in the room. The owner alone will de
 
 Third we walk data, then process, then people, then the decision, and we write blanks in ink. We do not shop for tools in the middle. If someone says the new software would handle that, we write "not handled today" and keep going.
 
-Fourth we read the blanks back and name one owner for the next change. If the source of truth is the blank that matters, Anita and Chris agree what they will treat as the record on ordinary days. June's job is to back that choice when it is inconvenient.
+Fourth we read the blanks back and name one owner for the next change. If the source of truth is the blank that matters, the bookkeeper and the counter lead agree what they will treat as the record on ordinary days. The owner's job is to back that choice when it is inconvenient.
 
 Fifth we only then look at tools, with the sheet on the table. Any feature that does not touch a ticked box or a named blank is a distraction. If the blanks are still the whole story, we stop. A process blank goes to the process guide. The same four groups go to the check when we want a band instead of ticks.
 
-We book the session after the rush, short enough that Chris is not watching the door. A checklist filled by the owner alone at midnight will be full, and it will be wrong.
+We book the session after the rush, short enough that the counter lead is not watching the door. A checklist filled by the owner alone at midnight will be full, and it will be wrong.
 
 ## Common mistakes
 
-The mistake we see most is ticking the box you hope is true. "We have a process" often means a binder from a quieter year. If Chris cannot find the page that covers a damaged part, you do not have a process for the job you are buying for.
+The mistake we see most is ticking the box you hope is true. "We have a process" often means a binder from a quieter year. If the counter lead cannot find the page that covers a damaged part, you do not have a process for the job you are buying for.
 
 Another mistake is letting the vendor's questionnaire replace yours. Their questions ask whether you can be a customer. Yours ask whether the job can survive contact with a tool. Keep yours, even if yours is a notebook page.
 
@@ -769,9 +769,9 @@ We also watch owners score their own confidence and write only the happy path. C
 
 ## What we'd do
 
-We would not buy in the meeting where the checklist is first filled in. We would buy later, for one job, after the source of truth has a name and the handoff has a person. Our opinion is blunt. A tool on top of three records will make another record, and you will pay a fee for the privilege of still calling Anita.
+We would not buy in the meeting where the checklist is first filled in. We would buy later, for one job, after the source of truth has a name and the handoff has a person. Our opinion is blunt. A tool on top of three records will make another record, and you will pay a fee for the privilege of still calling the bookkeeper.
 
-If we were June, we would spend the next stretch of ordinary days making Chris and Anita write status in one place, including the damaged-part case, and we would pause Chris's phone tool for customer messages until June has said what may be sent. That is a smaller project than a new platform. It is the project the checklist was trying to start.
+If we were the owner, we would spend the next stretch of ordinary days making the counter lead and the bookkeeper write status in one place, including the damaged-part case, and we would pause the counter lead's phone tool for customer messages until the owner has said what may be sent. That is a smaller project than a new platform. It is the project the checklist was trying to start.
 
 We would treat a full page of ticks with suspicion, and a short page of blanks with respect. The blanks are the work. The tool can wait.
 
@@ -803,7 +803,7 @@ Score the four groups in words first. Then run the check if you want the band. W
 
 Here is how we assign the words, so they do not become moods. Data is absent when nobody can name the record. It is partial when a record exists and people still keep a side copy they trust more. It is in place when one current source is the one a new person would open, and a system could read it without a retype. It is running when that source is already feeding a job you do every week, and someone notices when a field is wrong.
 
-Process is absent when the steps live in one person's head. It is partial when the happy path is written and the exceptions are folklore. It is in place when the exceptions are on the same page and one person owns the handoff, including the day they are out. It is running when the team follows that page without a meeting to rediscover it.
+Process is absent when the steps live in one person's head. It is partial when the happy path is written and the exceptions are folklore. It is in place when the exceptions are on the same page and one person owns the handoff, including the day they are out. It is running when everyone follows that page without a meeting to rediscover it.
 
 People is absent when nobody may send output to a customer and nobody has noticed that someone already does. It is partial when use is informal and rejection rights are unclear. It is in place when a named person may use the tool, a named person may send, and a named person may stop it. It is running when that stop has actually been used, not just promised.
 
@@ -813,39 +813,39 @@ The band sits on top of those words. It does not replace them. Early, Forming, R
 
 ## A worked example
 
-Say we are in a small bakery after the morning rush. Luis owns it. Nia runs the front. Omar runs the kitchen and the special-order book. This is an example we walk through. We did not audit their flour, and we will not invent a before-and-after.
+Say we are in a small bakery after the morning rush. One person runs the front. Another runs the kitchen and the special-order book. This is an example we walk through. We did not audit their flour, and we will not invent a before-and-after.
 
-Luis wants a tool that answers catering emails and suggests a quote. The demo replied faster than Nia. The framework is the part where we ignore the speed and score the job.
+The owner wants a tool that answers catering emails and suggests a quote. The demo replied faster than the front lead. The framework is the part where we ignore the speed and score the job.
 
-Data. The special-order book is a paper notebook in the kitchen. Nia also keeps notes in the front-of-house inbox because customers write to the shop address. Luis has a spreadsheet of prices that is "mostly current." Asked which record a quote must match, they do not agree. Data is absent for the catering job, even though a notebook exists. A notebook nobody treats as final is not a source of truth. Scoring it "in place" because paper is tangible would be the wish Gartner is warning about, the one where the project later gets abandoned because the data was never ready. We say absent.
+Data. The special-order book is a paper notebook in the kitchen. The front lead also keeps notes in the front-of-house inbox because customers write to the shop address. The owner has a spreadsheet of prices that is "mostly current." Asked which record a quote must match, they do not agree. Data is absent for the catering job, even though a notebook exists. A notebook nobody treats as final is not a source of truth. Scoring it "in place" because paper is tangible would be the wish Gartner is warning about, the one where the project later gets abandoned because the data was never ready. We say absent.
 
-Process. The happy path is real: inquiry, Omar checks the book, Luis prices it, Nia replies. The exception is a customer who changes the headcount the day before, or a date Omar already half-promised on the phone. That exception is not written. Process is partial. The happy path is not the process. If we scored process as in place, the tool would invent the headcount change and sound sure about it.
+Process. The happy path is real: inquiry, the kitchen lead checks the book, the owner prices it, the front lead replies. The exception is a customer who changes the headcount the day before, or a date the kitchen lead already half-promised on the phone. That exception is not written. Process is partial. The happy path is not the process. If we scored process as in place, the tool would invent the headcount change and sound sure about it.
 
-People. Nia already drafts replies in a personal account when she is behind, then pastes them into the inbox. Luis did not know the drafts touched customer words before he saw them. Nobody is named as the person who may send, and nobody is named as the person who may block a send. People is partial, leaning toward absent on the permission that matters. We do not call partial "good enough" just because Nia is capable. Capable is not the same as authorized.
+People. The front lead already drafts replies in a personal account when she is behind, then pastes them into the inbox. The owner did not know the drafts touched customer words before he saw them. Nobody is named as the person who may send, and nobody is named as the person who may block a send. People is partial, leaning toward absent on the permission that matters. We do not call partial "good enough" just because the front lead is capable. Capable is not the same as authorized.
 
-Decision. Luis says success is more catering without more evenings. That is almost a sentence. He cannot say what would make him turn the tool off, except "if it felt wrong." Felt wrong is not a rule. Decision is partial. We will not average these four words into a cheerful Ready. Absent data plus partial everything else is an Early or Forming shape, and we would rather say that than borrow Cisco's pacesetter story for a bakery that is not in that sample.
+Decision. The owner says success is more catering without more evenings. That is almost a sentence. He cannot say what would make him turn the tool off, except "if it felt wrong." Felt wrong is not a rule. Decision is partial. We will not average these four words into a cheerful Ready. Absent data plus partial everything else is an Early or Forming shape, and we would rather say that than borrow Cisco's pacesetter story for a bakery that is not in that sample.
 
-What we leave Luis with is four words and one job. Not a percentage. Not a certificate. The next move is to make the notebook or the inbox the single record, write the headcount exception, and name who may send. Then a band means something.
+What we leave the owner with is four words and one job. Not a percentage. Not a certificate. The next move is to make the notebook or the inbox the single record, write the headcount exception, and name who may send. Then a band means something.
 
 ## How we'd run it
 
-First we pick the job the tool is supposed to touch. At the bakery it is the catering reply, from the first email to a price the kitchen can keep. If Luis says the framework should cover the whole shop, we narrow it. A framework about everything scores nothing.
+First we pick the job the tool is supposed to touch. At the bakery it is the catering reply, from the first email to a price the kitchen can keep. If the owner says the framework should cover the whole shop, we narrow it. A framework about everything scores nothing.
 
-Second we put Nia and Omar in the conversation, not only Luis. The owner describes the price list. The front describes the inbox. The kitchen describes the book. The framework is a pointing exercise. People who do not touch the job cannot point.
+Second we put the front lead and the kitchen lead in the conversation, not only the owner. The owner describes the price list. The front describes the inbox. The kitchen describes the book. The framework is a pointing exercise. People who do not touch the job cannot point.
 
 Third we assign absent, partial, in place, or running to data, then process, then people, then the decision. We say the word out loud and we wait for someone to object. An objection usually means we were about to flatter the group. We downgrade when we cannot point. We do not upgrade because the demo was impressive.
 
-Fourth we only then look at the check, if they want Early, Forming, Ready, or Running as a band from 0 to 100. The band has to be able to live with the four words. If data is absent, we should not be surprised by a low band, and we should not argue the band upward to protect Luis's mood.
+Fourth we only then look at the check, if they want Early, Forming, Ready, or Running as a band from 0 to 100. The band has to be able to live with the four words. If data is absent, we should not be surprised by a low band, and we should not argue the band upward to protect the owner's mood.
 
 Fifth we choose one group to move up a single step. Absent data becomes partial when one record is named, not when a tool arrives. Partial process becomes in place when the headcount exception is written on the same page as the happy path. We do not try to move all four groups in a week of panic. One step, one owner, then we look again.
 
-Sixth we keep Cisco and Gartner in their proper jobs. They explain why data and production matter in the research. They do not score the bakery. If someone in the room quotes a large-firm index as Luis's grade, we put the framework sheet back in the middle of the table.
+Sixth we keep Cisco and Gartner in their proper jobs. They explain why data and production matter in the research. They do not score the bakery. If someone in the room quotes a large-firm index as the owner's grade, we put the framework sheet back in the middle of the table.
 
 ## Common mistakes
 
 The mistake we see most is using the strong word because it sounds like progress. Calling a shared inbox "running" is the mistake named above, and it is common because the inbox is busy. Busy is not the same as a source a system can read. Busy is a pile with a pulse.
 
-Another mistake is scoring the owner's ambition instead of the job. Luis wants catering to grow. Ambition is not a group in the framework. The groups are data, process, people, and the decision. If those are weak, the ambition is a wish with a login attached.
+Another mistake is scoring the owner's ambition instead of the job. The owner wants catering to grow. Ambition is not a group in the framework. The groups are data, process, people, and the decision. If those are weak, the ambition is a wish with a login attached.
 
 A third mistake is importing a pacesetter comparison into a small firm. Cisco's 2025 index is senior leaders at organizations with more than 500 employees. Pacesetters near 13%, and 4 times more likely to move a pilot into production, describe that sample. The bakery is not that sample. The pattern we keep is the written process. The ranking we drop.
 
@@ -853,9 +853,9 @@ We also watch people skip the decision group because it feels soft. It is the gr
 
 ## What we'd do
 
-We would score in words and stay there until the words stop embarrassing us. Our opinion: the band is a convenience, and the four words are the work. A bakery that can say "data is absent, and Omar's notebook is what we will make true" is ahead of a bakery that can quote a readiness percentage it did not earn.
+We would score in words and stay there until the words stop embarrassing us. Our opinion: the band is a convenience, and the four words are the work. A bakery that can say "data is absent, and the kitchen lead's notebook is what we will make true" is ahead of a bakery that can quote a readiness percentage it did not earn.
 
-If we were Luis, we would not answer another catering email from a side draft until the inbox and the book agree which one wins, and we would write the headcount change on the same card as the quote steps. Then we would take the check. If the band says Early, we would believe it and keep going. The framework did its job when it stopped a fast yes.
+If we were the owner, we would not answer another catering email from a side draft until the inbox and the book agree which one wins, and we would write the headcount change on the same card as the quote steps. Then we would take the check. If the band says Early, we would believe it and keep going. The framework did its job when it stopped a fast yes.
 
 ## AI-Ready Data: What a Small Business Needs First
 
@@ -897,29 +897,29 @@ Two phrases we will not use as substitutes for the source. "We have a lot of dat
 
 ## A worked example
 
-Say we are in the office of a small landscaping company on a weekday morning. Theo owns it. Bea schedules. Imani leads a crew. This is an example we walk through. We are not reporting their routes or their revenue. There is no measured before and after. There is a job, and a question about where its record lives.
+Say we are in the office of a small landscaping company on a weekday morning. One person schedules. Another leads a crew. This is an example we walk through. We are not reporting their routes or their revenue. There is no measured before and after. There is a job, and a question about where its record lives.
 
-The job Theo wants a tool to do is the customer update: what the crew did, what is left, and whether the customer owes a decision about extra work. A vendor showed a draft that sounded like Imani, only smoother. Theo liked the sound. We asked where the facts in that draft would come from.
+The job the owner wants a tool to do is the customer update: what the crew did, what is left, and whether the customer owes a decision about extra work. A vendor showed a draft that sounded like the crew lead, only smoother. The owner liked the sound. We asked where the facts in that draft would come from.
 
-Bea says the booking tool is the source. It knows the address and the window. Imani says the truth is the note she writes in a group text after the crew walks the yard. Theo keeps a spreadsheet of who has approved extras, because he does not trust the booking tool with money questions. Three homes for one update. A draft from the booking tool alone will miss the yard note and may invent the approval. That second version will sound like Imani and be wrong in the way that costs trust.
+The scheduler says the booking tool is the source. It knows the address and the window. The crew lead says the truth is the note she writes in a group text after the crew walks the yard. The owner keeps a spreadsheet of who has approved extras, because he does not trust the booking tool with money questions. Three homes for one update. A draft from the booking tool alone will miss the yard note and may invent the approval. That second version will sound like the crew lead and be wrong in the way that costs trust.
 
-Where the knowledge lives, in the table's words: partly in one person's head, Imani's, until she texts; partly in documents the booking tool does not read, the group text and Theo's spreadsheet; not yet in one system with a current record of the whole job. A system could read the address. It could not read "the side bed was wetter than expected, so we stopped and need a yes on the extra drainage" unless someone retypes that into a field. So the middle row is the honest row. A person still has to retype. Buying the draft tool now adds a voice to the retype. It does not remove it.
+Where the knowledge lives, in the table's words: partly in one person's head, the crew lead's, until she texts; partly in documents the booking tool does not read, the group text and the owner's spreadsheet; not yet in one system with a current record of the whole job. A system could read the address. It could not read "the side bed was wetter than expected, so we stopped and need a yes on the extra drainage" unless someone retypes that into a field. So the middle row is the honest row. A person still has to retype. Buying the draft tool now adds a voice to the retype. It does not remove it.
 
-We ask who knows which fields lie. Imani knows the yard. Bea knows which customers answer. Theo knows the spreadsheet falls behind whenever he is on a job himself. The record is split across a text, a schedule, and a sheet, and current means something different in each. For the customer update, current has to mean this morning's yard plus whether the extra is approved. They do not have one place that means both.
+We ask who knows which fields lie. The crew lead knows the yard. The scheduler knows which customers answer. The owner knows the spreadsheet falls behind whenever he is on a job himself. The record is split across a text, a schedule, and a sheet, and current means something different in each. For the customer update, current has to mean this morning's yard plus whether the extra is approved. They do not have one place that means both.
 
-What we would not do is start a proof of concept on last month's cleanest jobs. If the proof only runs on yards Bea already tidied, it is a performance. The test is a messy yard Imani has not typed up yet. That is how a flattering demo joins the projects abandoned after proof of concept.
+What we would not do is start a proof of concept on last month's cleanest jobs. If the proof only runs on yards the scheduler already tidied, it is a performance. The test is a messy yard the crew lead has not typed up yet. That is how a flattering demo joins the projects abandoned after proof of concept.
 
-The fix is boring, which is why it works. Pick the customer update as the only job. Pick one place the yard note and the approval must both land before a message goes out. Imani's text can stay a scratch pad if Bea or Imani moves the real sentence into that place the same day. Theo's spreadsheet can stay his private worry list until the approval is also in the shared record. Then a tool can be tried, because there is one current source. Until then, the low-data guide is the right page, not the vendor's order form.
+The fix is boring, which is why it works. Pick the customer update as the only job. Pick one place the yard note and the approval must both land before a message goes out. The crew lead's text can stay a scratch pad if the scheduler or the crew lead moves the real sentence into that place the same day. The owner's spreadsheet can stay his private worry list until the approval is also in the shared record. Then a tool can be tried, because there is one current source. Until then, the low-data guide is the right page, not the vendor's order form.
 
 ## How we'd run it
 
-First we name the job in one sentence. Not "our data." The customer update, or the open order, or the recall. If the sentence needs a comma splice of every service the company sells, we have not named a job. Data readiness without a job is a storage conversation, and storage is how you buy a warehouse you do not need.
+First we name the job in one sentence. Not "our data." The customer update, or the open order, or the recall. If the sentence needs a comma splice of every service you sell, we have not named a job. Data readiness without a job is a storage conversation, and storage is how you buy a warehouse you do not need.
 
-Second we ask each person where they would look if the owner were unreachable. Bea's answer, Imani's answer, and Theo's answer go on one sheet. If the answers match, we still ask whether a system can read that place or whether someone retypes. If the answers do not match, the source is not named, and we stop pretending the booking tool won because it has a logo.
+Second we ask each person where they would look if the owner were unreachable. The scheduler's answer, the crew lead's answer, and the owner's answer go on one sheet. If the answers match, we still ask whether a system can read that place or whether someone retypes. If the answers do not match, the source is not named, and we stop pretending the booking tool won because it has a logo.
 
 Third we mark the table's row in ink. One person's head, documents no system can read, or one system with a current record. We do not invent a fourth row called "we are getting there." Getting there is the middle row plus a plan. The plan is a person and a place, not a purchase.
 
-Fourth we name who knows which fields lie, and we write the fields. For the crew, the lie is often an approval that was verbal on site and never reached Theo's sheet. That field does not go into a customer message until it is in the shared record. This is the risk-control reason from the later Gartner article, in small clothes: somebody can say the output is not allowed to include a guess.
+Fourth we name who knows which fields lie, and we write the fields. For the crew, the lie is often an approval that was verbal on site and never reached the owner's sheet. That field does not go into a customer message until it is in the shared record. This is the risk-control reason from the later Gartner article, in small clothes: somebody can say the output is not allowed to include a guess.
 
 Fifth we decide low or mid before we decide tool or no tool. If we cannot name the source, we are in the low-data guide and the purchase stops. If we can name it and a person still retypes the part the tool would need, we are in the mid-data guide and the work is to make that part readable. Only the bottom row of the table gets a trial, and the trial has to use the ugly records, not a cleaned sample.
 
@@ -927,21 +927,21 @@ Sixth we reread the research as a brake. 63% without the practices, or unsure th
 
 ## Common mistakes
 
-The mistake we see most is calling an export the source of truth. Bea can pull a schedule file any morning. By the time Imani is in the yard, the file is a souvenir. The source is whatever will still be right when the customer calls at the end of the day. If that thing is Imani's head, say so.
+The mistake we see most is calling an export the source of truth. The scheduler can pull a schedule file any morning. By the time the crew lead is in the yard, the file is a souvenir. The source is whatever will still be right when the customer calls at the end of the day. If that thing is the crew lead's head, say so.
 
 Another mistake is cleaning the data for the demo. Tidy jobs are not the business. A proof of concept that only sees them will pass, then fail when poor data quality shows up. Use a record you are slightly ashamed of.
 
 A third mistake is treating "a lot of history" as readiness. Old invoices in a folder are documents. If no system can read them, a person retypes, and you are in the middle row no matter how many years the folder represents. Volume is not a source.
 
-We also watch owners skip the person who knows which fields lie. Theo knows the approval column goes stale. If he is not in the conversation, the tool will treat that column as fact. The research can talk about data quality. In the room, data quality is a person with a grudge against a specific field. Find that person.
+We also watch owners skip the person who knows which fields lie. The owner knows the approval column goes stale. If he is not in the conversation, the tool will treat that column as fact. The research can talk about data quality. In the room, data quality is a person with a grudge against a specific field. Find that person.
 
 The last mistake is citing a sample size these pages do not give you. The February 2025 page's sample size is not cited here, because the article and its structured data do not agree. Do not fill that gap with a number you heard elsewhere.
 
 ## What we'd do
 
-We would not buy the drafting tool for Theo until the yard note and the approval live in one place a message can read. Our opinion is stubborn on this. A smoother voice on a split record is how you send a confident update that Imani would not sign. The customer will not blame the data model. They will blame the crew.
+We would not buy the drafting tool for the owner until the yard note and the approval live in one place a message can read. Our opinion is stubborn on this. A smoother voice on a split record is how you send a confident update that the crew lead would not sign. The customer will not blame the data model. They will blame the crew.
 
-If we were Theo, we would pick the update job only, make one shared note the place Imani's sentence and the yes on extra work must land the same day, and leave the spreadsheet until it matches that note. Then we would try a tool on a messy yard. If we still cannot name the source, we would stay on the low-data guide and keep the money. One current record is the requirement. A warehouse can wait.
+If we were the owner, we would pick the update job only, make one shared note the place the crew lead's sentence and the yes on extra work must land the same day, and leave the spreadsheet until it matches that note. Then we would try a tool on a messy yard. If we still cannot name the source, we would stay on the low-data guide and keep the money. One current record is the requirement. A warehouse can wait.
 
 ## AI Strategy for Small Business: Start With the Job
 
@@ -971,7 +971,7 @@ Those figures describe different populations. Microsoft asked knowledge workers 
 
 Walk a heating-and-cooling company that runs a handful of trucks. Example only. Nobody measured this for a report. The owner prices jobs from the driver's seat and has started pasting symptom notes into a personal chatbot. He likes the draft it gives him. He has not told the dispatcher. The dispatcher still builds the board from calls, texts, and a whiteboard that is more accurate than the software they pay for. Two techs trust the board. They do not trust a paragraph the owner forwards at night.
 
-There is no strategy. There is a private habit. That habit is exactly the pattern in the Microsoft index, where most AI users bring their own tools, and the share is even higher at small and midsize businesses. The owner is not a villain. He found something that unsticks a quote when he is tired. The trouble starts when a customer reads the draft back to the dispatcher the next morning, including a part the company does not stock and a price the owner would have softened if he had been at a desk.
+There is no strategy yet, just staff quietly using their own tools. That habit is exactly the pattern in the Microsoft index, where most AI users bring their own tools, and the share is even higher at small and midsize businesses. The owner is not a villain. He found something that unsticks a quote when he is tired. The trouble starts when a customer reads the draft back to the dispatcher the next morning, including a part the shop does not stock and a price the owner would have softened if he had been at a desk.
 
 The office manager finds out in the worst way, which is from the customer. She has no page that says which jobs the tool may touch. She has no rule that a quote leaves only after she or the dispatcher has seen it. She was never trained, because there was nothing to be trained on except "the boss has an app." The Microsoft index saying only a minority of companies were planning generative AI training will feel familiar to her. She is living in the gap between use and a plan.
 
@@ -1039,15 +1039,15 @@ The drop is the part owners feel in the till, even when they never see the study
 
 ## A worked example
 
-Walk a neighborhood hardware store. This is an example we talk through, not a result. Ruth owns it. Sam works the counter and knows which aisle lies. The question people already ask, out loud and in search, is some version of "can someone cut a key and tell me which cartridge fits this dripping faucet."
+Walk a neighborhood hardware store. This is an example we talk through, not a result. One person works the counter and knows which aisle lies. The question people already ask, out loud and in search, is some version of "can someone cut a key and tell me which cartridge fits this dripping faucet."
 
-The old page says the store sells hardware, paint, and keys, with a phone number and a cheerful sentence about friendly service. It is indexed, barely, and a snippet would have nothing sharp to lift. An answer engine, asked that faucet question, will cite a page that states the measurement, the common mismatch, and what to bring to the counter. Ruth's page can be that page. It does not become that page by adding a new acronym to the title.
+The old page says the store sells hardware, paint, and keys, with a phone number and a cheerful sentence about friendly service. It is indexed, barely, and a snippet would have nothing sharp to lift. An answer engine, asked that faucet question, will cite a page that states the measurement, the common mismatch, and what to bring to the counter. The owner's page can be that page. It does not become that page by adding a new acronym to the title.
 
-Sam's knowledge is the raw material. He already says, to the person holding a bag of parts, that the stem length matters more than the brand stamped on the handle, and that a photo of the old cartridge saves a second trip. That sentence belongs at the top, in words a summary can quote and a person can use. Under it, Ruth writes what the store actually does. Keys cut while you wait on the days Sam is in. Cartridges matched if you bring the old one or a clear photo. No plumbing repairs in the wall. The refusal is useful. It keeps the answer honest, and it keeps the click from becoming a disappointed visit.
+The counter lead's knowledge is the raw material. He already says, to the person holding a bag of parts, that the stem length matters more than the brand stamped on the handle, and that a photo of the old cartridge saves a second trip. That sentence belongs at the top, in words a summary can quote and a person can use. Under it, the owner writes what the store actually does. Keys cut while you wait on the days the counter lead is in. Cartridges matched if you bring the old one or a clear photo. No plumbing repairs in the wall. The refusal is useful. It keeps the answer honest, and it keeps the click from becoming a disappointed visit.
 
-Roles, not a scoreboard. Ruth owns the claims and will not let a page say they repair what they only sell. Sam checks the draft against what he says at the counter, because a polished sentence that contradicts him will make the next customer angry. Whoever updates the site, even if that is a nephew, has one job: the page stays indexable, the first sentences answer the question, and the source of any number is visible. If a figure is about their own stock, they say it is theirs. If it comes from a manufacturer sheet, they name the sheet. That is the citations-and-quotations move, done at the size of one shop.
+Roles, not a scoreboard. The owner owns the claims and will not let a page say they repair what they only sell. The counter lead checks the draft against what he says at the counter, because a polished sentence that contradicts him will make the next customer angry. Whoever updates the site, even if that is a nephew, has one job: the page stays indexable, the first sentences answer the question, and the source of any number is visible. If a figure is about their own stock, they say it is theirs. If it comes from a manufacturer sheet, they name the sheet. That is the citations-and-quotations move, done at the size of one shop.
 
-A generated answer might then say the stem length matters and send the person to Ruth. Pew's finding is why the page cannot stop at the fact the summary will steal. The summary can explain the stem. The page has to make the trip obviously better. Bring the old cartridge. Sam is the one who matches it. The store does not open the wall. Those lines are the reason to click, and they are also the reason the citation does not become a complaint.
+A generated answer might then say the stem length matters and send the person to the owner. Pew's finding is why the page cannot stop at the fact the summary will steal. The summary can explain the stem. The page has to make the trip obviously better. Bring the old cartridge. The counter lead is the one who matches it. The store does not open the wall. Those lines are the reason to click, and they are also the reason the citation does not become a complaint.
 
 ## How we'd run it
 
@@ -1057,13 +1057,13 @@ First, confirm the page is indexed and eligible for a snippet. If it is blocked,
 
 Second, write the question in the customer's words at the top, then answer it in the next sentences. Key cutting, cartridge match, what to bring. A heading that restates the question helps a person scan, and it gives an answer something clean to lift. This is structure, not a special chunking ritual. Google says there is no special chunking requirement.
 
-Third, add the material the 2024 paper associated with the gains. A real citation, a real quotation, a real figure. For Ruth, that might be the manufacturer fit note, a sentence that is actually Sam's, and a plain statement of which sizes they stock. Do not invent a study. Do not borrow a number you cannot stand behind if a customer reads it back to you.
+Third, add the material the 2024 paper associated with the gains. A real citation, a real quotation, a real figure. For the owner, that might be the manufacturer fit note, a sentence that is actually the counter lead's, and a plain statement of which sizes they stock. Do not invent a study. Do not borrow a number you cannot stand behind if a customer reads it back to you.
 
 Fourth, add the reason to click, knowing a summary may already have stated the fact. Hours in words, what you refuse, who at the counter does the matching, what the person should carry in. Pew's July 2025 read is the context. A click happened 8% of the time when a summary appeared, against 15% when it did not. Write for the person who still has a reason to come.
 
 Fifth, skip the extras Google says it does not need. Do not wait on llms.txt. Do not add schema you cannot explain. Do not rewrite the page as fragments that only a model could love. A person in the aisle is the reader who can hurt you.
 
-Sixth, read the page out loud at the counter. Sam corrects anything he would not say. Ruth deletes any boast. Then leave it up long enough to see whether the questions at the register start to match the questions on the page. That is the feedback that matters at this size. A visibility score from a vendor is optional. The counter is not.
+Sixth, read the page out loud at the counter. The counter lead corrects anything he would not say. The owner deletes any boast. Then leave it up long enough to see whether the questions at the register start to match the questions on the page. That is the feedback that matters at this size. A visibility score from a vendor is optional. The counter is not.
 
 ## Common mistakes
 
@@ -1071,19 +1071,19 @@ The first mistake is treating the new name as a new channel with its own file. G
 
 The second mistake is a page that cannot be lifted. No clear answer in the opening lines, no heading a person can scan, a phone number as the only fact. Eligibility for a snippet is a requirement, not a style preference. If a snippet would be empty, an answer will be empty too.
 
-The third mistake is fake precision. The paper's gains, up to 40%, and over 40% where citations, quotations, and statistics were added, describe methods on a benchmark of 10,000 queries. Pasting those percentages into Ruth's title would be a lie about her store. Use the method. Do not wear the result.
+The third mistake is fake precision. The paper's gains, up to 40%, and over 40% where citations, quotations, and statistics were added, describe methods on a benchmark of 10,000 queries. Pasting those percentages into the owner's title would be a lie about her store. Use the method. Do not wear the result.
 
 The fourth mistake is writing only for the summary. You optimize the fact, and you forget the click. When a summary is present, Pew saw a click 8% of the time, against 15% without one. A perfect citation that sends nobody to the counter is a thinner business, even if a dashboard calls it visibility.
 
-The fifth mistake is contradictions between the page and the counter. The page says same-day key cutting. Sam is off, and the backup will not touch the machine. The answer cites you, the customer arrives, and you lose the only asset that mattered, which is being believed next time.
+The fifth mistake is contradictions between the page and the counter. The page says same-day key cutting. The counter lead is off, and the backup will not touch the machine. The answer cites you, the customer arrives, and you lose the only asset that mattered, which is being believed next time.
 
 The sixth mistake is extra schema as a superstition. The guide says no extra schema is required for these features. Adding markup you do not understand does not repair a page that never answered the question.
 
 ## What we'd do
 
-We would rewrite the one page people already need, in Sam's words, with the refusal included, and we would ignore the pitch that AEO is a separate craft with a separate invoice. Our opinion is that the paper is useful and the label is not. Visibility gains in a 2024 study are a reason to put citations, quotations, and statistics on the page when you truly have them. They are not a reason to talk differently from the way you talk at the counter.
+We would rewrite the one page people already need, in the counter lead's words, with the refusal included, and we would ignore the pitch that AEO is a separate craft with a separate invoice. Our opinion is that the paper is useful and the label is not. Visibility gains in a 2024 study are a reason to put citations, quotations, and statistics on the page when you truly have them. They are not a reason to talk differently from the way you talk at the counter.
 
-Google still wants an indexed page a snippet can use. Pew says the click gets rarer when a summary shows up. So the page has to be worth the trip after the answer has already spoken. We would rather Ruth be cited for a true sentence about stem length, and then earn the visit, than chase a file Google has said it does not read. If you do one thing after this, open the page that should win the question and see whether a stranger could follow it. That is the work. The acronym can wait in the hallway.
+Google still wants an indexed page a snippet can use. Pew says the click gets rarer when a summary shows up. So the page has to be worth the trip after the answer has already spoken. We would rather the owner be cited for a true sentence about stem length, and then earn the visit, than chase a file Google has said it does not read. If you do one thing after this, open the page that should win the question and see whether a stranger could follow it. That is the work. The acronym can wait in the hallway.
 
 ## Business Process Automation With AI: Write the Job
 
@@ -1095,7 +1095,7 @@ If the steps aren't written, stop spending. The [process guide](https://check.ab
 
 The map is the thing you are making. Software is only a way to run that map on a busy Tuesday the same way it ran on a quiet Monday. Microsoft's 2024 index says 75% of knowledge workers use AI, and 46% of those users started less than six months earlier.[^microsoft] Use is already ordinary. A shared plan is not. 60% of leaders worry leadership lacks a plan and vision. 55% of leaders were concerned about talent. Only 25% of companies were planning generative AI training. People are already in the tools. Almost nobody is teaching a shared way to use them.
 
-People don't wait for the lesson. 78% of AI users bring their own tools, and 80% do so at small and midsize businesses. At a small firm that usually means a personal login the owner likes and a different tab the office manager likes. The work lands in the company inbox. The method stays in a browser history. When that person is out, the method is out. That isn't a process. It's a habit with a password. Banning the login without writing the path just moves the habit.
+Staff are already using AI, with or without a plan. 78% of AI users bring their own tools, and 80% do so at small and midsize businesses. At a small firm that usually means a personal login the owner likes and a different tab the office manager likes. The work lands in the shared inbox. The method stays in a browser history. When that person is out, the method is out. That isn't a process. It's a habit with a password. Banning the login without writing the path just moves the habit.
 
 Where the hours sit should decide which job you write first. 60% of time in the work apps was spent in email, chat, and meetings, and 40% in creation apps. Owners often want to automate the part that feels like making something, and they leave the inbox alone. The inbox is the job. The chat thread is the job. The meeting that produces no note is the job. Inside those apps, creation is the smaller share of the time. Automate the daily sorting before you decorate a rare act of writing.
 
@@ -1179,33 +1179,33 @@ That is the practical split we want owners to remember. The index is the price o
 
 ## A worked example
 
-Walk a small dental clinic, as an example, not as a case with a score. Helen owns it. Imani runs the front desk and already answers the same questions the search box gets. Dr. Shah does the dentistry and will not let the website invent clinical promises. The question they care about is the one new patients ask before they call: what happens at a first visit, does it hurt to ask about a cracked tooth, and will you see someone who is nervous.
+Walk a small dental clinic, as an example, not as a case with a score. The front desk lead already answers the same questions the search box gets. The dentist will not let the website invent clinical promises. The question they care about is the one new patients ask before they call: what happens at a first visit, does it hurt to ask about a cracked tooth, and will you see someone who is nervous.
 
-Their current page is an SEO page in the old, thin sense. City name, "family dentistry," a list of services, a map. It might be indexed. A snippet would be mush. A generated answer, asked about a cracked tooth and a nervous patient, will pass over it for a page that says what the first hour is like, what to bring, and what the clinic will not promise. Helen does not need a second site for "generative" readers. She needs this page to carry both jobs.
+Their current page is an SEO page in the old, thin sense. City name, "family dentistry," a list of services, a map. It might be indexed. A snippet would be mush. A generated answer, asked about a cracked tooth and a nervous patient, will pass over it for a page that says what the first hour is like, what to bring, and what the clinic will not promise. The owner does not need a second site for "generative" readers. She needs this page to carry both jobs.
 
-What does not change is the floor. The page has to be indexed. It has to be eligible for a snippet. Imani should be able to read the opening lines and say, "Yes, that is what I tell people." Dr. Shah should be able to read the clinical lines and not flinch. If those two cannot sign the page, no engine should be quoting it. Google's refusal of special chunking and of llms.txt belongs here too. Chopping the page into fragments, or adding a side file, does not replace Helen's signature on the sentences.
+What does not change is the floor. The page has to be indexed. It has to be eligible for a snippet. The front desk lead should be able to read the opening lines and say, "Yes, that is what I tell people." The dentist should be able to read the clinical lines and not flinch. If those two cannot sign the page, no engine should be quoting it. Google's refusal of special chunking and of llms.txt belongs here too. Chopping the page into fragments, or adding a side file, does not replace the owner's signature on the sentences.
 
-What changes is the shape of the sentences, and the paper is the reason we say so without turning it into a guarantee. Citations, quotations, and statistics were associated with gains over 40% in that 2024 work, on a benchmark of 10,000 queries. For this clinic the honest version is modest. Quote the after-care instruction you already hand out on paper. Cite the professional guidance you actually follow when you talk about a cracked tooth, instead of a blog that sounds clinical. If you mention a figure, it has to be a figure you can explain to a patient who read it in an answer and walked in holding it. Position-adjusted word count and a subjective impression score moved in the study, 41% and 28%. We do not translate those into a target for Helen. We translate them into "write enough real detail that a reader feels the visit before they book."
+What changes is the shape of the sentences, and the paper is the reason we say so without turning it into a guarantee. Citations, quotations, and statistics were associated with gains over 40% in that 2024 work, on a benchmark of 10,000 queries. For this clinic the honest version is modest. Quote the after-care instruction you already hand out on paper. Cite the professional guidance you actually follow when you talk about a cracked tooth, instead of a blog that sounds clinical. If you mention a figure, it has to be a figure you can explain to a patient who read it in an answer and walked in holding it. Position-adjusted word count and a subjective impression score moved in the study, 41% and 28%. We do not translate those into a target for the owner. We translate them into "write enough real detail that a reader feels the visit before they book."
 
-The click problem sits on top of that, and Pew is why we will not let the page end at the definition of a cracked tooth. A summary can explain the tooth. The page has to explain Helen's clinic. First visits start with a conversation, not a surprise procedure. Nervous patients can say so when they book, and Imani will leave a longer chair. The clinic does not do every specialty, and it will say which ones it refers. Those lines are useless to a summary that only wanted a definition, and they are the reason a person still taps through. When a summary is on the page, the click showed up 8% of the time in Pew's July 2025 read, against 15% when no summary appeared. Write the lines the summary cannot satisfy.
+The click problem sits on top of that, and Pew is why we will not let the page end at the definition of a cracked tooth. A summary can explain the tooth. The page has to explain the owner's clinic. First visits start with a conversation, not a surprise procedure. Nervous patients can say so when they book, and the front desk lead will leave a longer chair. The clinic does not do every specialty, and it will say which ones it refers. Those lines are useless to a summary that only wanted a definition, and they are the reason a person still taps through. When a summary is on the page, the click showed up 8% of the time in Pew's July 2025 read, against 15% when no summary appeared. Write the lines the summary cannot satisfy.
 
-Roles again, because this is where projects get sloppy. Helen approves what the clinic claims. Imani checks the practical lines against the phone script, including the referral list. Dr. Shah owns anything that could be heard as a diagnosis or a promise of no pain. A freelancer can tidy the headings. A freelancer cannot decide the referral list. If the generative work and the SEO work are billed as two projects, you will get two drafts that disagree, and the patient will meet the disagreement at the desk.
+Roles again, because this is where projects get sloppy. The owner approves what the clinic claims. The front desk lead checks the practical lines against the phone script, including the referral list. The dentist owns anything that could be heard as a diagnosis or a promise of no pain. A freelancer can tidy the headings. A freelancer cannot decide the referral list. If the generative work and the SEO work are billed as two projects, you will get two drafts that disagree, and the patient will meet the disagreement at the desk.
 
 ## How we'd run it
 
 We would run one page, once, for both names.
 
-First, pick the question Imani answers every week, and only that question. A first visit. A cracked tooth. What you do with a nervous patient. One page per question. A page that tries to be the whole clinic will be quoted for nothing in particular.
+First, pick the question the front desk lead answers every week, and only that question. A first visit. A cracked tooth. What you do with a nervous patient. One page per question. A page that tries to be the whole clinic will be quoted for nothing in particular.
 
-Second, make the SEO floor obvious. Indexed, reachable without a gate, eligible for a snippet, opening lines that answer the question in sentences. If a snippet of those lines would embarrass Dr. Shah, they are the wrong lines. Fix them before you worry about any generative layer.
+Second, make the SEO floor obvious. Indexed, reachable without a gate, eligible for a snippet, opening lines that answer the question in sentences. If a snippet of those lines would embarrass the dentist, they are the wrong lines. Fix them before you worry about any generative layer.
 
 Third, add evidence the way the 2024 paper describes it, and only evidence you have. A citation you would show a patient. A quotation that is actually yours, or actually the patient's instructions you already print. A statistic you can defend. The study saw gains of up to 40% when pages were written for a generative answer, and gains over 40% tied to citations, quotations, and statistics. Perplexity's reported gains went up to 37%. Use the method on your own material. Do not paste the study's percentages onto the clinic.
 
-Fourth, write the click. Say what the summary will not know. How booking works with Imani. What to bring. What you refuse. Which fear you will take seriously. This is the reply to Pew. Being the source is not the same as being visited.
+Fourth, write the click. Say what the summary will not know. How booking works with the front desk lead. What to bring. What you refuse. Which fear you will take seriously. This is the reply to Pew. Being the source is not the same as being visited.
 
-Fifth, refuse the split invoice. Do not hire one vendor for SEO and another for generative engine work on the same URL unless they edit one document. Two strategies produce two tones, and the answer will quote whichever is cleaner, which may be the one Dr. Shah never saw.
+Fifth, refuse the split invoice. Do not hire one vendor for SEO and another for generative engine work on the same URL unless they edit one document. Two strategies produce two tones, and the answer will quote whichever is cleaner, which may be the one the dentist never saw.
 
-Sixth, read it the way the desk will hear it. Imani reads the practical half aloud. Dr. Shah reads the clinical half. Helen asks, "If this is the only paragraph a summary keeps, is it still true?" If the answer is no, cut until it is. Then publish the one page. The names GEO and SEO can both point at it. They do not each get a website.
+Sixth, read it the way the desk will hear it. The front desk lead reads the practical half aloud. The dentist reads the clinical half. The owner asks, "If this is the only paragraph a summary keeps, is it still true?" If the answer is no, cut until it is. Then publish the one page. The names GEO and SEO can both point at it. They do not each get a website.
 
 ## Common mistakes
 
@@ -1215,23 +1215,23 @@ The second mistake is the side file. Google does not use llms.txt for this. Buyi
 
 The third mistake is special structure for its own sake. There is no special chunking requirement. Headings that match real questions help humans and give an answer a clean edge to lift. Headings that exist only as bait, with nothing under them, help no one. We would rather see four plain sections a patient can scan than a pile of fragments.
 
-The fourth mistake is importing the study as a forecast for your city. Up to 40%, over 40% with citations, quotations, and statistics, up to 37% on Perplexity, word count up 41%, impression up 28%, benchmark of 10,000 queries. That is what the paper measured. It is not Helen's pipeline. Quoting it on the homepage would be the wrong kind of statistic.
+The fourth mistake is importing the study as a forecast for your city. Up to 40%, over 40% with citations, quotations, and statistics, up to 37% on Perplexity, word count up 41%, impression up 28%, benchmark of 10,000 queries. That is what the paper measured. It is not the owner's pipeline. Quoting it on the homepage would be the wrong kind of statistic.
 
 The fifth mistake is ignoring the click. Pew's 8% with a summary, against 15% without, is the business problem hiding inside the visibility win. If you only chase the citation, you can "win" a mention that replaces the visit. Put the un-summarizable detail on the page. The person, the refusal, the way booking actually feels.
 
-The sixth mistake is two owners for one page. A marketing seat edits for keywords. Another edits for answers. Neither sits with Imani. The patient meets the gap. One page, one checker at the desk, one clinician who can veto a line.
+The sixth mistake is two owners for one page. A marketing seat edits for keywords. Another edits for answers. Neither sits with the front desk lead. The patient meets the gap. One page, one checker at the desk, one clinician who can veto a line.
 
 ## What we'd do
 
 We would keep a single page and a single editor, and we would fire the framing that GEO replaces SEO. Our opinion is that the guide is right and the category fight is not. Write the page so a person can use it. That is what makes it indexable, snippet-ready, and worth citing. The 2024 paper tells you that evidence on the page is associated with more visibility inside generated answers. Pew tells you the click gets harder once a summary appears. Those two facts pull in the same direction. Be specific enough to be quoted, and specific in a way the quote cannot finish.
 
-We would spend Helen's money on Imani's questions and Dr. Shah's veto, not on a second strategy deck. If a vendor cannot show the same URL doing both jobs, they are selling a conflict Google did not ask for. The page still has to exist for the list of links and for the cited answer. One page. Make it true, then make it useful, then leave it where a crawler and a nervous patient can both find it.
+We would spend the owner's money on the front desk lead's questions and the dentist's veto, not on a second strategy deck. If a vendor cannot show the same URL doing both jobs, they are selling a conflict Google did not ask for. The page still has to exist for the list of links and for the cited answer. One page. Make it true, then make it useful, then leave it where a crawler and a nervous patient can both find it.
 
 ## How Can AI Help a Small Business? What Surveys Count
 
-AI helps a small business by taking a named job a person already does. It does not help by moving you closer to a headline. Two surveys from 2025 count AI in small firms, and they count different work. The U.S. Chamber asked who uses generative AI. Statistics Canada asked who used AI to produce goods or deliver services. A firm can say yes to the first and no to the second, and both answers can be honest. This note keeps those claims apart, then names the jobs owners hand over. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is the matching question for one business. [Christopher Buzny](/about/christopher-buzny) writes these notes from the [studio site](/).
+AI helps a small business by taking a named job a person already does. It does not help by moving you closer to a headline. Two surveys from 2025 count AI in small firms, and they count different work. The U.S. Chamber asked who uses generative AI. Statistics Canada asked who used AI to produce goods or deliver services. A firm can say yes to the first and no to the second, and both answers can be honest. This note keeps those claims apart, then names the jobs owners hand over. The [pressure guide](https://check.abra-ca-dabra.app/check/guide/pressure) is the matching question for one business. We write these notes on [our site](/).
 
-We sit with owners who have already been told they are late. The number they heard was usually the larger one. Our job in that first conversation is to slow the number down until it has a population attached. Help, for a shop or a clinic or a trades desk, is a draft someone checks, a sort someone trusts, a reminder someone still sends. Help is not a rank on a national chart.
+We sit with owners who have already been told they are late. The number they heard was usually the larger one. First, we figure out what the number actually measures. Help, for a shop or a clinic or a trades desk, is a draft someone checks, a sort someone trusts, a reminder someone still sends. Help is not a rank on a national chart.
 
 ## Generative use is not production use
 
@@ -1241,7 +1241,7 @@ Statistics Canada, in the Canadian Survey on Business Conditions for the second 
 
 <!--image:2-->
 
-Among businesses that used AI, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. Those shares sit inside the group that already uses AI. They are not shares of every firm in the country, and they are not shares of the Chamber's generative question. Text analytics is reading and sorting language. Marketing automation is sending and measuring. A new workflow is a path that wasn't written before. Training is a person who was shown the path. Put that way, the list is practical. It is also modest. None of those four is a claim that the company now runs itself.
+Among businesses that used AI, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. Those shares sit inside the group that already uses AI. They are not shares of every firm in the country, and they are not shares of the Chamber's generative question. Text analytics is reading and sorting language. Marketing automation is sending and measuring. A new workflow is a path that wasn't written before. Training is a person who was shown the path. Put that way, the list is practical. It is also modest. None of those four is a claim that the business now runs itself.
 
 <!--cta:inline-->
 
@@ -1249,7 +1249,7 @@ Among businesses that used AI, text analytics accounted for 35.7%, and marketing
 
 The Chamber figure describes a tool someone opens. The StatCan figure describes AI inside the delivery of the product or the service. A small business can do the first for a long time without the second. We think that is a sane order. Open the tool on a job you can check. Let production use be a later question, asked only when the goods or the service actually depend on the system. Most owners we sit with are nowhere near that later question, and they don't need to pretend they are.
 
-The jobs that show up in the StatCan breakdown are the practical list: reading and sorting text, sending and measuring marketing, writing a workflow that did not exist, and training the people who will run it. None of those is a promise that the tool will run the company. Reading text looks like an inbox, a pile of referrals, a supplier sheet. Sending marketing looks like a note to people who already bought, not a brand campaign with a film crew. A new workflow looks like a page the front desk can follow when the owner is in a room with a patient. Training looks like sitting with that person once on a real message, not a slide deck titled for a company with a department you don't have.
+The jobs that show up in the StatCan breakdown are the practical list: reading and sorting text, sending and measuring marketing, writing a workflow that did not exist, and training the people who will run it. None of those is a promise that the tool will run the business. Reading text looks like an inbox, a pile of referrals, a supplier sheet. Sending marketing looks like a note to people who already bought, not a brand campaign with a film crew. A new workflow looks like a page the front desk can follow when the owner is in a room with a patient. Training looks like sitting with that person once on a real message, not a slide deck titled for a company with a department you don't have.
 
 The [readiness note](/blog/ai-readiness-assessment) asks a different question: whether this firm, not the average firm, has the data, the process, the people, and the decision in place. Average firms are what surveys are for. Your firm is a counter, a desk, a schedule. If the readiness questions fail, the survey percentages will not save the project. If they pass, you still don't need the larger percentage as a goal. You need the job.
 
@@ -1327,31 +1327,31 @@ That Pew read is about Google summaries, and we still bring it into this convers
 
 ## A worked example
 
-Walk an electrical contractor with us. This is a scene, not a measured result. Mara owns the company. Ben runs the office, the inbox, and the site password. Two techs, Noor and Ellis, do the work. The question homeowners ask is whether someone can look at a panel that trips, and whether that someone is licensed, insured, and willing to say when the job is a utility problem instead of a house problem.
+Walk an electrical contractor with us. This is a scene, not a measured result. An office manager runs the office, the inbox, and the site password. Two techs do the work. The question homeowners ask is whether someone can look at a panel that trips, and whether that someone is licensed, insured, and willing to say when the job is a utility problem instead of a house problem.
 
-Their current site is a header, three service words, and a contact form that sometimes fails on a phone. Ben once pasted a robots file from a forum because a post said AI companies were copying the web. He did not know he had turned away the crawler that fetches pages for search. Mara then paid for a rewrite that added a file at the root and left the service page as thin as before. They were told this would help them show up. It did not, because the search crawler was still unwelcome, and the page still had nothing a citation could honestly repeat.
+Their current site is a header, three service words, and a contact form that sometimes fails on a phone. The office manager once pasted a robots file from a forum because a post said AI companies were copying the web. He did not know he had turned away the crawler that fetches pages for search. The owner then paid for a rewrite that added a file at the root and left the service page as thin as before. They were told this would help them show up. It did not, because the search crawler was still unwelcome, and the page still had nothing a citation could honestly repeat.
 
-Separate the switches the way OpenAI separates them. OAI-SearchBot is the one that has to be allowed if ChatGPT search is supposed to fetch the panel page. Opting that one out keeps the page out of those answers, which is a legitimate choice if Mara does not want to be there, and a mistake if she does. GPTBot is the training crawler, and it is a different decision. Mara can refuse training and still want search. She cannot express that difference with a single "disallow all" line she does not understand. ChatGPT-User is the third case. It fetches because a person asked, and robots.txt may not apply to it. Ben should know that rule exists so he does not promise Mara that a robots file controls every look-up a user can trigger.
+Separate the switches the way OpenAI separates them. OAI-SearchBot is the one that has to be allowed if ChatGPT search is supposed to fetch the panel page. Opting that one out keeps the page out of those answers, which is a legitimate choice if the owner does not want to be there, and a mistake if she does. GPTBot is the training crawler, and it is a different decision. The owner can refuse training and still want search. She cannot express that difference with a single "disallow all" line she does not understand. ChatGPT-User is the third case. It fetches because a person asked, and robots.txt may not apply to it. The office manager should know that rule exists so he does not promise the owner that a robots file controls every look-up a user can trigger.
 
-The page itself has to survive being read by a person standing in a dark kitchen. Opening lines answer the panel question. What you do on a trip. What you will not do, including anything on the utility side of the meter. How to reach Ben, and what to say so the right tech brings the right tester. Noor and Ellis should recognize the description, because they are the ones who will hear "but your website said" in a hallway. Mara signs the claims about license and insurance. Ben signs the crawler rules, in writing, with the three bots named in words he can point at.
+The page itself has to survive being read by a person standing in a dark kitchen. Opening lines answer the panel question. What you do on a trip. What you will not do, including anything on the utility side of the meter. How to reach the office manager, and what to say so the right tech brings the right tester. The techs should recognize the description, because they are the ones who will hear "but your website said" in a hallway. The owner signs the claims about license and insurance. The office manager signs the crawler rules, in writing, with the three bots named in words he can point at.
 
-A generated answer might then mention the firm for a tripping panel in their towns. That mention is not the booking. Pew is the reminder, even though it measured a different summary. When a summary is present, a click is less common. So the paragraph the answer cannot replace is the one about the utility boundary and about calling Ben with a photo of the panel label. The citation gets them interested. The specific refusal gets them to the phone. A thin page gets them a sentence that could have been any electrician in the county.
+A generated answer might then mention the firm for a tripping panel in their towns. That mention is not the booking. Pew is the reminder, even though it measured a different summary. When a summary is present, a click is less common. So the paragraph the answer cannot replace is the one about the utility boundary and about calling the office manager with a photo of the panel label. The citation gets them interested. The specific refusal gets them to the phone. A thin page gets them a sentence that could have been any electrician in the county.
 
 ## How we'd run it
 
 We would touch the robots file and the service page in the same week, and we would not call a new root file the project.
 
-First, write down the three crawlers in Ben's notebook, in plain words. OAI-SearchBot fetches pages for search. Leaving it blocked keeps you out of ChatGPT search answers. GPTBot is training. ChatGPT-User fetches when a person triggers a look-up, and a robots file may not govern it. If Ben cannot say those apart, nobody edits the file yet.
+First, write down the three crawlers in the office manager's notebook, in plain words. OAI-SearchBot fetches pages for search. Leaving it blocked keeps you out of ChatGPT search answers. GPTBot is training. ChatGPT-User fetches when a person triggers a look-up, and a robots file may not govern it. If the office manager cannot say those apart, nobody edits the file yet.
 
-Second, decide the training question on purpose. Some owners want no training crawl. That is allowed, and it is not the same lever as search. Make the search choice second, out loud. If Mara wants to be findable in ChatGPT search, OAI-SearchBot has to be allowed to fetch the pages she hopes will be cited. Write the decision next to the file so the next freelancer does not "clean it up."
+Second, decide the training question on purpose. Some owners want no training crawl. That is allowed, and it is not the same lever as search. Make the search choice second, out loud. If the owner wants to be findable in ChatGPT search, OAI-SearchBot has to be allowed to fetch the pages she hopes will be cited. Write the decision next to the file so the next freelancer does not "clean it up."
 
 Third, look at the Google floor on the same pages. Indexed. Eligible for a snippet. Not blocked, not thin, not hiding the only useful sentence behind a form. Google's guide says the generative features are still SEO, that it does not use llms.txt, and that there is no special chunking requirement. No extra schema is required. A page that fails this floor will not become an overview because a file appeared.
 
-Fourth, rewrite the service page in the voice of the kitchen, not the voice of a keyword list. The panel question, the utility boundary, what to photograph, how booking with Ben works. A person should be able to read it without feeling marketed to. An answer should be able to lift a sentence without inventing the rest.
+Fourth, rewrite the service page in the voice of the kitchen, not the voice of a keyword list. The panel question, the utility boundary, what to photograph, how booking with the office manager works. A person should be able to read it without feeling marketed to. An answer should be able to lift a sentence without inventing the rest.
 
 Fifth, add the reason to click. Assume the summary stole the easy definition of a tripping breaker. Leave the shop-specific part on the page. Who comes. What you refuse. What a homeowner should have ready. Pew, in July 2025, saw a click 8% of the time when a summary appeared, against 15% when none did. Showing up is the citation. The click is a separate piece of writing.
 
-Sixth, test the boring way. Ask someone who does not work there to find the page from the question, on a phone, and to tell you what they would do next. If they cannot tell you, the citation will not save you. Fix the page. Then leave the crawler rules alone unless Mara changes her mind. Stability in the file matters more than a monthly tweak from whoever last read a thread.
+Sixth, test the boring way. Ask someone who does not work there to find the page from the question, on a phone, and to tell you what they would do next. If they cannot tell you, the citation will not save you. Fix the page. Then leave the crawler rules alone unless the owner changes her mind. Stability in the file matters more than a monthly tweak from whoever last read a thread.
 
 ## Common mistakes
 
@@ -1359,29 +1359,42 @@ The first mistake is one switch for every bot. A copied robots file that disallo
 
 The second mistake is the magic file. Google says it does not use llms.txt. A blocked, thin, or snippet-ineligible page will not become an overview because a new file was added. We have heard the file sold as the ChatGPT trick too. The trick is the crawler plus a page worth citing. The file is a list, when it is anything.
 
-The third mistake is a page only a model could love. Fragments, repeated town names, no sentence Noor would say in a hallway. There is no special chunking requirement. Headings are for people who scan. If Ellis would be ashamed to read the page to a customer, it is the wrong page, however well a crawler can fetch it.
+The third mistake is a page only a model could love. Fragments, repeated town names, no sentence a tech would say in a hallway. There is no special chunking requirement. Headings are for people who scan. If a tech would be ashamed to read the page to a customer, it is the wrong page, however well a crawler can fetch it.
 
 The fourth mistake is confusing a mention with a call. The July 2025 Pew finding, 8% of visits with a summary producing a click against 15% without one, is the warning. Write the line the summary cannot complete. The boundary of the work. The photo to send. The person who answers.
 
-The fifth mistake is claims nobody will back. "Same hour" when the truck is across the county. "We repair utility equipment" when you do not. ChatGPT-User may fetch the page because a person asked, and robots.txt may not apply, so a reckless sentence can travel even when you thought you had a gate. Write only what Mara will say in the driveway.
+The fifth mistake is claims nobody will back. "Same hour" when the truck is across the county. "We repair utility equipment" when you do not. ChatGPT-User may fetch the page because a person asked, and robots.txt may not apply, so a reckless sentence can travel even when you thought you had a gate. Write only what the owner will say in the driveway.
 
-The sixth mistake is handing the file to someone who cannot name the bots. Ben owns this, or a person Ben trusts who will explain the diff in words. An anonymous plugin update that "optimizes robots" is how the search crawler disappears again on a Friday.
+The sixth mistake is handing the file to someone who cannot name the bots. The office manager owns this, or a person the office manager trusts who will explain the diff in words. An anonymous plugin update that "optimizes robots" is how the search crawler disappears again on a Friday.
 
 ## What we'd do
 
 We would allow the search crawler, make a separate and explicit choice about training, and spend the real effort on the panel page a homeowner can use. We would not start with a root file, and we would not let a single disallow line stand in for a decision. Our opinion is that most "show up in ChatGPT" projects are a robots accident plus a thin page, wearing a strategy name.
 
-Google still wants an indexed page a snippet can lift, and it still declines the special file and the special schema. OpenAI still uses different crawlers for search, training, and a person-triggered fetch. Pew still says the click thins out when a summary is already on screen. Those three facts are the whole job. Let the search crawler in if you want to be cited. Write the answer where Ben, Noor, and the homeowner would all recognize it. Then make the next step obvious enough that a citation has somewhere to go.
+Google still wants an indexed page a snippet can lift, and it still declines the special file and the special schema. OpenAI still uses different crawlers for search, training, and a person-triggered fetch. Pew still says the click thins out when a summary is already on screen. Those three facts are the whole job. Let the search crawler in if you want to be cited. Write the answer where the office manager, a tech, and the homeowner would all recognize it. Then make the next step obvious enough that a citation has somewhere to go.
 
 ## How to Use AI in Your Business: Twelve Jobs
 
-How to use AI in a business is a job list, not a model list. Pick a job you already do, write the steps, and keep a person on the output. The model is the last decision, and for plenty of jobs it is a small one. Statistics Canada's 2025 brief asked businesses that already use AI which tools they use and what they changed.[^statcan] Among those businesses, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. In the same period, 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier. Those are descriptions of what firms reported. They are not a shopping list, and they are not permission to open twelve tools on Monday.
+How to use AI in a business is a job list, not a model list. Pick a job you already do, write the steps, and keep a person on the output. The model is the last decision, and for plenty of jobs it is a small one. Statistics Canada's 2025 report asked businesses that already use AI which tools they use and what they changed.[^statcan] Among those businesses, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. In the same period, 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier. Those are descriptions of what firms reported. They are not a shopping list, and they are not permission to open twelve tools on Monday.
 
 The [help note](/blog/how-can-ai-help-small-businesses) separates that production question from generative-AI use. The [automation note](/blog/ai-automation-for-small-business) is how to pick the first job. The [agents note](/blog/ai-agents-for-business) is when the steps branch and a fixed checklist stops being honest. We'd start with one job from the list below. We'd leave the rest in a stack until that one job has a person on it and a week of real use behind it.
 
 ## Twelve jobs you can write down
 
-Draft the customer reply, then a person sends it. Summarize the meeting, then a person accepts the tasks. Turn notes into a quote, then a person sets the price. Sort the inbox, then a person decides what is answered. Flag the late invoice, then a person decides the chase. Describe the product, then a person approves the page. Group support tickets, then a person picks the answer. Check the inventory exception, then a person orders. Rewrite the policy in plain language, then a person publishes it. Compare two supplier notes, then a person chooses. Draft the weekly report, then a person accepts the numbers. Prepare the staff answer, then a person trains the team.
+In each job below, AI does the first pass and a person makes the call:
+
+- Draft the customer reply: a person sends it.
+- Summarize the meeting: a person accepts the tasks.
+- Turn notes into a quote: a person sets the price.
+- Sort the inbox: a person decides what is answered.
+- Flag the late invoice: a person decides the chase.
+- Describe the product: a person approves the page.
+- Group support tickets: a person picks the answer.
+- Check the inventory exception: a person orders.
+- Rewrite the policy in plain language: a person publishes it.
+- Compare two supplier notes: a person chooses.
+- Draft the weekly report: a person accepts the numbers.
+- Prepare the staff answer: a person trains the staff.
 
 Each line has the same shape. A system prepares. A person decides. If you delete the person, you don't have a job. You have a mailbox that hopes. The reply can be drafted from the thread the customer already wrote. Someone who knows that customer still sends it. The meeting summary can list tasks. Someone who was in the room still accepts them, because a model wasn't there to hear the aside that mattered. The quote can be assembled from notes. The price stays with the owner. We keep repeating that shape because owners keep trying to skip the second half. The second half is the business.
 
@@ -1401,7 +1414,7 @@ Say they pick the customer reply, because it happens every day and a wrong tone 
 
 The quote job shows up the day the shop does custom work. Notes from a conversation become a description. The owner sets the price. We've watched owners try to let the draft set the price because the draft sounded confident. Confidence isn't a cost. The supplier comparison is the same trap with a different costume. Two notes, two minimums, two lead times written in different formats. A draft can line them up. The owner chooses. Choosing is the job. Lining up is the chore.
 
-A clinic can run the same list without pretending to be a shop. Summarize the meeting, then the practitioner accepts the tasks. Prepare the staff answer, then a person trains the team. Rewrite the policy in plain language, then a person publishes it. The publish step matters because a policy that sounds friendly and says the wrong clinical thing is worse than a stiff policy that is right. A trades desk lives in the quote line and the inventory exception. The lead tech's note becomes a description. The owner prices. The exception gets checked. A person orders. We are not saying every firm should run all twelve. We are saying each of the twelve is a job with an edge, and the edge is a person.
+A clinic can run the same list without pretending to be a shop. Summarize the meeting, then the practitioner accepts the tasks. Prepare the staff answer, then a person trains the staff. Rewrite the policy in plain language, then a person publishes it. The publish step matters because a policy that sounds friendly and says the wrong clinical thing is worse than a stiff policy that is right. A trades desk lives in the quote line and the inventory exception. The lead tech's note becomes a description. The owner prices. The exception gets checked. A person orders. We are not saying every firm should run all twelve. We are saying each of the twelve is a job with an edge, and the edge is a person.
 
 ## How we'd run it
 
@@ -1427,7 +1440,7 @@ Skipping the person on the output is the mistake that reaches the customer. A dr
 
 Running all twelve at once is impatience dressed up as ambition. The stack exists so you don't. A shop that tries replies, invoices, inventory, the product page, and the staff answer in the same month will do all of them badly and then conclude the tools don't work. They weren't given a job. They were given a pile. Pick one. Let it become boring. Boring is the success condition.
 
-Forgetting training is how the workflow figure and the real room come apart. A new workflow that lives in the owner's head is the old company with an extra tab. Show the clerk on a real thread. Show the bookkeeper on a real late invoice. If the only person who can run it is the person who set it up, you don't have a job. You have a hobby.
+Forgetting training is how the workflow figure and the real room come apart. A new workflow that lives in the owner's head is the old business with an extra tab. Show the clerk on a real thread. Show the bookkeeper on a real late invoice. If the only person who can run it is the person who set it up, you don't have a job. You have a hobby.
 
 ## What we'd do
 
@@ -1451,7 +1464,7 @@ Cisco's 2025 AI Readiness Index surveyed 8,000 senior leaders at organizations w
 
 We say the last part slowly, because it is the part owners miss. Ready on our check means the named job can carry a tool. A pacesetter in Cisco's index is a large organization in a sample of senior leaders. Near 13% of that sample is about those organizations. It is not a report card for a shop, a clinic, or a trades desk. If a salesperson says you should buy now to catch up with pacesetters, they have glued a large-firm statistic to a small-firm fear. The 4 times production gap is real inside that sample. It does not mean your service writer is late.
 
-Use the index as a picture of a different size of firm. The useful rhyme is that moving a pilot into production follows a written process. The useless move is to decide you are behind a company that staffs a team for the pilot. You have a bay, a desk, and a person who knows the customers. Readiness is whether that person can hand the job to a tool without the job falling apart.
+Use the index as a picture of a different size of firm. The useful rhyme is that moving a pilot into production follows a written process. The useless move is to decide you are behind a business that staffs a whole crew for the pilot. You have a bay, a desk, and a person who knows the customers. Readiness is whether that person can hand the job to a tool without the job falling apart.
 
 <!--image:2-->
 
@@ -1467,33 +1480,33 @@ The negative signs are the same facts turned around. Knowledge in one head feels
 
 <!--image:3-->
 
-A small firm can show the positive signs on one job and the negative signs on another. That is normal, and it is why "is my business ready?" is a slightly dishonest question. The honest question is which job. The check's bands describe the state you are in for the way you answered, not a tattoo on the company. Early and Forming are 0–39 and 40–59. They are descriptions. Ready and Running are 60–79 and 80–100. They are also descriptions. None of them means you have purchased a product, and none of them means you have failed as an owner.
+A small firm can show the positive signs on one job and the negative signs on another. That is normal, and it is why "is my business ready?" is the wrong question. The honest question is which job. The check's bands describe the state you are in for the way you answered, not a tattoo on the business. Early and Forming are 0–39 and 40–59. They are descriptions. Ready and Running are 60–79 and 80–100. They are also descriptions. None of them means you have purchased a product, and none of them means you have failed as an owner.
 
 ## A worked example
 
-Say we are in an independent auto shop on a slow afternoon. Denise owns it. Paul writes the service tickets. Rosa is the lead tech. This is an example we walk through. We are not reporting their revenue, their comeback rate, or any other figure, because we did not measure them and we will not fake it.
+Say we are in an independent auto shop on a slow afternoon. One person writes the service tickets. Another is the lead tech. This is an example we walk through. We are not reporting their revenue, their comeback rate, or any other figure, because we did not measure them and we will not fake it.
 
-Denise asked after a vendor showed a tool that drafts customer updates from the ticket. We split the question. Ready for which job? The job on offer is the status text: diagnosed, the customer hears what is wrong, says yes or no, Rosa proceeds or does not.
+The owner asked after a vendor showed a tool that drafts customer updates from the ticket. We split the question. Ready for which job? The job on offer is the status text: diagnosed, the customer hears what is wrong, says yes or no, the lead tech proceeds or does not.
 
-Walk the positive signs. Is the source of truth named? Paul says the shop system. Rosa says she writes the real finding on the paper that stays on the dash, because the system ticket is what Paul had time to type, and Paul is often still with the previous customer. Denise says she trusts whatever Paul texts her. Three candidates. The source is not named. First negative sign, already. Knowledge of the true finding sits with Rosa's paper and Rosa's head. That is the "one head" sign, even though Paul has a system. A system that is not believed is not the source of truth.
+Walk the positive signs. Is the source of truth named? The ticket writer says the shop system. The lead tech says she writes the real finding on the paper that stays on the dash, because the system ticket is what the ticket writer had time to type, and the ticket writer is often still with the previous customer. The owner says she trusts whatever the ticket writer texts her. Three candidates. The source is not named. First negative sign, already. Knowledge of the true finding sits with the lead tech's paper and the lead tech's head. That is the "one head" sign, even though the ticket writer has a system. A system that is not believed is not the source of truth.
 
-Are the steps written? The sunny path is. Car in, inspect, call, approve, repair, car out. The exceptions are not. What if the customer does not answer and the bay is needed? What if Rosa finds a second problem after the yes? What if Paul is off and the other writer does not know Rosa's shorthand? Unwritten exceptions. Second negative sign.
+Are the steps written? The sunny path is. Car in, inspect, call, approve, repair, car out. The exceptions are not. What if the customer does not answer and the bay is needed? What if the lead tech finds a second problem after the yes? What if the ticket writer is off and the other writer does not know the lead tech's shorthand? Unwritten exceptions. Second negative sign.
 
-Does a person own the output? The vendor's tool would send a text. Paul assumes he would glance at it. Rosa says she would not see it until the customer called angry. Denise says she wants to approve "the important ones," which means there is no rule. Nobody owns the output in a way that survives a busy morning. Third gap.
+Does a person own the output? The vendor's tool would send a text. The ticket writer assumes he would glance at it. The lead tech says she would not see it until the customer called angry. The owner says she wants to approve "the important ones," which means there is no rule. Nobody owns the output in a way that survives a busy morning. Third gap.
 
-Can someone stop the experiment? Denise says she could cancel the subscription. That is a commercial stop, not an operational one. An operational stop is: this text does not go out, today, because it is wrong, and the person who sees that is allowed to halt it without a meeting. They do not have that person. Fourth gap.
+Can someone stop the experiment? The owner says she could cancel the subscription. That is a commercial stop, not an operational one. An operational stop is: this text does not go out, today, because it is wrong, and the person who sees that is allowed to halt it without a meeting. They do not have that person. Fourth gap.
 
-So the shop is not ready for this job. That is not an insult. Denise runs a respected bay. The signs say the status text would invent a process Paul, Rosa, and Denise do not currently share. If we put the same shop on the check, we would not be surprised to land in Early or Forming. We would be surprised, and suspicious, if the answers came back Ready while the dash paper still beats the ticket.
+So the shop is not ready for this job. That is not an insult. The owner runs a respected bay. The signs say the status text would invent a process the ticket writer, the lead tech, and the owner do not currently share. If we put the same shop on the check, we would not be surprised to land in Early or Forming. We would be surprised, and suspicious, if the answers came back Ready while the dash paper still beats the ticket.
 
-What would ready look like, without pretending we watched it happen? Paul and Rosa agree the ticket is the record, and the dash paper is a scratch pad that gets typed before anyone is texted. The no-answer case and the second-problem case are written where the other writer can find them. Paul owns the text, Rosa can reject a finding that is not what she saw, and Denise can halt a wrong text the same day. Success means the customer hears the finding Rosa actually made. That is Ready in the ordinary sense. It does not look like a pacesetter. It looks like a shop that stopped inventing the process inside the tool.
+What would ready look like, without pretending we watched it happen? The ticket writer and the lead tech agree the ticket is the record, and the dash paper is a scratch pad that gets typed before anyone is texted. The no-answer case and the second-problem case are written where the other writer can find them. The ticket writer owns the text, the lead tech can reject a finding that is not what she saw, and the owner can halt a wrong text the same day. Success means the customer hears the finding the lead tech actually made. That is Ready in the ordinary sense. It does not look like a pacesetter. It looks like a shop that stopped inventing the process inside the tool.
 
 ## How we'd run it
 
-First we refuse the wide question. "Is my business ready?" becomes "is this job ready?" Denise does not get to mean the whole shop. She gets the status text, because that is what the vendor is selling. A yes about a different job is a way of changing the subject.
+First we refuse the wide question. "Is my business ready?" becomes "is this job ready?" The owner does not get to mean the whole shop. She gets the status text, because that is what the vendor is selling. A yes about a different job is a way of changing the subject.
 
 Second we read the large-firm index for what it counted, then say out loud that the shop is not in that census. The fear of being behind pacesetters does not get a vote.
 
-Third we walk the four positive signs and the four negative signs as pairs. Named source or one head. Written steps or unwritten exceptions. A person who owns the output, or nobody who may send. A stopper, or success with no definition. Paul, Rosa, and Denise each answer. We write conflicts instead of smoothing them. Rosa's paper versus Paul's ticket is the conflict that matters.
+Third we walk the four positive signs and the four negative signs as pairs. Named source or one head. Written steps or unwritten exceptions. A person who owns the output, or nobody who may send. A stopper, or success with no definition. The ticket writer, the lead tech, and the owner each answer. We write conflicts instead of smoothing them. The lead tech's paper versus the ticket writer's ticket is the conflict that matters.
 
 Fourth we open the band pages if a label will help. Early and Ready are states with sentences, not prizes. If the signs are negative, we expect Early or Forming, and we treat a Ready result as a reason to reread the answers, not as a reason to celebrate. The check does not diagnose. Neither do we.
 
@@ -1503,21 +1516,21 @@ Sixth we only talk about the vendor after the signs are honest. If the signs are
 
 ## Common mistakes
 
-The mistake we see most is hearing "ready" as a personality. Denise is decisive, Rosa is skilled, Paul is careful. None of that answers the signs. A careful writer with two records is not ready for a tool that needs one. Character is not a band.
+The mistake we see most is hearing "ready" as a personality. The owner is decisive, the lead tech is skilled, the ticket writer is careful. None of that answers the signs. A careful writer with two records is not ready for a tool that needs one. Character is not a band.
 
 Another mistake is using Cisco's 13% as a small-business failure rate. It is the share of pacesetters in a sample of large organizations. Quoting it to scare a shop owner is a category error. The sample is not a census of bays and storefronts. We will not nod along when a pitch does it.
 
-A third mistake is counting a subscription cancel button as the ability to stop. Denise can always call the vendor later. The sign we want is someone on the floor who can block a bad customer message today. Later is how a wrong text sits in a customer's phone all afternoon.
+A third mistake is counting a subscription cancel button as the ability to stop. The owner can always call the vendor later. The sign we want is someone on the floor who can block a bad customer message today. Later is how a wrong text sits in a customer's phone all afternoon.
 
-We also see owners collect the positive signs as adjectives and skip the negatives. They can name a system, so they ignore that Rosa does not believe it. Naming a system you do not trust is the one-head problem in a nicer outfit. Look at the negative list on purpose. It is ruder, and it is clearer.
+We also see owners collect the positive signs as adjectives and skip the negatives. They can name a system, so they ignore that the lead tech does not believe it. Naming a system you do not trust is the one-head problem in a nicer outfit. Look at the negative list on purpose. It is ruder, and it is clearer.
 
 The last mistake is treating the OECD tool's missing rate as bad news. It does not publish an adoption rate. That is restraint. Do not fill the silence with a guess and then feel behind the guess.
 
 ## What we'd do
 
-We would answer Denise with the signs, not with a pep talk. Our opinion: most shops that ask "are we ready?" are asking for permission to buy, and the honest answer is often that one job is Forming and the rest of the question is too big. We would rather shrink the question than inflate the readiness.
+We would answer the owner with the signs, not with a pep talk. Our opinion: most shops that ask "are we ready?" are asking for permission to buy, and the honest answer is often that one job is Forming and the rest of the question is too big. We would rather shrink the question than inflate the readiness.
 
-If we were Denise, we would make the ticket the only record Rosa is willing to have texted, write the no-answer case where the other writer can see it, and give Rosa a plain way to kill a message that does not match her finding. Then we would take the check and read the band as a state. If it says Ready, we would still start with one job and a person who can stop it. If it says Early, we would believe the dash paper over the demo.
+If we were the owner, we would make the ticket the only record the lead tech is willing to have texted, write the no-answer case where the other writer can see it, and give the lead tech a plain way to kill a message that does not match her finding. Then we would take the check and read the band as a state. If it says Ready, we would still start with one job and a person who can stop it. If it says Early, we would believe the dash paper over the demo.
 
 ## Off-the-Shelf AI or Custom Software
 
@@ -1593,9 +1606,9 @@ If those steps are still in someone's head, the matching check is the [process g
 
 Use a workflow when the steps are known: take the email, extract the fields, write the draft, wait for a person. Use an agent when the next step depends on what the last step found, and you cannot write every branch in advance. If you cannot name the stop condition, you do not have either one yet.
 
-Picture a plumbing desk on a loud Monday. Dana runs the book. She gets the name, the address, and whether water is on the floor. She asks which room, and whether anyone shut the main off. Those questions do not change because a model showed up. A workflow can hold them: a form, a text to the on-call tech, a line in the book. The fork comes after intake, and that is the part people try to skip.
+Picture a plumbing desk on a loud Monday. A scheduler runs the book. She gets the name, the address, and whether water is on the floor. She asks which room, and whether anyone shut the main off. Those questions do not change because a model showed up. A workflow can hold them: a form, a text to the on-call tech, a line in the book. The fork comes after intake, and that is the part people try to skip.
 
-A restaurant with water through the ceiling is a different promise from a slow drip under a rental sink. The restaurant needs the owner or the senior tech to say whether someone rolls now. The drip can wait for the afternoon route. Vendors offer an agent for that fork. The model would read the note and pick a tech, a part, and a time. We would let it draft the options. We would not let it text a time until Dana or the owner has looked. Known order, workflow. Order that depends on what you just learned, maybe an agent, and still a person who can stop the send.
+A restaurant with water through the ceiling is a different promise from a slow drip under a rental sink. The restaurant needs the owner or the senior tech to say whether someone rolls now. The drip can wait for the afternoon route. Vendors offer an agent for that fork. The model would read the note and pick a tech, a part, and a time. We would let it draft the options. We would not let it text a time until the scheduler or the owner has looked. Known order, workflow. Order that depends on what you just learned, maybe an agent, and still a person who can stop the send.
 
 <!--image:2-->
 
@@ -1619,55 +1632,55 @@ The agent sentences are smaller, and they are the ones we want in the room. 23% 
 
 Those are enterprise survey shares. They are not a score for one small business. An agent still needs a written process and a person who can stop it.
 
-We say this out loud because the wide percentage gets used as a shove. A vendor will put the 88% line on a slide and talk as if a shop with a few trucks is late. The survey does not say that. It says use is common, and scaling an agent inside a single function is not. If firms with real operations teams are mostly still experimenting, you are allowed to write your process before you buy a system that chooses its own tools. The survey is a count of what respondents said. It is not a definition of an agent, and it is not a grade for your desk. Wooden bars of different heights do not tell Dana what to do with the next call.
+We say this out loud because the wide percentage gets used as a shove. A vendor will put the 88% line on a slide and talk as if a shop with a few trucks is late. The survey does not say that. It says use is common, and scaling an agent inside a single function is not. If firms with real operations teams are mostly still experimenting, you are allowed to write your process before you buy a system that chooses its own tools. The survey is a count of what respondents said. It is not a definition of an agent, and it is not a grade for your desk. Wooden bars of different heights do not tell the scheduler what to do with the next call.
 
 <!--image:3-->
 
 ## A worked example
 
-Stay with the plumbing desk and give everyone a job. This is a walk-through, not a result we measured. Chris owns the company and takes the hard calls. Dana runs the book. Luis and Priya are on the tools.
+Stay with the plumbing desk and give everyone a job. This is a walk-through, not a result we measured. The owner takes the hard calls. A scheduler runs the book. Luis and Priya are on the tools.
 
-A property manager calls about a smell in more than one unit. Dana opens the job the way she always has. Name, callback number, address, keys, whether anyone is home. That block is a workflow. It should not depend on a model's mood. The note that comes back is messy. One unit had a dishwasher replaced recently. Another has a tenant who shuts the water off and tells nobody. Another unit is vacant. The next step depends on what Dana just heard. Which door gets the first visit. Whether the truck should carry a camera. Whether a vacant unit with a smell is a bigger opening than a clogged trap.
+A property manager calls about a smell in more than one unit. The scheduler opens the job the way she always has. Name, callback number, address, keys, whether anyone is home. That block is a workflow. It should not depend on a model's mood. The note that comes back is messy. One unit had a dishwasher replaced recently. Another has a tenant who shuts the water off and tells nobody. Another unit is vacant. The next step depends on what the scheduler just heard. Which door gets the first visit. Whether the truck should carry a camera. Whether a vacant unit with a smell is a bigger opening than a clogged trap.
 
-An agent, in the sense of that 2024 essay, could read the note, look at the afternoon routes and the parts list, and propose an order. Vacant unit first, camera on the truck, Luis because he did the camera work last week and Priya is already on a job across town. The proposal is the agent's work. The text to the manager is not, until Dana accepts the wording and the time. If the model cannot see the route, it should say so and stop, rather than invent an arrival window. The card by the phone says no time goes out unless a person on the desk has tapped yes.
+An agent, in the sense of that 2024 essay, could read the note, look at the afternoon routes and the parts list, and propose an order. Vacant unit first, camera on the truck, Luis because he did the camera work last week and Priya is already on a job across town. The proposal is the agent's work. The text to the manager is not, until the scheduler accepts the wording and the time. If the model cannot see the route, it should say so and stop, rather than invent an arrival window. The card by the phone says no time goes out unless a person on the desk has tapped yes.
 
-A workflow ends at the form, which is the right ending for intake and the wrong tool for this fork. You cannot pre-write every branch of a messy multi-unit call. A single prompt would be Dana pasting the note into a chat box and asking for a polite reply. Fine on a quiet afternoon. It does not watch the route, and it does not send anything.
+A workflow ends at the form, which is the right ending for intake and the wrong tool for this fork. You cannot pre-write every branch of a messy multi-unit call. A single prompt would be the scheduler pasting the note into a chat box and asking for a polite reply. Fine on a quiet afternoon. It does not watch the route, and it does not send anything.
 
-Chris does not need a lecture on models. He needs to know which decisions the desk may delegate. Dana needs propose and send as different buttons. Luis needs the camera on the truck if the camera was the point. If those people cannot point at the control that stops the system, you do not have an agent yet. You have a chatbot wearing a job title, and the customer will hear its mistakes in your voice.
+The owner does not need a lecture on models. He needs to know which decisions the desk may delegate. The scheduler needs propose and send as different buttons. Luis needs the camera on the truck if the camera was the point. If those people cannot point at the control that stops the system, you do not have an agent yet. You have a chatbot wearing a job title, and the customer will hear its mistakes in your voice.
 
 ## How we'd run it
 
-We would not start by picking software. We would sit with Dana and write what she already does when the phone is mean.
+We would not start by picking software. We would sit with the scheduler and write what she already does when the phone is mean.
 
 First, name the job in one sentence a new hire could repeat. "Turn a call into a visit the tech can finish, without promising a time the route cannot keep." If that sentence becomes the whole menu, you have not named the job.
 
-Second, write the steps that do not change. Name, number, address, access, what is happening, who is rolling. Use Dana's order, not a template's. This workflow is the floor, even if an agent comes later.
+Second, write the steps that do not change. Name, number, address, access, what is happening, who is rolling. Use the scheduler's order, not a template's. This workflow is the floor, even if an agent comes later.
 
-Third, mark the forks. A fork is any moment where the next step depends on what the last step found. Which unit, camera or not, emergency or the afternoon route. If you can write it as a rule, it is still a workflow. "Water through the ceiling, page Chris" does not need a model.
+Third, mark the forks. A fork is any moment where the next step depends on what the last step found. Which unit, camera or not, emergency or the afternoon route. If you can write it as a rule, it is still a workflow. "Water through the ceiling, page the owner" does not need a model.
 
 Fourth, choose what the model may touch. We allow a draft, a suggested tech, and a suggested part. We forbid sending, pricing, and any sentence about who pays for damage. If the bound says "use your judgment," you have left a hole, and the model will fill it with something polite.
 
-Fifth, name the stop and the person. Dana can stop it. Chris can stop it. A tech can kick back a job that arrived without the part. The system stops when a fact is missing, when the time sits outside the route, or when the caller is angry. Stopping is a success.
+Fifth, name the stop and the person. The scheduler can stop it. The owner can stop it. A tech can kick back a job that arrived without the part. The system stops when a fact is missing, when the time sits outside the route, or when the caller is angry. Stopping is a success.
 
-Sixth, replay recent jobs with the names covered. Dana compares the proposal with what the desk actually did. Hunt the confident wrong time. Fix the bounds before a live customer sees a message. Only then draft against today's calls, with send still in human hands. We would repeat that replay until the refusals look right, rather than turn on an automatic text because a trial is ending.
+Sixth, replay recent jobs with the names covered. The scheduler compares the proposal with what the desk actually did. Hunt the confident wrong time. Fix the bounds before a live customer sees a message. Only then draft against today's calls, with send still in human hands. We would repeat that replay until the refusals look right, rather than turn on an automatic text because a trial is ending.
 
 ## Common mistakes
 
 The first mistake is a rename. The chat box gets called an agent because the invoice said so. If a person still picks every next step, you have one prompt. That can be the right tool. The rename makes the staff expect judgment the box does not have.
 
-The second mistake is skipping the written path because writing feels slow. Every exception becomes the model's problem, including ones a card by the phone could handle. The staff stops trusting the book. Dana goes back to memory, plus a fee.
+The second mistake is skipping the written path because writing feels slow. Every exception becomes the model's problem, including ones a card by the phone could handle. The staff stops trusting the book. The scheduler goes back to memory, plus a fee.
 
-The third mistake is a missing stop. The model may text, and nobody is named to halt it on a bad afternoon. The bad promise is usually small, a time the tech cannot make, and the customer hears it as the company.
+The third mistake is a missing stop. The model may text, and nobody is named to halt it on a bad afternoon. The bad promise is usually small, a time the tech cannot make, and the customer hears it as the business.
 
 The fourth mistake is treating the survey as a target. 23% scaling an agentic system somewhere in the enterprise is not a quota. 10% inside any one function is not a score you are failing. Chasing those shares buys a tool nobody can supervise.
 
-The fifth mistake is letting the system near money. A price, a waived fee, a line about whether the landlord pays. A draft Chris edits is a different product from a message that already left.
+The fifth mistake is letting the system near money. A price, a waived fee, a line about whether the landlord pays. A draft the owner edits is a different product from a message that already left.
 
-The sixth mistake is a bound written as a mood. "Be helpful" is not a bound. "Do not offer a same-day visit unless Chris has marked the job urgent" is a bound. If Dana cannot enforce the sentence, the model will be helpful in the wrong direction.
+The sixth mistake is a bound written as a mood. "Be helpful" is not a bound. "Do not offer a same-day visit unless the owner has marked the job urgent" is a bound. If the scheduler cannot enforce the sentence, the model will be helpful in the wrong direction.
 
 ## What we'd do
 
-We would write Dana's path before we paid for anything that chooses its own tools. We would keep one prompt for the messy replies, a workflow for intake, and an agent only on the fork where the next visit depends on what the note contains. We would leave send on a human button longer than a vendor likes. Our opinion is plain. An agent is worth the trouble when the branch is real and a named person owns the stop. It is a poor purchase when the process is still a story the owner tells at the counter.
+We would write the scheduler's path before we paid for anything that chooses its own tools. We would keep one prompt for the messy replies, a workflow for intake, and an agent only on the fork where the next visit depends on what the note contains. We would leave send on a human button longer than a vendor likes. Our opinion is plain. An agent is worth the trouble when the branch is real and a named person owns the stop. It is a poor purchase when the process is still a story the owner tells at the counter.
 
 The 2024 essay says to earn the complexity. The 2025 survey says that even large firms, inside any one function, are mostly not scaling agents. We believe both. Then we go sit with the person who answers the phone, because that person already knows where the path breaks, and the software does not.
 
@@ -1675,7 +1688,7 @@ The 2024 essay says to earn the complexity. The 2025 survey says that even large
 
 llms.txt is a proposed text file at the root of a site that lists the pages you most want a model to read. It is a map. It is not a citation, and it is not a ranking.
 
-Jeremy Howard published the proposal in September 2024, and the page was updated in August 2026.[^llmstxt] The idea is a short list of the pages you want a model to read, written so a person can audit it in one sitting. This site already publishes [its own file](/llms.txt). That is a fact about this site, not a traffic statistic. We publish it because we like a clean list of what we stand behind. We do not publish it because a counter moved.
+Jeremy Howard published the proposal in September 2024, and the page was updated in August 2026.[^llmstxt] The idea is a short list of the pages you want a model to read, written so a person can audit it in one sitting. This site already publishes [its own file](/llms.txt). That is a fact about this site, not a traffic statistic. We publish it because we like a clean list of what we stand behind.
 
 Google's guide says Google does not use llms.txt for generative features in search.[^google] Keep that next to the proposal, or the proposal becomes a rumor. A file Google's generative features do not read cannot be the reason you show up in those features. The page still has to be indexed. The page still has to deserve the quote.
 
@@ -1699,39 +1712,39 @@ The order of that advice is the order we use in the room. Pages first. Index fir
 
 ## A worked example
 
-Walk an independent bookshop. This is an example, not a study, and it has no score. Ade owns the shop. Cole runs the floor and the website on the same tired afternoons. People ask, online and at the desk, for a book for a grieving friend, for something a nine-year-old will actually finish, and whether tonight's reading is still happening. The site has a homepage, an events page that is sometimes stale, and a staff-picks page that is the best thing they have written all year.
+Walk an independent bookshop. This is an example, not a study, and it has no score. A manager runs the floor and the website on the same tired afternoons. People ask, online and at the desk, for a book for a grieving friend, for something a nine-year-old will actually finish, and whether tonight's reading is still happening. The site has a homepage, an events page that is sometimes stale, and a staff-picks page that is the best thing they have written all year.
 
-Someone on a forum told Cole that models will not understand the shop without llms.txt. He generated a long file that linked every tag, every old event, and a draft page about a book club that never started. It looked thorough. It was a bad map. A model that actually fetched it would have been pointed at stale nights and a club that does not exist. A model that never fetched it, which is the common case in the Ahrefs count, would have changed nothing, and Cole would have spent the evening on the wrong artifact.
+Someone on a forum told the manager that models will not understand the shop without llms.txt. He generated a long file that linked every tag, every old event, and a draft page about a book club that never started. It looked thorough. It was a bad map. A model that actually fetched it would have been pointed at stale nights and a club that does not exist. A model that never fetched it, which is the common case in the Ahrefs count, would have changed nothing, and the manager would have spent the evening on the wrong artifact.
 
-What we would want in the file, if they publish one, is short. The staff-picks page. The page that explains how to order a book they do not have on the shelf. The events page, only if Cole updates it when a reading is canceled. Not the tag archives. Not the draft. The proposal, since September 2024 and as updated in August 2026, is a list of the pages you want read. "Want" is the verb. It is not "everything the CMS can emit."
+What we would want in the file, if they publish one, is short. The staff-picks page. The page that explains how to order a book they do not have on the shelf. The events page, only if the manager updates it when a reading is canceled. Not the tag archives. Not the draft. The proposal, since September 2024 and as updated in August 2026, is a list of the pages you want read. "Want" is the verb. It is not "everything the CMS can emit."
 
-Roles make the file honest. Ade decides which pages represent the shop. If she would not hand that URL to a regular, it does not go in the list. Cole keeps the events page true, because a file that points at a lie is worse than no file. Whoever fetches or fails to fetch is not their audience. The person who needs a book this afternoon is. The staff-picks page has to stand alone if no model ever requests the map. That is the lesson in the request counts. 97% of the valid files in the study got zero requests in May 2026. A shop that only improved the file, and left the picks page mushy, improved the thing almost nobody asked for.
+Roles make the file honest. The owner decides which pages represent the shop. If she would not hand that URL to a regular, it does not go in the list. The manager keeps the events page true, because a file that points at a lie is worse than no file. Whoever fetches or fails to fetch is not their audience. The person who needs a book this afternoon is. The staff-picks page has to stand alone if no model ever requests the map. That is the lesson in the request counts. 97% of the valid files in the study got zero requests in May 2026. A shop that only improved the file, and left the picks page mushy, improved the thing almost nobody asked for.
 
-Google sits to the side of this scene on purpose. The guide says Google does not use llms.txt for generative features in search. Ade can publish a beautiful file and still be absent from those features if the picks page is thin, blocked, or impossible to snippet. The answer-engine work is the page. The file is optional housekeeping. We would tell Cole that directly, before he buys a plugin that regenerates the list every night from every URL it can see.
+Google sits to the side of this scene on purpose. The guide says Google does not use llms.txt for generative features in search. The owner can publish a beautiful file and still be absent from those features if the picks page is thin, blocked, or impossible to snippet. The answer-engine work is the page. The file is optional housekeeping. We would tell the manager that directly, before he buys a plugin that regenerates the list every night from every URL it can see.
 
-And the request mix matters when someone waves a log at you. 96% of the requests that did arrive, in that June 2026 study, were bots. 19.5% came from named AI tools. 12% came from audit or scanner tools. A hit in a log is not a customer. It is often a machine checking whether the file exists. Treat a scanner hit as a scanner hit. Do not report it to Ade as demand.
+And the request mix matters when someone waves a log at you. 96% of the requests that did arrive, in that June 2026 study, were bots. 19.5% came from named AI tools. 12% came from audit or scanner tools. A hit in a log is not a customer. It is often a machine checking whether the file exists. Treat a scanner hit as a scanner hit. Do not report it to the owner as demand.
 
 ## How we'd run it
 
 We would decide whether the list is worth keeping, and we would write it by hand the first time.
 
-First, choose the pages you hope a stranger finds, with Ade in the room. Staff picks. Ordering a title you do not stock. Tonight's reading, if and only if it stays current. If you cannot name them without opening the CMS and scrolling, you are not ready to publish a map.
+First, choose the pages you hope a stranger finds, with the owner in the room. Staff picks. Ordering a title you do not stock. Tonight's reading, if and only if it stays current. If you cannot name them without opening the CMS and scrolling, you are not ready to publish a map.
 
-Second, make those pages good enough to cite with no file at all. Indexed. Clear opening lines. A sentence Cole would say at the desk. Google does not use the file for its generative features, so this step is the one that can affect that surface. The [answer-engine note](/blog/answer-engine-optimization) is the longer version of what "good enough" means. Do not skip it because a file feels more concrete.
+Second, make those pages good enough to cite with no file at all. Indexed. Clear opening lines. A sentence the manager would say at the desk. Google does not use the file for its generative features, so this step is the one that can affect that surface. The [answer-engine note](/blog/answer-engine-optimization) is the longer version of what "good enough" means. Do not skip it because a file feels more concrete.
 
-Third, write a short llms.txt that points only at those pages, with a line of plain description a person can check. Link the live URL. If the events page is stale, leave it off until Cole fixes it. A short true list beats a long generated one. This site's own file is that kind of choice. It is not evidence that files bring visits.
+Third, write a short llms.txt that points only at those pages, with a line of plain description a person can check. Link the live URL. If the events page is stale, leave it off until the manager fixes it. A short true list beats a long generated one. This site's own file is that kind of choice. It is not evidence that files bring visits.
 
 Fourth, put the file at the root and then forget the fantasy. Ahrefs looked at 137,210 domains with traffic in May 2026 and found that 28% had a file, about 38,000 valid ones. 97% of those saw zero requests that month. If yours is among the quiet majority, the shop does not get to feel broken. The pages are still the product.
 
 Fifth, if you do watch logs, separate machines from people. 96% of requests in the study were bots. Named AI tools were 19.5% of requests. Audit and scanner tools were 12%. A spike from a scanner is not a crowd of readers. Do not rewrite the shop around it.
 
-Sixth, revisit the list when the shop changes, not on a timer. A new picks page, a retired book club, a reading series that ended. Ade removes the dead link the same week. A file that points at last year's calendar is a confident wrong direction. The August 2026 update of the proposal did not change this duty. The list means what it says, or it should not be up.
+Sixth, revisit the list when the shop changes, not on a timer. A new picks page, a retired book club, a reading series that ended. The owner removes the dead link the same week. A file that points at last year's calendar is a confident wrong direction. The August 2026 update of the proposal did not change this duty. The list means what it says, or it should not be up.
 
 ## Common mistakes
 
 The first mistake is expecting Google to fetch it. The guide says Google does not use llms.txt for generative features in search. Publishing one and waiting for AI Overviews is a plan the guide already declined. Fix the page Google can index.
 
-The second mistake is a generated dump. Every tag, every attachment, every draft. The proposal is a curated list. A dump hides the staff-picks page inside noise, which is the opposite of pointing a model at your best work. It also rots, because nobody will curate a thousand automatic lines. We would rather Cole maintain a list he can read aloud.
+The second mistake is a generated dump. Every tag, every attachment, every draft. The proposal is a curated list. A dump hides the staff-picks page inside noise, which is the opposite of pointing a model at your best work. It also rots, because nobody will curate a thousand automatic lines. We would rather the manager maintain a list he can read aloud.
 
 The third mistake is treating the Ahrefs shares as a personal failure or a personal trophy. 28% of those 137,210 domains had a file. About 38,000 valid files. 97% with zero requests in May 2026. You are not behind because you lack one, and you are not ahead because you have one that nobody requested. The study describes a crawl of files. It does not describe your customers.
 
@@ -1743,9 +1756,9 @@ The sixth mistake is doing the file instead of the page, because the file is sma
 
 ## What we'd do
 
-We would publish a short file only after the pages are true, and we would not tell Ade it will bring her readers. Our opinion is that the proposal is a reasonable courtesy and a bad priority. September 2024 was when the idea was written down. August 2026 is when the page was updated. June 2026 is when a large measurement, 137,210 domains, found that 97% of valid files got zero requests and that 96% of the requests which did show up were bots. Courtesy is allowed to be quiet. Strategy is not allowed to ignore a quiet result.
+We would publish a short file only after the pages are true, and we would not tell the owner it will bring her readers. Our opinion is that the proposal is a reasonable courtesy and a bad priority. September 2024 was when the idea was written down. August 2026 is when the page was updated. June 2026 is when a large measurement, 137,210 domains, found that 97% of valid files got zero requests and that 96% of the requests which did show up were bots. Courtesy is allowed to be quiet. Strategy is not allowed to ignore a quiet result.
 
-Google has said it does not use the file. So we would spend Cole's evening on the staff-picks page, the ordering explanation, and an events page that survives a cancellation. Then we would add a list of those URLs if Ade likes being able to see, in one place, what the shop claims. We would keep our own file for that same reason, and we would never wave it as proof of traffic. A file is a pointer. The page is the thing a person came for. If you only have time for one, choose the page, and let the pointer wait until the page would survive being read without it.
+Google has said it does not use the file. So we would spend the manager's evening on the staff-picks page, the ordering explanation, and an events page that survives a cancellation. Then we would add a list of those URLs if the owner likes being able to see, in one place, what the shop claims. We would keep our own file for that same reason, and we would never wave it as proof of traffic. A file is a pointer. The page is the thing a person came for. If you only have time for one, choose the page, and let the pointer wait until the page would survive being read without it.
 
 ## Why AI Pilots Stall After the Demo
 
@@ -1781,7 +1794,7 @@ Monday looked nothing like the paste. The customer had changed the fixture in a 
 
 The data was poor in a specific way. Not "messy" as a vibe. The source of truth was split, and the pilot pretended it was one record. Risk control was a shrug. Nobody was named to stop a quote that sounded sure and was wrong. Cost started as a small subscription and grew when the seller offered a second workflow "while we are in there." Value had been described as saving the office lead's afternoon. Nobody had written what "saved" would look like on a Thursday when the phones were ugly.
 
-So the pilot stalled in the handoff, which is where stalls live. The demo had no handoff. It ended on the summary. The real work ended when a human had to bet the company's name on that summary. The office lead stopped betting. The tab stayed open. The owner kept paying because canceling felt like admitting the demo had fooled her. It had not fooled her. It had shown her a different company, one with clean threads and a price book the software could read.
+So the pilot stalled in the handoff, which is where stalls live. The demo had no handoff. It ended on the summary. The real work ended when a human had to bet the business's name on that summary. The office lead stopped betting. The tab stayed open. The owner kept paying because canceling felt like admitting the demo had fooled her. It had not fooled her. It had shown her a different company, one with clean threads and a price book the software could read.
 
 ## How we'd run it
 
@@ -1805,7 +1818,7 @@ Blaming the model for a split source of truth wastes the next month. The summary
 
 Letting the seller define value is how the cost creeps. "Time back" is not a value until the office lead agrees which hour comes back and what she will do with it. If the answer is "she will finally eat lunch," believe her, and then check whether the note actually returns that lunch. If the note creates a new review chore that eats the same lunch, the value was a slogan.
 
-Skipping risk controls because the job "is just admin" is how a bad quote leaves the building. Admin is the company's voice. A wrong intake note becomes a wrong visit, a wrong part, and a customer who thinks you do not listen. The control is a named person. It is not a checkbox in the software called "human in the loop" that nobody's loop includes.
+Skipping risk controls because the job "is just admin" is how a bad quote leaves the building. Admin is your voice to customers. A wrong intake note becomes a wrong visit, a wrong part, and a customer who thinks you do not listen. The control is a named person. It is not a checkbox in the software called "human in the loop" that nobody's loop includes.
 
 Funding a fresh demo to avoid the stop conversation is the expensive mistake. Gartner's June 2025 forecast, that over 40% of agentic AI projects will be canceled by the end of 2027, is what this habit looks like in bulk. You can be one of the projects that cancels with a reason, or one of the projects that cancels later after a longer invoice. We prefer the shorter invoice.
 

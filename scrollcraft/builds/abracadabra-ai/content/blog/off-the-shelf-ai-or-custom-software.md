@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI consulting and implementation"
 cluster: "consulting"
 primaryQuery: "off the shelf ai or custom software"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "If a product already does the job, the check will not tell you to build it."
 images:
   - src: /blog/media/off-the-shelf-ai-or-custom-software/01.webp

@@ -28,7 +28,7 @@
       "min": 40,
       "max": 59,
       "label": "Forming",
-      "sentence": "Pieces of the work are written down. A named owner and one system of record are what turn that into something a team can run."
+      "sentence": "Some of your work is written down. Name an owner and keep one source of truth, and you're ready to build."
     },
     {
       "id": "ready",
@@ -162,7 +162,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "data",
-      "prompt": "Customer, product, and process records \u2014 where are they?",
+      "prompt": "Where do your customer, product and process records live?",
       "options": [
         {
           "value": "0",
@@ -220,7 +220,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "process",
-      "prompt": "Same job twice \u2014 same result?",
+      "prompt": "If two people do the same job, do they get the same result?",
       "options": [
         {
           "value": "0",
@@ -268,7 +268,7 @@
         },
         {
           "value": "3",
-          "label": "A named person \u2014 it's already part of their role",
+          "label": "A named person — it's already part of their role",
           "score": 3
         }
       ]
@@ -278,7 +278,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "people",
-      "prompt": "Has the team used AI tools?",
+      "prompt": "Have you or your staff used AI tools?",
       "options": [
         {
           "value": "0",
@@ -401,7 +401,7 @@
         },
         {
           "value": "1",
-          "label": "Once \u2014 didn't like it",
+          "label": "Once — didn't like it",
           "score": 1
         },
         {
@@ -485,16 +485,16 @@
       "prompt": "Team size",
       "options": [
         {
-          "value": "1\u201310",
-          "label": "1\u201310"
+          "value": "1–10",
+          "label": "1–10"
         },
         {
-          "value": "11\u201350",
-          "label": "11\u201350"
+          "value": "11–50",
+          "label": "11–50"
         },
         {
-          "value": "51\u2013200",
-          "label": "51\u2013200"
+          "value": "51–200",
+          "label": "51–200"
         },
         {
           "value": "200+",
@@ -531,7 +531,7 @@
       "section": "readiness",
       "severity": "critical",
       "title": "Start with where the knowledge lives",
-      "body": "Where the knowledge lives is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "body": "Right now the know-how lives in people's heads. Pick one job this week and write down where its answers come from and who keeps them current.",
       "guideSlug": "fix/ready-data-low"
     },
     {
@@ -539,23 +539,23 @@
       "section": "readiness",
       "severity": "warn",
       "title": "Tighten where the knowledge lives",
-      "body": "Where the knowledge lives is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "body": "Some of what you know is written down. Name the one source people should trust for a single job, and retire the copies that disagree with it.",
       "guideSlug": "fix/ready-data-mid"
     },
     {
       "code": "READY_PROCESS_LOW",
       "section": "readiness",
       "severity": "critical",
-      "title": "Start with whether the work is written down",
-      "body": "Whether the work is written down is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "title": "Start by writing the work down",
+      "body": "The steps for your most repeated job aren't written yet. Write them in the order they happen, including what you do when something goes wrong.",
       "guideSlug": "fix/ready-process-low"
     },
     {
       "code": "READY_PROCESS_MID",
       "section": "readiness",
       "severity": "warn",
-      "title": "Tighten whether the work is written down",
-      "body": "Whether the work is written down is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "title": "Tighten how the work is written down",
+      "body": "The happy path is written, but the exceptions aren't. Add the two exceptions that come up most often to the same page.",
       "guideSlug": "fix/ready-process-mid"
     },
     {
@@ -563,15 +563,15 @@
       "section": "readiness",
       "severity": "critical",
       "title": "Start with who would own a new system",
-      "body": "Who would own a new system is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "body": "Nobody has time to own a new system yet. Pick one person to own it day to day, and put it in their role before you buy anything.",
       "guideSlug": "fix/ready-people-low"
     },
     {
       "code": "READY_PEOPLE_MID",
       "section": "readiness",
       "severity": "warn",
-      "title": "Tighten who would own a new system",
-      "body": "Who would own a new system is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "title": "Tighten who owns the new system",
+      "body": "You have someone in mind. Make it official: give them the time, and tell everyone else who to ask.",
       "guideSlug": "fix/ready-people-mid"
     },
     {
@@ -579,7 +579,7 @@
       "section": "readiness",
       "severity": "critical",
       "title": "Start with who decides and how fast",
-      "body": "Who decides and how fast is the part that would stall a new system. Write down one real example this week: the source, the owner, and the step that happens next.",
+      "body": "Decisions take months. Name who can say yes to a small first step, and agree a date to decide by.",
       "guideSlug": "fix/ready-decision-low"
     },
     {
@@ -587,7 +587,7 @@
       "section": "readiness",
       "severity": "warn",
       "title": "Tighten who decides and how fast",
-      "body": "Who decides and how fast is partly in place. Name the gap in one sentence and pick the person who closes it before you add a tool.",
+      "body": "Someone can decide, but it takes weeks. Agree in advance what a good first result looks like, so the yes comes quickly.",
       "guideSlug": "fix/ready-decision-mid"
     },
     {
@@ -642,7 +642,7 @@
       "code": "NO_JSON_LD_HOME",
       "section": "visibility",
       "severity": "warn",
-      "title": "No json ld home",
+      "title": "Your home page doesn't say who you are",
       "body": "The home page has no structured data, so answer engines have to guess what the business is. Fix that page first, then rerun the scan.",
       "guideSlug": "fix/no-json-ld-home"
     },
@@ -650,7 +650,7 @@
       "code": "NO_ORG_SCHEMA",
       "section": "visibility",
       "severity": "warn",
-      "title": "No org schema",
+      "title": "AI tools can't confirm your business details",
       "body": "There is no Organization or LocalBusiness markup naming who you are, where you are, and how to reach you. Fix that page first, then rerun the scan.",
       "guideSlug": "fix/no-org-schema"
     },
@@ -658,7 +658,7 @@
       "code": "MISSING_FAQ_SCHEMA",
       "section": "visibility",
       "severity": "warn",
-      "title": "Missing faq schema",
+      "title": "Your answers aren't marked up for AI",
       "body": "The questions buyers ask are not marked up as answers a machine can quote. Fix that page first, then rerun the scan.",
       "guideSlug": "fix/missing-faq-schema"
     },
@@ -666,79 +666,79 @@
       "code": "MISSING_LLMS_TXT",
       "section": "visibility",
       "severity": "warn",
-      "title": "Missing llms txt",
-      "body": "There is no llms.txt file telling an answer engine which pages matter. Fix that page first, then rerun the scan.",
+      "title": "No guide file for AI tools",
+      "body": "There is no llms.txt file telling an answer engine which pages matter. Fix this, then run the scan again.",
       "guideSlug": "fix/missing-llms-txt"
     },
     {
       "code": "EMPTY_LLMS_TXT",
       "section": "visibility",
       "severity": "warn",
-      "title": "Empty llms txt",
-      "body": "llms.txt exists but says nothing useful. Name the pages a buyer should read. Fix that page first, then rerun the scan.",
+      "title": "Your guide file for AI tools is empty",
+      "body": "llms.txt exists but says nothing useful. Name the pages a buyer should read. Fix this, then run the scan again.",
       "guideSlug": "fix/empty-llms-txt"
     },
     {
       "code": "MISSING_LLMS_FULL",
       "section": "visibility",
       "severity": "warn",
-      "title": "Missing llms full",
-      "body": "A short llms.txt is present. A fuller llms-full.txt gives answer engines the longer context. Fix that page first, then rerun the scan.",
+      "title": "Add a longer guide file for AI tools",
+      "body": "A short llms.txt is present. A fuller llms-full.txt gives answer engines the longer context. Fix this, then run the scan again.",
       "guideSlug": "fix/missing-llms-full"
     },
     {
       "code": "SITEMAP_MISSING",
       "section": "visibility",
       "severity": "warn",
-      "title": "Sitemap missing",
-      "body": "No sitemap was found, so crawlers have to discover pages by links alone. Fix that page first, then rerun the scan.",
+      "title": "No sitemap found",
+      "body": "No sitemap was found, so crawlers have to discover pages by links alone. Fix this, then run the scan again.",
       "guideSlug": "fix/sitemap-missing"
     },
     {
       "code": "SITEMAP_UNPARSEABLE",
       "section": "visibility",
       "severity": "warn",
-      "title": "Sitemap unparseable",
-      "body": "A sitemap was found but could not be read. Publish a valid XML sitemap. Fix that page first, then rerun the scan.",
+      "title": "Your sitemap can't be read",
+      "body": "A sitemap was found but could not be read. Publish a valid XML sitemap. Fix this, then run the scan again.",
       "guideSlug": "fix/sitemap-unparseable"
     },
     {
       "code": "ROBOTS_BLOCKS_GPTBOT",
       "section": "visibility",
       "severity": "warn",
-      "title": "Robots blocks gptbot",
-      "body": "robots.txt blocks GPTBot, so that answer engine is told to stay out. Fix that page first, then rerun the scan.",
+      "title": "ChatGPT is blocked from your site",
+      "body": "robots.txt blocks GPTBot, so that answer engine is told to stay out. Fix this, then run the scan again.",
       "guideSlug": "fix/robots-blocks-gptbot"
     },
     {
       "code": "ROBOTS_BLOCKS_AI_BOTS",
       "section": "visibility",
       "severity": "warn",
-      "title": "Robots blocks ai bots",
-      "body": "robots.txt blocks one or more AI crawlers. Decide which ones you want reading the site. Fix that page first, then rerun the scan.",
+      "title": "Some AI tools are blocked from your site",
+      "body": "robots.txt blocks one or more AI crawlers. Decide which ones you want reading the site. Fix this, then run the scan again.",
       "guideSlug": "fix/robots-blocks-ai-bots"
     },
     {
       "code": "LOW_JSON_LD_COVERAGE",
       "section": "visibility",
       "severity": "warn",
-      "title": "Low json ld coverage",
-      "body": "Most pages have no structured data, so the site looks thin to a machine. Fix that page first, then rerun the scan.",
+      "title": "Most pages don't describe themselves to AI",
+      "body": "Most pages have no structured data, so the site looks thin to a machine. Fix this, then run the scan again.",
       "guideSlug": "fix/low-json-ld-coverage"
     },
     {
       "code": "PAGES_FETCH_FAILED",
       "section": "visibility",
       "severity": "warn",
-      "title": "Pages fetch failed",
-      "body": "Some important pages could not be fetched. If a buyer cannot load them, neither can a crawler. Fix that page first, then rerun the scan.",
+      "title": "Some pages wouldn't load",
+      "body": "Some important pages could not be fetched. If a buyer cannot load them, neither can a crawler. Fix this, then run the scan again.",
       "guideSlug": "fix/pages-fetch-failed"
     },
     {
       "code": "MISSING_BREADCRUMB",
       "section": "visibility",
       "severity": "warn",
-      "title": "Missing breadcrumb",
+      "title": "Pages don't show where they sit in the site",
       "body": "Pages do not say where they sit in the site, which makes the structure harder to quote. Fix that page first, then rerun the scan.",
       "guideSlug": "fix/missing-breadcrumb"
     },
@@ -746,7 +746,7 @@
       "code": "MISSING_HOWTO_SCHEMA",
       "section": "visibility",
       "severity": "warn",
-      "title": "Missing howto schema",
+      "title": "Step-by-step pages aren't marked up",
       "body": "Step-by-step pages are not marked as HowTo, so the steps are harder to cite. Fix that page first, then rerun the scan.",
       "guideSlug": "fix/missing-howto-schema"
     },
@@ -754,7 +754,7 @@
       "code": "MISSING_PRODUCT_SCHEMA",
       "section": "visibility",
       "severity": "warn",
-      "title": "Missing product schema",
+      "title": "Product pages are missing product details",
       "body": "Product pages do not carry Product markup for price, availability, and name. Fix that page first, then rerun the scan.",
       "guideSlug": "fix/missing-product-schema"
     }
@@ -769,7 +769,7 @@
     {
       "row": "experts_queue",
       "said": "Answers wait on two or three people.",
-      "build": "A correct answer from knowledge you own, on text or voice, without growing the team in proportion to the questions.",
+      "build": "A correct answer from knowledge you own, on text or voice, without hiring more people as questions grow.",
       "specimens": []
     },
     {
@@ -792,7 +792,7 @@
     {
       "row": "ai_visibility",
       "said": "You do not know if AI answer engines can find you.",
-      "build": "A scan of how readable the site is to answer engines, and the fixes that move the score. pirx.ca went from near-zero to 201K search impressions, 1.1K clicks, and 21.8K impressions on Google's Generative AI surface in about twelve weeks.",
+      "build": "A scan of how readable the site is to answer engines, and the fixes that move the score. pirx.ca went from near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026, recorded 375K search impressions and 1.85K clicks.",
       "specimens": [
         {
           "name": "Schema",
@@ -813,34 +813,25 @@
     {
       "row": "new_channel",
       "said": "A new channel feels like it needs a department.",
-      "build": "Creative, language, and the claims you allow, produced from a system that already knows them.",
+      "build": "On-brand content made from what you've already approved.",
       "specimens": []
     },
     {
       "row": "sale_visit",
       "said": "The sale still needs a visit before anyone says yes.",
       "build": "Fit, price, booking, and trust on the screen, before anyone gets in a car.",
-      "specimens": [
-        {
-          "name": "Canadian Discount Appliances",
-          "url": "https://cdastore.vercel.app"
-        },
-        {
-          "name": "Showdesk",
-          "url": "https://www.showdesk-app.com"
-        }
-      ]
+      "specimens": []
     },
     {
       "row": "vendor_bill",
       "said": "The vendor bill grows as you grow.",
-      "build": "Answers, agreements, and the customer record on your side of the wall.",
+      "build": "Your answers and customer records, kept under your control.",
       "specimens": []
     },
     {
       "row": "one_person",
       "said": "One person knows how the important thing works.",
-      "build": "The knowledge becomes something a customer can finish and a team can teach.",
+      "build": "The knowledge becomes something a customer can finish and your staff can teach.",
       "specimens": [
         {
           "name": "LLM Leverage",
@@ -857,7 +848,7 @@
     {
       "row": "claims_drift",
       "said": "Claims drift the moment someone new writes.",
-      "build": "Writing fenced by the claims, the voice, and the product rules you already approved.",
+      "build": "Writing that always stays on-message.",
       "specimens": []
     }
   ],
@@ -868,7 +859,7 @@
     "gateHeadline": "Your check is scored.",
     "gatePrompt": "Where should we send it?",
     "consent": "We'll send this report and, if you book, the notes from your session. Nothing else.",
-    "bookingTitle": "Book a working session \u2014 thirty minutes, bring the workflow, we leave with a brief.",
+    "bookingTitle": "Book a thirty-minute working session. Bring one workflow, and leave with a plan.",
     "mailtoSubject": "Working session"
   }
 }

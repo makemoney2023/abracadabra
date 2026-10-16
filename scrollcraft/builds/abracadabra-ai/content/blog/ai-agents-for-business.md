@@ -1,12 +1,12 @@
 ---
 title: "AI Agents for Business: When to Use One"
-description: "Eight jobs can sit with an agent only when a person still checks the output. Anthropic says to start simpler. Gartner expects many agent projects to be canceled."
+description: "When an AI agent is worth it, when a simple workflow is the better buy, and why a person should still check the output."
 datePublished: "2026-10-14"
 dateModified: "2026-10-14"
 pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "ai agents for business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "An agent without an owner is a risk. See whether your team can check the work."
 images:
   - src: /blog/media/ai-agents-for-business/01.webp
@@ -104,7 +104,7 @@ Starting from the model instead of the branch is how pilots get expensive and va
 
 Ignoring the cancellation forecast because it sounds like someone else's enterprise problem is how small firms get a smaller version of the same ending. Over 40% is not a large-company-only weather report. Cost, unclear value, and inadequate risk controls fit a clinic and a trades desk perfectly well. Your version won't make the newspaper. It will make a monthly bill and a queue of drafts nobody trusts. That's an adequate disaster. You don't need a bigger one to take the warning.
 
-Staffing the check with a committee is the polite version of having no checker. "The team will review" means the draft sits until it doesn't. Write one name. Give that person the authority to say no without a meeting. If the job is important enough for an agent, it's important enough for a name. If it isn't important enough for a name, it isn't important enough for an agent.
+Staffing the check with a committee is the polite version of having no checker. "Someone will review" means the draft sits until it doesn't. Write one name. Give that person the authority to say no without a meeting. If the job is important enough for an agent, it's important enough for a name. If it isn't important enough for a name, it isn't important enough for an agent.
 
 ## What we'd do
 

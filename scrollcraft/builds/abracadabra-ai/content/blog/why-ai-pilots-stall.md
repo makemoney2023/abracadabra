@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI consulting and implementation"
 cluster: "implementation"
 primaryQuery: "why ai pilots stall"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "A stalled pilot is a decision. Run the check before you fund another demo."
 images:
   - src: /blog/media/why-ai-pilots-stall/01.webp
@@ -80,7 +80,7 @@ Monday looked nothing like the paste. The customer had changed the fixture in a 
 
 The data was poor in a specific way. Not "messy" as a vibe. The source of truth was split, and the pilot pretended it was one record. Risk control was a shrug. Nobody was named to stop a quote that sounded sure and was wrong. Cost started as a small subscription and grew when the seller offered a second workflow "while we are in there." Value had been described as saving the office lead's afternoon. Nobody had written what "saved" would look like on a Thursday when the phones were ugly.
 
-So the pilot stalled in the handoff, which is where stalls live. The demo had no handoff. It ended on the summary. The real work ended when a human had to bet the company's name on that summary. The office lead stopped betting. The tab stayed open. The owner kept paying because canceling felt like admitting the demo had fooled her. It had not fooled her. It had shown her a different company, one with clean threads and a price book the software could read.
+So the pilot stalled in the handoff, which is where stalls live. The demo had no handoff. It ended on the summary. The real work ended when a human had to bet the business's name on that summary. The office lead stopped betting. The tab stayed open. The owner kept paying because canceling felt like admitting the demo had fooled her. It had not fooled her. It had shown her a different company, one with clean threads and a price book the software could read.
 
 ## How we'd run it
 
@@ -104,7 +104,7 @@ Blaming the model for a split source of truth wastes the next month. The summary
 
 Letting the seller define value is how the cost creeps. "Time back" is not a value until the office lead agrees which hour comes back and what she will do with it. If the answer is "she will finally eat lunch," believe her, and then check whether the note actually returns that lunch. If the note creates a new review chore that eats the same lunch, the value was a slogan.
 
-Skipping risk controls because the job "is just admin" is how a bad quote leaves the building. Admin is the company's voice. A wrong intake note becomes a wrong visit, a wrong part, and a customer who thinks you do not listen. The control is a named person. It is not a checkbox in the software called "human in the loop" that nobody's loop includes.
+Skipping risk controls because the job "is just admin" is how a bad quote leaves the building. Admin is your voice to customers. A wrong intake note becomes a wrong visit, a wrong part, and a customer who thinks you do not listen. The control is a named person. It is not a checkbox in the software called "human in the loop" that nobody's loop includes.
 
 Funding a fresh demo to avoid the stop conversation is the expensive mistake. Gartner's June 2025 forecast, that over 40% of agentic AI projects will be canceled by the end of 2027, is what this habit looks like in bulk. You can be one of the projects that cancels with a reason, or one of the projects that cancels later after a longer invoice. We prefer the shorter invoice.
 

@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI readiness"
 cluster: "framework"
 primaryQuery: "ai readiness framework"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "See how this business scores on data, process, people, and the decision."
 images:
   - src: /blog/media/ai-readiness-framework/01.webp
@@ -80,7 +80,7 @@ Score the four groups in words first. Then run the check if you want the band. W
 
 Here is how we assign the words, so they do not become moods. Data is absent when nobody can name the record. It is partial when a record exists and people still keep a side copy they trust more. It is in place when one current source is the one a new person would open, and a system could read it without a retype. It is running when that source is already feeding a job you do every week, and someone notices when a field is wrong.
 
-Process is absent when the steps live in one person's head. It is partial when the happy path is written and the exceptions are folklore. It is in place when the exceptions are on the same page and one person owns the handoff, including the day they are out. It is running when the team follows that page without a meeting to rediscover it.
+Process is absent when the steps live in one person's head. It is partial when the happy path is written and the exceptions are folklore. It is in place when the exceptions are on the same page and one person owns the handoff, including the day they are out. It is running when everyone follows that page without a meeting to rediscover it.
 
 People is absent when nobody may send output to a customer and nobody has noticed that someone already does. It is partial when use is informal and rejection rights are unclear. It is in place when a named person may use the tool, a named person may send, and a named person may stop it. It is running when that stop has actually been used, not just promised.
 
@@ -90,39 +90,39 @@ The band sits on top of those words. It does not replace them. Early, Forming, R
 
 ## A worked example
 
-Say we are in a small bakery after the morning rush. Luis owns it. Nia runs the front. Omar runs the kitchen and the special-order book. This is an example we walk through. We did not audit their flour, and we will not invent a before-and-after.
+Say we are in a small bakery after the morning rush. One person runs the front. Another runs the kitchen and the special-order book. This is an example we walk through. We did not audit their flour, and we will not invent a before-and-after.
 
-Luis wants a tool that answers catering emails and suggests a quote. The demo replied faster than Nia. The framework is the part where we ignore the speed and score the job.
+The owner wants a tool that answers catering emails and suggests a quote. The demo replied faster than the front lead. The framework is the part where we ignore the speed and score the job.
 
-Data. The special-order book is a paper notebook in the kitchen. Nia also keeps notes in the front-of-house inbox because customers write to the shop address. Luis has a spreadsheet of prices that is "mostly current." Asked which record a quote must match, they do not agree. Data is absent for the catering job, even though a notebook exists. A notebook nobody treats as final is not a source of truth. Scoring it "in place" because paper is tangible would be the wish Gartner is warning about, the one where the project later gets abandoned because the data was never ready. We say absent.
+Data. The special-order book is a paper notebook in the kitchen. The front lead also keeps notes in the front-of-house inbox because customers write to the shop address. The owner has a spreadsheet of prices that is "mostly current." Asked which record a quote must match, they do not agree. Data is absent for the catering job, even though a notebook exists. A notebook nobody treats as final is not a source of truth. Scoring it "in place" because paper is tangible would be the wish Gartner is warning about, the one where the project later gets abandoned because the data was never ready. We say absent.
 
-Process. The happy path is real: inquiry, Omar checks the book, Luis prices it, Nia replies. The exception is a customer who changes the headcount the day before, or a date Omar already half-promised on the phone. That exception is not written. Process is partial. The happy path is not the process. If we scored process as in place, the tool would invent the headcount change and sound sure about it.
+Process. The happy path is real: inquiry, the kitchen lead checks the book, the owner prices it, the front lead replies. The exception is a customer who changes the headcount the day before, or a date the kitchen lead already half-promised on the phone. That exception is not written. Process is partial. The happy path is not the process. If we scored process as in place, the tool would invent the headcount change and sound sure about it.
 
-People. Nia already drafts replies in a personal account when she is behind, then pastes them into the inbox. Luis did not know the drafts touched customer words before he saw them. Nobody is named as the person who may send, and nobody is named as the person who may block a send. People is partial, leaning toward absent on the permission that matters. We do not call partial "good enough" just because Nia is capable. Capable is not the same as authorized.
+People. The front lead already drafts replies in a personal account when she is behind, then pastes them into the inbox. The owner did not know the drafts touched customer words before he saw them. Nobody is named as the person who may send, and nobody is named as the person who may block a send. People is partial, leaning toward absent on the permission that matters. We do not call partial "good enough" just because the front lead is capable. Capable is not the same as authorized.
 
-Decision. Luis says success is more catering without more evenings. That is almost a sentence. He cannot say what would make him turn the tool off, except "if it felt wrong." Felt wrong is not a rule. Decision is partial. We will not average these four words into a cheerful Ready. Absent data plus partial everything else is an Early or Forming shape, and we would rather say that than borrow Cisco's pacesetter story for a bakery that is not in that sample.
+Decision. The owner says success is more catering without more evenings. That is almost a sentence. He cannot say what would make him turn the tool off, except "if it felt wrong." Felt wrong is not a rule. Decision is partial. We will not average these four words into a cheerful Ready. Absent data plus partial everything else is an Early or Forming shape, and we would rather say that than borrow Cisco's pacesetter story for a bakery that is not in that sample.
 
-What we leave Luis with is four words and one job. Not a percentage. Not a certificate. The next move is to make the notebook or the inbox the single record, write the headcount exception, and name who may send. Then a band means something.
+What we leave the owner with is four words and one job. Not a percentage. Not a certificate. The next move is to make the notebook or the inbox the single record, write the headcount exception, and name who may send. Then a band means something.
 
 ## How we'd run it
 
-First we pick the job the tool is supposed to touch. At the bakery it is the catering reply, from the first email to a price the kitchen can keep. If Luis says the framework should cover the whole shop, we narrow it. A framework about everything scores nothing.
+First we pick the job the tool is supposed to touch. At the bakery it is the catering reply, from the first email to a price the kitchen can keep. If the owner says the framework should cover the whole shop, we narrow it. A framework about everything scores nothing.
 
-Second we put Nia and Omar in the conversation, not only Luis. The owner describes the price list. The front describes the inbox. The kitchen describes the book. The framework is a pointing exercise. People who do not touch the job cannot point.
+Second we put the front lead and the kitchen lead in the conversation, not only the owner. The owner describes the price list. The front describes the inbox. The kitchen describes the book. The framework is a pointing exercise. People who do not touch the job cannot point.
 
 Third we assign absent, partial, in place, or running to data, then process, then people, then the decision. We say the word out loud and we wait for someone to object. An objection usually means we were about to flatter the group. We downgrade when we cannot point. We do not upgrade because the demo was impressive.
 
-Fourth we only then look at the check, if they want Early, Forming, Ready, or Running as a band from 0 to 100. The band has to be able to live with the four words. If data is absent, we should not be surprised by a low band, and we should not argue the band upward to protect Luis's mood.
+Fourth we only then look at the check, if they want Early, Forming, Ready, or Running as a band from 0 to 100. The band has to be able to live with the four words. If data is absent, we should not be surprised by a low band, and we should not argue the band upward to protect the owner's mood.
 
 Fifth we choose one group to move up a single step. Absent data becomes partial when one record is named, not when a tool arrives. Partial process becomes in place when the headcount exception is written on the same page as the happy path. We do not try to move all four groups in a week of panic. One step, one owner, then we look again.
 
-Sixth we keep Cisco and Gartner in their proper jobs. They explain why data and production matter in the research. They do not score the bakery. If someone in the room quotes a large-firm index as Luis's grade, we put the framework sheet back in the middle of the table.
+Sixth we keep Cisco and Gartner in their proper jobs. They explain why data and production matter in the research. They do not score the bakery. If someone in the room quotes a large-firm index as the owner's grade, we put the framework sheet back in the middle of the table.
 
 ## Common mistakes
 
 The mistake we see most is using the strong word because it sounds like progress. Calling a shared inbox "running" is the mistake named above, and it is common because the inbox is busy. Busy is not the same as a source a system can read. Busy is a pile with a pulse.
 
-Another mistake is scoring the owner's ambition instead of the job. Luis wants catering to grow. Ambition is not a group in the framework. The groups are data, process, people, and the decision. If those are weak, the ambition is a wish with a login attached.
+Another mistake is scoring the owner's ambition instead of the job. The owner wants catering to grow. Ambition is not a group in the framework. The groups are data, process, people, and the decision. If those are weak, the ambition is a wish with a login attached.
 
 A third mistake is importing a pacesetter comparison into a small firm. Cisco's 2025 index is senior leaders at organizations with more than 500 employees. Pacesetters near 13%, and 4 times more likely to move a pilot into production, describe that sample. The bakery is not that sample. The pattern we keep is the written process. The ranking we drop.
 
@@ -130,6 +130,6 @@ We also watch people skip the decision group because it feels soft. It is the gr
 
 ## What we'd do
 
-We would score in words and stay there until the words stop embarrassing us. Our opinion: the band is a convenience, and the four words are the work. A bakery that can say "data is absent, and Omar's notebook is what we will make true" is ahead of a bakery that can quote a readiness percentage it did not earn.
+We would score in words and stay there until the words stop embarrassing us. Our opinion: the band is a convenience, and the four words are the work. A bakery that can say "data is absent, and the kitchen lead's notebook is what we will make true" is ahead of a bakery that can quote a readiness percentage it did not earn.
 
-If we were Luis, we would not answer another catering email from a side draft until the inbox and the book agree which one wins, and we would write the headcount change on the same card as the quote steps. Then we would take the check. If the band says Early, we would believe it and keep going. The framework did its job when it stopped a fast yes.
+If we were the owner, we would not answer another catering email from a side draft until the inbox and the book agree which one wins, and we would write the headcount change on the same card as the quote steps. Then we would take the check. If the band says Early, we would believe it and keep going. The framework did its job when it stopped a fast yes.

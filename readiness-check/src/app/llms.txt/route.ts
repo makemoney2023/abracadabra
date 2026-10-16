@@ -10,7 +10,7 @@ export function GET() {
     "",
     `Landing: ${base}/check`,
     `Schema ops: https://hq.abra-ca-dabra.app/schema`,
-    "Contact: dev@pirx.ca",
+    "Contact: houdini@abra-ca-dabra.app",
     "",
     "## Guides",
     ...CHECK_GUIDES.map((guide) => `- [${guide.title}](${base}/check/guide/${guide.slug}): ${guide.answer}`),

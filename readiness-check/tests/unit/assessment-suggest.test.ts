@@ -96,7 +96,7 @@ describe("suggestions and offers", () => {
       config,
     });
     expect(three).toHaveLength(3);
-    expect(three[0].specimens.map((s) => s.name)).toContain("Showdesk");
+    expect(three[0].specimens.map((s) => s.name)).not.toContain("Showdesk");
   });
 });
 
@@ -137,7 +137,7 @@ describe("presentation and scan link", () => {
       calLink: null,
     });
     expect(open.results?.booking.calLink).toBeNull();
-    expect(open.results?.booking.mailto).toContain("mailto:dev@pirx.ca");
+    expect(open.results?.booking.mailto).toContain("mailto:houdini@abra-ca-dabra.app");
     expect(open.results?.booking.mailto).toContain("acme.example");
     expect(open.results?.booking.prefill.assessment).toBe("tok");
     expect(open.results?.offers[0].row).toBe("ai_visibility");

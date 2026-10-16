@@ -6,7 +6,7 @@ dateModified: "2026-10-14"
 pillar: "AI for small business"
 cluster: "use"
 primaryQuery: "how to use ai in your business"
-author: christopher-buzny
+author: abracadabra-studio
 cta: "Twelve examples are still a list. Run the check on the one job you would hand over."
 images:
   - src: /blog/media/how-to-use-ai-in-your-business/01.webp
@@ -24,7 +24,7 @@ images:
     prompt: "Editorial illustration, no photographs of people and no readable words. Near-black canvas. Closing image for “How to Use AI in Your Business: 12 Examples by Team”: a small row of objects that suggests the next action, wide 16:9 framing."
 faqs:
   - question: "Which uses show up among Canadian businesses that use AI?"
-    answer: "In the 2025 Statistics Canada brief, 35.7% of those businesses used text analytics and 23.1% used marketing automation."
+    answer: "In the 2025 Statistics Canada report, 35.7% of those businesses used text analytics and 23.1% used marketing automation."
   - question: "What did those businesses change after they started?"
     answer: "40.1% developed new workflows and 38.9% trained staff. Those shares are among AI users, not among all firms."
   - question: "What share used AI to produce the goods or the service?"
@@ -37,13 +37,26 @@ citations:
     datePublished: "2025-06-16"
     figures: ["12.2", "6.1", "35.7", "23.1", "40.1", "38.9", "2025", "2024"]
 ---
-How to use AI in a business is a job list, not a model list. Pick a job you already do, write the steps, and keep a person on the output. The model is the last decision, and for plenty of jobs it is a small one. Statistics Canada's 2025 brief asked businesses that already use AI which tools they use and what they changed.[^statcan] Among those businesses, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. In the same period, 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier. Those are descriptions of what firms reported. They are not a shopping list, and they are not permission to open twelve tools on Monday.
+How to use AI in a business is a job list, not a model list. Pick a job you already do, write the steps, and keep a person on the output. The model is the last decision, and for plenty of jobs it is a small one. Statistics Canada's 2025 report asked businesses that already use AI which tools they use and what they changed.[^statcan] Among those businesses, text analytics accounted for 35.7%, and marketing automation for 23.1%. 40.1% had developed new workflows, and 38.9% had trained staff. In the same period, 12.2% of businesses used AI to produce goods or deliver services, up from 6.1% a year earlier. Those are descriptions of what firms reported. They are not a shopping list, and they are not permission to open twelve tools on Monday.
 
 The [help note](/blog/how-can-ai-help-small-businesses) separates that production question from generative-AI use. The [automation note](/blog/ai-automation-for-small-business) is how to pick the first job. The [agents note](/blog/ai-agents-for-business) is when the steps branch and a fixed checklist stops being honest. We'd start with one job from the list below. We'd leave the rest in a stack until that one job has a person on it and a week of real use behind it.
 
 ## Twelve jobs you can write down
 
-Draft the customer reply, then a person sends it. Summarize the meeting, then a person accepts the tasks. Turn notes into a quote, then a person sets the price. Sort the inbox, then a person decides what is answered. Flag the late invoice, then a person decides the chase. Describe the product, then a person approves the page. Group support tickets, then a person picks the answer. Check the inventory exception, then a person orders. Rewrite the policy in plain language, then a person publishes it. Compare two supplier notes, then a person chooses. Draft the weekly report, then a person accepts the numbers. Prepare the staff answer, then a person trains the team.
+In each job below, AI does the first pass and a person makes the call:
+
+- Draft the customer reply: a person sends it.
+- Summarize the meeting: a person accepts the tasks.
+- Turn notes into a quote: a person sets the price.
+- Sort the inbox: a person decides what is answered.
+- Flag the late invoice: a person decides the chase.
+- Describe the product: a person approves the page.
+- Group support tickets: a person picks the answer.
+- Check the inventory exception: a person orders.
+- Rewrite the policy in plain language: a person publishes it.
+- Compare two supplier notes: a person chooses.
+- Draft the weekly report: a person accepts the numbers.
+- Prepare the staff answer: a person trains the staff.
 
 Each line has the same shape. A system prepares. A person decides. If you delete the person, you don't have a job. You have a mailbox that hopes. The reply can be drafted from the thread the customer already wrote. Someone who knows that customer still sends it. The meeting summary can list tasks. Someone who was in the room still accepts them, because a model wasn't there to hear the aside that mattered. The quote can be assembled from notes. The price stays with the owner. We keep repeating that shape because owners keep trying to skip the second half. The second half is the business.
 
@@ -63,7 +76,7 @@ Say they pick the customer reply, because it happens every day and a wrong tone 
 
 The quote job shows up the day the shop does custom work. Notes from a conversation become a description. The owner sets the price. We've watched owners try to let the draft set the price because the draft sounded confident. Confidence isn't a cost. The supplier comparison is the same trap with a different costume. Two notes, two minimums, two lead times written in different formats. A draft can line them up. The owner chooses. Choosing is the job. Lining up is the chore.
 
-A clinic can run the same list without pretending to be a shop. Summarize the meeting, then the practitioner accepts the tasks. Prepare the staff answer, then a person trains the team. Rewrite the policy in plain language, then a person publishes it. The publish step matters because a policy that sounds friendly and says the wrong clinical thing is worse than a stiff policy that is right. A trades desk lives in the quote line and the inventory exception. The lead tech's note becomes a description. The owner prices. The exception gets checked. A person orders. We are not saying every firm should run all twelve. We are saying each of the twelve is a job with an edge, and the edge is a person.
+A clinic can run the same list without pretending to be a shop. Summarize the meeting, then the practitioner accepts the tasks. Prepare the staff answer, then a person trains the staff. Rewrite the policy in plain language, then a person publishes it. The publish step matters because a policy that sounds friendly and says the wrong clinical thing is worse than a stiff policy that is right. A trades desk lives in the quote line and the inventory exception. The lead tech's note becomes a description. The owner prices. The exception gets checked. A person orders. We are not saying every firm should run all twelve. We are saying each of the twelve is a job with an edge, and the edge is a person.
 
 ## How we'd run it
 
@@ -89,7 +102,7 @@ Skipping the person on the output is the mistake that reaches the customer. A dr
 
 Running all twelve at once is impatience dressed up as ambition. The stack exists so you don't. A shop that tries replies, invoices, inventory, the product page, and the staff answer in the same month will do all of them badly and then conclude the tools don't work. They weren't given a job. They were given a pile. Pick one. Let it become boring. Boring is the success condition.
 
-Forgetting training is how the workflow figure and the real room come apart. A new workflow that lives in the owner's head is the old company with an extra tab. Show the clerk on a real thread. Show the bookkeeper on a real late invoice. If the only person who can run it is the person who set it up, you don't have a job. You have a hobby.
+Forgetting training is how the workflow figure and the real room come apart. A new workflow that lives in the owner's head is the old business with an extra tab. Show the clerk on a real thread. Show the bookkeeper on a real late invoice. If the only person who can run it is the person who set it up, you don't have a job. You have a hobby.
 
 ## What we'd do
 
