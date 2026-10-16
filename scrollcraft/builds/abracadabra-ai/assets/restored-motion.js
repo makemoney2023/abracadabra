@@ -190,8 +190,8 @@
     marketing: 'Media you can check',
     social: 'Posts in your voice',
     sales: 'The request finishes',
-    service: 'Callers get the record',
-    operations: 'The steps run',
+    service: 'Calls answered from your records',
+    operations: 'Repetitive steps, automated',
     design: 'Screens that fit',
     platform: 'One bill, and room to grow'
   };
