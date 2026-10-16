@@ -10,9 +10,19 @@ npx --yes serve -l 4500
 npm test
 ```
 
-Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Portfolio, Products, Course, Blog, and **Start a project**. Services opens one menu: each function name, with that function's services under it. The phone menu uses the same grouping. The model strip is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (v1 silent loops; sharper v2 renders replace the same filenames). A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is **Start a project** at `#start`. The footer wordmark is Tektur. Reduced motion pauses video and stops the marquee.
+Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Portfolio, Products, Course, Blog, and **Start a project**. Services opens one menu: each function name, with that function's services under it. The phone menu uses the same grouping. The model strip is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (silent v2 renders). A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is **Start a project** at `#start`. The footer wordmark is Tektur. Reduced motion pauses video and stops the marquee.
 
 If the page and the source-of-truth file disagree, fix the file first, then the page.
+
+## Showcase loop v2 — 2026-10-16
+
+- The StrongFoam and Milrcorr films in `assets/video/` are the v2 renders. Filenames are unchanged: `strongfoam-loop` and `milrcorr-loop`, each as mp4, webm, and a jpg poster. Nothing was re-encoded.
+- **What changed** — the six media files only.
+- **Why** — Christopher supplied the sharper loops to replace v1 in place.
+- **Code touchpoints** — `assets/video/strongfoam-loop.{mp4,webm,jpg}`, `assets/video/milrcorr-loop.{mp4,webm,jpg}`.
+- **Data-flow impact** — none. The homepage work rail and the two portfolio heroes still point at those names.
+- **API / schema impact** — none.
+- **Verification** — `npm test` in this folder.
 
 ## Showcase loops and Services menu — 2026-10-16
 
