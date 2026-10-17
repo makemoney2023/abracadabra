@@ -38,6 +38,16 @@
   .marquee__list[aria-hidden="true"] { display: none; }
 }
 </style>
+<script>
+(function () {
+  document.documentElement.classList.add('js');
+  var reduce = false;
+  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var played = false;
+  try { played = window.sessionStorage.getItem('abra-hero-reveal') === '1'; } catch (e) {}
+  if (reduce || played) document.documentElement.classList.add('hero-settled');
+})();
+</script>
 
 <script type="application/ld+json">
 {
@@ -310,9 +320,6 @@
 <!-- /SITE-NAV -->
 <main id="top">
 <section id="hero" class="hero" aria-labelledby="hero-title">
-  <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="assets/schema-home.webp">
-    <source src="assets/orbital-horizon.mp4" type="video/mp4">
-  </video>
   <div class="hero__copy">
     <p class="kicker">Custom software</p>
     <h1 id="hero-title">Custom software, built for how you work.</h1>
@@ -322,7 +329,13 @@
       <a class="btn" href="#services">See the work</a>
     </div>
   </div>
+  <div class="hero__stage" data-hero-stage>
+    <img class="hero__wordmark" src="assets/wordmark/abra-ca-dabra-accent.svg" alt="" width="1680" height="202">
+    <img class="hero__orb" src="assets/wordmark/orb-still.svg" alt="" width="640" height="640">
+    <button type="button" class="hero__skip">Skip</button>
+  </div>
 </section>
+<script type="module" src="assets/hero-reveal.js"></script>
 
 <section id="compiler" class="restored restored-pin" aria-labelledby="compiler-heading">
     <div class="sc-stage">
