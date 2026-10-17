@@ -703,46 +703,8 @@
 #time .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Release"],
 #time .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Release"] { --start: 0.27; --span: 0.06; }
 
-#gantt .time-engine { --lane-label: 12.5rem; max-height: none; }
-#gantt .time-lane .sc-label { white-space: normal; overflow-wrap: anywhere; line-height: 1.15; }
-#gantt .time-lane[data-time-phase="Search"] { --start: 0; --span: 0.08; }
-#gantt .time-lane[data-time-phase="Marketing"] { --start: 0.11; --span: 0.08; }
-#gantt .time-lane[data-time-phase="Social"] { --start: 0.22; --span: 0.08; }
-#gantt .time-lane[data-time-phase="Sales"] { --start: 0.33; --span: 0.09; }
-#gantt .time-lane[data-time-phase="Service"] { --start: 0.45; --span: 0.09; }
-#gantt .time-lane[data-time-phase="Operations"] { --start: 0.57; --span: 0.10; }
-#gantt .time-lane[data-time-phase="Design"] { --start: 0.70; --span: 0.10; }
-#gantt .time-lane[data-time-phase="Platform"] { --start: 0.83; --span: 0.10; }
-#gantt .time-engine[data-active-state="engineer"] { --arrive: 0.73; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Search"],
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Marketing"],
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Social"] { --start: 0; --span: 0.07; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Sales"] { --start: 0.09; --span: 0.14; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Service"] { --start: 0.25; --span: 0.12; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Operations"] { --start: 0.39; --span: 0.12; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Design"] { --start: 0.53; --span: 0.10; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Platform"] { --start: 0.65; --span: 0.08; }
-#gantt .time-engine[data-active-state="parallel"],
-#gantt .time-engine[data-active-state="arrive"] { --arrive: 0.33; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Search"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Search"],
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Marketing"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Marketing"],
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Social"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Social"] { --start: 0; --span: 0.07; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Sales"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Sales"] { --start: 0.08; --span: 0.16; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Service"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Service"] { --start: 0.10; --span: 0.15; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Operations"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Operations"] { --start: 0.12; --span: 0.14; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Design"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Design"] { --start: 0.18; --span: 0.10; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Platform"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Platform"] { --start: 0.26; --span: 0.07; }
 
 .time-captions { position: relative; flex: 1; min-height: 5.5rem; margin-top: var(--sc-3); }
-#gantt .time-captions { min-height: 4.6rem; flex: 0 0 auto; }
 .time-panel {
   position: absolute;
   inset: 0;
@@ -968,9 +930,6 @@
   .time-copy .sc-body,
   .range-copy .sc-body { margin-inline: auto; }
   #time .time-engine { --lane-label: 5rem; --lane-gap: var(--sc-2); min-height: 31rem; max-height: none; }
-  #gantt .time-engine { --lane-label: 0rem; --lane-gap: 0rem; min-height: 0; max-height: none; }
-  #gantt .time-lane { grid-template-columns: minmax(0, 1fr); gap: 0.35rem; }
-  #gantt .time-axis { margin-left: 0; }
   .time-engine { max-height: none; }
   .time-captions { min-height: 8rem; }
   .range-engine { order: -1; min-height: 28rem; max-height: none; }
@@ -1046,4 +1005,285 @@
     transition: none;
   }
   .range-controls { display: none; }
+}
+
+/* ---------------------------------------------------------------
+   #gantt: its own Gantt chart (not the #time lanes).
+   Scroll writes --draw, --reflow and --today (weeks) on .gantt-engine.
+   Bars, waits, deps and the today marker move with transform/opacity
+   only, so the chart never changes size while it plays.
+   --------------------------------------------------------------- */
+.gantt-engine {
+  --weeks: 24;
+  --label: 11.5rem;
+  --row: 2.55rem;
+  --head: 2.2rem;
+  --draw: 0;
+  --reflow: 0;
+  --today: 0;
+  --done: 0;
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  align-self: center;
+  border: 1px solid color-mix(in oklab, var(--sc-signal) 30%, var(--sc-hairline));
+  clip-path: polygon(0 0, calc(100% - 1.1rem) 0, 100% 1.1rem, 100% 100%, 1.1rem 100%, 0 calc(100% - 1.1rem));
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--sc-signal) 6%, transparent), transparent 30%),
+    color-mix(in oklab, var(--sc-surface) 82%, var(--sc-canvas));
+  display: flex;
+  flex-direction: column;
+  font-family: var(--sc-font-text);
+}
+.gantt-engine__chrome {
+  min-height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-3);
+  padding: 0 var(--sc-4);
+  border-bottom: 1px solid var(--sc-hairline);
+}
+.gantt-engine__status { color: var(--sc-signal) !important; }
+.gantt-chart { position: relative; padding: var(--sc-3) var(--sc-4) 0; }
+.gantt-head {
+  display: grid;
+  grid-template-columns: var(--label) minmax(0, 1fr);
+  height: var(--head);
+  align-items: end;
+  border-bottom: 1px solid var(--sc-hairline-strong);
+}
+.gantt-head__corner { padding-bottom: 0.4rem; }
+.gantt-head__weeks { position: relative; height: 100%; }
+.gantt-head__weeks span {
+  position: absolute;
+  bottom: 0.4rem;
+  left: calc(var(--w) / var(--weeks) * 100%);
+  padding-left: 0.3rem;
+  border-left: 1px solid var(--sc-hairline-strong);
+  font-family: var(--sc-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--sc-ink-soft);
+  line-height: 1;
+}
+.gantt-spec {
+  position: absolute;
+  left: calc(2 / var(--weeks) * 100%);
+  bottom: -0.42rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-left: -0.4rem;
+  font-size: 0;
+  background: var(--sc-accent);
+  transform: rotate(45deg) scale(var(--spec, 0));
+  box-shadow: 0 0 0.9rem color-mix(in oklab, var(--sc-accent) 60%, transparent);
+  z-index: 3;
+}
+.gantt-rows { list-style: none; margin: 0; padding: 0; }
+.gantt-row {
+  --show: clamp(0, calc(var(--draw) * 9 - var(--i)), 1);
+  --k: clamp(0, calc(var(--reflow) * 1.7 - var(--i) * 0.09), 1);
+  --start: calc(var(--s0) + (var(--s1) - var(--s0)) * var(--k));
+  display: grid;
+  grid-template-columns: var(--label) minmax(0, 1fr);
+  height: var(--row);
+  align-items: center;
+  border-bottom: 1px solid var(--sc-hairline);
+}
+.gantt-row__label {
+  font-family: var(--sc-font-mono);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sc-ink);
+  line-height: 1.1;
+  padding-right: var(--sc-2);
+}
+.gantt-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.gantt-row__track {
+  position: relative;
+  height: 100%;
+  background:
+    linear-gradient(90deg, var(--sc-hairline) 1px, transparent 1px) 0 0 / calc(100% / var(--weeks)) 100%;
+  overflow: hidden;
+}
+.gantt-wait {
+  position: absolute;
+  inset: 32% 0;
+  transform-origin: left center;
+  transform: scaleX(calc(var(--start) / var(--weeks)));
+  opacity: calc(var(--show) * (1 - var(--k)) * 0.9);
+  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--sc-ink) 16%, transparent) 0 1px, transparent 1px 6px);
+  will-change: transform, opacity;
+}
+.gantt-bar {
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  left: 0;
+  width: calc(var(--len) / var(--weeks) * 100%);
+  transform: translate3d(calc(var(--start) / var(--len) * 100%), 0, 0);
+  opacity: var(--show);
+  will-change: transform;
+}
+.gantt-bar__ink,
+.gantt-bar__done {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+}
+.gantt-bar__ink {
+  border: 1px solid color-mix(in oklab, var(--sc-ink) 70%, transparent);
+  background: color-mix(in oklab, var(--sc-ink) 9%, transparent);
+  transform: scaleX(var(--show));
+}
+.gantt-bar__done {
+  background: var(--sc-accent);
+  transform: scaleX(clamp(0, calc((var(--today) - var(--start)) / var(--len)), 1));
+}
+.gantt-bar__tag {
+  position: absolute;
+  left: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--sc-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  color: var(--sc-ink);
+  opacity: calc(1 - var(--done));
+}
+.gantt-overlay {
+  position: absolute;
+  top: calc(var(--sc-3) + var(--head));
+  left: calc(var(--sc-4) + var(--label));
+  right: var(--sc-4);
+  height: calc(var(--row) * 8);
+  pointer-events: none;
+}
+.gantt-deps { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.gantt-deps path {
+  fill: none;
+  stroke: var(--sc-accent);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+  opacity: calc(var(--deps, 0) * 0.85);
+}
+.gantt-shipdate,
+.gantt-today {
+  position: absolute;
+  inset: -0.6rem 0 -0.4rem;
+  will-change: transform;
+}
+.gantt-shipdate { left: 100%; right: auto; width: 0; opacity: calc(var(--draw)); }
+.gantt-shipdate::before,
+.gantt-today::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--sc-hairline-strong);
+}
+.gantt-shipdate .sc-label {
+  position: absolute; right: 100%; bottom: -1.3rem; white-space: nowrap;
+  padding-right: 0.4rem; font-size: 0.62rem !important;
+}
+.gantt-today { right: auto; width: 100%; transform: translate3d(calc(var(--today) / var(--weeks) * 100%), 0, 0); opacity: clamp(0, calc(var(--today) * 2), 1); }
+.gantt-today::before { border-left: 2px solid var(--sc-accent); box-shadow: 0 0 0.8rem var(--sc-accent); }
+.gantt-today .sc-label {
+  position: absolute; left: 0.35rem; top: -0.2rem; white-space: nowrap;
+  color: var(--sc-accent) !important; font-size: 0.62rem !important;
+}
+.gantt-returned {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: calc(6 / var(--weeks) * 100%);
+  right: 0;
+  transform-origin: left center;
+  transform: scaleX(var(--done));
+  opacity: calc(var(--done) * 0.9);
+  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--sc-accent) 22%, transparent) 0 1px, transparent 1px 7px);
+  border-left: 1px solid var(--sc-accent);
+}
+.gantt-returned .sc-label {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scaleX(calc(1 / max(var(--done), 0.01)));
+  white-space: nowrap; color: var(--sc-accent) !important;
+  opacity: clamp(0, calc(var(--done) * 3 - 2), 1);
+}
+.gantt-captions { position: relative; min-height: 5.2rem; margin-top: var(--sc-4); }
+.gantt-panel {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--sc-4) var(--sc-3);
+  display: grid;
+  align-content: end;
+  gap: var(--sc-1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 0.5rem, 0);
+  transition: opacity 360ms var(--sc-ease-out), transform 480ms var(--sc-ease-out), visibility 0s linear 480ms;
+}
+.gantt-panel h3 {
+  margin: 0;
+  font-family: Tektur, var(--sc-font-display);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 1.9vw, 1.75rem);
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  color: var(--sc-ink);
+}
+.gantt-panel p { margin: 0; max-width: 52ch; color: var(--sc-ink-soft); }
+.gantt-engine[data-active-state="conventional"] [data-gantt-panel="conventional"],
+.gantt-engine[data-active-state="engineer"] [data-gantt-panel="engineer"],
+.gantt-engine[data-active-state="parallel"] [data-gantt-panel="parallel"],
+.gantt-engine[data-active-state="arrive"] [data-gantt-panel="arrive"] {
+  opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
+}
+.gantt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sc-2);
+  padding: var(--sc-3) var(--sc-4) var(--sc-4);
+  border-top: 1px solid var(--sc-hairline);
+}
+.gantt-controls button {
+  min-height: 44px;
+  padding: 0 var(--sc-3);
+  border: 1px solid var(--sc-hairline-strong);
+  background: transparent;
+  color: var(--sc-ink-soft);
+  font-family: var(--sc-font-mono);
+  font-size: var(--sc-t-xs);
+  letter-spacing: var(--sc-track-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.gantt-controls button[aria-pressed="true"] { border-color: var(--sc-accent); color: var(--sc-ink); background: color-mix(in oklab, var(--sc-accent) 16%, transparent); }
+.gantt-controls button:focus-visible { outline: 2px solid var(--sc-accent); outline-offset: 2px; }
+
+@media (max-width: 1100px) {
+  .gantt-engine { --label: 6.6rem; --row: 2.6rem; }
+  .gantt-row__label { font-size: 0.64rem; letter-spacing: 0.03em; }
+  .gantt-bar__tag { display: none; }
+  .gantt-head__weeks span { font-size: 0.56rem; padding-left: 0.15rem; }
+  .gantt-chart { padding-inline: var(--sc-3); }
+  .gantt-overlay { left: calc(var(--sc-3) + var(--label)); right: var(--sc-3); }
+  .gantt-captions { min-height: 7rem; }
+  .gantt-controls { padding-inline: var(--sc-3); }
+  .gantt-controls button { flex: 1 1 40%; padding: 0 var(--sc-2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gantt-engine { --draw: 1 !important; --reflow: 1 !important; --today: 6 !important; --done: 1 !important; --deps: 1 !important; --spec: 1 !important; }
+  .gantt-captions { min-height: 0; display: grid; gap: var(--sc-3); padding: var(--sc-3) 0; }
+  .gantt-panel { position: relative; inset: auto; opacity: 1; visibility: visible; transform: none; transition: none; }
+  .gantt-controls { display: none; }
 }

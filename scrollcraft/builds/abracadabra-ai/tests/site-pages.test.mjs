@@ -97,7 +97,10 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   }
   assert.match(agents, />Requirements<\/button>/);
   assert.equal(index.includes('id="agents"'), false);
-  assert.equal((gantt.match(/class="time-lane"/g) || []).length, 8);
+  assert.equal((gantt.match(/class="gantt-row"/g) || []).length, 8);
+  assert.equal(gantt.includes("time-lane"), false);
+  assert.equal(gantt.includes("time-engine"), false);
+  assert.match(gantt, /<ol class="gantt-rows" aria-label="Business functions">/);
   for (const phase of ["Discover", "Specify", "Design", "Build", "Test", "Release"]) {
     assert.equal(time.includes(`data-time-phase="${phase}"`), true, phase);
   }

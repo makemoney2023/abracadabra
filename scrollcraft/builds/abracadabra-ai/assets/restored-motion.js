@@ -178,7 +178,81 @@
     };
   }
 
-  var resolveGantt = bindCalendar(document.getElementById('gantt'));
+  /* #gantt: a real Gantt chart. Scroll progress p (0..1) maps to
+     draw (staircase appears), reflow (bars slide into parallel),
+     today (marker sweeps weeks 0..6) and done (time returned). */
+  function bindGantt(section) {
+    var engine = section ? section.querySelector('.gantt-engine') : null;
+    if (!engine) return function () {};
+    var buttons = Array.prototype.slice.call(section.querySelectorAll('[data-gantt-state]'));
+    var status = section.querySelector('[data-gantt-status]');
+    var todayLabel = section.querySelector('[data-gantt-today]');
+    var presets = { conventional: 0.2, engineer: 0.42, parallel: 0.66, arrive: 1 };
+    var statuses = {
+      conventional: 'Serial calendar / 24 weeks',
+      engineer: 'Spec locked / week 2',
+      parallel: 'Eight functions in parallel',
+      arrive: 'All done / week 6'
+    };
+    var chosen = false;
+    var target = reduceMotion ? 1 : 0;
+    var shown = -1;
+    var raf = 0;
+    var lastState = '';
+    function seg(p, a, b) { return Math.min(1, Math.max(0, (p - a) / (b - a))); }
+    function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function paint(p) {
+      var draw = seg(p, 0.02, 0.22);
+      var spec = seg(p, 0.24, 0.32);
+      var reflow = ease(seg(p, 0.3, 0.6));
+      var deps = seg(p, 0.48, 0.62);
+      var today = 6 * seg(p, 0.62, 0.88);
+      var done = ease(seg(p, 0.86, 0.97));
+      var st = engine.style;
+      st.setProperty('--draw', draw.toFixed(4));
+      st.setProperty('--spec', spec.toFixed(4));
+      st.setProperty('--reflow', reflow.toFixed(4));
+      st.setProperty('--deps', deps.toFixed(4));
+      st.setProperty('--today', today.toFixed(3));
+      st.setProperty('--done', done.toFixed(4));
+      var state = p < 0.26 ? 'conventional' : p < 0.5 ? 'engineer' : p < 0.8 ? 'parallel' : 'arrive';
+      if (state !== lastState) {
+        lastState = state;
+        engine.setAttribute('data-active-state', state);
+        buttons.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-gantt-state') === state ? 'true' : 'false'); });
+        if (status) status.textContent = statuses[state];
+      }
+      if (todayLabel) todayLabel.textContent = today >= 5.99 ? 'Done / W6' : 'Today / W' + Math.max(1, Math.ceil(today));
+    }
+    function frame() {
+      raf = 0;
+      if (shown < 0) shown = target;
+      var d = target - shown;
+      shown = Math.abs(d) < 0.0015 ? target : shown + d * 0.22;
+      paint(shown);
+      if (shown !== target) raf = requestAnimationFrame(frame);
+    }
+    function go(p) { target = p; if (!raf) raf = requestAnimationFrame(frame); }
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () { chosen = true; go(presets[b.getAttribute('data-gantt-state')]); });
+    });
+    paint(target);
+    shown = target;
+    return function resolve() {
+      if (reduceMotion || chosen || far(section)) return;
+      var p;
+      if (innerWidth > 1100) {
+        var travel = Math.max(1, section.offsetHeight - innerHeight);
+        p = -section.getBoundingClientRect().top / travel;
+      } else {
+        var r = engine.getBoundingClientRect();
+        p = (innerHeight * 0.9 - r.top) / Math.max(1, r.height * 0.9);
+      }
+      go(Math.min(1, Math.max(0, p)));
+    };
+  }
+
+  var resolveGantt = bindGantt(document.getElementById('gantt'));
   var resolveTime = bindCalendar(document.getElementById('time'));
 
   var rangeEngine = document.querySelector('#range .range-engine');
