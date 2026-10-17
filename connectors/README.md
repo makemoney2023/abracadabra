@@ -15,3 +15,5 @@ npm run deploy
 ```
 
 The zone route for `connectors.abra-ca-dabra.app` is attached by the operator. This config does not create that DNS record.
+
+Image, video, and voice keys are specified to land on this worker as `FAL_KEY`, `INFSH_API_KEY`, and `ELEVENLABS_API_KEY`. That module is not built yet. The design is [docs/superpowers/specs/2026-10-09-studio-secrets-design.md](../docs/superpowers/specs/2026-10-09-studio-secrets-design.md).
