@@ -24,6 +24,8 @@ Cloudflare MCP portal (one URL, one service-token grant)
 
 Clients do not see this page. The canvas Plug button stays a local way to try a Streamable HTTP URL. HQ-started runs do not copy those URLs.
 
+MuAPI is the first remote media server specified for this portal. One allowlist covers stills and motion for any brief. Website heroes and ads are the first two workflows. The link and the roles are [MuAPI on the swarm](2026-10-09-muapi-swarm-design.md). That server was linked on 2026-10-09. The HQ grant is left off.
+
 ## Current state
 
 Checked against the code on 2026-10-09, and against the Cloudflare MCP Portals docs and the Access OpenAPI for `GET/PUT /accounts/{account_id}/access/ai-controls/mcp/portals/{id}`.

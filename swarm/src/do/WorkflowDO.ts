@@ -16,6 +16,7 @@ import { notifyHandoffSettled } from '../handoff-callback';
 import { settleSpecialist } from './settle-specialist';
 import type { SpecialistKind } from '../ai/check';
 import { NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE, classifyResume, nextResumeAlarm, withStepTimeout } from './resume';
+import { assertToolsAllowed, toolsForNode } from '../mcp/tool-allow';
 
 export class WorkflowDO {
   private state: DurableObjectState;
@@ -466,7 +467,10 @@ export class WorkflowDO {
               const servers = this.resolveNodeServers(workflow, node);
               let mcpTools = await this.collectNodeTools(servers);
               let instructions = node.instructions;
-              if (researchRun) {
+              if (node.mcpToolNames !== undefined) {
+                assertToolsAllowed(mcpTools, node.mcpToolNames);
+                mcpTools = toolsForNode(mcpTools, node.mcpToolNames);
+              } else if (researchRun) {
                 instructions = `${node.instructions}\n\n${researchTaskNote(mcpTools)}`;
                 mcpTools = toolsForResearch(mcpTools);
               } else if (workflowKind === 'copy' || workflowKind === 'language' || workflowKind === 'visual') {
@@ -485,6 +489,7 @@ export class WorkflowDO {
                   skill,
                   requireParallel: researchRun,
                   mcpTools,
+                  maxToolRounds: node.mcpToolNames && node.mcpToolNames.length > 0 ? 8 : undefined,
                   executeTool: async (serverId, tool, args) => {
                     const server = servers.find((s) => s.id === serverId);
                     if (!server) throw new Error(`Unknown MCP server: ${serverId}`);
