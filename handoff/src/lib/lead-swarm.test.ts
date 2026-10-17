@@ -3,6 +3,7 @@ import { OPENING_PACK_ID } from "./pack-templates";
 import {
   followRunningSwarm,
   leadBrief,
+  leadPortalAttach,
   readSwarmArtifacts,
   readSwarmReport,
   readSwarmRun,
@@ -133,6 +134,53 @@ describe("lead swarm", () => {
     });
     const saved = JSON.parse(calls.find((call) => call.url.endsWith("/api/save"))?.body ?? "{}") as { name?: string };
     expect(saved.name).toBe("research: audience, competitors, content calendar strategy");
+  });
+
+  it("attaches the portal and sends the run secret when the agent has both", () => {
+    expect(leadPortalAttach({ origin: "https://swarm.example", portalUrl: "", runSecret: "test-run-secret" })).toEqual({
+      mcpServers: [],
+      runSecret: "",
+    });
+    expect(
+      leadPortalAttach({
+        origin: "https://swarm.example",
+        portalUrl: "https://mcp.example/mcp",
+        runSecret: "test-run-secret",
+      }),
+    ).toEqual({
+      mcpServers: [{ id: "portal", name: "MCP portal", url: "https://mcp.example/mcp" }],
+      runSecret: "test-run-secret",
+    });
+  });
+
+  it("sends the run secret with the portal on save and execute", async () => {
+    const headers: { url: string; authorization?: string }[] = [];
+    const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
+      const href = String(url);
+      headers.push({ url: href, authorization: new Headers(init?.headers).get("authorization") ?? undefined });
+      if (href.includes("/api/template")) return Response.json(template);
+      if (href.endsWith("/api/save")) return Response.json({ success: true });
+      if (href.endsWith("/api/execute")) return Response.json({ executionId: "run-portal" });
+      return Response.json({ status: "completed", results: { "mkt-r": { status: "done", output: "Cited." } } });
+    };
+    const portal = leadPortalAttach({
+      origin: "https://swarm.example",
+      portalUrl: "https://mcp.example/mcp",
+      runSecret: "test-run-secret",
+    });
+    await runLeadSwarm({
+      origin: "https://swarm.example",
+      workflowId: "lead-portal",
+      brief: "Research the market.",
+      fetchImpl: fetchImpl as typeof fetch,
+      wait: async () => {},
+      mcpServers: portal.mcpServers,
+      runSecret: portal.runSecret,
+    });
+    const save = headers.find((call) => call.url.endsWith("/api/save"));
+    const execute = headers.find((call) => call.url.endsWith("/api/execute"));
+    expect(save?.authorization).toBe("Bearer test-run-secret");
+    expect(execute?.authorization).toBe("Bearer test-run-secret");
   });
 
   it("reads one execution without saving or starting another", async () => {

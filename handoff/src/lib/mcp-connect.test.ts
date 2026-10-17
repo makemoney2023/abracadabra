@@ -20,6 +20,21 @@ describe("mcp connect target", () => {
     });
   });
 
+  it("keeps the Handoff route when the portal URL has no Access token", () => {
+    expect(
+      mcpConnectTarget({
+        MCP_PORTAL_URL: "https://mcp.abra-ca-dabra.app/mcp",
+        HANDOFF_MCP_URL: "https://hq.abra-ca-dabra.app/api/mcp",
+        AGENT_MCP_TOKEN: "hk_secret",
+        CF_ACCESS_CLIENT_ID: "",
+        CF_ACCESS_CLIENT_SECRET: "",
+      }),
+    ).toEqual({
+      url: "https://hq.abra-ca-dabra.app/api/mcp",
+      headers: { Authorization: "Bearer hk_secret" },
+    });
+  });
+
   it("uses the Handoff route and the agent key when the portal is empty", () => {
     expect(
       mcpConnectTarget({

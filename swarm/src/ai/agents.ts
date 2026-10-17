@@ -2,6 +2,7 @@ import type { AgentType } from '../types';
 import { formatToolsForPrompt, type McpToolDef } from '../mcp/client';
 import { MODEL_STEP_TIMEOUT_MS, STEP_TIMEOUT_MESSAGE, shouldTryNextModel, withStepTimeout } from '../do/resume';
 import { providerError } from './check';
+import { clipToolResult, researchToolNote } from './research-tools';
 import type { LoadedSkill } from './skills';
 
 /** Workers AI defaults to 256 output tokens, which truncates skill deliverables. */
@@ -107,7 +108,8 @@ export async function runAgent(type: AgentType, options: AgentRunOptions, env: a
   const canUseTools = tools.length > 0 && typeof options.executeTool === 'function';
 
   const systemPrompt = buildSystemPrompt(type, name, instructions, skill)
-    + (canUseTools ? buildToolPrompt(tools) : '');
+    + (canUseTools ? buildToolPrompt(tools) : '')
+    + researchToolNote(type, tools);
   const userPrompt = buildUserPrompt(type, input, skill);
 
   // Fast path: no tools — preserve the original stream-first behavior.
@@ -211,7 +213,10 @@ async function runToolLoop(
         const observation = await executeTool!(call.server, call.tool, call.args);
         recordUse(call.server, call.tool);
         onToolEvent?.({ server: call.server, tool: call.tool, phase: 'result', summary: observation.slice(0, 160) });
-        messages.push({ role: 'user', content: `Observation from ${call.server}/${call.tool}:\n${observation.slice(0, 3500)}` });
+        messages.push({
+          role: 'user',
+          content: `Observation from ${call.server}/${call.tool}:\n${clipToolResult(observation, call.tool)}`,
+        });
       } catch (e: any) {
         const msg = e?.message || 'Tool execution failed.';
         onToolEvent?.({ server: call.server, tool: call.tool, phase: 'result', summary: `ERROR: ${msg}` });

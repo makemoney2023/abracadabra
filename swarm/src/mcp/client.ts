@@ -1,3 +1,4 @@
+import { clipToolResult } from '../ai/research-tools';
 import type { McpServerConfig } from '../types';
 
 export interface McpToolDef {
@@ -154,13 +155,13 @@ export class McpClient {
     if (json?.error) throw new Error(json.error.message || `tool ${name} failed`);
     const content = json?.result?.content;
     if (Array.isArray(content)) {
-      return content
-        .map((c: any) => (typeof c.text === 'string' ? c.text : JSON.stringify(c)))
-        .join('\n')
-        .slice(0, 4000);
+      return clipToolResult(
+        content.map((c: any) => (typeof c.text === 'string' ? c.text : JSON.stringify(c))).join('\n'),
+        name,
+      );
     }
-    if (typeof json?.result === 'string') return json.result.slice(0, 4000);
-    return JSON.stringify(json?.result ?? null).slice(0, 4000);
+    if (typeof json?.result === 'string') return clipToolResult(json.result, name);
+    return clipToolResult(JSON.stringify(json?.result ?? null), name);
   }
 }
 

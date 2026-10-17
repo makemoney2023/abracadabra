@@ -83,6 +83,8 @@ Workers AI and R2 are bound via `wrangler.toml`. Secrets:
 
 The MuAPI API key is not a secret on this worker. It is the bearer credential on portal server `muapi`. See [the MuAPI swarm spec](../docs/superpowers/specs/2026-10-09-muapi-swarm-design.md).
 
+The Parallel API key is not in this table. It is the bearer on portal server `parallel-search` (`https://search.parallel.ai/mcp`). The portal exposes that server as `parallel-search_web_search` and `parallel-search_web_fetch`, and only researcher nodes receive those tools.
+
 ## Wipe All Run Data
 
 ```bash

@@ -8,6 +8,7 @@ import { WORKFLOW_TEMPLATES, type WorkflowTemplate } from '../types';
 
 const ALL_TEMPLATES: WorkflowTemplate[] = [...WORKFLOW_TEMPLATES, ...(packTemplates as WorkflowTemplate[])];
 import { generateReportPdf } from '../pdf/report';
+import { toolTimeoutMs } from '../ai/research-tools';
 import { McpClient, type McpToolDef } from '../mcp/client';
 import { headersFor, portalAllowed, serversForRun } from '../mcp/portal-gate';
 import { researchTaskNote, usesResearchTools, toolsForPage, toolsForResearch, toolsForWriting } from '../mcp/research-tools';
@@ -493,7 +494,7 @@ export class WorkflowDO {
                   executeTool: async (serverId, tool, args) => {
                     const server = servers.find((s) => s.id === serverId);
                     if (!server) throw new Error(`Unknown MCP server: ${serverId}`);
-                    return new McpClient(server, 60_000).callTool(tool, args);
+                    return new McpClient(server, toolTimeoutMs(tool)).callTool(tool, args);
                   },
                   onToken: (token) => {
                     if (settled) return;
