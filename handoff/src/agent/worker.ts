@@ -10,7 +10,7 @@ import {
   type ToolCaller,
 } from "../lib/client-documents";
 import { advanceClientWork, applyBriefChange, fileSwarmDelivery, planClientWork, qualifyLead } from "../lib/client-plan";
-import { followRunningSwarm, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "../lib/lead-swarm";
+import { followRunningSwarm, leadPortalAttach, readSwarmArtifacts, readSwarmRun, runLeadSwarm, swarmArtifactFiles } from "../lib/lead-swarm";
 import { packsFromTemplates } from "../lib/pack-picker";
 import { packTemplatesFromCatalog } from "../lib/pack-templates";
 import {
@@ -45,6 +45,7 @@ export interface AgentBindings extends ChatBindings {
   /** Public Cal.com link. Empty asks the prospect for two times. */
   BOOKING_URL?: string;
   SWARM_ORIGIN?: string;
+  SWARM_RUN_SECRET?: string;
   HANDOFF_MCP_URL?: string;
   AGENT_MCP_TOKEN?: string;
   SLACK_SIGNING_SECRET?: string;
@@ -283,13 +284,24 @@ export class ClientAgent extends Agent<AgentBindings> {
     const call = this.leadCaller();
     if (!call) return;
     const packs = await this.leadPacks(origin);
+    const portal = origin
+      ? leadPortalAttach({ origin, portalUrl: this.env.MCP_PORTAL_URL, runSecret: this.env.SWARM_RUN_SECRET })
+      : { mcpServers: [], runSecret: "" };
     await qualifyLead({
       call,
       requestId: wakeId,
       packs,
       trigger: reason,
       runSwarm: origin
-        ? (brief, templateId) => runLeadSwarm({ origin, workflowId: `lead-${wakeId}`, brief, templateId })
+        ? (brief, templateId) =>
+            runLeadSwarm({
+              origin,
+              workflowId: `lead-${wakeId}`,
+              brief,
+              templateId,
+              mcpServers: portal.mcpServers,
+              runSecret: portal.runSecret,
+            })
         : undefined,
       onStillRunning: async (run) => {
         await this.schedule(45, "refreshSwarm", { ...run, attempts: 1 });
