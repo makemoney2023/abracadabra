@@ -52,6 +52,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { AGENT_META, PRESET_GROUPS, TEMPLATES, type AgentPreset, type AgentType, type Artifact, type McpServerConfig, type TemplateMeta } from '@/lib/agents';
 import { bridgeEdge, chainOffset } from '@/lib/chain.mjs';
 import { executionIdFromSearch } from '@/lib/execution-link.mjs';
+import { flowNodeToPayload, templateNodeToFlowData } from '@/lib/workflow-payload.mjs';
 
 const nodeTypes = { agent: AgentNode };
 
@@ -390,20 +391,11 @@ export default function App() {
         return;
       }
       const newNodes: FlowNode[] = tmpl.nodes.map(
-        (n: { id: string; type: AgentType; name: string; instructions: string; mcpServerIds?: string[]; mcpServers?: McpServerConfig[]; position: { x: number; y: number } }) => ({
+        (n: { id: string; type: AgentType; name: string; instructions: string; mcpServerIds?: string[]; mcpServers?: McpServerConfig[]; mcpToolNames?: readonly string[]; position: { x: number; y: number } }) => ({
           id: `${n.id}-${++nodeIdCounter.current}`,
           type: 'agent',
           position: n.position,
-          data: {
-            agentType: n.type,
-            name: n.name,
-            instructions: n.instructions,
-            status: 'idle' as const,
-            output: '',
-            mcpServerIds: n.mcpServerIds,
-            mcpServers: n.mcpServers,
-            toolsUsed: [],
-          },
+          data: templateNodeToFlowData(n),
         }),
       );
       const idMap: Record<string, string> = {};
@@ -457,15 +449,7 @@ export default function App() {
   const buildWorkflowPayload = () => ({
     id: 'wf-' + Date.now(),
     name: workflowName,
-    nodes: nodes.map((n) => ({
-      id: n.id,
-      type: n.data.agentType,
-      name: n.data.name,
-      instructions: n.data.instructions,
-      position: n.position,
-      mcpServerIds: n.data.mcpServerIds,
-      mcpServers: n.data.mcpServers,
-    })),
+    nodes: nodes.map((n) => flowNodeToPayload(n)),
     edges: edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
     createdAt: Date.now(),
     mcpServers,
