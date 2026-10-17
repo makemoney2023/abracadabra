@@ -14,6 +14,16 @@ Then open http://localhost:4500. The homepage is left-aligned on desktop and sta
 
 If the page and the source-of-truth file disagree, fix the file first, then the page.
 
+## Video thumbnails — 2026-10-17
+
+- Film players on `/films.html` and the homepage Sell and Teach tabs use 1280×720 JPEG posters in `assets/films/thumbs/`. Schema, LLM Leverage home, and LLM Leverage workshops now have durations. The homepage Super Funnel and LLM Leverage players have full VideoObject markup. The sitemap lists 13 videos, each with a JPEG thumbnail. The StrongFoam and Milrcorr background loops are unchanged.
+- **What changed** — crawlable video posters, VideoObject fields, and video sitemap entries.
+- **Why** — Google Search Console was not indexing the films because the thumbnails were missing or were not JPEG posters of the videos.
+- **Code touchpoints** — `assets/films/thumbs/*.jpg`, `films.html`, `index.html`, `sitemap.xml`, `tests/films-archive.test.mjs`, `tests/work-rail.test.mjs`, `tests/video-thumbnails.test.mjs`.
+- **Data-flow impact** — none. Page chrome and copy are unchanged.
+- **API / schema impact** — VideoObject `thumbnailUrl` and `duration` on the films page; two VideoObject nodes on the homepage; four additional `video:video` entries in `sitemap.xml`.
+- **Verification** — `npm test` in this folder.
+
 ## Restored homepage motion — 2026-10-16
 
 - Under the hero, the original parallel-agent sweep, the function calendar, and the time-travel calendar are back, then the operation compiler, the name line, and the range menu. The hero stays the orbital film with **Start a project** and **See the work**.
