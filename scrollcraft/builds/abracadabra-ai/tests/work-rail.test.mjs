@@ -19,7 +19,7 @@ test("the work rail plays Getting started and no other Super Funnel cut", () => 
   assert.match(videos[0], /preload="none"/);
   assert.match(
     videos[0],
-    /poster="assets\/superfunnel-getting-started\.webp"/,
+    /poster="assets\/films\/thumbs\/superfunnel-getting-started\.jpg"/,
   );
   assert.match(
     videos[0],

@@ -74,7 +74,7 @@ test("films archive plays the eight Super Funnel walkthroughs", () => {
 
   for (const cut of cuts) {
     const src = `assets/films/${cut.slug}.mp4`;
-    const poster = `assets/${cut.slug}.webp`;
+    const poster = `assets/films/thumbs/${cut.slug}.jpg`;
     assert.match(html, new RegExp(`src="${src}"`));
     assert.match(html, new RegExp(`poster="${poster}"`));
     assert.match(html, new RegExp(`#${cut.slug}`));
