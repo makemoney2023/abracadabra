@@ -178,7 +178,6 @@
     };
   }
 
-  var resolveGantt = bindCalendar(document.getElementById('gantt'));
   var resolveTime = bindCalendar(document.getElementById('time'));
 
   var rangeEngine = document.querySelector('#range .range-engine');
@@ -456,7 +455,6 @@
 
   function updateScrollStates() {
     resolveCompilerFromScroll();
-    resolveGantt();
     resolveTime();
     resolveRangeFromScroll();
   }
