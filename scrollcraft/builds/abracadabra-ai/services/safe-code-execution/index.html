@@ -253,7 +253,7 @@
     });
   });
 </script>
-<main id="top" class="site-page sales">
+<main id="top" class="site-page sales service-page">
 <header class="page-hero page-header page-hero--photo">
 <figure class="page-hero__media"><picture>
 <source type="image/avif" srcset="/blog/media/services/safe-code-execution/hero-640.avif 640w, /blog/media/services/safe-code-execution/hero-960.avif 960w, /blog/media/services/safe-code-execution/hero-1280.avif 1280w" sizes="(min-width: 1024px) 72rem, 100vw">
@@ -270,18 +270,20 @@
 </div>
 </header>
 <ul class="proof-strip"><li><a href="/services/ai-assistants-and-agents/">AI assistants</a></li></ul>
-<section>
-<h2>When a reply isn’t enough, your assistant can do the work.</h2>
+<section class="service-page__intro editorial-split">
+<header class="section-heading"><p class="eyebrow">The shift</p><h2>When a reply isn’t enough, your assistant can do the work.</h2></header>
+<div class="editorial-split__body">
 <p>Copying numbers out of a chat to run them by hand is slow. Giving AI free rein is risky.</p>
 <p>We give it one job, specific files and a time limit. If it hits a limit, it stops and tells you.</p>
+</div>
 </section>
-<section>
-<h2>What you get</h2>
+<section class="service-page__outcomes">
+<header class="section-heading"><p class="eyebrow">The outcome</p><h2>What you get</h2></header>
 <ul class="outcome-grid"><li><h3>A task, not a blank console</h3><p>The job is specific: this calculation, this check, this draft. A request to do something else is refused.</p></li><li><h3>Bounds you can point at</h3><p>Time, memory, and which files it may read or write are set before it runs. Those bounds are part of the plan.</p></li><li><h3>A result you can read</h3><p>The output comes back to the assistant with what it used. You can run it again or throw it out.</p></li><li><h3>Stops safely</h3><p>If anything looks off, it stops and explains why.</p></li></ul>
 </section>
-<section class="sales-split">
+<section class="sales-split service-page__uses">
 <div>
-<h2>Use cases</h2>
+<header class="section-heading"><p class="eyebrow">Where it earns its keep</p><h2>Use cases</h2></header>
 <ul class="use-grid"><li><h3>A calculation from rows you trust</h3><p>The assistant takes numbers already in the file and returns the total the rule describes.</p></li><li><h3>A check before something is sent</h3><p>A file is tested against the rule you wrote: required fields, a total that matches, a name that exists. Failures go to a person with the reason.</p></li><li><h3>A draft from a template</h3><p>The task fills a template already on the list. It does not invent a new template, and it does not send the result. Sending stays a separate step.</p></li></ul>
 </div>
 <figure class="sales-split__photo"><picture>
@@ -291,22 +293,22 @@
 </picture></figure>
 </section>
 
-<section>
-<h2>How it works</h2>
+<section class="service-page__process">
+<header class="section-heading"><p class="eyebrow">The operating model</p><h2>How it works</h2></header>
 <p>From first conversation to a system that runs itself.</p>
 <ol class="process"><li><h3>Plan</h3><p>We map how the work gets done today, including the calls only a person should make, and agree on it before anything is built.</p></li><li><h3>Build</h3><p>Built on Cloudflare and connected to the tools you already use, so nothing has to move.</p></li><li><h3>Review</h3><p>Tested on your real work from last week before any customer sees it.</p></li><li><h3>Launch and run</h3><p>We launch with close monitoring, keep it running, and you can change the rules at any time. It’s yours to keep.</p></li></ol>
 </section>
-<section>
-<h2>How it compares</h2>
+<section class="service-page__compare">
+<header class="section-heading"><p class="eyebrow">The decision</p><h2>How it compares</h2></header>
 <p>Letting a model loose on a laptop, hiring someone to run the sheet, and a fenced task are different risks.</p>
 <div class="extraction-table"><table>
 <thead><tr><th></th><th>Off the shelf</th><th>Hire in-house</th><th>Abracadabra</th></tr></thead>
 <tbody><tr><th scope="row">What it can touch</th><td>Whatever the plugin or the laptop can touch.</td><td>Whatever that person can open.</td><td>The files and the actions on the list, for the time that was set.</td></tr><tr><th scope="row">When it fails</th><td>The miss may show up later.</td><td>They notice if they are looking.</td><td>The run stops and the reason is in the log.</td></tr><tr><th scope="row">Who sends the result</th><td>Sometimes the tool does, if the toggle was on.</td><td>The person, when they are trusted to.</td><td>A person, unless sending is explicitly on the list.</td></tr><tr><th scope="row">When you don’t need us</th><td>The assistant only needs to talk, or the task is one formula in a sheet a person already opens. A code runner does not belong behind a conversation that never needed one.</td><td>A person running a weekly sheet by hand is fine when the sheet is small and the cost of a miss is low.</td><td>This stays out of the assistant when the job is conversation only. The sandbox earns its place when a task is repeated and a wrong write would be expensive.</td></tr></tbody>
 </table></div>
 </section>
-<section class="sales-split">
+<section class="sales-split service-page__proof">
 <div>
-<h2>Proof</h2>
+<header class="section-heading"><p class="eyebrow">Named work</p><h2>Proof</h2></header>
 <article class="proof-card"><h3>It ships inside the assistant</h3><p>It’s part of every AI assistant we build. See the assistant page.</p><p><a href="/services/ai-assistants-and-agents/">Read the assistant page</a></p></article>
 </div>
 <figure class="sales-split__photo"><picture>
@@ -341,6 +343,7 @@
 <p>Tell us about a task you still do by hand after a chat, and we’ll show you how your assistant could do it safely.</p>
 <p class="sales-actions" data-actions><a class="btn btn--primary sales-primary" href="/start/">Start a project</a><a class="btn btn--secondary sales-secondary" href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a></p>
 </section>
+<div class="service-page__close" aria-hidden="true"><span>Describe it</span><span>Build it</span><span>Run it</span></div>
 </main>
 <footer class="site-foot">
   <div class="site-close">

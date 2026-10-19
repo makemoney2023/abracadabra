@@ -648,7 +648,7 @@ ${board}
 async function renderAuthor() {
   const ogAlt = "About Abracadabra";
   await writeOg("About Abracadabra", "ABRACADABRA", join(root, "blog/og/author.jpg"));
-  const body = `<main id="top" class="site-page">
+  const body = `<main id="top" class="site-page about-page">
 <header class="page-hero">
 <div class="page-hero__copy">
 ${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
@@ -657,7 +657,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
 <p class="dek">Abracadabra designs, builds and runs AI-powered tools for businesses whose work doesn't fit off-the-shelf software. Every system we ship comes with a short film of the real screens.</p>
 </div>
 </header>
-<article>
+<article class="about-page__story">
 <h2>How we work</h2>
 <p>We start with how the work gets done today, write it down, and agree on it with you before anything is built. Then we build on Cloudflare, test on your real work, and keep the system running after launch.</p>
 <h2>Work we've shipped</h2>
@@ -711,9 +711,9 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
 async function renderPrivacy() {
   const ogAlt = "Abracadabra AI privacy";
   await writeOg("Privacy", "ABRACADABRA AI", join(root, "blog/og/privacy.jpg"));
-  const body = `<main id="top">
+  const body = `<main id="top" class="site-page legal-page">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
-<article>
+<article class="legal-page__document">
 <h1>Privacy</h1>
 <p class="dek">What abra-ca-dabra.app and the Readiness Check collect, why, and how to reach us.</p>
 <p><strong>Effective date:</strong> <!-- PLACEHOLDER — needs owner sign-off: effective date --> [to be confirmed]</p>

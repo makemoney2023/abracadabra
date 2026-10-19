@@ -288,10 +288,18 @@ test('inner pages stay inside the viewport at the required widths', async () => 
     '/services/ai-visibility/index.html',
     '/portfolio/index.html',
     '/portfolio/pirx/index.html',
+    '/portfolio/milrcorr/index.html',
     '/products/index.html',
+    '/products/schema/index.html',
     '/course/llm-leverage/index.html',
     '/blog/index.html',
     '/blog/ai-readiness-assessment/index.html',
+    '/films.html',
+    '/about/index.html',
+    '/start/index.html',
+    '/start/thanks/index.html',
+    '/privacy/index.html',
+    '/404.html',
   ];
 
   for (const width of [375, 768, 1024, 1440, 1920]) {

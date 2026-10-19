@@ -150,7 +150,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(offering, /Priced to the project/);
   assert.match(offering, /href="\/services\/safe-code-execution\/"/);
   assert.match(offering, /class="page-hero page-header page-hero--photo"/);
-  assert.match(offering, /class="sales-split"/);
+  assert.match(offering, /class="[^"]*\bsales-split\b[^"]*"/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-640\.avif 640w/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-1280\.webp 1280w/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/body1-960\.avif 960w/);
@@ -300,4 +300,50 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.doesNotMatch(read("sitemap.xml"), /portfolio\/showdesk|portfolio\/canadian-discount-appliances|products\/showdesk/);
   assert.match(read("sitemap.xml"), /portfolio\/milrcorr/);
   assert.match(read("index.html"), /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
+});
+
+test("every remaining page family has an intentional premium composition", () => {
+  const expected = [
+    ["services/index.html", /class="site-page collection-page collection-page--services"/],
+    ["services/ai-assistants-and-agents/index.html", /class="site-page sales service-page"/],
+    ["portfolio/index.html", /class="site-page collection-page collection-page--portfolio"/],
+    ["portfolio/milrcorr/index.html", /class="site-page case-study"/],
+    ["products/index.html", /class="site-page collection-page collection-page--products"/],
+    ["products/schema/index.html", /class="site-page product-page"/],
+    ["course/llm-leverage/index.html", /class="site-page course-page"/],
+    ["start/index.html", /class="site-page start-page"/],
+    ["start/thanks/index.html", /class="site-page confirmation-page"/],
+    ["about/index.html", /class="site-page about-page"/],
+    ["privacy/index.html", /class="site-page legal-page"/],
+    ["films.html", /class="site-page films-page"/],
+  ];
+
+  for (const [path, pattern] of expected) assert.match(read(path), pattern, path);
+
+  const service = read("services/ai-assistants-and-agents/index.html");
+  assert.match(service, /class="section-heading"/);
+  assert.match(service, /class="service-page__close"/);
+
+  const caseStudy = read("portfolio/milrcorr/index.html");
+  assert.match(caseStudy, /class="[^"]*\bcase-study__story\b[^"]*"/);
+  assert.match(caseStudy, /class="case-study__gallery"/);
+  assert.match(caseStudy, /class="case-study__next"/);
+  assert.doesNotMatch(caseStudy, /Want something like this/);
+
+  const product = read("products/schema/index.html");
+  assert.match(product, /class="experience-panel"/);
+  assert.match(product, /class="[^"]*\bpage-hero__actions\b[^"]*"/);
+
+  const coursePage = read("course/llm-leverage/index.html");
+  assert.match(coursePage, /class="experience-panel experience-panel--course"/);
+  assert.match(coursePage, /class="[^"]*\bpage-hero__actions\b[^"]*"/);
+
+  const confirmation = read("start/thanks/index.html");
+  assert.match(confirmation, /class="confirmation-page__actions"/);
+  assert.match(confirmation, /href="\/portfolio\/"/);
+
+  const films = read("films.html");
+  assert.match(films, /class="site-nav"/);
+  assert.match(films, /class="[^"]*\bsite-foot\b[^"]*"/);
+  assert.match(films, /class="films-grid"/);
 });

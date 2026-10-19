@@ -1552,3 +1552,276 @@ input, textarea, select { border-radius: var(--ui-r-control); }
   .case-window--article .case-window__viewport img { object-position: top center; }
   .pirx-case__results { margin-inline: -1rem; padding-inline: 1rem; }
 }
+
+/* Remaining marketing templates — editorial hierarchy shared across the site. */
+.section-heading { max-width: 46rem; }
+.section-heading .eyebrow { margin-bottom: 0.45rem; }
+.section-heading h2 { max-width: 18ch; margin: 0; }
+.section-heading > p:last-child:not(.eyebrow) { max-width: 42rem; color: var(--ink-soft); }
+
+.editorial-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  align-items: start;
+}
+.editorial-split__body { max-width: 43rem; }
+.editorial-split__body > :first-child { margin-top: 0; }
+.editorial-split__body p:first-child {
+  color: var(--ink);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  line-height: 1.5;
+}
+
+.collection-page .page-hero { margin-bottom: 0; }
+.collection-index {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 0 clamp(3rem, 7vw, 6rem);
+  overflow: hidden;
+  background: var(--line);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+  box-shadow: var(--ui-shadow);
+}
+.collection-index p {
+  display: grid;
+  min-height: 7rem;
+  align-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 1rem 1.2rem;
+  background: var(--ui-surface-1);
+}
+.collection-index strong {
+  color: var(--ink);
+  font: 600 clamp(1.8rem, 4vw, 3.2rem)/0.95 var(--display);
+  letter-spacing: -0.05em;
+}
+.collection-index span {
+  color: var(--ink-soft);
+  font: 500 0.68rem/1.2 var(--label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.collection-page .fn-group {
+  padding-block: clamp(2.5rem, 6vw, 5rem);
+  border-top: var(--ui-border);
+}
+.collection-page .fn-group > h2 { margin-bottom: 0.35rem; }
+.collection-page > .cards { counter-reset: collection-card; }
+.collection-page > .cards > li { position: relative; counter-increment: collection-card; }
+.collection-page > .cards > li::before {
+  content: "0" counter(collection-card);
+  position: absolute;
+  z-index: 2;
+  top: 0.8rem;
+  left: 0.8rem;
+  display: grid;
+  width: 2rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(7, 7, 6, 0.82);
+  color: var(--ink);
+  font: 600 0.65rem/1 var(--label);
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(8px);
+}
+
+.service-page > section,
+.case-study > section,
+.product-page > section,
+.course-page > section {
+  margin-block: 0;
+  padding-block: clamp(3.25rem, 7vw, 6.5rem);
+  border-top: var(--ui-border);
+}
+.service-page .outcome-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); counter-reset: outcome; }
+.service-page .outcome-grid li {
+  position: relative;
+  min-height: 14rem;
+  padding: 4rem 1.1rem 1.1rem;
+  counter-increment: outcome;
+}
+.service-page .outcome-grid li::before {
+  content: "0" counter(outcome);
+  position: absolute;
+  top: 1.15rem;
+  left: 1.1rem;
+  color: var(--accent);
+  font: 600 0.7rem/1 var(--label);
+  letter-spacing: 0.12em;
+}
+.service-page__process .process {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 1.5rem;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  background: var(--line);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+}
+.service-page__process .process li { margin: 0; padding: 1.2rem; background: var(--ui-surface-1); }
+.service-page__close {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1.1rem;
+  border-top: var(--ui-border);
+  color: var(--ink-soft);
+  font: 500 0.7rem/1 var(--label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.experience-panel {
+  margin: 0;
+  padding: 0 !important;
+  overflow: hidden;
+  background: var(--ui-surface-1);
+  border: var(--ui-border) !important;
+  border-radius: var(--ui-r-card);
+  box-shadow: var(--ui-shadow);
+}
+.experience-panel__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: var(--ui-border);
+}
+.experience-panel__bar span { width: 0.43rem; aspect-ratio: 1; border-radius: 50%; background: var(--ui-border-hover); }
+.experience-panel__bar span:first-child { background: var(--accent); }
+.experience-panel__bar strong {
+  margin-left: auto;
+  color: var(--ink-soft);
+  font: 500 0.68rem/1 var(--label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.experience-panel__viewport {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #050505;
+}
+.experience-panel__viewport img,
+.experience-panel__viewport video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: top center;
+  border: 0;
+}
+.case-study__gallery > .section-heading { margin-bottom: 1.5rem; }
+.case-study__next {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 8%, transparent), transparent 55%);
+}
+.case-study__next ul { display: flex; flex-wrap: wrap; gap: 0.7rem 1.35rem; padding-left: 1rem; }
+
+.premium-cta {
+  padding-inline: clamp(1.2rem, 5vw, 4rem) !important;
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--accent) 9%, transparent), transparent 52%),
+    var(--ui-surface-1);
+}
+.premium-cta .note { max-width: 42rem; border-color: transparent; background: transparent; padding: 0; }
+.premium-cta .note p:last-child { display: none; }
+
+.about-page__story,
+.legal-page__document {
+  max-width: 52rem;
+  padding-top: clamp(2.5rem, 6vw, 5rem);
+}
+.about-page__story h2,
+.legal-page__document h2 { margin-top: clamp(2.6rem, 6vw, 4.5rem); }
+.about-page__story ul {
+  display: grid;
+  gap: 1px;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  background: var(--line);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+}
+.about-page__story li { padding: 1rem 1.1rem; background: var(--ui-surface-1); }
+.legal-page__document {
+  padding-inline: clamp(1.2rem, 5vw, 4rem);
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+  background: var(--ui-surface-1);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+}
+.start-page .intake-form { box-shadow: var(--ui-shadow); }
+.confirmation-page {
+  min-height: min(50rem, calc(100svh - var(--nav-h, 3.5rem)));
+  display: grid;
+  place-items: center;
+  padding-block: clamp(4rem, 12vw, 9rem);
+}
+.confirmation-page__panel {
+  width: min(42rem, 100%);
+  padding: clamp(1.5rem, 5vw, 4rem);
+  background:
+    radial-gradient(circle at 82% 12%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 32%),
+    var(--ui-surface-1);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+  box-shadow: var(--ui-shadow);
+}
+.confirmation-page__mark {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  margin: 1.5rem 0 2rem;
+  color: var(--canvas);
+  background: var(--accent);
+  border-radius: 50%;
+  font-weight: 700;
+}
+.confirmation-page__panel h1 { max-width: 11ch; }
+.confirmation-page__panel .lede { max-width: 36rem; }
+.confirmation-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 2rem 0 0;
+}
+
+@media (max-width: 900px) {
+  .editorial-split,
+  .case-study__next { grid-template-columns: 1fr; gap: 1.5rem; }
+  .service-page .outcome-grid,
+  .service-page__process .process { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .collection-index { grid-template-columns: 1fr; }
+  .collection-index p { min-height: 5.5rem; }
+  .service-page .outcome-grid,
+  .service-page__process .process {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(17rem, 84%);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+  .service-page .outcome-grid li,
+  .service-page__process .process li { scroll-snap-align: start; }
+  .service-page .outcome-grid li { min-height: 0; }
+  .experience-panel__viewport { aspect-ratio: 1 / 1; }
+  .premium-cta { margin-inline: -1rem; }
+}

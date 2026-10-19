@@ -177,6 +177,18 @@ ${actions}
 </header>`;
 }
 
+function pageActions(primaryHref, primaryLabel, secondaryHref, secondaryLabel) {
+  return `<p class="page-hero__actions sales-actions"><a class="btn btn--primary" href="${esc(primaryHref)}">${esc(primaryLabel)}</a><a class="btn btn--tertiary" href="${esc(secondaryHref)}">${esc(secondaryLabel)} <span class="btn__arrow" aria-hidden="true">→</span></a></p>`;
+}
+
+function sectionHeading(kicker, title, copy = "") {
+  return `<header class="section-heading"><p class="eyebrow">${esc(kicker)}</p><h2>${esc(title)}</h2>${copy ? `<p>${esc(copy)}</p>` : ""}</header>`;
+}
+
+function collectionIndex(items) {
+  return `<div class="collection-index" aria-label="Collection summary">${items.map(([value, label]) => `<p><strong>${esc(String(value))}</strong><span>${esc(label)}</span></p>`).join("")}</div>`;
+}
+
 function functionPhoto(fn) {
   if (fn.services[0]) return servicePicture(fn.services[0], "hero", { lazy: true, sizes: HOME_CARD_SIZES });
   return `<img src="/assets/og/portfolio-strongfoam-website.png" alt="StrongFoam website" width="1200" height="630" loading="lazy" decoding="async">`;
@@ -540,7 +552,7 @@ async function renderOffering(item) {
       description: page.description,
       image: og.url,
     }), [crumbList(crumbs), service, faq]),
-    body: item.slug === "ai-visibility" ? visibilityBody(page, item, crumbs) : `<main id="top" class="site-page sales">
+    body: item.slug === "ai-visibility" ? visibilityBody(page, item, crumbs) : `<main id="top" class="site-page sales service-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(SERVICE_GROUPS[item.slug] || OFFERINGS_KICKER),
@@ -550,35 +562,37 @@ ${pageHero({
   media: servicePicture(item.slug, "hero", { sizes: "(min-width: 1024px) 72rem, 100vw" }),
 })}
 ${proofStrip(page.strip)}
-<section>
-<h2>${esc(page.problemTitle)}</h2>
+<section class="service-page__intro editorial-split">
+${sectionHeading("The shift", page.problemTitle)}
+<div class="editorial-split__body">
 ${page.problem.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
+</div>
 </section>
-<section>
-<h2>What you get</h2>
+<section class="service-page__outcomes">
+${sectionHeading("The outcome", "What you get")}
 ${cardGrid("outcome-grid", page.outcomes)}
 </section>
-<section class="sales-split">
+<section class="sales-split service-page__uses">
 <div>
-<h2>Use cases</h2>
+${sectionHeading("Where it earns its keep", "Use cases")}
 ${cardGrid("use-grid", page.uses)}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body1", { lazy: true, sizes: SPLIT_SIZES })}</figure>
 </section>
 ${capabilityHtml(page.capability)}
-<section>
-<h2>How it works</h2>
+<section class="service-page__process">
+${sectionHeading("The operating model", "How it works")}
 <p>${esc(processIntro)}</p>
 <ol class="process">${steps}</ol>
 </section>
-<section>
-<h2>How it compares</h2>
+<section class="service-page__compare">
+${sectionHeading("The decision", "How it compares")}
 <p>${esc(page.compareIntro)}</p>
 ${comparisonTable(page.rows)}
 </section>
-<section class="sales-split">
+<section class="sales-split service-page__proof">
 <div>
-<h2>Proof</h2>
+${sectionHeading("Named work", "Proof")}
 ${proofs}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body2", { lazy: true, sizes: SPLIT_SIZES })}</figure>
@@ -598,6 +612,7 @@ ${questions}
 <p>${esc(page.close)}</p>
 ${salesActions()}
 </section>
+<div class="service-page__close" aria-hidden="true"><span>Describe it</span><span>Build it</span><span>Run it</span></div>
 </main>`,
   });
   await writePage(`services/${item.slug}/index.html`, html);
@@ -655,13 +670,14 @@ async function renderOfferingsHub() {
       name: OFFERINGS_HEADING,
       description,
     }), [crumbList(crumbs), listNode]),
-    body: `<main id="top" class="site-page">
+    body: `<main id="top" class="site-page collection-page collection-page--services">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(OFFERINGS_KICKER),
   title: esc(OFFERINGS_HEADING),
   dek: `<p>${esc(description)}</p>`,
 })}
+${collectionIndex([[businessFunctions.length, "business functions"], [offerings.length, "systems you can commission"], ["01", "operating partner"]])}
 ${groups}
 </main>`,
   });
@@ -757,6 +773,52 @@ ${pirxChartHtml()}
 </main>`;
 }
 
+function caseStudyBody(item, crumbs, relatedHtml) {
+  const liveHref = item.sameAs || "/start/";
+  const liveLabel = item.sameAs ? "Open the live system" : "Start a similar project";
+  const visual = item.loop
+    ? loopFilm(item.loop)
+    : item.hero
+      ? `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`
+      : item.image
+        ? assetMedia(item.image, item.imageAlt)
+        : "";
+  const story = item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n");
+  const product = products.some((productItem) => productItem.slug === item.slug)
+    ? `/products/${item.slug}/`
+    : item.slug === "llm-leverage"
+      ? "/course/llm-leverage/"
+      : "/portfolio/";
+  const productLabel = products.some((productItem) => productItem.slug === item.slug)
+    ? "See the product"
+    : item.slug === "llm-leverage"
+      ? "See the course"
+      : "Explore all work";
+
+  return `<main id="top" class="site-page case-study">
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: "Portfolio",
+  title: esc(item.name),
+  dek: `<p>${esc(item.summary)}</p>`,
+  actions: pageActions(liveHref, liveLabel, product, productLabel),
+  media: visual,
+})}
+<section class="case-study__story editorial-split">
+${sectionHeading("The work", "A working system, not a concept.")}
+<div class="editorial-split__body">${story}</div>
+</section>
+${visual ? `<section class="case-study__gallery" aria-label="${esc(item.name)} product view">
+${sectionHeading("Inside the system", "The real interface, in motion.")}
+<figure class="experience-panel"><div class="experience-panel__bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${esc(item.name)}</strong></div><div class="experience-panel__viewport">${visual}</div></figure>
+</section>` : ""}
+<section class="case-study__next">
+<div>${sectionHeading("Make the next one yours", "Build around the work you already do.")}</div>
+<div>${relatedHtml}${pageActions("/start/", "Start a project", "/portfolio/", "See all work")}</div>
+</section>
+</main>`;
+}
+
 async function renderCase(item) {
   const path = `/portfolio/${item.slug}/`;
   const url = `${SITE}${path}`;
@@ -768,13 +830,6 @@ async function renderCase(item) {
     { name: item.name, href: path, url },
   ];
   const og = await plateOrPhoto(`portfolio-${item.slug}`, "Portfolio", item.name, item.image || null);
-  const productLink = products.some((product) => product.slug === item.slug)
-    ? `<p><a href="/products/${item.slug}/">Product page</a></p>`
-    : "";
-  const courseLink = item.slug === "llm-leverage"
-    ? `<p><a href="/course/llm-leverage/">Course page</a></p>`
-    : "";
-  const live = item.sameAs ? `<p><a href="${esc(item.sameAs)}">Open the live system</a></p>` : "";
   const related = (item.services || []).map((slug) => {
     const page = salesPages[slug];
     if (!page) throw new Error(`Missing service ${slug} for ${item.slug}`);
@@ -798,24 +853,7 @@ async function renderCase(item) {
       description: item.summary,
       image: item.image ? `${SITE}${item.image}` : undefined,
     }), [crumbList(crumbs), caseAbout(item, url)]),
-    body: item.slug === "pirx" ? pirxCaseBody(item, crumbs, relatedHtml) : `<main id="top" class="site-page">
-${pageHero({
-  crumbs: visibleCrumbs(crumbs),
-  kicker: "Portfolio",
-  title: esc(item.name),
-  dek: `${live}\n${productLink}\n${courseLink}`,
-  media: item.loop
-    ? loopFilm(item.loop)
-    : item.hero
-      ? `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`
-      : item.image
-        ? assetMedia(item.image, item.imageAlt)
-        : "",
-})}
-${item.body.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("\n")}
-${(item.shots || []).length ? `${item.shots.map((pair) => shotPairHtml(pair)).join("\n")}\n` : ""}${item.chart ? `${pirxChartHtml()}\n` : ""}${relatedHtml}
-${placeholder(placeholders.portfolio)}
-</main>`,
+    body: item.slug === "pirx" ? pirxCaseBody(item, crumbs, relatedHtml) : caseStudyBody(item, crumbs, relatedHtml),
   });
   await writePage(`portfolio/${item.slug}/index.html`, html);
 }
@@ -864,13 +902,14 @@ async function renderPortfolioHub() {
       name: "Portfolio",
       description,
     }), [crumbList(crumbs), list]),
-    body: `<main id="top" class="site-page">
+    body: `<main id="top" class="site-page collection-page collection-page--portfolio">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",
   title: "Work that's live.",
   dek: "<p>Live work you can open and try, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants and pirx.ca.</p>",
 })}
+${collectionIndex([[cases.length, "named systems"], ["Live", "screens, not mockups"], ["Open", "the work and try it"]])}
 <ul class="cards">${cards}</ul>
 </main>`,
   });
@@ -917,15 +956,28 @@ async function renderProduct(item) {
       description: item.description,
       image: `${SITE}${item.image}`,
     }), [crumbList(crumbs), app]),
-    body: `<main id="top" class="site-page">
+    body: `<main id="top" class="site-page product-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Product",
   title: esc(item.name),
-  dek: `<p>${esc(item.description)}</p>\n<p><a href="${esc(item.sameAs)}">Open the live system</a></p>\n<p><a href="/portfolio/${item.caseSlug}/">Portfolio note</a></p>`,
+  dek: `<p>${esc(item.description)}</p>`,
+  actions: pageActions(item.sameAs, "Open the live system", `/portfolio/${item.caseSlug}/`, "Read the build note"),
   media: assetMedia(item.image, item.imageAlt),
 })}
+<section class="product-page__experience editorial-split">
+${sectionHeading("Use the real thing", "Open it. Try it. Decide from the work.")}
+<div class="editorial-split__body"><p>${esc(item.description)}</p><p>What you see here is the shipped interface—not a concept render or a speculative roadmap.</p></div>
+</section>
+<section class="experience-panel" aria-label="${esc(item.name)} product preview">
+<div class="experience-panel__bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${esc(item.name)}</strong></div>
+<div class="experience-panel__viewport">${assetMedia(item.image, item.imageAlt, { lazy: true })}</div>
+</section>
+<section class="product-page__next premium-cta">
+${sectionHeading("Need it shaped around your workflow?", "Use the product—or commission the system that fits.")}
 ${placeholder(placeholders.product)}
+${pageActions("/start/", "Start a project", `/portfolio/${item.caseSlug}/`, "Read the portfolio note")}
+</section>
 </main>`,
   });
   await writePage(`products/${item.slug}/index.html`, html);
@@ -972,13 +1024,14 @@ async function renderProductsHub() {
       name: "Products",
       description,
     }), [crumbList(crumbs), list]),
-    body: `<main id="top" class="site-page">
+    body: `<main id="top" class="site-page collection-page collection-page--products">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
   title: "Software you can use today.",
   dek: "<p>Ready-made tools you can try today: Schema and Super Funnel.</p>",
 })}
+${collectionIndex([[products.length, "products"], ["Live", "and ready to open"], ["Real", "screens and workflows"]])}
 <ul class="cards cards--pair">${cards}</ul>
 </main>`,
   });
@@ -1026,15 +1079,28 @@ async function renderCourse() {
       description: course.description,
       image: `${SITE}${course.image}`,
     }), [crumbList(crumbs), node]),
-    body: `<main id="top" class="site-page">
+    body: `<main id="top" class="site-page course-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "LLM Leverage",
   title: "Learn to get real work done with AI.",
-  dek: `<p>${esc(course.description)}</p>\n<p>Built for class or self-paced study. Includes four workshop decks, practice exercises, templates, a glossary and a capstone gallery.</p>\n<p><a href="${esc(course.sameAs)}">Open the course</a></p>\n<p><a href="/portfolio/llm-leverage/">Portfolio note</a></p>`,
+  dek: `<p>${esc(course.description)}</p>\n<p>Built for class or self-paced study. Includes four workshop decks, practice exercises, templates, a glossary and a capstone gallery.</p>`,
+  actions: pageActions(course.sameAs, "Open the course", "/portfolio/llm-leverage/", "Read the build note"),
   media: assetMedia("/assets/course-hero-bg.webp", course.imageAlt),
 })}
+<section class="course-page__path editorial-split">
+${sectionHeading("A complete learning path", "Learn alone—or bring the room with you.")}
+<div class="editorial-split__body"><p>Twelve modules turn better prompting into a repeatable working method. The workshop path gives a team the same language, practice, and operating rhythm.</p><p>Every module ends with a quiz. The capstone gallery makes the work visible rather than leaving completion as a checkbox.</p></div>
+</section>
+<section class="experience-panel experience-panel--course" aria-label="LLM Leverage course preview">
+<div class="experience-panel__bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>LLM Leverage</strong></div>
+<div class="experience-panel__viewport">${assetMedia(course.image, course.imageAlt, { lazy: true })}</div>
+</section>
+<section class="premium-cta">
+${sectionHeading("Put it into practice", "Open the course or bring the workshop to your team.")}
 ${placeholder(placeholders.course)}
+${pageActions(course.sameAs, "Open the course", "/start/", "Plan a team rollout")}
+</section>
 </main>`,
   });
   await writePage("course/llm-leverage/index.html", html);
@@ -1184,7 +1250,7 @@ async function renderStart() {
       name: "Start a project",
       description: "Tell us how the work gets done. We reply within one working day.",
     }), []),
-    body: `<main id="top" class="site-page">
+    body: `<main id="top" class="site-page start-page">
 ${pageHero({
   kicker: "Start",
   title: "Start a project",
@@ -1210,7 +1276,15 @@ ${intakeForm()}
       name: "Got it",
       description: "We reply within one working day.",
     }), []),
-    body: `<main id="top" class="site-page"><header class="page-hero page-header"><div class="page-hero__copy"><p class="eyebrow">Start</p><h1>Got it. We reply within one working day.</h1><div class="page-header__lede lede"><p>If you need to add something, email houdini@abra-ca-dabra.app.</p></div></div></header></main>`,
+    body: `<main id="top" class="site-page confirmation-page">
+<section class="confirmation-page__panel">
+<p class="eyebrow">Message received</p>
+<p class="confirmation-page__mark" aria-hidden="true">✓</p>
+<h1>Got it. We reply within one working day.</h1>
+<p class="lede">If you need to add something, email <a href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a>.</p>
+<p class="confirmation-page__actions" data-actions><a class="btn btn--primary" href="/portfolio/">See the work</a><a class="btn btn--tertiary" href="/">Back to home <span class="btn__arrow" aria-hidden="true">→</span></a></p>
+</section>
+</main>`,
   });
   await writePage("start/thanks/index.html", thanks);
 }
@@ -1258,6 +1332,14 @@ async function patchHome() {
   await writeFile(path, smartQuotesHtml(html));
 }
 
+async function patchFilms() {
+  const path = join(root, "films.html");
+  let html = await readFile(path, "utf8");
+  html = fill(html, "<!-- SITE-NAV -->", "<!-- /SITE-NAV -->", siteHeader());
+  html = fill(html, "<!-- SITE-FOOT -->", "<!-- /SITE-FOOT -->", siteFooter({ band: "compact" }));
+  await writeFile(path, smartQuotesHtml(html));
+}
+
 async function patchSitemap() {
   const path = join(root, "sitemap.xml");
   let xml = await readFile(path, "utf8");
@@ -1298,6 +1380,7 @@ export async function buildSitePages() {
   await renderStart();
   await renderMissing();
   await patchHome();
+  await patchFilms();
   await patchSitemap();
   await patchRedirects();
   await patchLlms();
