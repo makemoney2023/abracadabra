@@ -5,6 +5,7 @@ import { extname, join, normalize } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const mimeTypes = {
@@ -16,6 +17,8 @@ const mimeTypes = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.json': 'application/json',
 };
 
 let browser;
@@ -62,6 +65,16 @@ async function openPage({ width = 1280, height = 800, reducedMotion = 'no-prefer
     reducedMotion,
   });
   const page = await context.newPage();
+  const requests = [];
+  const errors = [];
+  page.on('request', (request) => {
+    requests.push(new URL(request.url()).pathname);
+  });
+  page.on('pageerror', (error) => {
+    errors.push(String(error));
+  });
+  page.requests = requests;
+  page.errors = errors;
   await page.goto(origin, { waitUntil: 'networkidle' });
   return { context, page };
 }
@@ -81,53 +94,115 @@ test('hero states the owner outcome with two clear actions', async () => {
   await context.close();
 });
 
-test('orbital horizon video covers the hero behind the copy', async () => {
+test('wordmark is lowercase Inter Tight with an orange dot', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800, reducedMotion: 'reduce' });
+  const mark = page.locator('#hero .hero__wm');
+  assert.equal((await mark.textContent()).trim(), 'abracadabra.');
+  const style = await mark.evaluate((element) => {
+    const s = getComputedStyle(element);
+    return { family: s.fontFamily, weight: s.fontWeight, spacing: parseFloat(s.letterSpacing) / parseFloat(s.fontSize) };
+  });
+  assert.match(style.family, /^"?Inter Tight"?/);
+  assert.equal(style.weight, '600');
+  assert.ok(Math.abs(style.spacing + 0.05) < 0.005, `letter-spacing ${style.spacing}em`);
+  assert.equal(await page.locator('#hero .wm-dot').evaluate((element) => getComputedStyle(element).color), 'rgb(255, 75, 36)');
+  assert.ok(await page.evaluate(() => document.fonts.check('600 40px "Inter Tight"')));
+  assert.match(await page.locator('h1').evaluate((element) => getComputedStyle(element).fontFamily), /Inter Tight/);
+  assert.equal(page.requests.some((path) => /tektur/i.test(path)), false);
+  await context.close();
+});
+
+test('hero headline is real HTML and readable on the first screen', async () => {
   for (const viewport of [
     { width: 1440, height: 1000 },
     { width: 390, height: 844 },
   ]) {
     const { context, page } = await openPage(viewport);
-    const video = page.locator('#hero .hero__video');
-    const source = video.locator('source');
+    assert.equal(await page.locator('#hero video').count(), 0);
+    assert.equal(page.requests.some((path) => path.endsWith('orbital-horizon.mp4')), false);
 
-    assert.equal(await source.getAttribute('src'), 'assets/orbital-horizon.mp4');
-    assert.equal(await source.getAttribute('type'), 'video/mp4');
-    assert.equal(await video.getAttribute('autoplay'), '');
-    assert.equal(await video.getAttribute('loop'), '');
-    assert.equal(await video.getAttribute('playsinline'), '');
-    assert.equal(await video.evaluate((element) => element.muted), true);
+    const title = page.locator('#hero-title');
+    const box = await title.boundingBox();
+    assert.equal(await title.evaluate((element) => getComputedStyle(element).opacity), '1');
+    assert.ok(box && box.width > 40 && box.height > 10, 'headline has no box');
+    assert.ok(box.y >= 0 && box.y + box.height < viewport.height, `${viewport.width}px headline is outside the first screen`);
 
-    const coverage = await page.locator('#hero').evaluate((hero) => {
-      const heroRect = hero.getBoundingClientRect();
-      const videoRect = hero.querySelector('.hero__video').getBoundingClientRect();
-      const copy = hero.querySelector('.hero__copy');
-      const film = hero.querySelector('.hero__video');
-
-      return {
-        filmBehindCopy: Number.parseInt(getComputedStyle(film).zIndex, 10)
-          < Number.parseInt(getComputedStyle(copy).zIndex, 10),
-        bottomGap: Math.abs(heroRect.bottom - videoRect.bottom),
-        leftGap: Math.abs(heroRect.left - videoRect.left),
-        rightGap: Math.abs(heroRect.right - videoRect.right),
-        topGap: Math.abs(heroRect.top - videoRect.top),
-      };
-    });
-
-    assert.equal(coverage.filmBehindCopy, true);
-    assert.ok(coverage.topGap <= 1);
-    assert.ok(coverage.rightGap <= 1);
-    assert.ok(coverage.bottomGap <= 1);
-    assert.ok(coverage.leftGap <= 1);
+    const stage = await page.locator('#hero .hero__stage').boundingBox();
+    assert.ok(stage && stage.height >= 200, 'stage did not reserve height');
+    const shift = await page.locator('#hero .hero__stage').evaluate((element) => new Promise((resolve) => {
+      const before = element.getBoundingClientRect().height;
+      requestAnimationFrame(() => {
+        resolve(Math.abs(element.getBoundingClientRect().height - before));
+      });
+    }));
+    assert.ok(shift < 1, `stage height moved ${shift}px`);
+    assert.deepEqual(page.errors, []);
     await context.close();
   }
 });
 
-test('orbital horizon video pauses when reduced motion is requested', async () => {
-  const { context, page } = await openPage({ reducedMotion: 'reduce' });
-  const video = page.locator('#hero .hero__video');
+test('reduced motion shows the wordmark with no canvas', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800, reducedMotion: 'reduce' });
+  assert.equal(await page.evaluate(() => document.documentElement.classList.contains('wm-js')), false);
+  assert.equal(page.requests.some((path) => path.includes('hero-three.js')), false);
+  assert.equal(await page.locator('#hero .hero__canvas').count(), 0);
+  await page.waitForTimeout(1500);
+  assert.equal(await page.locator('#hero .hero__wm').evaluate((element) => getComputedStyle(element).opacity), '1');
+  assert.deepEqual(page.errors, []);
+  await context.close();
+});
 
-  await page.waitForTimeout(100);
-  assert.equal(await video.evaluate((element) => element.paused), true);
+test('the canvas reveal plays in full once per session, then a quick version', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800 });
+  await page.waitForSelector('#hero .hero__canvas', { timeout: 5000 });
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('abra-wm')), '1');
+  await page.waitForFunction(() => document.documentElement.classList.contains('wm-dot-on'), { timeout: 5000 });
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('#hero .hero__wm')).opacity === '1', { timeout: 2000 });
+  const started = Date.now();
+  await page.goto(origin, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.documentElement.classList.contains('wm-dot-on'), { timeout: 3000 });
+  assert.ok(Date.now() - started < 2500, 'repeat visit should use the quick reveal');
+  assert.deepEqual(page.errors, []);
+  await context.close();
+});
+
+test('the reveal loop pauses when the hero leaves the screen', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800 });
+  await page.waitForFunction(() => window.__wmRunning && window.__wmRunning(), { timeout: 5000 });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForFunction(() => !window.__wmRunning(), { timeout: 3000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForFunction(() => window.__wmRunning(), { timeout: 3000 });
+  assert.deepEqual(page.errors, []);
+  await context.close();
+});
+
+test('the wordmark sits above the headline on a phone', async () => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 360, height: 780 }]) {
+    const { context, page } = await openPage({ ...viewport, reducedMotion: 'reduce' });
+    const stage = await page.locator('#hero .hero__stage').boundingBox();
+    const title = await page.locator('#hero-title').boundingBox();
+    const mark = await page.locator('#hero .hero__wm').boundingBox();
+    assert.ok(stage.y + stage.height <= title.y, `${viewport.width}px wordmark is not above the headline`);
+    assert.ok(mark.width >= viewport.width * 0.7 && mark.x >= 0 && mark.x + mark.width <= viewport.width, `${viewport.width}px wordmark width ${mark.width}`);
+    await context.close();
+  }
+});
+
+test('without a 2D canvas the wordmark still appears', async () => {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await context.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function getContext() {
+      return this.classList.contains('hero__canvas') ? null : original.apply(this, arguments);
+    };
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(String(error)));
+  await page.goto(origin, { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => document.documentElement.classList.contains('wm-on'), { timeout: 5000 });
+  assert.deepEqual(errors, []);
   await context.close();
 });
 

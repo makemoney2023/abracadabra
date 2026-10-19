@@ -49,7 +49,7 @@ a:hover { color: var(--ink); }
 }
 
 .mark {
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   color: var(--ink);
   text-decoration: none;
   letter-spacing: 0.02em;
@@ -70,7 +70,7 @@ main.blog-post {
   width: min(100% - 2rem, var(--page));
 }
 
-h1, h2, h3 { font-family: Tektur, sans-serif; font-weight: 500; line-height: 1.15; }
+h1, h2, h3 { font-family: "Inter Tight", sans-serif; font-weight: 500; line-height: 1.15; }
 
 h1 { font-size: clamp(2.1rem, 4.6vw, 3.4rem); margin: 0.35rem 0 0.8rem; }
 
@@ -188,7 +188,7 @@ main.blog-post .content-hero:has(.content-hero-photo) figcaption {
 
 .post-toc p {
   margin: 0 0 0.55rem;
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   font-size: 0.85rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -270,7 +270,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 .extraction-table th {
   background: #1c120f;
   color: var(--optic);
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   font-weight: 500;
 }
 
@@ -294,7 +294,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 
 .key-stat dd {
   margin: 0.15rem 0 0.35rem;
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   font-size: clamp(2.2rem, 4vw, 3rem);
   line-height: 1;
   color: var(--accent);
@@ -317,7 +317,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
   color: #170804;
   text-decoration: none;
   padding: 0.6rem 0.9rem;
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
 }
 
 .cta a:hover { background: var(--signal); color: #170804; }
@@ -344,7 +344,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 
 .faq-list summary {
   cursor: pointer;
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   padding: 0.55rem 0;
 }
 
@@ -468,7 +468,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 }
 
 .featured-copy strong {
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   font-weight: 500;
   font-size: clamp(1.7rem, 3vw, 2.5rem);
   line-height: 1.15;
@@ -506,7 +506,7 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 .cards a:hover { border-color: rgba(255, 75, 36, 0.55); }
 
 .cards strong {
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   font-weight: 500;
   font-size: 1.12rem;
   line-height: 1.25;
@@ -546,10 +546,13 @@ figcaption { color: var(--ink-soft); font-size: 0.9rem; margin-top: 0.45rem; }
 }
 
 .site-nav__mark {
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   color: var(--ink);
   text-decoration: none;
-  letter-spacing: 0.02em;
+  font-family: "Inter Tight", sans-serif;
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: -0.05em;
   white-space: nowrap;
 }
 
@@ -726,7 +729,7 @@ body { text-wrap: pretty; }
 .placeholder strong {
   display: block;
   margin-bottom: 0.35rem;
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   color: var(--accent);
   font-weight: 500;
 }
@@ -754,7 +757,7 @@ body { text-wrap: pretty; }
   justify-content: center;
   min-height: 44px;
   padding: 0.55rem 0.9rem;
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   text-decoration: none;
 }
 
@@ -1119,7 +1122,7 @@ summary:focus-visible {
   text-decoration: none;
   padding: 0.65rem 0.95rem;
   border-radius: var(--radius-control);
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
 }
 
 .skip:focus { top: 0.65rem; color: var(--ink-on-accent); }
@@ -1147,7 +1150,7 @@ summary:focus-visible {
   border: 1px solid var(--accent);
   color: var(--ink-on-accent);
   text-decoration: none;
-  font-family: Tektur, sans-serif;
+  font-family: "Inter Tight", sans-serif;
   transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out);
 }
 
@@ -1326,10 +1329,10 @@ main.site-page > section > h2,
 .site-foot__brand,
 .site-foot__word {
   margin: 0;
-  font-family: Tektur, sans-serif;
-  font-weight: 500;
+  font-family: "Inter Tight", sans-serif;
+  font-weight: 600;
   color: var(--ink);
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
   font-size: clamp(1.5rem, 9.2vw, 8rem);
   max-width: 100%;
   line-height: 0.9;
@@ -1455,3 +1458,5 @@ input, textarea, select { border-radius: var(--ui-r-control); }
 }
 
 .proof-strip__label { color: var(--ink-soft); }
+
+.wm-dot { color: var(--accent, #FF4B24); }
