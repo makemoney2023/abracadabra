@@ -28,19 +28,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: true });
   }
   try {
-    const result = await applyBookingEvent(createAdminClient(), event, body);
-    await forwardBooking({
+    // On Cloudflare there is no Supabase store: HQ (POST /api/intake/booking) is the booking record.
+    // The local Supabase write only runs where that admin env exists (the old Vercel/Inngest path).
+    const local = supabaseAdminConfigured() ? await applyBookingEvent(createAdminClient(), event, body) : null;
+    const forwarded = await forwardBooking({
       kind: event.kind,
       externalId: event.externalId,
       startsAt: event.startsAt,
       email: event.email,
       name: event.name,
     });
-    return NextResponse.json({ ok: true, ...result });
+    if (!local && forwarded.skipped) {
+      if (!event.externalId || !event.startsAt) return NextResponse.json({ ok: true, ignored: true });
+      // Nothing stored the booking. 503 makes Cal.com retry once HQ intake is configured.
+      return NextResponse.json({ error: "Booking store is not configured" }, { status: 503 });
+    }
+    return NextResponse.json({ ok: true, ...(local ?? {}), forwarded: !forwarded.skipped });
   } catch (err) {
     return NextResponse.json(
       { error: "Booking update failed", message: err instanceof Error ? err.message : "unknown" },
       { status: 500 },
     );
   }
+}
+
+function supabaseAdminConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
 }
