@@ -1,0 +1,10 @@
+{
+  "name": "abracadabra-chat",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "preview": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}

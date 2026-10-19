@@ -489,6 +489,7 @@ async function consumeBooking(
   const email = cleanEmail(body?.email);
   const name = cleanName(body?.name);
   const domain = companyDomain(body?.domain, email);
+  const chatSessionId = typeof body?.chat_session_id === "string" ? body.chat_session_id.trim().slice(0, 80) : "";
 
   const current = await sql.get<AppointmentRow>(
     `SELECT id, organization_id, contact_id, deal_id, starts_at, status
@@ -556,7 +557,12 @@ async function consumeBooking(
         dealId,
         kind: "call",
         body: bookingBody(status),
-        data: { external_id: externalId, starts_at: startsAt, status },
+        data: {
+          external_id: externalId,
+          starts_at: startsAt,
+          status,
+          ...(chatSessionId ? { chat_session_id: chatSessionId } : {}),
+        },
         now,
       });
       await sql.run(

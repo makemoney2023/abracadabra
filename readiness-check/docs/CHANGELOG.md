@@ -1,5 +1,14 @@
 # Changelog
 
+## Chat booking session — 2026-10-19
+
+- **What changed** — Cal.com webhook payloads now keep `metadata.chat_session_id`. That id is forwarded on `POST /api/intake/booking` as `chat_session_id`.
+- **Why** — A working session booked inside the site chat has to stay tied to that chat when HQ files the appointment.
+- **Code touchpoints** — `src/lib/booking/cal-payload.ts`, `src/lib/handoff-intake.ts`, `src/app/api/webhooks/booking/route.ts`
+- **Data-flow impact** — HQ booking intake gains an optional `chat_session_id`. Assessment bookings are unchanged.
+- **API / schema impact** — none on the check app. The HQ activity JSON stores the id when it is present.
+- **Verification** — `npx vitest run tests/unit/assessment-suggest.test.ts tests/unit/handoff-intake.test.ts`
+
 ## Plain-language questions — 2026-10-19
 
 - **What changed** — Question prompts and answer labels in the readiness check are rewritten in plain, human wording at about a grade 5 reading level. Jargon such as "system of record", "reconciled by hand", "workflow", and "answer engines" is gone.

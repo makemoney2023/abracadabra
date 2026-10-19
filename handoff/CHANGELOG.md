@@ -2,6 +2,15 @@
 
 ## 2026-10-19
 
+- **What changed** — A Cal.com booking can carry `chat_session_id`. The booking activity `data_json` stores it when the signed intake includes it.
+- **Why** — Sessions booked from the site chat need to point back at that chat on the lead.
+- **Code touchpoints** — `handoff/src/lib/intake/consume.ts`
+- **Data-flow impact** — `POST /api/intake/booking` accepts an optional string. Missing ids behave as before.
+- **API / schema impact** — No migration. The id lives in the existing activity JSON.
+- **Verification** — `npx vitest run src/lib/intake/consume.test.ts`
+
+## 2026-10-19
+
 - **What changed** — Readiness Check submissions and `/start/` project inquiries now queue a reply from Sales Outbound. New routing statuses `reply_needed` and `replied`. New signed intake `POST /api/intake/project-inquiry` (`PROJECT_INQUIRY_SIGNING_SECRET`, queue source `project_inquiry`) opens a `start_form` deal. `GET /api/leads/export?status=reply_needed` returns `reply_to`, `readiness` (with `answers`), and `inquiry`. `POST /api/intake/outreach` moves `reply_needed` to `replied`. Schema scoring no longer overwrites inbound statuses. The marketing worker posts the form to HQ; the houdini@ Resend email is optional.
 - **Why** — Readiness Check deals had no routing status, so no export returned them and nobody replied. The `/start/` form only emailed houdini@ through Resend, and the marketing worker has no Resend key.
 - **Code touchpoints** — `handoff/src/lib/lead-routing.ts`, `handoff/src/lib/lead-export.ts`, `handoff/src/lib/intake/{consume,accept,queue}.ts`, `handoff/src/app/api/intake/project-inquiry/route.ts`, `handoff/src/app/leads/{view.ts,filters.tsx}`, `scrollcraft/builds/abracadabra-ai/worker/intake.js`

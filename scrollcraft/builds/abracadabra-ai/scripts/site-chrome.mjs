@@ -233,5 +233,6 @@ export function siteFooter({ band = "full" } = {}) {
     <span>© ${YEAR} Abracadabra AI</span>
     <a href="/privacy">Privacy</a>
   </p>
+  <script type="module" src="/assets/chat-widget.js?v=20261019d"></script>
 </footer>`;
 }

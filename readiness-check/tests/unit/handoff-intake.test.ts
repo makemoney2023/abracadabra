@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { assessmentIntakeBody, deliverSchemaPackage, postSignedIntake } from "@/lib/handoff-intake";
+import { assessmentIntakeBody, bookingIntakeBody, deliverSchemaPackage, postSignedIntake } from "@/lib/handoff-intake";
 
 async function signIntakeBody(secret: string, body: string): Promise<string> {
   const key = await crypto.subtle.importKey(
@@ -116,5 +116,33 @@ describe("handoff intake poster", () => {
     );
     expect(result).toEqual({ ok: true, skipped: true });
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("keeps the chat session id on a Cal.com booking forwarded to HQ", () => {
+    expect(bookingIntakeBody({
+      kind: "created",
+      externalId: "bk_1",
+      startsAt: "2026-11-02T15:00:00.000Z",
+      email: "ada@northwind.example",
+      name: "Ada",
+      chatSessionId: "6f1e8c0a-1b2c-4d3e-8f90-aabbccddeeff",
+    })).toEqual({
+      skip: false,
+      body: {
+        external_id: "bk_1",
+        email: "ada@northwind.example",
+        name: "Ada",
+        starts_at: Date.parse("2026-11-02T15:00:00.000Z"),
+        kind: "created",
+        chat_session_id: "6f1e8c0a-1b2c-4d3e-8f90-aabbccddeeff",
+      },
+    });
+    expect(bookingIntakeBody({
+      kind: "created",
+      externalId: null,
+      startsAt: "2026-11-02T15:00:00.000Z",
+      email: null,
+      name: null,
+    })).toEqual({ skip: true });
   });
 });
