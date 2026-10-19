@@ -82,7 +82,7 @@ Functions come from one list, `businessFunctions` in `scripts/site-data.mjs`:
 
 | Function | Owns |
 |---|---|
-| Search & AI visibility | Get found in AI search. PiRX: 375K search impressions and 43.5K AI-feature impressions in 90 days (Jul 14 to Oct 13, 2026). |
+| Search & AI visibility | Get found in AI search. PiRX: 398K search impressions and 46.5K AI-feature impressions in 90 days (Jul 18 to Oct 17, 2026). |
 | Marketing | On-brand images, video and voice, on demand. Research you can trust, with every source cited. |
 | Sales | AI assistants that actually get things done. |
 | Customer service | AI that answers your phone. |
@@ -135,9 +135,9 @@ Four live lines. No client logos until permission exists.
 
 **Header:** "From zero to scale" isn't a slogan. Here's the receipt.
 
-**Body:** From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026: 375K search impressions, 1.85K clicks, average position 7.6. The Generative AI features report is separate and is not added to the search total: 43.5K impressions. Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K (search) and about 1.2-1.8K (AI features) by mid-September.
+**Body:** From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days. Google Search Console, Jul 18 to Oct 17, 2026: 398K search impressions, 1.94K clicks, average position 7.6. The Generative AI features report is separate and is not added to the search total: 46.5K impressions. Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K (search) and about 1.2-1.8K (AI features) by mid-September.
 
-**Small print (internal, not for the page):** Christopher approved this window on 2026-10-15. Do not mention CTR. Do not claim a traffic or revenue result. Do not add the two impression totals. The chart on the site is illustrative of the shape, not a daily export. The 2026-09-23 pull (201K / 21.8K / 1.1K) is superseded and must not stay on a public page.
+**Small print (internal, not for the page):** Christopher approved this window on 2026-10-15. Do not mention CTR. Do not claim a traffic or revenue result. Do not add the two impression totals. The charts on the site are blurred Search Console crops framed as product shots, not a daily export. The 2026-09-23 pull (201K / 21.8K / 1.1K) is superseded and must not stay on a public page.
 
 ### 3A. Answer Engine Optimization
 
@@ -154,7 +154,7 @@ Four live lines. No client logos until permission exists.
 3. **Make it legible to machines.** Connect the page, entity, schema, and source signals without inventing a score or claim.
 4. **Measure the surface.** Track indexed demand, clicks, and observed AI-search visibility; revise where the evidence is weak.
 
-**Proof:** From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Source: Google Search Console, Jul 14 to Oct 13, 2026. Search: 375K impressions, 1.85K clicks, average position 7.6. Generative AI features (separate report): 43.5K impressions. Top pages: good-10k-time-by-age 10,451; good-half-marathon-time-by-age 7,758; good-5k-time-by-age 6,104.
+**Proof:** From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days. Source: Google Search Console, Jul 18 to Oct 17, 2026. Search: 398K impressions, 1.94K clicks, average position 7.6. Generative AI features (separate report): 46.5K impressions. Top pages: good-10k-time-by-age 11,068; good-half-marathon-time-by-age 8,192; good-5k-time-by-age 6,728.
 
 **Primary CTA:** Run the Readiness Check
 **Secondary CTA:** Open Schema
@@ -246,7 +246,7 @@ Each row is a semantic system turned into something a buyer can take to a budget
 | Experts are the queue | A correct answer from owned science, product, and compensation knowledge, on text and voice, without growing the support team in proportion to the network | `SuperPatch AI`, `Videostoryboard`, `VideoTranscriptions`, `all studies` |
 | New reps sound unlike the standard | The best talk track in every conversation: frameworks from real training, words for each buyer, a voice path that books a time, a field app, and a coach on the live pipeline | `SalesEnablement`, `Practioiner Wordtracks`, `superpatch-d2c`, `jai`, `superfunnelsystem` |
 | Leads arrive with no story | An assessment a person finishes, a result they can read, their language, a clinic's name, email, and a path to purchase | `Medical Questionairre`, `superpatch-consumer-survey`, `superpatch-health-practitioner-survey` |
-| Nobody knows if AI answer engines can even find the brand | A scanner that scores AI visibility and generates the fix — plus a live proof case: a brand-new domain (pirx.ca) went from near-zero to 21.8K impressions on Google's Generative AI surface (201K impressions total) in about twelve weeks | `Schema`, `Projects/PIRX` (pirx.ca) |
+| Nobody knows if AI answer engines can even find the brand | A scanner that scores AI visibility and generates the fix — plus a live proof case: a brand-new domain (pirx.ca) went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days (Jul 18 to Oct 17, 2026) | `Schema`, `Projects/PIRX` (pirx.ca) |
 | Decisions wait on last month | What training can support, whether a habit is changing how someone feels, the rate move before the weekend, which anonymous visit is ready to buy | `Projects/PIRX`, `spwearable`, `HotelRates`, `Website Visitor` |
 | A new channel or country needs a department | On-brand creative, training films, product kits, and assessments for the markets and buyers you already have | `associate-content-studio`, `Superpatch_Context/content-studio`, `Translations`, `RobSperry Video Translations`, `Projects/SocialFunny`, `90 Day Social`, `Projects/Military`, `ICP` |
 | The sale required a visit | Fit, estimate, booking, trust, and the written record before the drive or the specialist's hour | Showdesk (repo), Canadian Discount Appliances (repo), `Projects/wilkandwilk`, `Projects/strongfoam`, `Projects/queenlynch/queenlynch-site`, `Projects/hunt`, `ClaudeSkills/apps/sieger-show-secretary` |
@@ -286,7 +286,7 @@ Repo brief for that catalog: quiet conjure, museum of working software, physical
 
 ### Named on the service pages — 2026-10-15
 
-Christopher cleared these names for the public service pages and `/portfolio/`. No testimonials. No metrics except the pirx.ca Search Console window Jul 14 to Oct 13, 2026, already in this file.
+Christopher cleared these names for the public service pages and `/portfolio/`. No testimonials. No metrics except the pirx.ca Search Console window Jul 18 to Oct 17, 2026, already in this file.
 
 | Name | What may be said | Service pages |
 |---|---|---|
@@ -299,7 +299,7 @@ Christopher cleared these names for the public service pages and `/portfolio/`. 
 
 Answers from your documents and voice have no named case. Any model, one bill points at the homepage model gateway and states no client spend. Safe code execution is a capability of the assistants; its URL stays, and both pages link to each other. It is not a client case.
 
-Christopher approved a fresh Google Search Console window on 2026-10-15: Jul 14 to Oct 13, 2026. Publish 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions as a separate report. Lead with "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days." Always show the date range. The 2026-09-23 digits are retired.
+Christopher approved a fresh Google Search Console window on 2026-10-15: Jul 18 to Oct 17, 2026. Publish 398K search impressions, 1.94K clicks, average position 7.6, and 46.5K Generative AI feature impressions as a separate report. Lead with "From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days." Always show the date range. The 2026-09-23 digits are retired.
 
 ### Answers and knowledge
 
@@ -331,7 +331,7 @@ Christopher approved a fresh Google Search Console window on 2026-10-15: Jul 14 
 | Consumer Signal Score | `Desktop/superpatch-consumer-survey` | Public assessment, personal report, many locales including right-to-left, email, affiliate lookup, path to cart | Proving ground |
 | Practitioner Signal Score | `Desktop/superpatch-health-practitioner-survey` | Same scoring, clinic branding, patient links, flyer and QR, no cart — the patient returns to the provider | Proving ground |
 | spwearable | `Desktop/spwearable` | Catalog, wear log, daily feel, wellness trend, tenant-aware chat, billing. Live: `spwearable.vercel.app` | Proving ground |
-| PIRX | `Desktop/Projects/PIRX` | What training structurally supports right now. Wearable ingestion, projections, chat, mobile — and the content engine behind pirx.ca, which went from a blank domain to 201K search impressions (21.8K of them on Google's Generative AI / AI Overviews surface) in about twelve weeks. Domain signal: `pirx.ca` | Venture |
+| PIRX | `Desktop/Projects/PIRX` | What training structurally supports right now. Wearable ingestion, projections, chat, mobile — and the content engine behind pirx.ca, which went from a blank domain to 398K search impressions and 46.5K AI-feature impressions in 90 days (Jul 18 to Oct 17, 2026). Domain signal: `pirx.ca` | Venture |
 | Launch survey | `Desktop/launchsurvey` | Structured beta feedback for a training platform | Ops |
 | TotalGut7 | `Desktop/TotalGut7Website` | Supplement brand site variants (clinical, editorial, consumer) from captured source copy. Confirm naming rights before public use | Venture |
 
@@ -416,7 +416,7 @@ These are sourced on disk. They are not approved public claims.
 
 **Safe to say without those numbers.** Live URLs. "Several languages" or "twenty locales" where the app README states the locale list. "Non-diagnostic wellness assessment." "Film, one-pager, and demo script from the same footage." "A second product on a shared platform."
 
-**Already cleared, unlike the table above.** The pirx.ca Search Console window Jul 14 to Oct 13, 2026 is approved for public use: 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions (a separate report). Top AI-feature pages: good-10k-time-by-age 10,451; good-half-marathon-time-by-age 7,758; good-5k-time-by-age 6,104. Do not mention CTR. Do not claim traffic or revenue. Do not add the two impression totals. The earlier 2026-09-23 pull is not the public claim. Self-hosted page screenshots may be shown; do not copy PiRX's own on-site claims (370K+, 4.9/5, 97.4%, Olympians) into Abracadabra text.
+**Already cleared, unlike the table above.** The pirx.ca Search Console window Jul 18 to Oct 17, 2026 is approved for public use: 398K search impressions, 1.94K clicks, average position 7.6, and 46.5K Generative AI feature impressions (a separate report). Top AI-feature pages: good-10k-time-by-age 11,068; good-half-marathon-time-by-age 8,192; good-5k-time-by-age 6,728. Do not mention CTR. Do not claim traffic or revenue. Do not add the two impression totals. The earlier 2026-09-23 pull is not the public claim. Self-hosted page screenshots may be shown; do not copy PiRX's own on-site claims (370K+, 4.9/5, 97.4%, Olympians) into Abracadabra text.
 
 ---
 

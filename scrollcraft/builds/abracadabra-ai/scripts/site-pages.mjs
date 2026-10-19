@@ -18,7 +18,7 @@ import {
   placeholders,
   products,
 } from "./site-data.mjs";
-import { pirxChartHtml } from "./pirx-chart.mjs";
+import { pirxChartHtml, pirxChartSingleHtml, writePirxChartImages } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 
@@ -189,7 +189,8 @@ function functionLinkList(fn) {
 function offeringsHtml() {
   const cards = businessFunctions.map((fn) => {
     const proof = fn.proof ? `<p class="fn-card__proof">${esc(fn.proof)}</p>` : "";
-    return `<li class="fn-card" id="fn-${esc(fn.id)}">${functionPhoto(fn)}<h3>${esc(fn.name)}</h3><p>${esc(fn.promise)}</p>${proof}${functionLinkList(fn)}</li>`;
+    const chart = fn.id === "search" ? pirxChartSingleHtml("performance", { sizes: "(min-width: 860px) 22vw, 100vw" }) : "";
+    return `<li class="fn-card" id="fn-${esc(fn.id)}">${functionPhoto(fn)}<h3>${esc(fn.name)}</h3><p>${esc(fn.promise)}</p>${proof}${chart}${functionLinkList(fn)}</li>`;
   }).join("");
   return `<section id="services" class="sc-section services" aria-labelledby="services-title">
     <div class="sc-wrap">
@@ -950,6 +951,33 @@ function llmsPages() {
   return lines.join("\n");
 }
 
+
+function homeAiSearchTileHtml() {
+  return `<section id="ai-search-tile" class="ai-search-tile" aria-labelledby="ai-search-tile-title">
+  <div class="wrap">
+    <a class="ai-search-tile__card" href="/services/ai-visibility/">
+      <p class="kicker">Search &amp; AI visibility</p>
+      <h2 id="ai-search-tile-title">Invisible in AI search? Not anymore.</h2>
+      <p>When a buyer asks an assistant what to use, you should be the answer. PiRX went from near-zero to 398K search impressions in 90 days.</p>
+      <p class="ai-search-tile__cta">Get found in AI search.</p>
+    </a>
+  </div>
+</section>`;
+}
+
+function homeProofHtml() {
+  return `<section id="proof" aria-labelledby="proof-title">
+  <div class="wrap">
+    <p class="kicker">Search &amp; AI visibility</p>
+    <h2 id="proof-title">Get found in AI search.</h2>
+    <p>PiRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p>
+    <p class="fine">Google Search Console, Jul 18 to Oct 17, 2026. The AI-feature count is separate and is not added to the search total.</p>
+    ${pirxChartHtml({ sizes: "(min-width: 860px) 46vw, 100vw" })}
+    <p><a href="/services/ai-visibility/">Get found in AI search.</a></p>
+  </div>
+</section>`;
+}
+
 async function patchHome() {
   const path = join(root, "index.html");
   let html = await readFile(path, "utf8");
@@ -957,6 +985,8 @@ async function patchHome() {
   html = fill(html, "<!-- SITE-FOOT -->", "<!-- /SITE-FOOT -->", siteFooter());
   html = fill(html, "<!-- MODELS -->", "<!-- /MODELS -->", modelsHtml());
   html = fill(html, "<!-- OFFERINGS -->", "<!-- /OFFERINGS -->", offeringsHtml());
+  html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", homeAiSearchTileHtml());
+  html = fill(html, "<!-- PROOF -->", "<!-- /PROOF -->", homeProofHtml());
   await writeFile(path, html);
 }
 
@@ -988,6 +1018,7 @@ async function patchLlms() {
 
 export async function buildSitePages() {
   await writeServiceImages();
+  await writePirxChartImages();
   await rm(join(root, "offerings"), { recursive: true, force: true });
   await renderOfferingsHub();
   for (const item of offerings) await renderOffering(item);

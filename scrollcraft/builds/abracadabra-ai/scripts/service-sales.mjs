@@ -508,7 +508,7 @@ export const salesPages = {
     proofs: [
       {
         title: "pirx.ca",
-        text: "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days. Google Search Console, Jul 14 to Oct 13, 2026, also recorded 1.85K clicks and an average position of 7.6. The Generative AI features report is a separate count and is not added to the search total. Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K in search and about 1.2-1.8K in AI features by mid-September. Those figures are this domain's, dated, and not a promise for the next one.",
+        text: "From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days. Google Search Console, Jul 18 to Oct 17, 2026, also recorded 1.94K clicks and an average position of 7.6. The Generative AI features report is a separate count and is not added to the search total. Both curves start near zero in mid-July, step up around Aug 31, and reach daily peaks of about 12-18K in search and about 1.2-1.8K in AI features by mid-September. Those figures are this domain's, dated, and not a promise for the next one.",
         href: "/portfolio/pirx/",
         link: "Read the pirx.ca note",
         chart: true,
@@ -527,7 +527,7 @@ export const salesPages = {
       ["What is the plain-text note?", "A file on the site that introduces the business and lists the pages worth reading. People can read it too. Claims that are not on the site are not hidden there."],
       ["Are new pages required?", "Only if the current ones do not answer the question. Filler is not published to chase a crawler."],
       ["Can another site's numbers appear on yours?", "No. The pirx.ca figures stay attached to pirx.ca and to the date they were pulled. The next report belongs to the next domain."],
-      ["How often do the figures move?", "The number on this page is the Google Search Console window Jul 14 to Oct 13, 2026. It is not refreshed from memory."],
+      ["How often do the figures move?", "The number on this page is the Google Search Console window Jul 18 to Oct 17, 2026. It is not refreshed from memory."],
     ],
     close: "Tell us what your customers ask, and we'll show you whether AI tools will point them to you.",
   }),

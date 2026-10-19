@@ -628,7 +628,7 @@ html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: backgro
 .ui-connector::before { left: 0; } .ui-connector::after { right: 0; }
 
 /* Cards */
-.fn-card, .cards > li, .proof-card, .pirx-chart {
+.fn-card, .cards > li, .proof-card {
   background: var(--ui-surface-1);
   border: var(--ui-border);
   border-radius: var(--ui-r-card);
@@ -679,3 +679,147 @@ input, textarea, select { border-radius: var(--ui-r-control); }
 }
 
 .wm-dot { color: var(--accent, #FF4B24); }
+
+
+/* PiRX proof shots — dark product frames, not raw screenshots */
+.pirx-chart { margin: 1rem 0 0; }
+.pirx-chart__pair {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 860px) {
+  .pirx-chart__pair { grid-template-columns: 1fr 1fr; gap: 1rem; }
+}
+.pirx-chart__source {
+  margin: 0.7rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  max-width: 52rem;
+}
+.pirx-chart--single { margin: 0.85rem 0.85rem 0; }
+.fn-card .pirx-chart--single { margin-inline: 0.85rem; margin-bottom: 0.25rem; }
+
+.pirx-shot {
+  --pirx-surface: #11110F;
+  --pirx-raised: #1A1A17;
+  position: relative;
+  margin: 0;
+  padding: 1rem 1rem 1.05rem;
+  background:
+    var(--ui-grid),
+    var(--pirx-surface);
+  background-size: 32px 32px, auto;
+  border: 1px solid rgba(245, 240, 232, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 1px rgba(0, 0, 0, 0.35), 0 18px 48px -12px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  isolation: isolate;
+}
+.pirx-shot__head { position: relative; z-index: 1; margin: 0 0 0.85rem; }
+.pirx-shot__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  margin: 0 0 0.65rem;
+  padding: 0.18em 0.7em;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, #C6FFB3 55%, transparent);
+  color: #C6FFB3;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.pirx-shot__label {
+  margin: 0 0 0.15rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.pirx-shot__figure {
+  margin: 0;
+  font-size: clamp(2.1rem, 4.2vw, 2.85rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.pirx-shot__sub {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.pirx-shot__stage {
+  position: relative;
+  padding: 0.55rem;
+  background: var(--pirx-raised);
+  border: 1px solid rgba(245, 240, 232, 0.08);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(245, 240, 232, 0.04);
+}
+@media (min-width: 860px) {
+  .pirx-shot:not(.pirx-shot--compact) .pirx-shot__stage {
+    transform: perspective(1200px) rotateY(-4deg) rotateX(2deg);
+    transform-origin: 50% 60%;
+  }
+  .pirx-chart__pair > .pirx-shot:nth-child(2):not(.pirx-shot--compact) .pirx-shot__stage {
+    transform: perspective(1200px) rotateY(4deg) rotateX(2deg);
+  }
+}
+.pirx-shot__screen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #0a0a09;
+  -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 70%, transparent 100%);
+}
+.pirx-shot__screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 55%, rgba(17, 17, 15, 0.55) 100%);
+}
+.pirx-shot__screen picture,
+.pirx-shot__screen img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Soft dark treatment so the light GSC UI sits in the frame */
+  filter: saturate(0.92) brightness(0.88) contrast(1.05);
+}
+.pirx-shot--compact { padding: 0.85rem 0.85rem 0.9rem; }
+.pirx-shot--compact .pirx-shot__figure { font-size: clamp(1.7rem, 3.5vw, 2.15rem); }
+.pirx-shot--compact .pirx-shot__stage { transform: none; }
+.pirx-shot--compact .pirx-shot__screen {
+  -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+}
+
+.ai-search-tile { padding: 2.5rem 0 0.5rem; }
+.ai-search-tile__card {
+  display: block;
+  padding: 1.35rem 1.4rem 1.25rem;
+  background: var(--ui-surface-1, #11110F);
+  border: 1px solid rgba(245, 240, 232, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 1px rgba(0, 0, 0, 0.35), 0 18px 48px -12px rgba(0, 0, 0, 0.6);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .2s ease;
+}
+.ai-search-tile__card:hover { border-color: rgba(245, 240, 232, 0.14); }
+.ai-search-tile__card h2 { margin: 0.2rem 0 0.55rem; }
+.ai-search-tile__card p { margin: 0 0 0.55rem; max-width: 42rem; }
+.ai-search-tile__cta {
+  margin: 0.75rem 0 0 !important;
+  color: var(--accent, #FF4B24);
+  font-weight: 600;
+}

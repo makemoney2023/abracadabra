@@ -160,8 +160,8 @@ If the page and the source-of-truth file disagree, fix the file first, then the 
 
 ## PiRX proof — 2026-10-15
 
-- The public pirx.ca Search Console claim is now the Christopher-approved window Jul 14 to Oct 13, 2026: 375K search impressions, 1.85K clicks, average position 7.6, and 43.5K Generative AI feature impressions as a separate report. The lead line is "From near-zero to 375K search impressions and 43.5K AI-feature impressions in 90 days."
-- The AI visibility proof card and the pirx.ca portfolio note carry that copy plus an illustrative two-curve chart in the brand tokens. The chart is labelled "Source: Google Search Console, Jul 14 to Oct 13, 2026" and is not a daily export. Top AI-feature pages stay on the portfolio note.
+- The public pirx.ca Search Console claim is now the Christopher-approved window Jul 18 to Oct 17, 2026: 398K search impressions, 1.94K clicks, average position 7.6, and 46.5K Generative AI feature impressions as a separate report. The lead line is "From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days."
+- The AI visibility proof card and the pirx.ca portfolio note carry that copy plus real Google Search Console chart crops framed as dark product shots (account chrome and tables blurred). The quiet source line reads "Google Search Console, Jul 18 to Oct 17, 2026" and is not a daily export. Top AI-feature pages stay on the portfolio note.
 - The homepage measure panel, the matching FAQ, and `llms.txt` use the same window. Research and custom apps still do not repeat the figures. The page does not mention CTR and does not claim a traffic or revenue result.
 - **What changed** — the 2026-09-23 pull is no longer the public figure.
 - **Why** — Christopher cleared the three-month Search Console window.
@@ -185,7 +185,7 @@ If the page and the source-of-truth file disagree, fix the file first, then the 
 
 - Each `/services/<slug>/` page is a sales page: outcome headline, "Show us how it works" (`/#brief`) and "AI Readiness Check", a proof strip, the problem, outcome cards, three generic business uses, the shared four-step process (brief, build, people approve, launch and run), a comparison of off-the-shelf / hire in-house / Abracadabra with an honest row for when off the shelf wins, a named proof card, the Cloudflare line, "Contact for pricing" with no numbers, five to seven questions, and a closing CTA. Copy lives in `scripts/service-sales.mjs`. Visible length is about 900–1300 words.
 - Safe code execution stays at `/services/safe-code-execution/` and is written as a capability of AI assistants. The assistants page and the safe-code page link to each other. The hub ItemList still lists all ten.
-- Portfolio notes added for SuperPatch products, the StrongFoam website, the StrongFoam CRM/ERP, and Renew Implants (site, social, blogs). The pirx.ca note covers the app, the blogs, and the Jul 14 to Oct 13, 2026 Search Console window. No testimonials.
+- Portfolio notes added for SuperPatch products, the StrongFoam website, the StrongFoam CRM/ERP, and Renew Implants (site, social, blogs). The pirx.ca note covers the app, the blogs, and the Jul 18 to Oct 17, 2026 Search Console window. No testimonials.
 - JSON-LD on each service page is Service, FAQPage, and BreadcrumbList. The hub adds an ItemList. There is no Offer and no AggregateRating. The Google Search Console verification meta is an HTML comment, `PLACEHOLDER — needs owner sign-off`, and is not a token.
 - Hero and two body image slots stay at `/blog/media/services/<slug>/01|02|03` until photographs are attached.
 

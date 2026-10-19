@@ -1,69 +1,103 @@
-/** Illustrative PiRX Search Console shape. Not a daily export. */
+/** Premium PiRX Search Console proof shots (blurred chart crops inside dark product frames). */
 
-const SOURCE = "Source: Google Search Console, Jul 14 to Oct 13, 2026";
+import { mkdir } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import sharp from "sharp";
 
-const SEARCH = [
-  [0, 0.03],
-  [0.16, 0.05],
-  [0.35, 0.1],
-  [0.53, 0.46],
-  [0.69, 0.96],
-  [0.84, 0.88],
-  [1, 0.84],
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const WIDTHS = [640, 960, 1280, 1600];
+const SOURCE = "Google Search Console, Jul 18 to Oct 17, 2026. AI-feature impressions are a separate report and are not added to the search total.";
+const ASPECT = { w: 1600, h: 636 };
+const PILL = "Google Search Console · 3 months";
+
+const CHARTS = [
+  {
+    id: "performance",
+    source: "gsc-performance-source.webp",
+    stem: "gsc-performance",
+    alt: "Google Search Console performance chart for pirx.ca: 1.94K clicks and 398K search impressions from Jul 18 to Oct 17, 2026. Account details and query tables are blurred.",
+    label: "Search impressions",
+    figure: "398K",
+    sub: "1.94K clicks · avg position 7.6",
+  },
+  {
+    id: "ai-features",
+    source: "gsc-ai-features-source.webp",
+    stem: "gsc-ai-features",
+    alt: "Google Search Console Generative AI features chart for pirx.ca: 46.5K AI-feature impressions from Jul 18 to Oct 17, 2026. Account details and page tables are blurred.",
+    label: "AI-feature impressions",
+    figure: "46.5K",
+    sub: "Separate report · not added to search",
+  },
 ];
 
-const AI = [
-  [0, 0.02],
-  [0.16, 0.04],
-  [0.35, 0.08],
-  [0.53, 0.42],
-  [0.69, 1],
-  [0.84, 0.9],
-  [1, 0.86],
-];
-
-const X0 = 112;
-const X1 = 344;
-const Y0 = 112;
-const Y1 = 28;
-
-function line(series) {
-  return series
-    .map(([t, v]) => {
-      const x = X0 + (X1 - X0) * t;
-      const y = Y0 - (Y0 - Y1) * v;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[char]);
 }
 
-function panel({ title, peak, stroke, series }) {
-  const points = line(series);
-  const stepX = (X0 + (X1 - X0) * 0.53).toFixed(1);
-  const area = `${points} ${X1}.0,${Y0}.0 ${X0}.0,${Y0}.0`;
-  return `<svg viewBox="0 0 360 156" role="img" aria-label="${title}. Illustrative trend from near zero in mid-July, a step around Aug 31, and a daily peak by mid-September. Peak band ${peak}.">
-<title>${title}</title>
-<text x="8" y="16" fill="var(--ink)" font-size="13" font-family="IBM Plex Sans, sans-serif">${title}</text>
-<text x="104" y="36" fill="var(--ink-soft)" font-size="11" font-family="IBM Plex Sans, sans-serif" text-anchor="end">${peak}</text>
-<text x="104" y="112" fill="var(--ink-soft)" font-size="11" font-family="IBM Plex Sans, sans-serif" text-anchor="end">near zero</text>
-<line x1="${X0}" y1="${Y1}" x2="${X0}" y2="${Y0}" stroke="var(--line)"/>
-<line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="var(--line)"/>
-<line x1="${stepX}" y1="${Y1}" x2="${stepX}" y2="${Y0}" stroke="var(--line)" stroke-dasharray="3 4"/>
-<polygon points="${area}" fill="${stroke}" opacity="0.16"/>
-<polyline points="${points}" fill="none" stroke="${stroke}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="${X0}" y="132" fill="var(--ink-soft)" font-size="11" font-family="IBM Plex Sans, sans-serif">Jul 14</text>
-<text x="${stepX}" y="132" fill="var(--ink-soft)" font-size="11" font-family="IBM Plex Sans, sans-serif" text-anchor="middle">Aug 31</text>
-<text x="${X1}" y="132" fill="var(--ink-soft)" font-size="11" font-family="IBM Plex Sans, sans-serif" text-anchor="end">Oct 13</text>
-<text x="8" y="150" fill="var(--ink-soft)" font-size="11" font-family="IBM Plex Sans, sans-serif">Illustrative trend, not a daily export</text>
-</svg>`;
+function picture(chart, { sizes = "(min-width: 860px) 46vw, 100vw" } = {}) {
+  const base = `/assets/pirx/${chart.stem}`;
+  const srcset = WIDTHS.map((width) => `${base}-${width}.webp ${width}w`).join(", ");
+  return `<picture>
+<source type="image/webp" srcset="${srcset}" sizes="${esc(sizes)}">
+<img src="${base}-1600.webp" alt="${esc(chart.alt)}" width="${ASPECT.w}" height="${ASPECT.h}" loading="lazy" decoding="async">
+</picture>`;
 }
 
-export function pirxChartHtml() {
+function shot(chart, { sizes, compact = false } = {}) {
+  const compactClass = compact ? " pirx-shot--compact" : "";
+  return `<article class="pirx-shot${compactClass}">
+<header class="pirx-shot__head">
+<span class="pirx-shot__pill">${esc(PILL)}</span>
+<p class="pirx-shot__label">${esc(chart.label)}</p>
+<p class="pirx-shot__figure">${esc(chart.figure)}</p>
+<p class="pirx-shot__sub">${esc(chart.sub)}</p>
+</header>
+<div class="pirx-shot__stage" aria-hidden="false">
+<div class="pirx-shot__screen">${picture(chart, { sizes })}</div>
+</div>
+</article>`;
+}
+
+/** Full proof: both product shots + quiet source line. */
+export function pirxChartHtml({ sizes } = {}) {
+  const pair = CHARTS.map((chart) => shot(chart, { sizes: sizes || "(min-width: 860px) 46vw, 100vw" })).join("\n");
   return `<figure class="pirx-chart">
 <div class="pirx-chart__pair">
-${panel({ title: "Search impressions", peak: "12-18K/day", stroke: "var(--accent)", series: SEARCH })}
-${panel({ title: "AI-feature impressions", peak: "1.2-1.8K/day", stroke: "var(--optic)", series: AI })}
+${pair}
 </div>
-<p class="pirx-chart__source">${SOURCE}</p>
+<p class="pirx-chart__source">${esc(SOURCE)}</p>
 </figure>`;
+}
+
+/** One compact shot for the homepage Search & AI visibility card. */
+export function pirxChartSingleHtml(which = "performance", { sizes = "(min-width: 860px) 22vw, 100vw" } = {}) {
+  const chart = CHARTS.find((item) => item.id === which) || CHARTS[0];
+  return `<figure class="pirx-chart pirx-chart--single">${shot(chart, { sizes, compact: true })}
+<p class="pirx-chart__source">${esc(SOURCE)}</p>
+</figure>`;
+}
+
+export async function writePirxChartImages() {
+  const dest = join(root, "assets/pirx");
+  await mkdir(dest, { recursive: true });
+  for (const chart of CHARTS) {
+    const input = sharp(join(dest, chart.source));
+    const meta = await input.metadata();
+    for (const width of WIDTHS) {
+      const height = Math.round(width * ((meta.height || ASPECT.h) / (meta.width || ASPECT.w)));
+      await input
+        .clone()
+        .resize(width, height, { fit: "inside" })
+        .webp({ quality: 82, effort: 4 })
+        .toFile(join(dest, `${chart.stem}-${width}.webp`));
+    }
+  }
 }
