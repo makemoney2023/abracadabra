@@ -532,7 +532,6 @@ async function renderOffering(item) {
     height: "630",
     alt: serviceAlt(item.slug, "hero"),
   };
-  const questions = page.faqs.map(([name, text]) => `<h3>${esc(name)}</h3>\n<p>${esc(text)}</p>`).join("\n");
   const steps = processSteps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
   const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}${(proof.shots || []).map((pair) => shotPairHtml(pair)).join("")}<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
   const html = shell({
@@ -601,11 +600,11 @@ ${proofs}
 <section class="price-block">
 <h2>Pricing</h2>
 <p>Priced to the project. Tell us what you need and we'll quote it.</p>
-<p><a href="/#start">Start a project</a></p>
+<p><a href="/start/">Start a project</a></p>
 </section>
-<section>
-<h2>FAQ</h2>
-${questions}
+<section class="faq-section" aria-labelledby="faq-title">
+${sectionHeading("Questions, answered", "FAQ", "faq-title")}
+${faqAccordion(page.faqs)}
 </section>
 <section class="sales-close">
 <h2>Start a project</h2>
@@ -1168,27 +1167,6 @@ function llmsPages() {
 }
 
 
-function homeAiSearchTileHtml() {
-  const chart = pirxChartPicture("performance", { sizes: "(min-width: 860px) 28vw, 100vw" });
-  return `<section id="ai-search-tile" class="ai-search-tile" aria-labelledby="ai-search-tile-title">
-  <div class="wrap">
-    <a class="ai-search-tile__card" href="/services/ai-visibility/">
-      <div class="ai-search-tile__copy">
-        <span class="pirx-shot__pill">Google Search Console · 3 months</span>
-        <p class="kicker">Search &amp; AI visibility</p>
-        <h2 id="ai-search-tile-title">Invisible in AI search? Not anymore.</h2>
-        <p class="ai-search-tile__figure">398K</p>
-        <p class="ai-search-tile__figure-label">Search impressions</p>
-        <p>When a buyer asks an assistant what to use, you should be the answer. PiRX went from near-zero to 398K search impressions in 90 days.</p>
-        <p class="ai-search-tile__cta">Get found in AI search.</p>
-      </div>
-      <div class="ai-search-tile__visual" aria-hidden="true">
-        <div class="pirx-shot__screen">${chart}</div>
-      </div>
-    </a>
-  </div>
-</section>`;
-}
 function homeProofHtml() {
   return `<section id="proof" aria-labelledby="proof-title">
   <div class="wrap">
@@ -1327,7 +1305,7 @@ async function patchHome() {
   html = fill(html, "<!-- MODELS -->", "<!-- /MODELS -->", modelsHtml());
   html = fill(html, "<!-- OFFERINGS -->", "<!-- /OFFERINGS -->", offeringsHtml());
   html = fill(html, "<!-- CLIENTS -->", "<!-- /CLIENTS -->", clientProofHtml(proof.entries));
-  html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", homeAiSearchTileHtml());
+  html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", "");
   html = fill(html, "<!-- PROOF -->", "<!-- /PROOF -->", homeProofHtml());
   await writeFile(path, smartQuotesHtml(html));
 }

@@ -48,6 +48,8 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.equal(index.includes("The next room is the receipt"), false);
   const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="showcase"'));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
+  assert.equal(index.includes('id="ai-search-tile"'), false);
+  assert.equal((index.match(/id="proof"/g) || []).length, 1);
   assert.match(index, /href="\/services\/">Services/);
   assert.equal(index.includes(">Offerings<"), false);
   assert.equal(modelsBlock.includes("marquee__word"), false);
@@ -191,6 +193,14 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(page, /Start a project/);
     assert.match(page, /When you don(&#39;|'|\u2019)t need us/);
     assert.match(page, /Priced to the project/);
+    if (slug === "ai-visibility") {
+      assert.match(page, /<section class="visibility-faq">/);
+    } else {
+      assert.match(page, /<section class="faq-section" aria-labelledby="faq-title">/);
+    }
+    assert.match(page, /<div class="faq-list"><details>/);
+    assert.equal((page.match(/<details>/g) || []).length >= 4, true, slug);
+    assert.equal(page.includes('href="/#start"'), false, slug);
     assert.match(page, /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
     assert.doesNotMatch(page, industryNoun);
     assert.equal(/\$\d/.test(page), false, slug);
@@ -219,7 +229,8 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
 
   assert.match(visibility, /gsc-ai-features-1600\.webp/);
   assert.doesNotMatch(visibility, /Illustrative trend/);
-  assert.match(read("index.html"), /Invisible in AI search\? Not anymore\./);
+  assert.match(read("index.html"), /Get found in AI search\./);
+  assert.doesNotMatch(read("index.html"), /Invisible in AI search\? Not anymore\./);
   assert.match(read("index.html"), /gsc-performance-/);
   assert.doesNotMatch(visibility, /\bCTR\b/i);
   assert.doesNotMatch(visibility, /201K|21\.8K|2026-09-23|418/);
