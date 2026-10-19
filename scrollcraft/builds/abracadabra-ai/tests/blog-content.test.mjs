@@ -155,11 +155,11 @@ describe("blog content", () => {
     const posts = await loadPosts();
     const stamp = JSON.parse(await text("blog/build-stamp.json"));
     const pages = [
-      ["blog/index.html", "blog/og/index.png", "Abracadabra AI blog — notes on AI for operators"],
-      ["about/index.html", "blog/og/author.png", "About Abracadabra"],
+      ["blog/index.html", "blog/og/index.jpg", "Abracadabra AI blog — notes on AI for operators"],
+      ["about/index.html", "blog/og/author.jpg", "About Abracadabra"],
       ...posts.map((post) => [
         `blog/${post.slug}/index.html`,
-        `blog/og/${post.slug}.png`,
+        `blog/og/${post.slug}.jpg`,
         `${post.title} — Abracadabra AI`,
       ]),
     ];

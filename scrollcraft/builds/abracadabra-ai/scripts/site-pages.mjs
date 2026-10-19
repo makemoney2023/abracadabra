@@ -3,7 +3,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { ORG_ID, SITE, WEBSITE_ID } from "./blog.mjs";
-import { siteFooter, siteHeader } from "./site-chrome.mjs";
+import { headLinks, intakeForm, siteFooter, siteHeader } from "./site-chrome.mjs";
+import { smartQuotesHtml } from "./typography.mjs";
 import {
   MODIFIED,
   OFFERINGS_HEADING,
@@ -131,10 +132,10 @@ function marquee(items, duration, reverse) {
 }
 
 function modelsHtml() {
-  return `<section id="models" class="sc-section models" aria-labelledby="models-title">
+  return `<section id="models" class="sc-section section models" aria-labelledby="models-title">
     <div class="sc-wrap">
       <p class="kicker">Models</p>
-      <h2 id="models-title" class="models__label">The models behind the work</h2>
+      <h2 id="models-title" class="models__label">Built with</h2>
       ${marquee(gatewayLogos, "90s", false)}
       ${marquee(familyLogos, "70s", true)}
     </div>
@@ -142,13 +143,14 @@ function modelsHtml() {
 }
 
 const HUB_SIZES = "(min-width: 1100px) 22rem, (min-width: 700px) 46vw, 100vw";
-const HOME_CARD_SIZES = "(min-width: 860px) 46vw, 100vw";
+const HOME_CARD_SIZES = "(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw";
 const SPLIT_SIZES = "(min-width: 1024px) 46vw, 100vw";
 
 const ASSET_SIZE = {
   "/assets/schema-home.webp": [1600, 1000],
   "/assets/llmcourse-home.webp": [1600, 1000],
   "/assets/superfunnel-getting-started.webp": [1920, 1080],
+  "/assets/course-hero-bg.webp": [1280, 720],
 };
 
 function loopFilm(loop) {
@@ -163,13 +165,13 @@ function assetMedia(src, alt, { lazy = false } = {}) {
 
 function pageHero({ crumbs = "", kicker, title, dek = "", actions = "", media = "" }) {
   const photo = media ? `<figure class="page-hero__media">${media}</figure>` : "";
-  return `<header class="page-hero${media ? " page-hero--photo" : ""}">
+  return `<header class="page-hero page-header${media ? " page-hero--photo" : ""}">
 ${photo}
 <div class="page-hero__copy">
 ${crumbs}
-<p class="kicker">${kicker}</p>
+<p class="eyebrow">${kicker}</p>
 <h1>${title}</h1>
-${dek}
+<div class="page-header__lede lede">${dek}</div>
 ${actions}
 </div>
 </header>`;
@@ -190,13 +192,15 @@ function offeringsHtml() {
   const cards = businessFunctions.map((fn) => {
     const proof = fn.proof ? `<p class="fn-card__proof">${esc(fn.proof)}</p>` : "";
     const chart = fn.id === "search" ? pirxChartSingleHtml("performance", { sizes: "(min-width: 860px) 22vw, 100vw" }) : "";
-    return `<li class="fn-card" id="fn-${esc(fn.id)}">${functionPhoto(fn)}<h3>${esc(fn.name)}</h3><p>${esc(fn.promise)}</p>${proof}${chart}${functionLinkList(fn)}</li>`;
+    return `<li class="card fn-card" id="fn-${esc(fn.id)}"><div class="card__media">${functionPhoto(fn)}</div><div class="card__body"><h3 class="card__title">${esc(fn.name)}</h3><p class="card__dek">${esc(fn.promise)}</p>${proof}${chart}${functionLinkList(fn)}</div></li>`;
   }).join("");
-  return `<section id="services" class="sc-section services" aria-labelledby="services-title">
+  return `<section id="services" class="sc-section section services" aria-labelledby="services-title">
     <div class="sc-wrap">
       <p class="kicker">${esc(OFFERINGS_KICKER)}</p>
       <h2 id="services-title">Everything you need to put AI to work in your business.</h2>
-      <div class="fn-scroller"><ul class="fn-grid">${cards}</ul></div>
+      <div class="fn-scroller" data-scroller><ul class="fn-grid">${cards}</ul><div class="fn-scroller__fade" aria-hidden="true"></div></div>
+      <div class="fn-scroller__dots" data-scroller-dots></div>
+      <script src="/assets/scroller.mjs" type="module"></script>
     </div>
   </section>`;
 }
@@ -232,10 +236,10 @@ async function writePlate(file, label, title) {
     ${titleLines}
   </svg>`;
   await mkdir(dirname(file), { recursive: true });
-  await sharp(Buffer.from(svg)).png().toFile(file);
+  await sharp(Buffer.from(svg)).jpeg({ quality: 80 }).toFile(file);
 }
 
-function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeight, ogAlt, json, body }) {
+function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeight, ogAlt, json, body, footer = "full" }) {
   const graph = JSON.stringify(json);
   if (graph.includes("PLACEHOLDER") || graph.includes("AggregateRating") || /"offers"\s*:/.test(graph)) {
     throw new Error(`Schema for ${canonical} includes a banned field`);
@@ -264,12 +268,9 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Inter+Tight:wght@500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/blog/blog.css">
-<link rel="stylesheet" href="/assets/pirx-shot.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070706'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23FF4B24'%3EA%3C/text%3E%3C/svg%3E">
+${headLinks()}
+<link rel="stylesheet" href="/blog/blog.css?v=20261019b">
+<link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019b">
 <script type="application/ld+json">
 ${jsonLd(json)}
 </script>
@@ -277,7 +278,7 @@ ${jsonLd(json)}
 <body>
 ${siteHeader()}
 ${body}
-${siteFooter()}
+${siteFooter({ band: footer })}
 </body>
 </html>
 `;
@@ -286,7 +287,7 @@ ${siteFooter()}
 async function writePage(relativePath, html) {
   const file = join(root, relativePath);
   await mkdir(dirname(file), { recursive: true });
-  await writeFile(file, html);
+  await writeFile(file, smartQuotesHtml(html));
 }
 
 function baseGraph(pageNode, extra) {
@@ -313,16 +314,15 @@ function pageNode({ type, id, url, name, description, image }) {
 }
 
 async function plateOrPhoto(key, label, title, photo) {
+  const relative = `assets/og/${key}.jpg`;
+  const file = join(root, relative);
+  await mkdir(dirname(file), { recursive: true });
   if (photo) {
-    return {
-      url: `${SITE}${photo}`,
-      width: "1600",
-      height: "1000",
-      alt: title,
-    };
+    const source = join(root, String(photo).replace(/^\//, ""));
+    await sharp(source).resize(1200, 630, { fit: "cover", position: "attention" }).jpeg({ quality: 78 }).toFile(file);
+  } else {
+    await writePlate(file, label, title);
   }
-  const relative = `assets/og/${key}.png`;
-  await writePlate(join(root, relative), label, title);
   return {
     url: `${SITE}/${relative}`,
     width: "1200",
@@ -342,7 +342,7 @@ function shotPairHtml(pair) {
 }
 
 function salesActions() {
-  return `<p class="sales-actions"><a class="sales-primary" href="/#start">Start a project</a><a class="sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
+  return `<p class="sales-actions" data-actions><a class="btn btn--primary sales-primary" href="/start/">Start a project</a><a class="btn btn--secondary sales-secondary" href="${esc(READINESS_URL)}">AI Readiness Check</a></p>`;
 }
 
 const SERVICE_GROUPS = {
@@ -542,8 +542,10 @@ async function renderOfferingsHub() {
       const photo = servicePicture(slug, "hero", { lazy: true, sizes: HUB_SIZES });
       return `<li><a href="/services/${slug}/">${photo}<strong>${esc(page.headline)}</strong><span>${esc(page.description)}${esc(note)}</span></a></li>`;
     }).join("");
-    const work = (fn.work || []).map((item) => `<li><a href="${esc(item.href)}"><strong>${esc(item.label)}</strong><span>${esc(fn.promise)}</span></a></li>`).join("");
-    return `<section id="${esc(fn.id)}" class="fn-group"><h2>${esc(fn.name)}</h2><p>${esc(fn.promise)}</p><ul class="cards">${cards}${work}</ul></section>`;
+    const workItems = fn.work || [];
+    const work = workItems.map((item) => `<li><a href="${esc(item.href)}"><strong>${esc(item.label)}</strong><span>${esc(fn.promise)}</span></a></li>`).join("");
+    const few = fn.services.length + workItems.length < 3 ? " cards--pair" : "";
+    return `<section id="${esc(fn.id)}" class="fn-group"><h2>${esc(fn.name)}</h2><p>${esc(fn.promise)}</p><ul class="cards${few}">${cards}${work}</ul></section>`;
   }).join("\n");
   const html = shell({
     title,
@@ -820,6 +822,7 @@ async function renderProductsHub() {
     ogWidth: og.width,
     ogHeight: og.height,
     ogAlt: og.alt,
+    footer: "compact",
     json: baseGraph(pageNode({
       type: "CollectionPage",
       id: `${url}#webpage`,
@@ -834,7 +837,7 @@ ${pageHero({
   title: "Software you can use today.",
   dek: "<p>Ready-made tools you can try today: Schema and Super Funnel.</p>",
 })}
-<ul class="cards">${cards}</ul>
+<ul class="cards cards--pair">${cards}</ul>
 </main>`,
   });
   await writePage("products/index.html", html);
@@ -887,7 +890,7 @@ ${pageHero({
   kicker: "LLM Leverage",
   title: "Learn to get real work done with AI.",
   dek: `<p>${esc(course.description)}</p>\n<p>Built for class or self-paced study. Includes four workshop decks, practice exercises, templates, a glossary and a capstone gallery.</p>\n<p><a href="${esc(course.sameAs)}">Open the course</a></p>\n<p><a href="/portfolio/llm-leverage/">Portfolio note</a></p>`,
-  media: assetMedia(course.image, course.imageAlt),
+  media: assetMedia("/assets/course-hero-bg.webp", course.imageAlt),
 })}
 ${placeholder(placeholders.course)}
 </main>`,
@@ -904,6 +907,8 @@ function siteUrls() {
     "/products/",
     ...products.map((item) => `/products/${item.slug}/`),
     "/course/llm-leverage/",
+    "/start/",
+    "/start/thanks/",
   ];
   return paths.map((path) => `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${MODIFIED}</lastmod>\n  </url>`).join("\n");
 }
@@ -917,6 +922,8 @@ function siteRedirects() {
     "/products",
     ...products.map((item) => `/products/${item.slug}`),
     "/course/llm-leverage",
+    "/start",
+    "/start/thanks",
   ];
   const rewrites = paths.flatMap((path) => [
     `${path} ${path}/index.html 200`,
@@ -982,21 +989,131 @@ function homeProofHtml() {
     <p>PiRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p>
     <p class="fine">Google Search Console, Jul 18 to Oct 17, 2026. The AI-feature count is separate and is not added to the search total.</p>
     ${pirxChartHtml({ sizes: "(min-width: 860px) 46vw, 100vw" })}
-    <p><a href="/services/ai-visibility/">Get found in AI search.</a></p>
+    <p data-actions><a class="btn btn--primary" href="/#start">Start a project</a><a class="btn btn--tertiary" href="/services/ai-visibility/">Get found in AI search <span class="btn__arrow" aria-hidden="true">→</span></a></p>
   </div>
 </section>`;
 }
 
+export function clientProofHtml(entries, caseList = cases) {
+  if (!entries?.length) return "";
+  const cards = entries.map((entry) => {
+    const item = caseList.find((row) => row.slug === entry.slug);
+    if (!item) throw new Error(`Unknown proof slug ${entry.slug}`);
+    const also = (entry.also || []).map((slug) => {
+      const extra = caseList.find((row) => row.slug === slug);
+      if (!extra) throw new Error(`Unknown proof slug ${slug}`);
+      return extra.summary;
+    });
+    const quote = entry.quote && entry.person
+      ? `<blockquote class="proof-card__quote"><p>${esc(entry.quote)}</p><footer>${esc(entry.person)}${entry.role ? `, ${esc(entry.role)}` : ""}</footer></blockquote>`
+      : "";
+    return `<li class="card proof-card"><div class="card__body"><p class="card__title">${esc(item.name)}</p><p class="card__dek">${esc([item.summary, ...also].join(" "))}</p>${quote}<p class="card__actions"><a class="btn btn--tertiary" href="/portfolio/${esc(item.slug)}/">Read the case study <span class="btn__arrow" aria-hidden="true">→</span></a></p></div></li>`;
+  }).join("");
+  const pirx = caseList.find((row) => row.slug === "pirx");
+  const figures = (pirx?.proofFigures || []).map((figure) => `<p class="num"><strong>${esc(figure.value)}</strong> ${esc(figure.label)}</p>`).join("");
+  const metrics = figures
+    ? `<div class="proof-metrics" data-num>${figures}<p class="proof-metrics__caption">${esc(pirx.proofCaption || "")}</p></div>`
+    : "";
+  return `<section id="clients" class="section proof-band" aria-labelledby="clients-title">
+  <div class="wrap">
+    <p class="eyebrow">Proof</p>
+    <h2 id="clients-title">Work we can name.</h2>
+    <ul class="proof-grid">${cards}</ul>
+    ${metrics}
+  </div>
+</section>`;
+}
+
+async function renderStart() {
+  const url = `${SITE}/start/`;
+  const html = shell({
+    title: "Start a project | Abracadabra AI",
+    description: "Tell us how the work gets done. We reply within one working day.",
+    canonical: url,
+    robots: "index,follow",
+    ogImage: `${SITE}/assets/og/home.jpg`,
+    ogWidth: "1200",
+    ogHeight: "630",
+    ogAlt: "Start a project with Abracadabra AI",
+    json: baseGraph(pageNode({
+      type: "WebPage",
+      id: `${url}#webpage`,
+      url,
+      name: "Start a project",
+      description: "Tell us how the work gets done. We reply within one working day.",
+    }), []),
+    body: `<main id="top" class="site-page">
+${pageHero({
+  kicker: "Start",
+  title: "Start a project",
+  dek: "<p>Tell us how your work gets done, and we will build software that fits it.</p>",
+})}
+${intakeForm()}
+</main>`,
+  });
+  await writePage("start/index.html", html);
+  const thanks = shell({
+    title: "Got it | Abracadabra AI",
+    description: "We reply within one working day.",
+    canonical: `${SITE}/start/thanks/`,
+    robots: "noindex",
+    ogImage: `${SITE}/assets/og/home.jpg`,
+    ogWidth: "1200",
+    ogHeight: "630",
+    ogAlt: "Abracadabra AI received the note",
+    json: baseGraph(pageNode({
+      type: "WebPage",
+      id: `${SITE}/start/thanks/#webpage`,
+      url: `${SITE}/start/thanks/`,
+      name: "Got it",
+      description: "We reply within one working day.",
+    }), []),
+    body: `<main id="top" class="site-page"><header class="page-hero page-header"><div class="page-hero__copy"><p class="eyebrow">Start</p><h1>Got it. We reply within one working day.</h1><div class="page-header__lede lede"><p>If you need to add something, email houdini@abra-ca-dabra.app.</p></div></div></header></main>`,
+  });
+  await writePage("start/thanks/index.html", thanks);
+}
+
+async function renderMissing() {
+  const html = shell({
+    title: "Page not found | Abracadabra AI",
+    description: "That page vanished.",
+    canonical: `${SITE}/404.html`,
+    robots: "noindex",
+    ogImage: `${SITE}/assets/og/home.jpg`,
+    ogWidth: "1200",
+    ogHeight: "630",
+    ogAlt: "Abracadabra AI",
+    footer: "compact",
+    json: baseGraph(pageNode({
+      type: "WebPage",
+      id: `${SITE}/404.html#webpage`,
+      url: `${SITE}/404.html`,
+      name: "Page not found",
+      description: "That page vanished.",
+    }), []),
+    body: `<main id="top" class="site-page page-missing">
+<p class="eyebrow">404</p>
+<h1>That page vanished.</h1>
+<p class="lede">The page is gone. The work is still here.</p>
+<p class="hero__actions" data-actions><a class="btn btn--primary" href="/start/">Start a project</a><a class="btn btn--secondary" href="/">Back to home</a><a class="btn btn--tertiary" href="/portfolio/">See the work <span class="btn__arrow" aria-hidden="true">→</span></a></p>
+<ul class="missing-links"><li><a href="/services/">Services</a></li><li><a href="/portfolio/">Work</a></li><li><a href="/products/">Products</a></li><li><a href="/blog">Blog</a></li></ul>
+</main>`,
+  });
+  await writePage("404.html", html);
+}
+
 async function patchHome() {
   const path = join(root, "index.html");
+  const proof = JSON.parse(await readFile(join(root, "content/proof.json"), "utf8"));
   let html = await readFile(path, "utf8");
-  html = fill(html, "<!-- SITE-NAV -->", "<!-- /SITE-NAV -->", siteHeader());
-  html = fill(html, "<!-- SITE-FOOT -->", "<!-- /SITE-FOOT -->", siteFooter());
+  html = fill(html, "<!-- SITE-NAV -->", "<!-- /SITE-NAV -->", siteHeader({ home: true }));
+  html = fill(html, "<!-- SITE-FOOT -->", "<!-- /SITE-FOOT -->", siteFooter({ band: "none" }));
   html = fill(html, "<!-- MODELS -->", "<!-- /MODELS -->", modelsHtml());
   html = fill(html, "<!-- OFFERINGS -->", "<!-- /OFFERINGS -->", offeringsHtml());
+  html = fill(html, "<!-- CLIENTS -->", "<!-- /CLIENTS -->", clientProofHtml(proof.entries));
   html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", homeAiSearchTileHtml());
   html = fill(html, "<!-- PROOF -->", "<!-- /PROOF -->", homeProofHtml());
-  await writeFile(path, html);
+  await writeFile(path, smartQuotesHtml(html));
 }
 
 async function patchSitemap() {
@@ -1036,6 +1153,8 @@ export async function buildSitePages() {
   await renderProductsHub();
   for (const item of products) await renderProduct(item);
   await renderCourse();
+  await renderStart();
+  await renderMissing();
   await patchHome();
   await patchSitemap();
   await patchRedirects();

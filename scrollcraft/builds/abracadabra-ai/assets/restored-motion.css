@@ -75,7 +75,7 @@
 
 .restored-pin > .sc-stage {
   position: sticky;
-  top: 0;
+  top: var(--nav-h, 3.5rem);
   height: 100vh;
   height: 100svh;
   overflow: hidden;
@@ -885,10 +885,10 @@
 #name .nw { display: inline-block; }
 /* The stage pins just under the nav and is only as tall as its copy, so when the
    read-along ends the next section follows straight on (no empty band). */
-html.name-live #name.name-pin { height: 190vh; padding-block: 0; }
+html.name-live #name.name-pin { height: 140vh; padding-block: 0; }
 html.name-live #name .name-stage { position: sticky; top: clamp(4.5rem, 18vh, 10rem); padding-block: 1rem 3rem; }
 @media (max-width: 768px) {
-  html.name-live #name.name-pin { height: 170vh; }
+  html.name-live #name.name-pin { height: 130vh; }
   #name .origin h2 { font-size: clamp(2.4rem, 11vw, 3.6rem); }
 }
 

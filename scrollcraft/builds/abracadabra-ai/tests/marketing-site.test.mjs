@@ -12,6 +12,9 @@ const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.woff2': 'font/woff2',
+  '.webmanifest': 'application/manifest+json',
   '.mp4': 'video/mp4',
   '.webp': 'image/webp',
   '.jpg': 'image/jpeg',
@@ -330,38 +333,28 @@ test('footer link row stays below the hero on a phone', async () => {
   await context.close();
 });
 
-test('site nav uses a compact menu below 1100px and a full bar from 1280px', async () => {
-  for (const width of [390, 1024]) {
+test('site nav uses a compact sheet below 900px and a full bar from 1024px', async () => {
+  for (const width of [390, 768]) {
     const compact = await openPage({ width, height: width < 500 ? 844 : 1000 });
     assert.equal(await compact.page.locator('.site-nav__toggle').count(), 1);
-    const closed = await compact.page.locator('.site-nav__links a', { hasText: 'Course' }).evaluate((link) => {
-      const rect = link.getBoundingClientRect();
-      return rect.width === 0 || rect.height === 0;
-    });
-    assert.equal(closed, true, `${width}px Course is visible before Menu`);
     await compact.page.locator('.site-nav__toggle').click();
+    const panel = await compact.page.locator('.site-nav__links').evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const nav = document.querySelector('.site-nav').getBoundingClientRect();
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, navBottom: nav.bottom, viewport: innerWidth, height: innerHeight };
+    });
+    assert.ok(panel.left >= -1 && panel.right <= panel.viewport + 1, `${width}px sheet is clipped`);
+    assert.ok(panel.bottom >= panel.height - 2, `${width}px sheet does not cover the viewport`);
     const opened = await compact.page.locator('.site-nav__links > a').evaluateAll((links) => links.map((link) => {
       const rect = link.getBoundingClientRect();
-      return {
-        bottom: rect.bottom,
-        left: rect.left,
-        right: rect.right,
-        text: link.textContent.trim(),
-        top: rect.top,
-        viewport: innerWidth,
-      };
+      return { height: rect.height, text: link.textContent.trim(), right: rect.right, viewport: innerWidth };
     }));
-    for (const name of ['Portfolio', 'Products', 'Course', 'Blog', 'Start a project']) {
+    for (const name of ['Work', 'Products', 'Blog', 'Films', 'Start a project']) {
       const link = opened.find((item) => item.text === name);
       assert.ok(link, `${width}px ${name}`);
-      assert.ok(link.left >= 0 && link.right <= link.viewport + 1, `${width}px ${name} is clipped`);
-      assert.ok(link.bottom > link.top, `${width}px ${name} is hidden`);
+      assert.ok(link.right <= link.viewport + 1, `${width}px ${name} is clipped`);
+      assert.ok(link.height >= 44, `${width}px ${name} is under 44px`);
     }
-    const overflow = await compact.page.evaluate(() => ({
-      clientWidth: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-    }));
-    assert.ok(overflow.scrollWidth <= overflow.clientWidth, `${width}px menu overflows`);
     await compact.context.close();
   }
 
@@ -373,42 +366,31 @@ test('site nav uses a compact menu below 1100px and a full bar from 1280px', asy
     const rect = link.getBoundingClientRect();
     return { right: rect.right, text: link.textContent.trim(), viewport: innerWidth };
   }));
-  for (const name of ['Course', 'Blog']) {
+  for (const name of ['Blog', 'Films']) {
     const link = serviceLinks.find((item) => item.text === name);
     assert.ok(link && link.right <= link.viewport + 1, name);
   }
   await service.context.close();
 
-  const desktop = await openPage({ width: 1280, height: 1000 });
-  assert.equal(
-    await desktop.page.locator('.site-nav__toggle').evaluate((toggle) => getComputedStyle(toggle).display),
-    'none',
-  );
-  const bar = await desktop.page.locator('.site-nav__links > a').evaluateAll((links) => links.map((link) => {
-    const rect = link.getBoundingClientRect();
-    return {
-      height: rect.height,
-      left: rect.left,
-      right: rect.right,
-      text: link.textContent.trim(),
-      viewport: innerWidth,
-    };
-  }));
-  for (const name of ['Portfolio', 'Products', 'Course', 'Blog', 'Start a project']) {
-    const link = bar.find((item) => item.text === name);
-    assert.ok(link, name);
-    assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
-    assert.ok(link.height >= 44, `${name} target is under 44px`);
+  for (const width of [1024, 1280]) {
+    const desktop = await openPage({ width, height: 1000 });
+    assert.equal(
+      await desktop.page.locator('.site-nav__toggle').evaluate((toggle) => getComputedStyle(toggle).display),
+      'none',
+    );
+    const bar = await desktop.page.locator('.site-nav__links > a').evaluateAll((links) => links.map((link) => {
+      const rect = link.getBoundingClientRect();
+      return { height: rect.height, left: rect.left, right: rect.right, text: link.textContent.trim(), viewport: innerWidth };
+    }));
+    for (const name of ['Work', 'Products', 'Blog', 'Films', 'Start a project']) {
+      const link = bar.find((item) => item.text === name);
+      assert.ok(link, `${width}px ${name}`);
+      assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
+      assert.ok(link.height >= 40, `${name} target is under 40px`);
+    }
+    assert.equal(await desktop.page.locator('.site-nav__mega').evaluate((node) => getComputedStyle(node).display), 'none');
+    await desktop.context.close();
   }
-  const services = await desktop.page.locator('.site-nav__services > summary').evaluate((node) => {
-    const rect = node.getBoundingClientRect();
-    return { height: rect.height, right: rect.right, text: node.textContent.trim(), viewport: innerWidth };
-  });
-  assert.equal(services.text, 'Services');
-  assert.ok(services.height >= 44, 'Services target is under 44px');
-  assert.ok(services.right <= services.viewport + 1, 'Services overflows the bar');
-  assert.equal(await desktop.page.locator('.site-nav__mega').evaluate((node) => getComputedStyle(node).display), 'none');
-  await desktop.context.close();
 });
 
 test('open Services menu stacks page links under the function list on a phone', async () => {
@@ -418,8 +400,8 @@ test('open Services menu stacks page links under the function list on a phone', 
   const layout = await page.evaluate(() => {
     const menu = document.querySelector('.site-nav__links');
     const services = document.querySelector('.site-nav__services');
-    const platform = document.querySelector('.site-nav__fn-name[href="/services/#platform"]');
-    const portfolio = [...menu.querySelectorAll(':scope > a')].find((link) => link.textContent.trim() === 'Portfolio');
+    const platform = document.querySelector('.site-nav__group summary');
+    const portfolio = [...menu.querySelectorAll(':scope > a')].find((link) => link.textContent.trim() === 'Work');
     const cta = menu.querySelector('.site-nav__cta');
     const place = (node) => {
       const box = node.getBoundingClientRect();

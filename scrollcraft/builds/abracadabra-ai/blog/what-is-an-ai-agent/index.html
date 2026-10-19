@@ -13,20 +13,26 @@
 <meta property="og:url" content="https://abra-ca-dabra.app/blog/what-is-an-ai-agent">
 <meta property="og:title" content="What Is an AI Agent? A Plain Answer for Owners | Abracadabra AI">
 <meta property="og:description" content="An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic&#39;s split and McKinsey&#39;s count of who is scaling.">
-<meta property="og:image" content="https://abra-ca-dabra.app/blog/og/what-is-an-ai-agent.png">
+<meta property="og:image" content="https://abra-ca-dabra.app/blog/og/what-is-an-ai-agent.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="What Is an AI Agent? A Plain Answer for Owners — Abracadabra AI">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="What Is an AI Agent? A Plain Answer for Owners | Abracadabra AI">
 <meta name="twitter:description" content="An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic&#39;s split and McKinsey&#39;s count of who is scaling.">
-<meta name="twitter:image" content="https://abra-ca-dabra.app/blog/og/what-is-an-ai-agent.png">
+<meta name="twitter:image" content="https://abra-ca-dabra.app/blog/og/what-is-an-ai-agent.jpg">
 <meta name="twitter:image:alt" content="What Is an AI Agent? A Plain Answer for Owners — Abracadabra AI">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Inter+Tight:wght@500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/blog/blog.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070706'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23FF4B24'%3EA%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#070706">
+<link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preload" href="/assets/fonts/inter-tight-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/site.css?v=20261019b">
+
+<link rel="stylesheet" href="/blog/blog.css?v=20261019b">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -182,28 +188,67 @@
 <header class="site-nav">
   <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
   <details class="site-nav__menu">
-    <summary class="site-nav__toggle">Menu</summary>
+    <summary class="site-nav__toggle" aria-label="Menu"><span class="site-nav__glyph" aria-hidden="true"></span></summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
-    <a href="/portfolio/">Portfolio</a>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><details class="site-nav__group" open><summary class="site-nav__fn-name">Build</summary><a class="site-nav__mega-link" href="/services/custom-apps/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Apps built around your workflow.</strong><span class="site-nav__desc">Software around the way the work already runs.</span></span></a><a class="site-nav__mega-link" href="/services/web-automation/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Put repetitive web work on autopilot.</strong><span class="site-nav__desc">Repetitive web jobs that run themselves.</span></span></a><a class="site-nav__mega-link" href="/services/answers-from-your-documents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Instant answers from your own documents.</strong><span class="site-nav__desc">Answers from the files you already keep.</span></span></a><a class="site-nav__mega-link" href="/services/safe-code-execution/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Let AI run code, safely.</strong><span class="site-nav__desc">AI that can run code, with a fence around it.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Create</summary><a class="site-nav__mega-link" href="/services/ai-media/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>On-brand images, video and voice, on demand.</strong><span class="site-nav__desc">On-brand images, video and voice.</span></span></a><a class="site-nav__mega-link" href="/services/voice-and-realtime-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI that answers your phone.</strong><span class="site-nav__desc">A voice that answers from your records.</span></span></a><a class="site-nav__mega-link" href="/services/ai-assistants-and-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI assistants that actually get things done.</strong><span class="site-nav__desc">An assistant that finishes the request.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Grow</summary><a class="site-nav__mega-link" href="/services/ai-visibility/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Get found in AI search.</strong><span class="site-nav__desc">Show up when someone asks an assistant.</span></span></a><a class="site-nav__mega-link" href="/services/search-grounded-research/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Research you can trust, with every source cited.</strong><span class="site-nav__desc">Research you can open and check.</span></span></a><a class="site-nav__mega-link" href="/services/any-model-one-bill/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Every AI model. One bill.</strong><span class="site-nav__desc">Every model, on one invoice.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Learn</summary><a class="site-nav__mega-link" href="/course/llm-leverage/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>LLM Leverage</strong><span class="site-nav__desc">A course for better answers from any model.</span></span></a><a class="site-nav__mega-link" href="/blog"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Notes</strong><span class="site-nav__desc">How to put AI to work.</span></span></a><a class="site-nav__mega-link" href="/films.html"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Films</strong><span class="site-nav__desc">The work, shown.</span></span></a></details></div></details>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
-    <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
+    <a class="btn btn--primary site-nav__cta" href="/start/">Start a project</a>
   </nav>
 </header>
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
     var services = bar.querySelector(".site-nav__services");
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () {
+        document.documentElement.style.setProperty("--nav-h", bar.offsetHeight + "px");
+      }).observe(bar);
+    }
     bar.addEventListener("click", function (event) {
       if (!event.target.closest("a")) return;
       if (menu) menu.open = false;
       if (services) services.open = false;
     });
+    if (menu) {
+      menu.addEventListener("toggle", function () {
+        document.documentElement.classList.toggle("menu-open", menu.open);
+      });
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    var services = document.querySelector(".site-nav__services");
+    var menu = document.querySelector(".site-nav__menu");
+    if (services && services.open) {
+      services.open = false;
+      var summary = services.querySelector("summary");
+      if (summary) summary.focus();
+      return;
+    }
+    if (menu && menu.open) {
+      menu.open = false;
+      var toggle = menu.querySelector("summary");
+      if (toggle) toggle.focus();
+    }
   });
   document.addEventListener("DOMContentLoaded", function () {
+    var clock = document.querySelector("[data-clock]");
+    if (clock) {
+      var zone = clock.getAttribute("data-clock");
+      var tick = function () {
+        try {
+          clock.textContent = new Intl.DateTimeFormat("en-CA", {
+            timeZone: zone, hour: "numeric", minute: "2-digit", timeZoneName: "short",
+          }).format(new Date());
+        } catch (error) { /* keep the timezone name */ }
+      };
+      tick();
+      setInterval(tick, 60000);
+    }
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     document.querySelectorAll("video.loop-film").forEach(function (video) {
       function stop() { video.pause(); }
@@ -230,19 +275,20 @@
 <div class="hero-copy">
 <p class="kicker">AI agents · what is an ai agent</p>
 <h1>What Is an AI Agent? A Plain Answer for Owners</h1>
-<p class="dek">An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic&#39;s split and McKinsey&#39;s count of who is scaling.</p>
+<p class="dek">An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic’s split and McKinsey’s count of who is scaling.</p>
 <p class="byline">By <a href="/about/">Abracadabra Studio</a> · <time datetime="2026-10-14">2026-10-14</time></p>
 
 </div>
 <figure class="content-hero-photo"><picture><source srcset="/blog/media/what-is-an-ai-agent/01.webp" type="image/webp"><img src="/blog/media/what-is-an-ai-agent/01.jpg" alt="A person at a service counter with a laptop and a notepad, seen from the side so the face stays out of view" width="1280" height="720"></picture><figcaption>The counter, with a notepad beside the laptop.</figcaption></figure>
 </header>
+<div class="reading-progress" aria-hidden="true"></div>
 <div class="post-layout">
 <article>
 <div class="prose post-prose">
 <p><strong>An AI agent looks at what it just found and chooses a step inside bounds you set.</strong> A workflow does the steps in an order you already wrote. We use that split every time an owner asks whether the new line on the invoice is an agent or a form with a louder name.</p>
-<figure class="key-stat"><dl><dt>Cited in this note</dt><dd>88%</dd></dl><figcaption>McKinsey&#39;s 2025 survey says 88% of respondents report regular AI use in at least one business function, compared with 78% a year earlier</figcaption></figure>
-<p>Anthropic&#39;s December 2024 essay draws the line in those terms. A workflow runs large language models and tools on a path the builder defined, and an agent lets the model direct its own process and its own tool use.<sup><a href="#source-anthropic">1</a></sup> The essay also says to start with the simplest solution, and to add complexity only when the simpler system fails. We keep that sentence on the table during these conversations. Most of the businesses we sit with are not stuck because the software is too plain. They are stuck because the work still lives in one person&#39;s memory, and a vendor asked a model to invent a process nobody had written down.</p>
-<p>If those steps are still in someone&#39;s head, the matching check is the <a href="https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low">process guide</a>. The <a href="/blog/ai-agents-for-business">use-case note</a> lists jobs a system might take. The <a href="/blog/ai-agents-vs-agentic-ai">comparison note</a> stays on the vocabulary, which is where sales pages get slippery.</p>
+<figure class="key-stat"><dl><dt>Cited in this note</dt><dd>88%</dd></dl><figcaption>McKinsey’s 2025 survey says 88% of respondents report regular AI use in at least one business function, compared with 78% a year earlier</figcaption></figure>
+<p>Anthropic’s December 2024 essay draws the line in those terms. A workflow runs large language models and tools on a path the builder defined, and an agent lets the model direct its own process and its own tool use.<sup><a href="#source-anthropic">1</a></sup> The essay also says to start with the simplest solution, and to add complexity only when the simpler system fails. We keep that sentence on the table during these conversations. Most of the businesses we sit with are not stuck because the software is too plain. They are stuck because the work still lives in one person’s memory, and a vendor asked a model to invent a process nobody had written down.</p>
+<p>If those steps are still in someone’s head, the matching check is the <a href="https://check.abra-ca-dabra.app/check/guide/fix/ready-process-low">process guide</a>. The <a href="/blog/ai-agents-for-business">use-case note</a> lists jobs a system might take. The <a href="/blog/ai-agents-vs-agentic-ai">comparison note</a> stays on the vocabulary, which is where sales pages get slippery.</p>
 <h2 id="when-a-workflow-is-enough">When a workflow is enough</h2>
 <p>Use a workflow when the steps are known: take the email, extract the fields, write the draft, wait for a person. Use an agent when the next step depends on what the last step found, and you cannot write every branch in advance. If you cannot name the stop condition, you do not have either one yet.</p>
 <p>Picture a plumbing desk on a loud Monday. A scheduler runs the book. She gets the name, the address, and whether water is on the floor. She asks which room, and whether anyone shut the main off. Those questions do not change because a model showed up. A workflow can hold them: a form, a text to the on-call tech, a line in the book. The fork comes after intake, and that is the part people try to skip.</p>
@@ -276,9 +322,9 @@
 <p>Read the middle column before you read a product page. One prompt means the person at the keyboard is still choosing. They paste the job notes, ask for a reply, and send it themselves. That can save a tired afternoon. It is not an agent, and it does not need to become one. A workflow means you already know the order, and the software repeats it without getting bored or skipping the address. An agent means the model looks at what it just found and chooses a tool. The calendar, the parts list, the text message. The bounds are yours. You decide which tools exist, what the system is forbidden to send, and who holds the stop.</p>
 <p>The right-hand column is the test we use with owners. If the steps rarely change, stop shopping and write the path. If the path depends on what the system finds, you may want an agent, and you still want the bounds on one page a new hire could follow. We have watched shops buy the agent column for work that belongs in the first row. The staff then spends the week correcting a machine that was never supposed to decide.</p>
 <h2 id="what-the-survey-actually-counts">What the survey actually counts</h2>
-<p>Owners hear a loud number and assume the trade has already moved past them. McKinsey&#39;s 2025 survey says 88% of respondents report regular AI use in at least one business function, compared with 78% a year earlier.<sup><a href="#source-mckinsey">2</a></sup> That is a wide claim. Regular use can be a person pasting a quote into a chat window on a Thursday. It is a different sentence from &quot;we run an agent.&quot;</p>
-<p>The agent sentences are smaller, and they are the ones we want in the room. 23% say their organizations are scaling an agentic system somewhere in the enterprise. An additional 39% are experimenting with agents. In any one function, no more than 10% say they are scaling agents. Read that last line slowly. Somewhere in a large company is a different fact from &quot;the scheduling desk has an agent in production.&quot; Firms under $100 million in revenue are less often at the scaling stage: 29%, against nearly half of firms over $5 billion.</p>
-<aside class="cta cta-inline"><p>An agent needs a written process and a person who checks it. The Readiness Check covers both.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="inline" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=inline">Run the Readiness Check</a></aside>
+<p>Owners hear a loud number and assume the trade has already moved past them. McKinsey’s 2025 survey says 88% of respondents report regular AI use in at least one business function, compared with 78% a year earlier.<sup><a href="#source-mckinsey">2</a></sup> That is a wide claim. Regular use can be a person pasting a quote into a chat window on a Thursday. It is a different sentence from “we run an agent.”</p>
+<p>The agent sentences are smaller, and they are the ones we want in the room. 23% say their organizations are scaling an agentic system somewhere in the enterprise. An additional 39% are experimenting with agents. In any one function, no more than 10% say they are scaling agents. Read that last line slowly. Somewhere in a large company is a different fact from “the scheduling desk has an agent in production.” Firms under $100 million in revenue are less often at the scaling stage: 29%, against nearly half of firms over $5 billion.</p>
+<aside class="cta cta-inline"><p>An agent needs a written process and a person who checks it. The Readiness Check covers both.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="inline" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=inline">Run the Readiness Check</a></aside>
 
 <p>Those are enterprise survey shares. They are not a score for one small business. An agent still needs a written process and a person who can stop it.</p>
 <p>We say this out loud because the wide percentage gets used as a shove. A vendor will put the 88% line on a slide and talk as if a shop with a few trucks is late. The survey does not say that. It says use is common, and scaling an agent inside a single function is not. If firms with real operations teams are mostly still experimenting, you are allowed to write your process before you buy a system that chooses its own tools. The survey is a count of what respondents said. It is not a definition of an agent, and it is not a grade for your desk. Wooden bars of different heights do not tell the scheduler what to do with the next call.</p>
@@ -286,44 +332,51 @@
 
 <h2 id="a-worked-example">A worked example</h2>
 <p>Stay with the plumbing desk and give everyone a job. This is a walk-through, not a result we measured. The owner takes the hard calls. A scheduler runs the book. Luis and Priya are on the tools.</p>
-<p>A property manager calls about a smell in more than one unit. The scheduler opens the job the way she always has. Name, callback number, address, keys, whether anyone is home. That block is a workflow. It should not depend on a model&#39;s mood. The note that comes back is messy. One unit had a dishwasher replaced recently. Another has a tenant who shuts the water off and tells nobody. Another unit is vacant. The next step depends on what the scheduler just heard. Which door gets the first visit. Whether the truck should carry a camera. Whether a vacant unit with a smell is a bigger opening than a clogged trap.</p>
-<p>An agent, in the sense of that 2024 essay, could read the note, look at the afternoon routes and the parts list, and propose an order. Vacant unit first, camera on the truck, Luis because he did the camera work last week and Priya is already on a job across town. The proposal is the agent&#39;s work. The text to the manager is not, until the scheduler accepts the wording and the time. If the model cannot see the route, it should say so and stop, rather than invent an arrival window. The card by the phone says no time goes out unless a person on the desk has tapped yes.</p>
+<p>A property manager calls about a smell in more than one unit. The scheduler opens the job the way she always has. Name, callback number, address, keys, whether anyone is home. That block is a workflow. It should not depend on a model’s mood. The note that comes back is messy. One unit had a dishwasher replaced recently. Another has a tenant who shuts the water off and tells nobody. Another unit is vacant. The next step depends on what the scheduler just heard. Which door gets the first visit. Whether the truck should carry a camera. Whether a vacant unit with a smell is a bigger opening than a clogged trap.</p>
+<p>An agent, in the sense of that 2024 essay, could read the note, look at the afternoon routes and the parts list, and propose an order. Vacant unit first, camera on the truck, Luis because he did the camera work last week and Priya is already on a job across town. The proposal is the agent’s work. The text to the manager is not, until the scheduler accepts the wording and the time. If the model cannot see the route, it should say so and stop, rather than invent an arrival window. The card by the phone says no time goes out unless a person on the desk has tapped yes.</p>
 <p>A workflow ends at the form, which is the right ending for intake and the wrong tool for this fork. You cannot pre-write every branch of a messy multi-unit call. A single prompt would be the scheduler pasting the note into a chat box and asking for a polite reply. Fine on a quiet afternoon. It does not watch the route, and it does not send anything.</p>
 <p>The owner does not need a lecture on models. He needs to know which decisions the desk may delegate. The scheduler needs propose and send as different buttons. Luis needs the camera on the truck if the camera was the point. If those people cannot point at the control that stops the system, you do not have an agent yet. You have a chatbot wearing a job title, and the customer will hear its mistakes in your voice.</p>
-<h2 id="how-we-39-d-run-it">How we&#39;d run it</h2>
+<h2 id="how-we-39-d-run-it">How we’d run it</h2>
 <p>We would not start by picking software. We would sit with the scheduler and write what she already does when the phone is mean.</p>
-<p>First, name the job in one sentence a new hire could repeat. &quot;Turn a call into a visit the tech can finish, without promising a time the route cannot keep.&quot; If that sentence becomes the whole menu, you have not named the job.</p>
-<p>Second, write the steps that do not change. Name, number, address, access, what is happening, who is rolling. Use the scheduler&#39;s order, not a template&#39;s. This workflow is the floor, even if an agent comes later.</p>
-<p>Third, mark the forks. A fork is any moment where the next step depends on what the last step found. Which unit, camera or not, emergency or the afternoon route. If you can write it as a rule, it is still a workflow. &quot;Water through the ceiling, page the owner&quot; does not need a model.</p>
-<p>Fourth, choose what the model may touch. We allow a draft, a suggested tech, and a suggested part. We forbid sending, pricing, and any sentence about who pays for damage. If the bound says &quot;use your judgment,&quot; you have left a hole, and the model will fill it with something polite.</p>
+<p>First, name the job in one sentence a new hire could repeat. “Turn a call into a visit the tech can finish, without promising a time the route cannot keep.” If that sentence becomes the whole menu, you have not named the job.</p>
+<p>Second, write the steps that do not change. Name, number, address, access, what is happening, who is rolling. Use the scheduler’s order, not a template’s. This workflow is the floor, even if an agent comes later.</p>
+<p>Third, mark the forks. A fork is any moment where the next step depends on what the last step found. Which unit, camera or not, emergency or the afternoon route. If you can write it as a rule, it is still a workflow. “Water through the ceiling, page the owner” does not need a model.</p>
+<p>Fourth, choose what the model may touch. We allow a draft, a suggested tech, and a suggested part. We forbid sending, pricing, and any sentence about who pays for damage. If the bound says “use your judgment,” you have left a hole, and the model will fill it with something polite.</p>
 <p>Fifth, name the stop and the person. The scheduler can stop it. The owner can stop it. A tech can kick back a job that arrived without the part. The system stops when a fact is missing, when the time sits outside the route, or when the caller is angry. Stopping is a success.</p>
-<p>Sixth, replay recent jobs with the names covered. The scheduler compares the proposal with what the desk actually did. Hunt the confident wrong time. Fix the bounds before a live customer sees a message. Only then draft against today&#39;s calls, with send still in human hands. We would repeat that replay until the refusals look right, rather than turn on an automatic text because a trial is ending.</p>
+<p>Sixth, replay recent jobs with the names covered. The scheduler compares the proposal with what the desk actually did. Hunt the confident wrong time. Fix the bounds before a live customer sees a message. Only then draft against today’s calls, with send still in human hands. We would repeat that replay until the refusals look right, rather than turn on an automatic text because a trial is ending.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <p>The first mistake is a rename. The chat box gets called an agent because the invoice said so. If a person still picks every next step, you have one prompt. That can be the right tool. The rename makes the staff expect judgment the box does not have.</p>
-<p>The second mistake is skipping the written path because writing feels slow. Every exception becomes the model&#39;s problem, including ones a card by the phone could handle. The staff stops trusting the book. The scheduler goes back to memory, plus a fee.</p>
+<p>The second mistake is skipping the written path because writing feels slow. Every exception becomes the model’s problem, including ones a card by the phone could handle. The staff stops trusting the book. The scheduler goes back to memory, plus a fee.</p>
 <p>The third mistake is a missing stop. The model may text, and nobody is named to halt it on a bad afternoon. The bad promise is usually small, a time the tech cannot make, and the customer hears it as the business.</p>
 <p>The fourth mistake is treating the survey as a target. 23% scaling an agentic system somewhere in the enterprise is not a quota. 10% inside any one function is not a score you are failing. Chasing those shares buys a tool nobody can supervise.</p>
 <p>The fifth mistake is letting the system near money. A price, a waived fee, a line about whether the landlord pays. A draft the owner edits is a different product from a message that already left.</p>
-<p>The sixth mistake is a bound written as a mood. &quot;Be helpful&quot; is not a bound. &quot;Do not offer a same-day visit unless the owner has marked the job urgent&quot; is a bound. If the scheduler cannot enforce the sentence, the model will be helpful in the wrong direction.</p>
-<h2 id="what-we-39-d-do">What we&#39;d do</h2>
-<p>We would write the scheduler&#39;s path before we paid for anything that chooses its own tools. We would keep one prompt for the messy replies, a workflow for intake, and an agent only on the fork where the next visit depends on what the note contains. We would leave send on a human button longer than a vendor likes. Our opinion is plain. An agent is worth the trouble when the branch is real and a named person owns the stop. It is a poor purchase when the process is still a story the owner tells at the counter.</p>
+<p>The sixth mistake is a bound written as a mood. “Be helpful” is not a bound. “Do not offer a same-day visit unless the owner has marked the job urgent” is a bound. If the scheduler cannot enforce the sentence, the model will be helpful in the wrong direction.</p>
+<h2 id="what-we-39-d-do">What we’d do</h2>
+<p>We would write the scheduler’s path before we paid for anything that chooses its own tools. We would keep one prompt for the messy replies, a workflow for intake, and an agent only on the fork where the next visit depends on what the note contains. We would leave send on a human button longer than a vendor likes. Our opinion is plain. An agent is worth the trouble when the branch is real and a named person owns the stop. It is a poor purchase when the process is still a story the owner tells at the counter.</p>
 <p>The 2024 essay says to earn the complexity. The 2025 survey says that even large firms, inside any one function, are mostly not scaling agents. We believe both. Then we go sit with the person who answers the phone, because that person already knows where the path breaks, and the software does not.</p>
 
 </div>
-<section id="faq"><h2>Questions</h2><div class="faq-list"><details><summary>What is an AI agent in plain language?</summary><p>Anthropic describes an agent as a system where the model directs its own process and tool use. A workflow, by contrast, follows a path the builder wrote in advance.</p></details><details><summary>Should a small business start with an agent?</summary><p>Anthropic&#39;s December 2024 essay says to start with the simplest solution that works. A fixed workflow is enough when the steps do not change.</p></details><details><summary>How many firms are scaling agents?</summary><p>McKinsey&#39;s 2025 survey says 23% of respondents are scaling an agentic system somewhere in the enterprise, and 39% are experimenting. In any one function, no more than 10% say they are scaling agents.</p></details></div></section>
+<section id="faq"><h2>Questions</h2><div class="faq-list"><details><summary>What is an AI agent in plain language?</summary><p>Anthropic describes an agent as a system where the model directs its own process and tool use. A workflow, by contrast, follows a path the builder wrote in advance.</p></details><details><summary>Should a small business start with an agent?</summary><p>Anthropic’s December 2024 essay says to start with the simplest solution that works. A fixed workflow is enough when the steps do not change.</p></details><details><summary>How many firms are scaling agents?</summary><p>McKinsey’s 2025 survey says 23% of respondents are scaling an agentic system somewhere in the enterprise, and 39% are experimenting. In any one function, no more than 10% say they are scaling agents.</p></details></div></section>
 <section id="sources"><h2>Sources</h2><ol><li id="source-anthropic"><a href="https://www.anthropic.com/research/building-effective-agents">Building effective agents</a>. Anthropic. 2024-12-19.</li><li id="source-mckinsey"><a href="https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai/november%202025/the-state-of-ai-2025-agents-innovation_cmyk-v1.pdf">The state of AI in 2025: Agents, innovation, and transformation</a>. McKinsey.</li></ol></section>
 <aside class="author-box"><p class="kicker">Author</p><h2>Abracadabra Studio</h2><p>The notes are written by the people who design, build and run AI-powered tools at Abracadabra. Every number names its source.</p><a href="/about/">About us</a></aside>
 <section id="related" class="post-related"><h2>Related</h2><ul class="cards"><li data-pillar="AI agents"><a href="/blog/ai-agents-for-business"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-agents-for-business/01.webp" type="image/webp"><img src="/blog/media/ai-agents-for-business/01.jpg" alt="A person seen from behind at a laptop in a workshop, with a second person beside them, looking at a screen together" width="1280" height="720"></picture></span><span class="kicker">AI agents</span><strong>AI Agents for Business: When to Use One</strong><span class="card-dek">When an AI agent is worth it, when a simple workflow is the better buy, and why a person should still check the output.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>10 min read</span></span></a></li><li data-pillar="AI agents"><a href="/blog/ai-agents-vs-agentic-ai"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-agents-vs-agentic-ai/01.webp" type="image/webp"><img src="/blog/media/ai-agents-vs-agentic-ai/01.jpg" alt="Two people at a workbench, one holding a pen over a sheet and the other holding a phone, faces turned away" width="1280" height="720"></picture></span><span class="kicker">AI agents</span><strong>AI Agents vs Agentic AI: A Plain Split</strong><span class="card-dek">An agent takes a goal and chooses tools. Agentic AI is the wider bet, and many of those projects are forecast to be canceled. Start with a workflow.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>9 min read</span></span></a></li><li data-pillar="AI consulting and implementation"><a href="/blog/ai-automation-agency-vs-consultant"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-automation-agency-vs-consultant/01.webp" type="image/webp"><img src="/blog/media/ai-automation-agency-vs-consultant/01.jpg" alt="A cafe table with an open laptop, a notebook, and two coffee cups, photographed from above with no faces in frame" width="1280" height="720"></picture></span><span class="kicker">AI consulting and implementation</span><strong>AI Automation Agency vs Consultant: Who to Hire</strong><span class="card-dek">Hire a consultant to name the job. Hire an agency to build after the job is named. Who to hire first, and why the order matters.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>10 min read</span></span></a></li></ul></section>
 <section id="all-notes"><h2>All notes</h2><ul><li><a href="/blog/ai-agents-for-business">AI Agents for Business: When to Use One</a></li><li><a href="/blog/ai-agents-vs-agentic-ai">AI Agents vs Agentic AI: A Plain Split</a></li><li><a href="/blog/ai-automation-agency-vs-consultant">AI Automation Agency vs Consultant: Who to Hire</a></li><li><a href="/blog/ai-automation-for-small-business">AI Automation for Small Business: Which Job First</a></li><li><a href="/blog/ai-consultant-for-small-business">AI Consultant for Small Business: What to Ask</a></li><li><a href="/blog/ai-for-small-business-2027">AI for Small Business: What the Surveys Still Say</a></li><li><a href="/blog/ai-implementation-framework">An AI Implementation Framework in Five Stages</a></li><li><a href="/blog/ai-readiness-assessment-questionnaire">AI Readiness Assessment Questionnaire: The Themes</a></li><li><a href="/blog/ai-readiness-assessment">AI Readiness Assessment: What It Measures and How to Score</a></li><li><a href="/blog/ai-readiness-checklist">AI Readiness Checklist Before You Buy a Tool</a></li><li><a href="/blog/ai-readiness-framework">An AI Readiness Framework an Owner Can Score</a></li><li><a href="/blog/ai-ready-data">AI-Ready Data: What a Small Business Needs First</a></li><li><a href="/blog/ai-strategy-for-small-business">AI Strategy for Small Business: Start With the Job</a></li><li><a href="/blog/answer-engine-optimization">Answer Engine Optimization: What Google Still Requires</a></li><li><a href="/blog/business-process-automation-ai">Business Process Automation With AI: Write the Job</a></li><li><a href="/blog/generative-engine-optimization-vs-seo">Generative Engine Optimization vs SEO</a></li><li><a href="/blog/how-can-ai-help-small-businesses">How Can AI Help a Small Business? What Surveys Count</a></li><li><a href="/blog/how-to-get-your-business-to-show-up-in-chatgpt">How to Show Up in ChatGPT and AI Overviews</a></li><li><a href="/blog/how-to-use-ai-in-your-business">How to Use AI in Your Business: Twelve Jobs</a></li><li><a href="/blog/is-my-business-ready-for-ai">Is My Business Ready for AI? Signs to Read First</a></li><li><a href="/blog/off-the-shelf-ai-or-custom-software">Off-the-Shelf AI or Custom Software</a></li><li><a href="/blog/what-is-llms-txt">What Is llms.txt, and Who Actually Reads It</a></li><li><a href="/blog/why-ai-pilots-stall">Why AI Pilots Stall After the Demo</a></li></ul></section>
-<aside class="cta cta-close"><p>An agent needs a written process and a person who checks it. The Readiness Check covers both.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="close" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=close">Run the Readiness Check</a></aside>
+<aside class="cta cta-close"><p>An agent needs a written process and a person who checks it. The Readiness Check covers both.</p><a class="btn btn--primary" href="/start/">Start a project</a><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="close" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=close">Run the Readiness Check</a></aside>
 </article>
 <aside class="post-aside">
-<nav class="post-toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#when-a-workflow-is-enough">When a workflow is enough</a></li><li><a href="#what-the-survey-actually-counts">What the survey actually counts</a></li><li><a href="#a-worked-example">A worked example</a></li><li><a href="#how-we-39-d-run-it">How we&#39;d run it</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#what-we-39-d-do">What we&#39;d do</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></nav>
+<nav class="toc post-toc" aria-label="On this page"><details class="toc__sheet"><summary>On this page</summary><p>On this page</p><ol><li><a href="#when-a-workflow-is-enough">When a workflow is enough</a></li><li><a href="#what-the-survey-actually-counts">What the survey actually counts</a></li><li><a href="#a-worked-example">A worked example</a></li><li><a href="#how-we-39-d-run-it">How we’d run it</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#what-we-39-d-do">What we’d do</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></details><div class="toc__rail"><p>On this page</p><ol><li><a href="#when-a-workflow-is-enough">When a workflow is enough</a></li><li><a href="#what-the-survey-actually-counts">What the survey actually counts</a></li><li><a href="#a-worked-example">A worked example</a></li><li><a href="#how-we-39-d-run-it">How we’d run it</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#what-we-39-d-do">What we’d do</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></div></nav>
 </aside>
 </div>
 </main>
-<aside class="cta cta-sticky"><p>An agent needs a written process and a person who checks it. The Readiness Check covers both.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="sticky" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=sticky">Take the Readiness Check</a></aside>
+<aside class="cta cta-sticky"><p>An agent needs a written process and a person who checks it. The Readiness Check covers both.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="what-is-an-ai-agent" data-track-placement="sticky" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-an-ai-agent&amp;utm_content=sticky">Take the Readiness Check</a></aside>
 <footer class="site-foot">
+  <div class="site-close">
+  <p class="site-close__line">Have something to make?</p>
+  <p class="site-close__actions" data-actions>
+    <a class="btn btn--primary" href="/start/">Start a project</a>
+    <a class="btn btn--tertiary" href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app <span class="btn__arrow" aria-hidden="true">→</span></a>
+  </p>
+</div>
   <p class="site-foot__word" aria-label="Abracadabra">abracadabra<span class="wm-dot">.</span></p>
   <nav class="site-foot__links" aria-label="Footer">
     <a href="/services/#search">Search &amp; AI visibility</a>
@@ -334,13 +387,19 @@
     <a href="/portfolio/">Design</a>
     <a href="/services/#platform">Platform</a>
     <a href="/services/">Services</a>
-    <a href="/portfolio/">Portfolio</a>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
     <a href="/privacy">Privacy</a>
   </nav>
+  <p class="site-foot__meta">
+    <span>Toronto</span>
+    <span data-clock="America/Toronto">America/Toronto</span>
+    <span>© 2026 Abracadabra AI</span>
+    <a href="/privacy">Privacy</a>
+  </p>
 </footer>
 </body>
 </html>

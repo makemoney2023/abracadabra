@@ -22,12 +22,18 @@
 <meta name="twitter:description" content="Each job uses the model that fits it. You get one gateway and one bill you can cap and stop.">
 <meta name="twitter:image" content="https://abra-ca-dabra.app/blog/media/services/any-model-one-bill/og.jpg">
 <meta name="twitter:image:alt" content="Model picker with several model names and one usage meter for the bill.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Inter+Tight:wght@500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/blog/blog.css">
-<link rel="stylesheet" href="/assets/pirx-shot.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070706'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23FF4B24'%3EA%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#070706">
+<link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preload" href="/assets/fonts/inter-tight-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/site.css?v=20261019b">
+
+<link rel="stylesheet" href="/blog/blog.css?v=20261019b">
+<link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019b">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -167,28 +173,67 @@
 <header class="site-nav">
   <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
   <details class="site-nav__menu">
-    <summary class="site-nav__toggle">Menu</summary>
+    <summary class="site-nav__toggle" aria-label="Menu"><span class="site-nav__glyph" aria-hidden="true"></span></summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
-    <a href="/portfolio/">Portfolio</a>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><details class="site-nav__group" open><summary class="site-nav__fn-name">Build</summary><a class="site-nav__mega-link" href="/services/custom-apps/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Apps built around your workflow.</strong><span class="site-nav__desc">Software around the way the work already runs.</span></span></a><a class="site-nav__mega-link" href="/services/web-automation/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Put repetitive web work on autopilot.</strong><span class="site-nav__desc">Repetitive web jobs that run themselves.</span></span></a><a class="site-nav__mega-link" href="/services/answers-from-your-documents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Instant answers from your own documents.</strong><span class="site-nav__desc">Answers from the files you already keep.</span></span></a><a class="site-nav__mega-link" href="/services/safe-code-execution/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Let AI run code, safely.</strong><span class="site-nav__desc">AI that can run code, with a fence around it.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Create</summary><a class="site-nav__mega-link" href="/services/ai-media/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>On-brand images, video and voice, on demand.</strong><span class="site-nav__desc">On-brand images, video and voice.</span></span></a><a class="site-nav__mega-link" href="/services/voice-and-realtime-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI that answers your phone.</strong><span class="site-nav__desc">A voice that answers from your records.</span></span></a><a class="site-nav__mega-link" href="/services/ai-assistants-and-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI assistants that actually get things done.</strong><span class="site-nav__desc">An assistant that finishes the request.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Grow</summary><a class="site-nav__mega-link" href="/services/ai-visibility/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Get found in AI search.</strong><span class="site-nav__desc">Show up when someone asks an assistant.</span></span></a><a class="site-nav__mega-link" href="/services/search-grounded-research/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Research you can trust, with every source cited.</strong><span class="site-nav__desc">Research you can open and check.</span></span></a><a class="site-nav__mega-link" href="/services/any-model-one-bill/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Every AI model. One bill.</strong><span class="site-nav__desc">Every model, on one invoice.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Learn</summary><a class="site-nav__mega-link" href="/course/llm-leverage/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>LLM Leverage</strong><span class="site-nav__desc">A course for better answers from any model.</span></span></a><a class="site-nav__mega-link" href="/blog"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Notes</strong><span class="site-nav__desc">How to put AI to work.</span></span></a><a class="site-nav__mega-link" href="/films.html"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Films</strong><span class="site-nav__desc">The work, shown.</span></span></a></details></div></details>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
-    <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
+    <a class="btn btn--primary site-nav__cta" href="/start/">Start a project</a>
   </nav>
 </header>
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
     var services = bar.querySelector(".site-nav__services");
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () {
+        document.documentElement.style.setProperty("--nav-h", bar.offsetHeight + "px");
+      }).observe(bar);
+    }
     bar.addEventListener("click", function (event) {
       if (!event.target.closest("a")) return;
       if (menu) menu.open = false;
       if (services) services.open = false;
     });
+    if (menu) {
+      menu.addEventListener("toggle", function () {
+        document.documentElement.classList.toggle("menu-open", menu.open);
+      });
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    var services = document.querySelector(".site-nav__services");
+    var menu = document.querySelector(".site-nav__menu");
+    if (services && services.open) {
+      services.open = false;
+      var summary = services.querySelector("summary");
+      if (summary) summary.focus();
+      return;
+    }
+    if (menu && menu.open) {
+      menu.open = false;
+      var toggle = menu.querySelector("summary");
+      if (toggle) toggle.focus();
+    }
   });
   document.addEventListener("DOMContentLoaded", function () {
+    var clock = document.querySelector("[data-clock]");
+    if (clock) {
+      var zone = clock.getAttribute("data-clock");
+      var tick = function () {
+        try {
+          clock.textContent = new Intl.DateTimeFormat("en-CA", {
+            timeZone: zone, hour: "numeric", minute: "2-digit", timeZoneName: "short",
+          }).format(new Date());
+        } catch (error) { /* keep the timezone name */ }
+      };
+      tick();
+      setInterval(tick, 60000);
+    }
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     document.querySelectorAll("video.loop-film").forEach(function (video) {
       function stop() { video.pause(); }
@@ -209,7 +254,7 @@
   });
 </script>
 <main id="top" class="site-page sales">
-<header class="page-hero page-hero--photo">
+<header class="page-hero page-header page-hero--photo">
 <figure class="page-hero__media"><picture>
 <source type="image/avif" srcset="/blog/media/services/any-model-one-bill/hero-640.avif 640w, /blog/media/services/any-model-one-bill/hero-960.avif 960w, /blog/media/services/any-model-one-bill/hero-1280.avif 1280w" sizes="(min-width: 1024px) 72rem, 100vw">
 <source type="image/webp" srcset="/blog/media/services/any-model-one-bill/hero-640.webp 640w, /blog/media/services/any-model-one-bill/hero-960.webp 960w, /blog/media/services/any-model-one-bill/hero-1280.webp 1280w" sizes="(min-width: 1024px) 72rem, 100vw">
@@ -217,22 +262,22 @@
 </picture></figure>
 <div class="page-hero__copy">
 <nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><a href="/services/">Services</a></li><li aria-current="page">Every AI model. One bill.</li></ol></nav>
-<p class="kicker">Platform</p>
+<p class="eyebrow">Platform</p>
 <h1>Every AI model. One bill.</h1>
-<p class="sales-dek">Use the best AI for every job, on one account and one bill, and switch any model off in a click.</p>
-
-<p class="sales-actions"><a class="sales-primary" href="/#start">Start a project</a><a class="sales-secondary" href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a></p>
+<div class="page-header__lede lede"><p class="sales-dek">Use the best AI for every job, on one account and one bill, and switch any model off in a click.</p>
+</div>
+<p class="sales-actions" data-actions><a class="btn btn--primary sales-primary" href="/start/">Start a project</a><a class="btn btn--secondary sales-secondary" href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a></p>
 </div>
 </header>
 <ul class="proof-strip"><li><a href="/#models">The models on this site</a></li></ul>
 <section>
-<h2>More AI tools shouldn&#39;t mean more accounts and invoices.</h2>
+<h2>More AI tools shouldn’t mean more accounts and invoices.</h2>
 <p>Every new AI tool brings another login and another invoice, and only one person knows how it all fits together.</p>
 <p>We connect every model in one place, so each task uses the right one and everything lands on a single bill.</p>
 </section>
 <section>
 <h2>What you get</h2>
-<ul class="outcome-grid"><li><h3>One account for every model</h3><p>The models you use are called through one place. Adding one does not mean a new vendor login for everyone.</p></li><li><h3>The model matches the job</h3><p>A short draft, a careful answer, and an image do not have to share a single model. You can change the choice.</p></li><li><h3>A bill you can stop</h3><p>Usage sits on one bill. If a model is not earning its place, you turn it off without unwiring the rest of the work.</p></li><li><h3>No invented spend story</h3><p>We do not publish anyone&#39;s invoice here. The proof is the gateway itself, and the providers named on the homepage.</p></li></ul>
+<ul class="outcome-grid"><li><h3>One account for every model</h3><p>The models you use are called through one place. Adding one does not mean a new vendor login for everyone.</p></li><li><h3>The model matches the job</h3><p>A short draft, a careful answer, and an image do not have to share a single model. You can change the choice.</p></li><li><h3>A bill you can stop</h3><p>Usage sits on one bill. If a model is not earning its place, you turn it off without unwiring the rest of the work.</p></li><li><h3>No invented spend story</h3><p>We do not publish anyone’s invoice here. The proof is the gateway itself, and the providers named on the homepage.</p></li></ul>
 </section>
 <section class="sales-split">
 <div>
@@ -249,20 +294,20 @@
 <section>
 <h2>How it works</h2>
 <p>From first conversation to a system that runs itself.</p>
-<ol class="process"><li><h3>Plan</h3><p>We map how the work gets done today, including the calls only a person should make, and agree on it before anything is built.</p></li><li><h3>Build</h3><p>Built on Cloudflare and connected to the tools you already use, so nothing has to move.</p></li><li><h3>Review</h3><p>Tested on your real work from last week before any customer sees it.</p></li><li><h3>Launch and run</h3><p>We launch with close monitoring, keep it running, and you can change the rules at any time. It&#39;s yours to keep.</p></li></ol>
+<ol class="process"><li><h3>Plan</h3><p>We map how the work gets done today, including the calls only a person should make, and agree on it before anything is built.</p></li><li><h3>Build</h3><p>Built on Cloudflare and connected to the tools you already use, so nothing has to move.</p></li><li><h3>Review</h3><p>Tested on your real work from last week before any customer sees it.</p></li><li><h3>Launch and run</h3><p>We launch with close monitoring, keep it running, and you can change the rules at any time. It’s yours to keep.</p></li></ol>
 </section>
 <section>
 <h2>How it compares</h2>
 <p>One vendor account, a person who manages keys, and a gateway are different amounts of work.</p>
 <div class="extraction-table"><table>
 <thead><tr><th></th><th>Off the shelf</th><th>Hire in-house</th><th>Abracadabra</th></tr></thead>
-<tbody><tr><th scope="row">How a model is added</th><td>A new account, a new key, a new invoice.</td><td>Someone on staff learns that vendor and keeps the key safe.</td><td>You add it on the gateway you already have.</td></tr><tr><th scope="row">How the cost is read</th><td>One vendor at a time, in that vendor&#39;s words.</td><td>A spreadsheet, if someone maintains it.</td><td>One bill, with the model named on the usage.</td></tr><tr><th scope="row">How it stops</th><td>Close that account and rewire what used it.</td><td>The knowledge leaves with the person.</td><td>You turn the model off. The other jobs stay.</td></tr><tr><th scope="row">When you don&#39;t need us</th><td>One model, a bill that is already clear, and no plan to switch. Stay. A gateway you do not need is another thing to watch.</td><td>A hire to manage a single key is overhead.</td><td>Our advice: stay on the one vendor. The gateway earns its place when the second model shows up.</td></tr></tbody>
+<tbody><tr><th scope="row">How a model is added</th><td>A new account, a new key, a new invoice.</td><td>Someone on staff learns that vendor and keeps the key safe.</td><td>You add it on the gateway you already have.</td></tr><tr><th scope="row">How the cost is read</th><td>One vendor at a time, in that vendor’s words.</td><td>A spreadsheet, if someone maintains it.</td><td>One bill, with the model named on the usage.</td></tr><tr><th scope="row">How it stops</th><td>Close that account and rewire what used it.</td><td>The knowledge leaves with the person.</td><td>You turn the model off. The other jobs stay.</td></tr><tr><th scope="row">When you don’t need us</th><td>One model, a bill that is already clear, and no plan to switch. Stay. A gateway you do not need is another thing to watch.</td><td>A hire to manage a single key is overhead.</td><td>Our advice: stay on the one vendor. The gateway earns its place when the second model shows up.</td></tr></tbody>
 </table></div>
 </section>
 <section class="sales-split">
 <div>
 <h2>Proof</h2>
-<article class="proof-card"><h3>The model list on this site</h3><p>The homepage names the gateway providers and the model families in two rows you can read. That list is the proof for this service. We do not attach anyone&#39;s spend, and we do not imply a seat purchase.</p><p><a href="/#models">See the models</a></p></article>
+<article class="proof-card"><h3>The model list on this site</h3><p>The homepage names the gateway providers and the model families in two rows you can read. That list is the proof for this service. We do not attach anyone’s spend, and we do not imply a seat purchase.</p><p><a href="/#models">See the models</a></p></article>
 </div>
 <figure class="sales-split__photo"><picture>
 <source type="image/avif" srcset="/blog/media/services/any-model-one-bill/body2-640.avif 640w, /blog/media/services/any-model-one-bill/body2-960.avif 960w, /blog/media/services/any-model-one-bill/body2-1280.avif 1280w" sizes="(min-width: 1024px) 46vw, 100vw">
@@ -273,7 +318,7 @@
 <p class="cloud-line">Running in production today.</p>
 <section class="price-block">
 <h2>Pricing</h2>
-<p>Priced to the project. Tell us what you need and we'll quote it.</p>
+<p>Priced to the project. Tell us what you need and we’ll quote it.</p>
 <p><a href="/#start">Start a project</a></p>
 </section>
 <section>
@@ -293,11 +338,18 @@
 </section>
 <section class="sales-close">
 <h2>Start a project</h2>
-<p>Tell us which AI tools you use today, and we&#39;ll show you how they fit on one bill.</p>
-<p class="sales-actions"><a class="sales-primary" href="/#start">Start a project</a><a class="sales-secondary" href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a></p>
+<p>Tell us which AI tools you use today, and we’ll show you how they fit on one bill.</p>
+<p class="sales-actions" data-actions><a class="btn btn--primary sales-primary" href="/start/">Start a project</a><a class="btn btn--secondary sales-secondary" href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a></p>
 </section>
 </main>
 <footer class="site-foot">
+  <div class="site-close">
+  <p class="site-close__line">Have something to make?</p>
+  <p class="site-close__actions" data-actions>
+    <a class="btn btn--primary" href="/start/">Start a project</a>
+    <a class="btn btn--tertiary" href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app <span class="btn__arrow" aria-hidden="true">→</span></a>
+  </p>
+</div>
   <p class="site-foot__word" aria-label="Abracadabra">abracadabra<span class="wm-dot">.</span></p>
   <nav class="site-foot__links" aria-label="Footer">
     <a href="/services/#search">Search &amp; AI visibility</a>
@@ -308,13 +360,19 @@
     <a href="/portfolio/">Design</a>
     <a href="/services/#platform">Platform</a>
     <a href="/services/">Services</a>
-    <a href="/portfolio/">Portfolio</a>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
     <a href="/privacy">Privacy</a>
   </nav>
+  <p class="site-foot__meta">
+    <span>Toronto</span>
+    <span data-clock="America/Toronto">America/Toronto</span>
+    <span>© 2026 Abracadabra AI</span>
+    <a href="/privacy">Privacy</a>
+  </p>
 </footer>
 </body>
 </html>

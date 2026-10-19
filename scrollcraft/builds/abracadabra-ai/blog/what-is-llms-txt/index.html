@@ -13,20 +13,26 @@
 <meta property="og:url" content="https://abra-ca-dabra.app/blog/what-is-llms-txt">
 <meta property="og:title" content="What Is llms.txt, and Who Actually Reads It | Abracadabra AI">
 <meta property="og:description" content="A proposed file that points models at your best pages. Google says it does not use the file. A large study found most copies are never requested.">
-<meta property="og:image" content="https://abra-ca-dabra.app/blog/og/what-is-llms-txt.png">
+<meta property="og:image" content="https://abra-ca-dabra.app/blog/og/what-is-llms-txt.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="What Is llms.txt, and Who Actually Reads It — Abracadabra AI">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="What Is llms.txt, and Who Actually Reads It | Abracadabra AI">
 <meta name="twitter:description" content="A proposed file that points models at your best pages. Google says it does not use the file. A large study found most copies are never requested.">
-<meta name="twitter:image" content="https://abra-ca-dabra.app/blog/og/what-is-llms-txt.png">
+<meta name="twitter:image" content="https://abra-ca-dabra.app/blog/og/what-is-llms-txt.jpg">
 <meta name="twitter:image:alt" content="What Is llms.txt, and Who Actually Reads It — Abracadabra AI">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Inter+Tight:wght@500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/blog/blog.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070706'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23FF4B24'%3EA%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#070706">
+<link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preload" href="/assets/fonts/inter-tight-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/site.css?v=20261019b">
+
+<link rel="stylesheet" href="/blog/blog.css?v=20261019b">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -192,28 +198,67 @@
 <header class="site-nav">
   <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
   <details class="site-nav__menu">
-    <summary class="site-nav__toggle">Menu</summary>
+    <summary class="site-nav__toggle" aria-label="Menu"><span class="site-nav__glyph" aria-hidden="true"></span></summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
-    <a href="/portfolio/">Portfolio</a>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><details class="site-nav__group" open><summary class="site-nav__fn-name">Build</summary><a class="site-nav__mega-link" href="/services/custom-apps/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Apps built around your workflow.</strong><span class="site-nav__desc">Software around the way the work already runs.</span></span></a><a class="site-nav__mega-link" href="/services/web-automation/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Put repetitive web work on autopilot.</strong><span class="site-nav__desc">Repetitive web jobs that run themselves.</span></span></a><a class="site-nav__mega-link" href="/services/answers-from-your-documents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Instant answers from your own documents.</strong><span class="site-nav__desc">Answers from the files you already keep.</span></span></a><a class="site-nav__mega-link" href="/services/safe-code-execution/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Let AI run code, safely.</strong><span class="site-nav__desc">AI that can run code, with a fence around it.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Create</summary><a class="site-nav__mega-link" href="/services/ai-media/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>On-brand images, video and voice, on demand.</strong><span class="site-nav__desc">On-brand images, video and voice.</span></span></a><a class="site-nav__mega-link" href="/services/voice-and-realtime-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI that answers your phone.</strong><span class="site-nav__desc">A voice that answers from your records.</span></span></a><a class="site-nav__mega-link" href="/services/ai-assistants-and-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI assistants that actually get things done.</strong><span class="site-nav__desc">An assistant that finishes the request.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Grow</summary><a class="site-nav__mega-link" href="/services/ai-visibility/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Get found in AI search.</strong><span class="site-nav__desc">Show up when someone asks an assistant.</span></span></a><a class="site-nav__mega-link" href="/services/search-grounded-research/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Research you can trust, with every source cited.</strong><span class="site-nav__desc">Research you can open and check.</span></span></a><a class="site-nav__mega-link" href="/services/any-model-one-bill/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Every AI model. One bill.</strong><span class="site-nav__desc">Every model, on one invoice.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Learn</summary><a class="site-nav__mega-link" href="/course/llm-leverage/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>LLM Leverage</strong><span class="site-nav__desc">A course for better answers from any model.</span></span></a><a class="site-nav__mega-link" href="/blog"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Notes</strong><span class="site-nav__desc">How to put AI to work.</span></span></a><a class="site-nav__mega-link" href="/films.html"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Films</strong><span class="site-nav__desc">The work, shown.</span></span></a></details></div></details>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
-    <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
+    <a class="btn btn--primary site-nav__cta" href="/start/">Start a project</a>
   </nav>
 </header>
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
     var services = bar.querySelector(".site-nav__services");
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () {
+        document.documentElement.style.setProperty("--nav-h", bar.offsetHeight + "px");
+      }).observe(bar);
+    }
     bar.addEventListener("click", function (event) {
       if (!event.target.closest("a")) return;
       if (menu) menu.open = false;
       if (services) services.open = false;
     });
+    if (menu) {
+      menu.addEventListener("toggle", function () {
+        document.documentElement.classList.toggle("menu-open", menu.open);
+      });
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    var services = document.querySelector(".site-nav__services");
+    var menu = document.querySelector(".site-nav__menu");
+    if (services && services.open) {
+      services.open = false;
+      var summary = services.querySelector("summary");
+      if (summary) summary.focus();
+      return;
+    }
+    if (menu && menu.open) {
+      menu.open = false;
+      var toggle = menu.querySelector("summary");
+      if (toggle) toggle.focus();
+    }
   });
   document.addEventListener("DOMContentLoaded", function () {
+    var clock = document.querySelector("[data-clock]");
+    if (clock) {
+      var zone = clock.getAttribute("data-clock");
+      var tick = function () {
+        try {
+          clock.textContent = new Intl.DateTimeFormat("en-CA", {
+            timeZone: zone, hour: "numeric", minute: "2-digit", timeZoneName: "short",
+          }).format(new Date());
+        } catch (error) { /* keep the timezone name */ }
+      };
+      tick();
+      setInterval(tick, 60000);
+    }
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     document.querySelectorAll("video.loop-film").forEach(function (video) {
       function stop() { video.pause(); }
@@ -246,66 +291,74 @@
 </div>
 <figure class="content-hero-photo"><picture><source srcset="/blog/media/what-is-llms-txt/01.webp" type="image/webp"><img src="/blog/media/what-is-llms-txt/01.jpg" alt="A laptop on a desk showing a text file, with a notebook and a pen beside it and no person in the frame" width="1280" height="720"></picture><figcaption>A plain text file on the laptop.</figcaption></figure>
 </header>
+<div class="reading-progress" aria-hidden="true"></div>
 <div class="post-layout">
 <article>
 <div class="prose post-prose">
 <p><strong>llms.txt is a proposed text file at the root of a site that lists the pages you most want a model to read.</strong> It is a map. It is not a citation, and it is not a ranking.</p>
 <figure class="key-stat"><dl><dt>Cited in this note</dt><dd>28%</dd></dl><figcaption>28% published an llms</figcaption></figure>
 <p>Jeremy Howard published the proposal in September 2024, and the page was updated in August 2026.<sup><a href="#source-llmstxt">1</a></sup> The idea is a short list of the pages you want a model to read, written so a person can audit it in one sitting. This site already publishes <a href="/llms.txt">its own file</a>. That is a fact about this site, not a traffic statistic. We publish it because we like a clean list of what we stand behind.</p>
-<p>Google&#39;s guide says Google does not use llms.txt for generative features in search.<sup><a href="#source-google">2</a></sup> Keep that next to the proposal, or the proposal becomes a rumor. A file Google&#39;s generative features do not read cannot be the reason you show up in those features. The page still has to be indexed. The page still has to deserve the quote.</p>
+<p>Google’s guide says Google does not use llms.txt for generative features in search.<sup><a href="#source-google">2</a></sup> Keep that next to the proposal, or the proposal becomes a rumor. A file Google’s generative features do not read cannot be the reason you show up in those features. The page still has to be indexed. The page still has to deserve the quote.</p>
 <p>The <a href="https://check.abra-ca-dabra.app/check/guide/fix/missing-llms-txt">missing-file guide</a> is the check if you want to know whether yours is absent, broken, or pointing at junk. The <a href="/blog/answer-engine-optimization">answer-engine note</a> is what Google does require, which is ordinary SEO on a real page. The <a href="/blog/generative-engine-optimization-vs-seo">GEO comparison</a> is the research on visibility and the click, if the file conversation has crowded that out.</p>
 <h2 id="what-a-crawl-of-the-files-found">What a crawl of the files found</h2>
 <p>Ahrefs, in a study published in June 2026, looked at 137,210 domains in its web analytics that had traffic in May 2026.<sup><a href="#source-ahrefs">3</a></sup> 28% published an llms.txt file, about 38,000 valid files. 97% of those files received zero requests in May. 96% of the requests that did arrive were bots. 19.5% of requests came from named AI tools, and 12% from audit or scanner tools. Sit with those shares before you schedule a project around the file. Most copies, in that study, were never asked for. When something did ask, it was usually a bot, and only a smaller slice of those requests were named AI tools.</p>
-<p>We do not read this as &quot;never publish one.&quot; We read it as &quot;do not expect the file to be a doorway.&quot; A list nobody requests cannot fix a homepage that says nothing. A list that scanners request is not the same event as a model citing you in an answer a customer sees. The study is a count of requests against files, in one month, on domains that already had traffic. It is not a verdict on the proposal&#39;s taste. It is a verdict on how often the file was fetched.</p>
+<p>We do not read this as “never publish one.” We read it as “do not expect the file to be a doorway.” A list nobody requests cannot fix a homepage that says nothing. A list that scanners request is not the same event as a model citing you in an answer a customer sees. The study is a count of requests against files, in one month, on domains that already had traffic. It is not a verdict on the proposal’s taste. It is a verdict on how often the file was fetched.</p>
 <figure class="post-figure"><picture><source srcset="/blog/media/what-is-llms-txt/02.webp" type="image/webp"><img src="/blog/media/what-is-llms-txt/02.jpg" alt="Unopened mail piling up at a small office mailbox" width="1280" height="720"></picture></figure>
 
-<aside class="cta cta-inline"><p>A file is not a citation. Check whether the pages themselves can be found.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-llms-txt" data-track-placement="inline" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-llms-txt&amp;utm_content=inline">Run the Readiness Check</a></aside>
+<aside class="cta cta-inline"><p>A file is not a citation. Check whether the pages themselves can be found.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="what-is-llms-txt" data-track-placement="inline" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-llms-txt&amp;utm_content=inline">Run the Readiness Check</a></aside>
 
 <p>Publish the file if you want a clean list of your pages. Do not expect Google to read it. Keep the pages indexed and worth citing either way.</p>
 <p>The order of that advice is the order we use in the room. Pages first. Index first. A sentence a stranger can use. Then, if you still want the list, a short file that points at those pages and does not point at drafts, tag dumps, or anything you would be ashamed to have quoted. The file is a courtesy and a control. It is not the work.</p>
 <figure class="post-figure"><picture><source srcset="/blog/media/what-is-llms-txt/03.webp" type="image/webp"><img src="/blog/media/what-is-llms-txt/03.jpg" alt="A small business network closet with blinking router and switch lights" width="1280" height="720"></picture></figure>
 
 <h2 id="a-worked-example">A worked example</h2>
-<p>Walk an independent bookshop. This is an example, not a study, and it has no score. A manager runs the floor and the website on the same tired afternoons. People ask, online and at the desk, for a book for a grieving friend, for something a nine-year-old will actually finish, and whether tonight&#39;s reading is still happening. The site has a homepage, an events page that is sometimes stale, and a staff-picks page that is the best thing they have written all year.</p>
+<p>Walk an independent bookshop. This is an example, not a study, and it has no score. A manager runs the floor and the website on the same tired afternoons. People ask, online and at the desk, for a book for a grieving friend, for something a nine-year-old will actually finish, and whether tonight’s reading is still happening. The site has a homepage, an events page that is sometimes stale, and a staff-picks page that is the best thing they have written all year.</p>
 <p>Someone on a forum told the manager that models will not understand the shop without llms.txt. He generated a long file that linked every tag, every old event, and a draft page about a book club that never started. It looked thorough. It was a bad map. A model that actually fetched it would have been pointed at stale nights and a club that does not exist. A model that never fetched it, which is the common case in the Ahrefs count, would have changed nothing, and the manager would have spent the evening on the wrong artifact.</p>
-<p>What we would want in the file, if they publish one, is short. The staff-picks page. The page that explains how to order a book they do not have on the shelf. The events page, only if the manager updates it when a reading is canceled. Not the tag archives. Not the draft. The proposal, since September 2024 and as updated in August 2026, is a list of the pages you want read. &quot;Want&quot; is the verb. It is not &quot;everything the CMS can emit.&quot;</p>
+<p>What we would want in the file, if they publish one, is short. The staff-picks page. The page that explains how to order a book they do not have on the shelf. The events page, only if the manager updates it when a reading is canceled. Not the tag archives. Not the draft. The proposal, since September 2024 and as updated in August 2026, is a list of the pages you want read. “Want” is the verb. It is not “everything the CMS can emit.”</p>
 <p>Roles make the file honest. The owner decides which pages represent the shop. If she would not hand that URL to a regular, it does not go in the list. The manager keeps the events page true, because a file that points at a lie is worse than no file. Whoever fetches or fails to fetch is not their audience. The person who needs a book this afternoon is. The staff-picks page has to stand alone if no model ever requests the map. That is the lesson in the request counts. 97% of the valid files in the study got zero requests in May 2026. A shop that only improved the file, and left the picks page mushy, improved the thing almost nobody asked for.</p>
 <p>Google sits to the side of this scene on purpose. The guide says Google does not use llms.txt for generative features in search. The owner can publish a beautiful file and still be absent from those features if the picks page is thin, blocked, or impossible to snippet. The answer-engine work is the page. The file is optional housekeeping. We would tell the manager that directly, before he buys a plugin that regenerates the list every night from every URL it can see.</p>
 <p>And the request mix matters when someone waves a log at you. 96% of the requests that did arrive, in that June 2026 study, were bots. 19.5% came from named AI tools. 12% came from audit or scanner tools. A hit in a log is not a customer. It is often a machine checking whether the file exists. Treat a scanner hit as a scanner hit. Do not report it to the owner as demand.</p>
-<h2 id="how-we-39-d-run-it">How we&#39;d run it</h2>
+<h2 id="how-we-39-d-run-it">How we’d run it</h2>
 <p>We would decide whether the list is worth keeping, and we would write it by hand the first time.</p>
-<p>First, choose the pages you hope a stranger finds, with the owner in the room. Staff picks. Ordering a title you do not stock. Tonight&#39;s reading, if and only if it stays current. If you cannot name them without opening the CMS and scrolling, you are not ready to publish a map.</p>
-<p>Second, make those pages good enough to cite with no file at all. Indexed. Clear opening lines. A sentence the manager would say at the desk. Google does not use the file for its generative features, so this step is the one that can affect that surface. The <a href="/blog/answer-engine-optimization">answer-engine note</a> is the longer version of what &quot;good enough&quot; means. Do not skip it because a file feels more concrete.</p>
-<p>Third, write a short llms.txt that points only at those pages, with a line of plain description a person can check. Link the live URL. If the events page is stale, leave it off until the manager fixes it. A short true list beats a long generated one. This site&#39;s own file is that kind of choice. It is not evidence that files bring visits.</p>
+<p>First, choose the pages you hope a stranger finds, with the owner in the room. Staff picks. Ordering a title you do not stock. Tonight’s reading, if and only if it stays current. If you cannot name them without opening the CMS and scrolling, you are not ready to publish a map.</p>
+<p>Second, make those pages good enough to cite with no file at all. Indexed. Clear opening lines. A sentence the manager would say at the desk. Google does not use the file for its generative features, so this step is the one that can affect that surface. The <a href="/blog/answer-engine-optimization">answer-engine note</a> is the longer version of what “good enough” means. Do not skip it because a file feels more concrete.</p>
+<p>Third, write a short llms.txt that points only at those pages, with a line of plain description a person can check. Link the live URL. If the events page is stale, leave it off until the manager fixes it. A short true list beats a long generated one. This site’s own file is that kind of choice. It is not evidence that files bring visits.</p>
 <p>Fourth, put the file at the root and then forget the fantasy. Ahrefs looked at 137,210 domains with traffic in May 2026 and found that 28% had a file, about 38,000 valid ones. 97% of those saw zero requests that month. If yours is among the quiet majority, the shop does not get to feel broken. The pages are still the product.</p>
 <p>Fifth, if you do watch logs, separate machines from people. 96% of requests in the study were bots. Named AI tools were 19.5% of requests. Audit and scanner tools were 12%. A spike from a scanner is not a crowd of readers. Do not rewrite the shop around it.</p>
-<p>Sixth, revisit the list when the shop changes, not on a timer. A new picks page, a retired book club, a reading series that ended. The owner removes the dead link the same week. A file that points at last year&#39;s calendar is a confident wrong direction. The August 2026 update of the proposal did not change this duty. The list means what it says, or it should not be up.</p>
+<p>Sixth, revisit the list when the shop changes, not on a timer. A new picks page, a retired book club, a reading series that ended. The owner removes the dead link the same week. A file that points at last year’s calendar is a confident wrong direction. The August 2026 update of the proposal did not change this duty. The list means what it says, or it should not be up.</p>
 <h2 id="common-mistakes">Common mistakes</h2>
 <p>The first mistake is expecting Google to fetch it. The guide says Google does not use llms.txt for generative features in search. Publishing one and waiting for AI Overviews is a plan the guide already declined. Fix the page Google can index.</p>
 <p>The second mistake is a generated dump. Every tag, every attachment, every draft. The proposal is a curated list. A dump hides the staff-picks page inside noise, which is the opposite of pointing a model at your best work. It also rots, because nobody will curate a thousand automatic lines. We would rather the manager maintain a list he can read aloud.</p>
 <p>The third mistake is treating the Ahrefs shares as a personal failure or a personal trophy. 28% of those 137,210 domains had a file. About 38,000 valid files. 97% with zero requests in May 2026. You are not behind because you lack one, and you are not ahead because you have one that nobody requested. The study describes a crawl of files. It does not describe your customers.</p>
 <p>The fourth mistake is reading bot traffic as adoption. 96% of the requests that arrived were bots. 12% were audit or scanner tools. 19.5% were named AI tools. None of those sentences say a reader found the shop. Report them as machine requests, or do not report them.</p>
-<p>The fifth mistake is letting the file contradict the floor. The events page says Thursday. The file&#39;s blurb says Wednesday, copied from an old night. Whichever surface gets quoted, you look careless. One source of truth, the live page, and the file follows it.</p>
+<p>The fifth mistake is letting the file contradict the floor. The events page says Thursday. The file’s blurb says Wednesday, copied from an old night. Whichever surface gets quoted, you look careless. One source of truth, the live page, and the file follows it.</p>
 <p>The sixth mistake is doing the file instead of the page, because the file is smaller. A map to a vague homepage is still a vague homepage. The pages have to be worth citing whether or not the file is ever requested. That is the whole practical reading of a study where almost all the valid files sat untouched for the month they measured.</p>
-<h2 id="what-we-39-d-do">What we&#39;d do</h2>
+<h2 id="what-we-39-d-do">What we’d do</h2>
 <p>We would publish a short file only after the pages are true, and we would not tell the owner it will bring her readers. Our opinion is that the proposal is a reasonable courtesy and a bad priority. September 2024 was when the idea was written down. August 2026 is when the page was updated. June 2026 is when a large measurement, 137,210 domains, found that 97% of valid files got zero requests and that 96% of the requests which did show up were bots. Courtesy is allowed to be quiet. Strategy is not allowed to ignore a quiet result.</p>
-<p>Google has said it does not use the file. So we would spend the manager&#39;s evening on the staff-picks page, the ordering explanation, and an events page that survives a cancellation. Then we would add a list of those URLs if the owner likes being able to see, in one place, what the shop claims. We would keep our own file for that same reason, and we would never wave it as proof of traffic. A file is a pointer. The page is the thing a person came for. If you only have time for one, choose the page, and let the pointer wait until the page would survive being read without it.</p>
+<p>Google has said it does not use the file. So we would spend the manager’s evening on the staff-picks page, the ordering explanation, and an events page that survives a cancellation. Then we would add a list of those URLs if the owner likes being able to see, in one place, what the shop claims. We would keep our own file for that same reason, and we would never wave it as proof of traffic. A file is a pointer. The page is the thing a person came for. If you only have time for one, choose the page, and let the pointer wait until the page would survive being read without it.</p>
 
 </div>
-<section id="faq"><h2>Questions</h2><div class="faq-list"><details><summary>What is llms.txt?</summary><p>A text file, proposed in September 2024, that lists pages you want a model to read. The proposal was updated in August 2026.</p></details><details><summary>Does Google use the file?</summary><p>Google&#39;s guide says Google does not use llms.txt for generative search features. The page still has to be indexed and eligible for a snippet.</p></details><details><summary>Do the files get read?</summary><p>In the Ahrefs study of 137,210 domains, 97% of valid files had zero requests in May 2026, and 96% of requests that arrived were bots.</p></details></div></section>
+<section id="faq"><h2>Questions</h2><div class="faq-list"><details><summary>What is llms.txt?</summary><p>A text file, proposed in September 2024, that lists pages you want a model to read. The proposal was updated in August 2026.</p></details><details><summary>Does Google use the file?</summary><p>Google’s guide says Google does not use llms.txt for generative search features. The page still has to be indexed and eligible for a snippet.</p></details><details><summary>Do the files get read?</summary><p>In the Ahrefs study of 137,210 domains, 97% of valid files had zero requests in May 2026, and 96% of requests that arrived were bots.</p></details></div></section>
 <section id="sources"><h2>Sources</h2><ol><li id="source-llmstxt"><a href="https://llmstxt.org/">The /llms.txt file</a>. llmstxt.org. 2024-09-03.</li><li id="source-google"><a href="https://developers.google.com/search/docs/fundamentals/ai-optimization-guide">Optimizing your website for generative AI features on Google Search</a>. Google Search Central.</li><li id="source-ahrefs"><a href="https://ahrefs.com/blog/llmstxt-study/">We analyzed 137,210 sites: most llms.txt files never get read</a>. Ahrefs. 2026-06-15.</li></ol></section>
 <aside class="author-box"><p class="kicker">Author</p><h2>Abracadabra Studio</h2><p>The notes are written by the people who design, build and run AI-powered tools at Abracadabra. Every number names its source.</p><a href="/about/">About us</a></aside>
 <section id="related" class="post-related"><h2>Related</h2><ul class="cards"><li data-pillar="AI search visibility"><a href="/blog/answer-engine-optimization"><span class="post-card-photo"><picture><source srcset="/blog/media/answer-engine-optimization/01.webp" type="image/webp"><img src="/blog/media/answer-engine-optimization/01.jpg" alt="A phone and a laptop open on a cafe table beside a coffee cup, screens facing up, with no person in the frame" width="1280" height="720"></picture></span><span class="kicker">AI search visibility</span><strong>Answer Engine Optimization: What Google Still Requires</strong><span class="card-dek">Google still treats answer-engine work as ordinary SEO. A research paper reports visibility gains. Pew found fewer clicks when a summary appears.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>9 min read</span></span></a></li><li data-pillar="AI search visibility"><a href="/blog/generative-engine-optimization-vs-seo"><span class="post-card-photo"><picture><source srcset="/blog/media/generative-engine-optimization-vs-seo/01.webp" type="image/webp"><img src="/blog/media/generative-engine-optimization-vs-seo/01.jpg" alt="A laptop and a phone side by side on a wooden desk, both screens on, with no person in the frame" width="1280" height="720"></picture></span><span class="kicker">AI search visibility</span><strong>Generative Engine Optimization vs SEO</strong><span class="card-dek">Google says the new names are still SEO. A research paper measures visibility. Pew measured the click. Write the page so both can use it.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>10 min read</span></span></a></li><li data-pillar="AI search visibility"><a href="/blog/how-to-get-your-business-to-show-up-in-chatgpt"><span class="post-card-photo"><picture><source srcset="/blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.webp" type="image/webp"><img src="/blog/media/how-to-get-your-business-to-show-up-in-chatgpt/01.jpg" alt="A phone held over a cafe table beside a laptop and a coffee cup, screen lit, with the holder&#39;s face out of frame" width="1280" height="720"></picture></span><span class="kicker">AI search visibility</span><strong>How to Show Up in ChatGPT and AI Overviews</strong><span class="card-dek">Showing up in ChatGPT search is a crawler and indexing problem. Google still treats answer-engine advice as ordinary SEO. Clicks fall when a summary appears.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>10 min read</span></span></a></li></ul></section>
 <section id="all-notes"><h2>All notes</h2><ul><li><a href="/blog/ai-agents-for-business">AI Agents for Business: When to Use One</a></li><li><a href="/blog/ai-agents-vs-agentic-ai">AI Agents vs Agentic AI: A Plain Split</a></li><li><a href="/blog/ai-automation-agency-vs-consultant">AI Automation Agency vs Consultant: Who to Hire</a></li><li><a href="/blog/ai-automation-for-small-business">AI Automation for Small Business: Which Job First</a></li><li><a href="/blog/ai-consultant-for-small-business">AI Consultant for Small Business: What to Ask</a></li><li><a href="/blog/ai-for-small-business-2027">AI for Small Business: What the Surveys Still Say</a></li><li><a href="/blog/ai-implementation-framework">An AI Implementation Framework in Five Stages</a></li><li><a href="/blog/ai-readiness-assessment-questionnaire">AI Readiness Assessment Questionnaire: The Themes</a></li><li><a href="/blog/ai-readiness-assessment">AI Readiness Assessment: What It Measures and How to Score</a></li><li><a href="/blog/ai-readiness-checklist">AI Readiness Checklist Before You Buy a Tool</a></li><li><a href="/blog/ai-readiness-framework">An AI Readiness Framework an Owner Can Score</a></li><li><a href="/blog/ai-ready-data">AI-Ready Data: What a Small Business Needs First</a></li><li><a href="/blog/ai-strategy-for-small-business">AI Strategy for Small Business: Start With the Job</a></li><li><a href="/blog/answer-engine-optimization">Answer Engine Optimization: What Google Still Requires</a></li><li><a href="/blog/business-process-automation-ai">Business Process Automation With AI: Write the Job</a></li><li><a href="/blog/generative-engine-optimization-vs-seo">Generative Engine Optimization vs SEO</a></li><li><a href="/blog/how-can-ai-help-small-businesses">How Can AI Help a Small Business? What Surveys Count</a></li><li><a href="/blog/how-to-get-your-business-to-show-up-in-chatgpt">How to Show Up in ChatGPT and AI Overviews</a></li><li><a href="/blog/how-to-use-ai-in-your-business">How to Use AI in Your Business: Twelve Jobs</a></li><li><a href="/blog/is-my-business-ready-for-ai">Is My Business Ready for AI? Signs to Read First</a></li><li><a href="/blog/off-the-shelf-ai-or-custom-software">Off-the-Shelf AI or Custom Software</a></li><li><a href="/blog/what-is-an-ai-agent">What Is an AI Agent? A Plain Answer for Owners</a></li><li><a href="/blog/why-ai-pilots-stall">Why AI Pilots Stall After the Demo</a></li></ul></section>
-<aside class="cta cta-close"><p>A file is not a citation. Check whether the pages themselves can be found.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-llms-txt" data-track-placement="close" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-llms-txt&amp;utm_content=close">Run the Readiness Check</a></aside>
+<aside class="cta cta-close"><p>A file is not a citation. Check whether the pages themselves can be found.</p><a class="btn btn--primary" href="/start/">Start a project</a><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="what-is-llms-txt" data-track-placement="close" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-llms-txt&amp;utm_content=close">Run the Readiness Check</a></aside>
 </article>
 <aside class="post-aside">
-<nav class="post-toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#what-a-crawl-of-the-files-found">What a crawl of the files found</a></li><li><a href="#a-worked-example">A worked example</a></li><li><a href="#how-we-39-d-run-it">How we&#39;d run it</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#what-we-39-d-do">What we&#39;d do</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></nav>
+<nav class="toc post-toc" aria-label="On this page"><details class="toc__sheet"><summary>On this page</summary><p>On this page</p><ol><li><a href="#what-a-crawl-of-the-files-found">What a crawl of the files found</a></li><li><a href="#a-worked-example">A worked example</a></li><li><a href="#how-we-39-d-run-it">How we’d run it</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#what-we-39-d-do">What we’d do</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></details><div class="toc__rail"><p>On this page</p><ol><li><a href="#what-a-crawl-of-the-files-found">What a crawl of the files found</a></li><li><a href="#a-worked-example">A worked example</a></li><li><a href="#how-we-39-d-run-it">How we’d run it</a></li><li><a href="#common-mistakes">Common mistakes</a></li><li><a href="#what-we-39-d-do">What we’d do</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></div></nav>
 </aside>
 </div>
 </main>
-<aside class="cta cta-sticky"><p>A file is not a citation. Check whether the pages themselves can be found.</p><a data-track="readiness_cta_clicked" data-track-slug="what-is-llms-txt" data-track-placement="sticky" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-llms-txt&amp;utm_content=sticky">Take the Readiness Check</a></aside>
+<aside class="cta cta-sticky"><p>A file is not a citation. Check whether the pages themselves can be found.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="what-is-llms-txt" data-track-placement="sticky" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=what-is-llms-txt&amp;utm_content=sticky">Take the Readiness Check</a></aside>
 <footer class="site-foot">
+  <div class="site-close">
+  <p class="site-close__line">Have something to make?</p>
+  <p class="site-close__actions" data-actions>
+    <a class="btn btn--primary" href="/start/">Start a project</a>
+    <a class="btn btn--tertiary" href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app <span class="btn__arrow" aria-hidden="true">→</span></a>
+  </p>
+</div>
   <p class="site-foot__word" aria-label="Abracadabra">abracadabra<span class="wm-dot">.</span></p>
   <nav class="site-foot__links" aria-label="Footer">
     <a href="/services/#search">Search &amp; AI visibility</a>
@@ -316,13 +369,19 @@
     <a href="/portfolio/">Design</a>
     <a href="/services/#platform">Platform</a>
     <a href="/services/">Services</a>
-    <a href="/portfolio/">Portfolio</a>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
     <a href="/privacy">Privacy</a>
   </nav>
+  <p class="site-foot__meta">
+    <span>Toronto</span>
+    <span data-clock="America/Toronto">America/Toronto</span>
+    <span>© 2026 Abracadabra AI</span>
+    <a href="/privacy">Privacy</a>
+  </p>
 </footer>
 </body>
 </html>

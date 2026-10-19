@@ -7,12 +7,56 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 npx --yes serve -l 4500
 
 # behavior and responsive regression tests
-npm test
+CHROME_PATH=/usr/bin/google-chrome npm test
 ```
 
-Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. Under the hero, the original parallel-agent sweep, function calendar, and time-travel calendar return, then the operation compiler, the name, and the menu. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Portfolio, Products, Course, Blog, and **Start a project**. Services opens one menu: each function name, with that function's services under it. The phone menu uses the same grouping. The model strip is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (silent v2 renders). A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is **Start a project** at `#start`. The footer wordmark is Inter Tight. Reduced motion pauses video and stops the marquee.
+Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. Under the hero, the original parallel-agent sweep, function calendar, and time-travel calendar return, then the operation compiler, the name, and the menu. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Work, Products, Blog, Films, and **Start a project**. Below 900px that bar is a full-height sheet. From 900px the links sit in one row. Services opens four groups (Build, Create, Grow, Learn). The mega menu is 3 columns until 1279px and 4 columns from 1280px. Course sits in Learn. The model strip is labelled **Built with** and is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (silent v2 renders). A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is a form, **Start a project**, at `#start` on the homepage and at `/start/` everywhere else. The primary button always says **Start a project**. The footer wordmark is Inter Tight. Reduced motion pauses video, stops the marquee, and keeps the page inside the viewport. Fonts are self-hosted in `assets/fonts/`. Icons and `manifest.webmanifest` are shared. Social cards are 1200×630 JPEGs.
 
 If the page and the source-of-truth file disagree, fix the file first, then the page.
+
+## Premium pass — 2026-10-19
+
+- The marketing site uses one set of buttons, borders, radii, and section spacing. The phone menu is a sheet below 900px. Desktop layouts use the width above 1280px. A proof band names StrongFoam, Milrcorr, SuperPatch, and pirx.ca. The start form posts to the Worker at `POST /api/intake`.
+- **What changed** — layout, navigation, type, proof, intake, icons, self-hosted fonts, and social cards.
+- **Why** — the site should feel like one product at every viewport, and a visitor should be able to start a project without opening a mail app.
+- **Code touchpoints** — `assets/site.css`, `assets/fonts/`, `assets/icons/`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `worker/intake.js`, `content/proof.json`, `index.html`, `films.html`.
+- **Data-flow impact** — generated pages, the homepage chrome, and the 404 page. The proof band reads portfolio facts from `scripts/site-data.mjs`.
+- **API / schema impact** — `POST /api/intake` validates the form, drops honeypot submissions, rate-limits by IP, and sends the note through Resend. No new public schema types.
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
+
+### Design system
+
+| Token | Value |
+|---|---|
+| Canvas / ink / accent | `#070706` / `#F5F0E8` / `#FF4B24` |
+| Borders | `--line` 12% ink, `--line-strong` 24% ink |
+| Radii | cards 8px, controls 6px |
+| Section padding | 4 / 6 / 9rem, and 3 / 4.5 / 6rem under 768px |
+| Primary button | **Start a project**, accent fill, dark ink |
+| Secondary button | bordered, for the other action on the same band |
+| Tertiary button | text with an arrow, for “See the work” and case-study links |
+
+New photography should sit on a neutral-to-warm white point, with blacks crushed toward the canvas and no highlight lighter than the ink. A static grain tile sits over the page at about 3.5% opacity and is hidden for print and forced colours.
+
+`.reveal` fades a section in with CSS scroll-driven animation where the browser supports it. The hero and the name pin do not use it. With reduced motion, revealed content is simply visible.
+
+IBM Plex Sans (400, 400 italic, 500, 600) and Inter Tight (500, 600, 700) are the Latin WOFF2 files in `assets/fonts/`. Their OFL licences sit beside them. Add a weight by dropping the subset in that folder and adding an `@font-face` in `assets/fonts.css`.
+
+`node scripts/write-brand-assets.mjs` rebuilds the icon set, the grain tile, the homepage social card, the blurred course hero, and the phone crops of the pirx screenshots. Page social cards are JPEGs written by `scripts/site-pages.mjs` and `scripts/blog.mjs` during `npm test`. The build also curls straight quotes in visible text. It does not change tags, scripts, or JSON-LD.
+
+Blog notes get a sticky “On this page” rail from 1280px and a closed details block on phones, plus a 2px reading-progress line.
+
+### Intake
+
+The form fields are name, email, optional company, what you need, budget, timeline, and a note. A hidden `company_website` field is the honeypot. With JavaScript the form confirms in place. Without it, the Worker redirects to `/start/thanks/`.
+
+```bash
+wrangler secret put RESEND_API_KEY
+wrangler secret put INTAKE_FROM
+wrangler secret put INTAKE_TO
+```
+
+Names only. Values stay in `.env.example` and in Worker secrets.
 
 ## Video thumbnails — 2026-10-17
 
@@ -139,7 +183,7 @@ If the page and the source-of-truth file disagree, fix the file first, then the 
 ## Mobile nav and hero column — 2026-10-15
 
 - From 1024px the homepage hero copy and the two actions sit in a left column over the film, with the actions side by side. Below 1024px the actions stack full width under the text, still left-aligned. Service, portfolio, product, course, and blog opening copy uses the same column. Later section headings stay centered.
-- Under 768px the header is a Menu control and the link list opens under the bar. From 768px the six links stay in one row, including Course and Blog.
+- Below 900px the header is a full-height Menu sheet. From 900px the bar is Services, Work, Products, Blog, Films, and Start a project. The Services menu is 3 columns until 1279px and 4 columns from 1280px. Course is inside Learn.
 - On screens up to 1100px the footer stays in normal flow at the end of the brief, so it no longer paints over the hero. The compiler stays in `#compiler`, under the hero.
 - **What changed** — the hero column, the compact menu, and the phone footer.
 - **Why** — Christopher asked for a left column on desktop and stacked full-width actions on smaller screens, and the phone preview showed the footer and the nav overflowing the hero.
@@ -300,7 +344,7 @@ Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/) on Cloudflare Worker `ab
 
 ### Cloudflare Workers (static assets)
 
-The same folder deploys to Cloudflare as Worker `abracadabra-marketing`. There is no build step. `wrangler.jsonc` points `assets.directory` at this folder. `html_handling` is `none` so `/walkthrough.html` and `/films.html` stay the canonical URLs already published in the sitemap. `/` rewrites to `/index.html` (`_redirects`, status 200). A missing path serves `404.html`. `.assetsignore` keeps tests, npm metadata, the brief, and env files off the public asset set.
+The same folder deploys to Cloudflare as Worker `abracadabra-marketing`. `worker/intake.js` answers `POST /api/intake` and everything else is a static asset. `wrangler.jsonc` points `assets.directory` at this folder. Set `RESEND_API_KEY`, `INTAKE_FROM`, and `INTAKE_TO` with `wrangler secret put` before the form can send mail. The names are listed in `.env.example`. `html_handling` is `none` so `/walkthrough.html` and `/films.html` stay the canonical URLs already published in the sitemap. `/` rewrites to `/index.html` (`_redirects`, status 200). A missing path serves `404.html`. `.assetsignore` keeps tests, npm metadata, the brief, and env files off the public asset set.
 
 ```bash
 # from this folder, with CLOUDFLARE_API_TOKEN in the environment

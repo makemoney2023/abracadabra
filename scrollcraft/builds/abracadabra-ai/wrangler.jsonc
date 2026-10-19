@@ -10,8 +10,10 @@
       "custom_domain": true
     }
   ],
+  "main": "worker/intake.js",
   "assets": {
     "directory": ".",
+    "binding": "ASSETS",
     "html_handling": "none",
     "not_found_handling": "404-page"
   }

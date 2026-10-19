@@ -9,6 +9,10 @@
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 <meta name="author" content="Abracadabra AI">
 <meta name="theme-color" content="#070706">
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="canonical" href="https://abra-ca-dabra.app/">
 <link rel="alternate" type="text/plain" href="https://abra-ca-dabra.app/llms.txt" title="Plain-text summary for language models">
 
@@ -18,27 +22,21 @@
 <meta property="og:url" content="https://abra-ca-dabra.app/">
 <meta property="og:title" content="Custom software, built for how you work.">
 <meta property="og:description" content="We design, build and run AI-powered tools that fit your business, not the other way around.">
-<meta property="og:image" content="https://abra-ca-dabra.app/assets/schema-home.webp">
-<meta property="og:image:width" content="1600">
-<meta property="og:image:height" content="1000">
-<meta property="og:image:alt" content="Schema home page: a URL field and an AI visibility check, on the Abracadabra AI homepage.">
+<meta property="og:image" content="https://abra-ca-dabra.app/assets/og/home.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Custom software, built for how you work. Abracadabra AI.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Custom software, built for how you work.">
 <meta name="twitter:description" content="We design, build and run AI-powered tools that fit your business, not the other way around.">
-<meta name="twitter:image" content="https://abra-ca-dabra.app/assets/schema-home.webp">
+<meta name="twitter:image" content="https://abra-ca-dabra.app/assets/og/home.jpg">
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230B0A08'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23E23B2F'%3EA%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css?v=20261018c">
-<link rel="stylesheet" href="assets/pirx-shot.css?v=20261019a">
-<link rel="stylesheet" href="assets/restored-motion.css?v=20261018c">
-<style>
-@media (prefers-reduced-motion: reduce) {
-  .marquee__list[aria-hidden="true"] { display: none; }
-}
-</style>
+<link rel="preload" href="assets/fonts/inter-tight-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts.css?v=20261019b">
+<link rel="stylesheet" href="assets/site.css?v=20261019b">
+<link rel="stylesheet" href="assets/pirx-shot.css?v=20261019b">
+<link rel="stylesheet" href="assets/restored-motion.css?v=20261019b">
 <script>(function(d){d.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('wm-js');setTimeout(function(){d.classList.add('wm-on','wm-dot-on')},4500)}catch(e){}})(document.documentElement);</script>
 
 <script type="application/ld+json">
@@ -292,28 +290,67 @@
 <header class="site-nav">
   <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
   <details class="site-nav__menu">
-    <summary class="site-nav__toggle">Menu</summary>
+    <summary class="site-nav__toggle" aria-label="Menu"><span class="site-nav__glyph" aria-hidden="true"></span></summary>
   </details>
   <nav class="site-nav__links" aria-label="Site">
-    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#search">Search &amp; AI visibility</a><a href="/services/ai-visibility/">Get found in AI search.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#marketing">Marketing</a><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#sales">Sales</a><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#service">Customer service</a><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#operations">Operations</a><a href="/services/web-automation/">Put repetitive web work on autopilot.</a><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a><a href="/services/custom-apps/">Apps built around your workflow.</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/portfolio/">Design</a><a href="/portfolio/strongfoam-website/">StrongFoam</a><a href="/portfolio/milrcorr/">Milrcorr</a><a href="/portfolio/pirx/">pirx.ca</a></div><div class="site-nav__group"><a class="site-nav__fn-name" href="/services/#platform">Platform</a><a href="/services/any-model-one-bill/">Every AI model. One bill.</a><a href="/services/safe-code-execution/">Let AI run code, safely.</a></div></div></details>
-    <a href="/portfolio/">Portfolio</a>
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><details class="site-nav__group" open><summary class="site-nav__fn-name">Build</summary><a class="site-nav__mega-link" href="/services/custom-apps/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Apps built around your workflow.</strong><span class="site-nav__desc">Software around the way the work already runs.</span></span></a><a class="site-nav__mega-link" href="/services/web-automation/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Put repetitive web work on autopilot.</strong><span class="site-nav__desc">Repetitive web jobs that run themselves.</span></span></a><a class="site-nav__mega-link" href="/services/answers-from-your-documents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Instant answers from your own documents.</strong><span class="site-nav__desc">Answers from the files you already keep.</span></span></a><a class="site-nav__mega-link" href="/services/safe-code-execution/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Let AI run code, safely.</strong><span class="site-nav__desc">AI that can run code, with a fence around it.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Create</summary><a class="site-nav__mega-link" href="/services/ai-media/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>On-brand images, video and voice, on demand.</strong><span class="site-nav__desc">On-brand images, video and voice.</span></span></a><a class="site-nav__mega-link" href="/services/voice-and-realtime-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI that answers your phone.</strong><span class="site-nav__desc">A voice that answers from your records.</span></span></a><a class="site-nav__mega-link" href="/services/ai-assistants-and-agents/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>AI assistants that actually get things done.</strong><span class="site-nav__desc">An assistant that finishes the request.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Grow</summary><a class="site-nav__mega-link" href="/services/ai-visibility/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Get found in AI search.</strong><span class="site-nav__desc">Show up when someone asks an assistant.</span></span></a><a class="site-nav__mega-link" href="/services/search-grounded-research/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Research you can trust, with every source cited.</strong><span class="site-nav__desc">Research you can open and check.</span></span></a><a class="site-nav__mega-link" href="/services/any-model-one-bill/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Every AI model. One bill.</strong><span class="site-nav__desc">Every model, on one invoice.</span></span></a></details><details class="site-nav__group" open><summary class="site-nav__fn-name">Learn</summary><a class="site-nav__mega-link" href="/course/llm-leverage/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>LLM Leverage</strong><span class="site-nav__desc">A course for better answers from any model.</span></span></a><a class="site-nav__mega-link" href="/blog"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Notes</strong><span class="site-nav__desc">How to put AI to work.</span></span></a><a class="site-nav__mega-link" href="/films.html"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>Films</strong><span class="site-nav__desc">The work, shown.</span></span></a></details></div></details>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
-    <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a class="site-nav__cta" href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
+    <a class="btn btn--primary site-nav__cta" href="/#start">Start a project</a>
   </nav>
 </header>
 <script>
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
     var services = bar.querySelector(".site-nav__services");
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () {
+        document.documentElement.style.setProperty("--nav-h", bar.offsetHeight + "px");
+      }).observe(bar);
+    }
     bar.addEventListener("click", function (event) {
       if (!event.target.closest("a")) return;
       if (menu) menu.open = false;
       if (services) services.open = false;
     });
+    if (menu) {
+      menu.addEventListener("toggle", function () {
+        document.documentElement.classList.toggle("menu-open", menu.open);
+      });
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    var services = document.querySelector(".site-nav__services");
+    var menu = document.querySelector(".site-nav__menu");
+    if (services && services.open) {
+      services.open = false;
+      var summary = services.querySelector("summary");
+      if (summary) summary.focus();
+      return;
+    }
+    if (menu && menu.open) {
+      menu.open = false;
+      var toggle = menu.querySelector("summary");
+      if (toggle) toggle.focus();
+    }
   });
   document.addEventListener("DOMContentLoaded", function () {
+    var clock = document.querySelector("[data-clock]");
+    if (clock) {
+      var zone = clock.getAttribute("data-clock");
+      var tick = function () {
+        try {
+          clock.textContent = new Intl.DateTimeFormat("en-CA", {
+            timeZone: zone, hour: "numeric", minute: "2-digit", timeZoneName: "short",
+          }).format(new Date());
+        } catch (error) { /* keep the timezone name */ }
+      };
+      tick();
+      setInterval(tick, 60000);
+    }
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     document.querySelectorAll("video.loop-film").forEach(function (video) {
       function stop() { video.pause(); }
@@ -342,7 +379,7 @@
     <p class="lede">We design, build and run AI-powered tools that fit your business, not the other way around.</p>
     <div class="hero__actions">
       <a class="btn btn--primary" href="#start">Start a project</a>
-      <a class="btn" href="#services">See the work</a>
+      <a class="btn btn--secondary" href="#services">See the work</a>
     </div>
   </div>
   <div class="hero__stage" data-hero-stage>
@@ -377,8 +414,8 @@
           <div class="intent-demo__viewport">
             <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
               <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Requirements</p>
-              <p class="intent-demo__quote">“<mark>Requirements captured up front.</mark> Unclear bits bounce back. Done means everyone's building from the same spec.”</p>
-              <p class="intent-demo__reading">Explain how your work gets done in plain words. We'll turn it into software that runs the way you already work.</p>
+              <p class="intent-demo__quote">“<mark>Requirements captured up front.</mark> Unclear bits bounce back. Done means everyone’s building from the same spec.”</p>
+              <p class="intent-demo__reading">Explain how your work gets done in plain words. We’ll turn it into software that runs the way you already work.</p>
             </section>
             <section class="intent-demo__state" data-compiler-panel="engineer" aria-labelledby="compiler-engineer-title">
               <p class="sc-label intent-demo__phase" id="compiler-engineer-title">02 / Engineer intent and context</p>
@@ -609,10 +646,10 @@
 </section>
 
 <!-- MODELS -->
-<section id="models" class="sc-section models" aria-labelledby="models-title">
+<section id="models" class="sc-section section models" aria-labelledby="models-title">
     <div class="sc-wrap">
       <p class="kicker">Models</p>
-      <h2 id="models-title" class="models__label">The models behind the work</h2>
+      <h2 id="models-title" class="models__label">Built with</h2>
       <div class="marquee" style="--marquee-duration: 90s" tabindex="0">
         <div class="marquee__track">
           <ul class="marquee__list"><li><img src="assets/logos/workers-ai.svg" alt="Workers AI" width="24" height="24"><span>Workers AI</span></li><li><img src="assets/logos/amazon-bedrock.svg" alt="Amazon Bedrock" width="24" height="24"><span>Amazon Bedrock</span></li><li><img src="assets/logos/anthropic.svg" alt="Anthropic" width="24" height="24"><span>Anthropic</span></li><li><img src="assets/logos/azure-openai.svg" alt="Azure OpenAI" width="24" height="24"><span>Azure OpenAI</span></li><li><img src="assets/logos/baseten.svg" alt="Baseten" width="24" height="24"><span>Baseten</span></li><li><img src="assets/logos/cartesia.svg" alt="Cartesia" width="24" height="24"><span>Cartesia</span></li><li><img src="assets/logos/cerebras.svg" alt="Cerebras" width="24" height="24"><span>Cerebras</span></li><li><img src="assets/logos/cohere.svg" alt="Cohere" width="24" height="24"><span>Cohere</span></li><li><img src="assets/logos/deepgram.svg" alt="Deepgram" width="24" height="24"><span>Deepgram</span></li><li><img src="assets/logos/deepseek.svg" alt="DeepSeek" width="24" height="24"><span>DeepSeek</span></li><li><img src="assets/logos/elevenlabs.svg" alt="ElevenLabs" width="24" height="24"><span>ElevenLabs</span></li><li><img src="assets/logos/fal.svg" alt="Fal AI" width="24" height="24"><span>Fal AI</span></li><li><img src="assets/logos/google-ai-studio.svg" alt="Google AI Studio" width="24" height="24"><span>Google AI Studio</span></li><li><img src="assets/logos/google-vertex-ai.svg" alt="Google Vertex AI" width="24" height="24"><span>Google Vertex AI</span></li><li><img src="assets/logos/groq.svg" alt="Groq" width="24" height="24"><span>Groq</span></li><li><img src="assets/logos/hugging-face.svg" alt="Hugging Face" width="24" height="24"><span>Hugging Face</span></li><li><img src="assets/logos/ideogram.svg" alt="Ideogram" width="24" height="24"><span>Ideogram</span></li><li><img src="assets/logos/mistral.svg" alt="Mistral AI" width="24" height="24"><span>Mistral AI</span></li><li><img src="assets/logos/openai.svg" alt="OpenAI" width="24" height="24"><span>OpenAI</span></li><li><img src="assets/logos/openrouter.svg" alt="OpenRouter" width="24" height="24"><span>OpenRouter</span></li><li><img src="assets/logos/parallel.svg" alt="Parallel" width="24" height="24"><span>Parallel</span></li><li><img src="assets/logos/perplexity.svg" alt="Perplexity" width="24" height="24"><span>Perplexity</span></li><li><img src="assets/logos/replicate.svg" alt="Replicate" width="24" height="24"><span>Replicate</span></li><li><img src="assets/logos/xai.svg" alt="xAI" width="24" height="24"><span>xAI</span></li></ul>
@@ -630,15 +667,15 @@
 <!-- /MODELS -->
 
 <!-- OFFERINGS -->
-<section id="services" class="sc-section services" aria-labelledby="services-title">
+<section id="services" class="sc-section section services" aria-labelledby="services-title">
     <div class="sc-wrap">
       <p class="kicker">Custom software</p>
       <h2 id="services-title">Everything you need to put AI to work in your business.</h2>
-      <div class="fn-scroller"><ul class="fn-grid"><li class="fn-card" id="fn-search"><picture>
-<source type="image/avif" srcset="/blog/media/services/ai-visibility/hero-640.avif 640w, /blog/media/services/ai-visibility/hero-960.avif 960w, /blog/media/services/ai-visibility/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/ai-visibility/hero-640.webp 640w, /blog/media/services/ai-visibility/hero-960.webp 960w, /blog/media/services/ai-visibility/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+      <div class="fn-scroller" data-scroller><ul class="fn-grid"><li class="card fn-card" id="fn-search"><div class="card__media"><picture>
+<source type="image/avif" srcset="/blog/media/services/ai-visibility/hero-640.avif 640w, /blog/media/services/ai-visibility/hero-960.avif 960w, /blog/media/services/ai-visibility/hero-1280.avif 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
+<source type="image/webp" srcset="/blog/media/services/ai-visibility/hero-640.webp 640w, /blog/media/services/ai-visibility/hero-960.webp 960w, /blog/media/services/ai-visibility/hero-1280.webp 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
 <img src="/blog/media/services/ai-visibility/hero.jpg" alt="Visibility dashboard with a query, an answer preview, and a measure of where the page shows." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Search &amp; AI visibility</h3><p>Show up when someone asks a search engine or an AI assistant for what you do.</p><p class="fn-card__proof">PiRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p><figure class="pirx-chart pirx-chart--single"><article class="pirx-shot pirx-shot--compact">
+</picture></div><div class="card__body"><h3 class="card__title">Search &amp; AI visibility</h3><p class="card__dek">Show up when someone asks a search engine or an AI assistant for what you do.</p><p class="fn-card__proof">PiRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p><figure class="pirx-chart pirx-chart--single"><article class="pirx-shot pirx-shot--compact">
 <header class="pirx-shot__head">
 <span class="pirx-shot__pill">Google Search Console · 3 months</span>
 <p class="pirx-shot__label">Search impressions</p>
@@ -653,27 +690,29 @@
 </div>
 </article>
 <p class="pirx-chart__source">Google Search Console, Jul 18 to Oct 17, 2026. AI-feature impressions are a separate report and are not added to the search total.</p>
-</figure><ul class="fn-card__links"><li><a href="/services/ai-visibility/">Get found in AI search.</a></li></ul></li><li class="fn-card" id="fn-marketing"><picture>
-<source type="image/avif" srcset="/blog/media/services/ai-media/hero-640.avif 640w, /blog/media/services/ai-media/hero-960.avif 960w, /blog/media/services/ai-media/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/ai-media/hero-640.webp 640w, /blog/media/services/ai-media/hero-960.webp 960w, /blog/media/services/ai-media/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+</figure><ul class="fn-card__links"><li><a href="/services/ai-visibility/">Get found in AI search.</a></li></ul></div></li><li class="card fn-card" id="fn-marketing"><div class="card__media"><picture>
+<source type="image/avif" srcset="/blog/media/services/ai-media/hero-640.avif 640w, /blog/media/services/ai-media/hero-960.avif 960w, /blog/media/services/ai-media/hero-1280.avif 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
+<source type="image/webp" srcset="/blog/media/services/ai-media/hero-640.webp 640w, /blog/media/services/ai-media/hero-960.webp 960w, /blog/media/services/ai-media/hero-1280.webp 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
 <img src="/blog/media/services/ai-media/hero.jpg" alt="Media board with a generated still, a timeline, and a prompt field." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Marketing</h3><p>Ship on-brand images, video, and voice, and research you can open and check.</p><ul class="fn-card__links"><li><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a></li><li><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></li></ul></li><li class="fn-card" id="fn-sales"><picture>
-<source type="image/avif" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.avif 640w, /blog/media/services/ai-assistants-and-agents/hero-960.avif 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.webp 640w, /blog/media/services/ai-assistants-and-agents/hero-960.webp 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+</picture></div><div class="card__body"><h3 class="card__title">Marketing</h3><p class="card__dek">Ship on-brand images, video, and voice, and research you can open and check.</p><ul class="fn-card__links"><li><a href="/services/ai-media/">On-brand images, video and voice, on demand.</a></li><li><a href="/services/search-grounded-research/">Research you can trust, with every source cited.</a></li></ul></div></li><li class="card fn-card" id="fn-sales"><div class="card__media"><picture>
+<source type="image/avif" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.avif 640w, /blog/media/services/ai-assistants-and-agents/hero-960.avif 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.avif 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
+<source type="image/webp" srcset="/blog/media/services/ai-assistants-and-agents/hero-640.webp 640w, /blog/media/services/ai-assistants-and-agents/hero-960.webp 960w, /blog/media/services/ai-assistants-and-agents/hero-1280.webp 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
 <img src="/blog/media/services/ai-assistants-and-agents/hero.jpg" alt="Dark chat console with a customer thread, a reply field, and a checklist of next steps." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Sales</h3><p>An assistant that keeps the conversation and finishes the request in the tools you already use.</p><ul class="fn-card__links"><li><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></li></ul></li><li class="fn-card" id="fn-service"><picture>
-<source type="image/avif" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.avif 640w, /blog/media/services/voice-and-realtime-agents/hero-960.avif 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.webp 640w, /blog/media/services/voice-and-realtime-agents/hero-960.webp 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+</picture></div><div class="card__body"><h3 class="card__title">Sales</h3><p class="card__dek">An assistant that keeps the conversation and finishes the request in the tools you already use.</p><ul class="fn-card__links"><li><a href="/services/ai-assistants-and-agents/">AI assistants that actually get things done.</a></li></ul></div></li><li class="card fn-card" id="fn-service"><div class="card__media"><picture>
+<source type="image/avif" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.avif 640w, /blog/media/services/voice-and-realtime-agents/hero-960.avif 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.avif 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
+<source type="image/webp" srcset="/blog/media/services/voice-and-realtime-agents/hero-640.webp 640w, /blog/media/services/voice-and-realtime-agents/hero-960.webp 960w, /blog/media/services/voice-and-realtime-agents/hero-1280.webp 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
 <img src="/blog/media/services/voice-and-realtime-agents/hero.jpg" alt="Voice console with a live waveform, a transcript, and a hold-to-talk control." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Customer service</h3><p>Callers get an answer from your records, and a person when the call needs one.</p><ul class="fn-card__links"><li><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></li></ul></li><li class="fn-card" id="fn-operations"><picture>
-<source type="image/avif" srcset="/blog/media/services/web-automation/hero-640.avif 640w, /blog/media/services/web-automation/hero-960.avif 960w, /blog/media/services/web-automation/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/web-automation/hero-640.webp 640w, /blog/media/services/web-automation/hero-960.webp 960w, /blog/media/services/web-automation/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+</picture></div><div class="card__body"><h3 class="card__title">Customer service</h3><p class="card__dek">Callers get an answer from your records, and a person when the call needs one.</p><ul class="fn-card__links"><li><a href="/services/voice-and-realtime-agents/">AI that answers your phone.</a></li></ul></div></li><li class="card fn-card" id="fn-operations"><div class="card__media"><picture>
+<source type="image/avif" srcset="/blog/media/services/web-automation/hero-640.avif 640w, /blog/media/services/web-automation/hero-960.avif 960w, /blog/media/services/web-automation/hero-1280.avif 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
+<source type="image/webp" srcset="/blog/media/services/web-automation/hero-640.webp 640w, /blog/media/services/web-automation/hero-960.webp 960w, /blog/media/services/web-automation/hero-1280.webp 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
 <img src="/blog/media/services/web-automation/hero.jpg" alt="Browser window with a recorded step list and a highlighted control on the page." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Operations</h3><p>Turn the way you already work into software, answers from your files, and web jobs that run themselves.</p><ul class="fn-card__links"><li><a href="/services/web-automation/">Put repetitive web work on autopilot.</a></li><li><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a></li><li><a href="/services/custom-apps/">Apps built around your workflow.</a></li></ul></li><li class="fn-card" id="fn-design"><img src="/assets/og/portfolio-strongfoam-website.png" alt="StrongFoam website" width="1200" height="630" loading="lazy" decoding="async"><h3>Design</h3><p>Websites and product pages built to sell, live today for StrongFoam, Milrcorr and pirx.ca.</p><ul class="fn-card__links"><li><a href="/portfolio/strongfoam-website/">StrongFoam</a></li><li><a href="/portfolio/milrcorr/">Milrcorr</a></li><li><a href="/portfolio/pirx/">pirx.ca</a></li></ul></li><li class="fn-card" id="fn-platform"><picture>
-<source type="image/avif" srcset="/blog/media/services/any-model-one-bill/hero-640.avif 640w, /blog/media/services/any-model-one-bill/hero-960.avif 960w, /blog/media/services/any-model-one-bill/hero-1280.avif 1280w" sizes="(min-width: 860px) 46vw, 100vw">
-<source type="image/webp" srcset="/blog/media/services/any-model-one-bill/hero-640.webp 640w, /blog/media/services/any-model-one-bill/hero-960.webp 960w, /blog/media/services/any-model-one-bill/hero-1280.webp 1280w" sizes="(min-width: 860px) 46vw, 100vw">
+</picture></div><div class="card__body"><h3 class="card__title">Operations</h3><p class="card__dek">Turn the way you already work into software, answers from your files, and web jobs that run themselves.</p><ul class="fn-card__links"><li><a href="/services/web-automation/">Put repetitive web work on autopilot.</a></li><li><a href="/services/answers-from-your-documents/">Instant answers from your own documents.</a></li><li><a href="/services/custom-apps/">Apps built around your workflow.</a></li></ul></div></li><li class="card fn-card" id="fn-design"><div class="card__media"><img src="/assets/og/portfolio-strongfoam-website.png" alt="StrongFoam website" width="1200" height="630" loading="lazy" decoding="async"></div><div class="card__body"><h3 class="card__title">Design</h3><p class="card__dek">Websites and product pages built to sell, live today for StrongFoam, Milrcorr and pirx.ca.</p><ul class="fn-card__links"><li><a href="/portfolio/strongfoam-website/">StrongFoam</a></li><li><a href="/portfolio/milrcorr/">Milrcorr</a></li><li><a href="/portfolio/pirx/">pirx.ca</a></li></ul></div></li><li class="card fn-card" id="fn-platform"><div class="card__media"><picture>
+<source type="image/avif" srcset="/blog/media/services/any-model-one-bill/hero-640.avif 640w, /blog/media/services/any-model-one-bill/hero-960.avif 960w, /blog/media/services/any-model-one-bill/hero-1280.avif 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
+<source type="image/webp" srcset="/blog/media/services/any-model-one-bill/hero-640.webp 640w, /blog/media/services/any-model-one-bill/hero-960.webp 960w, /blog/media/services/any-model-one-bill/hero-1280.webp 1280w" sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw">
 <img src="/blog/media/services/any-model-one-bill/hero.jpg" alt="Model picker with several model names and one usage meter for the bill." width="1280" height="720" loading="lazy" decoding="async">
-</picture><h3>Platform</h3><p>Use the best model for every job, on one bill, and let AI do real work, safely.</p><ul class="fn-card__links"><li><a href="/services/any-model-one-bill/">Every AI model. One bill.</a></li><li><a href="/services/safe-code-execution/">Let AI run code, safely.</a></li></ul></li></ul></div>
+</picture></div><div class="card__body"><h3 class="card__title">Platform</h3><p class="card__dek">Use the best model for every job, on one bill, and let AI do real work, safely.</p><ul class="fn-card__links"><li><a href="/services/any-model-one-bill/">Every AI model. One bill.</a></li><li><a href="/services/safe-code-execution/">Let AI run code, safely.</a></li></ul></div></li></ul><div class="fn-scroller__fade" aria-hidden="true"></div></div>
+      <div class="fn-scroller__dots" data-scroller-dots></div>
+      <script src="/assets/scroller.mjs" type="module"></script>
     </div>
   </section>
 <!-- /OFFERINGS -->
@@ -681,7 +720,7 @@
 <section id="showcase" class="showcase" aria-labelledby="showcase-title">
   <div class="wrap">
     <p class="kicker">Work</p>
-    <h2 id="showcase-title">Work that's already running.</h2>
+    <h2 id="showcase-title">Work that’s already running.</h2>
     <div class="tablist" role="tablist" aria-label="Work">
       <button type="button" role="tab" id="tab-sell" aria-selected="true" aria-controls="panel-sell">Sell</button>
       <button type="button" role="tab" id="tab-operate" aria-selected="false" aria-controls="panel-operate">Operate</button>
@@ -711,8 +750,8 @@
       <p class="kicker">Find</p>
       <h3>pirx.ca</h3>
       <div class="shot-row">
-        <img src="assets/pirx/pirx-home-hero-desktop.jpg" alt="pirx.ca home page" width="1440" height="900" loading="lazy" decoding="async">
-        <img src="assets/pirx/pirx-accuracy-full-desktop.jpg" alt="pirx.ca accuracy page" width="1440" height="900" loading="lazy" decoding="async">
+        <picture class="device-frame"><source media="(max-width: 767px)" srcset="assets/pirx/pirx-home-hero-mobile.webp" type="image/webp"><img src="assets/pirx/pirx-home-hero-desktop.jpg" alt="pirx.ca home page" width="1440" height="900" loading="lazy" decoding="async"></picture>
+        <picture class="device-frame"><source media="(max-width: 767px)" srcset="assets/pirx/pirx-accuracy-full-mobile.webp" type="image/webp"><img src="assets/pirx/pirx-accuracy-full-desktop.jpg" alt="pirx.ca accuracy page" width="1440" height="900" loading="lazy" decoding="async"></picture>
       </div>
     </div>
     <div id="panel-teach" class="tab-panel" role="tabpanel" aria-labelledby="tab-teach" hidden>
@@ -724,12 +763,25 @@
   </div>
 </section>
 
-<section id="models-band" class="band" aria-labelledby="models-band-title">
+<!-- CLIENTS -->
+<section id="clients" class="section proof-band" aria-labelledby="clients-title">
   <div class="wrap">
-    <p class="kicker">Models</p>
-    <h2 id="models-band-title">Every AI model. One bill.</h2>
-    <p>Use the right model for every job, on one invoice.</p>
-    <p><a href="/services/any-model-one-bill/">Every AI model. One bill.</a></p>
+    <p class="eyebrow">Proof</p>
+    <h2 id="clients-title">Work we can name.</h2>
+    <ul class="proof-grid"><li class="card proof-card"><div class="card__body"><p class="card__title">StrongFoam website</p><p class="card__dek">A public site where a visitor can start an estimate and book, so the request stays with the page. The record you work in: the customer, the job, and the numbers, in one place.</p><p class="card__actions"><a class="btn btn--tertiary" href="/portfolio/strongfoam-website/">Read the case study <span class="btn__arrow" aria-hidden="true">→</span></a></p></div></li><li class="card proof-card"><div class="card__body"><p class="card__title">Milrcorr</p><p class="card__dek">The public site for StrongFoam’s sister commercial fit-out work. A visitor can see the work and request an estimate.</p><p class="card__actions"><a class="btn btn--tertiary" href="/portfolio/milrcorr/">Read the case study <span class="btn__arrow" aria-hidden="true">→</span></a></p></div></li><li class="card proof-card"><div class="card__body"><p class="card__title">SuperPatch products</p><p class="card__dek">Public product pages: the offer, the comparison, and the questions a buyer asks.</p><p class="card__actions"><a class="btn btn--tertiary" href="/portfolio/superpatch-products/">Read the case study <span class="btn__arrow" aria-hidden="true">→</span></a></p></div></li><li class="card proof-card"><div class="card__body"><p class="card__title">pirx.ca</p><p class="card__dek">From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days, Jul 18 to Oct 17, 2026.</p><p class="card__actions"><a class="btn btn--tertiary" href="/portfolio/pirx/">Read the case study <span class="btn__arrow" aria-hidden="true">→</span></a></p></div></li></ul>
+    <div class="proof-metrics" data-num><p class="num"><strong>398K</strong> search impressions</p><p class="num"><strong>46.5K</strong> AI-feature impressions</p><p class="proof-metrics__caption">pirx.ca, Jul 18 to Oct 17, 2026</p></div>
+  </div>
+</section>
+<!-- /CLIENTS -->
+
+<section id="models-band" class="band section section--tight" aria-labelledby="models-band-title">
+  <div class="wrap band-split">
+    <div>
+      <p class="kicker">Models</p>
+      <h2 id="models-band-title">Every AI model. One bill.</h2>
+      <p class="lede">Use the right model for every job, on one invoice.</p>
+    </div>
+    <p class="band-split__actions" data-actions><a class="btn btn--primary" href="#start">Start a project</a><a class="btn btn--tertiary" href="/services/any-model-one-bill/">Every AI model. One bill. <span class="btn__arrow" aria-hidden="true">→</span></a></p>
   </div>
 </section>
 
@@ -797,7 +849,7 @@
 </div>
 <p class="pirx-chart__source">Google Search Console, Jul 18 to Oct 17, 2026. AI-feature impressions are a separate report and are not added to the search total.</p>
 </figure>
-    <p><a href="/services/ai-visibility/">Get found in AI search.</a></p>
+    <p data-actions><a class="btn btn--primary" href="/#start">Start a project</a><a class="btn btn--tertiary" href="/services/ai-visibility/">Get found in AI search <span class="btn__arrow" aria-hidden="true">→</span></a></p>
   </div>
 </section>
 <!-- /PROOF -->
@@ -850,7 +902,7 @@
     </details>
     <details>
       <summary>Who is Abracadabra AI for?</summary>
-      <p>Businesses whose work doesn't fit off-the-shelf software, or who are tired of juggling tools that each hold a piece of the customer.</p>
+      <p>Businesses whose work doesn’t fit off-the-shelf software, or who are tired of juggling tools that each hold a piece of the customer.</p>
     </details>
     <details>
       <summary>What if a product I can buy already does the job?</summary>
@@ -867,12 +919,43 @@
   </div>
 </section>
 
-<section id="start" class="start" aria-labelledby="start-title">
-  <div class="wrap">
-    <p class="kicker">Start</p>
-    <h2 id="start-title">Start a project</h2>
-    <p>Tell us how your work gets done, and we'll build software that fits it.</p>
-    <p><a class="btn btn--primary" href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a></p>
+<section id="start" class="start section section--loose" aria-labelledby="start-title">
+  <div class="wrap band-split">
+    <div>
+      <p class="kicker">Start</p>
+      <h2 id="start-title">Start a project</h2>
+      <p class="lede">Tell us how your work gets done, and we’ll build software that fits it.</p>
+    </div>
+    <form class="intake" action="/api/intake" method="post">
+      <label>Name <input name="name" required autocomplete="name" maxlength="120"></label>
+      <label>Email <input name="email" type="email" required autocomplete="email" maxlength="200"></label>
+      <label>Company <span class="fine">(optional)</span> <input name="company" autocomplete="organization" maxlength="160"></label>
+      <fieldset class="intake__chips"><legend>What you need</legend>
+        <label class="intake__chip"><input type="radio" name="need" value="Film" required><span>Film</span></label>
+        <label class="intake__chip"><input type="radio" name="need" value="Website"><span>Website</span></label>
+        <label class="intake__chip"><input type="radio" name="need" value="Product"><span>Product</span></label>
+        <label class="intake__chip"><input type="radio" name="need" value="Course"><span>Course</span></label>
+        <label class="intake__chip"><input type="radio" name="need" value="Not sure"><span>Not sure</span></label>
+      </fieldset>
+      <fieldset class="intake__chips"><legend>Budget</legend>
+        <label class="intake__chip"><input type="radio" name="budget" value="Under $15k" required><span>Under $15k</span></label>
+        <label class="intake__chip"><input type="radio" name="budget" value="$15–40k"><span>$15–40k</span></label>
+        <label class="intake__chip"><input type="radio" name="budget" value="$40k+"><span>$40k+</span></label>
+        <label class="intake__chip"><input type="radio" name="budget" value="Not sure"><span>Not sure</span></label>
+      </fieldset>
+      <fieldset class="intake__chips"><legend>Timeline</legend>
+        <label class="intake__chip"><input type="radio" name="timeline" value="Now" required><span>Now</span></label>
+        <label class="intake__chip"><input type="radio" name="timeline" value="This month"><span>This month</span></label>
+        <label class="intake__chip"><input type="radio" name="timeline" value="This quarter"><span>This quarter</span></label>
+        <label class="intake__chip"><input type="radio" name="timeline" value="Not sure"><span>Not sure</span></label>
+      </fieldset>
+      <label>Tell us more <textarea name="message" rows="4" maxlength="4000"></textarea></label>
+      <label class="intake__honey">Website <input name="company_website" tabindex="-1" autocomplete="off"></label>
+      <button class="btn btn--primary" type="submit">Start a project</button>
+      <p class="intake__status" aria-live="polite"></p>
+      <p><a class="btn btn--tertiary" href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app <span class="btn__arrow" aria-hidden="true">→</span></a></p>
+    </form>
+    <script src="/assets/intake.js" defer></script>
   </div>
 </section>
 </main>
@@ -888,13 +971,19 @@
     <a href="/portfolio/">Design</a>
     <a href="/services/#platform">Platform</a>
     <a href="/services/">Services</a>
-    <a href="/portfolio/">Portfolio</a>
+    <a href="/portfolio/">Work</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/#start">Start a project</a>
+    <a href="/films.html">Films</a>
     <a href="/privacy">Privacy</a>
   </nav>
+  <p class="site-foot__meta">
+    <span>Toronto</span>
+    <span data-clock="America/Toronto">America/Toronto</span>
+    <span>© 2026 Abracadabra AI</span>
+    <a href="/privacy">Privacy</a>
+  </p>
 </footer>
 <!-- /SITE-FOOT -->
 <script>

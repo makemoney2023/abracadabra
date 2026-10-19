@@ -515,6 +515,11 @@ export const cases = [
     slug: "pirx",
     name: "pirx.ca",
     kind: "proof",
+    proofFigures: [
+      { value: "398K", label: "search impressions" },
+      { value: "46.5K", label: "AI-feature impressions" },
+    ],
+    proofCaption: "pirx.ca, Jul 18 to Oct 17, 2026",
     sameAs: "https://pirx.ca/",
     image: pirxHero.desktop.src,
     imageAlt: pirxHero.desktop.alt,

@@ -18,7 +18,8 @@ test('Cloudflare Workers serves the catalog as static assets and keeps .html URL
   assert.equal(wrangler.assets.directory, '.');
   assert.equal(wrangler.assets.html_handling, 'none');
   assert.equal(wrangler.assets.not_found_handling, '404-page');
-  assert.equal(wrangler.main, undefined);
+  assert.equal(wrangler.main, 'worker/intake.js');
+  assert.equal(wrangler.assets.binding, 'ASSETS');
   assert.equal(wrangler.workers_dev, true);
   assert.doesNotMatch(JSON.stringify(wrangler), /cfat_|CLOUDFLARE_API_TOKEN|R2_SECRET|secret_access/i);
   assert.equal(pkg.scripts.deploy, 'wrangler deploy');
@@ -40,6 +41,8 @@ test('Cloudflare Workers serves the catalog as static assets and keeps .html URL
   const missing = await readFile(join(root, '404.html'), 'utf8');
   assert.match(missing, /<meta name="robots" content="noindex">/);
   assert.match(missing, /href="\/"/);
-  assert.match(missing, /This page is not here/);
-  assert.match(missing, /Back to the homepage/);
+  assert.match(missing, /That page vanished/);
+  assert.match(missing, /class="site-nav"/);
+  assert.match(missing, /class="site-foot/);
+  assert.match(missing, /Start a project/);
 });

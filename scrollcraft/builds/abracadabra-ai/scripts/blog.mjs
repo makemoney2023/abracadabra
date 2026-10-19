@@ -6,7 +6,8 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import sharp from "sharp";
 import { z } from "zod";
-import { siteFooter, siteHeader } from "./site-chrome.mjs";
+import { headLinks, siteFooter, siteHeader } from "./site-chrome.mjs";
+import { smartQuotesHtml } from "./typography.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 export const SITE = "https://abra-ca-dabra.app";
@@ -197,7 +198,7 @@ async function writeOg(title, eyebrow, dest, photo) {
   await mkdir(dirname(dest), { recursive: true });
   await sharp(base)
     .composite([{ input: Buffer.from(ogSvg(title, eyebrow)) }])
-    .png()
+    .jpeg({ quality: 80 })
     .toFile(dest);
   const meta = await sharp(dest).metadata();
   if (meta.width !== 1200 || meta.height !== 630) {
@@ -237,7 +238,8 @@ function statCallout(post) {
 function tocFrom(html) {
   const heads = [...html.matchAll(/<h2 id="([^"]+)">([\s\S]*?)<\/h2>/g)];
   const items = heads.map(([, id, inner]) => `<li><a href="#${id}">${inner.replace(/<[^>]+>/g, "")}</a></li>`).join("");
-  return `<nav class="post-toc" aria-label="On this page"><p>On this page</p><ol>${items}<li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></nav>`;
+  const list = `<p>On this page</p><ol>${items}<li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol>`;
+  return `<nav class="toc post-toc" aria-label="On this page"><details class="toc__sheet"><summary>On this page</summary>${list}</details><div class="toc__rail">${list}</div></nav>`;
 }
 
 const FEATURED_SLUG = "ai-readiness-assessment";
@@ -332,7 +334,10 @@ function renderMarkdown(post) {
 function ctaBlock(post, placement) {
   const href = ctaHref(post.slug, placement);
   const label = placement === "sticky" ? "Take the Readiness Check" : "Run the Readiness Check";
-  return `<aside class="cta cta-${placement}"><p>${esc(post.cta)}</p><a data-track="readiness_cta_clicked" data-track-slug="${esc(post.slug)}" data-track-placement="${placement}" href="${esc(href)}">${label}</a></aside>`;
+  const primary = placement === "close"
+    ? `<a class="btn btn--primary" href="/start/">Start a project</a>`
+    : "";
+  return `<aside class="cta cta-${placement}"><p>${esc(post.cta)}</p>${primary}<a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="${esc(post.slug)}" data-track-placement="${placement}" href="${esc(href)}">${label}</a></aside>`;
 }
 
 function relatedPosts(post, posts) {
@@ -439,7 +444,7 @@ function authorNode() {
 }
 
 function pageShell({ title, description, canonical, robots, ogImage, ogAlt, ogType, json, body }) {
-  return `<!doctype html>
+  return smartQuotesHtml(`<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -463,11 +468,8 @@ function pageShell({ title, description, canonical, robots, ogImage, ogAlt, ogTy
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Inter+Tight:wght@500;600;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/blog/blog.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070706'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23FF4B24'%3EA%3C/text%3E%3C/svg%3E">
+${headLinks()}
+<link rel="stylesheet" href="/blog/blog.css?v=20261019b">
 <script type="application/ld+json">
 ${jsonLd(json)}
 </script>
@@ -479,7 +481,7 @@ ${body}
 ${siteFooter()}
 </body>
 </html>
-`;
+`);
 }
 
 function crumbs(items) {
@@ -494,7 +496,7 @@ function crumbs(items) {
 async function renderPost(post, posts) {
   const url = `${SITE}/blog/${post.slug}`;
   const live = isPublic(post);
-  const ogPath = `/blog/og/${post.slug}.png`;
+  const ogPath = `/blog/og/${post.slug}.jpg`;
   const ogAlt = `${post.title} — Abracadabra AI`;
   const heroSource = join(root, "content/images", post.images[0].file);
   await writeOg(post.title, "ABRACADABRA AI", join(root, ogPath.slice(1)), heroSource);
@@ -524,6 +526,11 @@ async function renderPost(post, posts) {
     .filter((item) => item.slug !== post.slug)
     .map((item) => `<li><a href="/blog/${item.slug}">${esc(item.title)}</a></li>`)
     .join("");
+  const words = post.body.split(/\s+/).filter(Boolean).length;
+  const links = (post.body.match(/\]\(/g) || []).length;
+  if (links > words / 60) {
+    console.warn(`${post.slug} has ${links} links in ${words} words (more than 1 per 60 words).`);
+  }
   const prose = renderMarkdown(post).replace("</p>", `</p>\n${statCallout(post)}`);
   const body = `<main id="top" class="blog-post">
 <header class="content-hero">
@@ -537,6 +544,7 @@ ${live ? "" : `<p class="scheduled">Scheduled for ${esc(post.datePublished)}. Th
 </div>
 ${figure(post.images[0], "hero")}
 </header>
+<div class="reading-progress" aria-hidden="true"></div>
 <div class="post-layout">
 <article>
 <div class="prose post-prose">
@@ -605,7 +613,7 @@ function blogIndexGraph(livePosts) {
 async function renderIndex(posts) {
   const live = posts.filter((post) => isPublic(post));
   const ogAlt = "Abracadabra AI blog — notes on AI for operators";
-  await writeOg("Notes for operators", "BLOG", join(root, "blog/og/index.png"));
+  await writeOg("Notes for operators", "BLOG", join(root, "blog/og/index.jpg"));
   const featured = live.find((post) => post.slug === FEATURED_SLUG) ?? live[0];
   const rest = featured ? live.filter((post) => post.slug !== featured.slug) : [];
   const board = live.length
@@ -627,7 +635,7 @@ ${board}
     description: "Notes on buying a product that already fits, and on building a system of your own. Every number names its source.",
     canonical: `${SITE}/blog`,
     robots: publicRobots("index,follow,max-image-preview:large"),
-    ogImage: `${SITE}/blog/og/index.png`,
+    ogImage: `${SITE}/blog/og/index.jpg`,
     ogAlt,
     ogType: "website",
     json: blogIndexGraph(live),
@@ -639,7 +647,7 @@ ${board}
 
 async function renderAuthor() {
   const ogAlt = "About Abracadabra";
-  await writeOg("About Abracadabra", "ABRACADABRA", join(root, "blog/og/author.png"));
+  await writeOg("About Abracadabra", "ABRACADABRA", join(root, "blog/og/author.jpg"));
   const body = `<main id="top" class="site-page">
 <header class="page-hero">
 <div class="page-hero__copy">
@@ -661,7 +669,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
 <li><a href="/films.html">Super Funnel</a>: a sales app for independent associates, shown in eight short films.</li>
 </ul>
 <h2>Contact</h2>
-<p>Reach us at <a href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a>, or <a href="/#start">start a project</a>.</p>
+<p>Reach us at <a href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a>, or <a class="btn btn--primary" href="/start/">Start a project</a>.</p>
 </article>
 </main>`;
   const html = pageShell({
@@ -669,7 +677,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
     description: "Abracadabra designs, builds and runs AI-powered tools that fit how your business already works.",
     canonical: `${SITE}/about/`,
     robots: publicRobots("index,follow,max-image-preview:large"),
-    ogImage: `${SITE}/blog/og/author.png`,
+    ogImage: `${SITE}/blog/og/author.jpg`,
     ogAlt,
     ogType: "website",
     json: {
@@ -702,7 +710,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
 
 async function renderPrivacy() {
   const ogAlt = "Abracadabra AI privacy";
-  await writeOg("Privacy", "ABRACADABRA AI", join(root, "blog/og/privacy.png"));
+  await writeOg("Privacy", "ABRACADABRA AI", join(root, "blog/og/privacy.jpg"));
   const body = `<main id="top">
 ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
 <article>
@@ -711,7 +719,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
 <p><strong>Effective date:</strong> <!-- PLACEHOLDER — needs owner sign-off: effective date --> [to be confirmed]</p>
 <h2>This website</h2>
 <p>abra-ca-dabra.app is a static website hosted on Cloudflare. It does not use analytics, advertising or tracking scripts, and the site itself does not set cookies. Like any host, Cloudflare processes standard request data, such as IP address and browser type, to deliver and protect the site.</p>
-<p>The site has no forms. If you email us, we receive your address and whatever you include, and we use it only to reply.</p>
+<p>The start form at /start/ sends your name, email, company, and the note you write to the studio inbox. It does not set a cookie. A hidden field catches automated submissions and those are dropped. If you email us instead, we receive your address and whatever you include, and we use it only to reply.</p>
 <h2>The Readiness Check</h2>
 <p>The Readiness Check at check.abra-ca-dabra.app stores the answers you give so it can score them and show your results. If you choose to, it also stores your name, your email address and your website address. We use your website address to run a public scan of that site. We use your email address to send your report and, if you book a working session, notes from that session. Nothing else is sent.</p>
 <p>To prevent abuse, the check keeps a one-way hash of your IP address rather than the address itself. Links from this site into the check can carry a label showing which page you came from.</p>
@@ -729,7 +737,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "Privacy", href: "/privacy" }])}
     description: "What abra-ca-dabra.app and the Readiness Check collect, why, and how to reach us.",
     canonical: `${SITE}/privacy`,
     robots: "noindex,nofollow",
-    ogImage: `${SITE}/blog/og/privacy.png`,
+    ogImage: `${SITE}/blog/og/privacy.jpg`,
     ogAlt,
     ogType: "website",
     json: {

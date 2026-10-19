@@ -42,7 +42,7 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   const modelsBlock = index.slice(index.indexOf('id="models"'), index.indexOf('id="services"'));
   assert.equal((modelsBlock.match(/<ul class="marquee__list" aria-hidden="true">/g) || []).length, 2);
   assert.match(index, /prefers-reduced-motion: reduce/);
-  assert.match(index, /\.marquee__list\[aria-hidden="true"\] \{ display: none; \}/);
+  assert.match(read("assets/site.css"), /\.marquee__list\[aria-hidden="true"\] \{ display: none; \}/);
   assert.equal(index.includes("0.62rem"), false);
   assert.equal(index.includes("0.58rem"), false);
   assert.equal(index.includes("The next room is the receipt"), false);
@@ -137,7 +137,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   }
   const offering = read("services/ai-assistants-and-agents/index.html");
   assert.match(offering, /PLACEHOLDER — needs owner sign-off/);
-  assert.match(offering, /class="sales-primary" href="\/#start">Start a project/);
+  assert.match(offering, /class="btn btn--primary sales-primary" href="\/start\/">Start a project/);
   assert.match(offering, /AI Readiness Check/);
   assert.match(offering, /https:\/\/check\.abra-ca-dabra\.app\/check/);
   assert.match(offering, /What you get/);
@@ -146,10 +146,10 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(offering, /<h3>Plan<\/h3>/);
   assert.match(offering, /<h3>Review<\/h3>/);
   assert.match(offering, /How it compares/);
-  assert.match(offering, /When you don(&#39;|')t need us/);
+  assert.match(offering, /When you don(&#39;|'|\u2019)t need us/);
   assert.match(offering, /Priced to the project/);
   assert.match(offering, /href="\/services\/safe-code-execution\/"/);
-  assert.match(offering, /class="page-hero page-hero--photo"/);
+  assert.match(offering, /class="page-hero page-header page-hero--photo"/);
   assert.match(offering, /class="sales-split"/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-640\.avif 640w/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-1280\.webp 1280w/);
@@ -189,7 +189,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     const words = main.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/g, " ").split(/\s+/).filter(Boolean);
     assert.equal(words.length >= 700 && words.length <= 1300, true, `${slug} ${words.length} words`);
     assert.match(page, /Start a project/);
-    assert.match(page, /When you don(&#39;|')t need us/);
+    assert.match(page, /When you don(&#39;|'|\u2019)t need us/);
     assert.match(page, /Priced to the project/);
     assert.match(page, /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
     assert.doesNotMatch(page, industryNoun);

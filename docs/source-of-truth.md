@@ -282,7 +282,7 @@ These four can be named and linked today. They're the ones already cleared to na
 | Schema | See where answer engines cannot find you, then generate the fix. Internal inbox for prospecting | https://schema-two.vercel.app/ |
 | LLM Leverage | Teach a team one method for better answers from any model, with workshops and a certificate path | https://llm-leverage-course.vercel.app |
 
-Repo brief for that catalog: quiet conjure, museum of working software, physical proof. The marketing site leads with the benefit argument in this file. The catalog stays the room where the films play.
+Repo brief for that catalog: quiet conjure, museum of working software, physical proof. The marketing site leads with the benefit argument in this file. The catalog stays the room where the films play. The homepage proof band names StrongFoam, Milrcorr, SuperPatch, and pirx.ca from the portfolio pages already published here. It does not add quotes. **Start a project** is the only primary action. On the homepage it opens the form at `#start`. Everywhere else it opens `/start/`, which posts to `POST /api/intake`.
 
 ### Named on the service pages — 2026-10-15
 
