@@ -70,6 +70,57 @@ export function intakeLetter(payload) {
   ].filter((line) => line !== "").join("\n");
 }
 
+async function hmacHex(secret, body) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
+  return [...new Uint8Array(mac)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function inquiryBody(payload, externalId, now) {
+  return {
+    external_id: externalId,
+    name: payload.name,
+    email: payload.email,
+    company: payload.company || null,
+    need: payload.need,
+    budget: payload.budget,
+    timeline: payload.timeline,
+    message: payload.message || null,
+    page: "/start/",
+    submitted_at: new Date(now).toISOString(),
+  };
+}
+
+/**
+ * Posts the inquiry to HQ (POST /api/intake/project-inquiry), signed like every other HQ intake:
+ * x-intake-signature = hex HMAC-SHA256 of the raw body with PROJECT_INQUIRY_SIGNING_SECRET,
+ * x-intake-timestamp = unix ms. HQ answers 202 when it queued the lead. Sales Outbound replies from there.
+ */
+export async function forwardToHq(env, payload, { externalId, now, fetchImpl = fetch } = {}) {
+  const origin = (env.HANDOFF_INTAKE_ORIGIN || "").trim().replace(/\/$/, "");
+  const secret = (env.PROJECT_INQUIRY_SIGNING_SECRET || "").trim();
+  if (!origin || !secret) throw new Error("HQ intake is not configured");
+  const body = JSON.stringify(inquiryBody(payload, externalId, now));
+  const response = await fetchImpl(`${origin}/api/intake/project-inquiry`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-intake-signature": await hmacHex(secret, body),
+      "x-intake-timestamp": String(now),
+    },
+    body,
+    signal: AbortSignal.timeout(8000),
+  });
+  if (response.status !== 202) throw new Error(`HQ intake ${response.status}`);
+  return true;
+}
+
 export async function sendIntakeEmail(env, payload) {
   const key = env.RESEND_API_KEY;
   if (!key) throw new Error("RESEND_API_KEY is not set");
@@ -94,6 +145,8 @@ export async function sendIntakeEmail(env, payload) {
 export async function handleIntake(request, env, deps = {}) {
   const now = deps.now ? deps.now() : Date.now();
   const send = deps.send || sendIntakeEmail;
+  const forward = deps.forward || forwardToHq;
+  const externalId = deps.id ? deps.id() : crypto.randomUUID();
   const html = wantsHtml(request);
   if (limited(clientIp(request), now)) {
     return html
@@ -120,13 +173,27 @@ export async function handleIntake(request, env, deps = {}) {
       ? Response.redirect(new URL("/start/thanks/", request.url), 303)
       : Response.json({ ok: true, sent: false });
   }
+  // HQ is the record: it opens the deal and Sales Outbound replies. The houdini@ email is an optional copy,
+  // sent only when RESEND_API_KEY is set. The visitor sees thanks if either one landed.
+  let queued = false;
   try {
-    await send(env, parsed.data);
+    queued = await forward(env, parsed.data, { externalId, now });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "The mail service failed.";
+    console.error(`intake ${externalId}: ${error instanceof Error ? error.message : "HQ intake failed"}`);
+  }
+  let emailed = false;
+  if (env.RESEND_API_KEY) {
+    try {
+      await send(env, parsed.data);
+      emailed = true;
+    } catch (error) {
+      console.error(`intake ${externalId}: ${error instanceof Error ? error.message : "mail failed"}`);
+    }
+  }
+  if (!queued && !emailed) {
     return html
       ? htmlResponse(502, "Not sent", "We could not deliver that. Email houdini@abra-ca-dabra.app.")
-      : Response.json({ field: "form", message }, { status: 502 });
+      : Response.json({ field: "form", message: "We could not send that just now." }, { status: 502 });
   }
   return html
     ? Response.redirect(new URL("/start/thanks/", request.url), 303)

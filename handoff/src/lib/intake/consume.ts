@@ -3,6 +3,7 @@ import type { Sql } from "../../db/sql";
 import { fileSchemaPackage } from "../schema-work";
 import { consumeWorkRequest } from "../client-work";
 import { planProjectSpace } from "../project-space";
+import { queueReply } from "../lead-routing";
 
 export type ConsumeResult =
   | { ok: true; duplicate: boolean; filled_email?: boolean; leadOrganizationId?: string; kickoffOrganizationId?: string }
@@ -323,7 +324,7 @@ function bookingBody(status: string): string {
 
 async function placeLead(
   sql: Sql,
-  input: { email: string | null; name: string | null; domain: string | null; now: number },
+  input: { email: string | null; name: string | null; domain: string | null; now: number; orgName?: string | null },
 ): Promise<{ organizationId: string; contactId: string; created: boolean }> {
   if (input.email) {
     const known = await contactByEmail(sql, input.email);
@@ -344,7 +345,7 @@ async function placeLead(
     return { organizationId: existing.id, contactId, created: false };
   }
   const organizationId = await insertOrg(sql, {
-    name: leadName(input.name, input.domain),
+    name: input.orgName || leadName(input.name, input.domain),
     domain: input.domain,
     now: input.now,
   });
@@ -367,8 +368,8 @@ async function consumeAssessment(sql: Sql, payload: unknown, now: number): Promi
   const domain = companyDomain(body?.domain, email);
   if (!email && !domain) return { ok: false, error: "invalid", retry: false };
 
-  const existing = await sql.get<{ id: string; contact_id: string | null }>(
-    "SELECT id, contact_id FROM assessments WHERE id = ?",
+  const existing = await sql.get<{ id: string; contact_id: string | null; deal_id: string | null }>(
+    "SELECT id, contact_id, deal_id FROM assessments WHERE id = ?",
     [assessmentId],
   );
   if (existing) {
@@ -397,6 +398,8 @@ async function consumeAssessment(sql: Sql, payload: unknown, now: number): Promi
             ]);
           }
         }
+        // The email just arrived, so the reply can go out now.
+        if (existing.deal_id) await queueReply(sql, { dealId: existing.deal_id, kind: "readiness_check", now });
       });
     } catch (error) {
       if (isUnique(error)) return { ok: false, error: "invalid", retry: false };
@@ -454,6 +457,7 @@ async function consumeAssessment(sql: Sql, payload: unknown, now: number): Promi
         data: { assessment_id: assessmentId, total_score: totalScore },
         now,
       });
+      if (email) await queueReply(sql, { dealId: deal.id, kind: "readiness_check", now });
       await sql.run(
         "INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('assessment', ?, ?)",
         [assessmentId, now],
@@ -784,17 +788,17 @@ async function consumeEnrichment(sql: Sql, payload: unknown, now: number): Promi
   return { ok: true, duplicate: false };
 }
 
-type TargetDeal = { id: string; organization_id: string; stage: string };
+type TargetDeal = { id: string; organization_id: string; stage: string; routing_status: string | null };
 
 async function targetDeal(sql: Sql, body: Record<string, unknown> | null): Promise<TargetDeal | undefined> {
   const dealId = typeof body?.deal_id === "string" ? body.deal_id.trim() : "";
   if (dealId) {
-    return sql.get<TargetDeal>("SELECT id, organization_id, stage FROM deals WHERE id = ?", [dealId]);
+    return sql.get<TargetDeal>("SELECT id, organization_id, stage, routing_status FROM deals WHERE id = ?", [dealId]);
   }
   const domain = typeof body?.domain === "string" ? normalizeDomain(body.domain) : null;
   if (!domain) return undefined;
   return sql.get<TargetDeal>(
-    `SELECT d.id, d.organization_id, d.stage FROM deals d
+    `SELECT d.id, d.organization_id, d.stage, d.routing_status FROM deals d
      JOIN organizations o ON o.id = d.organization_id
      WHERE o.domain = ? AND o.archived_at IS NULL AND d.stage NOT IN ('won', 'lost')
      ORDER BY d.updated_at DESC LIMIT 1`,
@@ -810,7 +814,10 @@ async function seenReceipt(sql: Sql, source: string, externalId: string): Promis
   return Boolean(row);
 }
 
-/** Sales Outbound reports a send. Moves new to contacted and logs lead.contacted. */
+/**
+ * Sales Outbound reports a send. Moves new to contacted and logs lead.contacted.
+ * A reply_needed deal (Readiness Check or /start/ inquiry) moves to replied, so it leaves that export.
+ */
 async function consumeOutreach(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
   const body = asRecord(payload);
   const externalId = typeof body?.external_id === "string" ? body.external_id.trim().slice(0, 200) : "";
@@ -825,6 +832,9 @@ async function consumeOutreach(sql: Sql, payload: unknown, now: number): Promise
     await withTx(sql, async () => {
       if (deal.stage === "new") {
         await sql.run("UPDATE deals SET stage = 'contacted', updated_at = ? WHERE id = ?", [now, deal.id]);
+      }
+      if (deal.routing_status === "reply_needed") {
+        await sql.run("UPDATE deals SET routing_status = 'replied', updated_at = ? WHERE id = ?", [now, deal.id]);
       }
       await sql.run(
         `INSERT INTO activities (
@@ -916,6 +926,80 @@ async function consumeDealClosed(sql: Sql, payload: unknown, now: number): Promi
   return { ok: true, duplicate: false };
 }
 
+function inquiryText(raw: unknown, max: number): string | null {
+  if (typeof raw !== "string") return null;
+  const text = raw.trim();
+  return text ? text.slice(0, max) : null;
+}
+
+/**
+ * The website's /start/ form (abracadabra-marketing worker). Opens or reuses an open deal, logs a
+ * project_inquiry activity with the form fields, and queues the reply (routing_status reply_needed).
+ * A new deal gets source start_form. Dedup on external_id.
+ */
+async function consumeProjectInquiry(sql: Sql, payload: unknown, now: number): Promise<ConsumeResult> {
+  const body = asRecord(payload);
+  const externalId = inquiryText(body?.external_id, 200) ?? "";
+  const email = cleanEmail(body?.email);
+  if (!externalId || !email) return { ok: false, error: "invalid", retry: false };
+  if (await seenReceipt(sql, "project_inquiry", externalId)) return { ok: true, duplicate: true };
+  const name = cleanName(body?.name);
+  const company = inquiryText(body?.company, 160);
+  const domain = companyDomain(body?.domain, email);
+  const submittedRaw = typeof body?.submitted_at === "string" ? Date.parse(body.submitted_at) : NaN;
+  const data = {
+    external_id: externalId,
+    name,
+    email,
+    company,
+    need: inquiryText(body?.need, 40),
+    budget: inquiryText(body?.budget, 40),
+    timeline: inquiryText(body?.timeline, 40),
+    message: inquiryText(body?.message, 4000),
+    page: inquiryText(body?.page, 300),
+    submitted_at: new Date(Number.isFinite(submittedRaw) ? submittedRaw : now).toISOString(),
+  };
+  // Reads before the transaction: D1 buffers writes until COMMIT, so a read inside it would not see them.
+  const known = await contactByEmail(sql, email);
+  const knownOrg = known?.organization_id ?? (domain ? (await orgByDomain(sql, domain))?.id : undefined);
+  const existingDeal = knownOrg ? await openDeal(sql, knownOrg) : undefined;
+  let leadOrganizationId: string | undefined;
+  try {
+    await withTx(sql, async () => {
+      const placed = await placeLead(sql, { email, name, domain, now, orgName: company });
+      let dealId = existingDeal?.id;
+      if (!dealId) {
+        if (placed.created) leadOrganizationId = placed.organizationId;
+        dealId = await insertDeal(sql, {
+          organizationId: placed.organizationId,
+          title: `${company ?? leadName(name, domain)} project inquiry`,
+          stage: "new",
+          source: "start_form",
+          now,
+        });
+      }
+      await insertActivity(sql, {
+        organizationId: placed.organizationId,
+        contactId: placed.contactId,
+        dealId,
+        kind: "project_inquiry",
+        body: `Asked about a project on the website${data.need ? ` (${data.need})` : ""}.`,
+        data: { ...data, deal_id: dealId },
+        now,
+      });
+      await queueReply(sql, { dealId, kind: "start_form", now });
+      await sql.run("INSERT INTO intake_receipts (source, external_id, received_at) VALUES ('project_inquiry', ?, ?)", [
+        externalId,
+        now,
+      ]);
+    });
+  } catch (error) {
+    if (isUnique(error)) return { ok: true, duplicate: true };
+    throw error;
+  }
+  return { ok: true, duplicate: false, leadOrganizationId };
+}
+
 export async function consumeIntake(
   sql: Sql,
   message: { source: string; payload: unknown },
@@ -930,5 +1014,6 @@ export async function consumeIntake(
   if (message.source === "enrichment") return consumeEnrichment(sql, message.payload, now);
   if (message.source === "schema") return fileSchemaPackage(sql, message.payload, now);
   if (message.source === "work_request") return consumeWorkRequest(sql, message.payload, now);
+  if (message.source === "project_inquiry") return consumeProjectInquiry(sql, message.payload, now);
   return { ok: false, error: "invalid", retry: false };
 }

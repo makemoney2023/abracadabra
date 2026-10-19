@@ -65,13 +65,24 @@ When a task moves to build, Handoff starts a Cursor cloud run if the brief and t
 
 ### BDR lead intake and scored-lead export
 
-`POST /api/intake/lead` takes a BDR prospect signed the same way as the other intakes, but with `LEAD_AGENT_SIGNING_SECRET`. Required: `external_id`, and `email` or `domain`. It opens a lead and a `bdr` deal, then the queue starts the schema scan. When the scan finishes (`scan_ready`), the deal gets `lead_score`, `scored_at`, and `routing_status`: score at or below `LEAD_READY_THRESHOLD` (70, `src/lib/lead-routing.ts`) is `ready_for_outbound`; above 70 is `nurture` ("C quality"). The Readiness Check survey does not set routing.
+`POST /api/intake/lead` takes a BDR prospect signed the same way as the other intakes, but with `LEAD_AGENT_SIGNING_SECRET`. Required: `external_id`, and `email` or `domain`. It opens a lead and a `bdr` deal, then the queue starts the schema scan. When the scan finishes (`scan_ready`), the deal gets `lead_score`, `scored_at`, and `routing_status`: score at or below `LEAD_READY_THRESHOLD` (70, `src/lib/lead-routing.ts`) is `ready_for_outbound`; above 70 is `nurture` ("C quality"). The Readiness Check survey sets routing only as an inbound reply (see Inbound replies below).
 
 `GET /api/leads/export?status=ready_for_outbound&since=ISO` is read-only, needs `Authorization: Bearer $LEAD_EXPORT_TOKEN`, and returns each lead with its schema score, schema report link, and a `survey_url` to the Readiness Check with `utm_source=outbound` and `utm_content=deal_<id>`.
 
 `POST /api/intake/enrichment` takes Account Research's enrichment signed with `ENRICHMENT_SIGNING_SECRET` (`external_id` plus `deal_id` or `domain`; `brief`, `company_summary`, `decision_makers`, `pain_points`, `tech_stack`, `talking_points`, `sources`, `enriched_at`). It logs `lead.enriched` and moves a `ready_for_outbound` deal to `enriched`. Sales Outbound pulls `GET /api/leads/export?status=enriched`.
 
 `POST /api/intake/outreach` (Sales Outbound, `OUTREACH_SIGNING_SECRET`): `external_id`, `deal_id` or `domain`, `channel` (`email`|`linkedin`), `sent_at`, `summary`. Logs `lead.contacted` and moves stage `new` → `contacted` only. If `readiness_scans` is missing when a scored deal's scan finishes, HQ logs an error, marks the deal `scoring_error`, records `lead.scoring_failed` once, and retries the queue message.
+
+### Inbound replies (Readiness Check and the /start/ form)
+
+Two inbound sources queue a reply from Sales Outbound with `routing_status = reply_needed` and `scored_at` set to the moment the submission arrived (that is what the export's `since` compares):
+
+- A Readiness Check assessment (`POST /api/intake/assessment`) with an email. A new deal has `source = readiness_check`. An assessment that arrived without an email queues when the email fills in.
+- A project inquiry from the marketing site's `/start/` form (`POST /api/intake/project-inquiry`, signed with `PROJECT_INQUIRY_SIGNING_SECRET`, same `x-intake-signature` / `x-intake-timestamp` HMAC). Required: `external_id` (dedup) and `email`; also `name`, `company`, `need`, `budget`, `timeline`, `message`, `page`, `submitted_at`. It matches the contact by email, then the org by email domain (freemail gets no domain), opens a `start_form` deal when the org has no open deal, and logs a `project_inquiry` activity with the form fields.
+
+Rules (`queueReply` in `src/lib/lead-routing.ts`): only stages `new` and `contacted` (a deal at `call_booked` or `proposal` is left alone). A Readiness Check does not take a deal already in the BDR flow (`ready_for_outbound` or `enriched`); Sales Outbound already owns that conversation, usually because it sent the survey link. A project inquiry does take it, which also drops it out of the `enriched` export so the cold sequence stops. `replied` goes back to `reply_needed` on each new submission. Schema scoring (`applySchemaScore`) records `lead_score` on these deals but never changes `reply_needed` / `replied` or their `scored_at`, and a scoring failure never marks them `scoring_error`.
+
+Sales Outbound pulls `GET /api/leads/export?status=reply_needed&since=ISO` (Bearer `LEAD_EXPORT_TOKEN`). Besides the usual fields, each lead has `reply_to` (`name`, `email` of whoever submitted most recently), `readiness` (from the assessment on that deal: `assessment_id`, `total_score`, `scores_json`, `answers`, `report_url`, `completed_at`) and `inquiry` (`external_id`, `company`, `need`, `budget`, `timeline`, `message`, `page`, `submitted_at`); either can be `null`. `source` says which form it came from. After the reply is sent, Sales Outbound posts `POST /api/intake/outreach` with that `deal_id`; it moves the deal from `reply_needed` to `replied` (and `new` to `contacted`), so the lead leaves the queue. `status=replied` lists the answered ones.
 
 `POST /api/intake/deal-closed` (Sales Outbound, `OUTREACH_SIGNING_SECRET`): `external_id`, `deal_id` or `domain`, `closed_at`, optional `value_cents`, `products`, `notes`. Sets stage `won`, `closed_at`, org kind `client`, logs `deal.won`. Client Services pulls `GET /api/leads/export?status=won&since=ISO` (since matches closed_at).
 
