@@ -34,30 +34,34 @@ describe("scorePercent", () => {
 });
 
 describe("HEAT_STOPS", () => {
-  it("defines red → orange → yellow → green hex stops", () => {
+  it("defines studio vermilion → amber → cyan → mint hex stops", () => {
     expect(HEAT_STOPS.map((s) => s.t)).toEqual([0, 0.25, 0.5, 0.75, 1]);
     expect(HEAT_STOPS.every((s) => /^#[0-9A-F]{6}$/i.test(s.hex))).toBe(true);
+    expect(HEAT_STOPS[0]!.hex.toUpperCase()).toBe("#FF4B24");
+    expect(HEAT_STOPS[3]!.hex.toUpperCase()).toBe("#8DEBF2");
+    expect(HEAT_STOPS[4]!.hex.toUpperCase()).toBe("#C6FFB3");
   });
 });
 
 describe("scoreColorRgb heat palette", () => {
-  it("is red at 0, orange-leaning at 0.25, yellow at 0.5, green at 1", () => {
-    const red = scoreColorRgb(0);
-    const orange = scoreColorRgb(0.25);
-    const yellow = scoreColorRgb(0.5);
-    const green = scoreColorRgb(1);
+  it("is vermilion at 0, amber-leaning at 0.5, mint at 1", () => {
+    const vermilion = scoreColorRgb(0);
+    const mid = scoreColorRgb(0.5);
+    const mint = scoreColorRgb(1);
 
-    expect(red.r).toBeGreaterThan(230);
-    expect(red.g).toBeLessThan(100);
-    expect(orange.r).toBeGreaterThan(230);
-    expect(orange.g).toBeGreaterThan(100);
-    expect(orange.g).toBeLessThan(200);
-    // Yellow: high R+G, low B
-    expect(yellow.r).toBeGreaterThan(180);
-    expect(yellow.g).toBeGreaterThan(160);
-    expect(yellow.b).toBeLessThan(120);
-    expect(green.g).toBeGreaterThan(green.r);
-    expect(green.g).toBeGreaterThan(120);
+    expect(vermilion.r).toBeGreaterThan(230);
+    expect(vermilion.g).toBeLessThan(100);
+    // Amber mid: high R+G, low B
+    expect(mid.r).toBeGreaterThan(180);
+    expect(mid.g).toBeGreaterThan(140);
+    expect(mid.b).toBeLessThan(120);
+    // Mint: green channel leads
+    expect(mint.g).toBeGreaterThan(mint.r);
+    expect(mint.g).toBeGreaterThan(200);
+  });
+
+  it("uses phosphor mint at full score", () => {
+    expect(scoreColorCss(1).toUpperCase()).toBe("#C6FFB3");
   });
 });
 

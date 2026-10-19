@@ -8,8 +8,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-  --font-heading: var(--font-newsreader), ui-serif, Georgia, serif;
+  --font-mono: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  --font-heading: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,39 +49,54 @@
 }
 
 :root {
-  /* Cool slate + teal accent — technical editorial */
-  --background: oklch(0.985 0.005 240);
-  --foreground: oklch(0.2 0.02 250);
-  --card: oklch(0.995 0.003 240);
-  --card-foreground: oklch(0.2 0.02 250);
-  --popover: oklch(0.995 0.003 240);
-  --popover-foreground: oklch(0.2 0.02 250);
-  --primary: oklch(0.22 0.03 250);
-  --primary-foreground: oklch(0.985 0.005 240);
-  --secondary: oklch(0.95 0.01 240);
-  --secondary-foreground: oklch(0.25 0.02 250);
-  --muted: oklch(0.945 0.01 240);
-  --muted-foreground: oklch(0.48 0.02 250);
-  --accent: oklch(0.55 0.1 195);
-  --accent-foreground: oklch(0.985 0.01 195);
-  --destructive: oklch(0.55 0.2 25);
-  --border: oklch(0.9 0.01 240);
-  --input: oklch(0.9 0.01 240);
-  --ring: oklch(0.55 0.1 195);
-  --chart-1: oklch(0.55 0.1 195);
-  --chart-2: oklch(0.45 0.04 250);
-  --chart-3: oklch(0.6 0.03 240);
-  --chart-4: oklch(0.35 0.03 250);
-  --chart-5: oklch(0.75 0.02 240);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Abracadabra studio — shared with marketing + Readiness Check */
+  --sc-canvas: #070706;
+  --sc-surface: #11110F;
+  --sc-raised: #1A1A17;
+  --sc-ink: #F5F0E8;
+  --sc-ink-soft: #AAA49A;
+  --sc-accent: #FF4B24;
+  --sc-signal: #FF6B3D;
+  --sc-optic: #8DEBF2;
+  --sc-phosphor: #C6FFB3;
+  --sc-accent-ink: #070706;
+  --sc-hairline: rgba(245, 240, 232, 0.08);
+  --sc-hairline-hover: rgba(245, 240, 232, 0.14);
+  --sc-hairline-strong: rgba(245, 240, 232, 0.22);
+  --sc-shadow: 0 1px 2px rgba(0, 0, 0, 0.55), 0 1px 1px rgba(0, 0, 0, 0.35), 0 18px 48px -12px rgba(0, 0, 0, 0.6);
+  --background: var(--sc-canvas);
+  --foreground: var(--sc-ink);
+  --card: var(--sc-surface);
+  --card-foreground: var(--sc-ink);
+  --popover: var(--sc-surface);
+  --popover-foreground: var(--sc-ink);
+  --primary: var(--sc-accent);
+  --primary-foreground: var(--sc-accent-ink);
+  --secondary: var(--sc-raised);
+  --secondary-foreground: var(--sc-ink);
+  --muted: var(--sc-raised);
+  --muted-foreground: var(--sc-ink-soft);
+  --accent: var(--sc-signal);
+  --accent-foreground: var(--sc-accent-ink);
+  --destructive: #ff8a7a;
+  --border: var(--sc-hairline);
+  --input: rgba(245, 240, 232, 0.14);
+  --ring: var(--sc-accent);
+  --chart-1: var(--sc-accent);
+  --chart-2: var(--sc-optic);
+  --chart-3: var(--sc-phosphor);
+  --chart-4: var(--sc-signal);
+  --chart-5: var(--sc-ink-soft);
+  --radius: 0.5rem; /* 8px cards */
+  --radius-control: 0.375rem; /* 6px buttons/inputs */
+  --sidebar: var(--sc-surface);
+  --sidebar-foreground: var(--sc-ink);
+  --sidebar-primary: var(--sc-accent);
+  --sidebar-primary-foreground: var(--sc-accent-ink);
+  --sidebar-accent: var(--sc-raised);
+  --sidebar-accent-foreground: var(--sc-ink);
+  --sidebar-border: var(--sc-hairline);
+  --sidebar-ring: var(--sc-accent);
 }
 
 .dark {
@@ -184,8 +199,8 @@
   --border: var(--sc-hairline);
   --input: color-mix(in oklab, var(--sc-ink) 22%, transparent);
   --ring: var(--sc-accent);
-  --radius: 2px;
-  --font-heading: var(--font-tektur), "Tektur", "IBM Plex Sans", system-ui, sans-serif;
+  --radius: 0.5rem;
+  --font-heading: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
   position: relative;
   isolation: isolate;
   min-height: 100svh;
@@ -263,8 +278,9 @@
 }
 
 .check-studio .studio-kicker {
-  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
   font-size: 0.75rem;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--sc-accent);
@@ -287,7 +303,7 @@
   justify-content: center;
   padding: 0.78em 1.3em;
   border: 1px solid var(--sc-hairline);
-  border-radius: 2px;
+  border-radius: 6px;
   background: transparent;
   color: var(--sc-ink);
   font-weight: 500;
@@ -303,20 +319,28 @@
 }
 
 .check-studio .studio-cta-primary {
-  background: var(--sc-accent);
-  border-color: var(--sc-accent);
-  color: var(--sc-canvas);
+  background: #FF4B24;
+  border-color: #FF4B24;
+  color: #070706;
 }
 
-.check-studio .studio-cta-primary:hover {
-  background: color-mix(in oklab, var(--sc-accent) 86%, var(--sc-ink));
+.check-studio .studio-cta-primary:hover:not(:disabled) {
+  background: color-mix(in oklab, #FF4B24 86%, #F5F0E8);
   border-color: transparent;
-  color: var(--sc-canvas);
+  color: #070706;
 }
 
-.check-studio .studio-cta:disabled,
-.check-studio .studio-cta-primary:disabled {
+.check-studio .studio-cta:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Disabled primary: muted surface — avoid washed/muddy vermilion */
+.check-studio .studio-cta-primary:disabled {
+  opacity: 1;
+  background: var(--sc-raised);
+  border-color: var(--sc-hairline);
+  color: var(--sc-ink-soft);
   cursor: not-allowed;
 }
 
@@ -325,7 +349,7 @@
   min-height: 44px;
   width: 100%;
   border: 1px solid var(--sc-hairline-strong);
-  border-radius: 2px;
+  border-radius: 6px;
   background: color-mix(in oklab, var(--sc-surface) 80%, transparent);
   color: var(--sc-ink);
   padding: 0.75rem 1rem;
@@ -389,3 +413,64 @@
     content: none !important;
   }
 }
+
+/* Studio status pills — mint done, cyan progress, vermilion action */
+.studio-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.18em 0.7em;
+  border-radius: 999px;
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  border: 1px solid currentColor;
+}
+.studio-pill--done {
+  color: var(--sc-phosphor);
+  background: color-mix(in oklab, var(--sc-phosphor) 12%, transparent);
+  border-color: color-mix(in oklab, var(--sc-phosphor) 55%, transparent);
+}
+.studio-pill--progress {
+  color: var(--sc-optic);
+  background: color-mix(in oklab, var(--sc-optic) 12%, transparent);
+  border-color: color-mix(in oklab, var(--sc-optic) 55%, transparent);
+}
+.studio-pill--action {
+  color: var(--sc-accent);
+  background: color-mix(in oklab, var(--sc-accent) 12%, transparent);
+  border-color: color-mix(in oklab, var(--sc-accent) 55%, transparent);
+}
+
+/* Connector line with 6px end dots */
+.studio-connector {
+  position: relative;
+  height: 1px;
+  background: var(--sc-accent);
+  margin: 0.75rem 0;
+}
+.studio-connector--cyan { background: var(--sc-optic); }
+.studio-connector::before,
+.studio-connector::after {
+  content: "";
+  position: absolute;
+  top: -2.5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: inherit;
+}
+.studio-connector::before { left: 0; }
+.studio-connector::after { right: 0; }
+
+/* Raised surface card used on Schema + check */
+.studio-card {
+  background: var(--sc-surface);
+  border: 1px solid var(--sc-hairline);
+  border-radius: 8px;
+  box-shadow: var(--sc-shadow);
+  transition: border-color 0.2s ease;
+}
+.studio-card:hover { border-color: var(--sc-hairline-hover); }

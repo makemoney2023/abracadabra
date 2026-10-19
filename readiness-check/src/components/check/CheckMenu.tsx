@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CHECK_NAV, checkNavIsActive } from "@/lib/check-nav";
 
-export function CheckMenu({ fontClass }: { fontClass: string }) {
+export function CheckMenu({ fontClass = "" }: { fontClass?: string } = {}) {
   const path = usePathname() || "";
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -17,7 +17,7 @@ export function CheckMenu({ fontClass }: { fontClass: string }) {
       </SheetTrigger>
       <SheetContent
         side="left"
-        className={`check-studio check-drawer ${fontClass} gap-8 border-[var(--sc-hairline)] bg-[var(--sc-canvas)] p-6 text-[var(--sc-ink)]`}
+        className={`check-studio check-drawer${fontClass ? ` ${fontClass}` : ""} gap-8 border-[var(--sc-hairline)] bg-[var(--sc-canvas)] p-6 text-[var(--sc-ink)]`}
       >
         <SheetHeader className="p-0">
           <p className="studio-kicker">Abracadabra</p>

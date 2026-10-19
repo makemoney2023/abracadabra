@@ -4,8 +4,12 @@ import { describe, expect, it } from "vitest";
 import { STUDIO } from "@/lib/brand/studio";
 
 const repoRoot = path.resolve(__dirname, "../../..");
-const marketing = readFileSync(
-  path.join(repoRoot, "scrollcraft/builds/abracadabra-ai/index.html"),
+const marketingCss = readFileSync(
+  path.join(repoRoot, "scrollcraft/builds/abracadabra-ai/assets/restored-motion.css"),
+  "utf8",
+);
+const siteCss = readFileSync(
+  path.join(repoRoot, "scrollcraft/builds/abracadabra-ai/assets/site.css"),
   "utf8",
 );
 const checkCss = readFileSync(path.join(__dirname, "../../src/app/globals.css"), "utf8");
@@ -13,23 +17,23 @@ const report = readFileSync(path.join(__dirname, "../../src/lib/pdf/assessment-r
 
 describe("studio design tokens", () => {
   it("matches the marketing site colour and type roles", () => {
-    expect(marketing).toContain(`--sc-canvas: ${STUDIO.canvas}`);
-    expect(marketing).toContain(`--sc-surface: ${STUDIO.surface}`);
-    expect(marketing).toContain(`--sc-ink: ${STUDIO.ink}`);
-    expect(marketing).toContain(`--sc-ink-soft: ${STUDIO.inkSoft}`);
-    expect(marketing).toContain(`--sc-accent: ${STUDIO.accent}`);
-    expect(marketing).toContain(`--sc-signal: ${STUDIO.signal}`);
-    expect(marketing).toContain(`--sc-optic: ${STUDIO.optic}`);
-    expect(marketing).toContain(`--sc-phosphor: ${STUDIO.phosphor}`);
-    expect(marketing).toContain(`--sc-accent-ink: ${STUDIO.accentInk}`);
-    expect(marketing).toContain(`"Tektur"`);
-    expect(marketing).toContain(`"IBM Plex Sans"`);
-    expect(STUDIO.display).toContain("Tektur");
+    expect(marketingCss).toContain(`--sc-canvas: ${STUDIO.canvas}`);
+    expect(marketingCss).toContain(`--sc-surface: ${STUDIO.surface}`);
+    expect(marketingCss).toContain(`--sc-ink: ${STUDIO.ink}`);
+    expect(marketingCss).toContain(`--sc-ink-soft: ${STUDIO.inkSoft}`);
+    expect(marketingCss).toContain(`--sc-accent: ${STUDIO.accent}`);
+    expect(marketingCss).toContain(`--sc-optic: ${STUDIO.optic}`);
+    expect(marketingCss).toContain(`--sc-phosphor: ${STUDIO.phosphor}`);
+    expect(siteCss).toContain(`"Inter Tight"`);
+    expect(siteCss).toContain(`"IBM Plex Sans"`);
+    expect(marketingCss).toContain(`"Inter Tight"`);
+    expect(STUDIO.display).toContain("Inter Tight");
     expect(STUDIO.body).toContain("IBM Plex Sans");
+    expect(STUDIO.label).toContain("Inter Tight");
   });
 
   it("rejects a token that is not on the marketing site", () => {
-    expect(marketing).not.toContain("--sc-canvas: #ffffff");
+    expect(marketingCss).not.toContain("--sc-canvas: #ffffff");
     expect(STUDIO.canvas).not.toBe("#ffffff");
   });
 
@@ -39,8 +43,13 @@ describe("studio design tokens", () => {
     for (const hex of [STUDIO.canvas, STUDIO.surface, STUDIO.ink, STUDIO.accent, STUDIO.optic]) {
       expect(shell).toContain(hex);
     }
+    expect(shell).toContain("Inter Tight");
+    expect(shell).not.toContain("Tektur");
+    expect(shell).not.toContain("font-plex-mono");
     expect(report).toContain("STUDIO.canvas");
     expect(report).toContain("STUDIO.ink");
     expect(report).toContain("STUDIO.accent");
+    expect(report).toContain("Inter Tight");
+    expect(report).toContain("IBM Plex Sans");
   });
 });

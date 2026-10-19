@@ -114,7 +114,7 @@ export default function ScanPage() {
           <div className="space-y-10">
             {(payload.status === "queued" || payload.status === "running") && (
               <section className="animate-in fade-in space-y-3 duration-300">
-                <p className="text-xs uppercase tracking-[0.16em] text-accent">In progress</p>
+                <p className="studio-pill studio-pill--progress">In progress</p>
                 <h1 className="font-heading text-3xl tracking-tight sm:text-4xl">
                   {payload.domain}
                 </h1>

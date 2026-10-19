@@ -33,27 +33,25 @@ export default async function OpsLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border">
+    <div className="check-studio min-h-screen">
+      <header className="border-b border-[var(--sc-hairline)]">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-4">
-            <Link href="/ops" className="font-heading text-lg tracking-tight">
+            <Link href="/ops" className="font-heading text-lg tracking-tight no-underline">
               Schema Ops
             </Link>
             {!isLogin ? (
               <nav className="flex gap-3 text-sm text-muted-foreground">
-                <Link href="/ops" className="hover:text-foreground">
+                <Link href="/ops" className="hover:text-foreground no-underline">
                   Inbox
                 </Link>
-                <Link href="https://hq.abra-ca-dabra.app/schema" className="hover:text-foreground">
+                <Link href="https://hq.abra-ca-dabra.app/schema" className="hover:text-foreground no-underline">
                   Schema
                 </Link>
               </nav>
             ) : null}
           </div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            Internal
-          </span>
+          <span className="studio-kicker">Internal</span>
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>

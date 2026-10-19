@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SCAN_CTA } from "@/lib/marketing/copy";
@@ -43,10 +42,12 @@ export function ScanForm() {
     }
   }
 
+  const canSubmit = Boolean(url.trim()) && !pending;
+
   return (
     <form onSubmit={onSubmit} className="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
       <div className="flex-1 space-y-2">
-        <Label htmlFor={inputId} className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+        <Label htmlFor={inputId} className="studio-kicker">
           Website URL
         </Label>
         <Input
@@ -59,18 +60,17 @@ export function ScanForm() {
           onChange={(e) => setUrl(e.target.value)}
           required
           disabled={pending}
-          className="h-12 rounded-md border-border/80 bg-background/80 px-3 text-base shadow-none"
+          className="h-12 rounded-[6px] border-[var(--sc-hairline)] bg-[var(--sc-raised)] px-3 text-base text-[var(--sc-ink)] shadow-none placeholder:text-[var(--sc-ink-soft)]"
           aria-invalid={error ? true : undefined}
         />
       </div>
-      <Button
+      <button
         type="submit"
-        size="lg"
-        disabled={pending || !url.trim()}
-        className="h-12 cursor-pointer rounded-md px-5 text-sm font-medium tracking-wide"
+        disabled={!canSubmit}
+        className="studio-cta-primary h-12 shrink-0 px-5"
       >
         {pending ? "Starting…" : SCAN_CTA}
-      </Button>
+      </button>
       {error ? (
         <p className="basis-full text-sm text-destructive" role="alert">
           {error}

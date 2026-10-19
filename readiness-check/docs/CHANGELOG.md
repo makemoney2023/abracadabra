@@ -1,5 +1,22 @@
 # Changelog
 
+## Schema mint heat + CTA — 2026-10-19
+
+- **What changed** — Score ring/bars/Strong labels use studio heat (vermilion → amber → cyan → mint `#C6FFB3`). Scan CTA is full `#FF4B24` with dark text; disabled uses muted surface instead of washed vermilion.
+- **Why** — Match Abracadabra tokens; remove generic green and muddy CTA.
+
+## Schema scanner studio tokens — 2026-10-19
+
+- **What changed** — Schema landing (`/`), `/scan`, ops, and the Schema PDF use the same Abracadabra studio tokens as `/check` and marketing (dark canvas, vermilion accent, Inter Tight + IBM Plex Sans). Editorial cream/slate styling is removed.
+- **Why** — One design language across Abracadabra-owned surfaces.
+
+
+## Fonts aligned with marketing — 2026-10-19
+
+- **What changed** — Schema scanner, ops, `/check`, and both PDFs use Inter Tight for headings and labels, IBM Plex Sans for body. Newsreader, Tektur, and IBM Plex Mono are retired from visitor-facing type.
+- **Why** — Keep every Abracadabra-owned surface on the same type roles as `abra-ca-dabra.app`.
+
+
 ## 2026-10-14 — The check declares its sitemap
 
 - **What changed** — `robots.ts` allows crawlers and points them at `${checkUrl()}/sitemap.xml`. The pressure and readiness guides link to the matching studio notes.
@@ -74,7 +91,7 @@
 
 ## 2026-09-24 — Readiness Check uses the studio design system
 
-- **What changed** — `/check` (landing, questions, gate, guides, on-screen results) and the assessment PDF use the Abracadabra marketing tokens: dark canvas, Tektur display, IBM Plex Sans, clipped panels, and the accent CTA. Primary button text is canvas ink (`#070706`) on `#FF4B24` so contrast clears the check’s axe gate. Score heat colors on the rings and meters are unchanged. Schema scan and ops stay on the editorial theme.
+- **What changed** — `/check` (landing, questions, gate, guides, on-screen results) and the assessment PDF use the Abracadabra marketing tokens: dark canvas, Inter Tight display/labels, IBM Plex Sans body, clipped panels, and the accent CTA. Primary button text is canvas ink (`#070706`) on `#FF4B24` so contrast clears the check’s axe gate. Score heat colors on the rings and meters are unchanged. Schema scan and ops stay on the editorial theme.
 - **Why** — The check was still the Schema light theme while the public host sits next to the studio site.
 - **Code touchpoints** — `src/lib/brand/studio.ts`, `src/app/globals.css`, `src/app/check/layout.tsx`, check components under `src/components/check/`, `src/lib/pdf/assessment-report.tsx`, `tests/unit/studio-tokens.test.ts`
 - **Data-flow impact** — none
