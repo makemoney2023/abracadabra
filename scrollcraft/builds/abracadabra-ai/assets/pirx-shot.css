@@ -25,8 +25,6 @@
   max-width: 52rem;
   font-family: "IBM Plex Sans", system-ui, sans-serif;
 }
-.pirx-chart--single { margin: 0.85rem 0.85rem 0; }
-.fn-card .pirx-chart--single { margin-inline: 0.85rem; margin-bottom: 0.25rem; }
 
 .pirx-shot {
   --pirx-surface: #11110F;
@@ -108,11 +106,11 @@
   box-shadow: inset 0 1px 0 rgba(245, 240, 232, 0.04);
 }
 @media (min-width: 860px) {
-  .pirx-shot:not(.pirx-shot--compact) .pirx-shot__stage {
+  .pirx-shot .pirx-shot__stage {
     transform: perspective(1200px) rotateY(-3.5deg) rotateX(1.8deg);
     transform-origin: 50% 60%;
   }
-  .pirx-chart__pair > .pirx-shot:nth-child(2):not(.pirx-shot--compact) .pirx-shot__stage {
+  .pirx-chart__pair > .pirx-shot:nth-child(2) .pirx-shot__stage {
     transform: perspective(1200px) rotateY(3.5deg) rotateX(1.8deg);
   }
 }
@@ -139,13 +137,6 @@
   height: auto;
   /* Assets are already dark-treated; no invert needed */
   filter: none;
-}
-.pirx-shot--compact { padding: 0.9rem 0.9rem 0.95rem; }
-.pirx-shot--compact .pirx-shot__figure { font-size: clamp(2rem, 4vw, 2.6rem) !important; }
-.pirx-shot--compact .pirx-shot__stage { transform: none; }
-.pirx-shot--compact .pirx-shot__screen {
-  -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
-          mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
 }
 
 /* Homepage AI-search proof tile */

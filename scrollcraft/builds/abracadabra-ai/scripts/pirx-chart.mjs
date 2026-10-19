@@ -57,9 +57,8 @@ export function pirxChartPicture(chartOrId = "performance", { sizes = "(min-widt
 </picture>`;
 }
 
-function shot(chart, { sizes, compact = false } = {}) {
-  const compactClass = compact ? " pirx-shot--compact" : "";
-  return `<article class="pirx-shot${compactClass}">
+function shot(chart, { sizes } = {}) {
+  return `<article class="pirx-shot">
 <header class="pirx-shot__head">
 <span class="pirx-shot__pill">${esc(PILL)}</span>
 <p class="pirx-shot__label">${esc(chart.label)}</p>
@@ -79,14 +78,6 @@ export function pirxChartHtml({ sizes } = {}) {
 <div class="pirx-chart__pair">
 ${pair}
 </div>
-<p class="pirx-chart__source">${esc(SOURCE)}</p>
-</figure>`;
-}
-
-/** One compact shot for the homepage Search & AI visibility card. */
-export function pirxChartSingleHtml(which = "performance", { sizes = "(min-width: 860px) 22vw, 100vw" } = {}) {
-  const chart = CHARTS.find((item) => item.id === which) || CHARTS[0];
-  return `<figure class="pirx-chart pirx-chart--single">${shot(chart, { sizes, compact: true })}
 <p class="pirx-chart__source">${esc(SOURCE)}</p>
 </figure>`;
 }
