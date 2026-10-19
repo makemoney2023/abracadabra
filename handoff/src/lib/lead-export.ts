@@ -50,7 +50,26 @@ export type ExportedLead = {
   routing_status: RoutingStatus | null;
   schema_report_url: string | null;
   survey_url: string;
-  readiness: { total_score: number | null; scores_json: unknown; report_url: string | null } | null;
+  readiness: {
+    total_score: number | null;
+    scores_json: unknown;
+    report_url: string | null;
+    assessment_id?: string | null;
+    completed_at?: string | null;
+    answers?: unknown;
+  } | null;
+  /** Only for reply_needed and replied: who to answer and what they sent. */
+  reply_to?: { name: string | null; email: string | null } | null;
+  inquiry?: {
+    external_id: string | null;
+    company: string | null;
+    need: string | null;
+    budget: string | null;
+    timeline: string | null;
+    message: string | null;
+    page: string | null;
+    submitted_at: string | null;
+  } | null;
   bdr: Record<string, unknown> | null;
   enrichment: Record<string, unknown> | null;
   stage: string;
@@ -91,6 +110,74 @@ function parse(raw: string | null): unknown {
   }
 }
 
+/**
+ * Inbound detail for reply_needed / replied deals. reply_to is the person who submitted (the assessment's
+ * contact, or the project inquiry's contact), not the org's primary contact. A readiness_check deal reads the
+ * assessment on that deal; a start_form deal reads the latest project_inquiry activity. A deal can have both.
+ */
+async function inboundDetail(sql: Sql, dealId: string, source: string | null) {
+  const assessment = await sql.get<{
+    id: string;
+    total_score: number | null;
+    scores_json: string | null;
+    answers_json: string | null;
+    report_url: string | null;
+    completed_at: number | null;
+    received_at: number | null;
+    contact_name: string | null;
+    contact_email: string | null;
+  }>(
+    `SELECT s.id, s.total_score, s.scores_json, s.answers_json, s.report_url, s.completed_at, s.received_at,
+            c.name AS contact_name, c.email AS contact_email
+     FROM assessments s LEFT JOIN contacts c ON c.id = s.contact_id
+     WHERE s.deal_id = ? ORDER BY s.received_at DESC, s.completed_at DESC LIMIT 1`,
+    [dealId],
+  );
+  const inquiryRow = await sql.get<{ data_json: string | null; created_at: number; contact_name: string | null; contact_email: string | null }>(
+    `SELECT a.data_json, a.created_at, c.name AS contact_name, c.email AS contact_email
+     FROM activities a LEFT JOIN contacts c ON c.id = a.contact_id
+     WHERE a.deal_id = ? AND a.kind = 'project_inquiry' ORDER BY a.created_at DESC LIMIT 1`,
+    [dealId],
+  );
+  const str = (value: unknown) => (typeof value === "string" ? value : null);
+  const data = (parse(inquiryRow?.data_json ?? null) ?? {}) as Record<string, unknown>;
+  const inquiry = inquiryRow
+    ? {
+        external_id: str(data.external_id),
+        company: str(data.company),
+        need: str(data.need),
+        budget: str(data.budget),
+        timeline: str(data.timeline),
+        message: str(data.message),
+        page: str(data.page),
+        submitted_at: str(data.submitted_at),
+      }
+    : null;
+  // Whichever submission is newer decides who gets the reply; a start_form deal prefers its inquiry on a tie.
+  const assessmentAt = assessment ? assessment.received_at ?? assessment.completed_at ?? 0 : -1;
+  const inquiryAt = inquiryRow ? inquiryRow.created_at : -1;
+  const useInquiry = inquiryRow && (inquiryAt > assessmentAt || (inquiryAt === assessmentAt && source === "start_form"));
+  const replyTo = useInquiry
+    ? { name: inquiryRow.contact_name ?? str(data.name), email: inquiryRow.contact_email ?? str(data.email) }
+    : assessment
+      ? { name: assessment.contact_name, email: assessment.contact_email }
+      : null;
+  return {
+    reply_to: replyTo,
+    inquiry,
+    readiness: assessment
+      ? {
+          total_score: assessment.total_score,
+          scores_json: parse(assessment.scores_json),
+          report_url: assessment.report_url,
+          assessment_id: assessment.id,
+          completed_at: assessment.completed_at == null ? null : new Date(assessment.completed_at).toISOString(),
+          answers: parse(assessment.answers_json),
+        }
+      : null,
+  };
+}
+
 /** Read-only. Deals with the given routing status, newest score first. */
 export async function exportLeads(
   sql: Sql,
@@ -99,7 +186,10 @@ export async function exportLeads(
   const raw = input.status?.trim() || "ready_for_outbound";
   const won = raw === "won";
   const status = won ? null : routingStatusOf(raw);
-  if (!won && !status) return { error: "status must be ready_for_outbound, enriched, nurture, scoring_error, or won." };
+  if (!won && !status) {
+    return { error: "status must be ready_for_outbound, enriched, nurture, scoring_error, reply_needed, replied, or won." };
+  }
+  const inbound = status === "reply_needed" || status === "replied";
   const params: unknown[] = won ? [] : [status];
   const where = won
     ? "o.archived_at IS NULL AND d.stage = 'won'"
@@ -138,7 +228,11 @@ export async function exportLeads(
     params,
   );
   const origin = input.checkOrigin || CHECK_ORIGIN;
-  const extras = new Map<string, { contacts: ExportedLead["contacts"]; outreach: Record<string, unknown>[] }>();
+  type Inbound = { reply_to: ExportedLead["reply_to"]; inquiry: ExportedLead["inquiry"]; readiness: ExportedLead["readiness"] };
+  const extras = new Map<
+    string,
+    { contacts: ExportedLead["contacts"]; outreach: Record<string, unknown>[]; inbound?: Inbound }
+  >();
   for (const row of rows) {
     const contacts = await sql.all<{ name: string | null; email: string | null; is_primary: number }>(
       "SELECT name, email, is_primary FROM contacts WHERE organization_id = ? ORDER BY is_primary DESC, created_at",
@@ -151,12 +245,17 @@ export async function exportLeads(
     extras.set(row.deal_id, {
       contacts: contacts.map((c) => ({ name: c.name, email: c.email, is_primary: c.is_primary === 1 })),
       outreach: sent.map((a) => (parse(a.data_json) ?? {}) as Record<string, unknown>),
+      inbound: inbound ? await inboundDetail(sql, row.deal_id, row.source) : undefined,
     });
   }
   return rows.map((row) => {
     const bdr = (parse(row.bdr_json) ?? {}) as Record<string, unknown>;
     const str = (value: unknown) => (typeof value === "string" ? value : null);
     const hasReadiness = row.a_total != null || row.a_scores != null || row.a_report != null;
+    const detail = extras.get(row.deal_id)?.inbound;
+    const readiness = hasReadiness
+      ? { total_score: row.a_total, scores_json: parse(row.a_scores), report_url: row.a_report }
+      : null;
     return {
       deal_id: row.deal_id,
       organization_id: row.organization_id,
@@ -176,9 +275,8 @@ export async function exportLeads(
       routing_status: routingStatusOf(row.routing_status),
       schema_report_url: row.scan_token ? `${origin}/scan/${row.scan_token}` : null,
       survey_url: surveyUrl(row.deal_id, origin),
-      readiness: hasReadiness
-        ? { total_score: row.a_total, scores_json: parse(row.a_scores), report_url: row.a_report }
-        : null,
+      readiness: detail ? detail.readiness ?? readiness : readiness,
+      ...(detail ? { reply_to: detail.reply_to, inquiry: detail.inquiry } : {}),
       bdr: row.bdr_json ? bdr : null,
       enrichment: (parse(row.enrich_json) as Record<string, unknown> | null) ?? null,
       stage: row.stage,

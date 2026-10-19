@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-19
+
+- **What changed** — Readiness Check submissions and `/start/` project inquiries now queue a reply from Sales Outbound. New routing statuses `reply_needed` and `replied`. New signed intake `POST /api/intake/project-inquiry` (`PROJECT_INQUIRY_SIGNING_SECRET`, queue source `project_inquiry`) opens a `start_form` deal. `GET /api/leads/export?status=reply_needed` returns `reply_to`, `readiness` (with `answers`), and `inquiry`. `POST /api/intake/outreach` moves `reply_needed` to `replied`. Schema scoring no longer overwrites inbound statuses. The marketing worker posts the form to HQ; the houdini@ Resend email is optional.
+- **Why** — Readiness Check deals had no routing status, so no export returned them and nobody replied. The `/start/` form only emailed houdini@ through Resend, and the marketing worker has no Resend key.
+- **Code touchpoints** — `handoff/src/lib/lead-routing.ts`, `handoff/src/lib/lead-export.ts`, `handoff/src/lib/intake/{consume,accept,queue}.ts`, `handoff/src/app/api/intake/project-inquiry/route.ts`, `handoff/src/app/leads/{view.ts,filters.tsx}`, `scrollcraft/builds/abracadabra-ai/worker/intake.js`
+- **Data-flow impact** — Inbound leads reach Sales Outbound through the lead export. Existing readiness_check deals are not backfilled.
+- **API / schema impact** — No migration: `deals.routing_status` is unconstrained `TEXT`. New export statuses and response fields are additive.
+- **Verification** — handoff `vitest run` (all pass, incl. `src/lib/inbound-reply.test.ts`), agent vitest config, `tsc --noEmit`; marketing `npm test`.
+
 ## 2026-10-13
 
 - **What changed** — Research tools are chosen by the stage kind, not by the workflow name. A copy stage whose name or brief mentions "research" gets no tools. Tools are sent to Workers AI in the OpenAI function format with safe names and clean schemas. After `8001: Invalid input`, the same model is retried once with a clipped prompt. A provider error in a node's output marks the node as an error instead of done.

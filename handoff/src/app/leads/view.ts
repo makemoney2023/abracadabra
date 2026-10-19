@@ -21,7 +21,7 @@ export type LeadFilters = {
 
 export type LeadsView = "list" | "board";
 
-export const ROUTING_FILTERS = ["ready_for_outbound", "enriched", "nurture", "scoring_error", "unscored"] as const;
+export const ROUTING_FILTERS = ["ready_for_outbound", "enriched", "nurture", "scoring_error", "reply_needed", "replied", "unscored"] as const;
 export type RoutingFilter = (typeof ROUTING_FILTERS)[number];
 
 /** Known routing filter or blank. */

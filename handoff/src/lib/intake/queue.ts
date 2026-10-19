@@ -80,7 +80,8 @@ function messageShape(body: unknown): { source: string; payload: unknown } | nul
   if (source !== "assessment" && source !== "booking" && source !== "schema" && source !== "lead" && source !== "enrichment" &&
     source !== "outreach" &&
     source !== "deal_closed" &&
-    source !== "work_request"
+    source !== "work_request" &&
+    source !== "project_inquiry"
   ) return null;
   const payload = "payload" in body ? body.payload : null;
   return { source, payload };

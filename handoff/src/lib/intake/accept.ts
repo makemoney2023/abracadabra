@@ -12,6 +12,7 @@ type CloudflareEnv = {
   ENRICHMENT_SIGNING_SECRET?: string;
   OUTREACH_SIGNING_SECRET?: string;
   CLIENT_SERVICES_SIGNING_SECRET?: string;
+  PROJECT_INQUIRY_SIGNING_SECRET?: string;
 };
 
 function cloudflareEnv(): CloudflareEnv {
@@ -55,6 +56,13 @@ export function clientServicesSecret(): string {
   return cloudflareEnv().CLIENT_SERVICES_SIGNING_SECRET?.trim() ?? "";
 }
 
+/** Marketing site (/start/ form) key for project-inquiry intake. Separate so it can be revoked on its own. */
+export function projectInquirySecret(): string {
+  const fromProcess = process.env.PROJECT_INQUIRY_SIGNING_SECRET?.trim() ?? "";
+  if (fromProcess) return fromProcess;
+  return cloudflareEnv().PROJECT_INQUIRY_SIGNING_SECRET?.trim() ?? "";
+}
+
 export function intakeQueue(): QueueBinding | undefined {
   return cloudflareEnv().LEAD_INTAKE;
 }
@@ -62,7 +70,7 @@ export function intakeQueue(): QueueBinding | undefined {
 /** Check the signature, then the body, then put the message on the queue. */
 export async function acceptIntake(
   request: Request,
-  source: "assessment" | "booking" | "schema" | "lead" | "enrichment" | "outreach" | "deal_closed" | "work_request",
+  source: "assessment" | "booking" | "schema" | "lead" | "enrichment" | "outreach" | "deal_closed" | "work_request" | "project_inquiry",
   ready: (payload: unknown) => boolean,
   now = Date.now(),
   secret: string = source === "lead" ? leadAgentSecret() : source === "enrichment"
@@ -71,7 +79,9 @@ export async function acceptIntake(
         ? outreachSecret()
         : source === "work_request"
           ? clientServicesSecret()
-          : intakeSecret(),
+          : source === "project_inquiry"
+            ? projectInquirySecret()
+            : intakeSecret(),
 ): Promise<Response> {
   const raw = await request.text();
   const verdict = await verifyIntakeRequest({
@@ -157,4 +167,11 @@ export function dealClosedBodyReady(payload: unknown): boolean {
   if (!enrichmentBodyReady(payload)) return false;
   const value = (payload as Record<string, unknown>).value_cents;
   return value == null || (typeof value === "number" && Number.isInteger(value) && value >= 0);
+}
+
+export function projectInquiryBodyReady(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  const body = payload as Record<string, unknown>;
+  const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  return text(body.external_id).length > 0 && text(body.email).includes("@");
 }

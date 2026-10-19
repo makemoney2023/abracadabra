@@ -23,7 +23,7 @@ If the page and the source-of-truth file disagree, fix the file first, then the 
 - **Why** — the site should feel like one product at every viewport, and a visitor should be able to start a project without opening a mail app.
 - **Code touchpoints** — `assets/site.css`, `assets/fonts/`, `assets/icons/`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `worker/intake.js`, `content/proof.json`, `index.html`, `films.html`.
 - **Data-flow impact** — generated pages, the homepage chrome, and the 404 page. The proof band reads portfolio facts from `scripts/site-data.mjs`.
-- **API / schema impact** — `POST /api/intake` validates the form, drops honeypot submissions, rate-limits by IP, and sends the note through Resend. No new public schema types.
+- **API / schema impact** — `POST /api/intake` validates the form, drops honeypot submissions, rate-limits by IP, posts the note to HQ's signed project-inquiry intake, and emails a copy through Resend when a key is set. No new public schema types.
 - **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test` in this folder.
 
 ### Design system
@@ -52,7 +52,12 @@ Blog notes get a sticky “On this page” rail from 1280px and a closed details
 
 The form fields are name, email, optional company, what you need, budget, timeline, and a note. A hidden `company_website` field is the honeypot. With JavaScript the form confirms in place. Without it, the Worker redirects to `/start/thanks/`.
 
+Each valid submission is posted to HQ as a signed `POST {HANDOFF_INTAKE_ORIGIN}/api/intake/project-inquiry` (hex HMAC-SHA256 of the body with `PROJECT_INQUIRY_SIGNING_SECRET` in `x-intake-signature`, unix ms in `x-intake-timestamp`). HQ opens a `start_form` deal with `routing_status = reply_needed`, and Sales Outbound replies. The visitor gets the thanks page when HQ answers 202. The houdini@ email through Resend is an optional copy, sent only when `RESEND_API_KEY` is set, and a mail failure never fails the visitor. If neither HQ nor email takes the note, the visitor gets 502 and the houdini@ address.
+
 ```bash
+wrangler secret put HANDOFF_INTAKE_ORIGIN
+wrangler secret put PROJECT_INQUIRY_SIGNING_SECRET   # same value as on the HQ worker
+# optional houdini@ copy
 wrangler secret put RESEND_API_KEY
 wrangler secret put INTAKE_FROM
 wrangler secret put INTAKE_TO
@@ -346,7 +351,7 @@ Live at [abra-ca-dabra.app](https://abra-ca-dabra.app/) on Cloudflare Worker `ab
 
 ### Cloudflare Workers (static assets)
 
-The same folder deploys to Cloudflare as Worker `abracadabra-marketing`. `worker/intake.js` answers `POST /api/intake` and everything else is a static asset. `wrangler.jsonc` points `assets.directory` at this folder. Set `RESEND_API_KEY`, `INTAKE_FROM`, and `INTAKE_TO` with `wrangler secret put` before the form can send mail. The names are listed in `.env.example`. `html_handling` is `none` so `/walkthrough.html` and `/films.html` stay the canonical URLs already published in the sitemap. `/` rewrites to `/index.html` (`_redirects`, status 200). A missing path serves `404.html`. `.assetsignore` keeps tests, npm metadata, the brief, and env files off the public asset set.
+The same folder deploys to Cloudflare as Worker `abracadabra-marketing`. `worker/intake.js` answers `POST /api/intake` and everything else is a static asset. `wrangler.jsonc` points `assets.directory` at this folder. Set `HANDOFF_INTAKE_ORIGIN` and `PROJECT_INQUIRY_SIGNING_SECRET` with `wrangler secret put` so the form reaches HQ. `RESEND_API_KEY`, `INTAKE_FROM`, and `INTAKE_TO` are optional and only add the houdini@ copy. The names are listed in `.env.example`. `html_handling` is `none` so `/walkthrough.html` and `/films.html` stay the canonical URLs already published in the sitemap. `/` rewrites to `/index.html` (`_redirects`, status 200). A missing path serves `404.html`. `.assetsignore` keeps tests, npm metadata, the brief, and env files off the public asset set.
 
 ```bash
 # from this folder, with CLOUDFLARE_API_TOKEN in the environment

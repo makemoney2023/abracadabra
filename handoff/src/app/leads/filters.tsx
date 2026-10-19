@@ -87,6 +87,8 @@ export function LeadsToolbar({
             <SelectItem value="enriched">Enriched</SelectItem>
             <SelectItem value="nurture">C quality</SelectItem>
             <SelectItem value="scoring_error">Scoring error</SelectItem>
+            <SelectItem value="reply_needed">Reply needed</SelectItem>
+            <SelectItem value="replied">Replied</SelectItem>
             <SelectItem value="unscored">Not scored</SelectItem>
           </SelectContent>
         </Select>
