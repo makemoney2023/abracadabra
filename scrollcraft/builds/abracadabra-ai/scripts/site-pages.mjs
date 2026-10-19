@@ -19,7 +19,7 @@ import {
   placeholders,
   products,
 } from "./site-data.mjs";
-import { pirxChartHtml, pirxChartSingleHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
+import { pirxChartHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 
@@ -190,9 +190,7 @@ function functionLinkList(fn) {
 
 function offeringsHtml() {
   const cards = businessFunctions.map((fn) => {
-    const proof = fn.proof ? `<p class="fn-card__proof">${esc(fn.proof)}</p>` : "";
-    const chart = fn.id === "search" ? pirxChartSingleHtml("performance", { sizes: "(min-width: 860px) 22vw, 100vw" }) : "";
-    return `<li class="card fn-card" id="fn-${esc(fn.id)}"><div class="card__media">${functionPhoto(fn)}</div><div class="card__body"><h3 class="card__title">${esc(fn.name)}</h3><p class="card__dek">${esc(fn.promise)}</p>${proof}${chart}${functionLinkList(fn)}</div></li>`;
+    return `<li class="card fn-card" id="fn-${esc(fn.id)}"><div class="card__media">${functionPhoto(fn)}</div><div class="card__body"><h3 class="card__title">${esc(fn.name)}</h3><p class="card__dek">${esc(fn.promise)}</p>${functionLinkList(fn)}</div></li>`;
   }).join("");
   return `<section id="services" class="sc-section section services" aria-labelledby="services-title">
     <div class="sc-wrap">
@@ -269,8 +267,8 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
 ${headLinks()}
-<link rel="stylesheet" href="/blog/blog.css?v=20261019b">
-<link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019b">
+<link rel="stylesheet" href="/blog/blog.css?v=20261019c">
+<link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019c">
 <script type="application/ld+json">
 ${jsonLd(json)}
 </script>

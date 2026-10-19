@@ -1,7 +1,7 @@
 import { businessFunctions } from "./site-data.mjs";
 import { salesPages } from "./service-sales.mjs";
 
-export const ASSET_VERSION = "20261019b";
+export const ASSET_VERSION = "20261019c";
 const YEAR = new Date().getFullYear();
 const EMAIL = "houdini@abra-ca-dabra.app";
 

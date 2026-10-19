@@ -490,8 +490,6 @@ html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: backgro
 
 .fn-card h3 { margin-top: 0.9rem; }
 
-.fn-card__proof { color: var(--ink); }
-
 .fn-card__links { list-style: none; margin: 0; padding-bottom: 1rem; }
 
 .fn-card__links a {

@@ -379,7 +379,6 @@ export const businessFunctions = [
     id: "search",
     name: "Search & AI visibility",
     promise: "Show up when someone asks a search engine or an AI assistant for what you do.",
-    proof: "PiRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.",
     services: ["ai-visibility"],
   },
   {
