@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright-core';
+import { chromium, devices } from 'playwright-core';
 import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -256,7 +256,8 @@ test('the name sits under the hero, left-aligned, and reads along with scroll', 
     const before = Number(await first.evaluate((el) => getComputedStyle(el).opacity));
     const top = await page.locator('#name').evaluate((el) => el.getBoundingClientRect().top + scrollY);
     const height = await page.locator('#name').evaluate((el) => el.offsetHeight);
-    await page.evaluate((y) => scrollTo(0, y), top + height - viewport.height);
+    const unpin = await page.locator('#name .name-stage').evaluate((el) => el.offsetHeight + parseFloat(getComputedStyle(el).top));
+    await page.evaluate((y) => scrollTo(0, y), top + height - unpin);
     await page.waitForTimeout(200);
     const lastWord = page.locator('#name .sc-body .nw').last();
     assert.ok(before < 0.6, `first word starts ghosted (${before})`);
@@ -268,8 +269,11 @@ test('the name sits under the hero, left-aligned, and reads along with scroll', 
 
 test('reduced motion keeps a static calendar and the name fully shown', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000, reducedMotion: 'reduce' });
-  assert.equal(await page.locator('#name .nw').count(), 0);
-  assert.equal(await page.locator('#name-title').evaluate((el) => getComputedStyle(el).opacity), '1');
+  assert.equal(await page.evaluate(() => document.documentElement.classList.contains('name-live')), false, 'no pin under reduced motion');
+  await page.locator('#name').scrollIntoViewIfNeeded();
+  await page.evaluate(() => scrollBy(0, innerHeight * 0.6));
+  await page.waitForTimeout(200);
+  assert.equal(await page.locator('#name .nw').first().evaluate((el) => el.style.filter), '', 'reduced motion: opacity only');
   assert.equal(await page.locator('#time .time-engine').getAttribute('data-active-state'), 'arrive');
   await context.close();
 });
@@ -558,4 +562,57 @@ test('service page heroes use the same left column and stacked actions', async (
   assert.ok(stacked.secondaryTop >= stacked.primaryBottom - 1);
   assert.ok(stacked.primaryWidth >= stacked.width - 2);
   await phone.context.close();
+});
+
+test('the name reveal runs on an Android phone with touch scrolling and an address-bar resize', async () => {
+  for (const name of ['Pixel 7', 'Galaxy S9+']) {
+    const context = await browser.newContext({ ...devices[name] });
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(String(error)));
+    await page.goto(origin, { waitUntil: 'networkidle' });
+    const cdp = await context.newCDPSession(page);
+    const avg = () => page.evaluate(() => {
+      const ws = [...document.querySelectorAll('#name .nw')];
+      return ws.reduce((sum, el) => sum + Number(getComputedStyle(el).opacity), 0) / ws.length;
+    });
+    const { width, height } = page.viewportSize();
+    // A real finger drag: touchStart, a run of touchMoves, touchEnd (Chrome scrolls, and may fling).
+    const swipe = async (dy) => {
+      const x = Math.round(width / 2), y0 = Math.round(height * 0.75);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: y0 }] });
+      for (let k = 1; k <= 10; k += 1) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: Math.round(y0 - (dy * k) / 10) }] });
+        await page.waitForTimeout(16);
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    };
+    const start = await avg();
+    assert.ok(start < 0.35, `${name}: words start ghosted (${start})`);
+    const seen = [];
+    for (let i = 0; i < 30 && !(seen.length && seen[seen.length - 1] > 0.97); i += 1) {
+      await swipe(Math.round(height * 0.12));
+      if (i === 4) await page.setViewportSize({ width, height: height - 56 }); // address bar shows
+      if (i === 7) await page.setViewportSize({ width, height });             // and hides again
+      await page.waitForTimeout(250);
+      seen.push(await avg());
+    }
+    assert.ok(seen.some((v) => v > start + 0.1 && v < 0.95), `${name}: no mid-reveal state ${seen.map((v) => v.toFixed(2))}`);
+    assert.ok(Math.max(...seen) > 0.97, `${name}: reveal never completed ${seen.map((v) => v.toFixed(2))}`);
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});
+
+test('the menu copy sits above its animation on a phone and beside it on desktop', async () => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+    const { context, page } = await openPage({ ...viewport, reducedMotion: 'reduce' });
+    assert.equal((await page.locator('#range-title').textContent()).trim(), 'Any job you can describe can be built.');
+    assert.equal((await page.locator('#range .range-copy .sc-body').textContent()).trim(), 'One service, or the whole menu. Each one is built around how you already work.');
+    const copy = await page.locator('#range .range-copy').boundingBox();
+    const engine = await page.locator('#range .range-engine').boundingBox();
+    if (viewport.width < 1100) assert.ok(copy.y + copy.height <= engine.y, 'copy should sit above the menu animation');
+    else assert.ok(copy.x + copy.width <= engine.x, 'copy should lead, left of the animation');
+    await context.close();
+  }
 });

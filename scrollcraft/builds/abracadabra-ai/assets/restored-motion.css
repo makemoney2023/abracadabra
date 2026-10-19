@@ -882,19 +882,13 @@
 }
 #name .origin .sc-body { max-width: 34rem; font-size: clamp(1.1rem, 1.6vw, 1.35rem); }
 #name .origin em { font-style: italic; color: var(--sc-accent); }
-#name .nw {
-  display: inline-block;
-  opacity: calc(0.14 + 0.86 * var(--w, 1));
-  filter: blur(calc((1 - var(--w, 1)) * 6px));
-  transform: translate3d(0, calc((1 - var(--w, 1)) * 0.32em), 0);
-  will-change: opacity, filter, transform;
-}
-#name em .nw { text-shadow: 0 0 calc(var(--glow, 0) * 22px) rgba(255, 75, 36, 0.55); }
-html.name-live #name.name-pin { height: 230vh; padding-block: 0; }
-html.name-live #name .name-stage { position: sticky; top: 0; height: 100vh; display: flex; align-items: flex-start; padding-top: clamp(5rem, 20vh, 12rem); }
-#name .sc-wrap { width: 100%; max-width: none; margin: 0; padding-inline: 1.5rem; }
+#name .nw { display: inline-block; }
+/* The stage pins just under the nav and is only as tall as its copy, so when the
+   read-along ends the next section follows straight on (no empty band). */
+html.name-live #name.name-pin { height: 190vh; padding-block: 0; }
+html.name-live #name .name-stage { position: sticky; top: clamp(4.5rem, 18vh, 10rem); padding-block: 1rem 3rem; }
 @media (max-width: 768px) {
-  html.name-live #name.name-pin { height: 200vh; }
+  html.name-live #name.name-pin { height: 170vh; }
   #name .origin h2 { font-size: clamp(2.4rem, 11vw, 3.6rem); }
 }
 
@@ -954,7 +948,8 @@ html.name-live #name .name-stage { position: sticky; top: 0; height: 100vh; disp
   #time .time-engine { --lane-label: 5rem; --lane-gap: var(--sc-2); min-height: 31rem; max-height: none; }
   .time-engine { max-height: none; }
   .time-captions { min-height: 8rem; }
-  .range-engine { order: -1; min-height: 28rem; max-height: none; }
+  /* Copy introduces the menu animation: text first, then the engine. */
+  .range-engine { min-height: 28rem; max-height: none; }
   .range-body { grid-template-columns: 1fr; }
   .range-stack { display: none; }
   .range-viewport { min-height: 12rem; }
