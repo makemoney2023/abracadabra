@@ -106,7 +106,7 @@ export function ScorePreview({
             Pillars
           </h3>
           <p className="hidden text-xs text-muted-foreground sm:block">
-            Heat scale · red → orange → yellow → green
+            Heat scale · vermilion → amber → cyan → mint
           </p>
         </div>
 
