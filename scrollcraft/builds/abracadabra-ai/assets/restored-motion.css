@@ -866,14 +866,31 @@
   transition-delay: 0s;
 }
 
-#name .origin { max-width: 46rem; margin-inline: auto; text-align: center; }
+/* The name: left-aligned, pinned read-along. Words scrub from ghost to ink with
+   scroll progress (scroll-craft "kinetic" words + a pinned act publishing --sc-p).
+   Without JS or under reduced motion every word sits at full ink (--w defaults to 1). */
+#name .origin { max-width: 52rem; margin-inline: 0; text-align: left; }
 #name .origin h2 {
-  margin: var(--sc-3) auto var(--sc-5);
-  max-width: 16ch;
+  margin: var(--sc-3) 0 var(--sc-5);
+  max-width: 14ch;
+  font-family: "Inter Tight", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  font-size: clamp(2.6rem, 6.4vw, 6rem);
   text-wrap: balance;
-  font-size: var(--sc-t-2xl);
 }
+#name .origin .sc-body { max-width: 34rem; font-size: clamp(1.1rem, 1.6vw, 1.35rem); }
 #name .origin em { font-style: italic; color: var(--sc-accent); }
+#name .nw { display: inline-block; }
+/* The stage pins just under the nav and is only as tall as its copy, so when the
+   read-along ends the next section follows straight on (no empty band). */
+html.name-live #name.name-pin { height: 190vh; padding-block: 0; }
+html.name-live #name .name-stage { position: sticky; top: clamp(4.5rem, 18vh, 10rem); padding-block: 1rem 3rem; }
+@media (max-width: 768px) {
+  html.name-live #name.name-pin { height: 170vh; }
+  #name .origin h2 { font-size: clamp(2.4rem, 11vw, 3.6rem); }
+}
 
 @media (max-width: 1100px) {
   .restored-pin { min-height: 0; height: auto; }
@@ -931,7 +948,8 @@
   #time .time-engine { --lane-label: 5rem; --lane-gap: var(--sc-2); min-height: 31rem; max-height: none; }
   .time-engine { max-height: none; }
   .time-captions { min-height: 8rem; }
-  .range-engine { order: -1; min-height: 28rem; max-height: none; }
+  /* Copy introduces the menu animation: text first, then the engine. */
+  .range-engine { min-height: 28rem; max-height: none; }
   .range-body { grid-template-columns: 1fr; }
   .range-stack { display: none; }
   .range-viewport { min-height: 12rem; }
@@ -1003,3 +1021,6 @@
   }
   .range-controls { display: none; }
 }
+
+/* The operation compiler is hidden on the homepage; keep it out of layout. */
+#compiler[hidden] { display: none !important; }

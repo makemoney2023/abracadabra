@@ -69,7 +69,7 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.match(index, /muted playsinline loop preload="none"/);
   assert.match(index, /assets\/restored-motion\.css/);
   assert.match(index, /assets\/restored-motion\.js/);
-  const motionOrder = ["hero", "compiler", "time", "name", "range", "models"];
+  const motionOrder = ["hero", "name", "compiler", "time", "range", "models"];
   let motionAt = -1;
   for (const id of motionOrder) {
     const at = ids.indexOf(id);
@@ -77,7 +77,7 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
     motionAt = at;
   }
   const agents = index.slice(index.indexOf('id="compiler"'), index.indexOf('id="time"'));
-  const time = index.slice(index.indexOf('id="time"'), index.indexOf('id="name"'));
+  const time = index.slice(index.indexOf('id="time"'), index.indexOf('id="range"'));
   assert.equal((agents.match(/class="agent-track"/g) || []).length, 5);
   for (const lane of ["Workflow", "Experience", "Engineering", "Quality", "Launch"]) {
     assert.equal(agents.includes(`<span data-agent-role>${lane}</span>`), true, lane);
