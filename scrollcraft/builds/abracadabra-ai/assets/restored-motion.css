@@ -1003,3 +1003,6 @@
   }
   .range-controls { display: none; }
 }
+
+/* The operation compiler is hidden on the homepage; keep it out of layout. */
+#compiler[hidden] { display: none !important; }
