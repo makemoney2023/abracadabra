@@ -269,8 +269,8 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
 ${headLinks()}
-<link rel="stylesheet" href="/blog/blog.css?v=20261019b">
-<link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019b">
+<link rel="stylesheet" href="/blog/blog.css?v=20261019c">
+<link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019c">
 <script type="application/ld+json">
 ${jsonLd(json)}
 </script>
@@ -392,6 +392,98 @@ function capabilityHtml(block) {
 </section>`;
 }
 
+function proofMetrics(className) {
+  return `<div class="${className}" aria-label="PiRX results">
+<p class="metric"><strong>398K</strong><span>search impressions</span></p>
+<p class="metric"><strong>46.5K</strong><span>AI-feature impressions</span></p>
+<p class="metric"><strong>90</strong><span>days, Jul 18–Oct 17</span></p>
+</div>`;
+}
+
+function faqAccordion(faqs) {
+  return `<div class="faq-list">${faqs.map(([question, answer]) => `<details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>`).join("")}</div>`;
+}
+
+function caseWindow(pair, title, caption, position = "top", eager = false) {
+  const loading = eager ? "" : ' loading="lazy" decoding="async"';
+  const mobileSource = position === "top"
+    ? `<source media="(max-width: 700px)" srcset="${esc(pair.mobile.src)}">`
+    : "";
+  return `<figure class="case-window case-window--${esc(position)}">
+<div class="case-window__bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${esc(title)}</strong></div>
+<div class="case-window__viewport"><picture>
+${mobileSource}
+<img src="${esc(pair.desktop.src)}" alt="${esc(pair.desktop.alt)}" width="${pair.desktop.width}" height="${pair.desktop.height}"${loading}>
+</picture></div>
+<figcaption>${esc(caption)}</figcaption>
+</figure>`;
+}
+
+function visibilityBody(page, item, crumbs) {
+  const steps = processSteps.map((step, index) => `<li><span>0${index + 1}</span><div><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></div></li>`).join("");
+  return `<main id="top" class="site-page sales visibility-page">
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: esc(SERVICE_GROUPS[item.slug]),
+  title: esc(page.headline),
+  dek: `<p class="sales-dek">${esc(page.dek)}</p>`,
+  actions: salesActions(),
+  media: servicePicture(item.slug, "hero", { sizes: "(min-width: 1024px) 72rem, 100vw" }),
+})}
+${proofMetrics("visibility-hero__metrics")}
+${proofStrip(page.strip)}
+<section class="visibility-intro">
+<div><p class="eyebrow">The shift</p><h2>${esc(page.problemTitle)}</h2></div>
+<div class="visibility-intro__copy">${page.problem.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("")}</div>
+</section>
+<section class="visibility-outcomes">
+<p class="eyebrow">The system</p>
+<h2>Control what answer engines can find, trust, and quote.</h2>
+${cardGrid("outcome-grid", page.outcomes)}
+</section>
+<section class="visibility-use">
+<div><p class="eyebrow">Built for the real decisions</p><h2>Public when it helps. Private when it matters.</h2>${cardGrid("use-grid", page.uses)}</div>
+<figure class="sales-split__photo">${servicePicture(item.slug, "body1", { lazy: true, sizes: SPLIT_SIZES })}</figure>
+</section>
+<section class="visibility-process">
+<p class="eyebrow">How it works</p>
+<h2>${esc(processIntro)}</h2>
+<ol>${steps}</ol>
+</section>
+<section class="visibility-proof">
+<div class="visibility-proof__copy">
+<p class="eyebrow">Named proof · pirx.ca</p>
+<h2>Near-zero to visible in 90 days.</h2>
+<p>${esc(page.proofs[0].text)}</p>
+<p><a class="btn btn--tertiary" href="/portfolio/pirx/">Read the PiRX case study <span class="btn__arrow" aria-hidden="true">→</span></a></p>
+</div>
+${pirxChartHtml()}
+</section>
+<section class="visibility-compare">
+<p class="eyebrow">Buy the result, not the theatre</p>
+<h2>How the options compare.</h2>
+<p>${esc(page.compareIntro)}</p>
+${comparisonTable(page.rows)}
+</section>
+<section class="price-block visibility-price">
+<h2>Pricing</h2>
+<p>Priced to the project. Tell us what you need and we'll quote it.</p>
+<p><a href="/start/">Start a project</a></p>
+</section>
+<section class="visibility-faq">
+<p class="eyebrow">FAQ</p>
+<h2>What this can—and cannot—do.</h2>
+${faqAccordion(page.faqs)}
+</section>
+<section class="sales-close">
+<p class="eyebrow">Start with the question</p>
+<h2>Make your best answer the easiest one to find.</h2>
+<p>${esc(page.close)}</p>
+${salesActions()}
+</section>
+</main>`;
+}
+
 async function renderOffering(item) {
   const page = salesPages[item.slug];
   if (!page) throw new Error(`Missing sales page for ${item.slug}`);
@@ -448,7 +540,7 @@ async function renderOffering(item) {
       description: page.description,
       image: og.url,
     }), [crumbList(crumbs), service, faq]),
-    body: `<main id="top" class="site-page sales">
+    body: item.slug === "ai-visibility" ? visibilityBody(page, item, crumbs) : `<main id="top" class="site-page sales">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: esc(SERVICE_GROUPS[item.slug] || OFFERINGS_KICKER),
@@ -615,6 +707,56 @@ function caseAbout(item, url) {
   };
 }
 
+function pirxCaseBody(item, crumbs, relatedHtml) {
+  const [home, article] = item.shots;
+  return `<main id="top" class="site-page pirx-case">
+${pageHero({
+  crumbs: visibleCrumbs(crumbs),
+  kicker: "PiRX · Search & AI visibility",
+  title: "From invisible to 398K search impressions.",
+  dek: `<p>${esc(item.summary)}</p><p class="sales-actions"><a class="btn btn--primary" href="${esc(item.sameAs)}">Open pirx.ca</a><a class="btn btn--secondary" href="/services/ai-visibility/">See the visibility system</a></p>`,
+  media: `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`,
+})}
+${proofMetrics("pirx-case__metrics")}
+<section class="pirx-case__story">
+<div><p class="eyebrow">The brief</p><h2>Build something useful enough to earn the search.</h2></div>
+<div>
+<p>${esc(item.body[0])} ${esc(item.body[1])}</p>
+<p>The product gives runners a practical race-time predictor. The editorial layer answers the specific questions runners already type into search and AI assistants.</p>
+</div>
+</section>
+<section class="pirx-case__gallery" aria-labelledby="pirx-gallery-title">
+<div class="pirx-case__gallery-head"><p class="eyebrow">The system</p><h2 id="pirx-gallery-title">Product, evidence, and useful answers—one connected experience.</h2></div>
+${caseWindow(item.hero, "Product", "A race predictor that turns a recent result into a useful next target.", "top", true)}
+${caseWindow(home, "Experience", "The product, sample output, and guidance continue as one deliberate journey.", "middle")}
+${caseWindow(article, "Content engine", "Specific public guides give search engines and answer engines something real to cite.", "article")}
+</section>
+<section class="pirx-case__results">
+<div class="pirx-case__results-copy">
+<p class="eyebrow">The result</p>
+<h2>Demand compounded. The evidence stayed attached.</h2>
+<p>${esc(item.body[3])}</p>
+<p>${esc(item.body[4])}</p>
+<p class="fine">The AI-feature count is separate and is not added to the search total. Results vary by site; these are pirx.ca’s own dated numbers.</p>
+</div>
+${pirxChartHtml()}
+</section>
+<section class="pirx-case__method">
+<p class="eyebrow">What changed</p>
+<h2>A product people use. Pages machines can understand.</h2>
+<ol>
+<li><span>01</span><div><h3>Ship the useful tool</h3><p>The predictor gives the visitor an immediate result rather than a generic landing page.</p></div></li>
+<li><span>02</span><div><h3>Answer narrow, real questions</h3><p>Guides target concrete running questions with explicit data, age ranges, and distances.</p></div></li>
+<li><span>03</span><div><h3>Keep the proof legible</h3><p>Search Console and AI-feature reports stay separate, dated, and tied to this domain.</p></div></li>
+</ol>
+</section>
+<section class="pirx-case__next">
+<div><p class="eyebrow">Use the same operating model</p><h2>Turn expertise into a product—and a public record worth finding.</h2></div>
+<div>${relatedHtml}<p class="sales-actions"><a class="btn btn--primary" href="/start/">Start a project</a><a class="btn btn--tertiary" href="/services/ai-visibility/">Explore AI visibility <span class="btn__arrow" aria-hidden="true">→</span></a></p></div>
+</section>
+</main>`;
+}
+
 async function renderCase(item) {
   const path = `/portfolio/${item.slug}/`;
   const url = `${SITE}${path}`;
@@ -656,7 +798,7 @@ async function renderCase(item) {
       description: item.summary,
       image: item.image ? `${SITE}${item.image}` : undefined,
     }), [crumbList(crumbs), caseAbout(item, url)]),
-    body: `<main id="top" class="site-page">
+    body: item.slug === "pirx" ? pirxCaseBody(item, crumbs, relatedHtml) : `<main id="top" class="site-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Portfolio",

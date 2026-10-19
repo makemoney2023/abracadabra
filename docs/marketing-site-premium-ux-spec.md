@@ -935,6 +935,7 @@ Each PR also appends an entry to this document's change log (section 10) and, wh
 
 ## 10. Change log
 
+- **2026-10-19** — Fresh priority-page pass: rebuilt AI Visibility as the offer and PiRX as the evidence, with outcome-first metrics, compact editorial sections, bounded screenshot crops, mobile swipe rails, and a regression gate against full-page screenshot gutters.
 - **2026-10-19** — Implemented Phases 1–7 on `cursor/premium-ux-implement-55e8`. PiRX proof figures follow the live site data: 398K search impressions and 46.5K AI-feature impressions.
 - **2026-10-19** — Specification created from the 2026-10-19 audit (12 pages × 13 viewports, 353 captures; 9 defects, 15 recommendations). No implementation yet.
 - **2026-10-19** — R20 unblocked: the owner approved StrongFoam, Milrcorr, SuperPatch and PiRX for the proof band. The band now has four company-plus-outcome cards linked to their portfolio pages and a PiRX metric row, with quotes and names optional.

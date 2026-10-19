@@ -546,6 +546,50 @@ test('service page heroes use the same left column and stacked actions', async (
   await phone.context.close();
 });
 
+test('AI visibility and PiRX tell a compact proof-first story without full-page screenshot gutters', async () => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 1440, height: 1000 },
+  ]) {
+    const { context, page } = await openPage(viewport);
+
+    await page.goto(`${origin}/services/ai-visibility/index.html`, { waitUntil: 'networkidle' });
+    assert.equal(await page.locator('main.visibility-page').count(), 1);
+    assert.equal(await page.locator('.visibility-hero__metrics .metric').count(), 3);
+    assert.equal(await page.locator('.visibility-proof .shot-pair').count(), 0);
+    assert.equal(await page.locator('.visibility-proof .pirx-chart').count(), 1);
+    const visibilityHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    assert.ok(
+      visibilityHeight < (viewport.width < 500 ? 7600 : 6500),
+      `${viewport.width}px AI visibility page is ${visibilityHeight}px tall`,
+    );
+
+    await page.goto(`${origin}/portfolio/pirx/index.html`, { waitUntil: 'networkidle' });
+    assert.equal(await page.locator('main.pirx-case').count(), 1);
+    assert.equal(await page.locator('.pirx-case__metrics .metric').count(), 3);
+    assert.equal(await page.locator('.pirx-case__story').count(), 1);
+    assert.ok(await page.locator('.pirx-case__gallery .case-window').count() >= 3);
+    const frames = await page.locator('.pirx-case__gallery .case-window').evaluateAll((nodes) => nodes.map((node) => {
+      const rect = node.getBoundingClientRect();
+      return { height: rect.height, overflow: getComputedStyle(node).overflow };
+    }));
+    assert.ok(frames.every((frame) => frame.height <= 720), `${viewport.width}px PiRX frames are too tall`);
+    assert.ok(frames.every((frame) => frame.overflow === 'hidden'), `${viewport.width}px PiRX frames are not cropped`);
+    const caseHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    assert.ok(
+      caseHeight < (viewport.width < 500 ? 6200 : 5200),
+      `${viewport.width}px PiRX case study is ${caseHeight}px tall`,
+    );
+
+    const dimensions = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    assert.ok(dimensions.scrollWidth <= dimensions.clientWidth, `${viewport.width}px PiRX page overflows`);
+    await context.close();
+  }
+});
+
 test('the name reveal runs on an Android phone with touch scrolling and an address-bar resize', async () => {
   for (const name of ['Pixel 7', 'Galaxy S9+']) {
     const context = await browser.newContext({ ...devices[name] });

@@ -255,19 +255,12 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(pirx, /assets\/pirx\/pirx-home-hero-desktop\.jpg/);
   assert.match(pirx, /assets\/pirx\/pirx-home-hero-mobile\.jpg/);
   assert.match(pirx, /assets\/pirx\/pirx-home-full-desktop\.jpg/);
-  assert.match(pirx, /assets\/pirx\/pirx-home-full-mobile\.jpg/);
   assert.match(pirx, /assets\/pirx\/pirx-blog-post-full-desktop\.jpg/);
-  assert.match(pirx, /assets\/pirx\/pirx-blog-post-full-mobile\.jpg/);
+  assert.doesNotMatch(pirx, /assets\/pirx\/(?:pirx-home-full|pirx-blog-post-full)-mobile\.jpg/);
   assert.match(customApps, /assets\/pirx\/pirx-race-predictor-full-desktop\.jpg/);
   assert.match(customApps, /assets\/pirx\/pirx-race-predictor-full-mobile\.jpg/);
   assert.doesNotMatch(customApps, /pirx-accuracy-full|pirx-blog-full|pirx-home-full|pirx-blog-post/);
-  assert.match(visibility, /pirx-accuracy-full-desktop\.jpg/);
-  assert.match(visibility, /pirx-accuracy-full-mobile\.jpg/);
-  assert.match(visibility, /pirx-race-predictor-marathon-full-desktop\.jpg/);
-  assert.match(visibility, /pirx-race-predictor-marathon-full-mobile\.jpg/);
-  assert.match(visibility, /pirx-blog-full-desktop\.jpg/);
-  assert.match(visibility, /pirx-blog-full-mobile\.jpg/);
-  assert.doesNotMatch(visibility, /pirx-race-predictor-full-|pirx-home-full|pirx-blog-post/);
+  assert.doesNotMatch(visibility, /pirx-(?:accuracy|race-predictor-marathon|blog|race-predictor|home|blog-post)(?:-full)?-/);
   assert.doesNotMatch(research, /assets\/pirx\//);
   for (const file of [
     "pirx-home-hero-desktop.jpg",

@@ -17,6 +17,7 @@ If the page and the source-of-truth file disagree, fix the file first, then the 
 ## Premium pass — 2026-10-19
 
 - The marketing site uses one set of buttons, borders, radii, and section spacing. The phone menu is a sheet below 900px. Desktop layouts use the width above 1280px. A proof band names StrongFoam, Milrcorr, SuperPatch, and pirx.ca. The start form posts to the Worker at `POST /api/intake`.
+- AI Visibility and PiRX now work as one proof-first journey: the service page explains the offer in a compact editorial sequence, and the case study carries the dated result through a bounded product gallery. Full-page screenshots are cropped inside browser frames rather than setting the page height. On phones, system cards swipe horizontally and PiRX crops use the densest available source.
 - **What changed** — layout, navigation, type, proof, intake, icons, self-hosted fonts, and social cards.
 - **Why** — the site should feel like one product at every viewport, and a visitor should be able to start a project without opening a mail app.
 - **Code touchpoints** — `assets/site.css`, `assets/fonts/`, `assets/icons/`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `worker/intake.js`, `content/proof.json`, `index.html`, `films.html`.
