@@ -1,6 +1,6 @@
 # Abracadabra marketing site — premium UX specification and implementation plan
 
-**Status:** Specification. Nothing in this document is implemented yet. Each phase below is a separate PR.
+**Status:** Specification. Nothing in this document is implemented yet. Each phase below is a separate PR. Revised 2026-10-19 with a second premium pass (R16–R27, Phases 6–7).
 **Prepared:** 2026-10-19
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
@@ -10,11 +10,11 @@
 
 ## 1. Purpose and scope
 
-This document turns the 2026-10-19 UI/UX audit of the marketing site into a build-ready specification. It covers every defect found and every premium recommendation made, in enough detail that each item can be picked up as an isolated task with its own acceptance criteria and test.
+This document turns the 2026-10-19 UI/UX audit of the marketing site into a build-ready specification. It covers every defect found and every premium recommendation made (R1–R15 from the audit, R16–R27 from a second review of the site and of this plan), in enough detail that each item can be picked up as an isolated task with its own acceptance criteria and test.
 
 **In scope:** every page under `scrollcraft/builds/abracadabra-ai/` that ships to `abra-ca-dabra.app`: the homepage (`index.html`), `films.html`, `404.html`, the generated services / portfolio / products / course pages (`scripts/site-pages.mjs`), the shared chrome (`scripts/site-chrome.mjs`), the blog (`scripts/build-blog.mjs`, `scripts/blog.mjs`, `blog/blog.css`), and the stylesheets `assets/site.css`, `assets/restored-motion.css`.
 
-**Out of scope:** copy rewrites beyond what a layout change requires, new sections or pages, the dashboard / app surfaces, analytics, and anything under `scrollcraft/` that is not part of the `abracadabra-ai` build.
+**Out of scope:** copy rewrites beyond what a layout change requires, new sections or pages other than the `/start/` intake page (R19) and the proof band (R20), the dashboard / app surfaces, analytics, and anything under `scrollcraft/` that is not part of the `abracadabra-ai` build.
 
 ### 1.1 Audit method (what the findings are based on)
 
@@ -441,6 +441,175 @@ Spec and tests are in D5 and section 7.5. The alternative (stack vertically on p
 
 Fix `README.md:142` to describe the real behaviour after R6 lands: compact sheet below 900px, full bar from 900px, mega menu 3 columns to 1279px and 4 from 1280px. Done in the same PR as R6.
 
+## 5A. Second premium pass (R16–R27)
+
+A second review of the live site and of this plan, done the same day, looked at what R1–R15 leave untouched. R1–R15 fix layout, consistency and performance. The items below cover the details that make a studio site feel expensive: browser chrome, identity, transitions, proof, the contact moment, and finishing touches. Each one is independent of the first pass unless a dependency is stated.
+
+### R16 — Brand the browser chrome
+
+**Problem.** The blog sets `color-scheme: dark`, `scrollbar-color` and a branded `::selection` (`blog/blog.css:1079-1092`). The homepage, generated pages and `films.html` do not. Selecting text on the homepage shows the OS blue highlight, and form controls and scrollbars default to light-scheme styling on some platforms. `theme-color` is `#070706` in `index.html:11` but `#0B0A08` in `films.html:9` and `404.html:8`, so the mobile browser bar changes shade between pages.
+
+**Spec.**
+- Move the blog's rules into `assets/site.css` under `:root` / `html` so every page gets them: `color-scheme: dark`, `scrollbar-color: color-mix(in srgb, var(--ink) 24%, transparent) transparent`, `scrollbar-gutter: stable`, `accent-color: var(--accent)`, `caret-color: var(--accent)`.
+- `::selection { background: var(--accent); color: var(--ink-on-accent); }`, defined once in `site.css`. Remove the duplicate from `blog/blog.css`.
+- `<meta name="theme-color" content="#070706">` on every page. `films.html`, `404.html` and the emitter in `scripts/site-pages.mjs` change to match.
+
+**Acceptance.** On every audited page, `getComputedStyle(document.documentElement).colorScheme === 'dark'`, the `::selection` background resolves to `rgb(255, 75, 36)`, and the `theme-color` content is `#070706`.
+
+**Test.** `'every page shares brand browser chrome'` — loads each page and checks `colorScheme`, the `theme-color` meta, and (via `CSSStyleSheet` rules) that `::selection` is defined once.
+
+### R17 — Brand icon set and web manifest
+
+**Problem.** The favicon is a data-URI serif "A" filled `#E23B2F`. That font is not used anywhere on the site, and that red is not `--accent`. `films.html` ships a different SVG. There is no `apple-touch-icon` and no `manifest.webmanifest`, so a home-screen bookmark on iOS shows a screenshot thumbnail and Android shows a generic letter.
+
+**Spec.**
+- `assets/icons/favicon.svg`: the wordmark's mark (or a geometric "A" in Inter Tight 700) on `#070706` with a `#FF4B24` accent. Include a `prefers-color-scheme` `<style>` block inside the SVG so it stays legible on light browser tabs.
+- `assets/icons/favicon-32.png`, `apple-touch-icon.png` (180×180, no transparency), `icon-192.png`, `icon-512.png`, and `icon-maskable-512.png` (safe zone 80%).
+- `manifest.webmanifest` with `name`, `short_name: "Abracadabra"`, `background_color: "#070706"`, `theme_color: "#070706"`, `display: "browser"`, and the icons. No service worker; this is identity only.
+- One shared `<head>` snippet: `<link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">`, the PNG fallback, `apple-touch-icon`, and `manifest`. Emit it from `scripts/site-chrome.mjs` and paste it identically into `index.html`, `films.html` and `404.html`.
+
+**Acceptance.** Every page links the same four icon/manifest URLs, and each returns 200 from the build output. The manifest parses and lists 192 and 512 icons. No data-URI favicon remains.
+
+**Test.** `'every page links the shared icon set and manifest'` — parses each page's `<head>`, compares the link set, and checks that the files exist on disk.
+
+### R18 — Cross-document view transitions
+
+**Problem.** Moving between the homepage, a services page and a blog post is a hard white-free cut. That is acceptable, but it reads as "a set of pages", not "one product". Chrome and Safari 18.2+ support cross-document view transitions with no JavaScript.
+
+**Spec.**
+- In `assets/site.css` and `blog/blog.css`: `@view-transition { navigation: auto; }` inside `@media (prefers-reduced-motion: no-preference)`.
+- `view-transition-name: site-header` on the header and `site-wordmark` on the wordmark, so they stay still while the content cross-fades.
+- Default root animation: 180ms opacity cross-fade with an 8px upward settle on the new page, using the existing `--ease-out` token. No slide or zoom.
+- Card-to-detail morph (portfolio card image → portfolio page hero) is optional. Only add it if the names are unique per page; duplicate names abort the transition.
+- Browsers without support get today's behaviour; nothing is polyfilled.
+
+**Acceptance.** In Chrome, navigating home → `/services/…` triggers a `pagereveal` event with a non-null `viewTransition`. With `prefers-reduced-motion: reduce`, `viewTransition` is null. No console errors about duplicate `view-transition-name`.
+
+**Test.** `'same-origin navigation uses a view transition and respects reduced motion'` — listens for `pagereveal` across one navigation in each motion mode.
+
+### R19 — Structured project intake
+
+**Problem.** Every primary CTA ends at `mailto:houdini@abra-ca-dabra.app` (`index.html:801`). On a phone without a configured mail app the button does nothing visible. On desktop it opens a blank email, which asks the prospect to write a brief from scratch. A premium studio leads the client through the first step.
+
+**Spec.**
+- A `#start` section (and a `/start/` page emitted by `scripts/site-pages.mjs`) with a short form: name, email, company (optional), what you need (chips: Film, Website, Product, Course, Not sure), budget band (chips), timeline (chips), and a free-text "tell us more".
+- Submit sends a `POST` to a `/api/intake` route on the existing `abracadabra-marketing` Worker. The Worker validates the payload, rejects honeypot submissions, rate-limits by IP, and forwards to the studio inbox using the email provider already in use by the project. Secrets live in Worker secrets and are listed in `.env.example`.
+- Without JavaScript, the form posts normally and the Worker redirects to `/start/thanks/`. With JavaScript, the form swaps to an inline confirmation: "Got it. We reply within one working day." followed by a summary of what they sent.
+- A visible secondary link keeps the email address for people who prefer it.
+- Field labels are visible (no placeholder-only labels). Errors are inline and announced with `aria-live="polite"`.
+
+**Acceptance.** Valid submissions return 200 and render the confirmation. Missing email returns 400 with a field error. A filled honeypot returns 200 but sends nothing. The form works with JavaScript disabled.
+
+**Test.** `'intake form validates, submits and confirms'` — browser test against a mocked `/api/intake`. Worker unit tests cover the valid, invalid, honeypot and rate-limited cases with the email provider mocked.
+
+### R20 — Proof the studio can stand behind
+
+**Problem.** The only third-party names on the homepage are the tool and model marquee (`index.html:617-624`). Logos of the tools used can read like a client list, which a careful visitor sees through. There are no testimonials, outcomes or numbers anywhere.
+
+**Spec.**
+- Relabel the marquee as "Built with" so it is clearly about tools.
+- Add a proof band after the showcase. It has up to three outcome cards (a short quote, name, role, company, and one concrete result), plus an optional row of two to four metrics in `tabular-nums` (R23).
+- Content comes from a single data file (`content/proof.json`) so the band renders nothing if the file is empty. No placeholder quotes ship. This item is blocked on real, approved content from the owner.
+
+**Acceptance.** With an empty `proof.json`, the band is absent from the DOM. With entries, each card has a visible attribution, and the marquee heading reads "Built with".
+
+**Test.** `'proof band renders only real entries and the marquee is labelled as tools'`.
+
+### R21 — Responsive image formats for services cards
+
+**Problem.** The services cards load `.jpg` originals (`index.html:639-651`) even though 640/960/1280 AVIF and WebP variants already exist in `blog/media/services/*/`. Phones download desktop-sized JPEGs.
+
+**Spec.**
+- Wrap each card image in `<picture>` with AVIF then WebP `<source>`s, `srcset` at 640w/960w/1280w, and `sizes` matching the scroller card width from D5/R10 (for example `(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 85vw`). The JPEG stays as the `<img>` fallback, with explicit `width`/`height`.
+- Apply the same pattern anywhere else a pre-generated variant set exists. List those places in the PR.
+
+**Acceptance.** At 390px in Chrome, every services card requests an `.avif` no larger than the 960w variant. No layout shift from the cards (CLS contribution 0).
+
+**Test.** `'services cards serve modern formats sized to the viewport'` — records image requests at 390 and 1280.
+
+### R22 — Film grain and a consistent grade
+
+**Problem.** The canvas is flat `#070706`. Large dark areas with soft gradients show banding on 8-bit panels, and photography, renders and video posters come from different sources with different white points.
+
+**Spec.**
+- A fixed, `pointer-events: none` grain layer on `body::after`: a 128×128 tiled noise PNG (≤ 6 KB) or an inline SVG `feTurbulence`, at 3–4% opacity, with `mix-blend-mode: overlay`. It is static by default. A slow 8-step `steps()` shift is allowed only under `prefers-reduced-motion: no-preference`.
+- Hidden in `@media print` and `forced-colors: active`.
+- Imagery grading rule, documented in the README design section: neutral-to-warm white point, crushed blacks at the canvas value, no pure white highlights above `--ink`. Apply it to new assets. Re-grade existing assets only where they visibly clash; list them in the PR.
+
+**Acceptance.** The grain layer exists on every page, is non-interactive (`elementFromPoint` never returns it), and is absent with forced colours. Lighthouse performance score does not drop more than 1 point.
+
+**Test.** `'grain overlay is decorative and non-interactive'`.
+
+### R23 — Typographic finishing
+
+**Problem.** Numbers in prices, steps and dates use proportional figures, so columns of digits wobble. Straight quotes appear in copy. Eyebrows use letter-spaced uppercase without the font features that make it look set rather than typed.
+
+**Spec.**
+- `.num, time, [data-num], .price` get `font-variant-numeric: tabular-nums lining-nums`.
+- Body copy gets `hanging-punctuation: first last` (Safari only; harmless elsewhere) and `text-wrap: pretty`. Headings already use `balance`; verify.
+- Eyebrows: `font-feature-settings: "case" 1` on Inter Tight so punctuation aligns to caps. Tracking is a single token, `--track-eyebrow: 0.12em`.
+- A build-time check in `scripts/site-pages.mjs` and `scripts/build-blog.mjs` converts straight quotes and apostrophes in text nodes to curly ones (not in code, attributes or JSON-LD).
+- Use a real ellipsis (`…`) and en/em dashes where copy uses `...` or `--`.
+
+**Acceptance.** No straight `'` or `"` remains in rendered text nodes outside `<code>`/`<pre>`. Elements marked as numbers compute `tabular-nums`.
+
+**Test.** `'rendered copy uses typographic quotes and numbers are tabular'`.
+
+### R24 — Scroll-driven reveals without JavaScript
+
+**Problem.** Section reveals and the blog progress bar (R12) rely on script. CSS scroll-driven animations (`animation-timeline: view()` / `scroll()`) run off the main thread in Chrome and Safari 26, and are smoother.
+
+**Spec.**
+- A `.reveal` utility: `animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 40%;` with an 8–12px translate and opacity from 0 to 1. Wrap it in `@supports (animation-timeline: view())` and `@media (prefers-reduced-motion: no-preference)`. Outside those, content is simply visible.
+- The R12 reading-progress bar uses `animation-timeline: scroll(root)` where supported, and the small script remains only as the fallback.
+- Do not apply `.reveal` to the hero, the `#name` pin, or anything above the fold. Keep at most one reveal per section so the page does not "pop" constantly.
+- Existing script-driven motion in `restored-motion.css` is not migrated in this item.
+
+**Acceptance.** With motion reduced, every `.reveal` element has computed `opacity: 1` without scrolling. In Chrome with motion on, a `.reveal` element below the fold starts with opacity below 1.
+
+**Test.** `'reveals are CSS-driven and fully visible with reduced motion'`.
+
+### R25 — Social cards that look designed
+
+**Problem.** The home Open Graph image is `assets/schema-home.webp` at 1600×1000. Several platforms (LinkedIn, iMessage, Slack in some cases) do not render WebP previews, and 16:10 gets cropped. Generated pages fall back to the same image, so every shared link looks identical.
+
+**Spec.**
+- `assets/og/home.jpg` at 1200×630, under 300 KB, plus `og:image:width`, `og:image:height` and `og:image:alt`. Keep the WebP for JSON-LD.
+- A template-generated card per services, portfolio and product page: canvas background, grain, page title in Inter Tight, the wordmark, and the page's hero image cropped to the right third. Generate them at build time with the existing headless Chrome (render an HTML template and screenshot it). Commit the outputs so the deploy does not need Chrome.
+- `twitter:card` is `summary_large_image` everywhere.
+
+**Acceptance.** Every page has an `og:image` that resolves to a 1200×630 JPEG in the build output, with width, height and alt meta present. Generated pages have distinct images.
+
+**Test.** `'every page has a 1200x630 jpeg social card'` — reads image dimensions from the file headers.
+
+### R26 — The footer as a closing moment
+
+**Problem.** The footer is a link list. It is the last thing a convinced visitor sees, and it does not ask them to do anything, say where the studio is, or show it is a real business.
+
+**Spec.**
+- A closing band above the footer links: one line of display type ("Have something to make?"), the primary CTA to `#start` (R19), and the email as a secondary link.
+- Footer meta row: studio location and local time (rendered server-side as the timezone name, with an optional client-side clock updated once a minute), social links with accessible names, and a legal line (© year, company name, privacy).
+- On the homepage the band replaces the existing final CTA rather than stacking a second one.
+- Compact variant for blog and inner pages per R9: same meta row, smaller band.
+
+**Acceptance.** Every page ends with exactly one primary CTA pointing to `#start` or `/start/`. Social links have accessible names. The copyright year matches the build year.
+
+**Test.** `'footer closes with one primary call to action and studio details'`.
+
+### R27 — One verb per page
+
+**Problem.** CTAs use several verbs ("Start a project", "Get in touch", "Book a call", "Email us") and several targets (mailto, `#contact`, anchors). Mixed verbs make the site feel assembled from parts.
+
+**Spec.**
+- Primary action everywhere: **"Start a project"** → `#start` on the homepage, `/start/` elsewhere. It always uses the `.btn--primary` tier from R2.
+- Secondary actions use the tertiary/ghost tier and specific verbs tied to the page ("See the work", "Read the case study", "Watch the film").
+- At most one primary button per viewport-height section. Header CTA counts as one.
+- Write the copy rules into the README design section so new pages follow them.
+
+**Acceptance.** Across all audited pages, every `.btn--primary` has the text "Start a project" and an `href` ending in `#start` or `/start/`. No `mailto:` link uses the primary tier.
+
+**Test.** `'primary calls to action share one verb and one destination'`.
+
 ---
 
 ## 6. Design system changes (`assets/site.css`)
@@ -651,15 +820,53 @@ Each phase is one PR off `main`, authored and committed as `makemoney2023`, merg
 
 **Gate.** Lighthouse (or Playwright `performance.getEntriesByType('largest-contentful-paint')`) shows LCP element is the hero image with `fetchpriority="high"`; no third-party font requests; full `npm test` green.
 
+### Phase 6 — Browser chrome, icons, images, typography, social cards
+
+No dependency on Phases 1–5 except R21's `sizes` values, which follow the D5/R10 card widths. If Phase 6 ships before Phase 4, use the current card widths and update `sizes` in the Phase 4 PR.
+
+| Item | Files | Tests |
+|---|---|---|
+| R16 browser chrome | `assets/site.css`, `blog/blog.css` (rules moved out), `index.html`, `films.html`, `404.html`, `scripts/site-chrome.mjs` (`theme-color`) | `every page shares brand browser chrome` |
+| R17 icon set + manifest | `assets/icons/` (SVG, 32px PNG, 180px apple-touch, 192/512 maskable), `manifest.webmanifest`, head emitters in `scripts/site-chrome.mjs`, `index.html`, `films.html` | `every page links the shared icon set and manifest` |
+| R21 `<picture>` for services cards | `index.html` services cards, `scripts/site-pages.mjs` card emitter | `services cards serve modern formats sized to the viewport` |
+| R23 typographic finishing | `assets/site.css` (`--track-eyebrow`, numerals, `text-wrap`), a `smartQuotes()` build helper in `scripts/site-pages.mjs` and `scripts/build-blog.mjs` | `rendered copy uses typographic quotes and numbers are tabular` |
+| R25 social cards | `scripts/build-og.mjs` (headless Chrome, run manually, outputs committed), `assets/og/*.jpg`, `og:image` emitters | `every page has a 1200x630 jpeg social card` |
+
+**Gate.** Full `npm test` green; the address bar on Android Chrome and iOS Safari shows `#070706` on home, an inner page, and a blog post (screenshots in the PR); Chrome's Lighthouse "Installable"/manifest panel shows no errors; the social cards preview correctly in a card validator (opengraph.xyz or similar), with a screenshot in the PR; no rendered `"` or `'` remains in the body copy of the audited pages.
+
+### Phase 7 — Motion, texture, closing, conversion
+
+| Item | Files | Tests |
+|---|---|---|
+| R22 grain + grading rule | `assets/site.css` (`body::after`), `assets/grain.png` (≤ 8 KB tile); grading rule in README | `grain overlay is decorative and non-interactive` |
+| R24 CSS scroll-driven reveals | `assets/site.css` (`.reveal`, `@supports (animation-timeline: view())`), R12 progress bar moved to `scroll(root)` | `reveals are CSS-driven and fully visible with reduced motion` |
+| R18 view transitions | `assets/site.css` (`@view-transition`, `view-transition-name` on header and wordmark) | `same-origin navigation uses a view transition and respects reduced motion` |
+| R19 structured intake | `#start` markup in `index.html`, generated `/start/` and `/start/thanks/` in `scripts/site-pages.mjs`, `assets/intake.js`, Worker route `POST /api/intake`, `.env.example` | `intake form validates, submits and confirms`; Worker unit tests for validation, honeypot, rate limit, and the provider-error path |
+| R26 footer closing band | `scripts/site-chrome.mjs` (`siteFooter`), `index.html`, `films.html`, `assets/site.css` | `footer closes with one primary call to action and studio details` |
+| R27 one primary verb | every CTA emitter: `index.html`, `scripts/site-pages.mjs`, `scripts/site-chrome.mjs`, `films.html`, `404.html` | `primary calls to action share one verb and one destination` |
+| R20 proof band (blocked) | `content/proof.json`, renderer in `scripts/site-pages.mjs` and `index.html`; marquee label | `proof band renders only real entries and the marquee is labelled as tools` |
+
+R20 merges only when the owner supplies at least three real entries (quote, name, role, link or logo with permission). Until then, the PR lands the relabelled marquee and the empty-safe renderer, which renders nothing for an empty `content/proof.json`.
+
+**Gate.** Full `npm test` green; with `prefers-reduced-motion: reduce`, no view transition, reveal animation, or grain drift runs (Playwright run with the emulated media attached); a real intake submission on the preview deployment reaches the owner's inbox, and a submission with the honeypot filled is rejected; the form works with JavaScript disabled (redirect to `/start/thanks/`); INP on the homepage stays under 200 ms and CLS under 0.05 (Playwright `PerformanceObserver`), proving the grain and reveals do not cost interaction or layout stability.
+
 ### 8.1 Dependency order
 
 ```
-Phase 1 ──► Phase 2 ──► Phase 3 ──► Phase 4 ──► Phase 5
-  D1 D2 D3     R2 D8       R7 R3        R6 D5       R9 R12
-  D7 D6 D4*    D9 R11      R8 R4        R1 R15      R13 R14
+Phase 1 ──► Phase 2 ──► Phase 3 ──► Phase 4 ──► Phase 5 ──► Phase 7
+  D1 D2 D3     R2 D8       R7 R3        R6 D5       R9 R12      R22 R24
+  D7 D6 D4*    D9 R11      R8 R4        R1 R15      R13 R14     R18 R19
+                                                                R26 R27
+                                                                R20†
+Phase 6 (independent; can ship any time)
+  R16 R17 R21 R23 R25
 ```
 
 `D4*` is the interim fix; the real sheet lands with R6. R3 depends on R7 (tokens) and R2 (card actions use `.btn--tertiary`). R1 depends on R8 so band padding and width change together. R9 depends on R3 (header media uses the card media slot).
+
+Phase 6 touches only the document head, image markup, and type rules, so it can ship in parallel with Phases 1–5. R21's `sizes` follows the D5/R10 card widths (see the note under Phase 6). R25's cards reuse the R22 grain once it exists; until then the card template has no grain.
+
+Within Phase 7, R19 comes first because R26 and R27 point at its `#start` target. R26 and R27 also need R2's button tiers (Phase 2). R24 needs R12 (Phase 5) so the blog progress bar can move to `scroll(root)`. R18 needs R6 (Phase 4) so the header it names is the final one. `R20†` is blocked on owner content, not code.
 
 ### 8.2 Deployment
 
@@ -677,6 +884,11 @@ Phase 1 ──► Phase 2 ──► Phase 3 ──► Phase 4 ──► Phase 5
 | Generating `404.html` changes how Cloudflare resolves the not-found response | `tests/cloudflare-deploy.test.mjs` asserts the file exists in the build output and `_redirects` still maps 404; verify on the preview deployment before merging. |
 | Self-hosted fonts increase repo size (~200 KB) | Only the six weights actually used are committed; subset to Latin. |
 | Scroller script adds JS to a mostly static page | ~40 lines, `defer`, no dependencies, progressively enhances (the scroller works without it). |
+| Intake endpoint attracts spam or leaks a provider key | Honeypot field, per-IP rate limit in the Worker, server-side validation; the email provider key lives only in Worker secrets (`wrangler secret put`) and is listed by name in `.env.example`, never in source. |
+| Two elements share a `view-transition-name` on one page, which aborts the transition | Names are set only on the single header and footer wordmark; the R18 test asserts each name occurs once per page. |
+| Full-viewport grain overlay costs paint time on low-end phones | Static tiled PNG (no animated noise), `pointer-events: none`, removed under `prefers-reduced-transparency`/reduced motion where it drifts; the Phase 7 INP/CLS gate measures it. |
+| OG card generation needs Chrome, which CI may lack | `scripts/build-og.mjs` runs manually and its JPG outputs are committed; the test checks the committed files, not the generator. |
+| R20 has no real proof content | The renderer is empty-safe and ships with the marquee relabel; the proof band itself waits for the owner (see Phase 7). |
 
 ### 8.4 Documentation updates (same PR as the code)
 
@@ -687,6 +899,8 @@ Phase 1 ──► Phase 2 ──► Phase 3 ──► Phase 4 ──► Phase 5
 | 3 | `README.md`: token list; this document's **Status** line updated. |
 | 4 | `README.md:142` breakpoint note (R15); nav structure described. |
 | 5 | `README.md`: fonts are self-hosted, how to add a weight; blog TOC behaviour. |
+| 6 | `README.md`: icon set and manifest locations; how to regenerate social cards (`node scripts/build-og.mjs`); the curly-quote build step. |
+| 7 | `README.md` design section: the one-verb CTA rule (R27), the imagery grading rule (R22), and the reveal utility; intake endpoint, its env vars, and the `wrangler secret put` step in the deploy section; `.env.example` updated. |
 
 Each PR also appends an entry to this document's change log (section 10) and, when the deliverable changes site behaviour, to `docs/source-of-truth.md`.
 
@@ -701,6 +915,8 @@ Each PR also appends an entry to this document's change log (section 10) and, wh
 - [ ] `git diff --check` clean.
 - [ ] Cache-bust bumped if CSS changed.
 - [ ] README / this doc updated per 8.4.
+- [ ] If head tags changed: `theme-color`, icons, manifest, and the 1200×630 JPG `og:image` are present on every page touched.
+- [ ] If a Worker secret or env var was added: `.env.example` and the README deploy section list it by name.
 - [ ] Commit authored and committed as `makemoney2023`; branch `cursor/<name>-55e8`; PR opened as draft.
 
 ---
@@ -708,3 +924,4 @@ Each PR also appends an entry to this document's change log (section 10) and, wh
 ## 10. Change log
 
 - **2026-10-19** — Specification created from the 2026-10-19 audit (12 pages × 13 viewports, 353 captures; 9 defects, 15 recommendations). No implementation yet.
+- **2026-10-19** — Second premium pass: added R16–R27 (section 5A) and Phases 6–7, with the dependency, risk, documentation, and checklist updates. R20 is blocked on owner-supplied proof content. No implementation yet.
