@@ -18,7 +18,7 @@ import {
   placeholders,
   products,
 } from "./site-data.mjs";
-import { pirxChartHtml, pirxChartSingleHtml, writePirxChartImages } from "./pirx-chart.mjs";
+import { pirxChartHtml, pirxChartSingleHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 
@@ -268,6 +268,7 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Inter+Tight:wght@500;600;700&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/blog/blog.css">
+<link rel="stylesheet" href="/assets/pirx-shot.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070706'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23FF4B24'%3EA%3C/text%3E%3C/svg%3E">
 <script type="application/ld+json">
 ${jsonLd(json)}
@@ -953,18 +954,26 @@ function llmsPages() {
 
 
 function homeAiSearchTileHtml() {
+  const chart = pirxChartPicture("performance", { sizes: "(min-width: 860px) 28vw, 100vw" });
   return `<section id="ai-search-tile" class="ai-search-tile" aria-labelledby="ai-search-tile-title">
   <div class="wrap">
     <a class="ai-search-tile__card" href="/services/ai-visibility/">
-      <p class="kicker">Search &amp; AI visibility</p>
-      <h2 id="ai-search-tile-title">Invisible in AI search? Not anymore.</h2>
-      <p>When a buyer asks an assistant what to use, you should be the answer. PiRX went from near-zero to 398K search impressions in 90 days.</p>
-      <p class="ai-search-tile__cta">Get found in AI search.</p>
+      <div class="ai-search-tile__copy">
+        <span class="pirx-shot__pill">Google Search Console · 3 months</span>
+        <p class="kicker">Search &amp; AI visibility</p>
+        <h2 id="ai-search-tile-title">Invisible in AI search? Not anymore.</h2>
+        <p class="ai-search-tile__figure">398K</p>
+        <p class="ai-search-tile__figure-label">Search impressions</p>
+        <p>When a buyer asks an assistant what to use, you should be the answer. PiRX went from near-zero to 398K search impressions in 90 days.</p>
+        <p class="ai-search-tile__cta">Get found in AI search.</p>
+      </div>
+      <div class="ai-search-tile__visual" aria-hidden="true">
+        <div class="pirx-shot__screen">${chart}</div>
+      </div>
     </a>
   </div>
 </section>`;
 }
-
 function homeProofHtml() {
   return `<section id="proof" aria-labelledby="proof-title">
   <div class="wrap">

@@ -882,30 +882,7 @@ body { text-wrap: pretty; }
   margin: 0.8rem 0;
 }
 
-.pirx-chart {
-  margin: 1rem 0 1.2rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  padding: 0.75rem 0.75rem 0.2rem;
-}
-
-.pirx-chart__pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-
-.pirx-chart svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.pirx-chart__source {
-  color: var(--ink-soft);
-  font-size: 0.85rem;
-  margin: 0.35rem 0 0.6rem;
-}
+/* PiRX proof shots: styles live in /assets/pirx-shot.css (linked from site-pages). */
 
 .shot-pair {
   display: grid;
@@ -1407,7 +1384,7 @@ main.site-page > section > h2,
 .ui-connector::before { left: 0; } .ui-connector::after { right: 0; }
 
 /* Cards */
-.fn-card, .cards > li, .proof-card, .pirx-chart {
+.fn-card, .cards > li, .proof-card {
   background: var(--ui-surface-1);
   border: var(--ui-border);
   border-radius: var(--ui-r-card);

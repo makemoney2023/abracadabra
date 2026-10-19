@@ -1,4 +1,4 @@
-/** Premium PiRX Search Console proof shots (blurred chart crops inside dark product frames). */
+/** Premium PiRX Search Console proof shots (dark-treated plot crops in product frames). */
 
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -8,7 +8,6 @@ import sharp from "sharp";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const WIDTHS = [640, 960, 1280, 1600];
 const SOURCE = "Google Search Console, Jul 18 to Oct 17, 2026. AI-feature impressions are a separate report and are not added to the search total.";
-const ASPECT = { w: 1600, h: 636 };
 const PILL = "Google Search Console · 3 months";
 
 const CHARTS = [
@@ -16,7 +15,9 @@ const CHARTS = [
     id: "performance",
     source: "gsc-performance-source.webp",
     stem: "gsc-performance",
-    alt: "Google Search Console performance chart for pirx.ca: 1.94K clicks and 398K search impressions from Jul 18 to Oct 17, 2026. Account details and query tables are blurred.",
+    w: 1600,
+    h: 263,
+    alt: "Google Search Console performance chart for pirx.ca: 1.94K clicks and 398K search impressions from Jul 18 to Oct 17, 2026. Plot crop only; account chrome removed.",
     label: "Search impressions",
     figure: "398K",
     sub: "1.94K clicks · avg position 7.6",
@@ -25,7 +26,9 @@ const CHARTS = [
     id: "ai-features",
     source: "gsc-ai-features-source.webp",
     stem: "gsc-ai-features",
-    alt: "Google Search Console Generative AI features chart for pirx.ca: 46.5K AI-feature impressions from Jul 18 to Oct 17, 2026. Account details and page tables are blurred.",
+    w: 1600,
+    h: 301,
+    alt: "Google Search Console Generative AI features chart for pirx.ca: 46.5K AI-feature impressions from Jul 18 to Oct 17, 2026. Plot crop only; account chrome removed.",
     label: "AI-feature impressions",
     figure: "46.5K",
     sub: "Separate report · not added to search",
@@ -42,12 +45,15 @@ function esc(value) {
   })[char]);
 }
 
-function picture(chart, { sizes = "(min-width: 860px) 46vw, 100vw" } = {}) {
+export function pirxChartPicture(chartOrId = "performance", { sizes = "(min-width: 860px) 46vw, 100vw" } = {}) {
+  const chart = typeof chartOrId === "string"
+    ? (CHARTS.find((item) => item.id === chartOrId) || CHARTS[0])
+    : chartOrId;
   const base = `/assets/pirx/${chart.stem}`;
   const srcset = WIDTHS.map((width) => `${base}-${width}.webp ${width}w`).join(", ");
   return `<picture>
 <source type="image/webp" srcset="${srcset}" sizes="${esc(sizes)}">
-<img src="${base}-1600.webp" alt="${esc(chart.alt)}" width="${ASPECT.w}" height="${ASPECT.h}" loading="lazy" decoding="async">
+<img src="${base}-1600.webp" alt="${esc(chart.alt)}" width="${chart.w}" height="${chart.h}" loading="lazy" decoding="async">
 </picture>`;
 }
 
@@ -60,8 +66,8 @@ function shot(chart, { sizes, compact = false } = {}) {
 <p class="pirx-shot__figure">${esc(chart.figure)}</p>
 <p class="pirx-shot__sub">${esc(chart.sub)}</p>
 </header>
-<div class="pirx-shot__stage" aria-hidden="false">
-<div class="pirx-shot__screen">${picture(chart, { sizes })}</div>
+<div class="pirx-shot__stage">
+<div class="pirx-shot__screen">${pirxChartPicture(chart, { sizes })}</div>
 </div>
 </article>`;
 }
@@ -92,11 +98,11 @@ export async function writePirxChartImages() {
     const input = sharp(join(dest, chart.source));
     const meta = await input.metadata();
     for (const width of WIDTHS) {
-      const height = Math.round(width * ((meta.height || ASPECT.h) / (meta.width || ASPECT.w)));
+      const height = Math.round(width * ((meta.height || chart.h) / (meta.width || chart.w)));
       await input
         .clone()
         .resize(width, height, { fit: "inside" })
-        .webp({ quality: 82, effort: 4 })
+        .webp({ quality: 84, effort: 4 })
         .toFile(join(dest, `${chart.stem}-${width}.webp`));
     }
   }
