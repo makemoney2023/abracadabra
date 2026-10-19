@@ -150,11 +150,16 @@ const ASSET_SIZE = {
   "/assets/schema-home.webp": [1600, 1000],
   "/assets/llmcourse-home.webp": [1600, 1000],
   "/assets/superfunnel-getting-started.webp": [1920, 1080],
+  "/assets/strongfoam-erp-demo.webp": [1920, 1080],
   "/assets/course-hero-bg.webp": [1280, 720],
 };
 
 function loopFilm(loop) {
   return `<video class="loop-film" muted playsinline loop preload="none" poster="${esc(loop.base)}.jpg" width="1280" height="720" aria-label="${esc(loop.label)}"><source src="${esc(loop.base)}.webm" type="video/webm"><source src="${esc(loop.base)}.mp4" type="video/mp4"></video>`;
+}
+
+function filmPlayer(film) {
+  return `<video class="case-film" controls playsinline preload="none" poster="${esc(film.poster)}" src="${esc(film.src)}" width="1920" height="1080" aria-label="${esc(film.label)}"></video>`;
 }
 
 function assetMedia(src, alt, { lazy = false } = {}) {
@@ -279,7 +284,7 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
 ${headLinks()}
-<link rel="stylesheet" href="/blog/blog.css?v=20261019d">
+<link rel="stylesheet" href="/blog/blog.css?v=20261019e">
 <link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019c">
 <script type="application/ld+json">
 ${jsonLd(json)}
@@ -807,7 +812,7 @@ ${sectionHeading("The work", "A working system, not a concept.")}
 </section>
 ${visual ? `<section class="case-study__gallery" aria-label="${esc(item.name)} product view">
 ${sectionHeading("Inside the system", "The real interface, in motion.")}
-<figure class="experience-panel"><div class="experience-panel__bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${esc(item.name)}</strong></div><div class="experience-panel__viewport">${visual}</div></figure>
+<figure class="experience-panel"><div class="experience-panel__bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${esc(item.name)}</strong></div><div class="experience-panel__viewport">${item.film ? filmPlayer(item.film) : visual}</div></figure>
 </section>` : ""}
 <section class="case-study__next">
 <div>${sectionHeading("Make the next one yours", "Build around the work you already do.")}</div>

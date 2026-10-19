@@ -1733,6 +1733,7 @@ input, textarea, select { border-radius: var(--ui-r-control); }
   object-position: top center;
   border: 0;
 }
+.experience-panel__viewport video.case-film { object-fit: contain; object-position: center; }
 .case-study__gallery > .section-heading { margin-bottom: 1.5rem; }
 .case-study__next {
   display: grid;
@@ -1835,5 +1836,6 @@ input, textarea, select { border-radius: var(--ui-r-control); }
   .service-page__process .process li { scroll-snap-align: start; }
   .service-page .outcome-grid li { min-height: 0; }
   .experience-panel__viewport { aspect-ratio: 1 / 1; }
+  .experience-panel__viewport:has(> .case-film) { aspect-ratio: 16 / 9; }
   .premium-cta { margin-inline: -1rem; }
 }
