@@ -1,7 +1,7 @@
 /**
  * Colour and type roles from the Abracadabra marketing site
- * (`scrollcraft/builds/abracadabra-ai/index.html`).
- * The check shell and the results PDF both read this object.
+ * (`scrollcraft/builds/abracadabra-ai/assets/site.css` + `restored-motion.css`).
+ * The check shell, Schema scanner studio surfaces, and the assessment PDF read this object.
  */
 export const STUDIO = {
   canvas: "#070706",
@@ -13,6 +13,7 @@ export const STUDIO = {
   optic: "#8DEBF2",
   phosphor: "#C6FFB3",
   accentInk: "#F3EEE4",
-  display: '"Tektur", "IBM Plex Sans", system-ui, sans-serif',
+  display: '"Inter Tight", "IBM Plex Sans", system-ui, sans-serif',
   body: '"IBM Plex Sans", system-ui, sans-serif',
+  label: '"Inter Tight", "IBM Plex Sans", system-ui, sans-serif',
 } as const;

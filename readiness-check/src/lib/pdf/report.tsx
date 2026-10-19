@@ -1,6 +1,9 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { buildScoreSummary } from "@/lib/scoring/score-summary";
 import type { ScoreBreakdown } from "@/lib/types";
+import { registerStudioPdfFonts } from "@/lib/pdf/fonts";
+
+registerStudioPdfFonts();
 
 export type ReportPage = {
   url: string;
@@ -83,13 +86,13 @@ const styles = StyleSheet.create({
   page: {
     padding: 36,
     fontSize: 10,
-    fontFamily: "Helvetica",
+    fontFamily: "IBM Plex Sans",
     color: "#111827",
   },
-  h1: { fontSize: 16, marginBottom: 6, fontFamily: "Helvetica-Bold" },
-  h2: { fontSize: 12, marginTop: 14, marginBottom: 6, fontFamily: "Helvetica-Bold" },
+  h1: { fontSize: 16, marginBottom: 6, fontFamily: "Inter Tight", fontWeight: 700 },
+  h2: { fontSize: 12, marginTop: 14, marginBottom: 6, fontFamily: "Inter Tight", fontWeight: 700 },
   muted: { color: "#4b5563", marginBottom: 10 },
-  score: { fontSize: 28, fontFamily: "Helvetica-Bold", marginBottom: 8 },
+  score: { fontSize: 28, fontFamily: "Inter Tight", fontWeight: 700, marginBottom: 8 },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",

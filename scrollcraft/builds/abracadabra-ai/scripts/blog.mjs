@@ -162,9 +162,9 @@ function ogSvg(title, eyebrow) {
   <rect width="1200" height="630" fill="#070706"/>
   <rect width="1200" height="630" fill="url(#scrim)"/>
   <rect x="72" y="72" width="96" height="8" fill="#FF4B24"/>
-  <text x="72" y="124" fill="#8DEBF2" font-family="DejaVu Sans, sans-serif" font-size="22">${escXml(eyebrow)}</text>
-  <text x="72" y="210" fill="#F5F0E8" font-family="DejaVu Sans, sans-serif" font-size="48" font-weight="700">${tspans}</text>
-  <text x="72" y="566" fill="#AAA49A" font-family="DejaVu Sans, sans-serif" font-size="22">abra-ca-dabra.app</text>
+  <text x="72" y="124" fill="#8DEBF2" font-family="IBM Plex Sans, DejaVu Sans, sans-serif" font-size="22" font-weight="500">${escXml(eyebrow)}</text>
+  <text x="72" y="210" fill="#F5F0E8" font-family="Inter Tight, DejaVu Sans, sans-serif" font-size="48" font-weight="700">${tspans}</text>
+  <text x="72" y="566" fill="#AAA49A" font-family="IBM Plex Sans, DejaVu Sans, sans-serif" font-size="22">abra-ca-dabra.app</text>
 </svg>`;
 }
 

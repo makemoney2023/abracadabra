@@ -1,25 +1,30 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ResultsPayload } from "@/lib/assessment/present";
 import { STUDIO } from "@/lib/brand/studio";
+import { registerStudioPdfFonts } from "@/lib/pdf/fonts";
+
+registerStudioPdfFonts();
 
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 11,
-    fontFamily: "Helvetica",
+    fontFamily: "IBM Plex Sans",
     color: STUDIO.ink,
     backgroundColor: STUDIO.canvas,
   },
   kicker: {
     fontSize: 9,
+    fontFamily: "Inter Tight",
+    fontWeight: 500,
     color: STUDIO.accent,
     letterSpacing: 1.6,
     marginBottom: 10,
     textTransform: "uppercase",
   },
-  title: { fontSize: 22, marginBottom: 6, color: STUDIO.ink, fontFamily: "Helvetica-Bold" },
+  title: { fontSize: 22, marginBottom: 6, color: STUDIO.ink, fontFamily: "Inter Tight", fontWeight: 700 },
   muted: { color: STUDIO.inkSoft, marginBottom: 12 },
-  section: { marginTop: 14, marginBottom: 4, fontSize: 14, color: STUDIO.accent, fontFamily: "Helvetica-Bold" },
+  section: { marginTop: 14, marginBottom: 4, fontSize: 14, color: STUDIO.accent, fontFamily: "Inter Tight", fontWeight: 700 },
   row: { marginBottom: 4, color: STUDIO.ink },
   rule: { marginTop: 8, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: STUDIO.signal },
 });
