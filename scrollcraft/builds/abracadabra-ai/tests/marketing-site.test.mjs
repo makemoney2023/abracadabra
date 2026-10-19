@@ -225,7 +225,7 @@ test('required responsive widths do not create horizontal page overflow', async 
 test('restored motion sits under the hero and keeps the original sweep and calendars', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000 });
   const order = await page.evaluate(() => {
-    const ids = ['hero', 'time', 'models'];
+    const ids = ['hero', 'name', 'time', 'models'];
     return ids.map((id) => document.getElementById(id).getBoundingClientRect().top);
   });
   for (let i = 1; i < order.length; i += 1) {
@@ -239,8 +239,37 @@ test('restored motion sits under the hero and keeps the original sweep and calen
   await context.close();
 });
 
-test('reduced motion keeps a static calendar', async () => {
+test('the name sits under the hero, left-aligned, and reads along with scroll', async () => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    const { context, page } = await openPage(viewport);
+    const next = await page.evaluate(() => {
+      let el = document.getElementById('hero').nextElementSibling;
+      while (el && (el.tagName !== 'SECTION' || el.hidden)) el = el.nextElementSibling;
+      return el.id;
+    });
+    assert.equal(next, 'name');
+    assert.equal(await page.locator('#name .origin').evaluate((el) => getComputedStyle(el).textAlign), 'left');
+    assert.equal((await page.locator('#name-title').textContent()).trim(), 'I will create as I speak.');
+    assert.match(await page.locator('#name .sc-body').textContent(), /^Abracadabra, traced back far enough, is Aramaic, roughly avra kadavra\. Not a spell\. You describe the work, and it becomes real software\.$/);
+    assert.equal(await page.locator('#name-title').evaluate((el) => document.querySelectorAll('#name-title').length), 1);
+    const first = page.locator('#name-title .nw').first();
+    const before = Number(await first.evaluate((el) => getComputedStyle(el).opacity));
+    const top = await page.locator('#name').evaluate((el) => el.getBoundingClientRect().top + scrollY);
+    const height = await page.locator('#name').evaluate((el) => el.offsetHeight);
+    await page.evaluate((y) => scrollTo(0, y), top + height - viewport.height);
+    await page.waitForTimeout(200);
+    const lastWord = page.locator('#name .sc-body .nw').last();
+    assert.ok(before < 0.6, `first word starts ghosted (${before})`);
+    assert.equal(await lastWord.evaluate((el) => getComputedStyle(el).opacity), '1');
+    assert.deepEqual(page.errors, []);
+    await context.close();
+  }
+});
+
+test('reduced motion keeps a static calendar and the name fully shown', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000, reducedMotion: 'reduce' });
+  assert.equal(await page.locator('#name .nw').count(), 0);
+  assert.equal(await page.locator('#name-title').evaluate((el) => getComputedStyle(el).opacity), '1');
   assert.equal(await page.locator('#time .time-engine').getAttribute('data-active-state'), 'arrive');
   await context.close();
 });

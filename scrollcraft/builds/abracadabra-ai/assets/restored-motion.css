@@ -866,14 +866,37 @@
   transition-delay: 0s;
 }
 
-#name .origin { max-width: 46rem; margin-inline: auto; text-align: center; }
+/* The name: left-aligned, pinned read-along. Words scrub from ghost to ink with
+   scroll progress (scroll-craft "kinetic" words + a pinned act publishing --sc-p).
+   Without JS or under reduced motion every word sits at full ink (--w defaults to 1). */
+#name .origin { max-width: 52rem; margin-inline: 0; text-align: left; }
 #name .origin h2 {
-  margin: var(--sc-3) auto var(--sc-5);
-  max-width: 16ch;
+  margin: var(--sc-3) 0 var(--sc-5);
+  max-width: 14ch;
+  font-family: "Inter Tight", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+  font-size: clamp(2.6rem, 6.4vw, 6rem);
   text-wrap: balance;
-  font-size: var(--sc-t-2xl);
 }
+#name .origin .sc-body { max-width: 34rem; font-size: clamp(1.1rem, 1.6vw, 1.35rem); }
 #name .origin em { font-style: italic; color: var(--sc-accent); }
+#name .nw {
+  display: inline-block;
+  opacity: calc(0.14 + 0.86 * var(--w, 1));
+  filter: blur(calc((1 - var(--w, 1)) * 6px));
+  transform: translate3d(0, calc((1 - var(--w, 1)) * 0.32em), 0);
+  will-change: opacity, filter, transform;
+}
+#name em .nw { text-shadow: 0 0 calc(var(--glow, 0) * 22px) rgba(255, 75, 36, 0.55); }
+html.name-live #name.name-pin { height: 230vh; padding-block: 0; }
+html.name-live #name .name-stage { position: sticky; top: 0; height: 100vh; display: flex; align-items: flex-start; padding-top: clamp(5rem, 20vh, 12rem); }
+#name .sc-wrap { width: 100%; max-width: none; margin: 0; padding-inline: 1.5rem; }
+@media (max-width: 768px) {
+  html.name-live #name.name-pin { height: 200vh; }
+  #name .origin h2 { font-size: clamp(2.4rem, 11vw, 3.6rem); }
+}
 
 @media (max-width: 1100px) {
   .restored-pin { min-height: 0; height: auto; }
