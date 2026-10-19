@@ -48,6 +48,8 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.equal(index.includes("The next room is the receipt"), false);
   const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="showcase"'));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
+  assert.equal(index.includes('id="ai-search-tile"'), false);
+  assert.equal((index.match(/id="proof"/g) || []).length, 1);
   assert.match(index, /href="\/services\/">Services/);
   assert.equal(index.includes(">Offerings<"), false);
   assert.equal(modelsBlock.includes("marquee__word"), false);
@@ -150,7 +152,7 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(offering, /Priced to the project/);
   assert.match(offering, /href="\/services\/safe-code-execution\/"/);
   assert.match(offering, /class="page-hero page-header page-hero--photo"/);
-  assert.match(offering, /class="sales-split"/);
+  assert.match(offering, /class="[^"]*\bsales-split\b[^"]*"/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-640\.avif 640w/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/hero-1280\.webp 1280w/);
   assert.match(offering, /\/blog\/media\/services\/ai-assistants-and-agents\/body1-960\.avif 960w/);
@@ -191,6 +193,14 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
     assert.match(page, /Start a project/);
     assert.match(page, /When you don(&#39;|'|\u2019)t need us/);
     assert.match(page, /Priced to the project/);
+    if (slug === "ai-visibility") {
+      assert.match(page, /<section class="visibility-faq">/);
+    } else {
+      assert.match(page, /<section class="faq-section" aria-labelledby="faq-title">/);
+    }
+    assert.match(page, /<div class="faq-list"><details>/);
+    assert.equal((page.match(/<details>/g) || []).length >= 4, true, slug);
+    assert.equal(page.includes('href="/#start"'), false, slug);
     assert.match(page, /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
     assert.doesNotMatch(page, industryNoun);
     assert.equal(/\$\d/.test(page), false, slug);
@@ -219,7 +229,8 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
 
   assert.match(visibility, /gsc-ai-features-1600\.webp/);
   assert.doesNotMatch(visibility, /Illustrative trend/);
-  assert.match(read("index.html"), /Invisible in AI search\? Not anymore\./);
+  assert.match(read("index.html"), /Get found in AI search\./);
+  assert.doesNotMatch(read("index.html"), /Invisible in AI search\? Not anymore\./);
   assert.match(read("index.html"), /gsc-performance-/);
   assert.doesNotMatch(visibility, /\bCTR\b/i);
   assert.doesNotMatch(visibility, /201K|21\.8K|2026-09-23|418/);
@@ -255,19 +266,12 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(pirx, /assets\/pirx\/pirx-home-hero-desktop\.jpg/);
   assert.match(pirx, /assets\/pirx\/pirx-home-hero-mobile\.jpg/);
   assert.match(pirx, /assets\/pirx\/pirx-home-full-desktop\.jpg/);
-  assert.match(pirx, /assets\/pirx\/pirx-home-full-mobile\.jpg/);
   assert.match(pirx, /assets\/pirx\/pirx-blog-post-full-desktop\.jpg/);
-  assert.match(pirx, /assets\/pirx\/pirx-blog-post-full-mobile\.jpg/);
+  assert.doesNotMatch(pirx, /assets\/pirx\/(?:pirx-home-full|pirx-blog-post-full)-mobile\.jpg/);
   assert.match(customApps, /assets\/pirx\/pirx-race-predictor-full-desktop\.jpg/);
   assert.match(customApps, /assets\/pirx\/pirx-race-predictor-full-mobile\.jpg/);
   assert.doesNotMatch(customApps, /pirx-accuracy-full|pirx-blog-full|pirx-home-full|pirx-blog-post/);
-  assert.match(visibility, /pirx-accuracy-full-desktop\.jpg/);
-  assert.match(visibility, /pirx-accuracy-full-mobile\.jpg/);
-  assert.match(visibility, /pirx-race-predictor-marathon-full-desktop\.jpg/);
-  assert.match(visibility, /pirx-race-predictor-marathon-full-mobile\.jpg/);
-  assert.match(visibility, /pirx-blog-full-desktop\.jpg/);
-  assert.match(visibility, /pirx-blog-full-mobile\.jpg/);
-  assert.doesNotMatch(visibility, /pirx-race-predictor-full-|pirx-home-full|pirx-blog-post/);
+  assert.doesNotMatch(visibility, /pirx-(?:accuracy|race-predictor-marathon|blog|race-predictor|home|blog-post)(?:-full)?-/);
   assert.doesNotMatch(research, /assets\/pirx\//);
   for (const file of [
     "pirx-home-hero-desktop.jpg",
@@ -307,4 +311,50 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.doesNotMatch(read("sitemap.xml"), /portfolio\/showdesk|portfolio\/canadian-discount-appliances|products\/showdesk/);
   assert.match(read("sitemap.xml"), /portfolio\/milrcorr/);
   assert.match(read("index.html"), /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
+});
+
+test("every remaining page family has an intentional premium composition", () => {
+  const expected = [
+    ["services/index.html", /class="site-page collection-page collection-page--services"/],
+    ["services/ai-assistants-and-agents/index.html", /class="site-page sales service-page"/],
+    ["portfolio/index.html", /class="site-page collection-page collection-page--portfolio"/],
+    ["portfolio/milrcorr/index.html", /class="site-page case-study"/],
+    ["products/index.html", /class="site-page collection-page collection-page--products"/],
+    ["products/schema/index.html", /class="site-page product-page"/],
+    ["course/llm-leverage/index.html", /class="site-page course-page"/],
+    ["start/index.html", /class="site-page start-page"/],
+    ["start/thanks/index.html", /class="site-page confirmation-page"/],
+    ["about/index.html", /class="site-page about-page"/],
+    ["privacy/index.html", /class="site-page legal-page"/],
+    ["films.html", /class="site-page films-page"/],
+  ];
+
+  for (const [path, pattern] of expected) assert.match(read(path), pattern, path);
+
+  const service = read("services/ai-assistants-and-agents/index.html");
+  assert.match(service, /class="section-heading"/);
+  assert.match(service, /class="service-page__close"/);
+
+  const caseStudy = read("portfolio/milrcorr/index.html");
+  assert.match(caseStudy, /class="[^"]*\bcase-study__story\b[^"]*"/);
+  assert.match(caseStudy, /class="case-study__gallery"/);
+  assert.match(caseStudy, /class="case-study__next"/);
+  assert.doesNotMatch(caseStudy, /Want something like this/);
+
+  const product = read("products/schema/index.html");
+  assert.match(product, /class="experience-panel"/);
+  assert.match(product, /class="[^"]*\bpage-hero__actions\b[^"]*"/);
+
+  const coursePage = read("course/llm-leverage/index.html");
+  assert.match(coursePage, /class="experience-panel experience-panel--course"/);
+  assert.match(coursePage, /class="[^"]*\bpage-hero__actions\b[^"]*"/);
+
+  const confirmation = read("start/thanks/index.html");
+  assert.match(confirmation, /class="confirmation-page__actions"/);
+  assert.match(confirmation, /href="\/portfolio\/"/);
+
+  const films = read("films.html");
+  assert.match(films, /class="site-nav"/);
+  assert.match(films, /class="[^"]*\bsite-foot\b[^"]*"/);
+  assert.match(films, /class="films-grid"/);
 });

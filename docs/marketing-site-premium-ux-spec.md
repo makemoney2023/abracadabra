@@ -1,10 +1,22 @@
 # Abracadabra marketing site — premium UX specification and implementation plan
 
-**Status:** Implemented on branch `cursor/premium-ux-implement-55e8` (2026-10-19). Phases 1–7 landed together because they share the design system. PiRX figures follow `scripts/site-data.mjs` (398K search impressions and 46.5K AI-feature impressions, Jul 18 to Oct 17, 2026), which is the published record. The earlier 375K / 43.5K pair in this spec was stale.
+**Status:** Implemented, with a full remaining-template pass completed on branch `cursor/fresh-premium-ux-pass-55e8` (2026-10-19). The follow-up gives services, portfolio, products, course, films, about, privacy, and start their own intentional compositions while retaining one shared system. PiRX figures follow `scripts/site-data.mjs` (398K search impressions and 46.5K AI-feature impressions, Jul 18 to Oct 17, 2026), which is the published record. The earlier 375K / 43.5K pair in this spec was stale.
 **Prepared:** 2026-10-19
 **Surfaces:** `abra-ca-dabra.app` and `scrollcraft/builds/abracadabra-ai/`
 **Source of truth:** [`docs/source-of-truth.md`](source-of-truth.md)
 **Related plans:** [`docs/marketing-site-technological-magic-plan.md`](marketing-site-technological-magic-plan.md), [`docs/anything-digital-lead-in-plan.md`](anything-digital-lead-in-plan.md), [`docs/scroll-world-review.md`](scroll-world-review.md)
+
+---
+
+## 2026-10-19 follow-up implementation delta
+
+- Service pages now use a consistent editorial hierarchy for outcomes, use cases, process, comparisons, proof, pricing, and the closing action.
+- Collection hubs now open with a compact proof rail and visually numbered cards instead of reading as undifferentiated link grids.
+- Generic portfolio pages now tell a short case-study story, show the real system in a bounded product frame when media exists, and end with related services plus a clear next step.
+- Product and course pages now pair direct hero actions with a framed real-interface preview and a dedicated close.
+- Films now shares the global navigation and footer and uses the same typography and responsive grid system.
+- About, privacy, start, and the post-submit confirmation have explicit page-family classes and document/form treatments rather than inheriting generic article layout by accident.
+- Representative desktop and mobile routes were checked for overflow, missing media, shared chrome, and page-family identity. The implementation is guarded by `tests/site-pages.test.mjs`.
 
 ---
 
@@ -935,6 +947,7 @@ Each PR also appends an entry to this document's change log (section 10) and, wh
 
 ## 10. Change log
 
+- **2026-10-19** — Fresh priority-page pass: rebuilt AI Visibility as the offer and PiRX as the evidence, with outcome-first metrics, compact editorial sections, bounded screenshot crops, mobile swipe rails, and a regression gate against full-page screenshot gutters.
 - **2026-10-19** — Implemented Phases 1–7 on `cursor/premium-ux-implement-55e8`. PiRX proof figures follow the live site data: 398K search impressions and 46.5K AI-feature impressions.
 - **2026-10-19** — Specification created from the 2026-10-19 audit (12 pages × 13 viewports, 353 captures; 9 defects, 15 recommendations). No implementation yet.
 - **2026-10-19** — R20 unblocked: the owner approved StrongFoam, Milrcorr, SuperPatch and PiRX for the proof band. The band now has four company-plus-outcome cards linked to their portfolio pages and a PiRX metric row, with quotes and names optional.
