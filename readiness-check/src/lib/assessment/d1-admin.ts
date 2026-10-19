@@ -335,7 +335,9 @@ async function runQueue(db: BoundSql, spec: Spec, single: "many" | "maybe" | "on
   );
   if (spec.op === "select") {
     const row = await db
-      .prepare("SELECT id FROM deals WHERE organization_id = ? AND stage = 'new' LIMIT 1")
+      .prepare(
+      "SELECT id FROM deals WHERE organization_id = ? AND stage NOT IN ('won', 'lost') ORDER BY updated_at DESC LIMIT 1",
+    )
       .bind(leadId)
       .first<{ id: string }>();
     if (single === "many") return { data: row ? [row] : [], error: null, count: null };
@@ -345,7 +347,9 @@ async function runQueue(db: BoundSql, spec: Spec, single: "many" | "maybe" | "on
   const nextStep = typeof priority === "number" ? `Readiness check. Priority ${priority}.` : "Readiness check.";
   const now = Date.now();
   const existing = await db
-    .prepare("SELECT id FROM deals WHERE organization_id = ? AND stage = 'new' LIMIT 1")
+    .prepare(
+      "SELECT id FROM deals WHERE organization_id = ? AND stage NOT IN ('won', 'lost') ORDER BY updated_at DESC LIMIT 1",
+    )
     .bind(leadId)
     .first<{ id: string }>();
   if (existing) {
@@ -431,6 +435,23 @@ export function createD1AssessmentAdmin(db: BoundSql): CheckAdmin {
   };
 }
 
+/**
+ * Queue Sales Outbound's automatic reply: routing_status reply_needed, scored_at = now (the HQ lead export's
+ * `since`). Same rules as HQ's queueReply (handoff/src/lib/lead-routing.ts) for a Readiness Check: only stages
+ * new and contacted, and never a deal already in the BDR outbound flow (ready_for_outbound or enriched).
+ * replied goes back to reply_needed, so every submission gets a reply. Only called once the check has an email.
+ */
+async function queueReadinessReply(db: BoundSql, dealId: string, now: number): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE deals SET routing_status = 'reply_needed', scored_at = ?, updated_at = ?
+       WHERE id = ? AND stage IN ('new', 'contacted')
+         AND (routing_status IS NULL OR routing_status NOT IN ('ready_for_outbound', 'enriched'))`,
+    )
+    .bind(new Date(now).toISOString(), now, dealId)
+    .run();
+}
+
 /** Copy a finished check that has an email onto the Handoff client record. */
 export async function copyCompletedCheckToCrm(db: BoundSql, assessmentId: string): Promise<{ filed: boolean }> {
   const row = await db
@@ -443,8 +464,25 @@ export async function copyCompletedCheckToCrm(db: BoundSql, assessmentId: string
   const domain = typeof row.domain === "string" && row.domain.trim() ? row.domain.trim() : null;
   const name = typeof row.name === "string" && row.name.trim() ? row.name.trim().slice(0, 200) : email;
   const now = Date.now();
-  let orgId: string | null = null;
-  if (domain) {
+  // A known contact keeps its org (same as HQ's assessment intake), so a re-submission lands on the same deal.
+  const known = await db
+    .prepare(
+      `SELECT c.organization_id AS id FROM contacts c JOIN organizations o ON o.id = c.organization_id
+       WHERE c.email = ? AND o.archived_at IS NULL`,
+    )
+    .bind(email)
+    .first<{ id: string | null }>();
+  let orgId: string | null = known?.id ?? null;
+  // The opt-in already filed this check's lead org (check_assessments.lead_id); use it so the check gets one deal.
+  const leadId = typeof row.lead_id === "string" && row.lead_id ? row.lead_id : null;
+  if (!orgId && leadId) {
+    const lead = await db
+      .prepare("SELECT id FROM organizations WHERE id = ? AND archived_at IS NULL")
+      .bind(leadId)
+      .first<{ id: string }>();
+    orgId = lead?.id ?? null;
+  }
+  if (!orgId && domain) {
     const existing = await db
       .prepare("SELECT id FROM organizations WHERE domain = ? AND archived_at IS NULL")
       .bind(domain)
@@ -477,7 +515,9 @@ export async function copyCompletedCheckToCrm(db: BoundSql, assessmentId: string
       .run();
   }
   const deal = await db
-    .prepare("SELECT id FROM deals WHERE organization_id = ? AND stage = 'new' LIMIT 1")
+    .prepare(
+      "SELECT id FROM deals WHERE organization_id = ? AND stage NOT IN ('won', 'lost') ORDER BY updated_at DESC LIMIT 1",
+    )
     .bind(orgId)
     .first<{ id: string }>();
   const dealId = deal?.id ?? crypto.randomUUID();
@@ -546,6 +586,8 @@ export async function copyCompletedCheckToCrm(db: BoundSql, assessmentId: string
       .run();
   }
   await db.prepare("UPDATE check_assessments SET lead_id = ? WHERE id = ?").bind(orgId, assessmentId).run();
+  // Once per assessment: a repeated opt-in for the same check does not queue a second reply.
+  if (!already) await queueReadinessReply(db, dealId, now);
   return { filed: true };
 }
 

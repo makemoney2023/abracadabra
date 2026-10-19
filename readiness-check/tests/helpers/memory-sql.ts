@@ -35,6 +35,9 @@ CREATE TABLE deals (
   stage TEXT NOT NULL,
   source TEXT NOT NULL,
   next_step TEXT,
+  lead_score INTEGER,
+  scored_at TEXT,
+  routing_status TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
