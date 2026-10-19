@@ -1,23 +1,21 @@
 /**
- * Heat-ring / traffic score colors (vibrant UI stops).
+ * Heat-ring / traffic score colors — Abracadabra studio tokens.
  *
- * Research basis:
- * - Chrome Lighthouse score circles — red #FF4E42 / orange #FFA400 / green #0CCE6B
- * - ColorBrewer RdYlGn continuum — red → yellow → green diverging shape
- * - Always pair with numeric / band text (never color-alone)
+ * Continuum: vermilion (low) → amber (mid) → cyan → mint (high/done).
+ * Always pair with numeric / band text (never color-alone).
  */
 
 export type ScoreBand = "poor" | "fair" | "good" | "strong";
 
 export type Rgb = { r: number; g: number; b: number };
 
-/** Vibrant heat stops: red → orange → yellow → lime → green */
+/** Studio heat stops: vermilion → amber → cyan → mint */
 export const HEAT_STOPS: ReadonlyArray<{ t: number; hex: string }> = [
-  { t: 0, hex: "#FF4E42" }, // Lighthouse fail red
-  { t: 0.25, hex: "#FF8A00" }, // vivid orange
-  { t: 0.5, hex: "#FFCC00" }, // vivid yellow
-  { t: 0.75, hex: "#34C759" }, // vivid lime / Apple-style success green
-  { t: 1, hex: "#0CCE6B" }, // Lighthouse pass green
+  { t: 0, hex: "#FF4B24" }, // brand vermilion — low / action
+  { t: 0.25, hex: "#F08A2A" }, // warm amber-orange bridge
+  { t: 0.5, hex: "#E8B84A" }, // amber mid
+  { t: 0.75, hex: "#8DEBF2" }, // optic cyan — progress / good
+  { t: 1, hex: "#C6FFB3" }, // phosphor mint — done / strong
 ] as const;
 
 function clamp01(value: number): number {

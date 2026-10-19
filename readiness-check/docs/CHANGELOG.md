@@ -1,5 +1,10 @@
 # Changelog
 
+## Schema mint heat + CTA — 2026-10-19
+
+- **What changed** — Score ring/bars/Strong labels use studio heat (vermilion → amber → cyan → mint `#C6FFB3`). Scan CTA is full `#FF4B24` with dark text; disabled uses muted surface instead of washed vermilion.
+- **Why** — Match Abracadabra tokens; remove generic green and muddy CTA.
+
 ## Schema scanner studio tokens — 2026-10-19
 
 - **What changed** — Schema landing (`/`), `/scan`, ops, and the Schema PDF use the same Abracadabra studio tokens as `/check` and marketing (dark canvas, vermilion accent, Inter Tight + IBM Plex Sans). Editorial cream/slate styling is removed.

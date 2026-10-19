@@ -319,20 +319,28 @@
 }
 
 .check-studio .studio-cta-primary {
-  background: var(--sc-accent);
-  border-color: var(--sc-accent);
-  color: var(--sc-canvas);
+  background: #FF4B24;
+  border-color: #FF4B24;
+  color: #070706;
 }
 
-.check-studio .studio-cta-primary:hover {
-  background: color-mix(in oklab, var(--sc-accent) 86%, var(--sc-ink));
+.check-studio .studio-cta-primary:hover:not(:disabled) {
+  background: color-mix(in oklab, #FF4B24 86%, #F5F0E8);
   border-color: transparent;
-  color: var(--sc-canvas);
+  color: #070706;
 }
 
-.check-studio .studio-cta:disabled,
-.check-studio .studio-cta-primary:disabled {
+.check-studio .studio-cta:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Disabled primary: muted surface — avoid washed/muddy vermilion */
+.check-studio .studio-cta-primary:disabled {
+  opacity: 1;
+  background: var(--sc-raised);
+  border-color: var(--sc-hairline);
+  color: var(--sc-ink-soft);
   cursor: not-allowed;
 }
 

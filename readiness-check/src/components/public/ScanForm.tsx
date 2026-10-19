@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SCAN_CTA } from "@/lib/marketing/copy";
@@ -43,6 +42,8 @@ export function ScanForm() {
     }
   }
 
+  const canSubmit = Boolean(url.trim()) && !pending;
+
   return (
     <form onSubmit={onSubmit} className="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
       <div className="flex-1 space-y-2">
@@ -63,14 +64,13 @@ export function ScanForm() {
           aria-invalid={error ? true : undefined}
         />
       </div>
-      <Button
+      <button
         type="submit"
-        size="lg"
-        disabled={pending || !url.trim()}
-        className="studio-cta-primary h-12 cursor-pointer rounded-[6px] px-5 text-sm font-medium tracking-wide"
+        disabled={!canSubmit}
+        className="studio-cta-primary h-12 shrink-0 px-5"
       >
         {pending ? "Starting…" : SCAN_CTA}
-      </Button>
+      </button>
       {error ? (
         <p className="basis-full text-sm text-destructive" role="alert">
           {error}
