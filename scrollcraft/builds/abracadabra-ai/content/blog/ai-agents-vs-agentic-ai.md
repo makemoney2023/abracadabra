@@ -25,8 +25,8 @@ images:
 faqs:
   - question: "What is the difference between an agent and a workflow?"
     answer: "A workflow has its steps written in advance. An agent chooses tools as it goes. Anthropic says to start with the simplest of the two."
-  - question: "What does the agentic forecast add?"
-    answer: "Gartner expects over 40% of agentic AI projects to be canceled by the end of 2027, for cost, unclear value, or inadequate risk controls."
+  - question: "What does the Gartner forecast add?"
+    answer: "Gartner expects over 40% of AI projects that take actions on their own to be canceled by the end of 2027, for cost, unclear value, or weak risk controls."
   - question: "Does a canceled forecast mean you should avoid agents?"
     answer: "It means you should name the job and the person who checks it. A workflow that already works does not need the extra risk."
 citations:
@@ -43,72 +43,72 @@ citations:
     datePublished: "2025-06-25"
     figures: ["2025", "40", "2027", "3412", "19", "42", "8", "31", "130", "15", "2028", "0", "2024", "33", "1"]
 ---
-An AI agent directs its own tools toward a goal, and agentic AI is the wider label for many of those systems across a company. The words get sold as if they were the same purchase. They are not.
+An AI agent directs its own tools toward a goal. "AI that takes actions on its own" is the wider label for many of those systems across a company. The words get sold as if they were the same purchase, but they are not.
 
-An AI agent, in Anthropic's December 2024 essay, is a system that directs its own tools toward a goal.[^anthropic] A workflow is the opposite: the steps are written in advance. Agentic AI is the category vendors use when they mean many such systems, often across a company. The words are not interchangeable. We repeat that often because a deck will use the wider word for a single inbox rule, and the owner walks out thinking they bought a workforce.
+In Anthropic's December 2024 essay, an AI agent is a system that directs its own tools toward a goal.[^anthropic] A workflow is the opposite, because its steps are written in advance. The wider label is what vendors use when they mean many such systems, often spread across a company. We repeat the split often. A deck will use the big word for a single inbox rule, and the owner walks out thinking they bought a workforce.
 
-The [definition](/blog/what-is-an-ai-agent) is the short version of the split between a path you wrote and a model that chooses. The [jobs list](/blog/ai-agents-for-business) is where one agent might actually sit. The [people guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-people-mid) is who has to check the output. If you cannot name that person, the rest of the vocabulary does not matter yet.
+The [definition](/blog/what-is-an-ai-agent) is the short version of the split between a path you wrote and a model that chooses. The [jobs list](/blog/ai-agents-for-business) shows where one agent might actually sit. The [people guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-people-mid) covers who has to check the output. If you cannot name that person, the rest of the vocabulary does not matter yet.
 
 ## What the forecast says
 
-Gartner said in June 2025 that over 40% of agentic AI projects will be canceled by the end of 2027.[^gartner-agentic] The reasons are cost, unclear business value, and inadequate risk controls. Read those reasons as a checklist you can fail on purpose. A project with no named job will look unclear. A project nobody can halt will look like a risk problem. A project that needs three new tools and a consultant to explain them will look expensive, and then it will stop.
+Gartner said in June 2025 that over 40% of AI projects that take actions on their own will be canceled by the end of 2027.[^gartner-agentic] The reasons are cost, unclear business value, and inadequate risk controls. Read those reasons as a checklist you can fail on purpose. A project with no named job will look unclear, and a project nobody can halt will look like a risk problem. A project that needs three new tools and a consultant to explain them will look expensive, and then it will stop.
 
-The same note said 15% of day-to-day work decisions will be made autonomously by 2028, up from 0% in 2024, and that 33% of enterprise software will include agentic AI by 2028, up from less than 1% in 2024. Hold both forecasts at once. A lot of software will grow an agentic feature. A large share of the projects that chase the label will be canceled. The feature arriving in a product you already pay for is a different event from a program you launch because the word showed up in a board slide.
+The same note said 15% of day-to-day work decisions will be made on their own by 2028, up from 0% in 2024. It also said 33% of enterprise software will include this kind of AI by 2028, up from less than 1% in 2024. Hold both forecasts at once. A lot of software will grow an agent feature, and a large share of the projects that chase the label will be canceled. A feature that arrives in a product you already pay for is a different event. A program you start because the word showed up on a board slide is another thing.
 
 <!--image:2-->
 
 <!--cta:inline-->
 
-If you can write the steps, you want a workflow. If the next step depends on what the last step found, you may want an agent, and you still want a person who can stop it. Calling that agentic does not change the checkpoint.
+If you can write the steps, you want a workflow. If the next step depends on what the last step found, you may want an agent, and you still want a person who can stop it. A bigger label does not change that checkpoint.
 
-We use the forecast as a brake, not as a scare. Cancellation is what happens when the job was never specific enough to survive a budget meeting. It is also what happens when the risk control is a sentence in a policy nobody on the desk has read. You can avoid both without swearing off the tool. Name the decision. Name the checker. Keep the wider program on the shelf until that pair has worked on real afternoons.
+We use the forecast as a brake and not as a scare. Projects get canceled when the job was never clear enough to survive a budget meeting. They also get canceled when the risk control is a sentence in a policy that nobody on the desk has read. You can avoid both without giving up the tool. Name the decision and name the checker, and keep the wider program on the shelf until that pair has worked on real afternoons.
 
 <!--image:3-->
 
 ## A worked example
 
-Walk a small clinic with us. This is a scene, not a study, and it has no score attached. Nora owns the practice. One person runs the front desk. Dr. Patel sees patients. The phones pile up after lunch, mostly people who want to know whether a symptom can wait, whether a form was received, and whether tomorrow's visit is still on.
+Walk a small clinic with us. This is a scene and not a study, so it has no score attached. Nora owns the practice, one person runs the front desk, and Dr. Patel sees patients. The phones pile up after lunch. Most callers want to know whether a symptom can wait, whether a form was received, or whether tomorrow's visit is still on.
 
-A workflow can carry the parts that do not change. A missed call becomes a task. The form either arrived or it did not. A reminder goes out the afternoon before, with the address and what to bring. The front desk lead already does this. Writing it down does not require a new category of software. It requires the front desk lead's order, and a screen that will not skip the "what to bring" line when the day gets rude.
+A workflow can carry the parts that do not change. A missed call becomes a task, and the form either arrived or it did not. A reminder goes out the afternoon before, with the address and what to bring. The front desk lead already does this by hand. Writing it down does not need a new kind of software. It needs the front desk lead's order, and a screen that will not skip the "what to bring" line when the day gets rude.
 
-An agent is the narrower ask. A patient writes that the rash spread and they also have a fever, and they want to know if they should come in today. The next step depends on what the note contains. A model could draft a reply that offers the urgent slot and tells them what to watch for, using only the phrases Dr. Patel has approved. The front desk lead still sends it. Dr. Patel still owns anything that sounds like a diagnosis. The agent picked a tool, the template and the schedule, inside bounds. That is one agent. It is not an agentic program.
+An agent is the narrower ask. A patient writes that the rash spread and that they also have a fever, and they want to know if they should come in today. The next step depends on what the note says. A model could draft a reply that offers the urgent slot and says what to watch for, using only the phrases Dr. Patel has approved. The front desk lead still sends it, and Dr. Patel still owns anything that sounds like a diagnosis. The agent picked its tools, which were the template and the schedule, and stayed inside its bounds. That is one agent, and it is not a whole program.
 
-Agentic AI, the way the word gets used on calls, would be the bigger bet. One system talks to the schedule, another drafts the chart note, another chases the referral, another updates the billing code, and they hand work to each other while Nora is with a patient. That is the shape of the projects in the cancellation forecast. Cost shows up as four subscriptions and a person whose job becomes watching them. Value stays unclear because nobody can say which decision got better. Risk control fails the first time a draft implies a diagnosis and leaves the building. We would not start there. We would start with the front desk lead's reminder path, then one draft on the fever note, with send still human.
+The bigger bet is what gets pitched on sales calls. One system talks to the schedule, another drafts the chart note, another chases the referral, and another updates the billing code. They hand work to each other while Nora is with a patient. That is the shape of the projects in the cancellation forecast. Cost shows up as four subscriptions and a person whose job becomes watching them. Value stays unclear because nobody can say which decision got better. Risk control fails the first time a draft hints at a diagnosis and leaves the building. We would not start there. We would start with the front desk lead's reminder path. Then we would add one draft for the fever note, with the send step still done by a person.
 
-The roles are the point of the walk-through. Nora decides which phrases are allowed. The front desk lead is the checker who can throw a draft away. Dr. Patel is the only person who closes a clinical question. A vendor who cannot point at those three seats, and who calls the whole bundle agentic because it sounds larger, is selling the category. They are not selling the checkpoint.
+The roles are the point of the walk-through. Nora decides which phrases are allowed. The front desk lead is the checker who can throw a draft away, and Dr. Patel is the only person who closes a clinical question. A vendor who cannot point at those three seats is selling a category and not a checkpoint. That goes double when the vendor calls the whole bundle by a bigger name because it sounds larger.
 
 ## How we'd run it
 
 We would separate the words on a single page before anyone signs an order.
 
-First, write the job as one decision. "Reply to a same-day symptom note with an approved phrase, or book the urgent slot, and never invent a diagnosis." If the job is "make the clinic agentic," throw it out and start again.
+First, write the job as one decision. For example, "Reply to a same-day symptom note with an approved phrase, or book the urgent slot." The rule is to never invent a diagnosis. If the job is "make the clinic smarter," throw it out and start again.
 
-Second, list the steps the front desk lead already does that never change. Log the call, check the form, send the reminder, hold the chart for the clinician. That list is a workflow. Build it. Do not wait for a platform to discover it.
+Second, list the steps the front desk lead already does that never change. Log the call, check the form, send the reminder, and hold the chart for the clinician. That list is a workflow, so build it. Do not wait for a platform to find it for you.
 
-Third, circle the one place where the next step depends on what the message says. Symptom plus fever is a fork. A reminder is not. The fork is the only candidate for an agent. Everything else stays on the path you wrote.
+Third, circle the one place where the next step depends on what the message says. A symptom plus a fever is a fork, but a reminder is not. The fork is the only candidate for an agent, and everything else stays on the path you wrote.
 
-Fourth, write the bounds in the front desk lead's language. Allowed tools: the approved phrases and the urgent column on the schedule. Forbidden: naming a condition, promising a medication, telling someone to stay home. If a phrase is not on the card, the draft does not use it.
+Fourth, write the bounds in the front desk lead's own language. The agent may use the approved phrases and the urgent column on the schedule. It may not name a condition, promise a medication, or tell someone to stay home. If a phrase is not on the card, the draft does not use it.
 
-Fifth, name the checker on the rota, not in a policy PDF. The front desk lead on the desk days. The backup coordinator when the front desk lead is out. Dr. Patel for anything the card does not cover. The stop condition is simple. Missing fever detail, an angry message, or a phrase that is not on the card, and the draft dies.
+Fifth, name the checker on the rota and not in a policy file. That is the front desk lead on desk days and the backup coordinator when the lead is out. Dr. Patel covers anything the card does not. The stop rule is simple. If the draft has no fever detail, or the message is angry, or a phrase is not on the card, the draft is thrown away.
 
-Sixth, run last week's real messages with the names removed. Nora and the front desk lead mark the drafts they would have refused. Fix the card until the refusals match their judgment. Only then let it draft against today's inbox. Calling the result agentic adds nothing. The checkpoint is the same either way.
+Sixth, run last week's real messages with the names removed. Nora and the front desk lead mark the drafts they would have refused. Fix the card until the refusals match their judgment, and only then let it draft against today's inbox. The checkpoint is the same whatever you call the system.
 
 ## Common mistakes
 
-The first mistake is using the wide word for a narrow tool. A reminder sequence is a workflow. A chatbot that waits for a person to paste a question is one prompt. Neither becomes agentic because the proposal says so. The staff then expects a system of actors, and they get a mail merge.
+The first mistake is using the wide word for a narrow tool. A reminder sequence is a workflow, and a chatbot that waits for a person to paste a question is one prompt. Neither one is a system of actors because the proposal says so. The staff then expects a team of helpers and gets a mail merge.
 
-The second mistake is starting with the constellation. Several tools, several handoffs, nobody who can draw the path on a whiteboard. That is the shape Gartner expects a large share of projects to abandon by the end of 2027, for cost, unclear business value, and inadequate risk controls. A clinic does not need to donate itself to that share.
+The second mistake is starting with the whole constellation. That means several tools and several handoffs, with nobody who can draw the path on a whiteboard. Gartner expects a large share of projects like that to be dropped by the end of 2027, for cost, unclear business value, and inadequate risk controls. A clinic does not need to donate itself to that share.
 
-The third mistake is treating the 2028 lines as a deadline for your front desk. 15% of day-to-day work decisions made autonomously, and 33% of enterprise software including agentic AI, are statements about a market. They are not a due date for Nora. Software you already own may grow a feature. You still choose whether the front desk lead is allowed to rely on it.
+The third mistake is treating the 2028 lines as a deadline for your front desk. The 15% of work decisions made on their own and the 33% of software with this kind of AI are statements about a market. They are not a due date for Nora. Software you already own may grow a new feature, and you still choose whether the front desk lead is allowed to rely on it.
 
 The fourth mistake is a checker who exists only on paper. "The clinical lead reviews outputs" means nothing on a Tuesday when the lead is in a room and the draft is in the outbox. If the person who can stop it is not at the desk, you do not have the control. You have a sentence.
 
-The fifth mistake is letting a draft sound like Dr. Patel. Patients do not hear "language model." They hear the clinic. A warm sentence that implies a diagnosis is a clinical act. Keep it off the card, and kill the draft that sneaks one in.
+The fifth mistake is letting a draft sound like Dr. Patel. Patients do not hear "language model" when a message arrives. They hear the clinic. A warm sentence that implies a diagnosis is a clinical act, so keep it off the card and throw away any draft that sneaks one in.
 
-The sixth mistake is buying because 0% feels embarrassing. The note said autonomous day-to-day decisions sat at 0% in 2024. That is a baseline, not an insult. Moving off it without a named decision is how the cancellation reasons show up in a smaller budget.
+The sixth mistake is buying because 0% feels embarrassing. The note said that decisions made on their own sat at 0% in 2024, which is a baseline and not an insult. Moving off it without a named decision is how the cancellation reasons show up in a smaller budget.
 
 ## What we'd do
 
-We would buy the workflow first and the single agent second, and we would leave the agentic program unsold. Our opinion is that the wider word is doing sales work. It makes a reminder bot sound like a strategy, and it makes a careful one-agent pilot sound small. Small is the correct size until the front desk lead can refuse a draft without calling a vendor.
+We would buy the workflow first and the single agent second, and we would leave the big program unsold. Our view is that the wider word is doing sales work. It makes a reminder bot sound like a strategy, and it makes a careful one-agent test sound small. Small is the right size until the front desk lead can refuse a draft without calling a vendor.
 
-If the next step truly depends on what the note found, one agent, one card of phrases, one person who can stop it. If the steps are already writable, stay with the workflow and spend the money on the afternoon the front desk lead is underwater. The June 2025 forecast is not a reason to hide from the tool. It is a reason to refuse a project that cannot name its checker. We would rather be the clinic that canceled nothing, because we never started the project that deserved canceling.
+If the next step truly depends on what the note found, we would use one agent, one card of phrases, and one person who can stop it. If the steps can already be written, we would stay with the workflow. Then we would spend the money on the afternoon when the front desk lead is underwater. The June 2025 forecast is not a reason to hide from the tool. It is a reason to refuse a project that cannot name its checker. We would rather be the clinic that canceled nothing, because we never started the project that deserved canceling.

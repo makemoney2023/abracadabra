@@ -24,11 +24,11 @@ images:
     prompt: "Editorial diagram on a near-black canvas, no people and no letters. Four rising arcs from a short stroke to a nearly closed ring, coral on the leading edge and cyan behind. Quiet studio light, 16:9."
 faqs:
   - question: What does an AI readiness assessment measure?
-    answer: It names whether the data, the process, the people, and the decision are in a state where a tool can do a job. Public tools measure different populations. The Readiness Check scores the business taking it.
+    answer: It shows whether the data, the process, the people, and the decision are ready for a tool to do a job. Public tools measure different groups of firms, and the Readiness Check scores the business taking it.
   - question: Is the Cisco index a small-business score?
-    answer: No. The 2025 index surveyed senior leaders at organizations with more than 500 employees. It is a useful comparison for large firms, and it is the wrong sample for a small business.
+    answer: No, because the 2025 index surveyed senior leaders at companies with more than 500 employees. It is a useful comparison for large firms, but it is the wrong group for a small business.
   - question: What do the Readiness Check bands mean?
-    answer: Early is 0–39, Forming is 40–59, Ready is 60–79, and Running is 80–100. Each sentence on the check describes a state. The check does not diagnose.
+    answer: Early is 0–39, Forming is 40–59, Ready is 60–79, and Running is 80–100. Each band describes a state, and the check does not diagnose.
 citations:
   - id: cisco
     title: "Cisco AI research: the most AI-ready companies"
@@ -60,96 +60,100 @@ citations:
     figures: ["0", "39", "40", "59", "60", "79", "80", "100"]
 ---
 
-An AI readiness assessment asks whether a business can put a tool to work. Public indexes and checklists answer that question for different audiences, and they are easy to mix up. This note compares them, then states what the [Readiness Check guide](https://check.abra-ca-dabra.app/check/guide/readiness) scores for the firm actually in the room.
+An AI readiness assessment asks whether a business can put a new tool to work. Public indexes and checklists answer that question for different groups of people. The groups are easy to mix up. This note compares them. Then it explains what the [Readiness Check guide](https://check.abra-ca-dabra.app/check/guide/readiness) scores for the firm that is actually in the room.
 
-We get asked for "our number," as if readiness were a credit score you could borrow from a headline. A figure about senior leaders at large companies does not tell a clinic whether the front desk and the clinician share one record.
+We get asked for "our number," as if readiness were a credit score you could borrow from a headline. A figure about leaders at big companies cannot tell a clinic whether the front desk and the clinician use the same record.
 
 ## What the public tools measure
 
-Cisco's third annual AI Readiness Index, released 14 October 2025, surveyed 8,000 senior leaders in organizations with more than 500 employees, across 30 markets and 26 industries.[^cisco] Pacesetters stayed near 13% for three years. Those organizations were 4 times more likely to move a pilot into production, and 50% more likely to see measurable value. 83% of respondents plan to deploy AI agents, and nearly 40% expect agents to work alongside employees within a year. That sample is not a small-business survey.
+Cisco put out its third yearly AI Readiness Index on 14 October 2025. It surveyed 8,000 senior leaders at companies with more than 500 employees. Those leaders came from 30 markets and 26 industries.[^cisco] The leaders it calls pacesetters stayed near 13% of the sample for three years. Those companies were 4 times more likely to turn a first trial into real use. They were also 50% more likely to see real value. Of all the people surveyed, 83% plan to use AI agents. Nearly 40% expect agents to work beside staff within a year. That sample is not a small-business survey.
 
-Owners hear the Cisco line on a podcast and want to know if they are behind. Behind what? Behind a company large enough to put a senior leader on a survey. Pacesetters near 13% of that sample, held for three years, is a humility check for big firms. It is a bad mirror for a practice with a front desk and a couple of treatment rooms. The part that still rhymes is the production gap. The organizations that move a pilot into the real work are the ones with a written job. The demo was never the hard part. If you use Cisco at all in a small firm, use it as a warning against mistaking a pilot for a habit, not as a ranking you are supposed to join.
+Owners hear the Cisco line on a podcast and wonder if they are behind. Behind what, and compared with whom? They would be behind a company big enough to put a senior leader on a survey. The 13% figure is a fair check for large firms. It is a poor mirror for a practice with a front desk and two treatment rooms.
 
-Gartner reported on 26 February 2025 that 63% of respondents do not have, or are unsure they have, the data management practices AI needs.[^gartner] The same note predicts that through 2026 organizations will abandon 60% of AI projects that lack AI-ready data. That is the line we underline when someone wants to skip the record and start with a login. The project stops because the data was never ready. There is no mystery ending.
+One part still fits a small firm, and that is the gap between a trial and daily work. The companies that cross that gap have the job written down. The demo was never the hard part. So if you use Cisco at all in a small firm, use it as a warning against mistaking a trial for a habit. Please do not use it as a ranking that you are supposed to join.
 
-The OECD SME AI adoption tool, part of the 2026 French Group of Seven Presidency work, is a short self-check for smaller firms.[^oecd] It takes about five minutes, stores no data, and keeps answers in the browser. As of May 2026 it is a pilot, with preliminary validation by Group of Seven governments. It does not publish an adoption rate. We like it as questions you can answer without creating an account. We do not like it as a stand-in for a national share, because it refuses to be one. If a tool will not give you a rate, do not invent one after the meeting.
+Gartner said on 26 February 2025 that 63% of the people it asked do not have the data habits that AI needs. Some of them were also not sure they had those habits.[^gartner] The same note predicts that through 2026, companies will give up on 60% of AI projects that lack data made ready for AI. We point to that line when someone wants to skip the record and start with a login. The project stops when the data was never ready. That story is not hard to guess.
 
-AWS published an AI readiness checklist in September 2025.[^aws] It walks five steps and sorts a business into four stages: Not yet ready, Emerging, Operational, and Scaling. The stages cover data, the use case, the stack, governance, and the metrics you will watch. The page does not cite an adoption percentage. Stages are descriptions you can argue with. A percentage nobody counted is a rumor with a percent sign.
+The OECD tool for small and midsize firms is a short self-check about AI use. It is part of the work of the 2026 French Group of Seven Presidency.[^oecd] It takes about five minutes and stores no data. Your answers stay in the browser. As of May 2026 it is a test version, and Group of Seven governments are still checking it. It does not publish an adoption rate. We like it as a set of questions you can answer without making an account. We do not like it as a stand-in for a national share, because it never claims to be one.
+
+AWS posted an AI readiness checklist in September 2025.[^aws] It walks through five steps and sorts a business into four stages. The stages run from Not yet ready, through Emerging and Operational, to a last stage about using AI widely. They cover the data, the use case, the tools, the rules, and the numbers you will watch. The page does not cite an adoption percentage. Stages are plain descriptions that you can argue with. A percentage that nobody counted is just a rumor with a percent sign.
 
 <!--image:2-->
 
-| Tool | Who it describes | What you leave with |
-| --- | --- | --- |
-| Cisco AI Readiness Index | Organizations with more than 500 employees | A comparison with pacesetters, not a score for one small firm |
-| OECD SME tool | Smaller firms in the Group of Seven pilot | A short self-check that stays in the browser |
-| AWS checklist | A small or midsize business working through stages | Five steps and four stage names |
-| Readiness Check | The business taking it | Four scores, a band, and three suggestions per section |
+Here is a plain comparison of who each tool describes and what you leave with.
 
-The Readiness Check is the one built for the firm in the room. It educates and routes. It does not diagnose. We publish the method on [our site](/).
+- Cisco's index describes companies with more than 500 employees, so you get a comparison with pacesetters and not a score for one small firm.
+- The OECD tool describes the smaller firms in the Group of Seven test, so you get a short self-check that stays in the browser.
+- The AWS checklist describes a small or midsize business, so you get five steps and four stage names.
+- The Readiness Check describes the business taking it, so you get four scores, a band, and three tips for each section.
 
-We draw that line on purpose. A diagnosis says what is wrong with you. A route says where to look next. Owners sometimes want the diagnosis because it sounds more serious. Serious is not the same as useful. If we told a clinic it had failed readiness, we would be borrowing a clinical tone for a business conversation. The check describes a state and points at a next page. That is the promise, and we would not widen it.
+The Readiness Check is the one built for the firm in the room. It teaches and points the way, but it does not diagnose. We publish the method on [our site](/).
+
+We draw that line on purpose. A diagnosis says what is wrong with you. A route says where to look next. Owners sometimes want the diagnosis because it sounds more serious, but serious is not the same as useful. If we told a clinic that it had failed readiness, we would be borrowing a doctor's tone for a business talk. The check describes where you stand and points to a next page. That is the promise we make.
 
 <!--cta:inline-->
 
 ## What each band means
 
-The check scores from 0 to 100. Bands are Early (0–39), Forming (40–59), Ready (60–79), and Running (80–100).[^check]
+The check scores from 0 to 100. The bands are Early (0–39), Forming (40–59), Ready (60–79), and Running (80–100).[^check]
 
-- Early: The work that matters still lives in people's heads. The first useful move is to write one workflow down and name who owns it.
-- Forming: Pieces of the work are written down. A named owner and one system of record are what turn that into something a team can run.
-- Ready: The business can put a new system to work. The open question is which workflow to start with, and who owns it day to day.
-- Running: A real workflow already uses the tools. The next gain is the job that still waits on one person.
+- Early: The work that matters still lives in people's heads, so the first useful step is to write one job down and name who owns it.
+- Forming: Parts of the work are written down, so a named owner and one place for the facts can turn that into something a team can run.
+- Ready: The business can put a new tool to work, so the open question is which job to start with and who owns it day to day.
+- Running: A real job already uses the tools, so the next gain is the job that still waits on one person.
 
 <!--image:3-->
 
-A band is a state, not a grade. The four scores behind it are data, process, people, and the decision. The check takes five to seven minutes, one question per screen, and returns three suggestions for each section.
+A band tells you where you stand today. It is not a grade. The four scores behind it are data, process, people, and the decision. The check takes five to seven minutes with one question on each screen. It gives three tips for each section.
 
-Each band describes where you are today. Early means the know-how is still in people's heads, so you write one workflow and name the owner before you shop. Forming is partial writing. The missing pieces are a named owner and one system of record, and without those nobody else can run the job when the usual person is out. Ready means a new system can land. The argument left is which workflow goes first, and who lives with it on an ordinary day. Running means a real workflow already uses the tools. The gain left is the job that still waits on one person, the one everyone routes around because it is "easier to ask her."
+Early means the know-how is still in people's heads. So you write one job down and name the owner before you shop. Forming means the writing is only partial. Two pieces are missing. One is a named owner, and the other is one place where the facts live. Without them nobody else can run the job when the usual person is out.
 
-People treat Running as the compliment and Early as the scolding. We do not. Early is a clear description, and it is often the honest one. A clinic can be excellent at care and Early at the paperwork around recalls. Those are different skills. The band is about whether a tool has anything solid to stand on. It is not a review of the owner's character.
+Ready means a new tool can land. The argument left is which job goes first and who lives with it on an ordinary day. Running means a real job already uses the tools. The gain left is the job that still waits on one person. Everyone goes around that job because it is "easier to ask her."
 
-The next note looks at [how surveys count AI in small businesses](/blog/how-can-ai-help-small-businesses), which is a different question from whether one firm is ready. A survey can talk about firms in general. It cannot say your front desk and your clinician agree on the chart note. Do not let the wide question answer the narrow one.
+People treat Running as the compliment and Early as the scolding, but we do not. Early is a clear description, and it is often the honest one. A clinic can be excellent at care and still be Early at the paperwork around recalls. Those are different skills. The band is about whether a tool has anything solid to stand on. It is not a review of the owner's character.
+
+The next note looks at [how surveys count AI in small businesses](/blog/how-can-ai-help-small-businesses). That is a different question from whether one firm is ready. A survey can talk about firms in general. It cannot say whether your front desk and your clinician agree on the chart note. We try not to let the wide question answer the narrow one.
 
 ## A worked example
 
-Say we are in a small physiotherapy clinic after the last patient. One person runs the front desk. One clinician sees most of the repeat visits. This is an example we walk through, not a clinic we measured.
+Say we are in a small physiotherapy clinic after the last patient has gone home. One person runs the front desk. One clinician sees most of the repeat visits. This is an example we walk through, and it is not a clinic we measured.
 
-The owner has been shown a tool that would draft recall messages and summarize visit notes. She wants to know if the practice is "ready" before she signs. We refuse to start with the tool. We start with the four scores, in words, the way the check will later put them in a band.
+The owner has been shown a tool that would draft recall messages and sum up visit notes. She wants to know if the practice is "ready" before she signs. We do not start with the tool. We start with the four scores, in plain words, the way the check will later turn them into a band.
 
-Data, for the recall job, is a mess in the ordinary sense. The front desk lead has a list in the booking screen. The clinician keeps a notebook of people he meant to see again. The owner trusts a spreadsheet she built when the booking screen lost a column. Asked which list is true, they look at each other. That is not a failure of care. It is an absent source of truth. We would not call data "in place" while three lists can disagree and nobody is embarrassed.
+Data for the recall job is a mess in the ordinary sense. The front desk lead has a list in the booking screen. The clinician keeps a notebook of people he meant to see again. The owner trusts a spreadsheet she built when the booking screen lost a column. Asked which list is right, they look at each other. That is not a failure of care. But it does mean there is no one place where the facts live. We would not call the data "in place" while three lists can disagree and nobody minds.
 
-Process is partial. The happy path is spoken: The clinician finishes, the front desk lead books the next visit, the patient leaves with a card. The exception is not spoken. What if the patient will not book today? What if the clinician wants a recall in six weeks but the front desk lead only sees open slots this month? What if the note is not finished before the patient reaches the desk? The owner says they "work it out." Working it out is Forming at best. It is not a process a tool can follow without inventing the rest.
+Process is only partial. The easy path is spoken aloud. The clinician finishes, the front desk lead books the next visit, and the patient leaves with a card. The odd cases are never spoken at all. What if the patient will not book today? What if the clinician wants a recall in six weeks, but the front desk lead only sees open slots this month? What if the note is not done before the patient reaches the desk? The owner says they "work it out." That is Forming at best, because a tool cannot follow it without making up the rest.
 
-People are the surprise, same as in most rooms. The front desk lead already pastes awkward wording into a personal chat tool so the recall text sounds less cold. The clinician did not know. The owner did not know. Nobody has said whether those words may go to a patient. The people score is not about enthusiasm. It is about permission.
+People are the surprise, as in most rooms. The front desk lead already pastes awkward wording into a personal chat tool so the recall text sounds less cold. The clinician did not know, and neither did the owner. Nobody has said whether those words may go to a patient. The people score is not about how eager everyone is. It is really about who has permission to do what.
 
-The decision is a blank. The owner says success would be "fewer no-shows" and then cannot say who would turn the tool off if a message went to the wrong person. Until that sentence exists, we will not talk about agents, pilots, or pacesetters. Cisco's large-firm picture is interesting and irrelevant to whether the front desk lead and the clinician share a list.
+The decision is still a blank. The owner says success would be "fewer no-shows." But she cannot say who would turn the tool off if a message went to the wrong person. Until that answer exists, we will not talk about agents, trials, or pacesetters. Cisco's picture of large firms is interesting. It has nothing to say about whether the front desk lead and the clinician share a list.
 
-If we scored this room in the check's language, we would expect Early or Forming, and we would say so without flinching. The work that matters for this job still lives in heads and side lists. The useful move is to write the recall workflow down and name who owns it. That is the Early sentence, and it fits.
+If we scored this room in the check's language, we would expect Early or Forming. We would say so plainly. The work that matters for this job still lives in heads and side lists. The useful step is to write the recall job down and name who owns it. That is just what the Early line says.
 
 ## How we'd run it
 
-First we name the job. One job. At the clinic it is the recall, from the clinician deciding someone should come back to the patient actually having a time. If the owner says "everything," we shrink it until it has a start and a finish.
+First, we name one job, and at the clinic it is the recall. It runs from the clinician deciding someone should come back to the patient actually having a time. If the owner says "everything," we shrink it until it has a clear start and a clear finish.
 
-Second we pull the public tools apart so nobody borrows the wrong population. Cisco describes organizations with more than 500 employees. The OECD tool is a short self-check that stays in the browser and publishes no rate. AWS offers stage names and does not cite an adoption percentage. None of those is a score for this clinic. We say that before anyone feels behind.
+Second, we pull the public tools apart so nobody borrows the wrong group of people. Cisco describes companies with more than 500 employees. The OECD tool is a short self-check that publishes no rate. AWS offers stage names without an adoption percentage. None of those is a score for this clinic, and we say so before anyone feels behind.
 
-Third we score data, process, people, and the decision in words, using absent, partial, in place, or running only if we can point. The front desk lead, the clinician, and the owner each answer. Disagreement is the finding. We write it down instead of averaging it into a mood.
+Third, we score data, process, people, and the decision in words. We use absent, partial, in place, or running. We use the last two only if we can point to proof. The front desk lead, the clinician, and the owner each answer on their own. When they disagree, that is the finding. So we write it down and do not average it into a mood.
 
-Fourth we take the check if they want the band. Five to seven minutes, one question per screen, three suggestions per section. We read Early, Forming, Ready, or Running as a state. We do not add a pep talk that turns Early into "almost Ready."
+Fourth, we take the check if they want the band. It takes five to seven minutes, with one question on each screen and three tips for each section. We read Early, Forming, Ready, or Running as a place to stand today. We do not add a pep talk that turns Early into "almost Ready."
 
-Fifth we pick one next page, not five projects. If the record is the blank, we fix the list the front desk lead and the clinician will both believe. If the writing is the blank, we write the exception for the patient who will not book today. The tool demo can wait until that page exists.
+Fifth, we pick one next page and not five projects. If the record is the blank, we fix the list that the front desk lead and the clinician will both believe. If the writing is the blank, we write down what happens for the patient who will not book today. The tool demo can wait until that page exists.
 
 ## Common mistakes
 
-The mistake we see most is treating Cisco's pacesetters as a small-business grade. Near 13% of a large-firm sample, 4 times as likely to move a pilot into production, is about those firms. Quoting it at a clinic as "only the top shops are ready" invents a ranking the study did not make.
+The mistake we see most is treating Cisco's pacesetters as a small-business grade. Near 13% of a large-firm sample were 4 times as likely to turn a first trial into real use. That is a fact about those firms. Quoting it at a clinic as "only the top shops are ready" makes up a ranking that the study never made.
 
-Another mistake is averaging the four scores into a feeling. Data can be absent while people are eager. Eagerness is not a score. The band names a state, and the useful part is the weak state, not the average comfort in the room.
+Another mistake is averaging the four scores into a feeling. Data can be absent while people are eager, and eagerness is not a score. The band names where you stand. The useful part is the weak spot, and not the average comfort in the room.
 
-A third mistake is using the OECD tool's silence as a zero. It does not publish an adoption rate. Silence is not a finding that small firms are unready. It is a tool that refused to pretend.
+A third mistake is reading the OECD tool's silence as a zero. It does not publish an adoption rate, but that does not show that small firms are unready. It shows a tool that refused to pretend.
 
-We also watch owners skip from a band to a purchase in the same sitting. Ready still asks which workflow to start with and who owns it day to day. The band did not pick the vendor. You still have to.
+We also watch owners jump from a band to a purchase in the same sitting. Ready still asks which job to start with and who owns it day to day. The band did not pick the vendor, so you still have to.
 
 ## What we'd do
 
-We would score the clinic in front of us and leave Cisco in the footnote where it belongs. Our opinion: a small practice does not need to know whether it is a pacesetter. It needs to know whether the front desk lead's list and the clinician's notebook are the same list. Until they are, a recall tool will write confident messages from a record nobody owns.
+We would score the clinic in front of us and leave Cisco in the footnote where it belongs. In our view a small practice does not need to know whether it is a pacesetter. It needs to know whether the front desk lead's list and the clinician's notebook are the same list. Until they are, a recall tool will write confident messages from a record nobody owns.
 
-If we were the owner, we would spend the next ordinary weeks on one written recall path, including the patient who will not book at the desk, and we would tell the front desk lead to stop sending patient wording from a personal account until the owner has said what may go out. Then we would take the check again and read the band as a state, not as a prize. If it is still Early, we would believe it.
+If we were the owner, we would spend the next few ordinary weeks on one written recall path. It would include the patient who will not book at the desk. We would also ask the front desk lead to stop sending patient wording from a personal account until the owner has said what may go out. Then we would take the check again and read the band as a place to stand and not a prize. If it still says Early, we would believe it.
