@@ -462,6 +462,27 @@ Do not edit that repo from this plan. When Voice next touches the draft:
 4. Do not put `schema_score` or `bdr_fit_score` in any prompt.
 5. Re-run `test_abracadabra_pathway_schema.py` so the graph check still passes.
 
+## C. Inbound web leads get a reply from Sales Outbound (approved Oct 19, 2026)
+
+Christopher's decision on Oct 19, 2026: Sales Outbound (Houdini, houdini@abra-ca-dabra.app) replies to every Readiness Check submission and every start-a-project form submission, and **may send those replies automatically** without per-message approval. All other outreach stays approval-gated. Existing clients still go to Client Services (magic@).
+
+### Today (verified Oct 19, 2026)
+
+- **Readiness Check** (check.abra-ca-dabra.app): signed `POST /api/intake/assessment` creates an `assessments` row and may open a deal with `source = 'readiness_check'`, stage `new`. It sets no `routing_status` or `scored_at`, so `GET /api/leads/export` never returns it and no routine hands it to Sales Outbound. **Nobody replies.**
+- **Start a project** (abra-ca-dabra.app/start/): `worker/intake.js` handles `POST /api/intake` and only emails houdini@ through Resend (`RESEND_API_KEY`, `INTAKE_FROM`, `INTAKE_TO`). Nothing reaches HQ. The `abracadabra-marketing` worker has no secrets set, so the email step likely fails and visitors see "Not sent" (to confirm). Sales Outbound reads houdini@ only once a day.
+
+### Proposed (in progress, PR pending; not merged or deployed)
+
+1. New `routing_status = reply_needed`, set by HQ when a Readiness Check or start-form submission opens or attaches to an open deal with an email contact. `scored_at` is stamped so `since` works. It does not overwrite BDR deals already in `ready_for_outbound` or `enriched`.
+2. Start form posts a signed intake to HQ (HMAC `x-intake-signature` / `x-intake-timestamp`, the same scheme as the other intakes) and creates a deal with `source = 'start_form'`, storing need, budget, timeline, message, and company. The houdini@ email stays an optional extra. The visitor sees the thanks page once HQ accepts.
+3. `GET /api/leads/export?status=reply_needed&since=` (Bearer `LEAD_EXPORT_TOKEN`) returns these leads with `source`, contact name/email, readiness score and `report_url`, or the inquiry fields.
+4. A routine owned by Abra-ca-dabra polls that export and hands each new lead to Sales Outbound. Sales Outbound replies in Christopher's voice from houdini@ (Readiness Check: score, report link, and the discovery-call ask; start form: answer the brief and book discovery). It then posts `POST /api/intake/outreach` so the deal moves `new` to `contacted` and leaves the queue.
+5. Guardrails on auto-replies: one reply per lead, no invented prices, timelines, or results, existing clients routed to magic@, honor `opted_out`, and the honeypot and rate limits stay in place.
+
+### Relation to the voice plan
+
+`reply_needed` leads are email-first. They are candidates for `call_ready` only after the phone, consent, and timezone work in sections 3 and 5 is approved and built.
+
 ## What this plan does not do
 
 - No migration, no Wrangler edit, no secret, no route, no cron.
