@@ -506,12 +506,24 @@ A second review of the live site and of this plan, done the same day, looked at 
 
 **Problem.** The only third-party names on the homepage are the tool and model marquee (`index.html:617-624`). Logos of the tools used can read like a client list, which a careful visitor sees through. There are no testimonials, outcomes or numbers anywhere.
 
+**Approved clients.** The owner approved four clients for the band: **StrongFoam**, **Milrcorr**, **SuperPatch** and **PiRX**. All four already have portfolio pages, and their outcome lines come from facts already published in `scripts/site-data.mjs`:
+
+| Client | Card links to | Outcome line (from existing site copy) |
+|---|---|---|
+| StrongFoam | `/portfolio/strongfoam-website/` (also mentions `/portfolio/strongfoam-crm/`) | Website with offer, estimate and booking, plus one CRM for customers, jobs and numbers |
+| Milrcorr | `/portfolio/milrcorr/` | Public site for commercial fit-out work where a visitor sees the work and requests an estimate |
+| SuperPatch | `/portfolio/superpatch-products/` | Product pages that carry the offer, the comparison and the buyer questions |
+| PiRX | `/portfolio/pirx/` | 375K search impressions and 43.5K AI-feature impressions in 90 days, from near zero |
+
 **Spec.**
 - Relabel the marquee as "Built with" so it is clearly about tools.
-- Add a proof band after the showcase. It has up to three outcome cards (a short quote, name, role, company, and one concrete result), plus an optional row of two to four metrics in `tabular-nums` (R23).
-- Content comes from a single data file (`content/proof.json`) so the band renders nothing if the file is empty. No placeholder quotes ship. This item is blocked on real, approved content from the owner.
+- Add a proof band after the showcase with four client cards in the order above. Each card shows the company name, a one-line outcome and a link to the portfolio page. The grid is 4 columns at ≥ 1100 px, 2 × 2 from 640 px, and 1 column below that. Four cards replaces the earlier cap of three because the owner approved four clients.
+- Below the cards, a metric row in `tabular-nums` (R23) shows PiRX's two figures: "375K search impressions" and "43.5K AI-feature impressions", with the caption "pirx.ca, first 90 days". These are the only hard numbers available. No other metric is shown until the owner supplies one.
+- Quotes and named people are optional fields per entry (`quote`, `person`, `role`). They render only when present. None ship now, because no quotes or attributions were supplied. Do not write placeholder or paraphrased quotes.
+- Content comes from one data file (`content/proof.json`). Its entries reference the portfolio slugs in `scripts/site-data.mjs` (`strongfoam-website`, `milrcorr`, `superpatch-products`, `pirx`). Company name, link and PiRX metrics are read from that source, so the facts are stated in one place. The band still renders nothing if the file is empty.
+- Logos appear only if the owner provides them with permission. Until then, the company name is set in the display face.
 
-**Acceptance.** With an empty `proof.json`, the band is absent from the DOM. With entries, each card has a visible attribution, and the marquee heading reads "Built with".
+**Acceptance.** With an empty `proof.json`, the band is absent from the DOM. With the four approved entries, the band shows StrongFoam, Milrcorr, SuperPatch and PiRX, in that order. Each card links to an existing portfolio page that returns 200. The PiRX figures match `site-data.mjs` exactly. No card shows a quote or person unless that field is set. The marquee heading reads "Built with".
 
 **Test.** `'proof band renders only real entries and the marquee is labelled as tools'`.
 
@@ -844,9 +856,9 @@ No dependency on Phases 1–5 except R21's `sizes` values, which follow the D5/R
 | R19 structured intake | `#start` markup in `index.html`, generated `/start/` and `/start/thanks/` in `scripts/site-pages.mjs`, `assets/intake.js`, Worker route `POST /api/intake`, `.env.example` | `intake form validates, submits and confirms`; Worker unit tests for validation, honeypot, rate limit, and the provider-error path |
 | R26 footer closing band | `scripts/site-chrome.mjs` (`siteFooter`), `index.html`, `films.html`, `assets/site.css` | `footer closes with one primary call to action and studio details` |
 | R27 one primary verb | every CTA emitter: `index.html`, `scripts/site-pages.mjs`, `scripts/site-chrome.mjs`, `films.html`, `404.html` | `primary calls to action share one verb and one destination` |
-| R20 proof band (blocked) | `content/proof.json`, renderer in `scripts/site-pages.mjs` and `index.html`; marquee label | `proof band renders only real entries and the marquee is labelled as tools` |
+| R20 proof band (StrongFoam, Milrcorr, SuperPatch, PiRX) | `content/proof.json`, renderer in `scripts/site-pages.mjs` and `index.html`; marquee label | `proof band renders only real entries and the marquee is labelled as tools` |
 
-R20 merges only when the owner supplies at least three real entries (quote, name, role, link or logo with permission). Until then, the PR lands the relabelled marquee and the empty-safe renderer, which renders nothing for an empty `content/proof.json`.
+R20 ships with the four owner-approved clients (StrongFoam, Milrcorr, SuperPatch, PiRX) as company-plus-outcome cards. Quotes, named people and logos are added later, and only when the owner supplies them.
 
 **Gate.** Full `npm test` green; with `prefers-reduced-motion: reduce`, no view transition, reveal animation, or grain drift runs (Playwright run with the emulated media attached); a real intake submission on the preview deployment reaches the owner's inbox, and a submission with the honeypot filled is rejected; the form works with JavaScript disabled (redirect to `/start/thanks/`); INP on the homepage stays under 200 ms and CLS under 0.05 (Playwright `PerformanceObserver`), proving the grain and reveals do not cost interaction or layout stability.
 
@@ -857,7 +869,7 @@ Phase 1 ──► Phase 2 ──► Phase 3 ──► Phase 4 ──► Phase 5 
   D1 D2 D3     R2 D8       R7 R3        R6 D5       R9 R12      R22 R24
   D7 D6 D4*    D9 R11      R8 R4        R1 R15      R13 R14     R18 R19
                                                                 R26 R27
-                                                                R20†
+                                                                R20
 Phase 6 (independent; can ship any time)
   R16 R17 R21 R23 R25
 ```
@@ -866,7 +878,7 @@ Phase 6 (independent; can ship any time)
 
 Phase 6 touches only the document head, image markup, and type rules, so it can ship in parallel with Phases 1–5. R21's `sizes` follows the D5/R10 card widths (see the note under Phase 6). R25's cards reuse the R22 grain once it exists; until then the card template has no grain.
 
-Within Phase 7, R19 comes first because R26 and R27 point at its `#start` target. R26 and R27 also need R2's button tiers (Phase 2). R24 needs R12 (Phase 5) so the blog progress bar can move to `scroll(root)`. R18 needs R6 (Phase 4) so the header it names is the final one. `R20†` is blocked on owner content, not code.
+Within Phase 7, R19 comes first because R26 and R27 point at its `#start` target. R26 and R27 also need R2's button tiers (Phase 2). R24 needs R12 (Phase 5) so the blog progress bar can move to `scroll(root)`. R18 needs R6 (Phase 4) so the header it names is the final one. R20 has no code dependency and can land anywhere in Phase 7.
 
 ### 8.2 Deployment
 
@@ -888,7 +900,7 @@ Within Phase 7, R19 comes first because R26 and R27 point at its `#start` target
 | Two elements share a `view-transition-name` on one page, which aborts the transition | Names are set only on the single header and footer wordmark; the R18 test asserts each name occurs once per page. |
 | Full-viewport grain overlay costs paint time on low-end phones | Static tiled PNG (no animated noise), `pointer-events: none`, removed under `prefers-reduced-transparency`/reduced motion where it drifts; the Phase 7 INP/CLS gate measures it. |
 | OG card generation needs Chrome, which CI may lack | `scripts/build-og.mjs` runs manually and its JPG outputs are committed; the test checks the committed files, not the generator. |
-| R20 has no real proof content | The renderer is empty-safe and ships with the marquee relabel; the proof band itself waits for the owner (see Phase 7). |
+| R20 proof overstates what clients said | Cards state only outcomes already published on the portfolio pages. The single metric row uses PiRX's own reported numbers. Quotes and names stay off until the owner supplies them. |
 
 ### 8.4 Documentation updates (same PR as the code)
 
@@ -924,4 +936,5 @@ Each PR also appends an entry to this document's change log (section 10) and, wh
 ## 10. Change log
 
 - **2026-10-19** — Specification created from the 2026-10-19 audit (12 pages × 13 viewports, 353 captures; 9 defects, 15 recommendations). No implementation yet.
+- **2026-10-19** — R20 unblocked: the owner approved StrongFoam, Milrcorr, SuperPatch and PiRX for the proof band. The band now has four company-plus-outcome cards linked to their portfolio pages and a PiRX metric row, with quotes and names optional.
 - **2026-10-19** — Second premium pass: added R16–R27 (section 5A) and Phases 6–7, with the dependency, risk, documentation, and checklist updates. R20 is blocked on owner-supplied proof content. No implementation yet.
