@@ -69,8 +69,8 @@ test("films archive plays the eight Super Funnel walkthroughs", () => {
     description.length <= 160,
     `description is ${description.length} characters`,
   );
-  assert.match(html, /dateModified": "2026-10-07"/);
-  assert.equal((html.match(/"@type": "VideoObject"/g) || []).length, 11);
+  assert.match(html, /dateModified": "2026-10-19"/);
+  assert.equal((html.match(/"@type": "VideoObject"/g) || []).length, 12);
 
   for (const cut of cuts) {
     const src = `assets/films/${cut.slug}.mp4`;
@@ -94,7 +94,7 @@ test("sitemap lists the Super Funnel cuts with measured durations", () => {
   const xml = readFileSync(join(root, "sitemap.xml"), "utf8");
   assert.match(
     xml,
-    /<loc>https:\/\/abra-ca-dabra\.app\/films\.html<\/loc>\s*<lastmod>2026-10-07<\/lastmod>/,
+    /<loc>https:\/\/abra-ca-dabra\.app\/films\.html<\/loc>\s*<lastmod>2026-10-19<\/lastmod>/,
   );
   for (const cut of cuts) {
     assert.match(
@@ -103,5 +103,19 @@ test("sitemap lists the Super Funnel cuts with measured durations", () => {
         `<video:content_loc>https://abra-ca-dabra\\.app/assets/films/${cut.slug}\\.mp4</video:content_loc>\\s*<video:duration>${cut.seconds}</video:duration>`,
       ),
     );
+  }
+});
+
+test("the StrongFoam CRM/ERP film plays on the films page and its case study", () => {
+  const films = readFileSync(join(root, "films.html"), "utf8");
+  assert.match(films, /src="assets\/films\/strongfoam-erp-demo\.mp4"/);
+  assert.match(films, /poster="assets\/films\/thumbs\/strongfoam-erp-demo\.jpg"/);
+  assert.match(films, /"duration": "PT3M3S"/);
+  const page = readFileSync(join(root, "portfolio/strongfoam-crm/index.html"), "utf8");
+  assert.match(page, /<video class="case-film" controls playsinline preload="none" poster="\/assets\/films\/thumbs\/strongfoam-erp-demo\.jpg" src="\/assets\/films\/strongfoam-erp-demo\.mp4"/);
+  const hub = readFileSync(join(root, "portfolio/index.html"), "utf8");
+  assert.match(hub, /<a href="\/portfolio\/strongfoam-crm\/"><img src="\/assets\/strongfoam-erp-demo\.webp"/);
+  for (const file of ["assets/films/strongfoam-erp-demo.mp4", "assets/films/thumbs/strongfoam-erp-demo.jpg", "assets/strongfoam-erp-demo.webp"]) {
+    assert.equal(existsSync(join(root, file)), true, `${file} is on disk`);
   }
 });

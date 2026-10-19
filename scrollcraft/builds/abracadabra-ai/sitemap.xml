@@ -41,9 +41,17 @@
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/films.html</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/strongfoam-erp-demo.jpg</video:thumbnail_loc>
+      <video:title>StrongFoam CRM/ERP: lead to closeout</video:title>
+      <video:description>One spray-foam job in the StrongFoam CRM/ERP: inbound email, cited estimate suggestions, schedule, field voice notes and photo captions, and closeout.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/strongfoam-erp-demo.mp4</video:content_loc>
+      <video:duration>183</video:duration>
+      <video:publication_date>2026-10-19</video:publication_date>
+    </video:video>
     <video:video>
       <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/schema-home-scan.jpg</video:thumbnail_loc>
       <video:title>Schema live home and scan capture</video:title>

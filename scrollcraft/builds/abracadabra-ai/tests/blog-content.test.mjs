@@ -222,7 +222,7 @@ describe("blog content", () => {
       }
     }
     assert.match(sitemap, /<loc>https:\/\/abra-ca-dabra\.app\/blog<\/loc>/);
-    assert.match(sitemap, /films\.html[\s\S]*<lastmod>2026-10-07<\/lastmod>/);
+    assert.match(sitemap, /films\.html[\s\S]*<lastmod>2026-10-19<\/lastmod>/);
   });
 
   it("ships BlogPosting, breadcrumbs, FAQ, citations, and check CTAs", async () => {

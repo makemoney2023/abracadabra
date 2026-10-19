@@ -578,11 +578,19 @@ export const cases = [
     slug: "strongfoam-crm",
     name: "StrongFoam CRM/ERP",
     kind: "app",
+    image: "/assets/strongfoam-erp-demo.webp",
+    imageAlt: "StrongFoam CRM/ERP film poster: lead, spray, closeout.",
+    film: {
+      src: "/assets/films/strongfoam-erp-demo.mp4",
+      poster: "/assets/films/thumbs/strongfoam-erp-demo.jpg",
+      label: "StrongFoam CRM/ERP: lead to closeout",
+    },
     summary: "The record you work in: the customer, the job, and the numbers, in one place.",
     services: ["custom-apps"],
     body: [
       "One place for customers, jobs and numbers, built around how StrongFoam works.",
       "The customer, the job, and the numbers live in one place.",
+      "The film follows one job in about three minutes: an inbound email becomes an estimate with cited suggestions, then a schedule and a job. Field crews add voice notes and photo captions, and the closeout ends in a daily digest.",
     ],
   },
   {

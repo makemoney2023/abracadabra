@@ -18,7 +18,7 @@ function videoObjects(file) {
   return out;
 }
 
-for (const [file, count] of [["index.html", 2], ["films.html", 11]]) {
+for (const [file, count] of [["index.html", 2], ["films.html", 12]]) {
   test(`${file} VideoObjects carry a crawlable 1280x720 JPG thumbnail`, async () => {
     const videos = videoObjects(file);
     assert.equal(videos.length, count);
@@ -37,6 +37,6 @@ for (const [file, count] of [["index.html", 2], ["films.html", 11]]) {
 test("every sitemap video thumbnail is a JPG under assets/films/thumbs", () => {
   const xml = readFileSync(join(root, "sitemap.xml"), "utf8");
   const locs = [...xml.matchAll(/<video:thumbnail_loc>([^<]+)</g)].map((m) => m[1]);
-  assert.equal(locs.length, 13);
+  assert.equal(locs.length, 14);
   for (const loc of locs) assert.match(loc, /^https:\/\/abra-ca-dabra\.app\/assets\/films\/thumbs\/[a-z-]+\.jpg$/);
 });
