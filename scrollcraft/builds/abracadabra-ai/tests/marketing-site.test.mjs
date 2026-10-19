@@ -94,54 +94,22 @@ test('hero states the owner outcome with two clear actions', async () => {
   await context.close();
 });
 
-test('wordmark is an outlined Abra-ca-dabra with sparkle hyphens', async () => {
-  const accent = await readFile(join(root, 'assets/wordmark/abra-ca-dabra-accent.svg'), 'utf8');
-  const ink = await readFile(join(root, 'assets/wordmark/abra-ca-dabra.svg'), 'utf8');
-  const light = await readFile(join(root, 'assets/wordmark/abra-ca-dabra-light.svg'), 'utf8');
-  const lightAccent = await readFile(join(root, 'assets/wordmark/abra-ca-dabra-light-accent.svg'), 'utf8');
-
-  for (const svg of [accent, ink, light, lightAccent]) {
-    assert.match(svg, /<title>Abra-ca-dabra<\/title>/);
-    assert.equal(svg.match(/data-accent="star"/g)?.length, 2);
-    assert.doesNotMatch(svg, /<(text|tspan)[\s>]/i);
-    assert.doesNotMatch(svg, /crescent|moon/i);
-    assert.match(svg, /<path\b/i);
-  }
-  assert.match(accent, /#F5F1E8/i);
-  assert.match(accent, /#FF4B24/i);
-  assert.match(ink, /#F5F1E8/i);
-  assert.doesNotMatch(ink, /#FF4B24/i);
-  assert.match(light, /#070706/i);
-  assert.match(lightAccent, /#070706/i);
-  assert.match(lightAccent, /#FF4B24/i);
-
-  for (const name of [
-    'abra-ca-dabra-dark-ink-512.png',
-    'abra-ca-dabra-dark-ink-2048.png',
-    'abra-ca-dabra-dark-accent-512.png',
-    'abra-ca-dabra-dark-accent-2048.png',
-    'abra-ca-dabra-light-ink-512.png',
-    'abra-ca-dabra-light-ink-2048.png',
-    'abra-ca-dabra-light-accent-512.png',
-    'abra-ca-dabra-light-accent-2048.png',
-  ]) {
-    const meta = await sharp(join(root, 'assets/wordmark', name)).metadata();
-    assert.equal(meta.width, name.includes('2048') ? 2048 : 512, name);
-    assert.ok(meta.height > 32, name);
-  }
-
-  const samples = JSON.parse(await readFile(join(root, 'assets/wordmark/abra-ca-dabra-samples.json'), 'utf8'));
-  assert.ok(Array.isArray(samples.points));
-  assert.ok(samples.points.length >= 2000 && samples.points.length <= 8000);
-  const starCount = samples.points.filter((point) => point[2] === 1).length;
-  assert.ok(starCount >= 80, `star samples ${starCount}`);
-  assert.ok(samples.points.length - starCount > starCount);
-  for (const point of samples.points) {
-    assert.equal(point.length, 3);
-    assert.ok(Math.abs(point[0]) <= 0.55);
-    assert.ok(Math.abs(point[1]) <= 0.25);
-    assert.ok(point[2] === 0 || point[2] === 1);
-  }
+test('wordmark is lowercase Inter Tight with an orange dot', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800, reducedMotion: 'reduce' });
+  const mark = page.locator('#hero .hero__wm');
+  assert.equal((await mark.textContent()).trim(), 'abracadabra.');
+  const style = await mark.evaluate((element) => {
+    const s = getComputedStyle(element);
+    return { family: s.fontFamily, weight: s.fontWeight, spacing: parseFloat(s.letterSpacing) / parseFloat(s.fontSize) };
+  });
+  assert.match(style.family, /^"?Inter Tight"?/);
+  assert.equal(style.weight, '600');
+  assert.ok(Math.abs(style.spacing + 0.05) < 0.005, `letter-spacing ${style.spacing}em`);
+  assert.equal(await page.locator('#hero .wm-dot').evaluate((element) => getComputedStyle(element).color), 'rgb(255, 75, 36)');
+  assert.ok(await page.evaluate(() => document.fonts.check('600 40px "Inter Tight"')));
+  assert.match(await page.locator('h1').evaluate((element) => getComputedStyle(element).fontFamily), /Inter Tight/);
+  assert.equal(page.requests.some((path) => /tektur/i.test(path)), false);
+  await context.close();
 });
 
 test('hero headline is real HTML and readable on the first screen', async () => {
@@ -173,72 +141,67 @@ test('hero headline is real HTML and readable on the first screen', async () => 
   }
 });
 
-test('reduced motion shows the settled orb and does not load the 3D code', async () => {
+test('reduced motion shows the wordmark with no canvas', async () => {
   const { context, page } = await openPage({ width: 1280, height: 800, reducedMotion: 'reduce' });
-  assert.equal(
-    await page.evaluate(() => document.documentElement.classList.contains('hero-settled')),
-    true,
-  );
+  assert.equal(await page.evaluate(() => document.documentElement.classList.contains('wm-js')), false);
   assert.equal(page.requests.some((path) => path.includes('hero-three.js')), false);
   assert.equal(await page.locator('#hero .hero__canvas').count(), 0);
-  assert.equal(await page.locator('#hero .hero__orb').evaluate((element) => getComputedStyle(element).opacity), '1');
-  assert.equal(await page.locator('#hero .hero__wordmark').evaluate((element) => getComputedStyle(element).opacity), '0');
+  await page.waitForTimeout(1500);
+  assert.equal(await page.locator('#hero .hero__wm').evaluate((element) => getComputedStyle(element).opacity), '1');
   assert.deepEqual(page.errors, []);
   await context.close();
 });
 
-test('the reveal lazy-loads 3D, plays once per session, and skips', async () => {
-  const { context, page } = await openPage({ width: 1280, height: 800 });
-  assert.equal(page.requests.some((path) => path.includes('hero-three.js')), true);
-  assert.equal(
-    page.requests.some((path) => path.includes('three.module.js') || path.includes('three.core.js')),
-    false,
-  );
-  await page.waitForSelector('#hero .hero__canvas', { timeout: 5000 });
-  await page.locator('#hero .hero__skip').click();
-  await page.waitForFunction(() => document.documentElement.classList.contains('hero-settled'));
-  assert.equal(await page.evaluate(() => sessionStorage.getItem('abra-hero-reveal')), '1');
-  assert.equal(await page.locator('#hero .hero__canvas').count(), 0);
-  assert.equal(await page.locator('#hero .hero__orb').evaluate((element) => getComputedStyle(element).opacity), '1');
-
-  const threeLoads = page.requests.filter((path) => path.includes('hero-three.js')).length;
-  await page.goto(origin, { waitUntil: 'networkidle' });
-  assert.equal(page.requests.filter((path) => path.includes('hero-three.js')).length, threeLoads);
-  assert.equal(
-    await page.evaluate(() => document.documentElement.classList.contains('hero-settled')),
-    true,
-  );
-  assert.equal(await page.locator('#hero .hero__canvas').count(), 0);
-  assert.deepEqual(page.errors, []);
-  await context.close();
-});
-
-test('scrolling skips the reveal', async () => {
+test('the canvas reveal plays in full once per session, then a quick version', async () => {
   const { context, page } = await openPage({ width: 1280, height: 800 });
   await page.waitForSelector('#hero .hero__canvas', { timeout: 5000 });
-  await page.mouse.wheel(0, 700);
-  await page.waitForFunction(() => document.documentElement.classList.contains('hero-settled'), { timeout: 2000 });
-  assert.equal(await page.evaluate(() => sessionStorage.getItem('abra-hero-reveal')), '1');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('abra-wm')), '1');
+  await page.waitForFunction(() => document.documentElement.classList.contains('wm-dot-on'), { timeout: 5000 });
+  await page.waitForFunction(() => getComputedStyle(document.querySelector('#hero .hero__wm')).opacity === '1', { timeout: 2000 });
+  const started = Date.now();
+  await page.goto(origin, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.documentElement.classList.contains('wm-dot-on'), { timeout: 3000 });
+  assert.ok(Date.now() - started < 2500, 'repeat visit should use the quick reveal');
   assert.deepEqual(page.errors, []);
   await context.close();
 });
 
-test('without WebGL the static wordmark and orb stay visible', async () => {
+test('the reveal loop pauses when the hero leaves the screen', async () => {
+  const { context, page } = await openPage({ width: 1280, height: 800 });
+  await page.waitForFunction(() => window.__wmRunning && window.__wmRunning(), { timeout: 5000 });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForFunction(() => !window.__wmRunning(), { timeout: 3000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForFunction(() => window.__wmRunning(), { timeout: 3000 });
+  assert.deepEqual(page.errors, []);
+  await context.close();
+});
+
+test('the wordmark sits above the headline on a phone', async () => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 360, height: 780 }]) {
+    const { context, page } = await openPage({ ...viewport, reducedMotion: 'reduce' });
+    const stage = await page.locator('#hero .hero__stage').boundingBox();
+    const title = await page.locator('#hero-title').boundingBox();
+    const mark = await page.locator('#hero .hero__wm').boundingBox();
+    assert.ok(stage.y + stage.height <= title.y, `${viewport.width}px wordmark is not above the headline`);
+    assert.ok(mark.width >= viewport.width * 0.7 && mark.x >= 0 && mark.x + mark.width <= viewport.width, `${viewport.width}px wordmark width ${mark.width}`);
+    await context.close();
+  }
+});
+
+test('without a 2D canvas the wordmark still appears', async () => {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await context.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function getContext(kind) {
-      if (String(kind).includes('webgl')) return null;
-      return original.apply(this, arguments);
+    HTMLCanvasElement.prototype.getContext = function getContext() {
+      return this.classList.contains('hero__canvas') ? null : original.apply(this, arguments);
     };
   });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto(origin, { waitUntil: 'networkidle' });
-  await page.waitForFunction(() => document.documentElement.classList.contains('hero-static'), { timeout: 5000 });
-  assert.equal(await page.locator('#hero .hero__wordmark').evaluate((element) => getComputedStyle(element).opacity), '1');
-  assert.equal(await page.locator('#hero .hero__orb').evaluate((element) => getComputedStyle(element).opacity), '1');
+  await page.waitForFunction(() => document.documentElement.classList.contains('wm-on'), { timeout: 5000 });
   assert.deepEqual(errors, []);
   await context.close();
 });
