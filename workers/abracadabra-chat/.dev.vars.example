@@ -1,0 +1,18 @@
+# Names only. Put values in `wrangler secret put` or a local .dev.vars that is not committed.
+# CAL_LINK is the Cal.com path, for example abracadabra/working-session. Empty shows the in-chat time card.
+CAL_LINK=
+# Same link, if you already use the HQ agent name.
+BOOKING_URL=
+READINESS_CHECK_URL=https://check.abra-ca-dabra.app/check
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
+AI_GATEWAY_ID=abracadabra-chat
+AI_GATEWAY_TOKEN=
+CF_ACCOUNT_ID=
+AI_MODEL=@cf/meta/llama-3.1-8b-instruct-fast
+# Signs the abra.chat.handoff v1.0 body. The mail goes to houdini@, never to the visitor.
+HANDOFF_HMAC_SECRET=
+CHAT_HANDOFF_TO=houdini@abra-ca-dabra.app
+CHAT_HANDOFF_FROM=Abracadabra Chat <chat@abra-ca-dabra.app>
+# Extra allowed Origins, comma-separated. The apex and localhost are already allowed.
+CHAT_ORIGINS=

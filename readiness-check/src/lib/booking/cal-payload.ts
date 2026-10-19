@@ -22,12 +22,13 @@ export type CalBookingEvent = {
   email: string | null;
   name: string | null;
   assessmentToken: string | null;
+  chatSessionId: string | null;
 };
 
 export function parseCalPayload(body: unknown): CalBookingEvent {
   const parsed = payloadSchema.safeParse(body);
   if (!parsed.success) {
-    return { kind: "ignored", externalId: null, startsAt: null, endsAt: null, email: null, name: null, assessmentToken: null };
+    return { kind: "ignored", externalId: null, startsAt: null, endsAt: null, email: null, name: null, assessmentToken: null, chatSessionId: null };
   }
   const kind =
     parsed.data.triggerEvent === "BOOKING_CREATED"
@@ -41,6 +42,9 @@ export function parseCalPayload(body: unknown): CalBookingEvent {
   const attendee = payload?.attendees?.[0];
   const meta = payload?.metadata ?? {};
   const token = typeof meta.assessment === "string" ? meta.assessment : null;
+  const chatSessionId = typeof meta.chat_session_id === "string" && meta.chat_session_id.trim()
+    ? meta.chat_session_id.trim().slice(0, 80)
+    : null;
   return {
     kind,
     externalId: payload?.uid ?? null,
@@ -49,5 +53,6 @@ export function parseCalPayload(body: unknown): CalBookingEvent {
     email: attendee?.email ?? null,
     name: attendee?.name ?? null,
     assessmentToken: token,
+    chatSessionId,
   };
 }

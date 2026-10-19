@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       startsAt: event.startsAt,
       email: event.email,
       name: event.name,
+      chatSessionId: event.chatSessionId,
     });
     if (!local && forwarded.skipped) {
       if (!event.externalId || !event.startsAt) return NextResponse.json({ ok: true, ignored: true });

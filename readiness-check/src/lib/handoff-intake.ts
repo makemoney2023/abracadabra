@@ -144,6 +144,30 @@ async function postAssessmentRow(
   return postSignedIntake(origin, secret, "/api/intake/assessment", built.body, now);
 }
 
+export function bookingIntakeBody(event: {
+  kind: "created" | "rescheduled" | "cancelled";
+  externalId: string | null;
+  startsAt: string | null;
+  email: string | null;
+  name: string | null;
+  chatSessionId?: string | null;
+}): { skip: true } | { skip: false; body: Record<string, unknown> } {
+  if (!event.externalId || !event.startsAt) return { skip: true };
+  const startsAt = Date.parse(event.startsAt);
+  if (!Number.isFinite(startsAt)) return { skip: true };
+  return {
+    skip: false,
+    body: {
+      external_id: event.externalId,
+      email: event.email,
+      name: event.name,
+      starts_at: startsAt,
+      kind: event.kind,
+      ...(event.chatSessionId ? { chat_session_id: event.chatSessionId } : {}),
+    },
+  };
+}
+
 export async function forwardBooking(
   event: {
     kind: "created" | "rescheduled" | "cancelled";
@@ -151,25 +175,13 @@ export async function forwardBooking(
     startsAt: string | null;
     email: string | null;
     name: string | null;
+    chatSessionId?: string | null;
   },
   now = Date.now(),
 ): Promise<{ ok: true; skipped?: boolean }> {
   const { origin, secret } = intakeEnv();
   if (!origin || !secret) return { ok: true, skipped: true };
-  if (!event.externalId || !event.startsAt) return { ok: true, skipped: true };
-  const startsAt = Date.parse(event.startsAt);
-  if (!Number.isFinite(startsAt)) return { ok: true, skipped: true };
-  return postSignedIntake(
-    origin,
-    secret,
-    "/api/intake/booking",
-    {
-      external_id: event.externalId,
-      email: event.email,
-      name: event.name,
-      starts_at: startsAt,
-      kind: event.kind,
-    },
-    now,
-  );
+  const built = bookingIntakeBody(event);
+  if (built.skip) return { ok: true, skipped: true };
+  return postSignedIntake(origin, secret, "/api/intake/booking", built.body, now);
 }

@@ -2,6 +2,17 @@
 
 Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](../../../docs/source-of-truth.md). The project brief is in `BRIEF.md`. Footage and sales packs live in `/outputs`.
 
+The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
+
+## Chat on the site — 2026-10-19
+
+- **What changed** — Every catalog page loads a studio chat panel. A visitor can book a thirty-minute working session in the panel, open the AI Readiness Check, or leave a name and email. Cal.com opens inside the panel when `CAL_LINK` is set. With no link, the panel asks for two times.
+- **Why** — The booking page and the check should be reachable without leaving the conversation.
+- **Code touchpoints** — `assets/chat-widget.js`, `scripts/site-chrome.mjs`, `worker/intake.js`, `wrangler.jsonc`, `walkthrough.html`, `workers/abracadabra-chat/`.
+- **Data-flow impact** — `POST /api/chat/session`, `/message`, `/contact`, and `/events` are proxied to the chat Worker. A consented contact or a finished booking is signed as `abra.chat.handoff` v1.0 and mailed to houdini@.
+- **API / schema impact** — New same-origin chat routes. No change to `POST /api/intake`.
+- **Verification** — `node --test test/*.test.js` in `workers/abracadabra-chat`. `node --test tests/chat-widget.test.mjs tests/chat-proxy.test.mjs tests/chat-widget.browser.test.mjs` in this folder.
+
 ```bash
 # from this folder
 npx --yes serve -l 4500

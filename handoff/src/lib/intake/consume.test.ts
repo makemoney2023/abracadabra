@@ -325,6 +325,29 @@ describe("intake consumer", () => {
     const orgs = await sql.all<{ id: string }>("SELECT id FROM organizations");
     expect(orgs).toHaveLength(0);
   });
+
+  it("stores the chat session id on the booking activity", async () => {
+    const sql = await database();
+    await consumeIntake(sql, { source: "assessment", payload: assessment }, NOW);
+    await consumeIntake(
+      sql,
+      {
+        source: "booking",
+        payload: {
+          external_id: "cal-chat",
+          email: "ada@northwind.example",
+          name: "Ada North",
+          domain: "northwind.example",
+          starts_at: NOW + 86_400_000,
+          kind: "created",
+          chat_session_id: "6f1e8c0a-1b2c-4d3e-8f90-aabbccddeeff",
+        },
+      },
+      NOW + 2,
+    );
+    const activity = await sql.get<{ data_json: string }>("SELECT data_json FROM activities WHERE kind = 'call'");
+    expect(JSON.parse(activity?.data_json || "{}").chat_session_id).toBe("6f1e8c0a-1b2c-4d3e-8f90-aabbccddeeff");
+  });
 });
 
 describe("bookingFrom", () => {
