@@ -28,7 +28,7 @@ faqs:
   - question: "What share of leaders lack AI-ready data practices?"
     answer: "Gartner's February 2025 note says 63% do not have them, or are unsure they have them. Through 2026 it expects firms to abandon 60% of AI projects that lack AI-ready data."
   - question: "Why do generative projects get abandoned?"
-    answer: "Gartner's January 2026 article says at least 50% of generative AI projects were abandoned after proof of concept by the end of last year, for poor data quality, weak risk controls, rising cost, or unclear value."
+    answer: "Gartner's January 2026 article says at least 50% of generative AI projects were abandoned after the first test run by the end of last year, for poor data quality, weak risk controls, rising cost, or unclear value."
 citations:
   - id: gartner-data
     title: "Lack of AI-ready data puts AI projects at risk"
@@ -44,86 +44,86 @@ citations:
     figures: ["2026", "50"]
 ---
 
-AI-ready data for a small business is one current source a system can read, with a person who knows which fields lie. It is not a warehouse, a lake, or a platform with a serious name. If the answer lives only in someone's head, the tool will invent a second version of it, and the second version will sound sure of itself.
+AI-ready data for a small business is one current place a system can read. It also needs a person who knows which fields are wrong. It is not a warehouse, a lake, or a platform with a serious name. If the answer lives only in someone's head, the tool will make up a second version. That version will sound very sure of itself.
 
-Owners get told to "get their data ready" as if that meant consultants and a new place to store everything. For the job in front of you, ready means smaller. One source. Current enough that the person doing the job believes it today. Readable without a retype. And a human who knows which fields are flattering lies. If you cannot point at that source, stop the purchase.
+Owners often hear that they must "get their data ready," as if that meant hiring consultants. It sounds like you must also buy a new place to store everything. For the job in front of you, ready means something much smaller. You need one place for the facts. It has to be current enough that the person doing the job trusts it today. A system has to be able to read it without anyone retyping it. And someone has to know which fields look fine but are not. If you cannot point at that place, stop the purchase.
 
-The [low-data guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-data-low) and the [mid-data guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-data-mid) are the matching fixes. The [checklist](/blog/ai-readiness-checklist) asks the same question before a purchase. Low means you cannot yet name a source. Mid means you have something a system should not trust yet. Neither guide is a shopping list.
+The [low-data guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-data-low) and the [mid-data guide](https://check.abra-ca-dabra.app/check/guide/fix/ready-data-mid) are the matching fixes. The [checklist](/blog/ai-readiness-checklist) asks the same question before you buy anything. Low means you cannot yet name the place the facts live. Mid means you have something, but a system should not trust it yet. Neither guide is a shopping list.
 
 ## What the research counts
 
-Gartner reported in February 2025 that 63% of respondents do not have, or are unsure they have, the data management practices AI needs.[^gartner-data] Through 2026, the same note says, organizations will abandon 60% of AI projects unsupported by AI-ready data. The page's sample size is not cited here, because the article and its structured data do not agree.
+Gartner reported in February 2025 that 63% of respondents lack the data management practices AI needs, or are unsure they have them.[^gartner-data] It also said that through 2026, firms will abandon 60% of AI projects that lack AI-ready data. We do not cite the sample size here, because the article and its structured data do not agree on it.
 
-We keep that last sentence because it is easy to launder a percentage into a precision it does not have. 63% is what the note reports about respondents. We will not add a sample size the page does not let us stand behind. The useful part is the shape of the failure: firms go ahead without the practices, and unsupported projects get dropped. Through 2026, the note expects organizations to abandon 60% of AI projects unsupported by AI-ready data. A tool can be full of features and still be unsupported if the record under it is a guess.
+We keep that last point because it is easy to turn a percentage into more precision than it has. The 63% is what the note reports about the people it asked. We will not add a sample size that the page does not let us stand behind. The useful part is the shape of the failure. Firms go ahead without the practices, and then they drop the projects. A tool can be full of features and still be unsupported if the record under it is a guess.
 
-A later Gartner article, from January 2026, says that by the end of last year at least 50% of generative AI projects were abandoned after proof of concept.[^gartner-fail] The reasons it names are poor data quality, inadequate risk controls, escalating costs, and unclear business value.
+A later Gartner article is from January 2026. It says at least 50% of generative AI projects were abandoned after the first test run by the end of last year.[^gartner-fail] The reasons it gives are poor data quality, weak risk controls, rising costs, and unclear business value.
 
-Read those reasons as ways a proof of concept flatters you. The demo works on a clean slice someone prepared. Poor data quality shows up when the real record arrives, with blank fields and two spellings of the same customer. Inadequate risk controls show up when nobody may stop a wrong output. Escalating costs show up when the retype you hoped to delete is still there, plus a fee. Unclear value shows up when you cannot say what you stopped doing. At least 50% abandoned after proof of concept describes projects that got to look successful once. It is a reason to refuse a proof that uses better data than you actually have.
+Read those reasons as ways a first test run can flatter you. The demo works on a clean slice that someone prepared by hand. Poor data quality shows up when the real record arrives, with blank fields and two spellings of the same customer. Weak risk controls show up when nobody is allowed to stop a wrong answer. Rising costs show up when the retyping you hoped to delete is still there. Now there is a new fee too. Unclear value shows up when you cannot say what you stopped doing. The figure for abandoned projects describes work that looked like a success once. So it is a good reason to refuse a test that uses better data than you really have.
 
 <!--image:2-->
 
 | Where the knowledge lives | What a tool can do with it |
 | --- | --- |
-| One person's head | Almost nothing repeatable |
-| Documents no system can read | A person still has to retype |
-| One system with a current record | The job can be tried |
+| Only in one person's head | Almost nothing that can be repeated |
+| In documents that no system can read | A person still has to retype it all |
+| In one system with a current record | The job can be tried |
 
 <!--cta:inline-->
 
-Pick one job. Name its source. If you cannot, stop the purchase and fix the source. That is the whole data test.
+Pick one job and name the place its facts live. If you cannot, stop the purchase and fix that first. That is the whole data test.
 
-The table is the test, and owners try to answer it with a tour of their software instead of a location. If the knowledge lives in one person's head, a tool has almost nothing it can repeat. If it lives in documents no system can read, a person still retypes, which means you bought a second job. If it lives in one system with a current record, the job can be tried. Tried is the honest verb. The table does not promise success. It says the attempt is no longer fiction.
+The table is the test, and owners often answer it with a tour of their software instead of a location. If the knowledge lives in one person's head, a tool has almost nothing it can repeat. If it lives in documents no system can read, a person still retypes, which means you bought a second job. If it lives in one system with a current record, the job can be tried. Tried is the honest word, because the table does not promise success. It only says the attempt is no longer make-believe.
 
-We add one column in conversation that the table does not need to print: who knows which fields lie. A current record can still flatter. The phone number is current and the "approved for the extra work" box is wishful. The person who knows that is part of AI-ready data. A warehouse without that person is a larger place to be wrong.
+We add one more question in conversation that the table does not need to print. It is who knows which fields are wrong. A current record can still flatter you. The phone number may be right while the box that says "approved for the extra work" is only wishful. The person who knows that is part of AI-ready data. A warehouse without that person is just a larger place to be wrong.
 
 <!--image:3-->
 
-Two phrases we will not use as substitutes for the source. "We have a lot of data" means a pile. Piles are not current on purpose. "We can export it" means a person can make a snapshot that starts going stale while the file downloads. An export is a document. If no system can read the live record, you are in the middle row of the table, and the person who exports is now the process. Fix the source they are exporting from before you call the export a strategy.
+There are two phrases we will not accept in place of a named place for the facts. "We have a lot of data" means a pile, and a pile is not kept current on purpose. "We can export it" means a person can make a snapshot that starts going stale while the file downloads. An export is a document. If no system can read the live record, you are in the middle row of the table. The person who exports it has become the process. Fix the place they export from before you call the export a plan.
 
 ## A worked example
 
-Say we are in the office of a small landscaping company on a weekday morning. One person schedules. Another leads a crew. This is an example we walk through. We are not reporting their routes or their revenue. There is no measured before and after. There is a job, and a question about where its record lives.
+Say we are in the office of a small landscaping company on a weekday morning. One person does the scheduling and another leads a crew. This is an example we walk through, so we are not reporting their routes or their revenue. There is no measured before and after, only a job and a question about where its record lives.
 
-The job the owner wants a tool to do is the customer update: what the crew did, what is left, and whether the customer owes a decision about extra work. A vendor showed a draft that sounded like the crew lead, only smoother. The owner liked the sound. We asked where the facts in that draft would come from.
+The job the owner wants a tool to do is the customer update. It says what the crew did, what is left, and whether the customer owes a decision about extra work. A vendor showed a draft that sounded like the crew lead, only smoother. The owner liked the sound, so we asked where the facts in that draft would come from.
 
-The scheduler says the booking tool is the source. It knows the address and the window. The crew lead says the truth is the note she writes in a group text after the crew walks the yard. The owner keeps a spreadsheet of who has approved extras, because he does not trust the booking tool with money questions. Three homes for one update. A draft from the booking tool alone will miss the yard note and may invent the approval. That second version will sound like the crew lead and be wrong in the way that costs trust.
+The scheduler says the booking tool is the answer, because it knows the address and the time window. The crew lead says the truth is in the note she writes in a group text. She sends it after the crew walks the yard. The owner keeps a spreadsheet of who has approved extras. He does not trust the booking tool with money questions. That makes three homes for one update. A draft built from the booking tool alone will miss the yard note and may invent the approval. The made-up version will sound like the crew lead. It will be wrong in the way that costs trust.
 
-Where the knowledge lives, in the table's words: partly in one person's head, the crew lead's, until she texts; partly in documents the booking tool does not read, the group text and the owner's spreadsheet; not yet in one system with a current record of the whole job. A system could read the address. It could not read "the side bed was wetter than expected, so we stopped and need a yes on the extra drainage" unless someone retypes that into a field. So the middle row is the honest row. A person still has to retype. Buying the draft tool now adds a voice to the retype. It does not remove it.
+Using the words of the table, the knowledge lives partly in one person's head until she sends her text. That head is the crew lead's. It also lives in documents the booking tool does not read, which are the group text and the owner's spreadsheet. It does not yet live in one system with a current record of the whole job. A system could read the address. It could not read "the side bed was wetter than expected, so we stopped and need a yes on the extra drainage." That only works if someone retypes it into a field. So the middle row is the honest row, because a person still has to retype. Buying the draft tool now adds a voice to the retyping and does not remove it.
 
-We ask who knows which fields lie. The crew lead knows the yard. The scheduler knows which customers answer. The owner knows the spreadsheet falls behind whenever he is on a job himself. The record is split across a text, a schedule, and a sheet, and current means something different in each. For the customer update, current has to mean this morning's yard plus whether the extra is approved. They do not have one place that means both.
+We then ask who knows which fields are wrong. The crew lead knows the yard, and the scheduler knows which customers answer their phones. The owner knows his spreadsheet falls behind whenever he is out on a job himself. The record is split across a text, a schedule, and a sheet, and current means something different in each one. For the customer update, current has to mean this morning's yard plus whether the extra work is approved. They do not have one place that holds both.
 
-What we would not do is start a proof of concept on last month's cleanest jobs. If the proof only runs on yards the scheduler already tidied, it is a performance. The test is a messy yard the crew lead has not typed up yet. That is how a flattering demo joins the projects abandoned after proof of concept.
+What we would not do is start a first test run on last month's cleanest jobs. If the test only runs on yards the scheduler already tidied, it is a performance and not a test. A real test uses a messy yard that the crew lead has not typed up yet. That is how a flattering demo ends up among the projects abandoned after the first test run.
 
-The fix is boring, which is why it works. Pick the customer update as the only job. Pick one place the yard note and the approval must both land before a message goes out. The crew lead's text can stay a scratch pad if the scheduler or the crew lead moves the real sentence into that place the same day. The owner's spreadsheet can stay his private worry list until the approval is also in the shared record. Then a tool can be tried, because there is one current source. Until then, the low-data guide is the right page, not the vendor's order form.
+The fix is dull, which is why it works. We pick the customer update as the only job. Then we pick one place where the yard note and the approval must both land before a message goes out. The crew lead's text can stay a scratch pad. She or the scheduler just has to move the real sentence into that place the same day. The owner's spreadsheet can stay his private worry list until the approval is also in the shared record. Then a tool can be tried, because there is one current place for the facts. Until then, the low-data guide is the right page to read, and the vendor's order form is not.
 
 ## How we'd run it
 
-First we name the job in one sentence. Not "our data." The customer update, or the open order, or the recall. If the sentence needs a comma splice of every service you sell, we have not named a job. Data readiness without a job is a storage conversation, and storage is how you buy a warehouse you do not need.
+First we name the job in one sentence. We do not say "our data." We say the customer update, or the open order, or the recall. If the sentence needs a list of every service you sell, we have not named a job yet. Data readiness without a job is a storage talk. Storage is how you end up buying a warehouse you do not need.
 
-Second we ask each person where they would look if the owner were unreachable. The scheduler's answer, the crew lead's answer, and the owner's answer go on one sheet. If the answers match, we still ask whether a system can read that place or whether someone retypes. If the answers do not match, the source is not named, and we stop pretending the booking tool won because it has a logo.
+Second we ask each person where they would look if the owner could not be reached. The scheduler's answer, the crew lead's answer, and the owner's answer all go on one sheet. If the answers match, we still ask whether a system can read that place or whether someone retypes it. If the answers do not match, the place is not named yet. We stop pretending the booking tool won just because it has a logo.
 
-Third we mark the table's row in ink. One person's head, documents no system can read, or one system with a current record. We do not invent a fourth row called "we are getting there." Getting there is the middle row plus a plan. The plan is a person and a place, not a purchase.
+Third we mark the table's row in ink. The row is one person's head, documents no system can read, or one system with a current record. We do not invent a fourth row called "we are getting there." Getting there is the middle row plus a plan. The plan is a person and a place, and not a purchase.
 
-Fourth we name who knows which fields lie, and we write the fields. For the crew, the lie is often an approval that was verbal on site and never reached the owner's sheet. That field does not go into a customer message until it is in the shared record. This is the risk-control reason from the later Gartner article, in small clothes: somebody can say the output is not allowed to include a guess.
+Fourth we name who knows which fields are wrong, and we write the fields down. For the crew, the wrong field is often an approval given out loud on site. It never reached the owner's sheet. That field does not go into a customer message until it is in the shared record. This is the risk-control reason from the later Gartner article in small form. Somebody can say the output is not allowed to include a guess.
 
-Fifth we decide low or mid before we decide tool or no tool. If we cannot name the source, we are in the low-data guide and the purchase stops. If we can name it and a person still retypes the part the tool would need, we are in the mid-data guide and the work is to make that part readable. Only the bottom row of the table gets a trial, and the trial has to use the ugly records, not a cleaned sample.
+Fifth we decide low or mid before we decide tool or no tool. If we cannot name the place, we are in the low-data guide and the purchase stops. If we can name it but a person still retypes the part the tool would need, we are in the mid-data guide. The work is to make that part readable. Only the bottom row of the table gets a trial. The trial has to use the ugly records and not a cleaned sample.
 
-Sixth we reread the research as a brake. 63% without the practices, or unsure they have them. 60% of unsupported projects expected to be abandoned through 2026. At least 50% of generative projects abandoned after proof of concept by the end of last year. Those figures are reasons to refuse a proof that flatters the record. We do not resize them.
+Sixth we reread the research as a brake. Gartner says 63% lack the practices or are unsure they have them. It expects 60% of unsupported projects to be abandoned through 2026. It also says at least 50% of generative projects were abandoned after the first test run. That was by the end of last year. Those figures are reasons to refuse a test that flatters the record, so we do not resize them.
 
 ## Common mistakes
 
-The mistake we see most is calling an export the source of truth. The scheduler can pull a schedule file any morning. By the time the crew lead is in the yard, the file is a souvenir. The source is whatever will still be right when the customer calls at the end of the day. If that thing is the crew lead's head, say so.
+The mistake we see most is calling an export the one place the facts live. The scheduler can pull a schedule file any morning. By the time the crew lead is in the yard, the file is a souvenir. The right place is whatever will still be correct when the customer calls at the end of the day. If that turns out to be the crew lead's head, say so out loud.
 
-Another mistake is cleaning the data for the demo. Tidy jobs are not the business. A proof of concept that only sees them will pass, then fail when poor data quality shows up. Use a record you are slightly ashamed of.
+Another mistake is cleaning the data for the demo. Tidy jobs are not the business. A first test run that only sees them will pass. Then it will fail when poor data quality shows up. Use a record you are a little ashamed of.
 
-A third mistake is treating "a lot of history" as readiness. Old invoices in a folder are documents. If no system can read them, a person retypes, and you are in the middle row no matter how many years the folder represents. Volume is not a source.
+A third mistake is treating a lot of history as readiness. Old invoices in a folder are documents. If no system can read them, a person retypes them. You are in the middle row no matter how many years the folder covers. Volume is not a source.
 
-We also watch owners skip the person who knows which fields lie. The owner knows the approval column goes stale. If he is not in the conversation, the tool will treat that column as fact. The research can talk about data quality. In the room, data quality is a person with a grudge against a specific field. Find that person.
+We also watch owners skip the person who knows which fields are wrong. The owner knows the approval column goes stale. If he is not in the conversation, the tool will treat that column as fact. The research can talk about data quality. In the room it is a person with a grudge against one specific field. Find that person.
 
-The last mistake is citing a sample size these pages do not give you. The February 2025 page's sample size is not cited here, because the article and its structured data do not agree. Do not fill that gap with a number you heard elsewhere.
+The last mistake is citing a sample size that these pages do not give you. We do not cite the sample size of the February 2025 page. The article and its structured data do not agree on it. Please do not fill that gap with a number you heard somewhere else.
 
 ## What we'd do
 
-We would not buy the drafting tool for the owner until the yard note and the approval live in one place a message can read. Our opinion is stubborn on this. A smoother voice on a split record is how you send a confident update that the crew lead would not sign. The customer will not blame the data model. They will blame the crew.
+We would not buy the drafting tool for the owner yet. First the yard note and the approval must live in one place a message can read. We hold that opinion firmly. A smoother voice on a split record is how you send a confident update that the crew lead would not sign. The customer will not blame the data model, and will blame the crew.
 
-If we were the owner, we would pick the update job only, make one shared note the place the crew lead's sentence and the yes on extra work must land the same day, and leave the spreadsheet until it matches that note. Then we would try a tool on a messy yard. If we still cannot name the source, we would stay on the low-data guide and keep the money. One current record is the requirement. A warehouse can wait.
+If we were the owner, we would pick the update job only. We would make one shared note the place where the crew lead's sentence and the yes on extra work land the same day. We would leave the spreadsheet alone until it matches that note. Then we would try a tool on a messy yard. If we still could not name the place the facts live, we would stay on the low-data guide. We would keep the money. One current record is the requirement, and a warehouse can wait.
