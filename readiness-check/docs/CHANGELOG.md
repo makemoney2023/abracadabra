@@ -1,5 +1,11 @@
 # Changelog
 
+## Schema scanner studio tokens — 2026-10-19
+
+- **What changed** — Schema landing (`/`), `/scan`, ops, and the Schema PDF use the same Abracadabra studio tokens as `/check` and marketing (dark canvas, vermilion accent, Inter Tight + IBM Plex Sans). Editorial cream/slate styling is removed.
+- **Why** — One design language across Abracadabra-owned surfaces.
+
+
 ## Fonts aligned with marketing — 2026-10-19
 
 - **What changed** — Schema scanner, ops, `/check`, and both PDFs use Inter Tight for headings and labels, IBM Plex Sans for body. Newsreader, Tektur, and IBM Plex Mono are retired from visitor-facing type.

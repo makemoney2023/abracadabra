@@ -21,7 +21,7 @@ export function LandingProblem() {
 
 export function LandingAnalogy() {
   return (
-    <section className="space-y-3 border-t border-border/60 pt-12 animate-in fade-in duration-700">
+    <section className="space-y-3 border-t border-border pt-12 animate-in fade-in duration-700">
       <h2 className="font-heading text-2xl tracking-tight sm:text-3xl">
         {LANDING_COPY.analogyTitle}
       </h2>
@@ -34,16 +34,15 @@ export function LandingAnalogy() {
 
 export function LandingHowItWorks() {
   return (
-    <section className="space-y-6 border-t border-border/60 pt-12 animate-in fade-in duration-700">
+    <section className="space-y-6 border-t border-border pt-12 animate-in fade-in duration-700">
       <h2 className="font-heading text-2xl tracking-tight sm:text-3xl">
         {LANDING_COPY.howTitle}
       </h2>
-      <ol className="grid gap-8 sm:grid-cols-3">
+      <div className="studio-connector" aria-hidden="true" />
+      <ol className="grid gap-4 sm:grid-cols-3 sm:gap-5">
         {LANDING_COPY.steps.map((step, i) => (
-          <li key={step.title} className="space-y-2">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              Step {i + 1}
-            </p>
+          <li key={step.title} className="studio-card space-y-2 p-5">
+            <p className="studio-kicker">Step {i + 1}</p>
             <h3 className="font-heading text-xl tracking-tight">{step.title}</h3>
             <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
           </li>
@@ -55,7 +54,7 @@ export function LandingHowItWorks() {
 
 export function LandingFaq() {
   return (
-    <section className="space-y-4 border-t border-border/60 pt-12 animate-in fade-in duration-700">
+    <section className="space-y-4 border-t border-border pt-12 animate-in fade-in duration-700">
       <h2 className="font-heading text-2xl tracking-tight sm:text-3xl">Common questions</h2>
       <Accordion type="single" collapsible className="max-w-2xl">
         {LANDING_COPY.faqs.map((faq, i) => (

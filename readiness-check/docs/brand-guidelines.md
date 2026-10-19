@@ -75,12 +75,12 @@ Do **not** replace with purple gradients, Space Grotesk, or cream/terracotta AI 
 
 | Token | Implementation |
 |-------|----------------|
-| Background / foreground | Cool slate in `src/app/globals.css` |
-| Accent | Teal (`oklch` primary system already in CSS) |
-| Heading | Newsreader (`--font-heading`) |
+| Background / foreground | Studio canvas `#070706` / ink `#F5F0E8` in `src/app/globals.css` |
+| Accent | Brand vermilion `#FF4B24` (primary) |
+| Heading / labels | Inter Tight (`--font-heading`) |
 | Body | IBM Plex Sans |
 | Labels | Inter Tight |
-| Atmosphere | Soft radial washes + light grid; editorial, not glassmorphic dark cinema |
+| Atmosphere | Dark studio canvas, faint 32px grid, vermilion accent; shared with marketing + `/check` |
 
 The Schema scanner (`/`, `/scan`), ops, and the Readiness Check (`/check`, guides, and PDFs) share the Abracadabra marketing type roles: Inter Tight headings and labels, IBM Plex Sans body. Colour tokens for `/check` and studio-styled scan shells live in `src/lib/brand/studio.ts` and `.check-studio` in `globals.css` (canvas `#070706`, surface `#11110F`, ink `#F5F0E8`, accent `#FF4B24`). Primary button labels use canvas ink on the accent fill so the check’s contrast gate passes; the marketing site’s cream accent-ink stays a named token only.
 

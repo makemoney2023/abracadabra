@@ -1,6 +1,7 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { buildScoreSummary } from "@/lib/scoring/score-summary";
 import type { ScoreBreakdown } from "@/lib/types";
+import { STUDIO } from "@/lib/brand/studio";
 import { registerStudioPdfFonts } from "@/lib/pdf/fonts";
 
 registerStudioPdfFonts();
@@ -87,21 +88,22 @@ const styles = StyleSheet.create({
     padding: 36,
     fontSize: 10,
     fontFamily: "IBM Plex Sans",
-    color: "#111827",
+    color: STUDIO.ink,
+    backgroundColor: STUDIO.canvas,
   },
-  h1: { fontSize: 16, marginBottom: 6, fontFamily: "Inter Tight", fontWeight: 700 },
-  h2: { fontSize: 12, marginTop: 14, marginBottom: 6, fontFamily: "Inter Tight", fontWeight: 700 },
-  muted: { color: "#4b5563", marginBottom: 10 },
-  score: { fontSize: 28, fontFamily: "Inter Tight", fontWeight: 700, marginBottom: 8 },
+  h1: { fontSize: 16, marginBottom: 6, fontFamily: "Inter Tight", fontWeight: 700, color: STUDIO.ink },
+  h2: { fontSize: 12, marginTop: 14, marginBottom: 6, fontFamily: "Inter Tight", fontWeight: 700, color: STUDIO.accent },
+  muted: { color: STUDIO.inkSoft, marginBottom: 10 },
+  score: { fontSize: 28, fontFamily: "Inter Tight", fontWeight: 700, marginBottom: 8, color: STUDIO.ink },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "rgba(245, 240, 232, 0.08)",
     paddingVertical: 4,
   },
-  cell: { flexGrow: 1, flexBasis: 0 },
-  finding: { marginBottom: 4 },
+  cell: { flexGrow: 1, flexBasis: 0, color: STUDIO.ink },
+  finding: { marginBottom: 4, color: STUDIO.ink },
 });
 
 export function ScanReportDocument(props: ReportProps) {
