@@ -401,6 +401,56 @@ test('site nav uses a compact sheet below 900px and a full bar from 1024px', asy
   }
 });
 
+test('open phone menu stays above inner-page content', async () => {
+  for (const path of [
+    '/',
+    '/start/index.html',
+    '/services/ai-assistants-and-agents/index.html',
+    '/portfolio/pirx/index.html',
+    '/blog/index.html',
+    '/films.html',
+  ]) {
+    const { context, page } = await openPage({ width: 390, height: 844 });
+    await page.goto(`${origin}${path}`, { waitUntil: 'domcontentloaded' });
+    await page.locator('.site-nav__toggle').click();
+    const hit = await page.evaluate(() => {
+      const nav = document.querySelector('.site-nav').getBoundingClientRect();
+      const panel = document.querySelector('.site-nav__links');
+      const panelBox = panel.getBoundingClientRect();
+      const x = Math.round(window.innerWidth / 2);
+      const y = Math.round(nav.bottom + 72);
+      const target = document.elementFromPoint(x, y);
+      return {
+        inMenu: Boolean(target && (target === panel || panel.contains(target))),
+        label: target ? `${target.tagName}.${target.className}` : 'none',
+        panelTop: panelBox.top,
+        panelBottom: panelBox.bottom,
+        navBottom: nav.bottom,
+        height: window.innerHeight,
+      };
+    });
+    assert.equal(hit.inMenu, true, `${path} menu is behind ${hit.label}`);
+    assert.ok(hit.panelTop <= hit.navBottom + 1, `${path} sheet starts below the header`);
+    assert.ok(hit.panelBottom >= hit.height - 2, `${path} sheet does not cover the viewport`);
+    await context.close();
+  }
+
+  const desktop = await openPage({ width: 1280, height: 900 });
+  await desktop.page.goto(`${origin}/start/index.html`, { waitUntil: 'domcontentloaded' });
+  await desktop.page.locator('.site-nav__services > summary').click();
+  const mega = await desktop.page.evaluate(() => {
+    const menu = document.querySelector('.site-nav__mega');
+    const box = menu.getBoundingClientRect();
+    const target = document.elementFromPoint(Math.round(box.left + 40), Math.round(box.top + 40));
+    return {
+      inMenu: Boolean(target && (target === menu || menu.contains(target))),
+      label: target ? `${target.tagName}.${target.className}` : 'none',
+    };
+  });
+  assert.equal(mega.inMenu, true, `desktop services menu is behind ${mega.label}`);
+  await desktop.context.close();
+});
+
 test('open Services menu stacks page links under the function list on a phone', async () => {
   const { context, page } = await openPage({ width: 375, height: 812 });
   await page.locator('.site-nav__toggle').click();

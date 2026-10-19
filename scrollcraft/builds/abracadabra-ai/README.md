@@ -14,6 +14,15 @@ Then open http://localhost:4500. The homepage is left-aligned on desktop and sta
 
 If the page and the source-of-truth file disagree, fix the file first, then the page.
 
+## Menu stacking — 2026-10-19
+
+- **What changed** — The phone menu and the desktop services menu stay above the page on every route.
+- **Why** — The frosted header blur was on the same element as the menu, so inner pages painted over the open menu. Home does not load that stylesheet.
+- **Code touchpoints** — `blog/blog.css`, generated pages that link it, `tests/marketing-site.test.mjs`.
+- **Data-flow impact** — none.
+- **API / schema impact** — none.
+- **Verification** — `node --test --test-name-pattern 'open phone menu stays above' tests/marketing-site.test.mjs`.
+
 ## Premium pass — 2026-10-19
 
 - The marketing site uses one set of buttons, borders, radii, and section spacing. The phone menu is a sheet below 900px. Desktop layouts use the width above 1280px. A proof band names StrongFoam, Milrcorr, SuperPatch, and pirx.ca. The start form posts to the Worker at `POST /api/intake`.

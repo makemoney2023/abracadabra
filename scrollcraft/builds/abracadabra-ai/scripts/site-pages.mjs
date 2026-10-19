@@ -279,7 +279,7 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
 ${headLinks()}
-<link rel="stylesheet" href="/blog/blog.css?v=20261019c">
+<link rel="stylesheet" href="/blog/blog.css?v=20261019d">
 <link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019c">
 <script type="application/ld+json">
 ${jsonLd(json)}
