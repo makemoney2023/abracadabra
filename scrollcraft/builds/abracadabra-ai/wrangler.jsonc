@@ -16,5 +16,8 @@
     "binding": "ASSETS",
     "html_handling": "none",
     "not_found_handling": "404-page"
-  }
+  },
+  "services": [
+    { "binding": "CHAT", "service": "abracadabra-chat" }
+  ]
 }

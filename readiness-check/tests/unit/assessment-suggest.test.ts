@@ -214,8 +214,12 @@ describe("limits and booking parse", () => {
       kind: "created",
       externalId: "bk_1",
       assessmentToken: "tok",
+      chatSessionId: null,
       email: "a@b.co",
     });
+    const fromChat = JSON.parse(raw);
+    fromChat.payload.metadata.chat_session_id = "6f1e8c0a-1b2c-4d3e-8f90-aabbccddeeff";
+    expect(parseCalPayload(fromChat).chatSessionId).toBe("6f1e8c0a-1b2c-4d3e-8f90-aabbccddeeff");
     expect(parseCalPayload({ triggerEvent: "PING" }).kind).toBe("ignored");
   });
 });

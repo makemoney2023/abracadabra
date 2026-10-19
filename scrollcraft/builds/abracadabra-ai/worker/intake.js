@@ -200,12 +200,22 @@ export async function handleIntake(request, env, deps = {}) {
     : Response.json({ ok: true, sent: true });
 }
 
+export async function proxyChat(request, env) {
+  if (!env.CHAT || typeof env.CHAT.fetch !== "function") {
+    return Response.json({ error: "Chat is not configured." }, { status: 503 });
+  }
+  return env.CHAT.fetch(request);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/intake") {
       if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
       return handleIntake(request, env);
+    }
+    if (url.pathname === "/api/chat" || url.pathname.startsWith("/api/chat/")) {
+      return proxyChat(request, env);
     }
     return env.ASSETS.fetch(request);
   },

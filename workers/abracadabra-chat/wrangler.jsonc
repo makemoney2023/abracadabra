@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "abracadabra-chat",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-06",
+  "account_id": "6f6959ecba86d1de4d6cf6aa0b34528d",
+  "workers_dev": true,
+  "durable_objects": {
+    "bindings": [
+      { "name": "CHAT_SESSION", "class_name": "ChatSessionDO" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ChatSessionDO"] }
+  ],
+  "send_email": [
+    { "name": "EMAIL" }
+  ]
+}
