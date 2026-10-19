@@ -25,6 +25,15 @@ Then open http://localhost:4500. The homepage is left-aligned on desktop and sta
 
 If the page and the source-of-truth file disagree, fix the file first, then the page.
 
+## Film range requests — 2026-10-19
+
+- **What changed** — Requests for `/assets/films/*` and `/assets/video/*` run through the Worker first. A `Range: bytes=` request for an `.mp4` or `.webm` gets a 206 slice with `Content-Range`; every film response says `Accept-Ranges: bytes`. The StrongFoam CRM/ERP film (3:03) sits on `/portfolio/strongfoam-crm/`, the portfolio card, and `films.html`.
+- **Why** — Static assets answered Range requests with the whole file, and Safari on iPhone will not play video that way.
+- **Code touchpoints** — `worker/intake.js` (`serveVideo`), `wrangler.jsonc` (`assets.run_worker_first`), `tests/video-range.test.mjs`.
+- **Data-flow impact** — none.
+- **API / schema impact** — none.
+- **Verification** — `node --test tests/video-range.test.mjs`, then `curl -sI -H 'Range: bytes=0-1023' https://abra-ca-dabra.app/assets/films/strongfoam-erp-demo.mp4` returns 206.
+
 ## Menu stacking — 2026-10-19
 
 - **What changed** — The phone menu and the desktop services menu stay above the page on every route.
