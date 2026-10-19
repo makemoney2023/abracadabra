@@ -225,7 +225,7 @@ test('required responsive widths do not create horizontal page overflow', async 
 test('restored motion sits under the hero and keeps the original sweep and calendars', async () => {
   const { context, page } = await openPage({ width: 1440, height: 1000 });
   const order = await page.evaluate(() => {
-    const ids = ['hero', 'compiler', 'gantt', 'time', 'models'];
+    const ids = ['hero', 'compiler', 'time', 'models'];
     return ids.map((id) => document.getElementById(id).getBoundingClientRect().top);
   });
   for (let i = 1; i < order.length; i += 1) {
@@ -233,15 +233,13 @@ test('restored motion sits under the hero and keeps the original sweep and calen
   }
   assert.equal(await page.locator('#compiler .agent-track').count(), 5);
   await page.locator('#compiler [data-compiler-state="build"]').click();
-  assert.equal(await page.locator('#gantt .time-lane').count(), 8);
+  assert.equal(await page.locator('#gantt').count(), 0);
   assert.equal(await page.locator('#time .time-lane').count(), 6);
   const sweep = await page.locator('#compiler .agent-track').first().evaluate((track) => (
     getComputedStyle(track, '::before').animationName
   ));
   assert.equal(sweep, 'agent-sweep');
-  await page.locator('#gantt [data-time-state="parallel"]').click();
   await page.locator('#time [data-time-state="parallel"]').click();
-  assert.equal(await page.locator('#gantt .time-engine').getAttribute('data-active-state'), 'parallel');
   assert.equal(await page.locator('#time .time-engine').getAttribute('data-active-state'), 'parallel');
   await context.close();
 });
@@ -252,7 +250,6 @@ test('reduced motion keeps a static calendar and a still sweep', async () => {
     getComputedStyle(track, '::before').animationName
   ));
   assert.equal(sweep, 'none');
-  assert.equal(await page.locator('#gantt .time-engine').getAttribute('data-active-state'), 'arrive');
   assert.equal(await page.locator('#time .time-engine').getAttribute('data-active-state'), 'arrive');
   await context.close();
 });

@@ -45,6 +45,30 @@
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "VideoObject",
+      "@id": "https://abra-ca-dabra.app/#video-superfunnel-getting-started",
+      "name": "Super Funnel: Getting started",
+      "description": "Associate tour of the home dashboard, setup, pipeline, and nav.",
+      "thumbnailUrl": "https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-getting-started.jpg",
+      "contentUrl": "https://abra-ca-dabra.app/assets/films/superfunnel-getting-started.mp4",
+      "embedUrl": "https://abra-ca-dabra.app/films.html",
+      "duration": "PT1M6S",
+      "uploadDate": "2026-10-07",
+      "publisher": { "@id": "https://abra-ca-dabra.app/#org" }
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://abra-ca-dabra.app/#video-llmcourse-home",
+      "name": "LLM Leverage home and lesson capture",
+      "description": "Live capture of the LLM Leverage course home and a lesson.",
+      "thumbnailUrl": "https://abra-ca-dabra.app/assets/films/thumbs/llmcourse-home-lesson.jpg",
+      "contentUrl": "https://abra-ca-dabra.app/assets/films/llmcourse-home-lesson.mp4",
+      "embedUrl": "https://abra-ca-dabra.app/films.html",
+      "duration": "PT10S",
+      "uploadDate": "2026-09-11",
+      "publisher": { "@id": "https://abra-ca-dabra.app/#org" }
+    },
+    {
       "@type": "Organization",
       "@id": "https://abra-ca-dabra.app/#org",
       "name": "Abracadabra AI",
@@ -338,7 +362,7 @@
           <div class="intent-demo__viewport">
             <section class="intent-demo__state" data-compiler-panel="describe" aria-labelledby="compiler-describe-title">
               <p class="sc-label intent-demo__phase" id="compiler-describe-title">01 / Requirements</p>
-              <p class="intent-demo__quote">“When a <mark>customer sends a request</mark>, the right person approves it, anything missing goes back to them, and they get their result as soon as it's ready.”</p>
+              <p class="intent-demo__quote">“<mark>Requirements captured up front.</mark> Unclear bits bounce back. Done means everyone's building from the same spec.”</p>
               <p class="intent-demo__reading">Explain how your work gets done in plain words. We'll turn it into software that runs the way you already work.</p>
             </section>
             <section class="intent-demo__state" data-compiler-panel="engineer" aria-labelledby="compiler-engineer-title">
@@ -433,66 +457,6 @@
       </div>
     </div>
   </section>
-
-<section id="gantt" class="restored restored-pin restored-pin--gantt" aria-labelledby="gantt-title">
-  <div class="sc-stage">
-    <div class="time-shell">
-      <div class="time-copy">
-        <p class="sc-label">The build</p>
-        <h2 id="gantt-title">Every function, on one calendar.</h2>
-        <p class="sc-body">Most projects spend more time waiting than working. Run everything at once and the waiting disappears.</p>
-      </div>
-      <div class="time-engine" data-active-state="conventional" aria-label="Eight functions on one delivery calendar">
-        <div class="time-engine__chrome" aria-hidden="true">
-          <p class="sc-label">Function calendar / same scope</p>
-          <p class="sc-label time-engine__status" data-time-status>Serial calendar</p>
-        </div>
-        <div class="time-track">
-          <div class="time-axis" aria-hidden="true">
-            <span class="sc-label">Kickoff</span>
-            <span class="sc-label">Conventional ship date</span>
-          </div>
-          <div class="time-lanes" role="list" aria-label="Business functions">
-            <div class="time-lane" role="listitem" data-time-phase="Search"><span class="sc-label">Search &amp; AI visibility</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-lane" role="listitem" data-time-phase="Marketing"><span class="sc-label">Marketing</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-lane" role="listitem" data-time-phase="Social"><span class="sc-label">Social media</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-lane" role="listitem" data-time-phase="Sales"><span class="sc-label">Sales</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-lane" role="listitem" data-time-phase="Service"><span class="sc-label">Customer service</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-lane" role="listitem" data-time-phase="Operations"><span class="sc-label">Operations</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-lane" role="listitem" data-time-phase="Design"><span class="sc-label">Design</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-lane" role="listitem" data-time-phase="Platform"><span class="sc-label">Platform</span><span class="time-lane__rail" aria-hidden="true"><span class="time-lane__wait"></span><span class="time-lane__bar"></span></span></div>
-            <div class="time-arrival" aria-hidden="true"><span class="sc-label">Arrives</span></div>
-            <div class="time-returned" aria-hidden="true"><span class="sc-label">Time returned</span></div>
-          </div>
-        </div>
-        <div class="time-captions">
-          <section class="time-panel" data-time-panel="conventional" aria-labelledby="gantt-panel-conventional">
-            <h3 id="gantt-panel-conventional">One thing at a time</h3>
-            <p>Most of the calendar is waiting.</p>
-          </section>
-          <section class="time-panel" data-time-panel="engineer" aria-labelledby="gantt-panel-engineer">
-            <h3 id="gantt-panel-engineer">Front-load the thinking</h3>
-            <p>The first functions share a start. The rest move up.</p>
-          </section>
-          <section class="time-panel" data-time-panel="parallel" aria-labelledby="gantt-panel-parallel">
-            <h3 id="gantt-panel-parallel">Run everything at once</h3>
-            <p>Search, marketing, social, sales, service, operations, design, and platform overlap.</p>
-          </section>
-          <section class="time-panel" data-time-panel="arrive" aria-labelledby="gantt-panel-arrive">
-            <h3 id="gantt-panel-arrive">Arrive before the due date</h3>
-            <p>The same work finishes early.</p>
-          </section>
-        </div>
-        <div class="time-controls" aria-label="Function calendar sequence">
-          <button type="button" data-time-state="conventional" aria-pressed="true">Conventional</button>
-          <button type="button" data-time-state="engineer" aria-pressed="false">Engineer</button>
-          <button type="button" data-time-state="parallel" aria-pressed="false">Parallel</button>
-          <button type="button" data-time-state="arrive" aria-pressed="false">Arrive</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section id="time" class="restored restored-pin" aria-labelledby="time-title">
   <div class="sc-stage">
@@ -708,7 +672,7 @@
     <div id="panel-sell" class="tab-panel" role="tabpanel" aria-labelledby="tab-sell">
       <p class="kicker">Sell</p>
       <h3>Super Funnel</h3>
-      <video controls playsinline preload="none" poster="assets/superfunnel-getting-started.webp" src="assets/films/superfunnel-getting-started.mp4"></video>
+      <video controls playsinline preload="none" poster="assets/films/thumbs/superfunnel-getting-started.jpg" src="assets/films/superfunnel-getting-started.mp4"></video>
       <p><a href="films.html">Super Funnel</a></p>
     </div>
     <div id="panel-operate" class="tab-panel" role="tabpanel" aria-labelledby="tab-operate" hidden>
@@ -734,7 +698,7 @@
     <div id="panel-teach" class="tab-panel" role="tabpanel" aria-labelledby="tab-teach" hidden>
       <p class="kicker">Teach</p>
       <h3>LLM Leverage</h3>
-      <video controls playsinline preload="none" poster="assets/llmcourse-home.webp" src="assets/films/llmcourse-home-lesson.mp4"></video>
+      <video controls playsinline preload="none" poster="assets/films/thumbs/llmcourse-home-lesson.jpg" src="assets/films/llmcourse-home-lesson.mp4"></video>
       <p><a href="/course/llm-leverage/">Learn to get real work done with AI.</a></p>
     </div>
   </div>

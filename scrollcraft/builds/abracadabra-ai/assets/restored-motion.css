@@ -72,7 +72,6 @@
 
 .restored-pin { position: relative; min-height: 235vh; }
 .restored-pin--range { min-height: 260vh; }
-.restored-pin--gantt { min-height: 210vh; }
 
 .restored-pin > .sc-stage {
   position: sticky;
@@ -703,46 +702,8 @@
 #time .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Release"],
 #time .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Release"] { --start: 0.27; --span: 0.06; }
 
-#gantt .time-engine { --lane-label: 12.5rem; max-height: none; }
-#gantt .time-lane .sc-label { white-space: normal; overflow-wrap: anywhere; line-height: 1.15; }
-#gantt .time-lane[data-time-phase="Search"] { --start: 0; --span: 0.08; }
-#gantt .time-lane[data-time-phase="Marketing"] { --start: 0.11; --span: 0.08; }
-#gantt .time-lane[data-time-phase="Social"] { --start: 0.22; --span: 0.08; }
-#gantt .time-lane[data-time-phase="Sales"] { --start: 0.33; --span: 0.09; }
-#gantt .time-lane[data-time-phase="Service"] { --start: 0.45; --span: 0.09; }
-#gantt .time-lane[data-time-phase="Operations"] { --start: 0.57; --span: 0.10; }
-#gantt .time-lane[data-time-phase="Design"] { --start: 0.70; --span: 0.10; }
-#gantt .time-lane[data-time-phase="Platform"] { --start: 0.83; --span: 0.10; }
-#gantt .time-engine[data-active-state="engineer"] { --arrive: 0.73; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Search"],
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Marketing"],
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Social"] { --start: 0; --span: 0.07; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Sales"] { --start: 0.09; --span: 0.14; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Service"] { --start: 0.25; --span: 0.12; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Operations"] { --start: 0.39; --span: 0.12; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Design"] { --start: 0.53; --span: 0.10; }
-#gantt .time-engine[data-active-state="engineer"] .time-lane[data-time-phase="Platform"] { --start: 0.65; --span: 0.08; }
-#gantt .time-engine[data-active-state="parallel"],
-#gantt .time-engine[data-active-state="arrive"] { --arrive: 0.33; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Search"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Search"],
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Marketing"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Marketing"],
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Social"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Social"] { --start: 0; --span: 0.07; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Sales"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Sales"] { --start: 0.08; --span: 0.16; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Service"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Service"] { --start: 0.10; --span: 0.15; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Operations"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Operations"] { --start: 0.12; --span: 0.14; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Design"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Design"] { --start: 0.18; --span: 0.10; }
-#gantt .time-engine[data-active-state="parallel"] .time-lane[data-time-phase="Platform"],
-#gantt .time-engine[data-active-state="arrive"] .time-lane[data-time-phase="Platform"] { --start: 0.26; --span: 0.07; }
 
 .time-captions { position: relative; flex: 1; min-height: 5.5rem; margin-top: var(--sc-3); }
-#gantt .time-captions { min-height: 4.6rem; flex: 0 0 auto; }
 .time-panel {
   position: absolute;
   inset: 0;
@@ -968,9 +929,6 @@
   .time-copy .sc-body,
   .range-copy .sc-body { margin-inline: auto; }
   #time .time-engine { --lane-label: 5rem; --lane-gap: var(--sc-2); min-height: 31rem; max-height: none; }
-  #gantt .time-engine { --lane-label: 0rem; --lane-gap: 0rem; min-height: 0; max-height: none; }
-  #gantt .time-lane { grid-template-columns: minmax(0, 1fr); gap: 0.35rem; }
-  #gantt .time-axis { margin-left: 0; }
   .time-engine { max-height: none; }
   .time-captions { min-height: 8rem; }
   .range-engine { order: -1; min-height: 28rem; max-height: none; }
@@ -1004,11 +962,9 @@
   .context-stream::after { transform: none; transition: none; }
   .agent-track::before { animation: none !important; opacity: 0; }
   #time,
-  #gantt,
   #compiler,
   #range { min-height: 0 !important; height: auto !important; }
   #time > .sc-stage,
-  #gantt > .sc-stage,
   #compiler > .sc-stage,
   #range > .sc-stage { position: relative; top: auto; height: auto; overflow: visible; }
   .time-shell,
