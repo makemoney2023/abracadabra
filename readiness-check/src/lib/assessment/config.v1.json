@@ -56,7 +56,7 @@
     },
     {
       "score": 3,
-      "label": "It caps how far we can grow"
+      "label": "It holds back how much we can grow"
     }
   ],
   "questions": [
@@ -68,62 +68,62 @@
       "options": [
         {
           "value": "P01",
-          "label": "Our process is real, but no software fits exactly how we run it.",
+          "label": "Our way of working is our own, and no off-the-shelf software fits it.",
           "offerRow": "custom_fit"
         },
         {
           "value": "P02",
-          "label": "Our experts are the queue. Answers wait on two or three people.",
+          "label": "Answers have to wait for two or three busy experts.",
           "offerRow": "experts_queue"
         },
         {
           "value": "P03",
-          "label": "New people don't sound like our best people.",
+          "label": "New hires don't sound as good as our best people.",
           "offerRow": "rep_standard"
         },
         {
           "value": "P04",
-          "label": "Leads arrive with no story attached.",
+          "label": "New leads show up and we don't know their story.",
           "offerRow": "lead_story"
         },
         {
           "value": "P05",
-          "label": "We don't know if AI answer engines can even find us.",
+          "label": "We don't know if AI tools like ChatGPT can find us.",
           "offerRow": "ai_visibility"
         },
         {
           "value": "P06",
-          "label": "Decisions wait on last month's numbers.",
+          "label": "We have to wait for last month's numbers before we can decide.",
           "offerRow": "decisions_wait"
         },
         {
           "value": "P07",
-          "label": "A new channel or market feels like it needs a whole department.",
+          "label": "Trying a new market or sales channel sounds like it needs a whole new team.",
           "offerRow": "new_channel"
         },
         {
           "value": "P08",
-          "label": "The sale still needs a visit or a specialist's hour before anyone says yes.",
+          "label": "Before anyone says yes, we still need a visit or an hour with an expert.",
           "offerRow": "sale_visit"
         },
         {
           "value": "P09",
-          "label": "The vendor bill grows as we grow.",
+          "label": "Our software bill goes up every time we grow.",
           "offerRow": "vendor_bill"
         },
         {
           "value": "P10",
-          "label": "One person knows how the important thing works.",
+          "label": "Only one person really knows how an important job gets done.",
           "offerRow": "one_person"
         },
         {
           "value": "P11",
-          "label": "Fraud or order review eats someone's morning.",
+          "label": "Someone spends their morning checking orders for fraud.",
           "offerRow": "fraud_review"
         },
         {
           "value": "P12",
-          "label": "Our claims drift the moment someone new writes for us.",
+          "label": "When someone new writes for us, what we say starts to drift.",
           "offerRow": "claims_drift"
         }
       ]
@@ -133,7 +133,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "data",
-      "prompt": "Where does the knowledge that runs the business live?",
+      "prompt": "Where does the know-how that runs your business live?",
       "options": [
         {
           "value": "0",
@@ -142,17 +142,17 @@
         },
         {
           "value": "1",
-          "label": "In documents and chats, spread around",
+          "label": "In documents and chats, all over the place",
           "score": 1
         },
         {
           "value": "2",
-          "label": "In a few systems we can export from",
+          "label": "In a few tools where we can pull it out",
           "score": 2
         },
         {
           "value": "3",
-          "label": "In systems we can connect to",
+          "label": "In tools that can connect to each other",
           "score": 3
         }
       ]
@@ -162,26 +162,26 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "data",
-      "prompt": "Where do your customer, product and process records live?",
+      "prompt": "Where do you keep your customer, product, and job records?",
       "options": [
         {
           "value": "0",
-          "label": "Many places, and they don't match",
+          "label": "In lots of places, and they don't agree",
           "score": 0
         },
         {
           "value": "1",
-          "label": "Several places, reconciled by hand",
+          "label": "In a few places, and we line them up by hand",
           "score": 1
         },
         {
           "value": "2",
-          "label": "Mostly one place",
+          "label": "Mostly in one place",
           "score": 2
         },
         {
           "value": "3",
-          "label": "One system of record",
+          "label": "All in one tool we trust",
           "score": 3
         }
       ]
@@ -191,7 +191,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "process",
-      "prompt": "Is the core workflow written down?",
+      "prompt": "Are the main steps of your work written down?",
       "options": [
         {
           "value": "0",
@@ -200,17 +200,17 @@
         },
         {
           "value": "1",
-          "label": "Partly, and it's out of date",
+          "label": "Some of them, but they're out of date",
           "score": 1
         },
         {
           "value": "2",
-          "label": "Documented, followed most of the time",
+          "label": "Yes, and we follow them most of the time",
           "score": 2
         },
         {
           "value": "3",
-          "label": "Documented, followed, and someone owns it",
+          "label": "Yes, we follow them, and someone keeps them up to date",
           "score": 3
         }
       ]
@@ -220,7 +220,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "process",
-      "prompt": "If two people do the same job, do they get the same result?",
+      "prompt": "When two people do the same job, do they get the same result?",
       "options": [
         {
           "value": "0",
@@ -229,17 +229,17 @@
         },
         {
           "value": "1",
-          "label": "Usually, with exceptions",
+          "label": "Most of the time, with a few exceptions",
           "score": 1
         },
         {
           "value": "2",
-          "label": "Yes, with a checklist",
+          "label": "Yes, because we use a checklist",
           "score": 2
         },
         {
           "value": "3",
-          "label": "Yes, and we measure it",
+          "label": "Yes, and we keep track of it",
           "score": 3
         }
       ]
@@ -249,7 +249,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "people",
-      "prompt": "Who would own a new system day to day?",
+      "prompt": "Who would look after a new tool day to day?",
       "options": [
         {
           "value": "0",
@@ -258,17 +258,17 @@
         },
         {
           "value": "1",
-          "label": "We'd work it out",
+          "label": "We'd figure it out",
           "score": 1
         },
         {
           "value": "2",
-          "label": "A named person, part time",
+          "label": "One person, part of their time",
           "score": 2
         },
         {
           "value": "3",
-          "label": "A named person — it's already part of their role",
+          "label": "One person, and it's already part of their job",
           "score": 3
         }
       ]
@@ -278,7 +278,7 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "people",
-      "prompt": "Have you or your staff used AI tools?",
+      "prompt": "Have you or your team used AI tools?",
       "options": [
         {
           "value": "0",
@@ -292,12 +292,12 @@
         },
         {
           "value": "2",
-          "label": "We tried something together, mixed results",
+          "label": "We tried something as a team, and the results were mixed",
           "score": 2
         },
         {
           "value": "3",
-          "label": "It's in a real workflow today",
+          "label": "Yes, we use it in our daily work",
           "score": 3
         }
       ]
@@ -307,26 +307,26 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "decision",
-      "prompt": "Who decides, and how long does it take?",
+      "prompt": "Who makes the call, and how long does it take?",
       "options": [
         {
           "value": "0",
-          "label": "Unclear",
+          "label": "We're not sure",
           "score": 0
         },
         {
           "value": "1",
-          "label": "The owner, over months",
+          "label": "The owner, and it takes months",
           "score": 1
         },
         {
           "value": "2",
-          "label": "The owner, over weeks",
+          "label": "The owner, and it takes a few weeks",
           "score": 2
         },
         {
           "value": "3",
-          "label": "A named person, within the month",
+          "label": "One named person, within a month",
           "score": 3
         }
       ]
@@ -336,21 +336,21 @@
       "sectionId": "readiness",
       "type": "single_select",
       "dim": "decision",
-      "prompt": "Timeline and budget?",
+      "prompt": "What are your timing and budget?",
       "options": [
         {
           "value": "0",
-          "label": "No timeline",
+          "label": "We don't have a timeline",
           "score": 0
         },
         {
           "value": "1",
-          "label": "Exploring, no budget",
+          "label": "We're just looking, with no budget yet",
           "score": 1
         },
         {
           "value": "2",
-          "label": "Budget exists, timeline open",
+          "label": "We have a budget, but no start date",
           "score": 2
         },
         {
@@ -364,26 +364,26 @@
       "id": "G01",
       "sectionId": "growth",
       "type": "single_select",
-      "prompt": "Where do new customers come from today?",
+      "prompt": "Where do your new customers come from?",
       "options": [
         {
           "value": "0",
-          "label": "Referrals only, or we're not sure",
+          "label": "Mostly referrals, or we're not sure",
           "score": 0
         },
         {
           "value": "1",
-          "label": "Mostly one channel",
+          "label": "Mostly from one place",
           "score": 1
         },
         {
           "value": "2",
-          "label": "Two or three channels",
+          "label": "From two or three places",
           "score": 2
         },
         {
           "value": "3",
-          "label": "Several channels we can measure",
+          "label": "From several places, and we can count them",
           "score": 3
         }
       ]
@@ -392,7 +392,7 @@
       "id": "G02",
       "sectionId": "growth",
       "type": "single_select",
-      "prompt": "Have you checked how your business shows up in ChatGPT, Perplexity, or Google AI Overviews?",
+      "prompt": "Have you looked up your business in ChatGPT, Perplexity, or Google's AI answers?",
       "options": [
         {
           "value": "0",
@@ -401,17 +401,17 @@
         },
         {
           "value": "1",
-          "label": "Once — didn't like it",
+          "label": "Once, and we didn't like what we saw",
           "score": 1
         },
         {
           "value": "2",
-          "label": "Yes, now and then",
+          "label": "Yes, every now and then",
           "score": 2
         },
         {
           "value": "3",
-          "label": "Yes, and we act on what we see",
+          "label": "Yes, and we act on what we find",
           "score": 3
         }
       ]
@@ -420,7 +420,7 @@
       "id": "G03",
       "sectionId": "growth",
       "type": "single_select",
-      "prompt": "Who looks after the website?",
+      "prompt": "Who looks after your website?",
       "options": [
         {
           "value": "0",
@@ -429,17 +429,17 @@
         },
         {
           "value": "1",
-          "label": "A vendor; changes take weeks",
+          "label": "An outside company, and changes take weeks",
           "score": 1
         },
         {
           "value": "2",
-          "label": "A vendor; changes take days",
+          "label": "An outside company, and changes take a few days",
           "score": 2
         },
         {
           "value": "3",
-          "label": "In-house; we ship changes ourselves",
+          "label": "Our own team, and we make changes ourselves",
           "score": 3
         }
       ]
@@ -470,7 +470,7 @@
         },
         {
           "value": "engineering",
-          "label": "IT or engineering"
+          "label": "IT or tech"
         },
         {
           "value": "other",
@@ -521,7 +521,7 @@
       "id": "Q04",
       "sectionId": "about",
       "type": "text",
-      "prompt": "If one thing were fixed by tomorrow, what would it be?",
+      "prompt": "If you could fix one thing by tomorrow, what would it be?",
       "maxLength": 240
     }
   ],

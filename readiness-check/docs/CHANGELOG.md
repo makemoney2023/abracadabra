@@ -1,5 +1,14 @@
 # Changelog
 
+## Plain-language questions — 2026-10-19
+
+- **What changed** — Question prompts and answer labels in the readiness check are rewritten in plain, human wording at about a grade 5 reading level. Jargon such as "system of record", "reconciled by hand", "workflow", and "answer engines" is gone.
+- **Why** — Match the plain voice of the blog posts so owners can answer without decoding the question.
+- **Code touchpoints** — `src/lib/assessment/config.v1.json` (only `prompt` and `label` text)
+- **Data-flow impact** — none
+- **API / schema impact** — none. Ids, values, scores, bands, and offers are unchanged, so saved answers and scoring behave as before. The design spec in `docs/superpowers/specs/` still quotes the original wording as a historical record.
+- **Verification** — `npm test` (239 passed), `npm run lint` (0 errors)
+
 ## Schema mint heat + CTA — 2026-10-19
 
 - **What changed** — Score ring/bars/Strong labels use studio heat (vermilion → amber → cyan → mint `#C6FFB3`). Scan CTA is full `#FF4B24` with dark text; disabled uses muted surface instead of washed vermilion.
