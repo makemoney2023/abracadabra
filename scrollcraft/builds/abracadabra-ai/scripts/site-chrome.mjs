@@ -41,7 +41,7 @@ function functionFoot() {
 export function siteHeader() {
   return `<a class="skip" href="#top">Skip to content</a>
 <header class="site-nav">
-  <a class="site-nav__mark" href="/">Abracadabra AI</a>
+  <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
   <details class="site-nav__menu">
     <summary class="site-nav__toggle">Menu</summary>
   </details>
@@ -88,7 +88,7 @@ export function siteHeader() {
 
 export function siteFooter() {
   return `<footer class="site-foot">
-  <p class="site-foot__word">Abracadabra</p>
+  <p class="site-foot__word" aria-label="Abracadabra">abracadabra<span class="wm-dot">.</span></p>
   <nav class="site-foot__links" aria-label="Footer">
     ${functionFoot()}
     <a href="/services/">Services</a>

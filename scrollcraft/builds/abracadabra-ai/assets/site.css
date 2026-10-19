@@ -8,7 +8,8 @@
   --green: #C6FFB3;
   --line: rgba(245, 240, 232, 0.14);
   --font: "IBM Plex Sans", system-ui, sans-serif;
-  --label: Tektur, sans-serif;
+  --label: "Inter Tight", sans-serif;
+  --display: "Inter Tight", system-ui, sans-serif;
   --page: 72rem;
 }
 
@@ -30,8 +31,8 @@ body {
 img, video { max-width: 100%; height: auto; }
 
 h1, h2, h3 {
-  font-family: var(--font);
-  font-weight: 500;
+  font-family: var(--display);
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.08;
   color: var(--ink);
@@ -94,7 +95,10 @@ a { color: var(--ink); }
   font-family: var(--label);
   color: var(--ink);
   text-decoration: none;
-  letter-spacing: 0.02em;
+  font-family: "Inter Tight", sans-serif;
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: -0.05em;
   white-space: nowrap;
 }
 
@@ -252,58 +256,50 @@ a { color: var(--ink); }
   position: relative;
   height: clamp(220px, 42vh, 520px);
   min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.hero__wordmark,
-.hero__orb,
-.hero__canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
+.hero__canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.hero__wm { position: relative; }
+.hero__wm .wm-dot { display: inline-block; }
+html.wm-js .hero__wm { animation: none; opacity: 0; }
+html.wm-js .hero__wm .wm-dot { opacity: 0; transform: translateY(-0.5em) scale(0.4); }
+html.wm-js.wm-on .hero__wm { opacity: 1; transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+html.wm-js.wm-dot-on .hero__wm .wm-dot { opacity: 1; transform: none; transition: transform 0.45s cubic-bezier(0.34, 1.9, 0.5, 1), opacity 0.15s ease-out; }
+.hero__wm .wm-txt {
+  background: linear-gradient(100deg, var(--ink) 47.5%, #FF8A6A 49.6%, #fff 50%, #FF8A6A 50.4%, var(--ink) 52.5%) no-repeat;
+  background-size: 320% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: background-position 0.6s cubic-bezier(0.45, 0, 0.2, 1); }
+.hero__sound {
+  position: absolute; right: 0.5rem; bottom: 0.5rem; z-index: 2; min-height: 44px; padding: 0 0.9rem;
+  border: 1px solid var(--line); background: rgba(7, 7, 6, 0.82); color: var(--ink-soft);
+  font-family: var(--label); font-size: 0.8rem; cursor: pointer;
 }
 
-html:not(.js) .hero__wordmark,
-html.js.hero-static .hero__wordmark {
-  inset: 6% 4% 52% 4%;
-}
-
-html:not(.js) .hero__orb,
-html.js.hero-static .hero__orb {
-  inset: 50% 16% 2% 16%;
-}
-
-html.js .hero__wordmark,
-html.js .hero__orb { opacity: 0; }
-
-html.js.hero-settled .hero__orb { opacity: 1; }
-
-html.js.hero-static .hero__wordmark,
-html.js.hero-static .hero__orb { opacity: 1; }
-
-html.js.hero-live .hero__orb { opacity: 0; }
-
-.hero__skip {
-  position: absolute;
-  z-index: 2;
-  right: 0.5rem;
-  bottom: 0.5rem;
-  min-height: 44px;
-  padding: 0 0.9rem;
-  border: 1px solid var(--line);
-  background: rgba(7, 7, 6, 0.82);
+/* Placeholder reveal: a plain fade-in. The particle reveal waits on an approved plan. */
+.hero__wm {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1;
   color: var(--ink);
-  font-family: var(--label);
-  font-size: 0.85rem;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  visibility: hidden;
+  font-size: clamp(3rem, 7.6vw, 7.5rem);
+  white-space: nowrap;
+  animation: hero-wm-fade 1.1s ease-out 0.15s both;
 }
 
-html.js.hero-playing .hero__skip {
-  visibility: visible;
+@keyframes hero-wm-fade {
+  from { opacity: 0; transform: translateY(0.4rem); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__wm { animation: none; }
 }
 
 .lede { font-size: 1.2rem; color: var(--ink); }
@@ -556,10 +552,10 @@ html.js.hero-playing .hero__skip {
 
 .site-foot__word {
   margin: 0;
-  font-family: var(--label);
-  font-weight: 500;
+  font-family: "Inter Tight", sans-serif;
+  font-weight: 600;
   color: var(--ink);
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
   font-size: clamp(1.5rem, 9.2vw, 8rem);
   line-height: 0.9;
   max-width: 100%;
@@ -662,3 +658,5 @@ input, textarea, select { border-radius: var(--ui-r-control); }
   -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
           mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 80%);
 }
+
+.wm-dot { color: var(--accent, #FF4B24); }

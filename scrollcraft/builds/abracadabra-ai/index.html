@@ -30,7 +30,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230B0A08'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='40' fill='%23E23B2F'%3EA%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Tektur:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="stylesheet" href="assets/restored-motion.css">
 <style>
@@ -38,16 +38,7 @@
   .marquee__list[aria-hidden="true"] { display: none; }
 }
 </style>
-<script>
-(function () {
-  document.documentElement.classList.add('js');
-  var reduce = false;
-  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-  var played = false;
-  try { played = window.sessionStorage.getItem('abra-hero-reveal') === '1'; } catch (e) {}
-  if (reduce || played) document.documentElement.classList.add('hero-settled');
-})();
-</script>
+<script>(function(d){d.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('wm-js');setTimeout(function(){d.classList.add('wm-on','wm-dot-on')},4500)}catch(e){}})(document.documentElement);</script>
 
 <script type="application/ld+json">
 {
@@ -274,7 +265,7 @@
 <!-- SITE-NAV -->
 <a class="skip" href="#top">Skip to content</a>
 <header class="site-nav">
-  <a class="site-nav__mark" href="/">Abracadabra AI</a>
+  <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
   <details class="site-nav__menu">
     <summary class="site-nav__toggle">Menu</summary>
   </details>
@@ -330,12 +321,11 @@
     </div>
   </div>
   <div class="hero__stage" data-hero-stage>
-    <img class="hero__wordmark" src="assets/wordmark/abra-ca-dabra-accent.svg" alt="" width="1680" height="202">
-    <img class="hero__orb" src="assets/wordmark/orb-still.svg" alt="" width="640" height="640">
-    <button type="button" class="hero__skip">Skip</button>
+    <p class="hero__wm"><span class="wm-txt">abracadabra</span><span class="wm-dot">.</span></p>
+    <button type="button" class="hero__sound" aria-pressed="false" hidden>Sound off</button>
   </div>
 </section>
-<script type="module" src="assets/hero-reveal.js"></script>
+<script src="/assets/hero-reveal.js" defer></script>
 
 <section id="compiler" class="restored restored-pin" aria-labelledby="compiler-heading">
     <div class="sc-stage">
@@ -846,7 +836,7 @@
 </main>
 <!-- SITE-FOOT -->
 <footer class="site-foot">
-  <p class="site-foot__word">Abracadabra</p>
+  <p class="site-foot__word" aria-label="Abracadabra">abracadabra<span class="wm-dot">.</span></p>
   <nav class="site-foot__links" aria-label="Footer">
     <a href="/services/#search">Search &amp; AI visibility</a>
     <a href="/services/#marketing">Marketing</a>

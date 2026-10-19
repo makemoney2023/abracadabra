@@ -16,9 +16,9 @@
   --sc-hairline: color-mix(in oklab, var(--sc-ink) 12%, transparent);
   --sc-hairline-strong: color-mix(in oklab, var(--sc-ink) 22%, transparent);
   --sc-glass: color-mix(in oklab, var(--sc-surface) 72%, transparent);
-  --sc-font-display: "IBM Plex Sans", system-ui, sans-serif;
+  --sc-font-display: "Inter Tight", system-ui, sans-serif;
   --sc-font-text: "IBM Plex Sans", system-ui, sans-serif;
-  --sc-font-mono: Tektur, sans-serif;
+  --sc-font-mono: "Inter Tight", sans-serif;
   --sc-t-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.82rem);
   --sc-t-sm: clamp(0.875rem, 0.84rem + 0.18vw, 0.95rem);
   --sc-t-base: clamp(1rem, 0.96rem + 0.22vw, 1.125rem);
