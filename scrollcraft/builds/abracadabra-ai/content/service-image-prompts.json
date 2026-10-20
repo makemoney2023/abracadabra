@@ -1,0 +1,54 @@
+{
+  "_about": "Prompts for the software-style service images in content/service-images/. The Oct 16 set (commit 769ba500) was made with the image generator but its prompts were not saved; these reproduce that style. Each prompt is STYLE + scene, generated at 16:9 with the listed reference images, then saved as 1280x720 JPEG. npm run build (scripts/service-visuals.mjs) writes the avif/webp sizes and og.jpg.",
+  "style": "Stylized software UI render in the exact style of the reference images, 16:9. Dark charcoal background (#0B0B0A) with a faint fine grid. Floating, slightly tilted dark UI panels (#161615) with rounded corners, thin light-gray borders, soft drop shadows and macOS-style red, yellow and green window dots. Gray rounded placeholder bars instead of body text, with only a few short readable labels. Ember-orange (#FF4B24) primary accents, thin cyan (#8DEBF2) connector lines with small dots at each end, small green check marks. Clean, minimal, premium, generous negative space. No logos, no brand names, no people. Scene: ",
+  "machine-learning": {
+    "hero": {
+      "scene": "on the left, a large forecast panel with window dots, a small label \"Forecast\", one big number \"84\" in white, and under it a horizontal range band: a softly shaded cyan bar with a white marker in the middle and the small label \"Range\". A thin cyan line connects it to a second, smaller tilted panel on the right titled \"Reasons it moved\" with four horizontal driver bars of different lengths (two ember-orange, two cyan), each with a gray placeholder label on its left, and a small green check mark at the top.",
+      "references": [
+        "content/service-images/ai-assistants/hero.jpg",
+        "content/service-images/web-automation/hero.jpg"
+      ]
+    },
+    "body1": {
+      "scene": "on the left, a short stack of five small record cards, each with a simple document or table icon and two gray placeholder bars. Thin cyan lines run from each card into one larger tilted panel on the right with window dots, titled \"Model\", with a small ember-orange pill labelled \"Learning\" and three rows of gray placeholder bars, each row ending in a small green check mark.",
+      "references": [
+        "content/service-images/knowledge-search/hero.jpg",
+        "content/service-images/ai-assistants/hero.jpg"
+      ]
+    },
+    "body2": {
+      "source": "Real pirx.ca screenshot, kept for the proof section: top 1440x810 of assets/pirx/pirx-race-predictor-marathon-full-desktop.jpg resized to 1280x720."
+    },
+    "body2-alternate": {
+      "scene": "a wide chart panel with window dots titled \"Projection\": a solid white line of past values that continues to the right as a dashed ember-orange projected line, inside a softly shaded cyan range band that widens toward the right; faint gray axis lines, no numbers. A thin cyan line connects it to a smaller tilted card titled \"What changed\" with three rows, each with a small green check mark and gray placeholder bars.",
+      "references": [
+        "content/service-images/ai-assistants/hero.jpg",
+        "content/service-images/web-automation/hero.jpg"
+      ],
+      "note": "Generated, not used: body2 keeps the PIRX screenshot."
+    }
+  },
+  "mcp-connectors": {
+    "hero": {
+      "scene": "on the left, an AI chat panel with window dots, one short message bubble reading \"What's booked Friday?\" and a reply bubble of gray placeholder bars, with a small ember-orange send button. Thin cyan lines lead to a central tilted panel with a simple plug icon, titled \"Connector\", with a small green \"Secure\" pill. From it, thin cyan lines fan out to four small tool cards stacked on the right, labelled \"CRM\", \"Calendar\", \"Jobs\" and \"Invoices\", each with a simple line icon.",
+      "references": [
+        "content/service-images/ai-assistants/hero.jpg",
+        "content/service-images/knowledge-search/hero.jpg"
+      ]
+    },
+    "body1": {
+      "scene": "on the left, an approval card titled \"Approve change?\" with two rows of gray placeholder bars, an ember-orange \"Approve\" button and a dark gray \"Decline\" button. A thin cyan line connects it to a taller tilted panel on the right with window dots, titled \"Activity log\", with four rows, each a small green check mark followed by gray placeholder bars.",
+      "references": [
+        "content/service-images/web-automation/hero.jpg",
+        "content/service-images/ai-assistants/hero.jpg"
+      ]
+    },
+    "body2": {
+      "scene": "one tilted sign-in and permissions panel with window dots. At the top, a \"Sign in\" section with one empty input field and an ember-orange \"Continue\" button. Below, a \"Permissions\" list with three rows labelled \"Owner\", \"Staff\" and \"Viewer\", each with a gray placeholder bar and a toggle switch on the right: the first two toggles on in ember-orange, the third off in gray. A small green check mark beside \"Sign in\".",
+      "references": [
+        "content/service-images/custom-apps/hero.jpg",
+        "content/service-images/ai-assistants/hero.jpg"
+      ]
+    }
+  }
+}
