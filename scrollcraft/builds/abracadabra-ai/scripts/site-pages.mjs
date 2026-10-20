@@ -405,7 +405,7 @@ function capabilityHtml(block) {
 }
 
 function proofMetrics(className) {
-  return `<div class="${className}" aria-label="PiRX results">
+  return `<div class="${className}" aria-label="PIRX results">
 <p class="metric"><strong>398K</strong><span>search impressions</span></p>
 <p class="metric"><strong>46.5K</strong><span>AI-feature impressions</span></p>
 <p class="metric"><strong>90</strong><span>days, Jul 18–Oct 17</span></p>
@@ -432,7 +432,7 @@ ${mobileSource}
 }
 
 function visibilityBody(page, item, crumbs) {
-  const steps = processSteps.map((step, index) => `<li><span>0${index + 1}</span><div><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></div></li>`).join("");
+  const steps = (page.processSteps || processSteps).map((step, index) => `<li><span>0${index + 1}</span><div><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></div></li>`).join("");
   return `<main id="top" class="site-page sales visibility-page">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
@@ -467,7 +467,7 @@ ${cardGrid("outcome-grid", page.outcomes)}
 <p class="eyebrow">Named proof · pirx.ca</p>
 <h2>Near-zero to visible in 90 days.</h2>
 <p>${esc(page.proofs[0].text)}</p>
-<p><a class="btn btn--tertiary" href="/portfolio/pirx/">Read the PiRX case study <span class="btn__arrow" aria-hidden="true">→</span></a></p>
+<p><a class="btn btn--tertiary" href="/portfolio/pirx/">Read the PIRX case study <span class="btn__arrow" aria-hidden="true">→</span></a></p>
 </div>
 ${pirxChartHtml()}
 </section>
@@ -532,7 +532,7 @@ async function renderOffering(item) {
     height: "630",
     alt: serviceAlt(item.slug, "hero"),
   };
-  const steps = processSteps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
+  const steps = (page.processSteps || processSteps).map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
   const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}${(proof.shots || []).map((pair) => shotPairHtml(pair)).join("")}${proof.href ? `<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p>` : ""}</article>`).join("\n");
   const html = shell({
     title,
@@ -727,7 +727,7 @@ function pirxCaseBody(item, crumbs, relatedHtml) {
   return `<main id="top" class="site-page pirx-case">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
-  kicker: "PiRX · App, machine learning & AI visibility",
+  kicker: "PIRX · App, machine learning & AI visibility",
   title: "From invisible to 398K search impressions.",
   dek: `<p>${esc(item.summary)}</p><p class="sales-actions"><a class="btn btn--primary" href="${esc(item.sameAs)}">Open pirx.ca</a><a class="btn btn--secondary" href="/services/ai-visibility/">See the visibility system</a></p>`,
   media: `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`,
@@ -1172,7 +1172,7 @@ function homeProofHtml() {
   <div class="wrap">
     <p class="kicker">Search &amp; AI visibility</p>
     <h2 id="proof-title">Get found in AI search.</h2>
-    <p>PiRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p>
+    <p>PIRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p>
     <p class="fine">Google Search Console, Jul 18 to Oct 17, 2026. The AI-feature count is separate and is not added to the search total.</p>
     ${pirxChartHtml({ sizes: "(min-width: 860px) 46vw, 100vw" })}
     <p data-actions><a class="btn btn--primary" href="/#start">Start a project</a><a class="btn btn--tertiary" href="/services/ai-visibility/">Get found in AI search <span class="btn__arrow" aria-hidden="true">→</span></a></p>

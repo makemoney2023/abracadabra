@@ -1,4 +1,4 @@
-/** Self-hosted pirx.ca screenshots. Alt text describes the screen. It does not repeat PiRX's own marketing claims. */
+/** Self-hosted pirx.ca screenshots. Alt text describes the screen. It does not repeat PIRX's own marketing claims. */
 
 function shot(file, alt, width, height) {
   return { src: `/assets/pirx/${file}`, alt, width, height };

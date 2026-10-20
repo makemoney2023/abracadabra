@@ -736,7 +736,7 @@ input, textarea, select { border-radius: var(--ui-r-control); }
 .wm-dot { color: var(--accent, #FF4B24); }
 
 
-/* PiRX proof shots: see pirx-shot.css (linked from index.html) */
+/* PIRX proof shots: see pirx-shot.css (linked from index.html) */
 
 ::selection { background: var(--accent); color: var(--ink-on-accent); }
 

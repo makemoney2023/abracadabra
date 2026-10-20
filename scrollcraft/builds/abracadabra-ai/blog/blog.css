@@ -702,7 +702,7 @@ body { text-wrap: pretty; }
   margin: 0.8rem 0;
 }
 
-/* PiRX proof shots: styles live in /assets/pirx-shot.css (linked from site-pages). */
+/* PIRX proof shots: styles live in /assets/pirx-shot.css (linked from site-pages). */
 
 .shot-pair {
   display: grid;
@@ -1258,7 +1258,7 @@ input, textarea, select { border-radius: var(--ui-r-control); }
 
 .wm-dot { color: var(--accent, #FF4B24); }
 
-/* AI visibility + PiRX — proof-first editorial pages */
+/* AI visibility + PIRX — proof-first editorial pages */
 .visibility-hero__metrics,
 .pirx-case__metrics {
   display: grid;

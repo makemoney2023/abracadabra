@@ -588,6 +588,10 @@ export const salesPages = {
     description: "We design and build machine learning into your app, so your own data turns into a clear number, a fair range, and the reasons behind it.",
     dek: "Your records already hold patterns. We build models that learn from them and give you a clear number, a fair range around it, and the reasons it moved. Then we put it inside the app where you already work.",
     lead: { before: "See it running:", href: "/portfolio/pirx/", label: "the PIRX app we designed and built for pirx.ca", after: "." },
+    // PIRX does not run on our Cloudflare stack, so this page uses neutral wording for the Build step.
+    processSteps: processSteps.map((step) => (step.title === "Build"
+      ? { ...step, text: "Built to run where your data lives and connected to the tools you already use, so nothing has to move." }
+      : step)),
     strip: [
       { href: "/portfolio/pirx/", label: "pirx.ca" },
       { href: "/services/custom-apps/", label: "Custom apps" },

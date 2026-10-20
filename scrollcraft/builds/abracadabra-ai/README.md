@@ -21,7 +21,7 @@ npx --yes serve -l 4500
 CHROME_PATH=/usr/bin/google-chrome npm test
 ```
 
-Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. Under the hero, the original parallel-agent sweep, function calendar, and time-travel calendar return, then the operation compiler, the name, and the menu. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Work, Products, Blog, Films, and **Start a project**. Below 900px that bar is a full-height sheet. From 900px the links sit in one row. Services opens four groups (Build, Create, Grow, Learn). The mega menu is 3 columns until 1279px and 4 columns from 1280px. Course sits in Learn. The model strip is labelled **Built with** and is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (silent v2 renders). A band says **Every AI model. One bill.** Search & AI visibility carries the PiRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is a form, **Start a project**, at `#start` on the homepage and at `/start/` everywhere else. The primary button always says **Start a project**. The footer wordmark is Inter Tight. Reduced motion pauses video, stops the marquee, and keeps the page inside the viewport. Fonts are self-hosted in `assets/fonts/`. Icons and `manifest.webmanifest` are shared. Social cards are 1200×630 JPEGs.
+Then open http://localhost:4500. The homepage is left-aligned on desktop and stacked on mobile. The hero is the orbital film plus the promise and two actions, **Start a project** and **See the work**. Under the hero, the original parallel-agent sweep, function calendar, and time-travel calendar return, then the operation compiler, the name, and the menu. From 1024px the actions sit side by side; below that they stack full width. The top bar is Services, Work, Products, Blog, Films, and **Start a project**. Below 900px that bar is a full-height sheet. From 900px the links sit in one row. Services opens four groups (Build, Create, Grow, Learn). The mega menu is 3 columns until 1279px and 4 columns from 1280px. Course sits in Learn. The model strip is labelled **Built with** and is AI model logos only. Offerings come from one list, `businessFunctions` in `scripts/site-data.mjs`: Search & AI visibility, Marketing, Sales, Customer service, Operations, Design, and Platform. Showcase tabs play the recordings we have. Operate is the StrongFoam website loop and Build is the Milrcorr loop, both under `assets/video/` (silent v2 renders). A band says **Every AI model. One bill.** Search & AI visibility carries the PIRX Search Console line. Notes are a 2×2 of the first four posts. **Apps that scale, proudly built with Cloudflare.** sits after that band and before the FAQ. The FAQ is a hairline accordion. The close is a form, **Start a project**, at `#start` on the homepage and at `/start/` everywhere else. The primary button always says **Start a project**. The footer wordmark is Inter Tight. Reduced motion pauses video, stops the marquee, and keeps the page inside the viewport. Fonts are self-hosted in `assets/fonts/`. Icons and `manifest.webmanifest` are shared. Social cards are 1200×630 JPEGs.
 
 If the page and the source-of-truth file disagree, fix the file first, then the page.
 
@@ -46,8 +46,8 @@ If the page and the source-of-truth file disagree, fix the file first, then the 
 ## Premium pass — 2026-10-19
 
 - The marketing site uses one set of buttons, borders, radii, and section spacing. The phone menu is a sheet below 900px. Desktop layouts use the width above 1280px. A proof band names StrongFoam, Milrcorr, SuperPatch, and pirx.ca. The start form posts to the Worker at `POST /api/intake`.
-- AI Visibility and PiRX now work as one proof-first journey: the service page explains the offer in a compact editorial sequence, and the case study carries the dated result through a bounded product gallery. Full-page screenshots are cropped inside browser frames rather than setting the page height. On phones, system cards swipe horizontally and PiRX crops use the densest available source.
-- The homepage keeps one dedicated PiRX visibility chapter instead of repeating the same metric tile. Generic service FAQs use the shared accordion, and their pricing actions route to `/start/`.
+- AI Visibility and PIRX now work as one proof-first journey: the service page explains the offer in a compact editorial sequence, and the case study carries the dated result through a bounded product gallery. Full-page screenshots are cropped inside browser frames rather than setting the page height. On phones, system cards swipe horizontally and PIRX crops use the densest available source.
+- The homepage keeps one dedicated PIRX visibility chapter instead of repeating the same metric tile. Generic service FAQs use the shared accordion, and their pricing actions route to `/start/`.
 - **What changed** — layout, navigation, type, proof, intake, icons, self-hosted fonts, and social cards.
 - **Why** — the site should feel like one product at every viewport, and a visitor should be able to start a project without opening a mail app.
 - **Code touchpoints** — `assets/site.css`, `assets/fonts/`, `assets/icons/`, `scripts/site-chrome.mjs`, `scripts/site-pages.mjs`, `scripts/blog.mjs`, `worker/intake.js`, `content/proof.json`, `index.html`, `films.html`.
@@ -138,7 +138,7 @@ Names only. Values stay in `.env.example` and in Worker secrets.
 
 ## Runway homepage — 2026-10-16
 
-- The homepage is a short left-aligned page: hero, model logos, function cards, showcase tabs, the model band, the PiRX proof, a notes grid, Cloudflare, the FAQ, and `#start`.
+- The homepage is a short left-aligned page: hero, model logos, function cards, showcase tabs, the model band, the PIRX proof, a notes grid, Cloudflare, the FAQ, and `#start`.
 - Search & AI visibility is its own function and owns “Get found in AI search.” Marketing keeps media and research. Sales and Customer service are separate. Design links to live portfolio work. Platform keeps one bill and safe code.
 - The Cloudflare section uses the official light wordmark. The headline is “Apps that scale, proudly built with Cloudflare.” The supporting line says the apps grow from the first user to millions without a rebuild, and stay fast, secure, and available wherever customers are.
 - The project action is **Start a project** at `/#start`. The word “brief” is off the public page. Showdesk and appliance-store media files are gone. Their old URLs still 301 to `/portfolio/`.
@@ -228,9 +228,9 @@ Names only. Values stay in `.env.example` and in Worker secrets.
 - **API / schema impact** — none.
 - **Verification** — `npm test` in this folder.
 
-## PiRX screenshots — 2026-10-15
+## PIRX screenshots — 2026-10-15
 
-- Self-hosted pirx.ca screenshots now sit on the portfolio card, the case study, the custom-apps proof, and the AI visibility proof. Alt text describes the screen. PiRX's own on-site claims are not copied into Abracadabra copy.
+- Self-hosted pirx.ca screenshots now sit on the portfolio card, the case study, the custom-apps proof, and the AI visibility proof. Alt text describes the screen. PIRX's own on-site claims are not copied into Abracadabra copy.
 - **What changed** — the home hero is the portfolio card and the case-study hero. The race predictor is the custom-apps proof. Accuracy, the marathon predictor, and the blog index are the AI visibility proof. The full home page and a blog post sit in the case-study body.
 - **Why** — Christopher supplied web-optimized screenshots as proof of the live product.
 - **Code touchpoints** — `scripts/pirx-shots.mjs`, `scripts/service-sales.mjs`, `scripts/site-data.mjs`, `scripts/site-pages.mjs`, `blog/blog.css`, `assets/pirx/`.
@@ -238,7 +238,7 @@ Names only. Values stay in `.env.example` and in Worker secrets.
 - **API / schema impact** — the pirx.ca page's primary image is the home-hero screenshot.
 - **Verification** — `npm test` in this folder.
 
-## PiRX proof — 2026-10-15
+## PIRX proof — 2026-10-15
 
 - The public pirx.ca Search Console claim is now the Christopher-approved window Jul 18 to Oct 17, 2026: 398K search impressions, 1.94K clicks, average position 7.6, and 46.5K Generative AI feature impressions as a separate report. The lead line is "From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days."
 - The AI visibility proof card and the pirx.ca portfolio note carry that copy plus real Google Search Console chart crops framed as dark product shots (account chrome and tables blurred). The quiet source line reads "Google Search Console, Jul 18 to Oct 17, 2026" and is not a daily export. Top AI-feature pages stay on the portfolio note.

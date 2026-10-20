@@ -28,7 +28,7 @@ export const SERVICE_ALTS = {
   "machine-learning": {
     hero: "The PIRX app on two phones, showing a runner's projected race times and the training zones behind them.",
     body1: "The PIRX race time predictor on pirx.ca, where a runner enters a recent race to get a projected finish time.",
-    body2: "A pirx.ca example card with a projected marathon time, the supported range around it, and bars for the drivers behind it.",
+    body2: "The PIRX marathon time predictor on pirx.ca, with a form for a recent race and notes on its machine learning engine and supported range.",
   },
   "mcp-connectors": {
     hero: "Diagram of AI assistants on the left, one safe connector in the middle, and business tools on the right.",

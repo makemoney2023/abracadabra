@@ -27,7 +27,8 @@ async function machineLearning() {
   const backdrop = await sharp(Buffer.from(glow)).png().toBuffer();
   await jpeg(sharp(backdrop).composite([{ input: phones, left: W - meta.width - 110, top: 40 }])).toFile(out("machine-learning", "hero"));
   await jpeg(sharp(pirx("pirx-race-predictor-full-desktop.jpg")).extract({ left: 0, top: 0, width: 1440, height: 810 }).resize(W, H)).toFile(out("machine-learning", "body1"));
-  await jpeg(sharp(pirx("pirx-home-full-desktop.jpg")).extract({ left: 0, top: 2350, width: 1440, height: 810 }).resize(W, H)).toFile(out("machine-learning", "body2"));
+  // Marathon predictor top: no driver labels on screen (the home page sample card uses older driver names).
+  await jpeg(sharp(pirx("pirx-race-predictor-marathon-full-desktop.jpg")).extract({ left: 0, top: 0, width: 1440, height: 810 }).resize(W, H)).toFile(out("machine-learning", "body2"));
 }
 
 const ICONS = {
