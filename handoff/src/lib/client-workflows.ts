@@ -1,3 +1,4 @@
+import { legacyStartsAllowed } from "./agent-mode";
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
 import { rememberProjectBrief } from "./channel-plan";
@@ -273,6 +274,7 @@ export async function runClientWorkflow(input: {
   wait?: (ms: number) => Promise<void>;
 }): Promise<{ ok: true; executionId: string; status: string; output: string; receipt: string } | { ok: false; error: "missing" | "invalid" }> {
   const brief = input.brief.trim();
+  if (!legacyStartsAllowed()) return { ok: false, error: "invalid" };
   if (!brief || !input.origin.trim()) return { ok: false, error: "invalid" };
   const workflow = await input.sql.get<{ id: string; organization_id: string; name: string; template_id: string; mcp_server_ids: string | null; kind: string | null }>(
     "SELECT id, organization_id, name, template_id, mcp_server_ids, kind FROM client_workflows WHERE id = ?",
@@ -672,6 +674,7 @@ export async function claimDueWorkflow(input: {
   /** Stops a finished chain from starting itself again. */
   chainDepth?: number;
 }): Promise<DueClaim> {
+  if (!legacyStartsAllowed()) return { ok: false, error: "invalid" };
   if (!input.origin.trim()) return { ok: false, error: "invalid" };
   const targeted = Boolean(input.workflowId);
   const trigger = input.trigger?.trim() || "due";

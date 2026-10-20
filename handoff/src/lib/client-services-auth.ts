@@ -18,7 +18,8 @@ export function envText(name: string): string {
 
 /**
  * Bearer CLIENT_SERVICES_TOKEN. It only opens the /api/client-services/* routes, which can read the
- * update feed and a Space's work, and comment, request changes, or approve. Nothing there deploys or deletes.
+ * update feed and a Space's work, comment, request changes, or approve, and register or assign client agents
+ * (/agents mints a filing-only token). Nothing there deploys or deletes.
  */
 export function clientServicesAuthorized(request: Request): boolean {
   return exportAuthorized(request.headers.get("authorization"), envText("CLIENT_SERVICES_TOKEN"));

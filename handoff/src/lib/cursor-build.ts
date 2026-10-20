@@ -1,4 +1,6 @@
 import type { Sql } from "@/db/sql";
+import { dispatchToLeadAgent } from "@/lib/agent-dispatch";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { publishDeliverableAsSystem, pullDeliverableAsSystem } from "@/db/deliverables";
 import type { WakeReason } from "@/lib/agent-wake";
 import { installationAccessToken, loadManifestBundle, resolveCommitSha } from "@/lib/github/contents";
@@ -15,7 +17,8 @@ export type GateReason =
   | "cap_reached"
   | "agent_paused"
   | "cursor_start_failed"
-  | "prompt_rejected";
+  | "prompt_rejected"
+  | "agent_mode";
 
 export type BuildResult =
   | { ok: true; action: "started"; runId: string; repo: string; branch: string }
@@ -372,6 +375,7 @@ async function failStart(
 
 /** Start or resume the cloud run for a task that has reached build. */
 export async function startBuild(sql: Sql, taskId: string, deps: BuildDeps): Promise<BuildResult> {
+  if (!legacyStartsAllowed()) return { ok: false, reason: "agent_mode" };
   const task = await sql.get<TaskRow>(
     `SELECT id, organization_id, project_id, title, deliverable_id, round FROM tasks WHERE id = ?`,
     [taskId],
@@ -514,6 +518,7 @@ export async function startBuild(sql: Sql, taskId: string, deps: BuildDeps): Pro
 
 /** Launch builds that were waiting because every cloud-run slot was full. */
 export async function retryCappedBuilds(sql: Sql, deps: BuildDeps): Promise<void> {
+  if (!legacyStartsAllowed()) return;
   const rows = await sql.all<{ id: string }>(
     `SELECT id FROM tasks
      WHERE stage = 'build' AND status = 'todo' AND blocked_reason IS NULL
@@ -922,7 +927,20 @@ export async function startRevision(
   );
   if (task.organization_id) {
     await act(sql, task.organization_id, task.project_id, "agent.revision_started", { deliverableId, taskId, round: task.round + 1 }, now);
-    if (wake) await wake(task.organization_id, "changes_requested");
+    if (!legacyStartsAllowed()) {
+      await dispatchToLeadAgent(sql, {
+        organizationId: task.organization_id,
+        projectId: task.project_id,
+        taskId,
+        title: task.title,
+        reason: "changes",
+        deliverableId,
+        actor: { kind: "system", id: "client-review" },
+        now,
+      });
+    } else if (wake) {
+      await wake(task.organization_id, "changes_requested");
+    }
   }
   return { taskId };
 }

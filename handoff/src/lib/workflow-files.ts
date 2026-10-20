@@ -73,6 +73,10 @@ export async function storeWorkflowOutput(input: {
   now: number;
   tag?: "copy" | "reference";
   projectId?: string | null;
+  /** File into this exact space (must be active and in the organization). Skips the oldest-space pick. */
+  workspaceId?: string | null;
+  /** Batch label shown in the space. Defaults to "From the swarm". */
+  label?: string;
 }): Promise<StoredWorkflowFiles> {
   const prepared = input.files.flatMap((file) => {
     if (file.bytes && isPdfBytes(file.bytes)) {
@@ -94,14 +98,20 @@ export async function storeWorkflowOutput(input: {
   if (prepared.length === 0) return { batchId: null, stored: [] };
 
   const projectId = input.projectId?.trim() || null;
-  const space = await input.sql.get<{ id: string; policy_profile: string; quota_bytes: number }>(
-    `SELECT id, policy_profile, quota_bytes FROM workspaces
-     WHERE organization_id = ? AND status = 'active'
-       AND (? IS NULL OR project_id = ? OR project_id IS NULL)
-     ORDER BY CASE WHEN project_id = ? THEN 0 ELSE 1 END, opened_at ASC
-     LIMIT 1`,
-    [input.organizationId, projectId, projectId, projectId],
-  );
+  const workspaceId = input.workspaceId?.trim() || null;
+  const space = workspaceId
+    ? await input.sql.get<{ id: string; policy_profile: string; quota_bytes: number }>(
+        "SELECT id, policy_profile, quota_bytes FROM workspaces WHERE id = ? AND organization_id = ? AND status = 'active'",
+        [workspaceId, input.organizationId],
+      )
+    : await input.sql.get<{ id: string; policy_profile: string; quota_bytes: number }>(
+        `SELECT id, policy_profile, quota_bytes FROM workspaces
+         WHERE organization_id = ? AND status = 'active'
+           AND (? IS NULL OR project_id = ? OR project_id IS NULL)
+         ORDER BY CASE WHEN project_id = ? THEN 0 ELSE 1 END, opened_at ASC
+         LIMIT 1`,
+        [input.organizationId, projectId, projectId, projectId],
+      );
   const profile = space ? profileOf(space.policy_profile) : null;
   if (!space || !profile) {
     await note(input.sql, input.organizationId, "Swarm output is waiting because this client has no file space.", input.now);
@@ -146,7 +156,7 @@ export async function storeWorkflowOutput(input: {
       `INSERT INTO batches (
         id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
       ) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?, NULL, NULL)`,
-      [batchId, space.id, ACTOR, LABEL, input.now, input.now],
+      [batchId, space.id, ACTOR, input.label ?? LABEL, input.now, input.now],
     );
     for (const file of rows) {
       await input.sql.run(

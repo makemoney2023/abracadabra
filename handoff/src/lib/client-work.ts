@@ -505,6 +505,10 @@ const UPDATE_KINDS = [
   "agent.brief_drafted",
   "request_done",
   "deal.won",
+  "client_agent.work_filed",
+  "client_agent.handoff",
+  "client_agent.dispatch",
+  "client_agent.board",
 ] as const;
 
 type ActivityRow = {

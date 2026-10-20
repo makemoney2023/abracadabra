@@ -1,3 +1,5 @@
+import { dispatchToLeadAgent } from "@/lib/agent-dispatch";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 import type { Sql } from "@/db/sql";
 import type { WakeReason } from "@/lib/agent-wake";
 import { claimDueWorkflow, scheduleTaskSwarm } from "@/lib/client-workflows";
@@ -55,6 +57,8 @@ export type MoveTaskResult =
       output?: string;
       waitingOn?: string;
       startedWorkflowId?: string;
+      /** AGENT_MODE=agents: the task went to this lead agent (null: Client Services must assign one). */
+      handedTo?: string | null;
     }
   | { ok: false; error: "missing" | "invalid" | GateReason };
 
@@ -224,7 +228,37 @@ async function moveToDone(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Pr
   return { ok: true, taskId: task.id, column: "done", stage: task.stage, status: "done" };
 }
 
+async function handToAgent(sql: Sql, task: TaskMoveRow, column: "build" | "run", input: MoveTaskInput): Promise<MoveTaskResult> {
+  const position = await place(sql, task, column, input);
+  await sql.run(
+    `UPDATE tasks SET stage = ?, status = 'doing', blocked_reason = NULL, done_at = NULL, position = ?, updated_at = ? WHERE id = ?`,
+    [column, position, input.now, task.id],
+  );
+  await logMove(sql, task, column, inputBody(column), input.now, input.actor);
+  let handedTo: string | null = null;
+  if (task.organization_id) {
+    const row = await sql.get<{ title: string; project_id: string | null; deliverable_id: string | null }>(
+      "SELECT title, project_id, deliverable_id FROM tasks WHERE id = ?",
+      [task.id],
+    );
+    const sent = await dispatchToLeadAgent(sql, {
+      organizationId: task.organization_id,
+      projectId: row?.project_id ?? null,
+      taskId: task.id,
+      title: row?.title ?? "Task",
+      reason: column,
+      deliverableId: row?.deliverable_id ?? null,
+      note: input.instruction ?? null,
+      actor: input.actor,
+      now: input.now,
+    });
+    handedTo = sent.leadAgentId;
+  }
+  return { ok: true, taskId: task.id, column, stage: column, status: "doing", handedTo };
+}
+
 async function moveToBuild(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Promise<MoveTaskResult> {
+  if (!legacyStartsAllowed()) return handToAgent(sql, task, "build", input);
   const built = await startBuild(sql, task.id, input.build ?? defaultBuildDeps(input.now));
   if (!built.ok) {
     await sql.run("UPDATE tasks SET stage = ?, done_at = NULL WHERE id = ?", [task.stage, task.id]);
@@ -252,6 +286,7 @@ async function moveToBuild(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): P
 }
 
 async function moveToRun(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Promise<MoveTaskResult> {
+  if (!legacyStartsAllowed()) return handToAgent(sql, task, "run", input);
   const position = await place(sql, task, "run", input);
   const status = task.status === "blocked" || task.status === "done" ? "todo" : task.status;
   await sql.run(
