@@ -405,7 +405,7 @@ function capabilityHtml(block) {
 }
 
 function proofMetrics(className) {
-  return `<div class="${className}" aria-label="PIRX results">
+  return `<div class="${className}" aria-label="pirx.ca results">
 <p class="metric"><strong>398K</strong><span>search impressions</span></p>
 <p class="metric"><strong>46.5K</strong><span>AI-feature impressions</span></p>
 <p class="metric"><strong>90</strong><span>days, Jul 18–Oct 17</span></p>
@@ -1172,7 +1172,7 @@ function homeProofHtml() {
   <div class="wrap">
     <p class="kicker">Search &amp; AI visibility</p>
     <h2 id="proof-title">Get found in AI search.</h2>
-    <p>PIRX went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p>
+    <p>pirx.ca went from near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.</p>
     <p class="fine">Google Search Console, Jul 18 to Oct 17, 2026. The AI-feature count is separate and is not added to the search total.</p>
     ${pirxChartHtml({ sizes: "(min-width: 860px) 46vw, 100vw" })}
     <p data-actions><a class="btn btn--primary" href="/#start">Start a project</a><a class="btn btn--tertiary" href="/services/ai-visibility/">Get found in AI search <span class="btn__arrow" aria-hidden="true">→</span></a></p>
