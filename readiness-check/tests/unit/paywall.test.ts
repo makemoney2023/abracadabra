@@ -17,6 +17,48 @@ const FULL_ENV = {
   STRIPE_PRICE_ID: "price_test",
 };
 
+describe("offer: $149.99 with a $10 checkout credit", () => {
+  const OFFER = { PRICE_AMOUNT_CENTS: "14999", PRICE_CURRENCY: "usd", CREDIT_AMOUNT_CENTS: "1000" };
+
+  it("formats the price, credit, and what you pay from config", async () => {
+    const { offerFrom } = await import("@/lib/paywall/config");
+    expect(offerFrom(OFFER)).toEqual({
+      priceDisplay: "$149.99",
+      creditDisplay: "$10",
+      payDisplay: "$139.99",
+      currency: "usd",
+    });
+    expect(offerFrom({ ...OFFER, PRICE_DISPLAY: "$149.99 USD" }).priceDisplay).toBe("$149.99 USD");
+  });
+
+  it("shows no credit without a price, without a credit, or when the credit isn't below the price", async () => {
+    const { offerFrom } = await import("@/lib/paywall/config");
+    expect(offerFrom({}).creditDisplay).toBeNull();
+    expect(offerFrom({}).priceDisplay).toBeNull();
+    expect(offerFrom({ PRICE_AMOUNT_CENTS: "14999" }).payDisplay).toBeNull();
+    expect(offerFrom({ PRICE_AMOUNT_CENTS: "1000", CREDIT_AMOUNT_CENTS: "1000" }).creditDisplay).toBeNull();
+    expect(offerFrom({ PRICE_AMOUNT_CENTS: "abc", CREDIT_AMOUNT_CENTS: "1000" }).creditDisplay).toBeNull();
+  });
+
+  it("won't switch buying on with a credit on show but no coupon to apply it", () => {
+    const off = paywallConfig({ ...FULL_ENV, ...OFFER });
+    expect(off.enabled).toBe(false);
+    if (off.enabled) throw new Error("expected disabled");
+    expect(off.missing).toEqual(["STRIPE_CREDIT_COUPON_ID"]);
+    const on = paywallConfig({ ...FULL_ENV, ...OFFER, STRIPE_CREDIT_COUPON_ID: "schema_files_credit_10_usd" });
+    expect(on.enabled).toBe(true);
+    if (!on.enabled) throw new Error("expected enabled");
+    expect(on.couponId).toBe("schema_files_credit_10_usd");
+  });
+
+  it("panel copy reads as Christopher set it", async () => {
+    const { creditLine } = await import("@/lib/marketing/copy");
+    expect(buyLabel("$149.99")).toBe("Buy the files $149.99");
+    expect(creditLine("$10", "$139.99")).toBe("$10 credit applied at checkout, you pay $139.99");
+    expect(creditLine(null, "$139.99")).toBeNull();
+  });
+});
+
 describe("paywallConfig", () => {
   it("is disabled and names what is missing when no provider env is set", () => {
     const c = paywallConfig({});
@@ -43,7 +85,8 @@ describe("buy button label", () => {
   it("never invents a price", () => {
     expect(buyLabel(null)).toBe("Buy the files");
     expect(buyLabel(undefined)).toBe("Buy the files");
-    expect(buyLabel("CA$X")).toBe("Buy the files · CA$X");
+    expect(buyLabel("CA$X")).toBe("Buy the files CA$X");
+    expect(buyLabel("$149.99")).toBe("Buy the files $149.99");
   });
 
   it("visible copy avoids the word brief and tech names in labels", () => {
@@ -138,6 +181,31 @@ describe("Stripe client", () => {
     expect(body.get("metadata[product]")).toBe(FILES_PRODUCT_TAG);
     expect(body.get("metadata[scan_token]")).toBe("tok1");
     expect(String(calls[0]!.init!.body)).not.toContain("sk_test_x");
+    expect(body.get("allow_promotion_codes")).toBe("false");
+    expect(body.has("discounts[0][coupon]")).toBe(false);
+  });
+
+  it("auto-applies the checkout credit and leaves promotion codes off (Stripe allows only one)", async () => {
+    let sent = "";
+    await createFilesCheckoutSession(
+      {
+        secretKey: "sk_test_x",
+        priceId: "price_test",
+        scanId: "scan1",
+        scanToken: "tok1",
+        domain: "acme.example",
+        successUrl: "https://h/s",
+        cancelUrl: "https://h/c",
+        couponId: "schema_files_credit_10_usd",
+      },
+      async (_url, init) => {
+        sent = String(init?.body);
+        return new Response(JSON.stringify({ id: "cs_test_1", url: "https://checkout.example/x" }));
+      },
+    );
+    const body = new URLSearchParams(sent);
+    expect(body.get("discounts[0][coupon]")).toBe("schema_files_credit_10_usd");
+    expect(body.has("allow_promotion_codes")).toBe(false);
   });
 
   it("rejects malformed session ids before calling out", async () => {
@@ -192,5 +260,53 @@ describe("per-page guidance", () => {
       ["/about", "missing"],
       ["/", "partial"],
     ]);
+  });
+});
+
+describe("PAYWALL_TEST_BYPASS (preview only)", () => {
+  it("only treats preview aliases and local hosts as previews", async () => {
+    const { isPreviewHost } = await import("@/lib/paywall/test-bypass");
+    expect(isPreviewHost("schema-paywall-readiness-check.abracadabra-ai.workers.dev")).toBe(true);
+    expect(isPreviewHost("localhost")).toBe(true);
+    expect(isPreviewHost("check.abra-ca-dabra.app")).toBe(false);
+    expect(isPreviewHost("readiness-check.abracadabra-ai.workers.dev")).toBe(false);
+    expect(isPreviewHost("-readiness-check.abracadabra-ai.workers.dev")).toBe(false);
+    expect(isPreviewHost("evil-readiness-check.example.com")).toBe(false);
+    expect(isPreviewHost("other-worker.abracadabra-ai.workers.dev")).toBe(false);
+  });
+
+  it("needs the exact value 1, a preview host, and a per-request opt-in", async () => {
+    const { paywallTestBypass } = await import("@/lib/paywall/test-bypass");
+    const opt = { headers: { "x-paywall-test-bypass": "1" } };
+    const preview = new Request("https://schema-paywall-readiness-check.abracadabra-ai.workers.dev/x", opt);
+    const prod = new Request("https://check.abra-ca-dabra.app/x", opt);
+    expect(paywallTestBypass(new Request("https://schema-paywall-readiness-check.abracadabra-ai.workers.dev/x"), { PAYWALL_TEST_BYPASS: "1" })).toBe(false);
+    expect(paywallTestBypass(new Request("https://schema-paywall-readiness-check.abracadabra-ai.workers.dev/x?paywall_test=1"), { PAYWALL_TEST_BYPASS: "1" })).toBe(true);
+    expect(paywallTestBypass(preview, { PAYWALL_TEST_BYPASS: "1" })).toBe(true);
+    expect(paywallTestBypass(preview, { PAYWALL_TEST_BYPASS: "true" })).toBe(false);
+    expect(paywallTestBypass(preview, {})).toBe(false);
+    expect(paywallTestBypass(prod, { PAYWALL_TEST_BYPASS: "1" })).toBe(false);
+  });
+});
+
+describe("llms.txt page names", () => {
+  it("names pages from their headline or slug, not just their type", async () => {
+    const { buildLlmsTxt } = await import("@/lib/fixes/llms-txt-template");
+    const out = buildLlmsTxt({
+      origin: "https://acme.example",
+      domain: "acme.example",
+      biz: { name: "Acme" },
+      pages: [
+        { url: "https://acme.example/", pageType: "home", fetchStatus: "ok" },
+        { url: "https://acme.example/services", pageType: "service", fetchStatus: "ok" },
+        { url: "https://acme.example/services/ai-audits", pageType: "service", fetchStatus: "ok" },
+        { url: "https://acme.example/blog/x", pageType: "blogPost", fetchStatus: "ok", title: "Why [x] matters", description: "A short   read." },
+        { url: "https://acme.example/gone", pageType: "about", fetchStatus: "failed" },
+      ],
+    });
+    expect(out).toContain("- [Services](https://acme.example/services)");
+    expect(out).toContain("- [AI audits](https://acme.example/services/ai-audits)");
+    expect(out).toContain("- [Why x matters](https://acme.example/blog/x): A short read.");
+    expect(out).not.toContain("https://acme.example/gone");
   });
 });

@@ -1,5 +1,22 @@
 # Changelog
 
+## Schema fix files: $149.99 offer, working generation, D1 unlock/PDF/refresh — 2026-10-20
+
+**Offer (config only).** wrangler vars: `PRICE_DISPLAY=$149.99`, `PRICE_AMOUNT_CENTS=14999`, `PRICE_CURRENCY=usd`, `CREDIT_AMOUNT_CENTS=1000`. The panel reads "Buy the files $149.99" and "$10 credit applied at checkout, you pay $139.99". Checkout auto-applies `STRIPE_CREDIT_COUPON_ID` via `discounts[0][coupon]` and leaves promotion codes off (Stripe won't take both). With a credit configured, buying stays off until the coupon id is set too, so the panel never promises a credit Stripe won't apply. Currency is USD: the repo defaults to `usd` everywhere. Confirm before creating the Price.
+
+**Stripe setup script.** `STRIPE_SECRET_KEY=sk_test_… node scripts/stripe-setup.mjs` creates or reuses product `schema_fix_files`, a $149.99 one-time price (lookup key `schema_fix_files_14999_usd`) and coupon `schema_files_credit_10_usd` ($10, once). It prints only the IDs and refuses live keys. Not run against any account.
+
+**Preview-only test bypass.** `PAYWALL_TEST_BYPASS=1` lets file generation run without payment, for checking the generators end to end. It is honoured only on a preview alias host (`<alias>-readiness-check.<sub>.workers.dev`) or localhost, and only when the request opts in (`x-paywall-test-bypass: 1` or `?paywall_test=1`). It is never set in `wrangler.jsonc`. Set it only on a preview upload: `wrangler versions upload --preview-alias <alias> --var PAYWALL_TEST_BYPASS:1`. Production hosts ignore it even if a version carrying the var is promoted.
+
+**Generators verified on real scans.** `tests/integration/fix-files-real-scans.test.ts` and `tests/unit/full-schema-real-scans.test.ts` run on the real D1 rows for example.com and abra-ca-dabra.app. They check llms.txt format, sitemap, that every JSON-LD file parses and uses schema.org types (checked against the schema.org vocabulary), and that the zip opens and matches the export. Fixes found on the way:
+- Duplicate-@id false positives: the validator walked `@graph` twice and counted references.
+- Breadcrumb last item now names the page, not its type.
+- llms.txt links use the page headline/description, and service pages get their own names instead of eleven "Services".
+
+**Off Supabase.** Email unlock (new table `readiness_scan_unlocks`, migration 0013, applied to `handoff`), PDF report and "Refresh facts from site" now use D1. Unlock records the email and sets the cookie. It sends no email.
+
+**PDF on Workers.** @react-pdf can't run on Workers: it compiles its layout WebAssembly at runtime and reads fonts from disk. The scan report is now drawn with pdf-lib, using brand fonts served from `public/pdf-fonts`. The assessment PDF still uses @react-pdf.
+
 ## Schema fix files behind a paywall — 2026-10-20
 
 - **What changed** — The scan result keeps the score, pillars, every issue, and a new "What each page needs" list free (no email, no payment). Only generating and downloading the fix files (zip and data export) is paid. `POST /api/scans/[token]/fixes` checks for a paid entitlement in D1 and a short-lived signed download token before anything is generated. It answers 402 without payment and 403 with a missing or wrong token. The full issue list moved out of the email gate. The page matrix and the PDF stay behind the email unlock.

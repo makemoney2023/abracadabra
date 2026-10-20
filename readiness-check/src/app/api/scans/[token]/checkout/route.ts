@@ -43,6 +43,7 @@ export async function POST(request: Request, context: RouteContext) {
       domain: scan.domain,
       successUrl: `${scanUrl}?checkout={CHECKOUT_SESSION_ID}#fix-package`,
       cancelUrl: `${scanUrl}?checkout=cancelled#fix-package`,
+      couponId: config.couponId,
     });
     if (!session.url) throw new StripeError("Checkout did not return a URL", 502);
     return NextResponse.json({ url: session.url });

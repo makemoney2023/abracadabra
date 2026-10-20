@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { checkDb, scanByToken } from "@/lib/paywall/scan-context";
+import { recordScanUnlock } from "@/lib/scan/d1-store";
 import { unlockCookieName, unlockEmailSchema } from "@/lib/scan/unlock";
 
 type RouteContext = { params: Promise<{ token: string }> };
@@ -27,17 +28,17 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const email = parsed.data.email.trim().toLowerCase();
-  const admin = createAdminClient();
+  const db = await checkDb();
+  if (!db) {
+    return NextResponse.json({ error: "Scan store unavailable" }, { status: 503 });
+  }
 
-  const { data: scan, error: scanError } = await admin
-    .from("scans")
-    .select("id, domain")
-    .eq("public_token", token)
-    .maybeSingle();
-
-  if (scanError) {
+  let scan: Awaited<ReturnType<typeof scanByToken>>;
+  try {
+    scan = await scanByToken(db, token);
+  } catch (err) {
     return NextResponse.json(
-      { error: "Failed to load scan", message: scanError.message },
+      { error: "Failed to load scan", message: err instanceof Error ? err.message : "unknown" },
       { status: 500 },
     );
   }
@@ -45,15 +46,12 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Scan not found" }, { status: 404 });
   }
 
-  const { error: unlockError } = await admin.from("scan_unlocks").insert({
-    scan_id: scan.id,
-    email,
-  });
-
-  // Unique (scan_id, email) — treat duplicate unlock as success.
-  if (unlockError && unlockError.code !== "23505") {
+  // Unique (scan_id, email): a repeat unlock is a no-op. Nothing is emailed.
+  try {
+    await recordScanUnlock(db, scan.id, email);
+  } catch (err) {
     return NextResponse.json(
-      { error: "Failed to unlock scan", message: unlockError.message },
+      { error: "Failed to unlock scan", message: err instanceof Error ? err.message : "unknown" },
       { status: 500 },
     );
   }

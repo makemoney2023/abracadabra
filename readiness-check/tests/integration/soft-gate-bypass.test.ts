@@ -30,13 +30,13 @@ vi.mock("@/lib/scan/supabase-repository", () => ({
   loadScanByPublicToken: (...args: unknown[]) => mockLoadScanByPublicToken(...args),
 }));
 
-vi.mock("@react-pdf/renderer", () => ({
-  renderToBuffer: (...args: unknown[]) => mockRenderToBuffer(...args),
+vi.mock("@/lib/pdf/scan-report-pdf", () => ({
+  renderScanReportPdf: (...args: unknown[]) => mockRenderToBuffer(...args),
+  STUDIO_PDF_FONT_FILES: {},
 }));
 
-vi.mock("@/lib/pdf/report", () => ({
+vi.mock("@/lib/pdf/report-props", () => ({
   buildReportProps: (...args: unknown[]) => mockBuildReportProps(...args),
-  ScanReportDocument: () => null,
 }));
 
 const sampleLoaded = {

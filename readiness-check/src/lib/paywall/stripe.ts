@@ -63,6 +63,8 @@ export async function createFilesCheckoutSession(
     domain: string;
     successUrl: string;
     cancelUrl: string;
+    /** Coupon applied automatically (the checkout credit). */
+    couponId?: string | null;
   },
   fetchImpl: FetchLike = fetch,
 ): Promise<CheckoutSession> {
@@ -77,6 +79,13 @@ export async function createFilesCheckoutSession(
   form.set("metadata[domain]", args.domain);
   form.set("success_url", args.successUrl);
   form.set("cancel_url", args.cancelUrl);
+  if (args.couponId) {
+    // Stripe rejects discounts[] together with allow_promotion_codes, so the credit
+    // is the only discount and promotion codes stay off (the default when omitted).
+    form.set("discounts[0][coupon]", args.couponId);
+  } else {
+    form.set("allow_promotion_codes", "false");
+  }
   return stripeRequest<CheckoutSession>(
     args.secretKey,
     "/checkout/sessions",

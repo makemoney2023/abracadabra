@@ -19,11 +19,19 @@ import {
 } from "@/lib/schema-org/organization-types";
 import type { FixOption, FixSelection } from "@/lib/fixes/generate-package";
 import type { RequiredField } from "@/lib/fixes/required-fields";
-import { buyLabel, PAYWALL_COPY } from "@/lib/marketing/copy";
+import { buyLabel, creditLine, PAYWALL_COPY } from "@/lib/marketing/copy";
+
+/** Preview-only test switch; ignored by the server unless PAYWALL_TEST_BYPASS is set on a preview host. */
+function previewTestQuery(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("paywall_test") === "1" ? "?paywall_test=1" : "";
+}
 
 type EntitlementState = {
   purchase: "available" | "unavailable";
   priceDisplay: string | null;
+  creditDisplay?: string | null;
+  payDisplay?: string | null;
   entitled: boolean;
   downloadToken?: string;
   downloadTokenExpiresAt?: number;
@@ -115,7 +123,7 @@ export function FixPackageDownload({ token, domain }: FixPackageDownloadProps) {
 
   async function loadEntitlement(): Promise<EntitlementState | null> {
     try {
-      const res = await fetch(`/api/scans/${token}/entitlement`, { cache: "no-store" });
+      const res = await fetch(`/api/scans/${token}/entitlement${previewTestQuery()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("entitlement");
       const data = (await res.json()) as EntitlementState;
       setEntitlement(data);
@@ -413,6 +421,7 @@ export function FixPackageDownload({ token, domain }: FixPackageDownloadProps) {
         headers: {
           "content-type": "application/json",
           ...(downloadToken ? { "x-download-token": downloadToken } : {}),
+          ...(previewTestQuery() ? { "x-paywall-test-bypass": "1" } : {}),
         },
         body: JSON.stringify(selectionBody(format)),
       });
@@ -929,7 +938,16 @@ function FilePurchasePanel({
                 ? PAYWALL_COPY.unavailableButton
                 : buyLabel(entitlement?.priceDisplay)}
         </button>
+        {entitlement?.priceDisplay && !unavailable ? null : entitlement?.priceDisplay ? (
+          <span className="text-sm text-muted-foreground">{entitlement.priceDisplay}</span>
+        ) : null}
       </div>
+      {creditLine(entitlement?.creditDisplay, entitlement?.payDisplay) ? (
+        <p className="text-sm" data-testid="checkout-credit">
+          <span className="studio-pill studio-pill--done mr-2">Credit</span>
+          {creditLine(entitlement?.creditDisplay, entitlement?.payDisplay)}
+        </p>
+      ) : null}
       {note ? (
         <p className="text-sm text-muted-foreground" role="status">
           {note}

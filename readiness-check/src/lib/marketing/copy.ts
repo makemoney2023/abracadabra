@@ -66,7 +66,7 @@ export const GUIDANCE_COPY = {
   loading: "Working out what each page needs…",
 } as const;
 
-/** Paid file download. Price label comes from config only (PRICE_DISPLAY). */
+/** Paid file download. Amounts come from config only (PRICE_*, CREDIT_AMOUNT_CENTS). */
 export const PAYWALL_COPY = {
   kicker: "Your fix files",
   lockedTitle: "Get the files that fix it",
@@ -89,7 +89,16 @@ export const PAYWALL_COPY = {
 } as const;
 
 export function buyLabel(priceDisplay: string | null | undefined): string {
-  return priceDisplay ? `${PAYWALL_COPY.buy} · ${priceDisplay}` : PAYWALL_COPY.buy;
+  return priceDisplay ? `${PAYWALL_COPY.buy} ${priceDisplay}` : PAYWALL_COPY.buy;
+}
+
+/** "$10 credit applied at checkout, you pay $139.99" — only when both amounts are configured. */
+export function creditLine(
+  creditDisplay: string | null | undefined,
+  payDisplay: string | null | undefined,
+): string | null {
+  if (!creditDisplay || !payDisplay) return null;
+  return `${creditDisplay} credit applied at checkout, you pay ${payDisplay}`;
 }
 
 export const OPT_IN_COPY = {

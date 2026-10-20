@@ -3,6 +3,7 @@ import type { BoundSql } from "@/lib/cloudflare/sql";
 import { paywallConfig, type PaywallEnv } from "@/lib/paywall/config";
 import { DOWNLOAD_TOKEN_HEADER, verifyDownloadToken } from "@/lib/paywall/download-token";
 import { findEntitlement } from "@/lib/paywall/entitlements";
+import { paywallTestBypass } from "@/lib/paywall/test-bypass";
 
 /**
  * Server-side gate for file generation. Returns a response to send back,
@@ -18,7 +19,11 @@ export async function requireFileAccess(args: {
   scanToken: string;
   env?: PaywallEnv;
 }): Promise<NextResponse | null> {
-  const config = paywallConfig(args.env ?? process.env);
+  const env = args.env ?? process.env;
+  // Preview/test only: never honoured on production hosts (see test-bypass.ts).
+  if (paywallTestBypass(args.request, env)) return null;
+
+  const config = paywallConfig(env);
   if (!config.enabled) {
     return NextResponse.json(
       {
