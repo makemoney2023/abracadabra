@@ -8,6 +8,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import opentype from "opentype.js";
+import sharp from "sharp";
 
 const fontDir = fileURLToPath(new URL("./fonts/", import.meta.url));
 const load = (file) => opentype.parse(readFileSync(fontDir + file).buffer);
@@ -96,19 +97,35 @@ export function wordmark({ x, y, size, ink = OG.ink, dot = OG.accent }) {
   return { svg: `<g>${word.svg}<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${r.toFixed(2)}" fill="${dot}"/></g>`, width, height: ascent };
 }
 
-/** Full-size transparent overlay: a dark pill with the wordmark, bottom-left. For photo cards. */
-export function brandBadgeSvg({ size = 40, inset = 48 } = {}) {
-  const padX = size * 0.55;
-  const padY = size * 0.42;
+export const BAND = { height: 84, fill: "#0B0B0B" };
+
+/** The bottom strip for photo cards: solid #0B0B0B, wordmark left, address right. */
+export function brandBandSvg() {
+  const top = OG.height - BAND.height;
+  const size = 40;
   const probe = wordmark({ x: 0, y: 0, size });
-  const h = probe.height + padY * 2;
-  const w = probe.width + padX * 2;
-  const top = OG.height - inset - h;
-  const mark = wordmark({ x: inset + padX, y: top + padY + probe.height, size });
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${OG.width}" height="${OG.height}" viewBox="0 0 ${OG.width} ${OG.height}">
-  <rect x="${inset}" y="${top.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="${(h / 2).toFixed(2)}" fill="${OG.canvas}" fill-opacity="0.86"/>
+  const baseline = top + (BAND.height + probe.height) / 2;
+  const mark = wordmark({ x: 56, y: baseline, size });
+  const url = textPath("abra-ca-dabra.app", { x: OG.width - 56, y: baseline - 2, size: 22, font: "plex-400", fill: OG.inkSoft, anchor: "end" });
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${OG.width}" height="${BAND.height}" viewBox="0 ${top} ${OG.width} ${BAND.height}">
+  <rect x="0" y="${top}" width="${OG.width}" height="${BAND.height}" fill="${BAND.fill}"/>
+  <rect x="0" y="${top}" width="${OG.width}" height="1" fill="${OG.ink}" fill-opacity="0.1"/>
   ${mark.svg}
+  ${url.svg}
 </svg>`;
+}
+
+/**
+ * A photo card: the photo is cropped into the area above the band (never under
+ * it), then the solid band with the wordmark is added along the bottom edge.
+ */
+export async function brandedPhotoCard(source, { position = "centre" } = {}) {
+  const photo = await sharp(source)
+    .resize(OG.width, OG.height - BAND.height, { fit: "cover", position })
+    .toBuffer();
+  const band = await sharp(Buffer.from(brandBandSvg())).png().toBuffer();
+  return sharp({ create: { width: OG.width, height: OG.height, channels: 3, background: BAND.fill } })
+    .composite([{ input: photo, left: 0, top: 0 }, { input: band, left: 0, top: OG.height - BAND.height }]);
 }
 
 /** A plain dark card: orange label, title lines, wordmark bottom-left. */

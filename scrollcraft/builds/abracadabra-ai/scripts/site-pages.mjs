@@ -22,7 +22,7 @@ import {
 import { pirxChartHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
-import { brandBadgeSvg, plateSvg } from "./og-brand.mjs";
+import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
 
 const HOME_OG_ALT = "The abracadabra wordmark with an orange dot, above the headline: Let us bring your ideas to life.";
 
@@ -329,11 +329,7 @@ async function plateOrPhoto(key, label, title, photo) {
   await mkdir(dirname(file), { recursive: true });
   if (photo) {
     const source = join(root, String(photo).replace(/^\//, ""));
-    await sharp(source)
-      .resize(1200, 630, { fit: "cover", position: "attention" })
-      .composite([{ input: Buffer.from(brandBadgeSvg()) }])
-      .jpeg({ quality: 78, mozjpeg: true })
-      .toFile(file);
+    await (await brandedPhotoCard(source, { position: "attention" })).jpeg({ quality: 78, mozjpeg: true }).toFile(file);
   } else {
     await writePlate(file, label, title);
   }
