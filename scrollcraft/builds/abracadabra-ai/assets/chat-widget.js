@@ -259,7 +259,11 @@ export const FILLER_LINES = ["Let me check.", "One sec.", "Good question.", "Jus
 const FILLER_COUNT = FILLER_LINES.length;
 const FILLER_PATH = "/assets/voice/filler-";
 const FILLER_VERSION = "2";
-export const RETRY_TEXT = "Sorry, that took longer than it should. Try again, or book a thirty-minute working session right here in this chat.";
+export const RETRY_TEXT = "Sorry, that took longer than it should. Please try again.";
+// The worker marks retryable errors with `retry: true`. Older worker builds sent a longer sentence
+// with the same opening, so match on the stable prefix too rather than one exact string.
+const RETRY_PREFIX = "Sorry, that took longer than it should.";
+export const isRetryText = (text) => typeof text === "string" && text.startsWith(RETRY_PREFIX);
 export const THINKING_STEPS_MS = [0, 2000, 5000];
 export const TYPED_TIMEOUT_MS = 20000;
 export function thinkingLabel(question, step = 0) {
@@ -1474,6 +1478,7 @@ export class AbraChat extends ElementBase {
     const timeout = setTimeout(() => abort.abort(), TYPED_TIMEOUT_MS);
     let answer = "";
     let failed = null;
+    let retryable = false;
     try {
       const response = await fetch("/api/chat/message", {
         method: "POST",
@@ -1501,7 +1506,10 @@ export class AbraChat extends ElementBase {
             renderLinked(pending, answer);
             this.stream.scrollTop = this.stream.scrollHeight;
           }
-          if (event === "error") failed = data.text || RETRY_TEXT;
+          if (event === "error") {
+            failed = data.text || RETRY_TEXT;
+            if (data.retry === true) retryable = true;
+          }
           if (event === "ui_action") this.action(data.action);
         });
         if (!answer && !failed) failed = RETRY_TEXT;
@@ -1515,7 +1523,7 @@ export class AbraChat extends ElementBase {
       this.busy = false;
     }
     if (failed && !answer) {
-      this.showRetry(pending, failed, question);
+      this.showRetry(pending, failed, question, retryable || isRetryText(failed));
       return;
     }
     this.status.textContent = "Answer ready.";
@@ -1547,11 +1555,11 @@ export class AbraChat extends ElementBase {
     };
   }
 
-  showRetry(bubble, text, question) {
+  showRetry(bubble, text, question, retryable = isRetryText(text)) {
     bubble.textContent = "";
     bubble.classList.add("failed");
     bubble.append(document.createTextNode(text));
-    if (text === RETRY_TEXT) {
+    if (retryable) {
       const again = el("button", "retry", "Try again");
       again.type = "button";
       again.addEventListener("click", () => {

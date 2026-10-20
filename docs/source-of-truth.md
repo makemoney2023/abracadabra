@@ -100,9 +100,9 @@ Functions come from one list, `businessFunctions` in `scripts/site-data.mjs`:
 
 **Eyebrow:** Custom software
 
-**Headline:** Custom software, built for how you work.
+**Headline:** Let us bring your ideas to life.
 
-**Subhead:** We design, build and run AI-powered tools that fit your business, not the other way around.
+**Subhead:** Custom software and AI tools, built for how you work. We design, build and run them, so they fit your business, not the other way around.
 
 **Primary action:** Start a project. The anchor is `/#start`.
 
@@ -118,7 +118,8 @@ Functions come from one list, `businessFunctions` in `scripts/site-data.mjs`:
 | Option | Line | Why it exists |
 |---|---|---|
 | A | From thought to working software. | Brand slogan. Stays in JSON-LD `slogan`. Not the visible homepage headline. |
-| B (page headline) | Custom software, built for how you work. | The visible homepage h1. Approved verbatim. |
+| B | Custom software, built for how you work. | The visible homepage h1 until Oct 2026. Now opens the lede. |
+| E (page headline) | Let us bring your ideas to life. | The visible homepage h1. Approved by Christopher, Oct 2026. |
 | C | From a blank page to a system your team can demo. | Strong on the leave-behind. Weaker on fit. |
 | D | We shrink the gap between what you meant and what's running. | Leads with the mechanism, not the product. |
 

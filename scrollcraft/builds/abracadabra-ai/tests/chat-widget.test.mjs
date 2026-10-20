@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildCalUrl,
   contactProblems,
+  isRetryText,
   launcherShouldHide,
   onCalMessage,
   readinessUrl,
@@ -99,3 +100,10 @@ test("voice helpers: support check, socket URL, PCM decode, clock", async () => 
   assert.match(MIC_WORKLET, /sampleRate \/ 16000/);
 });
 
+
+test("Try again shows for the current and the older worker retry text, not for other errors", () => {
+  assert.equal(isRetryText("Sorry, that took longer than it should. Please try again."), true);
+  assert.equal(isRetryText("Sorry, that took longer than it should. Try again, or book a thirty-minute working session right here in this chat."), true);
+  assert.equal(isRetryText("This chat is full. Email houdini@abra-ca-dabra.app."), false);
+  assert.equal(isRetryText(undefined), false);
+});
