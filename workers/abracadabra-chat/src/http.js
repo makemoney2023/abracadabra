@@ -1,5 +1,6 @@
 import { deliverHandoff, handoffEnvelope, handoffSummary, HANDOFF_FROM, mailerConfigured, signHex, studioInbox } from "./handoff.js";
 import { ChatUnavailable, replyStream } from "./model.js";
+import { answerLabel, bandView, checkFetch, checkOrigin, cleanAnswer, stepView } from "./readiness.js";
 import { hqConfigured, postLeadToHq } from "./hq.js";
 import {
   clientIp,
@@ -23,6 +24,7 @@ const IP_MESSAGE_LIMIT = 20;
 const IP_SESSION_LIMIT = 8;
 const SESSION_MESSAGE_LIMIT = 30;
 const IP_CALL_LIMIT = 6;
+const IP_READINESS_LIMIT = 120;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isolateLimits = { messages: new Map(), sessions: new Map(), calls: new Map(), passes: new Map() };
 const isolateRooms = new Map();
@@ -76,6 +78,7 @@ function limitsFor(deps) {
   const limits = deps.limits || isolateLimits;
   if (!limits.calls) limits.calls = new Map();
   if (!limits.passes) limits.passes = new Map();
+  if (!limits.readiness) limits.readiness = new Map();
   return limits;
 }
 
@@ -226,6 +229,84 @@ function streamReply({ text, action, history, session, storage, env, deps, now }
   });
 }
 
+const CHECK_DOWN = "The check is not answering right now. You can take it on its own page.";
+
+/** One step of the Readiness Check in the chat: start (or resume), or answer the current step. */
+async function readinessStep(body, session, storage, env, deps, now, ip) {
+  const state = session.readiness || null;
+  const fallbackUrl = `${checkOrigin(env)}/check?utm_source=chat`;
+  const reportUrl = (token) => `${checkOrigin(env)}/check/${encodeURIComponent(token)}`;
+  const headers = { "content-type": "application/json", "x-forwarded-for": ip };
+  const finished = () => json({ done: true, band: bandView(session.readiness.band), reportUrl: reportUrl(session.readiness.token) }, 200);
+  try {
+    if (body.op === "start") {
+      if (state?.done) return finished();
+      if (state?.token) return json({ step: stepView(state.step, state.answered), resumed: true }, 200);
+      const response = await checkFetch(env, "/api/assessments", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ utm: { utm_source: "chat", utm_medium: "website-chat", chat_session_id: session.id } }),
+      }, deps);
+      if (!response.ok) {
+        const limited = response.status === 429;
+        return json({ error: limited ? "That is the check limit for today on this network." : CHECK_DOWN, fallbackUrl }, limited ? 429 : 502);
+      }
+      const created = await response.json();
+      const step = stepView(String(created.firstStep || ""), 0);
+      if (!created.token || !step) return json({ error: CHECK_DOWN, fallbackUrl }, 502);
+      session.readiness = { token: String(created.token), step: step.id, answered: 0, startedAt: now, pressures: [] };
+      session.updatedAt = now;
+      await save(storage, session, deps);
+      return json({ step }, 200);
+    }
+    if (body.op !== "answer") return json({ error: "Unknown step." }, 400);
+    if (!state?.token) return json({ error: "Start the check first." }, 409);
+    if (state.done) return finished();
+    const stepId = String(body.stepId || "");
+    if (stepId !== state.step) return json({ error: "That question was already answered.", step: stepView(state.step, state.answered) }, 409);
+    const answer = cleanAnswer(stepId, body.answer);
+    if (answer === undefined) return json({ error: "Choose one of the options.", step: stepView(stepId, state.answered) }, 400);
+    const patched = await checkFetch(env, `/api/assessments/${encodeURIComponent(state.token)}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ stepId, answer }),
+    }, deps);
+    const data = await patched.json().catch(() => ({}));
+    if (patched.status === 400) {
+      return json({ error: String(data.details || data.error || "Check that answer.").slice(0, 200), step: stepView(stepId, state.answered) }, 400);
+    }
+    if (!patched.ok) return json({ error: CHECK_DOWN, fallbackUrl: reportUrl(state.token) }, 502);
+    state.answered += 1;
+    if (stepId === "pressure") state.pressures = answer.map((value) => answerLabel("pressure", [value])).slice(0, 5);
+    if (data.nextStep === "gate") {
+      const scored = await checkFetch(env, `/api/assessments/${encodeURIComponent(state.token)}/complete`, { method: "POST", headers }, deps);
+      const result = await scored.json().catch(() => ({}));
+      state.step = "gate";
+      if (!scored.ok || !result.band) {
+        await save(storage, session, deps);
+        return json({ error: CHECK_DOWN, fallbackUrl: reportUrl(state.token) }, 502);
+      }
+      state.done = true;
+      state.band = String(result.band);
+      state.completedAt = now;
+      const band = bandView(state.band);
+      // The model sees the outcome in the history, so follow-up questions make sense.
+      rememberExchange(session, "I finished the Readiness Check here in the chat.", `Your Readiness Check came out ${band.label}. ${band.sentence}`.trim(), now);
+      await save(storage, session, deps);
+      return finished();
+    }
+    const next = stepView(String(data.nextStep || ""), state.answered);
+    if (!next) return json({ error: CHECK_DOWN, fallbackUrl: reportUrl(state.token) }, 502);
+    state.step = next.id;
+    session.updatedAt = now;
+    await save(storage, session, deps);
+    return json({ step: next }, 200);
+  } catch (error) {
+    console.error(`readiness: ${error?.message || error}`);
+    return json({ error: CHECK_DOWN, fallbackUrl: state?.token ? reportUrl(state.token) : fallbackUrl }, 502);
+  }
+}
+
 /** The page the visitor is on right now (path and title), for page-aware answers. */
 function rememberPage(session, value) {
   if (value?.page) session.page = String(value.page).slice(0, 300);
@@ -262,6 +343,12 @@ export async function handleSession(request, storage, env, deps) {
     session.voicePass = { id: crypto.randomUUID(), expiresAt: now + VOICE_PASS_MS };
     await save(storage, session, deps);
     return json({ pass: session.voicePass.id }, 200);
+  }
+
+  if (url.pathname === "/api/chat/readiness") {
+    const parsed = await readJson(request);
+    if (!parsed.ok) return json({ error: parsed.message }, parsed.status);
+    return readinessStep(parsed.value || {}, session, storage, env, deps, now, clientIp(request));
   }
 
   if (url.pathname === "/api/chat/message") {
@@ -469,6 +556,11 @@ export async function handleRequest(request, env = {}, deps = {}) {
     if (!voiceEnabled(env)) return cors(json({ error: "Voice is off right now. Type your question." }, 404), request, env);
     if (!gateHit(limits, "calls", ip, now, IP_CALL_LIMIT)) {
       return cors(json({ error: "Too many voice calls from this network. You can still type." }, 429), request, env);
+    }
+  } else if (url.pathname === "/api/chat/readiness") {
+    // About twenty answers per check; they get their own allowance so typing is not used up.
+    if (!gateHit(limits, "readiness", ip, now, IP_READINESS_LIMIT)) {
+      return cors(json({ error: "Too many answers from this network. Try again later." }, 429), request, env);
     }
   } else if (!gateHit(limits, "messages", ip, now, IP_MESSAGE_LIMIT)) {
     return cors(json({ error: "Too many notes from this network. Try again later." }, 429), request, env);

@@ -147,7 +147,17 @@ button { cursor: pointer; }
 }
 .primary.secondary { background: transparent; color: #F5F0E8; border: 1px solid rgba(245, 240, 232, 0.24); }
 .card a { color: #8DEBF2; }
+.card a.primary { color: #170804; }
 .card.booked { border-color: rgba(198, 255, 179, 0.45); }
+.rc-options { display: grid; gap: 8px; }
+.choice { text-align: left; background: #11110F; color: #F5F0E8; border: 1px solid rgba(245, 240, 232, 0.2); border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.4; min-height: 44px; }
+.choice:hover { border-color: #8DEBF2; }
+.choice:focus-visible, .rc-field:focus-visible { outline: 2px solid #FF4B24; outline-offset: 2px; }
+.choice:disabled, .rc button:disabled { opacity: 0.6; cursor: progress; }
+.rc-check { padding: 6px 0; line-height: 1.4; }
+.rc-detail { color: #F5F0E8 !important; font-style: italic; }
+.rc-field { width: 100%; background: #070706; color: #F5F0E8; border: 1px solid rgba(245, 240, 232, 0.24); border-radius: 6px; min-height: 40px; padding: 0 10px; font: inherit; font-size: 16px; }
+.rc-row { display: flex; gap: 12px; align-items: center; }
 .card.booked .kicker { color: #C6FFB3; }
 .mic {
   flex: none; width: 40px; min-height: 40px; border-radius: 6px;
@@ -1030,7 +1040,7 @@ export class AbraChat extends ElementBase {
     const chips = el("div", "chips");
     const specs = [
       ["Book a 30-min working session", () => this.openBooking()],
-      ["Take the 3-min AI Readiness Check", () => this.showReadiness()],
+      ["Take the AI Readiness Check (5–7 min)", () => this.showReadiness()],
       ["What would you automate first?", () => this.send("What would you automate first for my business?")],
     ];
     for (const [label, run] of specs) {
@@ -1151,21 +1161,206 @@ export class AbraChat extends ElementBase {
   showReadiness() {
     const url = readinessUrl(this.config.readinessCheckUrl, this.sessionId);
     const card = el("div", "card");
+    card.dataset.readinessCard = "true";
     card.append(
-      el("p", "kicker", "Three minutes"),
+      el("p", "kicker", "Five to seven minutes"),
       el("h3", null, "Take the AI Readiness Check."),
-      el("p", null, "It scores the work, then you leave with a plan."),
+      el("p", null, "Answer here in the chat, one question at a time. You get a score for readiness, growth, and how AI answer engines read your site, then a plan."),
     );
-    const link = el("a", "primary", "Start the check");
+    const start = el("button", "primary", "Start it here");
+    start.type = "button";
+    start.addEventListener("click", () => {
+      start.disabled = true;
+      void this.postEvent({ kind: "readiness_check_clicked" });
+      void this.startReadiness();
+    });
+    const link = el("a", "texty", "Open it on its own page");
     link.href = url;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.addEventListener("click", () => {
       void this.postEvent({ kind: "readiness_check_clicked" });
     });
+    card.append(start, link);
+    this.stream.append(card);
+    this.stream.scrollTop = this.stream.scrollHeight;
+  }
+
+  async readinessCall(body) {
+    try {
+      const response = await fetch("/api/chat/readiness", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json().catch(() => ({}));
+      return { status: response.status, data };
+    } catch {
+      return { status: 0, data: { error: "The check is not answering right now. You can take it on its own page." } };
+    }
+  }
+
+  async startReadiness() {
+    if (!this.sessionId) await this.ensureSession();
+    const { data } = await this.readinessCall({ op: "start" });
+    this.renderReadiness(data);
+  }
+
+  renderReadiness(data) {
+    if (data.done) return this.showReadinessResult(data);
+    if (data.step) return this.readinessCard(data.step, data.error);
+    const card = el("div", "card");
+    card.append(el("p", "kicker", "Readiness Check"), el("p", "error", data.error || "Something went wrong."));
+    const link = el("a", "texty", "Open the check");
+    link.href = data.fallbackUrl || readinessUrl(this.config.readinessCheckUrl, this.sessionId);
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
     card.append(link);
     this.stream.append(card);
     this.stream.scrollTop = this.stream.scrollHeight;
+  }
+
+  /** One question as a card: buttons for one choice, boxes for several, a field for text. */
+  readinessCard(step, error) {
+    this.stream.querySelector("[data-readiness-step]")?.remove();
+    const card = el("div", "card rc");
+    card.dataset.readinessStep = step.id;
+    const titleId = `rc-${step.id.replace(/[^a-z0-9]/gi, "")}-${Date.now()}`;
+    const count = step.progress ? `Readiness Check · ${step.progress.answered + 1} of about ${step.progress.estimate}` : "Readiness Check";
+    const title = el("h3", null, step.prompt);
+    title.id = titleId;
+    card.append(el("p", "kicker", count), title);
+    if (step.detail) card.append(el("p", "rc-detail", `“${step.detail}”`));
+    const group = el("div", "rc-options");
+    group.setAttribute("role", "group");
+    group.setAttribute("aria-labelledby", titleId);
+    const problem = el("p", "error");
+    problem.setAttribute("role", "alert");
+    if (error) problem.textContent = error;
+    else problem.hidden = true;
+    const submit = (value, label) => this.answerReadiness(step, value, label, card, problem);
+
+    if (step.kind === "single_select" || step.kind === "severity") {
+      for (const option of step.options || []) {
+        const button = el("button", "choice", option.label);
+        button.type = "button";
+        button.addEventListener("click", () => submit(option.value, option.label));
+        group.append(button);
+      }
+      card.append(group, problem);
+    } else if (step.kind === "multi_select") {
+      card.append(el("p", "fine", "Pick any that apply."));
+      for (const option of step.options || []) {
+        const row = el("label", "check rc-check");
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.value = option.value;
+        row.append(box, document.createTextNode(` ${option.label}`));
+        group.append(row);
+      }
+      const next = el("button", "primary", "None of these, next");
+      next.type = "button";
+      group.addEventListener("change", () => {
+        next.textContent = group.querySelector("input:checked") ? "Next" : "None of these, next";
+      });
+      next.addEventListener("click", () => {
+        const picked = [...group.querySelectorAll("input:checked")];
+        const labels = picked.map((box) => box.parentElement.textContent.trim());
+        submit(picked.map((box) => box.value), labels.length ? labels.join(" / ") : "None of these");
+      });
+      card.append(group, problem, next);
+    } else {
+      const field = document.createElement("input");
+      field.className = "rc-field";
+      field.setAttribute("aria-labelledby", titleId);
+      if (step.kind === "url") {
+        field.inputMode = "url";
+        field.autocomplete = "url";
+        field.placeholder = "example.com";
+      }
+      if (step.maxLength) field.maxLength = step.maxLength;
+      card.append(field);
+      if (step.suggestions?.length) {
+        const chips = el("div", "chips");
+        for (const suggestion of step.suggestions) {
+          const chip = el("button", "chip", suggestion);
+          chip.type = "button";
+          chip.addEventListener("click", () => { field.value = suggestion; field.focus(); });
+          chips.append(chip);
+        }
+        card.append(chips);
+      }
+      const row = el("div", "rc-row");
+      const next = el("button", "primary", "Next");
+      next.type = "button";
+      next.addEventListener("click", () => submit(field.value, field.value.trim()));
+      field.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") { event.preventDefault(); next.click(); }
+      });
+      row.append(next);
+      if (step.kind === "text") {
+        const skip = el("button", "texty", "Skip");
+        skip.type = "button";
+        skip.addEventListener("click", () => submit("", "(skipped)"));
+        row.append(skip);
+      }
+      card.append(problem, row);
+    }
+    this.stream.append(card);
+    // Long questions start at their heading, not at the bottom of the list.
+    this.stream.scrollTop = Math.max(0, card.offsetTop - this.stream.offsetTop - 8);
+    card.querySelector("button, input")?.focus({ preventScroll: true });
+  }
+
+  async answerReadiness(step, value, label, card, problem) {
+    if (card.dataset.busy) return;
+    card.dataset.busy = "1";
+    for (const control of card.querySelectorAll("button, input")) control.disabled = true;
+    const { status, data } = await this.readinessCall({ op: "answer", stepId: step.id, answer: value });
+    if (status === 200) {
+      card.remove();
+      this.addBubble("user", label || "(skipped)");
+      this.renderReadiness(data);
+      return;
+    }
+    delete card.dataset.busy;
+    for (const control of card.querySelectorAll("button, input")) control.disabled = false;
+    if (data.step && data.step.id !== step.id) {
+      card.remove();
+      this.readinessCard(data.step);
+      return;
+    }
+    if (!data.step && data.fallbackUrl) {
+      card.remove();
+      this.renderReadiness(data);
+      return;
+    }
+    problem.hidden = false;
+    problem.textContent = data.error || "Check that answer.";
+  }
+
+  showReadinessResult(data) {
+    if (this.stream.querySelector("[data-readiness-result]")) return;
+    const card = el("div", "card booked");
+    card.dataset.readinessResult = "true";
+    card.append(
+      el("p", "kicker", "Readiness Check · scored"),
+      el("h3", null, `${data.band?.label || "Scored"}.`),
+    );
+    if (data.band?.sentence) card.append(el("p", null, data.band.sentence));
+    card.append(el("p", "fine", "The full report opens on the check site. It asks for your email, then shows each score and three suggestions in each section."));
+    const report = el("a", "primary", "See your score and plan");
+    report.href = data.reportUrl;
+    report.target = "_blank";
+    report.rel = "noopener noreferrer";
+    const book = el("button", "texty", "Book a 30-min working session");
+    book.type = "button";
+    book.addEventListener("click", () => this.openBooking());
+    card.append(report, book);
+    this.stream.append(card);
+    this.stream.scrollTop = this.stream.scrollHeight;
+    this.status.textContent = `Readiness Check scored: ${data.band?.label || "done"}.`;
   }
 
   showBookingCard() {

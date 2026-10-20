@@ -155,7 +155,7 @@ export function localReply(userText) {
     return "A thirty-minute working session is the fastest way to look at one job. You can pick a time in this chat.";
   }
   if (action === "offer_readiness_check") {
-    return "The Readiness Check takes a few minutes. It shows where the work slows down, then you can book a thirty-minute working session.";
+    return "The Readiness Check takes five to seven minutes, and you can take it right here in this chat. It shows where the work slows down, then you can book a thirty-minute working session.";
   }
   if (action === "request_contact") {
     return "Leave your name and email here. A person reads it before anyone writes back.";
