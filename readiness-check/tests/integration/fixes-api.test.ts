@@ -2,12 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockLoadScan = vi.fn();
 
-vi.mock("@/lib/scan/supabase-repository", () => ({
+// Generation behaviour only. Payment gating is covered in fixes-paywall.test.ts.
+vi.mock("@/lib/scan/d1-store", () => ({
   loadScanByPublicToken: (...args: unknown[]) => mockLoadScan(...args),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({}),
+vi.mock("@opennextjs/cloudflare", () => ({
+  getCloudflareContext: async () => ({ env: { DB: {} } }),
+}));
+
+vi.mock("@/lib/paywall/guard", () => ({
+  requireFileAccess: async () => null,
 }));
 
 const completeScan = {

@@ -1,0 +1,210 @@
+{
+ "scan": {
+  "id": "101d3213-c439-4cb3-8da7-151b434a93d4",
+  "public_token": "b5Msaa5JDgf3OLNz5lM2hvts",
+  "domain": "example.com",
+  "origin": "https://example.com",
+  "source": "public",
+  "status": "complete",
+  "score_total": 20,
+  "score_breakdown_json": "{\"structuredData\":0,\"aiDiscoveryFiles\":0,\"aiCrawlability\":20,\"pageCoverage\":0,\"answerReadiness\":0}",
+  "created_at": 1792511978940,
+  "completed_at": 1792512047147
+ },
+ "pages": [
+  {
+   "url": "https://example.com/",
+   "page_type": "home",
+   "fetch_status": "ok",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": [], \"businessName\": \"Example Domain\", \"openingHours\": [], \"scrapedText\": \"\"}"
+  },
+  {
+   "url": "https://example.com/about",
+   "page_type": "about",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/contact",
+   "page_type": "contact",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/appointment",
+   "page_type": "appointment",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/book",
+   "page_type": "appointment",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/services",
+   "page_type": "service",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/pricing",
+   "page_type": "pricing",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/faq",
+   "page_type": "faq",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/testimonials",
+   "page_type": "testimonial",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/reviews",
+   "page_type": "testimonial",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/blog",
+   "page_type": "blog",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/articles",
+   "page_type": "blog",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/products",
+   "page_type": "product",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/events",
+   "page_type": "event",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/careers",
+   "page_type": "careers",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  },
+  {
+   "url": "https://example.com/menu",
+   "page_type": "menu",
+   "fetch_status": "failed",
+   "has_json_ld": 0,
+   "schema_types_json": "[]",
+   "evidence_json": "{\"emails\": [], \"phones\": [], \"sameAs\": [], \"faqPairs\": [], \"reviews\": [], \"howtoSteps\": [], \"hasSiteSearch\": false, \"existingTypes\": [], \"existingBlocks\": []}"
+  }
+ ],
+ "findings": [
+  {
+   "page_url": "https://example.com/",
+   "code": "NO_JSON_LD_HOME",
+   "severity": "critical",
+   "passed": 0,
+   "message": "Home page is missing JSON-LD structured data.",
+   "evidence_json": "{\"page_url\":\"https://example.com/\"}"
+  },
+  {
+   "page_url": "https://example.com/",
+   "code": "NO_ORG_SCHEMA",
+   "severity": "warn",
+   "passed": 0,
+   "message": "Home page is missing Organization/LocalBusiness schema.",
+   "evidence_json": "{\"page_url\":\"https://example.com/\"}"
+  },
+  {
+   "page_url": null,
+   "code": "MISSING_FAQ_SCHEMA",
+   "severity": "info",
+   "passed": 0,
+   "message": "No FAQ schema detected across scanned pages.",
+   "evidence_json": "{}"
+  },
+  {
+   "page_url": null,
+   "code": "MISSING_LLMS_TXT",
+   "severity": "critical",
+   "passed": 0,
+   "message": "llms.txt is missing.",
+   "evidence_json": "{}"
+  },
+  {
+   "page_url": null,
+   "code": "MISSING_LLMS_FULL",
+   "severity": "info",
+   "passed": 0,
+   "message": "llms-full.txt is missing or not useful for deeper AI discovery.",
+   "evidence_json": "{}"
+  },
+  {
+   "page_url": null,
+   "code": "SITEMAP_MISSING",
+   "severity": "warn",
+   "passed": 0,
+   "message": "sitemap.xml is missing.",
+   "evidence_json": "{}"
+  },
+  {
+   "page_url": null,
+   "code": "PAGES_FETCH_FAILED",
+   "severity": "warn",
+   "passed": 0,
+   "message": "15 page(s) failed to fetch and were excluded from coverage.",
+   "evidence_json": "{\"urls\":[\"https://example.com/about\",\"https://example.com/contact\",\"https://example.com/appointment\",\"https://example.com/book\",\"https://example.com/services\",\"https://example.com/pricing\",\"https://example.com/faq\",\"https://example.com/testimonials\",\"https://example.com/reviews\",\"https://example.com/blog\",\"https://example.com/articles\",\"https://example.com/products\",\"https://example.com/events\",\"https://example.com/careers\",\"https://example.com/menu\"]}"
+  },
+  {
+   "page_url": null,
+   "code": "LOW_JSON_LD_COVERAGE",
+   "severity": "warn",
+   "passed": 0,
+   "message": "Critical page type(s) missing JSON-LD: home.",
+   "evidence_json": "{\"missingCriticalTypes\":[\"home\"]}"
+  }
+ ]
+}

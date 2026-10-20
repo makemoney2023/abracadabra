@@ -10,6 +10,10 @@ export type LlmsTemplatePage = {
   url: string;
   pageType: string;
   fetchStatus: string;
+  /** Page headline from the scan, when found. */
+  title?: string;
+  /** Page meta description from the scan, when found. */
+  description?: string;
 };
 
 export type LlmsTemplateBiz = {
@@ -147,14 +151,22 @@ function formatAddress(address: PostalAddressFacts | undefined): string | undefi
 
 function humanTitle(pageType: string, url: string): string {
   const meta = PAGE_META[pageType];
-  if (meta && pageType !== "other") return meta.title;
   try {
     const path = new URL(url).pathname.replace(/\/$/, "") || "/";
     if (path === "/") return "Home";
-    const last = path.split("/").filter(Boolean).pop() ?? "Page";
-    return last
-      .replace(/[-_]+/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const segments = path.split("/").filter(Boolean);
+    // A section root (/services) keeps its type name; a page under it (/services/web-automation)
+    // gets its own name, so eleven service pages aren't all called "Services".
+    if (meta && pageType !== "other" && segments.length <= 1) return meta.title;
+    const last = segments.pop() ?? "Page";
+    // Sentence case from the slug, keeping common acronyms: "ai-assistants" → "AI assistants".
+    const words = last.replace(/[-_]+/g, " ").trim().split(/\s+/);
+    return words
+      .map((w, i) => {
+        if (/^(ai|seo|faq|api|crm|b2b|ux|ui|llm|llms)$/i.test(w)) return w.toUpperCase();
+        return i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+      })
+      .join(" ");
   } catch {
     return meta?.title ?? "Page";
   }
@@ -172,9 +184,16 @@ function okPages(pages: LlmsTemplatePage[]): LlmsTemplatePage[] {
   return pages.filter((p) => p.fetchStatus === "ok");
 }
 
+function clean(text: string | undefined, max: number): string | undefined {
+  const value = text?.replace(/\s+/g, " ").replace(/[[\]]/g, "").trim();
+  if (!value) return undefined;
+  return value.length > max ? `${value.slice(0, max - 1).trimEnd()}…` : value;
+}
+
 function linkLine(page: LlmsTemplatePage): string {
-  const title = humanTitle(page.pageType, page.url);
-  return `- [${title}](${page.url}): ${noteFor(page.pageType)}`;
+  const title = clean(page.title, 90) ?? humanTitle(page.pageType, page.url);
+  const note = clean(page.description, 200) ?? noteFor(page.pageType);
+  return `- [${title}](${page.url}): ${note}`;
 }
 
 function buildDetailProse(input: LlmsTemplateInput): string {

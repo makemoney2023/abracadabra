@@ -28,7 +28,7 @@ function walkNodes(node: unknown, visit: (obj: Record<string, unknown>) => void)
   }
   const obj = node as Record<string, unknown>;
   visit(obj);
-  if (Array.isArray(obj["@graph"])) walkNodes(obj["@graph"], visit);
+  // Each child once: @graph is just another array value, so don't walk it twice.
   for (const value of Object.values(obj)) {
     if (value && typeof value === "object") walkNodes(value, visit);
   }
@@ -61,7 +61,17 @@ function validateJsonLdFile(path: string, content: string): ValidationIssue[] {
     issues.push({ path, severity: "error", message: "No detectable @type in JSON-LD" });
   }
 
+  // Duplicate definitions: two top-level nodes with one @id. Nested {"@id": …} objects are
+  // references (or partial descriptions JSON-LD merges), not second definitions.
   const ids = new Set<string>();
+  const topLevel = Array.isArray(root["@graph"]) ? (root["@graph"] as unknown[]) : [root];
+  for (const node of topLevel) {
+    const id = node && typeof node === "object" ? (node as Record<string, unknown>)["@id"] : undefined;
+    if (typeof id !== "string") continue;
+    if (ids.has(id)) issues.push({ path, severity: "warn", message: `Duplicate @id ${id}` });
+    ids.add(id);
+  }
+
   walkNodes(parsed, (obj) => {
     if (!obj["@type"] && !obj["@id"] && !obj["@context"]) {
       // ignore leaf objects without type
@@ -76,13 +86,6 @@ function validateJsonLdFile(path: string, content: string): ValidationIssue[] {
           }
         }
       }
-    }
-
-    if (typeof obj["@id"] === "string") {
-      if (ids.has(obj["@id"])) {
-        issues.push({ path, severity: "warn", message: `Duplicate @id ${obj["@id"]}` });
-      }
-      ids.add(obj["@id"]);
     }
 
     if (obj["@type"] === "AggregateRating" || (Array.isArray(obj["@type"]) && obj["@type"].includes("AggregateRating"))) {

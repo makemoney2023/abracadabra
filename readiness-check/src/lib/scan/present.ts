@@ -44,6 +44,8 @@ type ScanPayloadBase = {
   pagesMissingJsonLd: PageMissingJsonLd[];
   pillarWhy: Record<keyof ScoreBreakdown, PillarWhy>;
   scoreSummary: ScoreSummary;
+  /** Every issue the scan recorded. Free: no email, no payment. */
+  findings: FullScanView["findings"];
 };
 
 export type LockedScanPayload = ScanPayloadBase & {
@@ -53,7 +55,6 @@ export type LockedScanPayload = ScanPayloadBase & {
 export type UnlockedScanPayload = ScanPayloadBase & {
   unlocked: true;
   pages: FullScanView["pages"];
-  findings: FullScanView["findings"];
 };
 
 export type ScanPayload = LockedScanPayload | UnlockedScanPayload;
@@ -77,7 +78,10 @@ export function selectPagesMissingJsonLd(
     .map((p) => ({ url: p.url, pageType: p.pageType }));
 }
 
-/** Soft-gate projection: score + gaps + missing JSON-LD pages always; full matrix when unlocked. */
+/**
+ * Soft-gate projection. Always free: score, pillars, every finding, pages missing structured data.
+ * Email unlock adds the page matrix (and the PDF route). Fix files are paid, separately.
+ */
 export function selectScanPayload(full: FullScanView, unlocked: boolean): ScanPayload {
   const topGaps = selectTopGaps(full.findings);
   const pagesMissingJsonLd = selectPagesMissingJsonLd(full.pages);
@@ -97,6 +101,7 @@ export function selectScanPayload(full: FullScanView, unlocked: boolean): ScanPa
     pagesMissingJsonLd,
     pillarWhy,
     scoreSummary,
+    findings: full.findings,
   };
 
   if (!unlocked) {
@@ -107,6 +112,5 @@ export function selectScanPayload(full: FullScanView, unlocked: boolean): ScanPa
     ...base,
     unlocked: true,
     pages: full.pages,
-    findings: full.findings,
   };
 }

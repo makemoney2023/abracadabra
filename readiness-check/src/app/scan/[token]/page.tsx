@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FindingsList } from "@/components/public/FindingsList";
 import { FixPackageDownload } from "@/components/public/FixPackageDownload";
 import { OptInForm } from "@/components/public/OptInForm";
+import { PageGuidance } from "@/components/public/PageGuidance";
 import { PageMatrix } from "@/components/public/PageMatrix";
 import { ScanReportActions } from "@/components/public/ScanReportActions";
 import { ScorePreview } from "@/components/public/ScorePreview";
@@ -153,6 +154,11 @@ export default function ScanPage() {
                   }
                 />
 
+                {/* Free: every issue and what each page needs. */}
+                <FindingsList findings={payload.findings} />
+                <PageGuidance token={token} />
+
+                {/* Paid: generated files only. Enforced server-side. */}
                 <div className="no-print">
                   <FixPackageDownload token={token} domain={payload.domain} />
                 </div>
@@ -167,7 +173,6 @@ export default function ScanPage() {
                 ) : (
                   <>
                     <PageMatrix pages={payload.pages} />
-                    <FindingsList findings={payload.findings} />
                     <div className="no-print border-t border-border/70 pt-8">
                       <ScanReportActions token={token} unlocked />
                     </div>

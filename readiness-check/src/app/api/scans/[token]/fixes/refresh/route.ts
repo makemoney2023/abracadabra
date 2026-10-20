@@ -6,8 +6,8 @@ import {
 } from "@/lib/fixes/generate-package";
 import { computeRequiredFields } from "@/lib/fixes/required-fields";
 import { refreshPageFacts } from "@/lib/scan/refresh-page-facts";
-import { loadScanByPublicToken } from "@/lib/scan/supabase-repository";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { checkDb } from "@/lib/paywall/scan-context";
+import { loadScanByPublicToken, updateScanPageFacts } from "@/lib/scan/d1-store";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -18,10 +18,13 @@ export async function POST(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
-  const admin = createAdminClient();
+  const db = await checkDb();
+  if (!db) {
+    return NextResponse.json({ error: "Scan store unavailable" }, { status: 503 });
+  }
   let loaded: Awaited<ReturnType<typeof loadScanByPublicToken>>;
   try {
-    loaded = await loadScanByPublicToken(token, admin);
+    loaded = await loadScanByPublicToken(db, token);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to load scan" },
@@ -53,19 +56,17 @@ export async function POST(_request: Request, context: RouteContext) {
 
   for (const page of refreshed.pages) {
     if (!refreshed.refreshedUrls.includes(page.url)) continue;
-    const { error } = await admin
-      .from("scan_pages")
-      .update({
-        evidence: page.evidence,
-        has_json_ld: page.hasJsonLd,
-        schema_types: page.schemaTypes,
-        page_type: page.pageType,
-      })
-      .eq("scan_id", loaded.scan.id)
-      .eq("url", page.url);
-    if (error) {
+    try {
+      await updateScanPageFacts(db, loaded.scan.id, {
+        url: page.url,
+        pageType: page.pageType,
+        hasJsonLd: page.hasJsonLd,
+        schemaTypes: page.schemaTypes,
+        evidence: page.evidence as unknown as Record<string, unknown>,
+      });
+    } catch (err) {
       return NextResponse.json(
-        { error: `Failed to persist evidence: ${error.message}` },
+        { error: `Failed to persist evidence: ${err instanceof Error ? err.message : "unknown"}` },
         { status: 500 },
       );
     }

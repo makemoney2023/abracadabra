@@ -356,3 +356,48 @@ export function createD1ScanRepository(db: BoundSql): ScanRepository {
     },
   };
 }
+
+/** Record an email unlock for a scan. Repeat unlocks for the same email are no-ops. */
+export async function recordScanUnlock(
+  db: BoundSql,
+  scanId: string,
+  email: string,
+  now = Date.now(),
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO readiness_scan_unlocks (id, scan_id, email, created_at)
+       VALUES (?, ?, ?, ?)`,
+    )
+    .bind(crypto.randomUUID(), scanId, email, now)
+    .run();
+}
+
+/** Persist refreshed facts for one page of a scan. */
+export async function updateScanPageFacts(
+  db: BoundSql,
+  scanId: string,
+  page: {
+    url: string;
+    pageType: string;
+    hasJsonLd: boolean;
+    schemaTypes: string[];
+    evidence: Record<string, unknown>;
+  },
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE readiness_scan_pages
+       SET evidence_json = ?, has_json_ld = ?, schema_types_json = ?, page_type = ?
+       WHERE scan_id = ? AND url = ?`,
+    )
+    .bind(
+      JSON.stringify(page.evidence ?? {}),
+      page.hasJsonLd ? 1 : 0,
+      JSON.stringify(page.schemaTypes ?? []),
+      page.pageType,
+      scanId,
+      page.url,
+    )
+    .run();
+}

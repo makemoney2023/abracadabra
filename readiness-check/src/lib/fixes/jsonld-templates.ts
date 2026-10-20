@@ -393,7 +393,8 @@ export function buildPageJsonLd(input: PageJsonLdInput): Record<string, unknown>
   const origin = originBase(input.origin);
   const { pageUrl, pageType, biz, facts } = input;
   const label = pageLabel(pageType);
-  const breadcrumb = buildBreadcrumbList(origin, pageUrl, label);
+  // The last crumb names this page, not its type ("AI agents for business", not "Blog").
+  const breadcrumb = buildBreadcrumbList(origin, pageUrl, facts.headline?.trim() || label);
 
   if (pageType === "faq") {
     const faq = buildFaqDesired(pageUrl, facts.faqPairs.length ? facts.faqPairs : biz.faqPairs);

@@ -30,13 +30,13 @@ vi.mock("@/lib/scan/supabase-repository", () => ({
   loadScanByPublicToken: (...args: unknown[]) => mockLoadScanByPublicToken(...args),
 }));
 
-vi.mock("@react-pdf/renderer", () => ({
-  renderToBuffer: (...args: unknown[]) => mockRenderToBuffer(...args),
+vi.mock("@/lib/pdf/scan-report-pdf", () => ({
+  renderScanReportPdf: (...args: unknown[]) => mockRenderToBuffer(...args),
+  STUDIO_PDF_FONT_FILES: {},
 }));
 
-vi.mock("@/lib/pdf/report", () => ({
+vi.mock("@/lib/pdf/report-props", () => ({
   buildReportProps: (...args: unknown[]) => mockBuildReportProps(...args),
-  ScanReportDocument: () => null,
 }));
 
 const sampleLoaded = {
@@ -100,7 +100,8 @@ describe("public soft-gate bypass", () => {
     const json = await res.json();
     expect(json.unlocked).toBe(false);
     expect(json).not.toHaveProperty("pages");
-    expect(json).not.toHaveProperty("findings");
+    // Issues are free; only the page matrix stays behind the email gate.
+    expect(json.findings).toHaveLength(1);
   });
 
   it("GET /api/scans/[token] unlocks when httpOnly cookie is set", async () => {

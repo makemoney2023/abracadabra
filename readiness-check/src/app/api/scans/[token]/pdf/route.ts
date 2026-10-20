@@ -1,22 +1,23 @@
-import { renderToBuffer } from "@react-pdf/renderer";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { buildReportProps, ScanReportDocument } from "@/lib/pdf/report";
-import { loadScanByPublicToken } from "@/lib/scan/supabase-repository";
+import { checkDb } from "@/lib/paywall/scan-context";
+import { buildReportProps } from "@/lib/pdf/report-props";
+import { renderScanReportPdf } from "@/lib/pdf/scan-report-pdf";
+import { loadStudioFontBytes } from "@/lib/pdf/studio-font-bytes";
+import { loadScanByPublicToken } from "@/lib/scan/d1-store";
 import { unlockCookieName } from "@/lib/scan/unlock";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const { token } = await context.params;
   if (!token) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
   const cookieStore = await cookies();
-  const unlockedCookie =
-    cookieStore.get(unlockCookieName(token))?.value === "1";
+  const unlockedCookie = cookieStore.get(unlockCookieName(token))?.value === "1";
 
   if (!unlockedCookie) {
     return NextResponse.json(
@@ -25,10 +26,13 @@ export async function GET(_request: Request, context: RouteContext) {
     );
   }
 
-  const admin = createAdminClient();
+  const db = await checkDb();
+  if (!db) {
+    return NextResponse.json({ error: "Scan store unavailable" }, { status: 503 });
+  }
   let loaded: Awaited<ReturnType<typeof loadScanByPublicToken>>;
   try {
-    loaded = await loadScanByPublicToken(token, admin);
+    loaded = await loadScanByPublicToken(db, token);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to load scan" },
@@ -48,9 +52,19 @@ export async function GET(_request: Request, context: RouteContext) {
     findings: loaded.findings,
   });
 
-  const buffer = await renderToBuffer(<ScanReportDocument {...props} />);
+  let bytes: Uint8Array;
+  try {
+    const env = (await getCloudflareContext({ async: true })).env as {
+      ASSETS?: { fetch: (input: Request | string) => Promise<Response> };
+    };
+    const fonts = await loadStudioFontBytes(env.ASSETS ?? null, new URL(request.url).origin);
+    bytes = await renderScanReportPdf(props, fonts);
+  } catch (err) {
+    console.error("scan pdf render failed", err instanceof Error ? err.message : "unknown");
+    return NextResponse.json({ error: "PDF render failed" }, { status: 500 });
+  }
 
-  return new NextResponse(new Uint8Array(buffer), {
+  return new NextResponse(bytes as unknown as BodyInit, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",

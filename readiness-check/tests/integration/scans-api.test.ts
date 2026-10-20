@@ -71,7 +71,7 @@ describe("scans API helpers (soft gate + rate limit)", () => {
       { url: "https://acme.example/", pageType: "home" },
     ]);
     expect(locked).not.toHaveProperty("pages");
-    expect(locked).not.toHaveProperty("findings");
+    expect(locked.findings).toHaveLength(2);
   });
 
   it("builds unlocked GET payload with pages when cookie gate opens", () => {

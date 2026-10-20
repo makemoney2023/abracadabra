@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { CheckBindings } from "@/lib/cloudflare/sql";
+import { memoryCheckDb } from "../helpers/memory-sql";
 
-const mockFrom = vi.fn();
 const mockCookieSet = vi.fn();
 const mockCookieGet = vi.fn();
+const holder: { env: CheckBindings } = { env: {} };
 
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({ from: mockFrom }),
+vi.mock("@opennextjs/cloudflare", () => ({
+  getCloudflareContext: async () => ({ env: holder.env }),
 }));
 
 vi.mock("next/headers", () => ({
@@ -15,76 +17,83 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
-describe("POST /api/scans/[token]/unlock", () => {
-  beforeEach(() => {
+function unlockRequest(body: unknown, token = "tok1") {
+  return new Request(`http://localhost/api/scans/${token}/unlock`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function unlockRows() {
+  const res = await holder.env
+    .DB!.prepare("SELECT scan_id, email FROM readiness_scan_unlocks WHERE scan_id = ? ORDER BY created_at")
+    .bind("scan-1")
+    .all<{ scan_id: string; email: string }>();
+  return res.results ?? [];
+}
+
+describe("POST /api/scans/[token]/unlock (D1)", () => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    mockFrom.mockReset();
-    mockCookieSet.mockReset();
-    mockCookieGet.mockReset();
+    holder.env = { DB: memoryCheckDb() };
+    await holder.env
+      .DB!.prepare(
+        `INSERT INTO readiness_scans (id, public_token, domain, origin, source, status, created_at)
+         VALUES (?, ?, 'acme.example', 'https://acme.example', 'public', 'complete', 1)`,
+      )
+      .bind("scan-1", "tok1")
+      .run();
   });
 
-  it("returns 400 for invalid email", async () => {
+  it("returns 400 for invalid email and stores nothing", async () => {
     const { POST } = await import("@/app/api/scans/[token]/unlock/route");
-    const res = await POST(
-      new Request("http://localhost/api/scans/tok1/unlock", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: "not-an-email" }),
-      }),
-      { params: Promise.resolve({ token: "tok1" }) },
-    );
-
+    const res = await POST(unlockRequest({ email: "not-an-email" }), {
+      params: Promise.resolve({ token: "tok1" }),
+    });
     expect(res.status).toBe(400);
-    const json = await res.json();
-    expect(json.error).toMatch(/invalid/i);
-    expect(mockFrom).not.toHaveBeenCalled();
+    expect((await res.json()).error).toMatch(/invalid/i);
+    expect(await unlockRows()).toEqual([]);
+    expect(mockCookieSet).not.toHaveBeenCalled();
   });
 
   it("returns 400 when email is missing", async () => {
     const { POST } = await import("@/app/api/scans/[token]/unlock/route");
-    const res = await POST(
-      new Request("http://localhost/api/scans/tok1/unlock", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({}),
-      }),
-      { params: Promise.resolve({ token: "tok1" }) },
-    );
-
+    const res = await POST(unlockRequest({}), { params: Promise.resolve({ token: "tok1" }) });
     expect(res.status).toBe(400);
   });
 
-  it("inserts unlock, sets cookie, returns unlocked true", async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({
-      data: { id: "scan-1", domain: "acme.example" },
-      error: null,
-    });
-    const eq = vi.fn(() => ({ maybeSingle }));
-    const select = vi.fn(() => ({ eq }));
-    const insert = vi.fn().mockResolvedValue({ error: null });
-
-    mockFrom.mockImplementation((table: string) => {
-      if (table === "scans") return { select };
-      if (table === "scan_unlocks") return { insert };
-      throw new Error(`unexpected table ${table}`);
-    });
-
+  it("returns 404 for an unknown scan", async () => {
     const { POST } = await import("@/app/api/scans/[token]/unlock/route");
-    const res = await POST(
-      new Request("http://localhost/api/scans/tok1/unlock", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: "ops@acme.example" }),
-      }),
-      { params: Promise.resolve({ token: "tok1" }) },
-    );
+    const res = await POST(unlockRequest({ email: "a@acme.example" }, "nope"), {
+      params: Promise.resolve({ token: "nope" }),
+    });
+    expect(res.status).toBe(404);
+    expect(mockCookieSet).not.toHaveBeenCalled();
+  });
+
+  it("returns 503 when the scan store is not bound", async () => {
+    holder.env = {};
+    const { POST } = await import("@/app/api/scans/[token]/unlock/route");
+    const res = await POST(unlockRequest({ email: "a@acme.example" }), {
+      params: Promise.resolve({ token: "tok1" }),
+    });
+    expect(res.status).toBe(503);
+  });
+
+  it("records the unlock in D1, sets the cookie, and sends nothing", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    const { POST } = await import("@/app/api/scans/[token]/unlock/route");
+    const res = await POST(unlockRequest({ email: "Ops@Acme.Example" }), {
+      params: Promise.resolve({ token: "tok1" }),
+    });
+    vi.unstubAllGlobals();
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ unlocked: true });
-    expect(insert).toHaveBeenCalledWith({
-      scan_id: "scan-1",
-      email: "ops@acme.example",
-    });
+    expect(await unlockRows()).toEqual([{ scan_id: "scan-1", email: "ops@acme.example" }]);
+    expect(fetchSpy).not.toHaveBeenCalled();
     expect(mockCookieSet).toHaveBeenCalledWith(
       "scan_unlock_tok1",
       "1",
@@ -93,6 +102,17 @@ describe("POST /api/scans/[token]/unlock", () => {
         secure: process.env.NODE_ENV === "production",
       }),
     );
+  });
+
+  it("treats a repeat unlock as success without a duplicate row", async () => {
+    const { POST } = await import("@/app/api/scans/[token]/unlock/route");
+    for (let i = 0; i < 2; i++) {
+      const res = await POST(unlockRequest({ email: "ops@acme.example" }), {
+        params: Promise.resolve({ token: "tok1" }),
+      });
+      expect(res.status).toBe(200);
+    }
+    expect(await unlockRows()).toHaveLength(1);
   });
 });
 

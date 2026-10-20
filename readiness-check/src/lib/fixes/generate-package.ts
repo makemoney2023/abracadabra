@@ -772,11 +772,16 @@ export function generateFixPackage(
       sameAs: biz.sameAs,
       address: biz.address,
     },
-    pages: input.pages.map((p) => ({
-      url: p.url,
-      pageType: p.pageType,
-      fetchStatus: p.fetchStatus,
-    })),
+    pages: input.pages.map((p) => {
+      const facts = factsFor(p);
+      return {
+        url: p.url,
+        pageType: p.pageType,
+        fetchStatus: p.fetchStatus,
+        title: facts.headline,
+        description: facts.description,
+      };
+    }),
   };
 
   if (selection.llmsTxt) {
