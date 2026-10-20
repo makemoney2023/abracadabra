@@ -16,6 +16,8 @@ export type Organization = {
   kind: OrgKind;
   created_at: number;
   updated_at: number;
+  /** The holding company this one sits under, if any. Older rows and test fixtures may omit it. */
+  parent_organization_id?: string | null;
 };
 
 export type WorkspaceLink = {
@@ -205,7 +207,7 @@ export const CRM_ERRORS: Record<CrmError, string> = {
 
 const KINDS = new Set<OrgKind>(["lead", "client", "past_client", "partner"]);
 
-const ORG_COLUMNS = "id, name, domain, website, industry, notes, kind, created_at, updated_at";
+const ORG_COLUMNS = "id, name, domain, website, industry, notes, kind, created_at, updated_at, parent_organization_id";
 
 function staffUserId(caller: Caller): string | null {
   if (!caller.staff || !caller.userId) return null;
@@ -368,11 +370,20 @@ export async function organizationById(
 export async function createOrganization(
   sql: Sql,
   caller: Caller,
-  input: { name: string; website?: string; kind?: OrgKind },
+  input: { name: string; website?: string; kind?: OrgKind; parentOrganizationId?: string | null },
   now: number,
 ): Promise<CrmResult<Organization>> {
   const actorId = staffUserId(caller);
   if (!actorId) return { ok: false, error: "forbidden" };
+  const parentId = (input.parentOrganizationId ?? "").trim() || null;
+  if (parentId) {
+    const parent = await sql.get<{ parent_organization_id: string | null }>(
+      "SELECT parent_organization_id FROM organizations WHERE id = ? AND archived_at IS NULL",
+      [parentId],
+    );
+    if (!parent) return { ok: false, error: "missing" };
+    if (parent.parent_organization_id) return { ok: false, error: "invalid" };
+  }
   const name = input.name.trim();
   if (name.length < 1 || name.length > 200) return { ok: false, error: "invalid" };
   const kind = input.kind ?? "client";
@@ -389,9 +400,9 @@ export async function createOrganization(
   try {
     await sql.exec("BEGIN");
     await sql.run(
-      `INSERT INTO organizations (id, name, domain, website, kind, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id, name, domain, website, kind, now, now],
+      `INSERT INTO organizations (id, name, domain, website, kind, parent_organization_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, name, domain, website, kind, parentId, now, now],
     );
     await sql.run(
       `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, created_at)
@@ -1715,6 +1726,15 @@ export async function mergeOrganizations(
     for (const table of MERGE_TABLES) {
       await sql.run(`UPDATE ${table} SET organization_id = ? WHERE organization_id = ?`, [keep.id, drop.id]);
     }
+    // Group links follow the kept company. A child never ends up as its own parent.
+    await sql.run(
+      "UPDATE organizations SET parent_organization_id = ? WHERE parent_organization_id = ? AND id != ?",
+      [keep.id, drop.id, keep.id],
+    );
+    await sql.run(
+      "UPDATE organizations SET parent_organization_id = NULL WHERE id = ? AND parent_organization_id = ?",
+      [keep.id, drop.id],
+    );
     await sql.run("UPDATE organizations SET archived_at = ?, updated_at = ? WHERE id = ?", [now, now, drop.id]);
     await sql.run(
       `INSERT INTO activities (

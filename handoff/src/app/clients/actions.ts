@@ -21,6 +21,7 @@ import { requireHqStaffPage } from "@/lib/current";
 import { runHqTool } from "@/lib/hq-tools";
 import { beginDirectClient, scanIntakeBindings } from "@/lib/lead-schema";
 import { sendHandoffMail } from "@/lib/mail";
+import { setParentOrganization } from "@/db/org-groups";
 import { saveConnectorGrant } from "@/lib/connector-grants";
 import { assignSwarmRun } from "@/lib/swarm-runs";
 
@@ -41,6 +42,7 @@ export async function createClientAction(_previous: FormState, formData: FormDat
       name: String(formData.get("name") ?? ""),
       website: String(formData.get("website") ?? ""),
       kind,
+      parentOrganizationId: String(formData.get("parentOrganizationId") ?? ""),
     },
     Date.now(),
   );
@@ -69,7 +71,12 @@ export async function createClientDrawerAction(
   const created = await createOrganization(
     sql,
     caller,
-    { name, website, kind: kindOf(formData.get("kind")) },
+    {
+      name,
+      website,
+      kind: kindOf(formData.get("kind")),
+      parentOrganizationId: String(formData.get("parentOrganizationId") ?? ""),
+    },
     Date.now(),
   );
   if (!created.ok) {
@@ -91,6 +98,27 @@ export async function createClientDrawerAction(
   revalidatePath("/clients");
   revalidatePath("/");
   return ok("Client added.");
+}
+
+/** Put this company under a holding company, or take it out of its group with an empty choice. */
+export async function setParentAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const parentId = String(formData.get("parentOrganizationId") ?? "").trim() || null;
+  const previous = String(formData.get("previousParentId") ?? "");
+  const result = await setParentOrganization(sql, caller, { organizationId, parentId }, Date.now());
+  if (!result.ok) {
+    return result.error === "invalid"
+      ? fail("Pick a top-level company. A group is one level deep.", "parentOrganizationId")
+      : fail(CRM_ERRORS[result.error]);
+  }
+  revalidatePath(`/clients/${organizationId}`);
+  for (const id of [parentId, previous]) if (id) revalidatePath(`/clients/${id}`);
+  revalidatePath("/clients");
+  return ok(parentId ? "Group saved." : "Removed from the group.");
 }
 
 export async function linkSpaceAction(

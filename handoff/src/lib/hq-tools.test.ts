@@ -86,6 +86,31 @@ describe("runHqTool", () => {
     expect(missing).toEqual({ ok: false, error: "missing" });
   });
 
+  it("creates a client under a holding company when parentId is given", async () => {
+    const sql = await database();
+    const parent = await runHqTool(sql, staff, { tool: "create_client", input: { name: "LioCorr Holdings Inc." }, idempotencyKey: "group-1" }, NOW);
+    const parentId = (valueOf(parent) as { id: string }).id;
+    const child = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_client", input: { name: "Square Assembly Inc.", parentId }, idempotencyKey: "group-2" },
+      NOW,
+    );
+    const childId = (valueOf(child) as { id: string }).id;
+    const row = await sql.get<{ parent_organization_id: string | null }>(
+      "SELECT parent_organization_id FROM organizations WHERE id = ?",
+      [childId],
+    );
+    expect(row?.parent_organization_id).toBe(parentId);
+    const missing = await runHqTool(
+      sql,
+      staff,
+      { tool: "create_client", input: { name: "Orphan", parentId: "nope" }, idempotencyKey: "group-3" },
+      NOW,
+    );
+    expect(missing).toEqual({ ok: false, error: "missing" });
+  });
+
   it("opens a space and queues a schema scan when a client is added with a website", async () => {
     const sql = await database();
     await sql.exec(`

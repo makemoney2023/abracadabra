@@ -28,11 +28,19 @@ const STEPS = [
   { file: "0024_lead_scores.sql", column: { table: "deals", name: "routing_status" } },
   { file: "0025_client_work.sql", table: "client_work_requests" },
   { file: "0026_agent_work.sql", table: "skill_grants" },
+  { file: "0027_org_parent.sql", index: "organizations_parent" },
 ] as const;
 
 type Step = (typeof STEPS)[number];
 
 async function stepApplied(sql: Sql, step: Step): Promise<boolean> {
+  if ("index" in step) {
+    const index = await sql.get<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?",
+      [step.index],
+    );
+    return index?.name === step.index;
+  }
   if ("column" in step) {
     if (!/^[a-z_]+$/.test(step.column.table)) return false;
     const columns = await sql.all<{ name: string }>(`PRAGMA table_info(${step.column.table})`);

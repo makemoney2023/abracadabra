@@ -389,7 +389,12 @@ async function perform(
     const created = await createOrganization(
       sql,
       caller,
-      { name: text(input, "name"), website: text(input, "website") || undefined, kind: "client" },
+      {
+        name: text(input, "name"),
+        website: text(input, "website") || undefined,
+        kind: "client",
+        parentOrganizationId: text(input, "parentId") || undefined,
+      },
       now,
     );
     if (created.ok) {
