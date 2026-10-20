@@ -73,7 +73,7 @@ New photography should sit on a neutral-to-warm white point, with blacks crushed
 
 IBM Plex Sans (400, 400 italic, 500, 600) and Inter Tight (500, 600, 700) are the Latin WOFF2 files in `assets/fonts/`. Their OFL licences sit beside them. Add a weight by dropping the subset in that folder and adding an `@font-face` in `assets/fonts.css`.
 
-`node scripts/write-brand-assets.mjs` rebuilds the icon set, the grain tile, the homepage social card, the blurred course hero, and the phone crops of the pirx screenshots. Page social cards are JPEGs written by `scripts/site-pages.mjs` and `scripts/blog.mjs` during `npm test`. The build also curls straight quotes in visible text. It does not change tags, scripts, or JSON-LD.
+`node scripts/write-brand-assets.mjs` rebuilds the icon set, the grain tile, the homepage social card, the blurred course hero, and the phone crops of the pirx screenshots. Page social cards are JPEGs written by `scripts/site-pages.mjs`, `scripts/service-visuals.mjs` and `scripts/blog.mjs` during `npm test`. Every card shares `scripts/og-brand.mjs`: the lowercase `abracadabra` wordmark (Inter Tight 600, -0.05em, round `#FF4B24` dot) and all card text are drawn as outlines from `scripts/fonts`, so no card depends on fonts installed on the build machine. Text plates and blog cards carry the wordmark bottom-left; photo cards get it on a dark pill bottom-left. `assets/og/films.jpg` is a static file and is not generated. The build also curls straight quotes in visible text. It does not change tags, scripts, or JSON-LD.
 
 Blog notes get a sticky “On this page” rail from 1280px and a closed details block on phones, plus a 2px reading-progress line.
 

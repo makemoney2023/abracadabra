@@ -2,6 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { homeCardSvg } from "./og-brand.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -49,16 +50,9 @@ async function grain() {
 }
 
 async function homeCard() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
-    <rect width="1200" height="630" fill="#070706"/>
-    <rect x="72" y="72" width="96" height="8" fill="#FF4B24"/>
-    <text x="72" y="220" fill="#F5F0E8" font-family="sans-serif" font-size="64" font-weight="700">Custom software,</text>
-    <text x="72" y="300" fill="#F5F0E8" font-family="sans-serif" font-size="64" font-weight="700">built for how you work.</text>
-    <text x="72" y="540" fill="#FF4B24" font-family="sans-serif" font-size="28">abracadabra.</text>
-  </svg>`;
   const dest = join(root, "assets/og/home.jpg");
   await mkdir(dirname(dest), { recursive: true });
-  await sharp(Buffer.from(svg)).jpeg({ quality: 80 }).toFile(dest);
+  await sharp(Buffer.from(homeCardSvg())).jpeg({ quality: 82, mozjpeg: true }).toFile(dest);
 }
 
 async function courseHero() {

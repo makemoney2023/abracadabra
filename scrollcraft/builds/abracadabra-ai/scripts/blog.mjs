@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import matter from "gray-matter";
 import { marked } from "marked";
 import sharp from "sharp";
+import { textPath, wordmark, wrapToWidth } from "./og-brand.mjs";
 import { z } from "zod";
 import { headLinks, siteFooter, siteHeader } from "./site-chrome.mjs";
 import { smartQuotesHtml } from "./typography.mjs";
@@ -121,36 +122,17 @@ function esc(value) {
   })[char]);
 }
 
-function escXml(value) {
-  return esc(value);
-}
-
 function jsonLd(data) {
   return JSON.stringify(data, null, 2).replace(/</g, "\\u003c");
 }
 
-function wrap(text, width) {
-  const words = text.split(/\s+/);
-  const lines = [];
-  let line = "";
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (next.length > width && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = next;
-    }
-  }
-  if (line) lines.push(line);
-  return lines.slice(0, 4);
-}
 
 function ogSvg(title, eyebrow) {
-  const lines = wrap(title, 26);
-  const tspans = lines.map((line, index) => (
-    `<tspan x="72" dy="${index === 0 ? 0 : 62}">${escXml(line)}</tspan>`
-  )).join("");
+  const titleOptions = { font: "inter-700", size: 48 };
+  const lines = wrapToWidth(title, 700, titleOptions, 4);
+  const titleSvg = lines.map((line, index) => textPath(line, { x: 72, y: 210 + index * 62, fill: "#F5F0E8", ...titleOptions }).svg).join("");
+  const eyebrowSvg = textPath(eyebrow, { x: 72, y: 124, size: 22, font: "plex-500", fill: "#8DEBF2" }).svg;
+  const mark = wordmark({ x: 72, y: 566, size: 44 });
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -163,9 +145,9 @@ function ogSvg(title, eyebrow) {
   <rect width="1200" height="630" fill="#070706"/>
   <rect width="1200" height="630" fill="url(#scrim)"/>
   <rect x="72" y="72" width="96" height="8" fill="#FF4B24"/>
-  <text x="72" y="124" fill="#8DEBF2" font-family="IBM Plex Sans, DejaVu Sans, sans-serif" font-size="22" font-weight="500">${escXml(eyebrow)}</text>
-  <text x="72" y="210" fill="#F5F0E8" font-family="Inter Tight, DejaVu Sans, sans-serif" font-size="48" font-weight="700">${tspans}</text>
-  <text x="72" y="566" fill="#AAA49A" font-family="IBM Plex Sans, DejaVu Sans, sans-serif" font-size="22">abra-ca-dabra.app</text>
+  ${eyebrowSvg}
+  ${titleSvg}
+  ${mark.svg}
 </svg>`;
 }
 
