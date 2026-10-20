@@ -151,3 +151,18 @@ Export (server to server, no CORS):
 - **Switching off:** `CHAT_STATS_ENABLED=false` stops new rows.
 
 The new Durable Object needs `wrangler deploy` once, because `versions upload` cannot apply a migration.
+
+## Quality check (20 questions, real models)
+
+    AI_GATEWAY_TOKEN=... CF_ACCOUNT_ID=... npm run quality      # 70B and 8B side by side
+    node scripts/quality-check.mjs --models 70b --out /tmp/q.md # one model
+
+The check sends 20 fixed questions through the live answer path: system prompt, sentence checks, and page context for the two voice cases. The questions cover services, cost, timeline, location, healthcare data, a named integration, examples, Readiness Check length, booking, a phone number, prompt injection, off-topic, comparison with agencies, free trial, a law-firm need, video, ChatGPT visibility, and two vague voice questions asked on a page.
+
+Each answer gets automatic checks:
+- the expected point is there
+- no forbidden content (prices, phone numbers, a poem)
+- no talk about being an AI or the model
+- no post-check replacement
+
+The report also gives first-sentence latency. The command exits 1 when the default model fails a check. Nothing is stored or posted. Reports from 2026-10-19 are in `reports/`.
