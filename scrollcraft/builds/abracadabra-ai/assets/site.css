@@ -708,17 +708,6 @@ html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: backgro
 .section--loose { padding-block: var(--space-section-l); }
 input, textarea, select { border-radius: var(--ui-r-control); }
 
-/* Services menu */
-.site-nav__services[open] > .site-nav__mega {
-  background: var(--ui-surface-1);
-  border: var(--ui-border);
-  border-radius: var(--ui-r-card);
-  box-shadow: var(--ui-shadow);
-}
-.site-nav__group { position: relative; padding-left: .9rem; border-left: 1px solid color-mix(in oklab, var(--ui-progress) 35%, transparent); }
-.site-nav__group::before { content: ""; position: absolute; left: -3.5px; top: .85rem; width: 6px; height: 6px; border-radius: 50%; background: var(--ui-progress); }
-.site-nav__links .site-nav__mega a:not(.site-nav__fn-name):hover { color: var(--ink); }
-
 /* FAQ */
 .faq details, .faq-list details {
   background: var(--ui-surface-1);
@@ -806,22 +795,6 @@ html.menu-open { overflow: hidden; }
   .hero__stage { min-height: 100%; }
   .band-split { display: grid; grid-template-columns: minmax(0, 36rem) minmax(0, 1fr); gap: 2rem; align-items: start; }
 }
-
-.site-nav__mega-link {
-  display: grid;
-  grid-template-columns: 16px 1fr;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  min-height: 40px;
-  border-radius: var(--ui-r-control);
-  text-decoration: none;
-  color: var(--ink);
-}
-.site-nav__mega-link:hover { background: var(--surface-raised); }
-.site-nav__icon { width: 16px; height: 16px; margin-top: 0.2rem; border: 1px solid var(--line-strong); border-radius: 3px; }
-.site-nav__desc { display: block; color: var(--ink-soft); font-size: 0.85rem; font-weight: 400; }
-.site-nav__group { border: 0; }
-.site-nav__group > summary { cursor: pointer; }
 
 .eyebrow, .kicker {
   font: 500 0.8rem/1 var(--label);
@@ -1078,3 +1051,133 @@ body::before {
 
 .sales-primary { background: var(--accent); color: var(--ink-on-accent); border-color: var(--accent); }
 .sales-secondary { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+
+/* Services menu: trigger, panel, groups and links. One block so the open and current states stay consistent. */
+.site-nav__links a.site-nav__cta { color: var(--ink-on-accent); }
+.site-nav__links > a:not(.site-nav__cta),
+.site-nav__services > summary {
+  position: relative;
+  color: var(--ink-soft);
+  transition: color var(--t-fast);
+}
+.site-nav__services > summary { gap: 0.45rem; user-select: none; }
+.site-nav__services > summary::after {
+  content: "";
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-0.12rem) rotate(45deg);
+  transition: transform var(--t-fast);
+}
+.site-nav__services[open] > summary::after { transform: translateY(0.12rem) rotate(-135deg); }
+.site-nav__links > a:not(.site-nav__cta):hover,
+.site-nav__links > a[aria-current="page"]:not(.site-nav__cta),
+.site-nav__services > summary:hover,
+.site-nav__services > summary.is-current,
+.site-nav__services[open] > summary { color: var(--ink); }
+.site-nav__links :is(a, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--ui-r-control);
+}
+
+.site-nav__services[open] > .site-nav__mega {
+  gap: 1.25rem 1.5rem;
+  margin-top: 0.4rem;
+  padding: 1.25rem;
+  background: var(--ui-surface-1);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+  box-shadow: var(--ui-shadow);
+}
+.site-nav__group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.site-nav__fn-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  padding: 0 0.6rem;
+  color: var(--ink-soft);
+  font: 500 0.75rem/1 var(--label);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+}
+.site-nav__fn-name::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ui-progress);
+}
+.site-nav__links .site-nav__mega a.site-nav__mega-link {
+  display: block;
+  min-height: 0;
+  padding: 0.55rem 0.6rem;
+  border-radius: var(--ui-r-control);
+  color: var(--ink);
+  font-size: inherit;
+  white-space: normal;
+  text-decoration: none;
+  transition: background-color var(--t-fast);
+}
+.site-nav__links .site-nav__mega a.site-nav__mega-link:hover,
+.site-nav__links .site-nav__mega a.site-nav__mega-link:focus-visible,
+.site-nav__links .site-nav__mega a.site-nav__mega-link[aria-current="page"] { background: var(--ui-surface-2); }
+.site-nav__mega-link strong {
+  display: block;
+  color: var(--ink);
+  font: 600 0.95rem/1.3 var(--display);
+  letter-spacing: -0.01em;
+}
+.site-nav__desc {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font: 400 0.85rem/1.4 var(--font);
+}
+
+@media (min-width: 900px) {
+  .site-nav__services > summary.is-current,
+  .site-nav__links > a[aria-current="page"]:not(.site-nav__cta) { box-shadow: inset 0 -2px 0 var(--accent); }
+  .site-nav__services[open] > .site-nav__mega { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1000px) {
+  .site-nav__services[open] > .site-nav__mega { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 899px) {
+  .site-nav__services > summary {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    padding-right: 0.35rem;
+  }
+  .site-nav__services[open] > .site-nav__mega {
+    position: static;
+    width: auto;
+    translate: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 1rem 0 1.25rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .site-nav__fn-name { padding: 0; }
+  .site-nav__links .site-nav__mega a.site-nav__mega-link { padding: 0.65rem 0.75rem; margin-inline: -0.75rem; }
+}

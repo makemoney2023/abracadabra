@@ -458,7 +458,7 @@ test('open Services menu stacks page links under the function list on a phone', 
   const layout = await page.evaluate(() => {
     const menu = document.querySelector('.site-nav__links');
     const services = document.querySelector('.site-nav__services');
-    const platform = document.querySelector('.site-nav__group summary');
+    const platform = document.querySelector('.site-nav__group .site-nav__fn-name');
     const portfolio = [...menu.querySelectorAll(':scope > a')].find((link) => link.textContent.trim() === 'Work');
     const cta = menu.querySelector('.site-nav__cta');
     const place = (node) => {

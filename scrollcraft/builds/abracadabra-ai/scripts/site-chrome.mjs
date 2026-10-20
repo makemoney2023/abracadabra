@@ -1,7 +1,7 @@
 import { businessFunctions } from "./site-data.mjs";
 import { salesPages } from "./service-sales.mjs";
 
-export const ASSET_VERSION = "20261019c";
+export const ASSET_VERSION = "20261019m";
 const YEAR = new Date().getFullYear();
 const EMAIL = "houdini@abra-ca-dabra.app";
 
@@ -18,7 +18,7 @@ function esc(value) {
 function megaLink(slug, description) {
   const page = salesPages[slug];
   if (!page) throw new Error(`Missing sales page ${slug}`);
-  return `<a class="site-nav__mega-link" href="/services/${slug}/"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>${esc(page.headline)}</strong><span class="site-nav__desc">${esc(description)}</span></span></a>`;
+  return `<a class="site-nav__mega-link" href="/services/${slug}/"><strong>${esc(page.headline)}</strong><span class="site-nav__desc">${esc(description)}</span></a>`;
 }
 
 const navGroups = [
@@ -56,13 +56,13 @@ const learnLinks = [
 ];
 
 function groupHtml(label, links) {
-  return `<details class="site-nav__group" open><summary class="site-nav__fn-name">${esc(label)}</summary>${links}</details>`;
+  return `<div class="site-nav__group" role="group" aria-label="${esc(label)}"><p class="site-nav__fn-name" aria-hidden="true">${esc(label)}</p>${links}</div>`;
 }
 
 function servicesNav() {
   const built = navGroups.map((group) => groupHtml(group.label, group.links.map(([slug, description]) => megaLink(slug, description)).join(""))).join("");
   const learn = groupHtml("Learn", learnLinks.map(([title, href, description]) => (
-    `<a class="site-nav__mega-link" href="${esc(href)}"><span class="site-nav__icon" aria-hidden="true"></span><span><strong>${esc(title)}</strong><span class="site-nav__desc">${esc(description)}</span></span></a>`
+    `<a class="site-nav__mega-link" href="${esc(href)}"><strong>${esc(title)}</strong><span class="site-nav__desc">${esc(description)}</span></a>`
   )).join(""));
   return `<details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega">${built}${learn}</div></details>`;
 }
@@ -135,6 +135,14 @@ export function siteHeader({ home = false } = {}) {
   document.querySelectorAll(".site-nav").forEach(function (bar) {
     var menu = bar.querySelector(".site-nav__menu");
     var services = bar.querySelector(".site-nav__services");
+    var here = location.pathname;
+    if (here.slice(-10) === "index.html") here = here.slice(0, -10);
+    bar.querySelectorAll(".site-nav__links a:not(.site-nav__cta)").forEach(function (link) {
+      var path = link.getAttribute("href") || "";
+      var top = link.parentElement && link.parentElement.classList.contains("site-nav__links");
+      if (here === path || (top && path !== "/" && here.indexOf(path) === 0)) link.setAttribute("aria-current", "page");
+    });
+    if (services && here.indexOf("/services/") === 0) services.querySelector("summary").classList.add("is-current");
     if (window.ResizeObserver) {
       new ResizeObserver(function () {
         document.documentElement.style.setProperty("--nav-h", bar.offsetHeight + "px");

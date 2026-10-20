@@ -1229,17 +1229,6 @@ main.site-page > section > h2,
 .btn { border-radius: var(--ui-r-control); }
 input, textarea, select { border-radius: var(--ui-r-control); }
 
-/* Services menu */
-.site-nav__services[open] > .site-nav__mega {
-  background: var(--ui-surface-1);
-  border: var(--ui-border);
-  border-radius: var(--ui-r-card);
-  box-shadow: var(--ui-shadow);
-}
-.site-nav__group { position: relative; padding-left: .9rem; border-left: 1px solid color-mix(in oklab, var(--ui-progress) 35%, transparent); }
-.site-nav__group::before { content: ""; position: absolute; left: -3.5px; top: .85rem; width: 6px; height: 6px; border-radius: 50%; background: var(--ui-progress); }
-.site-nav__links .site-nav__mega a:not(.site-nav__fn-name):hover { color: var(--ink); }
-
 /* FAQ */
 .faq details, .faq-list details {
   background: var(--ui-surface-1);
