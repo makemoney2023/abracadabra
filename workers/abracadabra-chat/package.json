@@ -8,6 +8,7 @@
     "fillers": "node scripts/build-fillers.mjs",
     "preview": "wrangler dev",
     "deploy": "wrangler deploy",
-    "readiness": "node scripts/build-readiness-questions.mjs"
+    "readiness": "node scripts/build-readiness-questions.mjs",
+    "quality": "node scripts/quality-check.mjs --out reports/quality-latest.md"
   }
 }
