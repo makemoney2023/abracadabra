@@ -15,7 +15,7 @@
 // reply is aborted and the browser is told to drop queued audio. Audio is never stored.
 
 import { ChatUnavailable, replyStream } from "./model.js";
-import { checkedSentences, localReply, uiActionFor } from "./policy.js";
+import { checkedSentences, localReply, offerState, uiActionFor } from "./policy.js";
 import { rememberExchange } from "./session.js";
 import {
   CALL_IDLE_MS,
@@ -323,6 +323,7 @@ export class VoiceCall {
     }
 
     let action = uiActionFor(text);
+    const offers = offerState(session, text);
     const budget = VOICE_TTS_CHARS_PER_SESSION - (session.ttsChars || 0);
     if (budget <= 0) return this.ttsLimit();
     // A clear ask to book: open the calendar now and say so, without waiting on the model.
@@ -357,8 +358,8 @@ export class VoiceCall {
         ? (async function* () { yield booking; })()
         : eager
         ? eager.replay(controller.signal)
-        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle } });
-      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true })) {
+        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers });
+      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true, dropOffers: !booking && offers.dropOffers })) {
         if (controller.signal.aborted || this.closed) break;
         if (part.replace) {
           // Nothing unsafe is ever spoken. If a sentence already played, stop there.
@@ -413,7 +414,7 @@ export class VoiceCall {
     // EndOfTurn may have arrived while the session loaded; then this guess is too late.
     if (ticket !== this.eagerTicket || !session || this.closed || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) return;
     const controller = new AbortController();
-    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle } });
+    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers: offerState(session, text) });
     this.eager = new Prefetch(sameWords(text), stream, controller, this.now());
     this.eagerStarts = (this.eagerStarts || 0) + 1;
   }

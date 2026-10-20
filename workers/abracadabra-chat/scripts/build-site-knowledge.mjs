@@ -68,7 +68,7 @@ export async function buildKnowledge() {
     ...OTHER_PAGES.map(([name, path, line]) => `- ${name} | ${path} | ${line}`),
     `PROCESS: ${process.join(" ")}`,
     "COST: Priced to the project. Tell us what you need and we'll quote it. Never give a number.",
-    "NEXT STEPS: a thirty-minute working session, booked right in this chat. Not sure where to start? The Readiness Check takes five to seven minutes, can be taken right here in this chat (or at check.abra-ca-dabra.app), and shows where the work slows down: the data, the workflow, the owner, the decision, and how visible the site is to answer engines.",
+    "NEXT STEPS (options, not a closing line: offer one only when the visitor asks about cost, timing, getting started, or talking to a person): a thirty-minute working session, booked right in this chat. Not sure where to start? The Readiness Check takes five to seven minutes, can be taken right here in this chat (or at check.abra-ca-dabra.app), and shows where the work slows down: the data, the workflow, the owner, the decision, and how visible the site is to answer engines.",
     "WHY CLOUDFLARE:",
     ...CLOUDFLARE.map((line) => `- ${line}`),
   ];

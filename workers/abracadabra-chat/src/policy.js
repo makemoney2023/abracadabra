@@ -7,8 +7,7 @@ const JARGON = /\b(leverage|synergy|utilize|paradigm|holistic|robust|seamless|cu
 const PROPER_NAMES = /\bLLM Leverage\b/gi;
 // Things the model has said that are false for this studio.
 const FALSE_CLAIM = /\b(?:(?:no|don't have any|do not have any|haven't got any)\s+(?:portfolio|examples?|case stud(?:y|ies)|past work|projects to show)|(?:don't|do not) charge|(?:it's|it is|services are|is) free\b|no cost)/i;
-const GROUNDED = "We have real, public work: the StrongFoam CRM and website, pirx.ca, and the Super Funnel sales app. You can see them on the Work page, or book a thirty-minute working session right here in this chat.";
-const OFFER = /\b(book|working session|readiness check|in this chat|leave (?:a|your) name)\b/i;
+const GROUNDED = "We have real, public work: the StrongFoam CRM and website, pirx.ca, and the Super Funnel sales app. You can see them on the Work page.";
 const ABBREV = /\b(e\.g|i\.e|etc|vs|approx)\.(?=\s)/gi;
 
 const SAFE = "I can help you think it through. A person reviews anything we send after this chat.";
@@ -100,22 +99,14 @@ export function postCheck(text) {
       clean = PLAIN;
     }
   }
-  // Keep up to four sentences. If it runs longer, keep the first three and the closing offer,
-  // so the booking or Readiness Check sentence is never the one that gets cut.
+  // Keep the first four sentences. The answer comes first; a closing offer is not protected.
   const parts = clean
     .replace(ABBREV, (match) => match.replace(/\./g, "\u2024"))
     .split(/(?<=[.!?])\s+/)
     .map((part) => part.replace(/\u2024/g, ".").trim())
     .filter(Boolean);
-  if (parts.length > MAX_SENTENCES) {
-    flags.push("length");
-    const offerAt = parts.findLastIndex((part, index) => index >= MAX_SENTENCES - 1 && OFFER.test(part));
-    clean = offerAt >= 0
-      ? [...parts.slice(0, MAX_SENTENCES - 1), parts[offerAt]].join(" ")
-      : parts.slice(0, MAX_SENTENCES).join(" ");
-  } else {
-    clean = parts.join(" ");
-  }
+  if (parts.length > MAX_SENTENCES) flags.push("length");
+  clean = parts.slice(0, MAX_SENTENCES).join(" ");
   if (!clean) clean = EMPTY;
   return { text: clean, flags };
 }
@@ -134,6 +125,54 @@ export function wantsBooking(userText) {
     /\b(can|could) we (meet|hop on a call|get on a call)\b/.test(text) ||
     /^\s*(book( it| one)?|yes,? book( it)?|let'?s book( it)?)[.!]?\s*$/.test(text)
   );
+}
+
+// A sentence that pitches the working session or the Readiness Check. Plain uses of "book"
+// ("a visitor can start an estimate and book") are not offers.
+export const OFFER_PITCH = /\b(working session|readiness check|book (?:a |an |the |your |some )?(?:thirty|30|time|call|session|slot|meeting|working)|book (?:it|one)\b|book(?:ed)? right here|booking (?:calendar|form|link)|pick a time|schedule a (?:call|session|time|meeting))/i;
+
+export function hasOffer(text) {
+  return OFFER_PITCH.test(String(text || ""));
+}
+
+/**
+ * The visitor is asking for a next step: to book, about cost or timing, how to get started,
+ * where to start, or to talk to a person. Then an offer is welcome.
+ */
+export function asksNextStep(userText) {
+  const text = String(userText || "").toLowerCase();
+  if (wantsBooking(text)) return true;
+  const action = uiActionFor(text);
+  if (action === "open_booking" || action === "offer_booking" || action === "offer_readiness_check") return true;
+  return /\b(cost|costs|price|prices|pricing|how much|budget|quote|afford|rates?|timeline|how long|how soon|when can|get started|getting started|start|begin|next steps?|sign up|hire you|work with you|working session|person|human|someone)\b/.test(text);
+}
+
+/**
+ * What the chat has offered so far, from the saved replies (typed and voice alike).
+ * repliesSince: 1 means the last reply had an offer. recent: one of the last two replies did.
+ */
+export function offerState(session, userText) {
+  const replies = (session?.messages || []).filter((message) => message.role === "assistant");
+  let repliesSince = null;
+  for (let i = replies.length - 1; i >= 0; i -= 1) {
+    if (hasOffer(replies[i].text)) {
+      repliesSince = replies.length - i;
+      break;
+    }
+  }
+  const asked = asksNextStep(userText);
+  // Unsure where to begin: the Readiness Check comes first, then the working session.
+  const start = asked && (uiActionFor(userText) === "offer_readiness_check" || /\b(where (?:should|do|can|would) (?:we|i) (?:start|begin)|where to (?:start|begin)|not sure|unsure|don'?t know where)\b/i.test(String(userText || "")));
+  const recent = repliesSince !== null && repliesSince <= 2;
+  return {
+    offered: repliesSince !== null || Boolean(session?.bookingOffered),
+    repliesSince,
+    recent,
+    asked,
+    start,
+    // The server drops an offer sentence when one went out in the last two replies and nobody asked.
+    dropOffers: recent && !asked,
+  };
 }
 
 export function uiActionFor(userText) {
@@ -155,7 +194,7 @@ export function localReply(userText) {
     return "A thirty-minute working session is the fastest way to look at one job. You can pick a time in this chat.";
   }
   if (action === "offer_readiness_check") {
-    return "The Readiness Check takes five to seven minutes, and you can take it right here in this chat. It shows where the work slows down, then you can book a thirty-minute working session.";
+    return "The Readiness Check takes five to seven minutes, and you can take it right here in this chat. It shows where the work slows down.";
   }
   if (action === "request_contact") {
     return "Leave your name and email here. A person reads it before anyone writes back.";
@@ -228,9 +267,12 @@ function nextSentence(buffer, clause = false) {
  * { replace } when a sentence trips a rule that replaces the whole answer (then stops).
  * Stops after maxSentences.
  */
-export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false } = {}) {
+export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false } = {}) {
   let buffer = "";
   let count = 0;
+  // dropOffers: hold back booking or Readiness Check sentences. One is used only if the
+  // reply would otherwise be empty.
+  let held = null;
   const judge = (sentence) => {
     const out = postCheck(sentence);
     // A sentence that is only a link says nothing; skip it.
@@ -246,6 +288,10 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
       if (!next.sentence) continue;
       const part = judge(next.sentence);
       if (!part) continue;
+      if (dropOffers && part.text && hasOffer(part.text)) {
+        held ||= { ...part, flags: [...part.flags, "repeat_offer"] };
+        continue;
+      }
       yield part;
       count += 1;
       if (part.replace || count >= maxSentences) return;
@@ -253,5 +299,11 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
   }
   const tail = buffer.replace(/\s+/g, " ").trim();
   const last = tail ? judge(tail) : null;
-  if (last) yield last;
+  if (last && dropOffers && last.text && hasOffer(last.text)) {
+    held ||= { ...last, flags: [...last.flags, "repeat_offer"] };
+  } else if (last) {
+    yield last;
+    count += 1;
+  }
+  if (!count && held) yield held;
 }
