@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bot,
   Building2,
   CalendarDays,
   FolderKanban,
+  FolderInput,
   FolderOpen,
   Inbox,
   ListTodo,
@@ -36,6 +38,8 @@ export const ICONS = {
   "/projects": FolderKanban,
   "/chat": MessageSquare,
   "/swarm": Workflow,
+  "/agents": Bot,
+  "/unfiled": FolderInput,
   "/spaces": FolderOpen,
   "/settings/github": Settings,
   "/mcp": Plug,
@@ -47,12 +51,14 @@ export type NavBadges = {
   needsYou: number;
   leads: number;
   work: number;
+  unfiled: number;
 };
 
 function badgeFor(href: string, counts: NavBadges): number {
   if (href === "/") return counts.needsYou;
   if (href === "/leads") return counts.leads;
   if (href === "/work") return counts.work;
+  if (href === "/unfiled") return counts.unfiled;
   return 0;
 }
 

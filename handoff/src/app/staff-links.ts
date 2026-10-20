@@ -31,6 +31,8 @@ export const STUDIO_NAV_GROUPS = [
     items: [
       { href: "/chat", label: "Chat" },
       { href: "/swarm", label: "Swarm" },
+      { href: "/agents", label: "Agents" },
+      { href: "/unfiled", label: "Unfiled work" },
     ],
   },
   {

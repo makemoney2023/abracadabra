@@ -20,6 +20,7 @@ import {
 } from "@/db/crm";
 import { latestSchemaScan } from "@/db/schema-checks";
 import { clock } from "@/lib/clock";
+import { listClientAgentWork } from "@/lib/agent-admin";
 import { requireHqStaffPage } from "@/lib/current";
 import { initials } from "@/lib/format";
 import { listVisibleRepos } from "@/lib/github/app";
@@ -127,6 +128,7 @@ export default async function ClientPage({
     openCloudRunCount(sql, caller),
     listUnassignedSwarmRuns(sql, caller, client.id),
   ]);
+  const agentWork = tab === "agents" ? await listClientAgentWork(sql, caller, client.id) : undefined;
   const swarm = tab === "work" ? await boardSwarmExtras(sql) : { runningTaskIds: [], packs: [] };
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
@@ -197,6 +199,7 @@ export default async function ClientPage({
           githubConnected={Boolean(secrets)}
           githubFailed={Boolean(secrets && visible && !visible.ok)}
           searchConsoleResource={await connectorGrant(sql, client.id, "search-console")}
+          agentWork={agentWork}
         />
       </PageFrame>
     </StaffShell>

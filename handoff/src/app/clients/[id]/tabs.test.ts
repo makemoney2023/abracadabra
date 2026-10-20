@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import { CLIENT_TABS, activeTab, tabHref } from "./tabs";
 
 describe("client tabs", () => {
-  it("lists Overview, Work, Threads, Files & spaces, Repos, Activity, and Settings", () => {
+  it("lists Overview, Work, Threads, Files & spaces, Agent work, Repos, Activity, and Settings", () => {
     expect(CLIENT_TABS.map((tab) => tab.label)).toEqual([
       "Overview",
       "Work",
       "Threads",
       "Files & spaces",
+      "Agent work",
       "Repos",
       "Activity",
       "Settings",

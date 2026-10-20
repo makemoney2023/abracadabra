@@ -701,8 +701,17 @@ export async function listUnfiledWork(sql: Sql, now: number): Promise<UnfiledIte
 export async function fileUnfiledWork(
   sql: Sql,
   store: ObjectStore,
-  input: { id: string; organizationId: string; workspaceId: string; projectId?: string | null; actor: string; now: number },
-): Promise<{ ok: true; paths: string[] } | { ok: false; error: "missing" | "invalid" | "space_rejected" }> {
+  input: {
+    id: string;
+    organizationId: string;
+    workspaceId: string;
+    projectId?: string | null;
+    /** The task this work finishes. Undefined: the agent's own task_id when it is in this client. Null or "": none. */
+    taskId?: string | null;
+    actor: string;
+    now: number;
+  },
+): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean } | { ok: false; error: "missing" | "invalid" | "space_rejected" }> {
   const row = await sql.get<{ id: string; agent_id: string; state: string; payload_json: string | null }>(
     "SELECT id, agent_id, state, payload_json FROM agent_work_items WHERE id = ?",
     [input.id],
@@ -726,22 +735,52 @@ export async function fileUnfiledWork(
     assignments: [{ organizationId: input.organizationId, workspaceId: space.id, projectId, role: "lead" }],
   };
   const payload = JSON.parse(row.payload_json) as WorkPayload;
+  const explicit = input.taskId !== undefined;
+  const wanted = (explicit ? input.taskId : payload.taskId)?.trim() || null;
+  let taskId: string | null = null;
+  if (wanted) {
+    const task = await sql.get<{ id: string }>("SELECT id FROM tasks WHERE id = ? AND organization_id = ?", [wanted, input.organizationId]);
+    if (task) taskId = task.id;
+    else if (explicit) return { ok: false, error: "invalid" };
+  }
   const filed = await writeFiled(sql, store, {
     itemId: row.id,
     agent,
-    payload: { ...payload, taskId: null, handoffTo: null },
-    route: { ok: true, organizationId: input.organizationId, space, projectId, taskId: null, route: "staff" },
+    payload: { ...payload, taskId, handoffTo: null },
+    route: { ok: true, organizationId: input.organizationId, space, projectId, taskId, route: "staff" },
     actor: input.actor,
     now: input.now,
   });
   if (!filed.ok) return { ok: false, error: "space_rejected" };
-  return { ok: true, paths: filed.paths };
+  return { ok: true, paths: filed.paths, batchId: filed.batchId, taskClosed: filed.taskClosed };
 }
 
-export async function discardUnfiledWork(sql: Sql, input: { id: string; actor: string; now: number }): Promise<boolean> {
-  const row = await sql.get<{ id: string }>("SELECT id FROM agent_work_items WHERE id = ? AND state IN ('unfiled', 'received')", [input.id]);
+/** Drops one unfiled item. The reason, when given, is kept on the item (route) and on the timeline. */
+export async function discardUnfiledWork(sql: Sql, input: { id: string; actor: string; now: number; reason?: string | null }): Promise<boolean> {
+  const row = await sql.get<{ id: string; title: string; agent_id: string; suggested_organization_id: string | null }>(
+    "SELECT id, title, agent_id, suggested_organization_id FROM agent_work_items WHERE id = ? AND state IN ('unfiled', 'received')",
+    [input.id],
+  );
   if (!row) return false;
-  await sql.run("UPDATE agent_work_items SET state = 'discarded', payload_json = NULL, filed_by = ?, updated_at = ? WHERE id = ?", [input.actor, input.now, input.id]);
+  const reason = input.reason?.trim().slice(0, 500) || null;
+  await sql.batch([
+    {
+      statement: "UPDATE agent_work_items SET state = 'discarded', payload_json = NULL, route = ?, filed_by = ?, updated_at = ? WHERE id = ?",
+      params: [reason ? `discarded: ${reason}` : "discarded", input.actor, input.now, input.id],
+    },
+    {
+      statement: `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
+                  VALUES (?, ?, 'client_agent.work_discarded', 'staff', ?, ?, ?, ?)`,
+      params: [
+        crypto.randomUUID(),
+        row.suggested_organization_id,
+        input.actor,
+        `Discarded "${row.title}" from ${row.agent_id}.${reason ? ` ${reason}` : ""}`.slice(0, 500),
+        JSON.stringify({ work_item_id: row.id, agent_id: row.agent_id, reason }),
+        input.now,
+      ],
+    },
+  ]);
   return true;
 }
 
