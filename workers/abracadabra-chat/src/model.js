@@ -1,4 +1,5 @@
 import { localReply } from "./policy.js";
+import { pagePrompt } from "./page-context.js";
 import { SITE_KNOWLEDGE } from "./site-knowledge.js";
 
 export const SYSTEM_PROMPT = [
@@ -21,8 +22,8 @@ export const VOICE_SUFFIX = "This answer is read aloud. Use two or three short s
 
 export const MAX_TOKENS = 260;
 
-export function systemPrompt({ voice = false } = {}) {
-  return `${SYSTEM_PROMPT} ${voice ? VOICE_SUFFIX : TEXT_SUFFIX}\n\nSITE FACTS:\n${SITE_KNOWLEDGE}`;
+export function systemPrompt({ voice = false, page } = {}) {
+  return `${SYSTEM_PROMPT} ${voice ? VOICE_SUFFIX : TEXT_SUFFIX}\n\nSITE FACTS:\n${SITE_KNOWLEDGE}${pagePrompt(page?.path, page?.title)}`;
 }
 
 export const DEFAULT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
@@ -34,7 +35,7 @@ export function chatModel(env, voice = false) {
   return String(pick || DEFAULT_MODEL).trim();
 }
 
-function gatewayRequest(env, messages, voice, model) {
+function gatewayRequest(env, messages, voice, model, page) {
   const token = String(env.AI_GATEWAY_TOKEN || env.CLOUDFLARE_API_TOKEN || "").trim();
   const account = String(env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || "").trim();
   const gateway = String(env.AI_GATEWAY_ID || "abracadabra-chat").trim();
@@ -50,7 +51,7 @@ function gatewayRequest(env, messages, voice, model) {
     },
     body: {
       messages: [
-        { role: "system", content: systemPrompt({ voice }) },
+        { role: "system", content: systemPrompt({ voice, page }) },
         ...messages.map((message) => ({ role: message.role, content: message.text })),
       ],
       max_tokens: MAX_TOKENS,
@@ -69,8 +70,8 @@ function deltaOf(data) {
  * (CHAT_TIMEOUT_MS for the whole reply), so callers can show a retry message instead of hanging.
  * A gateway that answers with plain JSON (no stream) yields the whole text once.
  */
-export async function* streamChat({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, model, firstTokenMs }) {
-  const request = gatewayRequest(env, messages, voice, model);
+export async function* streamChat({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, model, firstTokenMs, page }) {
+  const request = gatewayRequest(env, messages, voice, model, page);
   if (!request) throw new ChatUnavailable("unconfigured");
   const clock = new AbortController();
   const timer = setTimeout(() => clock.abort(new DOMException("The reply took too long.", "TimeoutError")), timeoutMs);
@@ -123,11 +124,11 @@ const FIRST_TOKEN_MS = 6000;
  * (error, garbled text, no first word in FIRST_TOKEN_MS), one try on AI_FALLBACK_MODEL
  * (default 8B fast, "none" turns it off) inside the same CHAT_TIMEOUT_MS budget.
  */
-export async function* replyStream({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, now = () => Date.now() }) {
+export async function* replyStream({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, now = () => Date.now(), page }) {
   const started = now();
   let said = false;
   try {
-    for await (const delta of streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs, firstTokenMs: FIRST_TOKEN_MS })) {
+    for await (const delta of streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs, firstTokenMs: FIRST_TOKEN_MS, page })) {
       said = true;
       yield delta;
     }
@@ -139,7 +140,7 @@ export async function* replyStream({ env, messages, fetchImpl = fetch, voice = f
     const left = timeoutMs - (now() - started);
     if (!fallback || fallback === "none" || fallback === chatModel(env, voice) || left < 2000) throw error;
     console.error(`chat model ${reason}; using ${fallback}`);
-    yield* streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs: left, model: fallback });
+    yield* streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs: left, model: fallback, page });
   }
 }
 
@@ -212,11 +213,11 @@ export class ChatUnavailable extends Error {
 }
 
 /** Whole reply as one string. Falls back to the studio script when the model is not reachable. */
-export async function completeChat({ env, messages, fetchImpl = fetch, voice = false }) {
+export async function completeChat({ env, messages, fetchImpl = fetch, voice = false, page }) {
   const last = [...messages].reverse().find((message) => message.role === "user")?.text || "";
   try {
     let text = "";
-    for await (const delta of replyStream({ env, messages, fetchImpl, voice })) text += delta;
+    for await (const delta of replyStream({ env, messages, fetchImpl, voice, page })) text += delta;
     return text.trim() || localReply(last);
   } catch {
     return localReply(last);

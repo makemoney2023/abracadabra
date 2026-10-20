@@ -357,7 +357,7 @@ export class VoiceCall {
         ? (async function* () { yield booking; })()
         : eager
         ? eager.replay(controller.signal)
-        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal });
+        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle } });
       for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true })) {
         if (controller.signal.aborted || this.closed) break;
         if (part.replace) {
@@ -412,7 +412,7 @@ export class VoiceCall {
     // EndOfTurn may have arrived while the session loaded; then this guess is too late.
     if (ticket !== this.eagerTicket || !session || this.closed || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) return;
     const controller = new AbortController();
-    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal });
+    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle } });
     this.eager = new Prefetch(sameWords(text), stream, controller, this.now());
     this.eagerStarts = (this.eagerStarts || 0) + 1;
   }

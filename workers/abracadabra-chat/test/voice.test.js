@@ -597,3 +597,20 @@ test("booking intent: clear asks open the calendar, mentions only offer it", asy
   }
   assert.equal(uiActionFor("What's your pricing?"), "offer_booking");
 });
+
+test("a voice call answers about the page the visitor opened it on", async () => {
+  const bodies = [];
+  const h = harness({ llm: (body) => { bodies.push(body); return Response.json({ success: true, result: { response: "We build that." } }); } });
+  const cookie = await open(h);
+  const passed = await handleRequest(new Request("https://abra-ca-dabra.app/api/chat/voice-pass", {
+    method: "POST",
+    headers: { origin: "http://127.0.0.1:4500", "content-type": "application/json", "cf-connecting-ip": "203.0.113.20", cookie },
+    body: JSON.stringify({ page: "/services/custom-apps/", title: "Custom apps | Abracadabra" }),
+  }), h.env, h.deps);
+  const { pass } = await passed.json();
+  assert.equal((await dial(h, { cookie, pass })).headers.get("x-test-upgrade"), "1");
+  await flush();
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "How much is this?" }));
+  await flush(60);
+  assert.match(bodies[0].messages[0].content, /READING THIS PAGE NOW: Custom apps \|/);
+});
