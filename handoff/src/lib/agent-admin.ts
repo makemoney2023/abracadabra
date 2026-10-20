@@ -13,6 +13,8 @@ import { parseSkillCatalog } from "@/lib/client-documents";
 import type { SkillBucket } from "@/lib/skill-library";
 import type { ObjectStore } from "@/lib/store/objects";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
+import { handOverWaitingTasks } from "@/lib/agent-dispatch";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 
 /**
  * Staff side of client agents: the unfiled inbox, the agents list, and the client "Agent work" panel.
@@ -531,5 +533,24 @@ export async function listClientAgentWork(sql: Sql, caller: Caller, organization
       handoffTo: row.handoff_to,
     })),
     updates: updates.map((row) => ({ id: row.id, kind: row.kind, body: row.body ?? "", actorId: row.actor_id, at: row.created_at })),
+  };
+}
+
+/** Staff button: hand the client's lead agent the tasks already waiting in build or run. AGENT_MODE=agents only. */
+export async function staffHandOverWaiting(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; now: number },
+): Promise<ActionOutcome> {
+  const gate = await liveStaff(sql, caller);
+  if (!gate.ok) return gate;
+  if (legacyStartsAllowed()) return { ok: false, error: "AGENT_MODE is legacy, so build and run still start the swarm and Cursor. Nothing to hand over." };
+  const handed = await handOverWaitingTasks(sql, { organizationId: input.organizationId, actor: { kind: "staff", id: gate.actor }, now: input.now });
+  if (!handed.leadAgentId) return { ok: false, error: "This client has no lead agent. Assign one first." };
+  return {
+    ok: true,
+    message: handed.taskIds.length
+      ? `Handed ${handed.taskIds.length} waiting task${handed.taskIds.length === 1 ? "" : "s"} to ${handed.leadAgentId}.`
+      : `Nothing waiting. ${handed.leadAgentId} already has every build and run task.`,
   };
 }

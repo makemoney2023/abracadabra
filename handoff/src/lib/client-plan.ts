@@ -1,3 +1,4 @@
+import { legacyStartsAllowed } from "./agent-mode";
 import { adaptArtifact } from "./artifact-adapter";
 import { nextSteps, type StepCard } from "./board-model";
 import { chooseSkillsForPiece, type PieceKind, type SkillCard, type ToolCaller } from "./client-documents";
@@ -141,6 +142,8 @@ export async function qualifyLead(input: {
   requestId: string;
   packs?: PackCandidate[];
   trigger?: string;
+  /** False in AGENT_MODE=agents: no swarm is asked for and no swarm run is recorded. Defaults to the flag. */
+  swarmAllowed?: boolean;
   runSwarm?: (brief: string, templateId: string) => Promise<string | { output: string; status: string; executionId: string }>;
   onStillRunning?: (run: {
     executionId: string;
@@ -178,7 +181,8 @@ export async function qualifyLead(input: {
   let swarm = "";
   let swarmStatus = "not_started";
   let executionId = "";
-  if (input.runSwarm) {
+  const swarmAllowed = input.swarmAllowed ?? legacyStartsAllowed();
+  if (input.runSwarm && swarmAllowed) {
     try {
       const finished = await input.runSwarm(brief, choice.id);
       if (typeof finished === "string") {
@@ -224,6 +228,8 @@ export async function qualifyLead(input: {
   }
   const activityKey = `${input.requestId}:swarm-run`;
   const trigger = input.trigger?.trim() || "lead_created";
+  // Agents mode: the normal pickup note and file stand; there is no swarm run to record.
+  if (!swarmAllowed) return "started";
   await input.call("record_swarm_run", {
     packId: choice.id,
     packName: choice.name,

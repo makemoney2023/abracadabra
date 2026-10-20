@@ -14,6 +14,7 @@ import {
   revokeSkillAction,
   rotateAgentAction,
   unassignAgentAction,
+  handOverWaitingAction,
 } from "./actions";
 import { TokenActionForm } from "./token-reveal";
 
@@ -163,6 +164,24 @@ export function UnassignButton({ agentId, organizationId, organizationName }: { 
     >
       <ActionForm action={unassignAgentAction} submitLabel="Unassign" pendingLabel="Unassigning">
         <input type="hidden" name="agentId" value={agentId} />
+        <input type="hidden" name="organizationId" value={organizationId} />
+      </ActionForm>
+    </FormDrawer>
+  );
+}
+
+export function HandOverButton({ organizationId, organizationName }: { organizationId: string; organizationName: string }) {
+  return (
+    <FormDrawer
+      title={`Hand over waiting tasks for ${organizationName}`}
+      description="Sends the lead agent every open task already in Build or Run that it has not been handed yet. Nothing starts in the old swarm or Cursor."
+      trigger={
+        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+          Hand over waiting
+        </Button>
+      }
+    >
+      <ActionForm action={handOverWaitingAction} submitLabel="Hand over" pendingLabel="Handing over">
         <input type="hidden" name="organizationId" value={organizationId} />
       </ActionForm>
     </FormDrawer>

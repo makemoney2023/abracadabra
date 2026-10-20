@@ -36,6 +36,7 @@ import { beginDirectClient, scanIntakeBindings, type ScanQueue } from "@/lib/lea
 import { defaultBuildDeps, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import { moveTaskStage } from "@/lib/task-stage";
 import { decideReview } from "@/lib/task-review";
+import { agentModeRefusal, legacyStartsAllowed } from "@/lib/agent-mode";
 import { columnOf as boardColumnOf } from "@/lib/board-model";
 import type { Caller } from "@/lib/authz";
 import { itemForPath } from "@/lib/artifact-adapter";
@@ -318,6 +319,28 @@ export async function runHqTool(
   return result;
 }
 
+/**
+ * AGENT_MODE=agents: tools that would create or start old-swarm work are refused with a clear message.
+ * run_workflow on a workflow tied to a task still goes through the board move, which hands the task to the lead agent.
+ */
+const SWARM_TOOLS_OFF = new Set([
+  "start_pipeline",
+  "append_pipeline_stage",
+  "create_workflow",
+  "queue_followup_swarms",
+  "accept_workflow",
+  "run_workflow",
+]);
+
+async function swarmToolOff(sql: Sql, tool: string, input: Record<string, unknown>): Promise<boolean> {
+  if (!SWARM_TOOLS_OFF.has(tool) || legacyStartsAllowed()) return false;
+  if (tool === "run_workflow") {
+    const row = await sql.get<{ task_id: string | null }>("SELECT task_id FROM client_workflows WHERE id = ?", [text(input, "id")]);
+    return !row?.task_id;
+  }
+  return true;
+}
+
 async function perform(
   sql: Sql,
   caller: Caller,
@@ -327,6 +350,8 @@ async function perform(
   options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const organizationId = text(input, "organizationId");
+  const off = await swarmToolOff(sql, tool, input);
+  if (off) return { ok: true, value: { refused: agentModeRefusal(tool), agentMode: "agents" } };
   if (tool === "search_clients") {
     const query = text(input, "query").toLowerCase();
     const rows = await listOrganizations(sql, caller);
@@ -1102,6 +1127,7 @@ async function beginPipeline(
       };
     }
     if (started.error === "unknown_skill") return unknownSkills(started.unknown);
+    if (started.error === "agent_mode") return { ok: true, value: { refused: agentModeRefusal("start_pipeline"), agentMode: "agents" } };
     return { ok: false, error: started.error };
   }
   await logStaff(

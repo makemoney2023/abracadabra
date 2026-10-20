@@ -3,6 +3,8 @@ import type { Sql } from "@/db/sql";
 import type { ObjectStore } from "@/lib/store/objects";
 import { markTaskDone } from "@/lib/task-done";
 import { storeWorkflowOutput, type WorkflowFile } from "@/lib/workflow-files";
+import { handOverWaitingTasks } from "@/lib/agent-dispatch";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 
 /**
  * Work from client agents (Grok Bot teammates and hires) lands in the right client space on its own.
@@ -103,7 +105,7 @@ export async function registerClientAgent(
     actor: string;
     now: number;
   },
-): Promise<{ ok: true; created: boolean; token: string | null } | { ok: false; message: string }> {
+): Promise<{ ok: true; created: boolean; token: string | null; handedOver?: string[] } | { ok: false; message: string }> {
   const agentId = input.agentId.trim().toLowerCase();
   if (!AGENT_ID.test(agentId)) return { ok: false, message: "agent_id must be 2-64 lowercase letters, digits, or dashes." };
   const organizationId = input.organizationId?.trim() || null;
@@ -164,6 +166,11 @@ export async function registerClientAgent(
     });
   }
   if (writes.length) await sql.batch(writes);
+  // AGENT_MODE=agents: a new lead also gets the tasks already waiting in build or run.
+  if (organizationId && role === "lead" && !legacyStartsAllowed()) {
+    const handed = await handOverWaitingTasks(sql, { organizationId, actor: { kind: "system", id: input.actor }, now: input.now });
+    if (handed.leadAgentId === agentId) return { ok: true, created: !existing, token, handedOver: handed.taskIds };
+  }
   return { ok: true, created: !existing, token };
 }
 

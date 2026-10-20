@@ -11,6 +11,7 @@ import {
   staffRevokeSkill,
   staffRotateAgent,
   staffUnassignAgent,
+  staffHandOverWaiting,
   type ActionOutcome,
 } from "@/lib/agent-admin";
 import type { ActionResult } from "@/lib/action-result";
@@ -133,5 +134,13 @@ export async function discardUnfiledAction(_previous: ActionResult | null, formD
   const { sql, caller } = await requireHqStaffPage();
   const outcome = await staffDiscardUnfiled(sql, caller, { id: text(formData, "id"), reason: text(formData, "reason"), now: Date.now() });
   if (outcome.ok) refresh();
+  return result(outcome);
+}
+
+export async function handOverWaitingAction(_previous: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = text(formData, "organizationId");
+  const outcome = await staffHandOverWaiting(sql, caller, { organizationId, now: Date.now() });
+  if (outcome.ok) refresh(organizationId);
   return result(outcome);
 }

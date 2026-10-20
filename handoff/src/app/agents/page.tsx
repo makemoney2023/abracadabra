@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { clock } from "@/lib/clock";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 import {
   filingChoices,
   listAgentsForStaff,
@@ -26,6 +27,7 @@ import {
   RevokeTokenDrawer,
   RotateTokenDrawer,
   UnassignButton,
+  HandOverButton,
 } from "./agent-forms";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +51,7 @@ export default async function AgentsPage() {
   const packError = packs.ok ? null : packs.error;
   const clients = choices.clients;
   const now = clock();
+  const agentsMode = !legacyStartsAllowed();
 
   const columns: Column<AgentRow>[] = [
     {
@@ -83,6 +86,9 @@ export default async function AgentsPage() {
                 {item.spaceName ? <span className="text-xs text-muted-foreground">{item.spaceName}</span> : null}
                 {item.projectName ? <span className="text-xs text-muted-foreground">· {item.projectName}</span> : null}
                 <UnassignButton agentId={row.id} organizationId={item.organizationId} organizationName={item.organizationName} />
+                {item.role === "lead" && agentsMode ? (
+                  <HandOverButton organizationId={item.organizationId} organizationName={item.organizationName} />
+                ) : null}
               </li>
             ))}
           </ul>

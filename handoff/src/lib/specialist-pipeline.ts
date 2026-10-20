@@ -1,4 +1,5 @@
 import type { Sql, SqlStatement } from "@/db/sql";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { claimDueWorkflow } from "@/lib/client-workflows";
 import { deliverableKind, packTemplateId } from "@/lib/pack-templates";
 import type { ObjectStore } from "@/lib/store/objects";
@@ -62,9 +63,11 @@ export async function startPipeline(
       waitingOn?: string;
       paused?: { name: string; status: string; output: string };
     }
-  | { ok: false; error: "invalid" | "missing" | "open" }
+  | { ok: false; error: "invalid" | "missing" | "open" | "agent_mode" }
   | { ok: false; error: "unknown_skill"; unknown: string[] }
 > {
+  // AGENT_MODE=agents: refuse before any group, stage, or task row is written.
+  if (!legacyStartsAllowed()) return { ok: false, error: "agent_mode" };
   if (!input.paths.length || !input.projectId) return { ok: false, error: "invalid" };
   const unknown = unknownSkillPaths(input.paths);
   if (unknown.length) return { ok: false, error: "unknown_skill", unknown };

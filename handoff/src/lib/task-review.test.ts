@@ -199,7 +199,12 @@ describe("staff review decisions", () => {
     expect(toBuild).toMatchObject({ ok: true, column: "build", handedTo: "acme-lead" });
     expect(build.calls).toBe(0);
     const reasons = await sql.all<{ data_json: string }>("SELECT data_json FROM activities WHERE kind = 'client_agent.dispatch' ORDER BY created_at");
-    expect(reasons.map((item) => JSON.parse(item.data_json).reason)).toEqual(["changes", "build"]);
+    // Assigning the lead first hands over t-run (already in run); the Review card t-build is not handed over.
+    expect(reasons.map((item) => [JSON.parse(item.data_json).task_id, JSON.parse(item.data_json).reason])).toEqual([
+      ["t-run", "run"],
+      ["t-build", "changes"],
+      ["t-run", "build"],
+    ]);
   });
 });
 
