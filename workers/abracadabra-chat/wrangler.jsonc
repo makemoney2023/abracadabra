@@ -14,11 +14,14 @@
   },
   "durable_objects": {
     "bindings": [
-      { "name": "CHAT_SESSION", "class_name": "ChatSessionDO" }
+      { "name": "CHAT_SESSION", "class_name": "ChatSessionDO" },
+      // Anonymous weekly chat stats (one SQLite object). Read with GET /api/chat/stats + CHAT_STATS_TOKEN.
+      { "name": "CHAT_STATS", "class_name": "ChatStatsDO" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["ChatSessionDO"] }
+    { "tag": "v1", "new_sqlite_classes": ["ChatSessionDO"] },
+    { "tag": "v2", "new_sqlite_classes": ["ChatStatsDO"] }
   ],
   "send_email": [
     { "name": "EMAIL" }

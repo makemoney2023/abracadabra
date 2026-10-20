@@ -15,7 +15,7 @@ const RECAP_SYSTEM = [
   "If the visitor said little, say that in one short sentence.",
 ].join(" ");
 
-const TOPICS = [
+export const TOPICS = [
   ["Voice", /\b(voice|phone|call(s|er)?|receptionist|answering)\b/i],
   ["AI assistants", /\b(assistant|agent|chatbot|bot)\b/i],
   ["Answers from your documents", /\b(documents?|files?|pdfs?|knowledge base|manuals?)\b/i],
@@ -38,7 +38,7 @@ export function recapFacts(session) {
     topics.length ? `Asked about: ${topics.join(", ")}.` : "",
     readiness,
     voiceTurns ? `Spoke by voice (${voiceTurns} turn${voiceTurns === 1 ? "" : "s"}).` : "",
-    session.page ? `Started on ${session.page}.` : "",
+    (session.startPage || session.page) ? `Started on ${session.startPage || session.page}.` : "",
     `${session.messageCount || 0} question${session.messageCount === 1 ? "" : "s"} asked.`,
   ].filter(Boolean);
 }

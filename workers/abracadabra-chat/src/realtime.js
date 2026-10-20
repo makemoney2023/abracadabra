@@ -390,6 +390,7 @@ export class VoiceCall {
     session.voiceTurns = (session.voiceTurns || 0) + 1;
     if (action === "offer_booking" || booking) session.bookingOffered = true;
     if (answer !== VOICE_RETRY_TEXT) rememberExchange(session, text, answer, this.now(), { voice: true });
+    else session.replyFailures = (session.replyFailures || 0) + 1;
     session.ttsChars = (session.ttsChars || 0) + spokenChars;
     await this.saveSession(session);
     if (controller.signal.aborted || this.closed) return;

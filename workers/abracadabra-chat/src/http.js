@@ -14,6 +14,7 @@ import {
   uiActionFor,
   verifyTurnstile,
 } from "./policy.js";
+import { recentWeeks, recordSession, STATS_MAX_WEEKS, statsCsv, statsStore, weekSummary } from "./stats.js";
 import { applyChatEvent, blankSession, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
 import { VoiceCall } from "./realtime.js";
 import { VOICE_CALLS_PER_SESSION, VOICE_TURNS_PER_SESSION, voiceEnabled } from "./voice.js";
@@ -26,6 +27,7 @@ const IP_SESSION_LIMIT = 8;
 const SESSION_MESSAGE_LIMIT = 30;
 const IP_CALL_LIMIT = 6;
 const IP_READINESS_LIMIT = 120;
+const IP_STATS_LIMIT = 30;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isolateLimits = { messages: new Map(), sessions: new Map(), calls: new Map(), passes: new Map() };
 const isolateRooms = new Map();
@@ -80,6 +82,7 @@ function limitsFor(deps) {
   if (!limits.calls) limits.calls = new Map();
   if (!limits.passes) limits.passes = new Map();
   if (!limits.readiness) limits.readiness = new Map();
+  if (!limits.stats) limits.stats = new Map();
   return limits;
 }
 
@@ -211,6 +214,8 @@ function streamReply({ text, action, history, session, storage, env, deps, now }
       if (failure === "unconfigured") answer = localReply(text);
       if (!answer) {
         if (failure && failure !== "unconfigured") console.error(`chat reply: ${failure}`);
+        session.replyFailures = (session.replyFailures || 0) + 1;
+        await save(storage, session, deps).catch(() => {});
         emit("error", { text: RETRY_TEXT, retry: true });
         emit("done", { ok: false });
         controller.close();
@@ -458,6 +463,10 @@ async function leadRecap(session, env, deps) {
 export async function runAlarm(storage, env, deps, now) {
   const session = await load(storage, now);
   if (!session || now < session.alarmAt) return { sent: false };
+  // Anonymous stats for this chat, rewritten each time it goes idle. Stored straight, not through
+  // save(), so the past-due alarm is not set again.
+  const fresh = !session.statsId;
+  if ((await recordSession(session, env, deps, now)) && fresh) await storage.put("session", session);
   let hq = false;
   let changed = false;
   // A lead HQ did not take on the first try is retried here (up to HQ_RETRIES). HQ dedupes on external_id.
@@ -477,6 +486,54 @@ export async function runAlarm(storage, env, deps, now) {
   return { ...result, hq };
 }
 
+async function digest(text) {
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+}
+
+/** Same-length comparison of the two digests, so the check takes the same time either way. */
+async function tokenMatches(given, expected) {
+  const [a, b] = await Promise.all([digest(given), digest(expected)]);
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
+/**
+ * GET /api/chat/stats: weekly anonymous totals, JSON (default) or ?format=csv. ?weeks=N (1-12, default
+ * 2, newest last) or ?week=2026-W43. Needs "Authorization: Bearer <CHAT_STATS_TOKEN>"; with no token
+ * set the route does not exist. The token is never read from the query string.
+ */
+async function statsExport(request, env, deps, now, limits, ip) {
+  const expected = String(env.CHAT_STATS_TOKEN || "").trim();
+  if (expected.length < 24) return json({ error: "Not found." }, 404);
+  if (request.method !== "GET") return json({ error: "Method not allowed." }, 405);
+  if (!gateHit(limits, "stats", ip, now, IP_STATS_LIMIT)) return json({ error: "Too many tries. Try again later." }, 429);
+  const given = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!given || !(await tokenMatches(given, expected))) {
+    return new Response(JSON.stringify({ error: "Not allowed." }), {
+      status: 401,
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "www-authenticate": "Bearer" },
+    });
+  }
+  const url = new URL(request.url);
+  const one = url.searchParams.get("week") || "";
+  if (one && !/^\d{4}-W\d{2}$/.test(one)) return json({ error: "Use a week like 2026-W43." }, 400);
+  const count = Math.min(STATS_MAX_WEEKS, Math.max(1, Number.parseInt(url.searchParams.get("weeks") || "2", 10) || 2));
+  const weeks = one ? [one] : recentWeeks(now, count);
+  const rows = await statsStore(env, deps).weeks(weeks);
+  const summaries = weeks.map((week) => weekSummary(week, rows.filter((r) => r.week === week)));
+  const headers = { "cache-control": "no-store", "x-robots-tag": "noindex" };
+  if (url.searchParams.get("format") === "csv") {
+    return new Response(statsCsv(summaries), { status: 200, headers: { ...headers, "content-type": "text/csv; charset=utf-8" } });
+  }
+  return new Response(JSON.stringify({
+    generatedAt: new Date(now).toISOString(),
+    zone: "America/Toronto",
+    note: "One row per chat, counted when the chat goes quiet for 15 minutes. No words, contact details, IPs or ids are kept.",
+    weeks: summaries,
+  }, null, 2), { status: 200, headers: { ...headers, "content-type": "application/json; charset=utf-8" } });
+}
+
 export async function handleRequest(request, env = {}, deps = {}) {
   const url = new URL(request.url);
   if (url.pathname !== "/api/chat" && !url.pathname.startsWith("/api/chat/")) {
@@ -489,6 +546,9 @@ export async function handleRequest(request, env = {}, deps = {}) {
   if (url.pathname === "/api/chat/config" && request.method === "GET") {
     return cors(json(publicConfig(env), 200), request, env);
   }
+
+  // Token-protected, server to server: no CORS headers, so no browser page can read it.
+  if (url.pathname === "/api/chat/stats") return statsExport(request, env, deps, now, limitsFor(deps), clientIp(request));
 
   const realtime = url.pathname === "/api/chat/realtime" && request.method === "GET";
   if (request.method !== "POST" && !realtime) return cors(json({ error: "Method not allowed." }, 405), request, env);

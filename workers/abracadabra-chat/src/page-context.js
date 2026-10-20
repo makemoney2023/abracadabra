@@ -43,3 +43,11 @@ export function pagePrompt(rawPath, rawTitle) {
   if (!fact) return "";
   return `\n\nTHE VISITOR IS READING THIS PAGE NOW: ${fact}\nIf the question is vague ("this", "how does it work", "how much is it", "can you do this for me"), they mean what this page covers: answer about that service, project or article first, by name. Talk about the thing, not "this page". Do not repeat its link unless they ask. Still suggest a better fit when one clearly fits.`;
 }
+
+/** For anonymous stats: a page on the site ("/services/voice-and-realtime-agents/", "/blog/<slug>/"), else "other". */
+export function sitePage(raw) {
+  const path = normalizePath(raw);
+  if (!path) return "";
+  if (path === "/" || PAGES.has(path) || /^\/blog\/[a-z0-9-]+\/$/.test(path)) return path;
+  return "other";
+}
