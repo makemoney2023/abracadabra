@@ -2,10 +2,12 @@ import type { Sql } from "@/db/sql";
 import { parseSkillCatalog } from "@/lib/client-documents";
 import { skillObjectKey, type SkillBucket } from "@/lib/skill-library";
 import type { AgentPrincipal } from "@/lib/agent-work-filing";
+import { attachedOnOpenCards } from "@/lib/skill-packs";
 
 /**
  * Client agents read skill packs from the handoff-skills bucket through HQ, scoped by their own token.
  * Grants are path prefixes (e.g. "community/marketingskills/") on the agent, or on a client for every agent assigned to it.
+ * Packs an agent attached to an open card of its clients (task_skill_packs) count too, until the card is done.
  * HQ reads the bucket through its binding. No bucket credential or signed URL leaves HQ.
  */
 
@@ -78,7 +80,7 @@ export async function revokeSkills(sql: Sql, input: { agentId?: string | null; o
 }
 
 /** Live prefixes for this agent: its own grants plus grants on clients it is assigned to now. */
-export async function skillPrefixesFor(sql: Sql, agent: AgentPrincipal): Promise<string[]> {
+export async function grantedPrefixesFor(sql: Sql, agent: AgentPrincipal): Promise<string[]> {
   const orgs = agent.assignments.map((row) => row.organizationId);
   const marks = orgs.map(() => "?").join(", ");
   const rows = await sql.all<{ prefix: string }>(
@@ -89,28 +91,60 @@ export async function skillPrefixesFor(sql: Sql, agent: AgentPrincipal): Promise
   return rows.map((row) => row.prefix).sort();
 }
 
+/**
+ * Everything this agent may read: grants, plus packs attached to open cards of its clients. taskId narrows the
+ * attached part to that one card.
+ */
+export async function skillPrefixesFor(
+  sql: Sql,
+  agent: AgentPrincipal,
+  taskId?: string | null,
+): Promise<{ prefixes: string[]; granted: string[]; attached: { task_id: string; prefix: string }[] }> {
+  const granted = await grantedPrefixesFor(sql, agent);
+  const attached = await attachedOnOpenCards(sql, agent.assignments.map((row) => row.organizationId), taskId);
+  const prefixes = [...new Set([...granted, ...attached.map((row) => row.prefix)])].sort();
+  return { prefixes, granted, attached };
+}
+
 function allowed(path: string, prefixes: string[]): boolean {
   return prefixes.some((prefix) => (prefix.endsWith("/SKILL.md") ? path === prefix : path.startsWith(prefix)));
 }
 
 export type AgentSkillList =
-  | { ok: true; library_version: string; prefixes: string[]; skills: { name: string; description: string; path: string; pack: string }[] }
+  | {
+      ok: true;
+      library_version: string;
+      /** Grants plus attached packs. */
+      prefixes: string[];
+      /** Packs on open cards: which card each came from. */
+      attached: { task_id: string; prefix: string }[];
+      skills: { name: string; description: string; path: string; pack: string }[];
+    }
   | { ok: false; status: 503; message: string };
 
-/** GET /api/agent-skills: the published index, cut down to this agent's grants. Optional q filters by words. */
-export async function listAgentSkills(sql: Sql, bucket: SkillBucket | undefined, agent: AgentPrincipal, q?: string | null): Promise<AgentSkillList> {
+/**
+ * GET /api/agent-skills: the published index, cut down to this agent's grants and attached packs. Optional q filters by
+ * words; taskId keeps only that card's attached packs (grants stay).
+ */
+export async function listAgentSkills(
+  sql: Sql,
+  bucket: SkillBucket | undefined,
+  agent: AgentPrincipal,
+  q?: string | null,
+  taskId?: string | null,
+): Promise<AgentSkillList> {
   if (!bucket) return { ok: false, status: 503, message: "The skill library is not connected." };
   const object = await bucket.get("skills/index.json");
   if (!object) return { ok: false, status: 503, message: "The skill library has not been published." };
   const raw = await object.text();
-  const prefixes = await skillPrefixesFor(sql, agent);
+  const { prefixes, attached } = await skillPrefixesFor(sql, agent, taskId);
   const words = (q ?? "").toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length >= 2);
   const skills = parseSkillCatalog(raw)
     .filter((skill) => allowed(skill.path, prefixes))
     .filter((skill) => words.every((word) => `${skill.name} ${skill.description} ${skill.path}`.toLowerCase().includes(word)))
     .slice(0, 500)
     .map((skill) => ({ ...skill, pack: skill.path.split("/").slice(0, 2).join("/") }));
-  return { ok: true, library_version: await sha12(raw), prefixes, skills };
+  return { ok: true, library_version: await sha12(raw), prefixes, attached, skills };
 }
 
 /** GET /api/agent-skills/<path>/SKILL.md: one granted skill body with a content version. */
@@ -124,8 +158,8 @@ export async function readAgentSkill(
   const key = skillObjectKey(skillPath);
   if (!key) return { ok: false, status: 404, message: "That is not a skill path." };
   const relative = key.slice("skills/".length);
-  if (relative.startsWith("org/") || !allowed(relative, await skillPrefixesFor(sql, agent))) {
-    return { ok: false, status: 403, message: "This agent has no grant for that skill." };
+  if (relative.startsWith("org/") || !allowed(relative, (await skillPrefixesFor(sql, agent)).prefixes)) {
+    return { ok: false, status: 403, message: "This agent has no grant for that skill, and it is not attached to an open card. Attach it with attach_skills." };
   }
   const object = await bucket.get(key);
   if (!object) return { ok: false, status: 404, message: "That skill is not in the library." };
