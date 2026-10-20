@@ -43,6 +43,7 @@ describe("statementsFromMigration", () => {
       "0024_lead_scores.sql",
       "0025_client_work.sql",
       "0026_agent_work.sql",
+      "0027_task_review.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -205,6 +206,22 @@ describe("a step that stopped halfway", () => {
     await migrate(sql);
     const columns = db.prepare("PRAGMA table_info(deals)").all() as { name: string }[];
     expect(columns.map((column) => column.name)).toEqual(expect.arrayContaining(["lead_score", "scored_at", "routing_status"]));
+  });
+
+  it("adds the Review columns without touching existing tasks, and finishes a half-applied 0027", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    db.exec("ALTER TABLE tasks DROP COLUMN review_note");
+    db.exec("ALTER TABLE tasks DROP COLUMN review_requested_at");
+    db.exec(
+      "INSERT INTO tasks (id, title, status, stage, created_at, updated_at) VALUES ('t-old', 'Old card', 'doing', 'build', 1, 1)",
+    );
+    db.exec("ALTER TABLE tasks ADD COLUMN review_requested_at INTEGER");
+    await migrate(sql);
+    const row = db.prepare("SELECT status, stage, review_requested_at, review_note FROM tasks WHERE id = 't-old'").get();
+    expect(row).toEqual({ status: "doing", stage: "build", review_requested_at: null, review_note: null });
+    await migrate(sql);
   });
 
   it("still fails on a real error", async () => {

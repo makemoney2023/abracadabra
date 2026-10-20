@@ -32,7 +32,7 @@ describe("workCounts", () => {
         ],
         now,
       ),
-    ).toEqual({ all: 3, late: 0, thisWeek: 2, blocked: 1 });
+    ).toEqual({ all: 3, late: 0, thisWeek: 2, blocked: 1, review: 0 });
   });
 
   it("counts a task due yesterday as late and not this week", () => {
@@ -41,8 +41,20 @@ describe("workCounts", () => {
       late: 1,
       thisWeek: 0,
       blocked: 0,
+      review: 0,
     });
-    expect(workCounts([], now)).toEqual({ all: 0, late: 0, thisWeek: 0, blocked: 0 });
+    expect(workCounts([], now)).toEqual({ all: 0, late: 0, thisWeek: 0, blocked: 0, review: 0 });
+  });
+
+  it("counts and filters cards in Review", () => {
+    const tasks = [
+      { id: "a", status: "doing", due_at: null, review_requested_at: now - day },
+      { id: "b", status: "doing", due_at: null, review_requested_at: null },
+      { id: "c", status: "done", due_at: null, review_requested_at: now - day },
+    ];
+    expect(workCounts(tasks, now).review).toBe(1);
+    expect(filterWork(tasks, { review: true }, now).map((task) => task.id)).toEqual(["a"]);
+    expect(workHref({ review: true, client: "org-1" })).toBe("/work?review=1&client=org-1");
   });
 });
 

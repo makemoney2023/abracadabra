@@ -14,12 +14,13 @@ import { filterWork, workCounts, workHref } from "./query";
 export default async function WorkPage({
   searchParams,
 }: {
-  searchParams: Promise<{ late?: string; week?: string; blocked?: string; client?: string; project?: string }>;
+  searchParams: Promise<{ late?: string; week?: string; blocked?: string; review?: string; client?: string; project?: string }>;
 }) {
   const query = await searchParams;
   const late = query.late === "1";
   const week = query.week === "1";
   const blocked = query.blocked === "1";
+  const review = query.review === "1";
   const client = query.client ?? "";
   const project = query.project ?? "";
   const { sql, caller } = await requireHqStaffPage();
@@ -40,22 +41,22 @@ export default async function WorkPage({
   ]);
   const open = cards.filter((card) => card.status !== "done");
   const counts = workCounts(open, now);
-  const filtered = late || week || blocked;
+  const filtered = late || week || blocked || review;
   const visible = filtered
-    ? filterWork(open, { late, week, blocked }, now)
+    ? filterWork(open, { late, week, blocked, review }, now)
     : cards;
   const orgIds = [...new Set(visible.map((card) => card.organization_id))];
   const activity = await listBoardActivity(sql, caller, orgIds);
   const runCap = capRow ? Number(capRow.value) : null;
-  const scope = { late, week, blocked, client: client || undefined };
+  const scope = { late, week, blocked, review, client: client || undefined };
 
   return (
     <StaffShell>
-      <PageFrame title="Work" description="Cards for every client. The agent takes the top card in Describe or Engineer.">
+      <PageFrame title="Work" description="Cards for every client. The agent takes the top card in Describe or Engineer. Review waits on staff to approve or send back.">
         <ClientRequests rows={pending} />
-        <WorkToolbar late={late} week={week} blocked={blocked} client={client || undefined} project={project || undefined} counts={counts} />
+        <WorkToolbar late={late} week={week} blocked={blocked} review={review} client={client || undefined} project={project || undefined} counts={counts} />
         <div className="flex flex-wrap gap-2">
-          <Link href={workHref({ late, week, blocked })} className={client ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
+          <Link href={workHref({ late, week, blocked, review })} className={client ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
             All clients
           </Link>
           {chips.map((chip) => (

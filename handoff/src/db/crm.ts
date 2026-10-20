@@ -92,6 +92,8 @@ export type WorkTask = TaskRow & {
 };
 
 export type BoardCard = WorkTask & {
+  review_requested_at: number | null;
+  review_note: string | null;
   run_started_at: number | null;
   pr_number: number | null;
   repo_full_name: string | null;
@@ -170,7 +172,7 @@ const WORK_COLUMNS = `t.id, t.organization_id, t.title, t.status, t.due_at, t.do
   t.skills_json, t.round, t.created_by_kind, t.cursor_agent_id, t.created_at,
   o.name AS organization_name, s.email AS assignee_email,
   p.name AS project_name, p.status AS project_status`;
-const BOARD_COLUMNS = `${WORK_COLUMNS},
+const BOARD_COLUMNS = `${WORK_COLUMNS}, t.review_requested_at, t.review_note,
   cr.started_at AS run_started_at, cr.pr_number AS pr_number, rp.full_name AS repo_full_name`;
 const WORK_JOINS = `FROM tasks t
   JOIN organizations o ON o.id = t.organization_id

@@ -1,4 +1,4 @@
-export const BOARD_COLUMNS = ["describe", "engineer", "build", "run", "done"] as const;
+export const BOARD_COLUMNS = ["describe", "engineer", "build", "run", "review", "done"] as const;
 
 export type BoardColumn = (typeof BOARD_COLUMNS)[number];
 
@@ -7,8 +7,27 @@ export const BOARD_COLUMN_LABEL: Record<BoardColumn, string> = {
   engineer: "Engineer",
   build: "Build",
   run: "Run",
+  review: "Review",
   done: "Done",
 };
+
+/** Columns that are a stage on the row. Review and done are flags over the stage. */
+export const STAGE_COLUMNS = ["describe", "engineer", "build", "run"] as const;
+
+/** Review sits on a task while review_requested_at is set and it is not done. */
+export function inReview(task: { status: string; review_requested_at?: number | null }): boolean {
+  return task.status !== "done" && task.review_requested_at != null;
+}
+
+/**
+ * SQL for "this row sits in column ?". Bind the column three times.
+ * Done is status; Review is the review flag; the stage columns leave Review cards out.
+ */
+export const COLUMN_SQL = `(
+         (? = 'done' AND status = 'done')
+         OR (? = 'review' AND status != 'done' AND review_requested_at IS NOT NULL)
+         OR (stage = ? AND status != 'done' AND review_requested_at IS NULL)
+       )`;
 
 const DONE_LIMIT = 30;
 const ACTIVE_PROJECT = new Set(["planned", "active", "waiting_on_client"]);
@@ -20,6 +39,7 @@ export type PlacedTask = {
   position: number;
   created_at: number;
   done_at: number | null;
+  review_requested_at?: number | null;
 };
 
 export type StepCard = {
@@ -33,13 +53,16 @@ export type StepCard = {
   createdAt: number;
   blockedAnswered: boolean;
   hasSkill: boolean;
+  /** In Review: waiting on staff, so the HQ agent does not pick it up. */
+  inReview?: boolean;
 };
 
 type SkillStep = { path?: unknown; status?: unknown };
 
-/** The column a card sits in. Done is status. Blocked stays in its stage. */
-export function columnOf(task: { status: string; stage: string }): BoardColumn {
+/** The column a card sits in. Done is status. Review is a flag over the stage. Blocked stays where it is. */
+export function columnOf(task: { status: string; stage: string; review_requested_at?: number | null }): BoardColumn {
   if (task.status === "done") return "done";
+  if (inReview(task)) return "review";
   if (task.stage === "engineer" || task.stage === "build" || task.stage === "run" || task.stage === "describe") {
     return task.stage;
   }
@@ -70,6 +93,7 @@ export function boardCards<T extends PlacedTask>(tasks: T[]): Record<BoardColumn
     engineer: [],
     build: [],
     run: [],
+    review: [],
     done: [],
   };
   for (const task of tasks) columns[columnOf(task)].push(task);
@@ -82,7 +106,7 @@ export function boardCards<T extends PlacedTask>(tasks: T[]): Record<BoardColumn
 }
 
 function ready(card: StepCard): boolean {
-  if (!card.id || !card.hasSkill) return false;
+  if (!card.id || !card.hasSkill || card.inReview) return false;
   if (card.status === "done" || card.stage === "build" || card.stage === "run") return false;
   if (card.status === "blocked" && !card.blockedAnswered) return false;
   if (!card.projectId) return false;

@@ -521,7 +521,7 @@ export async function retryCappedBuilds(sql: Sql, deps: BuildDeps): Promise<void
   if (!legacyStartsAllowed()) return;
   const rows = await sql.all<{ id: string }>(
     `SELECT id FROM tasks
-     WHERE stage = 'build' AND status = 'todo' AND blocked_reason IS NULL
+     WHERE stage = 'build' AND status = 'todo' AND blocked_reason IS NULL AND review_requested_at IS NULL
        AND NOT EXISTS (
          SELECT 1 FROM cloud_runs
          WHERE cloud_runs.task_id = tasks.id
@@ -688,7 +688,7 @@ export async function ingestPullRequest(sql: Sql, payload: unknown, deps: BuildD
     [resolved, deps.now, run.id],
   );
   await sql.run(
-    `UPDATE tasks SET status = 'done', stage = 'run', done_at = ?, blocked_reason = NULL, updated_at = ? WHERE id = ?`,
+    `UPDATE tasks SET status = 'done', stage = 'run', done_at = ?, blocked_reason = NULL, review_requested_at = NULL, updated_at = ? WHERE id = ?`,
     [deps.now, deps.now, run.task_id],
   );
   await act(sql, run.deliverable_org, run.project_id, "agent.build_pulled", { deliverableId: run.deliverable_id, runId: run.id }, deps.now);

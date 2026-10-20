@@ -22,11 +22,13 @@ import {
   BOARD_COLUMNS,
   BOARD_COLUMN_LABEL,
   boardCards,
+  columnOf,
+  inReview,
   skillSteps,
   type BoardColumn,
 } from "@/lib/board-model";
 import { swarmRunReady } from "@/lib/swarm-ready";
-import { assignTaskPackAction, moveBoardCardAction } from "./actions";
+import { assignTaskPackAction, moveBoardCardAction, reviewCardAction } from "./actions";
 import type { BoardActivity } from "@/db/crm";
 
 export type WorkBoardCard = {
@@ -50,6 +52,8 @@ export type WorkBoardCard = {
   run_started_at: number | null;
   pr_number: number | null;
   repo_full_name: string | null;
+  review_requested_at?: number | null;
+  review_note?: string | null;
 };
 
 const CLEARING: Record<string, string> = {
@@ -97,7 +101,7 @@ function useCardMove(card: WorkBoardCard) {
 function CardMenu({ card }: { card: WorkBoardCard }) {
   const [reason, setReason] = useState("");
   const { pending, send } = useCardMove(card);
-  const column = card.status === "done" ? "done" : card.stage;
+  const column = columnOf(card);
 
   return (
     <DropdownMenu>
@@ -137,6 +141,59 @@ function CardMenu({ card }: { card: WorkBoardCard }) {
   );
 }
 
+/** Staff decision on a card in Review: approve to done, or send back with a note. */
+function ReviewPanel({ card, now }: { card: WorkBoardCard; now: number }) {
+  const [note, setNote] = useState("");
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  function decide(decision: "approve" | "progress" | "build") {
+    const data = new FormData();
+    data.set("taskId", card.id);
+    data.set("organizationId", card.organization_id);
+    data.set("projectId", card.project_id ?? "");
+    data.set("decision", decision);
+    data.set("note", note);
+    startTransition(async () => {
+      const result = await reviewCardAction(data);
+      if (result.ok) {
+        toast.success(result.message);
+        setNote("");
+        router.refresh();
+        return;
+      }
+      toast.error(result.message);
+    });
+  }
+  const from = card.stage === "describe" || card.stage === "engineer" || card.stage === "build" || card.stage === "run" ? card.stage : "describe";
+  return (
+    <div className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/40 p-2" aria-label={`Review ${card.title}`}>
+      <p className="text-xs text-muted-foreground">
+        Waiting on review{card.review_requested_at ? ` · ${formatRelative(card.review_requested_at, now)}` : ""} · from{" "}
+        {BOARD_COLUMN_LABEL[from]}
+      </p>
+      {card.review_note ? <p className="whitespace-pre-wrap text-xs">{card.review_note}</p> : null}
+      <Input
+        value={note}
+        maxLength={2000}
+        placeholder="Note (needed to send back)"
+        aria-label={`Review note for ${card.title}`}
+        onChange={(event) => setNote(event.target.value)}
+      />
+      <div className="flex flex-wrap gap-1.5">
+        <Button size="sm" type="button" disabled={pending} onClick={() => decide("approve")}>
+          Approve
+        </Button>
+        <Button size="sm" type="button" variant="outline" disabled={pending || note.trim().length === 0} onClick={() => decide("progress")}>
+          Send back
+        </Button>
+        <Button size="sm" type="button" variant="ghost" disabled={pending || note.trim().length === 0} onClick={() => decide("build")}>
+          Back to build
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CardFace({
   card,
   now,
@@ -157,6 +214,7 @@ function CardFace({
   onMove: (taskId: string, column: BoardColumn) => void;
 }) {
   const late = card.due_at !== null && card.due_at < now && card.status !== "done";
+  const review = inReview(card);
   const waiting = card.stage === "build" && card.status === "todo" && !card.cursor_agent_id && !card.blocked_reason;
   const steps = skillSteps(card.skills_json);
   const brief = notes.find((note) => note.kind === "agent.task_brief")?.body;
@@ -229,7 +287,8 @@ function CardFace({
       {card.status !== "done" && card.stage === "run" && swarm.templateId && !running ? (
         <p className="text-xs text-muted-foreground">{packName} is scheduled.</p>
       ) : null}
-      {swarm.ready ? (
+      {review ? <ReviewPanel card={card} now={now} /> : null}
+      {swarm.ready && !review ? (
         <Button size="sm" type="button" disabled={pending} onClick={() => onMove(card.id, "run")}>
           Run swarm
         </Button>
@@ -340,8 +399,7 @@ export function WorkBoard({
   function dropCard(taskId: string, column: BoardColumn) {
     const card = cards.find((item) => item.id === taskId);
     if (!card) return;
-    const current = card.status === "done" ? "done" : card.stage;
-    if (current === column) return;
+    if (columnOf(card) === column) return;
     const data = new FormData();
     data.set("taskId", card.id);
     data.set("organizationId", card.organization_id);

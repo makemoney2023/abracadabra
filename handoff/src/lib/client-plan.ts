@@ -31,6 +31,7 @@ type ContextTask = {
   skills?: PlanSkill[];
   templateId?: string | null;
   blockedReason?: string | null;
+  inReview?: boolean;
 };
 
 type ContextProject = { id?: string; name?: string; status?: string };
@@ -445,6 +446,7 @@ function queueTasks(context: ClientPicture): { tasks: ContextTask[]; more: boole
       createdAt: task.createdAt ?? 0,
       blockedAnswered: answeredCount > 0,
       hasSkill: eligible(task, answeredCount),
+      inReview: task.inReview === true,
       task,
     };
     return [card];

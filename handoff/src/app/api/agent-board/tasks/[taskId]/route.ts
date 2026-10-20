@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 /**
  * One board change. Bearer agent token. Body is one of:
  * { action: "start" } | { action: "pause" } | { action: "block", reason } | { action: "review", note? }
- * | { action: "move", to: describe|engineer|build|run|done } | { action: "note", body }
+ * | { action: "move", to: describe|engineer|build|run|review|done } | { action: "note", body }
  * build and run are refused while AGENT_MODE is legacy (they would start a swarm or Cursor run). No deletes.
  */
 export async function POST(request: Request, context: { params: Promise<{ taskId: string }> }) {

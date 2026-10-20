@@ -4,17 +4,20 @@ import Link from "next/link";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { workHref, type WorkCount } from "./query";
 
-function activeFilter(late: boolean, week: boolean, blocked: boolean): "all" | "late" | "week" | "blocked" {
-  if (late && !week && !blocked) return "late";
-  if (week && !late && !blocked) return "week";
-  if (blocked && !late && !week) return "blocked";
-  return "all";
+function activeFilter(late: boolean, week: boolean, blocked: boolean, review: boolean): "all" | "late" | "week" | "blocked" | "review" {
+  const on = [late, week, blocked, review].filter(Boolean).length;
+  if (on !== 1) return "all";
+  if (late) return "late";
+  if (week) return "week";
+  if (blocked) return "blocked";
+  return "review";
 }
 
 export function WorkToolbar({
   late,
   week,
   blocked,
+  review = false,
   client,
   project,
   counts,
@@ -22,6 +25,7 @@ export function WorkToolbar({
   late: boolean;
   week: boolean;
   blocked: boolean;
+  review?: boolean;
   client?: string;
   project?: string;
   counts: WorkCount;
@@ -30,7 +34,7 @@ export function WorkToolbar({
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-      <ToggleGroup type="single" value={activeFilter(late, week, blocked)} className="max-w-full flex-wrap">
+      <ToggleGroup type="single" value={activeFilter(late, week, blocked, review)} className="max-w-full flex-wrap">
         <ToggleGroupItem value="all" asChild>
           <Link href={workHref(scope)}>
             All
@@ -53,6 +57,12 @@ export function WorkToolbar({
           <Link href={workHref({ ...scope, blocked: true })}>
             Blocked
             <span className="tabular-nums">{counts.blocked}</span>
+          </Link>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="review" asChild>
+          <Link href={workHref({ ...scope, review: true })}>
+            In review
+            <span className="tabular-nums">{counts.review}</span>
           </Link>
         </ToggleGroupItem>
       </ToggleGroup>

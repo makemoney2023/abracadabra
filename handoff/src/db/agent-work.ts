@@ -589,6 +589,18 @@ async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now:
   const taskId = args.taskId?.trim() ?? "";
   if (!taskId) throw new AgentWorkError("Name a task.");
   const task = await taskInOrg(sql, actor.organizationId, taskId);
+  if (args.stage === "review") {
+    // Review column: the card waits on staff. Nothing starts, in either AGENT_MODE.
+    const moved = await moveTaskStage(sql, {
+      taskId: task.id,
+      to: "review",
+      note: args.note,
+      now,
+      actor: { kind: "agent", id: actor.keyId },
+    });
+    if (!moved.ok) throw new AgentWorkError("That task could not go to review.");
+    return { taskId: task.id, stage: moved.stage, column: "review", status: moved.status };
+  }
   if (args.stage === "build") {
     const built = await moveTaskStage(sql, {
       taskId: task.id,

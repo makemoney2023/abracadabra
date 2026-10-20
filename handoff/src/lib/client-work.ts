@@ -499,6 +499,7 @@ const UPDATE_KINDS = [
   "client_work.kickoff",
   "agent.task_stage",
   "staff.task_stage",
+  "staff.task_review",
   "deliverable_published",
   "agent.published",
   "agent.ready_to_publish",

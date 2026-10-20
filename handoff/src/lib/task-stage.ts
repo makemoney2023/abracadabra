@@ -6,10 +6,11 @@ import { claimDueWorkflow, scheduleTaskSwarm } from "@/lib/client-workflows";
 import type { ObjectStore } from "@/lib/store/objects";
 import { defaultBuildDeps, startBuild, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import { nextColumnPosition } from "@/lib/task-position";
+import { BOARD_COLUMNS, COLUMN_SQL, columnOf as boardColumnOf } from "@/lib/board-model";
 
 export { nextColumnPosition } from "@/lib/task-position";
 
-export const TASK_COLUMNS = ["describe", "engineer", "build", "run", "done"] as const;
+export const TASK_COLUMNS = BOARD_COLUMNS;
 export type TaskColumn = (typeof TASK_COLUMNS)[number];
 
 type TaskMoveRow = {
@@ -19,6 +20,7 @@ type TaskMoveRow = {
   stage: string;
   status: string;
   position: number;
+  review_requested_at: number | null;
 };
 
 export type MoveTaskInput = {
@@ -40,6 +42,8 @@ export type MoveTaskInput = {
   };
   instruction?: string;
   readSkill?: (skillPath: string) => Promise<string | null>;
+  /** A move to review keeps this as the note staff read. */
+  note?: string;
 };
 
 export type MoveTaskResult =
@@ -62,16 +66,12 @@ export type MoveTaskResult =
     }
   | { ok: false; error: "missing" | "invalid" | GateReason };
 
-function columnOf(task: { status: string; stage: string }): TaskColumn {
-  if (task.status === "done") return "done";
-  if (task.stage === "engineer" || task.stage === "build" || task.stage === "run" || task.stage === "describe") {
-    return task.stage;
-  }
-  return "describe";
+function columnOf(task: { status: string; stage: string; review_requested_at?: number | null }): TaskColumn {
+  return boardColumnOf(task);
 }
 
-function isColumn(value: string | undefined): value is TaskColumn {
-  return value === "describe" || value === "engineer" || value === "build" || value === "run" || value === "done";
+export function isColumn(value: string | undefined): value is TaskColumn {
+  return (TASK_COLUMNS as readonly string[]).includes(value ?? "");
 }
 
 async function columnMates(sql: Sql, task: TaskMoveRow, column: TaskColumn): Promise<{ id: string }[]> {
@@ -79,10 +79,7 @@ async function columnMates(sql: Sql, task: TaskMoveRow, column: TaskColumn): Pro
     `SELECT id FROM tasks
      WHERE ifnull(organization_id, '') = ifnull(?, '')
        AND ifnull(project_id, '') = ifnull(?, '')
-       AND (
-         (? = 'done' AND status = 'done')
-         OR (? != 'done' AND stage = ? AND status != 'done')
-       )
+       AND ${COLUMN_SQL}
      ORDER BY position, created_at, id`,
     [task.organization_id, task.project_id, column, column, column],
   );
@@ -129,10 +126,19 @@ async function logMove(
 /** One stage move for the board, staff chat, and the agent. Build and run keep their gates. */
 export async function moveTaskStage(sql: Sql, input: MoveTaskInput): Promise<MoveTaskResult> {
   const task = await sql.get<TaskMoveRow>(
-    "SELECT id, organization_id, project_id, stage, status, position FROM tasks WHERE id = ?",
+    "SELECT id, organization_id, project_id, stage, status, position, review_requested_at FROM tasks WHERE id = ?",
     [input.taskId],
   );
   if (!task) return { ok: false, error: "missing" };
+  const moved = await moveTask(sql, task, input);
+  // Leaving Review: any successful move to another column drops the review flag (the stage stays).
+  if (moved.ok && task.review_requested_at != null && moved.column !== "review") {
+    await sql.run("UPDATE tasks SET review_requested_at = NULL WHERE id = ?", [task.id]);
+  }
+  return moved;
+}
+
+async function moveTask(sql: Sql, task: TaskMoveRow, input: MoveTaskInput): Promise<MoveTaskResult> {
   if (input.blockedReason !== undefined) {
     const reason = input.blockedReason.trim();
     if (!reason) return { ok: false, error: "invalid" };
@@ -152,7 +158,35 @@ export async function moveTaskStage(sql: Sql, input: MoveTaskInput): Promise<Mov
   if (input.to === "build") return moveToBuild(sql, task, input);
   if (input.to === "run") return moveToRun(sql, task, input);
   if (input.to === "done") return moveToDone(sql, task, input);
+  if (input.to === "review") return moveToReview(sql, task, current, input);
   return moveToStage(sql, task, input.to, current, input);
+}
+
+/**
+ * Review waits on staff. It never starts a cloud run, a swarm, or a wake, in either AGENT_MODE.
+ * The stage stays as it was, so a send back knows where the card came from.
+ */
+async function moveToReview(
+  sql: Sql,
+  task: TaskMoveRow,
+  current: TaskColumn,
+  input: MoveTaskInput,
+): Promise<MoveTaskResult> {
+  if (current === "done") return { ok: false, error: "invalid" };
+  const note = input.note?.trim().slice(0, 2000) || null;
+  if (current === "review" && input.position === undefined && note === null) {
+    return { ok: true, taskId: task.id, column: "review", stage: task.stage, status: task.status };
+  }
+  const position = await place(sql, task, "review", input);
+  await sql.run(
+    `UPDATE tasks
+     SET status = 'doing', review_requested_at = COALESCE(review_requested_at, ?), review_note = COALESCE(?, review_note),
+         blocked_reason = NULL, done_at = NULL, position = ?, updated_at = ?
+     WHERE id = ?`,
+    [input.now, note, position, input.now, task.id],
+  );
+  await logMove(sql, task, "review", note ? `Moved to review. ${note}` : inputBody("review"), input.now, input.actor);
+  return { ok: true, taskId: task.id, column: "review", stage: task.stage, status: "doing" };
 }
 
 async function reorder(

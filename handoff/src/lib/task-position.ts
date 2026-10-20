@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { COLUMN_SQL } from "@/lib/board-model";
 
 /** Next position at the end of one column for one project. */
 export async function nextColumnPosition(
@@ -9,10 +10,7 @@ export async function nextColumnPosition(
     `SELECT COALESCE(MAX(position), -1) + 1 AS next FROM tasks
      WHERE ifnull(organization_id, '') = ifnull(?, '')
        AND ifnull(project_id, '') = ifnull(?, '')
-       AND (
-         (? = 'done' AND status = 'done')
-         OR (? != 'done' AND stage = ? AND status != 'done')
-       )`,
+       AND ${COLUMN_SQL}`,
     [input.organizationId, input.projectId, input.column, input.column, input.column],
   );
   return Number(row?.next ?? 0);

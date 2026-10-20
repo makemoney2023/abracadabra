@@ -193,9 +193,11 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
     project_id: string | null;
     position: number;
     created_at: number;
+    review_requested_at: number | null;
+    review_note: string | null;
   }>(
     `SELECT id, title, status, stage, round, deliverable_id, cursor_agent_id, skills_json, blocked_reason,
-            project_id, position, created_at
+            project_id, position, created_at, review_requested_at, review_note
      FROM tasks WHERE organization_id = ? ORDER BY position, created_at, id`,
     [organizationId],
   );
@@ -302,6 +304,9 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
       skills: skillSteps(task.skills_json),
       templateId: templateOnCard(task.skills_json),
       blockedReason: task.blocked_reason,
+      // Review: waiting on staff. The HQ agent leaves these alone; reviewNote is the ask or the last send-back note.
+      inReview: task.status !== "done" && task.review_requested_at != null,
+      reviewNote: task.review_note,
       staffNotes: notes.filter((note) => note.task_id === task.id).map((note) => note.body),
     })),
     openQuestions: openQuestions.map((row) => ({ id: row.id, question: row.question, askedAt: row.asked_at })),

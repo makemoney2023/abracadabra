@@ -27,6 +27,7 @@ export const GATED_HQ_TOOLS = new Set([
   "invite_person",
   "merge_clients",
   "set_task_stage",
+  "review_task",
   "add_work",
   "revise_brief",
   "instruct_task",
@@ -84,7 +85,8 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   },
   list_tasks: {
     label: "List tasks",
-    description: "Tasks for a client with status, stage, and project_id. Fields: organizationId.",
+    description:
+      "Tasks for a client with status, stage, column (describe, engineer, build, run, review, done), review_note, and project_id. Fields: organizationId.",
   },
   list_projects: {
     label: "List projects",
@@ -161,7 +163,13 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   merge_clients: { label: "Merge clients", description: "Merge two client records. Fields: keepId, dropId." },
   set_task_stage: {
     label: "Move a task",
-    description: "Set a task stage: describe, engineer, build, run. Build needs an approved brief. Fields: taskId, stage.",
+    description:
+      "Set a task stage: describe, engineer, build, run, or review. Build needs an approved brief. Review waits on staff and starts nothing. Fields: taskId, stage, note (review only).",
+  },
+  review_task: {
+    label: "Decide a review",
+    description:
+      "Decide a task in the Review column. decision approve moves it to done. progress sends it back to its stage as in progress and starts nothing. build sends it back to build (a build move: legacy starts a cloud run). A send back needs a note. Fields: taskId, decision (approve, progress, build), note.",
   },
   add_work: {
     label: "Add work to the brief",

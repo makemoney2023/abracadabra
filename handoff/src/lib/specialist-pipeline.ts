@@ -304,7 +304,7 @@ export async function abandonPipeline(
   const orphans = await sql.all<{ id: string; task_id: string }>(
     `SELECT w.id, w.task_id FROM client_workflows w JOIN tasks t ON t.id = w.task_id
      WHERE w.group_id = ? AND w.accepted_at IS NULL AND COALESCE(w.last_execution_id, '') = ''
-       AND t.status = 'todo' AND t.stage = 'describe'
+       AND t.status = 'todo' AND t.stage = 'describe' AND t.review_requested_at IS NULL
        AND NOT EXISTS (SELECT 1 FROM agent_questions q WHERE q.task_id = t.id)
        AND NOT EXISTS (SELECT 1 FROM cloud_runs r WHERE r.task_id = t.id)`,
     [input.groupId],

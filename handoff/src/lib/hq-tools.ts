@@ -35,6 +35,8 @@ import { wakeOrganization, type WakeEnv, type WakeReason } from "@/lib/agent-wak
 import { beginDirectClient, scanIntakeBindings, type ScanQueue } from "@/lib/lead-schema";
 import { defaultBuildDeps, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import { moveTaskStage } from "@/lib/task-stage";
+import { decideReview } from "@/lib/task-review";
+import { columnOf as boardColumnOf } from "@/lib/board-model";
 import type { Caller } from "@/lib/authz";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { workflowSpacePath } from "@/lib/workflow-files";
@@ -349,11 +351,25 @@ async function perform(
   }
   if (tool === "list_tasks") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
-    const rows = await sql.all(
-      "SELECT id, title, status, stage, project_id FROM tasks WHERE organization_id = ?",
+    const rows = await sql.all<{
+      id: string; title: string; status: string; stage: string; project_id: string | null;
+      review_requested_at: number | null; review_note: string | null;
+    }>(
+      "SELECT id, title, status, stage, project_id, review_requested_at, review_note FROM tasks WHERE organization_id = ?",
       [organizationId],
     );
-    return { ok: true, value: rows };
+    return {
+      ok: true,
+      value: rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        stage: row.stage,
+        column: boardColumnOf(row),
+        review_note: row.review_note,
+        project_id: row.project_id,
+      })),
+    };
   }
   if (tool === "list_deliverables") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
@@ -540,6 +556,7 @@ async function perform(
     return fromCrm(await mergeOrganizations(sql, caller, { keepId: text(input, "keepId"), dropId: text(input, "dropId") }, now));
   }
   if (tool === "set_task_stage") return setTaskStage(sql, caller, input, now, options);
+  if (tool === "review_task") return reviewTask(sql, caller, input, now, options);
   if (tool === "list_swarm_packs") return listSwarmPacks(options.swarm, text(input, "query"));
   if (tool === "add_work") return addWork(sql, caller, input, now, options.wake);
   if (tool === "revise_brief") return reviseBrief(sql, caller, input, now);
@@ -1604,7 +1621,7 @@ async function setTaskStage(
   options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const stage = text(input, "stage");
-  if (stage !== "describe" && stage !== "engineer" && stage !== "build" && stage !== "run") {
+  if (stage !== "describe" && stage !== "engineer" && stage !== "build" && stage !== "run" && stage !== "review") {
     return { ok: false, error: "invalid" };
   }
   const task = await sql.get<{ id: string; organization_id: string | null }>(
@@ -1617,6 +1634,7 @@ async function setTaskStage(
   const moved = await moveTaskStage(sql, {
     taskId: task.id,
     to: stage,
+    note: stage === "review" ? text(input, "note") || undefined : undefined,
     now,
     actor: { kind: "staff", id: caller.userId },
     build: options.build ?? defaultBuildDeps(now),
@@ -1639,6 +1657,50 @@ async function setTaskStage(
     };
   }
   return { ok: true, value: { taskId: task.id, stage } };
+}
+
+async function reviewTask(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions & { wake: Wake },
+): Promise<HqToolResult> {
+  const decision = text(input, "decision");
+  if (decision !== "approve" && decision !== "progress" && decision !== "build") return { ok: false, error: "invalid" };
+  const task = await sql.get<{ id: string; organization_id: string | null }>(
+    "SELECT id, organization_id FROM tasks WHERE id = ?",
+    [text(input, "taskId")],
+  );
+  if (!task?.organization_id || !(await seenOrg(sql, caller, task.organization_id)) || !caller.userId) {
+    return { ok: false, error: "missing" };
+  }
+  const decided = await decideReview(sql, {
+    taskId: task.id,
+    decision,
+    note: text(input, "note") || undefined,
+    now,
+    actor: { kind: "staff", id: caller.userId },
+    build: options.build ?? defaultBuildDeps(now),
+    wake: options.wake,
+    readSkill: options.readSkill,
+  });
+  // not_in_review and note_required come back as invalid: the description says a send back needs a note.
+  if (!decided.ok) {
+    return { ok: false, error: decided.error === "not_in_review" || decided.error === "note_required" ? "invalid" : decided.error };
+  }
+  return {
+    ok: true,
+    value: {
+      taskId: task.id,
+      column: decided.column,
+      stage: decided.stage,
+      status: decided.status,
+      ...(decided.runId ? { runId: decided.runId } : {}),
+      ...(decided.waiting ? { waiting: decided.waiting } : {}),
+      ...(decided.handedTo !== undefined ? { handedTo: decided.handedTo } : {}),
+    },
+  };
 }
 
 async function projectForBrief(sql: Sql, organizationId: string, requested: string): Promise<string | null | "missing"> {

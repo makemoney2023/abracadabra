@@ -100,6 +100,7 @@ export async function dueOrganizations(sql: Sql, cron: string, now = Date.now())
              SELECT 1 FROM tasks
              WHERE tasks.organization_id = organizations.id
                AND tasks.status != 'done'
+               AND tasks.review_requested_at IS NULL
                AND (tasks.due_at IS NULL OR tasks.due_at <= ?)
                AND NOT EXISTS (
                  SELECT 1 FROM client_workflows w
