@@ -389,7 +389,12 @@ async function perform(
     const created = await createOrganization(
       sql,
       caller,
-      { name: text(input, "name"), website: text(input, "website") || undefined, kind: "client" },
+      {
+        name: text(input, "name"),
+        website: text(input, "website") || undefined,
+        kind: "client",
+        parentOrganizationId: text(input, "parentId") || undefined,
+      },
       now,
     );
     if (created.ok) {
@@ -399,6 +404,7 @@ async function perform(
         organizationId: created.value.id,
         website: created.value.website ?? "",
         now,
+        skipIntake: flag(input, "skipIntake"),
         queue: options.intake?.queue ?? bound.queue,
         env: options.intake?.env ?? bound.env,
         fetchImpl: options.intake?.fetchImpl,

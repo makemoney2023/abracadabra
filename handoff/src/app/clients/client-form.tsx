@@ -11,7 +11,22 @@ const initial: FormState = { message: "" };
 
 const selectClass = "h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
-export function ClientFields() {
+export type ParentChoice = { id: string; name: string };
+
+function ParentOptions({ parents }: { parents: ParentChoice[] }) {
+  return (
+    <>
+      <option value="">None</option>
+      {parents.map((parent) => (
+        <option key={parent.id} value={parent.id}>
+          {parent.name}
+        </option>
+      ))}
+    </>
+  );
+}
+
+export function ClientFields({ parents = [] }: { parents?: ParentChoice[] }) {
   return (
     <>
       <ActionField name="name" label="Company name">
@@ -28,11 +43,22 @@ export function ClientFields() {
           <option value="partner">Partner</option>
         </select>
       </ActionField>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="skipIntake" />
+        Existing client: skip the website check and lead pickup
+      </label>
+      {parents.length > 0 ? (
+        <ActionField name="parentOrganizationId" label="Part of (optional)">
+          <select name="parentOrganizationId" className={selectClass} defaultValue="">
+            <ParentOptions parents={parents} />
+          </select>
+        </ActionField>
+      ) : null}
     </>
   );
 }
 
-export function NewClientDrawer() {
+export function NewClientDrawer({ parents = [] }: { parents?: ParentChoice[] }) {
   return (
     <FormDrawer
       title="New client"
@@ -40,13 +66,13 @@ export function NewClientDrawer() {
       trigger={<Button>New client</Button>}
     >
       <ActionForm action={createClientDrawerAction} submitLabel="Add a client" pendingLabel="Adding">
-        <ClientFields />
+        <ClientFields parents={parents} />
       </ActionForm>
     </FormDrawer>
   );
 }
 
-export function ClientForm() {
+export function ClientForm({ parents = [] }: { parents?: ParentChoice[] }) {
   const [state, action, pending] = useActionState(createClientAction, initial);
   return (
     <form action={action} className="flex flex-col gap-3">
@@ -67,6 +93,18 @@ export function ClientForm() {
           <option value="partner">Partner</option>
         </select>
       </label>
+      <label className="flex items-center gap-2 text-sm" htmlFor="client-skip-intake">
+        <input id="client-skip-intake" type="checkbox" name="skipIntake" />
+        Existing client: skip the website check and lead pickup
+      </label>
+      {parents.length > 0 ? (
+        <label className="flex flex-col gap-1 text-sm" htmlFor="client-parent">
+          Part of (optional)
+          <select id="client-parent" name="parentOrganizationId" className={selectClass} defaultValue="">
+            <ParentOptions parents={parents} />
+          </select>
+        </label>
+      ) : null}
       <Button type="submit" disabled={pending}>
         {pending ? "Adding" : "Add a client"}
       </Button>

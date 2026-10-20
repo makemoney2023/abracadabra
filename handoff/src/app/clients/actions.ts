@@ -21,6 +21,7 @@ import { requireHqStaffPage } from "@/lib/current";
 import { runHqTool } from "@/lib/hq-tools";
 import { beginDirectClient, scanIntakeBindings } from "@/lib/lead-schema";
 import { sendHandoffMail } from "@/lib/mail";
+import { renameOrganization, setParentOrganization } from "@/db/org-groups";
 import { saveConnectorGrant } from "@/lib/connector-grants";
 import { assignSwarmRun } from "@/lib/swarm-runs";
 
@@ -29,6 +30,12 @@ export type FormState = { message: string };
 function kindOf(value: FormDataEntryValue | null): OrgKind | undefined {
   if (value === "lead" || value === "client" || value === "past_client" || value === "partner") return value;
   return undefined;
+}
+
+/** "Existing client" checkbox: open the space but skip the website check and lead pickup. */
+function skipIntakeOf(formData: FormData): boolean {
+  const value = formData.get("skipIntake");
+  return value === "on" || value === "1" || value === "true";
 }
 
 export async function createClientAction(_previous: FormState, formData: FormData): Promise<FormState> {
@@ -41,6 +48,7 @@ export async function createClientAction(_previous: FormState, formData: FormDat
       name: String(formData.get("name") ?? ""),
       website: String(formData.get("website") ?? ""),
       kind,
+      parentOrganizationId: String(formData.get("parentOrganizationId") ?? ""),
     },
     Date.now(),
   );
@@ -54,6 +62,7 @@ export async function createClientAction(_previous: FormState, formData: FormDat
       now: Date.now(),
       queue: bound.queue,
       env: bound.env,
+      skipIntake: skipIntakeOf(formData),
     });
   }
   redirect(`/clients/${created.value.id}`);
@@ -69,7 +78,12 @@ export async function createClientDrawerAction(
   const created = await createOrganization(
     sql,
     caller,
-    { name, website, kind: kindOf(formData.get("kind")) },
+    {
+      name,
+      website,
+      kind: kindOf(formData.get("kind")),
+      parentOrganizationId: String(formData.get("parentOrganizationId") ?? ""),
+    },
     Date.now(),
   );
   if (!created.ok) {
@@ -86,11 +100,59 @@ export async function createClientDrawerAction(
       now: Date.now(),
       queue: bound.queue,
       env: bound.env,
+      skipIntake: skipIntakeOf(formData),
     });
   }
   revalidatePath("/clients");
   revalidatePath("/");
   return ok("Client added.");
+}
+
+/** Put this company under a holding company, or take it out of its group with an empty choice. */
+export async function setParentAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const parentId = String(formData.get("parentOrganizationId") ?? "").trim() || null;
+  const previous = String(formData.get("previousParentId") ?? "");
+  const result = await setParentOrganization(sql, caller, { organizationId, parentId }, Date.now());
+  if (!result.ok) {
+    return result.error === "invalid"
+      ? fail("Pick a top-level company. A group is one level deep.", "parentOrganizationId")
+      : fail(CRM_ERRORS[result.error]);
+  }
+  revalidatePath(`/clients/${organizationId}`);
+  for (const id of [parentId, previous]) if (id) revalidatePath(`/clients/${id}`);
+  revalidatePath("/clients");
+  return ok(parentId ? "Group saved." : "Removed from the group.");
+}
+
+/** Rename a company and, when asked, its spaces that still carry the old name. Staff only; logged on the timeline. */
+export async function renameClientAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const renamed = await renameOrganization(
+    sql,
+    caller,
+    {
+      organizationId,
+      name: String(formData.get("name") ?? ""),
+      renameSpaces: formData.get("renameSpaces") === "on",
+    },
+    Date.now(),
+  );
+  if (!renamed.ok) {
+    return renamed.error === "invalid" ? fail("Give the company a name (1 to 200 characters).", "name") : fail(CRM_ERRORS[renamed.error]);
+  }
+  revalidatePath(`/clients/${organizationId}`);
+  revalidatePath("/clients");
+  revalidatePath("/spaces");
+  return ok("Renamed.");
 }
 
 export async function linkSpaceAction(

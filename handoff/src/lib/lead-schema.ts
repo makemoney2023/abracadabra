@@ -144,7 +144,11 @@ export async function finishManualLead(input: {
   }
 }
 
-/** A client added directly gets the same start as a lead: a file space, then the schema check. */
+/**
+ * A client added directly gets the same start as a lead: a file space, then the schema check.
+ * skipIntake is for an existing client: open the space only. No site crawl, no agent wake, so no lead pickup,
+ * drafted first email or swarm run. A timeline note records that the check was skipped.
+ */
 export async function beginDirectClient(input: {
   sql: Sql;
   organizationId: string;
@@ -153,7 +157,21 @@ export async function beginDirectClient(input: {
   queue?: ScanQueue | null;
   env: WakeEnv;
   fetchImpl?: typeof fetch;
+  skipIntake?: boolean;
 }): Promise<void> {
   await ensureClientSpace(input.sql, input.organizationId, input.now);
+  if (input.skipIntake) {
+    await input.sql.run(
+      `INSERT INTO activities (id, organization_id, kind, actor_kind, body, created_at)
+       VALUES (?, ?, 'note', 'system', ?, ?)`,
+      [
+        crypto.randomUUID(),
+        input.organizationId,
+        "Added as an existing client. Website check and lead pickup skipped.",
+        input.now,
+      ],
+    );
+    return;
+  }
   await finishManualLead({ ...input, subject: "client" });
 }
