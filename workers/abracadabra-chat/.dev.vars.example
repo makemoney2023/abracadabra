@@ -25,3 +25,4 @@ VOICE_ENABLED=true
 TTS_SPEAKER=luna
 # Optional override.
 TTS_MODEL=@cf/deepgram/aura-2-en
+AI_RECAP_MODEL=@cf/meta/llama-3.1-8b-instruct-fast

@@ -125,3 +125,10 @@ The chat can run the real Readiness Check one question at a time (`POST /api/cha
 - Transport: the `READINESS` service binding to `readiness-check` (in `wrangler.jsonc`). Without the binding it uses `READINESS_ORIGIN`, which defaults to the public check origin.
 - Answers have their own per-network allowance of 120 per hour, so they do not use up the typed-message limit.
 - The check takes five to seven minutes, and the chat says so.
+
+## Chat recap on the HQ lead
+
+When a consented lead goes to HQ (`project-inquiry`), the message carries a `Recap:` line before the transcript (`src/recap.js`).
+- **Summary:** two sentences from a small model (`AI_RECAP_MODEL`, default `@cf/meta/llama-3.1-8b-instruct-fast`; `none` turns it off). The prompt keeps only what the visitor said. Emails are masked. The call is capped at 4 seconds, and a slow or failed call just leaves the summary out.
+- **Facts from the session:** services asked about, the Readiness Check band and pressures if it was taken in the chat, whether voice was used, the start page, and the number of questions.
+- The recap is only built when a lead is actually posted. It is never shown to the visitor, and no email is sent.
