@@ -97,7 +97,7 @@ test("no gateway configured answers from the studio script", async () => {
   const h = harness(() => { throw new Error("should not call"); });
   const { events } = await ask(h, "book a call", {});
   assert.match(events.find((e) => e.event === "final").data.text, /thirty-minute working session/);
-  assert.ok(events.some((e) => e.event === "ui_action" && e.data.action === "offer_booking"));
+  assert.ok(events.some((e) => e.event === "ui_action" && e.data.action === "open_booking"));
 });
 
 test("a garbled 70B stream never reaches the visitor; the 8B fallback answers", async () => {
