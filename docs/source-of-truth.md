@@ -130,7 +130,7 @@ Four live lines. No client logos until permission exists.
 - Milrcorr — commercial fit-outs, with an estimate you can request — [milrcorr.com](https://milrcorr.com)
 - StrongFoam — the public site, with an estimate you can start — [strongfoam.com](https://strongfoam.com/)
 - Schema — where AI search cannot find you — [schema-two.vercel.app](https://schema-two.vercel.app/)
-- LLM Leverage — a team trained on any model — [llm-leverage-course.vercel.app](https://llm-leverage-course.vercel.app)
+- LLM Leverage — a team trained on any model — [learn.abra-ca-dabra.app](https://learn.abra-ca-dabra.app)
 
 ### 3. The zero-to-scale case
 
@@ -281,7 +281,7 @@ These four can be named and linked today. They're the ones already cleared to na
 | Milrcorr | The public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate. | https://milrcorr.com |
 | StrongFoam | The public site, with an estimate a visitor can start and a booking. Do not say "insulation contractor." | https://strongfoam.com/ |
 | Schema | See where answer engines cannot find you, then generate the fix. Internal inbox for prospecting | https://schema-two.vercel.app/ |
-| LLM Leverage | Teach a team one method for better answers from any model, with workshops and a certificate path | https://llm-leverage-course.vercel.app |
+| LLM Leverage | Teach a team one method for better answers from any model, with workshops and a certificate path | https://learn.abra-ca-dabra.app |
 
 Repo brief for that catalog: quiet conjure, museum of working software, physical proof. The marketing site leads with the benefit argument in this file. The catalog stays the room where the films play. The homepage proof band names StrongFoam, Milrcorr, SuperPatch, and pirx.ca from the portfolio pages already published here. It does not add quotes. **Start a project** is the only primary action. On the homepage it opens the form at `#start`. Everywhere else it opens `/start/`, which posts to `POST /api/intake`.
 

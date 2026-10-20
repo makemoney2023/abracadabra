@@ -39,7 +39,7 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 - PIRX, the app at pirx.ca, designed and built by the studio, including its machine learning. A runner connects the watch they already wear. PIRX gives a Projected Time for a race, a Supported Range around it, and the five Structural Drivers behind it: Aerobic Base, Threshold Density, Speed Exposure, Running Economy and Load Consistency. Personal models, including gradient boosting, are only used when they beat the app's safe rules. Athletic estimates, not medical advice: https://abra-ca-dabra.app/portfolio/pirx/
 - StrongFoam, the public site, with an estimate a visitor can start and a booking: https://strongfoam.com/
 - Schema, scores how visible a site is to answer engines and generates the repair: https://schema-two.vercel.app/
-- LLM Leverage, a self-paced course for better answers from any model, plus a workshop path you can run: https://llm-leverage-course.vercel.app
+- LLM Leverage, a self-paced course for better answers from any model, plus a workshop path you can run: https://learn.abra-ca-dabra.app
 - Super Funnel, one associate app. The homepage shows the Getting started film (home dashboard, setup, pipeline, and nav, 66 seconds). The other seven tours are on the films page. There is no separate public app URL: https://abra-ca-dabra.app/films.html
 
 Also shipped, named when the client allows: clinical-style assessments (non-diagnostic; they educate and route, they do not diagnose), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, and the pirx.ca Search Console record dated above. The list is a sample of what shipped, not a ceiling on what the studio will take on.

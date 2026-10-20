@@ -43,6 +43,7 @@ describe("statementsFromMigration", () => {
       "0024_lead_scores.sql",
       "0025_client_work.sql",
       "0026_agent_work.sql",
+      "0027_org_parent.sql",
       "0028_task_review.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
@@ -222,6 +223,19 @@ describe("a step that stopped halfway", () => {
     const row = db.prepare("SELECT status, stage, review_requested_at, review_note FROM tasks WHERE id = 't-old'").get();
     expect(row).toEqual({ status: "doing", stage: "build", review_requested_at: null, review_note: null });
     await migrate(sql);
+  });
+
+  it("finishes a half-applied 0027 (column added, index missing) and then 0028", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    db.exec("DROP INDEX organizations_parent");
+    db.exec("ALTER TABLE tasks DROP COLUMN review_note");
+    await migrate(sql);
+    const index = db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'organizations_parent'").get();
+    expect(index).toEqual({ name: "organizations_parent" });
+    const columns = db.prepare("PRAGMA table_info(tasks)").all() as { name: string }[];
+    expect(columns.map((column) => column.name)).toContain("review_note");
   });
 
   it("still fails on a real error", async () => {

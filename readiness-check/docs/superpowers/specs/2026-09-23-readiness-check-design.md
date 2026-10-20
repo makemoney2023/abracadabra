@@ -276,7 +276,7 @@ Keyed by `offerRow`. Each: `{ row, said, build, specimens: Array<{ name, url }> 
 | `new_channel` | — |
 | `sale_visit` | Canadian Discount Appliances (cdastore.vercel.app), Showdesk (showdesk-app.com) |
 | `vendor_bill` | — |
-| `one_person` | LLM Leverage (llm-leverage-course.vercel.app) |
+| `one_person` | LLM Leverage (learn.abra-ca-dabra.app) |
 | `fraud_review` | — |
 | `claims_drift` | — |
 

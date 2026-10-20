@@ -39,6 +39,10 @@ import { TIMELINE_PAGE_SIZE } from "./activity-tab";
 import { ClientActions } from "./client-actions";
 import { ClientBody } from "./client-body";
 import { ClientTabs } from "./client-tabs";
+import { GroupCompanies, PartOfLabel } from "./group-panel";
+import { RenameForm } from "./rename-form";
+import { SetParentForm } from "./set-parent-form";
+import { organizationGroup, parentChoices } from "@/db/org-groups";
 import { CLIENT_KIND_LABEL, activeTab } from "./tabs";
 
 function asHealth(value: string): StatusHealth | null {
@@ -66,6 +70,10 @@ export default async function ClientPage({
   const { sql, caller } = await requireHqStaffPage();
   const client = await organizationById(sql, caller, id);
   if (!client) notFound();
+  const [group, parentOptions] = await Promise.all([
+    organizationGroup(sql, caller, client.id),
+    parentChoices(sql, caller, client.id),
+  ]);
   const [
     free,
     linked,
@@ -148,6 +156,7 @@ export default async function ClientPage({
           <span className="inline-flex flex-wrap items-center gap-2">
             <span>{client.name}</span>
             <Badge variant="secondary">{CLIENT_KIND_LABEL[client.kind]}</Badge>
+            <PartOfLabel group={group} />
             {health ? (
               <span className="inline-flex items-center gap-1.5 text-sm font-normal">
                 <StatusDot domain="health" value={health} />
@@ -165,8 +174,23 @@ export default async function ClientPage({
           </span>
         }
         description={client.website ?? undefined}
-        actions={<ClientActions organizationId={client.id} spaces={free} />}
+        actions={
+          <>
+            <RenameForm organizationId={client.id} name={client.name} />
+            {group.children.length === 0 ? (
+              <SetParentForm
+                organizationId={client.id}
+                parentId={group.parent?.id ?? null}
+                choices={parentOptions}
+                headsGroup={false}
+                label={group.parent ? "Change parent" : "Set parent"}
+              />
+            ) : null}
+            <ClientActions organizationId={client.id} spaces={free} />
+          </>
+        }
       >
+        <GroupCompanies group={group} />
         {query.merged === "1" ? <p role="status" className="text-sm">These clients are now one.</p> : null}
         <ClientTabs clientId={client.id} tab={tab} />
         <ClientBody

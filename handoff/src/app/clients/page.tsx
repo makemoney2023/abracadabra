@@ -169,7 +169,11 @@ export default async function ClientsPage({
       <PageFrame
         title="Clients"
         description="Company records live here. File spaces stay linked to them."
-        actions={<NewClientDrawer />}
+        actions={
+          <NewClientDrawer
+            parents={orgs.filter((org) => !org.parent_organization_id).map((org) => ({ id: org.id, name: org.name }))}
+          />
+        }
       >
         <form action="/clients" className="flex max-w-md items-center gap-2">
           <Input

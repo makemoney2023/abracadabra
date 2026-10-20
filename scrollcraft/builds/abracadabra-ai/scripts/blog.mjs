@@ -647,7 +647,7 @@ ${crumbs([{ name: "Home", href: "/" }, { name: "About", href: "/about/" }])}
 <li><a href="https://milrcorr.com">Milrcorr</a>: the website for StrongFoam's sister commercial fit-out business, where visitors see the work and request an estimate.</li>
 <li><a href="https://strongfoam.com/">StrongFoam</a>: a website where visitors can start an estimate and book.</li>
 <li><a href="https://schema-two.vercel.app/">Schema</a>: see how easily AI search can find your site, and get the fixes.</li>
-<li><a href="https://llm-leverage-course.vercel.app">LLM Leverage</a>: a self-paced course for getting real work done with AI, plus workshops you can run.</li>
+<li><a href="https://learn.abra-ca-dabra.app">LLM Leverage</a>: a self-paced course for getting real work done with AI, plus workshops you can run.</li>
 <li><a href="/films.html">Super Funnel</a>: a sales app for independent associates, shown in eight short films.</li>
 </ul>
 <h2>Contact</h2>
