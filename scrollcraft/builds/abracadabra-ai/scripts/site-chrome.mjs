@@ -2,7 +2,7 @@ import { businessFunctions } from "./site-data.mjs";
 import { salesPages } from "./service-sales.mjs";
 import { navIcon } from "./nav-icons.mjs";
 
-export const ASSET_VERSION = "20261019n";
+export const ASSET_VERSION = "20261020b";
 const YEAR = new Date().getFullYear();
 const EMAIL = "houdini@abra-ca-dabra.app";
 
