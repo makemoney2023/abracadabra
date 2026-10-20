@@ -11,6 +11,6 @@
 - Completion is gated at 75% on the quiz.
 - Workshops are the same source of truth, not a second syllabus.
 
-**Proof on film:** `outputs/footage/llmcourse-home-lesson.webm`. Live: https://llm-leverage-course.vercel.app/
+**Proof on film:** `outputs/footage/llmcourse-home-lesson.webm`. Live: https://learn.abra-ca-dabra.app/
 
 **Next step:** Preview Mental model, then plan a four-session rollout.

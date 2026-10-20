@@ -14,7 +14,7 @@ Founders and operators who need a live product and a walkthrough their reps will
 | --- | --- | --- |
 | Showdesk | Ringside desk for live events | https://www.showdesk-app.com/ |
 | Schema | AI-visibility scanner (AEO / GEO) | https://schema-two.vercel.app/ |
-| LLMCourse | LLM Leverage self-paced course | https://llm-leverage-course.vercel.app/ |
+| LLMCourse | LLM Leverage self-paced course | https://learn.abra-ca-dabra.app/ |
 | Canadian Discount Appliances | Appliance warehouse site with Path Check | https://cdastore.vercel.app/ |
 
 **How a first conversation runs**

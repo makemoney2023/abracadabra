@@ -1,6 +1,6 @@
 # LLMCourse · team-rollout demo script (25 min)
 
-Tied to `outputs/footage/llmcourse-home-lesson.webm`, `llmcourse-workshops.webm`, and https://llm-leverage-course.vercel.app/.
+Tied to `outputs/footage/llmcourse-home-lesson.webm`, `llmcourse-workshops.webm`, and https://learn.abra-ca-dabra.app/.
 
 **Buyer:** an operator buying a team rollout, not a single learner.
 
