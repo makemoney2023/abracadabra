@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
-import { briefWakeReason, dueOrganizations, signWake, verifyWake, wakeDueAgents, WORK_WAKE_CRON } from "@/lib/agent-wake";
+import { briefWakeReason, dueOrganizations, noteWakeOk, signWake, verifyWake, wakeDueAgents, WORK_WAKE_CRON } from "@/lib/agent-wake";
 import { LIMITS } from "@/lib/policy/limits";
 
 const NOW = 1_700_000_000_000;
@@ -207,6 +207,28 @@ describe("signed wakes", () => {
       "SELECT count(*) AS n FROM activities WHERE kind = 'agent.wake_failed'",
     );
     expect(again?.n).toBe(0);
+    const ok = await sql.get<{ agent_wake_ok_at: number | null }>("SELECT agent_wake_ok_at FROM organizations WHERE id = 'org-open'");
+    expect(ok?.agent_wake_ok_at).toBe(NOW);
+  });
+
+  it("records a successful wake at most every 15 minutes, unless a failure is newer", async () => {
+    const sql = await db();
+    await org(sql, "org-ok");
+    const okAt = async () =>
+      (await sql.get<{ at: number | null }>("SELECT agent_wake_ok_at AS at FROM organizations WHERE id = 'org-ok'"))?.at;
+    await noteWakeOk(sql, "org-ok", NOW);
+    expect(await okAt()).toBe(NOW);
+    await noteWakeOk(sql, "org-ok", NOW + 60_000);
+    expect(await okAt()).toBe(NOW);
+    await sql.run(
+      `INSERT INTO activities (id, organization_id, kind, actor_kind, body, created_at)
+       VALUES ('fail-1', 'org-ok', 'agent.wake_failed', 'system', 'Wake returned 500.', ?)`,
+      [NOW + 90_000],
+    );
+    await noteWakeOk(sql, "org-ok", NOW + 120_000);
+    expect(await okAt()).toBe(NOW + 120_000);
+    await noteWakeOk(sql, "org-ok", NOW + 16 * 60_000 + 120_000);
+    expect(await okAt()).toBe(NOW + 16 * 60_000 + 120_000);
   });
 
   it("checks an open cloud run on the hour", async () => {

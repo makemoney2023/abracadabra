@@ -1,14 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { TodayBoard, WorkTask } from "@/db/crm";
 import {
-  activityItems,
   clientsAtRisk,
   greeting,
   greetingName,
   needsYou,
   pipelineCounts,
-  timelineFilter,
-  todayFeed,
   todayKicker,
   todayMetrics,
 } from "./today-view";
@@ -48,9 +45,12 @@ function board(partial: Partial<TodayBoard> = {}): TodayBoard {
     stalledDeals: [],
     waitingSpaces: [],
     invoices: [],
-    agentNotes: [],
-    agentActivity: [],
     workRequests: [],
+    events: [],
+    wakeAlerts: [],
+    reviewWaiting: [],
+    pipeline: [],
+    clients: [],
     ...partial,
   };
 }
@@ -148,45 +148,69 @@ describe("needsYou", () => {
   });
 });
 
-describe("timelineFilter", () => {
-  it("keeps only agent items", () => {
-    const items = activityItems(
+describe("needsYou alerts", () => {
+  const HOUR = 60 * 60 * 1000;
+
+  it("puts wake alerts, failed deploys, inquiries and stale review cards ahead of late tasks", () => {
+    const rows = needsYou(
       board({
-        newLeads: [{ id: "lead", title: "North", organizationId: "org-2", organizationName: "North" }],
-        agentActivity: [
+        tasks: [task({ id: "late", title: "Late", status: "todo", due_at: NOW - 1 })],
+        wakeAlerts: [
+          { organizationId: "org-1", organizationName: "Harbor", parentOrganizationId: null, failures: 6, lastAt: NOW - HOUR, lastError: "Wake returned 500." },
+        ],
+        reviewWaiting: [
+          { taskId: "t1", title: "Quote export", organizationId: "org-1", organizationName: "Harbor", parentOrganizationId: null, projectId: "p1", since: NOW - 5 * HOUR },
+          { taskId: "t2", title: "Fresh", organizationId: "org-1", organizationName: "Harbor", parentOrganizationId: null, projectId: "p1", since: NOW - HOUR },
+        ],
+        events: [
           {
-            id: "run",
-            kind: "swarm.run",
-            body: null,
-            status: "done",
-            createdAt: NOW,
-            organizationId: null,
-            organizationName: "",
-            reportUrl: null,
-            artifacts: [],
+            id: "inq",
+            kind: "project_inquiry",
+            actorKind: "system",
+            actorId: null,
+            body: "Asked about a project on the website (Product).",
+            data: {},
+            createdAt: NOW - 2 * HOUR,
+            organizationId: "org-2",
+            organizationName: "North",
+            parentOrganizationId: null,
+            projectId: null,
+            taskId: null,
+            taskTitle: null,
           },
         ],
       }),
+      12,
+      NOW,
     );
-    expect(timelineFilter(items, "agent").map((item) => item.id)).toEqual(["run"]);
-    expect(timelineFilter(items, "leads").map((item) => item.id)).toEqual(["lead"]);
-    expect(timelineFilter(items, "all")).toHaveLength(2);
+    expect(rows.map((row) => row.id)).toEqual(["wake:org-1", "inq", "review:t1", "late"]);
+    expect(rows[0]).toMatchObject({ tone: "late", client: "Harbor", at: NOW - HOUR });
+  });
+
+  it("counts every alert in the Needs you metric", () => {
+    const metrics = todayMetrics(
+      board({
+        wakeAlerts: [
+          { organizationId: "org-1", organizationName: "Harbor", parentOrganizationId: null, failures: 2, lastAt: NOW - HOUR, lastError: null },
+        ],
+        stalledDeals: [
+          { id: "deal-1", title: "Site", organizationId: "org-1", organizationName: "Harbor", nextStep: "Call back", nextStepAt: NOW - HOUR },
+        ],
+        waitingSpaces: [{ id: "ws-1", slug: "harbor", displayName: "Harbor", requestTitle: "Logo", dueOn: NOW - HOUR }],
+      }),
+      NOW,
+    );
+    expect(metrics[0]).toMatchObject({ label: "Needs you", value: 3 });
   });
 });
 
 describe("greeting", () => {
-  it("says good morning, afternoon, or evening and includes the first name", () => {
-    expect(greeting(new Date(Date.UTC(2026, 9, 9, 8)), "Ada Lovelace")).toBe("Good morning, Ada");
-    expect(greeting(new Date(Date.UTC(2026, 9, 9, 14)))).toBe("Good afternoon");
-    expect(greeting(new Date(Date.UTC(2026, 9, 9, 19)), "  ")).toBe("Good evening");
-  });
-});
-
-describe("todayFeed", () => {
-  it("keeps a known filter and drops anything else", () => {
-    expect(todayFeed("agent")).toBe("agent");
-    expect(todayFeed("nope")).toBe("all");
-    expect(todayFeed(undefined)).toBe("all");
+  it("says good morning, afternoon, or evening in Toronto time and includes the first name", () => {
+    // Toronto is UTC-4 in October.
+    expect(greeting(new Date(Date.UTC(2026, 9, 9, 13)), "Ada Lovelace")).toBe("Good morning, Ada");
+    expect(greeting(new Date(Date.UTC(2026, 9, 9, 17)))).toBe("Good afternoon");
+    expect(greeting(new Date(Date.UTC(2026, 9, 9, 20)))).toBe("Good afternoon");
+    expect(greeting(new Date(Date.UTC(2026, 9, 9, 22)), "  ")).toBe("Good evening");
   });
 });
 
@@ -199,8 +223,10 @@ describe("greetingName", () => {
 });
 
 describe("today helpers", () => {
-  it("formats the day kicker in UTC and drops healthy clients", () => {
+  it("formats the day kicker in Toronto time and drops healthy clients", () => {
     expect(todayKicker(new Date(NOW))).toBe("Friday, Oct 9");
+    // 1 AM UTC on Oct 10 is still Oct 9 in Toronto.
+    expect(todayKicker(new Date(Date.UTC(2026, 9, 10, 1)))).toBe("Friday, Oct 9");
     expect(
       pipelineCounts([
         { stage: "new" },

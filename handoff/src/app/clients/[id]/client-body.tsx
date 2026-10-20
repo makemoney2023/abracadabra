@@ -57,6 +57,7 @@ export function ClientBody({
   githubFailed,
   searchConsoleResource,
   agentWork,
+  internal = false,
 }: {
   tab: ClientTabId;
   page: number;
@@ -87,6 +88,8 @@ export function ClientBody({
   githubConnected: boolean;
   githubFailed: boolean;
   searchConsoleResource: string;
+  /** Hidden from Today as internal, test, or vendor. */
+  internal?: boolean;
   agentWork?: ClientAgentWork;
 }) {
   if (tab === "work") {
@@ -124,7 +127,9 @@ export function ClientBody({
   }
   if (tab === "activity") return <ActivityTab organizationId={client.id} timeline={timeline} page={page} />;
   if (tab === "settings") {
-    return <SettingsTab keepId={client.id} others={others} searchConsoleResource={searchConsoleResource} />;
+    return (
+      <SettingsTab keepId={client.id} others={others} searchConsoleResource={searchConsoleResource} internal={internal} />
+    );
   }
   return (
     <OverviewTab

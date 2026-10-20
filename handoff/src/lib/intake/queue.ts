@@ -1,6 +1,6 @@
 import { migrate } from "../../db/migrate";
 import { d1Sql, type D1Like } from "../../db/sql";
-import { noteWakeMiss, wakeOrganization, type WakeEnv } from "../agent-wake";
+import { noteWakeMiss, noteWakeOk, wakeOrganization, type WakeEnv } from "../agent-wake";
 import { applySchemaScore } from "../lead-routing";
 import { startLeadSchemaScan, type ScanQueue } from "../lead-schema";
 import { storeScanContext } from "../scan-context";
@@ -107,7 +107,8 @@ export async function handleLeadIntakeBatch(
           await storeScanContext({ sql, store, organizationId: ready.organizationId, now });
         }
         const woke = await wakeOrganization(env, ready.organizationId, "scan_ready", now, fetchImpl);
-        if (!woke) await noteWakeMiss(sql, ready.organizationId, now);
+        if (woke) await noteWakeOk(sql, ready.organizationId, now);
+        else await noteWakeMiss(sql, ready.organizationId, now);
         message.ack();
       } catch {
         message.retry();
@@ -129,7 +130,8 @@ export async function handleLeadIntakeBatch(
         const waiting = await queuedSchemaScan(sql, shaped.source, result.leadOrganizationId, env.SCAN_JOBS, now);
         if (!waiting) {
           const woke = await wakeOrganization(env, result.leadOrganizationId, "lead_created", now, fetchImpl);
-          if (!woke) await noteWakeMiss(sql, result.leadOrganizationId, now);
+          if (woke) await noteWakeOk(sql, result.leadOrganizationId, now);
+          else await noteWakeMiss(sql, result.leadOrganizationId, now);
         }
       }
       if (result.kickoffOrganizationId) {

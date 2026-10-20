@@ -1,4 +1,5 @@
 import { normalizeDomain } from "../../db/crm";
+import { internalFlag } from "../internal-orgs";
 import type { Sql } from "../../db/sql";
 import { fileSchemaPackage } from "../schema-work";
 import { consumeWorkRequest } from "../client-work";
@@ -242,9 +243,9 @@ async function insertOrg(
   const id = crypto.randomUUID();
   const website = input.domain ? `https://${input.domain}` : null;
   await sql.run(
-    `INSERT INTO organizations (id, name, domain, website, kind, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'lead', ?, ?)`,
-    [id, input.name, input.domain, website, input.now, input.now],
+    `INSERT INTO organizations (id, name, domain, website, kind, is_internal, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'lead', ?, ?, ?)`,
+    [id, input.name, input.domain, website, internalFlag(input.name, input.domain), input.now, input.now],
   );
   return id;
 }

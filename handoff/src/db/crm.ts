@@ -1,7 +1,7 @@
 import type { Caller } from "@/lib/authz";
+import { internalFlag, isVendorDomain } from "@/lib/internal-orgs";
 import { nextColumnPosition } from "@/lib/task-position";
 import { LIMITS } from "@/lib/policy/limits";
-import { activityLinks, runStatus } from "@/lib/agent-activity";
 import type { Sql } from "./sql";
 
 export type OrgKind = "lead" | "client" | "past_client" | "partner";
@@ -128,10 +128,60 @@ export type StatusUpdateRow = {
   published_at: number | null;
 };
 
+/** One activity row for the Today feed (hidden clients already left out). */
+export type FeedEvent = {
+  id: string;
+  kind: string;
+  actorKind: string;
+  actorId: string | null;
+  body: string | null;
+  data: Record<string, unknown>;
+  createdAt: number;
+  organizationId: string;
+  organizationName: string;
+  parentOrganizationId: string | null;
+  /** The holding group's name, when this client sits under one. */
+  parentOrganizationName?: string | null;
+  projectId: string | null;
+  taskId: string | null;
+  taskTitle: string | null;
+};
+
+export type NewLeadRow = {
+  id: string;
+  title: string;
+  organizationId: string;
+  organizationName: string;
+  parentOrganizationId: string | null;
+  createdAt: number;
+};
+
+/** Wake failures since the client's last successful wake. */
+export type WakeAlert = {
+  organizationId: string;
+  organizationName: string;
+  parentOrganizationId: string | null;
+  failures: number;
+  lastAt: number;
+  lastError: string | null;
+};
+
+/** A card in Waiting on Client Services. */
+export type ReviewWaiting = {
+  taskId: string;
+  title: string;
+  organizationId: string;
+  organizationName: string;
+  parentOrganizationId: string | null;
+  projectId: string | null;
+  since: number;
+};
+
 export type TodayBoard = {
-  newLeads: { id: string; title: string; organizationId: string; organizationName: string }[];
+  newLeads: NewLeadRow[];
   calls: { id: string; organizationId: string; organizationName: string; startsAt: number }[];
   tasks: WorkTask[];
+  /** Open deals whose next step date has passed. */
   stalledDeals: {
     id: string;
     title: string;
@@ -140,27 +190,18 @@ export type TodayBoard = {
     nextStep: string | null;
     nextStepAt: number | null;
   }[];
-  waitingSpaces: { id: string; slug: string; displayName: string; requestTitle: string }[];
+  /** Open file requests past their due date. The standing "Files" request is not one. */
+  waitingSpaces: { id: string; slug: string; displayName: string; requestTitle: string; dueOn: number }[];
   invoices: { id: string; number: string; organizationName: string; dueAt: number }[];
-  agentNotes: {
-    id: string;
-    body: string | null;
-    createdAt: number;
-    organizationId: string | null;
-    organizationName: string;
-  }[];
-  agentActivity: {
-    id: string;
-    kind: string;
-    body: string | null;
-    status: string;
-    createdAt: number;
-    organizationId: string | null;
-    organizationName: string;
-    reportUrl: string | null;
-    artifacts: string[];
-  }[];
   workRequests: { id: string; organizationId: string; organizationName: string; body: string; channel: string }[];
+  /** Activity from the last 7 days, newest first. */
+  events: FeedEvent[];
+  wakeAlerts: WakeAlert[];
+  reviewWaiting: ReviewWaiting[];
+  /** Deal counts per stage for real clients and leads (not internal, test, or vendor). */
+  pipeline: { stage: string; count: number }[];
+  /** Live, non-internal organizations for the client picker. */
+  clients: { id: string; name: string; parentId: string | null }[];
 };
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -402,9 +443,9 @@ export async function createOrganization(
   try {
     await sql.exec("BEGIN");
     await sql.run(
-      `INSERT INTO organizations (id, name, domain, website, kind, parent_organization_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, name, domain, website, kind, parentId, now, now],
+      `INSERT INTO organizations (id, name, domain, website, kind, parent_organization_id, is_internal, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, name, domain, website, kind, parentId, internalFlag(name, domain), now, now],
     );
     await sql.run(
       `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, created_at)
@@ -1477,28 +1518,85 @@ const EMPTY_TODAY: TodayBoard = {
   stalledDeals: [],
   waitingSpaces: [],
   invoices: [],
-  agentNotes: [],
-  agentActivity: [],
   workRequests: [],
+  events: [],
+  wakeAlerts: [],
+  reviewWaiting: [],
+  pipeline: [],
+  clients: [],
 };
+
+/** Archived, internal, test, and vendor organizations stay off Today. */
+const SHOWN_ORG = "o.archived_at IS NULL AND o.is_internal = 0";
+
+/** Kinds Today never shows: the old swarm, deletes, workflow plumbing, and the email row a client.message repeats. */
+const TODAY_HIDDEN_KINDS = [
+  "agent.swarm_run",
+  "pipeline.started",
+  "pipeline.abandoned",
+  "task_deleted",
+  "agent.task_deleted",
+  "agent.project_deleted",
+  "staff.workflow",
+  "staff.workflow_group",
+  "agent.task_brief",
+  "email",
+];
+
+const TODAY_EVENT_LIMIT = 500;
+const WAKE_ALERT_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+
+function parseData(value: string | null): Record<string, unknown> {
+  if (!value) return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
 
 export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<TodayBoard> {
   const actorId = staffUserId(caller);
   if (!actorId) return EMPTY_TODAY;
   const weekEnd = now + WEEK_MS;
-  const [newLeads, calls, tasks, stalledDeals, waitingSpaces, invoices, workRequests, agentNotes, agentActivity] = await Promise.all([
-    sql.all<{ id: string; title: string; organization_id: string; organization_name: string }>(
-      `SELECT d.id, d.title, d.organization_id, o.name AS organization_name
+  const hiddenKinds = TODAY_HIDDEN_KINDS.map(() => "?").join(", ");
+  const [
+    newLeads,
+    calls,
+    tasks,
+    stalledDeals,
+    waitingSpaces,
+    invoices,
+    workRequests,
+    events,
+    wakeAlerts,
+    reviewWaiting,
+    pipeline,
+    clients,
+  ] = await Promise.all([
+    sql.all<{
+      id: string;
+      title: string;
+      organization_id: string;
+      organization_name: string;
+      parent_organization_id: string | null;
+      website: string | null;
+      domain: string | null;
+      created_at: number;
+    }>(
+      `SELECT d.id, d.title, d.organization_id, o.name AS organization_name, o.parent_organization_id,
+              o.website, o.domain, d.created_at
        FROM deals d
        JOIN organizations o ON o.id = d.organization_id
-       WHERE o.archived_at IS NULL AND d.stage = 'new'
-       ORDER BY d.updated_at DESC, d.title`,
+       WHERE ${SHOWN_ORG} AND d.stage = 'new'
+       ORDER BY d.created_at DESC, d.title`,
     ),
     sql.all<{ id: string; organization_id: string; organization_name: string; starts_at: number }>(
       `SELECT a.id, a.organization_id, o.name AS organization_name, a.starts_at
        FROM appointments a
        JOIN organizations o ON o.id = a.organization_id
-       WHERE o.archived_at IS NULL
+       WHERE ${SHOWN_ORG}
          AND a.status IN ('booked', 'rescheduled')
          AND a.starts_at >= ? AND a.starts_at <= ?
        ORDER BY a.starts_at`,
@@ -1507,7 +1605,7 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
     sql.all<WorkTask>(
       `SELECT ${WORK_COLUMNS}
        ${WORK_JOINS}
-       WHERE o.archived_at IS NULL
+       WHERE ${SHOWN_ORG}
          AND t.status != 'done'
          AND (
            (t.due_at IS NOT NULL AND t.due_at <= ?)
@@ -1529,24 +1627,27 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       `SELECT d.id, d.title, d.organization_id, o.name AS organization_name, d.next_step, d.next_step_at
        FROM deals d
        JOIN organizations o ON o.id = d.organization_id
-       WHERE o.archived_at IS NULL
+       WHERE ${SHOWN_ORG}
          AND d.stage NOT IN ('won', 'lost')
-         AND (d.next_step IS NULL OR d.next_step_at IS NULL OR d.next_step_at < ?)
-       ORDER BY d.updated_at DESC, d.title`,
+         AND d.next_step_at IS NOT NULL AND d.next_step_at < ?
+       ORDER BY d.next_step_at, d.title`,
       [now],
     ),
-    sql.all<{ id: string; slug: string; display_name: string; request_title: string }>(
-      `SELECT w.id, w.slug, w.display_name, r.title AS request_title
+    sql.all<{ id: string; slug: string; display_name: string; request_title: string; due_on: number }>(
+      `SELECT w.id, w.slug, w.display_name, r.title AS request_title, r.due_on
        FROM requests r
        JOIN workspaces w ON w.id = r.workspace_id
-       WHERE r.status = 'open' AND w.organization_id IS NOT NULL AND w.status != 'purged'
-       ORDER BY w.display_name, r.title`,
+       JOIN organizations o ON o.id = w.organization_id
+       WHERE r.status = 'open' AND w.status != 'purged' AND ${SHOWN_ORG}
+         AND r.due_on IS NOT NULL AND r.due_on < ?
+       ORDER BY r.due_on, w.display_name, r.title`,
+      [now],
     ),
     sql.all<{ id: string; number: string; organization_name: string; due_at: number }>(
       `SELECT i.id, i.number, o.name AS organization_name, i.due_at
        FROM invoices i
        JOIN organizations o ON o.id = i.organization_id
-       WHERE o.archived_at IS NULL
+       WHERE ${SHOWN_ORG}
          AND i.status IN ('sent', 'partly_paid')
          AND i.due_at IS NOT NULL
          AND i.due_at <= ?
@@ -1557,47 +1658,105 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       `SELECT w.id, w.organization_id, o.name AS organization_name, w.body, w.channel
        FROM work_requests w
        JOIN organizations o ON o.id = w.organization_id
-       WHERE o.archived_at IS NULL AND w.state = 'proposed'
+       WHERE ${SHOWN_ORG} AND w.state = 'proposed'
        ORDER BY w.updated_at DESC`,
     ),
     sql.all<{
       id: string;
-      body: string | null;
-      created_at: number;
-      organization_id: string | null;
-      organization_name: string | null;
-    }>(
-      `SELECT a.id, a.body, a.created_at, a.organization_id, o.name AS organization_name
-       FROM activities a
-       LEFT JOIN organizations o ON o.id = a.organization_id
-       WHERE a.actor_kind = 'agent' AND a.kind NOT IN ('agent.swarm_run') AND a.created_at >= ?
-       ORDER BY a.created_at DESC`,
-      [now - WEEK_MS],
-    ),
-    sql.all<{
-      id: string;
       kind: string;
+      actor_kind: string;
+      actor_id: string | null;
       body: string | null;
       data_json: string | null;
       created_at: number;
-      organization_id: string | null;
-      organization_name: string | null;
+      organization_id: string;
+      organization_name: string;
+      parent_organization_id: string | null;
+      parent_organization_name: string | null;
+      project_id: string | null;
+      task_id: string | null;
+      task_title: string | null;
     }>(
-      `SELECT a.id, a.kind, a.body, a.data_json, a.created_at, a.organization_id, o.name AS organization_name
+      `SELECT a.id, a.kind, a.actor_kind, a.actor_id, a.body, a.data_json, a.created_at, a.organization_id,
+              o.name AS organization_name, o.parent_organization_id, p.name AS parent_organization_name,
+              a.project_id, t.id AS task_id, t.title AS task_title
        FROM activities a
-       LEFT JOIN organizations o ON o.id = a.organization_id
-       WHERE a.kind IN ('schema.scan', 'agent.swarm_run', 'agent.wake_failed') AND a.created_at >= ?
-       ORDER BY a.created_at DESC
-       LIMIT 40`,
-      [now - WEEK_MS],
+       JOIN organizations o ON o.id = a.organization_id
+       LEFT JOIN organizations p ON p.id = o.parent_organization_id
+       LEFT JOIN tasks t ON t.id = CASE
+         WHEN json_valid(a.data_json) THEN COALESCE(json_extract(a.data_json, '$.taskId'), json_extract(a.data_json, '$.task_id'))
+       END
+       WHERE a.created_at >= ? AND ${SHOWN_ORG} AND a.kind NOT IN (${hiddenKinds})
+       ORDER BY a.created_at DESC, a.id
+       LIMIT ${TODAY_EVENT_LIMIT}`,
+      [now - WEEK_MS, ...TODAY_HIDDEN_KINDS],
+    ),
+    sql.all<{
+      organization_id: string;
+      organization_name: string;
+      parent_organization_id: string | null;
+      failures: number;
+      last_at: number;
+      last_error: string | null;
+    }>(
+      `SELECT o.id AS organization_id, o.name AS organization_name, o.parent_organization_id,
+              COUNT(*) AS failures, MAX(a.created_at) AS last_at,
+              (SELECT a2.body FROM activities a2
+               WHERE a2.organization_id = o.id AND a2.kind = 'agent.wake_failed'
+               ORDER BY a2.created_at DESC LIMIT 1) AS last_error
+       FROM activities a
+       JOIN organizations o ON o.id = a.organization_id
+       WHERE a.kind = 'agent.wake_failed' AND a.created_at >= ?
+         AND a.created_at > COALESCE(o.agent_wake_ok_at, 0)
+         AND ${SHOWN_ORG}
+       GROUP BY o.id, o.name, o.parent_organization_id
+       ORDER BY last_at DESC`,
+      [now - WAKE_ALERT_WINDOW_MS],
+    ),
+    sql.all<{
+      id: string;
+      title: string;
+      organization_id: string;
+      organization_name: string;
+      parent_organization_id: string | null;
+      project_id: string | null;
+      review_requested_at: number;
+    }>(
+      `SELECT t.id, t.title, t.organization_id, o.name AS organization_name, o.parent_organization_id,
+              t.project_id, t.review_requested_at
+       FROM tasks t
+       JOIN organizations o ON o.id = t.organization_id
+       WHERE t.review_requested_at IS NOT NULL AND t.status != 'done' AND ${SHOWN_ORG}
+       ORDER BY t.review_requested_at, t.title`,
+    ),
+    sql.all<{ stage: string; website: string | null; domain: string | null }>(
+      `SELECT d.stage, o.website, o.domain
+       FROM deals d
+       JOIN organizations o ON o.id = d.organization_id
+       WHERE ${SHOWN_ORG}`,
+    ),
+    sql.all<{ id: string; name: string; parent_organization_id: string | null }>(
+      `SELECT o.id, o.name, o.parent_organization_id
+       FROM organizations o
+       WHERE ${SHOWN_ORG}
+       ORDER BY o.name`,
     ),
   ]);
+  const realLead = (row: { website: string | null; domain: string | null }) =>
+    !isVendorDomain(row.domain) && !isVendorDomain(row.website);
+  const stageCounts = new Map<string, number>();
+  for (const row of pipeline) {
+    if (!realLead(row)) continue;
+    stageCounts.set(row.stage, (stageCounts.get(row.stage) ?? 0) + 1);
+  }
   return {
-    newLeads: newLeads.map((row) => ({
+    newLeads: newLeads.filter(realLead).map((row) => ({
       id: row.id,
       title: row.title,
       organizationId: row.organization_id,
       organizationName: row.organization_name,
+      parentOrganizationId: row.parent_organization_id,
+      createdAt: row.created_at,
     })),
     calls: calls.map((row) => ({
       id: row.id,
@@ -1619,6 +1778,7 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       slug: row.slug,
       displayName: row.display_name,
       requestTitle: row.request_title,
+      dueOn: row.due_on,
     })),
     invoices: invoices.map((row) => ({
       id: row.id,
@@ -1626,27 +1786,6 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       organizationName: row.organization_name,
       dueAt: row.due_at,
     })),
-    agentNotes: agentNotes.map((row) => ({
-      id: row.id,
-      body: row.body,
-      createdAt: row.created_at,
-      organizationId: row.organization_id,
-      organizationName: row.organization_name ?? "",
-    })),
-    agentActivity: agentActivity.map((row) => {
-      const links = activityLinks(row.data_json);
-      return {
-        id: row.id,
-        kind: row.kind,
-        body: row.body,
-        status: runStatus(row.data_json),
-        createdAt: row.created_at,
-        organizationId: row.organization_id,
-        organizationName: row.organization_name ?? "",
-        reportUrl: links.reportUrl,
-        artifacts: links.artifacts,
-      };
-    }),
     workRequests: workRequests.map((row) => ({
       id: row.id,
       organizationId: row.organization_id,
@@ -1654,8 +1793,113 @@ export async function todayFor(sql: Sql, caller: Caller, now: number): Promise<T
       body: row.body,
       channel: row.channel,
     })),
+    events: events.map((row) => ({
+      id: row.id,
+      kind: row.kind,
+      actorKind: row.actor_kind,
+      actorId: row.actor_id,
+      body: row.body,
+      data: parseData(row.data_json),
+      createdAt: row.created_at,
+      organizationId: row.organization_id,
+      organizationName: row.organization_name,
+      parentOrganizationId: row.parent_organization_id,
+      parentOrganizationName: row.parent_organization_name,
+      projectId: row.project_id,
+      taskId: row.task_id,
+      taskTitle: row.task_title,
+    })),
+    wakeAlerts: wakeAlerts.map((row) => ({
+      organizationId: row.organization_id,
+      organizationName: row.organization_name,
+      parentOrganizationId: row.parent_organization_id,
+      failures: Number(row.failures),
+      lastAt: Number(row.last_at),
+      lastError: row.last_error,
+    })),
+    reviewWaiting: reviewWaiting.map((row) => ({
+      taskId: row.id,
+      title: row.title,
+      organizationId: row.organization_id,
+      organizationName: row.organization_name,
+      parentOrganizationId: row.parent_organization_id,
+      projectId: row.project_id,
+      since: row.review_requested_at,
+    })),
+    pipeline: DEAL_STAGES.map((stage) => ({ stage, count: stageCounts.get(stage) ?? 0 })),
+    clients: clients.map((row) => ({ id: row.id, name: row.name, parentId: row.parent_organization_id })),
   };
 }
+
+/** Is this organization hidden from Today (internal, test, or vendor)? */
+export async function organizationInternal(sql: Sql, caller: Caller, organizationId: string): Promise<boolean> {
+  if (!staffUserId(caller)) return false;
+  const row = await sql.get<{ is_internal: number }>("SELECT is_internal FROM organizations WHERE id = ?", [organizationId]);
+  return row?.is_internal === 1;
+}
+
+/** Staff toggle on the client's Settings tab. */
+export async function setOrganizationInternal(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; internal: boolean },
+  now: number,
+): Promise<CrmResult<{ internal: boolean }>> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  const row = await sql.get<{ is_internal: number }>("SELECT is_internal FROM organizations WHERE id = ?", [input.organizationId]);
+  if (!row) return { ok: false, error: "missing" };
+  const next = input.internal ? 1 : 0;
+  if (row.is_internal === next) return { ok: true, value: { internal: input.internal } };
+  await sql.run("UPDATE organizations SET is_internal = ?, updated_at = ? WHERE id = ?", [next, now, input.organizationId]);
+  await sql.run(
+    `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, created_at)
+     VALUES (?, ?, 'note', 'staff', ?, ?, ?)`,
+    [
+      crypto.randomUUID(),
+      input.organizationId,
+      actorId,
+      input.internal ? "Marked internal, test, or vendor. Hidden from Today." : "Marked as a real client. Shown on Today.",
+      now,
+    ],
+  );
+  return { ok: true, value: { internal: input.internal } };
+}
+
+/**
+ * Today's "new since your last visit" line. A load more than 30 minutes after the previous one starts a new visit:
+ * everything after that previous load is new. Loads inside one visit keep the same starting point.
+ * Returns where "new" starts, or null on a first visit.
+ */
+export async function recordFeedVisit(sql: Sql, caller: Caller, now: number): Promise<number | null> {
+  const userId = staffUserId(caller);
+  if (!userId) return null;
+  const row = await sql.get<{ seen_at: number | null; last_visit_at: number }>(
+    "SELECT seen_at, last_visit_at FROM staff_feed_seen WHERE user_id = ?",
+    [userId],
+  );
+  if (!row) {
+    await sql.run("INSERT INTO staff_feed_seen (user_id, seen_at, last_visit_at) VALUES (?, NULL, ?)", [userId, now]);
+    return null;
+  }
+  const newVisit = now - row.last_visit_at > FEED_VISIT_GAP_MS;
+  const seenAt = newVisit ? row.last_visit_at : row.seen_at;
+  await sql.run("UPDATE staff_feed_seen SET seen_at = ?, last_visit_at = ? WHERE user_id = ?", [seenAt, now, userId]);
+  return seenAt;
+}
+
+/** "Mark all read": nothing before now counts as new. */
+export async function markFeedRead(sql: Sql, caller: Caller, now: number): Promise<void> {
+  const userId = staffUserId(caller);
+  if (!userId) return;
+  await sql.run(
+    `INSERT INTO staff_feed_seen (user_id, seen_at, last_visit_at) VALUES (?, ?, ?)
+     ON CONFLICT (user_id) DO UPDATE SET seen_at = excluded.seen_at, last_visit_at = excluded.last_visit_at`,
+    [userId, now, now],
+  );
+}
+
+const FEED_VISIT_GAP_MS = 30 * 60 * 1000;
 
 export async function listTimeline(
   sql: Sql,

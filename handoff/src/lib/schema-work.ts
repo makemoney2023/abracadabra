@@ -1,4 +1,5 @@
 import { normalizeDomain } from "@/db/crm";
+import { internalFlag } from "@/lib/internal-orgs";
 import type { Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
 
@@ -85,9 +86,9 @@ export async function fileSchemaPackage(sql: Sql, payload: unknown, now: number)
     if (!org) {
       const id = crypto.randomUUID();
       await sql.run(
-        `INSERT INTO organizations (id, name, domain, website, kind, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 'client', ?, ?)`,
-        [id, businessName, domain, origin, now, now],
+        `INSERT INTO organizations (id, name, domain, website, kind, is_internal, created_at, updated_at)
+         VALUES (?, ?, ?, ?, 'client', ?, ?, ?)`,
+        [id, businessName, domain, origin, internalFlag(businessName, domain), now, now],
       );
       org = { id };
     }

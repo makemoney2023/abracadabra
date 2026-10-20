@@ -1,4 +1,5 @@
 import { normalizeDomain } from "@/db/crm";
+import { internalFlag } from "@/lib/internal-orgs";
 import type { Sql } from "@/db/sql";
 import { dueMillis } from "./channel-plan";
 import { leadScanTarget, startLeadSchemaScan, type ScanQueue } from "./lead-schema";
@@ -192,9 +193,9 @@ async function createLead(
   const website = input.domain ? `https://${input.domain}` : null;
   await withTx(sql, async () => {
     await sql.run(
-      `INSERT INTO organizations (id, name, domain, website, kind, created_at, updated_at)
-       VALUES (?, ?, ?, ?, 'lead', ?, ?)`,
-      [organizationId, input.orgName, input.domain, website, input.now, input.now],
+      `INSERT INTO organizations (id, name, domain, website, kind, is_internal, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'lead', ?, ?, ?)`,
+      [organizationId, input.orgName, input.domain, website, internalFlag(input.orgName, input.domain), input.now, input.now],
     );
     await sql.run(
       `INSERT INTO contacts (id, organization_id, name, email, is_primary, created_at, updated_at)

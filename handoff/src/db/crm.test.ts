@@ -737,9 +737,12 @@ describe("projects and work", () => {
       stalledDeals: [],
       waitingSpaces: [],
       invoices: [],
-      agentNotes: [],
-      agentActivity: [],
       workRequests: [],
+      events: [],
+      wakeAlerts: [],
+      reviewWaiting: [],
+      pipeline: [],
+      clients: [],
     });
   });
 
@@ -1301,10 +1304,13 @@ describe("projects and work", () => {
     expect(today.calls).toHaveLength(1);
     expect(today.calls[0]?.organizationName).toBe("Harbor");
     expect(today.tasks.map((task) => task.title)).toEqual(["Late sketch", "Just filed"]);
-    expect(today.stalledDeals.map((deal) => deal.title).sort()).toEqual(["New site", "Stalled site"]);
-    expect(today.waitingSpaces.map((space) => space.requestTitle)).toContain("Logo");
+    // Only a next step whose date has passed; deals with no next step stay in the Pipeline panel.
+    expect(today.stalledDeals).toEqual([]);
+    // An open request with no due date is not on Today.
+    expect(today.waitingSpaces).toEqual([]);
     expect(today.invoices.map((invoice) => invoice.number)).toEqual(["INV-2026-0001"]);
-    expect(today.agentNotes.map((note) => note.body)).toEqual(["Drafted a follow-up."]);
+    expect(today.events.map((event) => event.body)).toContain("Drafted a follow-up.");
+    expect(today.pipeline.find((row) => row.stage === "new")?.count).toBe(1);
   });
 });
 
