@@ -19,6 +19,9 @@ export type InboundEmail = {
   authenticationResults: string;
   autoSubmitted: string;
   precedence: string;
+  /** List-Unsubscribe and List-Id headers: set on newsletters and other bulk mail. */
+  listUnsubscribe?: string;
+  listId?: string;
   bytes: number;
   attachments: EmailAttachment[];
 };
@@ -596,6 +599,8 @@ export async function parseInboundEmail(raw: string): Promise<InboundEmail> {
     authenticationResults: field("authentication-results"),
     autoSubmitted: field("auto-submitted"),
     precedence: field("precedence").toLowerCase(),
+    listUnsubscribe: field("list-unsubscribe"),
+    listId: field("list-id"),
     bytes: new TextEncoder().encode(raw).byteLength,
     attachments: (parsed.attachments ?? [])
       .filter((part) => !part.related && part.disposition !== "inline")

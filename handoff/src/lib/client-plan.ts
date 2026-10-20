@@ -157,6 +157,9 @@ export async function qualifyLead(input: {
   if (context.organization?.agentPausedAt != null) return "skipped";
   const name = context.organization?.name ?? "this lead";
   const filed = fields(await input.call("store_scan_context", { requestId: `${input.requestId}:scan-context` }));
+  // AGENT_MODE=agents: BDR, Account Research and Sales Outbound work leads. The scan context is filed above (the HQ
+  // schema scan and the lead export are unchanged); no placeholder note, "Qualify" task, or pickup file is written.
+  if (!(input.swarmAllowed ?? legacyStartsAllowed())) return "skipped";
   const already = (context.tasks ?? []).some((task) => task.title === `Qualify ${name}` && task.status !== "done");
   if (already) return "skipped";
   const scanScore = typeof filed.score === "number" ? filed.score : null;
@@ -461,14 +464,20 @@ function queueTasks(context: ClientPicture): { tasks: ContextTask[]; more: boole
   return { tasks: ordered.slice(0, 8).map((card) => card.task), more: ordered.length > 8 };
 }
 
-/** Runs one step of each open task, at most eight, then asks for another wake. */
+/**
+ * Runs one step of each open task, at most eight, then asks for another wake. Off in AGENT_MODE=agents: it marked
+ * skills_json steps done with placeholder "Loaded …" notes and moved cards, so there only client bots and Client
+ * Services move cards. stepsAllowed defaults to the flag (the agent Durable Object passes its own env).
+ */
 export async function advanceClientWork(input: {
   call: ToolCaller;
   requestId: string;
   now: number;
   readSkill: (skillPath: string) => Promise<string | null>;
   onLoaded?: (skillPath: string, taskId: string) => void | string | null | Promise<void | string | null>;
+  stepsAllowed?: boolean;
 }): Promise<{ advanced: number; reschedule: boolean }> {
+  if (!(input.stepsAllowed ?? legacyStartsAllowed())) return { advanced: 0, reschedule: false };
   const context = picture(await input.call("client_context", {}));
   if (context.organization?.agentPausedAt != null) return { advanced: 0, reschedule: false };
   const queue = queueTasks(context);

@@ -36,7 +36,47 @@ export type WakeTarget = { organizationId: string; reason: WakeReason };
 export type WakeEnv = {
   AGENT_URL?: string;
   AGENT_WAKE_SECRET?: string;
+  /** all | no_lead_bot | off (default). Read from here, then process.env, then the Worker bindings. */
+  AGENT_WAKES?: string;
 };
+
+/**
+ * AGENT_WAKES decides whether HQ wakes the per-client HQ agent (handoff-agent ClientAgent) at all.
+ * - "off" (default, also when unset or unknown): nothing wakes it. Client bots and Client Services do the work.
+ * - "no_lead_bot": only clients with no live lead client bot are woken.
+ * - "all": the old behaviour.
+ * The staff chat (HqChat) and email intake never go through a wake, so this does not touch them.
+ */
+export type AgentWakes = "all" | "no_lead_bot" | "off";
+
+const CLOUDFLARE_CONTEXT = Symbol.for("__cloudflare-context__");
+
+export function agentWakes(env?: { AGENT_WAKES?: unknown }): AgentWakes {
+  const read = (value: unknown) => (typeof value === "string" ? value.trim().toLowerCase() : "");
+  const holder = globalThis as typeof globalThis & { [CLOUDFLARE_CONTEXT]?: { env?: Record<string, unknown> } };
+  const raw =
+    read(env?.AGENT_WAKES) ||
+    read(typeof process !== "undefined" ? process.env?.AGENT_WAKES : "") ||
+    read(holder[CLOUDFLARE_CONTEXT]?.env?.AGENT_WAKES);
+  return raw === "all" || raw === "no_lead_bot" ? raw : "off";
+}
+
+async function hasLeadBot(sql: Sql, organizationId: string): Promise<boolean> {
+  const row = await sql.get<{ id: string }>(
+    `SELECT a.id FROM agent_assignments a JOIN client_agents c ON c.id = a.agent_id
+     WHERE a.organization_id = ? AND a.role = 'lead' AND a.ended_at IS NULL AND c.revoked_at IS NULL LIMIT 1`,
+    [organizationId],
+  );
+  return Boolean(row);
+}
+
+/** True when AGENT_WAKES lets HQ wake this client's HQ agent. no_lead_bot without a database fails closed. */
+export async function wakeAllowed(env: WakeEnv, organizationId: string, sql?: Sql): Promise<boolean> {
+  const mode = agentWakes(env);
+  if (mode === "all") return true;
+  if (mode === "off" || !sql) return false;
+  return !(await hasLeadBot(sql, organizationId));
+}
 
 /** HMAC-SHA256 of the raw wake body, hex. */
 export function signWake(secret: string, rawBody: string): string {
@@ -130,23 +170,23 @@ export async function dueOrganizations(sql: Sql, cron: string, now = Date.now())
     );
     return rows.map((row) => ({ organizationId: row.id, reason: "run_check" }));
   }
-  if (cron === "0 8 * * 1") {
-    const rows = await sql.all<{ id: string }>(
-      `SELECT id FROM organizations WHERE ${LIVE} AND kind = 'client' ORDER BY id`,
-    );
-    return rows.map((row) => ({ organizationId: row.id, reason: "status" }));
-  }
+  // The weekly "0 8 * * 1" status wake is gone: the agent never handled "status", so it did nothing.
   return [];
 }
 
-/** False when the address or secret is missing, or the agent refuses the wake. A thrown fetch stays thrown so a queue can retry. */
+/**
+ * "skipped" when AGENT_WAKES rules this client out (log nothing). False when the address or secret is missing, or the
+ * agent refuses the wake. A thrown fetch stays thrown so a queue can retry. Pass sql so no_lead_bot can check the client.
+ */
 export async function wakeOrganization(
   env: WakeEnv,
   organizationId: string,
   reason: WakeReason,
   now: number,
   fetchImpl: typeof fetch = fetch,
-): Promise<boolean> {
+  sql?: Sql,
+): Promise<boolean | "skipped"> {
+  if (!(await wakeAllowed(env, organizationId, sql))) return "skipped";
   const secret = env.AGENT_WAKE_SECRET ?? "";
   const url = env.AGENT_URL?.replace(/\/$/, "");
   if (!url || !secret) return false;
@@ -235,8 +275,11 @@ export async function wakeDueAgents(
   now: number,
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
+  // AGENT_WAKES=off: nobody is due. The rest of the scheduled job (scan filing, swarm settle, run expiry) still runs.
+  if (agentWakes(env) === "off") return;
   const due = await dueOrganizations(sql, cron, now);
   for (const target of due) {
+    if (!(await wakeAllowed(env, target.organizationId, sql))) continue;
     const body = JSON.stringify({ organizationId: target.organizationId, reason: target.reason, sentAt: now });
     const secret = env.AGENT_WAKE_SECRET ?? "";
     const url = env.AGENT_URL?.replace(/\/$/, "");

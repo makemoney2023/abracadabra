@@ -21,6 +21,7 @@ import { lookupEmailSender, markOptedOut } from "@/lib/client-channel-store";
 import type { ScanQueue } from "@/lib/lead-schema";
 import { captureProspectWebsite, noteProspectBudget, noteProspectTurn, openEmailProspect } from "@/lib/prospect-lead";
 import { storeEmailAttachments } from "@/lib/email-files";
+import { logInboundEmail } from "@/lib/email-intake";
 import { openObjectStore } from "@/lib/store/objects";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +77,29 @@ export async function POST(request: Request) {
   await migrate(sql);
   const action = text(body, "action");
   const now = Date.now();
+  // Log-only mailbox (default): handoff-agent posts each inbound message here. No reply is sent.
+  if (action === "log_email") {
+    const result = await logInboundEmail(
+      sql,
+      {
+        sender: text(body, "sender"),
+        name: text(body, "name") || null,
+        subject: text(body, "subject"),
+        text: text(body, "text"),
+        messageId: text(body, "messageId"),
+        threadId: text(body, "threadId"),
+        references: text(body, "references"),
+        listUnsubscribe: text(body, "listUnsubscribe"),
+        listId: text(body, "listId"),
+        precedence: text(body, "precedence"),
+        autoSubmitted: text(body, "autoSubmitted"),
+        authenticationResults: text(body, "authenticationResults"),
+        attachments: typeof body.attachments === "number" ? body.attachments : 0,
+      },
+      now,
+    );
+    return NextResponse.json({ ok: true, value: result });
+  }
   if (action === "lookup") {
     return NextResponse.json({
       ok: true,

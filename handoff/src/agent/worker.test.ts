@@ -3,7 +3,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { env, exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { signWake } from "../lib/agent-wake";
-import { parseSkillIndex, toolNamesFrom, type ClientAgent, type HqChat } from "./worker";
+import { emailLogPayload, mailboxAutoReply, parseSkillIndex, toolNamesFrom, type ClientAgent, type HqChat } from "./worker";
 
 const SECRET = "test-wake-secret";
 
@@ -134,5 +134,44 @@ describe("handoff agent", () => {
       "extra_tool",
     ]);
     expect(toolNamesFrom([], undefined)).toEqual([]);
+  });
+});
+
+describe("log-only mailbox", () => {
+  const parsed = {
+    from: "Cursor <news@mail.cursor.com>",
+    to: "hq@mail.abra-ca-dabra.app",
+    subject: "Your environment is almost ready",
+    text: "Just one thing needs your input.",
+    messageId: "<m1@cursor.com>",
+    threadId: "<m1@cursor.com>",
+    references: "",
+    authenticationResults: "dmarc=pass",
+    autoSubmitted: "",
+    precedence: "bulk",
+    listUnsubscribe: "<https://cursor.com/unsub>",
+    listId: "",
+    bytes: 100,
+    attachments: [],
+  };
+
+  it("is log-only unless MAILBOX_AUTO_REPLY is on", () => {
+    expect(mailboxAutoReply({})).toBe(false);
+    expect(mailboxAutoReply({ MAILBOX_AUTO_REPLY: "off" })).toBe(false);
+    expect(mailboxAutoReply({ MAILBOX_AUTO_REPLY: " ON " })).toBe(true);
+    expect(mailboxAutoReply(env as { MAILBOX_AUTO_REPLY?: unknown })).toBe(false);
+  });
+
+  it("posts the headers HQ needs to spot bulk mail, and drops our own mail", () => {
+    expect(emailLogPayload(parsed, ["hq@mail.abra-ca-dabra.app"])).toMatchObject({
+      action: "log_email",
+      sender: "news@mail.cursor.com",
+      name: "Cursor",
+      subject: "Your environment is almost ready",
+      listUnsubscribe: "<https://cursor.com/unsub>",
+      precedence: "bulk",
+      attachments: 0,
+    });
+    expect(emailLogPayload({ ...parsed, from: "HQ <hq@mail.abra-ca-dabra.app>" }, ["hq@mail.abra-ca-dabra.app"])).toBeNull();
   });
 });

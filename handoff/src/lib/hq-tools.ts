@@ -85,7 +85,7 @@ type MailGate = {
 };
 
 type ToolOptions = {
-  wake?: (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
+  wake?: (organizationId: string, reason: WakeReason) => Promise<unknown>;
   mail?: MailGate;
   swarm?: { origin: string; fetchImpl?: typeof fetch; wait?: (ms: number) => Promise<void>; store?: ObjectStore };
   imageRun?: (prompt: string) => Promise<{ image?: string }>;
@@ -212,7 +212,7 @@ async function logStaff(
   );
 }
 
-type Wake = (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
+type Wake = (organizationId: string, reason: WakeReason) => Promise<unknown>;
 
 /**
  * Saves a brief version with the new piece. When staff own brief approval, this approval card approves the
@@ -307,6 +307,8 @@ export async function runHqTool(
         organizationId,
         reason,
         now,
+        fetch,
+        sql,
       ));
   const result = await perform(sql, caller, tool, input, now, { ...options, wake });
   if (request.idempotencyKey && "ok" in result && result.ok) {

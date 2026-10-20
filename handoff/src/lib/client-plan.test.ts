@@ -131,7 +131,7 @@ describe("lead pickup", () => {
     expect(briefs[0]).toContain("Foam mattresses ship free.");
   });
 
-  it("AGENT_MODE=agents: no swarm is asked for, the normal note and file are written, and no swarm run is recorded", async () => {
+  it("AGENT_MODE=agents: no swarm, and only the scan context is filed (no placeholder note, Qualify task, or file)", async () => {
     process.env.AGENT_MODE = "agents";
     try {
       const { call, calls } = caller({});
@@ -144,17 +144,9 @@ describe("lead pickup", () => {
           return "Swarm runs are off. AGENT_MODE is agents.";
         },
       });
-      expect(result).toBe("started");
+      expect(result).toBe("skipped");
       expect(asked).toBe(0);
-      expect(calls.map((entry) => entry.name)).toEqual([
-        "client_context",
-        "store_scan_context",
-        "add_note",
-        "create_task",
-        "save_space_file",
-      ]);
-      expect(String(calls.find((entry) => entry.name === "add_note")?.args.body)).toMatch(/^Picked up Foam Co\./);
-      expect(String(calls.find((entry) => entry.name === "save_space_file")?.args.body)).not.toContain("AGENT_MODE");
+      expect(calls.map((entry) => entry.name)).toEqual(["client_context", "store_scan_context"]);
     } finally {
       delete process.env.AGENT_MODE;
     }

@@ -59,6 +59,8 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
       opened.deliverable.organization_id,
       reason,
       Date.now(),
+      fetch,
+      sql,
     );
   }
   if (
@@ -74,6 +76,8 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
         organizationId,
         revisionReason,
         sentAt,
+        fetch,
+        sql,
       ),
     );
   }

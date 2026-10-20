@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { d1Sql, type D1Like } from "@/db/sql";
 import { localObjectStore } from "@/lib/store/objects";
@@ -58,6 +58,14 @@ const assessment = {
 };
 
 describe("lead intake wake", () => {
+  // These cover the old wake path, which now needs AGENT_WAKES=all (the default is off).
+  beforeEach(() => {
+    process.env.AGENT_WAKES = "all";
+  });
+  afterEach(() => {
+    delete process.env.AGENT_WAKES;
+  });
+
   it("wakes the agent when the assessment opens a lead", async () => {
     const calls: { url: string; body: string }[] = [];
     const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {

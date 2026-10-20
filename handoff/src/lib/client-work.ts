@@ -462,7 +462,9 @@ export async function listPendingWorkRequests(sql: Sql): Promise<PendingWorkRequ
 }
 
 /** Records that the HQ agent was (or was not) woken for an accepted request. */
-export async function noteKickoff(sql: Sql, organizationId: string, woke: boolean, now: number): Promise<void> {
+/** "skipped" (AGENT_WAKES rules the HQ agent out): no note. The client's bots and Client Services pick the task up. */
+export async function noteKickoff(sql: Sql, organizationId: string, woke: boolean | "skipped", now: number): Promise<void> {
+  if (woke === "skipped") return;
   const rows = await sql.all<{ id: string; project_id: string | null; workspace_id: string | null; task_id: string | null }>(
     `SELECT r.id, r.project_id, r.workspace_id, r.task_id FROM client_work_requests r
      WHERE r.organization_id = ? AND r.state = 'accepted'
@@ -512,6 +514,7 @@ const UPDATE_KINDS = [
   "client_agent.handoff",
   "client_agent.dispatch",
   "client_agent.board",
+  "email.received",
 ] as const;
 
 type ActivityRow = {
@@ -540,16 +543,19 @@ function interesting(row: ActivityRow, data: Record<string, unknown>): boolean {
   return true;
 }
 
-/** Copies new milestone activities for client orgs into client_service_updates. Idempotent on activity_id. */
+/**
+ * Copies new milestone activities for client orgs into client_service_updates. Idempotent on activity_id.
+ * email.received (the log-only mailbox) is copied for any sender, with or without an organization.
+ */
 export async function syncClientUpdates(sql: Sql, now: number, origin: string): Promise<number> {
   const last = await sql.get<{ at: number | null }>("SELECT MAX(created_at) AS at FROM client_service_updates");
   const floor = Math.max(0, Number(last?.at ?? now - 7 * 24 * 3600 * 1000) - 3_600_000);
   const marks = UPDATE_KINDS.map(() => "?").join(", ");
   const rows = await sql.all<ActivityRow>(
     `SELECT a.id, a.organization_id, a.project_id, a.workspace_id, a.kind, a.body, a.data_json, a.created_at
-     FROM activities a JOIN organizations o ON o.id = a.organization_id
+     FROM activities a LEFT JOIN organizations o ON o.id = a.organization_id
      WHERE a.created_at >= ? AND a.kind IN (${marks})
-       AND (o.kind = 'client' OR EXISTS (SELECT 1 FROM client_work_requests r WHERE r.organization_id = o.id))
+       AND (a.kind = 'email.received' OR o.kind = 'client' OR EXISTS (SELECT 1 FROM client_work_requests r WHERE r.organization_id = o.id))
        AND NOT EXISTS (SELECT 1 FROM client_service_updates u WHERE u.activity_id = a.id)
      ORDER BY a.created_at, a.rowid LIMIT 500`,
     [floor, ...UPDATE_KINDS],

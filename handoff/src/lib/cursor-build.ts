@@ -26,7 +26,7 @@ export type BuildResult =
   | { ok: true; action: "waiting"; reason: "cap_reached" }
   | { ok: false; reason: GateReason };
 
-export type BuildWake = (organizationId: string, reason: WakeReason) => Promise<void | boolean>;
+export type BuildWake = (organizationId: string, reason: WakeReason) => Promise<unknown>;
 
 export type BuildDeps = {
   fetch: typeof fetch;

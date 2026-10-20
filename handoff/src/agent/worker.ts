@@ -21,6 +21,7 @@ import {
   handleInboundEmail,
   LEGACY_APP_ADDRESSES,
   parseInboundEmail,
+  type InboundEmail as InboundEmailParsed,
   replyMime,
   replyToClient,
   type ClientDesk,
@@ -53,6 +54,36 @@ export interface AgentBindings extends ChatBindings {
   SLACK_BOT_TOKEN?: string;
   SLACK_BOT_USER_ID?: string;
   SLACK_STAFF_USER_IDS?: string;
+  /** "on" brings back the old LLM email desk (auto-replies, prospect chats). Anything else: log-only. */
+  MAILBOX_AUTO_REPLY?: string;
+}
+
+/** Inbound mail is log-only unless MAILBOX_AUTO_REPLY is "on". */
+export function mailboxAutoReply(env: { MAILBOX_AUTO_REPLY?: unknown }): boolean {
+  return typeof env.MAILBOX_AUTO_REPLY === "string" && env.MAILBOX_AUTO_REPLY.trim().toLowerCase() === "on";
+}
+
+/** What the log-only mailbox posts to HQ (action log_email). Mail from our own addresses is dropped (null). */
+export function emailLogPayload(parsed: InboundEmailParsed, ownAddresses: string[]): Record<string, unknown> | null {
+  const sender = addressOf(parsed.from);
+  if (!sender || ownAddresses.map((address) => address.toLowerCase()).includes(sender)) return null;
+  const name = parsed.from.includes("<") ? parsed.from.split("<")[0].replace(/["']/g, "").trim() : "";
+  return {
+    action: "log_email",
+    sender,
+    name,
+    subject: parsed.subject,
+    text: parsed.text.slice(0, 20_000),
+    messageId: parsed.messageId,
+    threadId: parsed.threadId,
+    references: parsed.references,
+    listUnsubscribe: parsed.listUnsubscribe ?? "",
+    listId: parsed.listId ?? "",
+    precedence: parsed.precedence,
+    autoSubmitted: parsed.autoSubmitted,
+    authenticationResults: parsed.authenticationResults,
+    attachments: parsed.attachments.length,
+  };
 }
 
 type SkillFile = { skills?: { name?: unknown }[] } | { name?: unknown }[];
@@ -524,6 +555,7 @@ export class ClientAgent extends Agent<AgentBindings> {
       now: Date.now(),
       readSkill: (skillPath) => this.readSkill(skillPath),
       onLoaded: (skillPath, taskId) => this.recordSkill(taskId, skillPath),
+      stepsAllowed: legacyStartsAllowed(this.env as { AGENT_MODE?: unknown }),
     });
     if (result.reschedule) await this.schedule(60, "work", undefined, { idempotent: true });
   }
@@ -723,6 +755,12 @@ const worker = {
     const parsed = await parseInboundEmail(raw);
     if (typeof message.rawSize === "number") parsed.bytes = message.rawSize;
     const own = env.MAGIC_EMAIL_FROM || "hq@mail.abra-ca-dabra.app";
+    if (!mailboxAutoReply(env)) {
+      // Log-only: HQ records it and posts "New email" to the Client Services feed. No reply, no LLM call.
+      const payload = emailLogPayload(parsed, [own, ...LEGACY_APP_ADDRESSES]);
+      if (payload) await hqChannel(env, payload);
+      return;
+    }
     const reply = await handleInboundEmail(parsed, {
       lookup: async (email) => {
         const body = (await hqChannel(env, {

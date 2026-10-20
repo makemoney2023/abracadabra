@@ -42,7 +42,7 @@ export async function POST(request: Request, context: { params: Promise<{ spaceI
   if (decision === "changes") {
     const wake: WakeEnv = { AGENT_URL: envText("AGENT_URL"), AGENT_WAKE_SECRET: envText("AGENT_WAKE_SECRET") };
     try {
-      await wakeOrganization(wake, result.organizationId, "changes_requested", now);
+      await wakeOrganization(wake, result.organizationId, "changes_requested", now, fetch, sql);
     } catch {
       // The every-minute cron still picks up open work.
     }
