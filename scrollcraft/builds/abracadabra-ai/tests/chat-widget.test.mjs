@@ -94,3 +94,10 @@ test("voice picks MP4 on Safari and iOS, WebM elsewhere, and shows the audio not
   assert.equal(voiceSupported({ MediaRecorder() {}, navigator: { mediaDevices: { getUserMedia() {} } }, isSecureContext: true }), true);
   assert.match(widgetCss, /\.mic\.recording/);
 });
+
+test("streaming playback is used when the browser can play MP3", async () => {
+  const { canStreamMp3 } = await import("../assets/chat-widget.js");
+  assert.equal(canStreamMp3({ canPlayType: () => "maybe" }), true);
+  assert.equal(canStreamMp3({ canPlayType: () => "" }), false);
+  assert.equal(canStreamMp3(null), false);
+});

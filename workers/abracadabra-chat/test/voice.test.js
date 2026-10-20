@@ -111,9 +111,92 @@ test("a spoken question round-trips: whisper, chat, then aura for that reply onl
   assert.equal(tts.body.text, payload.reply);
   assert.equal(tts.headers["cf-aig-collect-log-payload"], "false");
 
-  // A second read is allowed (replay), a third is not.
-  assert.equal((await post("/api/chat/speak", h, { cookie, body: { replyId: payload.replyId } })).status, 200);
-  assert.equal((await post("/api/chat/speak", h, { cookie, body: { replyId: payload.replyId } })).status, 429);
+  // Play 2 (a replay) is allowed, play 3 is not.
+  assert.equal((await post("/api/chat/speak", h, { cookie, body: { replyId: payload.replyId, play: 2 } })).status, 200);
+  assert.equal((await post("/api/chat/speak", h, { cookie, body: { replyId: payload.replyId, play: 3 } })).status, 429);
+});
+
+function get(path, h, { cookie, ip = "203.0.113.20", headers = {} } = {}) {
+  return handleRequest(new Request(`https://abra-ca-dabra.app${path}`, {
+    method: "GET",
+    headers: { "cf-connecting-ip": ip, ...(cookie ? { cookie } : {}), ...headers },
+  }), h.env, h.deps);
+}
+
+test("GET speak streams the Aura body through without buffering", async () => {
+  const h = harness();
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const base = h.deps.fetchImpl;
+  h.deps.fetchImpl = async (url, init) => {
+    if (!String(url).includes("aura")) return base(url, init);
+    h.calls.push({ url: String(url), headers: init.headers, body: JSON.parse(init.body) });
+    const stream = new ReadableStream({
+      async start(controller) {
+        controller.enqueue(new Uint8Array([0x49, 0x44, 0x33, 1]));
+        await gate;
+        controller.enqueue(new Uint8Array([2, 3]));
+        controller.close();
+      },
+    });
+    return new Response(stream, { headers: { "content-type": "audio/mpeg" } });
+  };
+  const cookie = await open(h);
+  const asked = await (await post("/api/chat/voice", h, { cookie, body: WEBM, type: "audio/webm" })).json();
+  // A media element sends no Origin header and may send a Range probe.
+  const response = await get(`/api/chat/speak?id=${asked.replyId}&p=1`, h, { cookie, headers: { range: "bytes=0-1" } });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "audio/mpeg");
+  assert.equal(response.headers.get("cache-control"), "no-store");
+  assert.equal(response.headers.get("accept-ranges"), "none");
+  assert.equal(response.headers.get("content-length"), null);
+  const reader = response.body.getReader();
+  const first = await reader.read();
+  assert.deepEqual([...first.value], [0x49, 0x44, 0x33, 1], "first bytes arrive before the stream finishes");
+  release();
+  const second = await reader.read();
+  assert.deepEqual([...second.value], [2, 3]);
+  assert.equal((await reader.read()).done, true);
+});
+
+test("GET speak keeps the guardrails: own session, play numbers, repeats, and char cap", async () => {
+  const h = harness();
+  const mine = await open(h, "203.0.113.31");
+  const theirs = await open(h, "203.0.113.32");
+  const asked = await (await post("/api/chat/voice", h, { cookie: mine, body: WEBM, type: "audio/webm", ip: "203.0.113.31" })).json();
+  const path = `/api/chat/speak?id=${asked.replyId}`;
+  assert.equal((await get(`${path}&p=1`, h, { cookie: theirs, ip: "203.0.113.32" })).status, 404);
+  assert.equal((await get(`${path}&p=1`, h, { ip: "203.0.113.31" })).status, 401);
+  assert.equal((await get("/api/chat/speak?text=hello", h, { cookie: mine, ip: "203.0.113.31" })).status, 404);
+  const charged = () => h.calls.filter((call) => call.url.includes("aura")).length;
+  assert.equal((await get(`${path}&p=1`, h, { cookie: mine, ip: "203.0.113.31" })).status, 200);
+  // Safari can open the same play again (probe, then read). Two repeats are allowed, a third is not.
+  assert.equal((await get(`${path}&p=1`, h, { cookie: mine, ip: "203.0.113.31" })).status, 200);
+  assert.equal((await get(`${path}&p=1`, h, { cookie: mine, ip: "203.0.113.31" })).status, 200);
+  assert.equal((await get(`${path}&p=1`, h, { cookie: mine, ip: "203.0.113.31" })).status, 429);
+  assert.equal((await get(`${path}&p=2`, h, { cookie: mine, ip: "203.0.113.31" })).status, 200);
+  assert.equal((await get(`${path}&p=3`, h, { cookie: mine, ip: "203.0.113.31" })).status, 429);
+  assert.equal(charged(), 4);
+  // Off switch closes the stream route too.
+  h.env.VOICE_ENABLED = "false";
+  assert.equal((await get(`${path}&p=2`, h, { cookie: mine, ip: "203.0.113.31" })).status, 404);
+});
+
+test("the 3,000 spoken characters per chat cap holds across replies", async () => {
+  const long = "This is a long and friendly sentence about the studio and the work. ".repeat(6);
+  const h = harness(VOICE_ENV, { reply: long });
+  const cookie = await open(h, "203.0.113.41");
+  let blocked = 0;
+  for (let i = 0; i < 12; i += 1) {
+    const asked = await (await post("/api/chat/voice", h, { cookie, body: WEBM, type: "audio/webm", ip: "203.0.113.41" })).json();
+    for (const p of [1, 2]) {
+      const status = (await get(`/api/chat/speak?id=${asked.replyId}&p=${p}`, h, { cookie, ip: "203.0.113.41" })).status;
+      if (status === 429) blocked += 1;
+    }
+  }
+  const spokenChars = h.calls.filter((call) => call.url.includes("aura")).reduce((sum, call) => sum + call.body.text.length, 0);
+  assert.ok(spokenChars <= 3000, `spoke ${spokenChars}`);
+  assert.ok(blocked > 0);
 });
 
 test("speak only reads this session's own voice replies", async () => {

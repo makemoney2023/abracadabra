@@ -43,7 +43,7 @@ before(async () => {
         for (const [key, value] of Object.entries(request.headers)) {
           if (value) headers.set(key, Array.isArray(value) ? value.join(", ") : value);
         }
-        const upstream = await handleRequest(new Request(new URL(url.pathname, origin), {
+        const upstream = await handleRequest(new Request(new URL(`${url.pathname}${url.search}`, origin), {
           method: request.method,
           headers,
           body: request.method === "GET" || request.method === "HEAD" ? undefined : body,
@@ -173,7 +173,9 @@ test("an empty Cal.com link asks for two times inside the chat", async () => {
   await page.close();
 });
 
-test("push-to-talk records, shows the transcript, and plays only the spoken answer", async () => {
+const TONE = await readFile(new URL("./fixtures/voice-tone.mp3", import.meta.url));
+
+async function voiceRun(auraBody) {
   env.CAL_LINK = "abracadabra/working-session";
   Object.assign(env, { VOICE_ENABLED: "true", AI_GATEWAY_TOKEN: "test-token", CF_ACCOUNT_ID: "acct" });
   const gateway = [];
@@ -184,45 +186,76 @@ test("push-to-talk records, shows the transcript, and plays only the spoken answ
       assert.ok(body.audio.length > 100);
       return Response.json({ success: true, result: { text: "What does Abracadabra build?", transcription_info: { duration: 2 } } });
     }
-    if (String(url).includes("aura")) {
-      return new Response(new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0, 0, 0, 0, 0]), { headers: { "content-type": "audio/mpeg" } });
-    }
+    if (String(url).includes("aura")) return new Response(auraBody, { headers: { "content-type": "audio/mpeg" } });
     return Response.json({ success: true, result: { response: "We build software around the work you already do." } });
   };
+  const page = await openFixture(390, 844);
+  const speaks = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname === "/api/chat/speak") {
+      speaks.push({ method: request.method(), id: url.searchParams.get("id"), p: url.searchParams.get("p"), body: request.method() === "POST" ? request.postDataJSON() : null });
+    }
+  });
+  await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+  const mic = page.getByRole("button", { name: "Speak your question" });
+  await mic.waitFor();
+  await page.getByText("Audio isn't stored.").waitFor();
+  await page.getByRole("textbox", { name: "Message" }).fill("What do you build?");
+  await page.getByRole("button", { name: "Send", exact: true }).click();
+  await page.getByText("We build software around the work you already do.").first().waitFor();
+  assert.equal(speaks.length, 0, "typed questions stay silent");
+  await mic.click();
+  await page.getByRole("button", { name: "Stop and send" }).waitFor();
+  await page.waitForTimeout(1500);
+  await page.getByRole("button", { name: "Stop and send" }).click();
+  const timings = await page.locator("abra-chat").evaluate((node) => new Promise((resolve) => {
+    const started = Date.now();
+    const check = () => (node.voiceTimings?.playing || Date.now() - started > 8000
+      ? resolve({ ...node.voiceTimings, mode: node.voiceMode })
+      : setTimeout(check, 25));
+    check();
+  }));
+  const users = await page.locator("abra-chat").evaluate((node) => [...node.shadowRoot.querySelectorAll(".bubble.user")].map((b) => b.textContent));
+  assert.equal(users.at(-1), "What does Abracadabra build?");
+  assert.ok(gateway.some((url) => url.includes("whisper-large-v3-turbo")));
+  assert.ok(gateway.some((url) => url.includes("aura-2-en")));
+  return { page, speaks, timings };
+}
+
+function clearVoiceEnv() {
+  delete env.VOICE_ENABLED;
+  delete env.AI_GATEWAY_TOKEN;
+  delete env.CF_ACCOUNT_ID;
+  delete deps.fetchImpl;
+}
+
+test("push-to-talk streams the spoken answer into the audio element", async () => {
   try {
-    const page = await openFixture(390, 844);
-    const speaks = [];
-    page.on("request", (request) => {
-      if (request.url().endsWith("/api/chat/speak")) speaks.push(request.postDataJSON());
-    });
-    await page.getByRole("button", { name: "Ask Abracadabra" }).click();
-    const mic = page.getByRole("button", { name: "Speak your question" });
-    await mic.waitFor();
-    await page.getByText("Audio isn't stored.").waitFor();
-    await page.getByRole("textbox", { name: "Message" }).fill("What do you build?");
-    await page.getByRole("button", { name: "Send", exact: true }).click();
-    await page.getByText("We build software around the work you already do.").first().waitFor();
-    assert.equal(speaks.length, 0, "typed questions stay silent");
-    await mic.click();
-    await page.getByRole("button", { name: "Stop and send" }).waitFor();
-    await page.waitForTimeout(1500);
-    await page.getByRole("button", { name: "Stop and send" }).click();
-    await page.locator("abra-chat").evaluate((node) => new Promise((resolve) => {
-      const check = () => (node.lastSpokenId ? resolve() : setTimeout(check, 50));
-      check();
-    }));
-    const users = await page.locator("abra-chat").evaluate((node) => [...node.shadowRoot.querySelectorAll(".bubble.user")].map((b) => b.textContent));
-    assert.equal(users.at(-1), "What does Abracadabra build?");
-    assert.equal(speaks.length, 1);
-    assert.match(speaks[0].replyId, /^[0-9a-f-]{36}$/);
-    assert.ok(gateway.some((url) => url.includes("whisper-large-v3-turbo")));
-    assert.ok(gateway.some((url) => url.includes("aura-2-en")));
+    const { page, speaks, timings } = await voiceRun(TONE);
+    assert.equal(timings.mode, "stream");
+    assert.ok(timings.playing > timings.reply, "audio played after the text reply");
+    assert.equal(speaks.length >= 1, true);
+    assert.ok(speaks.every((s) => s.method === "GET" && s.p === "1"), JSON.stringify(speaks));
+    assert.match(speaks[0].id, /^[0-9a-f-]{36}$/);
     assert.equal(page.errors.length, 0);
     await page.close();
   } finally {
-    delete env.VOICE_ENABLED;
-    delete env.AI_GATEWAY_TOKEN;
-    delete env.CF_ACCOUNT_ID;
-    delete deps.fetchImpl;
+    clearVoiceEnv();
+  }
+});
+
+test("a stream the browser cannot play falls back to one full download", async () => {
+  try {
+    const { page, speaks } = await voiceRun(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
+    await page.waitForFunction(() => document.querySelector("abra-chat").voiceMode === "buffered");
+    const post = speaks.find((s) => s.method === "POST");
+    assert.ok(post, JSON.stringify(speaks));
+    assert.equal(post.body.play, 1);
+    assert.equal(post.body.replyId, speaks[0].id);
+    assert.equal(page.errors.length, 0);
+    await page.close();
+  } finally {
+    clearVoiceEnv();
   }
 });

@@ -173,6 +173,14 @@ export function voiceSupported(win = typeof window === "undefined" ? undefined :
   return Boolean(win?.MediaRecorder && win?.navigator?.mediaDevices?.getUserMedia && win?.isSecureContext !== false);
 }
 
+export function canStreamMp3(player) {
+  try {
+    return Boolean(player?.canPlayType?.("audio/mpeg"));
+  } catch {
+    return false;
+  }
+}
+
 export function formatClock(ms) {
   const seconds = Math.max(0, Math.floor(ms / 1000));
   return `0:${String(seconds).padStart(2, "0")}`;
@@ -535,6 +543,9 @@ export class AbraChat extends ElementBase {
   stopSpeaking() {
     if (!this.player) return;
     this.player.pause();
+    // Drop the stream so the server connection closes.
+    this.player.removeAttribute("src");
+    this.player.load();
     this.finishSpeaking();
   }
 
@@ -647,6 +658,8 @@ export class AbraChat extends ElementBase {
     } else mine.remove();
     if (payload.reply) {
       this.addBubble("assistant", payload.reply);
+      this.voiceTimings = {};
+      this.markVoice("reply");
       this.messages.push({ role: "assistant", text: payload.reply });
     }
     if (payload.action) this.action(payload.action);
@@ -654,29 +667,97 @@ export class AbraChat extends ElementBase {
     else this.setVoiceState("idle");
   }
 
+  /**
+   * Streams the answer: the <audio> element reads GET /api/chat/speak as the MP3 arrives, so sound
+   * starts with the first bytes. The element was unlocked inside the first mic tap, which is what
+   * iOS Safari needs before a later play() without a tap. If the browser cannot stream MP3, or the
+   * stream errors before it plays, fall back to downloading the whole clip (same play, not charged again).
+   */
   async speak(replyId) {
+    this.unlockAudio();
+    this.lastSpokenId = replyId;
+    const url = `/api/chat/speak?id=${encodeURIComponent(replyId)}&p=1`;
+    if (canStreamMp3(this.player)) {
+      const result = await this.playStream(url);
+      if (result !== "failed") return;
+    }
+    await this.playBuffered(replyId, 1);
+  }
+
+  playStream(url) {
+    return new Promise((resolve) => {
+      const player = this.player;
+      let settled = false;
+      const done = (result) => {
+        if (settled) return;
+        settled = true;
+        player.removeEventListener("playing", onPlaying);
+        player.removeEventListener("error", onError);
+        resolve(result);
+      };
+      const onPlaying = () => {
+        this.markVoice("playing");
+        done("playing");
+      };
+      const onError = () => done("failed");
+      player.addEventListener("playing", onPlaying);
+      player.addEventListener("error", onError);
+      if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
+      this.audioUrl = "";
+      this.voiceMode = "stream";
+      player.src = url;
+      this.setVoiceState("speaking");
+      let played;
+      try {
+        played = player.play();
+      } catch {
+        done("failed");
+        return;
+      }
+      if (played?.catch) {
+        played.catch((error) => {
+          // Autoplay still locked: the text answer is on screen, do not fetch again.
+          if (error?.name === "NotAllowedError") {
+            this.setVoiceState("idle");
+            done("blocked");
+          } else done("failed");
+        });
+      }
+    });
+  }
+
+  async playBuffered(replyId, play) {
     try {
       const response = await fetch("/api/chat/speak", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ replyId }),
+        body: JSON.stringify({ replyId, play }),
       });
       if (!response.ok) {
         this.setVoiceState("idle");
         return;
       }
       const audio = await response.blob();
-      this.unlockAudio();
       if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
       this.audioUrl = URL.createObjectURL(audio);
+      this.voiceMode = "buffered";
+      this.player.addEventListener("playing", () => this.markVoice("playing"), { once: true });
       this.player.src = this.audioUrl;
       this.setVoiceState("speaking");
-      this.lastSpokenId = replyId;
       await this.player.play();
     } catch {
       this.finishSpeaking();
       this.setVoiceState("idle");
+    }
+  }
+
+  markVoice(name) {
+    this.voiceTimings = { ...(this.voiceTimings || {}), [name]: performance.now() };
+    try {
+      performance.mark(`abra-voice-${name}`);
+    } catch {
+      // Timing marks are optional.
     }
   }
 

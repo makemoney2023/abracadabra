@@ -31,7 +31,9 @@ const IP_MESSAGE_LIMIT = 20;
 const IP_SESSION_LIMIT = 8;
 const SESSION_MESSAGE_LIMIT = 30;
 const IP_VOICE_LIMIT = 15;
-const IP_SPEAK_LIMIT = 30;
+const IP_SPEAK_LIMIT = 45;
+const SPEAK_REPEAT_MS = 60 * 1000;
+const SPEAK_REPEATS = 2;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isolateLimits = { messages: new Map(), sessions: new Map(), voice: new Map(), speak: new Map() };
 const isolateRooms = new Map();
@@ -92,6 +94,41 @@ function gateHit(limits, name, ip, now, limit) {
   const gate = rateGate(limits[name].get(ip) || [], now, limit, WINDOW_MS);
   limits[name].set(ip, gate.hits);
   return gate.ok;
+}
+
+/**
+ * A reply can be played SPEAKS_PER_REPLY times. Media players (Safari in particular) may open
+ * the same play more than once (a range probe, then the real read). A repeat of the same play
+ * number inside SPEAK_REPEAT_MS is allowed up to SPEAK_REPEATS times and is not charged again.
+ */
+export function claimSpeak(session, replyId, play, now) {
+  const id = String(replyId || "");
+  const reply = UUID.test(id)
+    ? session.messages.find((message) => message.role === "assistant" && message.voice && message.id === id)
+    : null;
+  if (!reply) return { ok: false, status: 404, message: "Nothing to read." };
+  const n = Number(play);
+  if (!Number.isInteger(n) || n < 1 || n > SPEAKS_PER_REPLY) {
+    return { ok: false, status: 429, message: "That answer was already read." };
+  }
+  const text = speakable(reply.text);
+  if (!text) return { ok: false, status: 404, message: "Nothing to read." };
+  reply.plays = reply.plays || {};
+  const seen = reply.plays[n];
+  if (seen) {
+    if (now - seen.at > SPEAK_REPEAT_MS || seen.repeats >= SPEAK_REPEATS) {
+      return { ok: false, status: 429, message: "That answer was already read." };
+    }
+    seen.repeats += 1;
+    return { ok: true, text, repeat: true };
+  }
+  if ((session.ttsChars || 0) + text.length > VOICE_TTS_CHARS_PER_SESSION) {
+    return { ok: false, status: 429, message: "Spoken answers are used up for this chat. The answer is in the chat." };
+  }
+  reply.plays[n] = { at: now, repeats: 0 };
+  reply.spoken = Object.keys(reply.plays).length;
+  session.ttsChars = (session.ttsChars || 0) + text.length;
+  return { ok: true, text, repeat: false };
 }
 
 async function readAudio(request) {
@@ -303,28 +340,34 @@ export async function handleSession(request, storage, env, deps) {
 
   if (url.pathname === "/api/chat/speak") {
     if (!voiceEnabled(env)) return json({ error: "Voice is off right now." }, 404);
-    const parsed = await readJson(request);
-    if (!parsed.ok) return json({ error: parsed.message }, parsed.status);
-    const replyId = String(parsed.value?.replyId || "");
-    const reply = UUID.test(replyId)
-      ? session.messages.find((message) => message.role === "assistant" && message.voice && message.id === replyId)
-      : null;
-    if (!reply) return json({ error: "Nothing to read." }, 404);
-    if ((reply.spoken || 0) >= SPEAKS_PER_REPLY) return json({ error: "That answer was already read." }, 429);
-    const spoken = speakable(reply.text);
-    if (!spoken) return json({ error: "Nothing to read." }, 404);
-    if ((session.ttsChars || 0) + spoken.length > VOICE_TTS_CHARS_PER_SESSION) {
-      return json({ error: "Spoken answers are used up for this chat. The answer is in the chat." }, 429);
+    // GET ?id=<replyId>&p=<play> lets an <audio> element stream the MP3 as it arrives.
+    // POST {replyId, play} is the full-download fallback. Both share the same checks.
+    let replyId = "";
+    let play = 1;
+    if (request.method === "GET") {
+      replyId = url.searchParams.get("id") || "";
+      play = Number(url.searchParams.get("p") || 1);
+    } else {
+      const parsed = await readJson(request);
+      if (!parsed.ok) return json({ error: parsed.message }, parsed.status);
+      replyId = String(parsed.value?.replyId || "");
+      play = Number(parsed.value?.play || 1);
     }
-    reply.spoken = (reply.spoken || 0) + 1;
-    session.ttsChars = (session.ttsChars || 0) + spoken.length;
+    const ticket = claimSpeak(session, replyId, play, now);
+    if (!ticket.ok) return json({ error: ticket.message }, ticket.status);
     session.updatedAt = now;
     await save(storage, session, deps);
-    const audio = await synthesize({ env, text: spoken, fetchImpl: deps.fetchImpl });
+    const audio = await synthesize({ env, text: ticket.text, fetchImpl: deps.fetchImpl });
     if (!audio) return json({ error: "The voice is quiet right now. The answer is in the chat." }, 502);
+    // Pass the gateway stream straight through: no buffering, no Content-Length.
     return new Response(audio.body, {
       status: 200,
-      headers: { "content-type": audio.headers.get("content-type") || "audio/mpeg", "cache-control": "no-store" },
+      headers: {
+        "content-type": audio.headers.get("content-type") || "audio/mpeg",
+        "cache-control": "no-store",
+        "accept-ranges": "none",
+        "x-content-type-options": "nosniff",
+      },
     });
   }
 
@@ -395,7 +438,8 @@ export async function handleRequest(request, env = {}, deps = {}) {
     return cors(json(publicConfig(env), 200), request, env);
   }
 
-  if (request.method !== "POST") return cors(json({ error: "Method not allowed." }, 405), request, env);
+  const streamSpeak = url.pathname === "/api/chat/speak" && request.method === "GET";
+  if (request.method !== "POST" && !streamSpeak) return cors(json({ error: "Method not allowed." }, 405), request, env);
 
   const ip = clientIp(request);
   const limits = limitsFor(deps);
