@@ -863,11 +863,8 @@ body { hanging-punctuation: first last; }
   .fn-grid {
     display: grid;
     grid-auto-flow: row;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .fn-grid > .card:nth-child(-n+2),
-  .fn-grid > .card:nth-last-child(-n+2) { grid-column: span 3; }
-  .fn-grid > .card:nth-child(n+3):nth-child(-n+5) { grid-column: span 2; }
   .fn-scroller__fade, .fn-scroller__dots { display: none; }
 }
 

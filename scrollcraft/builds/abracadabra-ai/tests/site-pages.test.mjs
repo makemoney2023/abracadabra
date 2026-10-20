@@ -51,6 +51,12 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.equal(index.includes("The next room is the receipt"), false);
   const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="showcase"'));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 12);
+  const cardIds = [...servicesBlock.matchAll(/<li class="card fn-card" id="fn-([a-z-]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(cardIds, ["search", "marketing", "sales", "service", "mcp-connectors", "machine-learning", "operations", "design", "platform"]);
+  for (const slug of ["mcp-connectors", "machine-learning"]) {
+    assert.match(servicesBlock, new RegExp(`/blog/media/services/${slug}/hero\\.jpg`));
+    assert.equal((servicesBlock.match(new RegExp(`href="/services/${slug}/"`, "g")) || []).length, 1);
+  }
   assert.equal(index.includes('id="ai-search-tile"'), false);
   assert.equal((index.match(/id="proof"/g) || []).length, 1);
   assert.match(index, /href="\/services\/">Services/);
