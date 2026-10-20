@@ -1504,6 +1504,11 @@ input, textarea, select { border-radius: var(--ui-r-control); }
 .pirx-case__results-copy > p:not(.eyebrow) { max-width: 38rem; }
 .pirx-case__method > h2 { max-width: 17ch; margin: 0.45rem 0 2rem; }
 .pirx-case__method ol { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pirx-case__app > h2 { max-width: 24ch; }
+.pirx-case__app > p:not(.eyebrow) { max-width: 44rem; }
+.pirx-case__app > h2 { margin-bottom: 1.4rem; }
+.pirx-case__app > ol { margin-bottom: 1.2rem; }
+.pirx-case__app li > span { margin-bottom: 1rem; }
 .pirx-case__next ul { display: flex; flex-wrap: wrap; gap: 0.65rem 1.25rem; padding-left: 1rem; }
 
 @media (max-width: 900px) {
@@ -1531,7 +1536,8 @@ input, textarea, select { border-radius: var(--ui-r-control); }
   .pirx-case__method ol,
   .pirx-case__gallery { grid-template-columns: 1fr; }
   .visibility-page .outcome-grid,
-  .visibility-process > ol {
+  .visibility-process > ol,
+  .pirx-case__app > ol {
     grid-template-columns: none;
     grid-auto-flow: column;
     grid-auto-columns: minmax(17rem, 82%);
@@ -1541,7 +1547,8 @@ input, textarea, select { border-radius: var(--ui-r-control); }
     overscroll-behavior-inline: contain;
   }
   .visibility-page .outcome-grid li,
-  .visibility-process li { scroll-snap-align: start; }
+  .visibility-process li,
+  .pirx-case__app li { scroll-snap-align: start; }
   .visibility-page .outcome-grid li { min-height: 0; padding-top: 3.75rem; }
   .visibility-process li > span,
   .pirx-case__method li > span { margin-bottom: 1.25rem; }

@@ -20,6 +20,8 @@ const offerings = [
   "ai-media",
   "ai-visibility",
   "search-grounded-research",
+  "machine-learning",
+  "mcp-connectors",
 ];
 
 test("the homepage runs hero, models, functions, then Cloudflare before the FAQ", () => {
@@ -48,7 +50,7 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.equal(index.includes("0.58rem"), false);
   assert.equal(index.includes("The next room is the receipt"), false);
   const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="showcase"'));
-  assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 10);
+  assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 12);
   assert.equal(index.includes('id="ai-search-tile"'), false);
   assert.equal((index.match(/id="proof"/g) || []).length, 1);
   assert.match(index, /href="\/services\/">Services/);

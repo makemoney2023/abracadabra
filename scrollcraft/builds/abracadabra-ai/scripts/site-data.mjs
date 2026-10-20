@@ -222,6 +222,74 @@ export const offerings = [
     builtOn: ["Sandboxes", "Containers"],
   },
   {
+    slug: "machine-learning",
+    outcome: "Machine learning that shows its working",
+    card: "Models that learn from your own records and give a clear number, a fair range, and the reasons behind it, inside your app.",
+    whatItIs: "We design and build machine learning into an app. The model learns from your own data, gives one clear number, a range around it, and the parts that moved it.",
+    examples: [
+      "PIRX on pirx.ca: a Projected Time, a Supported Range, and five Structural Drivers for each runner",
+      "An estimate a customer can plan around, worked out from their own history",
+      "A flag on the records that look off, with the reason",
+    ],
+    steps: [
+      "We pick the one question the number has to answer, and check the data you have.",
+      "Simple, safe rules come first, so there is always a sound answer.",
+      "Learned models are added when there is enough history, and only used when they beat the rules.",
+      "The number, the range and the reasons show up inside the app where people already work.",
+    ],
+    deliverables: [
+      "A model built on your data",
+      "A range that widens when the data is thin",
+      "The reasons behind each number, in plain words",
+      "A fallback to safe rules if a model does worse",
+    ],
+    who: "Owners with history in their records and a question they ask every day.",
+    signs: [
+      "You keep asking what happens next, and the spreadsheet can only add up the past",
+      "Customers want an estimate and a reason, not just a number",
+      "Someone already guesses the answer by hand each week",
+    ],
+    faqs: [
+      ["How much data do we need?", "Enough history to learn from. If it is too thin, we start with simple rules."],
+      ["Can we see why a number changed?", "Yes. Each number is split into the parts that moved it."],
+    ],
+    builtOn: ["Your app", "Your data"],
+  },
+  {
+    slug: "mcp-connectors",
+    outcome: "Connect your AI to your tools",
+    card: "A safe MCP connector so Claude, ChatGPT and other assistants can use your business tools, with sign-in, permissions and a yes before any change.",
+    whatItIs: "MCP, the Model Context Protocol, is an open standard that lets an AI assistant plug into your tools through one common connector. We build that connector for the tools you already use.",
+    examples: [
+      "Ask your business: plain questions about your CRM, jobs or inventory, read-only to start",
+      "Let your AI do the busywork: book, log a call, draft an invoice or update a job, each with a yes first",
+      "One safe front door: every AI connection behind one sign-in, with rules and a record",
+    ],
+    steps: [
+      "We list the tools you use, and connect to any that already have a good official connector.",
+      "We build the missing connector on Cloudflare, read-only first.",
+      "Changes are added one at a time, each asking a person for a yes.",
+      "Every action is logged, and each person only reaches what their role allows.",
+    ],
+    deliverables: [
+      "An MCP connector for your tools",
+      "Sign-in with your team's own accounts",
+      "A yes before any change",
+      "A record of every action",
+    ],
+    who: "Teams already using AI assistants who want them to see and safely use the business's own tools.",
+    signs: [
+      "Someone copies records into an AI chat to get an answer",
+      "Your tools have no official connector, or you use several and want one front door",
+      "You want the AI to do routine updates, but only with a person's yes",
+    ],
+    faqs: [
+      ["What is MCP?", "An open standard that lets an AI assistant plug into your tools through one common connector."],
+      ["Can the AI change things on its own?", "Only what you allow. Changes ask a person for a yes first."],
+    ],
+    builtOn: ["Workers", "Durable Objects"],
+  },
+  {
     slug: "custom-apps",
     outcome: "Custom apps and back offices",
     card: "We build the app around the way you already work, so the real job is the product.",
@@ -403,7 +471,7 @@ export const businessFunctions = [
     id: "operations",
     name: "Operations",
     promise: "Turn the way you already work into software, answers from your files, and web jobs that run themselves.",
-    services: ["web-automation", "answers-from-your-documents", "custom-apps"],
+    services: ["web-automation", "answers-from-your-documents", "custom-apps", "machine-learning"],
   },
   {
     id: "design",
@@ -420,7 +488,7 @@ export const businessFunctions = [
     id: "platform",
     name: "Platform",
     promise: "Use the best model for every job, on one bill, and let AI do real work, safely.",
-    services: ["any-model-one-bill", "safe-code-execution"],
+    services: ["any-model-one-bill", "safe-code-execution", "mcp-connectors"],
   },
 ];
 
@@ -525,11 +593,11 @@ export const cases = [
     cardImage: pirxHero.desktop,
     hero: pirxHero,
     shots: pirxCaseShots,
-    summary: "From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days, Jul 18 to Oct 17, 2026.",
+    summary: "We designed and built the PIRX app, its machine learning, and the blogs. From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days, Jul 18 to Oct 17, 2026.",
     chart: true,
-    services: ["custom-apps", "ai-visibility", "search-grounded-research"],
+    services: ["machine-learning", "custom-apps", "ai-visibility", "search-grounded-research"],
     body: [
-      "pirx.ca is the app and the blogs.",
+      "pirx.ca is the PIRX app, its machine learning, and the blogs. We designed and built all three.",
       "The app is the product people use. The blogs are the public pages behind the search record below.",
       "From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days.",
       "Google Search Console, Jul 18 to Oct 17, 2026, recorded 398K search impressions, 1.94K clicks, and an average position of 7.6. The count starts near zero in mid-July.",

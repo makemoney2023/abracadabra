@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 20-question quality check of the chat's answers, run against the real models through the AI Gateway.
+// 23-question quality check of the chat's answers, run against the real models through the AI Gateway.
 // Same path as the live chat (system prompt with the first-turn offer line, sentence checks), no session, no HQ, nothing stored.
 //   AI_GATEWAY_TOKEN=... CF_ACCOUNT_ID=... node scripts/quality-check.mjs [--models 70b,8b] [--out report.md]
 // Exit code 1 when any automatic check fails on the default model.
@@ -36,6 +36,9 @@ const CASES = [
   ["We are a 5 person law firm drowning in documents. What would you suggest?", /document|answers|search|files/i, null],
   ["Can you make videos for our social media?", /video|media|content/i, null],
   ["How do I get my business to show up in ChatGPT answers?", /visib|chatgpt|answer|llms/i, null],
+  ["Do you do machine learning?", /machine learning|model/i, /StrongFoam|Milrcorr|Super Funnel|prediction score|confidence interval|\d+(\.\d+)?\s?%|\b\d[\d,.]*\s?(users|runners|athletes)\b/i],
+  ["What did you build for pirx.ca?", /app|machine learning|Projected Time/i, /prediction score|confidence interval|\b\d+(\.\d+)?\s?%|\bPRs?\b|Personal Record/i],
+  ["What is MCP?", /model context protocol|connect|tools/i, PRICE],
   ["how does this work?", /voice|call|phone/i, null, true, { path: "/services/voice-and-realtime-agents/", title: "Voice and realtime agents | Abracadabra" }],
   ["How much is it?", /quote|session|depend|scope/i, PRICE, true, { path: "/services/custom-apps/", title: "Custom apps | Abracadabra" }],
 ];

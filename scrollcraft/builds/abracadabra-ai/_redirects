@@ -17,6 +17,10 @@
 /services/web-automation/ /services/web-automation/index.html 200
 /services/safe-code-execution /services/safe-code-execution/index.html 200
 /services/safe-code-execution/ /services/safe-code-execution/index.html 200
+/services/machine-learning /services/machine-learning/index.html 200
+/services/machine-learning/ /services/machine-learning/index.html 200
+/services/mcp-connectors /services/mcp-connectors/index.html 200
+/services/mcp-connectors/ /services/mcp-connectors/index.html 200
 /services/custom-apps /services/custom-apps/index.html 200
 /services/custom-apps/ /services/custom-apps/index.html 200
 /services/ai-media /services/ai-media/index.html 200
@@ -71,6 +75,10 @@
 /offerings/web-automation/ /services/web-automation/ 301
 /offerings/safe-code-execution /services/safe-code-execution/ 301
 /offerings/safe-code-execution/ /services/safe-code-execution/ 301
+/offerings/machine-learning /services/machine-learning/ 301
+/offerings/machine-learning/ /services/machine-learning/ 301
+/offerings/mcp-connectors /services/mcp-connectors/ 301
+/offerings/mcp-connectors/ /services/mcp-connectors/ 301
 /offerings/custom-apps /services/custom-apps/ 301
 /offerings/custom-apps/ /services/custom-apps/ 301
 /offerings/ai-media /services/ai-media/ 301

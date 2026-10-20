@@ -279,7 +279,7 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
 ${headLinks()}
-<link rel="stylesheet" href="/blog/blog.css?v=20261019n">
+<link rel="stylesheet" href="/blog/blog.css?v=20261020a">
 <link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019n">
 <script type="application/ld+json">
 ${jsonLd(json)}
@@ -366,6 +366,8 @@ const SERVICE_GROUPS = {
   "custom-apps": "Operations",
   "any-model-one-bill": "Platform",
   "safe-code-execution": "Platform",
+  "machine-learning": "Operations",
+  "mcp-connectors": "Platform",
 };
 
 function proofStrip(items) {
@@ -531,7 +533,7 @@ async function renderOffering(item) {
     alt: serviceAlt(item.slug, "hero"),
   };
   const steps = processSteps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></li>`).join("");
-  const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}${(proof.shots || []).map((pair) => shotPairHtml(pair)).join("")}<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p></article>`).join("\n");
+  const proofs = page.proofs.map((proof) => `<article class="proof-card"><h3>${esc(proof.title)}</h3><p>${esc(proof.text)}</p>${proof.chart ? pirxChartHtml() : ""}${(proof.shots || []).map((pair) => shotPairHtml(pair)).join("")}${proof.href ? `<p><a href="${esc(proof.href)}">${esc(proof.link)}</a></p>` : ""}</article>`).join("\n");
   const html = shell({
     title,
     description: page.description,
@@ -589,7 +591,7 @@ ${comparisonTable(page.rows)}
 </section>
 <section class="sales-split service-page__proof">
 <div>
-${sectionHeading("Named work", "Proof")}
+${sectionHeading(page.proofKicker || "Named work", page.proofTitle || "Proof")}
 ${proofs}
 </div>
 <figure class="sales-split__photo">${servicePicture(item.slug, "body2", { lazy: true, sizes: SPLIT_SIZES })}</figure>
@@ -725,7 +727,7 @@ function pirxCaseBody(item, crumbs, relatedHtml) {
   return `<main id="top" class="site-page pirx-case">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
-  kicker: "PiRX · Search & AI visibility",
+  kicker: "PiRX · App, machine learning & AI visibility",
   title: "From invisible to 398K search impressions.",
   dek: `<p>${esc(item.summary)}</p><p class="sales-actions"><a class="btn btn--primary" href="${esc(item.sameAs)}">Open pirx.ca</a><a class="btn btn--secondary" href="/services/ai-visibility/">See the visibility system</a></p>`,
   media: `${shotImg(item.hero.desktop, { lazy: false, className: "shot-desktop" })}${shotImg(item.hero.mobile, { lazy: false, className: "shot-mobile" })}`,
@@ -734,9 +736,18 @@ ${proofMetrics("pirx-case__metrics")}
 <section class="pirx-case__story">
 <div><p class="eyebrow">The brief</p><h2>Build something useful enough to earn the search.</h2></div>
 <div>
-<p>${esc(item.body[0])} ${esc(item.body[1])}</p>
-<p>The product gives runners a practical race-time predictor. The editorial layer answers the specific questions runners already type into search and AI assistants.</p>
+<p>${esc(item.body[0])} ${esc(item.body[1])} The blogs answer the specific questions runners already type into search and AI assistants.</p>
 </div>
+</section>
+<section class="pirx-case__method pirx-case__app" aria-labelledby="pirx-app-title">
+<p class="eyebrow">The app</p>
+<h2 id="pirx-app-title">We designed and built the PIRX app and its machine learning.</h2>
+<ol>
+<li><span>01</span><div><h3>Projected Time</h3><p>The race time a runner’s own training supports today. One odd run can’t swing it.</p></div></li>
+<li><span>02</span><div><h3>Supported Range</h3><p>The band around it. Thin or messy data makes the band wider, not the number bolder.</p></div></li>
+<li><span>03</span><div><h3>Five Structural Drivers</h3><p>Aerobic Base, Threshold Density, Speed Exposure, Running Economy and Load Consistency. They always add up to the Improvement Since Baseline.</p></div></li>
+</ol>
+<p>A runner connects the watch they already wear. Personal models, including gradient boosting, learn each runner’s patterns and are only used when they beat the app’s safe rules. Athletic estimates, not medical advice. <a href="/services/machine-learning/">See how we build machine learning</a>.</p>
 </section>
 <section class="pirx-case__gallery" aria-labelledby="pirx-gallery-title">
 <div class="pirx-case__gallery-head"><p class="eyebrow">The system</p><h2 id="pirx-gallery-title">Product, evidence, and useful answers—one connected experience.</h2></div>
@@ -753,15 +764,6 @@ ${caseWindow(article, "Content engine", "Specific public guides give search engi
 <p class="fine">The AI-feature count is separate and is not added to the search total. Results vary by site; these are pirx.ca’s own dated numbers.</p>
 </div>
 ${pirxChartHtml()}
-</section>
-<section class="pirx-case__method">
-<p class="eyebrow">What changed</p>
-<h2>A product people use. Pages machines can understand.</h2>
-<ol>
-<li><span>01</span><div><h3>Ship the useful tool</h3><p>The predictor gives the visitor an immediate result rather than a generic landing page.</p></div></li>
-<li><span>02</span><div><h3>Answer narrow, real questions</h3><p>Guides target concrete running questions with explicit data, age ranges, and distances.</p></div></li>
-<li><span>03</span><div><h3>Keep the proof legible</h3><p>Search Console and AI-feature reports stay separate, dated, and tied to this domain.</p></div></li>
-</ol>
 </section>
 <section class="pirx-case__next">
 <div><p class="eyebrow">Use the same operating model</p><h2>Turn expertise into a product—and a public record worth finding.</h2></div>

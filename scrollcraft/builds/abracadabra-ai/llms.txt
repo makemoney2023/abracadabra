@@ -13,7 +13,8 @@ Last updated: 2026-10-15
 - The calendar gets shorter because the plan is written first and the later work runs at the same time. The work does not shrink. The waiting between the work does. Abracadabra AI does not publish a duration or a percentage for this.
 - The plan and the build ship as working systems, not slide decks.
 - AEO, GEO, and SEO run as one discipline (answer engines, generative engines, and classic search).
-- A menu of services: marketing, applications, machine-learning products, systems of record (CRM/ERP), and stores and lead generation. One service, or the whole menu. Each one is built around how you already work. A job that can be described can be built. Measured visibility proof stays in the pirx.ca block below.
+- A menu of services: marketing, applications, machine-learning products, MCP connectors that let AI assistants safely use your business tools, systems of record (CRM/ERP), and stores and lead generation. One service, or the whole menu. Each one is built around how you already work. A job that can be described can be built. Measured visibility proof stays in the pirx.ca block below.
+- MCP connectors (a service offered, not a named shipped system): the studio builds connectors so AI assistants like Claude and ChatGPT can safely use a business's tools, on Cloudflare, with sign-in, permissions and approval before any change: https://abra-ca-dabra.app/services/mcp-connectors/
 - Each project leaves you with the live system, the film, and the words you use to show it. You can demo the system without us in the room.
 
 ## Answer Engine Optimization
@@ -35,6 +36,7 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 ## Shipped systems that can be named
 
 - Milrcorr, the public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate: https://milrcorr.com
+- PIRX, the app at pirx.ca, designed and built by the studio, including its machine learning. A runner connects the watch they already wear. PIRX gives a Projected Time for a race, a Supported Range around it, and the five Structural Drivers behind it: Aerobic Base, Threshold Density, Speed Exposure, Running Economy and Load Consistency. Personal models, including gradient boosting, are only used when they beat the app's safe rules. Athletic estimates, not medical advice: https://abra-ca-dabra.app/portfolio/pirx/
 - StrongFoam, the public site, with an estimate a visitor can start and a booking: https://strongfoam.com/
 - Schema, scores how visible a site is to answer engines and generates the repair: https://schema-two.vercel.app/
 - LLM Leverage, a self-paced course for better answers from any model, plus a workshop path you can run: https://llm-leverage-course.vercel.app
@@ -74,6 +76,8 @@ When a product already on the market does the job, the reply says so and points 
 - AI that answers your phone.: https://abra-ca-dabra.app/services/voice-and-realtime-agents/
 - Put repetitive web work on autopilot.: https://abra-ca-dabra.app/services/web-automation/
 - Let AI run code, safely.: https://abra-ca-dabra.app/services/safe-code-execution/
+- Machine learning that shows its working.: https://abra-ca-dabra.app/services/machine-learning/
+- Connect your AI to your tools.: https://abra-ca-dabra.app/services/mcp-connectors/
 - Apps built around your workflow.: https://abra-ca-dabra.app/services/custom-apps/
 - On-brand images, video and voice, on demand.: https://abra-ca-dabra.app/services/ai-media/
 - Get found in AI search.: https://abra-ca-dabra.app/services/ai-visibility/
