@@ -18,6 +18,7 @@ import { workspacesFor } from "@/db/records";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
+import { isLiveSuperAdmin } from "@/lib/store/staff";
 import { formatRelative } from "@/lib/format";
 import { clientSpaceHref } from "@/lib/host";
 import { liveStaff } from "@/lib/store/staff";
@@ -51,6 +52,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const { sql, caller } = await requireHqStaffPage();
   const project = await projectById(sql, caller, id);
+  const reviewOverride = await isLiveSuperAdmin(sql, caller);
   if (!project) notFound();
   const now = clock();
   const [org, milestones, tasks, updates, staff, spaces, looseSpaces, activity, capRow, runsOpen, swarmRuns, clientRepos, siblings, swarm] =
@@ -196,6 +198,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   activity={activity}
                   runningTaskIds={swarm.runningTaskIds}
                   packs={swarm.packs}
+                  reviewOverride={reviewOverride}
                 />
               </CardContent>
             </Card>

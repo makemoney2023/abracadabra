@@ -72,19 +72,19 @@ async function count(kind: string): Promise<number> {
 }
 
 describe("board model", () => {
-  it("puts Review after run and before done, and done still wins", () => {
+  it("puts Waiting on Client Services after Doing and before Done, and done still wins", () => {
     expect(columnOf({ status: "doing", stage: "build", review_requested_at: NOW })).toBe("review");
     expect(columnOf({ status: "blocked", stage: "run", review_requested_at: NOW })).toBe("review");
     expect(columnOf({ status: "done", stage: "build", review_requested_at: NOW })).toBe("done");
-    expect(columnOf({ status: "doing", stage: "build", review_requested_at: null })).toBe("build");
-    expect(columnOf({ status: "doing", stage: "build" })).toBe("build");
+    expect(columnOf({ status: "doing", stage: "build", review_requested_at: null })).toBe("doing");
+    expect(columnOf({ status: "doing", stage: "build" })).toBe("doing");
     const columns = boardCards([
       { id: "a", status: "doing", stage: "build", position: 0, created_at: 0, done_at: null, review_requested_at: NOW },
       { id: "b", status: "doing", stage: "build", position: 1, created_at: 0, done_at: null, review_requested_at: null },
     ]);
-    expect(Object.keys(columns)).toEqual(["describe", "engineer", "build", "run", "review", "done"]);
+    expect(Object.keys(columns)).toEqual(["todo", "doing", "review", "done"]);
     expect(columns.review.map((card) => card.id)).toEqual(["a"]);
-    expect(columns.build.map((card) => card.id)).toEqual(["b"]);
+    expect(columns.doing.map((card) => card.id)).toEqual(["b"]);
   });
 
   it("keeps Review cards out of the HQ agent's queue", () => {
@@ -147,11 +147,11 @@ describe("moving into Review", () => {
   it("a plain move out of Review drops the flag and keeps the card", async () => {
     await moveTaskStage(sql, { taskId: "t-describe", to: "review", now: NOW, actor: staff });
     const moved = await moveTaskStage(sql, { taskId: "t-describe", to: "engineer", now: NOW + 1, actor: staff });
-    expect(moved).toMatchObject({ ok: true, column: "engineer" });
+    expect(moved).toMatchObject({ ok: true, column: "doing", stage: "engineer" });
     expect(await row("t-describe")).toMatchObject({ stage: "engineer", review_requested_at: null });
   });
 
-  it("filing or the deliverable PR path (markTaskDone) still finishes a Review card", async () => {
+  it("the deliverable PR path (markTaskDone) still finishes a Review card", async () => {
     await moveTaskStage(sql, { taskId: "t-build", to: "review", now: NOW, actor: staff });
     await markTaskDone(sql, { taskId: "t-build", now: NOW + 2, actor: staff });
     expect(await row("t-build")).toMatchObject({ status: "done", review_requested_at: null, done_at: NOW + 2 });
@@ -169,7 +169,7 @@ describe("staff review decisions", () => {
     expect(await row("t-build")).toMatchObject({ status: "done", review_requested_at: null, review_note: null, done_at: NOW + 5 });
     expect(await count("staff.task_review")).toBe(1);
     const updates = await listClientUpdates(sql, { since: null, now: NOW + 10_000, origin: "https://hq.example" });
-    expect(Array.isArray(updates) && updates.some((update) => update.summary.includes("Review approved"))).toBe(true);
+    expect(Array.isArray(updates) && updates.some((update) => update.summary.includes("review approved"))).toBe(true);
   });
 
   it("send back needs a note, and only works on a Review card", async () => {
@@ -181,7 +181,7 @@ describe("staff review decisions", () => {
   it("send back to in progress returns the card to its stage as doing and starts nothing (legacy)", async () => {
     const build = noStarts();
     const decided = await decideReview(sql, { taskId: "t-build", decision: "progress", note: "Fix the header", now: NOW + 5, actor: staff, build });
-    expect(decided).toMatchObject({ ok: true, column: "build", stage: "build", status: "doing" });
+    expect(decided).toMatchObject({ ok: true, column: "doing", stage: "build", status: "doing" });
     expect(decided).not.toHaveProperty("handedTo");
     expect(build.calls).toBe(0);
     expect(await row("t-build")).toMatchObject({ stage: "build", status: "doing", review_requested_at: null, review_note: "Fix the header" });
@@ -196,7 +196,7 @@ describe("staff review decisions", () => {
     await moveTaskStage(sql, { taskId: "t-run", to: "review", now: NOW + 6, actor: staff });
     const build = noStarts();
     const toBuild = await decideReview(sql, { taskId: "t-run", decision: "build", note: "Rebuild with the new copy", now: NOW + 7, actor: staff, build });
-    expect(toBuild).toMatchObject({ ok: true, column: "build", handedTo: "acme-lead" });
+    expect(toBuild).toMatchObject({ ok: true, column: "doing", stage: "build", handedTo: "acme-lead" });
     expect(build.calls).toBe(0);
     const reasons = await sql.all<{ data_json: string }>("SELECT data_json FROM activities WHERE kind = 'client_agent.dispatch' ORDER BY created_at");
     // Assigning the lead first hands over t-run (already in run); the Review card t-build is not handed over.
@@ -217,16 +217,27 @@ describe("client agent review action", () => {
     return principal;
   }
 
-  it("moves the card into the Review column and still posts to the feed; done waits on staff", async () => {
+  it("moves the card to Waiting on Client Services and posts to the feed; the agent can't finish or withdraw it", async () => {
     const agent = await lead();
     const reviewed = await updateAgentTask(sql, agent, { taskId: "t-build", change: { action: "review", note: "Draft filed." }, now: NOW + 1 });
     expect(reviewed).toMatchObject({ ok: true, task: { column: "review", stage: "build", review_note: "Draft filed." } });
     const board = await listAgentBoard(sql, agent, {});
     expect(board.ok && board.tasks.find((item) => item.id === "t-build")?.column).toBe("review");
-    const refused = await updateAgentTask(sql, agent, { taskId: "t-build", change: { action: "move", to: "done" }, now: NOW + 2 });
-    expect(refused).toMatchObject({ ok: false, status: 403 });
-    const back = await updateAgentTask(sql, agent, { taskId: "t-build", change: { action: "start" }, now: NOW + 3 });
-    expect(back).toMatchObject({ ok: true, task: { column: "build", review_requested_at: null } });
+    for (const change of [
+      { action: "move", to: "done" },
+      { action: "move", to: "doing" },
+      { action: "move", to: "todo" },
+      { action: "start" },
+      { action: "pause" },
+    ] as const) {
+      const refused = await updateAgentTask(sql, agent, { taskId: "t-build", change: change as never, now: NOW + 2 });
+      expect(refused).toMatchObject({ ok: false, status: 403, message: expect.stringContaining("Client Services") });
+    }
+    const noted = await updateAgentTask(sql, agent, { taskId: "t-build", change: { action: "note", body: "Logo swapped." }, now: NOW + 3 });
+    expect(noted).toMatchObject({ ok: true, task: { column: "review" } });
+    const blocked = await updateAgentTask(sql, agent, { taskId: "t-build", change: { action: "block", reason: "Need the logo file" }, now: NOW + 4 });
+    expect(blocked).toMatchObject({ ok: true, task: { column: "review", status: "blocked" } });
+    expect(await row("t-build")).toMatchObject({ review_requested_at: NOW + 1 });
     const updates = await listClientUpdates(sql, { since: null, now: NOW + 10_000, origin: "https://hq.example" });
     expect(Array.isArray(updates) && updates.some((update) => update.summary.includes("ready for review"))).toBe(true);
   });
@@ -234,12 +245,33 @@ describe("client agent review action", () => {
 
 describe("HQ chat tools", () => {
   const caller = { userId: "staff-1", staff: { superAdmin: false }, operatorOf: [], memberships: [] };
+  const admin = { userId: "staff-1", staff: { superAdmin: true }, operatorOf: [], memberships: [] };
 
   beforeEach(async () => {
     await sql.run(
       "INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at) VALUES ('staff-1', 'staff@example.com', 0, ?, NULL)",
       [NOW],
     );
+  });
+
+  it("set_task_stage takes todo and doing; doing inside Doing starts nothing", async () => {
+    const build = noStarts();
+    const toTodo = await runHqTool(
+      sql, caller as never,
+      { tool: "set_task_stage", input: { taskId: "t-run", stage: "todo" }, idempotencyKey: "s1", approved: true },
+      NOW, { build } as never,
+    );
+    expect(toTodo).toMatchObject({ ok: true });
+    expect(await row("t-run")).toMatchObject({ stage: "describe" });
+    await sql.run("UPDATE tasks SET stage = 'engineer' WHERE id = 't-run'");
+    const stay = await runHqTool(
+      sql, caller as never,
+      { tool: "set_task_stage", input: { taskId: "t-run", stage: "doing" }, idempotencyKey: "s2", approved: true },
+      NOW + 1, { build } as never,
+    );
+    expect(stay).toMatchObject({ ok: true });
+    expect(await row("t-run")).toMatchObject({ stage: "engineer" });
+    expect(build.calls).toBe(0);
   });
 
   it("set_task_stage takes review, list_tasks shows the column, review_task decides it", async () => {
@@ -254,14 +286,20 @@ describe("HQ chat tools", () => {
     expect(listed).toMatchObject({ ok: true });
     const value = (listed as { value: { id: string; column: string; review_note: string | null }[] }).value;
     expect(value.find((item) => item.id === "t-run")).toMatchObject({ column: "review", review_note: "Check it" });
-    const noNote = await runHqTool(
+    const notAdmin = await runHqTool(
       sql, caller as never,
+      { tool: "review_task", input: { taskId: "t-run", decision: "approve" }, idempotencyKey: "r1b", approved: true },
+      NOW, { build } as never,
+    );
+    expect(notAdmin).toEqual({ ok: false, error: "forbidden" });
+    const noNote = await runHqTool(
+      sql, admin as never,
       { tool: "review_task", input: { taskId: "t-run", decision: "progress" }, idempotencyKey: "r2", approved: true },
       NOW, { build } as never,
     );
     expect(noNote).toEqual({ ok: false, error: "invalid" });
     const approved = await runHqTool(
-      sql, caller as never,
+      sql, admin as never,
       { tool: "review_task", input: { taskId: "t-run", decision: "approve" }, idempotencyKey: "r3", approved: true },
       NOW + 1, { build } as never,
     );

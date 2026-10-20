@@ -57,7 +57,7 @@ export type WorkPayload = {
 export type FileResult =
   | {
       ok: true; duplicate: boolean; state: "filed"; workItemId: string; organizationId: string; workspaceId: string;
-      spaceSlug: string; projectId: string | null; paths: string[]; route: string; taskClosed: boolean; handoffTo: string | null;
+      spaceSlug: string; projectId: string | null; paths: string[]; route: string; taskClosed: boolean; handoffTo: string | null; awaitingReview?: boolean;
     }
   | { ok: true; duplicate: boolean; state: "unfiled" | "received" | "discarded"; workItemId: string; reason: string | null }
   | { ok: false; error: "invalid"; message: string }
@@ -426,7 +426,7 @@ async function writeFiled(
   sql: Sql,
   store: ObjectStore,
   input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; route: Extract<Route, { ok: true }>; actor: string; now: number },
-): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean } | { ok: false }> {
+): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview?: boolean } | { ok: false }> {
   const { route, payload, agent } = input;
   const summary = summaryMarkdown(agent, payload, input.now);
   const stored = await storeWorkflowOutput({
@@ -441,7 +441,15 @@ async function writeFiled(
     now: input.now,
   });
   if (!stored.batchId || stored.stored.length === 0) return { ok: false };
-  const closeTask = Boolean(route.taskId) && !payload.keepTaskOpen;
+  // A task in Review waits on Client Services: filing attaches the work (task_id on the item) but does not close it.
+  const reviewTask = route.taskId
+    ? await sql.get<{ title: string }>(
+        "SELECT title FROM tasks WHERE id = ? AND status != 'done' AND review_requested_at IS NOT NULL",
+        [route.taskId],
+      )
+    : undefined;
+  const awaitingReview = Boolean(reviewTask);
+  const closeTask = Boolean(route.taskId) && !payload.keepTaskOpen && !awaitingReview;
   const writes: Write[] = [
     {
       statement: `UPDATE agent_work_items SET state = 'filed', organization_id = ?, workspace_id = ?, project_id = ?, task_id = ?, task_closed = ?,
@@ -467,6 +475,18 @@ async function writeFiled(
       ],
     },
   ];
+  if (awaitingReview && reviewTask) {
+    writes.push({
+      statement: `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
+                  VALUES (?, ?, ?, ?, 'client_agent.review_waiting', 'agent', ?, ?, ?, ?)`,
+      params: [
+        crypto.randomUUID(), route.organizationId, route.projectId, route.space.id, agent.agentId,
+        `Awaiting Client Services review: "${reviewTask.title}". ${agent.label} filed "${payload.title}".`.slice(0, 500),
+        JSON.stringify({ task_id: route.taskId, work_item_id: input.itemId, agent_id: agent.agentId, paths: stored.stored, links: payload.links }),
+        input.now,
+      ],
+    });
+  }
   if (payload.handoffTo) {
     writes.push({
       statement: `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
@@ -481,7 +501,7 @@ async function writeFiled(
   }
   await sql.batch(writes);
   if (closeTask && route.taskId) await markTaskDone(sql, { taskId: route.taskId, now: input.now, actor: { kind: "agent", id: agent.agentId } });
-  return { ok: true, paths: stored.stored, batchId: stored.batchId, taskClosed: closeTask };
+  return { ok: true, paths: stored.stored, batchId: stored.batchId, taskClosed: closeTask, ...(awaitingReview ? { awaitingReview } : {}) };
 }
 
 async function markUnfiled(sql: Sql, itemId: string, agent: AgentPrincipal, payload: WorkPayload, reason: UnfiledReason, organizationId: string | null, suggested: string | null, now: number) {
@@ -575,7 +595,7 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
   return {
     ok: true, duplicate: false, state: "filed", workItemId: itemId, organizationId: route.organizationId, workspaceId: route.space.id,
     spaceSlug: route.space.slug, projectId: route.projectId, paths: filed.paths, route: route.route, taskClosed: filed.taskClosed,
-    handoffTo: payload.handoffTo,
+    handoffTo: payload.handoffTo, ...(filed.awaitingReview ? { awaitingReview: true } : {}),
   };
 }
 

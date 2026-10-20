@@ -12,6 +12,10 @@ import { GET as agentSkillGet } from "@/app/api/agent-skills/[...path]/route";
 import { POST as skillGrantsPost } from "@/app/api/client-services/skill-grants/route";
 import { cleanSkillPrefix, grantSkills, listAgentSkills, readAgentSkill } from "./agent-skills";
 import { POST as agentsPost } from "@/app/api/client-services/agents/route";
+import { GET as reviewsGet } from "@/app/api/client-services/reviews/route";
+import { POST as reviewDecide } from "@/app/api/client-services/reviews/[taskId]/route";
+import { moveTaskStage } from "./task-stage";
+import { decideReview } from "./task-review";
 import { localObjectStore, type ObjectStore } from "@/lib/store/objects";
 import {
   agentForToken,
@@ -81,6 +85,7 @@ afterEach(() => {
   delete (globalThis as Record<symbol, unknown>)[CTX];
   delete process.env.CLIENT_SERVICES_TOKEN;
   delete process.env.HANDOFF_OBJECT_PATH;
+  delete process.env.AGENT_MODE;
 });
 
 async function org(name: string, domain: string, kind = "client"): Promise<string> {
@@ -613,5 +618,115 @@ describe("agent read routes", () => {
     expect(denied.status).toBe(403);
     const noCs = await skillGrantsPost(new Request("https://hq.example/api/client-services/skill-grants", { method: "POST", body: "{}" }));
     expect(noCs.status).toBe(401);
+  });
+});
+
+describe("Client Services review flow", () => {
+  const cs = { authorization: "Bearer cs-review-token", "content-type": "application/json" };
+
+  async function inReview() {
+    const acme = await org("Acme", "acme.example");
+    const projectId = await project(acme, "Website");
+    await space(acme, "acme-example", projectId);
+    const made = await registerClientAgent(sql, { agentId: "acme-lead", label: "Acme lead", organizationId: acme, role: "lead", actor: "test", now: NOW });
+    if (!made.ok || !made.token) throw new Error("register failed");
+    const agent = (await agentForToken(sql, `Bearer ${made.token}`))!;
+    const taskId = await task(acme, projectId, "Landing page");
+    await moveTaskStage(sql, { taskId, to: "review", note: "Draft is ready.", now: NOW + 1, actor: { kind: "agent", id: "acme-lead" } });
+    return { acme, projectId, agent, taskId };
+  }
+
+  function decide(taskId: string, body: unknown, headers: Record<string, string> = cs) {
+    return reviewDecide(
+      new Request(`https://hq.example/api/client-services/reviews/${taskId}`, { method: "POST", headers, body: JSON.stringify(body) }),
+      { params: Promise.resolve({ taskId }) },
+    );
+  }
+
+  it("filing work on a task waiting on Client Services keeps it open, links the item, and posts awaiting review", async () => {
+    const { agent, taskId } = await inReview();
+    const filed = await fileAgentWork(sql, store, agent, { ...work, task_id: taskId }, NOW + 2);
+    expect(filed).toMatchObject({ state: "filed", taskClosed: false, awaitingReview: true });
+    const row = await sql.get<{ status: string; review_requested_at: number | null }>("SELECT status, review_requested_at FROM tasks WHERE id = ?", [taskId]);
+    expect(row).toEqual({ status: "doing", review_requested_at: NOW + 1 });
+    expect((await sql.get<{ task_id: string }>("SELECT task_id FROM agent_work_items WHERE state = 'filed'"))?.task_id).toBe(taskId);
+    const waiting = await sql.get<{ body: string; data_json: string }>("SELECT body, data_json FROM activities WHERE kind = 'client_agent.review_waiting'");
+    expect(waiting?.body).toContain('Awaiting Client Services review: "Landing page"');
+    expect(JSON.parse(waiting!.data_json)).toMatchObject({ task_id: taskId, agent_id: "acme-lead" });
+    const updates = await listClientUpdates(sql, { since: null, now: NOW + 10_000, origin: "https://hq.example" });
+    expect(Array.isArray(updates) && updates.some((update) => update.kind === "client_agent.review_waiting")).toBe(true);
+  });
+
+  it("GET lists open reviews with the note, who asked, the client's agents, and the filed work; token required", async () => {
+    const { acme, taskId, agent } = await inReview();
+    await fileAgentWork(sql, store, agent, { ...work, task_id: taskId }, NOW + 2);
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { DB: d1 } };
+    process.env.CLIENT_SERVICES_TOKEN = "cs-review-token";
+    expect((await reviewsGet(new Request("https://hq.example/api/client-services/reviews"))).status).toBe(401);
+    expect((await decide(taskId, { action: "approve" }, { authorization: "Bearer wrong" })).status).toBe(401);
+    const res = await reviewsGet(new Request("https://hq.example/api/client-services/reviews?client=acme.example", { headers: cs }));
+    expect(res.status).toBe(200);
+    const { reviews } = (await res.json()) as { reviews: Record<string, unknown>[] };
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0]).toMatchObject({
+      task_id: taskId,
+      title: "Landing page",
+      organization: { id: acme, name: "Acme" },
+      project: { name: "Website" },
+      note: "Draft is ready.",
+      requested_by: { kind: "agent", id: "acme-lead" },
+      agents: [{ agent_id: "acme-lead", role: "lead" }],
+      filed_work: [{ agent_id: "acme-lead", title: work.title, kind: "copy" }],
+    });
+    const other = await reviewsGet(new Request("https://hq.example/api/client-services/reviews?client=nobody.example", { headers: cs }));
+    expect(other.status).toBe(404);
+  });
+
+  it("POST approve moves it to Done with the timeline and feed; send_back needs a note; a decided card is 409", async () => {
+    const { taskId } = await inReview();
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { DB: d1 } };
+    process.env.CLIENT_SERVICES_TOKEN = "cs-review-token";
+    expect((await decide(taskId, { action: "maybe" })).status).toBe(400);
+    const noNote = await decide(taskId, { action: "send_back", note: "  " });
+    expect(noNote.status).toBe(400);
+    expect(await noNote.json()).toMatchObject({ code: "note_required" });
+    expect((await decide("missing-task", { action: "approve" })).status).toBe(404);
+    const approved = await decide(taskId, { action: "approve" });
+    expect(approved.status).toBe(200);
+    expect(await approved.json()).toMatchObject({ ok: true, column: "done", status: "done" });
+    const row = await sql.get<{ status: string; review_requested_at: number | null }>("SELECT status, review_requested_at FROM tasks WHERE id = ?", [taskId]);
+    expect(row).toEqual({ status: "done", review_requested_at: null });
+    const decided = await sql.get<{ actor_kind: string; actor_id: string; body: string }>(
+      "SELECT actor_kind, actor_id, body FROM activities WHERE kind = 'client_services.task_review'",
+    );
+    expect(decided).toMatchObject({ actor_kind: "system", actor_id: "client-services" });
+    expect(decided?.body).toContain("Client Services: review approved");
+    const updates = await listClientUpdates(sql, { since: null, now: NOW + 10_000, origin: "https://hq.example" });
+    expect(Array.isArray(updates) && updates.some((update) => update.kind === "client_services.task_review")).toBe(true);
+    expect((await decide(taskId, { action: "approve" })).status).toBe(409);
+  });
+
+  it("POST send_back in AGENT_MODE=agents returns it to Doing and hands the note to the lead agent", async () => {
+    process.env.AGENT_MODE = "agents";
+    const { taskId } = await inReview();
+    await sql.run("UPDATE tasks SET stage = 'build' WHERE id = ?", [taskId]);
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { DB: d1 } };
+    process.env.CLIENT_SERVICES_TOKEN = "cs-review-token";
+    const res = await decide(taskId, { action: "send_back", note: "Shorter hero, please." });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true, column: "doing", stage: "build", status: "doing", handed_to: "acme-lead" });
+    const row = await sql.get<{ review_requested_at: number | null; review_note: string }>("SELECT review_requested_at, review_note FROM tasks WHERE id = ?", [taskId]);
+    expect(row).toEqual({ review_requested_at: null, review_note: "Shorter hero, please." });
+    const dispatch = await sql.get<{ data_json: string }>(
+      "SELECT data_json FROM activities WHERE kind = 'client_agent.dispatch' AND json_extract(data_json, '$.reason') = 'changes'",
+    );
+    expect(JSON.parse(dispatch!.data_json)).toMatchObject({ task_id: taskId, to: "acme-lead", note: "Shorter hero, please." });
+  });
+
+  it("a client agent can't approve its own work", async () => {
+    const { taskId } = await inReview();
+    const tried = await decideReview(sql, { taskId, decision: "approve", now: NOW + 3, actor: { kind: "agent", id: "acme-lead" } });
+    expect(tried).toEqual({ ok: false, error: "invalid" });
+    expect((await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = ?", [taskId]))?.status).toBe("doing");
   });
 });

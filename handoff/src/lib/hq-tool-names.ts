@@ -86,7 +86,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   list_tasks: {
     label: "List tasks",
     description:
-      "Tasks for a client with status, stage, column (describe, engineer, build, run, review, done), review_note, and project_id. Fields: organizationId.",
+      "Tasks for a client with status, stage, column (todo, doing, review, done; review is Waiting on Client Services), review_note, and project_id. Fields: organizationId.",
   },
   list_projects: {
     label: "List projects",
@@ -164,12 +164,12 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   set_task_stage: {
     label: "Move a task",
     description:
-      "Set a task stage: describe, engineer, build, run, or review. Build needs an approved brief. Review waits on staff and starts nothing. Fields: taskId, stage, note (review only).",
+      "Move a task on the four-column board: todo (To do), doing (Doing, stores build), or review (Waiting on Client Services; starts nothing). The stage names describe, engineer, build, and run still work. Build needs an approved brief. Fields: taskId, stage, note (review only).",
   },
   review_task: {
-    label: "Decide a review",
+    label: "Admin override: decide a review",
     description:
-      "Decide a task in the Review column. decision approve moves it to done. progress sends it back to its stage as in progress and starts nothing. build sends it back to build (a build move: legacy starts a cloud run). A send back needs a note. Fields: taskId, decision (approve, progress, build), note.",
+      "Admin override only (super admins). Client Services normally decides Review cards. Decide a task in the Review column (Waiting on Client Services). decision approve moves it to done. progress sends it back to its stage as in progress and starts nothing. build sends it back to build (a build move: legacy starts a cloud run). A send back needs a note. Fields: taskId, decision (approve, progress, build), note.",
   },
   add_work: {
     label: "Add work to the brief",

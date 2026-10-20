@@ -67,7 +67,8 @@ export async function dispatchToLeadAgent(
 }
 
 /**
- * AGENT_MODE=agents: hand the client's lead agent every open task already sitting in build or run (not in Review)
+ * AGENT_MODE=agents: hand the client's lead agent every open task already in Doing (stage engineer, build, or run; not
+ * waiting on Client Services)
  * whose latest dispatch did not go to that lead, e.g. tasks moved before any lead was assigned. Runs on lead
  * assignment and from the staff button. Returns the task ids handed over.
  */
@@ -84,7 +85,7 @@ export async function handOverWaitingTasks(
                AND json_extract(a.data_json, '$.task_id') = t.id
              ORDER BY a.created_at DESC, a.rowid DESC LIMIT 1) AS last_to
      FROM tasks t
-     WHERE t.organization_id = ? AND t.stage IN ('build', 'run') AND t.status != 'done' AND t.review_requested_at IS NULL
+     WHERE t.organization_id = ? AND t.stage IN ('engineer', 'build', 'run') AND t.status != 'done' AND t.review_requested_at IS NULL
      ORDER BY t.position, t.created_at, t.id`,
     [input.organizationId],
   );

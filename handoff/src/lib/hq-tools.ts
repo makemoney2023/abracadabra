@@ -1647,7 +1647,10 @@ async function setTaskStage(
   options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const stage = text(input, "stage");
-  if (stage !== "describe" && stage !== "engineer" && stage !== "build" && stage !== "run" && stage !== "review") {
+  if (
+    stage !== "todo" && stage !== "doing" && stage !== "describe" && stage !== "engineer" && stage !== "build" &&
+    stage !== "run" && stage !== "review"
+  ) {
     return { ok: false, error: "invalid" };
   }
   const task = await sql.get<{ id: string; organization_id: string | null }>(
@@ -1694,6 +1697,8 @@ async function reviewTask(
 ): Promise<HqToolResult> {
   const decision = text(input, "decision");
   if (decision !== "approve" && decision !== "progress" && decision !== "build") return { ok: false, error: "invalid" };
+  // Client Services decides reviews; chat may only do it as a super-admin override.
+  if (!caller.staff?.superAdmin) return { ok: false, error: "forbidden" };
   const task = await sql.get<{ id: string; organization_id: string | null }>(
     "SELECT id, organization_id FROM tasks WHERE id = ?",
     [text(input, "taskId")],

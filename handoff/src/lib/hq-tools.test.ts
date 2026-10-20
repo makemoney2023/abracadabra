@@ -797,7 +797,7 @@ it("returns the client's projects and reuses one with the same name", async () =
       title: "Create content calendar",
       status: "todo",
       stage: "describe",
-      column: "describe",
+      column: "todo",
       review_note: null,
       project_id: projectId,
     },

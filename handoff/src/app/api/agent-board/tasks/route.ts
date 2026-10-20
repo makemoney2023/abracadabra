@@ -6,7 +6,7 @@ import { agentForToken } from "@/lib/agent-work-filing";
 
 export const dynamic = "force-dynamic";
 
-/** New task on a client's board. Bearer agent token. Body: { title, note?, stage?: describe|engineer, client?, project_id? } */
+/** New task on a client's board. Bearer agent token. Body: { title, note?, stage?: todo|doing (old names describe|engineer still work), client?, project_id? } */
 export async function POST(request: Request) {
   const sql = await openHandoffDb();
   await migrate(sql);

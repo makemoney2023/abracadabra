@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { wakeOrganization } from "@/lib/agent-wake";
 import { defaultBuildDeps } from "@/lib/cursor-build";
 import { requireHqStaffPage } from "@/lib/current";
-import { isColumn, moveTaskStage, type TaskColumn } from "@/lib/task-stage";
+import { isMoveTarget, moveTaskStage, type MoveTarget } from "@/lib/task-stage";
 import { decideReview, type ReviewDecision } from "@/lib/task-review";
 import { writeTaskPack } from "@/lib/task-packs";
 import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
 import { openObjectStore } from "@/lib/store/objects";
+import { isLiveSuperAdmin } from "@/lib/store/staff";
 
 const REASON: Record<string, string> = {
   missing: "That task is not on the board.",
@@ -23,12 +24,13 @@ const REASON: Record<string, string> = {
   agent_paused: "The agent is paused.",
   cursor_start_failed: "The cloud run did not start.",
   prompt_rejected: "Rewrite the build brief.",
-  not_in_review: "That card is not in Review.",
+  not_in_review: "That card is not waiting on Client Services.",
   note_required: "Add a note so the agent knows what to change.",
 };
 
-function columnOf(value: string): TaskColumn | null {
-  return isColumn(value) ? value : null;
+/** The board sends a column (todo, doing, review, done); Run swarm sends run. */
+function columnOf(value: string): MoveTarget | null {
+  return isMoveTarget(value) ? value : null;
 }
 
 function wakeFor(now: number) {
@@ -102,10 +104,15 @@ export async function moveBoardCardAction(formData: FormData): Promise<{ ok: boo
 
 const DECISIONS = new Set<ReviewDecision>(["approve", "progress", "build"]);
 
-/** Approve a Review card to done, or send it back to in progress or build with a note. */
+/**
+ * Admin override for a Review card: approve to done, or send back with a note. Client Services normally decides
+ * these through POST /api/client-services/reviews/<taskId>. Super admins only.
+ */
 export async function reviewCardAction(formData: FormData): Promise<{ ok: boolean; message: string }> {
   const { sql, caller } = await requireHqStaffPage();
-  if (!caller.userId) return { ok: false, message: "You can't do that." };
+  if (!caller.userId || !(await isLiveSuperAdmin(sql, caller))) {
+    return { ok: false, message: "Client Services decides reviews. Only an admin can override." };
+  }
   const taskId = String(formData.get("taskId") ?? "");
   const organizationId = String(formData.get("organizationId") ?? "");
   const projectId = String(formData.get("projectId") ?? "");
@@ -129,7 +136,7 @@ export async function reviewCardAction(formData: FormData): Promise<{ ok: boolea
   if (organizationId) revalidatePath(`/clients/${organizationId}`);
   if (projectId) revalidatePath(`/projects/${projectId}`);
   if (!decided.ok) return { ok: false, message: REASON[decided.error] ?? "That did not stick." };
-  if (decision === "approve") return { ok: true, message: "Approved. Moved to done." };
+  if (decision === "approve") return { ok: true, message: "Override: approved. Moved to done." };
   if (decided.waiting) return { ok: true, message: "Sent back. Waiting for a free cloud run." };
   return { ok: true, message: decision === "build" ? "Sent back to build." : "Sent back to in progress." };
 }

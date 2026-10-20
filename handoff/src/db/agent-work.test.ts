@@ -144,3 +144,31 @@ describe("agent deliverable items", () => {
     ]);
   });
 });
+
+describe("update_task on the four-column board", () => {
+  async function card(): Promise<string> {
+    await sql.run(
+      `INSERT INTO tasks (id, organization_id, title, status, stage, position, created_at, updated_at)
+       VALUES ('t-1', 'org-1', 'Landing page', 'doing', 'build', 0, ?, ?)`,
+      [NOW, NOW],
+    );
+    return "t-1";
+  }
+  const actor = { keyId: "key-1", organizationId: "org-1" };
+
+  it("refuses to move or finish a card waiting on Client Services", async () => {
+    const id = await card();
+    await runAgentWork(sql, actor, "update_task", { requestId: "r-review", taskId: id, stage: "review", note: "Ready" }, NOW);
+    for (const [index, args] of [{ status: "done" }, { stage: "describe" }, { stage: "todo" }, { stage: "build" }].entries()) {
+      await expect(runAgentWork(sql, actor, "update_task", { requestId: `r-${index}`, taskId: id, ...args }, NOW + 1)).rejects.toThrow(/Client Services/);
+    }
+    const row = await sql.get<{ status: string; review_requested_at: number | null }>("SELECT status, review_requested_at FROM tasks WHERE id = ?", [id]);
+    expect(row).toEqual({ status: "doing", review_requested_at: NOW });
+  });
+
+  it("todo stores describe", async () => {
+    const id = await card();
+    await runAgentWork(sql, actor, "update_task", { requestId: "r-todo", taskId: id, stage: "todo" }, NOW);
+    expect((await sql.get<{ stage: string }>("SELECT stage FROM tasks WHERE id = ?", [id]))?.stage).toBe("describe");
+  });
+});

@@ -656,7 +656,7 @@ describe("build gate", () => {
       actor: { kind: "staff", id: "staff-1" },
       build: deps(quiet.fetch),
     });
-    expect(moved).toMatchObject({ ok: true, column: "build", status: "doing" });
+    expect(moved).toMatchObject({ ok: true, column: "doing", stage: "build", status: "doing" });
     expect(await sql.get("SELECT stage, status, done_at FROM tasks WHERE id = 'task-1'")).toEqual({
       stage: "build",
       status: "doing",
@@ -679,7 +679,7 @@ describe("build gate", () => {
       actor: { kind: "staff", id: "staff-1" },
       build: deps(quiet.fetch),
     });
-    expect(moved).toMatchObject({ ok: true, column: "build", status: "todo", waiting: "cap_reached" });
+    expect(moved).toMatchObject({ ok: true, column: "doing", stage: "build", status: "todo", waiting: "cap_reached" });
     expect(await sql.get("SELECT stage, status, done_at FROM tasks WHERE id = 'task-1'")).toEqual({
       stage: "build",
       status: "todo",

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listBoard, listBoardActivity, boardClientChips, listProjects, openCloudRunCount } from "@/db/crm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
+import { isLiveSuperAdmin } from "@/lib/store/staff";
 import { PageFrame } from "@/components/page-frame";
 import { StaffShell } from "../staff-shell";
 import { boardSwarmExtras } from "@/lib/board-swarm";
@@ -48,11 +49,12 @@ export default async function WorkPage({
   const orgIds = [...new Set(visible.map((card) => card.organization_id))];
   const activity = await listBoardActivity(sql, caller, orgIds);
   const runCap = capRow ? Number(capRow.value) : null;
+  const reviewOverride = await isLiveSuperAdmin(sql, caller);
   const scope = { late, week, blocked, review, client: client || undefined };
 
   return (
     <StaffShell>
-      <PageFrame title="Work" description="Cards for every client. The agent takes the top card in Describe or Engineer. Review waits on staff to approve or send back.">
+      <PageFrame title="Work" description="Cards for every client: To do, Doing, Waiting on Client Services, and Done. Client Services approves a card or sends it back.">
         <ClientRequests rows={pending} />
         <WorkToolbar late={late} week={week} blocked={blocked} review={review} client={client || undefined} project={project || undefined} counts={counts} />
         <div className="flex flex-wrap gap-2">
@@ -101,6 +103,7 @@ export default async function WorkPage({
           activity={activity}
           runningTaskIds={swarm.runningTaskIds}
           packs={swarm.packs}
+          reviewOverride={reviewOverride}
         />
       </PageFrame>
     </StaffShell>

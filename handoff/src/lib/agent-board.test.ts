@@ -182,9 +182,9 @@ describe("AGENT_MODE flag", () => {
     const fetchImpl = vi.fn(async () => new Response("{}"));
     process.env.AGENT_MODE = "agents";
     const built = await moveTaskStage(sql, { taskId: build, to: "build", now: NOW, actor: { kind: "staff", id: "u1" }, build: deps(fetchImpl as unknown as typeof fetch) });
-    expect(built).toMatchObject({ ok: true, column: "build", status: "doing", handedTo: "acme-lead" });
+    expect(built).toMatchObject({ ok: true, column: "doing", stage: "build", status: "doing", handedTo: "acme-lead" });
     const ran = await moveTaskStage(sql, { taskId: run, to: "run", now: NOW + 1, actor: { kind: "staff", id: "u1" }, swarm: { origin: "https://hq.example", fetchImpl: fetchImpl as unknown as typeof fetch } });
-    expect(ran).toMatchObject({ ok: true, column: "run", handedTo: "acme-lead" });
+    expect(ran).toMatchObject({ ok: true, column: "doing", stage: "run", handedTo: "acme-lead" });
     expect(fetchImpl).not.toHaveBeenCalled();
     const dispatches = (await feed()).filter((update) => update.kind === "client_agent.dispatch");
     expect(dispatches).toHaveLength(2);
@@ -261,27 +261,49 @@ describe("agent board updates", () => {
     expect((await step({ action: "start" }, 1)).status).toBe("doing");
     const blocked = await step({ action: "block", reason: "Waiting on the logo files" }, 2);
     expect(blocked).toMatchObject({ status: "blocked", blocked_reason: "Waiting on the logo files" });
-    expect((await step({ action: "review", note: "Draft is in the space." }, 3)).status).toBe("doing");
-    await step({ action: "note", body: "Used the spring palette." }, 4);
-    expect((await step({ action: "move", to: "engineer" }, 5)).column).toBe("engineer");
-    expect((await step({ action: "move", to: "done" }, 6)).column).toBe("done");
+    await step({ action: "note", body: "Used the spring palette." }, 3);
+    expect(await step({ action: "move", to: "describe" }, 4)).toMatchObject({ column: "todo", stage: "describe" });
+    expect((await step({ action: "move", to: "done" }, 5)).column).toBe("done");
+    const second = await task(acme, site, "About page");
+    const reviewed = await updateAgentTask(sql, principal, { taskId: second, change: parseBoardAction({ action: "review", note: "Draft is in the space." })!, now: NOW + 6 });
+    expect(reviewed).toMatchObject({ ok: true, task: { column: "review", status: "doing" } });
     const timeline = await kinds("client_agent.board");
-    expect(timeline.map((row) => JSON.parse(row.data_json).action)).toEqual(["start", "block", "review", "note", "move", "move"]);
+    expect(timeline.map((row) => JSON.parse(row.data_json).action)).toEqual(["start", "block", "note", "move", "move", "review"]);
+    const moves = timeline.filter((row) => JSON.parse(row.data_json).action === "move").map((row) => JSON.parse(row.data_json));
+    expect(moves.map((data) => [data.to, data.asked ?? null])).toEqual([["todo", "describe"], ["done", null]]);
+    expect(timeline.find((row) => JSON.parse(row.data_json).to === "todo")?.body).toContain("to To do.");
     const posted = (await feed()).filter((update) => update.kind === "client_agent.board");
     expect(posted).toHaveLength(6);
     expect(posted.some((update) => update.summary.includes("Waiting on the logo files"))).toBe(true);
     expect(posted.some((update) => update.summary.includes("ready for review"))).toBe(true);
   });
 
-  it("refuses build and run moves in legacy mode, and hands them off in agents mode", async () => {
+  it("move takes todo, doing, review, and done, and the old stage names as aliases", () => {
+    expect(parseBoardAction({ action: "move", to: "todo" })).toEqual({ action: "move", to: "todo" });
+    expect(parseBoardAction({ action: "move", to: "Doing" })).toEqual({ action: "move", to: "doing" });
+    expect(parseBoardAction({ action: "move", to: "describe" })).toEqual({ action: "move", to: "todo", asked: "describe" });
+    for (const old of ["engineer", "build", "run"]) {
+      expect(parseBoardAction({ action: "move", to: old })).toEqual({ action: "move", to: "doing", asked: old });
+    }
+    expect(parseBoardAction({ action: "move", to: "review" })).toEqual({ action: "move", to: "review" });
+    expect(parseBoardAction({ action: "move", to: "done" })).toEqual({ action: "move", to: "done" });
+  });
+
+  it("refuses moves into Doing in legacy mode, and in agents mode stores build and hands it to the lead agent", async () => {
     const { acme, site } = await client();
-    const id = await task(acme, site, "Homepage", { stage: "engineer" });
+    const id = await task(acme, site, "Homepage");
     const { principal } = await agent(acme, "acme-lead");
-    const refused = await updateAgentTask(sql, principal, { taskId: id, change: { action: "move", to: "build" }, now: NOW });
-    expect(refused).toMatchObject({ ok: false, status: 403 });
+    for (const to of ["doing", "build", "run", "engineer"]) {
+      const refused = await updateAgentTask(sql, principal, { taskId: id, change: parseBoardAction({ action: "move", to })!, now: NOW });
+      expect(refused).toMatchObject({ ok: false, status: 403 });
+    }
     process.env.AGENT_MODE = "agents";
-    const moved = await updateAgentTask(sql, principal, { taskId: id, change: { action: "move", to: "build" }, now: NOW });
-    expect(moved).toMatchObject({ ok: true, handedTo: "acme-lead", task: { column: "build" } });
+    const moved = await updateAgentTask(sql, principal, { taskId: id, change: parseBoardAction({ action: "move", to: "doing" })!, now: NOW });
+    expect(moved).toMatchObject({ ok: true, handedTo: "acme-lead", task: { column: "doing", stage: "build" } });
+    // Already in Doing: run (an alias of doing) changes nothing and hands nothing over again.
+    const again = await updateAgentTask(sql, principal, { taskId: id, change: parseBoardAction({ action: "move", to: "run" })!, now: NOW + 1 });
+    expect(again).toMatchObject({ ok: true, task: { column: "doing", stage: "build" } });
+    expect(await kinds("client_agent.dispatch")).toHaveLength(1);
   });
 
   it("cannot touch another client's task, and rejects unknown actions such as delete", async () => {
@@ -301,13 +323,15 @@ describe("agent board updates", () => {
     const { acme, site } = await client();
     const { principal } = await agent(acme, "acme-lead");
     const made = await createAgentTask(sql, principal, { title: "Write FAQ", note: "From the kickoff call.", now: NOW });
-    expect(made).toMatchObject({ ok: true, task: { project_id: site, column: "describe", status: "todo" } });
+    expect(made).toMatchObject({ ok: true, task: { project_id: site, column: "todo", stage: "describe", status: "todo" } });
     const row = await sql.get<{ created_by_kind: string }>("SELECT created_by_kind FROM tasks WHERE title = 'Write FAQ'");
     expect(row?.created_by_kind).toBe("agent");
     expect((await feed()).some((update) => update.kind === "client_agent.board" && update.summary.includes("Write FAQ"))).toBe(true);
     const second = await project(acme, "Socials");
     expect(await createAgentTask(sql, principal, { title: "Plan posts", now: NOW })).toMatchObject({ ok: false, status: 400 });
-    expect(await createAgentTask(sql, principal, { title: "Plan posts", projectId: second, stage: "engineer", now: NOW })).toMatchObject({ ok: true, task: { project_id: second, column: "engineer" } });
+    expect(await createAgentTask(sql, principal, { title: "Plan posts", projectId: second, stage: "engineer", now: NOW })).toMatchObject({ ok: true, task: { project_id: second, column: "doing", stage: "engineer" } });
+    expect(await createAgentTask(sql, principal, { title: "Plan reels", projectId: second, stage: "doing", now: NOW })).toMatchObject({ ok: true, task: { column: "doing", stage: "engineer" } });
+    expect(await createAgentTask(sql, principal, { title: "Plan stories", projectId: second, stage: "todo", now: NOW })).toMatchObject({ ok: true, task: { column: "todo", stage: "describe" } });
     expect(await createAgentTask(sql, principal, { title: "Plan posts", projectId: second, stage: "done", now: NOW })).toMatchObject({ ok: false, status: 400 });
     const other = await org("Other", "other.example");
     expect(await createAgentTask(sql, principal, { title: "Sneaky", projectId: await project(other, "Theirs"), now: NOW })).toMatchObject({ ok: false, status: 403 });

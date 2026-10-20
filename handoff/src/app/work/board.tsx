@@ -142,7 +142,7 @@ function CardMenu({ card }: { card: WorkBoardCard }) {
 }
 
 /** Staff decision on a card in Review: approve to done, or send back with a note. */
-function ReviewPanel({ card, now }: { card: WorkBoardCard; now: number }) {
+function ReviewPanel({ card, now, override }: { card: WorkBoardCard; now: number; override: boolean }) {
   const [note, setNote] = useState("");
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -164,32 +164,40 @@ function ReviewPanel({ card, now }: { card: WorkBoardCard; now: number }) {
       toast.error(result.message);
     });
   }
-  const from = card.stage === "describe" || card.stage === "engineer" || card.stage === "build" || card.stage === "run" ? card.stage : "describe";
+  const from = columnOf({ status: "todo", stage: card.stage });
   return (
     <div className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/40 p-2" aria-label={`Review ${card.title}`}>
       <p className="text-xs text-muted-foreground">
-        Waiting on review{card.review_requested_at ? ` · ${formatRelative(card.review_requested_at, now)}` : ""} · from{" "}
+        Waiting on Client Services{card.review_requested_at ? ` · ${formatRelative(card.review_requested_at, now)}` : ""} · from{" "}
         {BOARD_COLUMN_LABEL[from]}
       </p>
       {card.review_note ? <p className="whitespace-pre-wrap text-xs">{card.review_note}</p> : null}
-      <Input
-        value={note}
-        maxLength={2000}
-        placeholder="Note (needed to send back)"
-        aria-label={`Review note for ${card.title}`}
-        onChange={(event) => setNote(event.target.value)}
-      />
-      <div className="flex flex-wrap gap-1.5">
-        <Button size="sm" type="button" disabled={pending} onClick={() => decide("approve")}>
-          Approve
-        </Button>
-        <Button size="sm" type="button" variant="outline" disabled={pending || note.trim().length === 0} onClick={() => decide("progress")}>
-          Send back
-        </Button>
-        <Button size="sm" type="button" variant="ghost" disabled={pending || note.trim().length === 0} onClick={() => decide("build")}>
-          Back to build
-        </Button>
-      </div>
+      {override ? (
+        <details className="text-xs">
+          <summary className="text-muted-foreground">Admin override</summary>
+          <div className="mt-1.5 flex flex-col gap-1.5">
+            <p className="text-muted-foreground">Client Services approves Review cards. Use this only to step in for it.</p>
+            <Input
+              value={note}
+              maxLength={2000}
+              placeholder="Note (needed to send back)"
+              aria-label={`Review note for ${card.title}`}
+              onChange={(event) => setNote(event.target.value)}
+            />
+            <div className="flex flex-wrap gap-1.5">
+              <Button size="sm" type="button" variant="outline" disabled={pending} onClick={() => decide("approve")}>
+                Override: approve
+              </Button>
+              <Button size="sm" type="button" variant="outline" disabled={pending || note.trim().length === 0} onClick={() => decide("progress")}>
+                Override: send back
+              </Button>
+              <Button size="sm" type="button" variant="ghost" disabled={pending || note.trim().length === 0} onClick={() => decide("build")}>
+                Override: back to build
+              </Button>
+            </div>
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -203,6 +211,7 @@ function CardFace({
   running,
   packs,
   onMove,
+  reviewOverride = false,
 }: {
   card: WorkBoardCard;
   now: number;
@@ -211,7 +220,8 @@ function CardFace({
   notes: BoardActivity[];
   running: boolean;
   packs: { id: string; name: string }[];
-  onMove: (taskId: string, column: BoardColumn) => void;
+  onMove: (taskId: string, column: BoardColumn | "run") => void;
+  reviewOverride?: boolean;
 }) {
   const late = card.due_at !== null && card.due_at < now && card.status !== "done";
   const review = inReview(card);
@@ -287,7 +297,7 @@ function CardFace({
       {card.status !== "done" && card.stage === "run" && swarm.templateId && !running ? (
         <p className="text-xs text-muted-foreground">{packName} is scheduled.</p>
       ) : null}
-      {review ? <ReviewPanel card={card} now={now} /> : null}
+      {review ? <ReviewPanel card={card} now={now} override={reviewOverride} /> : null}
       {swarm.ready && !review ? (
         <Button size="sm" type="button" disabled={pending} onClick={() => onMove(card.id, "run")}>
           Run swarm
@@ -376,6 +386,7 @@ export function WorkBoard({
   activity,
   runningTaskIds = [],
   packs = [],
+  reviewOverride = false,
 }: {
   cards: WorkBoardCard[];
   now: number;
@@ -386,6 +397,8 @@ export function WorkBoard({
   activity: BoardActivity[];
   runningTaskIds?: string[];
   packs?: { id: string; name: string }[];
+  /** Super admins see the admin override on Review cards. Client Services decides them through its API. */
+  reviewOverride?: boolean;
 }) {
   const columns = boardCards(cards);
   const notes = new Map<string, BoardActivity[]>();
@@ -396,7 +409,7 @@ export function WorkBoard({
   }
   const router = useRouter();
   const [, startTransition] = useTransition();
-  function dropCard(taskId: string, column: BoardColumn) {
+  function dropCard(taskId: string, column: BoardColumn | "run") {
     const card = cards.find((item) => item.id === taskId);
     if (!card) return;
     if (columnOf(card) === column) return;
@@ -420,7 +433,7 @@ export function WorkBoard({
       <div className="flex w-max gap-3 pb-3">
         {BOARD_COLUMNS.map((column) => {
           const items = columns[column];
-          const capNote = column === "build" && runCap !== null ? ` · ${runsOpen}/${runCap}` : "";
+          const capNote = column === "doing" && runCap !== null ? ` · ${runsOpen}/${runCap}` : "";
           return (
             <section
               key={column}
@@ -452,6 +465,7 @@ export function WorkBoard({
                   running={runningTaskIds.includes(card.id)}
                   packs={packs}
                   onMove={dropCard}
+                  reviewOverride={reviewOverride}
                 />
               ))}
             </section>
