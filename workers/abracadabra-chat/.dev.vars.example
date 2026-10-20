@@ -16,3 +16,9 @@ CHAT_HANDOFF_TO=houdini@abra-ca-dabra.app
 CHAT_HANDOFF_FROM=Abracadabra Chat <chat@abra-ca-dabra.app>
 # Extra allowed Origins, comma-separated. The apex and localhost are already allowed.
 CHAT_ORIGINS=
+# Realtime voice. "true" shows the mic. Needs the AI binding (wrangler.jsonc), AI_GATEWAY_TOKEN and CF_ACCOUNT_ID.
+VOICE_ENABLED=true
+# Aura-2 speaker, for example luna, thalia, asteria, orion. Unknown names fall back to luna.
+TTS_SPEAKER=luna
+# Optional override.
+TTS_MODEL=@cf/deepgram/aura-2-en

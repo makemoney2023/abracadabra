@@ -75,3 +75,27 @@ test("the studio skin uses the site tokens", () => {
   assert.match(widgetCss, /220ms cubic-bezier/);
   assert.match(widgetCss, /92dvh/);
 });
+
+test("voice helpers: support check, socket URL, PCM decode, clock", async () => {
+  const { formatClock, voiceSupported, realtimeUrl, pcmToFloat, MIC_WORKLET } = await import("../assets/chat-widget.js");
+  const full = {
+    AudioContext() {}, AudioWorkletNode() {}, WebSocket() {},
+    navigator: { mediaDevices: { getUserMedia() {} } }, isSecureContext: true,
+  };
+  assert.equal(voiceSupported({}), false);
+  assert.equal(voiceSupported(full), true);
+  assert.equal(voiceSupported({ ...full, AudioWorkletNode: undefined }), false);
+  assert.equal(voiceSupported({ ...full, isSecureContext: false }), false);
+  assert.equal(voiceSupported({ ...full, AudioContext: undefined, webkitAudioContext() {} }), true);
+  assert.equal(realtimeUrl({ protocol: "https:", host: "abra-ca-dabra.app" }), "wss://abra-ca-dabra.app/api/chat/realtime");
+  assert.equal(realtimeUrl({ protocol: "http:", host: "127.0.0.1:4500" }), "ws://127.0.0.1:4500/api/chat/realtime");
+  const pcm = new Int16Array([0, 16384, -32768, 32767]);
+  const out = pcmToFloat(pcm.buffer);
+  assert.deepEqual([...out].map((v) => Math.round(v * 1000) / 1000), [0, 0.5, -1, 1]);
+  assert.equal(pcmToFloat(new Uint8Array(3).buffer).length, 1);
+  assert.equal(formatClock(12_400), "0:12");
+  assert.equal(formatClock(185_000), "3:05");
+  assert.match(MIC_WORKLET, /registerProcessor\("abra-mic"/);
+  assert.match(MIC_WORKLET, /sampleRate \/ 16000/);
+});
+

@@ -11,13 +11,16 @@ import {
   verifyTurnstile,
 } from "./policy.js";
 import { applyChatEvent, blankSession, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
+import { VoiceCall } from "./realtime.js";
+import { VOICE_CALLS_PER_SESSION, VOICE_TURNS_PER_SESSION, voiceEnabled } from "./voice.js";
 
 const WINDOW_MS = 60 * 60 * 1000;
 const IP_MESSAGE_LIMIT = 20;
 const IP_SESSION_LIMIT = 8;
 const SESSION_MESSAGE_LIMIT = 30;
+const IP_CALL_LIMIT = 6;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const isolateLimits = { messages: new Map(), sessions: new Map() };
+const isolateLimits = { messages: new Map(), sessions: new Map(), calls: new Map() };
 const isolateRooms = new Map();
 
 export function readCookie(header, name) {
@@ -66,7 +69,15 @@ async function readJson(request) {
 }
 
 function limitsFor(deps) {
-  return deps.limits || isolateLimits;
+  const limits = deps.limits || isolateLimits;
+  if (!limits.calls) limits.calls = new Map();
+  return limits;
+}
+
+function gateHit(limits, name, ip, now, limit) {
+  const gate = rateGate(limits[name].get(ip) || [], now, limit, WINDOW_MS);
+  limits[name].set(ip, gate.hits);
+  return gate.ok;
 }
 
 function roomsFor(deps) {
@@ -92,6 +103,7 @@ function publicConfig(env) {
     calLink: String(env.CAL_LINK || env.BOOKING_URL || "").trim(),
     readinessCheckUrl: String(env.READINESS_CHECK_URL || "https://check.abra-ca-dabra.app/check").trim(),
     turnstileSiteKey: String(env.TURNSTILE_SITE_KEY || "").trim(),
+    voiceEnabled: voiceEnabled(env),
     greeting: "Ask a plain question. A person reviews anything we follow up on.",
   };
 }
@@ -214,6 +226,36 @@ export async function handleSession(request, storage, env, deps) {
     return sse(checked.text, action);
   }
 
+  if (url.pathname === "/api/chat/realtime") {
+    if (!voiceEnabled(env)) return json({ error: "Voice is off right now. Type your question." }, 404);
+    if ((request.headers.get("upgrade") || "").toLowerCase() !== "websocket") {
+      return json({ error: "Open the voice call from the chat." }, 426);
+    }
+    if ((session.voiceCalls || 0) >= VOICE_CALLS_PER_SESSION || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) {
+      return json({ error: "That is the voice limit for this chat. You can keep typing." }, 429);
+    }
+    const slot = deps.callSlot || deps;
+    if (slot.activeCall && !slot.activeCall.closed) {
+      return json({ error: "A voice call is already open in this chat." }, 409);
+    }
+    session.voiceCalls = (session.voiceCalls || 0) + 1;
+    session.updatedAt = now;
+    await save(storage, session, deps);
+    const pair = deps.webSocketPair ? deps.webSocketPair() : new WebSocketPair();
+    const [client, server] = Object.values(pair);
+    server.accept();
+    const call = new VoiceCall({
+      client: server,
+      env,
+      deps,
+      loadSession: () => load(storage, deps.now ? deps.now() : Date.now()),
+      saveSession: (next) => save(storage, next, deps),
+    });
+    slot.activeCall = call;
+    void call.start();
+    return deps.upgrade ? deps.upgrade(client, call) : new Response(null, { status: 101, webSocket: client });
+  }
+
   if (url.pathname === "/api/chat/contact") {
     const parsed = await readJson(request);
     if (!parsed.ok) return json({ error: parsed.message }, parsed.status);
@@ -281,7 +323,8 @@ export async function handleRequest(request, env = {}, deps = {}) {
     return cors(json(publicConfig(env), 200), request, env);
   }
 
-  if (request.method !== "POST") return cors(json({ error: "Method not allowed." }, 405), request, env);
+  const realtime = url.pathname === "/api/chat/realtime" && request.method === "GET";
+  if (request.method !== "POST" && !realtime) return cors(json({ error: "Method not allowed." }, 405), request, env);
 
   const ip = clientIp(request);
   const limits = limitsFor(deps);
@@ -321,10 +364,19 @@ export async function handleRequest(request, env = {}, deps = {}) {
     return cors(new Response(created.body, { status: created.status, headers }), request, env);
   }
 
-  const gate = rateGate(limits.messages.get(ip) || [], now, IP_MESSAGE_LIMIT, WINDOW_MS);
-  limits.messages.set(ip, gate.hits);
-  if (!gate.ok) return cors(json({ error: "Too many notes from this network. Try again later." }, 429), request, env);
+  if (url.pathname === "/api/chat/realtime") {
+    if (!voiceEnabled(env)) return cors(json({ error: "Voice is off right now. Type your question." }, 404), request, env);
+    if (!gateHit(limits, "calls", ip, now, IP_CALL_LIMIT)) {
+      return cors(json({ error: "Too many voice calls from this network. You can still type." }, 429), request, env);
+    }
+  } else if (!gateHit(limits, "messages", ip, now, IP_MESSAGE_LIMIT)) {
+    return cors(json({ error: "Too many notes from this network. Try again later." }, 429), request, env);
+  }
   const id = readCookie(request.headers.get("cookie"), "abra_chat");
   if (!UUID.test(id)) return cors(json({ error: "Open the chat again." }, 401), request, env);
-  return cors(await openSession(id, forward(request, id), env, deps), request, env);
+  const answer = await openSession(id, forward(request, id), env, deps);
+  // A 101 carries the WebSocket and must be returned as is.
+  if (realtime && answer.status === 101) return answer;
+  if (realtime && answer.webSocket) return answer;
+  return cors(answer, request, env);
 }

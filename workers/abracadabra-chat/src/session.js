@@ -22,6 +22,8 @@ export function blankSession({ id, now, ip, page }) {
     handoffSent: false,
     handoff: null,
     messageCount: 0,
+    voiceTurns: 0,
+    ttsChars: 0,
   };
 }
 
@@ -84,9 +86,15 @@ export function applyChatEvent(session, body, now) {
   return { ok: true };
 }
 
-export function rememberExchange(session, userText, assistantText, now) {
-  session.messages.push({ role: "user", text: userText, at: now });
-  session.messages.push({ role: "assistant", text: assistantText, at: now });
+export function rememberExchange(session, userText, assistantText, now, meta = {}) {
+  session.messages.push({ role: "user", text: userText, at: now, ...(meta.voice ? { voice: true } : {}) });
+  const reply = { role: "assistant", text: assistantText, at: now };
+  if (meta.replyId) {
+    reply.id = meta.replyId;
+    reply.voice = true;
+    reply.spoken = 0;
+  }
+  session.messages.push(reply);
   if (session.messages.length > MESSAGE_CAP) {
     session.messages.splice(0, session.messages.length - MESSAGE_CAP);
   }
