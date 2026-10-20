@@ -2,6 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { brandedPhotoCard } from "./og-brand.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const WIDTHS = [640, 960, 1280];
@@ -125,8 +126,7 @@ export async function writeServiceImages() {
       const source = join(root, "content/service-images", folder, `${role}.jpg`);
       await writeRole(source, destDir, role);
     }
-    await sharp(join(root, "content/service-images", folder, "hero.jpg"))
-      .resize(1200, 630, { fit: "cover", position: "centre" })
+    await (await brandedPhotoCard(join(root, "content/service-images", folder, "hero.jpg"), { position: "centre" }))
       .jpeg({ quality: 80, mozjpeg: true })
       .toFile(join(destDir, "og.jpg"));
   }

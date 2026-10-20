@@ -22,6 +22,9 @@ import {
 import { pirxChartHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
+import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
+
+const HOME_OG_ALT = "The abracadabra wordmark with an orange dot, above the headline: Let us bring your ideas to life.";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -242,16 +245,8 @@ function wrapLines(text, max = 26) {
 }
 
 async function writePlate(file, label, title) {
-  const titleLines = wrapLines(title).map((line, index) => (
-    `<text x="72" y="${250 + index * 68}" fill="#F5F0E8" font-family="sans-serif" font-size="52">${esc(line)}</text>`
-  )).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
-    <rect width="1200" height="630" fill="#070706"/>
-    <text x="72" y="150" fill="#FF4B24" font-family="sans-serif" font-size="24">${esc(label)}</text>
-    ${titleLines}
-  </svg>`;
   await mkdir(dirname(file), { recursive: true });
-  await sharp(Buffer.from(svg)).jpeg({ quality: 80 }).toFile(file);
+  await sharp(Buffer.from(plateSvg({ label, title }))).jpeg({ quality: 82, mozjpeg: true }).toFile(file);
 }
 
 function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeight, ogAlt, json, body, footer = "full" }) {
@@ -334,7 +329,7 @@ async function plateOrPhoto(key, label, title, photo) {
   await mkdir(dirname(file), { recursive: true });
   if (photo) {
     const source = join(root, String(photo).replace(/^\//, ""));
-    await sharp(source).resize(1200, 630, { fit: "cover", position: "attention" }).jpeg({ quality: 78 }).toFile(file);
+    await (await brandedPhotoCard(source, { position: "attention" })).jpeg({ quality: 78, mozjpeg: true }).toFile(file);
   } else {
     await writePlate(file, label, title);
   }
@@ -1223,7 +1218,7 @@ async function renderStart() {
     ogImage: `${SITE}/assets/og/home.jpg`,
     ogWidth: "1200",
     ogHeight: "630",
-    ogAlt: "Start a project with Abracadabra AI",
+    ogAlt: HOME_OG_ALT,
     json: baseGraph(pageNode({
       type: "WebPage",
       id: `${url}#webpage`,
@@ -1249,7 +1244,7 @@ ${intakeForm()}
     ogImage: `${SITE}/assets/og/home.jpg`,
     ogWidth: "1200",
     ogHeight: "630",
-    ogAlt: "Abracadabra AI received the note",
+    ogAlt: HOME_OG_ALT,
     json: baseGraph(pageNode({
       type: "WebPage",
       id: `${SITE}/start/thanks/#webpage`,
@@ -1279,7 +1274,7 @@ async function renderMissing() {
     ogImage: `${SITE}/assets/og/home.jpg`,
     ogWidth: "1200",
     ogHeight: "630",
-    ogAlt: "Abracadabra AI",
+    ogAlt: HOME_OG_ALT,
     footer: "compact",
     json: baseGraph(pageNode({
       type: "WebPage",
