@@ -202,15 +202,28 @@ function functionPhoto(fn) {
   return `<img src="/assets/og/portfolio-strongfoam-website.png" alt="StrongFoam website" width="1200" height="630" loading="lazy" decoding="async">`;
 }
 
-function functionLinkList(fn) {
-  const services = fn.services.map((slug) => `<li><a href="/services/${slug}/">${esc(salesPages[slug].headline)}</a></li>`).join("");
+// Services with their own card in the homepage scroller, placed after the function named in `after`.
+// They are left out of that function's link list on the homepage so each service shows once.
+const HOME_SERVICE_CARDS = [
+  { slug: "mcp-connectors", after: "service", title: "MCP connectors", dek: "Let Claude, ChatGPT and other assistants use your tools safely, with a yes from you before any change." },
+  { slug: "machine-learning", after: "service", title: "Machine learning", dek: "Models that learn from your records and show a clear number, a fair range and the reasons, like the PIRX app." },
+];
+const HOME_CARD_SLUGS = new Set(HOME_SERVICE_CARDS.map((card) => card.slug));
+
+function serviceCardHtml(card) {
+  return `<li class="card fn-card" id="fn-${esc(card.slug)}"><div class="card__media">${servicePicture(card.slug, "hero", { lazy: true, sizes: HOME_CARD_SIZES })}</div><div class="card__body"><h3 class="card__title">${esc(card.title)}</h3><p class="card__dek">${esc(card.dek)}</p><ul class="fn-card__links"><li><a href="/services/${card.slug}/">${esc(salesPages[card.slug].headline)}</a></li></ul></div></li>`;
+}
+
+function functionLinkList(fn, skip = new Set()) {
+  const services = fn.services.filter((slug) => !skip.has(slug)).map((slug) => `<li><a href="/services/${slug}/">${esc(salesPages[slug].headline)}</a></li>`).join("");
   const work = (fn.work || []).map((item) => `<li><a href="${esc(item.href)}">${esc(item.label)}</a></li>`).join("");
   return `<ul class="fn-card__links">${services}${work}</ul>`;
 }
 
 function offeringsHtml() {
   const cards = businessFunctions.map((fn) => {
-    return `<li class="card fn-card" id="fn-${esc(fn.id)}"><div class="card__media">${functionPhoto(fn)}</div><div class="card__body"><h3 class="card__title">${esc(fn.name)}</h3><p class="card__dek">${esc(fn.promise)}</p>${functionLinkList(fn)}</div></li>`;
+    const card = `<li class="card fn-card" id="fn-${esc(fn.id)}"><div class="card__media">${functionPhoto(fn)}</div><div class="card__body"><h3 class="card__title">${esc(fn.name)}</h3><p class="card__dek">${esc(fn.promise)}</p>${functionLinkList(fn, HOME_CARD_SLUGS)}</div></li>`;
+    return card + HOME_SERVICE_CARDS.filter((extra) => extra.after === fn.id).map(serviceCardHtml).join("");
   }).join("");
   return `<section id="services" class="sc-section section services" aria-labelledby="services-title">
     <div class="sc-wrap">
