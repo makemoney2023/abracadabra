@@ -14,6 +14,7 @@ const mime = {
   ".js": "text/javascript; charset=utf-8",
   ".woff2": "font/woff2",
   ".svg": "image/svg+xml",
+  ".mp3": "audio/mpeg",
 };
 
 const env = {
@@ -260,7 +261,7 @@ function tone(seconds, rate = 24000) {
   return new Uint8Array(samples.buffer);
 }
 
-async function callRun({ script, ttsSeconds = 0.6 }) {
+async function callRun({ script, ttsSeconds = 0.6, llmDelayMs = 0 }) {
   env.CAL_LINK = "abracadabra/working-session";
   Object.assign(env, { VOICE_ENABLED: "true", AI_GATEWAY_TOKEN: "test-token", CF_ACCOUNT_ID: "acct", AI: { run() {} } });
   const gateway = [];
@@ -282,6 +283,7 @@ async function callRun({ script, ttsSeconds = 0.6 }) {
       });
       return new Response(stream, { headers: { "content-type": "audio/mpeg" } });
     }
+    if (llmDelayMs) await new Promise((resolve) => setTimeout(resolve, llmDelayMs));
     return Response.json({ success: true, result: { response: "We build software around the work you already do." } });
   };
   const state = { calls: [], flux };
@@ -319,7 +321,7 @@ async function callRun({ script, ttsSeconds = 0.6 }) {
 
 function clearVoiceEnv() {
   for (const key of ["VOICE_ENABLED", "AI_GATEWAY_TOKEN", "CF_ACCOUNT_ID", "AI"]) delete env[key];
-  for (const key of ["fetchImpl", "openFlux", "tickMs", "webSocketPair", "upgrade", "activeCall"]) delete deps[key];
+  for (const key of ["fetchImpl", "openFlux", "tickMs", "webSocketPair", "upgrade", "activeCall", "fillerAfterMs"]) delete deps[key];
 }
 
 const widgetState = (page) => page.locator("abra-chat").evaluate((node) => ({
@@ -349,7 +351,7 @@ test("one tap starts a hands-free call: mic streams, Flux ends the turn, Aura PC
     await page.waitForFunction(() => document.querySelector("abra-chat").voiceTimings?.playing, null, { timeout: 8000 });
     const during = await widgetState(page);
     assert.equal(during.users.at(-1), "What does Abracadabra build?");
-    assert.ok(during.timings.playing >= during.timings.reply);
+    assert.ok(during.timings.playing >= during.timings.heard);
     // Playback finishes, the browser reports it, and the call listens again.
     await page.waitForFunction(() => document.querySelector("abra-chat").callState_ === "listening", null, { timeout: 8000 });
     assert.equal(state.calls[0].state, "listening");
@@ -409,4 +411,73 @@ test("voice stays hidden when the switch is off", async () => {
   await page.getByText("Ask a plain question. A person reviews anything we follow up on.").waitFor();
   assert.equal(await page.getByRole("button", { name: "Start voice chat" }).count(), 0);
   await page.close();
+});
+
+test("a slow voice answer shows contextual thinking text and plays a cached filler first", async () => {
+  try {
+    deps.fillerAfterMs = 300;
+    const { page, state, gateway, mic } = await callRun({
+      llmDelayMs: 1500,
+      script: [
+        { at: 16000, event: { event: "StartOfTurn", transcript: "What work" } },
+        { at: 32000, event: { event: "EndOfTurn", transcript: "What work have you done?" } },
+      ],
+    });
+    await mic.click();
+    await page.getByText("Looking through our work…").waitFor({ timeout: 8000 });
+    assert.equal((await widgetState(page)).label, "Thinking…");
+    await page.waitForFunction(() => document.querySelector("abra-chat").voiceTimings?.filler, null, { timeout: 8000 });
+    await page.getByText("Let me check.").waitFor();
+    await page.waitForFunction(() => document.querySelector("abra-chat").voiceTimings?.playing, null, { timeout: 8000 });
+    const t = (await widgetState(page)).timings;
+    assert.ok(t.playing > t.filler, "the answer comes after the filler");
+    assert.ok(t.audibleAt >= t.fillerAudibleAt + 400, "the answer queues after the filler line");
+    assert.equal(gateway.filter((g) => g.url.includes("aura")).length, 1, "the filler is not synthesized");
+    assert.equal(state.calls.length, 1);
+    await page.getByRole("button", { name: "End voice chat" }).click();
+    assert.equal(page.errors.length, 0);
+    await page.close();
+  } finally {
+    clearVoiceEnv();
+  }
+});
+
+test("typed chat shows a working indicator that changes over time, then a retry on failure", async () => {
+  Object.assign(env, { AI_GATEWAY_TOKEN: "test-token", CF_ACCOUNT_ID: "acct" });
+  let mode = "slow";
+  deps.fetchImpl = async () => {
+    if (mode === "fail") return new Response("busy", { status: 503 });
+    await new Promise((resolve) => setTimeout(resolve, 2600));
+    return Response.json({ result: { response: "We build custom apps. See https://abra-ca-dabra.app/services/custom-apps/." } });
+  };
+  try {
+    const page = await openFixture();
+    await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+    await page.getByRole("textbox", { name: "Message" }).fill("what services do you offer");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await page.locator("abra-chat").locator(".thinking-text").getByText("Thinking…").waitFor({ timeout: 1000 });
+    const status = () => page.locator("abra-chat").evaluate((node) => node.shadowRoot.querySelector("[role=status]").textContent);
+    assert.equal(await status(), "Thinking…");
+    await page.locator("abra-chat").locator(".thinking-text").getByText("Looking through our services…").waitFor({ timeout: 3000 });
+    assert.equal(await status(), "Looking through our services…");
+    await page.getByRole("link", { name: "abra-ca-dabra.app/services/custom-apps/" }).waitFor({ timeout: 4000 });
+    assert.equal(await page.locator("abra-chat").locator(".thinking").count(), 0);
+
+    mode = "fail";
+    await page.getByRole("textbox", { name: "Message" }).fill("and the cost?");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await page.getByText(/took longer than it should/).waitFor({ timeout: 4000 });
+    mode = "fast";
+    deps.fetchImpl = async () => Response.json({ result: { response: "We price each project to the job." } });
+    await page.getByRole("button", { name: "Try again" }).click();
+    await page.getByText("We price each project to the job.").waitFor({ timeout: 4000 });
+    const users = await page.locator("abra-chat").evaluate((node) => node.shadowRoot.querySelectorAll(".bubble.user").length);
+    assert.equal(users, 2, "a retry does not repeat the question bubble");
+    assert.equal(page.errors.length, 0);
+    await page.close();
+  } finally {
+    delete env.AI_GATEWAY_TOKEN;
+    delete env.CF_ACCOUNT_ID;
+    delete deps.fetchImpl;
+  }
 });

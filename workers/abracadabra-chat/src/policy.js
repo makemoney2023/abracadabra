@@ -75,15 +75,16 @@ export function postCheck(text) {
       clean = PLAIN;
     }
     clean = clean.replace(/https?:\/\/[^\s)]+/gi, (url) => {
-      const trimmed = url.replace(/[.,;:]+$/, "");
+      const trimmed = url.replace(/[.,;:!?]+$/, "");
+      const tail = url.slice(trimmed.length);
       const allowed = /^https:\/\/(?:[a-z0-9-]+\.)*abra-ca-dabra\.app(?:[/?#]|$)|^https:\/\/(?:www\.)?cal\.com(?:[/?#]|$)|^https:\/\/(?:www\.)?cal\.eu(?:[/?#]|$)|^https:\/\/app\.cal\.com(?:[/?#]|$)/i;
-      if (allowed.test(trimmed) && sitePageKnown(trimmed)) return trimmed;
+      if (allowed.test(trimmed) && sitePageKnown(trimmed)) return trimmed + tail;
       if (allowed.test(trimmed)) {
         flags.push("unknown_page");
-        return "https://abra-ca-dabra.app/";
+        return `https://abra-ca-dabra.app/${tail}`;
       }
       flags.push("url");
-      return "";
+      return tail;
     }).replace(/\s+/g, " ").trim();
     // A bare page path the model copied from the facts becomes a full link (typed) and is dropped when spoken.
     clean = clean
@@ -170,4 +171,70 @@ export async function verifyTurnstile({ secret, token, ip, fetchImpl, allowMissi
   if (!response.ok) return { ok: false, reason: "upstream" };
   const json = await response.json();
   return json?.success === true ? { ok: true } : { ok: false, reason: "rejected" };
+}
+
+// Flags that mean the reply as a whole must be replaced, not just trimmed.
+const REPLACING = new Set(["commitment", "price", "jargon", "false_claim"]);
+const BOUNDARY = /[.!?](?=\s)/g;
+
+const CLAUSE = /[,;:](?=\s)|\s[-–—](?=\s)/g;
+
+function nextSentence(buffer, clause = false) {
+  const guarded = buffer.replace(ABBREV, (match) => match.replace(/\./g, "\u2024"));
+  BOUNDARY.lastIndex = 0;
+  const hit = BOUNDARY.exec(guarded);
+  // A link the model did not close with a period still ends the sentence when a new one starts.
+  const link = /https?:\/\/[^\s]+(?=\s+[A-Z])/.exec(guarded);
+  const end = [hit ? hit.index + 1 : -1, link ? link.index + link[0].length : -1].filter((at) => at > 0);
+  if (clause) {
+    // Voice: the first piece may end at a comma once it is long enough to say on its own,
+    // so Aura can start sooner. Each piece is still checked before it is spoken.
+    CLAUSE.lastIndex = 0;
+    let comma;
+    while ((comma = CLAUSE.exec(guarded))) {
+      if (comma.index >= 30) {
+        end.push(comma.index + 1);
+        break;
+      }
+    }
+  }
+  if (!end.length) return null;
+  const at = Math.min(...end);
+  let sentence = buffer.slice(0, at).trim();
+  if (!/[.!?,;:]$/.test(sentence)) sentence += ".";
+  return { sentence, rest: buffer.slice(at) };
+}
+
+/**
+ * Checks a streamed reply one sentence at a time, so the first sentence can be shown or spoken
+ * while the model is still writing. Yields { text } for each sentence that passes, or one
+ * { replace } when a sentence trips a rule that replaces the whole answer (then stops).
+ * Stops after maxSentences.
+ */
+export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false } = {}) {
+  let buffer = "";
+  let count = 0;
+  const judge = (sentence) => {
+    const out = postCheck(sentence);
+    // A sentence that is only a link says nothing; skip it.
+    if (!out.text.replace(/https?:\/\/\S+/g, "").replace(/[\s.,;:!?]/g, "")) return null;
+    if (out.flags.some((flag) => REPLACING.has(flag))) return { replace: out.text, flags: out.flags };
+    return { text: out.text, flags: out.flags };
+  };
+  for await (const delta of deltas) {
+    buffer += delta;
+    let next;
+    while ((next = nextSentence(buffer, firstClause && count === 0))) {
+      buffer = next.rest;
+      if (!next.sentence) continue;
+      const part = judge(next.sentence);
+      if (!part) continue;
+      yield part;
+      count += 1;
+      if (part.replace || count >= maxSentences) return;
+    }
+  }
+  const tail = buffer.replace(/\s+/g, " ").trim();
+  const last = tail ? judge(tail) : null;
+  if (last) yield last;
 }

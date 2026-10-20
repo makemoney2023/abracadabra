@@ -31,8 +31,18 @@ export const CLOUDFLARE = [
   "From our site: built on Cloudflare and connected to the tools you already use, so nothing has to move. Your data goes only to the model doing the work.",
 ];
 
+const OTHER_PAGES = [
+  ["Home", "/", "the studio, the process, and how to start"],
+  ["Work page", "/portfolio/", "all case studies"],
+  ["Services page", "/services/", "all services"],
+  ["Products page", "/products/", "Schema and Super Funnel"],
+  ["Films page", "/films.html", "short films of the apps"],
+  ["Notes", "/blog/", "plain guides to putting AI to work"],
+  ["LLM Leverage course", "/course/llm-leverage/", "the self-paced course"],
+];
+
 // Every page the chat may link to. Anything else on the domain is dropped by the answer filter.
-const BASE_PATHS = ["/", "/portfolio/", "/services/", "/products/", "/films.html", "/blog/", "/course/llm-leverage/"];
+const BASE_PATHS = OTHER_PAGES.map(([, path]) => path);
 
 export async function buildKnowledge() {
   const data = await import(new URL("site-data.mjs", site));
@@ -50,12 +60,12 @@ export async function buildKnowledge() {
   const process = sales.processSteps.map((step) => `${step.title}: ${first(step.text)}`);
   const lines = [
     "ABOUT: Abracadabra is a studio in Toronto. We design, build and run AI-powered tools that fit your business, not the other way around. Custom software, built for how you work.",
-    "WORK (real, public examples; say the name, then the page):",
-    ...work.map((item) => `- ${item.name} (${item.path}): ${item.line}`),
-    "More work: /portfolio/. Products: /products/. Films of the apps: /films.html. Only link to pages listed here.",
-    "SERVICES (all at /services/):",
-    ...services.map((item) => `- ${item.name} (${item.path}): ${item.line}`),
-    "LEARN: LLM Leverage course (/course/llm-leverage/). Notes, plain guides to putting AI to work (/blog/).",
+    "WORK (real, public examples). Format: name | page | what it is. Each page belongs only to its own project.",
+    ...work.map((item) => `- ${item.name} | ${item.path} | ${item.line}`),
+    "SERVICES. Format: name | page | what it does.",
+    ...services.map((item) => `- ${item.name} | ${item.path} | ${item.line}`),
+    "OTHER PAGES (the only other pages that exist):",
+    ...OTHER_PAGES.map(([name, path, line]) => `- ${name} | ${path} | ${line}`),
     `PROCESS: ${process.join(" ")}`,
     "COST: Priced to the project. Tell us what you need and we'll quote it. Never give a number.",
     "NEXT STEPS: a thirty-minute working session, booked right in this chat. Not sure where to start? The Readiness Check (check.abra-ca-dabra.app) takes a few minutes and shows where the work slows down: the data, the workflow, the owner, the decision, and how visible the site is to answer engines.",

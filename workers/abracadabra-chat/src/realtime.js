@@ -3,26 +3,31 @@
 // Browser ──PCM 16 kHz──► this call ──► Flux (Workers AI binding WebSocket, end-of-turn detection)
 //                                       │ EndOfTurn transcript
 //                                       ▼
-//                         completeChat + postCheck (same brain and filter as typed chat)
-//                                       │ reply, split into sentences
+//                         streamChat + checkedSentences (same brain and filter as typed chat)
+//                                       │ each checked sentence goes to Aura as soon as it is written
 //                                       ▼
 // Browser ◄──PCM 24 kHz── Aura-2 through AI Gateway, streamed chunk by chunk
+//
+// Filler: if nothing is audible FILLER_AFTER_MS after the turn ends, the browser plays one short
+// pre-generated line ("Let me check that.") from /assets/voice/, and the answer queues after it.
 //
 // Barge-in: when Flux hears the visitor start a new turn while we think or speak, the current
 // reply is aborted and the browser is told to drop queued audio. Audio is never stored.
 
-import { completeChat } from "./model.js";
-import { postCheck, uiActionFor } from "./policy.js";
+import { ChatUnavailable, replyStream } from "./model.js";
+import { checkedSentences, localReply, uiActionFor } from "./policy.js";
 import { rememberExchange } from "./session.js";
 import {
   CALL_IDLE_MS,
+  FILLER_AFTER_MS,
+  FILLERS,
   looksLikeEcho,
   MAX_CALL_MS,
   MIC_SAMPLE_RATE,
   openFlux,
-  sentences,
   speakable,
   synthesizePcm,
+  TTS_CHAR_CAP,
   TTS_SAMPLE_RATE,
   VOICE_TTS_CHARS_PER_SESSION,
   VOICE_TURNS_PER_SESSION,
@@ -33,6 +38,37 @@ const BYTES_PER_SECOND_IN = MIC_SAMPLE_RATE * 2;
 const PENDING_FRAME_CAP = 200;
 const SESSION_MESSAGE_LIMIT = 30;
 const PLAYBACK_GRACE_MS = 1500;
+const FILLER_MS = 1200;
+const VOICE_SENTENCES = 4;
+export const VOICE_RETRY_TEXT = "Sorry, I lost that one. Could you say it again?";
+
+/** A small async queue: push() as items arrive, iterate in order, close() when done. */
+class Channel {
+  constructor() {
+    this.items = [];
+    this.waiting = null;
+    this.done = false;
+  }
+  push(item) {
+    this.items.push(item);
+    this.waiting?.();
+  }
+  close() {
+    this.done = true;
+    this.waiting?.();
+  }
+  async *[Symbol.asyncIterator]() {
+    while (true) {
+      if (this.items.length) {
+        yield this.items.shift();
+        continue;
+      }
+      if (this.done) return;
+      await new Promise((resolve) => { this.waiting = resolve; });
+      this.waiting = null;
+    }
+  }
+}
 
 export class VoiceCall {
   /**
@@ -59,6 +95,8 @@ export class VoiceCall {
     this.turn = 0;
     this.controller = null;
     this.speakingText = "";
+    this.fillerText = "";
+    this.fillerCount = 0;
     this.closed = false;
   }
 
@@ -192,7 +230,8 @@ export class VoiceCall {
     if (this.state !== "speaking" && this.state !== "thinking") return;
     const words = transcript.split(/\s+/).filter(Boolean);
     if (words.length < 2) return;
-    if (this.state === "speaking" && looksLikeEcho(transcript, this.speakingText)) return;
+    if (this.state === "speaking" && looksLikeEcho(transcript, `${this.fillerText} ${this.speakingText}`)) return;
+    if (this.state === "thinking" && this.fillerText && looksLikeEcho(transcript, this.fillerText)) return;
     this.interrupt();
   }
 
@@ -201,6 +240,7 @@ export class VoiceCall {
     this.controller.abort();
     this.controller = null;
     this.speakingText = "";
+    this.fillerText = "";
     this.playbackDeadline = 0;
     this.send({ type: "interrupt", turn: this.turn });
     this.setState("listening");
@@ -222,54 +262,100 @@ export class VoiceCall {
       return this.end("turn_limit");
     }
 
-    const draft = await completeChat({
-      env: this.env,
-      messages: [...session.messages, { role: "user", text }],
-      fetchImpl: this.deps.fetchImpl,
-      voice: true,
-    });
-    if (controller.signal.aborted || this.closed) return;
-    const checked = postCheck(draft);
     const action = uiActionFor(text);
+    const budget = VOICE_TTS_CHARS_PER_SESSION - (session.ttsChars || 0);
+    if (budget <= 0) return this.ttsLimit();
+    const audio = new Channel();
+    this.firstAudioAt = 0;
+    this.fillerText = "";
+    this.filler = setTimeout(() => this.playFiller(turn, controller), this.deps.fillerAfterMs ?? FILLER_AFTER_MS);
+    const playing = this.speak(audio, turn, controller);
+
+    let answer = "";
+    let spokenChars = 0;
+    let failure = null;
+    const queueSpeech = (sentence) => {
+      const spoken = speakable(sentence);
+      // Whole sentences only, inside the per-reply and per-session spoken caps.
+      if (!spoken || spokenChars + spoken.length > Math.min(budget, TTS_CHAR_CAP)) return false;
+      spokenChars += spoken.length;
+      this.speakingText = `${this.speakingText} ${spoken}`.trim();
+      // Start Aura for this sentence now; the player keeps the order.
+      audio.push(synthesizePcm({ env: this.env, text: spoken, signal: controller.signal, fetchImpl: this.deps.fetchImpl }));
+      return true;
+    };
+    this.speakingText = "";
+    try {
+      const deltas = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal });
+      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true })) {
+        if (controller.signal.aborted || this.closed) break;
+        if (part.replace) {
+          // Nothing unsafe is ever spoken. If a sentence already played, stop there.
+          if (!answer) {
+            answer = part.replace;
+            queueSpeech(part.replace);
+          }
+          break;
+        }
+        answer = answer ? `${answer} ${part.text}` : part.text;
+        if (!queueSpeech(part.text)) break;
+      }
+    } catch (error) {
+      failure = error instanceof ChatUnavailable ? error.reason : "error";
+    }
+    if (controller.signal.aborted || this.closed) {
+      audio.close();
+      return;
+    }
+    if (!answer) {
+      answer = failure === "unconfigured" ? localReply(text) : VOICE_RETRY_TEXT;
+      if (failure && failure !== "unconfigured") console.error(`voice reply: ${failure}`);
+      queueSpeech(answer);
+    }
+    audio.close();
+    const outOfVoice = spokenChars === 0;
 
     session = (await this.loadSession()) || session;
     session.voiceTurns = (session.voiceTurns || 0) + 1;
     if (action === "offer_booking") session.bookingOffered = true;
-    rememberExchange(session, text, checked.text, this.now(), { voice: true });
-    const spoken = speakable(checked.text);
-    const allowed = spoken && (session.ttsChars || 0) + spoken.length <= VOICE_TTS_CHARS_PER_SESSION;
-    if (allowed) session.ttsChars = (session.ttsChars || 0) + spoken.length;
+    if (answer !== VOICE_RETRY_TEXT) rememberExchange(session, text, answer, this.now(), { voice: true });
+    session.ttsChars = (session.ttsChars || 0) + spokenChars;
     await this.saveSession(session);
     if (controller.signal.aborted || this.closed) return;
-
-    this.send({ type: "assistant", text: checked.text, action, turn });
-    if (!allowed) {
-      this.send({ type: "notice", text: "Spoken answers are used up for this chat. The answers stay in the chat." });
-      this.controller = null;
-      return this.end("tts_limit");
-    }
-    await this.speak(spoken, turn, controller);
+    this.send({ type: "assistant", text: answer, action, turn });
+    if (outOfVoice) return this.ttsLimit();
+    await playing;
   }
 
-  async speak(text, turn, controller) {
-    this.speakingText = text;
-    this.setState("speaking");
-    const parts = sentences(text);
-    // Start every sentence at once so the next one is ready when the first ends; play in order.
-    const bodies = parts.map((part) => synthesizePcm({
-      env: this.env,
-      text: part,
-      signal: controller.signal,
-      fetchImpl: this.deps.fetchImpl,
-    }));
-    this.send({ type: "audio_start", turn, sampleRate: TTS_SAMPLE_RATE });
+  ttsLimit() {
+    this.send({ type: "notice", text: "Spoken answers are used up for this chat. The answers stay in the chat." });
+    this.controller = null;
+    return this.end("tts_limit");
+  }
+
+  /** Tells the browser to play one cached filler line if the answer is not audible yet. */
+  playFiller(turn, controller) {
+    if (this.closed || controller.signal.aborted || turn !== this.turn || this.firstAudioAt) return;
+    const index = this.fillerCount++ % FILLERS.length;
+    this.fillerText = FILLERS[index];
+    this.fillerUntil = this.now() + FILLER_MS;
+    this.send({ type: "filler", index, turn });
+  }
+
+  /** Plays Aura bodies in order as they arrive on the channel. */
+  async speak(audio, turn, controller) {
     let carry = null;
     let sentBytes = 0;
-    let firstByteAt = 0;
+    let started = false;
     this.playbackDeadline = 0;
-    for (const pending of bodies) {
+    for await (const pending of audio) {
       const body = await pending;
       if (!body) continue;
+      if (!started) {
+        started = true;
+        this.setState("speaking");
+        this.send({ type: "audio_start", turn, sampleRate: TTS_SAMPLE_RATE });
+      }
       const reader = body.getReader();
       // A barge-in must stop a read that is still waiting on Aura, not only the next one.
       const stop = () => reader.cancel().catch(() => {});
@@ -277,7 +363,8 @@ export class VoiceCall {
       while (true) {
         if (controller.signal.aborted || this.closed) {
           try { await reader.cancel(); } catch { /* stream already closed */ }
-          for (const rest of bodies) rest.then((other) => other?.cancel?.().catch(() => {})).catch(() => {});
+          for (const rest of audio.items) Promise.resolve(rest).then((other) => other?.cancel?.().catch(() => {})).catch(() => {});
+          clearTimeout(this.filler);
           return;
         }
         let chunk;
@@ -309,23 +396,35 @@ export class VoiceCall {
           } catch {
             return;
           }
-          if (!firstByteAt) firstByteAt = this.now();
+          if (!this.firstAudioAt) {
+            this.firstAudioAt = this.now();
+            clearTimeout(this.filler);
+          }
           sentBytes += bytes.length;
         }
       }
     }
-    if (controller.signal.aborted || this.closed) return;
+    clearTimeout(this.filler);
+    if (controller.signal.aborted || this.closed || !started) {
+      if (!started && !controller.signal.aborted && !this.closed && turn === this.turn) {
+        this.controller = null;
+        this.setState("listening");
+      }
+      return;
+    }
     this.send({ type: "audio_end", turn });
-    // The browser is still playing what it queued. Stay "speaking" (so barge-in keeps working)
-    // until it says the audio finished, or until that audio must have ended.
+    // The browser is still playing what it queued (after any filler). Stay "speaking" (so barge-in
+    // keeps working) until it says the audio finished, or until that audio must have ended.
     const playMs = (sentBytes / 2 / TTS_SAMPLE_RATE) * 1000;
-    this.playbackDeadline = this.now() + Math.max(0, playMs - (this.now() - firstByteAt)) + PLAYBACK_GRACE_MS;
+    const fillerLeft = Math.max(0, (this.fillerUntil || 0) - this.firstAudioAt);
+    this.playbackDeadline = this.now() + Math.max(0, playMs + fillerLeft - (this.now() - this.firstAudioAt)) + PLAYBACK_GRACE_MS;
   }
 
   finishSpeaking(turn) {
     if (this.closed || this.state !== "speaking" || (turn !== undefined && turn !== this.turn)) return;
     this.controller = null;
     this.speakingText = "";
+    this.fillerText = "";
     this.playbackDeadline = 0;
     this.lastActivity = this.now();
     this.setState("listening");
@@ -335,6 +434,7 @@ export class VoiceCall {
     if (this.closed) return;
     this.closed = true;
     clearInterval(this.timer);
+    clearTimeout(this.filler);
     this.controller?.abort();
     this.controller = null;
     this.pending = [];

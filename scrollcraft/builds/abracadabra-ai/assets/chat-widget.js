@@ -120,6 +120,18 @@ button { cursor: pointer; }
   animation: blink 1s steps(1) infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
+.bubble.thinking { display: inline-flex; align-items: center; gap: 10px; color: #AAA49A; }
+.bubble.thinking::after { display: none; }
+.thinking-dots { display: inline-flex; gap: 4px; }
+.thinking-dots i { width: 6px; height: 6px; border-radius: 50%; background: #8DEBF2; opacity: 0.35; animation: think 1.2s ease-in-out infinite; }
+.thinking-dots i:nth-child(2) { animation-delay: 0.15s; }
+.thinking-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes think { 0%, 80%, 100% { opacity: 0.35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.thinking-text { font-size: 14px; }
+.retry { margin-top: 8px; display: block; background: transparent; color: #F5F0E8; border: 1px solid rgba(245, 240, 232, 0.3); border-radius: 8px; padding: 6px 12px; font-size: 14px; }
+.retry:hover { border-color: #FF4B24; }
+.retry:focus-visible { outline: 2px solid #FF4B24; outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .card {
   background: #17160F; border: 1px solid rgba(245, 240, 232, 0.12); border-radius: 8px;
   padding: 16px; display: grid; gap: 10px;
@@ -192,7 +204,7 @@ textarea:focus, .field input:focus, button:focus-visible { outline: 2px solid #F
   .panel.expanded { height: 92dvh; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .panel, .bubble.streaming::after, .skeleton, .mic.live, .call-orb { transition: none; animation: none; }
+  .panel, .bubble.streaming::after, .skeleton, .mic.live, .call-orb, .thinking-dots i { transition: none; animation: none; }
 }
 `;
 
@@ -227,6 +239,27 @@ export const CALL_LABELS = {
   thinking: "Thinking…",
   speaking: "Speaking · talk to interrupt",
 };
+
+// What the "working" indicator says while an answer is on its way: right away, after ~2s, after ~5s.
+// Pre-generated Aura-2 luna lines in /assets/voice/ (workers/abracadabra-chat npm run fillers). Same order as the worker.
+export const FILLER_LINES = ["Let me check.", "One sec.", "Good question.", "Just a moment."];
+const FILLER_COUNT = FILLER_LINES.length;
+const FILLER_PATH = "/assets/voice/filler-";
+const FILLER_VERSION = "2";
+export const RETRY_TEXT = "Sorry, that took longer than it should. Try again, or book a thirty-minute working session right here in this chat.";
+export const THINKING_STEPS_MS = [0, 2000, 5000];
+export const TYPED_TIMEOUT_MS = 20000;
+export function thinkingLabel(question, step = 0) {
+  if (step <= 0) return "Thinking…";
+  if (step >= 2) return "Almost there…";
+  const text = String(question || "").toLowerCase();
+  if (/\b(book|call|meet|schedule|calendar|session)\b/.test(text)) return "Getting the booking ready…";
+  if (/\b(cost|price|pricing|quote|budget|how much)\b/.test(text)) return "Checking how we price work…";
+  if (/cloudflare|secure|security|host|fast|speed/.test(text)) return "Checking how we build…";
+  if (/\b(service|services|offer|help with|can you build|voice|agent|assistant|automat|app)\b/.test(text)) return "Looking through our services…";
+  if (/\b(ready|readiness|start|begin)\b/.test(text)) return "Checking the Readiness Check…";
+  return "Looking through our work…";
+}
 
 export function launcherShouldHide({ bodyClass = "", menuOpen = false } = {}) {
   return menuOpen || String(bodyClass).split(/\s+/).includes("intake-lock");
@@ -427,6 +460,7 @@ export class AbraChat extends ElementBase {
         </div>
       </header>
       <div class="stream" role="log" aria-live="polite"></div>
+      <p class="sr-only" role="status" aria-live="polite" data-chat-status></p>
       <form class="composer">
         <textarea rows="1" aria-label="Message" placeholder="Ask about the work" maxlength="2000"></textarea>
         <button class="mic" type="button" data-mic aria-label="Start voice chat" title="Start voice chat" aria-pressed="false" hidden>${MIC_SVG}</button>
@@ -464,6 +498,7 @@ export class AbraChat extends ElementBase {
     this.callState = this.panel.querySelector("[data-call-state]");
     this.callHeard = this.panel.querySelector("[data-call-heard]");
     this.callTime = this.panel.querySelector("[data-call-time]");
+    this.status = this.panel.querySelector("[data-chat-status]");
     this.mic.addEventListener("click", () => this.toggleCall());
     this.panel.querySelector("[data-call-end]").addEventListener("click", () => this.endCall("visitor"));
     this.launcher.addEventListener("click", () => this.openPanel());
@@ -659,6 +694,7 @@ export class AbraChat extends ElementBase {
       return;
     }
     if (this.call !== call) return;
+    this.loadFillers(ctx);
     const ws = new WebSocket(realtimeUrl());
     ws.binaryType = "arraybuffer";
     call.ws = ws;
@@ -697,12 +733,18 @@ export class AbraChat extends ElementBase {
         call.serverState = message.state;
         if (message.state === "listening") this.callHeard.textContent = "";
         this.setCallUi(message.state === "listening" && call.sources.size ? "speaking" : message.state);
+        if (message.state === "thinking") this.startCallThinking(call);
+        else this.stopCallThinking(call);
+        break;
+      case "filler":
+        this.playFiller(call, message.index);
         break;
       case "interim":
         if (call.serverState === "listening") this.callHeard.textContent = message.text;
         break;
       case "user":
         this.markVoice("heard");
+        call.lastHeard = message.text;
         this.callHeard.textContent = "";
         this.messages.push({ role: "user", text: message.text });
         this.addBubble("user", message.text);
@@ -752,7 +794,7 @@ export class AbraChat extends ElementBase {
     source.start(at);
     call.playHead = at + clip.duration;
     call.sources.add(source);
-    if (call.sources.size === 1 && !call.playing) {
+    if (!call.playing) {
       call.playing = true;
       this.markVoice("playing");
       this.voiceTimings.audibleAt = this.voiceTimings.playing + (at - ctx.currentTime + (ctx.outputLatency || ctx.baseLatency || 0)) * 1000;
@@ -762,6 +804,57 @@ export class AbraChat extends ElementBase {
       call.sources.delete(source);
       this.maybePlayed(call);
     };
+  }
+
+  /** Loads the pre-generated filler lines once per page; they are tiny and cached by the browser. */
+  loadFillers(ctx) {
+    if (this.fillers) return;
+    this.fillers = [];
+    for (let index = 0; index < FILLER_COUNT; index += 1) {
+      fetch(`${FILLER_PATH}${index}.mp3?v=${FILLER_VERSION}`)
+        .then((response) => (response.ok ? response.arrayBuffer() : null))
+        .then((bytes) => (bytes ? new Promise((resolve, reject) => ctx.decodeAudioData(bytes, resolve, reject)) : null))
+        .then((buffer) => { if (buffer) this.fillers[index] = buffer; })
+        .catch(() => {});
+    }
+  }
+
+  /** Plays one short "Let me check that." line; the answer queues right after it. Talking stops it. */
+  playFiller(call, index) {
+    const ctx = this.audioCtx;
+    const clip = this.fillers?.[index] || this.fillers?.find(Boolean);
+    if (!ctx || !clip || call.playing) return;
+    const source = ctx.createBufferSource();
+    source.buffer = clip;
+    source.connect(ctx.destination);
+    const at = Math.max(ctx.currentTime + 0.02, call.playHead);
+    source.start(at);
+    call.playHead = at + clip.duration;
+    call.sources.add(source);
+    this.markVoice("filler");
+    this.voiceTimings.fillerAudibleAt = this.voiceTimings.filler + (at - ctx.currentTime + (ctx.outputLatency || ctx.baseLatency || 0)) * 1000;
+    this.stopCallThinking(call, { keepText: true });
+    this.callHeard.textContent = FILLER_LINES[index] || "One sec…";
+    source.onended = () => {
+      call.sources.delete(source);
+      this.maybePlayed(call);
+    };
+  }
+
+  startCallThinking(call) {
+    this.stopCallThinking(call);
+    const show = (step) => {
+      if (this.call !== call || call.serverState !== "thinking") return;
+      this.callHeard.textContent = thinkingLabel(call.lastHeard, step || 1);
+    };
+    show(1);
+    call.thinkingTimer = setTimeout(() => show(2), THINKING_STEPS_MS[2] - THINKING_STEPS_MS[1]);
+  }
+
+  stopCallThinking(call, { keepText = false } = {}) {
+    clearTimeout(call.thinkingTimer);
+    call.thinkingTimer = null;
+    if (!keepText && call.serverState !== "thinking" && call.serverState !== "listening") this.callHeard.textContent = "";
   }
 
   maybePlayed(call) {
@@ -789,6 +882,7 @@ export class AbraChat extends ElementBase {
     if (!call) return;
     this.call = null;
     clearInterval(this.callTimer);
+    clearTimeout(call.thinkingTimer);
     if (!quiet && call.ws?.readyState === 1) {
       try { call.ws.send(JSON.stringify({ type: "end" })); } catch { /* gone */ }
     }
@@ -1125,42 +1219,114 @@ export class AbraChat extends ElementBase {
     });
   }
 
-  async send(text) {
+  async send(text, { retry = false } = {}) {
     const question = String(text || "").trim();
-    if (!question || !this.ready) return;
-    this.input.value = "";
-    this.input.style.height = "auto";
-    this.messages.push({ role: "user", text: question });
-    this.addBubble("user", question);
+    if (!question || !this.ready || this.busy) return;
+    this.busy = true;
+    if (!retry) {
+      this.input.value = "";
+      this.input.style.height = "auto";
+      this.messages.push({ role: "user", text: question });
+      this.addBubble("user", question);
+    }
     const pending = this.addBubble("assistant", "");
-    pending.classList.add("streaming");
+    const stopThinking = this.showThinking(pending, question);
+    const abort = new AbortController();
+    const timeout = setTimeout(() => abort.abort(), TYPED_TIMEOUT_MS);
+    let answer = "";
+    let failed = null;
     try {
       const response = await fetch("/api/chat/message", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json", accept: "text/event-stream" },
         body: JSON.stringify({ text: question, page: location.pathname }),
+        signal: abort.signal,
       });
       if (!response.ok || !response.body) {
-        pending.classList.remove("streaming");
-        pending.textContent = "The chat is quiet right now. Email houdini@abra-ca-dabra.app.";
-        return;
+        failed = response.status === 429 ? ((await response.json().catch(() => ({}))).error || "This chat is full. Email houdini@abra-ca-dabra.app.") : RETRY_TEXT;
+      } else {
+        await readSse(response, (event, data) => {
+          if (event === "token") {
+            if (!answer) {
+              stopThinking();
+              this.markTyped("first");
+            }
+            answer += data.text || "";
+            renderLinked(pending, answer);
+            this.stream.scrollTop = this.stream.scrollHeight;
+          }
+          if (event === "final") {
+            if (!answer) stopThinking();
+            answer = data.text || answer;
+            renderLinked(pending, answer);
+            this.stream.scrollTop = this.stream.scrollHeight;
+          }
+          if (event === "error") failed = data.text || RETRY_TEXT;
+          if (event === "ui_action") this.action(data.action);
+        });
+        if (!answer && !failed) failed = RETRY_TEXT;
       }
-      let answer = "";
-      await readSse(response, (event, data) => {
-        if (event === "token") {
-          answer += data.text || "";
-          renderLinked(pending, answer);
-        }
-        if (event === "ui_action") this.action(data.action);
-        if (event === "done") pending.classList.remove("streaming");
-      });
-      pending.classList.remove("streaming");
-      this.messages.push({ role: "assistant", text: answer });
     } catch {
+      failed = RETRY_TEXT;
+    } finally {
+      clearTimeout(timeout);
+      stopThinking();
       pending.classList.remove("streaming");
-      pending.textContent = "The chat is quiet right now. Email houdini@abra-ca-dabra.app.";
+      this.busy = false;
     }
+    if (failed && !answer) {
+      this.showRetry(pending, failed, question);
+      return;
+    }
+    this.status.textContent = "Answer ready.";
+    this.messages.push({ role: "assistant", text: answer });
+  }
+
+  /** Animated dots plus a status line that changes if the answer takes longer. Returns a stop function. */
+  showThinking(bubble, question) {
+    bubble.classList.add("thinking");
+    bubble.textContent = "";
+    const dots = el("span", "thinking-dots");
+    dots.setAttribute("aria-hidden", "true");
+    dots.append(el("i"), el("i"), el("i"));
+    const label = el("span", "thinking-text", thinkingLabel(question, 0));
+    bubble.append(dots, label);
+    this.status.textContent = label.textContent;
+    this.markTyped("sent");
+    const timers = THINKING_STEPS_MS.slice(1).map((ms, index) => setTimeout(() => {
+      label.textContent = thinkingLabel(question, index + 1);
+      this.status.textContent = label.textContent;
+    }, ms));
+    let stopped = false;
+    return () => {
+      if (stopped) return;
+      stopped = true;
+      for (const timer of timers) clearTimeout(timer);
+      bubble.classList.remove("thinking");
+      bubble.textContent = "";
+    };
+  }
+
+  showRetry(bubble, text, question) {
+    bubble.textContent = "";
+    bubble.classList.add("failed");
+    bubble.append(document.createTextNode(text));
+    if (text === RETRY_TEXT) {
+      const again = el("button", "retry", "Try again");
+      again.type = "button";
+      again.addEventListener("click", () => {
+        bubble.remove();
+        this.send(question, { retry: true });
+      });
+      bubble.append(again);
+    }
+    this.stream.scrollTop = this.stream.scrollHeight;
+    this.status.textContent = "The answer did not come through.";
+  }
+
+  markTyped(name) {
+    this.typedTimings = { ...(name === "sent" ? {} : this.typedTimings || {}), [name]: performance.now() };
   }
 
   action(name) {
