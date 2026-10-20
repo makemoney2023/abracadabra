@@ -73,6 +73,12 @@ When a task moves to build, Handoff starts a Cursor cloud run if the brief and t
 
 `POST /api/intake/outreach` (Sales Outbound, `OUTREACH_SIGNING_SECRET`): `external_id`, `deal_id` or `domain`, `channel` (`email`|`linkedin`), `sent_at`, `summary`. Logs `lead.contacted` and moves stage `new` → `contacted` only. If `readiness_scans` is missing when a scored deal's scan finishes, HQ logs an error, marks the deal `scoring_error`, records `lead.scoring_failed` once, and retries the queue message.
 
+### Client agent work filing (prototype)
+
+Each client's dedicated agent files finished work with `POST /api/agent-work` and its own Bearer token (`caw_…`, stored as SHA-256 only). Client Services registers or re-assigns an agent with `POST /api/client-services/agents` (Bearer `CLIENT_SERVICES_TOKEN`): `{ agent_id, label?, client: { organization_id | domain | space_slug }, space_id?, project_id?, rotate? }`. The token comes back once, on create or `rotate: true`.
+
+The body is `{ external_id, title, kind?, summary?, content?, attachments?: [{ name, body }], links?: [{ label, url }], client?, project_id?, task_id?, finished_at? }`, at most 1 MB. Large files go as links. `external_id` makes repeats return the first result. The agent's assignment decides the client. A space slug, project, or task in the body can pick one of that client's spaces. It never moves work to another client. Without a single match the item is `unfiled` (`agent_not_assigned`, `client_mismatch`, `ambiguous_space`, `no_space`, `project_not_open`, `task_not_in_client`, `space_rejected`), and a matching domain is only kept as a suggestion. Filed work lands under `agent/work/<date>-<title>-<id>/summary.md` (plus attachments) in a batch labelled `From <agent>`, goes through the usual scan, logs `client_agent.work_filed`, and shows in the Client Services updates feed.
+
 ### Inbound replies (Readiness Check and the /start/ form)
 
 Two inbound sources queue a reply from Sales Outbound with `routing_status = reply_needed` and `scored_at` set to the moment the submission arrived (that is what the export's `since` compares):
