@@ -1,5 +1,6 @@
 import { deliverHandoff, handoffEnvelope, handoffSummary, HANDOFF_FROM, mailerConfigured, signHex, studioInbox } from "./handoff.js";
 import { ChatUnavailable, replyStream } from "./model.js";
+import { hqConfigured, postLeadToHq } from "./hq.js";
 import {
   clientIp,
   extraOrigins,
@@ -14,6 +15,8 @@ import {
 import { applyChatEvent, blankSession, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
 import { VoiceCall } from "./realtime.js";
 import { VOICE_CALLS_PER_SESSION, VOICE_TURNS_PER_SESSION, voiceEnabled } from "./voice.js";
+
+const HQ_RETRIES = 5;
 
 const WINDOW_MS = 60 * 60 * 1000;
 const IP_MESSAGE_LIMIT = 20;
@@ -294,8 +297,10 @@ export async function handleSession(request, storage, env, deps) {
     session.contact = { ...contact.value, consentAt: new Date(now).toISOString() };
     session.updatedAt = now;
     const handoff = await emitHandoff(session, env, deps, now);
+    session.hqAttempts = (session.hqAttempts || 0) + 1;
+    const hq = await postLeadToHq(session, env, { now, fetchImpl: deps.hqFetch || deps.fetchImpl || fetch });
     await save(storage, session, deps);
-    return json({ ok: true, mailed: handoff.mailed, duplicate: handoff.duplicate }, 200);
+    return json({ ok: true, mailed: handoff.mailed, duplicate: handoff.duplicate, hq: hq.posted || Boolean(session.hqLeadSent) }, 200);
   }
 
   if (url.pathname === "/api/chat/events") {
@@ -331,13 +336,24 @@ function forward(request, id) {
 
 export async function runAlarm(storage, env, deps, now) {
   const session = await load(storage, now);
-  if (!session || session.handoffSent) return { sent: false };
-  if (now < session.alarmAt) return { sent: false };
-  if (!session.contact && !session.bookingCompleted) return { sent: false };
+  if (!session || now < session.alarmAt) return { sent: false };
+  let hq = false;
+  let changed = false;
+  // A lead HQ did not take on the first try is retried here (up to HQ_RETRIES). HQ dedupes on external_id.
+  if (session.contact && !session.hqLeadSent && hqConfigured(env) && (session.hqAttempts || 0) < HQ_RETRIES) {
+    session.hqAttempts = (session.hqAttempts || 0) + 1;
+    hq = (await postLeadToHq(session, env, { now, fetchImpl: deps.hqFetch || deps.fetchImpl || fetch })).posted;
+    if (!hq) session.alarmAt = now + IDLE_MS;
+    changed = true;
+  }
+  if (session.handoffSent || (!session.contact && !session.bookingCompleted)) {
+    if (changed) await save(storage, session, deps);
+    return { sent: false, hq };
+  }
   const result = await emitHandoff(session, env, deps, now);
   if (!result.sent) session.alarmAt = now + IDLE_MS;
   await save(storage, session, deps);
-  return result;
+  return { ...result, hq };
 }
 
 export async function handleRequest(request, env = {}, deps = {}) {
