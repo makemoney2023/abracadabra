@@ -26,14 +26,14 @@ export const SERVICE_FOLDERS = {
 
 export const SERVICE_ALTS = {
   "machine-learning": {
-    hero: "The PIRX app on two phones, showing a runner's projected race times and the training zones behind them.",
-    body1: "The PIRX race time predictor on pirx.ca, where a runner enters a recent race to get a projected finish time.",
+    hero: "Forecast panel with one large number and a range bar, linked to a list of the reasons it moved.",
+    body1: "Five record cards with lines running into a model panel that is learning, each row checked.",
     body2: "The PIRX marathon time predictor on pirx.ca, with a form for a recent race and notes on its machine learning engine and supported range.",
   },
   "mcp-connectors": {
-    hero: "Diagram of AI assistants on the left, one safe connector in the middle, and business tools on the right.",
-    body1: "Diagram of a plain question going to the connector, which reads the calendar and returns an answer without changing anything.",
-    body2: "Diagram of a proposed change waiting for a person to approve it before the connector saves it, with every step logged.",
+    hero: "Chat panel asking what is booked Friday, linked through one secure connector to CRM, calendar, jobs and invoice cards.",
+    body1: "Approval card with Approve and Decline buttons beside an activity log of checked steps.",
+    body2: "Sign-in panel with a Continue button above a permissions list with role toggles for owner, staff and viewer.",
   },
   "ai-assistants-and-agents": {
     hero: "Dark chat console with a customer thread, a reply field, and a checklist of next steps.",
