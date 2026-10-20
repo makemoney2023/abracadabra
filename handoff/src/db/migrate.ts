@@ -28,7 +28,7 @@ const STEPS = [
   { file: "0024_lead_scores.sql", column: { table: "deals", name: "routing_status" } },
   { file: "0025_client_work.sql", table: "client_work_requests" },
   { file: "0026_agent_work.sql", table: "skill_grants" },
-  { file: "0027_task_review.sql", column: { table: "tasks", name: "review_note" } },
+  { file: "0028_task_review.sql", column: { table: "tasks", name: "review_note" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];

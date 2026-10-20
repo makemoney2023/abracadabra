@@ -43,7 +43,7 @@ describe("statementsFromMigration", () => {
       "0024_lead_scores.sql",
       "0025_client_work.sql",
       "0026_agent_work.sql",
-      "0027_task_review.sql",
+      "0028_task_review.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -208,7 +208,7 @@ describe("a step that stopped halfway", () => {
     expect(columns.map((column) => column.name)).toEqual(expect.arrayContaining(["lead_score", "scored_at", "routing_status"]));
   });
 
-  it("adds the Review columns without touching existing tasks, and finishes a half-applied 0027", async () => {
+  it("adds the Review columns without touching existing tasks, and finishes a half-applied 0028", async () => {
     const db = new DatabaseSync(":memory:");
     const sql = sqliteSql(db);
     await migrate(sql);
