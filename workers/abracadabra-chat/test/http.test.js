@@ -166,7 +166,7 @@ test("answers stay short, plain, and on our sites", async () => {
   const chat = await openChat(h, "203.0.113.40");
   const response = await call("/api/chat/message", { ...h, cookie: chat.cookie, ip: "203.0.113.40", body: { text: "Can we book a call?" } });
   const body = await response.text();
-  assert.match(body, /event: ui_action\ndata: \{"action":"offer_booking"\}/);
+  assert.match(body, /event: ui_action\ndata: \{"action":"open_booking"\}/);
   assert.equal(body.includes("$40k"), false);
   assert.equal(body.includes("evil.example"), false);
   const session = await h.deps.rooms.get(chat.id).get("session");

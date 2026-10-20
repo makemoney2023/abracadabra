@@ -24,7 +24,7 @@ const IP_SESSION_LIMIT = 8;
 const SESSION_MESSAGE_LIMIT = 30;
 const IP_CALL_LIMIT = 6;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const isolateLimits = { messages: new Map(), sessions: new Map(), calls: new Map() };
+const isolateLimits = { messages: new Map(), sessions: new Map(), calls: new Map(), passes: new Map() };
 const isolateRooms = new Map();
 
 export function readCookie(header, name) {
@@ -75,6 +75,7 @@ async function readJson(request) {
 function limitsFor(deps) {
   const limits = deps.limits || isolateLimits;
   if (!limits.calls) limits.calls = new Map();
+  if (!limits.passes) limits.passes = new Map();
   return limits;
 }
 
@@ -211,7 +212,7 @@ function streamReply({ text, action, history, session, storage, env, deps, now }
         controller.close();
         return;
       }
-      if (action === "offer_booking") session.bookingOffered = true;
+      if (action === "offer_booking" || action === "open_booking") session.bookingOffered = true;
       rememberExchange(session, text, answer, now);
       await save(storage, session, deps);
       emit("final", { text: answer });
@@ -430,6 +431,9 @@ export async function handleRequest(request, env = {}, deps = {}) {
   if (url.pathname === "/api/chat/voice-pass") {
     // Each voice call needs its own fresh Turnstile pass, not just the one that opened the chat.
     if (!voiceEnabled(env)) return cors(json({ error: "Voice is off right now. Type your question." }, 404), request, env);
+    if (!gateHit(limits, "passes", ip, now, IP_CALL_LIMIT * 2)) {
+      return cors(json({ error: "Too many voice calls from this network. You can still type." }, 429), request, env);
+    }
     const id = readCookie(request.headers.get("cookie"), "abra_chat");
     if (!UUID.test(id)) return cors(json({ error: "Open the chat again." }, 401), request, env);
     const parsed = await readJson(request);

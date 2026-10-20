@@ -549,3 +549,51 @@ test("Flux is asked for eager end-of-turn events", async () => {
   assert.equal(params.eager_eot_threshold, "0.5");
   assert.equal(params.eot_threshold, "0.7");
 });
+
+test("a clear ask to book opens the calendar at once and says so, without the model", async () => {
+  const h = harness({ env: { ...VOICE_ENV, CAL_LINK: "abra/30min" } });
+  const { browser } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "Can we book a call?" }));
+  await flush(60);
+  const out = browser.json();
+  const action = out.findIndex((m) => m.type === "ui_action");
+  assert.equal(out[action].action, "open_booking");
+  assert.ok(action < out.findIndex((m) => m.type === "assistant"), "calendar opens before the answer");
+  assert.match(out.find((m) => m.type === "assistant").text, /opened the booking calendar/);
+  assert.equal(out.find((m) => m.type === "assistant").action, null);
+  assert.equal(h.calls.filter((c) => !c.url.includes("aura")).length, 0);
+  assert.match(h.calls.find((c) => c.url.includes("aura")).body.text, /opened the booking calendar/);
+  assert.equal((await storedSession(h)).bookingOffered, true);
+});
+
+test("without a Cal.com link the voice points to the two-times form", async () => {
+  const h = harness();
+  const { browser } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "I'd like to schedule a meeting" }));
+  await flush(60);
+  assert.match(browser.json().find((m) => m.type === "assistant").text, /short form/);
+});
+
+test("a booking made during the call is confirmed out loud once", async () => {
+  const h = harness();
+  const { browser } = await connect(h);
+  browser.emit("message", JSON.stringify({ type: "booked", when: "November 2, 10:00 AM EST<script>" }));
+  browser.emit("message", JSON.stringify({ type: "booked", when: "November 2, 10:00 AM EST" }));
+  await flush(60);
+  const said = browser.json().filter((m) => m.type === "assistant");
+  assert.equal(said.length, 1);
+  assert.equal(said[0].text, "You're booked for November 2, 10:00 AM ESTscript. A calendar invite is on its way to your email.");
+  assert.equal(h.calls.filter((c) => c.url.includes("aura")).length, 1);
+});
+
+test("booking intent: clear asks open the calendar, mentions only offer it", async () => {
+  const { uiActionFor, wantsBooking } = await import("../src/policy.js");
+  for (const ask of ["Can we book a call?", "book it", "I want to schedule a meeting", "Could we set up a time next week?", "Can I talk to a person?", "open the calendar", "can we meet"]) {
+    assert.equal(wantsBooking(ask), true, ask);
+    assert.equal(uiActionFor(ask), "open_booking", ask);
+  }
+  for (const mention of ["How much does a call cost?", "What happens on the call?", "I don't want to book a call yet", "What's your pricing?", "Do you build call center agents?"]) {
+    assert.equal(wantsBooking(mention), false, mention);
+  }
+  assert.equal(uiActionFor("What's your pricing?"), "offer_booking");
+});

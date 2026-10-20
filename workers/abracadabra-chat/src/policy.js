@@ -120,7 +120,24 @@ export function postCheck(text) {
   return { text: clean, flags };
 }
 
+/**
+ * A clear ask to book (not just a mention of price or a call): the chat opens the calendar itself.
+ * "book a call", "can we schedule a meeting", "I want to talk to someone", "open the calendar".
+ */
+export function wantsBooking(userText) {
+  const text = String(userText || "").toLowerCase();
+  if (/\b(don'?t|do not|not ready|no need|later)\b/.test(text)) return false;
+  return (
+    /\b(book|booking|schedule|set up|arrange|grab|reserve)\b[^.?!]{0,30}\b(call|meeting|session|time|slot|chat|appointment|consult\w*)\b/.test(text) ||
+    /\b(open|show)\b[^.?!]{0,20}\b(calendar|booking)\b/.test(text) ||
+    /\b(talk|speak) (to|with) (a person|someone|somebody|a human|chris\w*|the team|you guys)\b/.test(text) ||
+    /\b(can|could) we (meet|hop on a call|get on a call)\b/.test(text) ||
+    /^\s*(book( it| one)?|yes,? book( it)?|let'?s book( it)?)[.!]?\s*$/.test(text)
+  );
+}
+
 export function uiActionFor(userText) {
+  if (wantsBooking(userText)) return "open_booking";
   const text = String(userText || "").toLowerCase();
   if (/\b(book|booking|calendar|call|meet|meeting|schedule|pricing|price|engagement|talk)\b/.test(text)) {
     return "offer_booking";
@@ -134,7 +151,7 @@ export function uiActionFor(userText) {
 
 export function localReply(userText) {
   const action = uiActionFor(userText);
-  if (action === "offer_booking") {
+  if (action === "offer_booking" || action === "open_booking") {
     return "A thirty-minute working session is the fastest way to look at one job. You can pick a time in this chat.";
   }
   if (action === "offer_readiness_check") {

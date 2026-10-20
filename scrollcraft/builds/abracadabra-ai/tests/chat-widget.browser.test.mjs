@@ -98,6 +98,8 @@ after(async () => {
 });
 
 async function openFixture(width = 1280, height = 800, prepare) {
+  // Every test is a fresh visitor from 127.0.0.1; the per-network limits would otherwise add up across tests.
+  for (const map of Object.values(deps.limits)) map.clear();
   const page = await browser.newPage({ viewport: { width, height } });
   if (prepare) await prepare(page);
   const errors = [];
@@ -401,6 +403,40 @@ test("talking over the reply stops playback at once (barge-in)", async () => {
     // Tapping the mic again ends the call.
     await page.getByRole("button", { name: "End voice chat" }).click();
     await page.waitForFunction(() => document.querySelector("abra-chat").callState_ === "idle");
+    assert.equal(page.errors.length, 0, page.errors.join("\n"));
+    await page.close();
+  } finally {
+    clearVoiceEnv();
+  }
+});
+
+test("asking to book on a voice call opens the calendar in the chat and confirms the booking out loud", async () => {
+  try {
+    const { page, state, gateway, mic } = await callRun({
+      script: [{ at: 16000, event: { event: "EndOfTurn", transcript: "Can we book a call?" } }],
+    });
+    await page.route(/cal\.com/, (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>Cal</p>" }));
+    await mic.click();
+    await page.getByText(/opened the booking calendar right here in the chat/).last().waitFor({ timeout: 8000 });
+    const sheet = await page.locator("abra-chat").evaluate((node) => ({
+      open: !node.shadowRoot.querySelector(".sheet")?.hidden,
+      frame: node.shadowRoot.querySelector("iframe")?.src || "",
+    }));
+    assert.equal(sheet.open, true);
+    assert.match(sheet.frame, /cal\.com\/abracadabra\/working-session/);
+    if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/voice-booking-open-390.png` });
+    assert.equal(gateway.filter((g) => !g.url.includes("aura")).length, 0, "no model call for a clear booking ask");
+    await page.getByRole("button", { name: "End voice chat" }).waitFor();
+    await page.waitForFunction(() => document.querySelector("abra-chat").callState_ === "listening", null, { timeout: 8000 });
+    await page.locator("abra-chat").evaluate((node) => node.completeBooking({
+      externalId: "bk_9", startsAt: "2026-11-02T15:00:00.000Z", endsAt: "2026-11-02T15:30:00.000Z", email: "ada@northwind.example", name: "Ada North",
+    }));
+    await page.getByText(/You're booked for November 2/).last().waitFor({ timeout: 8000 });
+    if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/voice-booked-390.png` });
+    const spoken = gateway.filter((g) => g.url.includes("aura")).map((g) => g.body.text);
+    assert.ok(spoken.some((t) => /You're booked for November 2/.test(t)), spoken.join(" | "));
+    assert.equal(state.calls[0].bookedSaid, true);
+    await page.getByRole("button", { name: "End voice chat" }).click();
     assert.equal(page.errors.length, 0, page.errors.join("\n"));
     await page.close();
   } finally {

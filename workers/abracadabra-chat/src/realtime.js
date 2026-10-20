@@ -42,6 +42,13 @@ const FILLER_MS = 1200;
 const VOICE_SENTENCES = 4;
 export const VOICE_RETRY_TEXT = "Sorry, I lost that one. Could you say it again?";
 
+/** What the voice says when it opens the calendar (or the two-times form when no Cal.com link is set). */
+export function bookingLine(env) {
+  return String(env?.CAL_LINK || env?.BOOKING_URL || "").trim()
+    ? "I've opened the booking calendar right here in the chat. Pick a thirty-minute time that works, and I'm still listening if you have questions."
+    : "I've opened a short form in the chat. Leave your email and two times that work, and a person will send the invite.";
+}
+
 /** Words only, lower case: "What do you build?" and "what do you build" are the same turn. */
 export function sameWords(text) {
   return (String(text || "").toLowerCase().match(/[a-z0-9']+/g) || []).join(" ");
@@ -218,6 +225,7 @@ export class VoiceCall {
       }
       if (message?.type === "end") this.end("visitor");
       else if (message?.type === "played") this.finishSpeaking(Number(message.turn));
+      else if (message?.type === "booked") void this.sayBooked(message.when);
       return;
     }
     // Newer runtimes hand binary frames over as Blob. Read them in order.
@@ -314,9 +322,15 @@ export class VoiceCall {
       return this.end("turn_limit");
     }
 
-    const action = uiActionFor(text);
+    let action = uiActionFor(text);
     const budget = VOICE_TTS_CHARS_PER_SESSION - (session.ttsChars || 0);
     if (budget <= 0) return this.ttsLimit();
+    // A clear ask to book: open the calendar now and say so, without waiting on the model.
+    const booking = action === "open_booking" ? bookingLine(this.env) : "";
+    if (booking) {
+      this.dropEager();
+      this.send({ type: "ui_action", action, turn });
+    }
     const audio = new Channel();
     this.firstAudioAt = 0;
     this.fillerText = "";
@@ -338,8 +352,10 @@ export class VoiceCall {
     };
     this.speakingText = "";
     try {
-      const eager = this.takeEager(text);
-      const deltas = eager
+      const eager = booking ? null : this.takeEager(text);
+      const deltas = booking
+        ? (async function* () { yield booking; })()
+        : eager
         ? eager.replay(controller.signal)
         : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal });
       for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true })) {
@@ -372,11 +388,13 @@ export class VoiceCall {
 
     session = (await this.loadSession()) || session;
     session.voiceTurns = (session.voiceTurns || 0) + 1;
-    if (action === "offer_booking") session.bookingOffered = true;
+    if (action === "offer_booking" || booking) session.bookingOffered = true;
     if (answer !== VOICE_RETRY_TEXT) rememberExchange(session, text, answer, this.now(), { voice: true });
     session.ttsChars = (session.ttsChars || 0) + spokenChars;
     await this.saveSession(session);
     if (controller.signal.aborted || this.closed) return;
+    // The calendar already opened at the start of this turn.
+    if (booking) action = null;
     this.send({ type: "assistant", text: answer, action, turn });
     if (outOfVoice) return this.ttsLimit();
     await playing;
@@ -416,6 +434,46 @@ export class VoiceCall {
   dropEager() {
     this.eager?.abort();
     this.eager = null;
+  }
+
+  /** The visitor finished booking on screen during the call: confirm it out loud, once. */
+  async sayBooked(when) {
+    if (this.closed || this.bookedSaid) return;
+    this.bookedSaid = true;
+    const label = String(when || "").replace(/[^\w :,.\-]/g, "").trim().slice(0, 60);
+    const line = label
+      ? `You're booked for ${label}. A calendar invite is on its way to your email.`
+      : "You're booked. A calendar invite is on its way to your email.";
+    await this.say(line);
+  }
+
+  /** Speaks one fixed line as its own turn (no model), inside the spoken caps. */
+  async say(line) {
+    if (this.controller) this.interrupt();
+    const turn = ++this.turn;
+    const controller = new AbortController();
+    this.controller = controller;
+    this.lastActivity = this.now();
+    const session = await this.loadSession();
+    if (!session || this.closed || controller.signal.aborted) return;
+    const spoken = speakable(line);
+    const budget = VOICE_TTS_CHARS_PER_SESSION - (session.ttsChars || 0);
+    this.send({ type: "assistant", text: line, turn });
+    if (!spoken || spoken.length > budget) {
+      this.controller = null;
+      return;
+    }
+    this.setState("thinking");
+    const audio = new Channel();
+    this.firstAudioAt = 0;
+    this.fillerText = "";
+    this.speakingText = spoken;
+    const playing = this.speak(audio, turn, controller);
+    audio.push(synthesizePcm({ env: this.env, text: spoken, signal: controller.signal, fetchImpl: this.deps.fetchImpl }));
+    audio.close();
+    session.ttsChars = (session.ttsChars || 0) + spoken.length;
+    await this.saveSession(session);
+    await playing;
   }
 
   ttsLimit() {

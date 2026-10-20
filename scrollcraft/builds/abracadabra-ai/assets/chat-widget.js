@@ -189,7 +189,7 @@ textarea:focus, .field input:focus, button:focus-visible { outline: 2px solid #F
 .foot { margin: 0; padding: 0 14px 12px; color: #AAA49A; font-size: 12px; background: #11110F; }
 .sheet { position: absolute; inset: 0; display: flex; flex-direction: column; background: #070706; }
 .sheet-body { flex: 1; overflow: auto; padding: 12px; }
-.sheet iframe { width: 100%; height: 100%; min-height: 520px; border: 0; background: #070706; border-radius: 8px; }
+.sheet iframe { width: 100%; height: 100%; min-height: 360px; border: 0; background: #070706; border-radius: 8px; }
 .skeleton { height: 280px; border-radius: 8px; background: linear-gradient(90deg, #11110F, #17160F, #11110F); background-size: 200% 100%; animation: pulse 1.2s ease infinite; }
 @keyframes pulse { 50% { background-position: 100% 0; } }
 .field { display: grid; gap: 6px; font-size: 13px; }
@@ -768,6 +768,9 @@ export class AbraChat extends ElementBase {
         this.markVoice("reply");
         if (message.action) this.action(message.action);
         break;
+      case "ui_action":
+        this.action(message.action);
+        break;
       case "audio_start":
         call.turn = message.turn;
         call.audioDone = false;
@@ -929,6 +932,18 @@ export class AbraChat extends ElementBase {
     this.mic.title = label;
     this.voiceNote.hidden = live || this.mic.hidden;
     this.renderClock();
+    this.fitSheet();
+  }
+
+  /** On a voice call the booking sheet stops above the call bar, so End and the call state stay in view. */
+  fitSheet() {
+    if (!this.sheet) return;
+    if (this.sheet.hidden || this.callBar.hidden) {
+      this.sheet.style.bottom = "";
+      return;
+    }
+    const gap = this.panel.getBoundingClientRect().bottom - this.callBar.getBoundingClientRect().top;
+    this.sheet.style.bottom = `${Math.max(0, Math.round(gap))}px`;
   }
 
   renderClock() {
@@ -1067,6 +1082,8 @@ export class AbraChat extends ElementBase {
     this.savedScroll = this.stream.scrollTop;
     this.panel.classList.add("expanded");
     this.sheet.hidden = false;
+    this.fitSheet();
+    requestAnimationFrame(() => this.fitSheet());
     this.sheetBody.replaceChildren();
     const link = buildCalUrl(this.calInput(true));
     const external = buildCalUrl(this.calInput(false));
@@ -1095,6 +1112,7 @@ export class AbraChat extends ElementBase {
 
   closeBooking() {
     this.sheet.hidden = true;
+    this.fitSheet();
     this.panel.classList.remove("expanded");
     if (Number.isFinite(this.savedScroll)) this.stream.scrollTop = this.savedScroll;
   }
@@ -1356,7 +1374,12 @@ export class AbraChat extends ElementBase {
   }
 
   action(name) {
-    if (name === "offer_booking") {
+    if (name === "open_booking") {
+      // A clear ask to book: open the calendar inside the chat (also during a voice call).
+      this.bookingOffered = true;
+      this.showBookingCard();
+      void this.openBooking();
+    } else if (name === "offer_booking") {
       this.bookingOffered = true;
       this.showBookingCard();
     } else if (name === "offer_readiness_check") this.showReadiness();
@@ -1373,6 +1396,8 @@ export class AbraChat extends ElementBase {
     );
     this.stream.append(card);
     this.closeBooking();
+    // On a voice call the assistant says the time out loud.
+    if (this.call?.ws?.readyState === 1) this.call.ws.send(JSON.stringify({ type: "booked", when }));
     await this.postEvent({
       kind: "booking_completed",
       externalId: booking.externalId,
