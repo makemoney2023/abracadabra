@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { handleRequest, RETRY_TEXT } from "../src/http.js";
 import { offerPrompt, systemPrompt, SYSTEM_PROMPT } from "../src/model.js";
-import { asksNextStep, checkedSentences, hasOffer, localReply, offerState, postCheck, uiActionFor } from "../src/policy.js";
+import { asksNextStep, CALENDAR_OPEN, checkedSentences, hasOffer, localReply, offerState, postCheck, uiActionFor } from "../src/policy.js";
 import { SITE_KNOWLEDGE } from "../src/site-knowledge.js";
 
 const ENV = { AI_GATEWAY_TOKEN: "t", CF_ACCOUNT_ID: "acct" };
@@ -114,7 +114,7 @@ function sse(text) {
   }), { headers: { "content-type": "text/event-stream" } });
 }
 
-async function conversation(replies) {
+async function conversation(replies, env = ENV) {
   const calls = [];
   const deps = {
     now: () => 1_700_000_000_000,
@@ -133,7 +133,7 @@ async function conversation(replies) {
   const say = async (text) => {
     const response = await handleRequest(new Request("https://abra-ca-dabra.app/api/chat/message", {
       method: "POST", headers: { origin: "https://abra-ca-dabra.app", "content-type": "application/json", "cf-connecting-ip": "203.0.113.91", cookie }, body: JSON.stringify({ text }),
-    }), ENV, deps);
+    }), env, deps);
     const raw = await response.text();
     const events = [...raw.matchAll(/event: (\w+)\ndata: (.*)\n\n/g)].map(([, event, data]) => ({ event, data: JSON.parse(data) }));
     return events.find((e) => e.event === "final")?.data.text;
@@ -152,4 +152,68 @@ test("typed chat: no back-to-back offers unless the visitor asks, and the prompt
   // Asked about cost: the offer goes through even right after another.
   assert.equal(await say("How much would it cost?"), pitch);
   assert.match(calls[3].messages[0].content, /asking about cost, timing/);
+});
+
+test("our own names and page links are not jargon; real jargon still is", () => {
+  const course = "The LLM Leverage course is a self-paced course for better answers from any model https://abra-ca-dabra.app/course/llm-leverage/. See the case study at https://abra-ca-dabra.app/portfolio/llm-leverage/.";
+  const out = postCheck(course);
+  assert.deepEqual(out.flags, []);
+  assert.equal(out.text, course);
+  assert.deepEqual(postCheck("The LLM-Leverage course helps.").flags, []);
+  for (const bad of ["We leverage AI for you.", "You can leverage our tools.", "A seamless, robust platform.", "Leverage the LLM Leverage course."]) {
+    assert.ok(postCheck(bad).flags.includes("jargon"), bad);
+  }
+});
+
+test("a sentence saying a client is like the visitor is dropped; plain past work stays", () => {
+  const out = postCheck("We've worked with businesses like StrongFoam, which has a similar fleet of vehicles. We built their CRM, the record you work in.");
+  assert.ok(out.flags.includes("client_claim"));
+  assert.equal(out.text, "We built their CRM, the record you work in.");
+  assert.equal(postCheck("StrongFoam is in the same industry as you.").flags.includes("client_claim"), true);
+  assert.equal(postCheck("pirx.ca had a similar setup to yours.").flags.includes("client_claim"), true);
+  for (const fine of ["We built the StrongFoam CRM, the record you work in.", "We can build something similar for your roofing company.", "For StrongFoam we built a site where a visitor can start an estimate."]) {
+    assert.deepEqual(postCheck(fine).flags, [], fine);
+  }
+});
+
+test("a reply that was only a client claim is not left empty", async () => {
+  const parts = await collect(from("StrongFoam has a similar fleet to yours."));
+  assert.equal(parts.length, 1);
+  assert.doesNotMatch(parts[0].text, /StrongFoam/);
+});
+
+test("calendar open: contact asks are dropped, the booking words stay, never empty", async () => {
+  const parts = await collect(from("You can book a thirty-minute working session right here in this chat. ", "Just leave your name and email in the chat. ", "What's your email address?"), { calendarOpen: true });
+  assert.deepEqual(parts.map((p) => p.text), ["You can book a thirty-minute working session right here in this chat."]);
+  const only = await collect(from("Please leave your name and email so we can schedule."), { calendarOpen: true });
+  assert.deepEqual(only.map((p) => p.text), [CALENDAR_OPEN]);
+  const closed = await collect(from("Leave your name and email here."), { calendarOpen: false });
+  assert.equal(closed.length, 1);
+});
+
+test("typed: asking to book mid-chat tells the model the calendar is open and strips contact asks", async () => {
+  const reply = "You can book a thirty-minute working session right here in this chat. To get started, leave your name and email in the chat, and a person will review it. What's your name and email address?";
+  const { say, calls } = await conversation(["We build apps for trades.", reply], { ...ENV, CAL_LINK: "abra/30min" });
+  await say("What do you build?");
+  const final = await say("OK, I want to book a call.");
+  assert.equal(final, "You can book a thirty-minute working session right here in this chat.");
+  assert.match(calls[1].messages[0].content, /booking calendar is already open in this chat.*Do not ask for their name, email/);
+});
+
+test("typed: without a Cal.com link the two-times form opens, so asking for an email is fine", async () => {
+  const reply = "Leave your email and two times that work, and a person will send the invite.";
+  const { say, calls } = await conversation([reply]);
+  assert.equal(await say("book a call"), reply);
+  assert.doesNotMatch(calls[0].messages[0].content, /calendar is already open/);
+});
+
+test("a sentence leaning on a dropped client claim goes too", async () => {
+  const parts = await collect(from("We've worked with companies like StrongFoam, which has a similar fleet size. ", "We also built a website for their sister company, Milrcorr. ", "Our Custom apps service could help you schedule your vans. ", "We also connect to your tools."));
+  assert.deepEqual(parts.map((p) => p.text), ["Our Custom apps service could help you schedule your vans.", "We also connect to your tools."]);
+});
+
+test("after a dropped client claim, a leftover \"also\" is taken out", async () => {
+  const parts = await collect(from("We've worked with companies like StrongFoam, which has a similar fleet. ", "Our AI assistants service can also help with scheduling."));
+  assert.deepEqual(parts.map((p) => p.text), ["Our AI assistants service can help with scheduling."]);
+  assert.equal(hasOffer("You can pick a thirty-minute time in the calendar right here."), true);
 });

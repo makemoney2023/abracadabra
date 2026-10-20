@@ -4,7 +4,13 @@ const COMMIT = /\b(we guarantee|guarantee a|signed contract|binding agreement|we
 const JARGON = /\b(leverage|synergy|utilize|paradigm|holistic|robust|seamless|cutting-edge|unlock|empower)\b/i;
 
 // Names on the site that contain a filtered word. They are allowed; the word is not.
-const PROPER_NAMES = /\bLLM Leverage\b/gi;
+const PROPER_NAMES = /\bLLM[\s-]Leverage\b/gi;
+// Our clients by name. A reply may say what we built for them, never that they are like the visitor.
+const CLIENTS = /\b(StrongFoam|pirx(?:\.ca)?|Milrcorr|Renew Implants|SuperPatch)\b/i;
+const LIKE_YOU = /\b(?:similar|the same|comparable)\s+(?:\w+\s+)?(?:fleet|size|setup|set-up|business|team|company|industry|trade|situation|needs?|problems?|challenges?|workflow|process|vans|vehicles|customers)\b|\b(?:businesses|companies|clients|firms|shops|people) like (?:yours|you|StrongFoam|pirx|Milrcorr|Renew Implants|SuperPatch)\b|\b(?:just )?like (?:yours|you do)\b/i;
+// Asking for contact details, which is wrong once the booking calendar is open.
+const CONTACT_ASK = /\b(name and (?:e-?mail|email address)|your (?:e-?mail|email address|phone|phone number|contact (?:details|info\w*))|leave (?:a|your) (?:name|e-?mail|details)|contact (?:details|information))\b/i;
+export const CALENDAR_OPEN = "The booking calendar is open right here in the chat. Pick a thirty-minute time that works for you.";
 // Things the model has said that are false for this studio.
 const FALSE_CLAIM = /\b(?:(?:no|don't have any|do not have any|haven't got any)\s+(?:portfolio|examples?|case stud(?:y|ies)|past work|projects to show)|(?:don't|do not) charge|(?:it's|it is|services are|is) free\b|no cost)/i;
 const GROUNDED = "We have real, public work: the StrongFoam CRM and website, pirx.ca, and the Super Funnel sales app. You can see them on the Work page.";
@@ -94,7 +100,8 @@ export function postCheck(text) {
       flags.push("false_claim");
       clean = GROUNDED;
     }
-    if (JARGON.test(clean.replace(PROPER_NAMES, ""))) {
+    // Page links and our own names ("LLM Leverage", /course/llm-leverage/) are not jargon.
+    if (JARGON.test(clean.replace(/https?:\/\/\S+/g, "").replace(PROPER_NAMES, ""))) {
       flags.push("jargon");
       clean = PLAIN;
     }
@@ -105,8 +112,12 @@ export function postCheck(text) {
     .split(/(?<=[.!?])\s+/)
     .map((part) => part.replace(/\u2024/g, ".").trim())
     .filter(Boolean);
-  if (parts.length > MAX_SENTENCES) flags.push("length");
-  clean = parts.slice(0, MAX_SENTENCES).join(" ");
+  // A sentence that says a client is like the visitor ("StrongFoam has a similar fleet") is dropped.
+  const kept = parts.filter((part) => !(CLIENTS.test(part) && LIKE_YOU.test(part)));
+  if (kept.length < parts.length) flags.push("client_claim");
+  if (kept.length > MAX_SENTENCES) flags.push("length");
+  clean = kept.slice(0, MAX_SENTENCES).join(" ");
+  if (!clean && flags.includes("client_claim")) return { text: "", flags };
   if (!clean) clean = EMPTY;
   return { text: clean, flags };
 }
@@ -129,7 +140,7 @@ export function wantsBooking(userText) {
 
 // A sentence that pitches the working session or the Readiness Check. Plain uses of "book"
 // ("a visitor can start an estimate and book") are not offers.
-export const OFFER_PITCH = /\b(working session|readiness check|book (?:a |an |the |your |some )?(?:thirty|30|time|call|session|slot|meeting|working)|book (?:it|one)\b|book(?:ed)? right here|booking (?:calendar|form|link)|pick a time|schedule a (?:call|session|time|meeting))/i;
+export const OFFER_PITCH = /\b(working session|readiness check|book (?:a |an |the |your |some )?(?:thirty|30|time|call|session|slot|meeting|working)|book (?:it|one)\b|book(?:ed)? right here|booking (?:calendar|form|link)|pick a (?:thirty-minute |30-minute )?time|schedule a (?:call|session|time|meeting))/i;
 
 export function hasOffer(text) {
   return OFFER_PITCH.test(String(text || ""));
@@ -267,14 +278,34 @@ function nextSentence(buffer, clause = false) {
  * { replace } when a sentence trips a rule that replaces the whole answer (then stops).
  * Stops after maxSentences.
  */
-export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false } = {}) {
+export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false, calendarOpen = false } = {}) {
   let buffer = "";
   let count = 0;
   // dropOffers: hold back booking or Readiness Check sentences. One is used only if the
   // reply would otherwise be empty.
   let held = null;
+  // calendarOpen: the booking calendar just opened, so a sentence asking for a name, email or
+  // phone is dropped. dropped: something was taken out, so the reply must not end up empty.
+  let dropped = false;
+  // After a dropped client claim, a sentence that leans on it ("We also built…", "Their…") goes too.
+  let orphan = false;
   const judge = (sentence) => {
     const out = postCheck(sentence);
+    if (out.flags.includes("client_claim") && !out.text) {
+      dropped = true;
+      orphan = true;
+      return null;
+    }
+    const leans = orphan && /^(?:we also|also|they|their|them|it also|this also)\b|\b(?:their|its) sister\b/i.test(out.text || "");
+    const after = orphan;
+    orphan = false;
+    if (leans) return null;
+    // "Our service can also help" reads wrong once the sentence before it is gone.
+    if (after && out.text) out.text = out.text.replace(/\b(can|could|will|would|may)\s+also\b/i, "$1");
+    if (calendarOpen && out.text && CONTACT_ASK.test(out.text) && !out.flags.some((flag) => REPLACING.has(flag))) {
+      dropped = true;
+      return null;
+    }
     // A sentence that is only a link says nothing; skip it.
     if (!out.text.replace(/https?:\/\/\S+/g, "").replace(/[\s.,;:!?]/g, "")) return null;
     if (out.flags.some((flag) => REPLACING.has(flag))) return { replace: out.text, flags: out.flags };
@@ -306,4 +337,5 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
     count += 1;
   }
   if (!count && held) yield held;
+  else if (!count && dropped) yield { text: calendarOpen ? CALENDAR_OPEN : EMPTY, flags: ["dropped"] };
 }

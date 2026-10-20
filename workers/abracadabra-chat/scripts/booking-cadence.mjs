@@ -12,7 +12,7 @@ import { pathToFileURL } from "node:url";
 const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i > 0 ? process.argv[i + 1] : fallback; };
 
 // Same test for before and after, fixed here so both runs are counted the same way.
-const OFFER = /\b(working session|readiness check|book (?:a |an |the |your |some )?(?:thirty|30|time|call|session|slot|meeting|working)|book (?:it|one)\b|book(?:ed)? right here|booking (?:calendar|form|link)|pick a time|schedule a (?:call|session|time|meeting))/i;
+const OFFER = /\b(working session|readiness check|book (?:a |an |the |your |some )?(?:thirty|30|time|call|session|slot|meeting|working)|book (?:it|one)\b|book(?:ed)? right here|booking (?:calendar|form|link)|pick a (?:thirty-minute |30-minute )?time|schedule a (?:call|session|time|meeting))/i;
 const hasOffer = (text) => OFFER.test(String(text || ""));
 
 // Turns marked ask: true are explicit asks (book, price, timing, start, a person): they must get the offer.

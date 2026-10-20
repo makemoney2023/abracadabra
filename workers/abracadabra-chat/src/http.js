@@ -201,7 +201,7 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
       let answer = "";
       let failure = null;
       try {
-        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers })) {
+        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening) })) {
           if (part.replace) {
             answer = part.replace;
             break;
@@ -370,7 +370,9 @@ export async function handleSession(request, storage, env, deps) {
     rememberPage(session, parsed.value);
     const action = uiActionFor(text);
     const history = [...session.messages, { role: "user", text }];
-    const offers = offerState(session, text);
+    // A clear ask to book opens the Cal.com calendar in the widget (the two-times form when no link is set).
+    const calendarOpen = action === "open_booking" && Boolean(String(env.CAL_LINK || env.BOOKING_URL || "").trim());
+    const offers = { ...offerState(session, text), opening: calendarOpen };
     return streamReply({ text, action, history, session, storage, env, deps, now, offers });
   }
 
