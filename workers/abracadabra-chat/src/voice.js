@@ -14,6 +14,12 @@ export const VOICE_TTS_CHARS_PER_SESSION = 3000;
 export const VOICE_CALLS_PER_SESSION = 3;
 export const MAX_CALL_MS = 5 * 60 * 1000;
 export const CALL_IDLE_MS = 45 * 1000;
+// Short spoken fillers, played by the browser when the real answer is not audible yet.
+// Pre-generated once with Aura-2 luna (npm run fillers) into the marketing site's /assets/voice/;
+// never synthesized per call. Keep the order: the index is the file name.
+export const FILLERS = ["Let me check.", "One sec.", "Good question.", "Just a moment."];
+export const FILLER_AFTER_MS = 1200;
+export const FILLER_PATH = "/assets/voice/filler-";
 export const KEYTERMS = ["Abracadabra", "Readiness Check", "Cal.com"];
 
 const AURA_SPEAKERS = new Set([

@@ -39,7 +39,9 @@ Copy `.dev.vars.example` to `.dev.vars` (do not commit it). On the Worker, set t
 | `AI_GATEWAY_ID` | Defaults to `abracadabra-chat` |
 | `AI_GATEWAY_TOKEN` | Cloudflare token that can call AI Gateway |
 | `CF_ACCOUNT_ID` | Account that owns the gateway |
-| `AI_MODEL` | Workers AI model id. Defaults to `@cf/meta/llama-3.1-8b-instruct-fast` |
+| `AI_MODEL` | Typed chat model. Defaults to `@cf/meta/llama-3.3-70b-instruct-fp8-fast` |
+| `AI_VOICE_MODEL` | Voice model; falls back to `AI_MODEL`, then the default |
+| `AI_FALLBACK_MODEL` | One retry when the main model errors, garbles or is silent for 6 s. Default `@cf/meta/llama-3.1-8b-instruct-fast`; `none` turns it off |
 | `HANDOFF_HMAC_SECRET` | Signs the `abra.chat.handoff` v1.0 JSON in the houdini@ mail |
 | `CHAT_HANDOFF_TO` | Must include `houdini@abra-ca-dabra.app`. Anything else is ignored |
 | `CHAT_ORIGINS` | Extra allowed `Origin` values, comma-separated |
@@ -57,6 +59,20 @@ HQ opens or reuses a deal, logs a `project_inquiry` activity and marks it `reply
 to Sales Outbound. `external_id` is `chat_<session id>`, so retries (idle alarm, up to 5) never make a second lead.
 `need` is "Website chat"; `message` starts "From the website chat" and carries the note and the latest transcript.
 Nothing is emailed to the visitor. Both settings empty = no post (the houdini@ handoff mail still works as before).
+
+## Streaming and the working indicator
+
+Typed replies stream from the gateway (`stream: true`) and are checked one sentence at a time (`checkedSentences`):
+each sentence that passes is sent as an SSE `token`, then `final` carries the whole checked answer. A sentence that
+trips the price, promise, jargon or "no portfolio" rules replaces the whole answer. If the model fails, the stream
+sends `error` (a short retry line) instead of hanging; the whole reply has 15 s. The widget shows animated dots with
+"Thinking…", then a topic line at 2 s ("Looking through our work…") and "Almost there…" at 5 s, announced through a
+`role="status"` region, and offers "Try again" on failure (client timeout 20 s).
+
+Voice uses the same stream: the first clause and then each sentence go to Aura as soon as they pass, so speech starts
+before the model finishes. If nothing is audible 1.2 s after the turn ends, the browser plays one short cached filler
+("Let me check.") from `/assets/voice/filler-<n>.mp3` (made once with `npm run fillers`, Aura-2 luna, trimmed), and
+the answer queues after it. The filler's echo does not count as a barge-in; talking over it stops it.
 
 ## Site knowledge
 

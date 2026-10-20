@@ -5,6 +5,7 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "knowledge": "node scripts/build-site-knowledge.mjs",
+    "fillers": "node scripts/build-fillers.mjs",
     "preview": "wrangler dev",
     "deploy": "wrangler deploy"
   }
