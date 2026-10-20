@@ -13,9 +13,10 @@ export const dynamic = "force-dynamic";
  * { action: "start" } | { action: "pause" } | { action: "block", reason } | { action: "review", note? }
  * | { action: "move", to: todo|doing|review|done } | { action: "note", body }
  * | { action: "attach_skills", prefixes: [...] } | { action: "detach_skills", prefixes: [...] }
+ * | { action: "assign", to: "<agent id>" | null }  (lead only; null or "lead" hands the card back to the lead)
  * The board has four columns: To do, Doing, Waiting on Client Services (review), Done. The old stage names are
  * aliases: describe is todo; engineer, build, and run are doing. A move to doing stores stage build and, with
- * AGENT_MODE=agents, hands the task to the lead agent; it is refused while AGENT_MODE is legacy (it would start a
+ * AGENT_MODE=agents, hands the task to its agent assignee (else the lead agent); it is refused while AGENT_MODE is legacy (it would start a
  * swarm or Cursor run). A card waiting on Client Services can't be started, paused, or moved. No deletes.
  * Skill packs (library prefixes) attach to any open card of a client this agent is on, review included: 403 for
  * another client's card, 404 for a missing card or an unknown pack, 409 for a done card.

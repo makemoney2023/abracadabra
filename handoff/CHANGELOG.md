@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-20
+
+- **What changed** — Per-client projects and agent card owners. Agents list their clients' projects (`GET /api/agent-projects`), and a client's lead agent opens new ones, each with its own space (`POST /api/agent-projects`). Cards get an optional agent owner (`tasks.assignee_agent_id`, migration 0031): `assignee` on card create, a lead-only `assign` board action, and `GET /api/agent-board?mine=1`. Dispatches (move to Doing, Client Services send-back, changes) go to the owner while it is live on the client, else to the lead. Client Services lists projects and agents with `GET /api/client-services/projects`. Staff get an agent badge, an "Assign to agent" menu item, and an Agent filter on the board. A second staff-created project gets its own space.
+- **Why** — Every card went to the lead and hires never got work. Agents could not list or open projects, so work for several projects could not be routed.
+- **Code touchpoints** — `handoff/migrations/0031_task_agent_owner.sql`, `handoff/src/lib/{agent-board,agent-dispatch,agent-projects,project-space,task-stage,task-review,cursor-build}.ts`, `handoff/src/db/{crm,migrate,migration-sql}.ts`, `handoff/src/app/api/{agent-projects,client-services/projects,agent-board}/**`, `handoff/src/app/work/*`, `handoff/src/app/projects/[id]/page.tsx`
+- **Data-flow impact** — Cards with no owner behave as before (the lead gets them). `handOverWaitingTasks` hands a card to its live owner and skips cards that owner already got.
+- **API / schema impact** — Additive: one nullable column plus index, two new routes, new optional fields. `dispatchToLeadAgent` is now `dispatchTask`; dispatch entries add `assignee` and `fallback`.
+- **Verification** — handoff `vitest run` (1135 pass, incl. new `src/lib/agent-projects.test.ts`), agent vitest config (11 pass), `tsc --noEmit` (both configs), eslint on touched files.
+
 ## 2026-10-19
 
 - **What changed** — A Cal.com booking can carry `chat_session_id`. The booking activity `data_json` stores it when the signed intake includes it.

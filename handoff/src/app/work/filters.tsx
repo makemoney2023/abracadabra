@@ -20,6 +20,7 @@ export function WorkToolbar({
   review = false,
   client,
   project,
+  agent,
   counts,
 }: {
   late: boolean;
@@ -28,9 +29,10 @@ export function WorkToolbar({
   review?: boolean;
   client?: string;
   project?: string;
+  agent?: string;
   counts: WorkCount;
 }) {
-  const scope = { client, project };
+  const scope = { client, project, agent };
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">

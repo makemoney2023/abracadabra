@@ -1,5 +1,5 @@
 import type { Sql } from "@/db/sql";
-import { dispatchToLeadAgent } from "@/lib/agent-dispatch";
+import { dispatchTask } from "@/lib/agent-dispatch";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { moveTaskStage, type MoveTaskInput, type MoveTaskResult } from "@/lib/task-stage";
 import { columnOf } from "@/lib/board-model";
@@ -113,7 +113,7 @@ export async function decideReview(sql: Sql, input: ReviewInput): Promise<Review
   await logReview(sql, task, "progress", note, input);
   let handedTo: string | null | undefined;
   if (!legacyStartsAllowed() && task.organization_id) {
-    const sent = await dispatchToLeadAgent(sql, {
+    const sent = await dispatchTask(sql, {
       organizationId: task.organization_id,
       projectId: task.project_id,
       taskId: task.id,
@@ -124,7 +124,7 @@ export async function decideReview(sql: Sql, input: ReviewInput): Promise<Review
       actor: input.actor,
       now: input.now,
     });
-    handedTo = sent.leadAgentId;
+    handedTo = sent.agentId;
   }
   return {
     ok: true,

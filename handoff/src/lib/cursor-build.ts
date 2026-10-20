@@ -1,5 +1,5 @@
 import type { Sql } from "@/db/sql";
-import { dispatchToLeadAgent } from "@/lib/agent-dispatch";
+import { dispatchTask } from "@/lib/agent-dispatch";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { publishDeliverableAsSystem, pullDeliverableAsSystem } from "@/db/deliverables";
 import type { WakeReason } from "@/lib/agent-wake";
@@ -896,8 +896,9 @@ export async function startRevision(
     round: number;
     status: string;
     skills_json: string | null;
+    assignee_agent_id: string | null;
   }>(
-    `SELECT id, title, project_id, organization_id, round, status, skills_json
+    `SELECT id, title, project_id, organization_id, round, status, skills_json, assignee_agent_id
      FROM tasks WHERE deliverable_id = ? ORDER BY round DESC LIMIT 1`,
     [deliverableId],
   );
@@ -911,8 +912,8 @@ export async function startRevision(
   await sql.run(
     `INSERT INTO tasks (
       id, project_id, organization_id, title, status, created_at, updated_at,
-      stage, deliverable_id, round, created_by_kind, skills_json
-    ) VALUES (?, ?, ?, ?, 'todo', ?, ?, 'engineer', ?, ?, 'agent', ?)`,
+      stage, deliverable_id, round, created_by_kind, skills_json, assignee_agent_id
+    ) VALUES (?, ?, ?, ?, 'todo', ?, ?, 'engineer', ?, ?, 'agent', ?, ?)`,
     [
       taskId,
       task.project_id,
@@ -923,12 +924,13 @@ export async function startRevision(
       deliverableId,
       task.round + 1,
       reviseSkills(task.skills_json),
+      task.assignee_agent_id ?? null,
     ],
   );
   if (task.organization_id) {
     await act(sql, task.organization_id, task.project_id, "agent.revision_started", { deliverableId, taskId, round: task.round + 1 }, now);
     if (!legacyStartsAllowed()) {
-      await dispatchToLeadAgent(sql, {
+      await dispatchTask(sql, {
         organizationId: task.organization_id,
         projectId: task.project_id,
         taskId,

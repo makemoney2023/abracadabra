@@ -6,7 +6,12 @@ import { agentForToken } from "@/lib/agent-work-filing";
 
 export const dynamic = "force-dynamic";
 
-/** New task on a client's board. Bearer agent token. Body: { title, note?, stage?: todo|doing (old names describe|engineer still work), client?, project_id? } */
+/**
+ * New task on a client's board. Bearer agent token.
+ * Body: { title, note?, stage?: todo|doing (old names describe|engineer still work), client?, project_id?, assignee? }
+ * assignee: agent id on the same client (lead only for someone else; a hire's cards default to itself). 400 if that
+ * agent is not on the client. List project ids with GET /api/agent-projects.
+ */
 export async function POST(request: Request) {
   const sql = await openHandoffDb();
   await migrate(sql);
@@ -24,6 +29,7 @@ export async function POST(request: Request) {
     title: typeof body?.title === "string" ? body.title : "",
     note: typeof body?.note === "string" ? body.note : null,
     stage: typeof body?.stage === "string" ? body.stage : null,
+    assignee: typeof body?.assignee === "string" ? body.assignee : null,
     now: Date.now(),
   });
   if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assignTaskAgent } from "@/lib/agent-board";
 import { wakeOrganization } from "@/lib/agent-wake";
 import { defaultBuildDeps } from "@/lib/cursor-build";
 import { requireHqStaffPage } from "@/lib/current";
@@ -141,4 +142,24 @@ export async function reviewCardAction(formData: FormData): Promise<{ ok: boolea
   if (decision === "approve") return { ok: true, message: "Override: approved. Moved to done." };
   if (decided.waiting) return { ok: true, message: "Sent back. Waiting for a free cloud run." };
   return { ok: true, message: decision === "build" ? "Sent back to build." : "Sent back to in progress." };
+}
+
+/**
+ * Staff assign a card to one of the client's live agents (lead or hire), or back to the lead (agentId empty).
+ * A card already in Doing is handed to its new owner right away (AGENT_MODE=agents).
+ */
+export async function assignBoardAgentAction(formData: FormData): Promise<{ ok: boolean; message: string }> {
+  const { sql, caller } = await requireHqStaffPage();
+  if (!caller.userId) return { ok: false, message: "You can't do that." };
+  const taskId = String(formData.get("taskId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const projectId = String(formData.get("projectId") ?? "");
+  const agentId = String(formData.get("agentId") ?? "").trim();
+  const done = await assignTaskAgent(sql, { taskId, to: agentId || null, actor: { kind: "staff", id: caller.userId }, now: Date.now() });
+  revalidatePath("/work");
+  if (organizationId) revalidatePath(`/clients/${organizationId}`);
+  if (projectId) revalidatePath(`/projects/${projectId}`);
+  if (!done.ok) return { ok: false, message: done.message };
+  const who = done.assignee ?? "the lead agent";
+  return { ok: true, message: done.handedTo ? `Assigned to ${who} and handed over.` : `Assigned to ${who}.` };
 }

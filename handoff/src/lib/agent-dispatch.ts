@@ -15,13 +15,45 @@ export async function leadAgentFor(sql: Sql, organizationId: string): Promise<st
   return row?.agent_id ?? null;
 }
 
+/** A live agent (token not revoked) with a live assignment to this client, or null. Matches the id case-insensitively. */
+export async function liveClientAgent(sql: Sql, organizationId: string, ref: string | null | undefined): Promise<{ id: string; role: "lead" | "hire" } | null> {
+  const id = ref?.trim().toLowerCase();
+  if (!id) return null;
+  const row = await sql.get<{ agent_id: string; role: "lead" | "hire" }>(
+    `SELECT a.agent_id, a.role FROM agent_assignments a JOIN client_agents c ON c.id = a.agent_id
+     WHERE a.agent_id = ? AND a.organization_id = ? AND a.ended_at IS NULL AND c.revoked_at IS NULL LIMIT 1`,
+    [id, organizationId],
+  );
+  return row ? { id: row.agent_id, role: row.role } : null;
+}
+
 /**
- * Hands one task to the client's lead agent (AGENT_MODE=agents). Logged as client_agent.dispatch, which the
- * Client Services updates feed carries; the lead agent also sees it with GET /api/agent-work?dispatches=1.
- * With no lead agent the entry says so, and Client Services assigns one. The entry carries the skill packs attached to
- * the card and how to browse and attach more.
+ * Who gets a card: its agent assignee (tasks.assignee_agent_id) while that agent is live and still assigned to the
+ * card's client, else the client's lead agent. `owner` is the stored assignee, kept even when it fell back.
  */
-export async function dispatchToLeadAgent(
+export async function dispatchTargetFor(
+  sql: Sql,
+  input: { organizationId: string; taskId: string },
+): Promise<{ agentId: string | null; owner: string | null; fallback: boolean }> {
+  const task = await sql.get<{ assignee_agent_id: string | null }>(
+    "SELECT assignee_agent_id FROM tasks WHERE id = ? AND organization_id = ?",
+    [input.taskId, input.organizationId],
+  );
+  const owner = task?.assignee_agent_id ?? null;
+  if (owner) {
+    const live = await liveClientAgent(sql, input.organizationId, owner);
+    if (live) return { agentId: live.id, owner, fallback: false };
+  }
+  return { agentId: await leadAgentFor(sql, input.organizationId), owner, fallback: Boolean(owner) };
+}
+
+/**
+ * Hands one task to its agent (AGENT_MODE=agents): the card's agent assignee when that agent is live and assigned to the
+ * client, else the client's lead agent. Logged as client_agent.dispatch, which the Client Services updates feed carries;
+ * the agent sees it with GET /api/agent-work?dispatches=1. With no one to hand it to the entry says so, and Client
+ * Services assigns a lead. The entry carries the skill packs attached to the card and how to browse and attach more.
+ */
+export async function dispatchTask(
   sql: Sql,
   input: {
     organizationId: string;
@@ -34,14 +66,16 @@ export async function dispatchToLeadAgent(
     actor: { kind: "staff" | "agent" | "system"; id: string };
     now: number;
   },
-): Promise<{ leadAgentId: string | null; activityId: string }> {
-  const leadAgentId = await leadAgentFor(sql, input.organizationId);
+): Promise<{ agentId: string | null; activityId: string }> {
+  const target = await dispatchTargetFor(sql, { organizationId: input.organizationId, taskId: input.taskId });
+  const agentId = target.agentId;
   const space = input.projectId
     ? await sql.get<{ id: string }>("SELECT id FROM workspaces WHERE project_id = ? AND status = 'active' LIMIT 1", [input.projectId])
     : undefined;
   const what = input.reason === "changes" ? "Changes requested" : input.reason === "build" ? "Build" : "Run";
-  const body = leadAgentId
-    ? `${what}: "${input.title}" handed to ${leadAgentId}.`
+  const fellBack = target.fallback ? ` (${target.owner} is no longer on this client, so the lead has it)` : "";
+  const body = agentId
+    ? `${what}: "${input.title}" handed to ${agentId}${fellBack}.`
     : `${what}: "${input.title}" needs a lead agent. Assign one to this client.`;
   const activityId = crypto.randomUUID();
   await sql.run(
@@ -59,21 +93,23 @@ export async function dispatchToLeadAgent(
         task_id: input.taskId,
         deliverable_id: input.deliverableId ?? null,
         reason: input.reason,
-        to: leadAgentId,
+        to: agentId,
+        assignee: target.owner,
+        fallback: target.fallback,
         note: input.note ?? null,
         skills: skillHint(input.taskId, await cardSkillPacks(sql, input.taskId)),
       }),
       input.now,
     ],
   );
-  return { leadAgentId, activityId };
+  return { agentId, activityId };
 }
 
 /**
- * AGENT_MODE=agents: hand the client's lead agent every open task already in Doing (stage engineer, build, or run; not
- * waiting on Client Services)
- * whose latest dispatch did not go to that lead, e.g. tasks moved before any lead was assigned. Runs on lead
- * assignment and from the staff button. Returns the task ids handed over.
+ * AGENT_MODE=agents: hand every open task already in Doing (stage engineer, build, or run; not waiting on Client
+ * Services) to its agent (the live assignee, else the lead) when its latest dispatch did not go to that agent, e.g.
+ * tasks moved before any lead was assigned. Cards a live hire owns and already got are left alone. Runs on lead
+ * assignment and from the staff button. Returns the task ids handed over (to the lead or to an assignee).
  */
 export async function handOverWaitingTasks(
   sql: Sql,
@@ -94,8 +130,9 @@ export async function handOverWaitingTasks(
   );
   const taskIds: string[] = [];
   for (const row of rows) {
-    if (row.last_to === leadAgentId) continue;
-    await dispatchToLeadAgent(sql, {
+    const target = await dispatchTargetFor(sql, { organizationId: input.organizationId, taskId: row.id });
+    if (row.last_to === target.agentId) continue;
+    await dispatchTask(sql, {
       organizationId: input.organizationId,
       projectId: row.project_id,
       taskId: row.id,

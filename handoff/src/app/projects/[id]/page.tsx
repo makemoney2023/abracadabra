@@ -5,6 +5,7 @@ import { getBrief } from "@/lib/agent-context";
 import {
   listBoard,
   listBoardActivity,
+  listBoardAgents,
   openCloudRunCount,
   listMilestones,
   listProjects,
@@ -55,7 +56,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   const reviewOverride = await isLiveSuperAdmin(sql, caller);
   if (!project) notFound();
   const now = clock();
-  const [org, milestones, tasks, updates, staff, spaces, looseSpaces, activity, capRow, runsOpen, swarmRuns, clientRepos, siblings, swarm] =
+  const [org, milestones, tasks, updates, staff, spaces, looseSpaces, activity, capRow, runsOpen, swarmRuns, clientRepos, siblings, swarm, agents] =
     await Promise.all([
     organizationById(sql, caller, project.organization_id),
     listMilestones(sql, caller, project.id),
@@ -81,6 +82,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     listRepos(sql, caller, project.organization_id),
     listProjects(sql, caller, project.organization_id),
     boardSwarmExtras(sql),
+    listBoardAgents(sql, caller, [project.organization_id]),
   ]);
   const repos = clientRepos.filter((repo) => repo.project_id === project.id);
   const unassignedRepos = clientRepos.filter((repo) => repo.project_id == null);
@@ -199,6 +201,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   runningTaskIds={swarm.runningTaskIds}
                   packs={swarm.packs}
                   reviewOverride={reviewOverride}
+                  agents={agents}
                 />
               </CardContent>
             </Card>

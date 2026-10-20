@@ -2,6 +2,7 @@ import type { Caller } from "@/lib/authz";
 import { internalFlag, isVendorDomain } from "@/lib/internal-orgs";
 import { nextColumnPosition } from "@/lib/task-position";
 import { LIMITS } from "@/lib/policy/limits";
+import { planProjectSpace } from "@/lib/project-space";
 import type { Sql } from "./sql";
 
 export type OrgKind = "lead" | "client" | "past_client" | "partner";
@@ -101,7 +102,13 @@ export type BoardCard = WorkTask & {
   repo_full_name: string | null;
   /** Skill pack prefixes attached to the card by its agents (task_skill_packs), oldest first. */
   skill_packs: string[];
+  /** The client agent that owns the card (lead or hire). null: the client's lead agent. */
+  assignee_agent_id: string | null;
+  assignee_agent_label: string | null;
 };
+
+/** A live client agent on one client: token not revoked, assignment not ended. */
+export type BoardAgent = { organization_id: string; id: string; label: string; role: "lead" | "hire" };
 
 export type BoardActivity = {
   id: string;
@@ -218,6 +225,7 @@ const WORK_COLUMNS = `t.id, t.organization_id, t.title, t.status, t.due_at, t.do
   o.name AS organization_name, s.email AS assignee_email,
   p.name AS project_name, p.status AS project_status`;
 const BOARD_COLUMNS = `${WORK_COLUMNS}, t.review_requested_at, t.review_note,
+  t.assignee_agent_id, (SELECT ca.label FROM client_agents ca WHERE ca.id = t.assignee_agent_id) AS assignee_agent_label,
   cr.started_at AS run_started_at, cr.pr_number AS pr_number, rp.full_name AS repo_full_name,
   (SELECT json_group_array(sp.prefix) FROM (
      SELECT prefix FROM task_skill_packs WHERE task_id = t.id AND detached_at IS NULL ORDER BY attached_at, rowid
@@ -1177,7 +1185,26 @@ export async function createProject(
   const row = await sql.get<ProjectRow>(`SELECT ${PROJECT_COLUMNS} FROM projects WHERE id = ?`, [id]);
   if (!row) return { ok: false, error: "missing" };
   await attachLooseHome(sql, input.organizationId, row.id);
+  await ownSpaceForNewProject(sql, input.organizationId, row.id, name, now);
   return { ok: true, value: row };
+}
+
+/**
+ * A client that already works in Spaces gets a new Space for each new project, so the project's work does not file
+ * into another project's Space. Skipped when the project already got a Space, when the client has loose Spaces for
+ * staff to pick from, and for a client with no Space at all (a Space opens with its first intake).
+ */
+async function ownSpaceForNewProject(sql: Sql, organizationId: string, projectId: string, name: string, now: number): Promise<void> {
+  const counts = await sql.get<{ linked_here: number; loose: number; any_active: number }>(
+    `SELECT
+       (SELECT COUNT(*) FROM workspaces WHERE project_id = ? AND status = 'active') AS linked_here,
+       (SELECT COUNT(*) FROM workspaces WHERE organization_id = ? AND project_id IS NULL AND status != 'purged') AS loose,
+       (SELECT COUNT(*) FROM workspaces WHERE organization_id = ? AND status = 'active') AS any_active`,
+    [projectId, organizationId, organizationId],
+  );
+  if (!counts || counts.linked_here > 0 || counts.loose > 0 || counts.any_active === 0) return;
+  const plan = await planProjectSpace(sql, { organizationId, name, projectId, spaceName: name, now });
+  if (plan.writes.length) await sql.batch(plan.writes);
 }
 
 export async function updateProject(
@@ -1329,6 +1356,8 @@ export type BoardQuery = {
   unassigned?: boolean;
   /** Client and studio boards hide open cards on paused, done, and cancelled projects. */
   hideInactiveProjects?: boolean;
+  /** Cards one client agent owns, or "lead" for cards with no agent assignee (the lead's). */
+  agentId?: string;
 };
 
 /** One task list for the project board, the client board, and the studio board. */
@@ -1348,6 +1377,12 @@ export async function listBoard(sql: Sql, caller: Caller, query: BoardQuery): Pr
   } else if (query.hideInactiveProjects) {
     where.push(`(t.project_id IS NULL OR p.status IN ${ACTIVE_PROJECT})`);
   }
+  if (query.agentId === "lead") {
+    where.push("t.assignee_agent_id IS NULL");
+  } else if (query.agentId) {
+    where.push("t.assignee_agent_id = ?");
+    params.push(query.agentId);
+  }
   const rows = await sql.all<Omit<BoardCard, "skill_packs"> & { skill_packs_json: string | null }>(
     `SELECT ${BOARD_COLUMNS}
      ${BOARD_JOINS}
@@ -1356,6 +1391,18 @@ export async function listBoard(sql: Sql, caller: Caller, query: BoardQuery): Pr
     params,
   );
   return rows.map(({ skill_packs_json, ...row }) => ({ ...row, skill_packs: skillPacksFromJson(skill_packs_json) }));
+}
+
+/** Live client agents of these clients, lead first: the board's agent badge, Assign menu, and Agent filter. */
+export async function listBoardAgents(sql: Sql, caller: Caller, organizationIds: string[]): Promise<BoardAgent[]> {
+  if (!staffUserId(caller) || organizationIds.length === 0) return [];
+  const ids = [...new Set(organizationIds)];
+  return sql.all<BoardAgent>(
+    `SELECT a.organization_id, c.id, c.label, a.role FROM agent_assignments a JOIN client_agents c ON c.id = a.agent_id
+     WHERE a.ended_at IS NULL AND c.revoked_at IS NULL AND a.organization_id IN (${ids.map(() => "?").join(", ")})
+     ORDER BY CASE a.role WHEN 'lead' THEN 0 ELSE 1 END, a.assigned_at, c.id`,
+    ids,
+  );
 }
 
 export async function openCloudRunCount(sql: Sql, caller: Caller): Promise<number> {

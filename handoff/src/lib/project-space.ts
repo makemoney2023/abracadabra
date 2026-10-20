@@ -41,6 +41,8 @@ export async function planProjectSpace(
     dealId?: string | null;
     description?: string | null;
     status?: "planned" | "active";
+    /** Slug words for a new Space of an existing project (a new project already uses its name). */
+    spaceName?: string | null;
     now: number;
   },
 ): Promise<ProjectSpacePlan> {
@@ -88,7 +90,7 @@ export async function planProjectSpace(
     return { projectId, workspaceId: loose.id, createdProject, createdSpace: false, writes };
   }
   const workspaceId = crypto.randomUUID();
-  const slug = await freeSlug(sql, `${orgName} ${createdProject ? name : ""}`.trim());
+  const slug = await freeSlug(sql, `${orgName} ${createdProject ? name : (input.spaceName ?? "")}`.trim());
   writes.push({
     statement: `INSERT INTO workspaces (
        id, slug, name, display_name, logo_object_key, sender_name, policy_profile,
