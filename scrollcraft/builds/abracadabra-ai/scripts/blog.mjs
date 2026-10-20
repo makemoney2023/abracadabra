@@ -451,7 +451,7 @@ function pageShell({ title, description, canonical, robots, ogImage, ogAlt, ogTy
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
 ${headLinks()}
-<link rel="stylesheet" href="/blog/blog.css?v=20261019n">
+<link rel="stylesheet" href="/blog/blog.css?v=20261020a">
 <script type="application/ld+json">
 ${jsonLd(json)}
 </script>

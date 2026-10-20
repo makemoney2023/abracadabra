@@ -1,4 +1,4 @@
-/** Premium PiRX Search Console proof shots (dark-treated plot crops in product frames). */
+/** Premium PIRX Search Console proof shots (dark-treated plot crops in product frames). */
 
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";

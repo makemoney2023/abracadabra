@@ -20,9 +20,21 @@ export const SERVICE_FOLDERS = {
   "ai-media": "ai-media",
   "ai-visibility": "ai-visibility",
   "search-grounded-research": "research-tools",
+  "machine-learning": "machine-learning",
+  "mcp-connectors": "mcp-connectors",
 };
 
 export const SERVICE_ALTS = {
+  "machine-learning": {
+    hero: "The PIRX app on two phones, showing a runner's projected race times and the training zones behind them.",
+    body1: "The PIRX race time predictor on pirx.ca, where a runner enters a recent race to get a projected finish time.",
+    body2: "The PIRX marathon time predictor on pirx.ca, with a form for a recent race and notes on its machine learning engine and supported range.",
+  },
+  "mcp-connectors": {
+    hero: "Diagram of AI assistants on the left, one safe connector in the middle, and business tools on the right.",
+    body1: "Diagram of a plain question going to the connector, which reads the calendar and returns an answer without changing anything.",
+    body2: "Diagram of a proposed change waiting for a person to approve it before the connector saves it, with every step logged.",
+  },
   "ai-assistants-and-agents": {
     hero: "Dark chat console with a customer thread, a reply field, and a checklist of next steps.",
     body1: "Three task cards for a follow-up, an order lookup, and a booking, each with a checked step.",

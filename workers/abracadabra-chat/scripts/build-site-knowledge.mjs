@@ -31,6 +31,12 @@ export const CLOUDFLARE = [
   "From our site: built on Cloudflare and connected to the tools you already use, so nothing has to move. Your data goes only to the model doing the work.",
 ];
 
+// Plain facts for the two newest services. Locked PIRX terms come from the PIRX owner's own glossary.
+export const DETAILS = [
+  "PIRX DETAIL (pirx.ca, /portfolio/pirx/): we designed and built the PIRX app and its machine learning. A runner connects the watch they already wear. PIRX gives a Projected Time for a race, a Supported Range around it, and five Structural Drivers: Aerobic Base, Threshold Density, Speed Exposure, Running Economy and Load Consistency. Personal models, including gradient boosting, learn each runner's patterns and are only used when they beat the app's safe rules. Athletic estimates, not medical advice. PIRX is the only named machine learning project; never say another project used machine learning. Use these exact names: say Projected Time (never prediction score), Supported Range (never confidence interval), Personal Best (never PR). Never give an accuracy figure or a user count.",
+  "MCP DETAIL (/services/mcp-connectors/): MCP, the Model Context Protocol, is an open standard that lets AI assistants like Claude, ChatGPT, Copilot and Cursor plug into a business's tools through one connector. We build MCP connectors on Cloudflare, with sign-in, permissions and approval before any change. Three ways to use it: ask your business (plain, read-only questions), let your AI do the busywork (each change asks for a yes first), and one safe front door (one sign-in, rules for who can use what, a record of every action). No MCP client project is named yet, so never claim one.",
+];
+
 const OTHER_PAGES = [
   ["Home", "/", "the studio, the process, and how to start"],
   ["Work page", "/portfolio/", "all case studies"],
@@ -50,7 +56,7 @@ export async function buildKnowledge() {
   const byCase = new Map(data.cases.map((item) => [item.slug, item]));
   const work = WORK_ORDER.map((slug) => byCase.get(slug)).filter(Boolean).map((item) => {
     const path = item.kind === "product" ? `/products/${item.slug}/` : `/portfolio/${item.slug}/`;
-    return { name: item.name, path, line: first(item.summary) };
+    return { name: item.name, path, line: brief(item.summary, 240) };
   });
   const services = Object.entries(sales.salesPages).map(([slug, page]) => ({
     name: page.short,
@@ -62,6 +68,7 @@ export async function buildKnowledge() {
     "ABOUT: Abracadabra is a studio in Toronto. Let us bring your ideas to life. Custom software and AI tools, built for how you work. We design, build and run them, so they fit your business, not the other way around.",
     "WORK (real, public examples). Format: name | page | what it is. Each page belongs only to its own project.",
     ...work.map((item) => `- ${item.name} | ${item.path} | ${item.line}`),
+    ...DETAILS,
     "SERVICES. Format: name | page | what it does.",
     ...services.map((item) => `- ${item.name} | ${item.path} | ${item.line}`),
     "OTHER PAGES (the only other pages that exist):",

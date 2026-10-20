@@ -605,7 +605,7 @@ test('service page heroes use the same left column and stacked actions', async (
   await phone.context.close();
 });
 
-test('AI visibility and PiRX tell a compact proof-first story without full-page screenshot gutters', async () => {
+test('AI visibility and PIRX tell a compact proof-first story without full-page screenshot gutters', async () => {
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 1440, height: 1000 },
@@ -632,19 +632,19 @@ test('AI visibility and PiRX tell a compact proof-first story without full-page 
       const rect = node.getBoundingClientRect();
       return { height: rect.height, overflow: getComputedStyle(node).overflow };
     }));
-    assert.ok(frames.every((frame) => frame.height <= 720), `${viewport.width}px PiRX frames are too tall`);
-    assert.ok(frames.every((frame) => frame.overflow === 'hidden'), `${viewport.width}px PiRX frames are not cropped`);
+    assert.ok(frames.every((frame) => frame.height <= 720), `${viewport.width}px PIRX frames are too tall`);
+    assert.ok(frames.every((frame) => frame.overflow === 'hidden'), `${viewport.width}px PIRX frames are not cropped`);
     const caseHeight = await page.evaluate(() => document.documentElement.scrollHeight);
     assert.ok(
       caseHeight < (viewport.width < 500 ? 6200 : 5200),
-      `${viewport.width}px PiRX case study is ${caseHeight}px tall`,
+      `${viewport.width}px PIRX case study is ${caseHeight}px tall`,
     );
 
     const dimensions = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
     }));
-    assert.ok(dimensions.scrollWidth <= dimensions.clientWidth, `${viewport.width}px PiRX page overflows`);
+    assert.ok(dimensions.scrollWidth <= dimensions.clientWidth, `${viewport.width}px PIRX page overflows`);
     await context.close();
   }
 });

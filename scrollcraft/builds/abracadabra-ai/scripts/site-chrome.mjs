@@ -30,6 +30,8 @@ const navGroups = [
       ["web-automation", "Repetitive web jobs that run themselves."],
       ["answers-from-your-documents", "Answers from the files you already keep."],
       ["safe-code-execution", "AI that can run code, with a fence around it."],
+      ["machine-learning", "Models that show a number and the reasons."],
+      ["mcp-connectors", "Let your AI use your tools, safely."],
     ],
   },
   {

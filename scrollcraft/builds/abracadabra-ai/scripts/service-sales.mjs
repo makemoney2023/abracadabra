@@ -581,4 +581,122 @@ export const salesPages = {
     ],
     close: "Bring a question you need answered before your next decision, and we'll show you a sourced answer.",
   }),
+  "machine-learning": page({
+    short: "Machine learning",
+    title: "Machine learning that shows its working",
+    headline: "Machine learning that shows its working.",
+    description: "We design and build machine learning into your app, so your own data turns into a clear number, a fair range, and the reasons behind it.",
+    dek: "Your records already hold patterns. We build models that learn from them and give you a clear number, a fair range around it, and the reasons it moved. Then we put it inside the app where you already work.",
+    lead: { before: "See it running:", href: "/portfolio/pirx/", label: "the PIRX app we designed and built for pirx.ca", after: "." },
+    // PIRX does not run on our Cloudflare stack, so this page uses neutral wording for the Build step.
+    processSteps: processSteps.map((step) => (step.title === "Build"
+      ? { ...step, text: "Built to run where your data lives and connected to the tools you already use, so nothing has to move." }
+      : step)),
+    strip: [
+      { href: "/portfolio/pirx/", label: "pirx.ca" },
+      { href: "/services/custom-apps/", label: "Custom apps" },
+    ],
+    problemTitle: "Your data knows more than your spreadsheet shows.",
+    problem: [
+      "You have years of records. Orders, jobs, visits, readings. Somewhere in there is the answer to a question you keep asking. What happens next? How much? How soon? A spreadsheet can add it up. It can't learn from it.",
+      "Many AI tools hand you a number with no reason. That is hard to trust, and harder to explain to a customer. We build models that learn from your own data, show their working, and say how sure they are. When the data is thin, they say so.",
+    ],
+    outcomes: [
+      { title: "A number you can use", text: "One clear answer to the question you ask most, worked out from your own records." },
+      { title: "A fair range", text: "Every number comes with a range. When the data is thin or messy, the range gets wider instead of the number pretending." },
+      { title: "The reasons, in plain words", text: "The number is split into the parts that moved it, so anyone can see why it changed." },
+      { title: "Steady, not jumpy", text: "One odd day does not swing the result. The number moves when something real has changed." },
+    ],
+    uses: [
+      { title: "What a customer can expect", text: "Turn a customer's own history into a clear estimate they can plan around, the way PIRX gives a runner a Projected Time." },
+      { title: "What is coming next", text: "Spot the pattern in past jobs or orders, so you can plan people and stock before the busy weeks." },
+      { title: "Which ones need a look", text: "Flag the records that look off, with the reason, so a person checks those first." },
+    ],
+    capability: {
+      title: "The model lives inside the app",
+      text: "The model is part of the product, not a report on the side. Your team and your customers see the number, the range and the reasons where they already work. We build the app around it too.",
+      href: "/services/custom-apps/",
+      label: "See how we build apps",
+    },
+    compareIntro: "A spreadsheet, a data hire, and a model built into your app answer different questions.",
+    rows: [
+      { label: "What you get", shelf: "A total or a trend line someone has to read.", hire: "A report, when the person has time.", us: "A number, a range and the reasons, inside the app you use." },
+      { label: "When the data is thin", shelf: "It shows a number anyway.", hire: "It depends on the person.", us: "The range gets wider and the app says the data is thin." },
+      { label: "Who can check it", shelf: "Whoever wrote the formula.", hire: "The person who built the model.", us: "Anyone. Each part of the number is shown." },
+      { label: "When you don't need us", shelf: "If a simple average answers the question, keep the spreadsheet.", hire: "Hire a data person when you need new research every week, not one product.", us: "Our advice: start simple. Machine learning earns its place when you have history to learn from and a question you ask every day." },
+    ],
+    proofs: [
+      {
+        title: "pirx.ca",
+        text: "We designed and built the PIRX app and its machine learning. A runner connects the watch they already wear. PIRX gives a Projected Time for a race, a Supported Range around it, and the seconds each of five Structural Drivers adds: Aerobic Base, Threshold Density, Speed Exposure, Running Economy and Load Consistency. Personal models, including gradient boosting, learn each runner's own patterns as their history grows. They are only used when they beat the app's safe rules.",
+        href: "/portfolio/pirx/",
+        link: "Read the pirx.ca case study",
+      },
+    ],
+    faqs: [
+      ["How much data do we need?", "Enough history to learn from. We look at what you have first. If it is too thin, we tell you, and we start with simple rules instead."],
+      ["Will the model make things up?", "It works only from your data. When the data is thin or odd, the range gets wider and the app says so."],
+      ["Can we see why a number changed?", "Yes. Each number is split into the parts that moved it, in plain words."],
+      ["What if a model gets it wrong?", "A new model is tested against safe rules first. If it does worse, or gives an odd answer, the app goes back to the rules."],
+      ["Who owns the data and the model?", "You do. The data stays yours, and so does what we build on it."],
+      ["What does it cost?", "Priced to the project. Tell us what you need and we'll quote it."],
+    ],
+    close: "Tell us the question you wish your data could answer, and we'll show you what a model could do with it.",
+  }),
+  "mcp-connectors": page({
+    short: "MCP connectors",
+    title: "Connect your AI to your tools",
+    headline: "Connect your AI to your tools.",
+    description: "We build a safe MCP connector between your AI assistant and the tools you already use, with sign-in, permissions, and a yes from you before any change.",
+    dek: "AI assistants like Claude and ChatGPT are smart, but they can't see your business. We build a safe connector between your AI and the tools you already use. Build it once. Use it with the AI tools your team already likes.",
+    strip: [
+      { href: "/services/ai-assistants-and-agents/", label: "AI assistants" },
+      { href: "/services/any-model-one-bill/", label: "Every AI model, one bill" },
+    ],
+    problemTitle: "Smart assistants that can't see your business.",
+    problem: [
+      "Your AI assistant doesn't know your customers. It can't check your calendar. It can't look up a job. So someone copies and pastes, and the answer is only as good as what got pasted.",
+      "We fix that with MCP, short for Model Context Protocol. It is an open standard, now looked after by the Linux Foundation, that lets an AI assistant plug into your tools through one common connector. It works with Claude, ChatGPT, Copilot, Cursor and more. We build it on Cloudflare, so it's fast, secure and ready to grow.",
+    ],
+    outcomes: [
+      { title: "Ask your business", text: "Your team asks plain questions about your CRM, jobs or inventory and gets real answers. Read-only to start." },
+      { title: "Let your AI do the busywork", text: "Tools that book appointments, log calls, draft invoices or update a job. Each one asks for a yes before it acts." },
+      { title: "One safe front door", text: "All your AI connections behind one sign-in, with rules for who can use what, and a record of every action." },
+      { title: "Build it once", text: "One connector works across the AI tools your team uses. If you switch AI tools later, the connector comes with you." },
+    ],
+    uses: [
+      { title: "A question you ask every day", text: "\"What's booked for Friday?\" \"Which quotes are still open?\" The assistant reads the answer from your tools. It can't change anything." },
+      { title: "A routine update", text: "\"Log this call and set a follow-up for Thursday.\" The assistant shows you the change and saves it after you say yes." },
+      { title: "A job with a few steps", text: "Find who is free after 2pm, suggest who takes the job, and book it once a person confirms." },
+    ],
+    capability: {
+      title: "Your own assistants can use it too",
+      text: "The same connector can also feed the chat and voice assistants we build for you, so they answer from your real records instead of a copy.",
+      href: "/services/ai-assistants-and-agents/",
+      label: "See our AI assistants",
+    },
+    compareIntro: "Copy and paste, a plug-in for each tool, and one safe connector are not the same thing.",
+    rows: [
+      { label: "What the AI can see", shelf: "Whatever someone pastes into the chat, or one tool per plug-in.", hire: "What one person wires up, when they have time.", us: "Only the tools and records you allow." },
+      { label: "Who approves a change", shelf: "It depends on each plug-in.", hire: "Whatever rules the person writes down.", us: "A person says yes before anything is changed, sent or spent." },
+      { label: "What gets recorded", shelf: "Each tool keeps its own history, if any.", hire: "Logs, if someone set them up.", us: "One record of every action, in one place." },
+      { label: "When you don't need us", shelf: "If the tool you use already has a good official connector, use it. Many now do.", hire: "If a nightly sync or a simple trigger does the job, you don't need AI at all.", us: "Our advice: connect to what exists. We build when your tools have no connector, or when you want them all behind one safe front door." },
+    ],
+    proofKicker: "Built in",
+    proofTitle: "How we keep it safe",
+    proofs: [
+      { title: "Sign-in and roles", text: "Each person signs in with their own account. They only reach the tools and records their role allows." },
+      { title: "A yes before any change", text: "Anything that changes a record, sends a message or spends money shows the change first and waits for a person to approve it." },
+      { title: "A record of every action", text: "Every question and every change is logged, so you can see what the AI did, for whom, and when.", href: "/start/", link: "Tell us which tools you use" },
+    ],
+    faqs: [
+      ["What is MCP?", "MCP stands for Model Context Protocol. It is an open standard that lets an AI assistant plug into your tools through one common connector, instead of a custom link for each AI tool."],
+      ["Which AI tools does it work with?", "Claude, ChatGPT, Copilot, Cursor and more. Some features depend on your plan with that AI company. We check yours before we build."],
+      ["Can the AI change things on its own?", "Only what you allow. We start read-only. Anything that changes a record, sends a message or spends money asks a person for a yes first."],
+      ["Do we need a connector if our tool already has one?", "Maybe not. Many tools now offer their own. We connect to those, and only build what is missing."],
+      ["Is it safe?", "We keep each tool's access narrow, treat what the AI reads as untrusted, and log every action. Permissions are checked by the connector, not left to the AI."],
+      ["What does it cost?", "Priced to the project. Tell us what you need and we'll quote it."],
+    ],
+    close: "Tell us which tools your team uses most, and we'll show you what your AI could do with them.",
+  }),
 };
