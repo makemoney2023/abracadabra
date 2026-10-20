@@ -86,7 +86,8 @@ test('hero states the owner outcome with two clear actions', async () => {
   const { context, page } = await openPage();
   const actions = await page.locator('#hero .hero__actions a').allTextContents();
 
-  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Custom software, built for how you work.');
+  assert.equal((await page.locator('#hero-title').textContent()).trim(), 'Let us bring your ideas to life.');
+  assert.match(await page.locator('#hero .hero__copy').textContent(), /Custom software and AI tools, built for how you work\./);
   assert.match(await page.locator('#hero .hero__copy').textContent(), /fit your business/i);
   assert.match(await page.locator('#hero .hero__copy').textContent(), /not the other way around/i);
   assert.deepEqual(actions.map((action) => action.trim()), [

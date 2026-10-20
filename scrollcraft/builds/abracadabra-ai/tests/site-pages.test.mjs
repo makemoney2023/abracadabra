@@ -32,7 +32,8 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
     assert.ok(at > last, id);
     last = at;
   }
-  assert.match(index, /Custom software, built for how you work\./);
+  assert.match(index, /<h1 id="hero-title">Let us bring your ideas to life\.<\/h1>/);
+  assert.match(index, /Custom software and AI tools, built for how you work\./);
   assert.match(index, /Every AI model\. One bill\./);
   assert.match(index, /Apps that scale, proudly built with Cloudflare\./);
   assert.match(index, /from the first user to millions, without a rebuild/);

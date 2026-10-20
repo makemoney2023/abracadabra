@@ -59,7 +59,7 @@ export async function buildKnowledge() {
   }));
   const process = sales.processSteps.map((step) => `${step.title}: ${first(step.text)}`);
   const lines = [
-    "ABOUT: Abracadabra is a studio in Toronto. We design, build and run AI-powered tools that fit your business, not the other way around. Custom software, built for how you work.",
+    "ABOUT: Abracadabra is a studio in Toronto. Let us bring your ideas to life. Custom software and AI tools, built for how you work. We design, build and run them, so they fit your business, not the other way around.",
     "WORK (real, public examples). Format: name | page | what it is. Each page belongs only to its own project.",
     ...work.map((item) => `- ${item.name} | ${item.path} | ${item.line}`),
     "SERVICES. Format: name | page | what it does.",
