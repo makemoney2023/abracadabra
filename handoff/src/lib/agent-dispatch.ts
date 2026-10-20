@@ -1,5 +1,6 @@
 import type { Sql } from "@/db/sql";
 import type { AgentPrincipal } from "@/lib/agent-work-filing";
+import { cardSkillPacks, skillHint } from "@/lib/skill-packs";
 
 export type DispatchReason = "build" | "run" | "changes";
 
@@ -17,7 +18,8 @@ export async function leadAgentFor(sql: Sql, organizationId: string): Promise<st
 /**
  * Hands one task to the client's lead agent (AGENT_MODE=agents). Logged as client_agent.dispatch, which the
  * Client Services updates feed carries; the lead agent also sees it with GET /api/agent-work?dispatches=1.
- * With no lead agent the entry says so, and Client Services assigns one.
+ * With no lead agent the entry says so, and Client Services assigns one. The entry carries the skill packs attached to
+ * the card and how to browse and attach more.
  */
 export async function dispatchToLeadAgent(
   sql: Sql,
@@ -59,6 +61,7 @@ export async function dispatchToLeadAgent(
         reason: input.reason,
         to: leadAgentId,
         note: input.note ?? null,
+        skills: skillHint(input.taskId, await cardSkillPacks(sql, input.taskId)),
       }),
       input.now,
     ],
@@ -117,6 +120,8 @@ export type DispatchRow = {
   reason: string;
   title: string;
   note: string | null;
+  /** Packs attached to the card now, and how to browse the library and attach more. */
+  skills: { attached: string[]; library: string; attach: string };
   created_at: string;
 };
 
@@ -132,18 +137,22 @@ export async function listAgentDispatches(sql: Sql, agent: AgentPrincipal, since
      ORDER BY created_at DESC LIMIT 100`,
     [...orgs, since, agent.agentId],
   );
-  return rows.map((row) => {
+  const out: DispatchRow[] = [];
+  for (const row of rows) {
     const data = JSON.parse(row.data_json) as Record<string, unknown>;
-    return {
+    const taskId = typeof data.task_id === "string" ? data.task_id : null;
+    out.push({
       id: row.id,
       organization_id: row.organization_id,
       project_id: row.project_id,
-      task_id: typeof data.task_id === "string" ? data.task_id : null,
+      task_id: taskId,
       deliverable_id: typeof data.deliverable_id === "string" ? data.deliverable_id : null,
       reason: String(data.reason ?? ""),
       title: row.body,
       note: typeof data.note === "string" ? data.note : null,
+      skills: skillHint(taskId ?? "<task id>", taskId ? await cardSkillPacks(sql, taskId) : []),
       created_at: new Date(row.created_at).toISOString(),
-    };
-  });
+    });
+  }
+  return out;
 }
