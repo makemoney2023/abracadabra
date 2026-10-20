@@ -39,6 +39,7 @@ import { ClientActions } from "./client-actions";
 import { ClientBody } from "./client-body";
 import { ClientTabs } from "./client-tabs";
 import { GroupCompanies, PartOfLabel } from "./group-panel";
+import { RenameForm } from "./rename-form";
 import { SetParentForm } from "./set-parent-form";
 import { organizationGroup, parentChoices } from "@/db/org-groups";
 import { CLIENT_KIND_LABEL, activeTab } from "./tabs";
@@ -173,6 +174,7 @@ export default async function ClientPage({
         description={client.website ?? undefined}
         actions={
           <>
+            <RenameForm organizationId={client.id} name={client.name} />
             {group.children.length === 0 ? (
               <SetParentForm
                 organizationId={client.id}

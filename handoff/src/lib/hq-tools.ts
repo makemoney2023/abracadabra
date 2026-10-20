@@ -404,6 +404,7 @@ async function perform(
         organizationId: created.value.id,
         website: created.value.website ?? "",
         now,
+        skipIntake: flag(input, "skipIntake"),
         queue: options.intake?.queue ?? bound.queue,
         env: options.intake?.env ?? bound.env,
         fetchImpl: options.intake?.fetchImpl,

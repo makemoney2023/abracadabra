@@ -154,6 +154,107 @@ describe("runHqTool", () => {
     expect(space).toEqual({ organization_id: organizationId, slug: "northwind-example" });
   });
 
+  it("skipIntake opens the space only: no scan, no agent wake, no lead pickup", async () => {
+    const sql = await database();
+    await sql.exec(`
+      CREATE TABLE readiness_scans (
+        id TEXT PRIMARY KEY,
+        public_token TEXT NOT NULL UNIQUE,
+        domain TEXT NOT NULL,
+        origin TEXT NOT NULL,
+        source TEXT NOT NULL,
+        status TEXT NOT NULL,
+        organization_id TEXT,
+        error_message TEXT,
+        created_at INTEGER NOT NULL,
+        completed_at INTEGER
+      );
+    `);
+    const sent: unknown[] = [];
+    const fetched: string[] = [];
+    const created = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "create_client",
+        input: { name: "Milr-Corr Construction", website: "https://milrcorr.example", skipIntake: true },
+        idempotencyKey: "create-existing",
+      },
+      NOW,
+      {
+        intake: {
+          queue: { send: async (body) => void sent.push(body) },
+          env: { AGENT_URL: "https://agent.example", AGENT_WAKE_SECRET: "wake-secret" },
+          fetchImpl: async (url) => {
+            fetched.push(String(url));
+            return new Response("ok");
+          },
+        },
+      },
+    );
+    expect(created).toMatchObject({ ok: true });
+    expect(sent).toEqual([]);
+    expect(fetched).toEqual([]);
+    const organizationId = String((valueOf(created) as { id?: string } | undefined)?.id ?? "");
+    const space = await sql.get<{ organization_id: string; slug: string }>(
+      "SELECT organization_id, slug FROM workspaces WHERE organization_id = ?",
+      [organizationId],
+    );
+    expect(space).toEqual({ organization_id: organizationId, slug: "milrcorr-example" });
+    const scans = await sql.get<{ count: number }>("SELECT COUNT(*) AS count FROM readiness_scans");
+    expect(scans?.count).toBe(0);
+    const note = await sql.get<{ body: string }>(
+      "SELECT body FROM activities WHERE organization_id = ? AND actor_kind = 'system'",
+      [organizationId],
+    );
+    expect(note?.body).toBe("Added as an existing client. Website check and lead pickup skipped.");
+    const deliverables = await sql.get<{ count: number }>("SELECT COUNT(*) AS count FROM deliverables");
+    expect(deliverables?.count).toBe(0);
+  });
+
+  it("winning a deal turns the lead into a client on its own space without starting intake", async () => {
+    const sql = await database();
+    const sent: unknown[] = [];
+    const fetched: string[] = [];
+    const lead = await runHqTool(sql, staff, { tool: "create_client", input: { name: "Strong Foam" }, idempotencyKey: "lead-org" }, NOW);
+    const organizationId = String((valueOf(lead) as { id?: string } | undefined)?.id ?? "");
+    await sql.run("UPDATE organizations SET kind = 'lead' WHERE id = ?", [organizationId]);
+    await sql.run(
+      `INSERT INTO deals (id, organization_id, title, stage, source, created_at, updated_at)
+       VALUES ('deal-1', ?, 'Readiness check', 'new', 'readiness_check', ?, ?)`,
+      [organizationId, NOW, NOW],
+    );
+    const before = await sql.all<{ id: string }>("SELECT id FROM workspaces WHERE organization_id = ?", [organizationId]);
+    expect(before).toHaveLength(1);
+    const won = await runHqTool(
+      sql,
+      staff,
+      { tool: "move_deal", input: { dealId: "deal-1", stage: "won" }, idempotencyKey: "won-1" },
+      NOW + 1,
+      {
+        intake: {
+          queue: { send: async (body) => void sent.push(body) },
+          env: { AGENT_URL: "https://agent.example", AGENT_WAKE_SECRET: "wake-secret" },
+          fetchImpl: async (url) => {
+            fetched.push(String(url));
+            return new Response("ok");
+          },
+        },
+      },
+    );
+    expect(won).toMatchObject({ ok: true });
+    expect(sent).toEqual([]);
+    expect(fetched).toEqual([]);
+    const org = await sql.get<{ kind: string }>("SELECT kind FROM organizations WHERE id = ?", [organizationId]);
+    expect(org?.kind).toBe("client");
+    const after = await sql.all<{ id: string; project_id: string | null }>(
+      "SELECT id, project_id FROM workspaces WHERE organization_id = ?",
+      [organizationId],
+    );
+    expect(after.map((row) => row.id)).toEqual(before.map((row) => row.id));
+    expect(after[0]?.project_id).toBeTruthy();
+  });
+
   it("previews a client-facing write and stores nothing until it is approved", async () => {
     const sql = await database();
     const created = await runHqTool(

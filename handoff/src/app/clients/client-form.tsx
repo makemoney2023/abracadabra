@@ -43,6 +43,10 @@ export function ClientFields({ parents = [] }: { parents?: ParentChoice[] }) {
           <option value="partner">Partner</option>
         </select>
       </ActionField>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="skipIntake" />
+        Existing client: skip the website check and lead pickup
+      </label>
       {parents.length > 0 ? (
         <ActionField name="parentOrganizationId" label="Part of (optional)">
           <select name="parentOrganizationId" className={selectClass} defaultValue="">
@@ -88,6 +92,10 @@ export function ClientForm({ parents = [] }: { parents?: ParentChoice[] }) {
           <option value="past_client">Past client</option>
           <option value="partner">Partner</option>
         </select>
+      </label>
+      <label className="flex items-center gap-2 text-sm" htmlFor="client-skip-intake">
+        <input id="client-skip-intake" type="checkbox" name="skipIntake" />
+        Existing client: skip the website check and lead pickup
       </label>
       {parents.length > 0 ? (
         <label className="flex flex-col gap-1 text-sm" htmlFor="client-parent">

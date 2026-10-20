@@ -127,3 +127,52 @@ export async function setParentOrganization(
   }
   return { ok: true, value: await organizationGroup(sql, caller, child.id) };
 }
+
+export type RenameResult = { name: string; previous: string; spaces: { id: string; slug: string }[] };
+
+/**
+ * Rename a company. With renameSpaces, its live spaces that still show the old name get the new one too
+ * (name and display name; the slug and links stay). Staff only. One timeline note records both.
+ */
+export async function renameOrganization(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; name: string; renameSpaces?: boolean },
+  now: number,
+): Promise<CrmResult<RenameResult>> {
+  const actorId = staffId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  const name = input.name.trim();
+  if (name.length < 1 || name.length > 200) return { ok: false, error: "invalid" };
+  const org = await liveRow(sql, input.organizationId);
+  if (!org) return { ok: false, error: "missing" };
+  const spaces = input.renameSpaces
+    ? await sql.all<{ id: string; slug: string }>(
+        `SELECT id, slug FROM workspaces
+         WHERE organization_id = ? AND status != 'purged' AND (display_name = ? OR name = ?)
+         ORDER BY opened_at`,
+        [org.id, org.name, org.name],
+      )
+    : [];
+  if (name === org.name && spaces.length === 0) {
+    return { ok: true, value: { name, previous: org.name, spaces: [] } };
+  }
+  const spaceNote = spaces.length > 0 ? ` Space ${spaces.map((space) => space.slug).join(", ")} renamed too.` : "";
+  try {
+    await sql.exec("BEGIN");
+    await sql.run("UPDATE organizations SET name = ?, updated_at = ? WHERE id = ?", [name, now, org.id]);
+    for (const space of spaces) {
+      await sql.run("UPDATE workspaces SET name = ?, display_name = ? WHERE id = ?", [name, name, space.id]);
+    }
+    await sql.run(
+      `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, created_at)
+       VALUES (?, ?, 'note', 'staff', ?, ?, ?)`,
+      [crypto.randomUUID(), org.id, actorId, `Renamed from ${org.name} to ${sentence(name)}${spaceNote}`, now],
+    );
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    throw error;
+  }
+  return { ok: true, value: { name, previous: org.name, spaces } };
+}

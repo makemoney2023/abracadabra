@@ -6,7 +6,7 @@ import type { Caller } from "@/lib/authz";
 import { createOrganization, listOrganizations, mergeOrganizations, organizationById } from "./crm";
 import { migrate } from "./migrate";
 import { MIGRATION_SQL } from "./migration-sql";
-import { organizationGroup, parentChoices, setParentOrganization } from "./org-groups";
+import { organizationGroup, parentChoices, renameOrganization, setParentOrganization } from "./org-groups";
 import { sqliteSql, type Sql } from "./sql";
 
 const NOW = 1_700_000_000_000;
@@ -125,5 +125,57 @@ describe("holding groups", () => {
     expect((await mergeOrganizations(sql, staff, { keepId: keep, dropId: drop }, NOW + 5)).ok).toBe(true);
     expect((await organizationById(sql, staff, child))?.parent_organization_id).toBe(keep);
     expect((await listOrganizations(sql, staff)).map((row) => row.name)).not.toContain("Liocorr duplicate");
+  });
+
+  it("renames a company and its spaces that still carry the old name, with one timeline note", async () => {
+    const { sql } = await database();
+    const id = await org(sql, "Christopher Buzny", "https://strongfoam.example");
+    for (const [space, slug, name] of [
+      ["ws-a", "strongfoam-example", "Christopher Buzny"],
+      ["ws-b", "other-space", "Shared drive"],
+    ]) {
+      await sql.run(
+        `INSERT INTO workspaces (id, slug, name, display_name, sender_name, policy_profile, quota_bytes, retention_days,
+           request_digest, status, opened_at, organization_id)
+         VALUES (?, ?, ?, ?, 'Studio', 'standard', 1, 1, 0, 'active', ?, ?)`,
+        [space, slug, name, name, NOW, id],
+      );
+    }
+    const renamed = await renameOrganization(
+      sql,
+      staff,
+      { organizationId: id, name: "Strong Foam Insulation Inc.", renameSpaces: true },
+      NOW + 1,
+    );
+    expect(renamed).toEqual({
+      ok: true,
+      value: { name: "Strong Foam Insulation Inc.", previous: "Christopher Buzny", spaces: [{ id: "ws-a", slug: "strongfoam-example" }] },
+    });
+    expect((await organizationById(sql, staff, id))?.name).toBe("Strong Foam Insulation Inc.");
+    const spaces = await sql.all<{ id: string; slug: string; display_name: string }>(
+      "SELECT id, slug, display_name FROM workspaces ORDER BY id",
+    );
+    expect(spaces).toEqual([
+      { id: "ws-a", slug: "strongfoam-example", display_name: "Strong Foam Insulation Inc." },
+      { id: "ws-b", slug: "other-space", display_name: "Shared drive" },
+    ]);
+    const note = await sql.get<{ body: string; actor_id: string }>(
+      "SELECT body, actor_id FROM activities WHERE organization_id = ? AND body LIKE 'Renamed%'",
+      [id],
+    );
+    expect(note).toEqual({
+      body: "Renamed from Christopher Buzny to Strong Foam Insulation Inc. Space strongfoam-example renamed too.",
+      actor_id: "staff-1",
+    });
+  });
+
+  it("rename keeps spaces when asked, and refuses blank names, missing companies and non-staff", async () => {
+    const { sql } = await database();
+    const id = await org(sql, "Old Name");
+    expect(await renameOrganization(sql, staff, { organizationId: id, name: "  " }, NOW)).toEqual({ ok: false, error: "invalid" });
+    expect(await renameOrganization(sql, staff, { organizationId: "nope", name: "X" }, NOW)).toEqual({ ok: false, error: "missing" });
+    expect(await renameOrganization(sql, outsider, { organizationId: id, name: "X" }, NOW)).toEqual({ ok: false, error: "forbidden" });
+    const renamed = await renameOrganization(sql, staff, { organizationId: id, name: "New Name" }, NOW);
+    expect(renamed.ok && renamed.value.spaces).toEqual([]);
   });
 });
