@@ -1,7 +1,8 @@
 import { businessFunctions } from "./site-data.mjs";
 import { salesPages } from "./service-sales.mjs";
+import { navIcon } from "./nav-icons.mjs";
 
-export const ASSET_VERSION = "20261019m";
+export const ASSET_VERSION = "20261019n";
 const YEAR = new Date().getFullYear();
 const EMAIL = "houdini@abra-ca-dabra.app";
 
@@ -18,7 +19,7 @@ function esc(value) {
 function megaLink(slug, description) {
   const page = salesPages[slug];
   if (!page) throw new Error(`Missing sales page ${slug}`);
-  return `<a class="site-nav__mega-link" href="/services/${slug}/"><strong>${esc(page.headline)}</strong><span class="site-nav__desc">${esc(description)}</span></a>`;
+  return `<a class="site-nav__mega-link" href="/services/${slug}/">${navIcon(slug)}<span class="site-nav__text"><strong>${esc(page.headline)}</strong><span class="site-nav__desc">${esc(description)}</span></span></a>`;
 }
 
 const navGroups = [
@@ -62,7 +63,7 @@ function groupHtml(label, links) {
 function servicesNav() {
   const built = navGroups.map((group) => groupHtml(group.label, group.links.map(([slug, description]) => megaLink(slug, description)).join(""))).join("");
   const learn = groupHtml("Learn", learnLinks.map(([title, href, description]) => (
-    `<a class="site-nav__mega-link" href="${esc(href)}"><strong>${esc(title)}</strong><span class="site-nav__desc">${esc(description)}</span></a>`
+    `<a class="site-nav__mega-link" href="${esc(href)}">${navIcon(href)}<span class="site-nav__text"><strong>${esc(title)}</strong><span class="site-nav__desc">${esc(description)}</span></span></a>`
   )).join(""));
   return `<details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega">${built}${learn}</div></details>`;
 }

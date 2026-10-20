@@ -1122,7 +1122,10 @@ body::before {
   background: var(--ui-progress);
 }
 .site-nav__links .site-nav__mega a.site-nav__mega-link {
-  display: block;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-items: start;
   min-height: 0;
   padding: 0.55rem 0.6rem;
   border-radius: var(--ui-r-control);
@@ -1135,6 +1138,26 @@ body::before {
 .site-nav__links .site-nav__mega a.site-nav__mega-link:hover,
 .site-nav__links .site-nav__mega a.site-nav__mega-link:focus-visible,
 .site-nav__links .site-nav__mega a.site-nav__mega-link[aria-current="page"] { background: var(--ui-surface-2); }
+.site-nav__icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin-top: -0.3rem;
+  border: var(--ui-border);
+  border-radius: var(--ui-r-control);
+  background: var(--canvas);
+  color: var(--ui-progress);
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.site-nav__icon svg { display: block; width: 18px; height: 18px; }
+.site-nav__text { min-width: 0; }
+.site-nav__links .site-nav__mega a.site-nav__mega-link:hover .site-nav__icon,
+.site-nav__links .site-nav__mega a.site-nav__mega-link:focus-visible .site-nav__icon,
+.site-nav__links .site-nav__mega a.site-nav__mega-link[aria-current="page"] .site-nav__icon {
+  color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+}
 .site-nav__mega-link strong {
   display: block;
   color: var(--ink);
