@@ -54,6 +54,8 @@ export type WorkBoardCard = {
   repo_full_name: string | null;
   review_requested_at?: number | null;
   review_note?: string | null;
+  /** Skill pack prefixes the card's agents attached from the library. */
+  skill_packs?: string[];
 };
 
 const CLEARING: Record<string, string> = {
@@ -202,6 +204,26 @@ function ReviewPanel({ card, now, override }: { card: WorkBoardCard; now: number
   );
 }
 
+/** A short name for a library prefix: "community/marketingskills/" is marketingskills, ".../openvid/SKILL.md" is openvid. */
+function skillChipName(prefix: string): string {
+  const parts = prefix.replace(/\/SKILL\.md$/, "").split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? prefix;
+}
+
+function SkillChips({ prefixes }: { prefixes: string[] }) {
+  return (
+    <ul className="flex flex-wrap items-center gap-1" aria-label="Skill packs attached">
+      {prefixes.map((prefix) => (
+        <li key={prefix}>
+          <Badge variant="outline" className="h-5 px-1.5 text-[11px] font-normal" title={prefix}>
+            {skillChipName(prefix)}
+          </Badge>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function CardFace({
   card,
   now,
@@ -284,6 +306,7 @@ function CardFace({
           </span>
         ) : null}
       </div>
+      {card.skill_packs && card.skill_packs.length > 0 ? <SkillChips prefixes={card.skill_packs} /> : null}
       {card.blocked_reason ? (
         <p className="text-xs text-muted-foreground">
           {card.blocked_reason}

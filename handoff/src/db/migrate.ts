@@ -30,6 +30,7 @@ const STEPS = [
   { file: "0026_agent_work.sql", table: "skill_grants" },
   { file: "0027_org_parent.sql", index: "organizations_parent" },
   { file: "0028_task_review.sql", column: { table: "tasks", name: "review_note" } },
+  { file: "0029_task_skill_packs.sql", index: "task_skill_packs_task" },
   { file: "0030_today_feed.sql", table: "staff_feed_seen" },
 ] as const;
 

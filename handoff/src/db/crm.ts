@@ -99,6 +99,8 @@ export type BoardCard = WorkTask & {
   run_started_at: number | null;
   pr_number: number | null;
   repo_full_name: string | null;
+  /** Skill pack prefixes attached to the card by its agents (task_skill_packs), oldest first. */
+  skill_packs: string[];
 };
 
 export type BoardActivity = {
@@ -216,7 +218,10 @@ const WORK_COLUMNS = `t.id, t.organization_id, t.title, t.status, t.due_at, t.do
   o.name AS organization_name, s.email AS assignee_email,
   p.name AS project_name, p.status AS project_status`;
 const BOARD_COLUMNS = `${WORK_COLUMNS}, t.review_requested_at, t.review_note,
-  cr.started_at AS run_started_at, cr.pr_number AS pr_number, rp.full_name AS repo_full_name`;
+  cr.started_at AS run_started_at, cr.pr_number AS pr_number, rp.full_name AS repo_full_name,
+  (SELECT json_group_array(sp.prefix) FROM (
+     SELECT prefix FROM task_skill_packs WHERE task_id = t.id AND detached_at IS NULL ORDER BY attached_at, rowid
+   ) sp) AS skill_packs_json`;
 const WORK_JOINS = `FROM tasks t
   JOIN organizations o ON o.id = t.organization_id
   LEFT JOIN projects p ON p.id = t.project_id
@@ -876,9 +881,19 @@ function deletedKind(actor: DeleteActor, record: "task" | "project"): string {
   return record === "task" ? "task_deleted" : "project_deleted";
 }
 
+function skillPacksFromJson(raw: string | null): string[] {
+  try {
+    const parsed = JSON.parse(raw ?? "[]") as unknown;
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Drops the rows that point at a task, then the task. The caller owns the transaction. */
 async function eraseTaskRow(sql: Sql, taskId: string, now: number): Promise<void> {
   await sql.run("DELETE FROM cloud_runs WHERE task_id = ?", [taskId]);
+  await sql.run("DELETE FROM task_skill_packs WHERE task_id = ?", [taskId]);
   await sql.run("DELETE FROM agent_questions WHERE task_id = ?", [taskId]);
   await sql.run(
     "UPDATE client_workflows SET task_id = NULL, next_run_at = NULL, updated_at = ? WHERE task_id = ?",
@@ -1333,13 +1348,14 @@ export async function listBoard(sql: Sql, caller: Caller, query: BoardQuery): Pr
   } else if (query.hideInactiveProjects) {
     where.push(`(t.project_id IS NULL OR p.status IN ${ACTIVE_PROJECT})`);
   }
-  return sql.all<BoardCard>(
+  const rows = await sql.all<Omit<BoardCard, "skill_packs"> & { skill_packs_json: string | null }>(
     `SELECT ${BOARD_COLUMNS}
      ${BOARD_JOINS}
      WHERE ${where.join(" AND ")}
      ORDER BY t.position, t.created_at, t.id`,
     params,
   );
+  return rows.map(({ skill_packs_json, ...row }) => ({ ...row, skill_packs: skillPacksFromJson(skill_packs_json) }));
 }
 
 export async function openCloudRunCount(sql: Sql, caller: Caller): Promise<number> {
