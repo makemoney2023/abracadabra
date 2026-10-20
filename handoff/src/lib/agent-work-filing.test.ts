@@ -5,13 +5,21 @@ import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { d1Sql, type D1Like, type Sql } from "@/db/sql";
-import { POST as agentWorkPost } from "@/app/api/agent-work/route";
+import { GET as agentWorkGet, POST as agentWorkPost } from "@/app/api/agent-work/route";
+import { GET as agentWorkItemGet } from "@/app/api/agent-work/[id]/route";
+import { GET as agentSkillsGet } from "@/app/api/agent-skills/route";
+import { GET as agentSkillGet } from "@/app/api/agent-skills/[...path]/route";
+import { POST as skillGrantsPost } from "@/app/api/client-services/skill-grants/route";
+import { cleanSkillPrefix, grantSkills, listAgentSkills, readAgentSkill } from "./agent-skills";
 import { POST as agentsPost } from "@/app/api/client-services/agents/route";
 import { localObjectStore, type ObjectStore } from "@/lib/store/objects";
 import {
   agentForToken,
   discardUnfiledWork,
+  endAssignment,
   fileAgentWork,
+  listAgentContext,
+  readAgentContextItem,
   fileUnfiledWork,
   listUnfiledWork,
   parseWorkPayload,
@@ -374,5 +382,236 @@ describe("routes", () => {
       }),
     );
     expect(huge.status).toBe(413);
+  });
+});
+
+async function task(organizationId: string, projectId: string | null, title = "Copy"): Promise<string> {
+  const id = crypto.randomUUID();
+  await sql.run(
+    "INSERT INTO tasks (id, project_id, organization_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, 'todo', ?, ?)",
+    [id, projectId, organizationId, title, NOW, NOW],
+  );
+  return id;
+}
+
+async function principal(agentId: string) {
+  const row = await sql.get<{ id: string }>("SELECT id FROM client_agents WHERE id = ?", [agentId]);
+  if (!row) throw new Error("no agent");
+  const rotated = await registerClientAgent(sql, { agentId, rotate: true, actor: "test", now: NOW });
+  if (!rotated.ok || !rotated.token) throw new Error("rotate failed");
+  return (await agentForToken(sql, `Bearer ${rotated.token}`))!;
+}
+
+describe("many agents and clients", () => {
+  it("several agents serve one client, and one hire serves two clients", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme-example");
+    const beta = await org("Beta", "beta.example");
+    await space(beta, "beta-example");
+    const lead = await agentFor(acme, "acme-lead");
+    await registerClientAgent(sql, { agentId: "designer", label: "Designer hire", organizationId: acme, role: "hire", actor: "test", now: NOW });
+    await registerClientAgent(sql, { agentId: "designer", organizationId: beta, role: "hire", actor: "test", now: NOW });
+    const designer = await principal("designer");
+    expect(designer.assignments.map((a) => a.organizationId).sort()).toEqual([acme, beta].sort());
+    expect(designer.assignments.every((a) => a.role === "hire")).toBe(true);
+
+    expect(await fileAgentWork(sql, store, lead.principal, work, NOW)).toMatchObject({ state: "filed", organizationId: acme });
+    expect(await fileAgentWork(sql, store, designer, { ...work, external_id: "d1" }, NOW)).toMatchObject({ state: "unfiled", reason: "ambiguous_client" });
+    expect(await fileAgentWork(sql, store, designer, { ...work, external_id: "d2", client: { domain: "beta.example" } }, NOW)).toMatchObject({ state: "filed", organizationId: beta });
+    const acmeTask = await task(acme, null);
+    expect(await fileAgentWork(sql, store, designer, { ...work, external_id: "d3", task_id: acmeTask }, NOW)).toMatchObject({ state: "filed", organizationId: acme });
+  });
+
+  it("an ended assignment stops filing and reading for that client", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme-example");
+    const { token } = await agentFor(acme);
+    expect(await endAssignment(sql, { agentId: "acme-agent", organizationId: acme, actor: "test", now: NOW })).toBe(true);
+    const after = (await agentForToken(sql, `Bearer ${token}`))!;
+    expect(after.assignments).toHaveLength(0);
+    expect(await fileAgentWork(sql, store, after, work, NOW)).toMatchObject({ state: "unfiled", reason: "agent_not_assigned" });
+  });
+});
+
+describe("handoffs", () => {
+  it("hands work to another agent on the same client, who finds it with handed_to_me", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme-example");
+    const lead = await agentFor(acme, "acme-lead");
+    await registerClientAgent(sql, { agentId: "writer", organizationId: acme, role: "hire", actor: "test", now: NOW });
+    const writer = await principal("writer");
+    const result = await fileAgentWork(sql, store, lead.principal, { ...work, kind: "plan", handoff: { to: "writer", note: "Write the FAQ next." } }, NOW);
+    expect(result).toMatchObject({ state: "filed", handoffTo: "writer" });
+    const inbox = await listAgentContext(sql, writer, { handedToMe: true });
+    expect(inbox.ok && inbox.items.map((i) => [i.title, i.handoff_note])).toEqual([[work.title, "Write the FAQ next."]]);
+    const activity = await sql.get<{ n: number }>("SELECT count(*) AS n FROM activities WHERE kind = 'client_agent.handoff'");
+    expect(activity?.n).toBe(1);
+  });
+
+  it("refuses a handoff to an agent that is not on this client", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme-example");
+    const beta = await org("Beta", "beta.example");
+    const lead = await agentFor(acme, "acme-lead");
+    await registerClientAgent(sql, { agentId: "beta-agent", organizationId: beta, actor: "test", now: NOW });
+    expect(await fileAgentWork(sql, store, lead.principal, { ...work, handoff: { to: "beta-agent" } }, NOW)).toMatchObject({ ok: false, error: "invalid" });
+    expect(await fileAgentWork(sql, store, lead.principal, { ...work, handoff: { to: "nobody" } }, NOW)).toMatchObject({ ok: false, error: "invalid" });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM agent_work_items"))?.n).toBe(0);
+  });
+});
+
+describe("task completion", () => {
+  it("moves the linked task to done once filed, unless keep_task_open", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme-example");
+    const { principal: agent } = await agentFor(acme);
+    const one = await task(acme, null, "One");
+    const two = await task(acme, null, "Two");
+    expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t1", task_id: one }, NOW)).toMatchObject({ state: "filed", taskClosed: true });
+    expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t2", task_id: two, keep_task_open: true }, NOW)).toMatchObject({ state: "filed", taskClosed: false });
+    const rows = await sql.all<{ title: string; status: string }>("SELECT title, status FROM tasks ORDER BY title");
+    expect(rows).toEqual([{ title: "One", status: "done" }, { title: "Two", status: "todo" }]);
+    const moved = await sql.get<{ actor_id: string }>("SELECT actor_id FROM activities WHERE kind = 'agent.task_stage'");
+    expect(moved?.actor_id).toBe("acme-agent");
+  });
+
+  it("unfiled work does not close the task", async () => {
+    const acme = await org("Acme", "acme.example");
+    const { principal: agent } = await agentFor(acme);
+    const one = await task(acme, null);
+    expect(await fileAgentWork(sql, store, agent, { ...work, task_id: one }, NOW)).toMatchObject({ state: "unfiled", reason: "no_space" });
+    expect((await sql.get<{ status: string }>("SELECT status FROM tasks"))?.status).toBe("todo");
+  });
+});
+
+describe("context read-back", () => {
+  it("an agent reads every agent's filed work for its own clients only", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme-example");
+    const beta = await org("Beta", "beta.example");
+    await space(beta, "beta-example");
+    const acmeLead = await agentFor(acme, "acme-lead");
+    await registerClientAgent(sql, { agentId: "acme-hire", organizationId: acme, role: "hire", actor: "test", now: NOW });
+    const acmeHire = await principal("acme-hire");
+    await registerClientAgent(sql, { agentId: "beta-lead", organizationId: beta, actor: "test", now: NOW });
+    const betaLead = await principal("beta-lead");
+    await fileAgentWork(sql, store, acmeLead.principal, { ...work, kind: "note", title: "Brand notes" }, NOW);
+    await fileAgentWork(sql, store, acmeHire, { ...work, title: "FAQ draft" }, NOW + 1);
+    const secret = await fileAgentWork(sql, store, betaLead, { ...work, title: "Beta secret plan" }, NOW + 2);
+
+    const seen = await listAgentContext(sql, acmeHire, {});
+    expect(seen.ok && seen.items.map((i) => i.title)).toEqual(["FAQ draft", "Brand notes"]);
+    expect(await listAgentContext(sql, acmeHire, { client: "beta.example" })).toMatchObject({ ok: false, status: 403 });
+    const notes = await listAgentContext(sql, acmeHire, { kind: "note" });
+    expect(notes.ok && notes.items.map((i) => i.title)).toEqual(["Brand notes"]);
+    if (!secret.ok) throw new Error("bad");
+    expect(await readAgentContextItem(sql, acmeHire, secret.workItemId)).toBeNull();
+    const own = await readAgentContextItem(sql, betaLead, secret.workItemId);
+    expect(own?.context_md).toContain("# Beta secret plan");
+  });
+});
+
+class FakeSkills {
+  constructor(private readonly objects: Record<string, string>) {}
+  async get(key: string) {
+    const value = this.objects[key];
+    return value == null ? null : { text: async () => value };
+  }
+}
+
+const skillsBucket = new FakeSkills({
+  "skills/index.json": JSON.stringify({
+    skills: [
+      { name: "copywriting", description: "Write landing page copy", path: "community/marketingskills/copywriting/SKILL.md", pack: "community" },
+      { name: "seo-audit", description: "Audit a site for search", path: "community/notfair-seo/seo-audit/SKILL.md", pack: "community" },
+      { name: "remotion", description: "Make videos", path: "community/remotion/basics/SKILL.md", pack: "community" },
+    ],
+  }),
+  "skills/community/marketingskills/copywriting/SKILL.md": "---\nname: copywriting\n---\nWrite clearly.",
+  "skills/community/notfair-seo/seo-audit/SKILL.md": "---\nname: seo-audit\n---\nCheck titles.",
+  "skills/community/remotion/basics/SKILL.md": "---\nname: remotion\n---\nRender.",
+});
+
+describe("skill packs through HQ", () => {
+  it("cleans prefixes and refuses paths that leave the library", () => {
+    expect(cleanSkillPrefix("community/marketingskills")).toBe("community/marketingskills/");
+    expect(cleanSkillPrefix(".cursor/skills/community/remotion/")).toBe("community/remotion/");
+    expect(cleanSkillPrefix("../secrets/")).toBeNull();
+    expect(cleanSkillPrefix("/etc/")).toBeNull();
+    expect(cleanSkillPrefix("org/")).toBeNull();
+  });
+
+  it("lists and reads only skills granted to the agent or to its clients", async () => {
+    const acme = await org("Acme", "acme.example");
+    const { principal: agent } = await agentFor(acme);
+    await grantSkills(sql, { agentId: "acme-agent", prefixes: ["community/marketingskills"], actor: "test", now: NOW });
+    await grantSkills(sql, { organizationId: acme, prefixes: ["community/notfair-seo/seo-audit/SKILL.md"], actor: "test", now: NOW });
+    const listed = await listAgentSkills(sql, skillsBucket, agent);
+    expect(listed.ok && listed.skills.map((s) => s.name)).toEqual(["copywriting", "seo-audit"]);
+    expect(listed.ok && listed.skills[0].pack).toBe("community/marketingskills");
+    const searched = await listAgentSkills(sql, skillsBucket, agent, "audit");
+    expect(searched.ok && searched.skills.map((s) => s.name)).toEqual(["seo-audit"]);
+    const read = await readAgentSkill(sql, skillsBucket, agent, "community/marketingskills/copywriting/SKILL.md");
+    expect(read).toMatchObject({ ok: true, path: "community/marketingskills/copywriting/SKILL.md" });
+    expect(read.ok && read.version).toMatch(/^[0-9a-f]{12}$/);
+    expect(await readAgentSkill(sql, skillsBucket, agent, "community/remotion/basics/SKILL.md")).toMatchObject({ ok: false, status: 403 });
+    expect(await readAgentSkill(sql, skillsBucket, agent, "community/marketingskills/../remotion/basics/SKILL.md")).toMatchObject({ ok: false, status: 404 });
+  });
+
+  it("client grants follow the assignment", async () => {
+    const acme = await org("Acme", "acme.example");
+    const { token } = await agentFor(acme);
+    await grantSkills(sql, { organizationId: acme, prefixes: ["community/remotion/"], actor: "test", now: NOW });
+    await endAssignment(sql, { agentId: "acme-agent", organizationId: acme, actor: "test", now: NOW });
+    const after = (await agentForToken(sql, `Bearer ${token}`))!;
+    const listed = await listAgentSkills(sql, skillsBucket, after);
+    expect(listed.ok && listed.skills).toEqual([]);
+  });
+});
+
+describe("agent read routes", () => {
+  it("GET /api/agent-work, /api/agent-work/:id, /api/agent-skills and skill-grants work with the right tokens", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme-example");
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { DB: d1, SKILLS: skillsBucket } };
+    process.env.CLIENT_SERVICES_TOKEN = "cs-test-token";
+    process.env.HANDOFF_OBJECT_PATH = root;
+    const { token, principal: agent } = await agentFor(acme);
+    const filed = await fileAgentWork(sql, store, agent, work, NOW);
+    if (!filed.ok) throw new Error("bad");
+    const auth = { authorization: `Bearer ${token}` };
+
+    expect((await agentWorkGet(new Request("https://hq.example/api/agent-work"))).status).toBe(401);
+    const list = await agentWorkGet(new Request("https://hq.example/api/agent-work?client=acme-example", { headers: auth }));
+    expect(list.status).toBe(200);
+    const listBody = (await list.json()) as { items: { id: string }[]; clients: { organization_id: string }[] };
+    expect(listBody.items.map((i) => i.id)).toEqual([filed.workItemId]);
+    expect(listBody.clients[0].organization_id).toBe(acme);
+    const one = await agentWorkItemGet(new Request(`https://hq.example/api/agent-work/${filed.workItemId}`, { headers: auth }), {
+      params: Promise.resolve({ id: filed.workItemId }),
+    });
+    expect(((await one.json()) as { context_md: string }).context_md).toContain("Smile with confidence");
+
+    const grant = await skillGrantsPost(
+      new Request("https://hq.example/api/client-services/skill-grants", {
+        method: "POST",
+        headers: { authorization: "Bearer cs-test-token" },
+        body: JSON.stringify({ client: { domain: "acme.example" }, prefixes: ["community/marketingskills/"] }),
+      }),
+    );
+    expect(grant.status).toBe(200);
+    const skills = await agentSkillsGet(new Request("https://hq.example/api/agent-skills", { headers: auth }));
+    expect(((await skills.json()) as { skills: { name: string }[] }).skills.map((s) => s.name)).toEqual(["copywriting"]);
+    const body = await agentSkillGet(new Request("https://hq.example/api/agent-skills/x", { headers: auth }), {
+      params: Promise.resolve({ path: ["community", "marketingskills", "copywriting", "SKILL.md"] }),
+    });
+    expect(body.status).toBe(200);
+    expect(body.headers.get("etag")).toMatch(/^"[0-9a-f]{12}"$/);
+    const denied = await agentSkillGet(new Request("https://hq.example/api/agent-skills/x", { headers: auth }), {
+      params: Promise.resolve({ path: ["community", "remotion", "basics", "SKILL.md"] }),
+    });
+    expect(denied.status).toBe(403);
+    const noCs = await skillGrantsPost(new Request("https://hq.example/api/client-services/skill-grants", { method: "POST", body: "{}" }));
+    expect(noCs.status).toBe(401);
   });
 });
