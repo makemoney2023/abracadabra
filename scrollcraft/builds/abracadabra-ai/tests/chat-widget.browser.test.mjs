@@ -83,6 +83,11 @@ before(async () => {
   browser = await chromium.launch({
     executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome",
     headless: true,
+    args: [
+      "--use-fake-ui-for-media-stream",
+      "--use-fake-device-for-media-stream",
+      "--autoplay-policy=no-user-gesture-required",
+    ],
   });
 });
 
@@ -166,4 +171,58 @@ test("an empty Cal.com link asks for two times inside the chat", async () => {
   await page.waitForFunction(() => document.querySelector("abra-chat").shadowRoot.querySelector(".launcher").hidden);
   assert.equal(page.errors.length, 0);
   await page.close();
+});
+
+test("push-to-talk records, shows the transcript, and plays only the spoken answer", async () => {
+  env.CAL_LINK = "abracadabra/working-session";
+  Object.assign(env, { VOICE_ENABLED: "true", AI_GATEWAY_TOKEN: "test-token", CF_ACCOUNT_ID: "acct" });
+  const gateway = [];
+  deps.fetchImpl = async (url, init = {}) => {
+    gateway.push(String(url));
+    if (String(url).includes("whisper")) {
+      const body = JSON.parse(init.body);
+      assert.ok(body.audio.length > 100);
+      return Response.json({ success: true, result: { text: "What does Abracadabra build?", transcription_info: { duration: 2 } } });
+    }
+    if (String(url).includes("aura")) {
+      return new Response(new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0, 0, 0, 0, 0]), { headers: { "content-type": "audio/mpeg" } });
+    }
+    return Response.json({ success: true, result: { response: "We build software around the work you already do." } });
+  };
+  try {
+    const page = await openFixture(390, 844);
+    const speaks = [];
+    page.on("request", (request) => {
+      if (request.url().endsWith("/api/chat/speak")) speaks.push(request.postDataJSON());
+    });
+    await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+    const mic = page.getByRole("button", { name: "Speak your question" });
+    await mic.waitFor();
+    await page.getByText("Audio isn't stored.").waitFor();
+    await page.getByRole("textbox", { name: "Message" }).fill("What do you build?");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await page.getByText("We build software around the work you already do.").first().waitFor();
+    assert.equal(speaks.length, 0, "typed questions stay silent");
+    await mic.click();
+    await page.getByRole("button", { name: "Stop and send" }).waitFor();
+    await page.waitForTimeout(1500);
+    await page.getByRole("button", { name: "Stop and send" }).click();
+    await page.locator("abra-chat").evaluate((node) => new Promise((resolve) => {
+      const check = () => (node.lastSpokenId ? resolve() : setTimeout(check, 50));
+      check();
+    }));
+    const users = await page.locator("abra-chat").evaluate((node) => [...node.shadowRoot.querySelectorAll(".bubble.user")].map((b) => b.textContent));
+    assert.equal(users.at(-1), "What does Abracadabra build?");
+    assert.equal(speaks.length, 1);
+    assert.match(speaks[0].replyId, /^[0-9a-f-]{36}$/);
+    assert.ok(gateway.some((url) => url.includes("whisper-large-v3-turbo")));
+    assert.ok(gateway.some((url) => url.includes("aura-2-en")));
+    assert.equal(page.errors.length, 0);
+    await page.close();
+  } finally {
+    delete env.VOICE_ENABLED;
+    delete env.AI_GATEWAY_TOKEN;
+    delete env.CF_ACCOUNT_ID;
+    delete deps.fetchImpl;
+  }
 });

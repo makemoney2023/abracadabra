@@ -1,4 +1,10 @@
 export const READINESS_FALLBACK = "https://check.abra-ca-dabra.app/check";
+export const VOICE_MAX_MS = 30_000;
+export const VOICE_MAX_BYTES = 600 * 1024;
+// A tiny silent WAV. Playing it inside the first mic tap unlocks audio on iOS Safari.
+const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+const MIC_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v4"/></svg>`;
+const STOP_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2"/></svg>`;
 
 const FREE_MAIL = new Set([
   "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com",
@@ -102,6 +108,20 @@ button { cursor: pointer; }
 .card a { color: #8DEBF2; }
 .card.booked { border-color: rgba(198, 255, 179, 0.45); }
 .card.booked .kicker { color: #C6FFB3; }
+.mic {
+  flex: none; width: 40px; min-height: 40px; border-radius: 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: #F5F0E8; border: 1px solid rgba(245, 240, 232, 0.24);
+}
+.mic[hidden] { display: none; }
+.mic:hover { border-color: rgba(245, 240, 232, 0.4); }
+.mic.recording { background: #FF4B24; color: #170804; border-color: #FF4B24; animation: ring 1.4s ease-out infinite; }
+.mic.busy { opacity: 0.6; cursor: progress; }
+.mic.speaking { border-color: #C6FFB3; color: #C6FFB3; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(255, 75, 36, 0.45); } 100% { box-shadow: 0 0 0 10px rgba(255, 75, 36, 0); } }
+.voice-note { margin: 0; padding: 0 14px 4px; color: #AAA49A; font-size: 12px; background: #11110F; }
+.voice-note[hidden] { display: none; }
+.voice-note strong { color: #F5F0E8; font-weight: 500; }
 .composer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid rgba(245, 240, 232, 0.12); background: #11110F; }
 textarea, .field input {
   width: 100%; resize: none; min-height: 40px; max-height: 120px;
@@ -127,9 +147,36 @@ textarea:focus, .field input:focus, button:focus-visible { outline: 2px solid #F
   .panel.expanded { height: 92dvh; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .panel, .bubble.streaming::after, .skeleton { transition: none; animation: none; }
+  .panel, .bubble.streaming::after, .skeleton, .mic.recording { transition: none; animation: none; }
 }
 `;
+
+/** Picks a MediaRecorder type. Safari and every iOS browser record MP4 (AAC); others prefer WebM/Opus. */
+export function recorderMime(isTypeSupported, userAgent = "") {
+  const supported = typeof isTypeSupported === "function" ? isTypeSupported : () => false;
+  const ua = String(userAgent);
+  const webkit = /iPad|iPhone|iPod/.test(ua) || (/Safari\//.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Edg|Android/.test(ua));
+  const order = webkit
+    ? ["audio/mp4", "audio/mp4;codecs=mp4a.40.2", "audio/webm;codecs=opus", "audio/webm"]
+    : ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
+  for (const type of order) {
+    try {
+      if (supported(type)) return type;
+    } catch {
+      // Keep looking.
+    }
+  }
+  return "";
+}
+
+export function voiceSupported(win = typeof window === "undefined" ? undefined : window) {
+  return Boolean(win?.MediaRecorder && win?.navigator?.mediaDevices?.getUserMedia && win?.isSecureContext !== false);
+}
+
+export function formatClock(ms) {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return `0:${String(seconds).padStart(2, "0")}`;
+}
 
 export function launcherShouldHide({ bodyClass = "", menuOpen = false } = {}) {
   return menuOpen || String(bodyClass).split(/\s+/).includes("intake-lock");
@@ -304,8 +351,10 @@ export class AbraChat extends ElementBase {
       <div class="stream" role="log" aria-live="polite"></div>
       <form class="composer">
         <textarea rows="1" aria-label="Message" placeholder="Ask about the work" maxlength="2000"></textarea>
+        <button class="mic" type="button" data-mic aria-label="Speak your question" aria-pressed="false" hidden>${MIC_SVG}</button>
         <button class="send" type="submit">Send</button>
       </form>
+      <p class="voice-note" data-voice-note hidden><strong>Tap the mic to talk, tap again to send.</strong> Audio isn't stored. Only the words are kept, like a typed chat.</p>
       <p class="foot">Plain answers. A person reviews any follow-up.</p>
       <div class="sheet" hidden>
         <div class="sheet-bar">
@@ -322,6 +371,9 @@ export class AbraChat extends ElementBase {
     this.sheet = this.panel.querySelector(".sheet");
     this.sheetBody = this.panel.querySelector(".sheet-body");
     this.newTab = this.panel.querySelector("[data-newtab]");
+    this.mic = this.panel.querySelector("[data-mic]");
+    this.voiceNote = this.panel.querySelector("[data-voice-note]");
+    this.mic.addEventListener("click", () => this.toggleVoice());
     this.launcher.addEventListener("click", () => this.openPanel());
     this.panel.querySelector("[data-close]").addEventListener("click", () => this.closePanel());
     this.panel.querySelector("[data-book]").addEventListener("click", () => this.openBooking());
@@ -365,6 +417,8 @@ export class AbraChat extends ElementBase {
   }
 
   disconnectedCallback() {
+    this.stopTracks();
+    clearInterval(this.voiceTimer);
     window.removeEventListener("message", this.onMessage);
     window.removeEventListener("scroll", this.onScroll);
     window.removeEventListener("resize", this.onScroll);
@@ -430,6 +484,200 @@ export class AbraChat extends ElementBase {
     if (this.config.turnstileSiteKey) await this.turnstile();
     await this.ensureSession();
     this.greeting();
+    this.setupVoice();
+  }
+
+  setupVoice() {
+    const on = Boolean(this.config.voiceEnabled && this.ready && voiceSupported());
+    this.mic.hidden = !on;
+    this.voiceNote.hidden = !on;
+    this.voiceState = "idle";
+  }
+
+  setVoiceState(state, label) {
+    this.voiceState = state;
+    this.mic.classList.toggle("recording", state === "recording");
+    this.mic.classList.toggle("busy", state === "thinking");
+    this.mic.classList.toggle("speaking", state === "speaking");
+    this.mic.setAttribute("aria-pressed", state === "recording" ? "true" : "false");
+    this.mic.innerHTML = state === "recording" || state === "speaking" ? STOP_SVG : MIC_SVG;
+    const names = {
+      idle: "Speak your question",
+      recording: "Stop and send",
+      thinking: "Working on it",
+      speaking: "Stop the spoken answer",
+    };
+    this.mic.setAttribute("aria-label", names[state] || names.idle);
+    this.mic.title = label || names[state] || names.idle;
+    this.input.placeholder = state === "recording" ? `Listening ${label || ""}`.trim() : "Ask about the work";
+  }
+
+  /** Runs inside the tap, so iOS lets the same element play the answer later. */
+  unlockAudio() {
+    if (!this.player) {
+      this.player = new Audio();
+      this.player.preload = "auto";
+      this.player.setAttribute("playsinline", "");
+      this.player.addEventListener("ended", () => this.finishSpeaking());
+      this.player.addEventListener("error", () => this.finishSpeaking());
+    }
+    if (this.audioUnlocked) return;
+    this.audioUnlocked = true;
+    try {
+      this.player.src = SILENT_WAV;
+      const played = this.player.play();
+      if (played?.catch) played.catch(() => {});
+    } catch {
+      // Playback stays locked; the text answer still shows.
+    }
+  }
+
+  stopSpeaking() {
+    if (!this.player) return;
+    this.player.pause();
+    this.finishSpeaking();
+  }
+
+  finishSpeaking() {
+    if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
+    this.audioUrl = "";
+    if (this.voiceState === "speaking") this.setVoiceState("idle");
+  }
+
+  stopTracks() {
+    for (const track of this.micStream?.getTracks?.() || []) track.stop();
+    this.micStream = null;
+  }
+
+  async toggleVoice() {
+    if (this.voiceState === "thinking") return;
+    if (this.voiceState === "speaking") {
+      this.stopSpeaking();
+      return;
+    }
+    if (this.voiceState === "recording") {
+      this.recorder?.stop();
+      return;
+    }
+    this.unlockAudio();
+    await this.startRecording();
+  }
+
+  async startRecording() {
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
+      });
+    } catch {
+      this.note("The mic is blocked or missing. You can type your question instead.");
+      return;
+    }
+    const mimeType = recorderMime((type) => MediaRecorder.isTypeSupported(type), navigator.userAgent);
+    let recorder;
+    try {
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 32000 } : { audioBitsPerSecond: 32000 });
+    } catch {
+      for (const track of stream.getTracks()) track.stop();
+      this.note("This browser cannot record here. You can type your question instead.");
+      return;
+    }
+    this.micStream = stream;
+    this.recorder = recorder;
+    const chunks = [];
+    const started = Date.now();
+    recorder.addEventListener("dataavailable", (event) => {
+      if (event.data?.size) chunks.push(event.data);
+    });
+    recorder.addEventListener("stop", () => {
+      clearInterval(this.voiceTimer);
+      clearTimeout(this.voiceLimit);
+      this.stopTracks();
+      const type = recorder.mimeType || mimeType || chunks[0]?.type || "audio/webm";
+      const blob = new Blob(chunks, { type });
+      void this.sendVoice(blob, Date.now() - started);
+    }, { once: true });
+    recorder.start(250);
+    this.setVoiceState("recording", formatClock(0));
+    this.voiceTimer = setInterval(() => this.setVoiceState("recording", formatClock(Date.now() - started)), 500);
+    this.voiceLimit = setTimeout(() => {
+      if (recorder.state !== "inactive") recorder.stop();
+    }, VOICE_MAX_MS);
+  }
+
+  async sendVoice(blob, elapsedMs) {
+    if (elapsedMs < 600 || blob.size < 800) {
+      this.setVoiceState("idle");
+      this.note("That was too short. Tap the mic, talk, then tap again.");
+      return;
+    }
+    if (blob.size > VOICE_MAX_BYTES) {
+      this.setVoiceState("idle");
+      this.note("That clip is too long. Keep it under 30 seconds.");
+      return;
+    }
+    this.setVoiceState("thinking");
+    const mine = this.addBubble("user", "…");
+    mine.classList.add("streaming");
+    let payload = {};
+    try {
+      const response = await fetch("/api/chat/voice", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": blob.type || "audio/webm" },
+        body: blob,
+      });
+      payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        mine.remove();
+        this.note(payload.error || "I could not hear that. You can type instead.");
+        this.setVoiceState("idle");
+        return;
+      }
+    } catch {
+      mine.remove();
+      this.note("The chat is quiet right now. Email houdini@abra-ca-dabra.app.");
+      this.setVoiceState("idle");
+      return;
+    }
+    mine.classList.remove("streaming");
+    if (payload.transcript) {
+      mine.textContent = payload.transcript;
+      this.messages.push({ role: "user", text: payload.transcript });
+    } else mine.remove();
+    if (payload.reply) {
+      this.addBubble("assistant", payload.reply);
+      this.messages.push({ role: "assistant", text: payload.reply });
+    }
+    if (payload.action) this.action(payload.action);
+    if (payload.replyId) await this.speak(payload.replyId);
+    else this.setVoiceState("idle");
+  }
+
+  async speak(replyId) {
+    try {
+      const response = await fetch("/api/chat/speak", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ replyId }),
+      });
+      if (!response.ok) {
+        this.setVoiceState("idle");
+        return;
+      }
+      const audio = await response.blob();
+      this.unlockAudio();
+      if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
+      this.audioUrl = URL.createObjectURL(audio);
+      this.player.src = this.audioUrl;
+      this.setVoiceState("speaking");
+      this.lastSpokenId = replyId;
+      await this.player.play();
+    } catch {
+      this.finishSpeaking();
+      this.setVoiceState("idle");
+    }
   }
 
   turnstile() {

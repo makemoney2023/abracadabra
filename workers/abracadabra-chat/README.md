@@ -13,6 +13,8 @@ A chat does not email the visitor. A consented contact card, or a booking finish
 | POST | `/api/chat/message` | Answers in a short server-sent stream and may attach a card |
 | POST | `/api/chat/contact` | Saves name, email, goal, and consent. Consent must be true |
 | POST | `/api/chat/events` | `booking_opened`, `booking_completed`, `readiness_check_clicked` |
+| POST | `/api/chat/voice` | Push-to-talk clip (raw audio body) → Whisper → the same chat answer. Returns `{transcript, reply, action, replyId}` |
+| POST | `/api/chat/speak` | `{replyId}` → Aura-2 MP3 of that session's own spoken reply. Never reads free text |
 
 Cards:
 
@@ -42,6 +44,15 @@ Copy `.dev.vars.example` to `.dev.vars` (do not commit it). On the Worker, set t
 | `HANDOFF_HMAC_SECRET` | Signs the `abra.chat.handoff` v1.0 JSON in the houdini@ mail |
 | `CHAT_HANDOFF_TO` | Must include `houdini@abra-ca-dabra.app`. Anything else is ignored |
 | `CHAT_ORIGINS` | Extra allowed `Origin` values, comma-separated |
+| `VOICE_ENABLED` | `"true"` shows the mic (set in `wrangler.jsonc`). `"false"` turns voice off |
+| `TTS_SPEAKER` | Aura-2 voice, default `luna`. Unknown names fall back to `luna` |
+| `STT_MODEL` / `TTS_MODEL` | Optional. Default `@cf/openai/whisper-large-v3-turbo` and `@cf/deepgram/aura-2-en` |
+
+## Voice
+
+Push-to-talk only. The visitor taps the mic, talks, and taps again (the widget stops at 30 seconds). The clip goes to `/api/chat/voice`, Whisper turns it into words (with a hint so "Abracadabra" comes out right), and the words take the normal chat path and checks. The reply then plays out loud from `/api/chat/speak`. Typed questions stay silent.
+
+Guardrails: an open, Turnstile-checked session; clips up to 600 KB and 30 seconds; only webm, mp4, ogg, mp3, and wav, checked by their first bytes; 15 voice turns per hour per IP and 15 per session; at most 400 spoken characters per reply, two plays per reply, and 3,000 spoken characters per session. Gateway cache and logging are off. Audio is never stored. Only the words are kept, like a typed chat.
 
 Deploy this Worker before the marketing Worker. The marketing `wrangler.jsonc` binds `CHAT` to the service name `abracadabra-chat`.
 

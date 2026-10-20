@@ -10,7 +10,9 @@ export const SYSTEM_PROMPT = [
   "If they want email, ask them to leave a name and email in the chat. A person reviews it before anyone writes back.",
 ].join(" ");
 
-export async function completeChat({ env, messages, fetchImpl = fetch }) {
+export const VOICE_SUFFIX = "This answer is read aloud. Use one or two short spoken sentences. No links, lists, or symbols.";
+
+export async function completeChat({ env, messages, fetchImpl = fetch, voice = false }) {
   const last = [...messages].reverse().find((message) => message.role === "user")?.text || "";
   const token = String(env.AI_GATEWAY_TOKEN || env.CLOUDFLARE_API_TOKEN || "").trim();
   const account = String(env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || "").trim();
@@ -31,7 +33,7 @@ export async function completeChat({ env, messages, fetchImpl = fetch }) {
         },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: voice ? `${SYSTEM_PROMPT} ${VOICE_SUFFIX}` : SYSTEM_PROMPT },
             ...messages.map((message) => ({ role: message.role, content: message.text })),
           ],
           max_tokens: 180,

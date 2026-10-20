@@ -5,6 +5,11 @@
   "compatibility_date": "2026-10-06",
   "account_id": "6f6959ecba86d1de4d6cf6aa0b34528d",
   "workers_dev": true,
+  // Voice (push-to-talk). Set VOICE_ENABLED to "false" to turn the mic off without a code change.
+  "vars": {
+    "VOICE_ENABLED": "true",
+    "TTS_SPEAKER": "luna"
+  },
   "durable_objects": {
     "bindings": [
       { "name": "CHAT_SESSION", "class_name": "ChatSessionDO" }

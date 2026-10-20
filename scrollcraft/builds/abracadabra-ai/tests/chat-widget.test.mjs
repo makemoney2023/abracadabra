@@ -75,3 +75,22 @@ test("the studio skin uses the site tokens", () => {
   assert.match(widgetCss, /220ms cubic-bezier/);
   assert.match(widgetCss, /92dvh/);
 });
+
+test("voice picks MP4 on Safari and iOS, WebM elsewhere, and shows the audio note", async () => {
+  const { recorderMime, formatClock, voiceSupported } = await import("../assets/chat-widget.js");
+  const both = (type) => type.startsWith("audio/mp4") || type.startsWith("audio/webm");
+  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1";
+  const iphoneChrome = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0 Mobile/15E148 Safari/604.1";
+  const macSafari = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15";
+  const chrome = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36";
+  assert.equal(recorderMime(both, iphone), "audio/mp4");
+  assert.equal(recorderMime(both, iphoneChrome), "audio/mp4");
+  assert.equal(recorderMime(both, macSafari), "audio/mp4");
+  assert.equal(recorderMime(both, chrome), "audio/webm;codecs=opus");
+  assert.equal(recorderMime((type) => type === "audio/mp4", chrome), "audio/mp4");
+  assert.equal(recorderMime(() => false, chrome), "");
+  assert.equal(formatClock(12_400), "0:12");
+  assert.equal(voiceSupported({}), false);
+  assert.equal(voiceSupported({ MediaRecorder() {}, navigator: { mediaDevices: { getUserMedia() {} } }, isSecureContext: true }), true);
+  assert.match(widgetCss, /\.mic\.recording/);
+});
