@@ -76,28 +76,26 @@ test("the studio skin uses the site tokens", () => {
   assert.match(widgetCss, /92dvh/);
 });
 
-test("voice picks MP4 on Safari and iOS, WebM elsewhere, and shows the audio note", async () => {
-  const { recorderMime, formatClock, voiceSupported } = await import("../assets/chat-widget.js");
-  const both = (type) => type.startsWith("audio/mp4") || type.startsWith("audio/webm");
-  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/604.1";
-  const iphoneChrome = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0 Mobile/15E148 Safari/604.1";
-  const macSafari = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15";
-  const chrome = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36";
-  assert.equal(recorderMime(both, iphone), "audio/mp4");
-  assert.equal(recorderMime(both, iphoneChrome), "audio/mp4");
-  assert.equal(recorderMime(both, macSafari), "audio/mp4");
-  assert.equal(recorderMime(both, chrome), "audio/webm;codecs=opus");
-  assert.equal(recorderMime((type) => type === "audio/mp4", chrome), "audio/mp4");
-  assert.equal(recorderMime(() => false, chrome), "");
-  assert.equal(formatClock(12_400), "0:12");
+test("voice helpers: support check, socket URL, PCM decode, clock", async () => {
+  const { formatClock, voiceSupported, realtimeUrl, pcmToFloat, MIC_WORKLET } = await import("../assets/chat-widget.js");
+  const full = {
+    AudioContext() {}, AudioWorkletNode() {}, WebSocket() {},
+    navigator: { mediaDevices: { getUserMedia() {} } }, isSecureContext: true,
+  };
   assert.equal(voiceSupported({}), false);
-  assert.equal(voiceSupported({ MediaRecorder() {}, navigator: { mediaDevices: { getUserMedia() {} } }, isSecureContext: true }), true);
-  assert.match(widgetCss, /\.mic\.recording/);
+  assert.equal(voiceSupported(full), true);
+  assert.equal(voiceSupported({ ...full, AudioWorkletNode: undefined }), false);
+  assert.equal(voiceSupported({ ...full, isSecureContext: false }), false);
+  assert.equal(voiceSupported({ ...full, AudioContext: undefined, webkitAudioContext() {} }), true);
+  assert.equal(realtimeUrl({ protocol: "https:", host: "abra-ca-dabra.app" }), "wss://abra-ca-dabra.app/api/chat/realtime");
+  assert.equal(realtimeUrl({ protocol: "http:", host: "127.0.0.1:4500" }), "ws://127.0.0.1:4500/api/chat/realtime");
+  const pcm = new Int16Array([0, 16384, -32768, 32767]);
+  const out = pcmToFloat(pcm.buffer);
+  assert.deepEqual([...out].map((v) => Math.round(v * 1000) / 1000), [0, 0.5, -1, 1]);
+  assert.equal(pcmToFloat(new Uint8Array(3).buffer).length, 1);
+  assert.equal(formatClock(12_400), "0:12");
+  assert.equal(formatClock(185_000), "3:05");
+  assert.match(MIC_WORKLET, /registerProcessor\("abra-mic"/);
+  assert.match(MIC_WORKLET, /sampleRate \/ 16000/);
 });
 
-test("streaming playback is used when the browser can play MP3", async () => {
-  const { canStreamMp3 } = await import("../assets/chat-widget.js");
-  assert.equal(canStreamMp3({ canPlayType: () => "maybe" }), true);
-  assert.equal(canStreamMp3({ canPlayType: () => "" }), false);
-  assert.equal(canStreamMp3(null), false);
-});

@@ -96,8 +96,9 @@ after(async () => {
   await new Promise((resolve, reject) => server?.close((error) => (error ? reject(error) : resolve())));
 });
 
-async function openFixture(width = 1280, height = 800) {
+async function openFixture(width = 1280, height = 800, prepare) {
   const page = await browser.newPage({ viewport: { width, height } });
+  if (prepare) await prepare(page);
   const errors = [];
   page.on("pageerror", (error) => errors.push(String(error)));
   await page.goto(`${origin}/chat-fixture`, { waitUntil: "networkidle" });
@@ -173,89 +174,208 @@ test("an empty Cal.com link asks for two times inside the chat", async () => {
   await page.close();
 });
 
-const TONE = await readFile(new URL("./fixtures/voice-tone.mp3", import.meta.url));
+// The page's WebSocket is routed into the real chat worker: handleRequest checks the session
+// cookie and limits, then VoiceCall runs with a fake Flux (driven by mic bytes) and fake Aura PCM.
+class BridgeSocket {
+  constructor(route) {
+    this.route = route;
+    this.listeners = {};
+  }
+  accept() {}
+  addEventListener(type, fn) {
+    (this.listeners[type] ||= []).push(fn);
+  }
+  emit(type, data) {
+    for (const fn of this.listeners[type] || []) fn({ data });
+  }
+  send(data) {
+    this.route.send(typeof data === "string" ? data : Buffer.from(data.buffer ?? data, data.byteOffset ?? 0, data.byteLength));
+  }
+  close() {
+    try { this.route.close(); } catch { /* gone */ }
+  }
+}
 
-async function voiceRun(auraBody) {
-  env.CAL_LINK = "abracadabra/working-session";
-  Object.assign(env, { VOICE_ENABLED: "true", AI_GATEWAY_TOKEN: "test-token", CF_ACCOUNT_ID: "acct" });
-  const gateway = [];
-  deps.fetchImpl = async (url, init = {}) => {
-    gateway.push(String(url));
-    if (String(url).includes("whisper")) {
-      const body = JSON.parse(init.body);
-      assert.ok(body.audio.length > 100);
-      return Response.json({ success: true, result: { text: "What does Abracadabra build?", transcription_info: { duration: 2 } } });
+class FakeFlux {
+  constructor(script) {
+    this.script = script;
+    this.listeners = {};
+    this.bytes = 0;
+    this.fired = new Set();
+  }
+  addEventListener(type, fn) {
+    (this.listeners[type] ||= []).push(fn);
+  }
+  emit(payload) {
+    for (const fn of this.listeners.message || []) fn({ data: JSON.stringify(payload) });
+  }
+  send(data) {
+    if (typeof data === "string") return;
+    this.bytes += data.byteLength;
+    // 32,000 bytes is one second of 16 kHz mic audio.
+    for (const step of this.script) {
+      if (!this.fired.has(step) && this.bytes >= step.at) {
+        this.fired.add(step);
+        this.emit(step.event);
+      }
     }
-    if (String(url).includes("aura")) return new Response(auraBody, { headers: { "content-type": "audio/mpeg" } });
+  }
+  close() {}
+}
+
+function tone(seconds, rate = 24000) {
+  const samples = new Int16Array(Math.round(seconds * rate));
+  for (let i = 0; i < samples.length; i += 1) samples[i] = Math.round(Math.sin((i / rate) * 2 * Math.PI * 330) * 6000);
+  return new Uint8Array(samples.buffer);
+}
+
+async function callRun({ script, ttsSeconds = 0.6 }) {
+  env.CAL_LINK = "abracadabra/working-session";
+  Object.assign(env, { VOICE_ENABLED: "true", AI_GATEWAY_TOKEN: "test-token", CF_ACCOUNT_ID: "acct", AI: { run() {} } });
+  const gateway = [];
+  const flux = new FakeFlux(script);
+  deps.openFlux = async () => flux;
+  deps.tickMs = 0;
+  deps.fetchImpl = async (url, init = {}) => {
+    gateway.push({ url: String(url), body: init.body ? JSON.parse(init.body) : null });
+    if (String(url).includes("aura")) {
+      const pcm = tone(ttsSeconds);
+      const stream = new ReadableStream({
+        async start(controller) {
+          for (let i = 0; i < pcm.length; i += 4801) {
+            controller.enqueue(pcm.slice(i, i + 4801));
+            await new Promise((resolve) => setTimeout(resolve, 20));
+          }
+          controller.close();
+        },
+      });
+      return new Response(stream, { headers: { "content-type": "audio/mpeg" } });
+    }
     return Response.json({ success: true, result: { response: "We build software around the work you already do." } });
   };
-  const page = await openFixture(390, 844);
-  const speaks = [];
-  page.on("request", (request) => {
-    const url = new URL(request.url());
-    if (url.pathname === "/api/chat/speak") {
-      speaks.push({ method: request.method(), id: url.searchParams.get("id"), p: url.searchParams.get("p"), body: request.method() === "POST" ? request.postDataJSON() : null });
+  const state = { calls: [], flux };
+  let page;
+  const prepare = (target) => target.routeWebSocket(/\/api\/chat\/realtime/, async (route) => {
+    const server = new BridgeSocket(route);
+    const client = new BridgeSocket(route);
+    const cookies = (await page.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
+    deps.webSocketPair = () => ({ 0: client, 1: server });
+    deps.upgrade = (_socket, call) => {
+      state.calls.push(call);
+      return new Response(null, { status: 200, headers: { "x-upgraded": "1" } });
+    };
+    const response = await handleRequest(new Request(`${origin}/api/chat/realtime`, {
+      headers: { origin, cookie: cookies, upgrade: "websocket", "cf-connecting-ip": "127.0.0.1" },
+    }), env, deps);
+    if (response.headers.get("x-upgraded") !== "1") {
+      state.refused = response.status;
+      route.close({ code: 4000 + (response.status % 1000), reason: "refused" });
+      return;
     }
+    route.onMessage((message) => {
+      server.emit("message", typeof message === "string" ? message : new Uint8Array(message).buffer);
+    });
+    route.onClose(() => server.emit("close"));
   });
+  page = await openFixture(390, 844, prepare);
+  if (process.env.VOICE_DEBUG) page.on("console", (m) => console.log("[page]", m.text()));
   await page.getByRole("button", { name: "Ask Abracadabra" }).click();
-  const mic = page.getByRole("button", { name: "Speak your question" });
+  const mic = page.getByRole("button", { name: "Start voice chat" });
   await mic.waitFor();
   await page.getByText("Audio isn't stored.").waitFor();
-  await page.getByRole("textbox", { name: "Message" }).fill("What do you build?");
-  await page.getByRole("button", { name: "Send", exact: true }).click();
-  await page.getByText("We build software around the work you already do.").first().waitFor();
-  assert.equal(speaks.length, 0, "typed questions stay silent");
-  await mic.click();
-  await page.getByRole("button", { name: "Stop and send" }).waitFor();
-  await page.waitForTimeout(1500);
-  await page.getByRole("button", { name: "Stop and send" }).click();
-  const timings = await page.locator("abra-chat").evaluate((node) => new Promise((resolve) => {
-    const started = Date.now();
-    const check = () => (node.voiceTimings?.playing || Date.now() - started > 8000
-      ? resolve({ ...node.voiceTimings, mode: node.voiceMode })
-      : setTimeout(check, 25));
-    check();
-  }));
-  const users = await page.locator("abra-chat").evaluate((node) => [...node.shadowRoot.querySelectorAll(".bubble.user")].map((b) => b.textContent));
-  assert.equal(users.at(-1), "What does Abracadabra build?");
-  assert.ok(gateway.some((url) => url.includes("whisper-large-v3-turbo")));
-  assert.ok(gateway.some((url) => url.includes("aura-2-en")));
-  return { page, speaks, timings };
+  return { page, state, gateway, mic };
 }
 
 function clearVoiceEnv() {
-  delete env.VOICE_ENABLED;
-  delete env.AI_GATEWAY_TOKEN;
-  delete env.CF_ACCOUNT_ID;
-  delete deps.fetchImpl;
+  for (const key of ["VOICE_ENABLED", "AI_GATEWAY_TOKEN", "CF_ACCOUNT_ID", "AI"]) delete env[key];
+  for (const key of ["fetchImpl", "openFlux", "tickMs", "webSocketPair", "upgrade", "activeCall"]) delete deps[key];
 }
 
-test("push-to-talk streams the spoken answer into the audio element", async () => {
+const widgetState = (page) => page.locator("abra-chat").evaluate((node) => ({
+  ui: node.callState_,
+  label: node.shadowRoot.querySelector("[data-call-state]").textContent,
+  users: [...node.shadowRoot.querySelectorAll(".bubble.user")].map((b) => b.textContent),
+  assistants: [...node.shadowRoot.querySelectorAll(".bubble.assistant")].map((b) => b.textContent),
+  timings: node.voiceTimings || {},
+  sources: node.call?.sources.size ?? 0,
+}));
+
+test("one tap starts a hands-free call: mic streams, Flux ends the turn, Aura PCM plays", async () => {
   try {
-    const { page, speaks, timings } = await voiceRun(TONE);
-    assert.equal(timings.mode, "stream");
-    assert.ok(timings.playing > timings.reply, "audio played after the text reply");
-    assert.equal(speaks.length >= 1, true);
-    assert.ok(speaks.every((s) => s.method === "GET" && s.p === "1"), JSON.stringify(speaks));
-    assert.match(speaks[0].id, /^[0-9a-f-]{36}$/);
-    assert.equal(page.errors.length, 0);
+    const { page, state, gateway, mic } = await callRun({
+      script: [
+        { at: 16000, event: { event: "StartOfTurn", transcript: "What does" } },
+        { at: 32000, event: { event: "EndOfTurn", transcript: "What does Abracadabra build?" } },
+      ],
+    });
+    await mic.click();
+    await page.getByRole("button", { name: "End voice chat" }).waitFor();
+    if (process.env.VOICE_DEBUG) {
+      await page.waitForTimeout(3000);
+      console.log(JSON.stringify(await widgetState(page)), state.refused, state.calls.length, state.flux.bytes, page.errors);
+    }
+    await page.getByText("We build software around the work you already do.").last().waitFor({ timeout: 8000 });
+    await page.waitForFunction(() => document.querySelector("abra-chat").voiceTimings?.playing, null, { timeout: 8000 });
+    const during = await widgetState(page);
+    assert.equal(during.users.at(-1), "What does Abracadabra build?");
+    assert.ok(during.timings.playing >= during.timings.reply);
+    // Playback finishes, the browser reports it, and the call listens again.
+    await page.waitForFunction(() => document.querySelector("abra-chat").callState_ === "listening", null, { timeout: 8000 });
+    assert.equal(state.calls[0].state, "listening");
+    assert.ok(state.flux.bytes >= 32000, "the mic kept streaming 16 kHz PCM");
+    const tts = gateway.find((g) => g.url.includes("aura-2-en"));
+    assert.equal(tts.body.encoding, "linear16");
+    assert.equal(tts.body.sample_rate, 24000);
+    await page.getByRole("button", { name: "End", exact: true }).click();
+    await page.waitForFunction(() => document.querySelector("abra-chat").callState_ === "idle");
+    await page.waitForTimeout(100);
+    assert.equal(state.calls[0].closed, true);
+    assert.equal(page.errors.length, 0, page.errors.join("\n"));
     await page.close();
   } finally {
     clearVoiceEnv();
   }
 });
 
-test("a stream the browser cannot play falls back to one full download", async () => {
+test("talking over the reply stops playback at once (barge-in)", async () => {
   try {
-    const { page, speaks } = await voiceRun(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
-    await page.waitForFunction(() => document.querySelector("abra-chat").voiceMode === "buffered");
-    const post = speaks.find((s) => s.method === "POST");
-    assert.ok(post, JSON.stringify(speaks));
-    assert.equal(post.body.play, 1);
-    assert.equal(post.body.replyId, speaks[0].id);
-    assert.equal(page.errors.length, 0);
+    const { page, state, mic } = await callRun({
+      ttsSeconds: 4,
+      script: [
+        { at: 16000, event: { event: "EndOfTurn", transcript: "What does Abracadabra build?" } },
+        // About 1.5 s later the visitor starts talking again while the reply plays.
+        { at: 64000, event: { event: "StartOfTurn", transcript: "Wait how much" } },
+        { at: 72000, event: { event: "Update", transcript: "Wait how much does it cost" } },
+      ],
+    });
+    await mic.click();
+    if (process.env.VOICE_DEBUG) {
+      for (let i = 0; i < 10; i += 1) {
+        await page.waitForTimeout(400);
+        console.log(JSON.stringify(await widgetState(page)), state.calls[0]?.state, state.flux.bytes);
+      }
+    }
+    await page.waitForFunction(() => document.querySelector("abra-chat").callState_ === "speaking", null, { timeout: 8000 });
+    await page.waitForFunction(() => {
+      const node = document.querySelector("abra-chat");
+      return node.callState_ === "listening" && node.call && node.call.sources.size === 0;
+    }, null, { timeout: 8000 });
+    assert.equal(state.calls[0].state, "listening");
+    assert.equal(state.calls[0].controller, null);
+    // Tapping the mic again ends the call.
+    await page.getByRole("button", { name: "End voice chat" }).click();
+    await page.waitForFunction(() => document.querySelector("abra-chat").callState_ === "idle");
+    assert.equal(page.errors.length, 0, page.errors.join("\n"));
     await page.close();
   } finally {
     clearVoiceEnv();
   }
+});
+
+test("voice stays hidden when the switch is off", async () => {
+  const page = await openFixture(390, 844);
+  await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+  await page.getByText("Ask a plain question. A person reviews anything we follow up on.").waitFor();
+  assert.equal(await page.getByRole("button", { name: "Start voice chat" }).count(), 0);
+  await page.close();
 });

@@ -13,8 +13,7 @@ A chat does not email the visitor. A consented contact card, or a booking finish
 | POST | `/api/chat/message` | Answers in a short server-sent stream and may attach a card |
 | POST | `/api/chat/contact` | Saves name, email, goal, and consent. Consent must be true |
 | POST | `/api/chat/events` | `booking_opened`, `booking_completed`, `readiness_check_clicked` |
-| POST | `/api/chat/voice` | Push-to-talk clip (raw audio body) → Whisper → the same chat answer. Returns `{transcript, reply, action, replyId}` |
-| POST | `/api/chat/speak` | `{replyId}` → Aura-2 MP3 of that session's own spoken reply. Never reads free text |
+| GET (WebSocket) | `/api/chat/realtime` | Hands-free voice call. Mic PCM in, JSON events and Aura-2 PCM out. See Voice below |
 
 Cards:
 
@@ -44,15 +43,29 @@ Copy `.dev.vars.example` to `.dev.vars` (do not commit it). On the Worker, set t
 | `HANDOFF_HMAC_SECRET` | Signs the `abra.chat.handoff` v1.0 JSON in the houdini@ mail |
 | `CHAT_HANDOFF_TO` | Must include `houdini@abra-ca-dabra.app`. Anything else is ignored |
 | `CHAT_ORIGINS` | Extra allowed `Origin` values, comma-separated |
+| `AI` (binding) | Workers AI binding in `wrangler.jsonc`. Flux speech-to-text runs over its WebSocket. No token |
 | `VOICE_ENABLED` | `"true"` shows the mic (set in `wrangler.jsonc`). `"false"` turns voice off |
 | `TTS_SPEAKER` | Aura-2 voice, default `luna`. Unknown names fall back to `luna` |
-| `STT_MODEL` / `TTS_MODEL` | Optional. Default `@cf/openai/whisper-large-v3-turbo` and `@cf/deepgram/aura-2-en` |
+| `TTS_MODEL` | Optional. Default `@cf/deepgram/aura-2-en` |
 
 ## Voice
 
-Push-to-talk only. The visitor taps the mic, talks, and taps again (the widget stops at 30 seconds). The clip goes to `/api/chat/voice`, Whisper turns it into words (with a hint so "Abracadabra" comes out right), and the words take the normal chat path and checks. The reply then plays out loud from `/api/chat/speak`. Typed questions stay silent.
+A hands-free call. One tap on the mic starts it; the visitor just talks, and taps End (or the mic) to stop.
 
-Guardrails: an open, Turnstile-checked session; clips up to 600 KB and 30 seconds; only webm, mp4, ogg, mp3, and wav, checked by their first bytes; 15 voice turns per hour per IP and 15 per session; at most 400 spoken characters per reply, two plays per reply, and 3,000 spoken characters per session. Gateway cache and logging are off. Audio is never stored. Only the words are kept, like a typed chat.
+```
+browser mic ─AudioWorklet, 16 kHz PCM, 40 ms frames─► /api/chat/realtime (WebSocket, session Durable Object)
+   └─► Flux (@cf/deepgram/flux over the AI binding WebSocket) ─ EndOfTurn ─► same chat brain + postCheck
+   ◄── Aura-2 (luna) through AI Gateway as linear16 24 kHz, streamed chunk by chunk ◄──┘
+```
+
+- Turn taking: Flux decides when the visitor has finished (end-of-turn detection). Keyterms help it hear "Abracadabra".
+- Barge-in: if Flux hears two or more new words while the reply is being made or played, the reply stops on both sides. Words that match the reply itself are treated as speaker echo and ignored. The browser asks for echo cancellation.
+- The call stays "speaking" until the browser reports its queued audio has played, so barge-in keeps working to the last word.
+- Protocol, server → browser: `ready`, `state` (listening, thinking, speaking), `interim`, `user`, `assistant`, `audio_start`, binary PCM, `audio_end`, `interrupt`, `notice`, `end`. Browser → server: binary PCM, `{type:"played"}`, `{type:"end"}`.
+
+Guardrails: an open, Turnstile-checked session cookie and an allowed Origin before the socket opens; one open call per chat, 3 calls per chat, 6 calls per hour per IP; calls end at 5 minutes or after 45 quiet seconds; mic frames up to 16 KB and no faster than real time; 15 voice turns per chat; at most 400 spoken characters per reply and 3,000 per chat. Gateway cache and logging are off for speech. Audio is never stored. Only the words are kept, like a typed chat.
+
+Cost at list price is about $0.026 per minute of call (Flux $0.0077 per minute plus Aura-2 at $0.030 per 1,000 characters), so about $0.13 for a full 5-minute call.
 
 Deploy this Worker before the marketing Worker. The marketing `wrangler.jsonc` binds `CHAT` to the service name `abracadabra-chat`.
 

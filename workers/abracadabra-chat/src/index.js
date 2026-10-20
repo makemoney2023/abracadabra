@@ -9,6 +9,8 @@ export class ChatSessionDO {
   fetch(request) {
     return handleSession(request, this.state.storage, this.env, {
       setAlarm: (when) => this.state.storage.setAlarm(when),
+      // One open voice call per chat session lives on this object.
+      callSlot: this,
     });
   }
 

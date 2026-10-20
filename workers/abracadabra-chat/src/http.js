@@ -11,31 +11,16 @@ import {
   verifyTurnstile,
 } from "./policy.js";
 import { applyChatEvent, blankSession, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
-import {
-  audioKind,
-  baseAudioType,
-  MAX_AUDIO_BYTES,
-  MAX_AUDIO_SECONDS,
-  MIN_AUDIO_BYTES,
-  SPEAKS_PER_REPLY,
-  speakable,
-  synthesize,
-  transcribe,
-  VOICE_TTS_CHARS_PER_SESSION,
-  VOICE_TURNS_PER_SESSION,
-  voiceEnabled,
-} from "./voice.js";
+import { VoiceCall } from "./realtime.js";
+import { VOICE_CALLS_PER_SESSION, VOICE_TURNS_PER_SESSION, voiceEnabled } from "./voice.js";
 
 const WINDOW_MS = 60 * 60 * 1000;
 const IP_MESSAGE_LIMIT = 20;
 const IP_SESSION_LIMIT = 8;
 const SESSION_MESSAGE_LIMIT = 30;
-const IP_VOICE_LIMIT = 15;
-const IP_SPEAK_LIMIT = 45;
-const SPEAK_REPEAT_MS = 60 * 1000;
-const SPEAK_REPEATS = 2;
+const IP_CALL_LIMIT = 6;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const isolateLimits = { messages: new Map(), sessions: new Map(), voice: new Map(), speak: new Map() };
+const isolateLimits = { messages: new Map(), sessions: new Map(), calls: new Map() };
 const isolateRooms = new Map();
 
 export function readCookie(header, name) {
@@ -85,8 +70,7 @@ async function readJson(request) {
 
 function limitsFor(deps) {
   const limits = deps.limits || isolateLimits;
-  if (!limits.voice) limits.voice = new Map();
-  if (!limits.speak) limits.speak = new Map();
+  if (!limits.calls) limits.calls = new Map();
   return limits;
 }
 
@@ -94,60 +78,6 @@ function gateHit(limits, name, ip, now, limit) {
   const gate = rateGate(limits[name].get(ip) || [], now, limit, WINDOW_MS);
   limits[name].set(ip, gate.hits);
   return gate.ok;
-}
-
-/**
- * A reply can be played SPEAKS_PER_REPLY times. Media players (Safari in particular) may open
- * the same play more than once (a range probe, then the real read). A repeat of the same play
- * number inside SPEAK_REPEAT_MS is allowed up to SPEAK_REPEATS times and is not charged again.
- */
-export function claimSpeak(session, replyId, play, now) {
-  const id = String(replyId || "");
-  const reply = UUID.test(id)
-    ? session.messages.find((message) => message.role === "assistant" && message.voice && message.id === id)
-    : null;
-  if (!reply) return { ok: false, status: 404, message: "Nothing to read." };
-  const n = Number(play);
-  if (!Number.isInteger(n) || n < 1 || n > SPEAKS_PER_REPLY) {
-    return { ok: false, status: 429, message: "That answer was already read." };
-  }
-  const text = speakable(reply.text);
-  if (!text) return { ok: false, status: 404, message: "Nothing to read." };
-  reply.plays = reply.plays || {};
-  const seen = reply.plays[n];
-  if (seen) {
-    if (now - seen.at > SPEAK_REPEAT_MS || seen.repeats >= SPEAK_REPEATS) {
-      return { ok: false, status: 429, message: "That answer was already read." };
-    }
-    seen.repeats += 1;
-    return { ok: true, text, repeat: true };
-  }
-  if ((session.ttsChars || 0) + text.length > VOICE_TTS_CHARS_PER_SESSION) {
-    return { ok: false, status: 429, message: "Spoken answers are used up for this chat. The answer is in the chat." };
-  }
-  reply.plays[n] = { at: now, repeats: 0 };
-  reply.spoken = Object.keys(reply.plays).length;
-  session.ttsChars = (session.ttsChars || 0) + text.length;
-  return { ok: true, text, repeat: false };
-}
-
-async function readAudio(request) {
-  const declared = request.headers.get("content-length");
-  const length = Number(declared);
-  if (!declared || !Number.isFinite(length)) return { ok: false, status: 411, message: "Send the clip again." };
-  if (length > MAX_AUDIO_BYTES) return { ok: false, status: 413, message: "Keep it under 30 seconds." };
-  let bytes;
-  try {
-    bytes = new Uint8Array(await request.arrayBuffer());
-  } catch {
-    return { ok: false, status: 400, message: "We could not read that clip." };
-  }
-  if (bytes.byteLength > MAX_AUDIO_BYTES) return { ok: false, status: 413, message: "Keep it under 30 seconds." };
-  if (bytes.byteLength < MIN_AUDIO_BYTES) return { ok: false, status: 400, message: "That was too short. Hold the mic a little longer." };
-  if (!audioKind(request.headers.get("content-type"), bytes)) {
-    return { ok: false, status: 415, message: "That audio type is not supported. You can type instead." };
-  }
-  return { ok: true, bytes, type: baseAudioType(request.headers.get("content-type")) };
 }
 
 function roomsFor(deps) {
@@ -296,79 +226,34 @@ export async function handleSession(request, storage, env, deps) {
     return sse(checked.text, action);
   }
 
-  if (url.pathname === "/api/chat/voice") {
+  if (url.pathname === "/api/chat/realtime") {
     if (!voiceEnabled(env)) return json({ error: "Voice is off right now. Type your question." }, 404);
-    if (session.messageCount >= SESSION_MESSAGE_LIMIT) {
-      return json({ error: "This chat is full. Email houdini@abra-ca-dabra.app." }, 429);
+    if ((request.headers.get("upgrade") || "").toLowerCase() !== "websocket") {
+      return json({ error: "Open the voice call from the chat." }, 426);
     }
-    if ((session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) {
+    if ((session.voiceCalls || 0) >= VOICE_CALLS_PER_SESSION || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) {
       return json({ error: "That is the voice limit for this chat. You can keep typing." }, 429);
     }
-    const audio = await readAudio(request);
-    if (!audio.ok) return json({ error: audio.message }, audio.status);
-    session.voiceTurns = (session.voiceTurns || 0) + 1;
+    const slot = deps.callSlot || deps;
+    if (slot.activeCall && !slot.activeCall.closed) {
+      return json({ error: "A voice call is already open in this chat." }, 409);
+    }
+    session.voiceCalls = (session.voiceCalls || 0) + 1;
     session.updatedAt = now;
-    const heard = await transcribe({ env, bytes: audio.bytes, fetchImpl: deps.fetchImpl });
-    audio.bytes = null;
-    if (!heard.ok) {
-      await save(storage, session, deps);
-      return json({ error: "I could not hear that. Try again, or type your question." }, 502);
-    }
-    if (heard.seconds && heard.seconds > MAX_AUDIO_SECONDS) {
-      await save(storage, session, deps);
-      return json({ error: "Keep it under 30 seconds." }, 413);
-    }
-    const text = heard.text;
-    if (text.replace(/[^a-z0-9]/gi, "").length < 2) {
-      await save(storage, session, deps);
-      return json({ ok: true, transcript: "", reply: "I did not catch that. Tap the mic and try again.", action: null, replyId: null }, 200);
-    }
-    const draft = await completeChat({
+    await save(storage, session, deps);
+    const pair = deps.webSocketPair ? deps.webSocketPair() : new WebSocketPair();
+    const [client, server] = Object.values(pair);
+    server.accept();
+    const call = new VoiceCall({
+      client: server,
       env,
-      messages: [...session.messages, { role: "user", text }],
-      fetchImpl: deps.fetchImpl,
-      voice: true,
+      deps,
+      loadSession: () => load(storage, deps.now ? deps.now() : Date.now()),
+      saveSession: (next) => save(storage, next, deps),
     });
-    const checked = postCheck(draft);
-    const action = uiActionFor(text);
-    if (action === "offer_booking") session.bookingOffered = true;
-    const replyId = crypto.randomUUID();
-    rememberExchange(session, text, checked.text, now, { voice: true, replyId });
-    await save(storage, session, deps);
-    return json({ ok: true, transcript: text, reply: checked.text, action, replyId }, 200);
-  }
-
-  if (url.pathname === "/api/chat/speak") {
-    if (!voiceEnabled(env)) return json({ error: "Voice is off right now." }, 404);
-    // GET ?id=<replyId>&p=<play> lets an <audio> element stream the MP3 as it arrives.
-    // POST {replyId, play} is the full-download fallback. Both share the same checks.
-    let replyId = "";
-    let play = 1;
-    if (request.method === "GET") {
-      replyId = url.searchParams.get("id") || "";
-      play = Number(url.searchParams.get("p") || 1);
-    } else {
-      const parsed = await readJson(request);
-      if (!parsed.ok) return json({ error: parsed.message }, parsed.status);
-      replyId = String(parsed.value?.replyId || "");
-      play = Number(parsed.value?.play || 1);
-    }
-    const ticket = claimSpeak(session, replyId, play, now);
-    if (!ticket.ok) return json({ error: ticket.message }, ticket.status);
-    session.updatedAt = now;
-    await save(storage, session, deps);
-    const audio = await synthesize({ env, text: ticket.text, fetchImpl: deps.fetchImpl });
-    if (!audio) return json({ error: "The voice is quiet right now. The answer is in the chat." }, 502);
-    // Pass the gateway stream straight through: no buffering, no Content-Length.
-    return new Response(audio.body, {
-      status: 200,
-      headers: {
-        "content-type": audio.headers.get("content-type") || "audio/mpeg",
-        "cache-control": "no-store",
-        "accept-ranges": "none",
-        "x-content-type-options": "nosniff",
-      },
-    });
+    slot.activeCall = call;
+    void call.start();
+    return deps.upgrade ? deps.upgrade(client, call) : new Response(null, { status: 101, webSocket: client });
   }
 
   if (url.pathname === "/api/chat/contact") {
@@ -438,8 +323,8 @@ export async function handleRequest(request, env = {}, deps = {}) {
     return cors(json(publicConfig(env), 200), request, env);
   }
 
-  const streamSpeak = url.pathname === "/api/chat/speak" && request.method === "GET";
-  if (request.method !== "POST" && !streamSpeak) return cors(json({ error: "Method not allowed." }, 405), request, env);
+  const realtime = url.pathname === "/api/chat/realtime" && request.method === "GET";
+  if (request.method !== "POST" && !realtime) return cors(json({ error: "Method not allowed." }, 405), request, env);
 
   const ip = clientIp(request);
   const limits = limitsFor(deps);
@@ -479,24 +364,19 @@ export async function handleRequest(request, env = {}, deps = {}) {
     return cors(new Response(created.body, { status: created.status, headers }), request, env);
   }
 
-  if (url.pathname === "/api/chat/voice" || url.pathname === "/api/chat/speak") {
+  if (url.pathname === "/api/chat/realtime") {
     if (!voiceEnabled(env)) return cors(json({ error: "Voice is off right now. Type your question." }, 404), request, env);
-    if (url.pathname === "/api/chat/voice") {
-      const length = Number(request.headers.get("content-length") || 0);
-      if (length > MAX_AUDIO_BYTES) return cors(json({ error: "Keep it under 30 seconds." }, 413), request, env);
-      if (!gateHit(limits, "voice", ip, now, IP_VOICE_LIMIT)) {
-        return cors(json({ error: "Too many voice notes from this network. You can still type." }, 429), request, env);
-      }
-      if (!gateHit(limits, "messages", ip, now, IP_MESSAGE_LIMIT)) {
-        return cors(json({ error: "Too many notes from this network. Try again later." }, 429), request, env);
-      }
-    } else if (!gateHit(limits, "speak", ip, now, IP_SPEAK_LIMIT)) {
-      return cors(json({ error: "Too many spoken answers from this network." }, 429), request, env);
+    if (!gateHit(limits, "calls", ip, now, IP_CALL_LIMIT)) {
+      return cors(json({ error: "Too many voice calls from this network. You can still type." }, 429), request, env);
     }
   } else if (!gateHit(limits, "messages", ip, now, IP_MESSAGE_LIMIT)) {
     return cors(json({ error: "Too many notes from this network. Try again later." }, 429), request, env);
   }
   const id = readCookie(request.headers.get("cookie"), "abra_chat");
   if (!UUID.test(id)) return cors(json({ error: "Open the chat again." }, 401), request, env);
-  return cors(await openSession(id, forward(request, id), env, deps), request, env);
+  const answer = await openSession(id, forward(request, id), env, deps);
+  // A 101 carries the WebSocket and must be returned as is.
+  if (realtime && answer.status === 101) return answer;
+  if (realtime && answer.webSocket) return answer;
+  return cors(answer, request, env);
 }

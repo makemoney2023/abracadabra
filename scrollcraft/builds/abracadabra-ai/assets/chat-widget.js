@@ -1,8 +1,35 @@
 export const READINESS_FALLBACK = "https://check.abra-ca-dabra.app/check";
-export const VOICE_MAX_MS = 30_000;
-export const VOICE_MAX_BYTES = 600 * 1024;
-// A tiny silent WAV. Playing it inside the first mic tap unlocks audio on iOS Safari.
-const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+export const MIC_RATE = 16000;
+// Runs off the main thread: averages the mic down to 16 kHz mono and posts 40 ms Int16 frames.
+export const MIC_WORKLET = `
+class AbraMic extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    this.step = sampleRate / ${16000};
+    this.t = 0; this.acc = 0; this.count = 0;
+    this.frame = new Int16Array(640); this.n = 0;
+  }
+  process(inputs) {
+    const channel = inputs[0] && inputs[0][0];
+    if (!channel) return true;
+    for (let i = 0; i < channel.length; i++) {
+      this.acc += channel[i]; this.count++; this.t += 1;
+      if (this.t >= this.step) {
+        this.t -= this.step;
+        const v = Math.max(-1, Math.min(1, this.acc / this.count));
+        this.acc = 0; this.count = 0;
+        this.frame[this.n++] = v < 0 ? v * 0x8000 : v * 0x7fff;
+        if (this.n === this.frame.length) {
+          this.port.postMessage(this.frame.buffer, [this.frame.buffer]);
+          this.frame = new Int16Array(640); this.n = 0;
+        }
+      }
+    }
+    return true;
+  }
+}
+registerProcessor("abra-mic", AbraMic);
+`;
 const MIC_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v4"/></svg>`;
 const STOP_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2"/></svg>`;
 
@@ -115,13 +142,29 @@ button { cursor: pointer; }
 }
 .mic[hidden] { display: none; }
 .mic:hover { border-color: rgba(245, 240, 232, 0.4); }
-.mic.recording { background: #FF4B24; color: #170804; border-color: #FF4B24; animation: ring 1.4s ease-out infinite; }
+.mic.live { background: #FF4B24; color: #170804; border-color: #FF4B24; animation: ring 1.4s ease-out infinite; }
 .mic.busy { opacity: 0.6; cursor: progress; }
-.mic.speaking { border-color: #C6FFB3; color: #C6FFB3; }
 @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(255, 75, 36, 0.45); } 100% { box-shadow: 0 0 0 10px rgba(255, 75, 36, 0); } }
 .voice-note { margin: 0; padding: 0 14px 4px; color: #AAA49A; font-size: 12px; background: #11110F; }
 .voice-note[hidden] { display: none; }
 .voice-note strong { color: #F5F0E8; font-weight: 500; }
+.call {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border-top: 1px solid rgba(245, 240, 232, 0.12); background: #17160F;
+}
+.call[hidden] { display: none; }
+.call-orb { flex: none; width: 12px; height: 12px; border-radius: 50%; background: #8DEBF2; box-shadow: 0 0 0 0 rgba(141, 235, 242, 0.5); animation: breathe 1.6s ease-in-out infinite; }
+.call[data-state="thinking"] .call-orb { background: #F5F0E8; animation: pulse-dot 0.8s ease-in-out infinite; }
+.call[data-state="speaking"] .call-orb { background: #C6FFB3; animation: talk 0.5s ease-in-out infinite alternate; }
+.call[data-state="connecting"] .call-orb { background: #AAA49A; animation: none; }
+.call-text { flex: 1; min-width: 0; }
+.call-state { margin: 0; color: #F5F0E8; font-size: 14px; font-weight: 600; }
+.call-heard { margin: 2px 0 0; color: #AAA49A; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.2em; }
+.call-time { color: #AAA49A; font-size: 12px; font-variant-numeric: tabular-nums; }
+.call-end { background: #FF4B24; color: #170804; border: 0; border-radius: 6px; min-height: 36px; padding: 0 12px; font-weight: 600; font-size: 14px; }
+@keyframes breathe { 50% { box-shadow: 0 0 0 7px rgba(141, 235, 242, 0); } }
+@keyframes pulse-dot { 50% { opacity: 0.35; } }
+@keyframes talk { from { transform: scale(0.8); } to { transform: scale(1.25); } }
 .composer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid rgba(245, 240, 232, 0.12); background: #11110F; }
 textarea, .field input {
   width: 100%; resize: none; min-height: 40px; max-height: 120px;
@@ -147,44 +190,41 @@ textarea:focus, .field input:focus, button:focus-visible { outline: 2px solid #F
   .panel.expanded { height: 92dvh; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .panel, .bubble.streaming::after, .skeleton, .mic.recording { transition: none; animation: none; }
+  .panel, .bubble.streaming::after, .skeleton, .mic.live, .call-orb { transition: none; animation: none; }
 }
 `;
 
-/** Picks a MediaRecorder type. Safari and every iOS browser record MP4 (AAC); others prefer WebM/Opus. */
-export function recorderMime(isTypeSupported, userAgent = "") {
-  const supported = typeof isTypeSupported === "function" ? isTypeSupported : () => false;
-  const ua = String(userAgent);
-  const webkit = /iPad|iPhone|iPod/.test(ua) || (/Safari\//.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Edg|Android/.test(ua));
-  const order = webkit
-    ? ["audio/mp4", "audio/mp4;codecs=mp4a.40.2", "audio/webm;codecs=opus", "audio/webm"]
-    : ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
-  for (const type of order) {
-    try {
-      if (supported(type)) return type;
-    } catch {
-      // Keep looking.
-    }
-  }
-  return "";
-}
-
 export function voiceSupported(win = typeof window === "undefined" ? undefined : window) {
-  return Boolean(win?.MediaRecorder && win?.navigator?.mediaDevices?.getUserMedia && win?.isSecureContext !== false);
+  const Context = win?.AudioContext || win?.webkitAudioContext;
+  return Boolean(
+    Context && win?.AudioWorkletNode && win?.WebSocket && win?.navigator?.mediaDevices?.getUserMedia && win?.isSecureContext !== false,
+  );
 }
 
-export function canStreamMp3(player) {
-  try {
-    return Boolean(player?.canPlayType?.("audio/mpeg"));
-  } catch {
-    return false;
-  }
+export function realtimeUrl(loc = typeof location === "undefined" ? undefined : location) {
+  const scheme = loc?.protocol === "http:" ? "ws:" : "wss:";
+  return `${scheme}//${loc?.host || ""}/api/chat/realtime`;
+}
+
+/** Turns 16-bit little-endian PCM into Web Audio samples. */
+export function pcmToFloat(buffer) {
+  const view = new DataView(buffer);
+  const out = new Float32Array(Math.floor(buffer.byteLength / 2));
+  for (let i = 0; i < out.length; i += 1) out[i] = view.getInt16(i * 2, true) / 0x8000;
+  return out;
 }
 
 export function formatClock(ms) {
   const seconds = Math.max(0, Math.floor(ms / 1000));
-  return `0:${String(seconds).padStart(2, "0")}`;
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
+
+export const CALL_LABELS = {
+  connecting: "Connecting…",
+  listening: "Listening",
+  thinking: "Thinking…",
+  speaking: "Speaking · talk to interrupt",
+};
 
 export function launcherShouldHide({ bodyClass = "", menuOpen = false } = {}) {
   return menuOpen || String(bodyClass).split(/\s+/).includes("intake-lock");
@@ -359,10 +399,19 @@ export class AbraChat extends ElementBase {
       <div class="stream" role="log" aria-live="polite"></div>
       <form class="composer">
         <textarea rows="1" aria-label="Message" placeholder="Ask about the work" maxlength="2000"></textarea>
-        <button class="mic" type="button" data-mic aria-label="Speak your question" aria-pressed="false" hidden>${MIC_SVG}</button>
+        <button class="mic" type="button" data-mic aria-label="Start voice chat" title="Start voice chat" aria-pressed="false" hidden>${MIC_SVG}</button>
         <button class="send" type="submit">Send</button>
       </form>
-      <p class="voice-note" data-voice-note hidden><strong>Tap the mic to talk, tap again to send.</strong> Audio isn't stored. Only the words are kept, like a typed chat.</p>
+      <div class="call" data-call data-state="connecting" hidden>
+        <span class="call-orb" aria-hidden="true"></span>
+        <div class="call-text" aria-live="polite">
+          <p class="call-state" data-call-state>Connecting…</p>
+          <p class="call-heard" data-call-heard></p>
+        </div>
+        <span class="call-time" data-call-time>0:00</span>
+        <button class="call-end" type="button" data-call-end>End</button>
+      </div>
+      <p class="voice-note" data-voice-note hidden><strong>Tap the mic to talk out loud. Just speak; tap End when you're done.</strong> Audio isn't stored. Only the words are kept, like a typed chat.</p>
       <p class="foot">Plain answers. A person reviews any follow-up.</p>
       <div class="sheet" hidden>
         <div class="sheet-bar">
@@ -381,7 +430,12 @@ export class AbraChat extends ElementBase {
     this.newTab = this.panel.querySelector("[data-newtab]");
     this.mic = this.panel.querySelector("[data-mic]");
     this.voiceNote = this.panel.querySelector("[data-voice-note]");
-    this.mic.addEventListener("click", () => this.toggleVoice());
+    this.callBar = this.panel.querySelector("[data-call]");
+    this.callState = this.panel.querySelector("[data-call-state]");
+    this.callHeard = this.panel.querySelector("[data-call-heard]");
+    this.callTime = this.panel.querySelector("[data-call-time]");
+    this.mic.addEventListener("click", () => this.toggleCall());
+    this.panel.querySelector("[data-call-end]").addEventListener("click", () => this.endCall("visitor"));
     this.launcher.addEventListener("click", () => this.openPanel());
     this.panel.querySelector("[data-close]").addEventListener("click", () => this.closePanel());
     this.panel.querySelector("[data-book]").addEventListener("click", () => this.openBooking());
@@ -425,8 +479,7 @@ export class AbraChat extends ElementBase {
   }
 
   disconnectedCallback() {
-    this.stopTracks();
-    clearInterval(this.voiceTimer);
+    this.endCall("left");
     window.removeEventListener("message", this.onMessage);
     window.removeEventListener("scroll", this.onScroll);
     window.removeEventListener("resize", this.onScroll);
@@ -471,6 +524,7 @@ export class AbraChat extends ElementBase {
   }
 
   closePanel() {
+    this.endCall("closed");
     this.isOpen = false;
     this.closeBooking();
     this.panel.hidden = true;
@@ -499,257 +553,250 @@ export class AbraChat extends ElementBase {
     const on = Boolean(this.config.voiceEnabled && this.ready && voiceSupported());
     this.mic.hidden = !on;
     this.voiceNote.hidden = !on;
-    this.voiceState = "idle";
+    this.callState_ = "idle";
   }
 
-  setVoiceState(state, label) {
-    this.voiceState = state;
-    this.mic.classList.toggle("recording", state === "recording");
-    this.mic.classList.toggle("busy", state === "thinking");
-    this.mic.classList.toggle("speaking", state === "speaking");
-    this.mic.setAttribute("aria-pressed", state === "recording" ? "true" : "false");
-    this.mic.innerHTML = state === "recording" || state === "speaking" ? STOP_SVG : MIC_SVG;
-    const names = {
-      idle: "Speak your question",
-      recording: "Stop and send",
-      thinking: "Working on it",
-      speaking: "Stop the spoken answer",
-    };
-    this.mic.setAttribute("aria-label", names[state] || names.idle);
-    this.mic.title = label || names[state] || names.idle;
-    this.input.placeholder = state === "recording" ? `Listening ${label || ""}`.trim() : "Ask about the work";
-  }
-
-  /** Runs inside the tap, so iOS lets the same element play the answer later. */
-  unlockAudio() {
-    if (!this.player) {
-      this.player = new Audio();
-      this.player.preload = "auto";
-      this.player.setAttribute("playsinline", "");
-      this.player.addEventListener("ended", () => this.finishSpeaking());
-      this.player.addEventListener("error", () => this.finishSpeaking());
-    }
-    if (this.audioUnlocked) return;
-    this.audioUnlocked = true;
-    try {
-      this.player.src = SILENT_WAV;
-      const played = this.player.play();
-      if (played?.catch) played.catch(() => {});
-    } catch {
-      // Playback stays locked; the text answer still shows.
-    }
-  }
-
-  stopSpeaking() {
-    if (!this.player) return;
-    this.player.pause();
-    // Drop the stream so the server connection closes.
-    this.player.removeAttribute("src");
-    this.player.load();
-    this.finishSpeaking();
-  }
-
-  finishSpeaking() {
-    if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
-    this.audioUrl = "";
-    if (this.voiceState === "speaking") this.setVoiceState("idle");
-  }
-
-  stopTracks() {
-    for (const track of this.micStream?.getTracks?.() || []) track.stop();
-    this.micStream = null;
-  }
-
-  async toggleVoice() {
-    if (this.voiceState === "thinking") return;
-    if (this.voiceState === "speaking") {
-      this.stopSpeaking();
-      return;
-    }
-    if (this.voiceState === "recording") {
-      this.recorder?.stop();
-      return;
-    }
-    this.unlockAudio();
-    await this.startRecording();
-  }
-
-  async startRecording() {
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
-      });
-    } catch {
-      this.note("The mic is blocked or missing. You can type your question instead.");
-      return;
-    }
-    const mimeType = recorderMime((type) => MediaRecorder.isTypeSupported(type), navigator.userAgent);
-    let recorder;
-    try {
-      recorder = new MediaRecorder(stream, mimeType ? { mimeType, audioBitsPerSecond: 32000 } : { audioBitsPerSecond: 32000 });
-    } catch {
-      for (const track of stream.getTracks()) track.stop();
-      this.note("This browser cannot record here. You can type your question instead.");
-      return;
-    }
-    this.micStream = stream;
-    this.recorder = recorder;
-    const chunks = [];
-    const started = Date.now();
-    recorder.addEventListener("dataavailable", (event) => {
-      if (event.data?.size) chunks.push(event.data);
-    });
-    recorder.addEventListener("stop", () => {
-      clearInterval(this.voiceTimer);
-      clearTimeout(this.voiceLimit);
-      this.stopTracks();
-      const type = recorder.mimeType || mimeType || chunks[0]?.type || "audio/webm";
-      const blob = new Blob(chunks, { type });
-      void this.sendVoice(blob, Date.now() - started);
-    }, { once: true });
-    recorder.start(250);
-    this.setVoiceState("recording", formatClock(0));
-    this.voiceTimer = setInterval(() => this.setVoiceState("recording", formatClock(Date.now() - started)), 500);
-    this.voiceLimit = setTimeout(() => {
-      if (recorder.state !== "inactive") recorder.stop();
-    }, VOICE_MAX_MS);
-  }
-
-  async sendVoice(blob, elapsedMs) {
-    if (elapsedMs < 600 || blob.size < 800) {
-      this.setVoiceState("idle");
-      this.note("That was too short. Tap the mic, talk, then tap again.");
-      return;
-    }
-    if (blob.size > VOICE_MAX_BYTES) {
-      this.setVoiceState("idle");
-      this.note("That clip is too long. Keep it under 30 seconds.");
-      return;
-    }
-    this.setVoiceState("thinking");
-    const mine = this.addBubble("user", "…");
-    mine.classList.add("streaming");
-    let payload = {};
-    try {
-      const response = await fetch("/api/chat/voice", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": blob.type || "audio/webm" },
-        body: blob,
-      });
-      payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        mine.remove();
-        this.note(payload.error || "I could not hear that. You can type instead.");
-        this.setVoiceState("idle");
-        return;
-      }
-    } catch {
-      mine.remove();
-      this.note("The chat is quiet right now. Email houdini@abra-ca-dabra.app.");
-      this.setVoiceState("idle");
-      return;
-    }
-    mine.classList.remove("streaming");
-    if (payload.transcript) {
-      mine.textContent = payload.transcript;
-      this.messages.push({ role: "user", text: payload.transcript });
-    } else mine.remove();
-    if (payload.reply) {
-      this.addBubble("assistant", payload.reply);
-      this.voiceTimings = {};
-      this.markVoice("reply");
-      this.messages.push({ role: "assistant", text: payload.reply });
-    }
-    if (payload.action) this.action(payload.action);
-    if (payload.replyId) await this.speak(payload.replyId);
-    else this.setVoiceState("idle");
+  async toggleCall() {
+    if (this.call) this.endCall("visitor");
+    else await this.startCall();
   }
 
   /**
-   * Streams the answer: the <audio> element reads GET /api/chat/speak as the MP3 arrives, so sound
-   * starts with the first bytes. The element was unlocked inside the first mic tap, which is what
-   * iOS Safari needs before a later play() without a tap. If the browser cannot stream MP3, or the
-   * stream errors before it plays, fall back to downloading the whole clip (same play, not charged again).
+   * One tap starts a hands-free call. Everything that needs the tap (AudioContext creation and
+   * resume, which is what unlocks sound on iOS Safari) happens before the first await.
    */
-  async speak(replyId) {
-    this.unlockAudio();
-    this.lastSpokenId = replyId;
-    const url = `/api/chat/speak?id=${encodeURIComponent(replyId)}&p=1`;
-    if (canStreamMp3(this.player)) {
-      const result = await this.playStream(url);
-      if (result !== "failed") return;
+  async startCall() {
+    if (this.call || !voiceSupported()) return;
+    const Context = window.AudioContext || window.webkitAudioContext;
+    let ctx;
+    try {
+      ctx = this.audioCtx && this.audioCtx.state !== "closed" ? this.audioCtx : new Context({ latencyHint: "interactive" });
+    } catch {
+      this.note("This browser cannot start a voice chat. You can type your question instead.");
+      return;
     }
-    await this.playBuffered(replyId, 1);
-  }
-
-  playStream(url) {
-    return new Promise((resolve) => {
-      const player = this.player;
-      let settled = false;
-      const done = (result) => {
-        if (settled) return;
-        settled = true;
-        player.removeEventListener("playing", onPlaying);
-        player.removeEventListener("error", onError);
-        resolve(result);
-      };
-      const onPlaying = () => {
-        this.markVoice("playing");
-        done("playing");
-      };
-      const onError = () => done("failed");
-      player.addEventListener("playing", onPlaying);
-      player.addEventListener("error", onError);
-      if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
-      this.audioUrl = "";
-      this.voiceMode = "stream";
-      player.src = url;
-      this.setVoiceState("speaking");
-      let played;
-      try {
-        played = player.play();
-      } catch {
-        done("failed");
-        return;
+    this.audioCtx = ctx;
+    const resumed = ctx.resume?.().catch?.(() => {});
+    try {
+      // A silent sample played inside the tap keeps iOS output unlocked.
+      const blank = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const source = ctx.createBufferSource();
+      source.buffer = blank;
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch {
+      // Optional.
+    }
+    const call = {
+      ws: null, stream: null, node: null, sink: null, sources: new Set(), playHead: 0,
+      started: Date.now(), state: "connecting", turn: 0, serverState: "connecting", ending: false,
+    };
+    this.call = call;
+    this.setCallUi("connecting");
+    this.callTimer = setInterval(() => this.renderClock(), 500);
+    try {
+      call.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
+      });
+    } catch {
+      this.endCall("mic_blocked", { quiet: true });
+      this.note("The mic is blocked or missing. You can type your question instead.");
+      return;
+    }
+    this.voiceTimings = {};
+    this.markVoice("mic");
+    if (this.call !== call) {
+      for (const track of call.stream.getTracks()) track.stop();
+      return;
+    }
+    try {
+      await resumed;
+      if (!this.workletUrl) this.workletUrl = URL.createObjectURL(new Blob([MIC_WORKLET], { type: "text/javascript" }));
+      if (!ctx.abraMicLoaded) {
+        await ctx.audioWorklet.addModule(this.workletUrl);
+        ctx.abraMicLoaded = true;
       }
-      if (played?.catch) {
-        played.catch((error) => {
-          // Autoplay still locked: the text answer is on screen, do not fetch again.
-          if (error?.name === "NotAllowedError") {
-            this.setVoiceState("idle");
-            done("blocked");
-          } else done("failed");
-        });
+      const input = ctx.createMediaStreamSource(call.stream);
+      call.node = new AudioWorkletNode(ctx, "abra-mic", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1 });
+      call.sink = ctx.createGain();
+      call.sink.gain.value = 0;
+      input.connect(call.node);
+      call.node.connect(call.sink).connect(ctx.destination);
+      call.input = input;
+    } catch {
+      this.endCall("audio_error", { quiet: true });
+      this.note("This browser cannot start a voice chat. You can type your question instead.");
+      return;
+    }
+    if (this.call !== call) return;
+    const ws = new WebSocket(realtimeUrl());
+    ws.binaryType = "arraybuffer";
+    call.ws = ws;
+    call.node.port.onmessage = (event) => {
+      if (ws.readyState === 1) ws.send(event.data);
+    };
+    ws.addEventListener("message", (event) => this.onCallMessage(call, event.data));
+    ws.addEventListener("close", () => {
+      if (this.call === call) this.endCall(call.endReason || "closed", { quiet: true, socketClosed: true });
+    });
+    ws.addEventListener("error", () => {
+      if (this.call === call && call.serverState === "connecting") {
+        this.endCall("connect_failed", { quiet: true });
+        this.note("The voice line did not connect. You can keep typing.");
       }
     });
   }
 
-  async playBuffered(replyId, play) {
-    try {
-      const response = await fetch("/api/chat/speak", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ replyId, play }),
-      });
-      if (!response.ok) {
-        this.setVoiceState("idle");
-        return;
-      }
-      const audio = await response.blob();
-      if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
-      this.audioUrl = URL.createObjectURL(audio);
-      this.voiceMode = "buffered";
-      this.player.addEventListener("playing", () => this.markVoice("playing"), { once: true });
-      this.player.src = this.audioUrl;
-      this.setVoiceState("speaking");
-      await this.player.play();
-    } catch {
-      this.finishSpeaking();
-      this.setVoiceState("idle");
+  onCallMessage(call, data) {
+    if (this.call !== call) return;
+    if (typeof data !== "string") {
+      this.playPcm(call, data);
+      return;
     }
+    let message;
+    try {
+      message = JSON.parse(data);
+    } catch {
+      return;
+    }
+    switch (message.type) {
+      case "ready":
+        call.rate = message.sampleRate || 24000;
+        break;
+      case "state":
+        call.serverState = message.state;
+        if (message.state === "listening") this.callHeard.textContent = "";
+        this.setCallUi(message.state === "listening" && call.sources.size ? "speaking" : message.state);
+        break;
+      case "interim":
+        if (call.serverState === "listening") this.callHeard.textContent = message.text;
+        break;
+      case "user":
+        this.markVoice("heard");
+        this.callHeard.textContent = "";
+        this.messages.push({ role: "user", text: message.text });
+        this.addBubble("user", message.text);
+        break;
+      case "assistant":
+        call.turn = message.turn;
+        this.messages.push({ role: "assistant", text: message.text });
+        this.addBubble("assistant", message.text);
+        this.markVoice("reply");
+        if (message.action) this.action(message.action);
+        break;
+      case "audio_start":
+        call.turn = message.turn;
+        call.audioDone = false;
+        break;
+      case "audio_end":
+        call.audioDone = true;
+        this.maybePlayed(call);
+        break;
+      case "interrupt":
+        this.stopPlayback(call);
+        break;
+      case "notice":
+        this.note(message.text);
+        break;
+      case "end":
+        call.endReason = message.reason;
+        this.endCall(message.reason, { quiet: true });
+        break;
+      default:
+        break;
+    }
+  }
+
+  /** Queues each PCM chunk right after the previous one so the reply plays as it streams. */
+  playPcm(call, buffer) {
+    const ctx = this.audioCtx;
+    if (!ctx || !buffer?.byteLength) return;
+    const samples = pcmToFloat(buffer);
+    if (!samples.length) return;
+    const clip = ctx.createBuffer(1, samples.length, call.rate || 24000);
+    clip.copyToChannel ? clip.copyToChannel(samples, 0) : clip.getChannelData(0).set(samples);
+    const source = ctx.createBufferSource();
+    source.buffer = clip;
+    source.connect(ctx.destination);
+    const at = Math.max(ctx.currentTime + 0.02, call.playHead);
+    source.start(at);
+    call.playHead = at + clip.duration;
+    call.sources.add(source);
+    if (call.sources.size === 1 && !call.playing) {
+      call.playing = true;
+      this.markVoice("playing");
+      this.voiceTimings.audibleAt = this.voiceTimings.playing + (at - ctx.currentTime + (ctx.outputLatency || ctx.baseLatency || 0)) * 1000;
+      this.setCallUi("speaking");
+    }
+    source.onended = () => {
+      call.sources.delete(source);
+      this.maybePlayed(call);
+    };
+  }
+
+  maybePlayed(call) {
+    if (call.sources.size || !call.audioDone || !call.playing) return;
+    call.playing = false;
+    call.audioDone = false;
+    if (call.ws?.readyState === 1) call.ws.send(JSON.stringify({ type: "played", turn: call.turn }));
+    this.setCallUi(call.serverState === "speaking" ? "listening" : call.serverState);
+  }
+
+  stopPlayback(call) {
+    for (const source of call.sources) {
+      source.onended = null;
+      try { source.stop(); } catch { /* not started */ }
+    }
+    call.sources.clear();
+    call.playHead = 0;
+    call.playing = false;
+    call.audioDone = false;
+    this.setCallUi("listening");
+  }
+
+  endCall(reason = "visitor", { quiet = false, socketClosed = false } = {}) {
+    const call = this.call;
+    if (!call) return;
+    this.call = null;
+    clearInterval(this.callTimer);
+    if (!quiet && call.ws?.readyState === 1) {
+      try { call.ws.send(JSON.stringify({ type: "end" })); } catch { /* gone */ }
+    }
+    if (!socketClosed) {
+      try { call.ws?.close(1000); } catch { /* gone */ }
+    }
+    for (const source of call.sources) {
+      try { source.stop(); } catch { /* not started */ }
+    }
+    call.sources.clear();
+    if (call.node) call.node.port.onmessage = null;
+    try { call.input?.disconnect(); } catch { /* gone */ }
+    try { call.node?.disconnect(); } catch { /* gone */ }
+    try { call.sink?.disconnect(); } catch { /* gone */ }
+    for (const track of call.stream?.getTracks?.() || []) track.stop();
+    this.lastCallEnd = reason;
+    this.setCallUi("idle");
+  }
+
+  setCallUi(state) {
+    this.callState_ = state;
+    const live = state !== "idle";
+    this.callBar.hidden = !live;
+    this.callBar.dataset.state = state;
+    this.callState.textContent = CALL_LABELS[state] || "";
+    if (!live) this.callHeard.textContent = "";
+    this.mic.classList.toggle("live", live);
+    this.mic.setAttribute("aria-pressed", live ? "true" : "false");
+    this.mic.innerHTML = live ? STOP_SVG : MIC_SVG;
+    const label = live ? "End voice chat" : "Start voice chat";
+    this.mic.setAttribute("aria-label", label);
+    this.mic.title = label;
+    this.voiceNote.hidden = live || this.mic.hidden;
+    this.renderClock();
+  }
+
+  renderClock() {
+    if (this.call) this.callTime.textContent = formatClock(Date.now() - this.call.started);
   }
 
   markVoice(name) {
