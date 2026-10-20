@@ -100,7 +100,8 @@ describe("public soft-gate bypass", () => {
     const json = await res.json();
     expect(json.unlocked).toBe(false);
     expect(json).not.toHaveProperty("pages");
-    expect(json).not.toHaveProperty("findings");
+    // Issues are free; only the page matrix stays behind the email gate.
+    expect(json.findings).toHaveLength(1);
   });
 
   it("GET /api/scans/[token] unlocks when httpOnly cookie is set", async () => {

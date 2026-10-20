@@ -48,10 +48,49 @@ export const LANDING_COPY = {
 
 export const UNLOCK_COPY = {
   title: "See which pages AI can’t read",
-  body: "Your overall score and top gaps are free. Enter a work email to unlock the page-by-page matrix, full findings, and PDF — the pages where the translation layer is missing. Fix packages above stay available without unlock.",
+  body: "Your score, every issue, and what each page needs are free. Enter a work email to unlock the page-by-page matrix and the PDF.",
   button: "Unlock report",
   pending: "Unlocking…",
 } as const;
+
+/** Per-page fixes, always free. */
+export const GUIDANCE_COPY = {
+  kicker: "What to fix",
+  title: "What each page needs",
+  body: "Every page we read, and what to add so AI assistants understand it. This is yours, free.",
+  siteTitle: "Across your site",
+  pagesTitle: "Page by page",
+  partial: "Partly there",
+  missing: "Missing",
+  empty: "Every page we read already tells AI assistants what it is.",
+  loading: "Working out what each page needs…",
+} as const;
+
+/** Paid file download. Price label comes from config only (PRICE_DISPLAY). */
+export const PAYWALL_COPY = {
+  kicker: "Your fix files",
+  lockedTitle: "Get the files that fix it",
+  lockedBody:
+    "Everything above stays free. The files are those fixes, written for your pages and ready to install. Buy once for this scan and download as often as you need.",
+  buy: "Buy the files",
+  redirecting: "Opening checkout…",
+  unavailableBody:
+    "File downloads open soon. Your score, issues, and page-by-page fixes stay free.",
+  unavailableButton: "Not on sale yet",
+  confirming: "Confirming your purchase…",
+  cancelled: "No charge made. Buy whenever you’re ready.",
+  paidPill: "Paid",
+  paidTitle: "Your files are ready",
+  paidBody: "Choose what to include, then download. Come back to this link any time.",
+  download: "Download your files",
+  downloadData: "Download as data",
+  checkoutError: "Checkout didn’t open. Try again in a minute.",
+  confirmError: "We couldn’t confirm that payment yet. Reload in a minute — if you were charged, your files will be here.",
+} as const;
+
+export function buyLabel(priceDisplay: string | null | undefined): string {
+  return priceDisplay ? `${PAYWALL_COPY.buy} · ${priceDisplay}` : PAYWALL_COPY.buy;
+}
 
 export const OPT_IN_COPY = {
   title: "Want us to close the AI blind spot?",

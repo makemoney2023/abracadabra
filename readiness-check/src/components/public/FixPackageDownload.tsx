@@ -19,6 +19,15 @@ import {
 } from "@/lib/schema-org/organization-types";
 import type { FixOption, FixSelection } from "@/lib/fixes/generate-package";
 import type { RequiredField } from "@/lib/fixes/required-fields";
+import { buyLabel, PAYWALL_COPY } from "@/lib/marketing/copy";
+
+type EntitlementState = {
+  purchase: "available" | "unavailable";
+  priceDisplay: string | null;
+  entitled: boolean;
+  downloadToken?: string;
+  downloadTokenExpiresAt?: number;
+};
 
 export type FixPackageDownloadProps = {
   token: string;
@@ -99,6 +108,102 @@ export function FixPackageDownload({ token, domain }: FixPackageDownloadProps) {
   const [pending, setPending] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const loading = options === null && !error;
+  const [entitlement, setEntitlement] = useState<EntitlementState | null>(null);
+  const [purchaseNote, setPurchaseNote] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [buying, setBuying] = useState(false);
+
+  async function loadEntitlement(): Promise<EntitlementState | null> {
+    try {
+      const res = await fetch(`/api/scans/${token}/entitlement`, { cache: "no-store" });
+      if (!res.ok) throw new Error("entitlement");
+      const data = (await res.json()) as EntitlementState;
+      setEntitlement(data);
+      return data;
+    } catch {
+      setEntitlement({ purchase: "unavailable", priceDisplay: null, entitled: false });
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function run() {
+      const params = new URLSearchParams(window.location.search);
+      const checkout = params.get("checkout");
+      const clearParam = () => {
+        params.delete("checkout");
+        const qs = params.toString();
+        window.history.replaceState(
+          null,
+          "",
+          `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`,
+        );
+      };
+
+      if (checkout && checkout.startsWith("cs_")) {
+        await Promise.resolve();
+        if (cancelled) return;
+        setConfirming(true);
+        try {
+          const res = await fetch(`/api/scans/${token}/checkout/confirm`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ sessionId: checkout }),
+          });
+          if (!res.ok && !cancelled) setPurchaseNote(PAYWALL_COPY.confirmError);
+        } catch {
+          if (!cancelled) setPurchaseNote(PAYWALL_COPY.confirmError);
+        }
+        if (cancelled) return;
+        clearParam();
+        setConfirming(false);
+      } else if (checkout === "cancelled") {
+        clearParam();
+        await Promise.resolve();
+        if (cancelled) return;
+        setPurchaseNote(PAYWALL_COPY.cancelled);
+      }
+      if (!cancelled) await loadEntitlement();
+    }
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per token
+  }, [token]);
+
+  async function startCheckout() {
+    setBuying(true);
+    setPurchaseNote(null);
+    try {
+      const res = await fetch(`/api/scans/${token}/checkout`, { method: "POST" });
+      const data = (await res.json()) as { url?: string; alreadyPaid?: boolean };
+      if (data.alreadyPaid) {
+        await loadEntitlement();
+        return;
+      }
+      if (!res.ok || !data.url) throw new Error("checkout");
+      window.location.assign(data.url);
+    } catch {
+      setPurchaseNote(PAYWALL_COPY.checkoutError);
+      setBuying(false);
+    }
+  }
+
+  async function freshDownloadToken(): Promise<string | undefined> {
+    const current = entitlement;
+    if (
+      current?.downloadToken &&
+      current.downloadTokenExpiresAt &&
+      current.downloadTokenExpiresAt - Date.now() > 30_000
+    ) {
+      return current.downloadToken;
+    }
+    return (await loadEntitlement())?.downloadToken;
+  }
 
   function applyOptions(data: OptionsResponse) {
     setOptions(data.options);
@@ -302,11 +407,18 @@ export function FixPackageDownload({ token, domain }: FixPackageDownloadProps) {
     setPending(true);
     setError(null);
     try {
+      const downloadToken = await freshDownloadToken();
       const res = await fetch(`/api/scans/${token}/fixes`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(downloadToken ? { "x-download-token": downloadToken } : {}),
+        },
         body: JSON.stringify(selectionBody(format)),
       });
+      if (res.status === 402 || res.status === 403) {
+        await loadEntitlement();
+      }
 
       if (!res.ok) {
         const data = (await res.json()) as {
@@ -344,17 +456,26 @@ export function FixPackageDownload({ token, domain }: FixPackageDownloadProps) {
   return (
     <section
       id="fix-package"
-      className="min-w-0 max-w-full space-y-5 overflow-hidden rounded-md border border-accent/40 bg-accent/5 px-4 py-6 sm:px-5"
+      className="studio-card min-w-0 max-w-full space-y-5 overflow-hidden px-4 py-6 sm:px-6"
     >
+      {!entitlement?.entitled ? (
+        <FilePurchasePanel
+          entitlement={entitlement}
+          confirming={confirming}
+          buying={buying}
+          note={purchaseNote}
+          onBuy={() => void startCheckout()}
+        />
+      ) : (
+      <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-accent">
-            Fix package
-          </p>
-          <h3 className="font-heading text-2xl tracking-tight">Generate &amp; download fixes</h3>
-          <p className="max-w-xl text-sm text-muted-foreground">
-            Packages never invent placeholders. Fill any required fields, then download.
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="studio-kicker">{PAYWALL_COPY.kicker}</p>
+            <span className="studio-pill studio-pill--done">{PAYWALL_COPY.paidPill}</span>
+          </div>
+          <h3 className="font-heading text-2xl tracking-tight">{PAYWALL_COPY.paidTitle}</h3>
+          <p className="max-w-xl text-sm text-muted-foreground">{PAYWALL_COPY.paidBody}</p>
         </div>
         <Button
           type="button"
@@ -740,27 +861,81 @@ export function FixPackageDownload({ token, domain }: FixPackageDownloadProps) {
           ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button
+            <button
               type="button"
-              className="cursor-pointer"
+              className="studio-cta-primary"
               disabled={!canDownload}
               onClick={() => download("zip")}
             >
-              {pending ? "Preparing…" : `Download selected (${selectedCount})`}
-            </Button>
-            <Button
+              {pending ? "Preparing…" : `${PAYWALL_COPY.download} (${selectedCount})`}
+            </button>
+            <button
               type="button"
-              variant="outline"
-              className="cursor-pointer"
+              className="studio-cta"
               disabled={!canDownload}
               onClick={() => download("json")}
             >
-              Export JSON
-            </Button>
+              {PAYWALL_COPY.downloadData}
+            </button>
           </div>
         </>
       ) : null}
+      </>
+      )}
     </section>
+  );
+}
+
+function FilePurchasePanel({
+  entitlement,
+  confirming,
+  buying,
+  note,
+  onBuy,
+}: {
+  entitlement: EntitlementState | null;
+  confirming: boolean;
+  buying: boolean;
+  note: string | null;
+  onBuy: () => void;
+}) {
+  const unavailable = entitlement?.purchase === "unavailable";
+  return (
+    <div className="space-y-4" data-testid="file-purchase">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <p className="studio-kicker">{PAYWALL_COPY.kicker}</p>
+          <span className="studio-pill studio-pill--action" aria-hidden="true">
+            Locked
+          </span>
+        </div>
+        <h3 className="font-heading text-2xl tracking-tight">{PAYWALL_COPY.lockedTitle}</h3>
+        <p className="max-w-xl text-sm text-muted-foreground">
+          {unavailable ? PAYWALL_COPY.unavailableBody : PAYWALL_COPY.lockedBody}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className="studio-cta-primary"
+          disabled={!entitlement || unavailable || buying || confirming}
+          onClick={onBuy}
+        >
+          {confirming
+            ? PAYWALL_COPY.confirming
+            : buying
+              ? PAYWALL_COPY.redirecting
+              : unavailable
+                ? PAYWALL_COPY.unavailableButton
+                : buyLabel(entitlement?.priceDisplay)}
+        </button>
+      </div>
+      {note ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          {note}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

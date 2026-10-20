@@ -1,5 +1,7 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { BoundSql, CheckBindings } from "@/lib/cloudflare/sql";
 import {
   generateFixPackage,
   listFixOptions,
@@ -8,9 +10,9 @@ import {
 } from "@/lib/fixes/generate-package";
 import { computeRequiredFields } from "@/lib/fixes/required-fields";
 import { fixPackageFolderName, zipFixFiles } from "@/lib/fixes/zip";
-import { loadScanByPublicToken } from "@/lib/scan/supabase-repository";
+import { requireFileAccess } from "@/lib/paywall/guard";
+import { loadScanByPublicToken } from "@/lib/scan/d1-store";
 import { isOrganizationType } from "@/lib/schema-org/organization-types";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -54,11 +56,17 @@ const selectionSchema = z.object({
   format: z.enum(["zip", "json"]).optional().default("zip"),
 });
 
-async function loadCompleteScan(token: string) {
-  const admin = createAdminClient();
+async function scanDb(): Promise<BoundSql | null> {
+  return ((await getCloudflareContext({ async: true })).env as CheckBindings).DB ?? null;
+}
+
+async function loadCompleteScan(db: BoundSql | null, token: string) {
+  if (!db) {
+    return { error: NextResponse.json({ error: "Scan store unavailable" }, { status: 503 }) };
+  }
   let loaded: Awaited<ReturnType<typeof loadScanByPublicToken>>;
   try {
-    loaded = await loadScanByPublicToken(token, admin);
+    loaded = await loadScanByPublicToken(db, token);
   } catch (err) {
     return {
       error: NextResponse.json(
@@ -105,14 +113,17 @@ function toInput(
   };
 }
 
-/** List selectable fix options (no email unlock — internal / on-the-fly). */
+/**
+ * Per-page guidance: what each page and the site need. Always free — no email, no payment.
+ * Returns options and prefills only, never generated file contents.
+ */
 export async function GET(_request: Request, context: RouteContext) {
   const { token } = await context.params;
   if (!token) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
-  const result = await loadCompleteScan(token);
+  const result = await loadCompleteScan(await scanDb(), token);
   if ("error" in result && result.error) return result.error;
 
   const input = toInput(result.loaded!);
@@ -135,15 +146,28 @@ export async function GET(_request: Request, context: RouteContext) {
   });
 }
 
-/** Generate zip/JSON for the user's selected fixes (no email unlock). */
+/**
+ * Generate the zip / data export for the selected fixes.
+ * Paid: requires a paid entitlement for this scan and a signed download token.
+ * Files are never generated before that check passes.
+ */
 export async function POST(request: Request, context: RouteContext) {
   const { token } = await context.params;
   if (!token) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
-  const result = await loadCompleteScan(token);
+  const db = await scanDb();
+  const result = await loadCompleteScan(db, token);
   if ("error" in result && result.error) return result.error;
+
+  const denied = await requireFileAccess({
+    db: db!,
+    request,
+    scanId: result.loaded!.scan.id,
+    scanToken: token,
+  });
+  if (denied) return denied;
 
   let body: unknown = {};
   try {

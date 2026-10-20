@@ -1,5 +1,15 @@
 # Changelog
 
+## Schema fix files behind a paywall — 2026-10-20
+
+- **What changed** — The scan result keeps the score, pillars, every issue, and a new "What each page needs" list free (no email, no payment). Only generating and downloading the fix files (zip and data export) is paid. `POST /api/scans/[token]/fixes` checks for a paid entitlement in D1 and a short-lived signed download token before anything is generated. It answers 402 without payment and 403 with a missing or wrong token. The full issue list moved out of the email gate. The page matrix and the PDF stay behind the email unlock.
+- **Why** — Christopher asked to charge for the generated files and keep the diagnosis free.
+- **Provider** — Stripe Checkout over fetch (no SDK). The paywall stays off until `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `STRIPE_PRICE_ID` are all set. While it is off, the result page shows "Not on sale yet" and the file endpoint returns 402 `purchase_unavailable`. `PRICE_DISPLAY` is an optional label on the buy button. The amount charged always comes from the Stripe Price. `DOWNLOAD_TOKEN_SECRET` is optional; by default the signing key is derived from the webhook secret.
+- **Code touchpoints** — `src/lib/paywall/*`, `src/app/api/scans/[token]/{entitlement,checkout,checkout/confirm}/route.ts`, `src/app/api/webhooks/stripe/route.ts`, `src/app/api/scans/[token]/fixes/route.ts` (now reads D1, gated POST), `src/lib/scan/present.ts`, `src/lib/fixes/guidance.ts`, `src/components/public/{PageGuidance,FixPackageDownload}.tsx`, `src/app/scan/[token]/page.tsx`, `migrations/0012_scan_file_entitlements.sql`
+- **Data-flow impact** — New D1 table `readiness_scan_entitlements` (one row per paid scan: session id, status, amount, currency; no email). Grants come from the signed webhook or from a server-side session read on the success URL; both paths are idempotent.
+- **Before turning it on** — Apply `migrations/0012_scan_file_entitlements.sql` to D1 `handoff`. Create the Price. Set the three secrets/vars on Worker `readiness-check`. Point a Stripe webhook at `https://check.abra-ca-dabra.app/api/webhooks/stripe` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`.
+- **Verification** — `npx vitest run tests/unit/paywall.test.ts tests/integration/fixes-paywall.test.ts`, plus the full suite.
+
 ## Chat booking session — 2026-10-19
 
 - **What changed** — Cal.com webhook payloads now keep `metadata.chat_session_id`. That id is forwarded on `POST /api/intake/booking` as `chat_session_id`.

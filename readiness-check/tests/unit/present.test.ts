@@ -91,10 +91,10 @@ describe("selectScanPayload soft gate", () => {
     expect(payload.pillarWhy.pageCoverage.bullets.some((b) => b.includes("/about"))).toBe(true);
   });
 
-  it("omits pages and full findings when locked but still lists missing JSON-LD pages", () => {
+  it("keeps the page matrix locked but every finding free", () => {
     const payload = selectScanPayload(full, false);
     expect(payload).not.toHaveProperty("pages");
-    expect(payload).not.toHaveProperty("findings");
+    expect(payload.findings).toEqual(full.findings);
     expect(payload.pagesMissingJsonLd).toHaveLength(1);
   });
 
