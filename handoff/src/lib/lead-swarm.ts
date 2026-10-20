@@ -1,3 +1,4 @@
+import { LegacyStartsDisabled, legacyStartsAllowed } from "./agent-mode";
 import { mcpServersFor } from "./mcp-catalog";
 import { OPENING_PACK_ID } from "./pack-templates";
 
@@ -84,6 +85,7 @@ export async function runLeadSwarm(input: {
   polls?: number;
   wait?: (ms: number) => Promise<void>;
 }): Promise<SwarmResult> {
+  if (!legacyStartsAllowed()) throw new LegacyStartsDisabled("Starting a swarm");
   const fetchImpl = input.fetchImpl ?? fetch;
   const base = originOf(input.origin);
   const templateId = input.templateId?.trim() || OPENING_PACK_ID;

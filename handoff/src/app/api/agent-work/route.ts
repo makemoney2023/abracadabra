@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
+import { listAgentDispatches } from "@/lib/agent-dispatch";
 import { agentForToken, fileAgentWork, listAgentContext, MAX_BODY_BYTES } from "@/lib/agent-work-filing";
 import { hqOrigin } from "@/lib/client-services-auth";
 import { openObjectStore } from "@/lib/store/objects";
@@ -56,13 +57,22 @@ export async function POST(request: Request) {
   );
 }
 
-/** Context read-back: work filed for this agent's clients, by any agent. ?client= &since= &kind= &handed_to_me=1 &limit= */
+/**
+ * Context read-back: work filed for this agent's clients, by any agent. ?client= &since= &kind= &handed_to_me=1 &limit=
+ * ?dispatches=1 [&since=]: tasks HQ handed to this agent (AGENT_MODE=agents board build/run and client change requests).
+ */
 export async function GET(request: Request) {
   const sql = await openHandoffDb();
   await migrate(sql);
   const agent = await agentForToken(sql, request.headers.get("authorization"));
   if (!agent) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   const params = new URL(request.url).searchParams;
+  if (params.get("dispatches") === "1") {
+    const since = params.get("since");
+    const at = since ? (/^\d+$/.test(since) ? Number(since) : Date.parse(since)) : 0;
+    if (!Number.isFinite(at)) return NextResponse.json({ error: "Bad since. Use ISO time or unix ms." }, { status: 400 });
+    return NextResponse.json({ agent_id: agent.agentId, dispatches: await listAgentDispatches(sql, agent, at) });
+  }
   const result = await listAgentContext(sql, agent, {
     client: params.get("client"),
     since: params.get("since"),
