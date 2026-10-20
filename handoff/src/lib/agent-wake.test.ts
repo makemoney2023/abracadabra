@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
@@ -12,6 +12,14 @@ const NOW = 1_700_000_000_000;
 const FIVE_MINUTES = 5 * 60 * 1000;
 
 describe("signed wakes", () => {
+  // These cover the old wake path, which now needs AGENT_WAKES=all (the default is off).
+  beforeEach(() => {
+    process.env.AGENT_WAKES = "all";
+  });
+  afterEach(() => {
+    delete process.env.AGENT_WAKES;
+  });
+
   let directory = "";
 
   afterEach(() => {
@@ -81,9 +89,8 @@ describe("signed wakes", () => {
 
     const hourly = await dueOrganizations(sql, "0 * * * *");
     expect(hourly).toEqual([]);
-    const weekly = await dueOrganizations(sql, "0 8 * * 1");
-    expect(weekly.map((row) => row.organizationId).sort()).toEqual(["org-idle", "org-open"]);
-    expect(weekly.every((row) => row.reason === "status")).toBe(true);
+    // The weekly status wake is gone: it never did anything.
+    expect(await dueOrganizations(sql, "0 8 * * 1")).toEqual([]);
   });
 
   it("waits on a future task and wakes a task whose time has arrived", async () => {

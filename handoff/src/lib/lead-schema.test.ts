@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
 import { beginDirectClient, finishManualLead, leadScanTarget, startLeadSchemaScan } from "./lead-schema";
@@ -33,6 +33,14 @@ async function database(): Promise<Sql> {
 }
 
 describe("lead schema scan", () => {
+  // These cover the old wake path, which now needs AGENT_WAKES=all (the default is off).
+  beforeEach(() => {
+    process.env.AGENT_WAKES = "all";
+  });
+  afterEach(() => {
+    delete process.env.AGENT_WAKES;
+  });
+
   it("reads a website into a domain", () => {
     expect(leadScanTarget("https://www.Foam.example/about")).toEqual({
       domain: "foam.example",

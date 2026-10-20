@@ -137,7 +137,8 @@ export async function finishManualLead(input: {
   });
   if (started.status === "queued") return;
   try {
-    const woke = await wakeOrganization(input.env, input.organizationId, "lead_created", input.now, input.fetchImpl);
+    const woke = await wakeOrganization(input.env, input.organizationId, "lead_created", input.now, input.fetchImpl, input.sql);
+    if (woke === "skipped") return;
     if (woke) await noteWakeOk(input.sql, input.organizationId, input.now);
     else await noteWakeMiss(input.sql, input.organizationId, input.now);
   } catch {

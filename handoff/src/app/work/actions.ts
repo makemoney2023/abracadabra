@@ -33,9 +33,9 @@ function columnOf(value: string): MoveTarget | null {
   return isMoveTarget(value) ? value : null;
 }
 
-function wakeFor(now: number) {
+function wakeFor(now: number, sql?: Parameters<typeof wakeOrganization>[5]) {
   return (id: string, reason: Parameters<typeof wakeOrganization>[2]) =>
-    wakeOrganization({ AGENT_URL: process.env.AGENT_URL, AGENT_WAKE_SECRET: process.env.AGENT_WAKE_SECRET }, id, reason, now);
+    wakeOrganization({ AGENT_URL: process.env.AGENT_URL, AGENT_WAKE_SECRET: process.env.AGENT_WAKE_SECRET }, id, reason, now, fetch, sql);
 }
 
 export async function assignTaskPackAction(formData: FormData): Promise<{ ok: boolean; message: string }> {
@@ -91,6 +91,8 @@ export async function moveBoardCardAction(formData: FormData): Promise<{ ok: boo
         id,
         reason,
         now,
+        fetch,
+        sql,
       ),
   });
   revalidatePath("/work");
@@ -129,7 +131,7 @@ export async function reviewCardAction(formData: FormData): Promise<{ ok: boolea
     build: defaultBuildDeps(now),
     swarm: { origin: process.env.SWARM_ORIGIN ?? "", store: openObjectStore() },
     readSkill: await cloudflareSkillReader(),
-    wake: wakeFor(now),
+    wake: wakeFor(now, sql),
   });
   revalidatePath("/work");
   revalidatePath("/");

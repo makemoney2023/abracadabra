@@ -106,9 +106,9 @@ export async function handleLeadIntakeBatch(
         if (store) {
           await storeScanContext({ sql, store, organizationId: ready.organizationId, now });
         }
-        const woke = await wakeOrganization(env, ready.organizationId, "scan_ready", now, fetchImpl);
-        if (woke) await noteWakeOk(sql, ready.organizationId, now);
-        else await noteWakeMiss(sql, ready.organizationId, now);
+        const woke = await wakeOrganization(env, ready.organizationId, "scan_ready", now, fetchImpl, sql);
+        if (woke === true) await noteWakeOk(sql, ready.organizationId, now);
+        else if (woke === false) await noteWakeMiss(sql, ready.organizationId, now);
         message.ack();
       } catch {
         message.retry();
@@ -129,15 +129,15 @@ export async function handleLeadIntakeBatch(
       if (result.leadOrganizationId) {
         const waiting = await queuedSchemaScan(sql, shaped.source, result.leadOrganizationId, env.SCAN_JOBS, now);
         if (!waiting) {
-          const woke = await wakeOrganization(env, result.leadOrganizationId, "lead_created", now, fetchImpl);
-          if (woke) await noteWakeOk(sql, result.leadOrganizationId, now);
-          else await noteWakeMiss(sql, result.leadOrganizationId, now);
+          const woke = await wakeOrganization(env, result.leadOrganizationId, "lead_created", now, fetchImpl, sql);
+          if (woke === true) await noteWakeOk(sql, result.leadOrganizationId, now);
+          else if (woke === false) await noteWakeMiss(sql, result.leadOrganizationId, now);
         }
       }
       if (result.kickoffOrganizationId) {
-        let woke = false;
+        let woke: boolean | "skipped" = false;
         try {
-          woke = await wakeOrganization(env, result.kickoffOrganizationId, "work", now, fetchImpl);
+          woke = await wakeOrganization(env, result.kickoffOrganizationId, "work", now, fetchImpl, sql);
         } catch {
           woke = false;
         }

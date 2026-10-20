@@ -17,13 +17,15 @@ export async function approveClientRequestAction(formData: FormData): Promise<vo
     now,
   });
   if (result.ok) {
-    let woke = false;
+    let woke: boolean | "skipped" = false;
     try {
       woke = await wakeOrganization(
         { AGENT_URL: process.env.AGENT_URL, AGENT_WAKE_SECRET: process.env.AGENT_WAKE_SECRET },
         result.organizationId,
         "work",
         now,
+        fetch,
+        sql,
       );
     } catch {
       woke = false;

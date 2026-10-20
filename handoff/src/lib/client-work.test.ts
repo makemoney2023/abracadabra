@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { d1Sql, type D1Like, type Sql } from "@/db/sql";
 import { POST as workPost } from "@/app/api/intake/work-request/route";
@@ -168,6 +168,14 @@ describe("consumeWorkRequest", () => {
 });
 
 describe("queue kickoff, update feed and review", () => {
+  // These cover the old wake path, which now needs AGENT_WAKES=all (the default is off).
+  beforeEach(() => {
+    process.env.AGENT_WAKES = "all";
+  });
+  afterEach(() => {
+    delete process.env.AGENT_WAKES;
+  });
+
   it("wakes the agent, reports back, and lets Client Services approve", async () => {
     const { sql, d1 } = await setup();
     const org = await client(sql);
