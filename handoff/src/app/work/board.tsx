@@ -192,7 +192,7 @@ function ReviewPanel({ card, now, override }: { card: WorkBoardCard; now: number
                 Override: send back
               </Button>
               <Button size="sm" type="button" variant="ghost" disabled={pending || note.trim().length === 0} onClick={() => decide("build")}>
-                Override: back to build
+                Override: back to Doing
               </Button>
             </div>
           </div>

@@ -61,7 +61,7 @@ export function WorkToolbar({
         </ToggleGroupItem>
         <ToggleGroupItem value="review" asChild>
           <Link href={workHref({ ...scope, review: true })}>
-            In review
+            Waiting on Client Services
             <span className="tabular-nums">{counts.review}</span>
           </Link>
         </ToggleGroupItem>
