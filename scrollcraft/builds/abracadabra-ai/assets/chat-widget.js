@@ -996,7 +996,7 @@ export class AbraChat extends ElementBase {
       method: "POST",
       credentials: "same-origin",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ turnstileToken: token || "" }),
+      body: JSON.stringify({ turnstileToken: token || "", page: location.pathname, title: document.title }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.pass) throw new Error(data.error || "The voice check did not go through.");
@@ -1284,7 +1284,7 @@ export class AbraChat extends ElementBase {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json", accept: "text/event-stream" },
-        body: JSON.stringify({ text: question, page: location.pathname }),
+        body: JSON.stringify({ text: question, page: location.pathname, title: document.title }),
         signal: abort.signal,
       });
       if (!response.ok || !response.body) {

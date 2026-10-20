@@ -193,7 +193,7 @@ function streamReply({ text, action, history, session, storage, env, deps, now }
       let answer = "";
       let failure = null;
       try {
-        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl }), { maxSentences: TYPED_SENTENCES })) {
+        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle } }), { maxSentences: TYPED_SENTENCES })) {
           if (part.replace) {
             answer = part.replace;
             break;
@@ -226,6 +226,12 @@ function streamReply({ text, action, history, session, storage, env, deps, now }
   });
 }
 
+/** The page the visitor is on right now (path and title), for page-aware answers. */
+function rememberPage(session, value) {
+  if (value?.page) session.page = String(value.page).slice(0, 300);
+  if (typeof value?.title === "string") session.pageTitle = value.title.slice(0, 160);
+}
+
 export async function handleSession(request, storage, env, deps) {
   const now = deps.now ? deps.now() : Date.now();
   const url = new URL(request.url);
@@ -248,6 +254,8 @@ export async function handleSession(request, storage, env, deps) {
   if (!session || session.id !== id) return json({ error: "Open the chat again." }, 401);
 
   if (op === "voice-pass") {
+    const parsed = await readJson(request);
+    if (parsed.ok) rememberPage(session, parsed.value);
     if ((session.voiceCalls || 0) >= VOICE_CALLS_PER_SESSION || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) {
       return json({ error: "That is the voice limit for this chat. You can keep typing." }, 429);
     }
@@ -264,7 +272,7 @@ export async function handleSession(request, storage, env, deps) {
     if (!parsed.ok) return json({ error: parsed.message }, parsed.status);
     const text = String(parsed.value?.text || "").trim();
     if (!text || text.length > 2000) return json({ error: "Add a short question." }, 400);
-    if (parsed.value?.page) session.page = String(parsed.value.page).slice(0, 300);
+    rememberPage(session, parsed.value);
     const action = uiActionFor(text);
     const history = [...session.messages, { role: "user", text }];
     return streamReply({ text, action, history, session, storage, env, deps, now });
@@ -451,7 +459,8 @@ export async function handleRequest(request, env = {}, deps = {}) {
     if (!turnstile.ok) return cors(json({ error: "The check failed. Try the voice call again." }, 403), request, env);
     const pass = new Request(request.url, {
       method: "POST",
-      headers: { "x-abra-session": id, "x-abra-op": "voice-pass", "cf-connecting-ip": ip },
+      headers: { "x-abra-session": id, "x-abra-op": "voice-pass", "cf-connecting-ip": ip, "content-type": "application/json" },
+      body: JSON.stringify({ page: parsed.value?.page || "", title: parsed.value?.title || "" }),
     });
     return cors(await openSession(id, pass, env, deps), request, env);
   }
