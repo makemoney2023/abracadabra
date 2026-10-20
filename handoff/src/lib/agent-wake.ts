@@ -189,6 +189,30 @@ export async function postHqNotice(
   }
 }
 
+const WAKE_OK_EVERY_MS = 15 * 60 * 1000;
+
+/**
+ * Last delivered wake, so Today can clear a wake-failure alert. Written at most every 15 minutes per client,
+ * or right away when a failure is newer than the last success.
+ */
+export async function noteWakeOk(sql: Sql, organizationId: string, now: number): Promise<void> {
+  await sql.run(
+    `UPDATE organizations SET agent_wake_ok_at = ?
+     WHERE id = ?
+       AND (
+         agent_wake_ok_at IS NULL
+         OR agent_wake_ok_at <= ?
+         OR EXISTS (
+           SELECT 1 FROM activities a
+           WHERE a.organization_id = organizations.id
+             AND a.kind = 'agent.wake_failed'
+             AND a.created_at > organizations.agent_wake_ok_at
+         )
+       )`,
+    [now, organizationId, now - WAKE_OK_EVERY_MS],
+  );
+}
+
 export async function noteWakeMiss(sql: Sql, organizationId: string, now: number): Promise<void> {
   await sql.run(
     `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
@@ -227,6 +251,7 @@ export async function wakeDueAgents(
         body,
       });
       if (!response.ok) throw new Error(`Wake returned ${response.status}.`);
+      await noteWakeOk(sql, target.organizationId, now);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Wake failed.";
       await sql.run(

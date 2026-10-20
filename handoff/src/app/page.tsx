@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { listDeals, listOrganizations, todayFor } from "@/db/crm";
+import { listOrganizations, recordFeedVisit, todayFor } from "@/db/crm";
 import { HqHome } from "./hq-home";
 import { SignInForm } from "./sign-in-form";
 import { StaffShell } from "./staff-shell";
 import { TodayScreen } from "./today-screen";
-import { greetingName, todayFeed, type ClientHealth } from "./today-view";
+import { feedQuery } from "./today-feed";
+import { greetingName, type ClientHealth } from "./today-view";
 import { workspacesFor } from "@/db/records";
 import { clock } from "@/lib/clock";
 import { openSession } from "@/lib/current";
@@ -21,7 +22,7 @@ const CLIENT_HEALTH = `SELECT o.id AS id, o.name AS name, s.health AS health
     ORDER BY s2.created_at DESC, s2.id DESC
     LIMIT 1
   )
-  WHERE o.archived_at IS NULL AND o.kind = 'client'
+  WHERE o.archived_at IS NULL AND o.is_internal = 0 AND o.kind = 'client'
   ORDER BY o.name`;
 
 export default async function Home({ searchParams }: PageProps<"/">) {
@@ -35,11 +36,11 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   if (isHqHost(host)) {
     if (caller.userId && caller.staff) {
       const now = clock();
-      const [board, orgs, deals, health, staff] = await Promise.all([
+      const [board, orgs, health, seenAt, staff] = await Promise.all([
         todayFor(sql, caller, now),
         listOrganizations(sql, caller),
-        listDeals(sql, caller),
         sql.all<ClientHealth>(CLIENT_HEALTH),
+        recordFeedVisit(sql, caller, now),
         sql.get<{ email: string }>(
           "SELECT email FROM staff WHERE user_id = ? AND revoked_at IS NULL",
           [caller.userId],
@@ -51,10 +52,10 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             board={board}
             now={now}
             activeClients={orgs.filter((org) => org.kind === "client").length}
-            deals={deals}
             health={health}
             name={greetingName(staff?.email)}
-            feed={todayFeed("feed" in params ? params.feed : undefined)}
+            query={feedQuery(params)}
+            seenAt={seenAt}
           />
         </StaffShell>
       );

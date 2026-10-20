@@ -12,6 +12,7 @@ import {
   linkWorkspace,
   logCall,
   mergeOrganizations,
+  setOrganizationInternal,
   type CrmError,
   type OrgKind,
 } from "@/db/crm";
@@ -392,4 +393,13 @@ export async function saveSearchConsoleGrantAction(formData: FormData): Promise<
     resource: String(formData.get("resource") ?? ""),
   });
   revalidatePath(`/clients/${organizationId}`);
+}
+
+/** Settings tab: hide or show this client on Today (internal, test, or vendor). */
+export async function setInternalAction(formData: FormData): Promise<void> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  await setOrganizationInternal(sql, caller, { organizationId, internal: formData.get("internal") === "1" }, Date.now());
+  revalidatePath(`/clients/${organizationId}`);
+  revalidatePath("/");
 }

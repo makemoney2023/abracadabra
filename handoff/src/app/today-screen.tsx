@@ -1,7 +1,8 @@
 import Link from "next/link";
-import type { DealCard, TodayBoard } from "@/db/crm";
-import { DEAL_STAGE_LABEL } from "@/db/crm";
+import type { TodayBoard } from "@/db/crm";
+import { DEAL_STAGE_LABEL, type DealStage } from "@/db/crm";
 import { formatRelative } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { PageFrame } from "@/components/page-frame";
 import { Metric } from "@/components/metric";
 import { MetricStrip } from "@/components/metric-strip";
@@ -11,36 +12,37 @@ import { EmptyState } from "@/components/empty-state";
 import { StatusDot } from "@/components/status-dot";
 import { Button } from "@/components/ui/button";
 import { RequestDecisionForm } from "./clients/thread-forms";
-import { OpenPaletteButton, TodayFeedToggle } from "./today-controls";
+import { markFeedReadAction } from "./today-actions";
+import { OpenPaletteButton, TodayFeedFilters } from "./today-controls";
 import {
-  activityItems,
+  FEED_PAGE,
+  agentWork,
+  agentWorkStats,
+  clientChoices,
+  dayGroup,
+  eventNeeds,
+  filterFeed,
+  fyiRows,
+  pageRows,
+  unreadCount,
+  type AgentWorkRow,
+  type FeedFilter,
+  type FeedRow,
+} from "./today-feed";
+import {
   clientsAtRisk,
   greeting,
+  needsCount,
   needsYou,
-  pipelineCounts,
-  timelineFilter,
   todayKicker,
   todayMetrics,
   type ClientHealth,
-  type TodayFeed,
   type TodayItem,
 } from "./today-view";
 
 const GROUPS = ["Today", "Yesterday", "Earlier"] as const;
-
-function dayKey(ms: number): string {
-  const date = new Date(ms);
-  return `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
-}
-
-function groupOf(at: number | undefined, now: number): (typeof GROUPS)[number] {
-  const stamp = at ?? now;
-  if (dayKey(stamp) === dayKey(now)) return "Today";
-  const yesterday = new Date(now);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  if (dayKey(stamp) === dayKey(yesterday.getTime())) return "Yesterday";
-  return "Earlier";
-}
+const NEEDS_SHOWN = 12;
+const AGENT_WORK_SHOWN = 6;
 
 function ageOf(at: number | undefined, now: number): string {
   if (at === undefined || at > now) return "";
@@ -53,86 +55,121 @@ function statusValue(tone: TodayItem["tone"]): { domain: "task" | "project"; val
   return { domain: "project", value: "waiting_on_client" };
 }
 
-const COLUMNS: Column<TodayItem>[] = [
-  {
-    key: "status",
-    header: "Status",
-    width: "4.5rem",
-    cell: (row) => {
-      const status = statusValue(row.tone);
-      return <StatusDot domain={status.domain} value={status.value} />;
+function columns(now: number): Column<TodayItem>[] {
+  return [
+    {
+      key: "status",
+      header: "Status",
+      width: "4.5rem",
+      cell: (row) => {
+        const status = statusValue(row.tone);
+        return <StatusDot domain={status.domain} value={status.value} />;
+      },
     },
-  },
-  {
-    key: "title",
-    header: "Title",
-    cell: (row) =>
-      row.href ? (
-        <Link href={row.href} className="font-medium hover:underline">
-          {row.title}
-        </Link>
-      ) : (
-        row.title
+    {
+      key: "title",
+      header: "Title",
+      cell: (row) => (
+        <div className="min-w-0">
+          {row.href ? (
+            <Link href={row.href} className="font-medium hover:underline">
+              {row.title}
+            </Link>
+          ) : (
+            <span className="font-medium">{row.title}</span>
+          )}
+          {row.body ? <p className="truncate text-xs text-muted-foreground">{row.body}</p> : null}
+        </div>
       ),
-  },
-  {
-    key: "client",
-    header: "Client",
-    cell: (row) => row.client ?? "",
-  },
-  {
-    key: "age",
-    header: "Age",
-    align: "right",
-    cell: () => "",
-  },
-];
+    },
+    { key: "client", header: "Client", cell: (row) => row.client ?? "" },
+    { key: "age", header: "Age", align: "right", cell: (row) => ageOf(row.at, now) },
+  ];
+}
+
+const DECISION_LABEL: Record<AgentWorkRow["decision"], string> = {
+  approved: "Approved",
+  sent_back: "Sent back",
+  waiting: "Waiting",
+  filed: "Filed",
+  handoff: "Handed off",
+};
+
+const DECISION_TONE: Record<AgentWorkRow["decision"], string> = {
+  approved: "text-status-complete",
+  sent_back: "text-status-late",
+  waiting: "text-status-waiting",
+  filed: "text-status-active",
+  handoff: "text-muted-foreground",
+};
+
+function feedHref(query: { type: FeedFilter; client: string | null }, limit: number): string {
+  const params = new URLSearchParams();
+  if (query.type !== "all") params.set("type", query.type);
+  if (query.client) params.set("client", query.client);
+  if (limit > FEED_PAGE) params.set("limit", String(limit));
+  const text = params.toString();
+  return text ? `/?${text}` : "/";
+}
+
+function feedItem(row: FeedRow, seenAt: number | null): TimelineItem {
+  const unread = seenAt !== null && row.at > seenAt;
+  return {
+    id: row.id,
+    at: row.at,
+    title: row.title,
+    body: row.body ? `${row.client} · ${row.body}` : row.client,
+    href: row.href,
+    dot: (
+      <span
+        className={cn(
+          "mt-1.5 size-2 shrink-0 rounded-full",
+          row.failed ? "bg-status-late" : unread ? "bg-optic" : "bg-muted-foreground/30",
+        )}
+        aria-label={unread ? "New" : undefined}
+      />
+    ),
+  };
+}
 
 export function TodayScreen({
   board,
   now,
   activeClients,
-  deals,
   health,
   name,
-  feed,
+  query,
+  seenAt,
 }: {
   board: TodayBoard;
   now: number;
   activeClients: number;
-  deals: Pick<DealCard, "stage">[];
   health: ClientHealth[];
   name?: string;
-  feed: TodayFeed;
+  query: { type: FeedFilter; client: string | null; limit: number };
+  seenAt: number | null;
 }) {
   const when = new Date(now);
   const metrics = todayMetrics(board, now, activeClients);
-  const rows = needsYou(board, 8, now);
-  const tasks = rows.filter((row) => !row.request);
-  const requests = rows.filter((row) => row.request);
-  const activity = timelineFilter(activityItems(board), feed);
-  const stages = pipelineCounts(deals);
-  const risk = clientsAtRisk(health);
-  const runs = activityItems(board)
-    .filter((item) => item.run)
-    .slice(0, 5);
-  const columns: Column<TodayItem>[] = COLUMNS.map((column) =>
-    column.key === "age" ? { ...column, cell: (row) => ageOf(row.at, now) } : column,
-  );
+  const needs = needsYou(board, NEEDS_SHOWN, now);
+  const needsTotal = needsCount(board, now);
+  const tasks = needs.filter((row) => !row.request);
+  const requests = needs.filter((row) => row.request);
+
+  const work = filterFeed(agentWork(board.events), { client: query.client });
+  const stats = agentWorkStats(board.events, board.reviewWaiting.length);
+
+  const needIds = new Set(eventNeeds(board.events, now).map((alert) => alert.id));
+  const fyi = filterFeed(fyiRows(board.events, board.newLeads, now, needIds), query);
+  const page = pageRows(fyi, query.limit);
+  const fresh = unreadCount(fyi, seenAt);
   const grouped = GROUPS.map((label) => ({
     label,
-    items: activity
-      .filter((item) => groupOf(item.at, now) === label)
-      .map(
-        (item): TimelineItem => ({
-          id: item.id,
-          at: item.at ?? now,
-          title: item.title,
-          body: item.body ?? item.client,
-          href: item.href,
-        }),
-      ),
+    items: page.rows.filter((row) => dayGroup(row.at, now) === label).map((row) => feedItem(row, seenAt)),
   })).filter((group) => group.items.length > 0);
+
+  const risk = clientsAtRisk(health);
+  const choices = clientChoices(board.clients);
 
   return (
     <PageFrame
@@ -152,26 +189,20 @@ export function TodayScreen({
     >
       <MetricStrip>
         {metrics.map((metric) => (
-          <Metric
-            key={metric.label}
-            label={metric.label}
-            value={metric.value}
-            tone={metric.tone}
-            href={metric.href}
-          />
+          <Metric key={metric.label} label={metric.label} value={metric.value} tone={metric.tone} href={metric.href} />
         ))}
       </MetricStrip>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-heading text-lg font-medium">Needs you</h2>
-          {rows.length > 0 ? (
+          {needs.length > 0 ? (
             <Link href="/work" className="text-sm text-muted-foreground hover:text-foreground">
-              View all
+              {needsTotal > needs.length ? `${needsTotal - needs.length} more · View all` : "View all"}
             </Link>
           ) : null}
         </div>
-        {rows.length === 0 ? (
+        {needs.length === 0 ? (
           <EmptyState
             title="Nothing needs you"
             action={
@@ -183,7 +214,7 @@ export function TodayScreen({
         ) : (
           <>
             {tasks.length > 0 ? (
-              <DataTable columns={columns} rows={tasks} rowKey={(row) => row.id} empty={null} />
+              <DataTable columns={columns(now)} rows={tasks} rowKey={(row) => row.id} empty={null} />
             ) : null}
             {requests.length > 0 ? (
               <ul className="flex flex-col gap-4">
@@ -204,11 +235,69 @@ export function TodayScreen({
         )}
       </section>
 
+      <section className="space-y-3 rounded-lg border border-border p-4" aria-label="Agent work">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-heading text-lg font-medium">Agent work</h2>
+          <Link href="/work" className="text-sm text-muted-foreground hover:text-foreground">
+            Board
+          </Link>
+        </div>
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: "Waiting on Client Services", value: stats.waiting, tone: "text-status-waiting" },
+            { label: "Filed this week", value: stats.filed, tone: "text-status-active" },
+            { label: "Approved", value: stats.approved, tone: "text-status-complete" },
+            { label: "Sent back", value: stats.sentBack, tone: "text-status-late" },
+          ].map((stat) => (
+            <div key={stat.label}>
+              <dt className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase">{stat.label}</dt>
+              <dd className={cn("font-heading text-2xl tabular-nums", stat.tone)}>{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+        {work.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No agent filings or Client Services decisions this week.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border text-sm">
+            {work.slice(0, AGENT_WORK_SHOWN).map((row) => (
+              <li key={row.id} className="flex items-baseline justify-between gap-3 py-2">
+                <div className="min-w-0">
+                  <span className={cn("mr-2 font-mono text-[11px] uppercase", DECISION_TONE[row.decision])}>
+                    {DECISION_LABEL[row.decision]}
+                  </span>
+                  <Link href={row.href} className="font-medium hover:underline">
+                    {row.title}
+                  </Link>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {row.body ? `${row.client} · ${row.body}` : row.client}
+                  </p>
+                </div>
+                <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{formatRelative(row.at, now)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-heading text-lg font-medium">Activity</h2>
-            <TodayFeedToggle value={feed} />
+            <div className="flex items-baseline gap-3">
+              <h2 className="font-heading text-lg font-medium">FYI</h2>
+              {fresh > 0 ? (
+                <span className="text-sm text-optic">
+                  {fresh} new since your last visit
+                </span>
+              ) : null}
+              {fresh > 0 ? (
+                <form action={markFeedReadAction}>
+                  <button type="submit" className="text-sm text-muted-foreground hover:text-foreground hover:underline">
+                    Mark all read
+                  </button>
+                </form>
+              ) : null}
+            </div>
+            <TodayFeedFilters type={query.type} client={query.client} choices={choices} />
           </div>
           {grouped.length === 0 ? (
             <EmptyState title="Nothing new" />
@@ -222,15 +311,24 @@ export function TodayScreen({
               </div>
             ))
           )}
+          {page.more > 0 ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={feedHref(query, query.limit + FEED_PAGE)} scroll={false}>
+                Show more ({page.more})
+              </Link>
+            </Button>
+          ) : null}
         </section>
 
         <aside className="space-y-4">
           <section className="rounded-lg border border-border p-4">
             <h2 className="mb-3 font-heading text-sm font-medium">Pipeline</h2>
             <ul className="flex flex-col gap-1.5 text-sm">
-              {stages.map((stage) => (
+              {board.pipeline.map((stage) => (
                 <li key={stage.stage} className="flex items-baseline justify-between gap-3">
-                  <span>{DEAL_STAGE_LABEL[stage.stage]}</span>
+                  <Link href="/leads" className="hover:underline">
+                    {DEAL_STAGE_LABEL[stage.stage as DealStage] ?? stage.stage}
+                  </Link>
                   <span className="tabular-nums text-muted-foreground">{stage.count}</span>
                 </li>
               ))}
@@ -249,28 +347,6 @@ export function TodayScreen({
                     <Link href={`/clients/${client.id}`} className="hover:underline">
                       {client.name}
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="rounded-lg border border-border p-4">
-            <h2 className="mb-3 font-heading text-sm font-medium">Agent runs</h2>
-            {runs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No agent runs in the last 7 days.</p>
-            ) : (
-              <ul className="flex flex-col gap-2 text-sm">
-                {runs.map((run) => (
-                  <li key={run.id}>
-                    {run.href ? (
-                      <Link href={run.href} className="hover:underline">
-                        {run.title}
-                      </Link>
-                    ) : (
-                      <span>{run.title}</span>
-                    )}
-                    <span className="ml-2 text-muted-foreground">{formatRelative(run.at ?? now, now)}</span>
                   </li>
                 ))}
               </ul>

@@ -14,6 +14,7 @@ import {
   listRepos,
   listTimeline,
   organizationById,
+  organizationInternal,
   presentAssessment,
   unlinkedWorkspaces,
   type StatusHealth,
@@ -223,6 +224,7 @@ export default async function ClientPage({
           githubConnected={Boolean(secrets)}
           githubFailed={Boolean(secrets && visible && !visible.ok)}
           searchConsoleResource={await connectorGrant(sql, client.id, "search-console")}
+          internal={tab === "settings" ? await organizationInternal(sql, caller, client.id) : false}
           agentWork={agentWork}
         />
       </PageFrame>

@@ -1,6 +1,6 @@
 import type { Sql } from "../db/sql";
 import { recordAgentRun } from "./agent-activity";
-import { noteWakeMiss, wakeOrganization, type WakeEnv } from "./agent-wake";
+import { noteWakeMiss, noteWakeOk, wakeOrganization, type WakeEnv } from "./agent-wake";
 import { ensureClientSpace } from "./scan-context";
 
 export type ScanQueue = {
@@ -138,7 +138,8 @@ export async function finishManualLead(input: {
   if (started.status === "queued") return;
   try {
     const woke = await wakeOrganization(input.env, input.organizationId, "lead_created", input.now, input.fetchImpl);
-    if (!woke) await noteWakeMiss(input.sql, input.organizationId, input.now);
+    if (woke) await noteWakeOk(input.sql, input.organizationId, input.now);
+    else await noteWakeMiss(input.sql, input.organizationId, input.now);
   } catch {
     await noteWakeMiss(input.sql, input.organizationId, input.now);
   }
