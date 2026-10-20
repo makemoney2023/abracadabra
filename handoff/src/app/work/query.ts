@@ -64,6 +64,8 @@ export function workHref(input: {
   group?: "person" | "client";
   client?: string;
   project?: string;
+  /** A client agent id, or "lead" for cards with no agent assignee. */
+  agent?: string;
   /** Ignored. Row density follows the staff setting, not the URL. */
   density?: string;
 }): string {
@@ -75,6 +77,7 @@ export function workHref(input: {
   if (input.group === "client") search.set("group", "client");
   if (input.client) search.set("client", input.client);
   if (input.project) search.set("project", input.project);
+  if (input.agent) search.set("agent", input.agent);
   const text = search.toString();
   return text.length > 0 ? `/work?${text}` : "/work";
 }

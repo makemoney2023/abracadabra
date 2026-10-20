@@ -1,4 +1,4 @@
-import { dispatchToLeadAgent } from "@/lib/agent-dispatch";
+import { dispatchTask } from "@/lib/agent-dispatch";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 import type { Sql } from "@/db/sql";
 import type { WakeReason } from "@/lib/agent-wake";
@@ -307,7 +307,7 @@ async function handToAgent(sql: Sql, task: TaskMoveRow, column: "build" | "run",
       "SELECT title, project_id, deliverable_id FROM tasks WHERE id = ?",
       [task.id],
     );
-    const sent = await dispatchToLeadAgent(sql, {
+    const sent = await dispatchTask(sql, {
       organizationId: task.organization_id,
       projectId: row?.project_id ?? null,
       taskId: task.id,
@@ -318,7 +318,7 @@ async function handToAgent(sql: Sql, task: TaskMoveRow, column: "build" | "run",
       actor: input.actor,
       now: input.now,
     });
-    handedTo = sent.leadAgentId;
+    handedTo = sent.agentId;
   }
   return { ok: true, taskId: task.id, column: "doing", stage: column, status: "doing", handedTo };
 }

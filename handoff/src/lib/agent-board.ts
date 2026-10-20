@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { dispatchTask, liveClientAgent } from "@/lib/agent-dispatch";
 import { agentMode } from "@/lib/agent-mode";
 import { resolveClientRef, type AgentPrincipal } from "@/lib/agent-work-filing";
 import { nextColumnPosition } from "@/lib/task-position";
@@ -10,7 +11,7 @@ import { attachCardSkills, cardSkillPacks, checkPrefixes, detachCardSkills, load
 /**
  * Client agents update the project board for clients they are assigned to now: set a task in progress, block it with
  * a reason, ask for review, move it between columns, add a note, attach or detach skill packs from the library, or
- * create a task in the client's project. No deletes.
+ * create a task in the client's project. Leads also assign cards to an agent on the client (assign). No deletes.
  * Every change is a client_agent.board activity, which the Client Services updates feed carries.
  */
 
@@ -32,6 +33,8 @@ export type BoardTask = {
   review_note: string | null;
   /** Skill pack prefixes attached to this card (task_skill_packs), oldest first. */
   skill_packs: string[];
+  /** The agent that owns the card (lead or hire). null: the client's lead agent. */
+  assignee_agent_id: string | null;
   updated_at: string;
 };
 
@@ -40,11 +43,11 @@ export type BoardError = { ok: false; status: 400 | 403 | 404 | 409 | 503; messa
 type TaskDbRow = {
   id: string; title: string; organization_id: string; project_id: string | null; stage: string; status: string;
   blocked_reason: string | null; deliverable_id: string | null; review_requested_at: number | null; review_note: string | null;
-  updated_at: number;
+  assignee_agent_id: string | null; updated_at: number;
 };
 
 const TASK_FIELDS =
-  "id, title, organization_id, project_id, stage, status, blocked_reason, deliverable_id, review_requested_at, review_note, updated_at";
+  "id, title, organization_id, project_id, stage, status, blocked_reason, deliverable_id, review_requested_at, review_note, assignee_agent_id, updated_at";
 
 function toBoardTask(row: TaskDbRow, skillPacks: string[] = []): BoardTask {
   return {
@@ -58,6 +61,11 @@ function toBoardTask(row: TaskDbRow, skillPacks: string[] = []): BoardTask {
 
 function assigned(agent: AgentPrincipal, organizationId: string | null): boolean {
   return Boolean(organizationId) && agent.assignments.some((row) => row.organizationId === organizationId);
+}
+
+/** True when this agent is the lead on that client (agent_assignments.role). */
+export function isLeadOn(agent: AgentPrincipal, organizationId: string | null): boolean {
+  return Boolean(organizationId) && agent.assignments.some((row) => row.organizationId === organizationId && row.role === "lead");
 }
 
 async function spaceFor(sql: Sql, projectId: string | null): Promise<string | null> {
@@ -95,11 +103,14 @@ async function record(
   return id;
 }
 
-/** Tasks on the boards of this agent's clients. ?client= (id, domain, or space slug) and ?project_id= narrow it. */
+/**
+ * Tasks on the boards of this agent's clients. ?client= (id, domain, or space slug) and ?project_id= narrow it.
+ * mine: only the cards whose agent assignee is this agent.
+ */
 export async function listAgentBoard(
   sql: Sql,
   agent: AgentPrincipal,
-  query: { client?: unknown; projectId?: string | null },
+  query: { client?: unknown; projectId?: string | null; mine?: boolean },
 ): Promise<{ ok: true; tasks: BoardTask[] } | BoardError> {
   let orgs = agent.assignments.map((row) => row.organizationId);
   if (query.client) {
@@ -111,9 +122,9 @@ export async function listAgentBoard(
   const marks = orgs.map(() => "?").join(", ");
   const rows = await sql.all<TaskDbRow>(
     `SELECT ${TASK_FIELDS} FROM tasks
-     WHERE organization_id IN (${marks}) AND (? IS NULL OR project_id = ?)
+     WHERE organization_id IN (${marks}) AND (? IS NULL OR project_id = ?) AND (? IS NULL OR assignee_agent_id = ?)
      ORDER BY CASE status WHEN 'done' THEN 1 ELSE 0 END, updated_at DESC LIMIT 200`,
-    [...orgs, query.projectId ?? null, query.projectId ?? null],
+    [...orgs, query.projectId ?? null, query.projectId ?? null, query.mine ? agent.agentId : null, query.mine ? agent.agentId : null],
   );
   const packs = new Map<string, string[]>();
   if (rows.length) {
@@ -140,7 +151,9 @@ export type BoardAction =
   | { action: "move"; to: BoardColumn; asked?: string }
   | { action: "note"; body: string }
   /** Skill pack prefixes from GET /api/agent-skill-library, e.g. "community/marketingskills/" or one ".../SKILL.md". */
-  | { action: "attach_skills" | "detach_skills"; prefixes: string[] };
+  | { action: "attach_skills" | "detach_skills"; prefixes: string[] }
+  /** Lead only. to: an agent id on the card's client, or null for the lead (default). */
+  | { action: "assign"; to: string | null };
 
 export function parseBoardAction(raw: unknown): BoardAction | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
@@ -165,6 +178,12 @@ export function parseBoardAction(raw: unknown): BoardAction | null {
     case "note": {
       const text = str(body.body, 4000);
       return text ? { action: "note", body: text } : null;
+    }
+    case "assign": {
+      if (body.to === null) return { action: "assign", to: null };
+      const to = str(body.to, 64)?.toLowerCase();
+      if (!to) return null;
+      return { action: "assign", to: to === "lead" ? null : to };
     }
     case "attach_skills":
     case "detach_skills": {
@@ -199,6 +218,12 @@ export async function updateAgentTask(
     return changeCardSkills(sql, agent, { ...task, organization_id: task.organization_id }, { ...change, action: change.action }, input);
   }
   if (!task || !task.organization_id || !assigned(agent, task.organization_id)) return { ok: false, status: 404, message: "No such task on your clients' boards." };
+  if (change.action === "assign") {
+    if (!isLeadOn(agent, task.organization_id)) return { ok: false, status: 403, message: "Only the client's lead agent assigns cards." };
+    const done = await assignTaskAgent(sql, { taskId: task.id, to: change.to, actor: { kind: "agent", id: agent.agentId, label: agent.label }, now: input.now });
+    if (!done.ok) return done;
+    return { ok: true, task: await freshTask(sql, task.id), activityId: done.activityId, ...(done.handedTo !== undefined ? { handedTo: done.handedTo } : {}) };
+  }
   const row = { id: task.id, title: task.title, organization_id: task.organization_id, project_id: task.project_id };
   const actor = { kind: "agent" as const, id: agent.agentId };
   let activityId = "";
@@ -256,6 +281,72 @@ export async function updateAgentTask(
   };
 }
 
+const DOING_STAGES = new Set(["engineer", "build", "run"]);
+
+/**
+ * Sets (or clears, to = null) a card's agent assignee. Used by the lead's assign action and the staff board.
+ * The target must be live and assigned to the card's client, else 400. A card already in Doing (not waiting on
+ * Client Services, not done) is handed to its new owner right away (AGENT_MODE=agents), so a hire sees it in
+ * ?dispatches=1. Logged as client_agent.board action assign, which the Client Services feed carries.
+ */
+export async function assignTaskAgent(
+  sql: Sql,
+  input: { taskId: string; to: string | null; actor: { kind: "agent" | "staff"; id: string; label?: string }; now: number },
+): Promise<{ ok: true; assignee: string | null; activityId: string | null; handedTo?: string | null } | BoardError> {
+  const task = await sql.get<{
+    id: string; title: string; organization_id: string | null; project_id: string | null; stage: string; status: string;
+    review_requested_at: number | null; deliverable_id: string | null; assignee_agent_id: string | null;
+  }>(
+    `SELECT id, title, organization_id, project_id, stage, status, review_requested_at, deliverable_id, assignee_agent_id
+     FROM tasks WHERE id = ?`,
+    [input.taskId],
+  );
+  if (!task || !task.organization_id) return { ok: false, status: 404, message: "No such task." };
+  let to: string | null = null;
+  if (input.to) {
+    const live = await liveClientAgent(sql, task.organization_id, input.to);
+    if (!live) return { ok: false, status: 400, message: `${input.to} is not an agent assigned to this card's client.` };
+    to = live.id;
+  }
+  if ((task.assignee_agent_id ?? null) === to) return { ok: true, assignee: to, activityId: null };
+  await sql.run("UPDATE tasks SET assignee_agent_id = ?, updated_at = ? WHERE id = ?", [to, input.now, task.id]);
+  const who = to ?? "the lead agent";
+  const label = input.actor.label ?? input.actor.id;
+  const activityId = crypto.randomUUID();
+  await sql.run(
+    `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
+     VALUES (?, ?, ?, ?, 'client_agent.board', ?, ?, ?, ?, ?)`,
+    [
+      activityId,
+      task.organization_id,
+      task.project_id,
+      await spaceFor(sql, task.project_id),
+      input.actor.kind,
+      input.actor.id,
+      `${label}: Assigned "${task.title}" to ${who}.`.slice(0, 2000),
+      JSON.stringify({ action: "assign", task_id: task.id, task_title: task.title, agent_id: input.actor.kind === "agent" ? input.actor.id : null, to, from: task.assignee_agent_id ?? null }),
+      input.now,
+    ],
+  );
+  let handedTo: string | null | undefined;
+  const inDoing = DOING_STAGES.has(task.stage) && task.status !== "done" && task.review_requested_at == null;
+  if (inDoing && agentMode() === "agents") {
+    const sent = await dispatchTask(sql, {
+      organizationId: task.organization_id,
+      projectId: task.project_id,
+      taskId: task.id,
+      title: task.title,
+      reason: task.stage === "run" ? "run" : "build",
+      deliverableId: task.deliverable_id,
+      note: `Reassigned to ${who}.`,
+      actor: { kind: input.actor.kind, id: input.actor.id },
+      now: input.now,
+    });
+    handedTo = sent.agentId;
+  }
+  return { ok: true, assignee: to, activityId, ...(handedTo !== undefined ? { handedTo } : {}) };
+}
+
 async function freshTask(sql: Sql, taskId: string): Promise<BoardTask> {
   const fresh = await sql.get<TaskDbRow>(`SELECT ${TASK_FIELDS} FROM tasks WHERE id = ?`, [taskId]);
   return toBoardTask(fresh!, await cardSkillPacks(sql, taskId));
@@ -301,7 +392,12 @@ async function changeCardSkills(
 export async function createAgentTask(
   sql: Sql,
   agent: AgentPrincipal,
-  input: { client?: unknown; projectId?: string | null; title: string; note?: string | null; stage?: string | null; now: number },
+  input: {
+    client?: unknown; projectId?: string | null; title: string; note?: string | null; stage?: string | null;
+    /** Agent id of the card's owner on the same client. A hire's own cards default to itself and can't name another. */
+    assignee?: string | null;
+    now: number;
+  },
 ): Promise<{ ok: true; task: BoardTask; activityId: string } | BoardError> {
   const title = input.title.trim().slice(0, 200);
   if (!title) return { ok: false, status: 400, message: "title is required." };
@@ -338,19 +434,36 @@ export async function createAgentTask(
       projectId = open[0].id;
     }
   }
+  let assignee: string | null = null;
+  const lead = isLeadOn(agent, organizationId);
+  const askedAssignee = input.assignee?.trim().toLowerCase() || null;
+  if (askedAssignee && askedAssignee !== "lead") {
+    if (!lead && askedAssignee !== agent.agentId) return { ok: false, status: 403, message: "A hire adds cards for itself only. Ask the lead agent to assign it." };
+    const live = await liveClientAgent(sql, organizationId, askedAssignee);
+    if (!live) return { ok: false, status: 400, message: `${askedAssignee} is not an agent assigned to this client.` };
+    assignee = live.id;
+  } else if (askedAssignee === "lead") {
+    if (!lead) return { ok: false, status: 403, message: "A hire adds cards for itself only. Ask the lead agent to assign it." };
+  } else if (!lead) {
+    assignee = agent.agentId;
+  }
   const id = crypto.randomUUID();
   const position = await nextColumnPosition(sql, { organizationId, projectId, column: stage });
   await sql.run(
-    `INSERT INTO tasks (id, project_id, organization_id, title, status, created_at, updated_at, stage, skills_json, created_by_kind, round, position)
-     VALUES (?, ?, ?, ?, 'todo', ?, ?, ?, '[]', 'agent', 1, ?)`,
-    [id, projectId, organizationId, title, input.now, input.now, stage, position],
+    `INSERT INTO tasks (id, project_id, organization_id, title, status, created_at, updated_at, stage, skills_json, created_by_kind, round, position, assignee_agent_id)
+     VALUES (?, ?, ?, ?, 'todo', ?, ?, ?, '[]', 'agent', 1, ?, ?)`,
+    [id, projectId, organizationId, title, input.now, input.now, stage, position, assignee],
   );
   const row = { id, title, organization_id: organizationId, project_id: projectId };
   const note = input.note?.trim().slice(0, 4000) || null;
-  const activityId = await record(sql, agent, row, "create", `Added task "${title}".${note ? ` ${note}` : ""}`, { stage, note }, input.now);
+  const owner = assignee && assignee !== agent.agentId ? ` Assigned to ${assignee}.` : "";
+  const activityId = await record(sql, agent, row, "create", `Added task "${title}".${owner}${note ? ` ${note}` : ""}`, { stage, note, assignee }, input.now);
   return {
     ok: true,
-    task: { ...row, stage, status: "todo", column: asked, blocked_reason: null, deliverable_id: null, review_requested_at: null, review_note: null, skill_packs: [], updated_at: new Date(input.now).toISOString() },
+    task: {
+      ...row, stage, status: "todo", column: asked, blocked_reason: null, deliverable_id: null, review_requested_at: null, review_note: null,
+      skill_packs: [], assignee_agent_id: assignee, updated_at: new Date(input.now).toISOString(),
+    },
     activityId,
   };
 }

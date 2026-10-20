@@ -6,7 +6,7 @@ import { agentForToken } from "@/lib/agent-work-filing";
 
 export const dynamic = "force-dynamic";
 
-/** Board tasks for this agent's clients. Bearer agent token. ?client= (org id, domain, or space slug) &project_id= */
+/** Board tasks for this agent's clients. Bearer agent token. ?client= (org id, domain, or space slug) &project_id= &mine=1 (cards assigned to this agent) */
 export async function GET(request: Request) {
   const sql = await openHandoffDb();
   await migrate(sql);
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const client = params.get("client")?.trim();
   const ref = client ? (client.includes(".") ? { domain: client } : /^[0-9a-f-]{36}$/.test(client) ? { organization_id: client } : { space_slug: client }) : null;
-  const result = await listAgentBoard(sql, agent, { client: ref, projectId: params.get("project_id") });
+  const result = await listAgentBoard(sql, agent, { client: ref, projectId: params.get("project_id"), mine: params.get("mine") === "1" || params.get("mine") === "true" });
   if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });
   return NextResponse.json(result);
 }

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreHorizontalIcon } from "lucide-react";
+import { BotIcon, MoreHorizontalIcon } from "lucide-react";
 import { toast } from "sonner";
 import { formatRelative } from "@/lib/format";
 import { StatusDot } from "@/components/status-dot";
@@ -14,6 +14,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -28,8 +31,8 @@ import {
   type BoardColumn,
 } from "@/lib/board-model";
 import { swarmRunReady } from "@/lib/swarm-ready";
-import { assignTaskPackAction, moveBoardCardAction, reviewCardAction } from "./actions";
-import type { BoardActivity } from "@/db/crm";
+import { assignBoardAgentAction, assignTaskPackAction, moveBoardCardAction, reviewCardAction } from "./actions";
+import type { BoardActivity, BoardAgent } from "@/db/crm";
 
 export type WorkBoardCard = {
   id: string;
@@ -56,6 +59,9 @@ export type WorkBoardCard = {
   review_note?: string | null;
   /** Skill pack prefixes the card's agents attached from the library. */
   skill_packs?: string[];
+  /** The client agent that owns the card. null: the client's lead agent. */
+  assignee_agent_id?: string | null;
+  assignee_agent_label?: string | null;
 };
 
 const CLEARING: Record<string, string> = {
@@ -100,15 +106,61 @@ function useCardMove(card: WorkBoardCard) {
   return { pending, send };
 }
 
-function CardMenu({ card }: { card: WorkBoardCard }) {
+function useAssignAgent(card: WorkBoardCard) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  function assign(agentId: string | null) {
+    const data = new FormData();
+    data.set("taskId", card.id);
+    data.set("organizationId", card.organization_id);
+    data.set("projectId", card.project_id ?? "");
+    data.set("agentId", agentId ?? "");
+    startTransition(async () => {
+      const result = await assignBoardAgentAction(data);
+      if (result.ok) {
+        toast.success(result.message);
+        router.refresh();
+        return;
+      }
+      toast.error(result.message);
+    });
+  }
+  return { assigning: pending, assign };
+}
+
+/** The card's owner: its agent assignee, else the client's lead (default), else nobody yet. */
+function AgentBadge({ card, agents }: { card: WorkBoardCard; agents: BoardAgent[] }) {
+  if (card.assignee_agent_id) {
+    const live = agents.some((agent) => agent.id === card.assignee_agent_id);
+    const label = card.assignee_agent_label || card.assignee_agent_id;
+    return (
+      <Badge variant="outline" className="h-5 gap-1 px-1.5 text-[11px] font-normal" title={live ? `Assigned to ${label}` : `${label} is no longer on this client. The lead gets it.`}>
+        <BotIcon aria-hidden className="size-3" />
+        {label}
+        {live ? null : " (off client)"}
+      </Badge>
+    );
+  }
+  const lead = agents.find((agent) => agent.role === "lead");
+  if (!lead) return null;
+  return (
+    <Badge variant="outline" className="h-5 gap-1 px-1.5 text-[11px] font-normal text-muted-foreground" title="No agent assignee: the client's lead agent has it">
+      <BotIcon aria-hidden className="size-3" />
+      {lead.label} · lead
+    </Badge>
+  );
+}
+
+function CardMenu({ card, agents = [] }: { card: WorkBoardCard; agents?: BoardAgent[] }) {
   const [reason, setReason] = useState("");
   const { pending, send } = useCardMove(card);
+  const { assigning, assign } = useAssignAgent(card);
   const column = columnOf(card);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="icon-sm" variant="ghost" aria-label={`Move ${card.title}`} disabled={pending}>
+        <Button size="icon-sm" variant="ghost" aria-label={`Move ${card.title}`} disabled={pending || assigning}>
           <MoreHorizontalIcon />
         </Button>
       </DropdownMenuTrigger>
@@ -121,6 +173,25 @@ function CardMenu({ card }: { card: WorkBoardCard }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => send({ direction: "up" })}>Move up</DropdownMenuItem>
         <DropdownMenuItem onSelect={() => send({ direction: "down" })}>Move down</DropdownMenuItem>
+        {agents.length > 0 ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Assign to agent</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem disabled={!card.assignee_agent_id} onSelect={() => assign(null)}>
+                  Lead (default)
+                </DropdownMenuItem>
+                {agents.map((agent) => (
+                  <DropdownMenuItem key={agent.id} disabled={agent.id === card.assignee_agent_id} onSelect={() => assign(agent.id)}>
+                    {agent.label}
+                    <span className="ml-auto pl-3 text-xs text-muted-foreground">{agent.role}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </>
+        ) : null}
         <DropdownMenuSeparator />
         <div className="flex flex-col gap-1.5 px-2 py-1.5">
           <label className="text-xs" htmlFor={`block-${card.id}`}>
@@ -234,6 +305,7 @@ function CardFace({
   packs,
   onMove,
   reviewOverride = false,
+  agents = [],
 }: {
   card: WorkBoardCard;
   now: number;
@@ -244,6 +316,8 @@ function CardFace({
   packs: { id: string; name: string }[];
   onMove: (taskId: string, column: BoardColumn | "run") => void;
   reviewOverride?: boolean;
+  /** Live agents of this card's client. */
+  agents?: BoardAgent[];
 }) {
   const late = card.due_at !== null && card.due_at < now && card.status !== "done";
   const review = inReview(card);
@@ -289,10 +363,11 @@ function CardFace({
           {showProject && !card.project_id ? <p className="text-sm text-muted-foreground">No project</p> : null}
           {brief ? <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{brief}</p> : null}
         </div>
-        <CardMenu card={card} />
+        <CardMenu card={card} agents={agents} />
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <StatusDot domain="task" value={card.status === "done" ? "done" : card.status} />
+        <AgentBadge card={card} agents={agents} />
         {card.created_by_kind === "agent" ? <Badge variant="secondary">Agent</Badge> : null}
         {card.round > 1 ? <Badge variant="secondary">Round {card.round}</Badge> : null}
         {steps.length > 0 ? (
@@ -410,6 +485,7 @@ export function WorkBoard({
   runningTaskIds = [],
   packs = [],
   reviewOverride = false,
+  agents = [],
 }: {
   cards: WorkBoardCard[];
   now: number;
@@ -422,6 +498,8 @@ export function WorkBoard({
   packs?: { id: string; name: string }[];
   /** Super admins see the admin override on Review cards. Client Services decides them through its API. */
   reviewOverride?: boolean;
+  /** Live client agents of the clients on this board (badge and Assign to agent). */
+  agents?: BoardAgent[];
 }) {
   const columns = boardCards(cards);
   const notes = new Map<string, BoardActivity[]>();
@@ -489,6 +567,7 @@ export function WorkBoard({
                   packs={packs}
                   onMove={dropCard}
                   reviewOverride={reviewOverride}
+                  agents={agents.filter((agent) => agent.organization_id === card.organization_id)}
                 />
               ))}
             </section>
