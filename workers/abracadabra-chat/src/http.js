@@ -174,6 +174,7 @@ export async function emitHandoff(session, env, deps, now) {
   return { sent: session.handoffSent, duplicate: false, mailed };
 }
 
+export const VOICE_PASS_MS = 2 * 60 * 1000;
 export const RETRY_TEXT = "Sorry, that took longer than it should. Try again, or book a thirty-minute working session right here in this chat.";
 export const TYPED_SENTENCES = 5;
 
@@ -245,6 +246,15 @@ export async function handleSession(request, storage, env, deps) {
   const session = await load(storage, now);
   if (!session || session.id !== id) return json({ error: "Open the chat again." }, 401);
 
+  if (op === "voice-pass") {
+    if ((session.voiceCalls || 0) >= VOICE_CALLS_PER_SESSION || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) {
+      return json({ error: "That is the voice limit for this chat. You can keep typing." }, 429);
+    }
+    session.voicePass = { id: crypto.randomUUID(), expiresAt: now + VOICE_PASS_MS };
+    await save(storage, session, deps);
+    return json({ pass: session.voicePass.id }, 200);
+  }
+
   if (url.pathname === "/api/chat/message") {
     if (session.messageCount >= SESSION_MESSAGE_LIMIT) {
       return json({ error: "This chat is full. Email houdini@abra-ca-dabra.app." }, 429);
@@ -271,6 +281,13 @@ export async function handleSession(request, storage, env, deps) {
     if (slot.activeCall && !slot.activeCall.closed) {
       return json({ error: "A voice call is already open in this chat." }, 409);
     }
+    // One fresh Turnstile pass per call, used once.
+    const pass = url.searchParams.get("pass") || "";
+    const held = session.voicePass;
+    if (!pass || !held || held.id !== pass || now > held.expiresAt) {
+      return json({ error: "The voice check expired. Tap the mic again." }, 403);
+    }
+    delete session.voicePass;
     session.voiceCalls = (session.voiceCalls || 0) + 1;
     session.updatedAt = now;
     await save(storage, session, deps);
@@ -408,6 +425,31 @@ export async function handleRequest(request, env = {}, deps = {}) {
     const headers = new Headers(created.headers);
     headers.append("set-cookie", cookie(id, request));
     return cors(new Response(created.body, { status: created.status, headers }), request, env);
+  }
+
+  if (url.pathname === "/api/chat/voice-pass") {
+    // Each voice call needs its own fresh Turnstile pass, not just the one that opened the chat.
+    if (!voiceEnabled(env)) return cors(json({ error: "Voice is off right now. Type your question." }, 404), request, env);
+    const id = readCookie(request.headers.get("cookie"), "abra_chat");
+    if (!UUID.test(id)) return cors(json({ error: "Open the chat again." }, 401), request, env);
+    const parsed = await readJson(request);
+    if (!parsed.ok) return cors(json({ error: parsed.message }, parsed.status), request, env);
+    const turnstile = await verifyTurnstile({
+      secret: String(env.TURNSTILE_SECRET_KEY || "").trim(),
+      token: String(parsed.value?.turnstileToken || ""),
+      ip,
+      fetchImpl: deps.fetchImpl || fetch,
+      allowMissingSecret: localOrigin(request.headers.get("origin")),
+    });
+    if (!turnstile.ok && turnstile.reason === "unconfigured") {
+      return cors(json({ error: "Chat verification is not configured." }, 503), request, env);
+    }
+    if (!turnstile.ok) return cors(json({ error: "The check failed. Try the voice call again." }, 403), request, env);
+    const pass = new Request(request.url, {
+      method: "POST",
+      headers: { "x-abra-session": id, "x-abra-op": "voice-pass", "cf-connecting-ip": ip },
+    });
+    return cors(await openSession(id, pass, env, deps), request, env);
   }
 
   if (url.pathname === "/api/chat/realtime") {

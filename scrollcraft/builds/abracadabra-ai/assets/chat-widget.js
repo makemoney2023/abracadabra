@@ -197,9 +197,11 @@ textarea:focus, .field input:focus, button:focus-visible { outline: 2px solid #F
 .error { color: #FF4B24; }
 @media (max-width: 720px) {
   .launcher { right: 16px; bottom: 16px; }
+  /* left + right instead of 100vw: 100vw includes a classic scrollbar and pushed the panel off the left edge. */
   .panel, .panel.expanded {
-    right: 0; bottom: 0; width: 100vw; border-radius: 16px 16px 0 0;
+    left: 0; right: 0; bottom: 0; width: auto; max-width: 100%; border-radius: 16px 16px 0 0;
     height: min(78dvh, 100%);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   .panel.expanded { height: 92dvh; }
 }
@@ -215,9 +217,10 @@ export function voiceSupported(win = typeof window === "undefined" ? undefined :
   );
 }
 
-export function realtimeUrl(loc = typeof location === "undefined" ? undefined : location) {
+export function realtimeUrl(loc = typeof location === "undefined" ? undefined : location, pass = "") {
   const scheme = loc?.protocol === "http:" ? "ws:" : "wss:";
-  return `${scheme}//${loc?.host || ""}/api/chat/realtime`;
+  const query = pass ? `?pass=${encodeURIComponent(pass)}` : "";
+  return `${scheme}//${loc?.host || ""}/api/chat/realtime${query}`;
 }
 
 /** Turns 16-bit little-endian PCM into Web Audio samples. */
@@ -659,6 +662,8 @@ export class AbraChat extends ElementBase {
     this.call = call;
     this.setCallUi("connecting");
     this.callTimer = setInterval(() => this.renderClock(), 500);
+    // The person check runs while the mic permission prompt is up.
+    const passing = this.voicePass().then((pass) => ({ pass }), (error) => ({ error }));
     try {
       call.stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
@@ -695,7 +700,14 @@ export class AbraChat extends ElementBase {
     }
     if (this.call !== call) return;
     this.loadFillers(ctx);
-    const ws = new WebSocket(realtimeUrl());
+    const checked = await passing;
+    if (this.call !== call) return;
+    if (!checked.pass) {
+      this.endCall("check_failed", { quiet: true });
+      this.note(checked.error?.message || "The voice check did not go through. You can keep typing.");
+      return;
+    }
+    const ws = new WebSocket(realtimeUrl(location, checked.pass));
     ws.binaryType = "arraybuffer";
     call.ws = ws;
     call.node.port.onmessage = (event) => {
@@ -932,10 +944,10 @@ export class AbraChat extends ElementBase {
     }
   }
 
-  turnstile() {
+  turnstile(message = "Confirm you are a person, then the chat opens.") {
     return new Promise((resolve) => {
       const box = el("div", "card");
-      box.append(el("p", "kicker", "Check"), el("p", null, "Confirm you are a person, then the chat opens."));
+      box.append(el("p", "kicker", "Check"), el("p", null, message));
       const mount = el("div");
       box.append(mount);
       this.stream.append(box);
@@ -947,7 +959,7 @@ export class AbraChat extends ElementBase {
           callback: (token) => {
             this.turnstileToken = token;
             box.remove();
-            resolve();
+            resolve(token);
           },
         });
       };
@@ -960,6 +972,20 @@ export class AbraChat extends ElementBase {
         document.head.append(script);
       } else render();
     });
+  }
+
+  /** A fresh Turnstile pass for this one call; the worker refuses a call without it. */
+  async voicePass() {
+    const token = this.config.turnstileSiteKey ? await this.turnstile("Quick check before the voice chat starts.") : "";
+    const response = await fetch("/api/chat/voice-pass", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ turnstileToken: token || "" }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.pass) throw new Error(data.error || "The voice check did not go through.");
+    return data.pass;
   }
 
   async ensureSession() {
