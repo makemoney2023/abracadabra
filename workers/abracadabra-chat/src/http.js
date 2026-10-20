@@ -1,11 +1,12 @@
 import { deliverHandoff, handoffEnvelope, handoffSummary, HANDOFF_FROM, mailerConfigured, signHex, studioInbox } from "./handoff.js";
-import { completeChat } from "./model.js";
+import { ChatUnavailable, replyStream } from "./model.js";
 import {
   clientIp,
   extraOrigins,
   localOrigin,
   originAllowed,
-  postCheck,
+  checkedSentences,
+  localReply,
   rateGate,
   uiActionFor,
   verifyTurnstile,
@@ -170,16 +171,53 @@ export async function emitHandoff(session, env, deps, now) {
   return { sent: session.handoffSent, duplicate: false, mailed };
 }
 
-function sse(text, action) {
-  const chunks = text.match(/\S+\s*/g) || [text];
-  let body = chunks.map((chunk) => `event: token\ndata: ${JSON.stringify({ text: chunk })}\n\n`).join("");
-  if (action) body += `event: ui_action\ndata: ${JSON.stringify({ action })}\n\n`;
-  body += `event: done\ndata: ${JSON.stringify({ ok: true })}\n\n`;
-  return new Response(body, {
-    headers: {
-      "content-type": "text/event-stream; charset=utf-8",
-      "cache-control": "no-store",
+export const RETRY_TEXT = "Sorry, that took longer than it should. Try again, or book a thirty-minute working session right here in this chat.";
+export const TYPED_SENTENCES = 5;
+
+/**
+ * Streams the typed reply as server-sent events: "token" for each checked sentence as soon as it
+ * passes, "final" with the whole checked answer (the widget swaps it in), "ui_action", then "done".
+ * A model timeout or error sends "error" with RETRY_TEXT instead of hanging. The exchange is saved
+ * only when an answer was given.
+ */
+function streamReply({ text, action, history, session, storage, env, deps, now }) {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream({
+    async start(controller) {
+      const emit = (event, data) => controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+      let answer = "";
+      let failure = null;
+      try {
+        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl }), { maxSentences: TYPED_SENTENCES })) {
+          if (part.replace) {
+            answer = part.replace;
+            break;
+          }
+          emit("token", { text: answer ? ` ${part.text}` : part.text });
+          answer = answer ? `${answer} ${part.text}` : part.text;
+        }
+      } catch (error) {
+        failure = error instanceof ChatUnavailable ? error.reason : "error";
+      }
+      if (failure === "unconfigured") answer = localReply(text);
+      if (!answer) {
+        if (failure && failure !== "unconfigured") console.error(`chat reply: ${failure}`);
+        emit("error", { text: RETRY_TEXT, retry: true });
+        emit("done", { ok: false });
+        controller.close();
+        return;
+      }
+      if (action === "offer_booking") session.bookingOffered = true;
+      rememberExchange(session, text, answer, now);
+      await save(storage, session, deps);
+      emit("final", { text: answer });
+      if (action) emit("ui_action", { action });
+      emit("done", { ok: true });
+      controller.close();
     },
+  });
+  return new Response(body, {
+    headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store" },
   });
 }
 
@@ -213,17 +251,9 @@ export async function handleSession(request, storage, env, deps) {
     const text = String(parsed.value?.text || "").trim();
     if (!text || text.length > 2000) return json({ error: "Add a short question." }, 400);
     if (parsed.value?.page) session.page = String(parsed.value.page).slice(0, 300);
-    const draft = await completeChat({
-      env,
-      messages: [...session.messages, { role: "user", text }],
-      fetchImpl: deps.fetchImpl,
-    });
-    const checked = postCheck(draft);
     const action = uiActionFor(text);
-    if (action === "offer_booking") session.bookingOffered = true;
-    rememberExchange(session, text, checked.text, now);
-    await save(storage, session, deps);
-    return sse(checked.text, action);
+    const history = [...session.messages, { role: "user", text }];
+    return streamReply({ text, action, history, session, storage, env, deps, now });
   }
 
   if (url.pathname === "/api/chat/realtime") {

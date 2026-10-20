@@ -58,7 +58,7 @@ function pcmStream(chunks, { hold } = {}) {
   return stream;
 }
 
-function harness({ env = VOICE_ENV, reply = "We build software around the work you already do. Tell me the job that takes the most time.", tts } = {}) {
+function harness({ env = VOICE_ENV, reply = "We build software around the work you already do. Tell me the job that takes the most time.", tts, llm } = {}) {
   const calls = [];
   const clock = { now: NOW };
   const h = {
@@ -80,6 +80,7 @@ function harness({ env = VOICE_ENV, reply = "We build software around the work y
           const stream = tts ? tts(body) : pcmStream([[1, 0, 2, 0], [3, 0]]);
           return new Response(stream, { headers: { "content-type": "audio/mpeg" } });
         }
+        if (llm) return llm(body);
         return Response.json({ success: true, result: { response: reply } });
       },
       webSocketPair: () => {
@@ -188,7 +189,7 @@ test("a spoken turn runs Flux text through the chat brain and streams Aura-2 PCM
   await flush(60);
 
   const types = browser.json().map((m) => m.type);
-  assert.deepEqual(types.slice(types.indexOf("user")), ["user", "state", "assistant", "state", "audio_start", "audio_end"]);
+  assert.deepEqual(types.slice(types.indexOf("user")), ["user", "state", "state", "audio_start", "assistant", "audio_end"]);
   // Still "speaking" until the browser finishes playing what it queued.
   assert.equal(h.call.state, "speaking");
   browser.emit("message", JSON.stringify({ type: "played", turn: 1 }));
@@ -353,4 +354,89 @@ test("helpers: echo check, sentences, speakable, speaker", () => {
   assert.ok(speakable("One short sentence here. ".repeat(40)).length <= TTS_CHAR_CAP);
   assert.equal(ttsSpeaker({ TTS_SPEAKER: "Thalia" }), "thalia");
   assert.equal(ttsSpeaker({ TTS_SPEAKER: "nope" }), "luna");
+});
+
+
+function sseStream(parts, { hold } = {}) {
+  const encoder = new TextEncoder();
+  return new Response(new ReadableStream({
+    async start(controller) {
+      for (const [index, part] of parts.entries()) {
+        if (hold && index === 1) await hold;
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ response: part })}\n\n`));
+      }
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  }), { headers: { "content-type": "text/event-stream" } });
+}
+
+test("the first sentence is spoken while the model is still writing", async () => {
+  let release;
+  const hold = new Promise((resolve) => { release = resolve; });
+  const h = harness({ llm: () => sseStream(["We build custom apps around your work. ", "You can book a thirty-minute working session right here in this chat."], { hold }) });
+  const { browser } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await flush(60);
+  const aura = h.calls.filter((c) => c.url.includes("aura"));
+  assert.equal(aura.length, 1);
+  assert.equal(aura[0].body.text, "We build custom apps around your work.");
+  assert.ok(browser.binary().length > 0, "audio is already streaming");
+  assert.equal(browser.json().some((m) => m.type === "assistant"), false);
+  assert.equal(h.calls.find((c) => !c.url.includes("aura")).body.stream, true);
+  release();
+  await flush(60);
+  assert.equal(h.calls.filter((c) => c.url.includes("aura")).length, 2);
+  assert.match(browser.json().find((m) => m.type === "assistant").text, /^We build custom apps around your work\. You can book/);
+});
+
+test("a slow answer gets one cached filler line, and its echo is not a barge-in", async () => {
+  let release;
+  const hold = new Promise((resolve) => { release = resolve; });
+  const h = harness({ llm: () => sseStream(["", "We build custom apps."], { hold }) });
+  h.deps.fillerAfterMs = 5;
+  const { browser, call } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  const filler = browser.json().find((m) => m.type === "filler");
+  assert.deepEqual(filler, { type: "filler", index: 0, turn: 1 });
+  assert.equal(h.calls.filter((c) => c.url.includes("aura")).length, 0, "filler is not synthesized per call");
+  h.flux.emit("message", JSON.stringify({ event: "Update", transcript: "let me check" }));
+  assert.equal(call.state, "thinking");
+  release();
+  await flush(60);
+  assert.equal(browser.json().filter((m) => m.type === "filler").length, 1);
+  assert.equal(call.state, "speaking");
+});
+
+test("a fast answer plays no filler", async () => {
+  const h = harness();
+  h.deps.fillerAfterMs = 30;
+  const { browser } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "Hello there" }));
+  await flush(60);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(browser.json().some((m) => m.type === "filler"), false);
+});
+
+test("a model error is spoken as a short retry line and not saved as an answer", async () => {
+  const h = harness({ llm: () => new Response("busy", { status: 503 }) });
+  const { browser } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await flush(60);
+  assert.equal(browser.json().find((m) => m.type === "assistant").text, "Sorry, I lost that one. Could you say it again?");
+  assert.equal(h.calls.filter((c) => c.url.includes("aura")).length, 1);
+  const session = await storedSession(h);
+  assert.equal(session.messages.length, 0);
+});
+
+test("the widget's filler lines and files match the worker's", async () => {
+  const { FILLERS } = await import("../src/voice.js");
+  const { readFile, stat } = await import("node:fs/promises");
+  const widget = await readFile(new URL("../../../scrollcraft/builds/abracadabra-ai/assets/chat-widget.js", import.meta.url), "utf8");
+  assert.ok(widget.includes(`FILLER_LINES = ${JSON.stringify(FILLERS).replace(/","/g, "\", \"")}`));
+  for (const index of FILLERS.keys()) {
+    const file = await stat(new URL(`../../../scrollcraft/builds/abracadabra-ai/assets/voice/filler-${index}.mp3`, import.meta.url));
+    assert.ok(file.size > 1000 && file.size < 20000);
+  }
 });

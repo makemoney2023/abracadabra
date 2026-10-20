@@ -14,6 +14,12 @@ export const VOICE_TTS_CHARS_PER_SESSION = 3000;
 export const VOICE_CALLS_PER_SESSION = 3;
 export const MAX_CALL_MS = 5 * 60 * 1000;
 export const CALL_IDLE_MS = 45 * 1000;
+// Short spoken fillers, played by the browser when the real answer is not audible yet.
+// Pre-generated once with Aura-2 luna (npm run fillers) into the marketing site's /assets/voice/;
+// never synthesized per call. Keep the order: the index is the file name.
+export const FILLERS = ["Let me check.", "One sec.", "Good question.", "Just a moment."];
+export const FILLER_AFTER_MS = 1200;
+export const FILLER_PATH = "/assets/voice/filler-";
 export const KEYTERMS = ["Abracadabra", "Readiness Check", "Cal.com"];
 
 const AURA_SPEAKERS = new Set([
@@ -47,7 +53,14 @@ export function ttsSpeaker(env) {
 /** Turns a checked chat reply into text that sounds right out loud, capped at TTS_CHAR_CAP. */
 export function speakable(text, cap = TTS_CHAR_CAP) {
   let clean = String(text || "")
-    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/\s*\(?https?:\/\/[^\s)]+\)?/gi, (url) => (/[.,;:!?]$/.test(url) ? url.slice(-1) : ""))
+    .replace(/\b((?:check\.)?abra-ca-dabra)\.app\b/gi, (_, name) => `${name.replace(".", " dot ")} dot app`)
+    .replace(/\s*\(\/[^\s)]*\)/g, "")
+    .replace(/(^|\s)\/[a-z0-9-]+(?:\/[a-z0-9.-]*)*(?=[\s.,;:!?]|$)/gi, "$1")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/(^|\s)[-*•]\s+/g, "$1")
+    .replace(/\s*\((?:page|link)\)/gi, "")
+    .replace(/\b([A-Z]{2,})\/([A-Z]{2,})\b/g, "$1 and $2")
     .replace(/[*_#`>\[\]]/g, "")
     .replace(/\s+/g, " ")
     .trim();
