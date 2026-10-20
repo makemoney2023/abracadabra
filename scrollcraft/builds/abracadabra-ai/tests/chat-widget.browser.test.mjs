@@ -122,8 +122,9 @@ test("the chat books in place, offers the check, and takes a consented note", as
   assert.equal(cal.searchParams.get("metadata[source]"), "abracadabra-chat");
   assert.match(cal.searchParams.get("metadata[chat_session_id]") || "", /^[0-9a-f-]{36}$/);
   await page.getByRole("button", { name: "Back to chat" }).click();
-  await page.getByRole("button", { name: "Take the 3-min AI Readiness Check" }).click();
-  const check = await page.getByRole("link", { name: "Start the check" }).getAttribute("href");
+  await page.getByRole("button", { name: "Take the AI Readiness Check (5–7 min)" }).click();
+  await page.getByText("Five to seven minutes").waitFor();
+  const check = await page.getByRole("link", { name: "Open it on its own page" }).getAttribute("href");
   assert.match(check, /utm_source=chat/);
   await page.getByRole("textbox", { name: "Message" }).fill("Please email me a follow up.");
   await page.getByRole("button", { name: "Send", exact: true }).click();
@@ -441,6 +442,71 @@ test("asking to book on a voice call opens the calendar in the chat and confirms
     await page.close();
   } finally {
     clearVoiceEnv();
+  }
+});
+
+test("the Readiness Check runs inside the chat, one question at a time, and links the real report", async () => {
+  const { READINESS } = await import("../../../../workers/abracadabra-chat/src/readiness-questions.js");
+  const answers = {};
+  const order = () => ["pressure", ...(answers.pressure || []).map((c) => `severity:${c}`), "R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "G01", "G02", "G03", "G04", "Q01", "Q02", "Q03", "Q04"];
+  const seen = [];
+  deps.readinessFetch = async (request) => {
+    const url = new URL(request.url);
+    if (url.pathname === "/api/assessments") return Response.json({ token: "chatTok123456789012345678", firstStep: "pressure" }, { status: 201 });
+    if (url.pathname.endsWith("/complete")) return Response.json({ ok: true, band: "ready" });
+    const body = await request.json();
+    seen.push([body.stepId, body.answer]);
+    if (body.stepId === "G04" && !String(body.answer).includes(".")) return Response.json({ error: "Invalid answer", details: "Enter a full domain like example.com" }, { status: 400 });
+    answers[body.stepId] = body.answer;
+    const steps = order();
+    return Response.json({ ok: true, nextStep: steps[steps.indexOf(body.stepId) + 1] || "gate" });
+  };
+  try {
+    for (const [width, height] of [[390, 844], [1280, 800]]) {
+      answers.pressure = undefined;
+      seen.length = 0;
+      const page = await openFixture(width, height);
+      await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+      await page.getByRole("button", { name: "Take the AI Readiness Check (5–7 min)" }).click();
+      await page.getByRole("button", { name: "Start it here" }).click();
+      await page.getByRole("heading", { name: "Where does the work slow down?" }).waitFor();
+      await page.getByRole("checkbox", { name: READINESS.questions.pressure.options[4].label }).check();
+      if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/readiness-question-${width}.png` });
+      await page.getByRole("button", { name: "Next", exact: true }).click();
+      await page.getByRole("heading", { name: "How much does this cost you?" }).waitFor();
+      await page.getByRole("button", { name: READINESS.severity[1].label }).click();
+      for (const id of ["R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "G01", "G02", "G03"]) {
+        const q = READINESS.questions[id];
+        await page.getByRole("heading", { name: q.prompt }).waitFor();
+        await page.getByRole("button", { name: q.options[2].label }).click();
+      }
+      await page.getByRole("heading", { name: "Your website" }).waitFor();
+      await page.getByRole("textbox", { name: "Your website" }).fill("northwind");
+      await page.getByRole("button", { name: "Next", exact: true }).click();
+      await page.getByText("Enter a full domain like example.com").waitFor();
+      await page.getByRole("textbox", { name: "Your website" }).fill("northwind.example");
+      await page.getByRole("button", { name: "Next", exact: true }).click();
+      await page.getByRole("button", { name: "Owner or executive" }).click();
+      await page.getByRole("button", { name: "11–50" }).click();
+      await page.getByRole("button", { name: "Trades" }).click();
+      await page.getByRole("button", { name: "Next", exact: true }).click();
+      await page.getByRole("heading", { name: READINESS.questions.Q04.prompt }).waitFor();
+      await page.getByRole("button", { name: "Skip" }).click();
+      await page.getByRole("heading", { name: "Ready." }).waitFor();
+      const report = await page.getByRole("link", { name: "See your score and plan" }).getAttribute("href");
+      assert.equal(report, "https://check.abra-ca-dabra.app/check/chatTok123456789012345678");
+      if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/readiness-result-${width}.png` });
+      assert.deepEqual(seen[0], ["pressure", ["P05"]]);
+      assert.deepEqual(seen[1], ["severity:P05", 2]);
+      assert.deepEqual(seen.at(-1), ["Q04", ""]);
+      const users = await page.locator("abra-chat").evaluate((node) => [...node.shadowRoot.querySelectorAll(".bubble.user")].map((b) => b.textContent));
+      assert.ok(users.includes("northwind.example") && users.includes("Trades") && users.includes("(skipped)"));
+      assert.equal(page.errors.length, 0, page.errors.join("\n"));
+      await page.close();
+      deps.rooms.clear();
+    }
+  } finally {
+    delete deps.readinessFetch;
   }
 });
 

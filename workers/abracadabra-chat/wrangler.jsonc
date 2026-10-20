@@ -22,5 +22,9 @@
   ],
   "send_email": [
     { "name": "EMAIL" }
+  ],
+  // The Readiness Check in the chat talks to the check worker directly (no public hop).
+  "services": [
+    { "binding": "READINESS", "service": "readiness-check" }
   ]
 }

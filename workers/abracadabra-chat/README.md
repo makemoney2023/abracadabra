@@ -114,3 +114,14 @@ npx wrangler deploy
 ```
 
 Do not point this Worker at a prospect inbox. The only recipient is houdini@.
+
+## Readiness Check in the chat
+
+The chat can run the real Readiness Check one question at a time (`POST /api/chat/readiness`, `{op:"start"}` then `{op:"answer", stepId, answer}`).
+
+- The chat creates a real assessment on the check worker (`POST /api/assessments`, utm `source=chat`, `chat_session_id`), sends each answer with `PATCH /api/assessments/<token>`, follows the `nextStep` the check returns, and calls `/complete` at the gate.
+- The visitor then opens `https://check.abra-ca-dabra.app/check/<token>`. The check's own email gate, opt-in and report run there as usual. The chat never sends the email or the opt-in itself.
+- Questions and options come from `readiness-check/src/lib/assessment/config.v1.json` through `npm run readiness`, which writes `src/readiness-questions.js`. Regenerate it whenever the check's questions change.
+- Transport: the `READINESS` service binding to `readiness-check` (in `wrangler.jsonc`). Without the binding it uses `READINESS_ORIGIN`, which defaults to the public check origin.
+- Answers have their own per-network allowance of 120 per hour, so they do not use up the typed-message limit.
+- The check takes five to seven minutes, and the chat says so.

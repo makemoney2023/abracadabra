@@ -7,6 +7,7 @@
     "knowledge": "node scripts/build-site-knowledge.mjs",
     "fillers": "node scripts/build-fillers.mjs",
     "preview": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "readiness": "node scripts/build-readiness-questions.mjs"
   }
 }
