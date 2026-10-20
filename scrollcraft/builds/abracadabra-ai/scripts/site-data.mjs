@@ -556,7 +556,7 @@ export const cases = [
     slug: "llm-leverage",
     name: "LLM Leverage",
     kind: "course",
-    sameAs: "https://llm-leverage-course.vercel.app",
+    sameAs: "https://learn.abra-ca-dabra.app",
     image: "/assets/llmcourse-home.webp",
     imageAlt: "LLM Leverage course home: a lesson preview and a rollout path.",
     summary: "A self-paced course for better answers from any model, plus a workshop path.",
@@ -698,7 +698,7 @@ export const products = [
 export const course = {
   slug: "llm-leverage",
   name: "LLM Leverage",
-  sameAs: "https://llm-leverage-course.vercel.app",
+  sameAs: "https://learn.abra-ca-dabra.app",
   image: "/assets/llmcourse-home.webp",
   imageAlt: "LLM Leverage course home: a lesson preview and a rollout path.",
   description: "A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, each with a quiz you pass at 75%.",

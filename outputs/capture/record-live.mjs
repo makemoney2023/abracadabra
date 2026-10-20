@@ -33,7 +33,7 @@ const jobs = [
   },
   {
     id: "llmcourse-home-lesson",
-    url: "https://llm-leverage-course.vercel.app/",
+    url: "https://learn.abra-ca-dabra.app/",
     async play(page) {
       await page.waitForTimeout(1800);
       await page.mouse.wheel(0, 600);
@@ -43,7 +43,7 @@ const jobs = [
         await preview.click();
         await page.waitForTimeout(2000);
       } else {
-        await page.goto("https://llm-leverage-course.vercel.app/modules/mental-model", {
+        await page.goto("https://learn.abra-ca-dabra.app/modules/mental-model", {
           waitUntil: "domcontentloaded",
         });
       }
@@ -60,7 +60,7 @@ const jobs = [
   },
   {
     id: "llmcourse-workshops",
-    url: "https://llm-leverage-course.vercel.app/workshops",
+    url: "https://learn.abra-ca-dabra.app/workshops",
     async play(page) {
       await page.waitForTimeout(1500);
       const session = page.getByRole("link").filter({ hasText: /session|research|wall/i }).first();
