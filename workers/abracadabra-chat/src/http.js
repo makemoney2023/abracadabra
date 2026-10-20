@@ -10,6 +10,7 @@ import {
   originAllowed,
   checkedSentences,
   localReply,
+  offerState,
   rateGate,
   uiActionFor,
   verifyTurnstile,
@@ -183,7 +184,7 @@ export async function emitHandoff(session, env, deps, now) {
 }
 
 export const VOICE_PASS_MS = 2 * 60 * 1000;
-export const RETRY_TEXT = "Sorry, that took longer than it should. Try again, or book a thirty-minute working session right here in this chat.";
+export const RETRY_TEXT = "Sorry, that took longer than it should. Please try again.";
 export const TYPED_SENTENCES = 5;
 
 /**
@@ -192,7 +193,7 @@ export const TYPED_SENTENCES = 5;
  * A model timeout or error sends "error" with RETRY_TEXT instead of hanging. The exchange is saved
  * only when an answer was given.
  */
-function streamReply({ text, action, history, session, storage, env, deps, now }) {
+function streamReply({ text, action, history, session, storage, env, deps, now, offers }) {
   const encoder = new TextEncoder();
   const body = new ReadableStream({
     async start(controller) {
@@ -200,7 +201,7 @@ function streamReply({ text, action, history, session, storage, env, deps, now }
       let answer = "";
       let failure = null;
       try {
-        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle } }), { maxSentences: TYPED_SENTENCES })) {
+        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening) })) {
           if (part.replace) {
             answer = part.replace;
             break;
@@ -369,7 +370,10 @@ export async function handleSession(request, storage, env, deps) {
     rememberPage(session, parsed.value);
     const action = uiActionFor(text);
     const history = [...session.messages, { role: "user", text }];
-    return streamReply({ text, action, history, session, storage, env, deps, now });
+    // A clear ask to book opens the Cal.com calendar in the widget (the two-times form when no link is set).
+    const calendarOpen = action === "open_booking" && Boolean(String(env.CAL_LINK || env.BOOKING_URL || "").trim());
+    const offers = { ...offerState(session, text), opening: calendarOpen };
+    return streamReply({ text, action, history, session, storage, env, deps, now, offers });
   }
 
   if (url.pathname === "/api/chat/realtime") {

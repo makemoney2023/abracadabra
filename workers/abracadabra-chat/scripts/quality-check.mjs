@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // 20-question quality check of the chat's answers, run against the real models through the AI Gateway.
-// Same path as the live chat (system prompt, sentence checks), no session, no HQ, nothing stored.
+// Same path as the live chat (system prompt with the first-turn offer line, sentence checks), no session, no HQ, nothing stored.
 //   AI_GATEWAY_TOKEN=... CF_ACCOUNT_ID=... node scripts/quality-check.mjs [--models 70b,8b] [--out report.md]
 // Exit code 1 when any automatic check fails on the default model.
 import { writeFileSync } from "node:fs";
 import { DEFAULT_MODEL, FALLBACK_MODEL, streamChat } from "../src/model.js";
-import { checkedSentences } from "../src/policy.js";
+import { checkedSentences, offerState } from "../src/policy.js";
 import { speakable } from "../src/voice.js";
 
 const MODELS = { "70b": DEFAULT_MODEL, "8b": FALLBACK_MODEL };
@@ -46,7 +46,7 @@ async function answer(model, [text, , , voice, page]) {
   const parts = [];
   let replaced = false;
   try {
-    for await (const part of checkedSentences(streamChat({ env: process.env, messages: [{ role: "user", text }], voice: Boolean(voice), page, model }), { maxSentences: voice ? 4 : 5 })) {
+    for await (const part of checkedSentences(streamChat({ env: process.env, messages: [{ role: "user", text }], voice: Boolean(voice), page, model, offers: offerState({ messages: [] }, text) }), { maxSentences: voice ? 4 : 5 })) {
       if (!first) first = Date.now() - started;
       if (part.replace) { parts.length = 0; parts.push(part.replace); replaced = true; break; }
       parts.push(part.text);

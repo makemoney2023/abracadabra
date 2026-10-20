@@ -614,3 +614,20 @@ test("a voice call answers about the page the visitor opened it on", async () =>
   await flush(60);
   assert.match(bodies[0].messages[0].content, /READING THIS PAGE NOW: Custom apps \|/);
 });
+
+test("voice: a repeat booking pitch is not spoken twice in a row, and the prompt knows it was offered", async () => {
+  const pitch = "We build custom apps around your work. You can book a thirty-minute working session right here in this chat.";
+  const h = harness({ reply: pitch });
+  const { browser } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await flush(80);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "Can I see some examples?" }));
+  await flush(80);
+  const answers = browser.json().filter((m) => m.type === "assistant").map((m) => m.text);
+  assert.equal(answers.length, 2);
+  assert.match(answers[0], /book a thirty-minute working session/);
+  assert.equal(answers[1], "We build custom apps around your work.");
+  const llm = h.calls.filter((c) => !c.url.includes("aura"));
+  assert.match(llm.at(-1).body.messages[0].content, /already offered the working session or the Readiness Check in your last answer/);
+  assert.equal(h.calls.filter((c) => c.url.includes("aura") && /book/.test(c.body.text)).length, 1, "the pitch is spoken once");
+});

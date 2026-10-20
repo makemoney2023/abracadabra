@@ -44,10 +44,10 @@ test("system prompt carries the facts and the right mode rules", () => {
   assert.ok(MAX_TOKENS >= 200 && MAX_TOKENS <= 300);
 });
 
-test("answer filter keeps the closing booking offer and real names", () => {
+test("answer filter keeps the first four sentences, not the closing offer, and real names", () => {
   const long = postCheck("We built the StrongFoam CRM. We built pirx.ca. We did Milrcorr. We did Renew Implants. We made the Super Funnel app. You can book a thirty-minute working session right here in this chat.");
-  assert.match(long.text, /book a thirty-minute working session/);
-  assert.equal(long.text.split(/(?<=\.)\s+/).length, 4);
+  assert.equal(long.text, "We built the StrongFoam CRM. We built pirx.ca. We did Milrcorr. We did Renew Implants.");
+  assert.ok(long.flags.includes("length"));
   assert.deepEqual(postCheck("Our LLM Leverage course helps.").flags, []);
   assert.match(postCheck("We leverage synergy.").text, /job that takes the most time/);
   assert.equal(postCheck("Tools, e.g. a CRM. It helps. It runs. It is yours.").text, "Tools, e.g. a CRM. It helps. It runs. It is yours.");
