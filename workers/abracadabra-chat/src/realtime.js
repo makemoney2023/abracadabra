@@ -42,6 +42,54 @@ const FILLER_MS = 1200;
 const VOICE_SENTENCES = 4;
 export const VOICE_RETRY_TEXT = "Sorry, I lost that one. Could you say it again?";
 
+/** Words only, lower case: "What do you build?" and "what do you build" are the same turn. */
+export function sameWords(text) {
+  return (String(text || "").toLowerCase().match(/[a-z0-9']+/g) || []).join(" ");
+}
+
+/** Reads a reply stream into memory as it arrives, so it can be replayed once the turn is final. */
+class Prefetch {
+  constructor(key, stream, controller, startedAt) {
+    this.key = key;
+    this.controller = controller;
+    this.startedAt = startedAt;
+    this.parts = [];
+    this.done = false;
+    this.error = null;
+    this.wake = null;
+    (async () => {
+      try {
+        for await (const delta of stream) {
+          this.parts.push(delta);
+          this.wake?.();
+        }
+      } catch (error) {
+        this.error = error;
+      }
+      this.done = true;
+      this.wake?.();
+    })();
+  }
+  abort() {
+    this.controller.abort();
+  }
+  async *replay(signal) {
+    const stop = () => this.controller.abort();
+    signal?.addEventListener("abort", stop, { once: true });
+    let index = 0;
+    while (true) {
+      if (index < this.parts.length) {
+        yield this.parts[index++];
+        continue;
+      }
+      if (this.error) throw this.error;
+      if (this.done) return;
+      await new Promise((resolve) => { this.wake = resolve; });
+      this.wake = null;
+    }
+  }
+}
+
 /** A small async queue: push() as items arrive, iterate in order, close() when done. */
 class Channel {
   constructor() {
@@ -212,11 +260,15 @@ export class VoiceCall {
       case "StartOfTurn":
       case "Update":
       case "TurnResumed":
+        if (data.event === "TurnResumed") this.dropEager();
         if (transcript) {
           this.send({ type: "interim", text: transcript });
           if (this.state === "listening") this.lastActivity = this.now();
           this.maybeBargeIn(transcript);
         }
+        break;
+      case "EagerEndOfTurn":
+        if (transcript) void this.startEager(transcript);
         break;
       case "EndOfTurn":
         if (transcript) void this.handleTurn(transcript);
@@ -286,7 +338,10 @@ export class VoiceCall {
     };
     this.speakingText = "";
     try {
-      const deltas = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal });
+      const eager = this.takeEager(text);
+      const deltas = eager
+        ? eager.replay(controller.signal)
+        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal });
       for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true })) {
         if (controller.signal.aborted || this.closed) break;
         if (part.replace) {
@@ -325,6 +380,42 @@ export class VoiceCall {
     this.send({ type: "assistant", text: answer, action, turn });
     if (outOfVoice) return this.ttsLimit();
     await playing;
+  }
+
+  /**
+   * Flux thinks the visitor is probably done: start the model now, quietly. Nothing is shown or
+   * spoken until EndOfTurn; a different final transcript or TurnResumed throws this away.
+   */
+  async startEager(text) {
+    if (this.closed || this.state !== "listening") return;
+    this.dropEager();
+    const ticket = (this.eagerTicket = (this.eagerTicket || 0) + 1);
+    const session = await this.loadSession();
+    // EndOfTurn may have arrived while the session loaded; then this guess is too late.
+    if (ticket !== this.eagerTicket || !session || this.closed || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) return;
+    const controller = new AbortController();
+    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal });
+    this.eager = new Prefetch(sameWords(text), stream, controller, this.now());
+    this.eagerStarts = (this.eagerStarts || 0) + 1;
+  }
+
+  takeEager(text) {
+    this.eagerTicket = (this.eagerTicket || 0) + 1;
+    const eager = this.eager;
+    this.eager = null;
+    if (!eager) return null;
+    if (eager.key !== sameWords(text)) {
+      eager.abort();
+      return null;
+    }
+    this.eagerHits = (this.eagerHits || 0) + 1;
+    console.log(`voice eager reuse: model started ${this.now() - eager.startedAt}ms before end of turn`);
+    return eager;
+  }
+
+  dropEager() {
+    this.eager?.abort();
+    this.eager = null;
   }
 
   ttsLimit() {
@@ -435,6 +526,7 @@ export class VoiceCall {
     this.closed = true;
     clearInterval(this.timer);
     clearTimeout(this.filler);
+    this.dropEager();
     this.controller?.abort();
     this.controller = null;
     this.pending = [];

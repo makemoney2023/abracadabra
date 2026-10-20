@@ -197,9 +197,12 @@ test("an empty Cal.com link asks for two times inside the chat", async () => {
   assert.equal(await page.locator("iframe").count(), 0);
   const box = await page.locator("abra-chat").evaluate((node) => {
     const panel = node.shadowRoot.querySelector(".panel");
-    return panel.getBoundingClientRect().width;
+    const rect = panel.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, width: rect.width, viewport: innerWidth };
   });
-  assert.ok(box >= 380);
+  // The phone sheet spans the visible width exactly: nothing cut off on the left (a scrollbar used to push it).
+  assert.equal(box.left, 0);
+  assert.ok(box.right <= box.viewport && box.width >= 360, JSON.stringify(box));
   await page.evaluate(() => document.body.classList.add("intake-lock"));
   await page.waitForFunction(() => document.querySelector("abra-chat").shadowRoot.querySelector(".launcher").hidden);
   assert.equal(page.errors.length, 0);
@@ -297,7 +300,7 @@ async function callRun({ script, ttsSeconds = 0.6, llmDelayMs = 0 }) {
       state.calls.push(call);
       return new Response(null, { status: 200, headers: { "x-upgraded": "1" } });
     };
-    const response = await handleRequest(new Request(`${origin}/api/chat/realtime`, {
+    const response = await handleRequest(new Request(`${origin}/api/chat/realtime${new URL(route.url()).search}`, {
       headers: { origin, cookie: cookies, upgrade: "websocket", "cf-connecting-ip": "127.0.0.1" },
     }), env, deps);
     if (response.headers.get("x-upgraded") !== "1") {

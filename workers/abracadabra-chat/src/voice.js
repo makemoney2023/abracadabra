@@ -19,6 +19,7 @@ export const CALL_IDLE_MS = 45 * 1000;
 // never synthesized per call. Keep the order: the index is the file name.
 export const FILLERS = ["Let me check.", "One sec.", "Good question.", "Just a moment."];
 export const FILLER_AFTER_MS = 1200;
+export const EAGER_EOT_THRESHOLD = "0.5";
 export const FILLER_PATH = "/assets/voice/filler-";
 export const KEYTERMS = ["Abracadabra", "Readiness Check", "Cal.com"];
 
@@ -119,6 +120,9 @@ export async function openFlux(env) {
         sample_rate: String(MIC_SAMPLE_RATE),
         eot_threshold: "0.7",
         eot_timeout_ms: "3000",
+        // EagerEndOfTurn fires earlier on a likely end; the call starts the model then and keeps
+        // the result only if the final transcript matches (TurnResumed cancels it).
+        eager_eot_threshold: EAGER_EOT_THRESHOLD,
         keyterm: KEYTERMS,
       },
       { websocket: true },

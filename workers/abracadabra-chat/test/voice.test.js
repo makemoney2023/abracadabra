@@ -108,11 +108,22 @@ async function open(h, ip = "203.0.113.20") {
   return `abra_chat=${response.headers.get("set-cookie").match(/abra_chat=([^;]+)/)[1]}`;
 }
 
-function dial(h, { cookie, ip = "203.0.113.20", upgrade = "websocket", origin = "https://abra-ca-dabra.app" } = {}) {
+async function voicePass(h, cookie, ip = "203.0.113.20", token = "") {
+  const response = await handleRequest(new Request("https://abra-ca-dabra.app/api/chat/voice-pass", {
+    method: "POST",
+    headers: { origin: "http://127.0.0.1:4500", "content-type": "application/json", "cf-connecting-ip": ip, cookie },
+    body: JSON.stringify({ turnstileToken: token }),
+  }), h.env, h.deps);
+  return { status: response.status, body: await response.json() };
+}
+
+async function dial(h, { cookie, ip = "203.0.113.20", upgrade = "websocket", origin = "https://abra-ca-dabra.app", pass } = {}) {
   const headers = { origin, "cf-connecting-ip": ip };
   if (upgrade) headers.upgrade = upgrade;
   if (cookie) headers.cookie = cookie;
-  return handleRequest(new Request("https://abra-ca-dabra.app/api/chat/realtime", { headers }), h.env, h.deps);
+  if (pass === undefined && cookie) pass = (await voicePass(h, cookie, ip)).body.pass || "";
+  const query = pass ? `?pass=${pass}` : "";
+  return handleRequest(new Request(`https://abra-ca-dabra.app/api/chat/realtime${query}`, { headers }), h.env, h.deps);
 }
 
 async function connect(h, ip) {
@@ -439,4 +450,102 @@ test("the widget's filler lines and files match the worker's", async () => {
     const file = await stat(new URL(`../../../scrollcraft/builds/abracadabra-ai/assets/voice/filler-${index}.mp3`, import.meta.url));
     assert.ok(file.size > 1000 && file.size < 20000);
   }
+});
+
+test("every call needs its own fresh Turnstile pass, used once", async () => {
+  const h = harness({ env: { ...VOICE_ENV, TURNSTILE_SECRET_KEY: "secret" } });
+  const base = h.deps.fetchImpl;
+  const verified = [];
+  h.deps.fetchImpl = async (url, init) => {
+    if (String(url).includes("turnstile")) {
+      const token = new URLSearchParams(init.body).get("response") || JSON.parse(init.body || "{}").response;
+      verified.push(token);
+      return Response.json({ success: token === "good-session" || token === "good-call" });
+    }
+    return base(url, init);
+  };
+  const session = await handleRequest(new Request("https://abra-ca-dabra.app/api/chat/session", {
+    method: "POST",
+    headers: { origin: "https://abra-ca-dabra.app", "content-type": "application/json", "cf-connecting-ip": "203.0.113.30" },
+    body: JSON.stringify({ turnstileToken: "good-session" }),
+  }), h.env, h.deps);
+  assert.equal(session.status, 200);
+  const cookie = `abra_chat=${session.headers.get("set-cookie").match(/abra_chat=([^;]+)/)[1]}`;
+  // The session's pass does not open a call by itself.
+  assert.equal((await dial(h, { cookie, pass: "" })).status, 403);
+  assert.equal((await dial(h, { cookie, pass: crypto.randomUUID() })).status, 403);
+  assert.equal((await voicePass(h, cookie, "203.0.113.30", "bad")).status, 403);
+  const good = await voicePass(h, cookie, "203.0.113.30", "good-call");
+  assert.equal(good.status, 200);
+  assert.deepEqual(verified, ["good-session", "bad", "good-call"]);
+  assert.equal((await dial(h, { cookie, pass: good.body.pass })).headers.get("x-test-upgrade"), "1");
+  h.call.end("visitor");
+  // Used once.
+  assert.equal((await dial(h, { cookie, pass: good.body.pass })).status, 403);
+  // Expires after two minutes.
+  const late = await voicePass(h, cookie, "203.0.113.30", "good-call");
+  h.clock.now += 2 * 60 * 1000 + 1;
+  assert.equal((await dial(h, { cookie, pass: late.body.pass })).status, 403);
+});
+
+function slowLlm(delayMs, text) {
+  const calls = [];
+  const llm = (body) => {
+    calls.push(body);
+    const encoder = new TextEncoder();
+    return new Response(new ReadableStream({
+      async start(controller) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ response: text })}\n\ndata: [DONE]\n\n`));
+        controller.close();
+      },
+    }), { headers: { "content-type": "text/event-stream" } });
+  };
+  return { llm, calls };
+}
+
+test("eager end of turn starts the model early and keeps it when the words match", async () => {
+  const model = slowLlm(30, "We build custom apps and voice agents.");
+  const h = harness({ llm: model.llm });
+  const { browser, call } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "StartOfTurn", transcript: "What" }));
+  h.flux.emit("message", JSON.stringify({ event: "EagerEndOfTurn", transcript: "What do you build" }));
+  await flush(10);
+  assert.equal(model.calls.length, 1, "model started on the eager event");
+  assert.equal(browser.json().some((m) => m.type === "assistant"), false, "nothing shown before the turn is final");
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  await flush(60);
+  assert.equal(model.calls.length, 1, "the early answer was reused");
+  assert.equal(call.eagerHits, 1);
+  assert.match(browser.json().find((m) => m.type === "assistant").text, /custom apps/);
+});
+
+test("eager guesses are dropped on TurnResumed or a different final transcript", async () => {
+  const model = slowLlm(5, "Here is an answer.");
+  const h = harness({ llm: model.llm });
+  const { browser, call } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EagerEndOfTurn", transcript: "What do you" }));
+  await flush(10);
+  h.flux.emit("message", JSON.stringify({ event: "TurnResumed", transcript: "What do you charge" }));
+  await flush(10);
+  assert.equal(call.eager, null);
+  h.flux.emit("message", JSON.stringify({ event: "EagerEndOfTurn", transcript: "What do you charge" }));
+  await flush(10);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you charge for a website?" }));
+  await new Promise((resolve) => setTimeout(resolve, 40));
+  await flush(60);
+  assert.equal(model.calls.length, 3, "two guesses, then a fresh call for the real words");
+  assert.equal(call.eagerHits || 0, 0);
+  assert.equal(model.calls.at(-1).messages.at(-1).content, "What do you charge for a website?");
+  assert.ok(browser.json().some((m) => m.type === "assistant"));
+});
+
+test("Flux is asked for eager end-of-turn events", async () => {
+  const { openFlux } = await import("../src/voice.js");
+  let params;
+  const socket = { accept() {} };
+  await openFlux({ AI: { run: async (_model, input) => { params = input; return { webSocket: socket }; } } });
+  assert.equal(params.eager_eot_threshold, "0.5");
+  assert.equal(params.eot_threshold, "0.7");
 });
