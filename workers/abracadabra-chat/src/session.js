@@ -13,6 +13,7 @@ export function blankSession({ id, now, ip, page }) {
     alarmAt: now + IDLE_MS,
     ip,
     page: String(page || "").slice(0, 300),
+    startPage: String(page || "").slice(0, 300),
     messages: [],
     contact: null,
     bookingOffered: false,

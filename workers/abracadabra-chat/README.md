@@ -132,3 +132,22 @@ When a consented lead goes to HQ (`project-inquiry`), the message carries a `Rec
 - **Summary:** two sentences from a small model (`AI_RECAP_MODEL`, default `@cf/meta/llama-3.1-8b-instruct-fast`; `none` turns it off). The prompt keeps only what the visitor said. Emails are masked. The call is capped at 4 seconds, and a slow or failed call just leaves the summary out.
 - **Facts from the session:** services asked about, the Readiness Check band and pressures if it was taken in the chat, whether voice was used, the start page, and the number of questions.
 - The recap is only built when a lead is actually posted. It is never shown to the visitor, and no email is sent.
+
+## Weekly chat stats (anonymous) and the export
+
+Each chat becomes one anonymous row when it goes quiet (the 15-minute idle alarm). If the visitor comes back, the same row is rewritten, so a chat is never counted twice.
+- **What a row holds:** ISO week (Toronto time), number of questions, voice calls and turns, service topics and intents (pricing, timeline, privacy and security, integrations, about the studio) counted by keyword, the start page (site pages only, otherwise `other`), flags for booking offered, opened and completed, contact left, and Readiness Check started, finished and band, plus reply failures.
+- **What a row never holds:** words, names, emails, IPs, or session or booking ids.
+- **Storage:** rows live in one SQLite Durable Object (`ChatStatsDO`, binding `CHAT_STATS`, migration `v2`). Rows older than 26 weeks are pruned.
+
+Export (server to server, no CORS):
+
+    curl -s -H "Authorization: Bearer $CHAT_STATS_TOKEN" "https://abra-ca-dabra.app/api/chat/stats?weeks=2"
+    curl -s -H "Authorization: Bearer $CHAT_STATS_TOKEN" "https://abra-ca-dabra.app/api/chat/stats?week=2026-W43&format=csv"
+
+- `weeks` takes 1 to 12 (default 2, newest last).
+- **Token:** set it with `wrangler secret put CHAT_STATS_TOKEN` (24 characters or more). Without it the route returns 404. The token is accepted only in the header, never in the URL.
+- **Rate limit:** 30 tries an hour per network.
+- **Switching off:** `CHAT_STATS_ENABLED=false` stops new rows.
+
+The new Durable Object needs `wrangler deploy` once, because `versions upload` cannot apply a migration.

@@ -1,5 +1,7 @@
 import { handleRequest, handleSession, runAlarm } from "./http.js";
 
+export { ChatStatsDO } from "./stats.js";
+
 export class ChatSessionDO {
   constructor(state, env) {
     this.state = state;
