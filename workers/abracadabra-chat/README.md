@@ -48,6 +48,16 @@ Copy `.dev.vars.example` to `.dev.vars` (do not commit it). On the Worker, set t
 | `TTS_SPEAKER` | Aura-2 voice, default `luna`. Unknown names fall back to `luna` |
 | `TTS_MODEL` | Optional. Default `@cf/deepgram/aura-2-en` |
 
+## Leads into HQ
+
+When a visitor saves the consented note card (name, email, what they need, times), the worker posts one lead to HQ's
+`POST {HANDOFF_INTAKE_ORIGIN}/api/intake/project-inquiry`, signed like the /start/ form
+(`x-intake-signature` = HMAC-SHA256 hex of the body with `PROJECT_INQUIRY_SIGNING_SECRET`, `x-intake-timestamp` = ms).
+HQ opens or reuses a deal, logs a `project_inquiry` activity and marks it `reply_needed`; the inbound routine hands it
+to Sales Outbound. `external_id` is `chat_<session id>`, so retries (idle alarm, up to 5) never make a second lead.
+`need` is "Website chat"; `message` starts "From the website chat" and carries the note and the latest transcript.
+Nothing is emailed to the visitor. Both settings empty = no post (the houdini@ handoff mail still works as before).
+
 ## Site knowledge
 
 The assistant answers from `src/site-knowledge.js`: the public work, the ten services, process, cost wording, next steps, and a short "Why Cloudflare" list (about 1.2k tokens). It is generated from the marketing site's own data (`scrollcraft/builds/abracadabra-ai/scripts/site-data.mjs` and `service-sales.mjs`):

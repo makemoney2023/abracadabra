@@ -11,6 +11,9 @@ AI_GATEWAY_TOKEN=
 CF_ACCOUNT_ID=
 AI_MODEL=@cf/meta/llama-3.1-8b-instruct-fast
 # Signs the abra.chat.handoff v1.0 body. The mail goes to houdini@, never to the visitor.
+# HQ lead intake (same signed path as the /start/ form). Both empty = no HQ post.
+HANDOFF_INTAKE_ORIGIN
+PROJECT_INQUIRY_SIGNING_SECRET
 HANDOFF_HMAC_SECRET=
 CHAT_HANDOFF_TO=houdini@abra-ca-dabra.app
 CHAT_HANDOFF_FROM=Abracadabra Chat <chat@abra-ca-dabra.app>
