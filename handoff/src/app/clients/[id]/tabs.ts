@@ -5,6 +5,7 @@ export const CLIENT_TABS = [
   { id: "work", label: "Work" },
   { id: "threads", label: "Threads" },
   { id: "files", label: "Files & spaces" },
+  { id: "agents", label: "Agent work" },
   { id: "repos", label: "Repos" },
   { id: "activity", label: "Activity" },
   { id: "settings", label: "Settings" },

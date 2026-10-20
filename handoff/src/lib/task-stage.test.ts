@@ -66,6 +66,32 @@ describe("moveTaskStage", () => {
     expect(row).toEqual({ stage: "describe", status: "done", done_at: NOW });
   });
 
+  it("todo stores describe; engineer is Doing and starts nothing; a move to doing inside Doing changes nothing", async () => {
+    const toDoing = await moveTaskStage(sql, { taskId: "task-b", to: "engineer", now: NOW, actor });
+    expect(toDoing).toMatchObject({ ok: true, column: "doing", stage: "engineer" });
+    const again = await moveTaskStage(sql, { taskId: "task-b", to: "doing", now: NOW + 1, actor });
+    expect(again).toMatchObject({ ok: true, column: "doing", stage: "engineer" });
+    const runs = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM cloud_runs");
+    expect(runs?.n).toBe(0);
+    const back = await moveTaskStage(sql, { taskId: "task-b", to: "todo", now: NOW + 2, actor });
+    expect(back).toMatchObject({ ok: true, column: "todo", stage: "describe" });
+    const log = await sql.all<{ body: string; data_json: string }>(
+      "SELECT body, data_json FROM activities WHERE kind = 'staff.task_stage' ORDER BY created_at",
+    );
+    expect(log.map((row) => row.body)).toEqual(["Moved to Doing.", "Moved to To do."]);
+    expect(JSON.parse(log[0]!.data_json)).toMatchObject({ taskId: "task-b", stage: "engineer", column: "doing" });
+  });
+
+  it("a move to doing from To do goes through the build gate and stores build", async () => {
+    const moved = await moveTaskStage(sql, { taskId: "task-a", to: "doing", now: NOW, actor });
+    expect(moved).toEqual({ ok: false, error: "brief_not_approved" });
+  });
+
+  it("rejects an unknown target", async () => {
+    const moved = await moveTaskStage(sql, { taskId: "task-a", to: "later" as never, now: NOW, actor });
+    expect(moved).toEqual({ ok: false, error: "invalid" });
+  });
+
   it("rewrites position only inside the column", async () => {
     await sql.run(
       `INSERT INTO tasks (
@@ -74,7 +100,7 @@ describe("moveTaskStage", () => {
       [NOW, NOW],
     );
     const moved = await moveTaskStage(sql, { taskId: "task-b", direction: "up", now: NOW, actor });
-    expect(moved).toMatchObject({ ok: true, column: "describe" });
+    expect(moved).toMatchObject({ ok: true, column: "todo" });
     const describe = await sql.all<{ id: string; position: number }>(
       "SELECT id, position FROM tasks WHERE stage = 'describe' ORDER BY position",
     );
@@ -101,7 +127,7 @@ describe("moveTaskStage", () => {
         wakes.push(`${organizationId}:${reason}`);
       },
     });
-    expect(moved).toMatchObject({ ok: true, column: "run", workflowId: expect.any(String) });
+    expect(moved).toMatchObject({ ok: true, column: "doing", stage: "run", workflowId: expect.any(String) });
     const workflow = await sql.get<{ task_id: string; next_run_at: number }>(
       "SELECT task_id, next_run_at FROM client_workflows WHERE task_id = 'task-a'",
     );

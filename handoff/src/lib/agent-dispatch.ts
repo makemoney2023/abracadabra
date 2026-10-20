@@ -66,6 +66,48 @@ export async function dispatchToLeadAgent(
   return { leadAgentId, activityId };
 }
 
+/**
+ * AGENT_MODE=agents: hand the client's lead agent every open task already in Doing (stage engineer, build, or run; not
+ * waiting on Client Services)
+ * whose latest dispatch did not go to that lead, e.g. tasks moved before any lead was assigned. Runs on lead
+ * assignment and from the staff button. Returns the task ids handed over.
+ */
+export async function handOverWaitingTasks(
+  sql: Sql,
+  input: { organizationId: string; actor: { kind: "staff" | "agent" | "system"; id: string }; now: number },
+): Promise<{ leadAgentId: string | null; taskIds: string[] }> {
+  const leadAgentId = await leadAgentFor(sql, input.organizationId);
+  if (!leadAgentId) return { leadAgentId: null, taskIds: [] };
+  const rows = await sql.all<{ id: string; title: string; stage: string; project_id: string | null; deliverable_id: string | null; last_to: string | null }>(
+    `SELECT t.id, t.title, t.stage, t.project_id, t.deliverable_id,
+            (SELECT json_extract(a.data_json, '$.to') FROM activities a
+             WHERE a.kind = 'client_agent.dispatch' AND a.organization_id = t.organization_id
+               AND json_extract(a.data_json, '$.task_id') = t.id
+             ORDER BY a.created_at DESC, a.rowid DESC LIMIT 1) AS last_to
+     FROM tasks t
+     WHERE t.organization_id = ? AND t.stage IN ('engineer', 'build', 'run') AND t.status != 'done' AND t.review_requested_at IS NULL
+     ORDER BY t.position, t.created_at, t.id`,
+    [input.organizationId],
+  );
+  const taskIds: string[] = [];
+  for (const row of rows) {
+    if (row.last_to === leadAgentId) continue;
+    await dispatchToLeadAgent(sql, {
+      organizationId: input.organizationId,
+      projectId: row.project_id,
+      taskId: row.id,
+      title: row.title,
+      reason: row.stage === "run" ? "run" : "build",
+      deliverableId: row.deliverable_id,
+      note: "Handed over: this task was already waiting in this column when the lead agent was assigned.",
+      actor: input.actor,
+      now: input.now,
+    });
+    taskIds.push(row.id);
+  }
+  return { leadAgentId, taskIds };
+}
+
 export type DispatchRow = {
   id: string;
   organization_id: string;

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bot,
   Building2,
   CalendarDays,
   FolderKanban,
+  FolderInput,
   FolderOpen,
   Inbox,
   ListTodo,
@@ -36,6 +38,8 @@ export const ICONS = {
   "/projects": FolderKanban,
   "/chat": MessageSquare,
   "/swarm": Workflow,
+  "/agents": Bot,
+  "/unfiled": FolderInput,
   "/spaces": FolderOpen,
   "/settings/github": Settings,
   "/mcp": Plug,
@@ -43,16 +47,28 @@ export const ICONS = {
 
 export const NAV_ICON_HREFS = Object.keys(ICONS);
 
+export function visibleNavGroups<G extends { label: string; items: readonly { href: string }[] }>(
+  groups: readonly G[],
+  hidden: readonly string[],
+): G[] {
+  if (hidden.length === 0) return [...groups];
+  return groups.map((group) => ({ ...group, items: group.items.filter((item) => !hidden.includes(item.href)) }));
+}
+
 export type NavBadges = {
   needsYou: number;
   leads: number;
   work: number;
+  unfiled: number;
+  /** Links not shown, e.g. /swarm while AGENT_MODE is agents. */
+  hidden?: readonly string[];
 };
 
 function badgeFor(href: string, counts: NavBadges): number {
   if (href === "/") return counts.needsYou;
   if (href === "/leads") return counts.leads;
   if (href === "/work") return counts.work;
+  if (href === "/unfiled") return counts.unfiled;
   return 0;
 }
 
@@ -60,7 +76,7 @@ export function StaffNav({ counts }: { counts: NavBadges }) {
   const path = usePathname() || "/";
   return (
     <>
-      {STUDIO_NAV_GROUPS.map((group) => (
+      {visibleNavGroups(STUDIO_NAV_GROUPS, counts.hidden ?? []).map((group) => (
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel className="font-mono text-[11px] tracking-wide uppercase">
             {group.label}

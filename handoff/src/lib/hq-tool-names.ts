@@ -27,6 +27,7 @@ export const GATED_HQ_TOOLS = new Set([
   "invite_person",
   "merge_clients",
   "set_task_stage",
+  "review_task",
   "add_work",
   "revise_brief",
   "instruct_task",
@@ -84,7 +85,8 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   },
   list_tasks: {
     label: "List tasks",
-    description: "Tasks for a client with status, stage, and project_id. Fields: organizationId.",
+    description:
+      "Tasks for a client with status, stage, column (todo, doing, review, done; review is Waiting on Client Services), review_note, and project_id. Fields: organizationId.",
   },
   list_projects: {
     label: "List projects",
@@ -161,7 +163,13 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   merge_clients: { label: "Merge clients", description: "Merge two client records. Fields: keepId, dropId." },
   set_task_stage: {
     label: "Move a task",
-    description: "Set a task stage: describe, engineer, build, run. Build needs an approved brief. Fields: taskId, stage.",
+    description:
+      "Move a task on the four-column board: todo (To do), doing (Doing, stores build), or review (Waiting on Client Services; starts nothing). The stage names describe, engineer, build, and run still work. Build needs an approved brief. Fields: taskId, stage, note (review only).",
+  },
+  review_task: {
+    label: "Admin override: decide a review",
+    description:
+      "Admin override only (super admins). Client Services normally decides Review cards. Decide a task in the Review column (Waiting on Client Services). decision approve moves it to done. progress sends it back to its stage as in progress and starts nothing. build sends it back to build (a build move: legacy starts a cloud run). A send back needs a note. Fields: taskId, decision (approve, progress, build), note.",
   },
   add_work: {
     label: "Add work to the brief",
@@ -230,7 +238,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   create_workflow: {
     label: "Create a workflow",
     description:
-      "Add a swarm template to a client's group and write its skill steps onto a task the work wake can run. Create the research workflow before copy, visuals, or a calendar. The group runs one at a time. templateId is a pack id such as pack-schema-readiness. Pass projectId to assign it now. dueAt is a unix millisecond time for the first swarm run. everyMs repeats it and must be at least 15 minutes. mcpServerIds names catalog servers each step may call, such as swarm-demo. Fields: organizationId, groupId, name, templateId, projectId, dueAt, everyMs, mcpServerIds.",
+      "Add a swarm template to a client's group and write its skill steps onto a task the work wake can run. Create the research workflow before copy, visuals, or a calendar. The group runs one at a time. templateId is a pack id such as pack-schema-readiness. Pass projectId to assign it now. dueAt is a unix millisecond time for the first swarm run. everyMs repeats it and must be at least 15 minutes. mcpServerIds names catalog servers each step may call, such as swarm-demo. Fields: organizationId, groupId, name, templateId, projectId, dueAt, everyMs, mcpServerIds. Off when AGENT_MODE is agents.",
   },
   assign_workflow: {
     label: "Assign a workflow",
@@ -239,17 +247,17 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   run_workflow: {
     label: "Run a workflow",
     description:
-      "Run one pipeline stage after the previous page is accepted. A stage that is still waiting returns waiting_accept and does not start. body is the instruction, and copy, visuals, and language need Facts: and Do not use:. Fields: id, body.",
+      "Run one pipeline stage after the previous page is accepted. A stage that is still waiting returns waiting_accept and does not start. body is the instruction, and copy, visuals, and language need Facts: and Do not use:. Fields: id, body. Off when AGENT_MODE is agents (run_workflow still hands a task-backed workflow to the lead agent).",
   },
   start_pipeline: {
     label: "Start a specialist pipeline",
     description:
-      "Create one stage per skill path, in order, and start the first. paths is one .cursor/skills path per line. Pass every stage in this one call. auto true files each finished page in the space and starts the next stage. Without auto, the next stage waits for accept_workflow. name is the label. body is the instruction, and copy, visuals, and language need Facts: and Do not use:. Each stage gets a task on the project board. The result has status, output, and auto. Only running or completed means the first stage started. source means the brief lacks Facts: and Do not use:. Fields: organizationId, projectId, name, paths, body, auto.",
+      "Create one stage per skill path, in order, and start the first. paths is one .cursor/skills path per line. Pass every stage in this one call. auto true files each finished page in the space and starts the next stage. Without auto, the next stage waits for accept_workflow. name is the label. body is the instruction, and copy, visuals, and language need Facts: and Do not use:. Each stage gets a task on the project board. The result has status, output, and auto. Only running or completed means the first stage started. source means the brief lacks Facts: and Do not use:. Fields: organizationId, projectId, name, paths, body, auto. Off when AGENT_MODE is agents.",
   },
   append_pipeline_stage: {
     label: "Add a pipeline stage",
     description:
-      "Add one skill at the end of an open pipeline. It does not start. Fields: organizationId, groupId, paths.",
+      "Add one skill at the end of an open pipeline. It does not start. Fields: organizationId, groupId, paths. Off when AGENT_MODE is agents.",
   },
   abandon_pipeline: {
     label: "Close a pipeline",
@@ -259,7 +267,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   accept_workflow: {
     label: "Accept a specialist page",
     description:
-      "Accept a completed stage. With auto, the server already accepted it and started the next stage. Without auto, call run_workflow for the next stage. A visual stage renders its image prompts. Fields: id.",
+      "Accept a completed stage. With auto, the server already accepted it and started the next stage. Without auto, call run_workflow for the next stage. A visual stage renders its image prompts. Fields: id. Off when AGENT_MODE is agents.",
   },
   pipeline_status: {
     label: "Pipeline status",
@@ -279,7 +287,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   queue_followup_swarms: {
     label: "Queue the next swarms",
     description:
-      "After a swarm finishes, file the next set without starting it. title is one line per swarm: Name | pack id. id is the finished workflow. name is the new group. Fields: organizationId, id, title, body, projectId, name.",
+      "After a swarm finishes, file the next set without starting it. title is one line per swarm: Name | pack id. id is the finished workflow. name is the new group. Fields: organizationId, id, title, body, projectId, name. Off when AGENT_MODE is agents.",
   },
   decide_work_request: {
     label: "Decide a client request",

@@ -22,11 +22,13 @@ import {
   BOARD_COLUMNS,
   BOARD_COLUMN_LABEL,
   boardCards,
+  columnOf,
+  inReview,
   skillSteps,
   type BoardColumn,
 } from "@/lib/board-model";
 import { swarmRunReady } from "@/lib/swarm-ready";
-import { assignTaskPackAction, moveBoardCardAction } from "./actions";
+import { assignTaskPackAction, moveBoardCardAction, reviewCardAction } from "./actions";
 import type { BoardActivity } from "@/db/crm";
 
 export type WorkBoardCard = {
@@ -50,6 +52,8 @@ export type WorkBoardCard = {
   run_started_at: number | null;
   pr_number: number | null;
   repo_full_name: string | null;
+  review_requested_at?: number | null;
+  review_note?: string | null;
 };
 
 const CLEARING: Record<string, string> = {
@@ -97,7 +101,7 @@ function useCardMove(card: WorkBoardCard) {
 function CardMenu({ card }: { card: WorkBoardCard }) {
   const [reason, setReason] = useState("");
   const { pending, send } = useCardMove(card);
-  const column = card.status === "done" ? "done" : card.stage;
+  const column = columnOf(card);
 
   return (
     <DropdownMenu>
@@ -137,6 +141,67 @@ function CardMenu({ card }: { card: WorkBoardCard }) {
   );
 }
 
+/** Staff decision on a card in Review: approve to done, or send back with a note. */
+function ReviewPanel({ card, now, override }: { card: WorkBoardCard; now: number; override: boolean }) {
+  const [note, setNote] = useState("");
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  function decide(decision: "approve" | "progress" | "build") {
+    const data = new FormData();
+    data.set("taskId", card.id);
+    data.set("organizationId", card.organization_id);
+    data.set("projectId", card.project_id ?? "");
+    data.set("decision", decision);
+    data.set("note", note);
+    startTransition(async () => {
+      const result = await reviewCardAction(data);
+      if (result.ok) {
+        toast.success(result.message);
+        setNote("");
+        router.refresh();
+        return;
+      }
+      toast.error(result.message);
+    });
+  }
+  const from = columnOf({ status: "todo", stage: card.stage });
+  return (
+    <div className="flex flex-col gap-1.5 rounded-md border border-border bg-muted/40 p-2" aria-label={`Review ${card.title}`}>
+      <p className="text-xs text-muted-foreground">
+        Waiting on Client Services{card.review_requested_at ? ` · ${formatRelative(card.review_requested_at, now)}` : ""} · from{" "}
+        {BOARD_COLUMN_LABEL[from]}
+      </p>
+      {card.review_note ? <p className="whitespace-pre-wrap text-xs">{card.review_note}</p> : null}
+      {override ? (
+        <details className="text-xs">
+          <summary className="text-muted-foreground">Admin override</summary>
+          <div className="mt-1.5 flex flex-col gap-1.5">
+            <p className="text-muted-foreground">Client Services approves Review cards. Use this only to step in for it.</p>
+            <Input
+              value={note}
+              maxLength={2000}
+              placeholder="Note (needed to send back)"
+              aria-label={`Review note for ${card.title}`}
+              onChange={(event) => setNote(event.target.value)}
+            />
+            <div className="flex flex-wrap gap-1.5">
+              <Button size="sm" type="button" variant="outline" disabled={pending} onClick={() => decide("approve")}>
+                Override: approve
+              </Button>
+              <Button size="sm" type="button" variant="outline" disabled={pending || note.trim().length === 0} onClick={() => decide("progress")}>
+                Override: send back
+              </Button>
+              <Button size="sm" type="button" variant="ghost" disabled={pending || note.trim().length === 0} onClick={() => decide("build")}>
+                Override: back to Doing
+              </Button>
+            </div>
+          </div>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
 function CardFace({
   card,
   now,
@@ -146,6 +211,7 @@ function CardFace({
   running,
   packs,
   onMove,
+  reviewOverride = false,
 }: {
   card: WorkBoardCard;
   now: number;
@@ -154,9 +220,11 @@ function CardFace({
   notes: BoardActivity[];
   running: boolean;
   packs: { id: string; name: string }[];
-  onMove: (taskId: string, column: BoardColumn) => void;
+  onMove: (taskId: string, column: BoardColumn | "run") => void;
+  reviewOverride?: boolean;
 }) {
   const late = card.due_at !== null && card.due_at < now && card.status !== "done";
+  const review = inReview(card);
   const waiting = card.stage === "build" && card.status === "todo" && !card.cursor_agent_id && !card.blocked_reason;
   const steps = skillSteps(card.skills_json);
   const brief = notes.find((note) => note.kind === "agent.task_brief")?.body;
@@ -229,7 +297,8 @@ function CardFace({
       {card.status !== "done" && card.stage === "run" && swarm.templateId && !running ? (
         <p className="text-xs text-muted-foreground">{packName} is scheduled.</p>
       ) : null}
-      {swarm.ready ? (
+      {review ? <ReviewPanel card={card} now={now} override={reviewOverride} /> : null}
+      {swarm.ready && !review ? (
         <Button size="sm" type="button" disabled={pending} onClick={() => onMove(card.id, "run")}>
           Run swarm
         </Button>
@@ -317,6 +386,7 @@ export function WorkBoard({
   activity,
   runningTaskIds = [],
   packs = [],
+  reviewOverride = false,
 }: {
   cards: WorkBoardCard[];
   now: number;
@@ -327,6 +397,8 @@ export function WorkBoard({
   activity: BoardActivity[];
   runningTaskIds?: string[];
   packs?: { id: string; name: string }[];
+  /** Super admins see the admin override on Review cards. Client Services decides them through its API. */
+  reviewOverride?: boolean;
 }) {
   const columns = boardCards(cards);
   const notes = new Map<string, BoardActivity[]>();
@@ -337,11 +409,10 @@ export function WorkBoard({
   }
   const router = useRouter();
   const [, startTransition] = useTransition();
-  function dropCard(taskId: string, column: BoardColumn) {
+  function dropCard(taskId: string, column: BoardColumn | "run") {
     const card = cards.find((item) => item.id === taskId);
     if (!card) return;
-    const current = card.status === "done" ? "done" : card.stage;
-    if (current === column) return;
+    if (columnOf(card) === column) return;
     const data = new FormData();
     data.set("taskId", card.id);
     data.set("organizationId", card.organization_id);
@@ -362,7 +433,7 @@ export function WorkBoard({
       <div className="flex w-max gap-3 pb-3">
         {BOARD_COLUMNS.map((column) => {
           const items = columns[column];
-          const capNote = column === "build" && runCap !== null ? ` · ${runsOpen}/${runCap}` : "";
+          const capNote = column === "doing" && runCap !== null ? ` · ${runsOpen}/${runCap}` : "";
           return (
             <section
               key={column}
@@ -394,6 +465,7 @@ export function WorkBoard({
                   running={runningTaskIds.includes(card.id)}
                   packs={packs}
                   onMove={dropCard}
+                  reviewOverride={reviewOverride}
                 />
               ))}
             </section>

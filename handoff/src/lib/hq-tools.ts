@@ -35,6 +35,9 @@ import { wakeOrganization, type WakeEnv, type WakeReason } from "@/lib/agent-wak
 import { beginDirectClient, scanIntakeBindings, type ScanQueue } from "@/lib/lead-schema";
 import { defaultBuildDeps, unblockAnsweredQuestion, type BuildDeps, type GateReason } from "@/lib/cursor-build";
 import { moveTaskStage } from "@/lib/task-stage";
+import { decideReview } from "@/lib/task-review";
+import { agentModeRefusal, legacyStartsAllowed } from "@/lib/agent-mode";
+import { columnOf as boardColumnOf } from "@/lib/board-model";
 import type { Caller } from "@/lib/authz";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { workflowSpacePath } from "@/lib/workflow-files";
@@ -316,6 +319,28 @@ export async function runHqTool(
   return result;
 }
 
+/**
+ * AGENT_MODE=agents: tools that would create or start old-swarm work are refused with a clear message.
+ * run_workflow on a workflow tied to a task still goes through the board move, which hands the task to the lead agent.
+ */
+const SWARM_TOOLS_OFF = new Set([
+  "start_pipeline",
+  "append_pipeline_stage",
+  "create_workflow",
+  "queue_followup_swarms",
+  "accept_workflow",
+  "run_workflow",
+]);
+
+async function swarmToolOff(sql: Sql, tool: string, input: Record<string, unknown>): Promise<boolean> {
+  if (!SWARM_TOOLS_OFF.has(tool) || legacyStartsAllowed()) return false;
+  if (tool === "run_workflow") {
+    const row = await sql.get<{ task_id: string | null }>("SELECT task_id FROM client_workflows WHERE id = ?", [text(input, "id")]);
+    return !row?.task_id;
+  }
+  return true;
+}
+
 async function perform(
   sql: Sql,
   caller: Caller,
@@ -325,6 +350,8 @@ async function perform(
   options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const organizationId = text(input, "organizationId");
+  const off = await swarmToolOff(sql, tool, input);
+  if (off) return { ok: true, value: { refused: agentModeRefusal(tool), agentMode: "agents" } };
   if (tool === "search_clients") {
     const query = text(input, "query").toLowerCase();
     const rows = await listOrganizations(sql, caller);
@@ -349,11 +376,25 @@ async function perform(
   }
   if (tool === "list_tasks") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
-    const rows = await sql.all(
-      "SELECT id, title, status, stage, project_id FROM tasks WHERE organization_id = ?",
+    const rows = await sql.all<{
+      id: string; title: string; status: string; stage: string; project_id: string | null;
+      review_requested_at: number | null; review_note: string | null;
+    }>(
+      "SELECT id, title, status, stage, project_id, review_requested_at, review_note FROM tasks WHERE organization_id = ?",
       [organizationId],
     );
-    return { ok: true, value: rows };
+    return {
+      ok: true,
+      value: rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        stage: row.stage,
+        column: boardColumnOf(row),
+        review_note: row.review_note,
+        project_id: row.project_id,
+      })),
+    };
   }
   if (tool === "list_deliverables") {
     if (!(await seenOrg(sql, caller, organizationId))) return { ok: false, error: "missing" };
@@ -546,6 +587,7 @@ async function perform(
     return fromCrm(await mergeOrganizations(sql, caller, { keepId: text(input, "keepId"), dropId: text(input, "dropId") }, now));
   }
   if (tool === "set_task_stage") return setTaskStage(sql, caller, input, now, options);
+  if (tool === "review_task") return reviewTask(sql, caller, input, now, options);
   if (tool === "list_swarm_packs") return listSwarmPacks(options.swarm, text(input, "query"));
   if (tool === "add_work") return addWork(sql, caller, input, now, options.wake);
   if (tool === "revise_brief") return reviseBrief(sql, caller, input, now);
@@ -1091,6 +1133,7 @@ async function beginPipeline(
       };
     }
     if (started.error === "unknown_skill") return unknownSkills(started.unknown);
+    if (started.error === "agent_mode") return { ok: true, value: { refused: agentModeRefusal("start_pipeline"), agentMode: "agents" } };
     return { ok: false, error: started.error };
   }
   await logStaff(
@@ -1610,7 +1653,10 @@ async function setTaskStage(
   options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const stage = text(input, "stage");
-  if (stage !== "describe" && stage !== "engineer" && stage !== "build" && stage !== "run") {
+  if (
+    stage !== "todo" && stage !== "doing" && stage !== "describe" && stage !== "engineer" && stage !== "build" &&
+    stage !== "run" && stage !== "review"
+  ) {
     return { ok: false, error: "invalid" };
   }
   const task = await sql.get<{ id: string; organization_id: string | null }>(
@@ -1623,6 +1669,7 @@ async function setTaskStage(
   const moved = await moveTaskStage(sql, {
     taskId: task.id,
     to: stage,
+    note: stage === "review" ? text(input, "note") || undefined : undefined,
     now,
     actor: { kind: "staff", id: caller.userId },
     build: options.build ?? defaultBuildDeps(now),
@@ -1645,6 +1692,52 @@ async function setTaskStage(
     };
   }
   return { ok: true, value: { taskId: task.id, stage } };
+}
+
+async function reviewTask(
+  sql: Sql,
+  caller: Caller,
+  input: Record<string, unknown>,
+  now: number,
+  options: ToolOptions & { wake: Wake },
+): Promise<HqToolResult> {
+  const decision = text(input, "decision");
+  if (decision !== "approve" && decision !== "progress" && decision !== "build") return { ok: false, error: "invalid" };
+  // Client Services decides reviews; chat may only do it as a super-admin override.
+  if (!caller.staff?.superAdmin) return { ok: false, error: "forbidden" };
+  const task = await sql.get<{ id: string; organization_id: string | null }>(
+    "SELECT id, organization_id FROM tasks WHERE id = ?",
+    [text(input, "taskId")],
+  );
+  if (!task?.organization_id || !(await seenOrg(sql, caller, task.organization_id)) || !caller.userId) {
+    return { ok: false, error: "missing" };
+  }
+  const decided = await decideReview(sql, {
+    taskId: task.id,
+    decision,
+    note: text(input, "note") || undefined,
+    now,
+    actor: { kind: "staff", id: caller.userId },
+    build: options.build ?? defaultBuildDeps(now),
+    wake: options.wake,
+    readSkill: options.readSkill,
+  });
+  // not_in_review and note_required come back as invalid: the description says a send back needs a note.
+  if (!decided.ok) {
+    return { ok: false, error: decided.error === "not_in_review" || decided.error === "note_required" ? "invalid" : decided.error };
+  }
+  return {
+    ok: true,
+    value: {
+      taskId: task.id,
+      column: decided.column,
+      stage: decided.stage,
+      status: decided.status,
+      ...(decided.runId ? { runId: decided.runId } : {}),
+      ...(decided.waiting ? { waiting: decided.waiting } : {}),
+      ...(decided.handedTo !== undefined ? { handedTo: decided.handedTo } : {}),
+    },
+  };
 }
 
 async function projectForBrief(sql: Sql, organizationId: string, requested: string): Promise<string | null | "missing"> {

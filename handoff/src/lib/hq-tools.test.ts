@@ -918,7 +918,15 @@ it("returns the client's projects and reuses one with the same name", async () =
   expect(valueOf(projects)).toEqual([{ id: projectId, name: "Social Media Ads", status: "planned" }]);
   const tasks = await runHqTool(sql, staff, { tool: "list_tasks", input: { organizationId } }, NOW);
   expect(valueOf(tasks)).toEqual([
-    { id: "task-1", title: "Create content calendar", status: "todo", stage: "describe", project_id: projectId },
+    {
+      id: "task-1",
+      title: "Create content calendar",
+      status: "todo",
+      stage: "describe",
+      column: "todo",
+      review_note: null,
+      project_id: projectId,
+    },
   ]);
   const summary = await runHqTool(sql, staff, { tool: "client_summary", input: { organizationId } }, NOW);
   expect(valueOf(summary)).toMatchObject({ projects: [{ id: projectId, name: "Social Media Ads" }] });

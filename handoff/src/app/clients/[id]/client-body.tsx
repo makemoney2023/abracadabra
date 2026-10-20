@@ -12,10 +12,12 @@ import type {
   TaskRow,
   WorkspaceLink,
 } from "@/db/crm";
+import type { ClientAgentWork } from "@/lib/agent-admin";
 import type { SchemaLeadView } from "@/lib/schema-report";
 import type { PackCandidate } from "@/lib/pack-picker";
 import type { SwarmRunRow } from "@/lib/swarm-runs";
 import { ActivityTab } from "./activity-tab";
+import { AgentWorkTab } from "./agent-work-tab";
 import { FilesTab } from "./files-tab";
 import { OverviewTab } from "./overview-tab";
 import { ReposTab, repoProjects } from "./repos-tab";
@@ -54,6 +56,7 @@ export function ClientBody({
   githubConnected,
   githubFailed,
   searchConsoleResource,
+  agentWork,
 }: {
   tab: ClientTabId;
   page: number;
@@ -84,6 +87,7 @@ export function ClientBody({
   githubConnected: boolean;
   githubFailed: boolean;
   searchConsoleResource: string;
+  agentWork?: ClientAgentWork;
 }) {
   if (tab === "work") {
     return (
@@ -104,6 +108,7 @@ export function ClientBody({
     );
   }
   if (tab === "threads") return <ThreadsTab organizationId={client.id} threads={threads} />;
+  if (tab === "agents") return <AgentWorkTab organizationId={client.id} work={agentWork ?? { agents: [], filed: [], updates: [] }} now={now} />;
   if (tab === "files") return <FilesTab organizationId={client.id} linked={linked} free={free} />;
   if (tab === "repos") {
     return (

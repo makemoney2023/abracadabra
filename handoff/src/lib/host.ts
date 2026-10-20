@@ -18,6 +18,8 @@ const STAFF_PREFIXES = [
   "/settings",
   "/chat",
   "/swarm",
+  "/agents",
+  "/unfiled",
 ];
 
 const CLIENT_PREFIXES = ["/w", "/share", "/invites", "/how-handoff-handles-files"];

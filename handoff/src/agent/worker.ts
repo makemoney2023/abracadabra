@@ -2,6 +2,7 @@ import { Agent, getAgentByName, routeAgentRequest } from "agents";
 import { HqChat } from "./hq-chat";
 import { adaptArtifact } from "../lib/artifact-adapter";
 import { verifyWake } from "../lib/agent-wake";
+import { legacyStartsAllowed } from "../lib/agent-mode";
 import {
   draftClientDocuments,
   parseSkillCatalog,
@@ -284,7 +285,9 @@ export class ClientAgent extends Agent<AgentBindings> {
     const call = this.leadCaller();
     if (!call) return;
     const packs = await this.leadPacks(origin);
-    const portal = origin
+    // AGENT_MODE=agents: no lead swarm. The plain pickup note and file are written, and no swarm run is recorded.
+    const swarmAllowed = legacyStartsAllowed(this.env as { AGENT_MODE?: unknown });
+    const portal = origin && swarmAllowed
       ? leadPortalAttach({ origin, portalUrl: this.env.MCP_PORTAL_URL, runSecret: this.env.SWARM_RUN_SECRET })
       : { mcpServers: [], runSecret: "" };
     await qualifyLead({
@@ -292,7 +295,8 @@ export class ClientAgent extends Agent<AgentBindings> {
       requestId: wakeId,
       packs,
       trigger: reason,
-      runSwarm: origin
+      swarmAllowed,
+      runSwarm: origin && swarmAllowed
         ? (brief, templateId) =>
             runLeadSwarm({
               origin,

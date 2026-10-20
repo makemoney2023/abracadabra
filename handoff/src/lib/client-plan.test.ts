@@ -131,6 +131,41 @@ describe("lead pickup", () => {
     expect(briefs[0]).toContain("Foam mattresses ship free.");
   });
 
+  it("AGENT_MODE=agents: no swarm is asked for, the normal note and file are written, and no swarm run is recorded", async () => {
+    process.env.AGENT_MODE = "agents";
+    try {
+      const { call, calls } = caller({});
+      let asked = 0;
+      const result = await qualifyLead({
+        call,
+        requestId: "wake-lead",
+        runSwarm: async () => {
+          asked += 1;
+          return "Swarm runs are off. AGENT_MODE is agents.";
+        },
+      });
+      expect(result).toBe("started");
+      expect(asked).toBe(0);
+      expect(calls.map((entry) => entry.name)).toEqual([
+        "client_context",
+        "store_scan_context",
+        "add_note",
+        "create_task",
+        "save_space_file",
+      ]);
+      expect(String(calls.find((entry) => entry.name === "add_note")?.args.body)).toMatch(/^Picked up Foam Co\./);
+      expect(String(calls.find((entry) => entry.name === "save_space_file")?.args.body)).not.toContain("AGENT_MODE");
+    } finally {
+      delete process.env.AGENT_MODE;
+    }
+  });
+
+  it("an explicit swarmAllowed false wins over a legacy flag", async () => {
+    const { call, calls } = caller({});
+    await qualifyLead({ call, requestId: "wake-lead", swarmAllowed: false, runSwarm: async () => "nope" });
+    expect(calls.some((entry) => entry.name === "record_swarm_run")).toBe(false);
+  });
+
   it("does not start a second swarm when qualify is already open", async () => {
     const { call, calls } = caller({ tasks: [{ title: "Qualify Foam Co", status: "todo" }] });
     const result = await qualifyLead({

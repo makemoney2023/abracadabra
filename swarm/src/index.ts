@@ -1,6 +1,7 @@
 import { WorkflowDO } from './do/WorkflowDO';
 import { handleDemoMcp } from './mcp/demo';
 import { uiAssetKey, uiContentType } from './ui-asset';
+import { refuseRunStart } from './agent-mode';
 
 export { WorkflowDO };
 
@@ -19,6 +20,8 @@ export interface Env {
   HANDOFF_ORIGIN?: string;
   CF_ACCESS_CLIENT_ID?: string;
   CF_ACCESS_CLIENT_SECRET?: string;
+  /** "agents": no new runs (POST /api/execute answers 409). Runs already started still finish. Set as a secret. */
+  AGENT_MODE?: string;
 }
 
 const frameAncestors =
@@ -35,6 +38,8 @@ export default {
 
     // Durable Object routing for the API (live execution, state, memory, artifacts)
     if (url.pathname.startsWith('/api/')) {
+      const refused = refuseRunStart(env, request.method, url.pathname);
+      if (refused) return refused;
       const id = env.WORKFLOW_DO.idFromName('orchestrator');
       const stub = env.WORKFLOW_DO.get(id);
       const doUrl = new URL(request.url);

@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { wakeOrganization } from "@/lib/agent-wake";
 import { defaultBuildDeps } from "@/lib/cursor-build";
 import { requireHqStaffPage } from "@/lib/current";
-import { moveTaskStage, type TaskColumn } from "@/lib/task-stage";
+import { isMoveTarget, moveTaskStage, type MoveTarget } from "@/lib/task-stage";
+import { decideReview, type ReviewDecision } from "@/lib/task-review";
 import { writeTaskPack } from "@/lib/task-packs";
 import { cloudflareSkillReader } from "@/lib/cloudflare-skills";
 import { openObjectStore } from "@/lib/store/objects";
-
-const COLUMNS = new Set<TaskColumn>(["describe", "engineer", "build", "run", "done"]);
+import { isLiveSuperAdmin } from "@/lib/store/staff";
 
 const REASON: Record<string, string> = {
   missing: "That task is not on the board.",
@@ -24,10 +24,18 @@ const REASON: Record<string, string> = {
   agent_paused: "The agent is paused.",
   cursor_start_failed: "The cloud run did not start.",
   prompt_rejected: "Rewrite the build brief.",
+  not_in_review: "That card is not waiting on Client Services.",
+  note_required: "Add a note so the agent knows what to change.",
 };
 
-function columnOf(value: string): TaskColumn | null {
-  return COLUMNS.has(value as TaskColumn) ? (value as TaskColumn) : null;
+/** The board sends a column (todo, doing, review, done); Run swarm sends run. */
+function columnOf(value: string): MoveTarget | null {
+  return isMoveTarget(value) ? value : null;
+}
+
+function wakeFor(now: number) {
+  return (id: string, reason: Parameters<typeof wakeOrganization>[2]) =>
+    wakeOrganization({ AGENT_URL: process.env.AGENT_URL, AGENT_WAKE_SECRET: process.env.AGENT_WAKE_SECRET }, id, reason, now);
 }
 
 export async function assignTaskPackAction(formData: FormData): Promise<{ ok: boolean; message: string }> {
@@ -92,4 +100,43 @@ export async function moveBoardCardAction(formData: FormData): Promise<{ ok: boo
   if (!moved.ok) return { ok: false, message: REASON[moved.error] ?? "That move did not stick." };
   if (moved.waiting) return { ok: true, message: "Waiting for a free cloud run." };
   return { ok: true, message: "Moved." };
+}
+
+const DECISIONS = new Set<ReviewDecision>(["approve", "progress", "build"]);
+
+/**
+ * Admin override for a Review card: approve to done, or send back with a note. Client Services normally decides
+ * these through POST /api/client-services/reviews/<taskId>. Super admins only.
+ */
+export async function reviewCardAction(formData: FormData): Promise<{ ok: boolean; message: string }> {
+  const { sql, caller } = await requireHqStaffPage();
+  if (!caller.userId || !(await isLiveSuperAdmin(sql, caller))) {
+    return { ok: false, message: "Client Services decides reviews. Only an admin can override." };
+  }
+  const taskId = String(formData.get("taskId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const projectId = String(formData.get("projectId") ?? "");
+  const decision = String(formData.get("decision") ?? "") as ReviewDecision;
+  if (!DECISIONS.has(decision)) return { ok: false, message: "Pick approve or send back." };
+  const note = String(formData.get("note") ?? "");
+  const now = Date.now();
+  const decided = await decideReview(sql, {
+    taskId,
+    decision,
+    note,
+    now,
+    actor: { kind: "staff", id: caller.userId },
+    build: defaultBuildDeps(now),
+    swarm: { origin: process.env.SWARM_ORIGIN ?? "", store: openObjectStore() },
+    readSkill: await cloudflareSkillReader(),
+    wake: wakeFor(now),
+  });
+  revalidatePath("/work");
+  revalidatePath("/");
+  if (organizationId) revalidatePath(`/clients/${organizationId}`);
+  if (projectId) revalidatePath(`/projects/${projectId}`);
+  if (!decided.ok) return { ok: false, message: REASON[decided.error] ?? "That did not stick." };
+  if (decision === "approve") return { ok: true, message: "Override: approved. Moved to done." };
+  if (decided.waiting) return { ok: true, message: "Sent back. Waiting for a free cloud run." };
+  return { ok: true, message: decision === "build" ? "Sent back to build." : "Sent back to in progress." };
 }

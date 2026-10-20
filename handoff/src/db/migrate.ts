@@ -29,6 +29,7 @@ const STEPS = [
   { file: "0025_client_work.sql", table: "client_work_requests" },
   { file: "0026_agent_work.sql", table: "skill_grants" },
   { file: "0027_org_parent.sql", index: "organizations_parent" },
+  { file: "0028_task_review.sql", column: { table: "tasks", name: "review_note" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];
@@ -68,13 +69,33 @@ export function statementsFromMigration(file: string): string[] {
     .filter((statement) => statement.length > 0);
 }
 
+/**
+ * A step is marked applied by its last table or column, so a step that stopped halfway runs again from the top.
+ * CREATE TABLE and CREATE INDEX get IF NOT EXISTS so that re-run finishes instead of failing on the first table.
+ * Only steps that are not applied yet run, so a database that is already current is not touched.
+ */
+export function idempotentStatement(statement: string): string {
+  return statement
+    .replace(/^CREATE\s+TABLE\s+(?!IF\s+NOT\s+EXISTS\b)/i, "CREATE TABLE IF NOT EXISTS ")
+    .replace(/^CREATE\s+(UNIQUE\s+)?INDEX\s+(?!IF\s+NOT\s+EXISTS\b)/i, (_match, unique?: string) => `CREATE ${unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS `);
+}
+
+function alreadyAddedColumn(statement: string, error: unknown): boolean {
+  return /^ALTER\s+TABLE\s+\S+\s+ADD\s+COLUMN\b/i.test(statement) && error instanceof Error && /duplicate column name/i.test(error.message);
+}
+
 export async function migrate(sql: Sql): Promise<void> {
   for (const step of STEPS) {
     if (await stepApplied(sql, step)) continue;
     const file = MIGRATION_SQL[step.file];
     if (!file) throw new Error(`Missing migration ${step.file}`);
-    for (const statement of statementsFromMigration(file)) {
-      await sql.run(statement);
+    for (const raw of statementsFromMigration(file)) {
+      const statement = idempotentStatement(raw);
+      try {
+        await sql.run(statement);
+      } catch (error) {
+        if (!alreadyAddedColumn(statement, error)) throw error;
+      }
     }
   }
   const marked = await sql.get<{ value: string }>(

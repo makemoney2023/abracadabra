@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardCards, nextSteps, skillProgress, type StepCard } from "./board-model";
+import { BOARD_COLUMNS, BOARD_COLUMN_LABEL, boardCards, columnOf, nextSteps, skillProgress, toColumn, type StepCard } from "./board-model";
 
 function placed(partial: {
   id: string;
@@ -35,18 +35,18 @@ function step(partial: Partial<StepCard> & Pick<StepCard, "id">): StepCard {
 }
 
 describe("boardCards", () => {
-  it("puts a finished run card in Done and an open run card in Run", () => {
+  it("puts a finished run card in Done and an open run card in Doing", () => {
     const columns = boardCards([
       placed({ id: "finished", status: "done", stage: "run", done_at: 20 }),
       placed({ id: "review", status: "todo", stage: "run" }),
     ]);
     expect(columns.done.map((card) => card.id)).toEqual(["finished"]);
-    expect(columns.run.map((card) => card.id)).toEqual(["review"]);
+    expect(columns.doing.map((card) => card.id)).toEqual(["review"]);
   });
 
-  it("leaves a blocked describe card in Describe", () => {
+  it("leaves a blocked describe card in To do", () => {
     const columns = boardCards([placed({ id: "stuck", status: "blocked", stage: "describe" })]);
-    expect(columns.describe.map((card) => card.id)).toEqual(["stuck"]);
+    expect(columns.todo.map((card) => card.id)).toEqual(["stuck"]);
     expect(columns.done).toEqual([]);
   });
 
@@ -56,7 +56,7 @@ describe("boardCards", () => {
       placed({ id: "a", position: 0, created_at: 2 }),
       placed({ id: "c", position: 0, created_at: 1 }),
     ]);
-    expect(columns.describe.map((card) => card.id)).toEqual(["c", "a", "b"]);
+    expect(columns.todo.map((card) => card.id)).toEqual(["c", "a", "b"]);
   });
 
   it("keeps the 30 most recently finished cards", () => {
@@ -67,6 +67,42 @@ describe("boardCards", () => {
     expect(columns.done).toHaveLength(30);
     expect(columns.done[0]?.id).toBe("done-30");
     expect(columns.done.some((card) => card.id === "done-0")).toBe(false);
+  });
+});
+
+describe("four columns", () => {
+  it("is To do, Doing, Waiting on Client Services, Done", () => {
+    expect(BOARD_COLUMNS.map((column) => BOARD_COLUMN_LABEL[column])).toEqual(["To do", "Doing", "Waiting on Client Services", "Done"]);
+  });
+
+  it("maps describe to To do; engineer, build, and run to Doing; the review flag and done over any stage", () => {
+    expect(columnOf({ status: "todo", stage: "describe" })).toBe("todo");
+    expect(columnOf({ status: "blocked", stage: "describe" })).toBe("todo");
+    for (const stage of ["engineer", "build", "run"]) expect(columnOf({ status: "todo", stage })).toBe("doing");
+    expect(columnOf({ status: "doing", stage: "run", review_requested_at: 5 })).toBe("review");
+    expect(columnOf({ status: "done", stage: "run", review_requested_at: 5 })).toBe("done");
+    expect(columnOf({ status: "todo", stage: "odd" })).toBe("todo");
+  });
+
+  it("puts the live mix where staff expect it", () => {
+    const columns = boardCards([
+      ...Array.from({ length: 4 }, (_, index) => placed({ id: `d${index}`, stage: "describe", position: index })),
+      placed({ id: "run-open", stage: "run" }),
+      placed({ id: "run-done", stage: "run", status: "done", done_at: 9 }),
+    ]);
+    expect(columns.todo.map((card) => card.id)).toEqual(["d0", "d1", "d2", "d3"]);
+    expect(columns.doing.map((card) => card.id)).toEqual(["run-open"]);
+    expect(columns.review).toEqual([]);
+    expect(columns.done.map((card) => card.id)).toEqual(["run-done"]);
+  });
+
+  it("takes the column names and the old stage names as move targets", () => {
+    expect(["todo", "To do", "describe"].map(toColumn)).toEqual(["todo", "todo", "todo"]);
+    expect(["doing", "engineer", "BUILD", "run"].map(toColumn)).toEqual(["doing", "doing", "doing", "doing"]);
+    expect(toColumn("review")).toBe("review");
+    expect(toColumn("done")).toBe("done");
+    expect(toColumn("later")).toBeNull();
+    expect(toColumn(3)).toBeNull();
   });
 });
 

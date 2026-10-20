@@ -21,7 +21,7 @@ export async function markTaskDone(
   });
   await sql.run(
     `UPDATE tasks
-     SET status = 'done', done_at = ?, blocked_reason = NULL, position = ?, updated_at = ?
+     SET status = 'done', done_at = ?, blocked_reason = NULL, review_requested_at = NULL, position = ?, updated_at = ?
      WHERE id = ?`,
     [input.now, position, input.now, task.id],
   );

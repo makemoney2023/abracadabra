@@ -5,12 +5,18 @@ export type WorkCount = {
   late: number;
   thisWeek: number;
   blocked: number;
+  review: number;
 };
 
 type CountedTask = {
   status: string;
   due_at: number | null;
+  review_requested_at?: number | null;
 };
+
+function isReview(task: CountedTask): boolean {
+  return task.status !== "done" && task.review_requested_at != null;
+}
 
 function isLate(task: CountedTask, now: number): boolean {
   return task.due_at !== null && task.due_at < now;
@@ -25,24 +31,27 @@ export function workCounts(tasks: CountedTask[], now: number): WorkCount {
   let late = 0;
   let thisWeek = 0;
   let blocked = 0;
+  let review = 0;
   for (const task of tasks) {
+    if (isReview(task)) review += 1;
     if (isLate(task, now)) late += 1;
     if (isThisWeek(task, now)) thisWeek += 1;
     if (task.status === "blocked") blocked += 1;
   }
-  return { all: tasks.length, late, thisWeek, blocked };
+  return { all: tasks.length, late, thisWeek, blocked, review };
 }
 
 /** Keeps tasks that match the active filters. `density` is not a filter. */
 export function filterWork<T extends CountedTask>(
   tasks: T[],
-  filter: { late?: boolean; week?: boolean; blocked?: boolean },
+  filter: { late?: boolean; week?: boolean; blocked?: boolean; review?: boolean },
   now: number,
 ): T[] {
   return tasks.filter((task) => {
     if (filter.late && !isLate(task, now)) return false;
     if (filter.week && !isThisWeek(task, now)) return false;
     if (filter.blocked && task.status !== "blocked") return false;
+    if (filter.review && !isReview(task)) return false;
     return true;
   });
 }
@@ -51,6 +60,7 @@ export function workHref(input: {
   late?: boolean;
   week?: boolean;
   blocked?: boolean;
+  review?: boolean;
   group?: "person" | "client";
   client?: string;
   project?: string;
@@ -61,6 +71,7 @@ export function workHref(input: {
   if (input.late) search.set("late", "1");
   if (input.week) search.set("week", "1");
   if (input.blocked) search.set("blocked", "1");
+  if (input.review) search.set("review", "1");
   if (input.group === "client") search.set("group", "client");
   if (input.client) search.set("client", input.client);
   if (input.project) search.set("project", input.project);

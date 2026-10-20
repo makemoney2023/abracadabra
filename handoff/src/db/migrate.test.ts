@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { migrate, statementsFromMigration } from "./migrate";
+import { idempotentStatement, migrate, statementsFromMigration } from "./migrate";
 import { MIGRATION_SQL } from "./migration-sql";
 import { sqliteSql } from "./sql";
 
@@ -42,6 +42,9 @@ describe("statementsFromMigration", () => {
       "0023_pipeline_auto.sql",
       "0024_lead_scores.sql",
       "0025_client_work.sql",
+      "0026_agent_work.sql",
+      "0027_org_parent.sql",
+      "0028_task_review.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -170,5 +173,78 @@ describe("statementsFromMigration", () => {
          'agent', 2, 2
        )`,
     );
+  });
+});
+
+describe("a step that stopped halfway", () => {
+  it("adds IF NOT EXISTS to CREATE TABLE and CREATE INDEX only", () => {
+    expect(idempotentStatement("CREATE TABLE a (id TEXT)")).toBe("CREATE TABLE IF NOT EXISTS a (id TEXT)");
+    expect(idempotentStatement("CREATE TABLE IF NOT EXISTS a (id TEXT)")).toBe("CREATE TABLE IF NOT EXISTS a (id TEXT)");
+    expect(idempotentStatement("CREATE UNIQUE INDEX a_x ON a (x) WHERE y IS NULL")).toBe("CREATE UNIQUE INDEX IF NOT EXISTS a_x ON a (x) WHERE y IS NULL");
+    expect(idempotentStatement("CREATE INDEX a_y ON a (y)")).toBe("CREATE INDEX IF NOT EXISTS a_y ON a (y)");
+    expect(idempotentStatement("INSERT INTO a SELECT * FROM b")).toBe("INSERT INTO a SELECT * FROM b");
+    expect(idempotentStatement("ALTER TABLE a ADD COLUMN z TEXT")).toBe("ALTER TABLE a ADD COLUMN z TEXT");
+  });
+
+  it("finishes 0026 when only its first tables were created", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    db.exec("DROP TABLE skill_grants");
+    db.exec("DROP TABLE agent_work_items");
+    await migrate(sql);
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('client_agents', 'agent_assignments', 'agent_work_items', 'skill_grants') ORDER BY name")
+      .all() as { name: string }[];
+    expect(tables.map((row) => row.name)).toEqual(["agent_assignments", "agent_work_items", "client_agents", "skill_grants"]);
+  });
+
+  it("finishes a column step when its first columns were added", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    db.exec("ALTER TABLE deals DROP COLUMN routing_status");
+    await migrate(sql);
+    const columns = db.prepare("PRAGMA table_info(deals)").all() as { name: string }[];
+    expect(columns.map((column) => column.name)).toEqual(expect.arrayContaining(["lead_score", "scored_at", "routing_status"]));
+  });
+
+  it("adds the Review columns without touching existing tasks, and finishes a half-applied 0028", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    db.exec("ALTER TABLE tasks DROP COLUMN review_note");
+    db.exec("ALTER TABLE tasks DROP COLUMN review_requested_at");
+    db.exec(
+      "INSERT INTO tasks (id, title, status, stage, created_at, updated_at) VALUES ('t-old', 'Old card', 'doing', 'build', 1, 1)",
+    );
+    db.exec("ALTER TABLE tasks ADD COLUMN review_requested_at INTEGER");
+    await migrate(sql);
+    const row = db.prepare("SELECT status, stage, review_requested_at, review_note FROM tasks WHERE id = 't-old'").get();
+    expect(row).toEqual({ status: "doing", stage: "build", review_requested_at: null, review_note: null });
+    await migrate(sql);
+  });
+
+  it("finishes a half-applied 0027 (column added, index missing) and then 0028", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    db.exec("DROP INDEX organizations_parent");
+    db.exec("ALTER TABLE tasks DROP COLUMN review_note");
+    await migrate(sql);
+    const index = db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'organizations_parent'").get();
+    expect(index).toEqual({ name: "organizations_parent" });
+    const columns = db.prepare("PRAGMA table_info(tasks)").all() as { name: string }[];
+    expect(columns.map((column) => column.name)).toContain("review_note");
+  });
+
+  it("still fails on a real error", async () => {
+    const db = new DatabaseSync(":memory:");
+    const sql = sqliteSql(db);
+    await migrate(sql);
+    db.exec("DROP TABLE skill_grants");
+    db.exec("DROP TABLE agent_work_items");
+    db.exec("CREATE TABLE agent_work_items_state (id TEXT)");
+    await expect(migrate(sql)).rejects.toThrow();
   });
 });

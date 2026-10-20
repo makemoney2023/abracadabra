@@ -1,14 +1,64 @@
-export const BOARD_COLUMNS = ["describe", "engineer", "build", "run", "done"] as const;
+/**
+ * Four columns: To do, Doing, Waiting on Client Services, Done.
+ * To do is stage describe. Doing is stage engineer, build, or run (new moves into Doing store build).
+ * Waiting on Client Services is the review flag over the stage. Done is status done.
+ */
+export const BOARD_COLUMNS = ["todo", "doing", "review", "done"] as const;
 
 export type BoardColumn = (typeof BOARD_COLUMNS)[number];
 
 export const BOARD_COLUMN_LABEL: Record<BoardColumn, string> = {
-  describe: "Describe",
-  engineer: "Engineer",
-  build: "Build",
-  run: "Run",
+  todo: "To do",
+  doing: "Doing",
+  review: "Waiting on Client Services",
   done: "Done",
 };
+
+/** Stored stages that show in Doing. Anything else that is not done or in review shows in To do. */
+export const DOING_STAGES = ["engineer", "build", "run"] as const;
+
+/** The old stage names still work as move targets: describe is To do; engineer, build, and run are Doing. */
+export const COLUMN_ALIASES: Record<string, BoardColumn> = {
+  todo: "todo",
+  "to do": "todo",
+  to_do: "todo",
+  describe: "todo",
+  doing: "doing",
+  engineer: "doing",
+  build: "doing",
+  run: "doing",
+  review: "review",
+  waiting: "review",
+  done: "done",
+};
+
+/** A column from a column name or an old stage name, else null. */
+export function toColumn(value: unknown): BoardColumn | null {
+  if (typeof value !== "string") return null;
+  return COLUMN_ALIASES[value.trim().toLowerCase()] ?? null;
+}
+
+/** Review sits on a task while review_requested_at is set and it is not done. */
+export function inReview(task: { status: string; review_requested_at?: number | null }): boolean {
+  return task.status !== "done" && task.review_requested_at != null;
+}
+
+/**
+ * SQL for "this row sits in column ?". Bind with columnBinds(column) (four values).
+ * Done is status; Review is the review flag; To do and Doing leave Review and done cards out.
+ */
+export const COLUMN_SQL = `(
+         (? = 'done' AND status = 'done')
+         OR (? = 'review' AND status != 'done' AND review_requested_at IS NOT NULL)
+         OR (? = 'todo' AND status != 'done' AND review_requested_at IS NULL AND stage NOT IN ('engineer', 'build', 'run'))
+         OR (? = 'doing' AND status != 'done' AND review_requested_at IS NULL AND stage IN ('engineer', 'build', 'run'))
+       )`;
+
+/** The four binds for COLUMN_SQL. Old stage names are accepted and mapped. */
+export function columnBinds(column: string): [string, string, string, string] {
+  const value = toColumn(column) ?? column;
+  return [value, value, value, value];
+}
 
 const DONE_LIMIT = 30;
 const ACTIVE_PROJECT = new Set(["planned", "active", "waiting_on_client"]);
@@ -20,6 +70,7 @@ export type PlacedTask = {
   position: number;
   created_at: number;
   done_at: number | null;
+  review_requested_at?: number | null;
 };
 
 export type StepCard = {
@@ -33,17 +84,17 @@ export type StepCard = {
   createdAt: number;
   blockedAnswered: boolean;
   hasSkill: boolean;
+  /** Waiting on Client Services, so the HQ agent does not pick it up. */
+  inReview?: boolean;
 };
 
 type SkillStep = { path?: unknown; status?: unknown };
 
-/** The column a card sits in. Done is status. Blocked stays in its stage. */
-export function columnOf(task: { status: string; stage: string }): BoardColumn {
+/** The column a card sits in. Done is status. Review is a flag over the stage. Blocked stays where it is. */
+export function columnOf(task: { status: string; stage: string; review_requested_at?: number | null }): BoardColumn {
   if (task.status === "done") return "done";
-  if (task.stage === "engineer" || task.stage === "build" || task.stage === "run" || task.stage === "describe") {
-    return task.stage;
-  }
-  return "describe";
+  if (inReview(task)) return "review";
+  return (DOING_STAGES as readonly string[]).includes(task.stage) ? "doing" : "todo";
 }
 
 function byQueue(left: PlacedTask, right: PlacedTask): number {
@@ -66,10 +117,9 @@ function byDone(left: PlacedTask, right: PlacedTask): number {
 /** Places each task in one column. Done keeps the 30 most recently finished cards. */
 export function boardCards<T extends PlacedTask>(tasks: T[]): Record<BoardColumn, T[]> {
   const columns: Record<BoardColumn, T[]> = {
-    describe: [],
-    engineer: [],
-    build: [],
-    run: [],
+    todo: [],
+    doing: [],
+    review: [],
     done: [],
   };
   for (const task of tasks) columns[columnOf(task)].push(task);
@@ -82,7 +132,7 @@ export function boardCards<T extends PlacedTask>(tasks: T[]): Record<BoardColumn
 }
 
 function ready(card: StepCard): boolean {
-  if (!card.id || !card.hasSkill) return false;
+  if (!card.id || !card.hasSkill || card.inReview) return false;
   if (card.status === "done" || card.stage === "build" || card.stage === "run") return false;
   if (card.status === "blocked" && !card.blockedAnswered) return false;
   if (!card.projectId) return false;

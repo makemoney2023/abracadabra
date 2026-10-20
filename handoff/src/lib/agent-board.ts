@@ -3,6 +3,7 @@ import { agentMode } from "@/lib/agent-mode";
 import { resolveClientRef, type AgentPrincipal } from "@/lib/agent-work-filing";
 import { nextColumnPosition } from "@/lib/task-position";
 import { moveTaskStage, type MoveTaskResult } from "@/lib/task-stage";
+import { BOARD_COLUMN_LABEL, columnOf as boardColumnOf, toColumn, type BoardColumn } from "@/lib/board-model";
 
 /**
  * Client agents update the project board for clients they are assigned to now: set a task in progress, block it with
@@ -11,7 +12,6 @@ import { moveTaskStage, type MoveTaskResult } from "@/lib/task-stage";
  */
 
 const OPEN_PROJECT = "status IN ('planned', 'active', 'waiting_on_client')";
-const COLUMNS = new Set(["describe", "engineer", "build", "run", "done"]);
 
 export type BoardTask = {
   id: string;
@@ -23,13 +23,31 @@ export type BoardTask = {
   column: string;
   blocked_reason: string | null;
   deliverable_id: string | null;
+  /** In Review: when it was asked for (ISO), else null. */
+  review_requested_at: string | null;
+  /** The note from the review ask, or the staff note from the last send back. */
+  review_note: string | null;
   updated_at: string;
 };
 
 export type BoardError = { ok: false; status: 400 | 403 | 404; message: string };
 
-function columnOf(row: { status: string; stage: string }): string {
-  return row.status === "done" ? "done" : row.stage || "describe";
+type TaskDbRow = {
+  id: string; title: string; organization_id: string; project_id: string | null; stage: string; status: string;
+  blocked_reason: string | null; deliverable_id: string | null; review_requested_at: number | null; review_note: string | null;
+  updated_at: number;
+};
+
+const TASK_FIELDS =
+  "id, title, organization_id, project_id, stage, status, blocked_reason, deliverable_id, review_requested_at, review_note, updated_at";
+
+function toBoardTask(row: TaskDbRow): BoardTask {
+  return {
+    ...row,
+    column: boardColumnOf(row),
+    review_requested_at: row.review_requested_at == null || row.status === "done" ? null : new Date(row.review_requested_at).toISOString(),
+    updated_at: new Date(row.updated_at).toISOString(),
+  };
 }
 
 function assigned(agent: AgentPrincipal, organizationId: string | null): boolean {
@@ -83,18 +101,15 @@ export async function listAgentBoard(
   }
   if (orgs.length === 0) return { ok: true, tasks: [] };
   const marks = orgs.map(() => "?").join(", ");
-  const rows = await sql.all<{
-    id: string; title: string; organization_id: string; project_id: string | null; stage: string; status: string;
-    blocked_reason: string | null; deliverable_id: string | null; updated_at: number;
-  }>(
-    `SELECT id, title, organization_id, project_id, stage, status, blocked_reason, deliverable_id, updated_at FROM tasks
+  const rows = await sql.all<TaskDbRow>(
+    `SELECT ${TASK_FIELDS} FROM tasks
      WHERE organization_id IN (${marks}) AND (? IS NULL OR project_id = ?)
      ORDER BY CASE status WHEN 'done' THEN 1 ELSE 0 END, updated_at DESC LIMIT 200`,
     [...orgs, query.projectId ?? null, query.projectId ?? null],
   );
   return {
     ok: true,
-    tasks: rows.map((row) => ({ ...row, column: columnOf(row), updated_at: new Date(row.updated_at).toISOString() })),
+    tasks: rows.map(toBoardTask),
   };
 }
 
@@ -103,7 +118,8 @@ export type BoardAction =
   | { action: "pause" }
   | { action: "block"; reason: string }
   | { action: "review"; note?: string }
-  | { action: "move"; to: string }
+  /** to is todo, doing, review, or done. The old stage names (describe, engineer, build, run) are aliases. */
+  | { action: "move"; to: BoardColumn; asked?: string }
   | { action: "note"; body: string };
 
 export function parseBoardAction(raw: unknown): BoardAction | null {
@@ -121,8 +137,10 @@ export function parseBoardAction(raw: unknown): BoardAction | null {
     case "review":
       return { action: "review", note: str(body.note, 4000) ?? undefined };
     case "move": {
-      const to = str(body.to, 20)?.toLowerCase();
-      return to && COLUMNS.has(to) ? { action: "move", to } : null;
+      const asked = str(body.to, 20)?.toLowerCase();
+      const to = toColumn(asked);
+      if (!asked || !to) return null;
+      return asked === to ? { action: "move", to } : { action: "move", to, asked };
     }
     case "note": {
       const text = str(body.body, 4000);
@@ -139,23 +157,35 @@ export async function updateAgentTask(
   agent: AgentPrincipal,
   input: { taskId: string; change: BoardAction; now: number },
 ): Promise<{ ok: true; task: BoardTask; activityId: string; handedTo?: string | null } | BoardError> {
-  const task = await sql.get<{ id: string; title: string; organization_id: string | null; project_id: string | null; stage: string; status: string }>(
-    "SELECT id, title, organization_id, project_id, stage, status FROM tasks WHERE id = ?",
+  const task = await sql.get<{
+    id: string; title: string; organization_id: string | null; project_id: string | null; stage: string; status: string;
+    review_requested_at: number | null;
+  }>(
+    "SELECT id, title, organization_id, project_id, stage, status, review_requested_at FROM tasks WHERE id = ?",
     [input.taskId],
   );
   if (!task || !task.organization_id || !assigned(agent, task.organization_id)) return { ok: false, status: 404, message: "No such task on your clients' boards." };
-  const row = { ...task, organization_id: task.organization_id };
+  const row = { id: task.id, title: task.title, organization_id: task.organization_id, project_id: task.project_id };
   const actor = { kind: "agent" as const, id: agent.agentId };
   const change = input.change;
   let activityId = "";
   let handedTo: string | null | undefined;
 
+  // Review waits on Client Services. The agent can note or block it, but not take it out or finish it itself.
+  const inReviewNow = boardColumnOf(task) === "review";
+  if (inReviewNow && (change.action === "start" || change.action === "pause" || change.action === "move")) {
+    return { ok: false, status: 403, message: "That task is waiting on Client Services review. Client Services approves it or sends it back." };
+  }
   if (change.action === "note") {
     activityId = await record(sql, agent, row, "note", `Note on "${task.title}": ${change.body}`, { body: change.body }, input.now);
   } else if (change.action === "start" || change.action === "pause") {
     if (task.status === "done") return { ok: false, status: 400, message: "That task is done. Move it to a column first." };
     const status = change.action === "start" ? "doing" : "todo";
-    await sql.run("UPDATE tasks SET status = ?, blocked_reason = NULL, updated_at = ? WHERE id = ?", [status, input.now, task.id]);
+    // Start or pause also takes the card out of Review: the agent is working on it again.
+    await sql.run(
+      "UPDATE tasks SET status = ?, blocked_reason = NULL, review_requested_at = NULL, updated_at = ? WHERE id = ?",
+      [status, input.now, task.id],
+    );
     activityId = await record(sql, agent, row, change.action, `${change.action === "start" ? "Started" : "Paused"} "${task.title}".`, { status }, input.now);
   } else if (change.action === "block") {
     const moved = await moveTaskStage(sql, { taskId: task.id, blockedReason: change.reason, now: input.now, actor });
@@ -163,24 +193,32 @@ export async function updateAgentTask(
     activityId = await record(sql, agent, row, "block", `Blocked "${task.title}": ${change.reason}`, { reason: change.reason }, input.now);
   } else if (change.action === "review") {
     if (task.status === "done") return { ok: false, status: 400, message: "That task is already done." };
-    await sql.run("UPDATE tasks SET status = 'doing', blocked_reason = NULL, updated_at = ? WHERE id = ?", [input.now, task.id]);
+    // Waiting on Client Services: starts nothing in either AGENT_MODE.
+    const moved = await moveTaskStage(sql, { taskId: task.id, to: "review", note: change.note, now: input.now, actor });
+    if (!moved.ok) return { ok: false, status: 400, message: "That task could not go to review." };
     activityId = await record(sql, agent, row, "review", `"${task.title}" is ready for review.${change.note ? ` ${change.note}` : ""}`, { note: change.note ?? null }, input.now);
   } else {
-    if ((change.to === "build" || change.to === "run") && agentMode() !== "agents") {
-      return { ok: false, status: 403, message: "Moving to build or run would start a swarm or Cursor run. Staff do that while AGENT_MODE is legacy." };
+    if (change.to === "doing" && agentMode() !== "agents") {
+      return { ok: false, status: 403, message: "Moving to Doing would start a swarm or Cursor run. Staff do that while AGENT_MODE is legacy." };
     }
-    const moved: MoveTaskResult = await moveTaskStage(sql, { taskId: task.id, to: change.to as "describe", now: input.now, actor });
+    // Doing stores stage build; in agents mode that hands the task to the lead agent. Already in Doing: no change.
+    const moved: MoveTaskResult = await moveTaskStage(sql, { taskId: task.id, to: change.to, now: input.now, actor });
     if (!moved.ok) return { ok: false, status: 400, message: `That move was refused (${moved.error}).` };
     handedTo = moved.handedTo;
-    activityId = await record(sql, agent, row, "move", `Moved "${task.title}" to ${change.to}.`, { to: change.to }, input.now);
+    activityId = await record(
+      sql,
+      agent,
+      row,
+      "move",
+      `Moved "${task.title}" to ${BOARD_COLUMN_LABEL[change.to]}.`,
+      { to: change.to, ...(change.asked ? { asked: change.asked } : {}) },
+      input.now,
+    );
   }
-  const fresh = await sql.get<{
-    id: string; title: string; organization_id: string; project_id: string | null; stage: string; status: string;
-    blocked_reason: string | null; deliverable_id: string | null; updated_at: number;
-  }>("SELECT id, title, organization_id, project_id, stage, status, blocked_reason, deliverable_id, updated_at FROM tasks WHERE id = ?", [task.id]);
+  const fresh = await sql.get<TaskDbRow>(`SELECT ${TASK_FIELDS} FROM tasks WHERE id = ?`, [task.id]);
   return {
     ok: true,
-    task: { ...fresh!, column: columnOf(fresh!), updated_at: new Date(fresh!.updated_at).toISOString() },
+    task: toBoardTask(fresh!),
     activityId,
     ...(handedTo !== undefined ? { handedTo } : {}),
   };
@@ -188,7 +226,8 @@ export async function updateAgentTask(
 
 /**
  * A new task in one of this agent's clients. Project: project_id, else the assignment's project, else the client's
- * only open project. Stage is describe (default) or engineer.
+ * only open project. stage is todo (default, stored describe) or doing (stored engineer: Doing, starts nothing).
+ * The old names describe and engineer still work.
  */
 export async function createAgentTask(
   sql: Sql,
@@ -197,8 +236,9 @@ export async function createAgentTask(
 ): Promise<{ ok: true; task: BoardTask; activityId: string } | BoardError> {
   const title = input.title.trim().slice(0, 200);
   if (!title) return { ok: false, status: 400, message: "title is required." };
-  const stage = input.stage ?? "describe";
-  if (stage !== "describe" && stage !== "engineer") return { ok: false, status: 400, message: "stage must be describe or engineer." };
+  const asked = toColumn(input.stage ?? "todo");
+  if (asked !== "todo" && asked !== "doing") return { ok: false, status: 400, message: "stage must be todo or doing." };
+  const stage = asked === "doing" ? "engineer" : "describe";
   let organizationId: string | null = null;
   if (input.client) {
     const client = await resolveClientRef(sql, input.client);
@@ -241,7 +281,7 @@ export async function createAgentTask(
   const activityId = await record(sql, agent, row, "create", `Added task "${title}".${note ? ` ${note}` : ""}`, { stage, note }, input.now);
   return {
     ok: true,
-    task: { ...row, stage, status: "todo", column: stage, blocked_reason: null, deliverable_id: null, updated_at: new Date(input.now).toISOString() },
+    task: { ...row, stage, status: "todo", column: asked, blocked_reason: null, deliverable_id: null, review_requested_at: null, review_note: null, updated_at: new Date(input.now).toISOString() },
     activityId,
   };
 }

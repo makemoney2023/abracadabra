@@ -18,6 +18,7 @@ import { settleSpecialist } from './settle-specialist';
 import type { SpecialistKind } from '../ai/check';
 import { NODE_BUDGET_MS, STEP_TIMEOUT_MESSAGE, classifyResume, nextResumeAlarm, withStepTimeout } from './resume';
 import { assertToolsAllowed, toolsForNode } from '../mcp/tool-allow';
+import { refuseRunStart } from '../agent-mode';
 
 export class WorkflowDO {
   private state: DurableObjectState;
@@ -105,6 +106,9 @@ export class WorkflowDO {
 
     // Execute workflow
     if (url.pathname === '/execute' && request.method === 'POST') {
+      // Second guard in case the object is reached without the worker's /api check.
+      const refused = refuseRunStart(this.env, 'POST', '/api/execute');
+      if (refused) return refused;
       const body = await request.json() as { workflowId: string; input: string };
       if (!body || typeof body.workflowId !== 'string' || typeof body.input !== 'string' || body.input.trim().length === 0 || body.input.length > 24000) {
         return new Response('Invalid execution request', { status: 400 });

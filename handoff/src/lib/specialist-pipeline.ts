@@ -1,4 +1,5 @@
 import type { Sql, SqlStatement } from "@/db/sql";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { claimDueWorkflow } from "@/lib/client-workflows";
 import { deliverableKind, packTemplateId } from "@/lib/pack-templates";
 import type { ObjectStore } from "@/lib/store/objects";
@@ -62,9 +63,11 @@ export async function startPipeline(
       waitingOn?: string;
       paused?: { name: string; status: string; output: string };
     }
-  | { ok: false; error: "invalid" | "missing" | "open" }
+  | { ok: false; error: "invalid" | "missing" | "open" | "agent_mode" }
   | { ok: false; error: "unknown_skill"; unknown: string[] }
 > {
+  // AGENT_MODE=agents: refuse before any group, stage, or task row is written.
+  if (!legacyStartsAllowed()) return { ok: false, error: "agent_mode" };
   if (!input.paths.length || !input.projectId) return { ok: false, error: "invalid" };
   const unknown = unknownSkillPaths(input.paths);
   if (unknown.length) return { ok: false, error: "unknown_skill", unknown };
@@ -304,7 +307,7 @@ export async function abandonPipeline(
   const orphans = await sql.all<{ id: string; task_id: string }>(
     `SELECT w.id, w.task_id FROM client_workflows w JOIN tasks t ON t.id = w.task_id
      WHERE w.group_id = ? AND w.accepted_at IS NULL AND COALESCE(w.last_execution_id, '') = ''
-       AND t.status = 'todo' AND t.stage = 'describe'
+       AND t.status = 'todo' AND t.stage = 'describe' AND t.review_requested_at IS NULL
        AND NOT EXISTS (SELECT 1 FROM agent_questions q WHERE q.task_id = t.id)
        AND NOT EXISTS (SELECT 1 FROM cloud_runs r WHERE r.task_id = t.id)`,
     [input.groupId],

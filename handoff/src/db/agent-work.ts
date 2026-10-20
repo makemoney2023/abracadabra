@@ -585,10 +585,32 @@ async function deleteAgentProject(sql: Sql, actor: AgentActor, args: WorkArgs, n
   return removed.value;
 }
 
-async function updateAgentTask(sql: Sql, actor: AgentActor, args: WorkArgs, now: number, deps?: AgentWorkDeps): Promise<unknown> {
+async function updateAgentTask(sql: Sql, actor: AgentActor, rawArgs: WorkArgs, now: number, deps?: AgentWorkDeps): Promise<unknown> {
+  // The board shows four columns. todo is stage describe; doing is a move into Doing, which stores build.
+  const args: WorkArgs =
+    rawArgs.stage === "todo" ? { ...rawArgs, stage: "describe" } : rawArgs.stage === "doing" ? { ...rawArgs, stage: "build" } : rawArgs;
   const taskId = args.taskId?.trim() ?? "";
   if (!taskId) throw new AgentWorkError("Name a task.");
   const task = await taskInOrg(sql, actor.organizationId, taskId);
+  const inReview = await sql.get<{ id: string }>(
+    "SELECT id FROM tasks WHERE id = ? AND status != 'done' AND review_requested_at IS NOT NULL",
+    [task.id],
+  );
+  if (inReview && ((args.stage !== undefined && args.stage !== "review") || args.status !== undefined)) {
+    throw new AgentWorkError("That task is waiting on Client Services review. Client Services approves it or sends it back.");
+  }
+  if (args.stage === "review") {
+    // Review column: the card waits on staff. Nothing starts, in either AGENT_MODE.
+    const moved = await moveTaskStage(sql, {
+      taskId: task.id,
+      to: "review",
+      note: args.note,
+      now,
+      actor: { kind: "agent", id: actor.keyId },
+    });
+    if (!moved.ok) throw new AgentWorkError("That task could not go to review.");
+    return { taskId: task.id, stage: moved.stage, column: "review", status: moved.status };
+  }
   if (args.stage === "build") {
     const built = await moveTaskStage(sql, {
       taskId: task.id,
