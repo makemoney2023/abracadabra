@@ -35,7 +35,7 @@ export function chatModel(env, voice = false) {
   return String(pick || DEFAULT_MODEL).trim();
 }
 
-function gatewayRequest(env, messages, voice, model, page) {
+function gatewayRequest(env, messages, voice, model, page, system, maxTokens) {
   const token = String(env.AI_GATEWAY_TOKEN || env.CLOUDFLARE_API_TOKEN || "").trim();
   const account = String(env.CF_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || "").trim();
   const gateway = String(env.AI_GATEWAY_ID || "abracadabra-chat").trim();
@@ -51,10 +51,10 @@ function gatewayRequest(env, messages, voice, model, page) {
     },
     body: {
       messages: [
-        { role: "system", content: systemPrompt({ voice, page }) },
+        { role: "system", content: system || systemPrompt({ voice, page }) },
         ...messages.map((message) => ({ role: message.role, content: message.text })),
       ],
-      max_tokens: MAX_TOKENS,
+      max_tokens: maxTokens || MAX_TOKENS,
     },
   };
 }
@@ -70,8 +70,8 @@ function deltaOf(data) {
  * (CHAT_TIMEOUT_MS for the whole reply), so callers can show a retry message instead of hanging.
  * A gateway that answers with plain JSON (no stream) yields the whole text once.
  */
-export async function* streamChat({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, model, firstTokenMs, page }) {
-  const request = gatewayRequest(env, messages, voice, model, page);
+export async function* streamChat({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, model, firstTokenMs, page, system, maxTokens }) {
+  const request = gatewayRequest(env, messages, voice, model, page, system, maxTokens);
   if (!request) throw new ChatUnavailable("unconfigured");
   const clock = new AbortController();
   const timer = setTimeout(() => clock.abort(new DOMException("The reply took too long.", "TimeoutError")), timeoutMs);

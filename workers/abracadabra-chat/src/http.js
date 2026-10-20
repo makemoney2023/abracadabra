@@ -2,6 +2,7 @@ import { deliverHandoff, handoffEnvelope, handoffSummary, HANDOFF_FROM, mailerCo
 import { ChatUnavailable, replyStream } from "./model.js";
 import { answerLabel, bandView, checkFetch, checkOrigin, cleanAnswer, stepView } from "./readiness.js";
 import { hqConfigured, postLeadToHq } from "./hq.js";
+import { buildRecap } from "./recap.js";
 import {
   clientIp,
   extraOrigins,
@@ -290,6 +291,7 @@ async function readinessStep(body, session, storage, env, deps, now, ip) {
       state.band = String(result.band);
       state.completedAt = now;
       const band = bandView(state.band);
+      state.bandLabel = band.label;
       // The model sees the outcome in the history, so follow-up questions make sense.
       rememberExchange(session, "I finished the Readiness Check here in the chat.", `Your Readiness Check came out ${band.label}. ${band.sentence}`.trim(), now);
       await save(storage, session, deps);
@@ -411,7 +413,7 @@ export async function handleSession(request, storage, env, deps) {
     session.updatedAt = now;
     const handoff = await emitHandoff(session, env, deps, now);
     session.hqAttempts = (session.hqAttempts || 0) + 1;
-    const hq = await postLeadToHq(session, env, { now, fetchImpl: deps.hqFetch || deps.fetchImpl || fetch });
+    const hq = await postLeadToHq(session, env, { now, fetchImpl: deps.hqFetch || deps.fetchImpl || fetch, recap: await leadRecap(session, env, deps) });
     await save(storage, session, deps);
     return json({ ok: true, mailed: handoff.mailed, duplicate: handoff.duplicate, hq: hq.posted || Boolean(session.hqLeadSent) }, 200);
   }
@@ -447,6 +449,12 @@ function forward(request, id) {
   return new Request(request, { headers });
 }
 
+/** The recap rides on the HQ lead; only built when the lead will actually be posted. */
+async function leadRecap(session, env, deps) {
+  if (session.hqLeadSent || !hqConfigured(env) || !session.contact?.email) return "";
+  return buildRecap(session, env, { fetchImpl: deps.fetchImpl || fetch, timeoutMs: deps.recapTimeoutMs });
+}
+
 export async function runAlarm(storage, env, deps, now) {
   const session = await load(storage, now);
   if (!session || now < session.alarmAt) return { sent: false };
@@ -455,7 +463,7 @@ export async function runAlarm(storage, env, deps, now) {
   // A lead HQ did not take on the first try is retried here (up to HQ_RETRIES). HQ dedupes on external_id.
   if (session.contact && !session.hqLeadSent && hqConfigured(env) && (session.hqAttempts || 0) < HQ_RETRIES) {
     session.hqAttempts = (session.hqAttempts || 0) + 1;
-    hq = (await postLeadToHq(session, env, { now, fetchImpl: deps.hqFetch || deps.fetchImpl || fetch })).posted;
+    hq = (await postLeadToHq(session, env, { now, fetchImpl: deps.hqFetch || deps.fetchImpl || fetch, recap: await leadRecap(session, env, deps) })).posted;
     if (!hq) session.alarmAt = now + IDLE_MS;
     changed = true;
   }
