@@ -152,6 +152,37 @@ test("the chat books in place, offers the check, and takes a consented note", as
   await page.close();
 });
 
+test("typed replies turn our page links into safe anchors", async () => {
+  env.CAL_LINK = "abracadabra/working-session";
+  Object.assign(env, { AI_GATEWAY_TOKEN: "test-token", CF_ACCOUNT_ID: "acct" });
+  deps.fetchImpl = async () => Response.json({ result: { response: "See the pirx.ca case study at https://abra-ca-dabra.app/portfolio/pirx/. Or https://evil.example/x <b>hi</b>. Take the check at https://check.abra-ca-dabra.app/." } });
+  try {
+    const page = await openFixture();
+    await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+    await page.getByRole("textbox", { name: "Message" }).fill("what work have you done");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    const pirx = page.getByRole("link", { name: "abra-ca-dabra.app/portfolio/pirx/" });
+    await pirx.waitFor();
+    assert.equal(await pirx.getAttribute("href"), "/portfolio/pirx/");
+    assert.equal(await pirx.getAttribute("target"), null);
+    const check = page.getByRole("link", { name: "check.abra-ca-dabra.app" });
+    assert.equal(await check.getAttribute("target"), "_blank");
+    assert.equal(await check.getAttribute("rel"), "noopener noreferrer");
+    const markup = await page.locator("abra-chat").evaluate((node) => {
+      const bubbles = node.shadowRoot.querySelectorAll(".bubble.assistant");
+      return bubbles[bubbles.length - 1].innerHTML;
+    });
+    assert.equal(markup.includes("evil.example"), false);
+    assert.equal(markup.includes("<b>"), false);
+    assert.equal(page.errors.length, 0);
+    await page.close();
+  } finally {
+    delete env.AI_GATEWAY_TOKEN;
+    delete env.CF_ACCOUNT_ID;
+    delete deps.fetchImpl;
+  }
+});
+
 test("an empty Cal.com link asks for two times inside the chat", async () => {
   env.CAL_LINK = "";
   const page = await openFixture(390, 800);

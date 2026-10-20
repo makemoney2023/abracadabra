@@ -111,6 +111,8 @@ button { cursor: pointer; }
 .chip:hover, .ghost:hover, .icon:hover { border-color: rgba(245, 240, 232, 0.4); }
 .bubble { max-width: 92%; padding: 10px 12px; border-radius: 8px; font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
 .bubble.assistant { background: #11110F; border: 1px solid rgba(245, 240, 232, 0.12); }
+.bubble a { color: #FF4B24; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.bubble a:focus-visible { outline: 2px solid #FF4B24; outline-offset: 2px; border-radius: 2px; }
 .bubble.user { align-self: flex-end; background: #17160F; border-left: 2px solid #FF4B24; }
 .bubble.streaming::after {
   content: ""; display: inline-block; width: 2px; height: 14px; margin-left: 3px;
@@ -330,6 +332,34 @@ function el(tag, className, text) {
   if (className) node.className = className;
   if (text != null) node.textContent = text;
   return node;
+}
+
+// Assistant replies can carry links to our own pages, the Readiness Check, or Cal.com.
+// They are built as real anchors from text nodes, so nothing in a reply is parsed as HTML.
+const LINK = /https:\/\/(?:www\.|check\.)?abra-ca-dabra\.app(?:\/[^\s<>"')]*)?|https:\/\/(?:app\.)?cal\.(?:com|eu)\/[^\s<>"')]*/g;
+
+function renderLinked(node, text) {
+  const value = String(text || "");
+  node.textContent = "";
+  let at = 0;
+  for (const match of value.matchAll(LINK)) {
+    let href = match[0];
+    const tail = href.match(/[.,;:!?]+$/);
+    if (tail) href = href.slice(0, -tail[0].length);
+    node.append(document.createTextNode(value.slice(at, match.index)));
+    const link = document.createElement("a");
+    const url = new URL(href);
+    const here = url.hostname === location.hostname || url.hostname === "abra-ca-dabra.app" || url.hostname === "www.abra-ca-dabra.app";
+    link.href = here && !url.hostname.startsWith("check.") ? `${url.pathname}${url.search}${url.hash}` : href;
+    link.textContent = url.hostname.replace(/^www\./, "") + (url.pathname === "/" ? "" : url.pathname);
+    if (!here || url.hostname.startsWith("check.")) {
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    }
+    node.append(link);
+    at = match.index + href.length;
+  }
+  node.append(document.createTextNode(value.slice(at)));
 }
 
 async function readSse(response, onEvent) {
@@ -878,7 +908,8 @@ export class AbraChat extends ElementBase {
   }
 
   addBubble(role, text) {
-    const bubble = el("div", `bubble ${role}`, text);
+    const bubble = el("div", `bubble ${role}`, role === "assistant" ? null : text);
+    if (role === "assistant") renderLinked(bubble, text);
     this.stream.append(bubble);
     this.stream.scrollTop = this.stream.scrollHeight;
     return bubble;
@@ -1119,7 +1150,7 @@ export class AbraChat extends ElementBase {
       await readSse(response, (event, data) => {
         if (event === "token") {
           answer += data.text || "";
-          pending.textContent = answer;
+          renderLinked(pending, answer);
         }
         if (event === "ui_action") this.action(data.action);
         if (event === "done") pending.classList.remove("streaming");

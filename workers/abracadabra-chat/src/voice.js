@@ -47,7 +47,14 @@ export function ttsSpeaker(env) {
 /** Turns a checked chat reply into text that sounds right out loud, capped at TTS_CHAR_CAP. */
 export function speakable(text, cap = TTS_CHAR_CAP) {
   let clean = String(text || "")
-    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/\s*\(?https?:\/\/[^\s)]+\)?/gi, (url) => (/[.,;:!?]$/.test(url) ? url.slice(-1) : ""))
+    .replace(/\b((?:check\.)?abra-ca-dabra)\.app\b/gi, (_, name) => `${name.replace(".", " dot ")} dot app`)
+    .replace(/\s*\(\/[^\s)]*\)/g, "")
+    .replace(/(^|\s)\/[a-z0-9-]+(?:\/[a-z0-9.-]*)*(?=[\s.,;:!?]|$)/gi, "$1")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/(^|\s)[-*•]\s+/g, "$1")
+    .replace(/\s*\((?:page|link)\)/gi, "")
+    .replace(/\b([A-Z]{2,})\/([A-Z]{2,})\b/g, "$1 and $2")
     .replace(/[*_#`>\[\]]/g, "")
     .replace(/\s+/g, " ")
     .trim();

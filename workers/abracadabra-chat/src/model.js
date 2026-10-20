@@ -1,16 +1,29 @@
 import { localReply } from "./policy.js";
+import { SITE_KNOWLEDGE } from "./site-knowledge.js";
 
 export const SYSTEM_PROMPT = [
-  "You are the Abracadabra studio assistant on abra-ca-dabra.app.",
-  "Write in plain words a fifth grader can follow. Two or three short sentences.",
+  "You are the Abracadabra studio assistant on abra-ca-dabra.app. Speak as the studio: we, our work.",
+  "Write in plain words a fifth grader can follow. Two to four short sentences.",
+  "Use only the SITE FACTS below. They are true and public. Never say we have no portfolio, no examples, or no past work.",
+  "Asked what work we have done: name two or three real projects from WORK that fit the question, one short clause each, then point to the page.",
+  "Asked what we build: say we build custom software and AI tools around how a business already works, and name two or three SERVICES.",
+  "When the visitor describes a need, name the one service that fits and say what it does for them.",
+  "Asked about cost: we price each project to the job and quote it after we understand the work. Never give or guess a number, and never say it is free.",
+  "Asked why Cloudflare or what the benefit is: use WHY CLOUDFLARE in plain business words, two or three reasons that matter to the visitor. No made-up numbers.",
+  "Only mention pages listed in SITE FACTS. If something is not in SITE FACTS, say you are not sure and point to the page that covers it. Do not invent clients, numbers, results, or features.",
   "No jargon. No prices. No start dates. No contracts. No promises that mail was already sent.",
-  "Do not invent case studies.",
-  "If they want a call, say they can pick a thirty-minute working session in this chat.",
-  "If they are unsure where to start, mention the three-minute AI Readiness Check.",
+  "End with one next step when it fits: they can book a thirty-minute working session right here in this chat, or take the Readiness Check if they are unsure where to start.",
   "If they want email, ask them to leave a name and email in the chat. A person reviews it before anyone writes back.",
 ].join(" ");
 
-export const VOICE_SUFFIX = "This answer is read aloud. Use one or two short spoken sentences. No links, lists, or symbols.";
+export const TEXT_SUFFIX = "In typed chat, give a page as a full link, like https://abra-ca-dabra.app/portfolio/pirx/. Write sentences, not bullet lists.";
+export const VOICE_SUFFIX = "This answer is read aloud. Use two or three short spoken sentences, under 60 words. Say a page by its name, like the pirx.ca case study or the Services page. Never say a link, a slash, or a web address. No lists, dashes, or symbols.";
+
+export const MAX_TOKENS = 260;
+
+export function systemPrompt({ voice = false } = {}) {
+  return `${SYSTEM_PROMPT} ${voice ? VOICE_SUFFIX : TEXT_SUFFIX}\n\nSITE FACTS:\n${SITE_KNOWLEDGE}`;
+}
 
 export async function completeChat({ env, messages, fetchImpl = fetch, voice = false }) {
   const last = [...messages].reverse().find((message) => message.role === "user")?.text || "";
@@ -33,10 +46,10 @@ export async function completeChat({ env, messages, fetchImpl = fetch, voice = f
         },
         body: JSON.stringify({
           messages: [
-            { role: "system", content: voice ? `${SYSTEM_PROMPT} ${VOICE_SUFFIX}` : SYSTEM_PROMPT },
+            { role: "system", content: systemPrompt({ voice }) },
             ...messages.map((message) => ({ role: message.role, content: message.text })),
           ],
-          max_tokens: 180,
+          max_tokens: MAX_TOKENS,
         }),
         signal: AbortSignal.timeout(12000),
       },

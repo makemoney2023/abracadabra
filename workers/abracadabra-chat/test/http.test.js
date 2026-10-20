@@ -147,9 +147,9 @@ test("answers stay short, plain, and on our sites", async () => {
   assert.equal(priced.flags.includes("price"), true);
   assert.equal(priced.text.includes("$"), false);
   assert.match(priced.text, /job that takes the most time/);
-  const long = postCheck("We map the work. Then we build the tool. Then we review it. Then we launch it.");
+  const long = postCheck("We map the work. Then we build the tool. Then we review it. Then we launch it. Then we run it.");
   assert.equal(long.flags.includes("length"), true);
-  assert.equal(long.text.split(". ").length, 3);
+  assert.equal(long.text.split(". ").length, 4);
   const linked = postCheck("See https://abra-ca-dabra.app/services/ and https://evil.example/phish and https://cal.com/abracadabra/working-session.");
   assert.match(linked.text, /abra-ca-dabra\.app/);
   assert.match(linked.text, /cal\.com/);

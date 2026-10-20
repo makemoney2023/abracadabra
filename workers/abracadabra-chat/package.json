@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.js",
+    "knowledge": "node scripts/build-site-knowledge.mjs",
     "preview": "wrangler dev",
     "deploy": "wrangler deploy"
   }

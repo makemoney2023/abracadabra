@@ -48,6 +48,16 @@ Copy `.dev.vars.example` to `.dev.vars` (do not commit it). On the Worker, set t
 | `TTS_SPEAKER` | Aura-2 voice, default `luna`. Unknown names fall back to `luna` |
 | `TTS_MODEL` | Optional. Default `@cf/deepgram/aura-2-en` |
 
+## Site knowledge
+
+The assistant answers from `src/site-knowledge.js`: the public work, the ten services, process, cost wording, next steps, and a short "Why Cloudflare" list (about 1.2k tokens). It is generated from the marketing site's own data (`scrollcraft/builds/abracadabra-ai/scripts/site-data.mjs` and `service-sales.mjs`):
+
+```sh
+npm run knowledge
+```
+
+A test fails when the file is out of date, when it names a page that does not exist, or when a case-study name is not in the site source. The answer filter (`postCheck`) drops links to pages that are not in `SITE_PATHS`, turns copied paths into full links, keeps the closing booking or Readiness Check sentence when it trims, and replaces any reply that denies the portfolio or calls the work free.
+
 ## Voice
 
 A hands-free call. One tap on the mic starts it; the visitor just talks, and taps End (or the mic) to stop.
