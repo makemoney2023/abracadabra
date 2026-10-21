@@ -21,6 +21,7 @@ import {
 } from "./site-data.mjs";
 import { pirxChartHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
+import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
 
@@ -1166,18 +1167,6 @@ function siteRedirects() {
   return [...rewrites, ...moved].join("\n");
 }
 
-function llmsPages() {
-  const lines = [
-    `- Services: ${SITE}/services/`,
-    ...offerings.map((item) => `- ${salesPages[item.slug].headline}: ${SITE}/services/${item.slug}/`),
-    `- Portfolio: ${SITE}/portfolio/`,
-    ...cases.map((item) => `- ${item.name}: ${SITE}/portfolio/${item.slug}/`),
-    `- Products: ${SITE}/products/`,
-    ...products.map((item) => `- ${item.name}: ${SITE}/products/${item.slug}/`),
-    `- LLM Leverage course: ${SITE}/course/llm-leverage/`,
-  ];
-  return lines.join("\n");
-}
 
 
 function homeProofHtml() {
@@ -1350,11 +1339,10 @@ async function patchRedirects() {
 }
 
 async function patchLlms() {
-  const path = join(root, "llms.txt");
-  let text = await readFile(path, "utf8");
-  text = text.replace(/^Last updated: .+$/m, `Last updated: ${MODIFIED}`);
-  text = fill(text, "<!-- site-pages:start -->", "<!-- site-pages:end -->", llmsPages());
-  await writeFile(path, text);
+  const { loadPosts, isPublic } = await import("./blog.mjs");
+  const posts = await loadPosts();
+  const updated = new Date().toISOString().slice(0, 10);
+  await writeDiscoveryFiles(root, posts, { updated, isPublicFn: isPublic });
 }
 
 export async function buildSitePages() {

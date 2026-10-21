@@ -202,7 +202,7 @@ describe("blog content", () => {
     const sitemap = await text("sitemap.xml");
     const rss = await text("blog/rss.xml");
     const llms = await text("llms.txt");
-    const liveBlock = llms.match(/<!-- blog-live:start -->([\s\S]*?)<!-- blog-live:end -->/)?.[1] ?? "";
+    const liveBlock = llms.includes("## Blog") ? llms.slice(llms.indexOf("## Blog")) : llms;
     for (const post of posts) {
       const html = await text(`blog/${post.slug}/index.html`);
       const listed = post.datePublished <= stamp.asOf;
@@ -297,7 +297,9 @@ describe("blog content", () => {
     assert.doesNotMatch(privacy, /<script[^>]+posthog/i);
     assert.doesNotMatch(privacy, /posthog\.com/);
     const llms = await text("llms.txt");
-    assert.match(llms, /Privacy: /);
+    assert.match(llms, /\[Privacy\]\(https:\/\/abra-ca-dabra\.app\/privacy\)/);
     assert.match(llms, /No post is public on this date|https:\/\/abra-ca-dabra\.app\/blog\//);
+    assert.doesNotMatch(llms, /<!--/);
+    assert.match(llms, /^- \[[^\]]+\]\(https:\/\/abra-ca-dabra\.app\/services\//m);
   });
 });
