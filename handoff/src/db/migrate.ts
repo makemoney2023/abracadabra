@@ -37,6 +37,7 @@ const STEPS = [
   { file: "0033_agent_work_folder.sql", index: "agent_work_items_folder" },
   { file: "0034_skill_usage.sql", index: "skill_events_work_item" },
   { file: "0035_built_work.sql", index: "built_work_space" },
+  { file: "0036_contact_address.sql", column: { table: "contacts", name: "country" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];

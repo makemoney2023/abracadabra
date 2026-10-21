@@ -35,6 +35,12 @@ export type Contact = {
   email: string | null;
   phone: string | null;
   is_primary: number;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  region?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
 };
 
 export type TaskStatus = "todo" | "doing" | "blocked" | "done";
@@ -564,7 +570,8 @@ export async function linkWorkspace(
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const CONTACT_COLUMNS = "id, organization_id, name, title, email, phone, is_primary";
+const CONTACT_COLUMNS =
+  "id, organization_id, name, title, email, phone, is_primary, address_line1, address_line2, city, region, postal_code, country";
 const TASK_COLUMNS = "id, organization_id, title, status, due_at, done_at";
 
 function cleanText(raw: string, max: number): string | null {
@@ -630,23 +637,66 @@ export async function listContacts(sql: Sql, caller: Caller, organizationId: str
   );
 }
 
-export async function createContact(
+/** Optional postal address on a contact. Every part is optional; blank parts are stored as NULL. */
+export type ContactAddressInput = {
+  line1?: string | null;
+  line2?: string | null;
+  city?: string | null;
+  region?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+};
+
+const ADDRESS_FIELDS = [
+  ["line1", "address_line1", 200],
+  ["line2", "address_line2", 200],
+  ["city", "city", 120],
+  ["region", "region", 120],
+  ["postalCode", "postal_code", 20],
+  ["country", "country", 80],
+] as const;
+
+/** Cleans the parts that were sent. undefined: leave as is; "" or null: clear. A part over its limit is invalid. */
+export function cleanAddress(raw: ContactAddressInput | undefined): { ok: true; columns: Record<string, string | null> } | { ok: false } {
+  const columns: Record<string, string | null> = {};
+  if (!raw) return { ok: true, columns };
+  for (const [key, column, max] of ADDRESS_FIELDS) {
+    const value = raw[key];
+    if (value === undefined) continue;
+    if (value !== null && typeof value !== "string") return { ok: false };
+    const trimmed = (value ?? "").replace(/\s+/g, " ").trim();
+    if (trimmed.length > max) return { ok: false };
+    columns[column] = trimmed.length ? trimmed : null;
+  }
+  return { ok: true, columns };
+}
+
+/** "12 Main St, Unit 4, Ottawa, ON K1A 0B1, Canada", or null when there is no address. */
+export function formatContactAddress(contact: Partial<Pick<Contact, "address_line1" | "address_line2" | "city" | "region" | "postal_code" | "country">>): string | null {
+  const regionLine = [contact.region, contact.postal_code].filter(Boolean).join(" ");
+  const parts = [contact.address_line1, contact.address_line2, contact.city, regionLine, contact.country].filter((part): part is string => Boolean(part));
+  return parts.length ? parts.join(", ") : null;
+}
+
+type ContactActor = { kind: "staff" | "agent"; id: string };
+
+type ContactFields = {
+  name: string;
+  email?: string;
+  phone?: string;
+  title?: string;
+  primary?: boolean;
+  address?: ContactAddressInput;
+};
+
+/** Shared insert for staff and client agents: same validation, same activity (actor_kind is the actor's). */
+async function insertContact(
   sql: Sql,
-  caller: Caller,
-  input: {
-    organizationId: string;
-    name: string;
-    email?: string;
-    phone?: string;
-    title?: string;
-    primary?: boolean;
-  },
+  actor: ContactActor,
+  input: ContactFields & { organizationId: string },
   now: number,
 ): Promise<CrmResult<Contact>> {
-  const actorId = staffUserId(caller);
-  if (!actorId) return { ok: false, error: "forbidden" };
-  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
-  const name = cleanText(input.name, 200);
+  const name = cleanText(input.name ?? "", 200);
   if (!name) return { ok: false, error: "invalid" };
   const email = cleanEmail(input.email);
   if (email === undefined) return { ok: false, error: "invalid" };
@@ -656,6 +706,9 @@ export async function createContact(
   const titleRaw = (input.title ?? "").trim();
   if (titleRaw.length > 120) return { ok: false, error: "invalid" };
   const title = titleRaw.length === 0 ? null : titleRaw;
+  const address = cleanAddress(input.address);
+  if (!address.ok) return { ok: false, error: "invalid" };
+  const addressValues = ADDRESS_FIELDS.map(([, column]) => address.columns[column] ?? null);
   const id = crypto.randomUUID();
   try {
     await sql.exec("BEGIN");
@@ -664,15 +717,16 @@ export async function createContact(
     }
     await sql.run(
       `INSERT INTO contacts (
-         id, organization_id, name, title, email, phone, is_primary, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, input.organizationId, name, title, email, phone, input.primary ? 1 : 0, now, now],
+         id, organization_id, name, title, email, phone, is_primary, address_line1, address_line2, city, region, postal_code, country,
+         created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, input.organizationId, name, title, email, phone, input.primary ? 1 : 0, ...addressValues, now, now],
     );
     await sql.run(
       `INSERT INTO activities (
          id, organization_id, contact_id, kind, actor_kind, actor_id, body, created_at
-       ) VALUES (?, ?, ?, 'note', 'staff', ?, ?, ?)`,
-      [crypto.randomUUID(), input.organizationId, id, actorId, `Added ${name}.`, now],
+       ) VALUES (?, ?, ?, 'note', ?, ?, ?, ?)`,
+      [crypto.randomUUID(), input.organizationId, id, actor.kind, actor.id, `Added ${name}.`, now],
     );
     await sql.exec("COMMIT");
   } catch (error) {
@@ -683,6 +737,127 @@ export async function createContact(
   const row = await sql.get<Contact>(`SELECT ${CONTACT_COLUMNS} FROM contacts WHERE id = ?`, [id]);
   if (!row) return { ok: false, error: "missing" };
   return { ok: true, value: row };
+}
+
+export async function createContact(
+  sql: Sql,
+  caller: Caller,
+  input: ContactFields & { organizationId: string },
+  now: number,
+): Promise<CrmResult<Contact>> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  if (!(await liveOrg(sql, caller, input.organizationId))) return { ok: false, error: "missing" };
+  return insertContact(sql, { kind: "staff", id: actorId }, input, now);
+}
+
+async function liveOrgId(sql: Sql, id: string): Promise<boolean> {
+  const row = await sql.get<{ id: string }>("SELECT id FROM organizations WHERE id = ? AND archived_at IS NULL", [id]);
+  return Boolean(row);
+}
+
+/**
+ * Client agents (src/app/api/agent-contacts). The route checks the agent's assignment and role; this only writes.
+ * Opt-in and opt-out are never set here.
+ */
+export async function listOrgContacts(sql: Sql, organizationId: string): Promise<(Contact & { opted_in: number; opted_out: number })[]> {
+  return sql.all<Contact & { opted_in: number; opted_out: number }>(
+    `SELECT ${CONTACT_COLUMNS}, opted_in, opted_out FROM contacts WHERE organization_id = ? ORDER BY is_primary DESC, name`,
+    [organizationId],
+  );
+}
+
+export async function createAgentContact(
+  sql: Sql,
+  agentId: string,
+  input: ContactFields & { organizationId: string },
+  now: number,
+): Promise<CrmResult<Contact>> {
+  if (!(await liveOrgId(sql, input.organizationId))) return { ok: false, error: "missing" };
+  return insertContact(sql, { kind: "agent", id: agentId }, input, now);
+}
+
+/** Changes the fields that were sent (undefined: unchanged; "" clears an optional field). Same limits as create. */
+export async function updateAgentContact(
+  sql: Sql,
+  agentId: string,
+  input: {
+    organizationId: string;
+    contactId: string;
+    name?: string;
+    email?: string | null;
+    phone?: string | null;
+    title?: string | null;
+    primary?: boolean;
+    address?: ContactAddressInput;
+  },
+  now: number,
+): Promise<CrmResult<Contact>> {
+  const current = await sql.get<Contact>(`SELECT ${CONTACT_COLUMNS} FROM contacts WHERE id = ? AND organization_id = ?`, [input.contactId, input.organizationId]);
+  if (!current) return { ok: false, error: "missing" };
+  const sets: string[] = [];
+  const params: unknown[] = [];
+  const changed: string[] = [];
+  const set = (column: string, value: unknown, label: string) => {
+    sets.push(`${column} = ?`);
+    params.push(value);
+    changed.push(label);
+  };
+  if (input.name !== undefined) {
+    const name = cleanText(input.name ?? "", 200);
+    if (!name) return { ok: false, error: "invalid" };
+    set("name", name, "name");
+  }
+  if (input.email !== undefined) {
+    const email = cleanEmail(input.email ?? "");
+    if (email === undefined) return { ok: false, error: "invalid" };
+    set("email", email, "email");
+  }
+  if (input.phone !== undefined) {
+    const phone = (input.phone ?? "").trim();
+    if (phone.length > 40) return { ok: false, error: "invalid" };
+    set("phone", phone || null, "phone");
+  }
+  if (input.title !== undefined) {
+    const title = (input.title ?? "").trim();
+    if (title.length > 120) return { ok: false, error: "invalid" };
+    set("title", title || null, "title");
+  }
+  const address = cleanAddress(input.address);
+  if (!address.ok) return { ok: false, error: "invalid" };
+  const addressColumns = Object.entries(address.columns);
+  for (const [column, value] of addressColumns) {
+    sets.push(`${column} = ?`);
+    params.push(value);
+  }
+  if (addressColumns.length) changed.push("address");
+  if (input.primary === true && current.is_primary !== 1) changed.push("main contact");
+  if (changed.length === 0 && input.primary !== true) return { ok: true, value: current };
+  try {
+    await sql.exec("BEGIN");
+    if (input.primary === true) {
+      await sql.run("UPDATE contacts SET is_primary = 0 WHERE organization_id = ? AND id != ?", [input.organizationId, input.contactId]);
+      sets.push("is_primary = 1");
+    }
+    sets.push("updated_at = ?");
+    params.push(now);
+    await sql.run(`UPDATE contacts SET ${sets.join(", ")} WHERE id = ?`, [...params, input.contactId]);
+    if (changed.length) {
+      await sql.run(
+        `INSERT INTO activities (
+           id, organization_id, contact_id, kind, actor_kind, actor_id, body, created_at
+         ) VALUES (?, ?, ?, 'note', 'agent', ?, ?, ?)`,
+        [crypto.randomUUID(), input.organizationId, input.contactId, agentId, `Updated ${current.name ?? "a person"}: ${changed.join(", ")}.`.slice(0, 2000), now],
+      );
+    }
+    await sql.exec("COMMIT");
+  } catch (error) {
+    await sql.exec("ROLLBACK");
+    if (isUnique(error)) return { ok: false, error: "email_taken" };
+    throw error;
+  }
+  const row = await sql.get<Contact>(`SELECT ${CONTACT_COLUMNS} FROM contacts WHERE id = ?`, [input.contactId]);
+  return row ? { ok: true, value: row } : { ok: false, error: "missing" };
 }
 
 async function writeStaffActivity(

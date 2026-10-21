@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import {
   DEAL_STAGE_LABEL,
   type ActivityRow,
   type AssessmentView,
+  formatContactAddress,
   type Contact,
   type DealCard,
   type LinkedRepo,
@@ -100,6 +102,7 @@ export function OverviewTab({
                 {main?.phone ? ` · ${main.phone}` : ""}
               </span>
             </p>
+            {main && formatContactAddress(main) ? <p className="text-muted-foreground">{formatContactAddress(main)}</p> : null}
           </CardContent>
         </Card>
         <Card>
@@ -206,6 +209,12 @@ export function OverviewTab({
                     ) : null}
                     {person.email ? <span className="ml-2 text-muted-foreground">{person.email}</span> : null}
                     {person.phone ? <span className="ml-2 text-muted-foreground">{person.phone}</span> : null}
+                    {formatContactAddress(person) ? (
+                      <address className="mt-0.5 flex items-start gap-1.5 text-xs not-italic text-muted-foreground" data-slot="contact-address">
+                        <MapPin aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+                        <span>{formatContactAddress(person)}</span>
+                      </address>
+                    ) : null}
                   </li>
                 ))}
               </ul>
