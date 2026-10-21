@@ -86,6 +86,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
               sizeBytes: file.sizeBytes,
               status: file.status,
               deletable: file.createdBy === caller.userId,
+              held: file.held,
               previewHref:
                 previewableStatus(file.status) && previewKind(file.name) !== "none"
                   ? `/w/${workspace.slug}/files/${file.id}`

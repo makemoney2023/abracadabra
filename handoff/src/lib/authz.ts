@@ -59,6 +59,11 @@ function staffOnWorkspace(caller: Caller, workspaceId: string | undefined): bool
   return isSuper(caller) || isAssignedOperator(caller, workspaceId);
 }
 
+/** Agent work waiting on Client Services (batches.held_at) shows to staff on the space, never to client members. */
+export function seesHeldWork(caller: Caller, workspaceId: string | undefined): boolean {
+  return staffOnWorkspace(caller, workspaceId);
+}
+
 /** HND-006. A missing workspace id only allows workspace creation by a super-admin. */
 export function can(caller: Caller, action: Action, target: AuthzTarget = {}): boolean {
   const workspaceId = workspaceIdOf(target);

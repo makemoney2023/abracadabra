@@ -1,3 +1,4 @@
+import { approveTaskWork } from "@/lib/agent-work-review";
 import type { Sql } from "@/db/sql";
 import { dispatchTask } from "@/lib/agent-dispatch";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
@@ -86,6 +87,8 @@ export async function decideReview(sql: Sql, input: ReviewInput): Promise<Review
     if (!moved.ok) return moved;
     await sql.run("UPDATE tasks SET review_note = NULL WHERE id = ?", [task.id]);
     await logReview(sql, task, "approve", note, input);
+    // Approving the card publishes every agent filing that waited on it: the client sees it and gets the email.
+    await approveTaskWork(sql, { taskId: task.id, actor: { kind: input.actor.kind === "staff" ? "staff" : "system", id: input.actor.id }, now: input.now });
     return moved;
   }
 

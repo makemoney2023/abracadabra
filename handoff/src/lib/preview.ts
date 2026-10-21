@@ -1,5 +1,5 @@
 import type { Caller } from "@/lib/authz";
-import { can } from "@/lib/authz";
+import { can, seesHeldWork } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { openObjectStore } from "@/lib/store/objects";
 
@@ -55,12 +55,13 @@ type PreviewRow = {
   object_deleted_at: number | null;
   discarded_at: number | null;
   deleted_at: number | null;
+  held_at: number | null;
 };
 
 async function previewRow(sql: Sql, fileId: string): Promise<PreviewRow | undefined> {
   return sql.get<PreviewRow>(
     `SELECT f.id, f.workspace_id, f.relative_path, f.status, f.object_key, f.object_deleted_at,
-            b.discarded_at, b.deleted_at
+            b.discarded_at, b.deleted_at, b.held_at
      FROM files f
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
      WHERE f.id = ?`,
@@ -88,6 +89,9 @@ export async function readPreviewFile(input: {
     return { ok: false, status: 404 };
   }
   if (!can(input.caller, "file.download", { workspaceId: row.workspace_id })) {
+    return { ok: false, status: 404 };
+  }
+  if (row.held_at != null && !seesHeldWork(input.caller, row.workspace_id)) {
     return { ok: false, status: 404 };
   }
   if (!previewableStatus(row.status) || previewKind(row.relative_path) === "none") {

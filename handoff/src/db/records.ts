@@ -1,5 +1,5 @@
 import { getTableName } from "drizzle-orm";
-import type { Caller } from "@/lib/authz";
+import { seesHeldWork, type Caller } from "@/lib/authz";
 import { isBatchActive } from "@/lib/batches";
 import { workspaces } from "./schema";
 import type { Sql } from "./sql";
@@ -99,21 +99,33 @@ export async function workspaceById(
   return visible.find((row) => row.id === id);
 }
 
-export function filesFor(sql: Sql, caller: Caller, workspaceId?: string) {
-  return scoped<ScopedRecord & { object_key: string; status: string }>(
+/** Files the caller may see. Files in a held batch (agent work waiting on Client Services) are staff-only. */
+export async function filesFor(sql: Sql, caller: Caller, workspaceId?: string) {
+  const rows = await scoped<ScopedRecord & { object_key: string; status: string; batch_id: string }>(
     sql,
     caller,
     "files",
     workspaceId,
   );
+  const blind = [...new Set(rows.map((row) => row.workspace_id))].filter((id) => !seesHeldWork(caller, id));
+  if (blind.length === 0) return rows;
+  const held = await sql.all<{ id: string }>(
+    `SELECT id FROM batches WHERE held_at IS NOT NULL AND workspace_id IN (${blind.map(() => "?").join(", ")})`,
+    blind,
+  );
+  if (held.length === 0) return rows;
+  const hidden = new Set(held.map((row) => row.id));
+  return rows.filter((row) => !hidden.has(row.batch_id));
 }
 
 export function requestsFor(sql: Sql, caller: Caller, workspaceId?: string) {
   return scoped(sql, caller, "requests", workspaceId);
 }
 
-export function batchesFor(sql: Sql, caller: Caller, workspaceId?: string) {
-  return scoped(sql, caller, "batches", workspaceId);
+/** Batches the caller may see. A held batch (agent work waiting on Client Services) is staff-only. */
+export async function batchesFor(sql: Sql, caller: Caller, workspaceId?: string) {
+  const rows = await scoped<ScopedRecord & { held_at?: number | null }>(sql, caller, "batches", workspaceId);
+  return rows.filter((row) => row.held_at == null || seesHeldWork(caller, row.workspace_id));
 }
 
 export function membershipsFor(sql: Sql, caller: Caller, workspaceId?: string) {

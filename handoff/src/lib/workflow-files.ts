@@ -14,11 +14,42 @@ export type WorkflowFile = {
   body: string;
   /** Raw PDF bytes. When set, the body is not used. */
   bytes?: Uint8Array;
+  /** Exact space path without the extension, like "Social/Facebook/post-1". Overrides agent/<workflow>/<run>/<node>. */
+  path?: string;
+  /** Keep this extension (html, csv, txt...) for a text body instead of saving it as markdown. */
+  textExtension?: string | null;
 };
+
+const TEXT_TYPES: Record<string, string> = {
+  md: "text/markdown",
+  txt: "text/plain",
+  csv: "text/csv",
+  html: "text/html",
+  htm: "text/html",
+  xml: "application/xml",
+  css: "text/css",
+};
+
+/** The extension a file is stored with, read from its bytes or body. null when it would not be stored. */
+export function workflowFileExtension(file: WorkflowFile): string | null {
+  if (file.bytes && isPdfBytes(file.bytes)) return "pdf";
+  if (file.bytes && isPngBytes(file.bytes)) return "png";
+  const adapted = adaptArtifact(file.body);
+  if (!adapted) return null;
+  if (adapted.kind === "markdown" && file.textExtension && TEXT_TYPES[file.textExtension]) return file.textExtension;
+  return adapted.extension;
+}
+
+function spacePath(file: WorkflowFile, extension: string): string | null {
+  if (file.path) return /^[a-z0-9]{1,8}$/.test(extension) ? `${file.path}.${extension}` : null;
+  return workflowSpacePath(file, extension);
+}
 
 export type StoredWorkflowFiles = {
   batchId: string | null;
   stored: string[];
+  /** The stored files, in order, with their object keys. */
+  files?: { relativePath: string; objectKey: string; sizeBytes: number; contentType: string }[];
 };
 
 function isPdfBytes(bytes: Uint8Array): boolean {
@@ -77,23 +108,27 @@ export async function storeWorkflowOutput(input: {
   workspaceId?: string | null;
   /** Batch label shown in the space. Defaults to "From the swarm". */
   label?: string;
+  /** Hide the batch from client members until Client Services approves it (batches.held_at). */
+  held?: boolean;
 }): Promise<StoredWorkflowFiles> {
   const prepared = input.files.flatMap((file) => {
     if (file.bytes && isPdfBytes(file.bytes)) {
-      const relativePath = workflowSpacePath(file, "pdf");
+      const relativePath = spacePath(file, "pdf");
       if (!relativePath) return [];
       return [{ relativePath, bytes: file.bytes, contentType: "application/pdf" }];
     }
     if (file.bytes && isPngBytes(file.bytes)) {
-      const relativePath = workflowSpacePath(file, "png");
+      const relativePath = spacePath(file, "png");
       if (!relativePath) return [];
       return [{ relativePath, bytes: file.bytes, contentType: "image/png" }];
     }
     const adapted = adaptArtifact(file.body);
     if (!adapted) return [];
-    const relativePath = workflowSpacePath(file, adapted.extension);
+    const extension = workflowFileExtension(file) ?? adapted.extension;
+    const relativePath = spacePath(file, extension);
     if (!relativePath) return [];
-    return [{ relativePath, bytes: adapted.bytes, contentType: adapted.contentType }];
+    const contentType = adapted.kind === "markdown" ? (TEXT_TYPES[extension] ?? adapted.contentType) : adapted.contentType;
+    return [{ relativePath, bytes: adapted.bytes, contentType }];
   });
   if (prepared.length === 0) return { batchId: null, stored: [] };
 
@@ -152,12 +187,21 @@ export async function storeWorkflowOutput(input: {
   const rows = accepted.map((file) => ({ ...file, id: crypto.randomUUID() }));
   await input.sql.exec("BEGIN");
   try {
-    await input.sql.run(
-      `INSERT INTO batches (
-        id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
-      ) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?, NULL, NULL)`,
-      [batchId, space.id, ACTOR, input.label ?? LABEL, input.now, input.now],
-    );
+    if (input.held) {
+      await input.sql.run(
+        `INSERT INTO batches (
+          id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at, held_at
+        ) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?, NULL, NULL, ?)`,
+        [batchId, space.id, ACTOR, input.label ?? LABEL, input.now, input.now, input.now],
+      );
+    } else {
+      await input.sql.run(
+        `INSERT INTO batches (
+          id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
+        ) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?, NULL, NULL)`,
+        [batchId, space.id, ACTOR, input.label ?? LABEL, input.now, input.now],
+      );
+    }
     for (const file of rows) {
       await input.sql.run(
         `INSERT INTO files (
@@ -187,14 +231,16 @@ export async function storeWorkflowOutput(input: {
   }
 
   const stored: string[] = [];
+  const saved: NonNullable<StoredWorkflowFiles["files"]> = [];
   for (const file of rows) {
     const key = `${space.id}/${batchId}/${file.id}`;
     try {
       await input.store.put(key, file.bytes);
       stored.push(file.relativePath);
+      saved.push({ relativePath: file.relativePath, objectKey: key, sizeBytes: file.bytes.byteLength, contentType: file.contentType });
     } catch {
       await input.sql.run("UPDATE files SET status = 'failed', scan_reason = ? WHERE id = ?", ["The file did not save.", file.id]);
     }
   }
-  return { batchId, stored };
+  return { batchId, stored, files: saved };
 }

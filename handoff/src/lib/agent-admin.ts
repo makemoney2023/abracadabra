@@ -222,7 +222,8 @@ export async function staffFileUnfiled(
     if (filed.error === "space_rejected") return { ok: false, error: "The space refused these files. Try another space." };
     return { ok: false, error: "That space, project, or task isn't part of this client.", field: "target" };
   }
-  return { ok: true, message: filed.taskClosed ? "Filed, and the task is done." : "Filed." };
+  // Routing an item is not approving it: the client sees it once Client Services approves.
+  return { ok: true, message: filed.awaitingReview ? "Filed. The task is waiting on Client Services." : "Filed. Client Services approves it before the client sees it." };
 }
 
 export async function staffDiscardUnfiled(sql: Sql, caller: Caller, input: { id: string; reason: string; now: number }): Promise<ActionOutcome> {
@@ -473,6 +474,9 @@ export type ClientAgentWork = {
     taskTitle: string | null;
     taskClosed: boolean;
     handoffTo: string | null;
+    /** null for work filed before review existed (already visible to the client). */
+    reviewState: "held" | "approved" | "superseded" | "retracted" | "discarded" | null;
+    folder: string | null;
   }[];
   updates: { id: string; kind: string; body: string; actorId: string | null; at: number }[];
 };
@@ -489,9 +493,10 @@ export async function listClientAgentWork(sql: Sql, caller: Caller, organization
     sql.all<{
       id: string; title: string; kind: string; summary: string | null; agent_id: string; label: string; filed_at: number; slug: string | null;
       display_name: string | null; batch_id: string | null; paths_json: string; links_json: string; task_title: string | null; task_closed: number; handoff_to: string | null;
+      review_state: string | null; folder: string | null;
     }>(
       `SELECT i.id, i.title, i.kind, i.summary, i.agent_id, c.label, i.filed_at, w.slug, w.display_name, i.batch_id, i.paths_json, i.links_json,
-              t.title AS task_title, i.task_closed, i.handoff_to
+              t.title AS task_title, i.task_closed, i.handoff_to, i.review_state, i.folder
        FROM agent_work_items i JOIN client_agents c ON c.id = i.agent_id
        LEFT JOIN workspaces w ON w.id = i.workspace_id
        LEFT JOIN tasks t ON t.id = i.task_id
@@ -531,6 +536,8 @@ export async function listClientAgentWork(sql: Sql, caller: Caller, organization
       taskTitle: row.task_title,
       taskClosed: row.task_closed === 1,
       handoffTo: row.handoff_to,
+      reviewState: (row.review_state as ClientAgentWork["filed"][number]["reviewState"]) ?? null,
+      folder: row.folder,
     })),
     updates: updates.map((row) => ({ id: row.id, kind: row.kind, body: row.body ?? "", actorId: row.actor_id, at: row.created_at })),
   };

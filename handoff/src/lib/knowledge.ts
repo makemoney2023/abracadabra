@@ -315,7 +315,7 @@ export async function searchSpace(input: {
      FROM file_passages p
      JOIN files f ON f.id = p.file_id AND f.object_deleted_at IS NULL
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
-       AND b.discarded_at IS NULL AND b.deleted_at IS NULL
+       AND b.discarded_at IS NULL AND b.deleted_at IS NULL AND b.held_at IS NULL
      LEFT JOIN file_reads r ON r.file_id = p.file_id
      WHERE p.workspace_id = ?
        AND (? IS NULL OR f.tag = ?)

@@ -178,7 +178,7 @@ describe("filing", () => {
     const result = await fileAgentWork(sql, store, principal, work, NOW);
     expect(result).toMatchObject({ ok: true, state: "filed", duplicate: false, workspaceId: spaceId, spaceSlug: "acme-example", route: "only_space" });
     if (!result.ok || result.state !== "filed") throw new Error("not filed");
-    expect(result.paths[0]).toMatch(/^agent\/work\/2023-11-14-spring-promo-landing-page-copy-[0-9a-f]{6}\/summary\.md$/);
+    expect(result.paths[0]).toBe("Finished work/2023-11-14 Spring promo landing page copy/summary.md");
     const file = await sql.get<{ object_key: string; status: string; workspace_id: string }>("SELECT object_key, status, workspace_id FROM files");
     expect(file?.workspace_id).toBe(spaceId);
     expect(file?.status).toBe("uploaded");
@@ -466,16 +466,18 @@ describe("handoffs", () => {
 });
 
 describe("task completion", () => {
-  it("moves the linked task to done once filed, unless keep_task_open", async () => {
+  it("moves the linked task to Waiting on Client Services once filed (never done), unless keep_task_open", async () => {
     const acme = await org("Acme", "acme.example");
     await space(acme, "acme-example");
     const { principal: agent } = await agentFor(acme);
     const one = await task(acme, null, "One");
     const two = await task(acme, null, "Two");
-    expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t1", task_id: one }, NOW)).toMatchObject({ state: "filed", taskClosed: true });
+    expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t1", task_id: one }, NOW)).toMatchObject({ state: "filed", taskClosed: false, awaitingReview: true, reviewState: "held" });
     expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t2", task_id: two, keep_task_open: true }, NOW)).toMatchObject({ state: "filed", taskClosed: false });
-    const rows = await sql.all<{ title: string; status: string }>("SELECT title, status FROM tasks ORDER BY title");
-    expect(rows).toEqual([{ title: "One", status: "done" }, { title: "Two", status: "todo" }]);
+    const rows = await sql.all<{ title: string; status: string; in_review: number }>(
+      "SELECT title, status, review_requested_at IS NOT NULL AS in_review FROM tasks ORDER BY title",
+    );
+    expect(rows).toEqual([{ title: "One", status: "doing", in_review: 1 }, { title: "Two", status: "todo", in_review: 0 }]);
     const moved = await sql.get<{ actor_id: string }>("SELECT actor_id FROM activities WHERE kind = 'agent.task_stage'");
     expect(moved?.actor_id).toBe("acme-agent");
   });

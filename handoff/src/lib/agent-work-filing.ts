@@ -1,8 +1,10 @@
 import { normalizeDomain } from "@/db/crm";
 import type { Sql } from "@/db/sql";
 import type { ObjectStore } from "@/lib/store/objects";
-import { markTaskDone } from "@/lib/task-done";
-import { storeWorkflowOutput, type WorkflowFile } from "@/lib/workflow-files";
+import { createWorkDeliverable, linkTaskDeliverable, loadOwnWork, withdrawAgentWork } from "@/lib/agent-work-review";
+import { moveTaskStage } from "@/lib/task-stage";
+import { cleanFolder, defaultFolder, fileStem, keptTextExtension } from "@/lib/work-folder";
+import { storeWorkflowOutput, workflowFileExtension, type WorkflowFile } from "@/lib/workflow-files";
 import { handOverWaitingTasks } from "@/lib/agent-dispatch";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 
@@ -52,12 +54,17 @@ export type WorkPayload = {
   handoffNote: string | null;
   finishedAt: string | null;
   agentId: string | null;
+  /** Space folder, like "Social/Facebook". null: Finished work/<date> <title>. */
+  folder: string | null;
+  /** external_id or work item id of this agent's own held filing that this one replaces. */
+  supersedes: string | null;
 };
 
 export type FileResult =
   | {
       ok: true; duplicate: boolean; state: "filed"; workItemId: string; organizationId: string; workspaceId: string;
       spaceSlug: string; projectId: string | null; paths: string[]; route: string; taskClosed: boolean; handoffTo: string | null; awaitingReview?: boolean;
+      reviewState?: string | null; folder?: string | null; deliverableId?: string | null; supersededId?: string | null;
     }
   | { ok: true; duplicate: boolean; state: "unfiled" | "received" | "discarded"; workItemId: string; reason: string | null }
   | { ok: false; error: "invalid"; message: string }
@@ -82,9 +89,6 @@ function text(raw: unknown, max: number): string | null {
   return value ? value.slice(0, max) : null;
 }
 
-function slug(value: string, max = 40): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, max).replace(/-+$/g, "");
-}
 
 // ---------- Agents, assignments, tokens ----------
 
@@ -258,6 +262,9 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
   if (!content && !summary && attachments.length === 0 && links.length === 0) {
     return { ok: false, message: "Send content, a summary, attachments, or links." };
   }
+  const folder = cleanFolder(body.folder);
+  if (!folder.ok) return { ok: false, message: folder.message };
+  if (body.supersedes != null && typeof body.supersedes !== "string") return { ok: false, message: "supersedes must be the external_id or id of your earlier filing." };
   const handoff = body.handoff && typeof body.handoff === "object" && !Array.isArray(body.handoff) ? (body.handoff as Record<string, unknown>) : {};
   const client = body.client && typeof body.client === "object" && !Array.isArray(body.client) ? (body.client as Record<string, unknown>) : {};
   const domainRaw = text(client.domain, 255);
@@ -283,6 +290,8 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       handoffNote: text(handoff.note, 4000),
       finishedAt: text(body.finished_at, 40),
       agentId: text(body.agent_id, 64)?.toLowerCase() ?? null,
+      folder: folder.folder,
+      supersedes: text(body.supersedes, 200),
     },
   };
 }
@@ -407,58 +416,100 @@ function summaryMarkdown(agent: AgentPrincipal, payload: WorkPayload, receivedAt
   return lines.join("\n");
 }
 
-function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number): WorkflowFile[] {
-  const date = new Date(now).toISOString().slice(0, 10);
-  const run = `${date}-${slug(payload.title) || "work"}-${itemId.slice(0, 6)}`;
-  const files: WorkflowFile[] = [{ workflow: "work", run, node: "summary", body: summary }];
-  if (payload.content?.trim().startsWith("data:")) files.push({ workflow: "work", run, node: "content", body: payload.content });
-  const used = new Set(["summary", "content"]);
+/**
+ * Files land in a folder: the agent's `folder`, else Finished work/<date> <title>. Attachment names stay readable.
+ * A name already used in that folder (by this filing or an earlier one) gets " (2)", " (3)", and so on.
+ */
+function filesFor(summary: string, payload: WorkPayload, folder: string, taken: Set<string>): WorkflowFile[] {
+  const used = new Set(taken);
+  const place = (stem: string, file: Omit<WorkflowFile, "path">): WorkflowFile => {
+    const extension = workflowFileExtension(file) ?? "md";
+    let name = stem;
+    for (let n = 2; used.has(`${folder}/${name}.${extension}`.toLowerCase()); n += 1) name = `${stem} (${n})`;
+    used.add(`${folder}/${name}.${extension}`.toLowerCase());
+    return { ...file, path: `${folder}/${name}` };
+  };
+  const summaryStem = payload.folder ? `${fileStem(payload.title)} - summary` : "summary";
+  const files: WorkflowFile[] = [place(summaryStem, { workflow: "work", run: "work", node: "summary", body: summary })];
+  if (payload.content?.trim().startsWith("data:")) {
+    files.push(place(payload.folder ? fileStem(payload.title) : "content", { workflow: "work", run: "work", node: "content", body: payload.content }));
+  }
   for (const file of payload.attachments) {
-    let node = slug(file.name.replace(/\.[a-z0-9]{1,8}$/i, ""), 50) || "file";
-    while (used.has(node)) node = `${node}-2`;
-    used.add(node);
-    files.push({ workflow: "work", run, node, body: file.body });
+    files.push(place(fileStem(file.name), { workflow: "work", run: "work", node: "file", body: file.body, textExtension: keptTextExtension(file.name) }));
   }
   return files;
+}
+
+function likeEscape(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
+/** Live file paths already in this folder of the space, lower-cased. */
+/** Names already used in a folder. The filing being replaced does not count: it is withdrawn right after, so v2 keeps v1's names. */
+async function takenPaths(sql: Sql, workspaceId: string, folder: string, replacing: string | null): Promise<Set<string>> {
+  const rows = await sql.all<{ path: string }>(
+    `SELECT lower(f.relative_path) AS path FROM files f JOIN batches b ON b.id = f.batch_id
+     WHERE f.workspace_id = ? AND b.discarded_at IS NULL AND b.deleted_at IS NULL AND f.object_deleted_at IS NULL
+       AND f.relative_path LIKE ? ESCAPE '\\' AND b.id IS NOT ?`,
+    [workspaceId, `${likeEscape(folder)}/%`, replacing],
+  );
+  return new Set(rows.map((row) => row.path));
 }
 
 async function writeFiled(
   sql: Sql,
   store: ObjectStore,
   input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; route: Extract<Route, { ok: true }>; actor: string; now: number },
-): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview?: boolean } | { ok: false }> {
+): Promise<
+  | { ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview: boolean; folder: string; deliverableId: string }
+  | { ok: false }
+> {
   const { route, payload, agent } = input;
   const summary = summaryMarkdown(agent, payload, input.now);
+  const folder = payload.folder ?? defaultFolder(input.now, payload.title);
+  const replacing = payload.supersedes ? ((await loadOwnWork(sql, agent.agentId, payload.supersedes))?.batch_id ?? null) : null;
   const stored = await storeWorkflowOutput({
     sql,
     store,
     organizationId: route.organizationId,
     workspaceId: route.space.id,
     projectId: route.projectId,
-    files: filesFor(input.itemId, summary, payload, input.now),
+    files: filesFor(summary, payload, folder, await takenPaths(sql, route.space.id, folder, replacing)),
     tag: "copy",
     label: `From ${agent.label}`.slice(0, 120),
+    held: true,
     now: input.now,
   });
   if (!stored.batchId || stored.stored.length === 0) return { ok: false };
-  // A task in Review waits on Client Services: filing attaches the work (task_id on the item) but does not close it.
+  const deliverableId = await createWorkDeliverable(sql, {
+    organizationId: route.organizationId,
+    projectId: route.projectId,
+    workspaceId: route.space.id,
+    title: payload.title,
+    agentId: agent.agentId,
+    folder,
+    summary: payload.summary,
+    files: stored.files ?? [],
+    now: input.now,
+  });
+  // Filed work waits on Client Services. A card that isn't waiting yet moves to Waiting on Client Services
+  // (unless keep_task_open), so the work is never marked Done before anyone has approved it.
   const reviewTask = route.taskId
     ? await sql.get<{ title: string }>(
         "SELECT title FROM tasks WHERE id = ? AND status != 'done' AND review_requested_at IS NOT NULL",
         [route.taskId],
       )
     : undefined;
-  const awaitingReview = Boolean(reviewTask);
-  const closeTask = Boolean(route.taskId) && !payload.keepTaskOpen && !awaitingReview;
   const writes: Write[] = [
     {
-      statement: `UPDATE agent_work_items SET state = 'filed', organization_id = ?, workspace_id = ?, project_id = ?, task_id = ?, task_closed = ?,
+      statement: `UPDATE agent_work_items SET state = 'filed', organization_id = ?, workspace_id = ?, project_id = ?, task_id = ?, task_closed = 0,
                     handoff_to = ?, handoff_note = ?, route = ?, unfiled_reason = NULL, payload_json = NULL, context_md = ?, batch_id = ?,
-                    paths_json = ?, filed_by = ?, filed_at = ?, updated_at = ?
+                    paths_json = ?, filed_by = ?, filed_at = ?, updated_at = ?, review_state = 'held', deliverable_id = ?, folder = ?
                   WHERE id = ?`,
       params: [
-        route.organizationId, route.space.id, route.projectId, route.taskId, closeTask ? 1 : 0, payload.handoffTo, payload.handoffNote,
-        route.route, summary.slice(0, CONTEXT_LIMIT), stored.batchId, JSON.stringify(stored.stored), input.actor, input.now, input.now, input.itemId,
+        route.organizationId, route.space.id, route.projectId, route.taskId, payload.handoffTo, payload.handoffNote,
+        route.route, summary.slice(0, CONTEXT_LIMIT), stored.batchId, JSON.stringify(stored.stored), input.actor, input.now, input.now,
+        deliverableId, folder, input.itemId,
       ],
     },
     {
@@ -466,16 +517,17 @@ async function writeFiled(
                   VALUES (?, ?, ?, ?, 'client_agent.work_filed', 'agent', ?, ?, ?, ?)`,
       params: [
         crypto.randomUUID(), route.organizationId, route.projectId, route.space.id, agent.agentId,
-        `${agent.label} filed: ${payload.title}`.slice(0, 500),
+        `${agent.label} filed: ${payload.title} (waiting on Client Services)`.slice(0, 500),
         JSON.stringify({
-          work_item_id: input.itemId, agent_id: agent.agentId, kind: payload.kind, task_id: route.taskId, task_closed: closeTask,
+          work_item_id: input.itemId, agent_id: agent.agentId, kind: payload.kind, task_id: route.taskId, task_closed: false,
           route: route.route, filed_by: input.actor, paths: stored.stored, links: payload.links, handoff_to: payload.handoffTo,
+          folder, deliverable_id: deliverableId, review_state: "held",
         }),
         input.now,
       ],
     },
   ];
-  if (awaitingReview && reviewTask) {
+  if (reviewTask) {
     writes.push({
       statement: `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
                   VALUES (?, ?, ?, ?, 'client_agent.review_waiting', 'agent', ?, ?, ?, ?)`,
@@ -500,8 +552,21 @@ async function writeFiled(
     });
   }
   await sql.batch(writes);
-  if (closeTask && route.taskId) await markTaskDone(sql, { taskId: route.taskId, now: input.now, actor: { kind: "agent", id: agent.agentId } });
-  return { ok: true, paths: stored.stored, batchId: stored.batchId, taskClosed: closeTask, ...(awaitingReview ? { awaitingReview } : {}) };
+  let awaitingReview = Boolean(reviewTask);
+  if (route.taskId) {
+    await linkTaskDeliverable(sql, route.taskId, deliverableId);
+    if (!reviewTask && !payload.keepTaskOpen) {
+      const moved = await moveTaskStage(sql, {
+        taskId: route.taskId,
+        to: "review",
+        note: `Filed "${payload.title}".`.slice(0, 500),
+        now: input.now,
+        actor: { kind: "agent", id: agent.agentId },
+      });
+      awaitingReview = moved.ok && moved.column === "review";
+    }
+  }
+  return { ok: true, paths: stored.stored, batchId: stored.batchId, taskClosed: false, awaitingReview, folder, deliverableId };
 }
 
 async function markUnfiled(sql: Sql, itemId: string, agent: AgentPrincipal, payload: WorkPayload, reason: UnfiledReason, organizationId: string | null, suggested: string | null, now: number) {
@@ -525,8 +590,10 @@ async function existingResult(sql: Sql, agentId: string, externalId: string): Pr
   const row = await sql.get<{
     id: string; state: string; organization_id: string | null; workspace_id: string | null; project_id: string | null;
     paths_json: string; route: string | null; unfiled_reason: string | null; task_closed: number; handoff_to: string | null;
+    review_state: string | null; folder: string | null; deliverable_id: string | null;
   }>(
-    `SELECT id, state, organization_id, workspace_id, project_id, paths_json, route, unfiled_reason, task_closed, handoff_to
+    `SELECT id, state, organization_id, workspace_id, project_id, paths_json, route, unfiled_reason, task_closed, handoff_to,
+            review_state, folder, deliverable_id
      FROM agent_work_items WHERE agent_id = ? AND external_id = ?`,
     [agentId, externalId],
   );
@@ -537,6 +604,7 @@ async function existingResult(sql: Sql, agentId: string, externalId: string): Pr
       ok: true, duplicate: true, state: "filed", workItemId: row.id, organizationId: row.organization_id, workspaceId: row.workspace_id,
       spaceSlug: space?.slug ?? "", projectId: row.project_id, paths: JSON.parse(row.paths_json) as string[], route: row.route ?? "",
       taskClosed: row.task_closed === 1, handoffTo: row.handoff_to,
+      reviewState: row.review_state, folder: row.folder, deliverableId: row.deliverable_id,
     };
   }
   return { ok: true, duplicate: true, state: row.state as "unfiled" | "received" | "discarded", workItemId: row.id, reason: row.unfiled_reason };
@@ -559,6 +627,21 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
   if (payload.agentId && payload.agentId !== agent.agentId) return { ok: false, error: "forbidden", message: "agent_id does not match this token." };
   const seen = await existingResult(sql, agent.agentId, payload.externalId);
   if (seen) return seen;
+  let superseded: string | null = null;
+  if (payload.supersedes) {
+    const earlier = await loadOwnWork(sql, agent.agentId, payload.supersedes);
+    if (!earlier || earlier.state !== "filed") return { ok: false, error: "invalid", message: "supersedes names no filed work of yours." };
+    if (earlier.review_state !== "held") {
+      return {
+        ok: false,
+        error: "invalid",
+        message: earlier.review_state === "approved" || earlier.review_state === null
+          ? "That work is already in the client's space. File the new version without supersedes, and ask Client Services to discard the old one."
+          : `That work is already ${earlier.review_state}.`,
+      };
+    }
+    superseded = earlier.id;
+  }
 
   const route = await resolveRoute(sql, agent, payload);
   if (route.ok && payload.handoffTo) {
@@ -592,10 +675,14 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
     await markUnfiled(sql, itemId, agent, payload, "space_rejected", route.organizationId, null, now);
     return { ok: true, duplicate: false, state: "unfiled", workItemId: itemId, reason: "space_rejected" };
   }
+  if (superseded) {
+    await withdrawAgentWork(sql, { id: superseded, to: "superseded", agentId: agent.agentId, supersededBy: itemId, actor: { kind: "agent", id: agent.agentId }, now });
+  }
   return {
     ok: true, duplicate: false, state: "filed", workItemId: itemId, organizationId: route.organizationId, workspaceId: route.space.id,
     spaceSlug: route.space.slug, projectId: route.projectId, paths: filed.paths, route: route.route, taskClosed: filed.taskClosed,
     handoffTo: payload.handoffTo, ...(filed.awaitingReview ? { awaitingReview: true } : {}),
+    reviewState: "held", folder: filed.folder, deliverableId: filed.deliverableId, supersededId: superseded,
   };
 }
 
@@ -618,6 +705,10 @@ export type WorkContextRow = {
   paths: string[];
   links: { label: string; url: string }[];
   filed_at: string;
+  /** null: filed before review existed (visible). held, approved, superseded, retracted. */
+  review_state: string | null;
+  folder: string | null;
+  deliverable_id: string | null;
 };
 
 /**
@@ -654,9 +745,11 @@ export async function listAgentContext(
     id: string; agent_id: string; agent_label: string; kind: string; title: string; summary: string | null; organization_id: string;
     organization_name: string; space_slug: string | null; project_id: string | null; task_id: string | null; handoff_to: string | null;
     handoff_note: string | null; paths_json: string; links_json: string; filed_at: number;
+    review_state: string | null; folder: string | null; deliverable_id: string | null;
   }>(
     `SELECT i.id, i.agent_id, a.label AS agent_label, i.kind, i.title, i.summary, i.organization_id, o.name AS organization_name,
-            w.slug AS space_slug, i.project_id, i.task_id, i.handoff_to, i.handoff_note, i.paths_json, i.links_json, i.filed_at
+            w.slug AS space_slug, i.project_id, i.task_id, i.handoff_to, i.handoff_note, i.paths_json, i.links_json, i.filed_at,
+            i.review_state, i.folder, i.deliverable_id
      FROM agent_work_items i
      JOIN client_agents a ON a.id = i.agent_id
      JOIN organizations o ON o.id = i.organization_id
@@ -738,7 +831,7 @@ export async function fileUnfiledWork(
     actor: string;
     now: number;
   },
-): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean } | { ok: false; error: "missing" | "invalid" | "space_rejected" }> {
+): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview: boolean } | { ok: false; error: "missing" | "invalid" | "space_rejected" }> {
   const row = await sql.get<{ id: string; agent_id: string; state: string; payload_json: string | null }>(
     "SELECT id, agent_id, state, payload_json FROM agent_work_items WHERE id = ?",
     [input.id],
@@ -779,7 +872,7 @@ export async function fileUnfiledWork(
     now: input.now,
   });
   if (!filed.ok) return { ok: false, error: "space_rejected" };
-  return { ok: true, paths: filed.paths, batchId: filed.batchId, taskClosed: filed.taskClosed };
+  return { ok: true, paths: filed.paths, batchId: filed.batchId, taskClosed: filed.taskClosed, awaitingReview: filed.awaitingReview };
 }
 
 /** Drops one unfiled item. The reason, when given, is kept on the item (route) and on the timeline. */

@@ -13,8 +13,10 @@ export const dynamic = "force-dynamic";
  * The client must be one of the agent's assignments. Anything that does not resolve waits as unfiled for staff.
  * Body: { external_id, title, kind?, summary?, content?, attachments?: [{ name, body }], links?: [{ label, url }],
  *         client?: { organization_id?, domain?, space_slug? }, project_id?, task_id?, keep_task_open?,
- *         handoff?: { to, note? }, finished_at?, agent_id? }
- * A task_id is moved to done once the work is filed, unless keep_task_open is true.
+ *         handoff?: { to, note? }, finished_at?, agent_id?, folder?, supersedes? }
+ * An attachment body is text, or a base64 data URL (data:image/png;base64,...) for a picture or PDF.
+ * Files land in `folder` ("Social/Facebook"), else "Finished work/<date> <title>", held from client members until
+ * Client Services approves. A task_id moves to Waiting on Client Services (unless keep_task_open), never to done.
  */
 export async function POST(request: Request) {
   const sql = await openHandoffDb();
@@ -47,6 +49,11 @@ export async function POST(request: Request) {
         paths: result.paths,
         task_closed: result.taskClosed,
         handoff_to: result.handoffTo,
+        review_state: result.reviewState ?? null,
+        folder: result.folder ?? null,
+        deliverable_id: result.deliverableId ?? null,
+        awaiting_review: result.awaitingReview ?? false,
+        ...(result.supersededId ? { superseded: result.supersededId } : {}),
       },
       { status: result.duplicate ? 200 : 201 },
     );

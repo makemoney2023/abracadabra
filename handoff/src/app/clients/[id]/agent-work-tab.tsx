@@ -5,6 +5,14 @@ import { formatRelative } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+const REVIEW_LABEL = {
+  held: "Waiting on Client Services",
+  approved: "Approved, client can see it",
+  superseded: "Superseded",
+  retracted: "Retracted",
+  discarded: "Discarded",
+} as const;
+
 const UPDATE_LABEL: Record<string, string> = {
   "client_agent.board": "Board",
   "client_agent.handoff": "Handoff",
@@ -37,6 +45,8 @@ export function AgentWorkTab({ organizationId, work, now }: { organizationId: st
                       <Badge variant="outline">{item.taskClosed ? `Done: ${item.taskTitle}` : `Task: ${item.taskTitle}`}</Badge>
                     ) : null}
                     {item.handoffTo ? <Badge variant="outline">Handed to {item.handoffTo}</Badge> : null}
+                    {item.reviewState ? <Badge variant={item.reviewState === "held" ? "default" : "outline"}>{REVIEW_LABEL[item.reviewState]}</Badge> : null}
+                    {item.folder ? <Badge variant="outline" className="font-mono">{item.folder}</Badge> : null}
                   </div>
                   {item.summary ? <p className="text-sm text-muted-foreground">{item.summary}</p> : null}
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">

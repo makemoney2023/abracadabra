@@ -1,3 +1,4 @@
+import { approveDeliverableWork } from "@/lib/agent-work-review";
 import { normalizeDomain } from "@/db/crm";
 import type { Sql } from "@/db/sql";
 import { cleanEmail, companyDomain } from "@/lib/intake/consume";
@@ -799,5 +800,9 @@ export async function reviewDeliverable(
     ],
   });
   await sql.batch(writes);
+  // Approving a whole deliverable that an agent filed publishes that filing to the client, as a card approval would.
+  if (input.decision === "approve" && !itemId) {
+    await approveDeliverableWork(sql, { deliverableId: row.id, actor: { kind: "system", id: "client-services" }, now: input.now });
+  }
   return { ok: true, status, organizationId: space.organization_id };
 }

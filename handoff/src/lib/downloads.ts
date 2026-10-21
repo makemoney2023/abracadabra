@@ -363,6 +363,8 @@ export type FolderFile = {
   sizeBytes: number;
   status: string;
   createdBy: string;
+  /** Agent work waiting on Client Services. Only staff ever get a held file here. */
+  held: boolean;
 };
 
 /** Files still in the folder. Thrown-away uploads stay out of the list. */
@@ -373,6 +375,7 @@ export async function listFolderFiles(
 ): Promise<FolderFile[]> {
   const visible = await batchesFor(sql, caller, workspaceId);
   if (visible.length === 0) return [];
+  const held = new Set(visible.filter((row) => row.held_at != null).map((row) => row.id));
   const ids = visible.map((row) => row.id);
   const placeholders = ids.map(() => "?").join(", ");
   const rows = await sql.all<{
@@ -400,6 +403,7 @@ export async function listFolderFiles(
     sizeBytes: row.size_bytes,
     status: row.status,
     createdBy: row.created_by,
+    held: held.has(row.batch_id),
   }));
 }
 
