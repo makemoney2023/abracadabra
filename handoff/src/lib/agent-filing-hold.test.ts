@@ -18,10 +18,10 @@ import { agentForToken, fileAgentWork, fileUnfiledWork, registerClientAgent } fr
 import { agentWorkLimits, storedBytes } from "./agent-work-limits";
 import { listFilings, releaseHeldWork, withdrawFiling } from "./agent-filing-review";
 import { clientServicesReview, listOpenReviews } from "./task-review";
-import { listClientUpdates } from "./client-work";
+import { listClientUpdates, readSpaceForReview } from "./client-work";
 import { createAgentTask } from "./agent-board";
 import { setOrganizationUpdateMode } from "@/db/crm";
-import { openDeliverable } from "@/db/deliverables";
+import { openDeliverable, recordFeedback } from "@/db/deliverables";
 import { clientDetails, clientLead, parseFilingSummary } from "./filing-summary";
 
 const NOW = 1_700_000_000_000;
@@ -688,3 +688,66 @@ describe("client-facing filing summary", () => {
     expect(items.map((item) => item.title)).toEqual(["October social posts", "my - summary.md", "posts.md"]);
   });
 });
+
+describe("Client Services needs-review after approval", () => {
+  const reviewIds = async (now: number) => {
+    const updates = await listClientUpdates(sql, { since: null, now, origin: "https://hq.example" });
+    if (!Array.isArray(updates)) throw new Error("updates");
+    return { updates, ids: updates.flatMap((update) => update.needs_review.map((entry) => `${entry.deliverable_id}:${entry.status}`)) };
+  };
+
+  it("an approved, released deliverable leaves the needs-review list (old snapshots too) but stays Waiting for a look for the client", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx);
+    const filed = await file(ctx, { external_id: "nr-1", task_id: taskId });
+    const deliverableId = filed.review!.deliverableId!;
+    // While held: listed for review (this snapshot is stored with the update).
+    const before = await reviewIds(NOW + 50);
+    expect(before.ids).toContain(`${deliverableId}:held_for_review`);
+
+    expect((await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 100 })).ok).toBe(true);
+    const after = await reviewIds(NOW + 10_000);
+    expect(after.ids.filter((id) => id.startsWith(deliverableId))).toEqual([]);
+    expect(after.updates.some((update) => update.kind === "client_work.update_ready")).toBe(true);
+
+    // The client's flow is unchanged: published, "in_review" (Waiting for a look), with Approve / Ask for changes.
+    const row = await sql.get<{ status: string; published_version: number }>("SELECT status, published_version FROM deliverables WHERE id = ?", [deliverableId]);
+    expect(row).toEqual({ status: "in_review", published_version: 1 });
+    expect(await openDeliverable(sql, ctx.member, deliverableId, "published")).not.toBeNull();
+    const space = await readSpaceForReview(sql, ctx.spaceId);
+    expect(space?.deliverables.find((entry) => entry.id === deliverableId)).toMatchObject({ status: "in_review", client_services: "approved" });
+  });
+
+  it("client changes and a new held filing bring it back", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx);
+    const filed = await file(ctx, { external_id: "nr-2", task_id: taskId });
+    const deliverableId = filed.review!.deliverableId!;
+    expect((await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 100 })).ok).toBe(true);
+    const page = (await openDeliverable(sql, ctx.member, deliverableId, "published"))!.items[0]!;
+    const asked = await recordFeedback(sql, ctx.member, { deliverableId, itemId: page.id, version: 1, decision: "changes", body: "Fix the hours." }, NOW + 200);
+    expect(asked.ok).toBe(true);
+    expect((await sql.get<{ status: string }>("SELECT status FROM deliverables WHERE id = ?", [deliverableId]))?.status).toBe("changes_requested");
+    expect((await readSpaceForReview(sql, ctx.spaceId))?.deliverables.find((entry) => entry.id === deliverableId)).toMatchObject({ client_services: "changes_requested" });
+    // A corrected filing is held again: Client Services reviews it.
+    await file(ctx, { external_id: "nr-3", task_id: taskId }, NOW + 300);
+    const again = await reviewIds(NOW + 20_000);
+    expect(again.ids).toContain(`${deliverableId}:held_for_review`);
+    expect((await readSpaceForReview(sql, ctx.spaceId))?.deliverables.find((entry) => entry.id === deliverableId)).toMatchObject({ client_services: "review" });
+  });
+
+  it("staff-published work waiting for the client is still listed", async () => {
+    const ctx = await setup();
+    const id = crypto.randomUUID();
+    await sql.run(
+      `INSERT INTO deliverables (id, organization_id, project_id, workspace_id, title, kind, status, version, published_version, published_at, actor_kind, actor_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'Brand guide', 'document', 'in_review', 1, 1, ?, 'staff', 'user-staff', ?, ?)`,
+      [id, ctx.acme, ctx.projectId, ctx.spaceId, NOW, NOW, NOW],
+    );
+    await file(ctx, { external_id: "nr-4", task_id: await card(ctx) });
+    const { ids } = await reviewIds(NOW + 10_000);
+    expect(ids).toContain(`${id}:in_review`);
+    expect((await readSpaceForReview(sql, ctx.spaceId))?.deliverables.find((entry) => entry.id === id)).toMatchObject({ client_services: "none" });
+  });
+});
+

@@ -8,6 +8,7 @@
 - **Data-flow impact** — Display only. Stored summary pages are read as they are; nothing is rewritten. `client_summary`, when sent, is written as a `## For the client` section of the same page.
 - **API / schema impact** — Additive: optional `client_summary` (2,000 characters). No migration. The agent API still returns the full summary.
 - **Rollback** — Revert the PR. Pages go back to the raw text; filings that sent `client_summary` keep it as one more markdown section.
+- **Status fix** — A deliverable Client Services approved stays `in_review` ("Waiting for a look") for the client, but no longer shows in Client Services' needs-review lists (the updates feed, including older snapshots, and the space review API, which now says `client_services: "approved"`). The staff deliverable page reads "Approved by Client Services, waiting for the client". The client asking for changes, or a new held filing, brings it back. No migration and no data change; it applies to deliverables already approved (8964371e) as well.
 - **Verification** — see the PR.
 
 ## 2026-10-20

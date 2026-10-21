@@ -8,6 +8,7 @@ import { readGithubSecrets } from "@/lib/github/secrets";
 import { FilingSummaryCard } from "@/components/filing-summary-card";
 import { PageFrame } from "@/components/page-frame";
 import { parseFilingSummary } from "@/lib/filing-summary";
+import { clientServicesReleased } from "@/lib/held-work";
 import { Timeline } from "@/components/timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,13 +27,18 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
   const repos = deliverable.project_id ? await listProjectRepos(sql, caller, deliverable.project_id) : [];
   const notes = await listDeliverableFeedback(sql, caller, deliverable.id);
   const githubReady = Boolean(readGithubSecrets()) && repos.some((repo) => repo.installation_id != null);
+  const approvedByClientServices = Boolean(
+    (await sql.get<{ ok: number }>(`SELECT 1 AS ok FROM deliverables d WHERE d.id = ? AND ${clientServicesReleased("d")}`, [deliverable.id]))?.ok,
+  );
   const sentBehind = deliverable.published_version != null && deliverable.version > deliverable.published_version;
   const now = clock();
   return (
     <StaffShell>
       <PageFrame
         title={deliverable.title}
-        description={`${DELIVERABLE_KIND_LABEL[deliverable.kind]} · ${DELIVERABLE_STATUS_LABEL[deliverable.status]}`}
+        description={`${DELIVERABLE_KIND_LABEL[deliverable.kind]} · ${
+          approvedByClientServices ? "Approved by Client Services, waiting for the client" : DELIVERABLE_STATUS_LABEL[deliverable.status]
+        }`}
         actions={
           deliverable.published_version != null && space ? (
             <Button variant="outline" size="sm" asChild>

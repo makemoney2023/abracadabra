@@ -4,6 +4,7 @@ import { cleanEmail, companyDomain } from "@/lib/intake/consume";
 import { planProjectSpace } from "@/lib/project-space";
 import { releaseHeldWork } from "@/lib/agent-filing-review";
 import { clientServicesReview } from "@/lib/task-review";
+import { clientServicesReleased } from "@/lib/held-work";
 
 /** Above this many estimated hours, or a "large" size, a request waits for staff on the HQ board. */
 export const AUTO_START_MAX_HOURS = 16;
@@ -603,6 +604,7 @@ export async function syncClientUpdates(sql: Sql, now: number, origin: string): 
            GROUP BY deliverable_id
          ) held ON held.deliverable_id = d.id
          WHERE d.workspace_id = ? AND (d.status IN ('in_review', 'changes_requested') OR held.n > 0)
+           AND NOT ${clientServicesReleased("d")}
          ORDER BY d.updated_at DESC LIMIT 20`,
         [workspaceId],
       );
@@ -685,6 +687,25 @@ export async function listClientUpdates(
      WHERE u.created_at > ? ORDER BY u.created_at, u.rowid LIMIT 200`,
     [since],
   );
+  // needs_review is a snapshot from when the update was made. Leave out what Client Services has since approved and
+  // released (still "Waiting for a look" for the client), so an old update does not ask for a review again.
+  const listed = new Set<string>();
+  const snapshots = new Map<string, ClientUpdate["needs_review"]>();
+  for (const row of rows) {
+    const entries = JSON.parse(row.needs_review_json) as ClientUpdate["needs_review"];
+    snapshots.set(row.id, entries);
+    for (const entry of entries) if (entry?.deliverable_id) listed.add(entry.deliverable_id);
+  }
+  const released = new Set<string>();
+  const ids = [...listed];
+  for (let start = 0; start < ids.length; start += 50) {
+    const chunk = ids.slice(start, start + 50);
+    const found = await sql.all<{ id: string }>(
+      `SELECT d.id FROM deliverables d WHERE d.id IN (${chunk.map(() => "?").join(", ")}) AND ${clientServicesReleased("d")}`,
+      chunk,
+    );
+    for (const row of found) released.add(row.id);
+  }
   return rows.map((row) => ({
     id: row.id,
     kind: row.kind,
@@ -695,7 +716,7 @@ export async function listClientUpdates(
     space_id: row.workspace_id,
     work_request_id: row.work_request_id,
     links: JSON.parse(row.links_json),
-    needs_review: JSON.parse(row.needs_review_json),
+    needs_review: (snapshots.get(row.id) ?? []).filter((entry) => !released.has(entry.deliverable_id)),
     ...(row.activity_data ? suggestedUpdate(row.activity_data) : {}),
   }));
 }
@@ -737,13 +758,18 @@ export async function readSpaceForReview(sql: Sql, spaceId: string) {
         [space.project_id],
       )
     : null;
-  const deliverables = await sql.all<{ id: string; title: string; kind: string; status: string; version: number; published_version: number | null; updated_at: number }>(
-    `SELECT id, title, kind, status, version, published_version, updated_at FROM deliverables
-     WHERE workspace_id = ? AND status != 'archived' ORDER BY updated_at DESC LIMIT 50`,
+  const deliverables = await sql.all<{
+    id: string; title: string; kind: string; status: string; version: number; published_version: number | null; updated_at: number;
+    client_services_approved: number;
+  }>(
+    `SELECT d.id, d.title, d.kind, d.status, d.version, d.published_version, d.updated_at,
+            CASE WHEN ${clientServicesReleased("d")} THEN 1 ELSE 0 END AS client_services_approved
+     FROM deliverables d
+     WHERE d.workspace_id = ? AND d.status != 'archived' ORDER BY d.updated_at DESC LIMIT 50`,
     [space.id],
   );
   const out = [];
-  for (const deliverable of deliverables) {
+  for (const { client_services_approved: approved, ...deliverable } of deliverables) {
     const version = deliverable.published_version ?? deliverable.version;
     const items = await sql.all(
       `SELECT id, section, format, channel, title, copy_text, media_json, link_url, status FROM deliverable_items
@@ -772,6 +798,8 @@ export async function readSpaceForReview(sql: Sql, spaceId: string) {
       ...deliverable, review_version: version, items, feedback,
       ...(pending.length ? { pending_version: deliverable.version, pending_items: pending } : {}),
       held_filings: held,
+      // client_services: what Client Services still owes. "approved" = released after its approval, now with the client.
+      client_services: held.length ? "review" : approved ? "approved" : deliverable.status === "changes_requested" ? "changes_requested" : "none",
     });
   }
   const tasks = space.project_id
