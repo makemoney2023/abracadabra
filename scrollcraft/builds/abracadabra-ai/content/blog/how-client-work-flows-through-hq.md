@@ -65,7 +65,7 @@ This note walks through each step. It is the same path we use for our own site, 
 
 ## What happens when you send us a request?
 
-Most requests start as an email to magic@abra-ca-dabra.app. HQ logs each message that reaches that inbox and puts it in front of Client Services. It does not fire back an automatic reply. If the sender is already a client, the email lands on that client's record. If not, it opens a lead, and we follow up like any new inquiry.
+Most requests start as an email to magic@abra-ca-dabra.app. HQ logs each message that reaches that inbox and puts it in front of Client Services. Routine questions get a quick reply from our Client Services assistant, and anything that needs a decision goes to a person on our team. If the sender is already a client, the email lands on that client's record. If not, it opens a lead, and we follow up like any new inquiry.
 
 You can also start from the [start a project](/start/) form on our site. And if you already have work with us, you can ask for changes on a piece right inside your space. All three paths end up in the same place, which is a person or an agent reading what you asked for.
 
