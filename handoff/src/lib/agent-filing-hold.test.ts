@@ -594,6 +594,7 @@ describe("folders", () => {
       { name: "schema-1.png", body: PNG },
       { name: "facebook-posts.md", body: "# Posts" },
       { name: "preview.html", body: "<!doctype html><p>Draft</p>" },
+      { name: "preview.md", body: "# Draft" },
     ],
   };
 
@@ -606,6 +607,7 @@ describe("folders", () => {
       "Social/Facebook/schema-1.png",
       "Social/Facebook/facebook-posts.md",
       "Social/Facebook/preview.html",
+      "Social/Facebook/preview.md",
     ]);
     const png = await sql.get<{ object_key: string }>("SELECT object_key FROM files WHERE relative_path = 'Social/Facebook/schema-1.png'");
     expect([...((await store.read(png!.object_key)) ?? new Uint8Array()).slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47]);

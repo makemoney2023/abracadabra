@@ -1,7 +1,7 @@
 import { normalizeDomain } from "@/db/crm";
 import type { Sql } from "@/db/sql";
 import type { ObjectStore } from "@/lib/store/objects";
-import { storeWorkflowOutput, type WorkflowFile } from "@/lib/workflow-files";
+import { storeWorkflowOutput, workflowFileExtension, type WorkflowFile } from "@/lib/workflow-files";
 import { cleanFolder, defaultFolder, fileStem } from "@/lib/work-folder";
 import { agentWorkLimits, MAX_ATTACHMENTS, storedBytes, tooBigMessage } from "@/lib/agent-work-limits";
 import { checkSupersedes, recordFiling, resolveFilingRequest, type FilingReview } from "@/lib/agent-filing-review";
@@ -453,17 +453,18 @@ async function takenPaths(sql: Sql, workspaceId: string, folder: string, agentId
        ))`,
     [workspaceId, `${likeEscape(folder)}/%`, ...supersedes, agentId, ...supersedes],
   );
-  // Compared without the extension, so two files never fight over one name whatever type they are stored as.
-  return new Set(rows.map((row) => row.path.replace(/\.[a-z0-9]{1,8}$/, "")));
+  return new Set(rows.map((row) => row.path));
 }
 
 /** Files for a filing: the summary plus attachments, under the agent's folder with readable names. */
 function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number, folder: string, taken: Set<string>): WorkflowFile[] {
   const run = itemId.slice(0, 8);
-  const claim = (stem: string): string => {
+  // Keyed on the exact stored name (same extension logic as storage), so post.md and post.html can sit side by side.
+  const claim = (stem: string, file: Pick<WorkflowFile, "body" | "name">): string => {
+    const extension = workflowFileExtension(file) ?? "md";
     for (let n = 1; ; n += 1) {
       const candidate = n === 1 ? `${folder}/${stem}` : `${folder}/${stem} (${n})`;
-      const key = candidate.toLowerCase();
+      const key = `${candidate}.${extension}`.toLowerCase();
       if (!taken.has(key)) {
         taken.add(key);
         return candidate;
@@ -471,13 +472,13 @@ function filesFor(itemId: string, summary: string, payload: WorkPayload, now: nu
     }
   };
   const summaryStem = payload.folder ? `${fileStem(payload.title)} - summary` : "summary";
-  const files: WorkflowFile[] = [{ workflow: "work", run, node: "summary", body: summary, path: claim(summaryStem) }];
+  const files: WorkflowFile[] = [{ workflow: "work", run, node: "summary", body: summary, path: claim(summaryStem, { body: summary }) }];
   if (payload.content?.trim().startsWith("data:")) {
-    files.push({ workflow: "work", run, node: "content", body: payload.content, path: claim("content") });
+    files.push({ workflow: "work", run, node: "content", body: payload.content, path: claim("content", { body: payload.content }) });
   }
   for (const file of payload.attachments) {
     const stem = fileStem(file.name);
-    files.push({ workflow: "work", run, node: stem, body: file.body, name: file.name, path: claim(stem) });
+    files.push({ workflow: "work", run, node: stem, body: file.body, name: file.name, path: claim(stem, file) });
   }
   void now;
   return files;

@@ -57,6 +57,15 @@ export function keptTextExtension(name: string | undefined, body: string): strin
   return extension;
 }
 
+/** The extension storeWorkflowOutput will give this file, or null when it would be skipped. Same order as below. */
+export function workflowFileExtension(file: Pick<WorkflowFile, "body" | "bytes" | "name">): string | null {
+  if (file.bytes && isPdfBytes(file.bytes)) return "pdf";
+  if (file.bytes && isPngBytes(file.bytes)) return "png";
+  const kept = keptTextExtension(file.name, file.body);
+  if (kept) return kept;
+  return adaptArtifact(file.body)?.extension ?? null;
+}
+
 export type StoredWorkflowFiles = {
   batchId: string | null;
   stored: string[];
