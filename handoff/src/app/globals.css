@@ -7,7 +7,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-  --font-heading: var(--font-tektur), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -113,6 +114,61 @@ html[data-density="compact"] {
 body {
   background: var(--background);
   color: var(--foreground);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+/*
+ * Type system shared with the marketing site (abra-ca-dabra.app/assets/site.css):
+ * - Body: IBM Plex Sans 400 (500/600 for emphasis), line-height 1.5, text-wrap: pretty.
+ * - Headings: Inter Tight 600, tight negative tracking (-0.03em on page titles), line-height 1.08, balanced.
+ * - Labels and kickers: Inter Tight 500, uppercase, 0.12em tracking, case-sensitive forms (the .eyebrow utility).
+ * - Numbers: tabular lining figures in times and metrics.
+ * Sizes stay on the app's own scale; only families, weights, tracking and leading follow the site.
+ */
+:root {
+  --tracking-display: -0.03em;
+  --tracking-heading: -0.015em;
+  --tracking-eyebrow: 0.12em;
+  --leading-display: 1.08;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  .font-heading {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+    text-wrap: balance;
+  }
+
+  time,
+  [data-num] {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
+
+/* Page titles: the site's display tracking and leading. Unlayered so it wins over leading-tight on the same h1. */
+h1.font-heading {
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
+}
+
+@utility eyebrow {
+  font-family: var(--font-label);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  font-feature-settings: "case" 1;
+}
+
+@utility wordmark {
+  font-family: var(--font-label);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 html[data-hq-focus] [data-slot="sidebar"],
@@ -127,9 +183,11 @@ summary:focus-visible {
 }
 
 .studio-kicker {
-  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-family: var(--font-label);
+  font-weight: 500;
   font-size: 0.75rem;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-eyebrow);
+  font-feature-settings: "case" 1;
   text-transform: uppercase;
   color: var(--muted-foreground);
 }

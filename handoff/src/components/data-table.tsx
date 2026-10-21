@@ -102,7 +102,7 @@ export function DataTable<Row>({
                 <TableRow className="bg-card hover:bg-card md:sticky md:top-[var(--row-h)] md:z-[9]">
                   <TableCell
                     colSpan={columns.length}
-                    className="font-mono text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+                    className="eyebrow text-[11px] text-muted-foreground"
                   >
                     {section.label}
                   </TableCell>
@@ -142,7 +142,7 @@ function DataRow<Row>({
       {more.length > 0 ? (
         <TableCell className="p-0 md:hidden">
           <details className="relative z-10 px-2">
-            <summary className="cursor-pointer py-1 font-mono text-[11px] tracking-wide text-muted-foreground uppercase">
+            <summary className="cursor-pointer py-1 eyebrow text-[11px] text-muted-foreground">
               More
             </summary>
             <div className="flex flex-col pb-2">
@@ -151,7 +151,7 @@ function DataRow<Row>({
                   key={column.key}
                   className="flex items-baseline justify-between gap-3 py-1"
                 >
-                  <span className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase">
+                  <span className="eyebrow text-[11px] text-muted-foreground">
                     {column.header}
                   </span>
                   <CellValue row={row} column={column} />
@@ -194,7 +194,7 @@ function DataCell<Row>({
           <span className="sr-only">Open</span>
         </Link>
       ) : null}
-      <span className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase md:hidden">
+      <span className="eyebrow text-[11px] text-muted-foreground md:hidden">
         {column.header}
       </span>
       <CellValue row={row} column={column} />

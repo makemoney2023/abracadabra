@@ -168,7 +168,7 @@ export default async function ClientPage({
             {owners.map((person) => (
               <span
                 key={person.id}
-                className="flex size-7 items-center justify-center rounded-full bg-muted font-mono text-[11px] font-normal"
+                className="flex size-7 items-center justify-center rounded-full bg-muted font-label text-[11px] font-medium"
               >
                 {initials(person.name)}
               </span>

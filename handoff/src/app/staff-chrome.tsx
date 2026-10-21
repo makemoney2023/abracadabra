@@ -35,8 +35,8 @@ export function StaffChrome({
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <Link href="/" className="flex items-baseline gap-1.5 px-2">
-            <span className="font-mono text-xs tracking-wide text-optic">Handoff</span>
-            <span className="font-mono text-xs tracking-wide text-muted-foreground">HQ</span>
+            <span className="wordmark text-sm text-optic">Handoff</span>
+            <span className="wordmark text-sm text-muted-foreground">HQ</span>
           </Link>
         </SidebarHeader>
         <SidebarSeparator />
