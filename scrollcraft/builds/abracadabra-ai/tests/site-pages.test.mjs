@@ -373,3 +373,14 @@ test("every remaining page family has an intentional premium composition", () =>
   assert.match(films, /class="[^"]*\bsite-foot\b[^"]*"/);
   assert.match(films, /class="films-grid"/);
 });
+
+test("the homepage Cloudflare section features the Cloudflare note with its own image and alt text", () => {
+  const index = read("index.html");
+  const block = index.slice(index.indexOf('<section id="cloudflare"'), index.indexOf('<section id="faq"'));
+  assert.match(block, /<a href="\/blog\/why-we-build-on-cloudflare">Why We Build on Cloudflare: Security, AI and the Edge<\/a>/);
+  assert.match(block, /<source srcset="\/blog\/media\/why-we-build-on-cloudflare\/03\.webp" type="image\/webp">/);
+  const alt = block.match(/<img src="\/blog\/media\/why-we-build-on-cloudflare\/03\.jpg" alt="([^"]+)"/);
+  assert.ok(alt && alt[1].length >= 60, "descriptive alt text");
+  assert.ok(existsSync(join(root, "blog/media/why-we-build-on-cloudflare/03.webp")));
+  assert.ok(existsSync(join(root, "blog/media/why-we-build-on-cloudflare/03.jpg")));
+});
