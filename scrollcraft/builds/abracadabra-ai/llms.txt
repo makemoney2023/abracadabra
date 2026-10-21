@@ -107,6 +107,7 @@ When a product already on the market does the job, the reply says so and points 
 - [What Is an AI Agent? A Plain Answer for Owners](https://abra-ca-dabra.app/blog/what-is-an-ai-agent): An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic's split and McKinsey's count of who is scaling.
 - [What Is llms.txt, and Who Actually Reads It](https://abra-ca-dabra.app/blog/what-is-llms-txt): A proposed file that points models at your best pages. Google says it does not use the file. A large study found most copies are never requested.
 - [Why AI Pilots Stall After the Demo](https://abra-ca-dabra.app/blog/why-ai-pilots-stall): Pilots stall when the data, the risk controls, or the value was never named. Surveys show use is common and scaling is rare. The demo is not the process.
+- [Why We Build on Cloudflare: Security, AI and the Edge](https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare): Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.
 
 ## Optional
 

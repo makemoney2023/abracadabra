@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Abracadabra Studio">
+<title>Why We Build on Cloudflare: Security, AI and the Edge | Abracadabra AI</title>
+<meta name="description" content="Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Abracadabra AI">
+<meta property="og:url" content="https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare">
+<meta property="og:title" content="Why We Build on Cloudflare: Security, AI and the Edge | Abracadabra AI">
+<meta property="og:description" content="Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.">
+<meta property="og:image" content="https://abra-ca-dabra.app/blog/og/why-we-build-on-cloudflare.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Why We Build on Cloudflare: Security, AI and the Edge — Abracadabra AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Why We Build on Cloudflare: Security, AI and the Edge | Abracadabra AI">
+<meta name="twitter:description" content="Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.">
+<meta name="twitter:image" content="https://abra-ca-dabra.app/blog/og/why-we-build-on-cloudflare.jpg">
+<meta name="twitter:image:alt" content="Why We Build on Cloudflare: Security, AI and the Edge — Abracadabra AI">
+<meta name="theme-color" content="#070706">
+<link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preload" href="/assets/fonts/inter-tight-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/site.css?v=20261020b">
+
+<link rel="stylesheet" href="/blog/blog.css?v=20261021a">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://abra-ca-dabra.app/#org",
+      "name": "Abracadabra AI",
+      "url": "https://abra-ca-dabra.app/",
+      "email": "houdini@abra-ca-dabra.app",
+      "slogan": "From thought to working software"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://abra-ca-dabra.app/#website",
+      "url": "https://abra-ca-dabra.app/",
+      "name": "Abra-ca-dabra",
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://abra-ca-dabra.app/#studio",
+      "name": "Abracadabra Studio",
+      "url": "https://abra-ca-dabra.app",
+      "parentOrganization": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      }
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare#post",
+      "headline": "Why We Build on Cloudflare: Security, AI and the Edge",
+      "description": "Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.",
+      "datePublished": "2026-10-21",
+      "dateModified": "2026-10-21",
+      "mainEntityOfPage": "https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare",
+      "url": "https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare",
+      "inLanguage": "en",
+      "keywords": "why build on Cloudflare",
+      "articleSection": "AI consulting and implementation",
+      "image": [
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/why-we-build-on-cloudflare/01.webp",
+          "width": 1280,
+          "height": 720,
+          "caption": "A dark software screen where an Incoming traffic panel, with one request marked Blocked, connects to a Security checks panel listing DDoS, WAF rules, Bot check and TLS, which connects to a Your app panel marked Protected"
+        },
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/why-we-build-on-cloudflare/02.webp",
+          "width": 1280,
+          "height": 720,
+          "caption": "An Agent panel marked Working, joined by thin connector lines to four tool cards labelled Models, Gateway, Search and Browser, each with its own status pill"
+        },
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/why-we-build-on-cloudflare/03.webp",
+          "width": 1280,
+          "height": 720,
+          "caption": "An Edge app panel marked Live with a dotted world map, joined to panels for a SQL database, file storage, a job queue marked Queued, and a usage card marked Pay for use"
+        }
+      ],
+      "author": {
+        "@id": "https://abra-ca-dabra.app/#studio"
+      },
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      },
+      "citation": [
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Workers: Overview",
+          "url": "https://developers.cloudflare.com/workers/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-10-08"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare DDoS Protection: Overview",
+          "url": "https://developers.cloudflare.com/ddos-protection/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-08-14"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Web Application Firewall: Overview",
+          "url": "https://developers.cloudflare.com/waf/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-08-19"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare bot solutions: Overview",
+          "url": "https://developers.cloudflare.com/bots/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-04-30"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare SSL/TLS: Overview",
+          "url": "https://developers.cloudflare.com/ssl/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-08-14"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Turnstile: Overview",
+          "url": "https://developers.cloudflare.com/turnstile/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-08-14"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare One: Overview",
+          "url": "https://developers.cloudflare.com/cloudflare-one/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-10-12"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Workers AI: Overview",
+          "url": "https://developers.cloudflare.com/workers-ai/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-04-21"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare AI Gateway: Overview",
+          "url": "https://developers.cloudflare.com/ai-gateway/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-04-20"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Build Agents on Cloudflare",
+          "url": "https://developers.cloudflare.com/agents/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-09-18"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Vectorize: Overview",
+          "url": "https://developers.cloudflare.com/vectorize/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-04-21"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "AI Search (formerly AutoRAG) now with More Models To Choose From",
+          "url": "https://developers.cloudflare.com/changelog/post/2025-09-25-ai-search-more-models/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Changelog"
+          },
+          "datePublished": "2025-09-25"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare AI Search: Overview",
+          "url": "https://developers.cloudflare.com/ai-search/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-10-01"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Browser Run: give your agents a browser",
+          "url": "https://blog.cloudflare.com/browser-run-for-ai-agents/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Blog"
+          },
+          "datePublished": "2026-04-15"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Browser Run: Overview",
+          "url": "https://developers.cloudflare.com/browser-run/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-08-11"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "AI Crawl Control: Overview",
+          "url": "https://developers.cloudflare.com/ai-crawl-control/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-08-14"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare D1: Overview",
+          "url": "https://developers.cloudflare.com/d1/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-04-30"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare R2: Overview",
+          "url": "https://developers.cloudflare.com/r2/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-10-01"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Durable Objects: Overview",
+          "url": "https://developers.cloudflare.com/durable-objects/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-07-15"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Queues: Overview",
+          "url": "https://developers.cloudflare.com/queues/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-04-21"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Cloudflare Global Network",
+          "url": "https://www.cloudflare.com/network/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare"
+          }
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "Workers pricing",
+          "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Cloudflare Docs"
+          },
+          "datePublished": "2026-10-02"
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://abra-ca-dabra.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Blog",
+          "item": "https://abra-ca-dabra.app/blog"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Why We Build on Cloudflare: Security, AI and the Edge",
+          "item": "https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why does Abracadabra build on Cloudflare?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Because one platform gives us the safety, the AI tools, the database, the file storage and the global network. We spend our time on the client's work, not on servers."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Cloudflare only for big companies?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Cloudflare docs list free plans for many of these tools, and the paid Workers plan starts at a small monthly charge. Larger plans add more controls."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you use every Cloudflare AI tool?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Today we use Workers AI, AI Gateway and the Agents SDK. We pick tools like Vectorize, AI Search and Browser Run when a job needs them."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is AI Search, and what happened to AutoRAG?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AI Search is the new name for AutoRAG. Cloudflare renamed it in its changelog. It lets an app or agent search your own files in plain words."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I know if my business is ready to put AI to work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Take the Readiness Check. In five to seven minutes it gives you a band and four scores: pressure, readiness, growth, and website visibility from a live read of your public site. You also get three suggestions in each section."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<header class="site-nav">
+  <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
+  <details class="site-nav__menu">
+    <summary class="site-nav__toggle" aria-label="Menu"><span class="site-nav__glyph" aria-hidden="true"></span></summary>
+  </details>
+  <nav class="site-nav__links" aria-label="Site">
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group" role="group" aria-label="Build"><p class="site-nav__fn-name" aria-hidden="true">Build</p><a class="site-nav__mega-link" href="/services/custom-apps/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg></span><span class="site-nav__text"><strong>Apps built around your workflow.</strong><span class="site-nav__desc">Software around the way the work already runs.</span></span></a><a class="site-nav__mega-link" href="/services/web-automation/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg></span><span class="site-nav__text"><strong>Put repetitive web work on autopilot.</strong><span class="site-nav__desc">Repetitive web jobs that run themselves.</span></span></a><a class="site-nav__mega-link" href="/services/answers-from-your-documents/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="M13.3 16.3 15 18"/></svg></span><span class="site-nav__text"><strong>Instant answers from your own documents.</strong><span class="site-nav__desc">Answers from the files you already keep.</span></span></a><a class="site-nav__mega-link" href="/services/safe-code-execution/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/></svg></span><span class="site-nav__text"><strong>Let AI run code, safely.</strong><span class="site-nav__desc">AI that can run code, with a fence around it.</span></span></a><a class="site-nav__mega-link" href="/services/machine-learning/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M9 13a4.5 4.5 0 0 0 3-4"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M12 13h4"/><path d="M12 18h6a2 2 0 0 1 2 2v1"/><path d="M12 8h8"/><path d="M16 8V5a2 2 0 0 1 2-2"/><circle cx="16" cy="13" r=".5"/><circle cx="18" cy="3" r=".5"/><circle cx="20" cy="21" r=".5"/><circle cx="20" cy="8" r=".5"/></svg></span><span class="site-nav__text"><strong>Machine learning that shows its working.</strong><span class="site-nav__desc">Models that show a number and the reasons.</span></span></a><a class="site-nav__mega-link" href="/services/mcp-connectors/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 22v-5"/><path d="M15 8V2"/><path d="M17 8a1 1 0 0 1 1 1v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1z"/><path d="M9 8V2"/></svg></span><span class="site-nav__text"><strong>Connect your AI to your tools.</strong><span class="site-nav__desc">Let your AI use your tools, safely.</span></span></a></div><div class="site-nav__group" role="group" aria-label="Create"><p class="site-nav__fn-name" aria-hidden="true">Create</p><a class="site-nav__mega-link" href="/services/ai-media/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m12.296 3.464 3.02 3.956"/><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m6.18 5.276 3.1 3.899"/></svg></span><span class="site-nav__text"><strong>On-brand images, video and voice, on demand.</strong><span class="site-nav__desc">On-brand images, video and voice.</span></span></a><a class="site-nav__mega-link" href="/services/voice-and-realtime-agents/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M13 2a9 9 0 0 1 9 9"/><path d="M13 6a5 5 0 0 1 5 5"/><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></span><span class="site-nav__text"><strong>AI that answers your phone.</strong><span class="site-nav__desc">A voice that answers from your records.</span></span></a><a class="site-nav__mega-link" href="/services/ai-assistants-and-agents/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><span class="site-nav__text"><strong>AI assistants that actually get things done.</strong><span class="site-nav__desc">An assistant that finishes the request.</span></span></a></div><div class="site-nav__group" role="group" aria-label="Grow"><p class="site-nav__fn-name" aria-hidden="true">Grow</p><a class="site-nav__mega-link" href="/services/ai-visibility/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/></svg></span><span class="site-nav__text"><strong>Get found in AI search.</strong><span class="site-nav__desc">Show up when someone asks an assistant.</span></span></a><a class="site-nav__mega-link" href="/services/search-grounded-research/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 5v16"/><path d="m16 12 2 2 4-4"/><path d="M22 6V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2h4.001A2 2 0 0022 17v-1.344"/></svg></span><span class="site-nav__text"><strong>Research you can trust, with every source cited.</strong><span class="site-nav__desc">Research you can open and check.</span></span></a><a class="site-nav__mega-link" href="/services/any-model-one-bill/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 17V7"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"/><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/></svg></span><span class="site-nav__text"><strong>Every AI model. One bill.</strong><span class="site-nav__desc">Every model, on one invoice.</span></span></a></div><div class="site-nav__group" role="group" aria-label="Learn"><p class="site-nav__fn-name" aria-hidden="true">Learn</p><a class="site-nav__mega-link" href="/course/llm-leverage/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span><span class="site-nav__text"><strong>LLM Leverage</strong><span class="site-nav__desc">A course for better answers from any model.</span></span></a><a class="site-nav__mega-link" href="/blog"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg></span><span class="site-nav__text"><strong>Notes</strong><span class="site-nav__desc">How to put AI to work.</span></span></a><a class="site-nav__mega-link" href="/films.html"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></svg></span><span class="site-nav__text"><strong>Films</strong><span class="site-nav__desc">The work, shown.</span></span></a></div></div></details>
+    <a href="/portfolio/">Work</a>
+    <a href="/products/">Products</a>
+    <a href="/blog">Blog</a>
+    <a href="/films.html">Films</a>
+    <a class="btn btn--primary site-nav__cta" href="/start/">Start a project</a>
+  </nav>
+</header>
+<script>
+  document.querySelectorAll(".site-nav").forEach(function (bar) {
+    var menu = bar.querySelector(".site-nav__menu");
+    var services = bar.querySelector(".site-nav__services");
+    var here = location.pathname;
+    if (here.slice(-10) === "index.html") here = here.slice(0, -10);
+    bar.querySelectorAll(".site-nav__links a:not(.site-nav__cta)").forEach(function (link) {
+      var path = link.getAttribute("href") || "";
+      var top = link.parentElement && link.parentElement.classList.contains("site-nav__links");
+      if (here === path || (top && path !== "/" && here.indexOf(path) === 0)) link.setAttribute("aria-current", "page");
+    });
+    if (services && here.indexOf("/services/") === 0) services.querySelector("summary").classList.add("is-current");
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () {
+        document.documentElement.style.setProperty("--nav-h", bar.offsetHeight + "px");
+      }).observe(bar);
+    }
+    bar.addEventListener("click", function (event) {
+      if (!event.target.closest("a")) return;
+      if (menu) menu.open = false;
+      if (services) services.open = false;
+    });
+    if (menu) {
+      menu.addEventListener("toggle", function () {
+        document.documentElement.classList.toggle("menu-open", menu.open);
+      });
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    var services = document.querySelector(".site-nav__services");
+    var menu = document.querySelector(".site-nav__menu");
+    if (services && services.open) {
+      services.open = false;
+      var summary = services.querySelector("summary");
+      if (summary) summary.focus();
+      return;
+    }
+    if (menu && menu.open) {
+      menu.open = false;
+      var toggle = menu.querySelector("summary");
+      if (toggle) toggle.focus();
+    }
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var clock = document.querySelector("[data-clock]");
+    if (clock) {
+      var zone = clock.getAttribute("data-clock");
+      var tick = function () {
+        try {
+          clock.textContent = new Intl.DateTimeFormat("en-CA", {
+            timeZone: zone, hour: "numeric", minute: "2-digit", timeZoneName: "short",
+          }).format(new Date());
+        } catch (error) { /* keep the timezone name */ }
+      };
+      tick();
+      setInterval(tick, 60000);
+    }
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.querySelectorAll("video.loop-film").forEach(function (video) {
+      function stop() { video.pause(); }
+      if (reduce.matches) {
+        stop();
+        video.addEventListener("play", stop);
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (reduce.matches || !entry.isIntersecting) stop();
+          else video.play().catch(function () {});
+        });
+      }, { threshold: 0.35 });
+      observer.observe(video);
+    });
+  });
+</script>
+
+<main id="top" class="blog-post">
+<header class="content-hero">
+<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">Why We Build on Cloudflare: Security, AI and the Edge</li></ol></nav>
+<div class="hero-copy">
+<p class="kicker">AI consulting and implementation · why build on Cloudflare</p>
+<h1>Why We Build on Cloudflare: Security, AI and the Edge</h1>
+<p class="dek">Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.</p>
+<p class="byline">By <a href="/about/">Abracadabra Studio</a> · <time datetime="2026-10-21">2026-10-21</time></p>
+
+</div>
+<figure class="content-hero-photo"><picture><source srcset="/blog/media/why-we-build-on-cloudflare/01.webp" type="image/webp"><img src="/blog/media/why-we-build-on-cloudflare/01.jpg" alt="A dark software screen where an Incoming traffic panel, with one request marked Blocked, connects to a Security checks panel listing DDoS, WAF rules, Bot check and TLS, which connects to a Your app panel marked Protected" width="1280" height="720"></picture><figcaption>Every request is checked before it reaches the app.</figcaption></figure>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<div class="post-layout">
+<article>
+<div class="prose post-prose">
+<p><strong>Here is the short answer.</strong> We build on Cloudflare® because one platform gives us the safety, the AI tools, the data and the global network our work needs. Our own site, our Readiness Check and HQ, the app we use to run client work, all run on it. That lets us spend our time on the job in front of us, not on servers.</p>
+<figure class="key-stat"><dl><dt>Cited in this note</dt><dd>95%</dd></dl><figcaption>Cloudflare says that 95% of people online are within 50 milliseconds of one of its data centers</figcaption></figure>
+<p>This note walks through the three reasons. First comes the safety you get by default. Next are the AI tools, and last is the platform itself, with what it costs. Each claim links to a Cloudflare page, and we say plainly which tools we use today and which we only plan to use. If you want to know whether your business is ready to put AI to work, the <a href="https://check.abra-ca-dabra.app/check">Readiness Check</a> takes five to seven minutes.</p>
+<figure class="post-figure post-diagram"><a href="/blog/media/why-we-build-on-cloudflare/stack.svg" title="Open the full-size diagram"><img src="/blog/media/why-we-build-on-cloudflare/stack.svg" alt="Representative diagram of our stack: visitors pass through the Cloudflare network edge, with DDoS protection, the WAF, bot checks and TLS, to four Workers apps. The marketing site serves files, the chat uses Workers AI, Durable Objects and Turnstile, the Readiness Check uses a D1 database and a queue, and HQ uses D1, R2 file storage, Workers AI and AI Gateway, with agents built on the Agents SDK" width="1280" height="720" loading="lazy" decoding="async"></a><figcaption>Representative diagram of how our own apps sit on Cloudflare, simplified. Names match our setup files; no client data is shown. <a href="/blog/media/why-we-build-on-cloudflare/stack.svg">Open full size</a>.</figcaption></figure>
+
+<h2 id="what-do-we-actually-run-on-cloudflare">What do we actually run on Cloudflare?</h2>
+<p>Every app we run lives on Cloudflare Workers®, which is code that runs on the Cloudflare network instead of on one server.<sup><a href="#source-cf-workers">1</a></sup> Our marketing site is a Worker that serves its pages and talks to a second Worker for the chat. The chat uses Workers AI® for speech to text, Durable Objects™ to hold each chat, and Turnstile to keep bots out.</p>
+<p>The Readiness Check is its own Worker. It keeps results in a D1 database and hands longer reads of a website to a queue, so a big job does not hold up the page. HQ is a Worker too. It uses D1 for its records, R2 to store files, and Workers AI and AI Gateway for its AI calls. The agents behind HQ are built on the Cloudflare Agents SDK. If you want the full story of how work moves through HQ, read <a href="/blog/how-client-work-flows-through-hq">how client work moves through HQ and our AI agents</a>.</p>
+<h2 id="what-safety-comes-built-in">What safety comes built in?</h2>
+<p>Most of it is on before we write a line of code. Cloudflare finds and stops DDoS attacks on its own, and its docs say this is on for all plans.<sup><a href="#source-cf-ddos">2</a></sup> A DDoS attack is a flood of fake traffic meant to knock a site over. When the site sits behind Cloudflare, that flood hits the Cloudflare network first.</p>
+<p>The WAF, or web app firewall, checks each request against sets of rules and filters out the bad ones.<sup><a href="#source-cf-waf">3</a></sup> You can turn on managed rules that Cloudflare keeps up to date, and add your own rules and rate limits. Bot tools sort real people from scripts that scrape content or try stolen passwords.<sup><a href="#source-cf-bots">4</a></sup> Free plans get a simple bot switch, and Enterprise plans get a score for each request.</p>
+<figure class="post-figure post-diagram"><a href="/blog/media/why-we-build-on-cloudflare/request-path.svg" title="Open the full-size diagram"><img src="/blog/media/why-we-build-on-cloudflare/request-path.svg" alt="Representative diagram of the checks a request passes on the way in: encrypted with TLS, screened for DDoS attacks, matched against WAF rules, scored for bots, checked by Turnstile on forms, and checked by Access for staff tools, before it reaches the app" width="1280" height="720" loading="lazy" decoding="async"></a><figcaption>Representative diagram of the security layers in front of an app. Which layers apply depends on the plan and the setup. <a href="/blog/media/why-we-build-on-cloudflare/request-path.svg">Open full size</a>.</figcaption></figure>
+
+<p>TLS is the lock in your browser bar. Cloudflare issues free certificates through Universal SSL, so traffic between visitors and the site is encrypted.<sup><a href="#source-cf-ssl">5</a></sup> For our chat we use Turnstile, which checks that a visitor is a person without making them solve a puzzle.<sup><a href="#source-cf-turnstile">6</a></sup> The chat asks for a Turnstile pass when it opens, and a fresh one before each voice call.</p>
+<p>For tools only our team should reach, there is Zero Trust. Cloudflare One checks who you are before it lets each request in, instead of trusting anyone who is already inside the network.<sup><a href="#source-cf-one">7</a></sup> Its Access tool guards the private tool server that HQ connects to, and HQ shows a service token to get in.</p>
+<h2 id="which-ai-tools-does-cloudflare-offer">Which AI tools does Cloudflare offer?</h2>
+<p>Cloudflare now has a full set of AI tools that run on the same network as the app. Workers AI runs open models on Cloudflare’s GPUs, and you pay for what you use.<sup><a href="#source-cf-workers-ai">8</a></sup> We use it in HQ and in our chat. AI Gateway sits between an app and the models it calls. It logs each call, shows cost, caches answers, limits rates, and can retry or fall back to a second model when one fails.<sup><a href="#source-cf-ai-gateway">9</a></sup> HQ sends its AI calls through it.</p>
+<p>The Agents SDK is how we build agents. Cloudflare says each agent gets its own lasting identity, its own SQL storage, live connections and scheduled work.<sup><a href="#source-cf-agents">10</a></sup> That is a good fit for agents that keep working on a task over days, which is what ours do.</p>
+<figure class="post-figure"><picture><source srcset="/blog/media/why-we-build-on-cloudflare/02.webp" type="image/webp"><img src="/blog/media/why-we-build-on-cloudflare/02.jpg" alt="An Agent panel marked Working, joined by thin connector lines to four tool cards labelled Models, Gateway, Search and Browser, each with its own status pill" width="1280" height="720"></picture></figure>
+
+<p>There are more tools we reach for when a job needs them. We do not use these in our own stack today. Vectorize is a vector database, which stores what text or images mean so an app can find close matches.<sup><a href="#source-cf-vectorize">11</a></sup> AI Search, which used to be called AutoRAG, was renamed in Cloudflare’s changelog.<sup><a href="#source-cf-ai-search-rename">12</a></sup> It lets an app or an agent search its own files in plain words, with keyword and meaning search turned on together.<sup><a href="#source-cf-ai-search">13</a></sup> Browser Run, which used to be called Browser Rendering, runs real browsers on the network so code or agents can read pages, take screenshots and fill in forms.<sup><a href="#source-cf-browser-run">14</a></sup><sup><a href="#source-cf-browser-run-docs">15</a></sup></p>
+<p>AI Crawl Control works the other way round. It shows which AI services are reading your site, lets you allow or block each crawler, and tracks which ones follow your robots.txt file.<sup><a href="#source-cf-crawl-control">16</a></sup> That matters for AI search, and it ties into the work we do on <a href="/services/ai-visibility/">AI visibility</a> and files like <a href="/blog/what-is-llms-txt">llms.txt</a>.</p>
+<aside class="cta cta-inline"><p>Is your business ready to put AI to work? Take the five-to-seven-minute Readiness Check.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="why-we-build-on-cloudflare" data-track-placement="inline" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=why-we-build-on-cloudflare&amp;utm_content=inline">Run the Readiness Check</a></aside>
+
+<h2 id="why-workers-d1-r2-and-durable-objects">Why Workers, D1, R2 and Durable Objects?</h2>
+<p>Each one does a plain job, and they all plug into a Worker with a few lines of setup. D1 is a SQL database that the docs say you can roll back to any minute in the last 30 days.<sup><a href="#source-cf-d1">17</a></sup> R2 stores files and does not charge to send them out to the web.<sup><a href="#source-cf-r2">18</a></sup> Durable Objects pair a bit of code with its own storage, so a chat or an agent keeps its state in one place.<sup><a href="#source-cf-durable-objects">19</a></sup> Queues let one Worker hand a job to another and make sure it gets done.<sup><a href="#source-cf-queues">20</a></sup></p>
+<p>This is how the Readiness Check handles longer reads of a website, so they do not make you wait. The page hands the job to a queue, and Workers pick it up in small parts. The results land in D1, and the page reads them back as they come in.</p>
+<figure class="post-figure"><picture><source srcset="/blog/media/why-we-build-on-cloudflare/03.webp" type="image/webp"><img src="/blog/media/why-we-build-on-cloudflare/03.jpg" alt="An Edge app panel marked Live with a dotted world map, joined to panels for a SQL database, file storage, a job queue marked Queued, and a usage card marked Pay for use" width="1280" height="720"></picture></figure>
+
+<h2 id="how-fast-is-the-network">How fast is the network?</h2>
+<p>Cloudflare says that 95% of people online are within 50 milliseconds of one of its data centers.<sup><a href="#source-cf-network">21</a></sup> That is Cloudflare’s own figure, not one we measured. What we can say is how it shapes our work. Our code runs close to the visitor by default, so we do not pick a region or move servers when a client grows.</p>
+<h2 id="what-does-it-cost">What does it cost?</h2>
+<p>It starts small. The Workers paid plan has a minimum charge of $5 a month per account, with usage above that billed as you go.<sup><a href="#source-cf-pricing">22</a></sup> The same page says requests for static files, like images and pages, are free, and there is no charge for data sent out. The free plan also includes some use each day. Prices change, so check the pricing page before you plan a budget.</p>
+<p>For our clients, the point is that cost tracks use. A new tool does not need a big server bill on day one. It can start small and grow, and the bill grows with it.</p>
+<h2 id="should-your-business-build-on-cloudflare">Should your business build on Cloudflare?</h2>
+<p>If you need a custom app, an AI assistant, or an agent that does real work, it is a strong place to start. We build <a href="/services/custom-apps/">custom apps</a>, <a href="/services/ai-assistants-and-agents/">AI assistants and agents</a>, and <a href="/services/any-model-one-bill/">one bill for many AI models</a>, and we build them on the stack in this note. If you are still deciding between a product and a build, read <a href="/blog/off-the-shelf-ai-or-custom-software">off-the-shelf AI or custom software</a>.</p>
+<p>The first step is knowing where you stand. The <a href="https://check.abra-ca-dabra.app/check">Readiness Check</a> takes five to seven minutes. It looks at the jobs that eat your week, whether your data and workflow can support real work, where new customers come from, and how well answer engines can find and quote your public site. You get a band, four scores and three suggestions in each section, plus a thirty-minute working session if you want one. Take it, then <a href="/start/">start a project</a> or write to <a href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a>, and we will look at the results with you.</p>
+<p>Cloudflare, the Cloudflare logo, Cloudflare Workers, Workers AI and Durable Objects are trademarks and/or registered trademarks of Cloudflare, Inc. in the United States and other places. This note is our own view and is not endorsed by Cloudflare.</p>
+
+</div>
+<section id="faq"><h2>Questions</h2><div class="faq-list"><details><summary>Why does Abracadabra build on Cloudflare?</summary><p>Because one platform gives us the safety, the AI tools, the database, the file storage and the global network. We spend our time on the client’s work, not on servers.</p></details><details><summary>Is Cloudflare only for big companies?</summary><p>No. Cloudflare docs list free plans for many of these tools, and the paid Workers plan starts at a small monthly charge. Larger plans add more controls.</p></details><details><summary>Do you use every Cloudflare AI tool?</summary><p>No. Today we use Workers AI, AI Gateway and the Agents SDK. We pick tools like Vectorize, AI Search and Browser Run when a job needs them.</p></details><details><summary>What is AI Search, and what happened to AutoRAG?</summary><p>AI Search is the new name for AutoRAG. Cloudflare renamed it in its changelog. It lets an app or agent search your own files in plain words.</p></details><details><summary>How do I know if my business is ready to put AI to work?</summary><p>Take the Readiness Check. In five to seven minutes it gives you a band and four scores: pressure, readiness, growth, and website visibility from a live read of your public site. You also get three suggestions in each section.</p></details></div></section>
+<section id="sources"><h2>Sources</h2><ol><li id="source-cf-workers"><a href="https://developers.cloudflare.com/workers/">Cloudflare Workers: Overview</a>. Cloudflare Docs. 2026-10-08.</li><li id="source-cf-ddos"><a href="https://developers.cloudflare.com/ddos-protection/">Cloudflare DDoS Protection: Overview</a>. Cloudflare Docs. 2026-08-14.</li><li id="source-cf-waf"><a href="https://developers.cloudflare.com/waf/">Cloudflare Web Application Firewall: Overview</a>. Cloudflare Docs. 2026-08-19.</li><li id="source-cf-bots"><a href="https://developers.cloudflare.com/bots/">Cloudflare bot solutions: Overview</a>. Cloudflare Docs. 2026-04-30.</li><li id="source-cf-ssl"><a href="https://developers.cloudflare.com/ssl/">Cloudflare SSL/TLS: Overview</a>. Cloudflare Docs. 2026-08-14.</li><li id="source-cf-turnstile"><a href="https://developers.cloudflare.com/turnstile/">Cloudflare Turnstile: Overview</a>. Cloudflare Docs. 2026-08-14.</li><li id="source-cf-one"><a href="https://developers.cloudflare.com/cloudflare-one/">Cloudflare One: Overview</a>. Cloudflare Docs. 2026-10-12.</li><li id="source-cf-workers-ai"><a href="https://developers.cloudflare.com/workers-ai/">Cloudflare Workers AI: Overview</a>. Cloudflare Docs. 2026-04-21.</li><li id="source-cf-ai-gateway"><a href="https://developers.cloudflare.com/ai-gateway/">Cloudflare AI Gateway: Overview</a>. Cloudflare Docs. 2026-04-20.</li><li id="source-cf-agents"><a href="https://developers.cloudflare.com/agents/">Build Agents on Cloudflare</a>. Cloudflare Docs. 2026-09-18.</li><li id="source-cf-vectorize"><a href="https://developers.cloudflare.com/vectorize/">Cloudflare Vectorize: Overview</a>. Cloudflare Docs. 2026-04-21.</li><li id="source-cf-ai-search-rename"><a href="https://developers.cloudflare.com/changelog/post/2025-09-25-ai-search-more-models/">AI Search (formerly AutoRAG) now with More Models To Choose From</a>. Cloudflare Changelog. 2025-09-25.</li><li id="source-cf-ai-search"><a href="https://developers.cloudflare.com/ai-search/">Cloudflare AI Search: Overview</a>. Cloudflare Docs. 2026-10-01.</li><li id="source-cf-browser-run"><a href="https://blog.cloudflare.com/browser-run-for-ai-agents/">Browser Run: give your agents a browser</a>. Cloudflare Blog. 2026-04-15.</li><li id="source-cf-browser-run-docs"><a href="https://developers.cloudflare.com/browser-run/">Browser Run: Overview</a>. Cloudflare Docs. 2026-08-11.</li><li id="source-cf-crawl-control"><a href="https://developers.cloudflare.com/ai-crawl-control/">AI Crawl Control: Overview</a>. Cloudflare Docs. 2026-08-14.</li><li id="source-cf-d1"><a href="https://developers.cloudflare.com/d1/">Cloudflare D1: Overview</a>. Cloudflare Docs. 2026-04-30.</li><li id="source-cf-r2"><a href="https://developers.cloudflare.com/r2/">Cloudflare R2: Overview</a>. Cloudflare Docs. 2026-10-01.</li><li id="source-cf-durable-objects"><a href="https://developers.cloudflare.com/durable-objects/">Cloudflare Durable Objects: Overview</a>. Cloudflare Docs. 2026-07-15.</li><li id="source-cf-queues"><a href="https://developers.cloudflare.com/queues/">Cloudflare Queues: Overview</a>. Cloudflare Docs. 2026-04-21.</li><li id="source-cf-network"><a href="https://www.cloudflare.com/network/">Cloudflare Global Network</a>. Cloudflare.</li><li id="source-cf-pricing"><a href="https://developers.cloudflare.com/workers/platform/pricing/">Workers pricing</a>. Cloudflare Docs. 2026-10-02.</li></ol></section>
+<aside class="author-box"><p class="kicker">Author</p><h2>Abracadabra Studio</h2><p>The notes are written by the people who design, build and run AI-powered tools at Abracadabra. Every number names its source.</p><a href="/about/">About us</a></aside>
+<section id="related" class="post-related"><h2>Related</h2><ul class="cards"><li data-pillar="AI consulting and implementation"><a href="/blog/ai-automation-agency-vs-consultant"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-automation-agency-vs-consultant/01.webp" type="image/webp"><img src="/blog/media/ai-automation-agency-vs-consultant/01.jpg" alt="A cafe table with an open laptop, a notebook, and two coffee cups, photographed from above with no faces in frame" width="1280" height="720"></picture></span><span class="kicker">AI consulting and implementation</span><strong>AI Automation Agency vs Consultant: Who to Hire</strong><span class="card-dek">Hire a consultant to name the job. Hire an agency to build after the job is named. Who to hire first, and why the order matters.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>11 min read</span></span></a></li><li data-pillar="AI consulting and implementation"><a href="/blog/ai-consultant-for-small-business"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-consultant-for-small-business/01.webp" type="image/webp"><img src="/blog/media/ai-consultant-for-small-business/01.jpg" alt="Two people at a small table, one with a laptop and one with a notebook, seen from the side so their faces stay out of view" width="1280" height="720"></picture></span><span class="kicker">AI consulting and implementation</span><strong>AI Consultant for Small Business: What to Ask</strong><span class="card-dek">A useful consultant names the job, the data, and the stop. Most firms use AI somewhere. Far fewer are scaling agents. Guaranteed rankings are a red flag.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>10 min read</span></span></a></li><li data-pillar="AI consulting and implementation"><a href="/blog/ai-implementation-framework"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-implementation-framework/01.webp" type="image/webp"><img src="/blog/media/ai-implementation-framework/01.jpg" alt="Four numbered steps written on a whiteboard, with two people standing in front of it and their faces turned away" width="1280" height="720"></picture></span><span class="kicker">AI consulting and implementation</span><strong>An AI Implementation Framework in Five Stages</strong><span class="card-dek">Name the job, score the data, write the process, assign a checker, then keep or stop. Surveys show use is common and scaling is not.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>11 min read</span></span></a></li></ul></section>
+<section id="all-notes"><h2>All notes</h2><ul><li><a href="/blog/ai-agents-for-business">AI Agents for Business: When to Use One</a></li><li><a href="/blog/ai-agents-vs-agentic-ai">AI Agents vs Agentic AI: A Plain Split</a></li><li><a href="/blog/ai-automation-agency-vs-consultant">AI Automation Agency vs Consultant: Who to Hire</a></li><li><a href="/blog/ai-automation-for-small-business">AI Automation for Small Business: Which Job First</a></li><li><a href="/blog/ai-consultant-for-small-business">AI Consultant for Small Business: What to Ask</a></li><li><a href="/blog/ai-for-small-business-2027">AI for Small Business: What the Surveys Still Say</a></li><li><a href="/blog/ai-implementation-framework">An AI Implementation Framework in Five Stages</a></li><li><a href="/blog/ai-readiness-assessment-questionnaire">AI Readiness Assessment Questionnaire: The Themes</a></li><li><a href="/blog/ai-readiness-assessment">AI Readiness Assessment: What It Measures and How to Score</a></li><li><a href="/blog/ai-readiness-checklist">AI Readiness Checklist Before You Buy a Tool</a></li><li><a href="/blog/ai-readiness-framework">An AI Readiness Framework an Owner Can Score</a></li><li><a href="/blog/ai-ready-data">AI-Ready Data: What a Small Business Needs First</a></li><li><a href="/blog/ai-strategy-for-small-business">AI Strategy for Small Business: Start With the Job</a></li><li><a href="/blog/answer-engine-optimization">Answer Engine Optimization: What Google Still Requires</a></li><li><a href="/blog/business-process-automation-ai">Business Process Automation With AI: Write the Job</a></li><li><a href="/blog/generative-engine-optimization-vs-seo">Generative Engine Optimization vs SEO</a></li><li><a href="/blog/how-can-ai-help-small-businesses">How Can AI Help a Small Business? What Surveys Count</a></li><li><a href="/blog/how-client-work-flows-through-hq">How Client Work Moves Through HQ and Our AI Agents</a></li><li><a href="/blog/how-to-get-your-business-to-show-up-in-chatgpt">How to Show Up in ChatGPT and AI Overviews</a></li><li><a href="/blog/how-to-use-ai-in-your-business">How to Use AI in Your Business: Twelve Jobs</a></li><li><a href="/blog/is-my-business-ready-for-ai">Is My Business Ready for AI? Signs to Read First</a></li><li><a href="/blog/off-the-shelf-ai-or-custom-software">Off-the-Shelf AI or Custom Software</a></li><li><a href="/blog/what-is-an-ai-agent">What Is an AI Agent? A Plain Answer for Owners</a></li><li><a href="/blog/what-is-llms-txt">What Is llms.txt, and Who Actually Reads It</a></li><li><a href="/blog/why-ai-pilots-stall">Why AI Pilots Stall After the Demo</a></li></ul></section>
+<aside class="cta cta-close"><p>Is your business ready to put AI to work? Take the five-to-seven-minute Readiness Check.</p><a class="btn btn--primary" href="/start/">Start a project</a><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="why-we-build-on-cloudflare" data-track-placement="close" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=why-we-build-on-cloudflare&amp;utm_content=close">Run the Readiness Check</a></aside>
+</article>
+<aside class="post-aside">
+<nav class="toc post-toc" aria-label="On this page"><details class="toc__sheet"><summary>On this page</summary><p>On this page</p><ol><li><a href="#what-do-we-actually-run-on-cloudflare">What do we actually run on Cloudflare?</a></li><li><a href="#what-safety-comes-built-in">What safety comes built in?</a></li><li><a href="#which-ai-tools-does-cloudflare-offer">Which AI tools does Cloudflare offer?</a></li><li><a href="#why-workers-d1-r2-and-durable-objects">Why Workers, D1, R2 and Durable Objects?</a></li><li><a href="#how-fast-is-the-network">How fast is the network?</a></li><li><a href="#what-does-it-cost">What does it cost?</a></li><li><a href="#should-your-business-build-on-cloudflare">Should your business build on Cloudflare?</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></details><div class="toc__rail"><p>On this page</p><ol><li><a href="#what-do-we-actually-run-on-cloudflare">What do we actually run on Cloudflare?</a></li><li><a href="#what-safety-comes-built-in">What safety comes built in?</a></li><li><a href="#which-ai-tools-does-cloudflare-offer">Which AI tools does Cloudflare offer?</a></li><li><a href="#why-workers-d1-r2-and-durable-objects">Why Workers, D1, R2 and Durable Objects?</a></li><li><a href="#how-fast-is-the-network">How fast is the network?</a></li><li><a href="#what-does-it-cost">What does it cost?</a></li><li><a href="#should-your-business-build-on-cloudflare">Should your business build on Cloudflare?</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></div></nav>
+</aside>
+</div>
+</main>
+<aside class="cta cta-sticky"><p>Is your business ready to put AI to work? Take the five-to-seven-minute Readiness Check.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="why-we-build-on-cloudflare" data-track-placement="sticky" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=why-we-build-on-cloudflare&amp;utm_content=sticky">Take the Readiness Check</a></aside>
+<footer class="site-foot">
+  <div class="site-close">
+  <p class="site-close__line">Have something to make?</p>
+  <p class="site-close__actions" data-actions>
+    <a class="btn btn--primary" href="/start/">Start a project</a>
+    <a class="btn btn--tertiary" href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app <span class="btn__arrow" aria-hidden="true">→</span></a>
+  </p>
+</div>
+  <p class="site-foot__word" aria-label="Abracadabra">abracadabra<span class="wm-dot">.</span></p>
+  <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/#search">Search &amp; AI visibility</a>
+    <a href="/services/#marketing">Marketing</a>
+    <a href="/services/#sales">Sales</a>
+    <a href="/services/#service">Customer service</a>
+    <a href="/services/#operations">Operations</a>
+    <a href="/portfolio/">Design</a>
+    <a href="/services/#platform">Platform</a>
+    <a href="/services/">Services</a>
+    <a href="/portfolio/">Work</a>
+    <a href="/products/">Products</a>
+    <a href="/course/llm-leverage/">Course</a>
+    <a href="/blog">Blog</a>
+    <a href="/films.html">Films</a>
+    <a href="/privacy">Privacy</a>
+  </nav>
+  <p class="site-foot__meta">
+    <span>Toronto</span>
+    <span data-clock="America/Toronto">America/Toronto</span>
+    <span>© 2026 Abracadabra AI</span>
+    <a href="/privacy">Privacy</a>
+  </p>
+  <script type="module" src="/assets/chat-widget.js?v=20261020a"></script>
+</footer>
+</body>
+</html>

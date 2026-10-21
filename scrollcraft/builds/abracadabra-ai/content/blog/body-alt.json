@@ -248,5 +248,15 @@
   "slug": "how-client-work-flows-through-hq",
   "slot": "body2",
   "alt": "A review card with Approve and Send back buttons, joined to a Your space panel showing a Blog folder with typed files"
+ },
+ {
+  "slug": "why-we-build-on-cloudflare",
+  "slot": "body1",
+  "alt": "An Agent panel marked Working, joined by thin connector lines to four tool cards labelled Models, Gateway, Search and Browser, each with its own status pill"
+ },
+ {
+  "slug": "why-we-build-on-cloudflare",
+  "slot": "body2",
+  "alt": "An Edge app panel marked Live with a dotted world map, joined to panels for a SQL database, file storage, a job queue marked Queued, and a usage card marked Pay for use"
  }
 ]

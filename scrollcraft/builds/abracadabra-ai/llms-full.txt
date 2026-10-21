@@ -1492,3 +1492,85 @@ Sources
 1. Why generative AI projects fail after proof of concept — Gartner, 2026-01-26 — https://www.gartner.com/en/articles/genai-project-failure
 2. The state of AI in 2025: Agents, innovation, and transformation — McKinsey — https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai/november%202025/the-state-of-ai-2025-agents-innovation_cmyk-v1.pdf
 3. Over 40 percent of agentic AI projects will be canceled by end of 2027 — Gartner, 2025-06-25 — https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027
+
+## Why We Build on Cloudflare: Security, AI and the Edge
+
+https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare
+
+Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.
+
+Here is the short answer. We build on Cloudflare® because one platform gives us the safety, the AI tools, the data and the global network our work needs. Our own site, our Readiness Check and HQ, the app we use to run client work, all run on it. That lets us spend our time on the job in front of us, not on servers.
+
+This note walks through the three reasons. First comes the safety you get by default. Next are the AI tools, and last is the platform itself, with what it costs. Each claim links to a Cloudflare page, and we say plainly which tools we use today and which we only plan to use. If you want to know whether your business is ready to put AI to work, the [Readiness Check](https://check.abra-ca-dabra.app/check) takes five to seven minutes.
+
+## What do we actually run on Cloudflare?
+
+Every app we run lives on Cloudflare Workers®, which is code that runs on the Cloudflare network instead of on one server. (Cloudflare Docs, 2026) Our marketing site is a Worker that serves its pages and talks to a second Worker for the chat. The chat uses Workers AI® for speech to text, Durable Objects™ to hold each chat, and Turnstile to keep bots out.
+
+The Readiness Check is its own Worker. It keeps results in a D1 database and hands longer reads of a website to a queue, so a big job does not hold up the page. HQ is a Worker too. It uses D1 for its records, R2 to store files, and Workers AI and AI Gateway for its AI calls. The agents behind HQ are built on the Cloudflare Agents SDK. If you want the full story of how work moves through HQ, read [how client work moves through HQ and our AI agents](https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq).
+
+## What safety comes built in?
+
+Most of it is on before we write a line of code. Cloudflare finds and stops DDoS attacks on its own, and its docs say this is on for all plans. (Cloudflare Docs, 2026) A DDoS attack is a flood of fake traffic meant to knock a site over. When the site sits behind Cloudflare, that flood hits the Cloudflare network first.
+
+The WAF, or web app firewall, checks each request against sets of rules and filters out the bad ones. (Cloudflare Docs, 2026) You can turn on managed rules that Cloudflare keeps up to date, and add your own rules and rate limits. Bot tools sort real people from scripts that scrape content or try stolen passwords. (Cloudflare Docs, 2026) Free plans get a simple bot switch, and Enterprise plans get a score for each request.
+
+TLS is the lock in your browser bar. Cloudflare issues free certificates through Universal SSL, so traffic between visitors and the site is encrypted. (Cloudflare Docs, 2026) For our chat we use Turnstile, which checks that a visitor is a person without making them solve a puzzle. (Cloudflare Docs, 2026) The chat asks for a Turnstile pass when it opens, and a fresh one before each voice call.
+
+For tools only our team should reach, there is Zero Trust. Cloudflare One checks who you are before it lets each request in, instead of trusting anyone who is already inside the network. (Cloudflare Docs, 2026) Its Access tool guards the private tool server that HQ connects to, and HQ shows a service token to get in.
+
+## Which AI tools does Cloudflare offer?
+
+Cloudflare now has a full set of AI tools that run on the same network as the app. Workers AI runs open models on Cloudflare's GPUs, and you pay for what you use. (Cloudflare Docs, 2026) We use it in HQ and in our chat. AI Gateway sits between an app and the models it calls. It logs each call, shows cost, caches answers, limits rates, and can retry or fall back to a second model when one fails. (Cloudflare Docs, 2026) HQ sends its AI calls through it.
+
+The Agents SDK is how we build agents. Cloudflare says each agent gets its own lasting identity, its own SQL storage, live connections and scheduled work. (Cloudflare Docs, 2026) That is a good fit for agents that keep working on a task over days, which is what ours do.
+
+There are more tools we reach for when a job needs them. We do not use these in our own stack today. Vectorize is a vector database, which stores what text or images mean so an app can find close matches. (Cloudflare Docs, 2026) AI Search, which used to be called AutoRAG, was renamed in Cloudflare's changelog. (Cloudflare Changelog, 2025) It lets an app or an agent search its own files in plain words, with keyword and meaning search turned on together. (Cloudflare Docs, 2026) Browser Run, which used to be called Browser Rendering, runs real browsers on the network so code or agents can read pages, take screenshots and fill in forms. (Cloudflare Blog, 2026) (Cloudflare Docs, 2026)
+
+AI Crawl Control works the other way round. It shows which AI services are reading your site, lets you allow or block each crawler, and tracks which ones follow your robots.txt file. (Cloudflare Docs, 2026) That matters for AI search, and it ties into the work we do on [AI visibility](https://abra-ca-dabra.app/services/ai-visibility/) and files like [llms.txt](https://abra-ca-dabra.app/blog/what-is-llms-txt).
+
+## Why Workers, D1, R2 and Durable Objects?
+
+Each one does a plain job, and they all plug into a Worker with a few lines of setup. D1 is a SQL database that the docs say you can roll back to any minute in the last 30 days. (Cloudflare Docs, 2026) R2 stores files and does not charge to send them out to the web. (Cloudflare Docs, 2026) Durable Objects pair a bit of code with its own storage, so a chat or an agent keeps its state in one place. (Cloudflare Docs, 2026) Queues let one Worker hand a job to another and make sure it gets done. (Cloudflare Docs, 2026)
+
+This is how the Readiness Check handles longer reads of a website, so they do not make you wait. The page hands the job to a queue, and Workers pick it up in small parts. The results land in D1, and the page reads them back as they come in.
+
+## How fast is the network?
+
+Cloudflare says that 95% of people online are within 50 milliseconds of one of its data centers. (Cloudflare) That is Cloudflare's own figure, not one we measured. What we can say is how it shapes our work. Our code runs close to the visitor by default, so we do not pick a region or move servers when a client grows.
+
+## What does it cost?
+
+It starts small. The Workers paid plan has a minimum charge of $5 a month per account, with usage above that billed as you go. (Cloudflare Docs, 2026) The same page says requests for static files, like images and pages, are free, and there is no charge for data sent out. The free plan also includes some use each day. Prices change, so check the pricing page before you plan a budget.
+
+For our clients, the point is that cost tracks use. A new tool does not need a big server bill on day one. It can start small and grow, and the bill grows with it.
+
+## Should your business build on Cloudflare?
+
+If you need a custom app, an AI assistant, or an agent that does real work, it is a strong place to start.
+
+… Full post: https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare
+
+Sources
+1. Cloudflare Workers: Overview — Cloudflare Docs, 2026-10-08 — https://developers.cloudflare.com/workers/
+2. Cloudflare DDoS Protection: Overview — Cloudflare Docs, 2026-08-14 — https://developers.cloudflare.com/ddos-protection/
+3. Cloudflare Web Application Firewall: Overview — Cloudflare Docs, 2026-08-19 — https://developers.cloudflare.com/waf/
+4. Cloudflare bot solutions: Overview — Cloudflare Docs, 2026-04-30 — https://developers.cloudflare.com/bots/
+5. Cloudflare SSL/TLS: Overview — Cloudflare Docs, 2026-08-14 — https://developers.cloudflare.com/ssl/
+6. Cloudflare Turnstile: Overview — Cloudflare Docs, 2026-08-14 — https://developers.cloudflare.com/turnstile/
+7. Cloudflare One: Overview — Cloudflare Docs, 2026-10-12 — https://developers.cloudflare.com/cloudflare-one/
+8. Cloudflare Workers AI: Overview — Cloudflare Docs, 2026-04-21 — https://developers.cloudflare.com/workers-ai/
+9. Cloudflare AI Gateway: Overview — Cloudflare Docs, 2026-04-20 — https://developers.cloudflare.com/ai-gateway/
+10. Build Agents on Cloudflare — Cloudflare Docs, 2026-09-18 — https://developers.cloudflare.com/agents/
+11. Cloudflare Vectorize: Overview — Cloudflare Docs, 2026-04-21 — https://developers.cloudflare.com/vectorize/
+12. AI Search (formerly AutoRAG) now with More Models To Choose From — Cloudflare Changelog, 2025-09-25 — https://developers.cloudflare.com/changelog/post/2025-09-25-ai-search-more-models/
+13. Cloudflare AI Search: Overview — Cloudflare Docs, 2026-10-01 — https://developers.cloudflare.com/ai-search/
+14. Browser Run: give your agents a browser — Cloudflare Blog, 2026-04-15 — https://blog.cloudflare.com/browser-run-for-ai-agents/
+15. Browser Run: Overview — Cloudflare Docs, 2026-08-11 — https://developers.cloudflare.com/browser-run/
+16. AI Crawl Control: Overview — Cloudflare Docs, 2026-08-14 — https://developers.cloudflare.com/ai-crawl-control/
+17. Cloudflare D1: Overview — Cloudflare Docs, 2026-04-30 — https://developers.cloudflare.com/d1/
+18. Cloudflare R2: Overview — Cloudflare Docs, 2026-10-01 — https://developers.cloudflare.com/r2/
+19. Cloudflare Durable Objects: Overview — Cloudflare Docs, 2026-07-15 — https://developers.cloudflare.com/durable-objects/
+20. Cloudflare Queues: Overview — Cloudflare Docs, 2026-04-21 — https://developers.cloudflare.com/queues/
+21. Cloudflare Global Network — Cloudflare — https://www.cloudflare.com/network/
+22. Workers pricing — Cloudflare Docs, 2026-10-02 — https://developers.cloudflare.com/workers/platform/pricing/
