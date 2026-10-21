@@ -7,7 +7,7 @@ pillar: "AI consulting and implementation"
 cluster: "platform"
 primaryQuery: "why build on Cloudflare"
 author: abracadabra-studio
-cta: "Want to know if your site is ready for AI search and AI tools? Run the free check."
+cta: "Is your business ready to put AI to work? Take the five-to-seven-minute Readiness Check."
 images:
   - src: /blog/media/why-we-build-on-cloudflare/01.webp
     file: why-we-build-on-cloudflare-01.jpg
@@ -38,9 +38,15 @@ faqs:
     answer: "No. Today we use Workers AI, AI Gateway and the Agents SDK. We pick tools like Vectorize, AI Search and Browser Run when a job needs them."
   - question: "What is AI Search, and what happened to AutoRAG?"
     answer: "AI Search is the new name for AutoRAG. Cloudflare renamed it in its changelog. It lets an app or agent search your own files in plain words."
-  - question: "How do I know if my site is ready for AI search?"
-    answer: "Run the free AI Readiness Check. It scans your site and shows what AI search tools can find, what is missing, and what to fix first."
+  - question: "How do I know if my business is ready to put AI to work?"
+    answer: "Take the Readiness Check. In five to seven minutes it gives you a band and four scores: pressure, readiness, growth, and website visibility from a live read of your public site. You also get three suggestions in each section."
 citations:
+  - id: cf-workers
+    title: "Cloudflare Workers: Overview"
+    url: "https://developers.cloudflare.com/workers/"
+    publisher: "Cloudflare Docs"
+    datePublished: "2026-10-08"
+    figures: []
   - id: cf-ddos
     title: "Cloudflare DDoS Protection: Overview"
     url: "https://developers.cloudflare.com/ddos-protection/"
@@ -65,17 +71,17 @@ citations:
     publisher: "Cloudflare Docs"
     datePublished: "2026-08-14"
     figures: []
-  - id: cf-one
-    title: "Cloudflare One: Overview"
-    url: "https://developers.cloudflare.com/cloudflare-one/"
-    publisher: "Cloudflare Docs"
-    datePublished: "2026-10-12"
-    figures: []
   - id: cf-turnstile
     title: "Cloudflare Turnstile: Overview"
     url: "https://developers.cloudflare.com/turnstile/"
     publisher: "Cloudflare Docs"
     datePublished: "2026-08-14"
+    figures: []
+  - id: cf-one
+    title: "Cloudflare One: Overview"
+    url: "https://developers.cloudflare.com/cloudflare-one/"
+    publisher: "Cloudflare Docs"
+    datePublished: "2026-10-12"
     figures: []
   - id: cf-workers-ai
     title: "Cloudflare Workers AI: Overview"
@@ -89,17 +95,17 @@ citations:
     publisher: "Cloudflare Docs"
     datePublished: "2026-04-20"
     figures: []
-  - id: cf-vectorize
-    title: "Cloudflare Vectorize: Overview"
-    url: "https://developers.cloudflare.com/vectorize/"
-    publisher: "Cloudflare Docs"
-    datePublished: "2026-04-21"
-    figures: []
   - id: cf-agents
     title: "Build Agents on Cloudflare"
     url: "https://developers.cloudflare.com/agents/"
     publisher: "Cloudflare Docs"
     datePublished: "2026-09-18"
+    figures: []
+  - id: cf-vectorize
+    title: "Cloudflare Vectorize: Overview"
+    url: "https://developers.cloudflare.com/vectorize/"
+    publisher: "Cloudflare Docs"
+    datePublished: "2026-04-21"
     figures: []
   - id: cf-ai-search-rename
     title: "AI Search (formerly AutoRAG) now with More Models To Choose From"
@@ -119,17 +125,17 @@ citations:
     publisher: "Cloudflare Blog"
     datePublished: "2026-04-15"
     figures: []
+  - id: cf-browser-run-docs
+    title: "Browser Run: Overview"
+    url: "https://developers.cloudflare.com/browser-run/"
+    publisher: "Cloudflare Docs"
+    datePublished: "2026-08-11"
+    figures: []
   - id: cf-crawl-control
     title: "AI Crawl Control: Overview"
     url: "https://developers.cloudflare.com/ai-crawl-control/"
     publisher: "Cloudflare Docs"
     datePublished: "2026-08-14"
-    figures: []
-  - id: cf-workers
-    title: "Cloudflare Workers: Overview"
-    url: "https://developers.cloudflare.com/workers/"
-    publisher: "Cloudflare Docs"
-    datePublished: "2026-10-08"
     figures: []
   - id: cf-d1
     title: "Cloudflare D1: Overview"
@@ -167,9 +173,9 @@ citations:
     datePublished: "2026-10-02"
     figures: ["5"]
 ---
-Here is the short answer. We build on Cloudflare® because one platform gives us the safety, the AI tools, the data and the global network our work needs. Our own site, our free AI Readiness Check and HQ, the app we use to run client work, all run on it. That lets us spend our time on the job in front of us, not on servers.
+Here is the short answer. We build on Cloudflare® because one platform gives us the safety, the AI tools, the data and the global network our work needs. Our own site, our Readiness Check and HQ, the app we use to run client work, all run on it. That lets us spend our time on the job in front of us, not on servers.
 
-This note walks through the three reasons. First comes the safety you get by default. Next are the AI tools, and last is the platform itself, with what it costs. Each claim links to a Cloudflare page, and we say plainly which tools we use today and which we only plan to use. If you want to see how your own site looks to AI search, the [AI Readiness Check](https://check.abra-ca-dabra.app/check) is free.
+This note walks through the three reasons. First comes the safety you get by default. Next are the AI tools, and last is the platform itself, with what it costs. Each claim links to a Cloudflare page, and we say plainly which tools we use today and which we only plan to use. If you want to know whether your business is ready to put AI to work, the [Readiness Check](https://check.abra-ca-dabra.app/check) takes five to seven minutes.
 
 <!--diagram:1-->
 
@@ -177,7 +183,7 @@ This note walks through the three reasons. First comes the safety you get by def
 
 Every app we run lives on Cloudflare Workers®, which is code that runs on the Cloudflare network instead of on one server.[^cf-workers] Our marketing site is a Worker that serves its pages and talks to a second Worker for the chat. The chat uses Workers AI® for speech to text, Durable Objects™ to hold each chat, and Turnstile to keep bots out.
 
-The Readiness Check is its own Worker. It keeps scan results in a D1 database and hands long scans to a queue, so a big scan does not hold up the page. Our deep scans, which are not on sale yet, follow each site's robots.txt rules. HQ is a Worker too. It uses D1 for its records, R2 to store files, and Workers AI and AI Gateway for its AI calls. The agents behind HQ are built on the Cloudflare Agents SDK. If you want the full story of how work moves through HQ, read [how client work moves through HQ and our AI agents](/blog/how-client-work-flows-through-hq).
+The Readiness Check is its own Worker. It keeps results in a D1 database and hands longer reads of a website to a queue, so a big job does not hold up the page. HQ is a Worker too. It uses D1 for its records, R2 to store files, and Workers AI and AI Gateway for its AI calls. The agents behind HQ are built on the Cloudflare Agents SDK. If you want the full story of how work moves through HQ, read [how client work moves through HQ and our AI agents](/blog/how-client-work-flows-through-hq).
 
 ## What safety comes built in?
 
@@ -199,7 +205,7 @@ The Agents SDK is how we build agents. Cloudflare says each agent gets its own l
 
 <!--image:2-->
 
-There are more tools we reach for when a job needs them. We do not use these in our own stack today. Vectorize is a vector database, which stores what text or images mean so an app can find close matches.[^cf-vectorize] AI Search, which used to be called AutoRAG, was renamed in Cloudflare's changelog.[^cf-ai-search-rename] It lets an app or an agent search its own files in plain words, with keyword and meaning search turned on together.[^cf-ai-search] Browser Run, which used to be called Browser Rendering, runs real browsers on the network so code or agents can read pages, take screenshots and fill in forms.[^cf-browser-run]
+There are more tools we reach for when a job needs them. We do not use these in our own stack today. Vectorize is a vector database, which stores what text or images mean so an app can find close matches.[^cf-vectorize] AI Search, which used to be called AutoRAG, was renamed in Cloudflare's changelog.[^cf-ai-search-rename] It lets an app or an agent search its own files in plain words, with keyword and meaning search turned on together.[^cf-ai-search] Browser Run, which used to be called Browser Rendering, runs real browsers on the network so code or agents can read pages, take screenshots and fill in forms.[^cf-browser-run][^cf-browser-run-docs]
 
 AI Crawl Control works the other way round. It shows which AI services are reading your site, lets you allow or block each crawler, and tracks which ones follow your robots.txt file.[^cf-crawl-control] That matters for AI search, and it ties into the work we do on [AI visibility](/services/ai-visibility/) and files like [llms.txt](/blog/what-is-llms-txt).
 
@@ -209,7 +215,7 @@ AI Crawl Control works the other way round. It shows which AI services are readi
 
 Each one does a plain job, and they all plug into a Worker with a few lines of setup. D1 is a SQL database that the docs say you can roll back to any minute in the last 30 days.[^cf-d1] R2 stores files and does not charge to send them out to the web.[^cf-r2] Durable Objects pair a bit of code with its own storage, so a chat or an agent keeps its state in one place.[^cf-durable-objects] Queues let one Worker hand a job to another and make sure it gets done.[^cf-queues]
 
-This is how we built the deep scans in the Readiness Check, so a long scan does not make you wait. The page hands the job to a queue, and Workers pick it up in small parts. The results land in D1, and the page reads them back as they come in.
+This is how the Readiness Check handles longer reads of a website, so they do not make you wait. The page hands the job to a queue, and Workers pick it up in small parts. The results land in D1, and the page reads them back as they come in.
 
 <!--image:3-->
 
@@ -227,6 +233,6 @@ For our clients, the point is that cost tracks use. A new tool does not need a b
 
 If you need a custom app, an AI assistant, or an agent that does real work, it is a strong place to start. We build [custom apps](/services/custom-apps/), [AI assistants and agents](/services/ai-assistants-and-agents/), and [one bill for many AI models](/services/any-model-one-bill/), and we build them on the stack in this note. If you are still deciding between a product and a build, read [off-the-shelf AI or custom software](/blog/off-the-shelf-ai-or-custom-software).
 
-The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) is free. It scans your site and shows how AI search tools see it, then lists what to fix first. Run it, then [start a project](/start/) or write to houdini@abra-ca-dabra.app, and we will look at the results with you.
+The first step is knowing where you stand. The [Readiness Check](https://check.abra-ca-dabra.app/check) takes five to seven minutes. It looks at the jobs that eat your week, whether your data and workflow can support real work, where new customers come from, and how well answer engines can find and quote your public site. You get a band, four scores and three suggestions in each section, plus a thirty-minute working session if you want one. Take it, then [start a project](/start/) or write to houdini@abra-ca-dabra.app, and we will look at the results with you.
 
 Cloudflare, the Cloudflare logo, Cloudflare Workers, Workers AI and Durable Objects are trademarks and/or registered trademarks of Cloudflare, Inc. in the United States and other places. This note is our own view and is not endorsed by Cloudflare.

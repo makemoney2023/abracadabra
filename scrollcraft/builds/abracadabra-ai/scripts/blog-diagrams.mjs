@@ -251,7 +251,7 @@ function stackDiagram() {
   const apps = [
     { title: "Marketing site", lines: ["Pages, blog and the", "chat front door"], chips: [["Static assets", "muted"], ["Service binding", "muted"]] },
     { title: "Chat", lines: ["Text and voice chat", "for visitors"], chips: [["Workers AI", "cyan"], ["Durable Objects", "cyan"], ["Turnstile", "amber"]] },
-    { title: "Readiness Check", lines: ["Free site scan, with", "deep scans on a queue"], chips: [["D1 database", "cyan"], ["Queues", "cyan"], ["Follows robots.txt", "green"]] },
+    { title: "Readiness Check", lines: ["A short check of your", "business and website"], chips: [["D1 database", "cyan"], ["Queues for site reads", "cyan"], ["Live site read", "green"]] },
     { title: "HQ and agents", lines: ["Client work, files", "and our agents"], chips: [["D1 and R2", "cyan"], ["Workers AI, AI Gateway", "cyan"], ["Agents SDK", "accent"]] },
   ];
   apps.forEach((app, i) => {
