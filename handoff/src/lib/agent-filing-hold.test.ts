@@ -585,3 +585,65 @@ describe("migration 0032", () => {
     for (const statement of statements) expect(statement).toMatch(/^(ALTER TABLE \w+ ADD COLUMN|CREATE (UNIQUE )?INDEX)/i);
   });
 });
+
+describe("folders", () => {
+  const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+  const posts = {
+    folder: "Social/Facebook",
+    attachments: [
+      { name: "schema-1.png", body: PNG },
+      { name: "facebook-posts.md", body: "# Posts" },
+      { name: "preview.html", body: "<!doctype html><p>Draft</p>" },
+    ],
+  };
+
+  it("files into the agent's folder with readable names, real image bytes and kept .html", async () => {
+    const ctx = await setup();
+    const result = await file(ctx, { external_id: "f1", ...posts });
+    expect(result.folder).toBe("Social/Facebook");
+    expect(result.paths).toEqual([
+      "Social/Facebook/October social posts - summary.md",
+      "Social/Facebook/schema-1.png",
+      "Social/Facebook/facebook-posts.md",
+      "Social/Facebook/preview.html",
+    ]);
+    const png = await sql.get<{ object_key: string }>("SELECT object_key FROM files WHERE relative_path = 'Social/Facebook/schema-1.png'");
+    expect([...((await store.read(png!.object_key)) ?? new Uint8Array()).slice(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47]);
+    expect((await sql.get<{ folder: string }>("SELECT folder FROM agent_work_items WHERE id = ?", [result.workItemId]))?.folder).toBe("Social/Facebook");
+  });
+
+  it("defaults to Finished work/<date> <title> and numbers a name already in the folder", async () => {
+    const ctx = await setup();
+    const one = await file(ctx, { external_id: "d1" });
+    expect(one.folder).toBe("Finished work/2023-11-14 October social posts");
+    expect(one.paths).toEqual(["Finished work/2023-11-14 October social posts/summary.md"]);
+    await file(ctx, { external_id: "a", ...posts });
+    const two = await file(ctx, { external_id: "b", ...posts });
+    expect(two.paths).toContain("Social/Facebook/schema-1 (2).png");
+    expect(two.paths).toContain("Social/Facebook/October social posts - summary (2).md");
+  });
+
+  it("a filing that supersedes another keeps its names", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx);
+    const first = await file(ctx, { external_id: "v1", task_id: taskId, ...posts });
+    const second = await file(ctx, { external_id: "v2", task_id: taskId, supersedes: first.workItemId, ...posts }, NOW + 20);
+    expect(second.paths).toEqual(first.paths);
+  });
+
+  it("held filings in a folder stay out of the client's tree until approval", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx);
+    await file(ctx, { external_id: "h1", task_id: taskId, ...posts });
+    expect(await listFolderFiles(sql, ctx.member, ctx.spaceId)).toEqual([]);
+    expect((await listFolderFiles(sql, ctx.staff, ctx.spaceId)).map((f) => [f.name, f.hold])).toContainEqual(["Social/Facebook/schema-1.png", "held"]);
+    await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 30 });
+    expect((await listFolderFiles(sql, ctx.member, ctx.spaceId)).map((f) => f.name)).toContain("Social/Facebook/schema-1.png");
+  });
+
+  it("refuses a folder that climbs or is not text", async () => {
+    const ctx = await setup();
+    expect(await fileAgentWork(sql, store, ctx.agent, { ...work, external_id: "x", folder: "Social/../up" }, NOW)).toMatchObject({ ok: false, error: "invalid" });
+    expect(await fileAgentWork(sql, store, ctx.agent, { ...work, external_id: "y", folder: 7 }, NOW)).toMatchObject({ ok: false, error: "invalid" });
+  });
+});

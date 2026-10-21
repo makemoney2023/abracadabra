@@ -2,9 +2,31 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import {
+  ChevronRight,
+  Clock,
+  File,
+  FileArchive,
+  FileBraces,
+  FileCode,
+  FileImage,
+  FileSpreadsheet,
+  FileText,
+  FileType,
+  FileVideo,
+  Folder,
+  Globe,
+  Palette,
+  PenTool,
+  Presentation,
+  Ruler,
+  type LucideIcon,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { fileStatusLabel, formatFileSize, groupFolderFiles } from "@/lib/file-label";
+import { baseName, buildFolderTree, displayPath, fileStatusLabel, formatFileSize, type FolderNode } from "@/lib/file-label";
+import { fileType, thumbnailable, type FileTypeKind } from "@/lib/file-type";
 
 export type FolderRow = {
   id: string;
@@ -17,6 +39,37 @@ export type FolderRow = {
   deletable: boolean;
   /** Staff only: an agent filing held until Client Services approves (client members don't see it). */
   heldNote?: string | null;
+};
+
+const ICONS: Record<FileTypeKind, LucideIcon> = {
+  image: FileImage,
+  vector: PenTool,
+  design: Palette,
+  video: FileVideo,
+  pdf: FileText,
+  markdown: FileText,
+  html: Globe,
+  text: FileText,
+  document: FileText,
+  spreadsheet: FileSpreadsheet,
+  slides: Presentation,
+  data: FileBraces,
+  code: FileCode,
+  font: FileType,
+  archive: FileArchive,
+  cad: Ruler,
+  other: File,
+};
+
+/** A little colour per family so a list of mixed files scans quickly. Brand accents only. */
+const TINT: Partial<Record<FileTypeKind, string>> = {
+  image: "text-optic",
+  vector: "text-optic",
+  video: "text-optic",
+  pdf: "text-status-late",
+  spreadsheet: "text-phosphor",
+  data: "text-phosphor",
+  html: "text-optic",
 };
 
 async function responseMessage(response: Response, fallback: string): Promise<string> {
@@ -33,6 +86,26 @@ function fileCount(count: number): string {
   return count === 1 ? "1 file" : `${count} files`;
 }
 
+function TypeTile({ file }: { file: FolderRow }) {
+  const type = fileType(file.name);
+  const Icon = ICONS[type.kind];
+  const thumb = file.previewHref && thumbnailable(file.name) ? `/api/files/${file.id}/preview` : null;
+  return (
+    <div
+      className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40"
+      aria-hidden="true"
+    >
+      {thumb ? (
+        // A session-only preview of the stored picture. Lazy, and only fetched once its folder is open.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={thumb} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+      ) : (
+        <Icon className={`size-5 ${TINT[type.kind] ?? "text-muted-foreground"}`} strokeWidth={1.75} />
+      )}
+    </div>
+  );
+}
+
 function FileActions({
   file,
   label,
@@ -46,44 +119,65 @@ function FileActions({
   onDownload: (file: FolderRow) => void;
   onDelete: (file: FolderRow) => void;
 }) {
+  const type = fileType(file.name);
   return (
-    <li className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">
-          {fileStatusLabel(file.status)} · {formatFileSize(file.sizeBytes)}
-          {file.heldNote ? <span className="ml-2 rounded-sm bg-amber-100 px-1.5 py-0.5 font-medium text-amber-900">{file.heldNote}</span> : null}
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-4 py-3 last:border-b-0">
+      <TypeTile file={file} />
+      <div className="min-w-0 flex-1 basis-40">
+        <p className="truncate text-sm font-medium" title={label}>
+          {label}
         </p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <Badge variant="outline" className="font-mono text-[0.6875rem] tracking-wide" data-file-type={type.kind}>
+            {type.extension ? `${type.label} · ${type.extension}` : type.label}
+          </Badge>
+          <span>
+            {fileStatusLabel(file.status)} · {formatFileSize(file.sizeBytes)}
+          </span>
+          {file.heldNote ? (
+            <Badge variant="secondary" className="gap-1">
+              <Clock aria-hidden="true" />
+              {file.heldNote}
+            </Badge>
+          ) : null}
+        </div>
       </div>
-      {file.previewHref ? (
-        <Link href={file.previewHref} className="text-sm">
-          Preview
-        </Link>
-      ) : null}
-      {file.status === "clean" ? (
-        <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => onDownload(file)}>
-          Download
-        </Button>
-      ) : null}
-      {file.deletable ? (
-        <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => onDelete(file)}>
-          Delete
-        </Button>
-      ) : null}
-      {file.moreHref ? (
-        <Link href={file.moreHref} className="text-sm">
-          More
-        </Link>
-      ) : null}
+      <div className="flex items-center gap-3">
+        {file.previewHref ? (
+          <Link href={file.previewHref} className="text-sm">
+            Preview
+          </Link>
+        ) : null}
+        {file.status === "clean" ? (
+          <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => onDownload(file)}>
+            Download
+          </Button>
+        ) : null}
+        {file.deletable ? (
+          <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => onDelete(file)}>
+            Delete
+          </Button>
+        ) : null}
+        {file.moreHref ? (
+          <Link href={file.moreHref} className="text-sm">
+            More
+          </Link>
+        ) : null}
+      </div>
     </li>
   );
 }
 
+function hasDeletable(node: FolderNode<FolderRow>): boolean {
+  return node.files.some((file) => file.deletable) || node.folders.some(hasDeletable);
+}
+
 export function FolderFiles({ files, slug }: { files: FolderRow[]; slug: string }) {
   const router = useRouter();
+  const list = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
   const [pendingKey, setPendingKey] = useState<string | null>(null);
-  const groups = groupFolderFiles(files);
+  const tree = buildFolderTree(files, (file) => displayPath(file.name));
 
   async function download(file: FolderRow) {
     setPendingKey(file.id);
@@ -134,58 +228,97 @@ export function FolderFiles({ files, slug }: { files: FolderRow[]; slug: string 
     router.refresh();
   }
 
+  function setAll(open: boolean) {
+    list.current?.querySelectorAll("details").forEach((details) => {
+      details.open = open;
+    });
+  }
+
+  const row = (file: FolderRow) => (
+    <FileActions
+      key={file.id}
+      file={file}
+      label={baseName(displayPath(file.name))}
+      pending={pendingKey === file.id}
+      onDownload={(picked) => void download(picked)}
+      onDelete={(picked) => void removeFile(picked)}
+    />
+  );
+
+  function folder(node: FolderNode<FolderRow>, depth: number) {
+    // Only a top-level folder of your own uploads can be deleted in one go.
+    const deletable = depth === 0 && hasDeletable(node);
+    return (
+      <li key={`folder:${node.path}`} className="border-b border-border last:border-b-0">
+        <details className="group/folder">
+          <summary
+            className="flex cursor-pointer list-none items-center gap-3 bg-muted/40 px-4 py-3 hover:bg-muted/60 [&::-webkit-details-marker]:hidden"
+            style={{ paddingLeft: `${1 + depth * 1.25}rem` }}
+          >
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-open/folder:rotate-90"
+            />
+            <Folder aria-hidden="true" className="size-4 shrink-0 text-optic" strokeWidth={1.75} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium" title={node.path}>
+                {node.name}
+              </p>
+              {depth > 0 ? <p className="truncate text-xs text-muted-foreground">{node.path.split("/").join(" / ")}</p> : null}
+            </div>
+            <Badge variant="outline" className="font-mono text-[0.6875rem]">
+              {fileCount(node.count)}
+            </Badge>
+            {deletable ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={pendingKey === `folder:${node.name}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void removeFolder(node.name);
+                }}
+              >
+                Delete folder
+              </Button>
+            ) : null}
+          </summary>
+          <ul className="border-t border-border" style={{ paddingLeft: `${depth * 1.25}rem` }}>
+            {node.folders.map((child) => folder(child, depth + 1))}
+            {node.files.map(row)}
+          </ul>
+        </details>
+      </li>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" ref={list}>
       {message ? (
         <p className="text-sm text-muted-foreground" role="status">
           {message}
         </p>
       ) : null}
+      {tree.folders.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+          <p>
+            {fileCount(tree.count)} in {tree.folders.length === 1 ? "1 folder" : `${tree.folders.length} folders`}
+            {tree.files.length ? ` and ${tree.files.length} loose` : ""}
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" variant="ghost" onClick={() => setAll(true)}>
+              Open all
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setAll(false)}>
+              Close all
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <ul className="overflow-hidden rounded-lg border border-border">
-        {groups.map((group) =>
-          group.kind === "folder" ? (
-            <li key={`folder:${group.name}`} className="border-b border-border last:border-b-0">
-              <div className="flex items-center gap-3 bg-muted/40 px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{group.name}</p>
-                  <p className="text-xs text-muted-foreground">{fileCount(group.files.length)}</p>
-                </div>
-                {group.files.some((file) => file.deletable) ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={pendingKey === `folder:${group.name}`}
-                    onClick={() => void removeFolder(group.name)}
-                  >
-                    Delete folder
-                  </Button>
-                ) : null}
-              </div>
-              <ul>
-                {group.files.map((file) => (
-                  <FileActions
-                    key={file.id}
-                    file={file}
-                    label={file.name.slice(group.name.length + 1)}
-                    pending={pendingKey === file.id}
-                    onDownload={(row) => void download(row)}
-                    onDelete={(row) => void removeFile(row)}
-                  />
-                ))}
-              </ul>
-            </li>
-          ) : (
-            <FileActions
-              key={group.file.id}
-              file={group.file}
-              label={group.file.name}
-              pending={pendingKey === group.file.id}
-              onDownload={(row) => void download(row)}
-              onDelete={(row) => void removeFile(row)}
-            />
-          ),
-        )}
+        {tree.folders.map((node) => folder(node, 0))}
+        {tree.files.map(row)}
       </ul>
     </div>
   );

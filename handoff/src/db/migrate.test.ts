@@ -49,6 +49,7 @@ describe("statementsFromMigration", () => {
       "0030_today_feed.sql",
       "0031_task_agent_owner.sql",
       "0032_agent_filing_hold.sql",
+      "0033_agent_work_folder.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -250,5 +251,13 @@ describe("a step that stopped halfway", () => {
     db.exec("DROP TABLE agent_work_items");
     db.exec("CREATE TABLE agent_work_items_state (id TEXT)");
     await expect(migrate(sql)).rejects.toThrow();
+  });
+});
+
+describe("HANDOFF_SKIP_MIGRATIONS", () => {
+  it("reads a comma-separated list of migration files to hold back", async () => {
+    const { skippedMigrations } = await import("./migrate");
+    expect([...skippedMigrations(" 0033_agent_work_folder.sql , ")]).toEqual(["0033_agent_work_folder.sql"]);
+    expect(skippedMigrations(undefined).size).toBe(0);
   });
 });

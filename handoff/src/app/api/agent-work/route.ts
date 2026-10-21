@@ -15,7 +15,9 @@ export const dynamic = "force-dynamic";
  * Body: { external_id, title, kind?, summary?, content?, attachments?: [{ name, body }], links?: [{ label, url }],
  *         client?: { organization_id?, domain?, space_slug? }, project_id?, task_id?, keep_task_open?,
  *         handoff?: { to, note? }, finished_at?, agent_id?, supersedes?: id | [ids], work_request_id?, thread_id?,
- *         deliverable_kind? }
+ *         deliverable_kind?, folder? }
+ * folder: where the files land in the space, like "Social/Facebook" (up to 6 levels). Default: Finished work/<date> <title>.
+ * Files keep readable names (post-1.png); a name already in the folder gets " (2)", except names of filings it supersedes.
  * attachments[].body: text (a .html/.csv/.txt/... name keeps its extension) or a base64 data URL
  * (data:image/png|jpeg|webp|gif;base64,... or data:application/pdf;base64,...).
  * Size: AGENT_WORK_MAX_MB (default 10) MB of files after decoding; the JSON may be about 4/3 of that plus 1 MB. Over: 413.
@@ -60,6 +62,7 @@ export async function POST(request: Request) {
         project_id: result.projectId,
         route: result.route,
         paths: result.paths,
+        ...(result.folder !== undefined ? { folder: result.folder } : {}),
         task_closed: result.taskClosed,
         handoff_to: result.handoffTo,
         held: true,
