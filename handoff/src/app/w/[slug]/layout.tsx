@@ -41,7 +41,7 @@ export default async function WorkspaceLayout({
           ) : null}
           <div className="flex flex-1 flex-col">
             {hq ? null : (
-              <Link href="/" className="font-mono text-xs tracking-wide text-optic">
+              <Link href="/" className="wordmark text-sm text-optic">
                 Handoff
               </Link>
             )}

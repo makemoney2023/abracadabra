@@ -516,6 +516,7 @@ const UPDATE_KINDS = [
   "client_agent.work_filed",
   "client_agent.handoff",
   "client_agent.dispatch",
+  "client.changes_requested",
   "client_agent.board",
   "email.received",
   "client_work.handoff",

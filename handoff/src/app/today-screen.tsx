@@ -250,7 +250,7 @@ export function TodayScreen({
             { label: "Sent back", value: stats.sentBack, tone: "text-status-late" },
           ].map((stat) => (
             <div key={stat.label}>
-              <dt className="font-mono text-[11px] tracking-wide text-muted-foreground uppercase">{stat.label}</dt>
+              <dt className="eyebrow text-[11px] text-muted-foreground">{stat.label}</dt>
               <dd className={cn("font-heading text-2xl tabular-nums", stat.tone)}>{stat.value}</dd>
             </div>
           ))}
@@ -262,7 +262,7 @@ export function TodayScreen({
             {work.slice(0, AGENT_WORK_SHOWN).map((row) => (
               <li key={row.id} className="flex items-baseline justify-between gap-3 py-2">
                 <div className="min-w-0">
-                  <span className={cn("mr-2 font-mono text-[11px] uppercase", DECISION_TONE[row.decision])}>
+                  <span className={cn("mr-2 eyebrow text-[11px]", DECISION_TONE[row.decision])}>
                     {DECISION_LABEL[row.decision]}
                   </span>
                   <Link href={row.href} className="font-medium hover:underline">
@@ -304,7 +304,7 @@ export function TodayScreen({
           ) : (
             grouped.map((group) => (
               <div key={group.label} className="space-y-2">
-                <h3 className="font-mono text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                <h3 className="eyebrow text-[11px] text-muted-foreground">
                   {group.label}
                 </h3>
                 <Timeline items={group.items} now={now} />

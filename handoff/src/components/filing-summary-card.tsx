@@ -65,11 +65,11 @@ export function FilingSummaryCard({
     >
       <header className="flex flex-col gap-2">
         {summary.finishedAt ? (
-          <p className="font-mono text-xs tracking-wide text-optic">
+          <p className="eyebrow text-xs text-optic">
             Delivered <time dateTime={summary.finishedAt.toISOString()}>{deliveredLabel(summary.finishedAt)}</time>
           </p>
         ) : (
-          <p className="font-mono text-xs tracking-wide text-optic">Delivered</p>
+          <p className="eyebrow text-xs text-optic">Delivered</p>
         )}
         <h2 className="font-heading text-xl leading-snug text-balance sm:text-2xl">{summary.title}</h2>
       </header>

@@ -21,7 +21,7 @@ export default async function LoginPage({
 
   return (
     <PageFrame title="Sign in" description="Use your username and password." width="narrow">
-      <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
+      <p className="wordmark text-sm text-optic">Handoff</p>
       {wrong ? (
         <p className="text-sm text-muted-foreground" role="status">
           That username or password is wrong.

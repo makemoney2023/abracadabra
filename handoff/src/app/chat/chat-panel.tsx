@@ -214,7 +214,7 @@ function MessageView({
       {mine ? null : (
         <span
           aria-hidden="true"
-          className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px]"
+          className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-muted font-label font-medium text-[10px]"
         >
           HQ
         </span>

@@ -78,7 +78,7 @@ export function StaffNav({ counts }: { counts: NavBadges }) {
     <>
       {visibleNavGroups(STUDIO_NAV_GROUPS, counts.hidden ?? []).map((group) => (
         <SidebarGroup key={group.label}>
-          <SidebarGroupLabel className="font-mono text-[11px] tracking-wide uppercase">
+          <SidebarGroupLabel className="eyebrow text-[11px]">
             {group.label}
           </SidebarGroupLabel>
           <SidebarGroupContent>

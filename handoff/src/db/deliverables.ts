@@ -133,15 +133,12 @@ function nextWorking(row: DeliverableRow): { version: number; bump: boolean } {
   return { version: row.version, bump: false };
 }
 
+/**
+ * All or none, through sql.batch. Not sql.run("BEGIN"): on D1 that reaches the database as a statement, D1 refuses
+ * SQL transactions, and the ROLLBACK in the catch failed too. Every client approve, ask for changes, and note threw.
+ */
 async function writeAll(sql: Sql, statements: { statement: string; params: readonly unknown[] }[]): Promise<void> {
-  await sql.run("BEGIN");
-  try {
-    for (const entry of statements) await sql.run(entry.statement, entry.params);
-    await sql.run("COMMIT");
-  } catch (error) {
-    await sql.run("ROLLBACK");
-    throw error;
-  }
+  await sql.batch(statements);
 }
 
 function activity(
@@ -426,7 +423,7 @@ export async function recordFeedback(
   caller: Caller,
   input: { deliverableId: string; itemId: string | null; version: number; decision: FeedbackDecision; body: string },
   now: number,
-): Promise<DeliverableResult<{ id: string }>> {
+): Promise<DeliverableResult<{ id: string; feedbackId: string }>> {
   const row = await loadRow(sql, input.deliverableId);
   if (!row || !(await seesSpace(sql, caller, row.workspace_id)) || !caller.userId) {
     return { ok: false, error: "missing" };
@@ -448,13 +445,14 @@ export async function recordFeedback(
   });
   const authorKind = caller.staff ? "staff" : "client";
   const actorKind = caller.staff ? "staff" : "system";
+  const feedbackId = crypto.randomUUID();
   const writes: { statement: string; params: readonly unknown[] }[] = [
     {
       statement: `INSERT INTO deliverable_feedback (
         id, deliverable_id, item_id, version, author_kind, author_id, decision, body, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       params: [
-        crypto.randomUUID(),
+        feedbackId,
         row.id,
         input.itemId,
         input.version,
@@ -488,7 +486,7 @@ export async function recordFeedback(
   }
   writes.push(activity(row, "deliverable_feedback", actorKind, caller.userId, body || "Approved.", now));
   await writeAll(sql, writes);
-  return { ok: true, value: { id: row.id } };
+  return { ok: true, value: { id: row.id, feedbackId } };
 }
 
 export async function visibleMedia(

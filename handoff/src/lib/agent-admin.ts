@@ -528,7 +528,8 @@ export async function listClientAgentWork(sql: Sql, caller: Caller, organization
     sql.all<{ id: string; kind: string; body: string | null; actor_id: string | null; created_at: number }>(
       `SELECT id, kind, body, actor_id, created_at FROM activities
        WHERE organization_id = ? AND kind IN ('client_agent.board', 'client_agent.handoff', 'client_agent.dispatch', 'client_agent.assigned', 'client_agent.unassigned',
-                                              'client_agent.work_superseded', 'client_agent.work_withdrawn', 'client_work.update_ready')
+                                              'client_agent.work_superseded', 'client_agent.work_withdrawn', 'client_work.update_ready',
+                                              'client.changes_requested')
        ORDER BY created_at DESC LIMIT 30`,
       [organizationId],
     ),

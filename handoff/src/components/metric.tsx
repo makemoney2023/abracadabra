@@ -29,7 +29,7 @@ export function Metric({
 }) {
   const body = (
     <>
-      <p className="font-mono text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+      <p className="eyebrow text-[11px] text-muted-foreground">
         {label}
       </p>
       <p

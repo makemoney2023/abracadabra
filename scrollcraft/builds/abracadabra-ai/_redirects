@@ -93,6 +93,12 @@
 /portfolio/canadian-discount-appliances/ /portfolio/ 301
 /products/showdesk /portfolio/ 301
 /products/showdesk/ /portfolio/ 301
+/contact /start/ 301
+/contact/ /start/ 301
+/book /start/ 301
+/book/ /start/ 301
+/faq /#faq 301
+/faq/ /#faq 301
 # /site-redirects
 # blog-redirects
 /blog /blog/index.html 200

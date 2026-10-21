@@ -317,6 +317,12 @@ test("generated pages keep placeholders visible and out of JSON-LD", () => {
   assert.match(read("_redirects"), /\/portfolio\/canadian-discount-appliances\/ \/portfolio\/ 301/);
   assert.match(read("_redirects"), /\/products\/showdesk \/portfolio\/ 301/);
   assert.match(read("_redirects"), /\/products\/showdesk\/ \/portfolio\/ 301/);
+  for (const from of ["/contact", "/contact/", "/book", "/book/"]) {
+    assert.match(read("_redirects"), new RegExp(`^${from} /start/ 301$`, "m"));
+  }
+  assert.match(read("_redirects"), /^\/faq \/#faq 301$/m);
+  assert.match(read("_redirects"), /^\/faq\/ \/#faq 301$/m);
+  assert.match(read("index.html"), /<section id="faq"/);
   assert.doesNotMatch(read("sitemap.xml"), /portfolio\/showdesk|portfolio\/canadian-discount-appliances|products\/showdesk/);
   assert.match(read("sitemap.xml"), /portfolio\/milrcorr/);
   assert.match(read("index.html"), /<!-- PLACEHOLDER — needs owner sign-off: Google Search Console verification meta -->/);
