@@ -1,6 +1,6 @@
 # Schema · first demo script (20 min)
 
-Tied to `outputs/footage/schema-home-scan.webm` and https://schema-two.vercel.app/. Internal playbook in the Schema repo (`docs/sales/`) already asks for a 2-minute walkthrough of `/scan/[token]`.
+Tied to `outputs/footage/schema-home-scan.webm` and https://schema.abra-ca-dabra.app/. Internal playbook in the Schema repo (`docs/sales/`) already asks for a 2-minute walkthrough of `/scan/[token]`.
 
 **Positioning:** sell AI visibility, not schema markup.
 

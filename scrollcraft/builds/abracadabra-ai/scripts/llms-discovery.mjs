@@ -121,13 +121,13 @@ function buildLlmsTxt({ posts, updated }) {
     mdEntry("Privacy", `${SITE}/privacy`, "How we handle information"),
     mdEntry("Start a project", `${SITE}/start/`, `Write houdini@ or use the form; contact ${CONTACT}`),
     mdEntry("Readiness Check", "https://check.abra-ca-dabra.app/check", "Five-to-seven-minute score of pressure, readiness, growth, and site visibility"),
-    mdEntry("Schema", "https://schema-two.vercel.app/", "Scores how visible a site is to answer engines and generates the repair"),
+    mdEntry("Schema", "https://schema.abra-ca-dabra.app/", "Scores how visible a site is to answer engines and generates the repair"),
   ];
   const shippedLines = [
     mdEntry("Milrcorr", "https://milrcorr.com", "Public site for StrongFoam's sister commercial fit-out work; request an estimate"),
     mdEntry("PIRX", `${SITE}/portfolio/pirx/`, "Runner app at pirx.ca with Projected Time, Supported Range, and five Structural Drivers; athletic estimates, not medical advice"),
     mdEntry("StrongFoam", "https://strongfoam.com/", "Public site with an estimate a visitor can start and a booking"),
-    mdEntry("Schema", "https://schema-two.vercel.app/", "AI visibility score and repair"),
+    mdEntry("Schema", "https://schema.abra-ca-dabra.app/", "AI visibility score and repair"),
     mdEntry("LLM Leverage", COURSE_URL, "Self-paced course plus a workshop path"),
     mdEntry("Super Funnel", `${SITE}/films.html`, "Associate app shown as film tours; no separate public app URL"),
   ];
@@ -263,7 +263,7 @@ ${productBlocks}
 
 When a product already on the market does the job, the reply says so and points there.
 
-Primary action: Start a project (${CONTACT}). Secondary: See what we've built (${SITE}/#work). Readiness Check: https://check.abra-ca-dabra.app/check. Schema: https://schema-two.vercel.app/.
+Primary action: Start a project (${CONTACT}). Secondary: See what we've built (${SITE}/#work). Readiness Check: https://check.abra-ca-dabra.app/check. Schema: https://schema.abra-ca-dabra.app/.
 
 ## Proof: pirx.ca
 

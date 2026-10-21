@@ -11,8 +11,8 @@ import { PageMatrix } from "@/components/public/PageMatrix";
 import { ScanReportActions } from "@/components/public/ScanReportActions";
 import { ScorePreview } from "@/components/public/ScorePreview";
 import { UnlockForm } from "@/components/public/UnlockForm";
-import { Button } from "@/components/ui/button";
 import type { ScanPayload } from "@/lib/scan/present";
+import { schemaUrl } from "@/lib/hosts";
 import { robotsNote } from "@/lib/scan/robots-note";
 
 const POLL_MS = 2000;
@@ -99,13 +99,11 @@ export default function ScanPage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b border-[var(--sc-hairline)]">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/check" className="font-heading text-lg no-underline">
-            Schema
-          </Link>
-          <span className="studio-kicker">Scan report</span>
-        </div>
+      <header className="schema-nav">
+        <Link href={schemaUrl()} className="schema-mark">
+          Schema
+        </Link>
+        <span className="studio-kicker">Scan report</span>
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-10 sm:px-8 sm:py-14">
@@ -160,9 +158,9 @@ export default function ScanPage() {
                     ? robotsNote(payload.progress)
                     : `Something went wrong while auditing ${payload.domain}. Start a new scan from the home page.`}
                 </p>
-                <Button asChild variant="outline" className="cursor-pointer">
-                  <Link href="/">Try another URL</Link>
-                </Button>
+                <Link href={schemaUrl()} className="studio-cta">
+                  Try another URL
+                </Link>
               </section>
             ) : null}
 

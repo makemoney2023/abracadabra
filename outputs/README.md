@@ -8,7 +8,7 @@ Stored here for the Abracadabra AI Scrollcraft catalog (`scrollcraft/builds/abra
 | --- | --- | --- |
 | Showdesk | `videos/showdesk/showdesk-promo.mp4` plus ringside, review, desk loops and posters | Copied from [makemoney2023/showdesk](https://github.com/makemoney2023/showdesk) `public/videos/` |
 | Showdesk live | `videos/showdesk/showdesk-home.mp4` | Playwright capture of https://www.showdesk-app.com/ |
-| Schema | `videos/schema/schema-home-scan.mp4` | Playwright capture of https://schema-two.vercel.app/ |
+| Schema | `videos/schema/schema-home-scan.mp4` | Playwright capture of https://schema.abra-ca-dabra.app/ |
 | LLMCourse | `videos/llmcourse/llmcourse-home-lesson.mp4`, `llmcourse-workshops.mp4` | Playwright capture of https://learn.abra-ca-dabra.app/ |
 | CDA | `videos/cda/cda-home-path.mp4` | Playwright capture of https://cdastore.vercel.app/ (home scroll, then the "Check my path" click into `/path-check`) |
 | Super Funnel | `videos/superfunnel/*.mp4` (eight cuts, each with a `-poster.jpg` title card) | Copied 2026-10-07 from `Desktop/superfunnelsystem` `public/walkthroughs/`. Associate app tour: getting started, working a lead, quiz lead with samples, quiz lead without samples, follow-ups and activity, My Page / card / funnels, social, team and settings. 1920×1080, 30fps, H.264. Source renders are Git LFS in that repo. Published the same day as plain players on `scrollcraft/builds/abracadabra-ai/films.html`. The homepage work rail plays Getting started only. |

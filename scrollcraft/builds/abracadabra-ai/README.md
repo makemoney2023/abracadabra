@@ -4,6 +4,15 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 
 The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
 
+## Schema links leave Vercel — 2026-10-21
+
+- **What changed** — Product, portfolio, about, walkthrough, and `llms.txt` / `llms-full.txt` Schema links open `https://schema.abra-ca-dabra.app/`.
+- **Why** — Those pages still sent people to the Vercel app.
+- **Code touchpoints** — `scripts/site-data.mjs`, `scripts/blog.mjs`, `scripts/llms-discovery.mjs`, `walkthrough.html`, generated HTML and discovery files.
+- **Data-flow impact** — Regenerated catalog pages and discovery files. No change to the chat or booking flow.
+- **API / schema impact** — JSON-LD `sameAs` for Schema is the Cloudflare origin.
+- **Verification** — `npm run build` in this folder; generated files no longer contain `schema-two.vercel.app`.
+
 ## Blog note on why we build on Cloudflare, plus two representative diagrams — 2026-10-21
 
 - **What changed** — New note `/blog/why-we-build-on-cloudflare` ("Why We Build on Cloudflare: Security, AI and the Edge"): built-in security (DDoS protection, WAF, bot tools, TLS, Zero Trust / Access, Turnstile), the AI tools (Workers AI, AI Gateway, Vectorize, Agents SDK, AI Search — formerly AutoRAG, Browser Run — formerly Browser Rendering, AI Crawl Control), and the platform (Workers, D1, R2, Durable Objects, Queues, network, cost). Every product claim cites a current Cloudflare docs page, changelog entry or blog post (22 sources, dated, listed in first-citation order so each superscript matches its Sources number). The note says which tools we use today (checked against the wrangler configs) and which we do not. Three service-image-style pictures (security, AI tools, edge platform) with no Cloudflare logos, since Cloudflare's trademark guidelines allow word marks only without written permission. Two SVG diagrams drawn by `scripts/blog-diagrams.mjs` (`stack.svg`, `request-path.svg`), each labelled representative. Pillar "AI consulting and implementation" so the Related cards stay on consulting notes. Ends with a trademark attribution line.

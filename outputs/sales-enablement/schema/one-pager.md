@@ -11,6 +11,6 @@
 - Fixes are an install path, not a redesign.
 - Ops can queue and rescan the same lead.
 
-**Proof on film:** `outputs/footage/schema-home-scan.webm`. Live: https://schema-two.vercel.app/
+**Proof on film:** `outputs/footage/schema-home-scan.webm`. Live: https://schema.abra-ca-dabra.app/
 
 **Next step:** Send their `/scan/[token]` URL. Do not publish prices.

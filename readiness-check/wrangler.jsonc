@@ -9,6 +9,10 @@
     {
       "pattern": "check.abra-ca-dabra.app",
       "custom_domain": true
+    },
+    {
+      "pattern": "schema.abra-ca-dabra.app",
+      "custom_domain": true
     }
   ],
   "assets": {
@@ -51,6 +55,7 @@
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://abra-ca-dabra.app",
     "NEXT_PUBLIC_CHECK_URL": "https://check.abra-ca-dabra.app",
+    "NEXT_PUBLIC_SCHEMA_URL": "https://schema.abra-ca-dabra.app",
     // Fix-file offer (display only; Stripe charges STRIPE_PRICE_ID minus STRIPE_CREDIT_COUPON_ID).
     // Buying stays off until STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID and
     // STRIPE_CREDIT_COUPON_ID are set. Currency: USD (flagged for Christopher to confirm).

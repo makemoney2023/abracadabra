@@ -306,11 +306,13 @@
   border-radius: 6px;
   background: transparent;
   color: var(--sc-ink);
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 200ms cubic-bezier(0.23, 1, 0.32, 1), background-color 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 150ms cubic-bezier(0.2, 0.7, 0.2, 1), filter 150ms cubic-bezier(0.2, 0.7, 0.2, 1), border-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1), background-color 150ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .check-studio .studio-cta:hover {
@@ -321,13 +323,15 @@
 .check-studio .studio-cta-primary {
   background: #FF4B24;
   border-color: #FF4B24;
-  color: #070706;
+  color: #170804;
 }
 
 .check-studio .studio-cta-primary:hover:not(:disabled) {
-  background: color-mix(in oklab, #FF4B24 86%, #F5F0E8);
-  border-color: transparent;
-  color: #070706;
+  background: #FF4B24;
+  border-color: #FF4B24;
+  color: #170804;
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 .check-studio .studio-cta:disabled {
@@ -474,3 +478,65 @@
   transition: border-color 0.2s ease;
 }
 .studio-card:hover { border-color: var(--sc-hairline-hover); }
+
+/* Schema scanner — marketing site nav, type, and flat canvas. */
+.schema-studio.check-studio::before,
+.schema-studio.check-studio::after {
+  display: none;
+}
+
+.schema-studio {
+  color: var(--sc-ink-soft);
+}
+
+.schema-studio h1,
+.schema-studio h2,
+.schema-studio h3,
+.schema-studio .font-heading,
+.schema-studio .schema-mark {
+  color: var(--sc-ink);
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.schema-nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.5rem;
+  padding: 0.55rem 1.25rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--sc-ink) 12%, transparent);
+  background: color-mix(in oklab, var(--sc-canvas) 94%, transparent);
+}
+
+.schema-mark {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.35rem;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--sc-ink);
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.schema-nav__studio {
+  font-family: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--sc-ink);
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.schema-nav__studio:hover {
+  color: var(--sc-accent);
+}

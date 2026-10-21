@@ -1,20 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
-function isCheckHost(request: NextRequest): boolean {
-  const raw = process.env.NEXT_PUBLIC_CHECK_URL;
-  if (!raw) return false;
-  try {
-    return request.headers.get("host") === new URL(raw).host;
-  } catch {
-    return false;
-  }
-}
+import { homeRedirectPath } from "@/lib/hosts";
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  if (path === "/" && isCheckHost(request)) {
-    return NextResponse.redirect(new URL("/check", request.url));
+  const redirectTo = homeRedirectPath(request.headers.get("host"), path);
+  if (redirectTo) {
+    return NextResponse.redirect(new URL(redirectTo, request.url));
   }
 
   const requestHeaders = new Headers(request.headers);
