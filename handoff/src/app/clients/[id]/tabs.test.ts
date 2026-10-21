@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import { CLIENT_TABS, activeTab, tabHref } from "./tabs";
 
 describe("client tabs", () => {
-  it("lists Overview, Work, Threads, Files & spaces, Agent work, Repos, Activity, and Settings", () => {
+  it("lists Overview, Work, Social, Threads, Files & spaces, Agent work, Repos, Activity, and Settings", () => {
     expect(CLIENT_TABS.map((tab) => tab.label)).toEqual([
       "Overview",
       "Work",
+      "Social",
       "Threads",
       "Files & spaces",
       "Agent work",
@@ -21,6 +22,7 @@ describe("client tabs", () => {
     expect(activeTab("")).toBe("overview");
     expect(activeTab("work")).toBe("work");
     expect(activeTab("files")).toBe("files");
+    expect(activeTab("social")).toBe("social");
   });
 
   it("keeps the tab in the link and only pages the activity tab", () => {

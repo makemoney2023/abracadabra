@@ -3,6 +3,7 @@ import type { OrgKind } from "@/db/crm";
 export const CLIENT_TABS = [
   { id: "overview", label: "Overview" },
   { id: "work", label: "Work" },
+  { id: "social", label: "Social" },
   { id: "threads", label: "Threads" },
   { id: "files", label: "Files & spaces" },
   { id: "agents", label: "Agent work" },

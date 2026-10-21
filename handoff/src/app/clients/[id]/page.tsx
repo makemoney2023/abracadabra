@@ -32,6 +32,9 @@ import { statusToken } from "@/lib/status-token";
 import { connectorGrant } from "@/lib/connector-grants";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { boardSwarmExtras } from "@/lib/board-swarm";
+import { listSocialAccounts, listSocialPosts, refreshSocialPosts, syncSocialAccounts } from "@/lib/social";
+import { openZernio } from "@/lib/zernio";
+import type { SocialView } from "./social-tab";
 import { SetContextLabel } from "@/components/context-bar";
 import { PageFrame } from "@/components/page-frame";
 import { StatusDot } from "@/components/status-dot";
@@ -51,6 +54,29 @@ function asHealth(value: string): StatusHealth | null {
   return (STATUS_HEALTHS as readonly string[]).includes(value) ? (value as StatusHealth) : null;
 }
 
+/** Opening the Social tab refreshes the client's accounts and the posts that should have gone out by now. */
+async function loadSocial(
+  sql: Awaited<ReturnType<typeof requireHqStaffPage>>["sql"],
+  client: { id: string; name: string },
+  notice: string,
+): Promise<SocialView> {
+  const zernio = openZernio();
+  let syncError: string | null = null;
+  if (zernio) {
+    try {
+      await syncSocialAccounts(sql, zernio, client, clock());
+      await refreshSocialPosts(sql, zernio, client.id, clock());
+    } catch (error) {
+      syncError = error instanceof Error ? error.message : "No answer.";
+    }
+  }
+  const [accounts, posts] = await Promise.all([
+    listSocialAccounts(sql, client.id),
+    listSocialPosts(sql, { organizationId: client.id }),
+  ]);
+  return { configured: Boolean(zernio), syncError, accounts, posts, notice };
+}
+
 function pageNumber(raw: string | undefined): number {
   const value = Number(raw ?? "1");
   if (!Number.isInteger(value) || value < 1) return 1;
@@ -62,7 +88,7 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string }>;
+  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string; social?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -139,6 +165,7 @@ export default async function ClientPage({
     listUnassignedSwarmRuns(sql, caller, client.id),
   ]);
   const agentWork = tab === "agents" ? await listClientAgentWork(sql, caller, client.id) : undefined;
+  const social = tab === "social" ? await loadSocial(sql, client, query.social ?? "") : undefined;
   const swarm = tab === "work" ? await boardSwarmExtras(sql) : { runningTaskIds: [], packs: [] };
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
@@ -228,6 +255,7 @@ export default async function ClientPage({
           internal={tab === "settings" ? await organizationInternal(sql, caller, client.id) : false}
           updateMode={tab === "settings" ? await organizationUpdateMode(sql, caller, client.id) : "draft"}
           agentWork={agentWork}
+          social={social}
         />
       </PageFrame>
     </StaffShell>
