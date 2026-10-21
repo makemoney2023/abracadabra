@@ -63,7 +63,12 @@ export type ZernioAccount = {
   isActive: boolean;
 };
 export type ZernioMediaItem = { type: "image" | "video" | "gif" | "document"; url: string; thumbnail?: string };
-export type ZernioPostTarget = { platform: string; accountId: string; platformSpecificData?: Record<string, unknown> };
+export type ZernioPostTarget = {
+  platform: string;
+  accountId: string;
+  customContent?: string;
+  platformSpecificData?: Record<string, unknown>;
+};
 export type ZernioPostInput = {
   content: string;
   title?: string;
@@ -75,14 +80,38 @@ export type ZernioPostInput = {
   publishNow?: boolean;
   isDraft?: boolean;
   tiktokSettings?: Record<string, unknown>;
+  tags?: string[];
 };
 export type ZernioPost = {
   _id: string;
   status: string;
   scheduledFor?: string | null;
-  platforms?: { platform: string; accountId: string; status?: string; errorMessage?: string; platformPostUrl?: string }[];
+  platforms?: ZernioPostPlatform[];
 };
+export type ZernioPostPlatform = {
+  platform: string;
+  accountId?: string | { _id?: string };
+  status?: string;
+  error?: string;
+  errorMessage?: string;
+  publishedUrl?: string;
+  platformPostUrl?: string;
+};
+export type ZernioWebhook = { _id: string; name: string; url: string; events: string[]; isActive?: boolean };
 export type Presigned = { uploadUrl: string; publicUrl: string };
+export type UploadStream = { body: ReadableStream<Uint8Array>; size: number };
+
+type FixedLength = new (length: number) => TransformStream<Uint8Array, Uint8Array>;
+
+/** A presigned PUT needs a Content-Length. Workers send a stream with one through FixedLengthStream. */
+function uploadBody(source: Uint8Array | UploadStream): BodyInit {
+  if (source instanceof Uint8Array) return source as unknown as BodyInit;
+  const Fixed = (globalThis as { FixedLengthStream?: FixedLength }).FixedLengthStream;
+  if (!Fixed) return source.body as unknown as BodyInit;
+  const fixed = new Fixed(source.size);
+  void source.body.pipeTo(fixed.writable);
+  return fixed.readable as unknown as BodyInit;
+}
 
 export type ZernioClient = {
   findProfile(externalId: string): Promise<ZernioProfile | null>;
@@ -91,9 +120,13 @@ export type ZernioClient = {
   connectUrl(platform: ConnectPlatform, profileId: string, redirectUrl: string): Promise<string>;
   disconnectAccount(accountId: string): Promise<void>;
   presign(filename: string, contentType: string): Promise<Presigned>;
-  upload(uploadUrl: string, bytes: Uint8Array, contentType: string): Promise<void>;
+  upload(uploadUrl: string, bytes: Uint8Array | UploadStream, contentType: string): Promise<void>;
   createPost(input: ZernioPostInput): Promise<ZernioPost>;
   getPost(postId: string): Promise<ZernioPost>;
+  reschedulePost(postId: string, scheduledFor: string, timezone: string): Promise<ZernioPost>;
+  deletePost(postId: string): Promise<void>;
+  listWebhooks(): Promise<ZernioWebhook[]>;
+  saveWebhook(input: { id?: string; name: string; url: string; events: string[]; secret: string }): Promise<ZernioWebhook>;
 };
 
 /** The agency API key from process.env or the Worker binding. Empty means Zernio is not set up. */
@@ -215,8 +248,9 @@ export function createZernioClient(apiKey: string, fetcher: typeof fetch = fetch
       const response = await fetcher(uploadUrl, {
         method: "PUT",
         headers: { "content-type": contentType },
-        body: bytes as unknown as BodyInit,
-      });
+        body: uploadBody(bytes),
+        ...(bytes instanceof Uint8Array ? {} : { duplex: "half" }),
+      } as RequestInit);
       if (!response.ok) throw new ZernioError(`Media upload answered ${response.status}`, response.status);
     },
     async createPost(input) {
@@ -229,6 +263,27 @@ export function createZernioClient(apiKey: string, fetcher: typeof fetch = fetch
       const post = data.post ?? (data._id ? (data as ZernioPost) : null);
       if (!post) throw new ZernioError("Zernio did not return the post.", 502);
       return post;
+    },
+    async reschedulePost(postId, scheduledFor, timezone) {
+      const data = await call<{ post?: ZernioPost } & Partial<ZernioPost>>("PUT", `/posts/${encodeURIComponent(postId)}`, {
+        scheduledFor,
+        timezone,
+      });
+      return data.post ?? ({ _id: postId, status: String(data.status ?? "scheduled") } as ZernioPost);
+    },
+    async deletePost(postId) {
+      await call("DELETE", `/posts/${encodeURIComponent(postId)}`);
+    },
+    async listWebhooks() {
+      const data = await call<{ webhooks?: ZernioWebhook[] }>("GET", "/webhooks/settings");
+      return data.webhooks ?? [];
+    },
+    async saveWebhook(input) {
+      const body = { name: input.name, url: input.url, events: input.events, secret: input.secret, isActive: true };
+      const data = input.id
+        ? await call<{ webhook?: ZernioWebhook }>("PUT", "/webhooks/settings", { webhookId: input.id, ...body })
+        : await call<{ webhook?: ZernioWebhook }>("POST", "/webhooks/settings", body);
+      return data.webhook ?? { _id: input.id ?? "", name: input.name, url: input.url, events: input.events };
     },
   };
 }

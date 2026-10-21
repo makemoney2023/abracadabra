@@ -10,6 +10,8 @@ export type UploadMeta = { key: string; batchId: string; fileId: string };
 export type ObjectStore = {
   stat(key: string): Promise<ObjectStat | null>;
   read(key: string): Promise<Uint8Array | null>;
+  /** R2 only: the object as a stream, so a large video is not held in Worker memory. */
+  readStream?(key: string): Promise<{ body: ReadableStream<Uint8Array>; size: number } | null>;
   remove(key: string): Promise<void>;
   put(key: string, bytes: Uint8Array): Promise<void>;
   beginUpload(key: string, batchId: string, fileId: string): Promise<string>;
@@ -30,7 +32,7 @@ type R2Upload = {
 
 export type FilesBucket = {
   head(key: string): Promise<{ size: number } | null>;
-  get(key: string): Promise<{ arrayBuffer(): Promise<ArrayBuffer> } | null>;
+  get(key: string): Promise<{ arrayBuffer(): Promise<ArrayBuffer>; body?: ReadableStream<Uint8Array>; size?: number } | null>;
   put(key: string, body: Uint8Array | string): Promise<void>;
   delete(keys: string | string[]): Promise<void>;
   list(options: { prefix: string; cursor?: string }): Promise<{
@@ -120,6 +122,12 @@ export function r2ObjectStore(bucket: FilesBucket): ObjectStore {
       const object = await bucket.get(key);
       if (!object) return null;
       return new Uint8Array(await object.arrayBuffer());
+    },
+    async readStream(key) {
+      if (!KEY.test(key)) return null;
+      const object = await bucket.get(key);
+      if (!object?.body || typeof object.size !== "number") return null;
+      return { body: object.body, size: object.size };
     },
     async remove(key) {
       if (!KEY.test(key)) return;

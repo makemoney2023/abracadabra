@@ -17,6 +17,7 @@ import {
   type ConnectPlatform,
   type ZernioClient,
   type ZernioMediaItem,
+  type ZernioPostPlatform,
   type ZernioPostTarget,
 } from "./zernio";
 
@@ -48,6 +49,7 @@ export type SocialPost = {
   status: PostStatus;
   zernio_post_id: string | null;
   error: string | null;
+  published_urls: string | null;
   created_at: number;
   updated_at: number;
   item_title?: string;
@@ -227,13 +229,18 @@ async function loadItem(sql: Sql, deliverableId: string, itemId: string): Promis
   );
 }
 
+async function hasPieceText(sql: Sql, itemId: string): Promise<boolean> {
+  return Object.keys((await pieceSettings(sql, itemId)).texts).length > 0;
+}
+
 async function uploadMedia(
   zernio: ZernioClient,
   store: ObjectStore,
   media: PlannedMedia,
   name: string,
 ): Promise<string> {
-  const bytes = await store.read(media.key);
+  const stream = media.kind === "video" && store.readStream ? await store.readStream(media.key) : null;
+  const bytes = stream ?? (await store.read(media.key));
   if (!bytes) throw new Error(`The ${media.role} file is missing from storage.`);
   const extension = media.contentType.split("/")[1]?.split(";")[0]?.replace("jpeg", "jpg") ?? "bin";
   const presigned = await zernio.presign(`${name}-${media.role}.${extension}`, media.contentType);
@@ -241,7 +248,7 @@ async function uploadMedia(
   return presigned.publicUrl;
 }
 
-function statusFrom(zernioStatus: string | undefined, mode: SendMode): PostStatus {
+export function statusFrom(zernioStatus: string | undefined, mode: SendMode): PostStatus {
   switch ((zernioStatus ?? "").toLowerCase()) {
     case "draft":
       return "draft";
@@ -252,10 +259,75 @@ function statusFrom(zernioStatus: string | undefined, mode: SendMode): PostStatu
     case "partial":
       return "partial";
     case "failed":
+    case "cancelled":
       return "failed";
     default:
       return mode === "draft" ? "draft" : mode === "scheduled" ? "scheduled" : "sending";
   }
+}
+
+/** Networks where Zernio posts a first comment right after the post. */
+const FIRST_COMMENT_PLATFORMS = new Set(["instagram", "facebook", "linkedin", "youtube", "threads", "twitter"]);
+
+export type PieceSettings = { texts: Record<string, string>; firstComment: string | null; tags: string[] };
+
+export const EMPTY_PIECE_SETTINGS: PieceSettings = { texts: {}, firstComment: null, tags: [] };
+
+export async function pieceSettings(sql: Sql, itemId: string): Promise<PieceSettings> {
+  const row = await sql.get<{ texts_json: string; first_comment: string | null; tags: string | null }>(
+    "SELECT texts_json, first_comment, tags FROM social_piece_settings WHERE item_id = ?",
+    [itemId],
+  );
+  if (!row) return EMPTY_PIECE_SETTINGS;
+  let texts: Record<string, string> = {};
+  try {
+    const parsed = JSON.parse(row.texts_json) as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      texts = Object.fromEntries(
+        Object.entries(parsed as Record<string, unknown>).filter(
+          (entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].trim().length > 0,
+        ),
+      );
+    }
+  } catch {
+    texts = {};
+  }
+  return {
+    texts,
+    firstComment: row.first_comment?.trim() || null,
+    tags: (row.tags ?? "").split(",").map((tag) => tag.trim()).filter(Boolean),
+  };
+}
+
+/** Saves the per-network text, first comment, and YouTube tags kept with one piece. Staff only. */
+export async function savePieceSettings(
+  sql: Sql,
+  caller: Caller,
+  itemId: string,
+  input: { texts: Record<string, string>; firstComment: string; tags: string },
+  now: number,
+): Promise<boolean> {
+  if (!caller.staff) return false;
+  const item = await sql.get<{ id: string }>("SELECT id FROM deliverable_items WHERE id = ?", [itemId]);
+  if (!item) return false;
+  const texts = Object.fromEntries(
+    Object.entries(input.texts)
+      .map(([platform, text]) => [platform, text.trim().slice(0, 5000)] as const)
+      .filter(([, text]) => text.length > 0),
+  );
+  const tags = input.tags
+    .split(",")
+    .map((tag) => tag.trim().slice(0, 100))
+    .filter(Boolean)
+    .join(",")
+    .slice(0, 500);
+  await sql.run(
+    `INSERT INTO social_piece_settings (item_id, texts_json, first_comment, tags, updated_at) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (item_id) DO UPDATE SET texts_json = excluded.texts_json, first_comment = excluded.first_comment,
+       tags = excluded.tags, updated_at = excluded.updated_at`,
+    [itemId, JSON.stringify(texts), input.firstComment.trim().slice(0, 2000) || null, tags || null, now],
+  );
+  return true;
 }
 
 export type SendPieceInput = {
@@ -318,8 +390,9 @@ export async function sendPiece(
   const media = pieceMedia(item.media_json);
   const postType = input.postType ?? defaultPostType(item.format, media);
   const content = (item.copy_text ?? "").trim();
-  if (!content && media.items.length === 0) return { ok: false, error: `"${item.title}" has no caption or media.`, skipped: [] };
+  if (!content && media.items.length === 0 && !(await hasPieceText(sql, item.id))) return { ok: false, error: `"${item.title}" has no caption or media.`, skipped: [] };
 
+  const settings = await pieceSettings(sql, item.id);
   const skipped: string[] = [];
   const targets: ZernioPostTarget[] = [];
   for (const account of accounts) {
@@ -333,10 +406,17 @@ export async function sendPiece(
       skipped.push(`${label}: ${plan.reason}`);
       continue;
     }
+    const comment =
+      settings.firstComment && postType !== "story" && FIRST_COMMENT_PLATFORMS.has(account.platform)
+        ? { firstComment: settings.firstComment }
+        : {};
+    const specific = { ...plan.platformSpecificData, ...comment };
+    const text = settings.texts[account.platform];
     targets.push({
       platform: account.platform,
       accountId: account.id,
-      ...(plan.platformSpecificData ? { platformSpecificData: plan.platformSpecificData } : {}),
+      ...(text ? { customContent: text } : {}),
+      ...(Object.keys(specific).length > 0 ? { platformSpecificData: specific } : {}),
     });
   }
   if (targets.length === 0) {
@@ -386,6 +466,7 @@ export async function sendPiece(
       content,
       title: item.title.slice(0, 100),
       profileId: profile.zernio_profile_id,
+      ...(settings.tags.length > 0 ? { tags: settings.tags } : {}),
       platforms: targets,
       mediaItems,
       timezone: input.timezone || "UTC",
@@ -404,12 +485,13 @@ export async function sendPiece(
       {
         statement: `INSERT INTO activities (
           id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at
-        ) VALUES (?, ?, ?, ?, 'social.post', 'staff', ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, 'social.post', ?, ?, ?, ?, ?)`,
         params: [
           crypto.randomUUID(),
           item.organization_id,
           item.project_id,
           item.workspace_id,
+          caller.userId ? "staff" : "system",
           caller.userId,
           `${input.mode === "draft" ? "Saved a draft of" : input.mode === "now" ? "Posted" : "Scheduled"} "${item.title}" to ${targets.length} account${targets.length === 1 ? "" : "s"}.`,
           JSON.stringify({ socialPostId: postId, zernioPostId: created._id, postType }),
@@ -495,7 +577,7 @@ export async function listSocialPosts(
   const where = filter.deliverableId ? "p.deliverable_id = ?" : "p.organization_id = ?";
   return sql.all<SocialPost>(
     `SELECT p.id, p.organization_id, p.deliverable_id, p.item_id, p.version, p.account_ids, p.mode, p.post_type,
-       p.skipped, p.scheduled_for, p.timezone, p.status, p.zernio_post_id, p.error, p.created_at, p.updated_at,
+       p.skipped, p.scheduled_for, p.timezone, p.status, p.zernio_post_id, p.error, p.published_urls, p.created_at, p.updated_at,
        i.title AS item_title, d.title AS deliverable_title
      FROM social_posts p
      JOIN deliverable_items i ON i.id = p.item_id
@@ -507,33 +589,154 @@ export async function listSocialPosts(
   );
 }
 
-/** Asks Zernio for the status of this client's posts that are still waiting to go out. */
-export async function refreshSocialPosts(sql: Sql, zernio: ZernioClient, organizationId: string, now: number): Promise<number> {
-  const waiting = await sql.all<{ id: string; zernio_post_id: string; mode: SendMode; scheduled_for: number | null }>(
-    `SELECT id, zernio_post_id, mode, scheduled_for FROM social_posts
-     WHERE organization_id = ? AND zernio_post_id IS NOT NULL AND status IN ('sending', 'scheduled')
-     AND (scheduled_for IS NULL OR scheduled_for <= ?)
-     ORDER BY updated_at LIMIT 20`,
-    [organizationId, now + 60_000],
-  );
+function accountIdOf(target: ZernioPostPlatform): string {
+  if (typeof target.accountId === "string") return target.accountId;
+  return target.accountId?._id ?? "";
+}
+
+/** Status, per-network errors, and public links from Zernio's view of one post. */
+export function postOutcome(
+  post: { status?: string; platforms?: ZernioPostPlatform[] },
+  mode: SendMode,
+): { status: PostStatus; error: string | null; urls: Record<string, string> } {
+  const status = statusFrom(post.status, mode);
+  const targets = post.platforms ?? [];
+  const failures = targets
+    .filter((target) => target.status === "failed" && (target.errorMessage || target.error))
+    .map((target) => `${PLATFORM_LABEL[target.platform] ?? target.platform}: ${target.errorMessage ?? target.error}`);
+  const urls: Record<string, string> = {};
+  for (const target of targets) {
+    const url = target.publishedUrl || target.platformPostUrl;
+    const id = accountIdOf(target);
+    if (url && id && /^https:\/\//.test(url)) urls[id] = url;
+  }
+  return {
+    status,
+    error: failures.length > 0 ? failures.join("\n").slice(0, 1000) : String(post.status).toLowerCase() === "cancelled" ? "Cancelled in Zernio." : null,
+    urls,
+  };
+}
+
+/** Writes Zernio's view of a post onto our row. Links already known are kept. */
+export async function recordOutcome(
+  sql: Sql,
+  rowId: string,
+  outcome: { status: PostStatus; error: string | null; urls: Record<string, string> },
+  now: number,
+): Promise<void> {
+  const current = await sql.get<{ published_urls: string | null }>("SELECT published_urls FROM social_posts WHERE id = ?", [rowId]);
+  let urls: Record<string, string> = {};
+  try {
+    urls = current?.published_urls ? (JSON.parse(current.published_urls) as Record<string, string>) : {};
+  } catch {
+    urls = {};
+  }
+  const merged = { ...urls, ...outcome.urls };
+  await sql.run("UPDATE social_posts SET status = ?, error = ?, published_urls = ?, updated_at = ? WHERE id = ?", [
+    outcome.status,
+    outcome.error,
+    Object.keys(merged).length > 0 ? JSON.stringify(merged) : null,
+    now,
+    rowId,
+  ]);
+}
+
+type Waiting = { id: string; zernio_post_id: string; mode: SendMode };
+
+async function refreshRows(sql: Sql, zernio: ZernioClient, rows: Waiting[], now: number): Promise<number> {
   let changed = 0;
-  for (const row of waiting) {
+  for (const row of rows) {
     try {
       const post = await zernio.getPost(row.zernio_post_id);
-      const status = statusFrom(post.status, row.mode === "draft" ? "draft" : row.mode);
-      const failures = (post.platforms ?? [])
-        .filter((target) => target.status === "failed" && target.errorMessage)
-        .map((target) => `${PLATFORM_LABEL[target.platform] ?? target.platform}: ${target.errorMessage}`);
-      await sql.run("UPDATE social_posts SET status = ?, error = ?, updated_at = ? WHERE id = ?", [
-        status,
-        failures.length > 0 ? failures.join("\n").slice(0, 1000) : null,
-        now,
-        row.id,
-      ]);
+      await recordOutcome(sql, row.id, postOutcome(post, row.mode), now);
       changed += 1;
     } catch {
       continue;
     }
   }
   return changed;
+}
+
+/** Asks Zernio for the status of this client's posts that are still waiting to go out. */
+export async function refreshSocialPosts(sql: Sql, zernio: ZernioClient, organizationId: string, now: number): Promise<number> {
+  const waiting = await sql.all<Waiting>(
+    `SELECT id, zernio_post_id, mode FROM social_posts
+     WHERE organization_id = ? AND zernio_post_id IS NOT NULL AND status IN ('sending', 'scheduled')
+     AND (scheduled_for IS NULL OR scheduled_for <= ?)
+     ORDER BY updated_at LIMIT 20`,
+    [organizationId, now + 60_000],
+  );
+  return refreshRows(sql, zernio, waiting, now);
+}
+
+/**
+ * Cron fallback for missed webhooks: posts due in the last six hours that still read sending or scheduled,
+ * across every client, oldest check first.
+ */
+export async function refreshDueSocialPosts(sql: Sql, zernio: ZernioClient, now: number, limit = 25): Promise<number> {
+  const waiting = await sql.all<Waiting>(
+    `SELECT id, zernio_post_id, mode FROM social_posts
+     WHERE zernio_post_id IS NOT NULL AND status IN ('sending', 'scheduled')
+     AND COALESCE(scheduled_for, created_at) BETWEEN ? AND ?
+     AND updated_at <= ?
+     ORDER BY updated_at LIMIT ?`,
+    [now - 6 * 3_600_000, now, now - 120_000, limit],
+  );
+  return refreshRows(sql, zernio, waiting, now);
+}
+
+async function ownPost(sql: Sql, caller: Caller, postId: string): Promise<SocialPost | null> {
+  if (!caller.staff) return null;
+  const row = await sql.get<SocialPost>(
+    `SELECT id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, skipped, scheduled_for,
+       timezone, status, zernio_post_id, error, published_urls, created_at, updated_at FROM social_posts WHERE id = ?`,
+    [postId],
+  );
+  return row ?? null;
+}
+
+/** Moves a scheduled post to a new time (calendar drag or the Move form). */
+export async function rescheduleSocialPost(
+  sql: Sql,
+  zernio: ZernioClient,
+  caller: Caller,
+  input: { postId: string; scheduledFor: number; timezone: string },
+  now: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const row = await ownPost(sql, caller, input.postId);
+  if (!row || !row.zernio_post_id) return { ok: false, error: "That post is not here." };
+  if (row.status !== "scheduled") return { ok: false, error: "Only a scheduled post can move." };
+  if (input.scheduledFor < now + 60_000) return { ok: false, error: "Pick a time at least one minute from now." };
+  try {
+    await zernio.reschedulePost(row.zernio_post_id, new Date(input.scheduledFor).toISOString(), input.timezone || "UTC");
+  } catch (error) {
+    return { ok: false, error: errorText(error) };
+  }
+  await sql.run("UPDATE social_posts SET scheduled_for = ?, timezone = ?, updated_at = ? WHERE id = ?", [
+    input.scheduledFor,
+    input.timezone || "UTC",
+    now,
+    row.id,
+  ]);
+  return { ok: true };
+}
+
+/** Takes a scheduled post or a draft off Zernio. It stays on our list as cancelled. */
+export async function cancelSocialPost(
+  sql: Sql,
+  zernio: ZernioClient,
+  caller: Caller,
+  postId: string,
+  now: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const row = await ownPost(sql, caller, postId);
+  if (!row || !row.zernio_post_id) return { ok: false, error: "That post is not here." };
+  if (row.status !== "scheduled" && row.status !== "draft") return { ok: false, error: "Only a scheduled post or a draft can be cancelled." };
+  try {
+    await zernio.deletePost(row.zernio_post_id);
+  } catch (error) {
+    return { ok: false, error: errorText(error) };
+  }
+  await sql.run("UPDATE social_posts SET status = 'failed', error = 'Cancelled.', updated_at = ? WHERE id = ?", [now, row.id]);
+  return { ok: true };
 }

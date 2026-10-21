@@ -8,6 +8,9 @@ import { briefWakeReason, wakeOrganization } from "@/lib/agent-wake";
 import { openClientChangeRequest } from "@/lib/client-change-request";
 import { startRevision } from "@/lib/cursor-build";
 import { openSession } from "@/lib/current";
+import { autoScheduleApproved } from "@/lib/social-autopost";
+import { openObjectStore } from "@/lib/store/objects";
+import { openZernio } from "@/lib/zernio";
 import { FEEDBACK_SAVE_FAILED, SENT } from "./sent";
 
 export type FormState = { message: string };
@@ -89,6 +92,19 @@ async function handOn(
       fetch,
       sql,
     );
+  }
+  if (opened && decision === "approve") {
+    const zernio = openZernio();
+    if (zernio) {
+      const auto = await autoScheduleApproved(
+        sql,
+        zernio,
+        openObjectStore(),
+        { deliverableId: opened.deliverable.id, itemIds: input.itemId ? [input.itemId] : null },
+        Date.now(),
+      );
+      if (auto.failed.length > 0) console.error("feedbackAction: auto-schedule", auto.failed.join(" "));
+    }
   }
   if (!opened || decision !== "changes" || opened.deliverable.kind === "brief" || opened.deliverable.kind === "design_system") {
     return;
