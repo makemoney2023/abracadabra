@@ -1835,3 +1835,12 @@ input, textarea, select { border-radius: var(--ui-r-control); }
   .experience-panel__viewport:has(> .case-film) { aspect-ratio: 16 / 9; }
   .premium-cta { margin-inline: -1rem; }
 }
+
+/* Representative diagrams in a note (scripts/blog-diagrams.mjs). */
+.post-diagram img {
+  object-fit: contain;
+  background: #0B0B0A;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.post-diagram > a { display: block; }

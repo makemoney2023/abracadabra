@@ -238,5 +238,15 @@
   "slug": "what-is-llms-txt",
   "slot": "body2",
   "alt": "A small business network closet with blinking router and switch lights"
+ },
+ {
+  "slug": "how-client-work-flows-through-hq",
+  "slot": "body1",
+  "alt": "Three small cards labelled Writing, Design and Code, each marked Working, feeding a Filed work panel marked Held for review"
+ },
+ {
+  "slug": "how-client-work-flows-through-hq",
+  "slot": "body2",
+  "alt": "A review card with Approve and Send back buttons, joined to a Your space panel showing a Blog folder with typed files"
  }
 ]

@@ -10,6 +10,7 @@ import { z } from "zod";
 import { headLinks, siteFooter, siteHeader } from "./site-chrome.mjs";
 import { smartQuotesHtml } from "./typography.mjs";
 import { writeDiscoveryFiles } from "./llms-discovery.mjs";
+import { DIAGRAM, writeDiagrams } from "./blog-diagrams.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 export const SITE = "https://abra-ca-dabra.app";
@@ -26,6 +27,12 @@ const imageSchema = z.object({
   alt: z.string().min(12),
   caption: z.string().min(8).optional(),
   prompt: z.string().min(40),
+});
+
+const diagramSchema = z.object({
+  src: z.string().regex(/^\/blog\/media\/[a-z0-9-]+\/[a-z0-9-]+\.svg$/),
+  alt: z.string().min(40),
+  caption: z.string().min(12),
 });
 
 const citationSchema = z.object({
@@ -53,6 +60,8 @@ export const postSchema = z.object({
     answer: z.string().min(40),
   })).min(3),
   citations: z.array(citationSchema).min(1),
+  /** Optional representative diagrams, drawn by scripts/blog-diagrams.mjs and placed with <!--diagram:N-->. */
+  diagrams: z.array(diagramSchema).max(4).optional(),
 });
 
 export const BANNED = [
@@ -195,6 +204,11 @@ function figure(image, kind = "inline") {
   return `<figure class="${cls}">${picture(image)}${caption}</figure>`;
 }
 
+function diagramFigure(diagram) {
+  const img = `<img src="${esc(diagram.src)}" alt="${esc(diagram.alt)}" width="${DIAGRAM.width}" height="${DIAGRAM.height}" loading="lazy" decoding="async">`;
+  return `<figure class="post-figure post-diagram"><a href="${esc(diagram.src)}" title="Open the full-size diagram">${img}</a><figcaption>${esc(diagram.caption)} <a href="${esc(diagram.src)}">Open full size</a>.</figcaption></figure>`;
+}
+
 function headingId(html) {
   const text = html.replace(/<[^>]+>/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   return text || "section";
@@ -304,6 +318,12 @@ function renderMarkdown(post) {
   let html = marked.parse(body);
   html = html.replace("<!--image:2-->", figure(post.images[1]));
   html = html.replace("<!--image:3-->", figure(post.images[2]));
+  (post.diagrams ?? []).forEach((diagram, index) => {
+    html = html.replace(`<!--diagram:${index + 1}-->`, diagramFigure(diagram));
+  });
+  if (html.includes("<!--diagram:")) {
+    throw new Error(`${post.slug} has a diagram marker with no diagram in front matter`);
+  }
   if (html.includes("<!--image:")) {
     throw new Error(`${post.slug} has an image marker that was not replaced`);
   }
@@ -452,7 +472,7 @@ function pageShell({ title, description, canonical, robots, ogImage, ogAlt, ogTy
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="twitter:image:alt" content="${esc(ogAlt)}">
 ${headLinks()}
-<link rel="stylesheet" href="/blog/blog.css?v=20261020a">
+<link rel="stylesheet" href="/blog/blog.css?v=20261021a">
 <script type="application/ld+json">
 ${jsonLd(json)}
 </script>
@@ -859,6 +879,10 @@ export async function loadPosts() {
     for (const token of numberTokens(prose)) {
       if (!allowed.has(token)) throw new Error(`${slug} uses unsourced number ${token}`);
     }
+    for (const [index, diagram] of (data.diagrams ?? []).entries()) {
+      if (!diagram.src.startsWith(`/blog/media/${slug}/`)) throw new Error(`${slug} diagram src must live under /blog/media/${slug}/`);
+      if (!parsed.content.includes(`<!--diagram:${index + 1}-->`)) throw new Error(`${slug} never places diagram ${index + 1}`);
+    }
     if (!parsed.content.includes("<!--image:2-->") || !parsed.content.includes("<!--image:3-->")) {
       throw new Error(`${slug} needs image markers for the two in-body images`);
     }
@@ -870,6 +894,7 @@ export async function loadPosts() {
 
 export async function build() {
   const posts = await loadPosts();
+  await writeDiagrams(root, posts);
   await renderIndex(posts);
   await renderAuthor();
   await renderPrivacy();
