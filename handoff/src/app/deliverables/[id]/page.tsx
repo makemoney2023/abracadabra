@@ -15,8 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { AddItemForm, PublishForm, PullForm } from "../forms";
-import { SendToSocialForm } from "../../clients/social-forms";
-import { POST_STATUS_LABEL, listSocialAccounts, listSocialPosts } from "@/lib/social";
+import { PieceSettingsForm, SendToSocialForm } from "../../clients/social-forms";
+import { POST_STATUS_LABEL, listSocialAccounts, listSocialPosts, pieceSettings } from "@/lib/social";
 import { POST_TYPE_LABEL, defaultPostType, pieceMedia } from "@/lib/social-plan";
 import { PLATFORM_LABEL, isBlogPlatform, zernioApiKey } from "@/lib/zernio";
 import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
@@ -41,6 +41,11 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
     listSocialPosts(sql, { deliverableId: deliverable.id }, 200),
   ]);
   const postable = socialAccounts.filter((account) => account.is_active && !isBlogPlatform(account.platform));
+  const networks = [...new Set(postable.map((account) => account.platform))].map((platform) => ({
+    id: platform,
+    label: PLATFORM_LABEL[platform] ?? platform,
+  }));
+  const settingsByItem = new Map(await Promise.all(items.map(async (item) => [item.id, await pieceSettings(sql, item.id)] as const)));
   const pieces = items
     .filter((item) => !(item.format === "page" && parseFilingSummary(item.copy_text)))
     .map((item) => {
@@ -96,6 +101,19 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                       <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
                     </div>
                     {item.copy_text ? <p className="text-sm">{item.copy_text}</p> : null}
+                    {networks.length > 0 ? (
+                      <div>
+                        <PieceSettingsForm
+                          deliverableId={deliverable.id}
+                          itemId={item.id}
+                          title={item.title}
+                          platforms={networks}
+                          texts={settingsByItem.get(item.id)?.texts ?? {}}
+                          firstComment={settingsByItem.get(item.id)?.firstComment ?? ""}
+                          tags={(settingsByItem.get(item.id)?.tags ?? []).join(", ")}
+                        />
+                      </div>
+                    ) : null}
                     <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
                       {listedMedia(item.media_json).filter((media) => media.video || media.image).map((media) =>
                         media.video ? (

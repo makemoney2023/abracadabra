@@ -7,7 +7,17 @@ import { organizationById } from "@/db/crm";
 import { fail, ok, type ActionResult } from "@/lib/action-result";
 import { requireHqStaffPage } from "@/lib/current";
 import { hostnameOf, hqOriginForHost } from "@/lib/host";
-import { connectLink, disconnectSocialAccount, sendPieces, zonedTimeToUtc, type SendMode } from "@/lib/social";
+import {
+  cancelSocialPost,
+  connectLink,
+  disconnectSocialAccount,
+  rescheduleSocialPost,
+  savePieceSettings,
+  sendPieces,
+  zonedTimeToUtc,
+  type SendMode,
+} from "@/lib/social";
+import { parseTimes, saveAutopost } from "@/lib/social-autopost";
 import { asPostType } from "@/lib/social-plan";
 import { openObjectStore } from "@/lib/store/objects";
 import { CONNECT_PLATFORMS, openZernio, type ConnectPlatform } from "@/lib/zernio";
@@ -129,4 +139,86 @@ export async function sendToSocialAction(
   if (result.sent === 0) return fail(notes.join(" ") || "Nothing was sent.");
   const summary = `${verb} ${result.sent} piece${result.sent === 1 ? "" : "s"}.`;
   return ok(notes.length > 0 ? `${summary} Not sent: ${notes.join(" ")}` : summary);
+}
+
+/** Per-network text, first comment, and YouTube tags for one piece. Fields are named text:<platform>. */
+export async function savePieceSettingsAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const deliverableId = String(formData.get("deliverableId") ?? "");
+  const texts: Record<string, string> = {};
+  for (const [name, value] of formData.entries()) {
+    if (name.startsWith("text:") && typeof value === "string") texts[name.slice(5)] = value;
+  }
+  const saved = await savePieceSettings(
+    sql,
+    caller,
+    String(formData.get("itemId") ?? ""),
+    { texts, firstComment: String(formData.get("firstComment") ?? ""), tags: String(formData.get("tags") ?? "") },
+    Date.now(),
+  );
+  if (!saved) return fail("That piece is not here.");
+  revalidatePath(`/deliverables/${deliverableId}`);
+  return ok("Saved. The next send uses this text.");
+}
+
+export async function moveSocialPostAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const zernio = openZernio();
+  if (!zernio) return fail(NOT_SET_UP);
+  const timezone = String(formData.get("timezone") ?? "UTC") || "UTC";
+  const at = zonedTimeToUtc(String(formData.get("startAt") ?? ""), timezone);
+  if (at == null) return fail("Pick a date and time.", "startAt");
+  const moved = await rescheduleSocialPost(
+    sql,
+    zernio,
+    caller,
+    { postId: String(formData.get("postId") ?? ""), scheduledFor: at, timezone },
+    Date.now(),
+  );
+  if (!moved.ok) return fail(moved.error);
+  revalidatePath(socialTab(String(formData.get("organizationId") ?? "")));
+  return ok("Moved.");
+}
+
+export async function cancelSocialPostAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const zernio = openZernio();
+  if (!zernio) return fail(NOT_SET_UP);
+  const cancelled = await cancelSocialPost(sql, zernio, caller, String(formData.get("postId") ?? ""), Date.now());
+  if (!cancelled.ok) return fail(cancelled.error);
+  revalidatePath(socialTab(String(formData.get("organizationId") ?? "")));
+  return ok("Cancelled. It will not post.");
+}
+
+export async function saveAutopostAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const saved = await saveAutopost(
+    sql,
+    caller,
+    organizationId,
+    {
+      enabled: formData.get("enabled") === "on",
+      accountIds: formData.getAll("accountId").map(String),
+      weekdays: formData.getAll("weekday").map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6),
+      times: parseTimes(String(formData.get("times") ?? "")),
+      timezone: String(formData.get("timezone") ?? "UTC") || "UTC",
+    },
+    Date.now(),
+  );
+  if (!saved.ok) return fail(saved.error);
+  revalidatePath(socialTab(organizationId));
+  return ok(formData.get("enabled") === "on" ? "Auto-schedule is on." : "Auto-schedule is off.");
 }

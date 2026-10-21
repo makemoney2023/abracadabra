@@ -19,6 +19,8 @@ export const READ_HQ_TOOLS = [
   "read_repo_file",
   "search_repo",
   "pipeline_status",
+  "list_social_accounts",
+  "list_social_posts",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -39,6 +41,7 @@ export const GATED_HQ_TOOLS = new Set([
   "publish_swarm_report",
   "delete_task",
   "delete_project",
+  "schedule_social",
 ]);
 
 /** Every tool the chat model may call besides the reads. A tool missing here is invisible to the model. */
@@ -96,6 +99,19 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   open_questions: { label: "Open questions", description: "Agent questions waiting for staff. Fields: organizationId." },
   recent_activity: { label: "Recent activity", description: "The client timeline, newest first. Fields: organizationId." },
   get_brief: { label: "Read the brief", description: "The latest brief and its status. Fields: organizationId." },
+  list_social_accounts: {
+    label: "Social accounts",
+    description: "The client's connected social accounts and blog sites, with ids for schedule_social. Fields: organizationId.",
+  },
+  list_social_posts: {
+    label: "Social posts",
+    description: "Posts sent or scheduled for a client: piece, type, status, time, and errors. Fields: organizationId.",
+  },
+  schedule_social: {
+    label: "Schedule to social",
+    description:
+      "Send finished-work pieces to the client's social accounts. Empty itemIds means every piece of the deliverable; empty accountIds means every connected social account. mode is draft, scheduled, or now. Scheduled needs startAt (YYYY-MM-DDTHH:MM wall clock) and timezone (IANA), and spaces each next piece gapMinutes later (default 1440). postType is auto (match each piece), feed, carousel, reel, story, or short. Only pieces the client approved can be scheduled or posted now. Fields: organizationId, deliverableId, itemIds, accountIds, mode, postType, startAt, timezone, gapMinutes.",
+  },
   list_work_requests: { label: "Client requests", description: "Requests from client email and Slack. Fields: organizationId." },
   create_client: {
     label: "Create a client",

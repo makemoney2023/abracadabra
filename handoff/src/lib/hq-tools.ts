@@ -63,12 +63,14 @@ import {
 } from "@/lib/specialist-pipeline";
 import { packsFromTemplates } from "@/lib/pack-picker";
 import { packTemplateId, swarmPackVisible } from "@/lib/pack-templates";
-import type { ObjectStore } from "@/lib/store/objects";
+import { openObjectStore, type ObjectStore } from "@/lib/store/objects";
 import { installationAccessToken } from "@/lib/github/contents";
 import { listRepoDirectory, readRepoText, searchRepoCode, type RepoBrowseError } from "@/lib/github/browse";
 import { readGithubSecrets } from "@/lib/github/secrets";
 import type { GithubSecrets } from "@/lib/github/app";
 import { hqToolNeedsApproval } from "@/lib/hq-tool-names";
+import { runSocialTool, type SocialToolDeps } from "@/lib/social-tools";
+import { openZernio } from "@/lib/zernio";
 import { createInvite } from "@/lib/store/invites";
 import type { OutboundMail } from "@/lib/session";
 
@@ -93,6 +95,7 @@ type ToolOptions = {
   build?: BuildDeps;
   intake?: { queue?: ScanQueue | null; env?: WakeEnv; fetchImpl?: typeof fetch };
   github?: { fetchImpl?: typeof fetch; secrets?: GithubSecrets | null; now?: number };
+  social?: SocialToolDeps;
 };
 
 const READS = new Set([
@@ -115,6 +118,8 @@ const READS = new Set([
   "list_repo_files",
   "read_repo_file",
   "search_repo",
+  "list_social_accounts",
+  "list_social_posts",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {
@@ -352,6 +357,8 @@ async function perform(
   options: ToolOptions & { wake: Wake },
 ): Promise<HqToolResult> {
   const organizationId = text(input, "organizationId");
+  const social = await runSocialTool(sql, caller, tool, input, now, () => options.social ?? { zernio: openZernio(), store: openObjectStore() });
+  if (social) return social;
   const off = await swarmToolOff(sql, tool, input);
   if (off) return { ok: true, value: { refused: agentModeRefusal(tool), agentMode: "agents" } };
   if (tool === "search_clients") {
