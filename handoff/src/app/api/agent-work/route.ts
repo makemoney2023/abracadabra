@@ -18,7 +18,12 @@ export const dynamic = "force-dynamic";
  * Body: { external_id, title, kind?, summary?, client_summary?, content?, attachments?: [{ name, body }], links?: [{ label, url }],
  *         client?: { organization_id?, domain?, space_slug? }, project_id?, task_id?, keep_task_open?,
  *         handoff?: { to, note? }, finished_at?, agent_id?, supersedes?: id | [ids], work_request_id?, thread_id?,
- *         deliverable_kind?, folder?, skills_used?: ["community/marketingskills/copywriting/SKILL.md", ...] }
+ *         deliverable_kind?, folder?, skills_used?: ["community/marketingskills/copywriting/SKILL.md", ...],
+ *         already_delivered?, built_work?: { title, live_url?, preview_url?, repo_url?, description?, status?, screenshot? } | [up to 12] }
+ * built_work: websites and other things we built, shown as cards in the client space once Client Services approves.
+ *   live_url or preview_url is required (https). status: live | preview | in_progress | archived. screenshot: an image
+ *   attachment name in this filing, or a data:image/png|jpeg|webp;base64 URL (stored in R2, counts toward the size cap).
+ * already_delivered: true (or kind "catalog"): finished before it was filed. Approval publishes it approved, no client update.
  * skills_used: the library skills this work followed (up to 30). Each is checked against the published index; unknown
  * paths are dropped and listed back as skills_unknown. Each kept path is logged as a cite in the skill usage table.
  * client_summary: what a client member reads first on Finished work (plain words, no ids). summary is the agent's note.
@@ -71,6 +76,7 @@ export async function POST(request: Request) {
         route: result.route,
         paths: result.paths,
         ...(result.folder !== undefined ? { folder: result.folder } : {}),
+        ...(result.builtWork ? { built_work: result.builtWork } : {}),
         task_closed: result.taskClosed,
         handoff_to: result.handoffTo,
         held: true,

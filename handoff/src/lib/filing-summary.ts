@@ -5,7 +5,7 @@
  *   # <title>
  *   - Kind / Agent / Finished / Task / Handed to / Ref   (internal metadata)
  *   ## For the client   (client_summary, optional)
- *   ## Summary / ## Handoff / ## Links / ## Files
+ *   ## Summary / ## Handoff / ## Links / ## Built work (shown as cards, not text) / ## Files
  *   ---
  *   <content>
  *
@@ -31,13 +31,15 @@ export type FilingSummary = {
 };
 
 const META_LINE = /^- ([A-Za-z][A-Za-z ]{0,30}): ?(.*)$/;
-const SECTIONS: Record<string, "clientSummary" | "summary" | "handoff" | "links" | "files"> = {
+const SECTIONS: Record<string, "clientSummary" | "summary" | "handoff" | "links" | "files" | "built"> = {
   "for the client": "clientSummary",
   "client summary": "clientSummary",
   summary: "summary",
   handoff: "handoff",
   links: "links",
   files: "files",
+  // Built work (websites and the like) renders as its own cards (src/components/built-work-cards.tsx), not as text.
+  "built work": "built",
 };
 /** Metadata keys a filing writes. One of Ref or Agent must be there for the text to count as a filing summary. */
 const KNOWN_META = new Set(["kind", "agent", "finished", "task", "handed to", "ref"]);
@@ -77,8 +79,8 @@ export function parseFilingSummary(text: string | null | undefined): FilingSumma
   if (!keys.has("ref") && !keys.has("agent")) return null;
   if (meta.some((entry) => !KNOWN_META.has(entry.key.toLowerCase()))) return null;
 
-  const blocks: Record<"clientSummary" | "summary" | "handoff" | "links" | "files", string[]> = {
-    clientSummary: [], summary: [], handoff: [], links: [], files: [],
+  const blocks: Record<"clientSummary" | "summary" | "handoff" | "links" | "files" | "built", string[]> = {
+    clientSummary: [], summary: [], handoff: [], links: [], files: [], built: [],
   };
   let current: keyof typeof blocks | null = null;
   let body: string | null = null;

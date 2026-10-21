@@ -3,6 +3,7 @@ import type { ClientAgentWork } from "@/lib/agent-admin";
 import { clientSpaceHref } from "@/lib/host";
 import { formatRelative } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { BuiltWorkCards } from "@/components/built-work-cards";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const UPDATE_LABEL: Record<string, string> = {
@@ -28,6 +29,19 @@ const VISIBILITY: Record<string, { label: string; variant: "default" | "secondar
 export function AgentWorkTab({ organizationId, work, now }: { organizationId: string; work: ClientAgentWork; now: number }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      {work.built?.length ? (
+        <Card className="lg:col-span-2">
+          <CardContent>
+            <BuiltWorkCards
+              cards={work.built}
+              viewer="staff"
+              heading="Built work"
+              intro="Websites and other things the agents filed for this client. The client sees a card once Client Services approves it."
+              showSpace
+            />
+          </CardContent>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>Agent work</CardTitle>
