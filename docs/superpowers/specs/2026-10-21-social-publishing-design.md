@@ -2,18 +2,20 @@
 
 Status: Phases 1, 2 and 3 built. Phase 4 is the plan.
 
+The workflow, UI, and Grok-agent expansion is specified in [Agent-managed social publishing](2026-10-21-agent-managed-social-publishing-design.md), with its [test-first implementation plan](../plans/2026-10-21-agent-managed-social-publishing.md).
+
 ## Goal
 
-Each client has its own social accounts and blog sites. Finished work for that client (the caption, the pictures, the videos, the title) stays together as one piece and goes out to the client's accounts in one API call, now or at a set time.
+Each client has its own social accounts. Finished work for that client (the caption, the pictures, the videos, the title) stays together as one piece and goes out to the client's accounts in one API call, now or at a set time.
 
 ## Why Zernio
 
-[Zernio](https://zernio.com/llms.txt) is one REST API for 16 social networks (Instagram, Facebook, TikTok, LinkedIn, X, YouTube, Threads, Pinterest, Bluesky, Google Business, and more) plus WordPress and Wix blogs. It has the multi-tenant model we need:
+[Zernio](https://zernio.com/llms.txt) is one REST API for the social networks we support here, including Instagram, Facebook, TikTok, LinkedIn, X, YouTube, Threads, Bluesky, and Google Business. Zernio also supports other destinations, but blog publishing and Pinterest-specific workflows are excluded from this product scope. It has the multi-tenant model we need:
 
 | Zernio | HQ |
 |---|---|
 | Profile (`externalId`) | One client (`organizations.id`) |
-| Connected account (`accountId`, `platform`) | One social account or blog of that client |
+| Connected account (`accountId`, `platform`) | One social account of that client |
 | Post (`content`, `mediaItems`, `platforms[]`, `scheduledFor`) | One finished-work piece (`deliverable_items`) |
 | Presigned media upload | The piece's R2 files, copied out once |
 
