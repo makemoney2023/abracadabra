@@ -85,14 +85,21 @@ function GroupTable({ group }: { group: PageGroup<PageMatrixRow> }) {
   );
 }
 
+export const MATRIX_OPEN_ALL_UP_TO = 40;
+const MATRIX_OPEN_SECTIONS = 3;
+
+export function initiallyOpen(groups: PageGroup[], pageCount: number): string[] {
+  if (pageCount <= MATRIX_OPEN_ALL_UP_TO) return groups.map((g) => g.key);
+  const failing = groups.filter((g) => g.failed > 0).slice(0, MATRIX_OPEN_SECTIONS);
+  return (failing.length > 0 ? failing : groups.slice(0, 1)).map((g) => g.key);
+}
+
 export function PageMatrix({ pages, csvHref }: PageMatrixProps) {
   const groups = useMemo(() => groupPages(pages), [pages]);
   const failed = groups.reduce((sum, g) => sum + g.failed, 0);
   const missing = groups.reduce((sum, g) => sum + g.missingSchema, 0);
-  // Open the groups that need attention; a small scan opens everything.
-  const [open, setOpen] = useState<Set<string>>(
-    () => new Set(groups.filter((g) => pages.length <= 40 || g.failed + g.missingSchema > 0).map((g) => g.key)),
-  );
+  // A small scan opens everything. A large one opens the first few sections with failures (or just the first).
+  const [open, setOpen] = useState<Set<string>>(() => new Set(initiallyOpen(groups, pages.length)));
   const toggle = (key: string) =>
     setOpen((current) => {
       const next = new Set(current);

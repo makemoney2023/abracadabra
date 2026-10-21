@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import type { FixOption } from "@/lib/fixes/generate-package";
+import { Button } from "@/components/ui/button";
 import { buildGuidance, type PageGuidance as PageItem, type SiteGuidance } from "@/lib/fixes/guidance";
 import { GUIDANCE_COPY } from "@/lib/marketing/copy";
+
+/** A deep scan can list hundreds of pages; show this many until asked for the rest. */
+const GUIDANCE_PAGE_LIMIT = 40;
 
 /** Free, per-page remediation. Reads the free guidance endpoint; no files involved. */
 export function PageGuidance({ token }: { token: string }) {
   const [site, setSite] = useState<SiteGuidance[] | null>(null);
   const [pages, setPages] = useState<PageItem[] | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -68,7 +73,7 @@ export function PageGuidance({ token }: { token: string }) {
               <p className="text-sm text-muted-foreground">{GUIDANCE_COPY.empty}</p>
             ) : (
               <ul className="space-y-2">
-                {pages.map((page) => (
+                {(showAll ? pages : pages.slice(0, GUIDANCE_PAGE_LIMIT)).map((page) => (
                   <li key={page.url} className="studio-card min-w-0 space-y-1.5 p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="min-w-0 break-all font-heading text-sm">{page.path}</span>
@@ -88,6 +93,11 @@ export function PageGuidance({ token }: { token: string }) {
                 ))}
               </ul>
             )}
+            {!showAll && pages.length > GUIDANCE_PAGE_LIMIT ? (
+              <Button type="button" variant="outline" size="sm" className="no-print cursor-pointer" onClick={() => setShowAll(true)}>
+                Show all {pages.length} pages
+              </Button>
+            ) : null}
           </div>
         </>
       )}

@@ -14,6 +14,7 @@ describe("page matrix groups", () => {
     expect(pageSection(page(`${O}/blog/a`, "blogPost"))).toEqual({ key: "blogPost", label: "Blog posts" });
     expect(pageSection(page(`${O}/portfolio/x`, "other"))).toEqual({ key: "other:portfolio", label: "/portfolio/" });
     expect(pageSection(page(`${O}/robots.txt`, "other"))).toEqual({ key: "other:", label: "Other pages" });
+    expect(pageSection(page(`${O}/1.1.1.1/setup/`, "other"))).toEqual({ key: "other:1.1.1.1", label: "/1.1.1.1/" });
   });
 
   it("puts groups with failures first and the worst pages first inside each group", () => {
@@ -87,4 +88,17 @@ describe("PDF for a 1,000-page scan", () => {
     expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe("%PDF-");
     expect(bytes.length).toBeLessThan(200_000);
   }, 30_000);
+});
+
+describe("page matrix sections open by default", () => {
+  it("opens everything on a small scan and the first failing sections on a large one", async () => {
+    const { initiallyOpen } = await import("@/components/public/PageMatrix");
+    const small = groupPages([page(`${O}/`, "home"), page(`${O}/a/1`, "other", "ok", false)]);
+    expect(initiallyOpen(small, 2)).toEqual(small.map((g) => g.key));
+    const big = groupPages(
+      Array.from({ length: 500 }, (_, i) => page(`${O}/s${i % 10}/${i}`, "other", i < 50 && i % 2 === 0 ? "failed" : "ok", i % 3 !== 0)),
+    );
+    expect(initiallyOpen(big, 500)).toHaveLength(3);
+    expect(initiallyOpen(groupPages(Array.from({ length: 60 }, (_, i) => page(`${O}/s${i % 4}/${i}`, "other"))), 60)).toHaveLength(1);
+  });
 });

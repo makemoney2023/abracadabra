@@ -37,8 +37,10 @@ const TYPE_LABELS: Record<string, string> = {
 
 function firstSegment(url: string): string {
   try {
-    const segment = new URL(url).pathname.split("/").filter(Boolean)[0] ?? "";
-    return segment.includes(".") ? "" : segment;
+    const segments = new URL(url).pathname.split("/").filter(Boolean);
+    const segment = segments[0] ?? "";
+    // "/robots.txt" is a file at the root; "/1.1.1.1/setup/" is a section that happens to contain dots.
+    return segments.length === 1 && segment.includes(".") ? "" : segment;
   } catch {
     return "";
   }
