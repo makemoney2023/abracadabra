@@ -7,6 +7,7 @@ import { migrate } from "@/db/migrate";
 import { d1Sql, type D1Like, type Sql } from "@/db/sql";
 import type { Caller } from "@/lib/authz";
 import { GET as agentWorkGet, POST as agentWorkPost } from "@/app/api/agent-work/route";
+import { POST as markDeliveredPost } from "@/app/api/client-services/deliverables/[id]/route";
 import { localObjectStore, type ObjectStore } from "@/lib/store/objects";
 import { readPreviewFile } from "@/lib/preview";
 import { agentForToken, fileAgentWork, registerClientAgent } from "./agent-work-filing";
@@ -271,5 +272,78 @@ describe("built work filings", () => {
     const ctx = await setup();
     const result = await fileAgentWork(sql, store, ctx.agent, { external_id: "only", title: "Sites", built_work: { title: "Site", live_url: "https://a.example" } }, NOW + 10);
     expect(result).toMatchObject({ ok: true, state: "filed" });
+  });
+});
+
+describe("already delivered (catalog) filings", () => {
+  const updates = async (orgId: string) =>
+    (await sql.all<{ n: number }>("SELECT COUNT(*) AS n FROM activities WHERE organization_id = ? AND kind = 'client_work.update_ready'", [orgId]))[0]!.n;
+
+  it("kind catalog or already_delivered: approval publishes as approved with no client update draft", async () => {
+    const ctx = await setup();
+    for (const extra of [{ kind: "catalog" }, { kind: "code", already_delivered: true }]) {
+      const taskId = await card(ctx, `Sites ${extra.kind}`);
+      const filed = await fileSite(ctx, { external_id: `cat-${extra.kind}`, task_id: taskId, ...extra });
+      const result = await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 20 });
+      expect(result.ok).toBe(true);
+      const row = await sql.get<{ status: string; published_version: number; kind: string }>(
+        "SELECT status, published_version, kind FROM deliverables WHERE id = ?", [filed.review!.deliverableId]);
+      expect(row).toEqual({ status: "approved", published_version: 1, kind: "website" });
+      const pending = await sql.all("SELECT id FROM deliverable_items WHERE deliverable_id = ? AND status = 'pending'", [filed.review!.deliverableId]);
+      expect(pending).toEqual([]);
+    }
+    expect(await updates(ctx.acme)).toBe(0);
+    expect(await listBuiltWork(sql, { workspaceId: ctx.spaceId, clientView: true })).toHaveLength(2);
+    const stored = await sql.all<{ already_delivered: number }>("SELECT already_delivered FROM agent_work_items WHERE organization_id = ?", [ctx.acme]);
+    expect(stored.every((row) => row.already_delivered === 1)).toBe(true);
+  });
+
+  it("an ordinary filing still publishes in_review with a suggested update", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx, "Sites");
+    const filed = await fileSite(ctx, { external_id: "normal", task_id: taskId });
+    await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 20 });
+    expect((await sql.get<{ status: string }>("SELECT status FROM deliverables WHERE id = ?", [filed.review!.deliverableId]))?.status).toBe("in_review");
+    expect(await updates(ctx.acme)).toBe(1);
+  });
+
+  it("Client Services can mark a published in_review deliverable delivered, once, with no new update", async () => {
+    const ctx = await setup();
+    routes();
+    const cs = { authorization: "Bearer cs-built-token", "content-type": "application/json" };
+    const mark = (id: string, body: unknown = { action: "mark_delivered", reason: "Finished before filing." }, headers: Record<string, string> = cs) =>
+      markDeliveredPost(new Request(`https://hq.example/api/client-services/deliverables/${id}`, { method: "POST", headers, body: JSON.stringify(body) }), { params: Promise.resolve({ id }) });
+    const taskId = await card(ctx, "Previews");
+    const filed = await fileSite(ctx, { external_id: "prev", task_id: taskId });
+    const id = filed.review!.deliverableId!;
+    expect((await mark(id)).status).toBe(409); // still draft, held
+    await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 20 });
+    expect(await updates(ctx.acme)).toBe(1);
+    expect((await mark(id, { action: "mark_delivered" }, { "content-type": "application/json" })).status).toBe(401);
+    expect((await mark(id, { action: "approve" })).status).toBe(400);
+    expect((await mark("nope")).status).toBe(404);
+    const ok = await mark(id);
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toMatchObject({ ok: true, status: "approved", version: 1, already: false });
+    expect((await sql.get<{ status: string }>("SELECT status FROM deliverables WHERE id = ?", [id]))?.status).toBe("approved");
+    expect(await sql.get("SELECT COUNT(*) AS n FROM deliverable_items WHERE deliverable_id = ? AND status = 'pending'", [id])).toEqual({ n: 0 });
+    expect(await mark(id).then((res) => res.json())).toMatchObject({ already: true });
+    expect(await updates(ctx.acme)).toBe(1);
+    const logged = await sql.all("SELECT id FROM activities WHERE kind = 'deliverable_marked_delivered'");
+    expect(logged).toHaveLength(1);
+  });
+
+  it("refuses to mark delivered while a newer filing is held", async () => {
+    const ctx = await setup();
+    routes();
+    const taskId = await card(ctx, "Previews");
+    const filed = await fileSite(ctx, { external_id: "h1", task_id: taskId });
+    await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 20 });
+    await fileSite(ctx, { external_id: "h2", task_id: taskId }, NOW + 30);
+    const res = await markDeliveredPost(
+      new Request("https://hq.example/api/client-services/deliverables/x", { method: "POST", headers: { authorization: "Bearer cs-built-token" }, body: JSON.stringify({ action: "mark_delivered" }) }),
+      { params: Promise.resolve({ id: filed.review!.deliverableId! }) },
+    );
+    expect([409]).toContain(res.status);
   });
 });

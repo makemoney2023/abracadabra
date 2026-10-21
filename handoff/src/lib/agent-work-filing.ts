@@ -26,7 +26,7 @@ export const PAYLOAD_NAMESPACE = "a9e7f11e-0000-4000-8000-000000000000";
 const OPEN_PROJECT = "status IN ('planned', 'active', 'waiting_on_client')";
 export const WORK_KINDS = [
   "report", "document", "research", "design", "copy", "code", "data",
-  "note", "plan", "decision", "meeting", "log", "handoff", "other",
+  "note", "plan", "decision", "meeting", "log", "handoff", "catalog", "other",
 ] as const;
 const KINDS = new Set<string>(WORK_KINDS);
 const AGENT_ID = /^[a-z0-9-]{2,64}$/;
@@ -76,6 +76,8 @@ export type WorkPayload = {
   skillsUsed?: string[];
   /** Websites and other things built, shown as cards in the client space (src/lib/built-work.ts). */
   builtWork?: BuiltWorkInput[];
+  /** Finished before it was filed (already_delivered: true, or kind "catalog"): approval publishes it as delivered, with no client update. */
+  alreadyDelivered?: boolean;
 };
 
 export type FileResult =
@@ -327,6 +329,7 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       folder: folder.folder,
       skillsUsed: skillsUsed.paths,
       builtWork: built.items,
+      alreadyDelivered: body.already_delivered === true || kind === "catalog",
     },
   };
 }
@@ -574,12 +577,13 @@ async function writeFiled(
     {
       statement: `UPDATE agent_work_items SET state = 'filed', organization_id = ?, workspace_id = ?, project_id = ?, task_id = ?, task_closed = 0,
                     handoff_to = ?, handoff_note = ?, route = ?, unfiled_reason = NULL, payload_json = NULL, payload_key = NULL, context_md = ?, batch_id = ?,
-                    paths_json = ?, filed_by = ?, filed_at = ?, updated_at = ?, supersedes_json = ?, work_request_id = ?, folder = ?
+                    paths_json = ?, filed_by = ?, filed_at = ?, updated_at = ?, supersedes_json = ?, work_request_id = ?, folder = ?,
+                    already_delivered = ?
                   WHERE id = ?`,
       params: [
         route.organizationId, route.space.id, route.projectId, route.taskId, payload.handoffTo, payload.handoffNote,
         route.route, summary.slice(0, CONTEXT_LIMIT), stored.batchId, JSON.stringify(stored.stored), input.actor, input.now, input.now,
-        JSON.stringify(payload.supersedes), request, folder, input.itemId,
+        JSON.stringify(payload.supersedes), request, folder, payload.alreadyDelivered ? 1 : 0, input.itemId,
       ],
     },
     {

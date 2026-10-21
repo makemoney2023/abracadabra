@@ -32,7 +32,7 @@ export type FilingReview = {
 
 const KIND_MAP: Record<string, string> = {
   report: "document", document: "document", research: "document", plan: "document", note: "document", decision: "document",
-  meeting: "document", log: "document", handoff: "document", copy: "social_pack", design: "design_system", code: "website",
+  meeting: "document", log: "document", handoff: "document", catalog: "website", copy: "social_pack", design: "design_system", code: "website",
   data: "other", other: "other",
 };
 const KINDS = new Set<string>(DELIVERABLE_KINDS);
@@ -324,6 +324,8 @@ export type ReleaseResult = {
   deliverableId: string | null;
   publishedVersion: number | null;
   notice: "draft" | "auto" | null;
+  /** Every released filing was already delivered (catalog): the deliverable is approved and no client update is posted. */
+  delivered?: boolean;
 };
 
 /**
@@ -341,10 +343,10 @@ export async function releaseHeldWork(
   const items = await sql.all<{
     id: string; title: string; batch_id: string | null; deliverable_id: string | null; deliverable_version: number | null;
     supersedes_json: string; organization_id: string; workspace_id: string | null; project_id: string | null; task_id: string | null;
-    work_request_id: string | null; agent_id: string;
+    work_request_id: string | null; agent_id: string; already_delivered: number;
   }>(
     `SELECT id, title, batch_id, deliverable_id, deliverable_version, supersedes_json, organization_id, workspace_id, project_id, task_id,
-            work_request_id, agent_id
+            work_request_id, agent_id, already_delivered
      FROM agent_work_items
      WHERE state = 'filed' AND retracted_at IS NULL AND released_at IS NULL AND superseded_by IS NULL
        AND ${input.taskId ? "task_id = ?" : "deliverable_id = ?"}
@@ -381,6 +383,8 @@ export async function releaseHeldWork(
     });
   }
   const first = items[items.length - 1]!;
+  // Catalog: work finished before it was filed. Published as approved (delivered) and no client update is posted.
+  const delivered = items.every((item) => item.already_delivered === 1);
   let deliverableId: string | null = null;
   let publishedVersion: number | null = null;
   let deliverableTitle = first.title;
@@ -392,16 +396,26 @@ export async function releaseHeldWork(
     const row = await sql.get<{ title: string; version: number }>("SELECT title, version FROM deliverables WHERE id = ?", [deliverableId]);
     deliverableTitle = row?.title ?? deliverableTitle;
     writes.push({
-      statement: `UPDATE deliverables SET published_version = ?, version = MAX(version, ?), published_at = ?, status = 'in_review', updated_at = ? WHERE id = ?`,
-      params: [publishedVersion, publishedVersion, input.now, input.now, deliverableId],
+      statement: `UPDATE deliverables SET published_version = ?, version = MAX(version, ?), published_at = ?, status = ?, updated_at = ? WHERE id = ?`,
+      params: [publishedVersion, publishedVersion, input.now, delivered ? "approved" : "in_review", input.now, deliverableId],
     });
+    if (delivered) {
+      writes.push({
+        statement: "UPDATE deliverable_items SET status = 'approved' WHERE deliverable_id = ? AND version = ? AND status = 'pending'",
+        params: [deliverableId, publishedVersion],
+      });
+    }
     writes.push(activity({
       organizationId: first.organization_id, projectId: first.project_id, workspaceId: first.workspace_id, kind: "deliverable_published",
-      actorKind: actor.kind, actorId: actor.id, body: `${deliverableTitle} (v${publishedVersion}) is released to the client space.`,
-      data: { deliverable_id: deliverableId, version: publishedVersion, task_id: first.task_id, work_item_ids: ids }, now: input.now,
+      actorKind: actor.kind, actorId: actor.id,
+      body: delivered
+        ? `${deliverableTitle} (v${publishedVersion}) is in the client space as delivered work (filed after it was finished, no client update).`
+        : `${deliverableTitle} (v${publishedVersion}) is released to the client space.`,
+      data: { deliverable_id: deliverableId, version: publishedVersion, task_id: first.task_id, work_item_ids: ids, delivered }, now: input.now,
     }));
   }
   await sql.batch(writes);
+  if (delivered) return { released: ids, hidden, deliverableId, publishedVersion, notice: null, delivered: true };
 
   // The notice. Draft (default): a suggested update on the Client Services feed. Auto: the "is ready" email to members.
   const org = await sql.get<{ client_update_mode: string | null; name: string }>("SELECT client_update_mode, name FROM organizations WHERE id = ?", [first.organization_id]);
@@ -575,4 +589,49 @@ export async function listFilings(
       }
     })(),
   }));
+}
+
+// ---------- Mark delivered (Client Services) ----------
+
+export type MarkDeliveredResult =
+  | { ok: true; deliverableId: string; already: boolean; version: number | null }
+  | { ok: false; status: 404 | 409; message: string };
+
+/**
+ * Client Services marks a published deliverable as delivered (approved) without a client update: for work that was
+ * finished before it was filed and went out as in_review. Only a deliverable that is in_review with a published
+ * version and no held filing waiting. Approved already is a no-op. Posts no notice and sends no email.
+ */
+export async function markDelivered(
+  sql: Sql,
+  input: { deliverableId: string; reason: string | null; now: number },
+): Promise<MarkDeliveredResult> {
+  const row = await sql.get<{ id: string; title: string; status: string; published_version: number | null; organization_id: string; project_id: string | null; workspace_id: string }>(
+    "SELECT id, title, status, published_version, organization_id, project_id, workspace_id FROM deliverables WHERE id = ?",
+    [input.deliverableId],
+  );
+  if (!row) return { ok: false, status: 404, message: "No such deliverable." };
+  if (row.status === "approved") return { ok: true, deliverableId: row.id, already: true, version: row.published_version };
+  if (row.status !== "in_review" || row.published_version == null) {
+    return { ok: false, status: 409, message: `Only a published deliverable waiting for a look can be marked delivered (this one is ${row.status}${row.published_version == null ? ", never published" : ""}).` };
+  }
+  const held = await sql.get<{ id: string }>(
+    `SELECT id FROM agent_work_items WHERE deliverable_id = ? AND state = 'filed' AND released_at IS NULL AND retracted_at IS NULL AND superseded_by IS NULL LIMIT 1`,
+    [row.id],
+  );
+  if (held) return { ok: false, status: 409, message: "A newer filing is still held for review. Approve or withdraw it first." };
+  await sql.batch([
+    { statement: "UPDATE deliverables SET status = 'approved', updated_at = ? WHERE id = ? AND status = 'in_review'", params: [input.now, row.id] },
+    {
+      statement: "UPDATE deliverable_items SET status = 'approved' WHERE deliverable_id = ? AND version = ? AND status = 'pending'",
+      params: [row.id, row.published_version],
+    },
+    activity({
+      organizationId: row.organization_id, projectId: row.project_id, workspaceId: row.workspace_id, kind: "deliverable_marked_delivered",
+      actorKind: "system", actorId: "client-services",
+      body: `${row.title} (v${row.published_version}) marked delivered by Client Services (no client update).${input.reason ? ` ${input.reason}` : ""}`,
+      data: { deliverable_id: row.id, version: row.published_version, reason: input.reason }, now: input.now,
+    }),
+  ]);
+  return { ok: true, deliverableId: row.id, already: false, version: row.published_version };
 }

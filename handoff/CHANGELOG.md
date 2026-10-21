@@ -7,7 +7,8 @@
 - **Code touchpoints** — `handoff/migrations/0035_built_work.sql`, `handoff/src/db/{migrate,migration-sql}.ts`, `handoff/src/lib/built-work.ts` (new), `handoff/src/lib/{agent-work-filing,agent-admin,filing-summary}.ts`, `handoff/src/components/built-work-cards.tsx` (new), `handoff/src/app/w/[slug]/page.tsx`, `handoff/src/app/clients/[id]/agent-work-tab.tsx`, `handoff/src/app/api/agent-work/route.ts`, `handoff/README.md`
 - **Data-flow impact** — Rides the existing filing: same hold, review, supersede and withdraw, same 10 MB limit, same R2 storage and preview route. One `built_work` row per item, written in the filing's batch write.
 - **API / schema impact** — Additive only: table `built_work` (2 indexes). Optional `built_work` on `POST /api/agent-work` (response adds `built_work` count; `GET` items add `built_work`). Without it nothing changes.
-- **Rollback** — Revert the PR. Migration 0035 can stay; old code ignores the table. Screenshots stay as ordinary files in the filing's folder.
+- **Already delivered** — `already_delivered: true` (or `kind: "catalog"`) marks work finished before it was filed. Approval publishes it as approved (delivered), not in_review, and creates no suggested client update and no email. New `POST /api/client-services/deliverables/<id>` `{action:"mark_delivered"}` turns an already-published in_review deliverable into approved with no notice (for the three Renew previews approved Oct 21). Migration 0035 adds `agent_work_items.already_delivered` (default 0).
+- **Rollback** — Revert the PR. Migration 0035 can stay; old code ignores the table and the column (a catalog filing approved under old code would go out in_review with a suggested update). Screenshots stay as ordinary files in the filing's folder.
 
 ## 2026-10-21
 
