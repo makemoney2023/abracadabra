@@ -15,6 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { AddItemForm, PublishForm, PullForm } from "../forms";
+import { SendToSocialForm } from "../../clients/social-forms";
+import { POST_STATUS_LABEL, listSocialAccounts, listSocialPosts } from "@/lib/social";
+import { POST_TYPE_LABEL, defaultPostType, pieceMedia } from "@/lib/social-plan";
+import { PLATFORM_LABEL, isBlogPlatform, zernioApiKey } from "@/lib/zernio";
 import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
 
 export default async function DeliverablePage({ params }: { params: Promise<{ id: string }> }) {
@@ -32,6 +36,24 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
   );
   const sentBehind = deliverable.published_version != null && deliverable.version > deliverable.published_version;
   const now = clock();
+  const [socialAccounts, socialPosts] = await Promise.all([
+    listSocialAccounts(sql, deliverable.organization_id),
+    listSocialPosts(sql, { deliverableId: deliverable.id }, 200),
+  ]);
+  const postable = socialAccounts.filter((account) => account.is_active && !isBlogPlatform(account.platform));
+  const pieces = items
+    .filter((item) => !(item.format === "page" && parseFilingSummary(item.copy_text)))
+    .map((item) => {
+      const latest = socialPosts.find((post) => post.item_id === item.id && post.version === item.version);
+      return {
+        id: item.id,
+        title: item.title,
+        format: ITEM_FORMAT_LABEL[item.format],
+        defaultType: defaultPostType(item.format, pieceMedia(item.media_json)),
+        approved: item.status === "approved",
+        sent: latest ? `${POST_STATUS_LABEL[latest.status]} as ${POST_TYPE_LABEL[latest.post_type].toLowerCase()}` : null,
+      };
+    });
   return (
     <StaffShell>
       <PageFrame
@@ -101,6 +123,37 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
             </ul>
             <AddItemForm deliverableId={deliverable.id} />
             {deliverable.status === "draft" && items.length > 0 ? <PublishForm deliverableId={deliverable.id} /> : null}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Post to social</CardTitle>
+            <CardDescription>
+              Send the caption, pictures, and video of each piece to this client&apos;s accounts. Pick all to schedule the whole round.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!zernioApiKey() ? (
+              <p className="text-sm text-muted-foreground">Zernio is not set up. Add the ZERNIO_API_KEY secret to the staff app.</p>
+            ) : postable.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                This client has no social accounts yet.{" "}
+                <Link className="underline" href={`/clients/${deliverable.organization_id}?tab=social`}>
+                  Connect accounts
+                </Link>
+              </p>
+            ) : pieces.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Add pieces before you post.</p>
+            ) : (
+              <SendToSocialForm
+                deliverableId={deliverable.id}
+                pieces={pieces}
+                accounts={postable.map((account) => ({
+                  id: account.id,
+                  label: `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`,
+                }))}
+              />
+            )}
           </CardContent>
         </Card>
         <Card>
