@@ -7,7 +7,10 @@ import { parseFilingSummary } from "@/lib/filing-summary";
 import { seesHeldWork } from "@/lib/held-work";
 import { FilingSummaryCard } from "@/components/filing-summary-card";
 import { ITEM_FORMATS } from "@/lib/deliverable-manifest";
-import { isSocialItemFormat } from "@/components/social/social-piece-view";
+import { SocialPieceCard } from "@/components/social/social-piece-card";
+import { itemDestinationPlatforms, previewPlatforms } from "@/components/social/platform-post-preview";
+import { isSocialItemFormat, pieceCardView } from "@/components/social/social-piece-view";
+import { pieceSettings } from "@/lib/social";
 import { approvalControlLabel, getAutopost } from "@/lib/social-autopost";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,6 +74,12 @@ export default async function FinishedPiecePage({
   const hasSocial = opened.items.some((item) => isSocialItemFormat(item.format));
   const approveAllLabel = autopost.enabled && hasSocial ? approveLabel.replace(/^Approve\b/, "Approve all") : "Approve all";
   const filingTitles = new Set([...filings.values()].map((filing) => filing.title));
+  const destinations = await itemDestinationPlatforms(sql, opened.deliverable.id);
+  const socialSettings = new Map(
+    await Promise.all(
+      items.filter((item) => isSocialItemFormat(item.format)).map(async (item) => [item.id, await pieceSettings(sql, item.id)] as const),
+    ),
+  );
   const filingFiles = (summaryItem: (typeof items)[number]) =>
     items.filter((item) => item.id !== summaryItem.id && item.format !== "link" && item.section === summaryItem.section).length;
   return (
@@ -140,6 +149,8 @@ export default async function FinishedPiecePage({
           const listed = listedMedia(item.media_json);
           const media = listed.filter((entry) => entry.video || entry.image);
           const storedFile = media.length === 0 && listed.length > 0;
+          const social = isSocialItemFormat(item.format);
+          const settings = socialSettings.get(item.id);
           return (
             <li key={item.id} id={`item-${item.id}`} className="flex scroll-mt-6 flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -147,7 +158,7 @@ export default async function FinishedPiecePage({
                 <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
               </div>
               {item.section && !filingTitles.has(item.section) ? <p className="text-sm text-muted-foreground">{item.section}</p> : null}
-              {item.copy_text ? (
+              {item.copy_text && !social ? (
                 <p className={brief ? "whitespace-pre-wrap text-sm leading-6" : "text-sm"}>{item.copy_text}</p>
               ) : null}
               {safeLink(item.link_url) ? (
@@ -164,7 +175,32 @@ export default async function FinishedPiecePage({
                   .
                 </p>
               ) : null}
-              {media.length > 0 ? (
+              {social ? (
+                <SocialPieceCard
+                  caption={item.copy_text ?? ""}
+                  accountName={workspace.display_name}
+                  platforms={previewPlatforms({
+                    channel: item.channel,
+                    textPlatforms: Object.keys(settings?.texts ?? {}),
+                    targetPlatforms: destinations.get(item.id) ?? [],
+                  })}
+                  captions={settings?.texts}
+                  view={pieceCardView({
+                    title: item.title,
+                    format: item.format,
+                    caption: item.copy_text ?? "",
+                    mediaJson: item.media_json,
+                    status: item.status,
+                    targets: (destinations.get(item.id) ?? []).map((platform) => ({ platform, outcome: "unpublished" })),
+                  })}
+                  media={media.map((entry) => ({
+                    role: entry.role,
+                    video: entry.video,
+                    alt: item.title || "Finished work",
+                    src: `/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${entry.role}`,
+                  }))}
+                />
+              ) : media.length > 0 ? (
                 <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
                   {media.map((entry) =>
                     entry.video ? (

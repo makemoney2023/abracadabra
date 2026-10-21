@@ -540,7 +540,7 @@ Test:
 - collection header shows version, delivered date, and `N of M reviewed`;
 - approved, changes-requested, and pending counts remain distinct;
 - each item visibly shows approval state;
-- article items render as article cards and social items reuse the established social preview;
+- article items render as article cards and social items reuse the in-situ preview: Facebook and Instagram frames differ, and a carousel shows one slide with count, dots, and previous/next controls;
 - change-request input stays collapsed until chosen;
 - per-item approval stays on the item;
 - Approve all appears after review context or in a non-obscuring sticky footer;

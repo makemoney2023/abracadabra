@@ -17,6 +17,7 @@ import { StaffShell } from "../../staff-shell";
 import { AddItemForm, PublishForm, PullForm } from "../forms";
 import { PublishingComposer } from "@/components/social/publishing-composer";
 import { SocialPieceCard } from "@/components/social/social-piece-card";
+import { itemDestinationPlatforms, previewPlatforms } from "@/components/social/platform-post-preview";
 import { collectionSummary, isSocialItemFormat, pieceCardView } from "@/components/social/social-piece-view";
 import { PieceSettingsForm, SendToSocialForm } from "../../clients/social-forms";
 import { POST_STATUS_LABEL, listSocialAccounts, listSocialPosts, pieceSettings } from "@/lib/social";
@@ -30,7 +31,8 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
   const opened = await openDeliverable(sql, caller, id, "working");
   if (!opened) notFound();
   const { deliverable, items } = opened;
-  const space = await sql.get<{ slug: string }>("SELECT slug FROM workspaces WHERE id = ?", [deliverable.workspace_id]);
+  const space = await sql.get<{ slug: string; display_name: string }>("SELECT slug, display_name FROM workspaces WHERE id = ?", [deliverable.workspace_id]);
+  const destinations = await itemDestinationPlatforms(sql, deliverable.id);
   const repos = deliverable.project_id ? await listProjectRepos(sql, caller, deliverable.project_id) : [];
   const notes = await listDeliverableFeedback(sql, caller, deliverable.id);
   const githubReady = Boolean(readGithubSecrets()) && repos.some((repo) => repo.installation_id != null);
@@ -117,9 +119,17 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                       <p className="font-medium">{item.title}</p>
                       <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
                     </div>
-                    {item.copy_text ? <p className="text-sm">{item.copy_text}</p> : null}
+                    {item.copy_text && !isSocialItemFormat(item.format) ? <p className="text-sm">{item.copy_text}</p> : null}
                     {isSocialItemFormat(item.format) ? (
                       <SocialPieceCard
+                        caption={item.copy_text ?? ""}
+                        accountName={space?.display_name || "Your page"}
+                        platforms={previewPlatforms({
+                          channel: item.channel,
+                          textPlatforms: Object.keys(settingsByItem.get(item.id)?.texts ?? {}),
+                          targetPlatforms: destinations.get(item.id) ?? [],
+                        })}
+                        captions={settingsByItem.get(item.id)?.texts}
                         view={pieceCardView({
                           title: item.title,
                           format: item.format,

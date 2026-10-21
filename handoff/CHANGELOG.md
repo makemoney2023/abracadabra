@@ -2,6 +2,15 @@
 
 ## 2026-10-21
 
+- **What changed** — Finished social work is shown in the frame of the network it is for. A Facebook post has the page header, caption above the media, and Like, Comment, and Share. An Instagram post has the profile header, the media first, and the caption underneath. A carousel shows one slide at a time, with the count, dots, and previous and next controls. Reels, Shorts, and Stories use a tall frame. Staff and the client see the same preview. A piece with no destination yet still uses its format, so a carousel does not become a stack of files.
+- **Why** — Finished work should look like the post a person will publish, not a generic file card.
+- **Code touchpoints** — `handoff/src/components/social/platform-post-preview.ts`, `handoff/src/components/social/platform-post-preview-view.tsx`, `handoff/src/components/social/social-piece-card.tsx`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.
+- **Data-flow impact** — Display only. Destination frames prefer saved post targets, then per-network captions, then the piece channel. No new publish path.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/components/social/platform-post-preview.test.tsx`.
+
+## 2026-10-21
+
 - **What changed** — `SOCIAL_AGENT_ACTIONS` is `on` in `wrangler.jsonc` and `wrangler.hq.jsonc`, so agent writes on `/api/agent-social/*` and the HQ `save_social_variant` tool are live in production.
 - **Rollback** — Set `SOCIAL_AGENT_ACTIONS` back to `off` in both configs and redeploy. Leave migrations 0039 and 0040 in place.
 

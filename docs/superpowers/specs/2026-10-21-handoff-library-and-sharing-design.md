@@ -515,7 +515,7 @@ The finished-work detail header shows:
 - Approve is on the item card.
 - Approve all appears after the item list or in a sticky footer after review progress.
 - Approve all names the count and never includes already-requested changes without warning.
-- Social items use the same platform preview component for staff and clients.
+- Social items use the same in-situ preview for staff and clients. A Facebook destination looks like a Facebook post: page header, caption above the media, then Like, Comment, and Share. An Instagram destination looks like an Instagram post: profile header, media first, caption underneath. A carousel stays one slide at a time, with the count, dots, and previous and next controls, inside whichever network frame it belongs to. Reels, Shorts, and Stories use a tall 9:16 frame. Several destinations produce several frames. A piece with no destination yet still uses its format frame, so a carousel does not become a stack of files.
 - Article items use the article card, not a generic link row.
 - Keyboard focus moves to confirmation/error feedback after submission.
 
@@ -915,7 +915,8 @@ Record counts without content, tokens, or full URLs:
 - [ ] Change-request fields stay collapsed until chosen.
 - [ ] Bulk approval appears after review context and names its scope.
 - [ ] Sources support breadcrumbs, search/filter/sort, and Used in links.
-- [ ] Client and staff social previews show the same media/copy/target state.
+- [ ] Client and staff social previews show the same media, copy, and target state inside the matching network frame.
+- [ ] Facebook, Instagram, and other destinations are visually distinct, and a carousel shows one slide at a time with count, dots, and previous/next controls.
 
 ### Quality
 
