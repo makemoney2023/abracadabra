@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyPageType, prioritizeUrls } from "@/lib/prioritize-urls";
+import { classifyPageType, PER_TYPE_FIRST_PASS, prioritizeUrls, templateSeedUrls } from "@/lib/prioritize-urls";
 
 describe("classifyPageType", () => {
   it("splits blog listings from blog posts", () => {
@@ -71,5 +71,70 @@ describe("classifyPageType expanded", () => {
     expect(classifyPageType("https://www.drbhasin.com/appointment", origin)).toBe("appointment");
     expect(classifyPageType("https://www.drbhasin.com/articles/hello", origin)).toBe("blogPost");
     expect(classifyPageType("https://www.drbhasin.com/book", origin)).toBe("appointment");
+  });
+});
+
+describe("sitemap URLs outrank guessed template paths", () => {
+  const origin = "https://abra-ca-dabra.app";
+  // Shape of the live sitemap: services, portfolio, products, start, a blog index and 24 posts.
+  const sitemap = [
+    `${origin}/`,
+    `${origin}/walkthrough.html`,
+    `${origin}/films.html`,
+    `${origin}/services/`,
+    ...Array.from({ length: 12 }, (_, i) => `${origin}/services/s-${i}/`),
+    `${origin}/portfolio/`,
+    ...Array.from({ length: 9 }, (_, i) => `${origin}/portfolio/case-${i}/`),
+    `${origin}/products/`,
+    `${origin}/products/schema/`,
+    `${origin}/products/super-funnel/`,
+    `${origin}/course/llm-leverage/`,
+    `${origin}/start/`,
+    `${origin}/start/thanks/`,
+    `${origin}/blog`,
+    `${origin}/about/`,
+    ...Array.from({ length: 24 }, (_, i) => `${origin}/blog/post-${i}`),
+  ];
+
+  it("only guesses page types the real URLs do not cover", () => {
+    const seeds = templateSeedUrls({ origin, sitemapUrls: sitemap, searchUrls: [] });
+    const types = new Set(seeds.map((s) => s.pageType));
+    for (const covered of ["about", "service", "blog", "product"]) expect(types.has(covered)).toBe(false);
+    expect(seeds.map((s) => new URL(s.url).pathname)).toEqual(
+      expect.arrayContaining(["/contact", "/appointment", "/book", "/pricing", "/faq", "/testimonials", "/reviews"]),
+    );
+    expect(seeds.every((s) => s.source === "seed")).toBe(true);
+  });
+
+  it("spends the 40-page cap on real pages before guesses", () => {
+    const result = prioritizeUrls({ origin, sitemapUrls: sitemap, searchUrls: [] });
+    expect(result).toHaveLength(40);
+    expect(result.some((p) => p.source === "seed")).toBe(false);
+    const paths = result.map((p) => new URL(p.url).pathname);
+    expect(paths).toEqual(expect.arrayContaining(["/portfolio", "/products", "/start", "/course/llm-leverage", "/about", "/blog"]));
+    expect(paths.some((p) => p.startsWith("/portfolio/case-"))).toBe(true);
+    expect(result.filter((p) => p.pageType === "blogPost").length).toBe(PER_TYPE_FIRST_PASS);
+  });
+
+  it("puts guesses after every real URL and uses pre-checked seeds when given", () => {
+    const small = [`${origin}/`, `${origin}/about/`, `${origin}/blog/one`];
+    const unchecked = prioritizeUrls({ origin, sitemapUrls: small, searchUrls: [] });
+    const firstSeed = unchecked.findIndex((p) => p.source === "seed");
+    expect(firstSeed).toBeGreaterThan(unchecked.findIndex((p) => p.url.endsWith("/blog/one")));
+
+    const checked = prioritizeUrls({
+      origin,
+      sitemapUrls: small,
+      searchUrls: [],
+      seedUrls: [{ url: `${origin}/contact`, pageType: "contact", source: "seed" }],
+    });
+    expect(checked.filter((p) => p.source === "seed").map((p) => p.url)).toEqual([`${origin}/contact`]);
+  });
+
+  it("caps one page type in the first pass so other sitemap pages get slots", () => {
+    const blogHeavy = [...Array.from({ length: 60 }, (_, i) => `${origin}/blog/p-${i}`), `${origin}/portfolio/x/`];
+    const result = prioritizeUrls({ origin, sitemapUrls: blogHeavy, searchUrls: [], seedUrls: [] });
+    expect(result.some((p) => p.url.endsWith("/portfolio/x"))).toBe(true);
+    expect(result).toHaveLength(40);
   });
 });
