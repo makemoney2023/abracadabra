@@ -36,17 +36,106 @@ export type SkillBucket = {
 
 export type SkillHit = SkillCard & { cited: string };
 
-/** One row per skill file. The org pack and files without a name are left out. */
+const FALLBACK_DESCRIPTION_MAX = 300;
+
+/**
+ * Name and description for a SKILL.md with no YAML front matter (some community packs start with "# Title" or
+ * "## Purpose"). Name: the folder name, like the slug names in front matter. Description: a "description:" line, else the
+ * first plain paragraph (headings, lists, and code skipped), up to 300 characters.
+ */
+export function fallbackSkillCard(relativePath: string, raw: string): { name: string; description: string } {
+  const parts = relativePath.split("/").filter(Boolean);
+  const folder = parts.length >= 2 ? parts[parts.length - 2] : "skill";
+  const lines = raw.replace(/^\uFEFF/, "").split(/\r?\n/);
+  const name = folder.slice(0, 120);
+  const described = lines.find((line) => /^description:\s*\S/i.test(line.trim()))?.trim().replace(/^description:\s*/i, "");
+  let description = described?.replace(/^["']|["']$/g, "").trim() ?? "";
+  if (!description) {
+    const paragraph: string[] = [];
+    let fenced = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("```")) {
+        fenced = !fenced;
+        if (paragraph.length) break;
+        continue;
+      }
+      if (fenced) continue;
+      if (!trimmed) {
+        if (paragraph.length) break;
+        continue;
+      }
+      if (/^(#|[-*+]\s|\d+\.\s|>|\||---)/.test(trimmed)) {
+        if (paragraph.length) break;
+        continue;
+      }
+      paragraph.push(trimmed);
+    }
+    description = paragraph.join(" ");
+  }
+  if (description.length > FALLBACK_DESCRIPTION_MAX) description = `${description.slice(0, FALLBACK_DESCRIPTION_MAX - 1).trimEnd()}…`;
+  return { name, description };
+}
+
+/**
+ * One row per skill file. The org pack is left out. A file with no front matter is still indexed, with a name and
+ * description read from its heading and first paragraph (fallbackSkillCard), so every SKILL.md is browsable.
+ */
 export function skillIndexFromFiles(files: { path: string; raw: string }[]): PublishedSkill[] {
   const rows: PublishedSkill[] = [];
   for (const file of files) {
     const relative = file.path.replaceAll("\\", "/").replace(/^\.\//, "");
     if (!relative.endsWith("/SKILL.md") || relative.startsWith("org/") || relative.split("/").includes("..")) continue;
-    const front = parseSkillFrontMatter(file.raw);
-    if (!front) continue;
+    const front = parseSkillFrontMatter(file.raw) ?? fallbackSkillCard(relative, file.raw);
     rows.push({ ...front, path: relative, pack: relative.split("/")[0] || "root" });
   }
   return rows.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+export type LibraryManifest = {
+  published_at: string;
+  git_sha: string | null;
+  file_count: number;
+  skill_count: number;
+  pack_count: number;
+  fallback_count: number;
+};
+
+/** skills/manifest.json: when and from which commit the library was published, and its counts. */
+export function libraryManifest(input: {
+  files: { path: string; raw: string }[];
+  index: PublishedSkill[];
+  packCount: number;
+  gitSha: string | null;
+  now: Date;
+}): LibraryManifest {
+  return {
+    published_at: input.now.toISOString(),
+    git_sha: input.gitSha,
+    file_count: input.files.length,
+    skill_count: input.index.length,
+    pack_count: input.packCount,
+    fallback_count: input.files.filter((file) => !parseSkillFrontMatter(file.raw)).length,
+  };
+}
+
+/** The manifest from its JSON. Anything malformed reads as null (an older publish had none). */
+export function parseLibraryManifest(raw: string | null | undefined): LibraryManifest | null {
+  if (!raw) return null;
+  try {
+    const value = JSON.parse(raw) as Partial<LibraryManifest>;
+    if (typeof value.published_at !== "string" || typeof value.skill_count !== "number") return null;
+    return {
+      published_at: value.published_at,
+      git_sha: typeof value.git_sha === "string" ? value.git_sha : null,
+      file_count: typeof value.file_count === "number" ? value.file_count : value.skill_count,
+      skill_count: value.skill_count,
+      pack_count: typeof value.pack_count === "number" ? value.pack_count : 0,
+      fallback_count: typeof value.fallback_count === "number" ? value.fallback_count : 0,
+    };
+  } catch {
+    return null;
+  }
 }
 
 /** Best catalog matches for a staff question. Each hit cites the path Cursor should read. */

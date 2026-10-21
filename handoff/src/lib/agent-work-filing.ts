@@ -1,4 +1,5 @@
 import { normalizeDomain } from "@/db/crm";
+import { skillObjectKey } from "@/lib/skill-library";
 import type { Sql } from "@/db/sql";
 import type { ObjectStore } from "@/lib/store/objects";
 import { storeWorkflowOutput, workflowFileExtension, type WorkflowFile } from "@/lib/workflow-files";
@@ -70,6 +71,8 @@ export type WorkPayload = {
   deliverableKind: string | null;
   /** Folder in the space, like "Social/Facebook". null: Finished work/<date> <title>. */
   folder: string | null;
+  /** Skill paths the agent followed ("community/x/y/SKILL.md"). Checked against the published index after filing. */
+  skillsUsed?: string[];
 };
 
 export type FileResult =
@@ -285,6 +288,8 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
   const deliverableKind = text(body.deliverable_kind, 30)?.toLowerCase() ?? null;
   const folder = cleanFolder(body.folder);
   if (!folder.ok) return { ok: false, message: folder.message };
+  const skillsUsed = parseSkillsUsed(body.skills_used);
+  if (!skillsUsed.ok) return { ok: false, message: skillsUsed.message };
   return {
     ok: true,
     payload: {
@@ -313,8 +318,31 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       threadId: text(body.thread_id, 500),
       deliverableKind,
       folder: folder.folder,
+      skillsUsed: skillsUsed.paths,
     },
   };
+}
+
+export const MAX_SKILLS_USED = 30;
+
+/**
+ * skills_used: up to 30 SKILL.md paths from the library ("community/marketingskills/copywriting/SKILL.md"; a leading
+ * ".cursor/skills/" or "skills/" is fine). org/ paths and anything that is not a SKILL.md path are refused.
+ */
+export function parseSkillsUsed(raw: unknown): { ok: true; paths: string[] } | { ok: false; message: string } {
+  if (raw == null) return { ok: true, paths: [] };
+  if (!Array.isArray(raw)) return { ok: false, message: "skills_used must be a list of skill paths." };
+  if (raw.length > MAX_SKILLS_USED) return { ok: false, message: `skills_used takes up to ${MAX_SKILLS_USED} skill paths.` };
+  const paths: string[] = [];
+  for (const value of raw) {
+    const key = typeof value === "string" ? skillObjectKey(value) : null;
+    const relative = key ? key.slice("skills/".length) : null;
+    if (!relative || relative.startsWith("org/") || !relative.includes("/")) {
+      return { ok: false, message: `skills_used: ${typeof value === "string" ? value.slice(0, 120) : String(value)} is not a skill path like community/marketingskills/copywriting/SKILL.md.` };
+    }
+    if (!paths.includes(relative)) paths.push(relative);
+  }
+  return { ok: true, paths };
 }
 
 // ---------- Routing ----------

@@ -5,9 +5,14 @@ import {
   filingChoices,
   listAgentsForStaff,
   listClientGrants,
+  publishedLabel,
   skillPacksFromIndex,
+  suggestionClients,
   type AgentRow,
 } from "@/lib/agent-admin";
+import { skillUsageStats, usageWindow } from "@/lib/skill-usage";
+import { suggestPacksForClient, type PackSuggestion } from "@/lib/skill-suggest";
+import { SkillUsageCard } from "./skill-usage-card";
 import { cfEnv } from "@/lib/client-services-auth";
 import { requireHqStaffPage } from "@/lib/current";
 import { formatRelative } from "@/lib/format";
@@ -38,8 +43,10 @@ const STATUS: Record<AgentRow["status"], { label: string; variant: "secondary" |
   revoked: { label: "Revoked", variant: "destructive" },
 };
 
-export default async function AgentsPage() {
+export default async function AgentsPage({ searchParams }: { searchParams?: Promise<{ usage?: string }> }) {
   const { sql, caller } = await requireHqStaffPage();
+  const query = (await searchParams) ?? {};
+  const days = usageWindow(query.usage);
   const [agents, clientGrants, choices, packs, isAdmin] = await Promise.all([
     listAgentsForStaff(sql, caller),
     listClientGrants(sql, caller),
@@ -51,6 +58,22 @@ export default async function AgentsPage() {
   const packError = packs.ok ? null : packs.error;
   const clients = choices.clients;
   const now = clock();
+  const [usage, suggestInputs] = await Promise.all([
+    skillUsageStats(sql, {
+      now,
+      days,
+      libraryPacks: packList.map((pack) => ({ prefix: pack.prefix, count: pack.count })),
+      skillNames: packs.ok ? packs.skillNames : undefined,
+    }),
+    suggestionClients(sql, caller, clients.map((client) => client.id)),
+  ]);
+  const granted = new Map(clientGrants.map((grant) => [grant.organizationId, grant.prefixes]));
+  const suggestions: Record<string, PackSuggestion[]> = {};
+  for (const client of suggestInputs) suggestions[client.id] = suggestPacksForClient(client, packList, 6, granted.get(client.id) ?? []);
+  const published = packs.ok ? publishedLabel(packs.manifest?.published_at) : null;
+  const librarySummary = packs.ok
+    ? ` ${packList.length} packs · ${packs.skillCount} skills · ${published ? `published ${published}` : "publish date unknown"}.`
+    : ` ${packError}`;
   const agentsMode = !legacyStartsAllowed();
 
   const columns: Column<AgentRow>[] = [
@@ -157,11 +180,17 @@ export default async function AgentsPage() {
                 <CardTitle>Client skill packs</CardTitle>
                 <CardDescription>
                   Granted per client by default, so every agent on that client can read them.
-                  {packs.ok ? ` ${packList.length} packs in the published library.` : ` ${packError}`}
+                  {librarySummary}
                 </CardDescription>
               </div>
               {clients.length ? (
-                <GrantSkillsDrawer scope="client" clients={clients.map((client) => ({ id: client.id, name: client.name }))} packs={packList} packError={packError} />
+                <GrantSkillsDrawer
+                  scope="client"
+                  clients={clients.map((client) => ({ id: client.id, name: client.name }))}
+                  packs={packList}
+                  packError={packError}
+                  suggestions={suggestions}
+                />
               ) : null}
             </CardHeader>
             <CardContent>
@@ -188,6 +217,7 @@ export default async function AgentsPage() {
               )}
             </CardContent>
           </Card>
+          <SkillUsageCard stats={usage} now={now} />
         </div>
       </PageFrame>
     </StaffShell>

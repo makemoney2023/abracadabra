@@ -10,8 +10,8 @@ import {
   revokeClientAgent,
   type UnfiledReason,
 } from "@/lib/agent-work-filing";
-import { parseSkillCatalog } from "@/lib/client-documents";
-import type { SkillBucket } from "@/lib/skill-library";
+import { parseLibraryManifest, type LibraryManifest, type SkillBucket } from "@/lib/skill-library";
+import { loadCatalog, packsFrom } from "@/lib/skill-packs";
 import type { ObjectStore } from "@/lib/store/objects";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 import { handOverWaitingTasks } from "@/lib/agent-dispatch";
@@ -331,28 +331,44 @@ export async function listClientGrants(sql: Sql, caller: Caller): Promise<{ orga
   return [...out.values()];
 }
 
-export type SkillPack = { prefix: string; name: string; count: number };
+export type SkillPack = { prefix: string; name: string; count: number; description: string };
 
-/** Skill packs from the published index in R2 (skills/index.json), grouped by their first two path parts. */
-export async function skillPacksFromIndex(bucket: SkillBucket | undefined): Promise<{ ok: true; packs: SkillPack[] } | { ok: false; error: string }> {
+export type LibrarySummary = {
+  ok: true;
+  packs: SkillPack[];
+  skillCount: number;
+  version: string;
+  /** skills/manifest.json from the last publish, or null when the library was published before manifests. */
+  manifest: LibraryManifest | null;
+  /** path → skill name, for the usage table. */
+  skillNames: Map<string, string>;
+};
+
+/**
+ * The published library (skills/index.json in R2) grouped with the shared pack rule (packsFrom in skill-packs.ts), so
+ * the Agents page, the agent API, and attach_skills agree on what a pack is. Includes skill count and manifest.
+ */
+export async function skillPacksFromIndex(bucket: SkillBucket | undefined): Promise<LibrarySummary | { ok: false; error: string }> {
   if (!bucket) return { ok: false, error: "The skill library isn't connected here." };
-  let object: { text(): Promise<string> } | null = null;
+  const catalog = await loadCatalog(bucket);
+  if (!catalog.ok) {
+    return { ok: false, error: catalog.message.includes("not been published") ? "The skill library hasn't been published yet." : "The skill library didn't answer." };
+  }
+  let manifest: LibraryManifest | null = null;
   try {
-    object = await bucket.get("skills/index.json");
+    const object = await bucket.get("skills/manifest.json");
+    manifest = parseLibraryManifest(object ? await object.text() : null);
   } catch {
-    return { ok: false, error: "The skill library didn't answer." };
+    manifest = null;
   }
-  if (!object) return { ok: false, error: "The skill library hasn't been published yet." };
-  const packs = new Map<string, SkillPack>();
-  for (const skill of parseSkillCatalog(await object.text())) {
-    const parts = skill.path.split("/").filter(Boolean);
-    if (parts.length < 2 || parts[0] === "org") continue;
-    const prefix = `${parts.slice(0, 2).join("/")}/`;
-    const entry = packs.get(prefix) ?? { prefix, name: parts[1], count: 0 };
-    entry.count += 1;
-    packs.set(prefix, entry);
-  }
-  return { ok: true, packs: [...packs.values()].sort((a, b) => a.prefix.localeCompare(b.prefix)) };
+  return {
+    ok: true,
+    packs: packsFrom(catalog.skills),
+    skillCount: catalog.skills.length,
+    version: catalog.version,
+    manifest,
+    skillNames: new Map(catalog.skills.map((skill) => [skill.path, skill.name])),
+  };
 }
 
 export type RegisterOutcome = { ok: true; message: string; token: string | null; agentId: string } | { ok: false; error: string; field?: string };
@@ -572,4 +588,36 @@ export async function staffHandOverWaiting(
       ? `Handed ${handed.taskIds.length} waiting task${handed.taskIds.length === 1 ? "" : "s"} to ${handed.leadAgentId}.`
       : `Nothing waiting. ${handed.leadAgentId} already has every build and run task.`,
   };
+}
+
+// ---------- Skill usage and suggestions (Agents page) ----------
+
+/** "Oct 9, 7:34 PM ET" for a published_at ISO time, in the agency's zone. */
+export function publishedLabel(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return null;
+  const text = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Toronto",
+    month: "short",
+    day: "numeric",
+    year: at.getUTCFullYear() === new Date().getUTCFullYear() ? undefined : "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(at);
+  return `${text} ET`;
+}
+
+/** Name, domain, website, industry, and notes of each live client, for pack suggestions. Staff only. */
+export async function suggestionClients(
+  sql: Sql,
+  caller: Caller,
+  ids: string[],
+): Promise<{ id: string; name: string; domain: string | null; website: string | null; industry: string | null; notes: string | null }[]> {
+  if (!(await liveStaff(sql, caller)).ok || ids.length === 0) return [];
+  const marks = ids.map(() => "?").join(", ");
+  return sql.all(
+    `SELECT id, name, domain, website, industry, notes FROM organizations WHERE archived_at IS NULL AND id IN (${marks}) ORDER BY name`,
+    ids,
+  );
 }

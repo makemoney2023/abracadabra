@@ -216,18 +216,74 @@ export function RevokeTokenDrawer({ agentId }: { agentId: string }) {
   );
 }
 
-function PackPicker({ packs, packError }: { packs: SkillPack[]; packError: string | null }) {
+type Suggestion = { prefix: string; reason: string };
+
+function PackPicker({
+  packs,
+  packError,
+  suggested,
+  suggestedFor,
+}: {
+  packs: SkillPack[];
+  packError: string | null;
+  suggested?: Suggestion[];
+  suggestedFor?: string;
+}) {
+  const [picked, setPicked] = React.useState<Set<string>>(() => new Set());
+  const toggle = (prefix: string, on?: boolean) =>
+    setPicked((current) => {
+      const next = new Set(current);
+      if (on ?? !next.has(prefix)) next.add(prefix);
+      else next.delete(prefix);
+      return next;
+    });
   return (
     <>
       {packError ? <p className="text-sm text-muted-foreground">{packError} Type a path below instead.</p> : null}
+      {suggested && suggested.length ? (
+        <div className="flex flex-col gap-1.5" data-testid="pack-suggestions">
+          <p className="text-sm font-medium">Suggested for {suggestedFor}</p>
+          <ul className="flex flex-wrap gap-1.5">
+            {suggested.map((item) => (
+              <li key={item.prefix}>
+                <button
+                  type="button"
+                  onClick={() => toggle(item.prefix, true)}
+                  aria-pressed={picked.has(item.prefix)}
+                  title={item.reason}
+                  className="rounded-md border border-border px-2 py-0.5 font-mono text-xs hover:bg-muted aria-pressed:border-primary aria-pressed:bg-primary/10"
+                >
+                  {picked.has(item.prefix) ? "✓ " : "+ "}
+                  {item.prefix}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground">Suggestions only. Nothing is granted until you press Grant.</p>
+        </div>
+      ) : null}
       {packs.length ? (
-        <fieldset className="flex max-h-64 flex-col gap-1.5 overflow-y-auto rounded-lg border border-border p-2">
+        <fieldset className="flex max-h-72 flex-col gap-2 overflow-y-auto rounded-lg border border-border p-2">
           <legend className="px-1 text-sm font-medium">Skill packs</legend>
           {packs.map((pack) => (
-            <label key={pack.prefix} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="prefixes" value={pack.prefix} />
-              <span className="font-mono text-xs">{pack.prefix}</span>
-              <span className="text-muted-foreground">{pack.count} skills</span>
+            <label key={pack.prefix} className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="prefixes"
+                value={pack.prefix}
+                className="mt-1"
+                checked={picked.has(pack.prefix)}
+                onChange={(event) => toggle(pack.prefix, event.target.checked)}
+              />
+              <span className="flex min-w-0 flex-col">
+                <span>
+                  <span className="font-mono text-xs">{pack.prefix}</span>{" "}
+                  <span className="text-muted-foreground">
+                    {pack.count} skill{pack.count === 1 ? "" : "s"}
+                  </span>
+                </span>
+                {pack.description ? <span className="line-clamp-2 text-xs text-muted-foreground">{pack.description}</span> : null}
+              </span>
             </label>
           ))}
         </fieldset>
@@ -245,6 +301,7 @@ export function GrantSkillsDrawer({
   clients,
   packs,
   packError,
+  suggestions,
   trigger,
 }: {
   scope: "client" | "agent";
@@ -252,8 +309,12 @@ export function GrantSkillsDrawer({
   clients?: { id: string; name: string }[];
   packs: SkillPack[];
   packError: string | null;
+  /** Client id → suggested packs (keyword rules on the client's domain and industry). Shown, never auto-granted. */
+  suggestions?: Record<string, Suggestion[]>;
   trigger?: React.ReactElement;
 }) {
+  const [clientId, setClientId] = React.useState(clients?.[0]?.id ?? "");
+  const client = clients?.find((item) => item.id === clientId);
   return (
     <FormDrawer
       title={scope === "client" ? "Grant skills to a client" : `Extra skills for ${agentId}`}
@@ -265,16 +326,22 @@ export function GrantSkillsDrawer({
         {agentId ? <input type="hidden" name="agentId" value={agentId} /> : null}
         {scope === "client" ? (
           <ActionField name="organizationId" label="Client">
-            <select name="organizationId" required className={selectClass}>
-              {(clients ?? []).map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
+            <select name="organizationId" required className={selectClass} value={clientId} onChange={(event) => setClientId(event.target.value)}>
+              {(clients ?? []).map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
                 </option>
               ))}
             </select>
           </ActionField>
         ) : null}
-        <PackPicker packs={packs} packError={packError} />
+        <PackPicker
+          key={clientId}
+          packs={packs}
+          packError={packError}
+          suggested={scope === "client" ? suggestions?.[clientId] : undefined}
+          suggestedFor={client?.name}
+        />
       </ActionForm>
     </FormDrawer>
   );

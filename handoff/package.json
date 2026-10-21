@@ -16,6 +16,7 @@
     "test:db": "vitest run src/db/isolation.test.ts",
     "worker": "tsx src/worker/index.ts",
     "publish:skills": "tsx scripts/publish-skills.ts",
+    "publish:skills:dry": "tsx scripts/publish-skills.ts --dry-run",
     "pull": "tsx cli/pull.ts",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv"
   },

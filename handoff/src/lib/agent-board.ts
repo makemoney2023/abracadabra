@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { logAgentSkillEvents } from "@/lib/skill-usage";
 import { dispatchTask, liveClientAgent } from "@/lib/agent-dispatch";
 import { agentMode } from "@/lib/agent-mode";
 import { resolveClientRef, type AgentPrincipal } from "@/lib/agent-work-filing";
@@ -373,11 +374,23 @@ async function changeCardSkills(
   if (change.action === "attach_skills") {
     const added = await attachCardSkills(sql, { taskId: task.id, prefixes: checked.prefixes, actor: { kind: "agent", id: agent.agentId }, now: input.now });
     if (added.length) {
+      await logAgentSkillEvents(sql, agent, { taskId: task.id, source: "agent-board", now: input.now }, added.map((prefix) => ({
+        event: "attach" as const,
+        prefix,
+        path: prefix.endsWith("/SKILL.md") ? prefix : null,
+        libraryVersion: catalog.version,
+      })));
       activityId = await record(sql, agent, row, "attach_skills", `attached ${added.join(", ")} to "${task.title}".`, { prefixes: added }, input.now, true);
     }
   } else {
     const removed = await detachCardSkills(sql, { taskId: task.id, prefixes: checked.prefixes, actor: { id: agent.agentId }, now: input.now });
     if (removed.length) {
+      await logAgentSkillEvents(sql, agent, { taskId: task.id, source: "agent-board", now: input.now }, removed.map((prefix) => ({
+        event: "detach" as const,
+        prefix,
+        path: prefix.endsWith("/SKILL.md") ? prefix : null,
+        libraryVersion: catalog.version,
+      })));
       activityId = await record(sql, agent, row, "detach_skills", `detached ${removed.join(", ")} from "${task.title}".`, { prefixes: removed }, input.now, true);
     }
   }

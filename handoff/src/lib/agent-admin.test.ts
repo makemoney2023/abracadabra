@@ -273,11 +273,13 @@ describe("skill grants", () => {
       ],
     });
     const bucket = { get: async (key: string) => (key === "skills/index.json" ? { text: async () => index } : null) };
-    expect(await skillPacksFromIndex(bucket)).toEqual({
+    expect(await skillPacksFromIndex(bucket)).toMatchObject({
       ok: true,
+      skillCount: 3,
+      manifest: null,
       packs: [
-        { prefix: "community/marketingskills/", name: "marketingskills", count: 2 },
-        { prefix: "design/brand/", name: "brand", count: 1 },
+        { prefix: "community/marketingskills/", name: "marketingskills", count: 2, description: "2 skills: a, b" },
+        { prefix: "design/brand/", name: "brand", count: 1, description: "1 skill: c" },
       ],
     });
     expect(await skillPacksFromIndex(undefined)).toMatchObject({ ok: false });

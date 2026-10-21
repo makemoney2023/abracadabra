@@ -1,7 +1,9 @@
+import { execFileSync } from "node:child_process";
 import { createHash, createHmac } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { skillIndexFromFiles, skillObjectKey } from "../src/lib/skill-library";
+import { libraryManifest, skillIndexFromFiles, skillObjectKey } from "../src/lib/skill-library";
+import { packOf } from "../src/lib/skill-packs";
 import { readSkillTree } from "../src/lib/skill-tree";
 
 const bucket = "handoff-skills";
@@ -80,8 +82,28 @@ async function each<T>(items: T[], size: number, runItem: (item: T) => Promise<v
   await Promise.all(Array.from({ length: size }, () => worker()));
 }
 
+function gitSha(): string | null {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], { cwd: handoff, encoding: "utf8" }).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 async function main(): Promise<void> {
   const envFile = await readFile(path.join(handoff, ".env.local"), "utf8").catch(() => "");
+  const files = await readSkillTree(skillsRoot);
+  const index = skillIndexFromFiles(files);
+  if (index.length === 0) throw new Error("No skills were found.");
+  const packCount = new Set(index.map((skill) => packOf(skill.path))).size;
+  const manifest = libraryManifest({ files, index, packCount, gitSha: gitSha(), now: new Date() });
+
+  if (process.argv.includes("--dry-run")) {
+    console.log(JSON.stringify(manifest, null, 2));
+    console.log("Dry run: nothing was uploaded.");
+    return;
+  }
+
   const accessKey = envValue("R2_ACCESS_KEY_ID", envFile);
   const secret = envValue("R2_SECRET_ACCESS_KEY", envFile);
   const endpoint = envValue("R2_ENDPOINT", envFile);
@@ -89,21 +111,22 @@ async function main(): Promise<void> {
     throw new Error("Set R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_ENDPOINT in handoff/.env.local.");
   }
 
-  const files = await readSkillTree(skillsRoot);
-  const index = skillIndexFromFiles(files);
-  if (index.length === 0) throw new Error("No skills were found.");
-
-  const uploads: { key: string; body: string; contentType: string }[] = [
-    { key: "skills/index.json", body: JSON.stringify({ skills: index }), contentType: "application/json" },
-  ];
+  // Bodies first, then the index, then the manifest: a reader never sees a path whose body is not there yet,
+  // and the manifest only changes once the whole library is up.
+  const uploads: { key: string; body: string; contentType: string }[] = [];
   for (const file of files) {
     const key = skillObjectKey(file.path);
     if (!key) continue;
     uploads.push({ key, body: file.raw, contentType: "text/markdown; charset=utf-8" });
   }
+  const tail = [
+    { key: "skills/index.json", body: JSON.stringify({ skills: index }), contentType: "application/json" },
+    { key: "skills/manifest.json", body: JSON.stringify(manifest), contentType: "application/json" },
+  ];
 
   let done = 0;
-  await each(uploads, 12, async (upload) => {
+  const total = uploads.length + tail.length;
+  const putOne = async (upload: { key: string; body: string; contentType: string }) => {
     let last = "upload failed";
     for (let attempt = 0; attempt < 4; attempt += 1) {
       try {
@@ -117,10 +140,15 @@ async function main(): Promise<void> {
     }
     if (last) throw new Error(`${upload.key} ${last}`);
     done += 1;
-    if (done % 50 === 0 || done === uploads.length) console.log(`${done}/${uploads.length}`);
-  });
+    if (done % 50 === 0 || done === total) console.log(`${done}/${total}`);
+  };
+  await each(uploads, 12, putOne);
+  for (const upload of tail) await putOne(upload);
 
-  console.log(`Published ${index.length} skills to ${bucket}.`);
+  console.log(
+    `Published ${manifest.skill_count} skills in ${manifest.pack_count} packs to ${bucket}` +
+      ` (${manifest.fallback_count} indexed without front matter, commit ${manifest.git_sha?.slice(0, 8) ?? "unknown"}).`,
+  );
 }
 
 main().catch((error: unknown) => {
