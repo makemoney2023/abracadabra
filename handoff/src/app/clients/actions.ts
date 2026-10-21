@@ -220,6 +220,14 @@ export async function createContactAction(
       phone: String(formData.get("phone") ?? ""),
       title: String(formData.get("title") ?? ""),
       primary: formData.get("primary") === "1",
+      address: {
+        line1: String(formData.get("addressLine1") ?? ""),
+        line2: String(formData.get("addressLine2") ?? ""),
+        city: String(formData.get("city") ?? ""),
+        region: String(formData.get("region") ?? ""),
+        postalCode: String(formData.get("postalCode") ?? ""),
+        country: String(formData.get("country") ?? ""),
+      },
     },
     Date.now(),
   );

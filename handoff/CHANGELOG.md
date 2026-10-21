@@ -2,6 +2,15 @@
 
 ## 2026-10-21
 
+- **What changed** — Contacts get an optional postal address (street, unit, city, province or state, postal code, country). Staff set it from the Add person form on the HQ client page; the Overview shows it under each person and under the main contact. New `GET/POST/PATCH /api/agent-contacts` on the hq. host: any agent on a client reads its contacts; the client's lead agent adds and edits them on its own client only.
+- **Why** — Christopher wants client agents (LioCorr's lead first) to keep the client's people up to date, with mailing addresses, without a staff round trip.
+- **Code touchpoints** — `handoff/migrations/0036_contact_address.sql`, `handoff/src/db/{migrate,migration-sql,crm}.ts`, `handoff/src/lib/agent-contacts.ts` (new), `handoff/src/app/api/agent-contacts/route.ts` (new), `handoff/src/app/clients/{actions.ts,activity-forms.tsx,[id]/overview-tab.tsx}`, `handoff/README.md`
+- **Data-flow impact** — Staff and agent writes share one insert path with the same validation and the same contact activity; agent rows carry `actor_kind = 'agent'` and the agent id. Agents can't delete contacts or change opt-in/opt-out (400). A contact on another client reads as 404.
+- **API / schema impact** — Additive only: six nullable columns on `contacts`. New route `/api/agent-contacts` (no DELETE).
+- **Rollback** — Revert the PR. Migration 0036 can stay; old code ignores the columns (addresses stay stored, just not shown).
+
+## 2026-10-21
+
 - **What changed** — Client spaces can show websites and other things we built. Agents file them with `built_work` on `POST /api/agent-work` (title, live and/or preview URL, repo URL, short description, status, screenshot image stored in R2 as a file of the filing). The client space home shows them first as "What we built" cards with the screenshot, a status pill (Live, Preview, In progress, Archived), the host, the description and Visit site / Preview / Code buttons; mobile is one column. Staff see held and retired cards too, with the hold note, and the HQ client Agent work tab has a Built work section.
 - **Why** — Christopher wants LioCorr's three child-company sites and Renew Implants' three sites (and Renew's social work) in their client spaces. A space only took filed text and files, so a site showed as a bare link at best.
 - **Code touchpoints** — `handoff/migrations/0035_built_work.sql`, `handoff/src/db/{migrate,migration-sql}.ts`, `handoff/src/lib/built-work.ts` (new), `handoff/src/lib/{agent-work-filing,agent-admin,filing-summary}.ts`, `handoff/src/components/built-work-cards.tsx` (new), `handoff/src/app/w/[slug]/page.tsx`, `handoff/src/app/clients/[id]/agent-work-tab.tsx`, `handoff/src/app/api/agent-work/route.ts`, `handoff/README.md`

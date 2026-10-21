@@ -40,6 +40,29 @@ export function PersonForm({ organizationId }: { organizationId: string }) {
         <ActionField name="title" label="Job title">
           <Input name="title" maxLength={120} />
         </ActionField>
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-1 text-sm font-medium">Address (optional)</legend>
+          <ActionField name="addressLine1" label="Street">
+            <Input name="addressLine1" maxLength={200} autoComplete="address-line1" />
+          </ActionField>
+          <ActionField name="addressLine2" label="Unit, suite">
+            <Input name="addressLine2" maxLength={200} autoComplete="address-line2" />
+          </ActionField>
+          <div className="grid grid-cols-2 gap-3">
+            <ActionField name="city" label="City">
+              <Input name="city" maxLength={120} autoComplete="address-level2" />
+            </ActionField>
+            <ActionField name="region" label="Province or state">
+              <Input name="region" maxLength={120} autoComplete="address-level1" />
+            </ActionField>
+            <ActionField name="postalCode" label="Postal code">
+              <Input name="postalCode" maxLength={20} autoComplete="postal-code" />
+            </ActionField>
+            <ActionField name="country" label="Country">
+              <Input name="country" maxLength={80} autoComplete="country-name" />
+            </ActionField>
+          </div>
+        </fieldset>
         <label className="flex items-center gap-2 text-sm" htmlFor={`person-primary-${organizationId}`}>
           <input id={`person-primary-${organizationId}`} name="primary" type="checkbox" value="1" />
           Main contact
