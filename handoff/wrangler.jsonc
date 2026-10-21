@@ -93,6 +93,7 @@
     "HANDOFF_HQ_ORIGIN": "https://hq.abra-ca-dabra.app",
     "HANDOFF_APP_ORIGIN": "https://handoff.abra-ca-dabra.app",
     "AGENT_URL": "https://agent.abra-ca-dabra.app",
-    "SWARM_ORIGIN": "https://agent-swarm-orchestrator.abracadabra-ai.workers.dev"
+    "SWARM_ORIGIN": "https://agent-swarm-orchestrator.abracadabra-ai.workers.dev",
+    "SOCIAL_AGENT_ACTIONS": "off"
   }
 }

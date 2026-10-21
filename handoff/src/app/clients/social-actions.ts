@@ -18,7 +18,12 @@ import {
   type SendMode,
 } from "@/lib/social";
 import { parseTimes, saveAutopost } from "@/lib/social-autopost";
+import { saveAgentPublishMode } from "@/lib/social-policy-settings";
+import type { AgentPublishMode } from "@/lib/social-policy";
 import { asPostType } from "@/lib/social-plan";
+import { PlanError } from "@/lib/social-plans";
+import { socialAgentActionsEnabled } from "@/lib/social-queries";
+import { mirrorPieceSettingsVariants } from "@/lib/social-variants";
 import { openObjectStore } from "@/lib/store/objects";
 import { CONNECT_PLATFORMS, openZernio, type ConnectPlatform } from "@/lib/zernio";
 
@@ -152,14 +157,35 @@ export async function savePieceSettingsAction(
   for (const [name, value] of formData.entries()) {
     if (name.startsWith("text:") && typeof value === "string") texts[name.slice(5)] = value;
   }
+  const itemId = String(formData.get("itemId") ?? "");
+  const firstComment = String(formData.get("firstComment") ?? "");
+  const tags = String(formData.get("tags") ?? "");
   const saved = await savePieceSettings(
     sql,
     caller,
-    String(formData.get("itemId") ?? ""),
-    { texts, firstComment: String(formData.get("firstComment") ?? ""), tags: String(formData.get("tags") ?? "") },
+    itemId,
+    { texts, firstComment, tags },
     Date.now(),
   );
   if (!saved) return fail("That piece is not here.");
+  if (socialAgentActionsEnabled()) {
+    try {
+      await mirrorPieceSettingsVariants(
+        sql,
+        { kind: "staff", id: caller.userId || "staff" },
+        itemId,
+        {
+          texts,
+          firstComment: firstComment.trim() || null,
+          tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        },
+        Date.now(),
+      );
+    } catch (error) {
+      if (error instanceof PlanError) return fail(`Saved the text, but the network copy was not updated (${error.reasonCode}).`);
+      throw error;
+    }
+  }
   revalidatePath(`/deliverables/${deliverableId}`);
   return ok("Saved. The next send uses this text.");
 }
@@ -220,5 +246,19 @@ export async function saveAutopostAction(
   );
   if (!saved.ok) return fail(saved.error);
   revalidatePath(socialTab(organizationId));
-  return ok(formData.get("enabled") === "on" ? "Auto-schedule is on." : "Auto-schedule is off.");
+  return ok(formData.get("enabled") === "on" ? "Publishing cadence is on." : "Publishing cadence is off.");
+}
+
+export async function saveAgentPublishModeAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const mode = String(formData.get("mode") ?? "") as AgentPublishMode;
+  if (!caller.userId) return fail("Only staff can change this.");
+  const saved = await saveAgentPublishMode(sql, { kind: "staff", id: caller.userId }, organizationId, mode, Date.now());
+  if (!saved.ok) return fail(saved.reasonCode === "invalid" ? "Pick a publishing mode." : "Only staff can change this.");
+  revalidatePath(socialTab(organizationId));
+  return ok("Publishing mode saved.");
 }

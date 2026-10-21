@@ -6,15 +6,24 @@ import { FormDrawer } from "@/components/form-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { POST_TYPES, POST_TYPE_LABEL, WEEKDAY_LABEL, type PostType } from "@/lib/social-plan";
+import { AGENT_MODES } from "@/lib/social-policy";
 import { Textarea } from "@/components/ui/textarea";
 import {
   cancelSocialPostAction,
   disconnectSocialAction,
   moveSocialPostAction,
+  saveAgentPublishModeAction,
   saveAutopostAction,
   savePieceSettingsAction,
   sendToSocialAction,
 } from "./social-actions";
+
+const MODE_LABEL: Record<(typeof AGENT_MODES)[number], string> = {
+  observe: "Observe",
+  draft: "Draft",
+  schedule_approved: "Schedule approved",
+  managed: "Managed",
+};
 
 const selectClass = "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
@@ -235,6 +244,7 @@ export function SendToSocialForm({
 export function PieceSettingsForm({
   deliverableId,
   itemId,
+  version,
   title,
   platforms,
   texts,
@@ -243,6 +253,7 @@ export function PieceSettingsForm({
 }: {
   deliverableId: string;
   itemId: string;
+  version: number;
   title: string;
   platforms: { id: string; label: string }[];
   texts: Record<string, string>;
@@ -263,6 +274,7 @@ export function PieceSettingsForm({
       <ActionForm action={savePieceSettingsAction} submitLabel="Save" pendingLabel="Saving">
         <input type="hidden" name="deliverableId" value={deliverableId} />
         <input type="hidden" name="itemId" value={itemId} />
+        <input type="hidden" name="version" value={version} />
         {platforms.map((platform) => (
           <ActionField key={platform.id} name={`text:${platform.id}`} label={platform.label}>
             <Textarea name={`text:${platform.id}`} rows={3} defaultValue={texts[platform.id] ?? ""} />
@@ -333,11 +345,11 @@ export function AutopostForm({
 }) {
   const [accountIds, setAccountIds] = React.useState(() => new Set(settings.accountIds));
   return (
-    <ActionForm action={saveAutopostAction} submitLabel="Save auto-schedule" pendingLabel="Saving">
+    <ActionForm action={saveAutopostAction} submitLabel="Save publishing cadence" pendingLabel="Saving">
       <input type="hidden" name="organizationId" value={organizationId} />
       <label className="flex items-center gap-2 text-sm font-medium">
         <input type="checkbox" name="enabled" defaultChecked={settings.enabled} />
-        Schedule each piece the client approves
+        Place approved pieces in the next open slot
       </label>
       <fieldset className="flex flex-col gap-2">
         <SelectAll label="All accounts" ids={accounts.map((account) => account.id)} selected={accountIds} onChange={setAccountIds} />
@@ -367,6 +379,25 @@ export function AutopostForm({
         <Input name="times" defaultValue={settings.times.join(", ")} placeholder="09:00, 17:30" />
       </ActionField>
       <TimeZoneField initial={settings.timezone === "UTC" && !settings.enabled ? undefined : settings.timezone} />
+    </ActionForm>
+  );
+}
+
+/** Staff grant for how a connected agent may publish. */
+export function AgentPublishModeForm({ organizationId, mode }: { organizationId: string; mode: string }) {
+  return (
+    <ActionForm action={saveAgentPublishModeAction} submitLabel="Save publishing mode" pendingLabel="Saving">
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <label className="flex flex-col gap-1 text-sm font-medium">
+        Mode
+        <select className={selectClass} name="mode" defaultValue={mode}>
+          {AGENT_MODES.map((item) => (
+            <option key={item} value={item}>
+              {MODE_LABEL[item]}
+            </option>
+          ))}
+        </select>
+      </label>
     </ActionForm>
   );
 }

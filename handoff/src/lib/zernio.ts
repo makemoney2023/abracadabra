@@ -42,6 +42,15 @@ export function isBlogPlatform(platform: string): boolean {
   return BLOG_SET.has(platform);
 }
 
+/** Blogs and Pinterest stay out of the new scheduling workflow. Historical connections can still be listed. */
+export const OUT_OF_SCOPE_PLATFORMS = ["pinterest", "wordpress", "wix"] as const;
+const OUT_OF_SCOPE = new Set<string>(OUT_OF_SCOPE_PLATFORMS);
+export const ELIGIBLE_CONNECT_PLATFORMS = SOCIAL_PLATFORMS.filter((platform) => platform !== "pinterest");
+
+export function isEligibleSocialPlatform(platform: string): boolean {
+  return !OUT_OF_SCOPE.has(platform);
+}
+
 export class ZernioError extends Error {
   constructor(
     message: string,

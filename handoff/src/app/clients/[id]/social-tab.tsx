@@ -2,12 +2,15 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SocialOperationsPanel, type OperationsCard } from "@/components/social/social-operations-panel";
 import { POST_STATUS_LABEL, type SocialAccount, type SocialPost } from "@/lib/social";
-import type { Autopost } from "@/lib/social-autopost";
+import { CADENCE_SENTENCE, type Autopost } from "@/lib/social-autopost";
 import { POST_TYPE_LABEL } from "@/lib/social-plan";
-import { CONNECT_PLATFORMS, PLATFORM_LABEL, isBlogPlatform } from "@/lib/zernio";
+import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, isBlogPlatform } from "@/lib/zernio";
 import { connectSocialAction } from "../social-actions";
-import { AutopostForm, CancelSocialPostForm, DisconnectSocialForm, MoveSocialPostForm } from "../social-forms";
+import { AgentPublishModeForm, AutopostForm, CancelSocialPostForm, DisconnectSocialForm, MoveSocialPostForm } from "../social-forms";
+
+export type SocialAttentionItem = { id: string; kind: string; platform: string };
 
 export type SocialView = {
   configured: boolean;
@@ -15,6 +18,8 @@ export type SocialView = {
   accounts: SocialAccount[];
   posts: SocialPost[];
   autopost: Autopost;
+  attention: SocialAttentionItem[];
+  agentMode: string;
   notice: string;
   now: number;
 };
@@ -43,6 +48,36 @@ function links(post: SocialPost): string[] {
   } catch {
     return [];
   }
+}
+
+function firstAccount(post: SocialPost): string {
+  try {
+    const ids = JSON.parse(post.account_ids) as unknown;
+    return Array.isArray(ids) && typeof ids[0] === "string" ? ids[0] : "";
+  } catch {
+    return "";
+  }
+}
+
+function platformOf(post: SocialPost, accounts: SocialAccount[]): string {
+  const id = firstAccount(post);
+  return accounts.find((account) => account.id === id)?.platform ?? "";
+}
+
+function operationCards(social: SocialView): OperationsCard[] {
+  return social.posts.map((post) => ({
+    id: post.id,
+    title: post.item_title ?? "Post",
+    platform: platformOf(post, social.accounts),
+    state: post.status,
+    at: post.scheduled_for ?? post.created_at,
+    timezone: post.timezone || "UTC",
+    thumbnailRole: "main",
+    deliverableId: post.deliverable_id,
+    itemId: post.item_id,
+    accountId: firstAccount(post),
+    collection: post.deliverable_title ?? "",
+  }));
 }
 
 function accountCount(post: SocialPost): number {
@@ -127,7 +162,7 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
   const history = social.posts.filter((post) => !upcomingIds.has(post.id));
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card id="account_health">
         <CardHeader>
           <CardTitle>Accounts</CardTitle>
           <CardDescription>
@@ -164,7 +199,7 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
             <div className="flex flex-col gap-2">
               <p className="text-sm font-medium">Connect an account</p>
               <div className="flex flex-wrap gap-2">
-                {CONNECT_PLATFORMS.map((platform) => (
+                {ELIGIBLE_CONNECT_PLATFORMS.map((platform) => (
                   <form key={platform} action={connectSocialAction}>
                     <input type="hidden" name="organizationId" value={organizationId} />
                     <input type="hidden" name="platform" value={platform} />
@@ -180,6 +215,15 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
       </Card>
       <Card>
         <CardHeader>
+          <CardTitle>Operations</CardTitle>
+          <CardDescription>Attention comes first. Move and cancel on the calendar still send directly.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SocialOperationsPanel attention={social.attention} posts={operationCards(social)} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
           <CardTitle>Calendar</CardTitle>
           <CardDescription>Scheduled posts, by day. Move or cancel one before it goes out.</CardDescription>
         </CardHeader>
@@ -191,12 +235,10 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
           )}
         </CardContent>
       </Card>
-      <Card>
+      <Card id="cadence">
         <CardHeader>
-          <CardTitle>Auto-schedule</CardTitle>
-          <CardDescription>
-            When a client approves a piece, it goes into the next free day and time below, as its own post type.
-          </CardDescription>
+          <CardTitle>Publishing cadence</CardTitle>
+          <CardDescription>{CADENCE_SENTENCE}</CardDescription>
         </CardHeader>
         <CardContent>
           {postable.length === 0 ? (
@@ -211,6 +253,15 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
         </CardContent>
       </Card>
       <Card>
+        <CardHeader>
+          <CardTitle>Agent publishing</CardTitle>
+          <CardDescription>How a connected agent may prepare or schedule posts for this client.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AgentPublishModeForm organizationId={organizationId} mode={social.agentMode} />
+        </CardContent>
+      </Card>
+      <Card id="history">
         <CardHeader>
           <CardTitle>Sent and drafts</CardTitle>
           <CardDescription>Everything else sent for this client, newest first.</CardDescription>

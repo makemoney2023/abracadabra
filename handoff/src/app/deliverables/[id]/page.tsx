@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { AddItemForm, PublishForm, PullForm } from "../forms";
+import { PublishingComposer } from "@/components/social/publishing-composer";
+import { SocialPieceCard } from "@/components/social/social-piece-card";
+import { collectionSummary, isSocialItemFormat, pieceCardView } from "@/components/social/social-piece-view";
 import { PieceSettingsForm, SendToSocialForm } from "../../clients/social-forms";
 import { POST_STATUS_LABEL, listSocialAccounts, listSocialPosts, pieceSettings } from "@/lib/social";
 import { POST_TYPE_LABEL, defaultPostType, pieceMedia } from "@/lib/social-plan";
@@ -56,9 +59,17 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
         format: ITEM_FORMAT_LABEL[item.format],
         defaultType: defaultPostType(item.format, pieceMedia(item.media_json)),
         approved: item.status === "approved",
+        compatible: isSocialItemFormat(item.format),
         sent: latest ? `${POST_STATUS_LABEL[latest.status]} as ${POST_TYPE_LABEL[latest.post_type].toLowerCase()}` : null,
       };
     });
+  const socialItems = items.filter((item) => isSocialItemFormat(item.format));
+  const summary = collectionSummary(
+    socialItems.map((item) => ({
+      status: item.status,
+      scheduled: socialPosts.some((post) => post.item_id === item.id && post.status === "scheduled"),
+    })),
+  );
   return (
     <StaffShell>
       <PageFrame
@@ -84,6 +95,12 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             {items.length === 0 ? <p className="text-sm text-muted-foreground">No pieces yet.</p> : null}
+            {socialItems.length > 0 ? (
+              <p className="text-sm">
+                {summary.approved} approved · {summary.needsChanges} need changes · {summary.unscheduled} unscheduled ·{" "}
+                {summary.actions.join(" · ")}
+              </p>
+            ) : null}
             <ul className="flex flex-col gap-6">
               {items.map((item) => {
                 const filing = item.format === "page" ? parseFilingSummary(item.copy_text) : null;
@@ -101,19 +118,26 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                       <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
                     </div>
                     {item.copy_text ? <p className="text-sm">{item.copy_text}</p> : null}
-                    {networks.length > 0 ? (
-                      <div>
-                        <PieceSettingsForm
-                          deliverableId={deliverable.id}
-                          itemId={item.id}
-                          title={item.title}
-                          platforms={networks}
-                          texts={settingsByItem.get(item.id)?.texts ?? {}}
-                          firstComment={settingsByItem.get(item.id)?.firstComment ?? ""}
-                          tags={(settingsByItem.get(item.id)?.tags ?? []).join(", ")}
-                        />
-                      </div>
-                    ) : null}
+                    {isSocialItemFormat(item.format) ? (
+                      <SocialPieceCard
+                        view={pieceCardView({
+                          title: item.title,
+                          format: item.format,
+                          caption: item.copy_text ?? "",
+                          mediaJson: item.media_json,
+                          status: item.status,
+                          targets: [],
+                        })}
+                        media={listedMedia(item.media_json)
+                          .filter((media) => media.video || media.image)
+                          .map((media) => ({
+                            role: media.role,
+                            video: media.video,
+                            alt: fileLabel({ title: item.title, role: media.role }),
+                            src: `/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`,
+                          }))}
+                      />
+                    ) : (
                     <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
                       {listedMedia(item.media_json).filter((media) => media.video || media.image).map((media) =>
                         media.video ? (
@@ -135,6 +159,21 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                         ),
                       )}
                     </div>
+                    )}
+                    {networks.length > 0 ? (
+                      <div>
+                        <PieceSettingsForm
+                          deliverableId={deliverable.id}
+                          itemId={item.id}
+                          version={item.version}
+                          title={item.title}
+                          platforms={networks}
+                          texts={settingsByItem.get(item.id)?.texts ?? {}}
+                          firstComment={settingsByItem.get(item.id)?.firstComment ?? ""}
+                          tags={(settingsByItem.get(item.id)?.tags ?? []).join(", ")}
+                        />
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}
@@ -163,14 +202,29 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
             ) : pieces.length === 0 ? (
               <p className="text-sm text-muted-foreground">Add pieces before you post.</p>
             ) : (
-              <SendToSocialForm
-                deliverableId={deliverable.id}
-                pieces={pieces}
-                accounts={postable.map((account) => ({
-                  id: account.id,
-                  label: `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`,
-                }))}
-              />
+              <div className="flex flex-col gap-6">
+                <PublishingComposer
+                  pieces={pieces.map((piece) => ({
+                    id: piece.id,
+                    title: piece.title,
+                    approved: piece.approved,
+                    compatible: piece.compatible,
+                    postType: piece.defaultType,
+                  }))}
+                  accounts={postable.map((account) => ({
+                    id: account.id,
+                    label: `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`,
+                  }))}
+                />
+                <SendToSocialForm
+                  deliverableId={deliverable.id}
+                  pieces={pieces}
+                  accounts={postable.map((account) => ({
+                    id: account.id,
+                    label: `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`,
+                  }))}
+                />
+              </div>
             )}
           </CardContent>
         </Card>

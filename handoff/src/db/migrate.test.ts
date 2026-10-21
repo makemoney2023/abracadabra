@@ -55,6 +55,8 @@ describe("statementsFromMigration", () => {
       "0036_contact_address.sql",
       "0037_social.sql",
       "0038_social_phase2.sql",
+      "0039_social_agent_plans.sql",
+      "0040_social_cadence_limits.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -256,6 +258,58 @@ describe("a step that stopped halfway", () => {
     db.exec("DROP TABLE agent_work_items");
     db.exec("CREATE TABLE agent_work_items_state (id TEXT)");
     await expect(migrate(sql)).rejects.toThrow();
+  });
+});
+
+describe("agent social plans", () => {
+  function columnNames(db: DatabaseSync, table: string): string[] {
+    return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((column) => column.name);
+  }
+
+  function uniqueColumnSets(db: DatabaseSync, table: string): string[][] {
+    const indexes = db.prepare(`PRAGMA index_list(${table})`).all() as { name: string; unique: number }[];
+    return indexes
+      .filter((index) => index.unique === 1)
+      .map((index) =>
+        (db.prepare(`PRAGMA index_info(${index.name})`).all() as { name: string }[]).map((column) => column.name),
+      );
+  }
+
+  it("creates plan, confirmation, policy, attention, and target tables, then migrates again", async () => {
+    const db = new DatabaseSync(":memory:");
+    await migrate(sqliteSql(db));
+    expect(columnNames(db, "social_collections")).toEqual(
+      expect.arrayContaining(["id", "organization_id", "deliverable_id", "name", "goal", "starts_at", "ends_at", "timezone", "status", "created_at", "updated_at"]),
+    );
+    expect(columnNames(db, "social_variants")).toEqual(
+      expect.arrayContaining(["id", "item_id", "version", "platform", "caption", "first_comment", "title", "tags_json", "post_type", "options_json", "revision", "updated_by_kind", "updated_by_id", "updated_at"]),
+    );
+    expect(uniqueColumnSets(db, "social_variants")).toEqual(expect.arrayContaining([["item_id", "version", "platform"]]));
+    expect(columnNames(db, "social_publish_plans")).toEqual(
+      expect.arrayContaining(["id", "organization_id", "actor_kind", "actor_id", "request_json", "rows_json", "blocked_json", "warnings_json", "plan_hash", "authorization", "expires_at", "executed_at", "result_json", "created_at"]),
+    );
+    expect(columnNames(db, "social_action_idempotency")).toEqual(
+      expect.arrayContaining(["actor_kind", "actor_id", "external_id", "action", "resource_id", "response_json", "created_at"]),
+    );
+    expect(uniqueColumnSets(db, "social_action_idempotency")).toEqual(expect.arrayContaining([["actor_kind", "actor_id", "external_id"]]));
+    expect(columnNames(db, "social_agent_policies")).toEqual(
+      expect.arrayContaining(["organization_id", "mode", "capabilities_json", "updated_by", "updated_at"]),
+    );
+    expect(uniqueColumnSets(db, "social_agent_policies")).toEqual(expect.arrayContaining([["organization_id"]]));
+    expect(columnNames(db, "social_confirmations")).toEqual(
+      expect.arrayContaining(["id", "plan_id", "plan_hash", "action", "approver_kind", "approver_id", "expires_at", "created_at", "used_at"]),
+    );
+    expect(columnNames(db, "social_attention_items")).toEqual(
+      expect.arrayContaining(["id", "organization_id", "source_kind", "source_id", "target", "status", "created_at", "updated_at"]),
+    );
+    expect(uniqueColumnSets(db, "social_attention_items")).toEqual(
+      expect.arrayContaining([["organization_id", "source_kind", "source_id", "target"]]),
+    );
+    expect(columnNames(db, "social_post_targets")).toEqual(
+      expect.arrayContaining(["id", "post_id", "account_id", "outcome", "updated_at"]),
+    );
+    expect(uniqueColumnSets(db, "social_post_targets")).toEqual(expect.arrayContaining([["post_id", "account_id"]]));
+    await migrate(sqliteSql(db));
   });
 });
 

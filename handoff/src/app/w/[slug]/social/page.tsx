@@ -3,9 +3,11 @@ import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { clock } from "@/lib/clock";
 import { openSession } from "@/lib/current";
-import { listSocialAccounts, listSocialPosts, syncSocialAccounts } from "@/lib/social";
+import { clientSocialReview } from "@/components/social/client-social-review";
+import { listSocialAccounts, listSocialPosts, syncSocialAccounts, type SocialAccount, type SocialPost } from "@/lib/social";
+import { approvalControlLabel, cadenceFingerprint, DEFAULT_AUTOPOST, getAutopost, type Autopost } from "@/lib/social-autopost";
 import { POST_TYPE_LABEL } from "@/lib/social-plan";
-import { CONNECT_PLATFORMS, PLATFORM_LABEL, openZernio } from "@/lib/zernio";
+import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, isEligibleSocialPlatform, openZernio } from "@/lib/zernio";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,9 +43,18 @@ export default async function SpaceSocialPage({
       // The list below is the last copy we have.
     }
   }
-  const [accounts, posts] = organization
-    ? await Promise.all([listSocialAccounts(sql, organization.id), listSocialPosts(sql, { organizationId: organization.id }, 100)])
-    : [[], []];
+  let accounts: SocialAccount[] = [];
+  let posts: SocialPost[] = [];
+  let cadence: Autopost = DEFAULT_AUTOPOST;
+  if (organization) {
+    [accounts, posts, cadence] = await Promise.all([
+      listSocialAccounts(sql, organization.id),
+      listSocialPosts(sql, { organizationId: organization.id }, 100),
+      getAutopost(sql, organization.id),
+    ]);
+  }
+  const fingerprint = cadence ? cadenceFingerprint(cadence) : "";
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
   const now = clock();
   const upcoming = posts
     .filter((post) => post.status === "scheduled" && (post.scheduled_for ?? 0) >= now)
@@ -79,7 +90,7 @@ export default async function SpaceSocialPage({
                 </ul>
               )}
               <div className="flex flex-wrap gap-2">
-                {CONNECT_PLATFORMS.map((platform) => (
+                {ELIGIBLE_CONNECT_PLATFORMS.map((platform) => (
                   <form key={platform} action={connectFromSpaceAction}>
                     <input type="hidden" name="slug" value={slug} />
                     <input type="hidden" name="platform" value={platform} />
@@ -103,7 +114,32 @@ export default async function SpaceSocialPage({
             <p className="text-sm text-muted-foreground">Nothing scheduled right now.</p>
           ) : (
             <ul className="flex flex-col gap-3">
-              {upcoming.map((post) => (
+              {upcoming.map((post) => {
+                let accountId = "";
+                try {
+                  const ids = JSON.parse(post.account_ids) as unknown;
+                  accountId = Array.isArray(ids) && typeof ids[0] === "string" ? ids[0] : "";
+                } catch {
+                  accountId = "";
+                }
+                const account = accountById.get(accountId);
+                const platform = account && account.is_active && isEligibleSocialPlatform(account.platform) ? account.platform : "";
+                const review = platform
+                  ? clientSocialReview({
+                      title: post.item_title ?? "Post",
+                      caption: "",
+                      mediaRoles: ["main"],
+                      platform,
+                      targetState: "scheduled",
+                      cadenceEnabled: Boolean(cadence?.enabled),
+                      cadenceLabel: cadence ? approvalControlLabel(cadence) : "Approve",
+                      previewSlots: [],
+                      fingerprint,
+                      confirmedFingerprint: fingerprint,
+                      role: "owner",
+                    })
+                  : null;
+                return (
                 <li key={post.id} className="flex flex-col gap-0.5 text-sm">
                   <span className="font-medium">{post.item_title}</span>
                   <span className="text-muted-foreground">
@@ -114,8 +150,10 @@ export default async function SpaceSocialPage({
                     })}{" "}
                     · {POST_TYPE_LABEL[post.post_type]}
                   </span>
+                  {review ? <span>{review.platformState}</span> : null}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </CardContent>

@@ -107,6 +107,7 @@ const skip = (reason: string): TargetPlan => ({ ok: false, reason });
 export function planTarget(platform: string, postType: PostType, media: PlannedMedia[], title: string): TargetPlan {
   const name = PLATFORM_LABEL[platform] ?? platform;
   if (isBlogPlatform(platform)) return skip(`${name} is a blog. It takes articles, not social posts.`);
+  if (platform === "pinterest") return skip("Pinterest is not part of social scheduling.");
   const shape = shapeOf(media);
   const mixed = shape.videos > 0 && shape.pictures > 0;
   const oneVideo = shape.count === 1 && shape.videos === 1;
@@ -163,11 +164,6 @@ export function planTarget(platform: string, postType: PostType, media: PlannedM
           expressConsentGiven: true,
         },
       };
-    }
-    case "pinterest": {
-      if (postType === "story" || postType === "carousel") return skip("Pinterest takes one picture or one video.");
-      if (shape.count !== 1) return skip("Pinterest takes one picture or one video.");
-      return { ok: true, platformSpecificData: { title: (title || "").slice(0, 100) || undefined } };
     }
     case "linkedin": {
       if (postType === "story") return skip("LinkedIn has no stories.");

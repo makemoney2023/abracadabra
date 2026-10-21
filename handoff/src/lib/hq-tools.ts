@@ -120,6 +120,9 @@ const READS = new Set([
   "search_repo",
   "list_social_accounts",
   "list_social_posts",
+  "social_overview",
+  "list_social_pieces",
+  "get_social_cadence",
 ]);
 
 function text(input: Record<string, unknown>, key: string): string {

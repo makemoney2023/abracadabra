@@ -21,6 +21,9 @@ export const READ_HQ_TOOLS = [
   "pipeline_status",
   "list_social_accounts",
   "list_social_posts",
+  "social_overview",
+  "list_social_pieces",
+  "get_social_cadence",
 ] as const;
 
 export const GATED_HQ_TOOLS = new Set([
@@ -42,6 +45,7 @@ export const GATED_HQ_TOOLS = new Set([
   "delete_task",
   "delete_project",
   "schedule_social",
+  "execute_social_plan",
 ]);
 
 /** Every tool the chat model may call besides the reads. A tool missing here is invisible to the model. */
@@ -71,6 +75,14 @@ export const CHAT_WRITE_TOOLS = [
   "save_swarm_report",
   "create_milestone",
   "post_internal_status",
+  "prepare_social_publish",
+  "prepare_social_move",
+  "prepare_social_cancel",
+  "prepare_social_retry",
+  "prepare_social_cadence",
+  "prepare_social_connect",
+  "prepare_social_disconnect",
+  "save_social_variant",
   ...GATED_HQ_TOOLS,
 ] as const;
 
@@ -111,6 +123,62 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     label: "Schedule to social",
     description:
       "Send finished-work pieces to the client's social accounts. Empty itemIds means every piece of the deliverable; empty accountIds means every connected social account. mode is draft, scheduled, or now. Scheduled needs startAt (YYYY-MM-DDTHH:MM wall clock) and timezone (IANA), and spaces each next piece gapMinutes later (default 1440). postType is auto (match each piece), feed, carousel, reel, story, or short. Only pieces the client approved can be scheduled or posted now. Fields: organizationId, deliverableId, itemIds, accountIds, mode, postType, startAt, timezone, gapMinutes.",
+  },
+  social_overview: {
+    label: "Social overview",
+    description:
+      "Eligible social accounts, ready and scheduled counts, open attention, and partial posts. A partial post is not a full success. WordPress, Wix, and Pinterest stay off this list. Fields: organizationId.",
+  },
+  list_social_pieces: {
+    label: "Social pieces",
+    description:
+      "Finished pieces for one client, with approval and version. Pass deliverableId to limit the list. An empty list is not every piece. Fields: organizationId, deliverableId.",
+  },
+  get_social_cadence: {
+    label: "Publishing cadence",
+    description:
+      "The client's publishing cadence and the next open slots. Approval alone does not publish. Fields: organizationId.",
+  },
+  prepare_social_publish: {
+    label: "Prepare a social publish",
+    description:
+      "Prepare an exact publish plan and do not post. An empty itemIds or accountIds list is not every piece. mode is draft, scheduled, or now. Scheduled needs startAt and timezone, and spaces each next piece gapMinutes later (default 60). Fields: organizationId, deliverableId, itemIds, accountIds, mode, postType, startAt, timezone, gapMinutes.",
+  },
+  prepare_social_move: {
+    label: "Prepare a social move",
+    description: "Prepare a plan to move one post. Does not change the post. Fields: organizationId, postId, scheduledFor, timezone.",
+  },
+  prepare_social_cancel: {
+    label: "Prepare a social cancel",
+    description: "Prepare a plan to cancel one post. Does not cancel it. Fields: organizationId, postId.",
+  },
+  prepare_social_retry: {
+    label: "Prepare a social retry",
+    description: "Prepare a plan to retry one open attention item. Does not post. Fields: organizationId, attentionId.",
+  },
+  prepare_social_cadence: {
+    label: "Prepare a cadence change",
+    description:
+      "Prepare a plan to change the publishing cadence. Does not save it. Fields: organizationId, enabled, accountIds, weekdays, times, timezone.",
+  },
+  prepare_social_connect: {
+    label: "Prepare a social connect",
+    description:
+      "Prepare a plan to connect one eligible network. Does not open the provider. Fields: organizationId, platform, redirectUrl.",
+  },
+  prepare_social_disconnect: {
+    label: "Prepare a social disconnect",
+    description: "Prepare a plan to disconnect one eligible account. Does not disconnect it. Fields: organizationId, accountId.",
+  },
+  save_social_variant: {
+    label: "Save a network copy",
+    description:
+      "Save one network copy of a piece when agent social actions are on. Fields: organizationId, itemId, version, platform, caption, firstComment, title, tags, postType, mediaOrder, expectedRevision.",
+  },
+  execute_social_plan: {
+    label: "Execute a social plan",
+    description:
+      "Run one prepared social plan after the approval card. Sends only the rows in that plan. Fields: organizationId, planId, planHash, externalId.",
   },
   list_work_requests: { label: "Client requests", description: "Requests from client email and Slack. Fields: organizationId." },
   create_client: {

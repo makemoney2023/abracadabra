@@ -45,6 +45,10 @@ export type UnfiledReason =
 export type Assignment = { organizationId: string; workspaceId: string | null; projectId: string | null; role: "lead" | "hire" };
 export type AgentPrincipal = { agentId: string; label: string; assignments: Assignment[] };
 
+export function assignmentFor(agent: AgentPrincipal, organizationId: string): Assignment | null {
+  return agent.assignments.find((row) => row.organizationId === organizationId) ?? null;
+}
+
 export type WorkPayload = {
   externalId: string;
   title: string;

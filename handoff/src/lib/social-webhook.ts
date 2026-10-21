@@ -1,5 +1,6 @@
 import type { Sql } from "@/db/sql";
 import { signIntakeBody } from "./intake/sign";
+import { noteDisconnectedAccount } from "./social-attention";
 import { postOutcome, recordOutcome, syncSocialAccounts, type SendMode } from "./social";
 import type { ZernioClient, ZernioPostPlatform } from "./zernio";
 
@@ -83,6 +84,7 @@ async function handle(sql: Sql, payload: Payload, event: string, now: number, ze
     const accountId = payload.account?.accountId ?? payload.account?.id;
     if (!accountId) return "ignored";
     await sql.run("UPDATE social_accounts SET is_active = 0, synced_at = ? WHERE id = ?", [now, accountId]);
+    await noteDisconnectedAccount(sql, accountId, now);
     return "updated";
   }
   if (event === "account.connected") {

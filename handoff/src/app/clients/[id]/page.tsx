@@ -33,7 +33,9 @@ import { connectorGrant } from "@/lib/connector-grants";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { listSocialAccounts, listSocialPosts, refreshSocialPosts, syncSocialAccounts } from "@/lib/social";
+import { listOpenSocialAttention } from "@/lib/social-attention";
 import { getAutopost } from "@/lib/social-autopost";
+import { getAgentPublishMode } from "@/lib/social-policy-settings";
 import { openZernio } from "@/lib/zernio";
 import type { SocialView } from "./social-tab";
 import { SetContextLabel } from "@/components/context-bar";
@@ -71,12 +73,14 @@ async function loadSocial(
       syncError = error instanceof Error ? error.message : "No answer.";
     }
   }
-  const [accounts, posts, autopost] = await Promise.all([
+  const [accounts, posts, autopost, attention, agentMode] = await Promise.all([
     listSocialAccounts(sql, client.id),
     listSocialPosts(sql, { organizationId: client.id }, 200),
     getAutopost(sql, client.id),
+    listOpenSocialAttention(sql, client.id),
+    getAgentPublishMode(sql, client.id),
   ]);
-  return { configured: Boolean(zernio), syncError, accounts, posts, autopost, notice, now: clock() };
+  return { configured: Boolean(zernio), syncError, accounts, posts, autopost, attention, agentMode, notice, now: clock() };
 }
 
 function pageNumber(raw: string | undefined): number {

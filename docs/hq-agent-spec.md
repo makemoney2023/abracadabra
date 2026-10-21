@@ -637,6 +637,7 @@ All new UI uses the existing shadcn components in `handoff/src/components/ui`.
 | `EMAIL` (`send_email` binding), `MAGIC_EMAIL_FROM` | `handoff-agent` | Replies from `magic@abra-ca-dabra.app` (17.6). |
 | `EMAIL_REPLY_SECRET` | `handoff-agent` | Signs outbound headers so replies route back to the same thread. |
 | `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_BOT_USER_ID` | `handoff-agent` | Slack channel (17.7). Stored in Obsidian. |
+| `SOCIAL_AGENT_ACTIONS` | `handoff`, `handoff-hq` | `1`, `true`, or `on` lets assigned agents prepare and execute social plans at `/api/agent-social`. Absent or `off` keeps those writes off. Reads stay available. `schedule_social` still sends directly either way. Not a secret. |
 
 Add `AGENT_WAKE_SECRET`, `CURSOR_API_KEY`, `CF_ACCESS_CLIENT_ID`, and `CF_ACCESS_CLIENT_SECRET` to `handoff/.env.example` with comments. `AGENT_MCP_TOKEN` is commented as a portal credential, not a Worker secret. Document the portal and the Worker in `handoff/README.md` under a new "Agent" section.
 

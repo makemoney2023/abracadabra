@@ -1,5 +1,6 @@
 import type { Sql } from "@/db/sql";
 import type { Caller } from "./authz";
+import { commandAuthorized, readCommandGate } from "./social-commands";
 import { sendPiece, zonedTimeToUtc } from "./social";
 import { WEEKDAY_LABEL } from "./social-plan";
 import type { ObjectStore } from "./store/objects";
@@ -13,7 +14,30 @@ export type Autopost = {
   /** "HH:MM" wall-clock times in the client's time zone. */
   times: string[];
   timezone: string;
+  /** When set, at most this many new slots land on one local day. Unset means no cap. */
+  dailyCap?: number;
+  /** YYYY-MM-DD in the client time zone. Unset or empty means no blackout. */
+  blackouts?: string[];
 };
+
+export const CADENCE_SENTENCE = "When the client approves a piece, place it in the next available slot.";
+
+export function approvalControlLabel(settings: Autopost): string {
+  if (!settings.enabled) return "Approve";
+  const days = settings.weekdays.map((day) => WEEKDAY_LABEL[day] ?? String(day)).join(", ");
+  return `Approve for ${settings.timezone} on ${days} at ${settings.times.join(", ")}`;
+}
+
+export function cadenceFingerprint(settings: Autopost): string {
+  return JSON.stringify({
+    enabled: settings.enabled,
+    weekdays: [...settings.weekdays].sort(),
+    times: [...settings.times],
+    timezone: settings.timezone,
+    dailyCap: settings.dailyCap ?? null,
+    blackouts: [...(settings.blackouts ?? [])].sort(),
+  });
+}
 
 export const DEFAULT_AUTOPOST: Autopost = { enabled: false, accountIds: [], weekdays: [1, 2, 3, 4, 5], times: ["09:00"], timezone: "UTC" };
 
@@ -27,9 +51,39 @@ export function parseTimes(value: string): string[] {
   return [...new Set(value.split(/[\s,]+/).map((part) => part.trim()).filter((part) => TIME.test(part)))].sort();
 }
 
+function readLimits(json: string | null | undefined): Pick<Autopost, "dailyCap" | "blackouts"> {
+  if (!json) return {};
+  try {
+    const parsed = JSON.parse(json) as { dailyCap?: unknown; blackouts?: unknown };
+    const dailyCap = typeof parsed.dailyCap === "number" && parsed.dailyCap > 0 ? parsed.dailyCap : undefined;
+    const blackouts = Array.isArray(parsed.blackouts)
+      ? parsed.blackouts.filter((day): day is string => typeof day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day))
+      : [];
+    return {
+      ...(dailyCap != null ? { dailyCap } : {}),
+      ...(blackouts.length > 0 ? { blackouts } : {}),
+    };
+  } catch {
+    return {};
+  }
+}
+
+function limitsJson(input: Autopost): string {
+  const body: { dailyCap?: number; blackouts?: string[] } = {};
+  if (input.dailyCap != null && input.dailyCap > 0) body.dailyCap = input.dailyCap;
+  if (input.blackouts && input.blackouts.length > 0) body.blackouts = input.blackouts;
+  return JSON.stringify(body);
+}
+
+function cadenceActor(caller: Caller): { kind: "staff" | "agent" | "system"; id: string | null } {
+  const gate = readCommandGate(caller);
+  if (gate) return { kind: gate.kind === "client" ? "system" : gate.kind, id: gate.id };
+  return { kind: caller.staff ? "staff" : "system", id: caller.userId };
+}
+
 export async function getAutopost(sql: Sql, organizationId: string): Promise<Autopost> {
-  const row = await sql.get<{ enabled: number; account_ids: string; weekdays: string; times: string; timezone: string }>(
-    "SELECT enabled, account_ids, weekdays, times, timezone FROM social_autopost WHERE organization_id = ?",
+  const row = await sql.get<{ enabled: number; account_ids: string; weekdays: string; times: string; timezone: string; limits_json: string | null }>(
+    "SELECT enabled, account_ids, weekdays, times, timezone, limits_json FROM social_autopost WHERE organization_id = ?",
     [organizationId],
   );
   if (!row) return DEFAULT_AUTOPOST;
@@ -46,6 +100,7 @@ export async function getAutopost(sql: Sql, organizationId: string): Promise<Aut
     weekdays: row.weekdays.split(",").map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6),
     times: parseTimes(row.times),
     timezone: row.timezone || "UTC",
+    ...readLimits(row.limits_json),
   };
 }
 
@@ -56,7 +111,7 @@ export async function saveAutopost(
   input: Autopost,
   now: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!caller.staff) return { ok: false, error: "You can't do that." };
+  if (!commandAuthorized(caller)) return { ok: false, error: "You can't do that." };
   if (zonedTimeToUtc("2026-01-01T09:00", input.timezone) == null) return { ok: false, error: "Pick a time zone." };
   const accounts = input.accountIds.length
     ? await sql.all<{ id: string }>(
@@ -69,10 +124,10 @@ export async function saveAutopost(
     return { ok: false, error: "Pick at least one day and one time." };
   }
   await sql.run(
-    `INSERT INTO social_autopost (organization_id, enabled, account_ids, weekdays, times, timezone, updated_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO social_autopost (organization_id, enabled, account_ids, weekdays, times, timezone, limits_json, updated_by, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (organization_id) DO UPDATE SET enabled = excluded.enabled, account_ids = excluded.account_ids,
-       weekdays = excluded.weekdays, times = excluded.times, timezone = excluded.timezone,
+       weekdays = excluded.weekdays, times = excluded.times, timezone = excluded.timezone, limits_json = excluded.limits_json,
        updated_by = excluded.updated_by, updated_at = excluded.updated_at`,
     [
       organizationId,
@@ -81,7 +136,22 @@ export async function saveAutopost(
       [...new Set(input.weekdays)].sort().join(","),
       input.times.join(","),
       input.timezone,
+      limitsJson(input),
       caller.userId,
+      now,
+    ],
+  );
+  const actor = cadenceActor(caller);
+  await sql.run(
+    `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
+     VALUES (?, ?, 'social.cadence.updated', ?, ?, ?, ?, ?)`,
+    [
+      crypto.randomUUID(),
+      organizationId,
+      actor.kind,
+      actor.id,
+      "Updated the publishing cadence.",
+      JSON.stringify({ enabled: input.enabled, timezone: input.timezone }),
       now,
     ],
   );
@@ -105,15 +175,21 @@ export function nextSlots(settings: Autopost, taken: number[], now: number, coun
   const slots: number[] = [];
   if (settings.weekdays.length === 0 || settings.times.length === 0 || count <= 0) return slots;
   const busy = [...taken];
+  const blackouts = settings.blackouts ?? [];
+  const cap = settings.dailyCap;
   for (let day = 0; day < 120 && slots.length < count; day += 1) {
     const { date, weekday } = localDay(now + day * 86_400_000, settings.timezone);
     if (!settings.weekdays.includes(weekday)) continue;
+    if (blackouts.includes(date)) continue;
+    let used = cap != null ? busy.filter((other) => localDay(other, settings.timezone).date === date).length : 0;
     for (const time of settings.times) {
+      if (cap != null && used >= cap) break;
       const at = zonedTimeToUtc(`${date}T${time}`, settings.timezone);
       if (at == null || at < now + 5 * 60_000) continue;
       if (busy.some((other) => Math.abs(other - at) < 60_000)) continue;
       slots.push(at);
       busy.push(at);
+      used += 1;
       if (slots.length >= count) break;
     }
   }

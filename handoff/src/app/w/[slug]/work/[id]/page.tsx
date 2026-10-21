@@ -7,6 +7,8 @@ import { parseFilingSummary } from "@/lib/filing-summary";
 import { seesHeldWork } from "@/lib/held-work";
 import { FilingSummaryCard } from "@/components/filing-summary-card";
 import { ITEM_FORMATS } from "@/lib/deliverable-manifest";
+import { isSocialItemFormat } from "@/components/social/social-piece-view";
+import { approvalControlLabel, getAutopost } from "@/lib/social-autopost";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
@@ -64,6 +66,10 @@ export default async function FinishedPiecePage({
     items.filter((item) => !filings.has(item.id) && item.format !== "link").map((item) => [item.title.toLowerCase(), `#item-${item.id}`]),
   );
   // A file's section is its filing's title, already the heading of the card above it.
+  const autopost = await getAutopost(sql, opened.deliverable.organization_id);
+  const approveLabel = approvalControlLabel(autopost);
+  const hasSocial = opened.items.some((item) => isSocialItemFormat(item.format));
+  const approveAllLabel = autopost.enabled && hasSocial ? approveLabel.replace(/^Approve\b/, "Approve all") : "Approve all";
   const filingTitles = new Set([...filings.values()].map((filing) => filing.title));
   const filingFiles = (summaryItem: (typeof items)[number]) =>
     items.filter((item) => item.id !== summaryItem.id && item.format !== "link" && item.section === summaryItem.section).length;
@@ -92,7 +98,7 @@ export default async function FinishedPiecePage({
             <NoteForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
           </div>
         ) : (
-          <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
+          <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={approveAllLabel} />
         )}
       </div>
       {brief || shownFormats.length < 2 ? null : (
@@ -188,7 +194,7 @@ export default async function FinishedPiecePage({
                     deliverableId={opened.deliverable.id}
                     itemId={item.id}
                     version={version}
-                    label="Approve"
+                    label={isSocialItemFormat(item.format) ? approveLabel : "Approve"}
                   />
                   <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
                 </div>

@@ -1,8 +1,8 @@
 # Social publishing through Zernio
 
-Status: Phases 1, 2 and 3 built. Phase 4 is the plan.
+Status: Phases 1, 2 and 3 built. The agent-managed workflow is built with writes behind `SOCIAL_AGENT_ACTIONS` (default off). `schedule_social` still sends directly. Phase 4 analytics is still the plan.
 
-The workflow, UI, and Grok-agent expansion is specified in [Agent-managed social publishing](2026-10-21-agent-managed-social-publishing-design.md), with its [test-first implementation plan](../plans/2026-10-21-agent-managed-social-publishing.md).
+The workflow, UI, and Grok-agent expansion is specified in [Agent-managed social publishing](2026-10-21-agent-managed-social-publishing-design.md), with its [test-first implementation plan](../plans/2026-10-21-agent-managed-social-publishing.md). Agent reads are live. Agent writes stay off until the flag is `1`, `true`, or `on`.
 
 ## Goal
 

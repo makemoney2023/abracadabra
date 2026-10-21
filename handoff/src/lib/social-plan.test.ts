@@ -63,6 +63,7 @@ describe("planTarget", () => {
   it("sends TikTok to the creator inbox and skips blogs and stories where there are none", () => {
     expect(planTarget("tiktok", "reel", [video], "t")).toMatchObject({ ok: true, platformSpecificData: { draft: true, mediaType: "video" } });
     expect(planTarget("wordpress", "feed", [], "t")).toMatchObject({ ok: false });
+    expect(planTarget("pinterest", "feed", [picture("a")], "t")).toMatchObject({ ok: false });
     expect(planTarget("linkedin", "story", [video], "t")).toMatchObject({ ok: false });
     expect(planTarget("linkedin", "reel", [video], "t")).toEqual({ ok: true });
   });

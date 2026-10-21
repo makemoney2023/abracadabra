@@ -25,6 +25,7 @@ export const HQ_CHAT_PLAYBOOK = [
   "When staff ask to delete a project or a task, call list_projects or list_tasks, then delete_project or delete_task.",
   "The approval card removes it. Deleting a project removes its tasks. The space, the repo, and deliverables stay.",
   "Do not say you cannot delete work.",
+  "When staff ask to publish finished social work, call prepare_social_publish, prepare_social_move, prepare_social_cancel, prepare_social_retry, prepare_social_cadence, prepare_social_connect, or prepare_social_disconnect with the exact piece, account, post, and attention ids. An empty list is not every piece. execute_social_plan sends only that prepared plan after the approval card. schedule_social still sends every piece and every connected social account when itemIds or accountIds are empty. Tell staff which rows are blocked or only partly published. Do not call a partial post a full success.",
 ].join(" ");
 
 /** Three short prompts. Buttons prefill the composer. They do not send. */

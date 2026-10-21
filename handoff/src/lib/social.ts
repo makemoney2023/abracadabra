@@ -1,6 +1,9 @@
 import type { Caller } from "./authz";
 import type { ItemFormat } from "./deliverable-manifest";
 import type { Sql } from "@/db/sql";
+import { reconcilePostedTargets } from "./social-attention";
+import { commandAuthorized, readCommandGate } from "./social-commands";
+import { storedSocialVariants, type SocialVariant } from "./social-variants";
 import type { ObjectStore } from "./store/objects";
 import {
   POST_TYPE_LABEL,
@@ -58,7 +61,9 @@ export type SocialPost = {
 
 export type SendResult =
   | { ok: true; postId: string; status: PostStatus; sentTo: number; skipped: string[] }
-  | { ok: false; error: string; skipped: string[] };
+  | { ok: false; error: string; skipped: string[]; postId?: string; uncertain?: boolean };
+
+export type TargetOutcome = "succeeded" | "failed" | "uncertain" | "not_attempted" | "scheduled" | "publishing";
 
 export const POST_STATUS_LABEL: Record<PostStatus, string> = {
   sending: "Sending",
@@ -75,6 +80,11 @@ function errorText(error: unknown): string {
   if (error instanceof ZernioError) return error.message;
   if (error instanceof Error) return error.message;
   return "Zernio did not answer.";
+}
+
+/** A timeout after the local row exists may have reached the provider. Leave the row sending. */
+function providerUncertain(error: unknown): boolean {
+  return error instanceof ZernioError && (error.status === 408 || error.status === 504 || error.status === 0);
 }
 
 /** The client's Zernio profile id, made on first use. externalId is the organization id. */
@@ -273,7 +283,7 @@ export type PieceSettings = { texts: Record<string, string>; firstComment: strin
 
 export const EMPTY_PIECE_SETTINGS: PieceSettings = { texts: {}, firstComment: null, tags: [] };
 
-export async function pieceSettings(sql: Sql, itemId: string): Promise<PieceSettings> {
+async function storedPieceSettings(sql: Sql, itemId: string): Promise<PieceSettings> {
   const row = await sql.get<{ texts_json: string; first_comment: string | null; tags: string | null }>(
     "SELECT texts_json, first_comment, tags FROM social_piece_settings WHERE item_id = ?",
     [itemId],
@@ -299,6 +309,51 @@ export async function pieceSettings(sql: Sql, itemId: string): Promise<PieceSett
   };
 }
 
+function sharedMediaOrder(variants: SocialVariant[]): string[] | null {
+  const orders = variants.map((row) => row.mediaOrder).filter((order) => order.length > 0);
+  if (orders.length === 0) return null;
+  const signature = orders[0].join("\0");
+  if (orders.some((order) => order.join("\0") !== signature)) return null;
+  return orders[0];
+}
+
+function orderedMedia(items: PlannedMedia[], order: string[] | null): PlannedMedia[] {
+  if (!order || order.length !== items.length) return items;
+  const byKey = new Map(items.map((item) => [item.key, item]));
+  if (!order.every((key) => byKey.has(key))) return items;
+  return order.map((key) => byKey.get(key)!);
+}
+
+function overlayPieceSettings(base: PieceSettings, variants: SocialVariant[]): PieceSettings {
+  const texts = { ...base.texts };
+  for (const variant of variants) {
+    if (variant.caption) texts[variant.platform] = variant.caption;
+    if (variant.platform === "youtube" && variant.title) texts.youtube_title = variant.title;
+  }
+  const youtube = variants.find((row) => row.platform === "youtube");
+  const comments = variants.map((row) => row.firstComment?.trim() || "").filter(Boolean);
+  const agreed = comments.length > 0 && comments.every((comment) => comment === comments[0]) ? comments[0] : null;
+  return {
+    texts,
+    firstComment: agreed ?? base.firstComment,
+    tags: youtube && youtube.tags.length > 0 ? youtube.tags : base.tags,
+  };
+}
+
+export async function pieceSettings(sql: Sql, itemId: string): Promise<PieceSettings> {
+  const base = await storedPieceSettings(sql, itemId);
+  const item = await sql.get<{ version: number; current_version: number }>(
+    `SELECT i.version, d.version AS current_version
+     FROM deliverable_items i JOIN deliverables d ON d.id = i.deliverable_id
+     WHERE i.id = ?`,
+    [itemId],
+  );
+  if (!item || item.version !== item.current_version) return base;
+  const variants = (await storedSocialVariants(sql, itemId, item.version)).filter((row) => row.eligible);
+  if (variants.length === 0) return base;
+  return overlayPieceSettings(base, variants);
+}
+
 /** Saves the per-network text, first comment, and YouTube tags kept with one piece. Staff only. */
 export async function savePieceSettings(
   sql: Sql,
@@ -307,7 +362,7 @@ export async function savePieceSettings(
   input: { texts: Record<string, string>; firstComment: string; tags: string },
   now: number,
 ): Promise<boolean> {
-  if (!caller.staff) return false;
+  if (!commandAuthorized(caller)) return false;
   const item = await sql.get<{ id: string }>("SELECT id FROM deliverable_items WHERE id = ?", [itemId]);
   if (!item) return false;
   const texts = Object.fromEntries(
@@ -355,7 +410,7 @@ export async function sendPiece(
   input: SendPieceInput,
   now: number,
 ): Promise<SendResult> {
-  if (!caller.staff) return { ok: false, error: "You can't do that.", skipped: [] };
+  if (!commandAuthorized(caller)) return { ok: false, error: "You can't do that.", skipped: [] };
   const item = await loadItem(sql, input.deliverableId, input.itemId);
   if (!item) return { ok: false, error: "That piece is not here.", skipped: [] };
   if (input.mode !== "draft" && item.status !== "approved") {
@@ -393,6 +448,10 @@ export async function sendPiece(
   if (!content && media.items.length === 0 && !(await hasPieceText(sql, item.id))) return { ok: false, error: `"${item.title}" has no caption or media.`, skipped: [] };
 
   const settings = await pieceSettings(sql, item.id);
+  const variants = (await storedSocialVariants(sql, item.id, item.version)).filter((row) => row.eligible);
+  const variantByPlatform = new Map(variants.map((row) => [row.platform, row]));
+  const youtubeVariant = variantByPlatform.get("youtube");
+  const postTags = youtubeVariant && youtubeVariant.tags.length > 0 ? youtubeVariant.tags : settings.tags;
   const skipped: string[] = [];
   const targets: ZernioPostTarget[] = [];
   for (const account of accounts) {
@@ -406,12 +465,14 @@ export async function sendPiece(
       skipped.push(`${label}: ${plan.reason}`);
       continue;
     }
+    const variant = variantByPlatform.get(account.platform);
+    const commentText = variant?.firstComment || settings.firstComment;
     const comment =
-      settings.firstComment && postType !== "story" && FIRST_COMMENT_PLATFORMS.has(account.platform)
-        ? { firstComment: settings.firstComment }
+      commentText && postType !== "story" && FIRST_COMMENT_PLATFORMS.has(account.platform)
+        ? { firstComment: commentText }
         : {};
-    const specific = { ...plan.platformSpecificData, ...comment };
-    const text = settings.texts[account.platform];
+    const specific = { ...plan.platformSpecificData, ...(variant?.options ?? {}), ...comment };
+    const text = variant?.caption || settings.texts[account.platform];
     targets.push({
       platform: account.platform,
       accountId: account.id,
@@ -451,7 +512,7 @@ export async function sendPiece(
     const name = item.id.slice(0, 8);
     const poster = media.poster ? await uploadMedia(zernio, store, media.poster, name) : null;
     const mediaItems: ZernioMediaItem[] = [];
-    for (const file of media.items) {
+    for (const file of orderedMedia(media.items, sharedMediaOrder(variants))) {
       const url = await uploadMedia(zernio, store, file, name);
       mediaItems.push(file.kind === "video" && poster ? { type: "video", url, thumbnail: poster } : { type: file.kind, url });
     }
@@ -466,7 +527,7 @@ export async function sendPiece(
       content,
       title: item.title.slice(0, 100),
       profileId: profile.zernio_profile_id,
-      ...(settings.tags.length > 0 ? { tags: settings.tags } : {}),
+      ...(postTags.length > 0 ? { tags: postTags } : {}),
       platforms: targets,
       mediaItems,
       timezone: input.timezone || "UTC",
@@ -477,6 +538,12 @@ export async function sendPiece(
         : {}),
     });
     const status = statusFrom(created.status, input.mode);
+    const gate = readCommandGate(caller);
+    const actorKind = gate ? (gate.kind === "client" ? "system" : gate.kind) : caller.userId ? "staff" : "system";
+    const actorId = gate ? gate.id : caller.userId;
+    const activityData = gate
+      ? { socialPostId: postId, zernioPostId: created._id, postType, actorKind: gate.kind }
+      : { socialPostId: postId, zernioPostId: created._id, postType };
     await sql.batch([
       {
         statement: "UPDATE social_posts SET zernio_post_id = ?, status = ?, updated_at = ? WHERE id = ?",
@@ -491,22 +558,44 @@ export async function sendPiece(
           item.organization_id,
           item.project_id,
           item.workspace_id,
-          caller.userId ? "staff" : "system",
-          caller.userId,
+          actorKind,
+          actorId,
           `${input.mode === "draft" ? "Saved a draft of" : input.mode === "now" ? "Posted" : "Scheduled"} "${item.title}" to ${targets.length} account${targets.length === 1 ? "" : "s"}.`,
-          JSON.stringify({ socialPostId: postId, zernioPostId: created._id, postType }),
+          JSON.stringify(activityData),
           now,
         ],
       },
     ]);
+    const targetOutcome: TargetOutcome =
+      status === "published" || status === "partial"
+        ? "succeeded"
+        : status === "failed"
+          ? "failed"
+          : status === "draft" || status === "scheduled"
+            ? "scheduled"
+            : "publishing";
+    await syncPostTargets(
+      sql,
+      postId,
+      item.organization_id,
+      targets.map((target) => ({ accountId: target.accountId, platform: target.platform })),
+      targetOutcome,
+      now,
+    );
     return { ok: true, postId, status, sentTo: targets.length, skipped };
   } catch (error) {
     const message = errorText(error);
+    const linked = targets.map((target) => ({ accountId: target.accountId, platform: target.platform }));
+    if (providerUncertain(error)) {
+      await syncPostTargets(sql, postId, item.organization_id, linked, "uncertain", Date.now());
+      return { ok: false, error: `"${item.title}" did not send: ${message}`, skipped, postId, uncertain: true };
+    }
     await sql.run("UPDATE social_posts SET status = 'failed', error = ?, updated_at = ? WHERE id = ?", [
       message.slice(0, 1000),
       Date.now(),
       postId,
     ]);
+    await syncPostTargets(sql, postId, item.organization_id, linked, "failed", Date.now());
     return { ok: false, error: `"${item.title}" did not send: ${message}`, skipped };
   }
 }
@@ -617,6 +706,32 @@ export function postOutcome(
   };
 }
 
+/** One outcome row per local post and account. Later reconciliations update the same row. */
+export async function syncPostTargets(
+  sql: Sql,
+  postId: string,
+  organizationId: string,
+  targets: { accountId: string; platform: string }[],
+  outcome: TargetOutcome,
+  now: number,
+  urls?: Record<string, string>,
+): Promise<void> {
+  for (const target of targets) {
+    const publicUrl = urls?.[target.accountId] ?? null;
+    await sql.run(
+      `INSERT INTO social_post_targets (
+         id, post_id, organization_id, account_id, platform, outcome, public_url, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (post_id, account_id) DO UPDATE SET
+         outcome = excluded.outcome,
+         public_url = COALESCE(excluded.public_url, social_post_targets.public_url),
+         updated_at = excluded.updated_at`,
+      [crypto.randomUUID(), postId, organizationId, target.accountId, target.platform, outcome, publicUrl, now],
+    );
+  }
+  await reconcilePostedTargets(sql, postId, organizationId, targets, outcome, now);
+}
+
 /** Writes Zernio's view of a post onto our row. Links already known are kept. */
 export async function recordOutcome(
   sql: Sql,
@@ -624,7 +739,10 @@ export async function recordOutcome(
   outcome: { status: PostStatus; error: string | null; urls: Record<string, string> },
   now: number,
 ): Promise<void> {
-  const current = await sql.get<{ published_urls: string | null }>("SELECT published_urls FROM social_posts WHERE id = ?", [rowId]);
+  const current = await sql.get<{ published_urls: string | null; account_ids: string; organization_id: string }>(
+    "SELECT published_urls, account_ids, organization_id FROM social_posts WHERE id = ?",
+    [rowId],
+  );
   let urls: Record<string, string> = {};
   try {
     urls = current?.published_urls ? (JSON.parse(current.published_urls) as Record<string, string>) : {};
@@ -639,6 +757,36 @@ export async function recordOutcome(
     now,
     rowId,
   ]);
+  if (!current) return;
+  let accountIds: string[] = [];
+  try {
+    accountIds = JSON.parse(current.account_ids) as string[];
+  } catch {
+    accountIds = [];
+  }
+  if (accountIds.length === 0) return;
+  const accounts = await sql.all<{ id: string; platform: string }>(
+    `SELECT id, platform FROM social_accounts WHERE id IN (${accountIds.map(() => "?").join(", ")})`,
+    accountIds,
+  );
+  const platformOf = new Map(accounts.map((account) => [account.id, account.platform]));
+  for (const accountId of accountIds) {
+    const platform = platformOf.get(accountId);
+    if (!platform) continue;
+    const targetOutcome: TargetOutcome =
+      outcome.status === "published"
+        ? "succeeded"
+        : outcome.status === "partial"
+          ? outcome.urls[accountId]
+            ? "succeeded"
+            : "failed"
+          : outcome.status === "failed"
+            ? "failed"
+            : outcome.status === "scheduled" || outcome.status === "draft"
+              ? "scheduled"
+              : "publishing";
+    await syncPostTargets(sql, rowId, current.organization_id, [{ accountId, platform }], targetOutcome, now, outcome.urls);
+  }
 }
 
 type Waiting = { id: string; zernio_post_id: string; mode: SendMode };
@@ -686,7 +834,7 @@ export async function refreshDueSocialPosts(sql: Sql, zernio: ZernioClient, now:
 }
 
 async function ownPost(sql: Sql, caller: Caller, postId: string): Promise<SocialPost | null> {
-  if (!caller.staff) return null;
+  if (!commandAuthorized(caller)) return null;
   const row = await sql.get<SocialPost>(
     `SELECT id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, skipped, scheduled_for,
        timezone, status, zernio_post_id, error, published_urls, created_at, updated_at FROM social_posts WHERE id = ?`,
