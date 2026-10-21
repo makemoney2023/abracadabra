@@ -75,15 +75,34 @@ export function memoryCheckDb(): BoundSql {
   const db = new DatabaseSync(":memory:");
   db.exec(CRM);
   for (const name of migrations) db.exec(readFileSync(path.join(dir, name), "utf8"));
+  const statements = new WeakMap<object, () => unknown>();
   return {
+    async batch(list) {
+      db.exec("BEGIN");
+      try {
+        const out = list.map((statement) => {
+          const run = statements.get(statement);
+          if (!run) throw new Error("Not a statement from this database");
+          return run();
+        });
+        db.exec("COMMIT");
+        return out;
+      } catch (err) {
+        db.exec("ROLLBACK");
+        throw err;
+      }
+    },
     prepare(query: string) {
       return {
         bind(...values: unknown[]) {
           const args = values.map((value) => (value === undefined ? null : value));
-          return {
+          const runNow = () => {
+            const info = db.prepare(query).run(...(args as never[]));
+            return { success: true, meta: { changes: Number(info.changes) } };
+          };
+          const statement = {
             async run() {
-              db.prepare(query).run(...(args as never[]));
-              return { success: true };
+              return runNow();
             },
             async first<T>() {
               const row = db.prepare(query).get(...(args as never[])) as T | undefined;
@@ -93,6 +112,8 @@ export function memoryCheckDb(): BoundSql {
               return { results: db.prepare(query).all(...(args as never[])) as T[] };
             },
           };
+          statements.set(statement, runNow);
+          return statement;
         },
       };
     },

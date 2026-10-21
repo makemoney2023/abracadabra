@@ -6,6 +6,7 @@ import { buildReportProps } from "@/lib/pdf/report-props";
 import { renderScanReportPdf } from "@/lib/pdf/scan-report-pdf";
 import { loadStudioFontBytes } from "@/lib/pdf/studio-font-bytes";
 import { loadScanByPublicToken } from "@/lib/scan/d1-store";
+import { robotsNote } from "@/lib/scan/robots-note";
 import { unlockCookieName } from "@/lib/scan/unlock";
 
 type RouteContext = { params: Promise<{ token: string }> };
@@ -32,7 +33,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
   let loaded: Awaited<ReturnType<typeof loadScanByPublicToken>>;
   try {
-    loaded = await loadScanByPublicToken(db, token);
+    loaded = await loadScanByPublicToken(db, token, { pages: "matrix" });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to load scan" },
@@ -50,6 +51,7 @@ export async function GET(request: Request, context: RouteContext) {
     scoreBreakdown: loaded.scan.score_breakdown,
     pages: loaded.pages,
     findings: loaded.findings,
+    robotsNote: robotsNote(loaded.progress),
   });
 
   let bytes: Uint8Array;

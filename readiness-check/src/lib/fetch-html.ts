@@ -1,3 +1,4 @@
+import { PAGE_MAX_BYTES, readTextCapped } from "@/lib/read-capped";
 /** Keep short — many pages may be attempted; long hangs freeze the scan UI. */
 const HTML_FETCH_TIMEOUT_MS = 5_000;
 /** Existence checks on guessed paths are cheaper still. */
@@ -63,7 +64,7 @@ export async function fetchHtmlForSchema(url: string): Promise<string | null> {
       return null;
     }
 
-    return await response.text();
+    return await readTextCapped(response, PAGE_MAX_BYTES);
   } catch {
     return null;
   }

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ParallelExtractResult, ParallelSearchResult } from "@/lib/parallel/types";
+import { PAGE_MAX_BYTES, readTextCapped, SITE_FILE_MAX_BYTES } from "@/lib/read-capped";
 
 const API = "https://api.cloudflare.com/client/v4";
 const FETCH_TIMEOUT_MS = 8_000;
@@ -156,7 +157,9 @@ export function createAiSearchScanClient(options?: { env?: AiSearchEnv; fetchImp
   };
 
   return {
-    async extract(urls: string[]): Promise<ParallelExtractResult[]> {
+    async extract(urls: string[], opts?: { fullContent?: boolean }): Promise<ParallelExtractResult[]> {
+      // Site files and sitemaps (fullContent) may be larger than pages; both are capped.
+      const maxBytes = opts?.fullContent ? SITE_FILE_MAX_BYTES : PAGE_MAX_BYTES;
       return Promise.all(
         urls.map(async (url) => {
           try {
@@ -170,7 +173,7 @@ export function createAiSearchScanClient(options?: { env?: AiSearchEnv; fetchImp
               signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
             });
             if (!response.ok) return { url, content: "", error: String(response.status) };
-            return { url, content: await response.text() };
+            return { url, content: await readTextCapped(response, maxBytes) };
           } catch (error) {
             return { url, content: "", error: error instanceof Error ? error.message : "fetch failed" };
           }
@@ -193,7 +196,7 @@ export function createAiSearchScanClient(options?: { env?: AiSearchEnv; fetchImp
           redirect: "follow",
           signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
         });
-        if (response.ok) html = await response.text();
+        if (response.ok) html = await readTextCapped(response, PAGE_MAX_BYTES);
       } catch {
         html = "";
       }

@@ -4,8 +4,18 @@ import type { ParallelExtractResult } from "@/lib/parallel/types";
 import { CRITICAL_PAGE_TYPES } from "@/lib/scoring/constants";
 import type { DetectedPage } from "@/lib/types";
 
-/** Cap HTML GETs so a 40-page scan cannot block for minutes on schema recovery. */
+/**
+ * Cap on extra HTML GETs, only for backends that return markdown or excerpts instead of HTML (the legacy Parallel
+ * path). The Cloudflare scan client already returns each page's HTML, so those pages are never fetched twice and
+ * this cap does not apply to them.
+ */
 export const MAX_SCHEMA_HTML_FETCHES = 12;
+
+/** True when an extract result is the page's own HTML, so JSON-LD and facts can be read from it directly. */
+export function looksLikeHtml(content: string | undefined): boolean {
+  if (!content) return false;
+  return /<!doctype html|<html[\s>]|<head[\s>]|<body[\s>]/i.test(content.slice(0, 4096));
+}
 
 const CRITICAL = new Set<string>(CRITICAL_PAGE_TYPES);
 const PAGE_TYPE_RANK: Record<string, number> = {
@@ -79,8 +89,8 @@ const FACT_HTML_TYPES = new Set(["home", "contact", "about", "faq", "service", "
 export const MAX_FACT_HTML_FETCHES = 10;
 
 /**
- * Recover JSON-LD from raw HTML for a capped, prioritized subset of pages.
- * Also fetches HTML for up to 10 critical ok pages for fact extraction.
+ * Recover JSON-LD from raw HTML. A page whose extract result is already HTML is read as is, with no cap and no
+ * second request. Other pages get a capped, prioritized HTML GET, plus up to 10 critical ok pages for facts.
  */
 export async function enrichPagesWithSchemaHtml(
   pages: DetectedPage[],
@@ -88,11 +98,15 @@ export async function enrichPagesWithSchemaHtml(
   const jsonLdBlocksByUrl = new Map<string, unknown[]>();
   const htmlByUrl = new Map<string, string>();
 
-  const needsSchemaHtml = pages.filter((p) => p.fetchStatus === "ok" && !p.hasJsonLd);
+  for (const page of pages) {
+    if (page.fetchStatus === "ok" && looksLikeHtml(page.rawContent)) htmlByUrl.set(page.url, page.rawContent!);
+  }
+
+  const needsSchemaHtml = pages.filter((p) => p.fetchStatus === "ok" && !p.hasJsonLd && !htmlByUrl.has(p.url));
   const schemaSelected = new Set(selectUrlsForSchemaHtmlFetch(needsSchemaHtml));
 
   const factCandidates = pages
-    .filter((p) => p.fetchStatus === "ok" && FACT_HTML_TYPES.has(p.pageType))
+    .filter((p) => p.fetchStatus === "ok" && FACT_HTML_TYPES.has(p.pageType) && !htmlByUrl.has(p.url))
     .sort((a, b) => (PAGE_TYPE_RANK[a.pageType] ?? 99) - (PAGE_TYPE_RANK[b.pageType] ?? 99))
     .slice(0, MAX_FACT_HTML_FETCHES);
 
