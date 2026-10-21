@@ -2,6 +2,15 @@
 
 ## 2026-10-21
 
+- **What changed** — A stored YouTube variant title is the title that gets posted. A title locked into a publish plan wins over a stale option on that variant. Piece settings that only set `youtube_title` still do not change a direct send. A denied plan reports the reason it was prepared with, including an empty selection. An approved picture sent only to YouTube stays allowed and blocked as "YouTube needs one video."
+- **Why** — Review of the social agent plans found the send path always used the piece title, and HQ execute of a denied plan recomputed policy without the approval flag, so every denial came back as unapproved.
+- **Code touchpoints** — `handoff/src/lib/social.ts`, `handoff/src/lib/social-commands.ts`, `handoff/src/lib/social-plans.ts`, `handoff/src/lib/social-tools.ts`.
+- **Data-flow impact** — Direct `schedule_social` and the staff Post to social form still send through `sendPieces`. Plan execute passes the hashed row options into that same send. The denial reason is stored on the plan request and is not part of the plan hash.
+- **API / schema impact** — none.
+- **Verification** — `npx tsc --noEmit`, `npm run typecheck:agent`, eslint on the touched files, `npm test` (181 files, 1379 tests, plus the agent suite of 11).
+
+## 2026-10-21
+
 - **What changed** — Assigned agents can read a client's social state and, when `SOCIAL_AGENT_ACTIONS` is on, prepare immutable publish plans. Staff still send with the existing Post to social form, calendar Move and Cancel, and `schedule_social`. An empty list on `schedule_social` still means every piece and every connected social account. New connect buttons hide WordPress, Wix, and Pinterest. Already-connected accounts stay listed.
 - **Why** — Grok agents need the same social workflow as staff, without replacing the tools and forms that already post.
 - **Code touchpoints** — `handoff/migrations/0039_social_agent_plans.sql`, `handoff/migrations/0040_social_cadence_limits.sql`, `handoff/src/lib/social-{policy,preflight,plans,commands,variants,attention,queries,tools,autopost}.ts`, `handoff/src/app/api/agent-social/`, `handoff/src/components/social/`, `handoff/src/app/clients/{social-actions.ts,social-forms.tsx,[id]/social-tab.tsx,[id]/page.tsx}`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/w/[slug]/{social/page.tsx,work/[id]/page.tsx}`, `handoff/src/cloudflare-env.d.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`, `handoff/.env.example`. The generated worker `Env` in `src/agent/env.d.ts` stays empty so HQ chat and client-agent bindings still typecheck.

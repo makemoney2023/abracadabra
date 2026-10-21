@@ -262,6 +262,61 @@ describe("social publishing, phase 2", () => {
     expect(byPlatform.youtube.platformSpecificData).toMatchObject({ firstComment: "Link in bio", title: "Piece i-vid" });
   });
 
+  it("keeps a settings-only YouTube title off the direct send", async () => {
+    const sql = await database();
+    const { zernio, posts } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    await sql.run(
+      `INSERT INTO social_piece_settings (item_id, texts_json, first_comment, tags, updated_at) VALUES ('i-vid', ?, NULL, NULL, ?)`,
+      [JSON.stringify({ youtube_title: "From settings" }), NOW],
+    );
+    await sendPiece(sql, zernio, store, staff, { ...base, itemId: "i-vid", postType: "short", accountIds: ["yt"], mode: "now", scheduledFor: null }, NOW);
+    expect(posts[0]?.platforms[0]?.platformSpecificData).toMatchObject({ title: "Piece i-vid" });
+  });
+
+  it("posts a stored YouTube variant title, and a plan override beats a stale option title", async () => {
+    const sql = await database();
+    const { zernio, posts } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    await sql.run(
+      `INSERT INTO social_variants (
+         id, item_id, version, platform, caption, first_comment, title, tags_json, post_type, options_json,
+         revision, updated_by_kind, updated_by_id, updated_at
+       ) VALUES ('v-yt', 'i-vid', 1, 'youtube', NULL, NULL, 'Launch day', '[]', 'short', ?, 1, 'staff', 'staff-1', ?)`,
+      [JSON.stringify({ title: "Stale title", visibility: "public", madeForKids: false }), NOW],
+    );
+    const sent = await sendPiece(
+      sql,
+      zernio,
+      store,
+      staff,
+      { ...base, itemId: "i-vid", postType: "short", accountIds: ["yt"], mode: "now", scheduledFor: null },
+      NOW,
+    );
+    expect(sent).toMatchObject({ ok: true });
+    expect(posts[0]?.title).toBe("Launch day");
+    expect(posts[0]?.platforms[0]?.platformSpecificData).toMatchObject({ title: "Launch day", visibility: "public" });
+
+    const drafted = await sendPiece(
+      sql,
+      zernio,
+      store,
+      staff,
+      {
+        ...base,
+        itemId: "i-vid",
+        postType: "short",
+        accountIds: ["yt"],
+        mode: "draft",
+        scheduledFor: null,
+        platformOverrides: { title: "Plan title", visibility: "unlisted", madeForKids: false },
+      },
+      NOW,
+    );
+    expect(drafted).toMatchObject({ ok: true, status: "draft" });
+    expect(posts[1]?.platforms[0]?.platformSpecificData).toMatchObject({ title: "Plan title", visibility: "unlisted" });
+  });
+
   it("moves and cancels a scheduled post, and keeps public links from a refresh", async () => {
     const sql = await database();
     const { zernio, moves, deletes } = fakeZernio(ACCOUNTS);

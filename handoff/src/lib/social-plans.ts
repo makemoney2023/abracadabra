@@ -99,6 +99,8 @@ export type StoredRequest = {
   scheduledFor?: number;
   attentionId?: string;
   cadence?: CommandCadence;
+  /** Why this plan was allowed or denied. Stored for HQ to report later. Not part of the plan hash. */
+  reasonCode?: string;
 };
 
 type PlanRow = {
@@ -303,6 +305,13 @@ async function loadContext(sql: Sql, input: PrepareSocialPlanInput): Promise<{ f
   };
 }
 
+/** An empty executable list is unapproved only when every block is the approval check. */
+function contentIsApproved(action: SocialAction, flight: PreflightResult): boolean {
+  if (action !== "schedule" && action !== "publish_now") return true;
+  if (flight.executable.length > 0) return true;
+  return flight.blocked.some((row) => row.reason !== "unapproved");
+}
+
 function activityActor(actor: SocialActor): { kind: "staff" | "agent" | "system"; id: string; stored: ActorStorageKind } {
   const stored = actorStorageKind(actor);
   return { kind: stored === "client" ? "system" : stored, id: actor.id, stored };
@@ -311,7 +320,7 @@ function activityActor(actor: SocialActor): { kind: "staff" | "agent" | "system"
 export async function prepareSocialPlan(sql: Sql, input: PrepareSocialPlanInput): Promise<PreparedPlan> {
   const { flight, cadenceRevision } = await loadContext(sql, input);
   const hash = hashRows(flight, input, cadenceRevision);
-  const contentApproved = input.action === "schedule" || input.action === "publish_now" ? flight.executable.length > 0 : true;
+  const contentApproved = contentIsApproved(input.action, flight);
   const policy =
     flight.reason === "selection_required"
       ? { authorization: "denied" as const, reasonCode: "selection_required", capabilities: [] }
@@ -327,6 +336,7 @@ export async function prepareSocialPlan(sql: Sql, input: PrepareSocialPlanInput)
     options: input.options ?? [],
     action: input.action,
     timezone: input.timezone ?? "UTC",
+    reasonCode: policy.reasonCode,
   };
   const actor = activityActor(input.actor);
   await sql.batch([
@@ -446,6 +456,7 @@ export async function prepareCommandPlan(sql: Sql, input: PrepareCommandPlanInpu
     ...(input.scheduledFor != null ? { scheduledFor: input.scheduledFor } : {}),
     ...(input.attentionId ? { attentionId: input.attentionId } : {}),
     ...(input.cadence ? { cadence: input.cadence } : {}),
+    reasonCode: policy.reasonCode,
   };
   const actor = activityActor(input.actor);
   await sql.batch([

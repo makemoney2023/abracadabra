@@ -150,6 +150,84 @@ describe("HQ social plan tools", () => {
     );
     expect(prepared).toMatchObject({ ok: true, value: { authorization: "denied", reasonCode: "selection_required" } });
     expect(fake.posts).toHaveLength(0);
+    const plan = (prepared as { value: { planId: string; planHash: string } }).value;
+    const executed = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "execute_social_plan",
+        input: { organizationId: "org-1", planId: plan.planId, planHash: plan.planHash, externalId: "empty-exec" },
+        idempotencyKey: "empty-exec",
+        approved: true,
+      },
+      NOW,
+      { social: { zernio: fake.zernio, store } },
+    );
+    expect(executed).toMatchObject({ ok: true, value: { executed: false, reasonCode: "selection_required" } });
+    expect(fake.posts).toHaveLength(0);
+  });
+
+  it("keeps an approved piece that YouTube cannot take as blocked, not unapproved", async () => {
+    const sql = await database();
+    const fake = fakeZernio(ACCOUNTS);
+    await withAccounts(sql, fake.zernio);
+    const prepared = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "prepare_social_publish",
+        input: { organizationId: "org-1", itemIds: ["i-pic"], accountIds: ["yt"], mode: "scheduled", startAt: "2027-03-01T09:00", timezone: "UTC" },
+        idempotencyKey: "blocked-approved",
+      },
+      NOW,
+      { social: { zernio: fake.zernio, store } },
+    );
+    expect(prepared).toMatchObject({
+      ok: true,
+      value: {
+        authorization: "allowed",
+        reasonCode: "allowed",
+        blocked: [expect.objectContaining({ itemId: "i-pic", accountId: "yt", reason: "YouTube needs one video." })],
+      },
+    });
+  });
+
+  it("posts the YouTube title locked in the plan, including a settings title the direct send ignores", async () => {
+    const sql = await database();
+    const fake = fakeZernio(ACCOUNTS);
+    await withAccounts(sql, fake.zernio);
+    await sql.run(
+      `INSERT INTO social_piece_settings (item_id, texts_json, first_comment, tags, updated_at) VALUES ('i-vid', ?, NULL, NULL, ?)`,
+      [JSON.stringify({ youtube_title: "From settings" }), NOW],
+    );
+    const social = { zernio: fake.zernio, store };
+    const prepared = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "prepare_social_publish",
+        input: { organizationId: "org-1", itemIds: ["i-vid"], accountIds: ["yt"], mode: "scheduled", startAt: "2027-03-01T09:00", timezone: "UTC" },
+        idempotencyKey: "yt-title-prepare",
+      },
+      NOW,
+      { social },
+    );
+    const plan = (prepared as { value: { planId: string; planHash: string; authorization: string } }).value;
+    expect(plan.authorization).toBe("allowed");
+    const done = await runHqTool(
+      sql,
+      staff,
+      {
+        tool: "execute_social_plan",
+        input: { organizationId: "org-1", planId: plan.planId, planHash: plan.planHash, externalId: "yt-title-exec" },
+        idempotencyKey: "yt-title-exec",
+        approved: true,
+      },
+      NOW,
+      { social },
+    );
+    expect(done).toMatchObject({ ok: true, value: { executed: true } });
+    expect(fake.posts[0]?.platforms[0]?.platformSpecificData).toMatchObject({ title: "From settings" });
   });
 
   it("prepares the named rows and blocks an unapproved piece without posting", async () => {

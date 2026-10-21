@@ -182,6 +182,7 @@ export async function executeSocialPlan(
         postType: row.postType,
         scheduledFor: row.scheduleAt,
         timezone: plan.request.timezone || "UTC",
+        platformOverrides: row.options,
       },
       input.now,
     );

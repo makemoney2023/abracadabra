@@ -4,7 +4,7 @@ import type { ItemFormat } from "./deliverable-manifest";
 import { getAutopost, nextSlots } from "./social-autopost";
 import { executeSocialPlan, issueConfirmation } from "./social-commands";
 import { asPostType, defaultPostType, pieceMedia, type PostType } from "./social-plan";
-import { evaluateSocialPolicy, type SocialAction, type SocialActor } from "./social-policy";
+import type { SocialAction, SocialActor } from "./social-policy";
 import { listSocialAccounts, listSocialPosts, sendPieces, zonedTimeToUtc, type SendMode } from "./social";
 import { PlanError, prepareCommandPlan, prepareSocialPlan, type PreparedPlan } from "./social-plans";
 import type { PreflightTiming } from "./social-preflight";
@@ -585,6 +585,16 @@ async function saveVariant(
   }
 }
 
+function storedReasonCode(requestJson: string): string {
+  try {
+    const request = JSON.parse(requestJson) as { reasonCode?: unknown };
+    if (typeof request.reasonCode === "string" && request.reasonCode.trim()) return request.reasonCode;
+  } catch {
+    return "denied";
+  }
+  return "denied";
+}
+
 async function executePlan(
   sql: Sql,
   actor: SocialActor,
@@ -604,8 +614,9 @@ async function executePlan(
     action: SocialAction;
     plan_hash: string;
     authorization: PreparedPlan["authorization"];
+    request_json: string;
   }>(
-    "SELECT organization_id, actor_kind, actor_id, action, plan_hash, authorization FROM social_publish_plans WHERE id = ?",
+    "SELECT organization_id, actor_kind, actor_id, action, plan_hash, authorization, request_json FROM social_publish_plans WHERE id = ?",
     [planId],
   );
   if (!row || row.organization_id !== orgId) return { ok: false, error: "missing" };
@@ -613,7 +624,7 @@ async function executePlan(
     return { ok: true, value: { executed: false, reasonCode: "stale_plan" } };
   }
   if (row.authorization === "denied") {
-    return { ok: true, value: { executed: false, reasonCode: evaluateSocialPolicy(actor, row.action).reasonCode } };
+    return { ok: true, value: { executed: false, reasonCode: storedReasonCode(row.request_json) } };
   }
   const { zernio, store } = deps();
   if (PROVIDER_ACTIONS.has(row.action) && !zernio) {

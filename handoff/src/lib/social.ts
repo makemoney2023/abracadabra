@@ -3,6 +3,7 @@ import type { ItemFormat } from "./deliverable-manifest";
 import type { Sql } from "@/db/sql";
 import { reconcilePostedTargets } from "./social-attention";
 import { commandAuthorized, readCommandGate } from "./social-commands";
+import { allowedSocialOptionKeys } from "./social-preflight";
 import { storedSocialVariants, type SocialVariant } from "./social-variants";
 import type { ObjectStore } from "./store/objects";
 import {
@@ -395,7 +396,35 @@ export type SendPieceInput = {
   /** Unix ms for mode "scheduled". */
   scheduledFor: number | null;
   timezone: string;
+  /**
+   * Options locked into a publish plan for this destination.
+   * Direct sends, including schedule_social, leave this unset.
+   */
+  platformOverrides?: Record<string, unknown>;
 };
+
+function trimmedText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+/** A plan row names tags even when the list is empty. A missing key keeps the piece's own tags. */
+function plannedOverrideTags(overrides: Record<string, unknown> | undefined): string[] | null {
+  if (!overrides || !Object.prototype.hasOwnProperty.call(overrides, "tags") || !Array.isArray(overrides.tags)) return null;
+  return overrides.tags.filter((tag): tag is string => typeof tag === "string");
+}
+
+function filteredPlatformOverrides(platform: string, overrides: Record<string, unknown> | undefined): Record<string, unknown> {
+  if (!overrides) return {};
+  const allowed = allowedSocialOptionKeys(platform);
+  return Object.fromEntries(Object.entries(overrides).filter(([key]) => allowed.has(key)));
+}
+
+function postedTitle(targets: ZernioPostTarget[], itemTitle: string): string {
+  const youtube = targets.find((target) => target.platform === "youtube");
+  const title = youtube?.platformSpecificData?.title;
+  if (typeof title === "string" && title.trim()) return title.slice(0, 100);
+  return itemTitle.slice(0, 100);
+}
 
 /**
  * Sends one finished-work piece (caption, pictures, video, title) to the chosen accounts as one Zernio post.
@@ -451,7 +480,8 @@ export async function sendPiece(
   const variants = (await storedSocialVariants(sql, item.id, item.version)).filter((row) => row.eligible);
   const variantByPlatform = new Map(variants.map((row) => [row.platform, row]));
   const youtubeVariant = variantByPlatform.get("youtube");
-  const postTags = youtubeVariant && youtubeVariant.tags.length > 0 ? youtubeVariant.tags : settings.tags;
+  const overrideTags = plannedOverrideTags(input.platformOverrides);
+  const postTags = overrideTags ?? (youtubeVariant && youtubeVariant.tags.length > 0 ? youtubeVariant.tags : settings.tags);
   const skipped: string[] = [];
   const targets: ZernioPostTarget[] = [];
   for (const account of accounts) {
@@ -460,18 +490,28 @@ export async function sendPiece(
       skipped.push(`${label}: already has this piece.`);
       continue;
     }
-    const plan = planTarget(account.platform, postType, media.items, item.title);
+    const variant = variantByPlatform.get(account.platform);
+    const overrides = filteredPlatformOverrides(account.platform, input.platformOverrides);
+    const title =
+      account.platform === "youtube"
+        ? trimmedText(overrides.title) || variant?.title?.trim() || item.title
+        : item.title;
+    const plan = planTarget(account.platform, postType, media.items, title);
     if (!plan.ok) {
       skipped.push(`${label}: ${plan.reason}`);
       continue;
     }
-    const variant = variantByPlatform.get(account.platform);
     const commentText = variant?.firstComment || settings.firstComment;
     const comment =
       commentText && postType !== "story" && FIRST_COMMENT_PLATFORMS.has(account.platform)
         ? { firstComment: commentText }
         : {};
-    const specific = { ...plan.platformSpecificData, ...(variant?.options ?? {}), ...comment };
+    const variantOptions = { ...(variant?.options ?? {}) };
+    if (account.platform === "youtube") delete variantOptions.title;
+    const specific: Record<string, unknown> = { ...plan.platformSpecificData, ...variantOptions, ...comment, ...overrides };
+    if (account.platform === "youtube" && typeof plan.platformSpecificData?.title === "string") {
+      specific.title = plan.platformSpecificData.title;
+    }
     const text = variant?.caption || settings.texts[account.platform];
     targets.push({
       platform: account.platform,
@@ -525,7 +565,7 @@ export async function sendPiece(
     }
     const created = await zernio.createPost({
       content,
-      title: item.title.slice(0, 100),
+      title: postedTitle(targets, item.title),
       profileId: profile.zernio_profile_id,
       ...(postTags.length > 0 ? { tags: postTags } : {}),
       platforms: targets,
