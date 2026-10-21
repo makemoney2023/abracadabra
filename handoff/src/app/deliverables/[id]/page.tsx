@@ -5,7 +5,9 @@ import { listProjectRepos } from "@/db/crm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
 import { readGithubSecrets } from "@/lib/github/secrets";
+import { FilingSummaryCard } from "@/components/filing-summary-card";
 import { PageFrame } from "@/components/page-frame";
+import { parseFilingSummary } from "@/lib/filing-summary";
 import { Timeline } from "@/components/timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,36 +52,46 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
           <CardContent className="flex flex-col gap-6">
             {items.length === 0 ? <p className="text-sm text-muted-foreground">No pieces yet.</p> : null}
             <ul className="flex flex-col gap-6">
-              {items.map((item) => (
-                <li key={item.id} className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{item.title}</p>
-                    <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
-                  </div>
-                  {item.copy_text ? <p className="text-sm">{item.copy_text}</p> : null}
-                  <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
-                    {listedMedia(item.media_json).map((media) =>
-                      media.video ? (
-                        <video
-                          key={media.role}
-                          controls
-                          className="w-full rounded-md"
-                          src={`/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`}
-                        />
-                      ) : (
-                        // The picture is served only when this caller can see the space.
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          key={media.role}
-                          alt={fileLabel({ title: item.title, role: media.role })}
-                          className="w-full rounded-md"
-                          src={`/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`}
-                        />
-                      ),
-                    )}
-                  </div>
-                </li>
-              ))}
+              {items.map((item) => {
+                const filing = item.format === "page" ? parseFilingSummary(item.copy_text) : null;
+                if (filing) {
+                  return (
+                    <li key={item.id} className="flex flex-col gap-2">
+                      <FilingSummaryCard summary={filing} viewer="staff" raw={item.copy_text ?? undefined} />
+                    </li>
+                  );
+                }
+                return (
+                  <li key={item.id} className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{item.title}</p>
+                      <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
+                    </div>
+                    {item.copy_text ? <p className="text-sm">{item.copy_text}</p> : null}
+                    <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
+                      {listedMedia(item.media_json).filter((media) => media.video || media.image).map((media) =>
+                        media.video ? (
+                          <video
+                            key={media.role}
+                            controls
+                            className="w-full rounded-md"
+                            src={`/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`}
+                          />
+                        ) : (
+                          // The picture is served only when this caller can see the space.
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            key={media.role}
+                            alt={fileLabel({ title: item.title, role: media.role })}
+                            className="w-full rounded-md"
+                            src={`/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`}
+                          />
+                        ),
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
             <AddItemForm deliverableId={deliverable.id} />
             {deliverable.status === "draft" && items.length > 0 ? <PublishForm deliverableId={deliverable.id} /> : null}

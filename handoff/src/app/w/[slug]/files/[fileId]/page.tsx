@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
-import { batchVisibleTo } from "@/lib/held-work";
+import { FilingSummaryCard } from "@/components/filing-summary-card";
+import { parseFilingSummary } from "@/lib/filing-summary";
+import { batchVisibleTo, seesHeldWork } from "@/lib/held-work";
 import { openSession } from "@/lib/current";
 import { previewKind, previewableStatus, readPreviewFile } from "@/lib/preview";
 
@@ -47,6 +49,9 @@ export default async function FilePreviewPage({
     shown?.ok && shown.file.kind === "text"
       ? new TextDecoder("utf-8", { fatal: false }).decode(shown.file.bytes)
       : "";
+  // An agent filing's summary page reads as the same card as Finished work; clients never see its internal ids.
+  const filing = /\.md$/i.test(name) ? parseFilingSummary(text) : null;
+  const viewer = seesHeldWork(caller, workspace.id) || caller.staff ? "staff" : "client";
 
   return (
     <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-6 px-6 py-10">
@@ -68,7 +73,8 @@ export default async function FilePreviewPage({
           className="h-[70vh] w-full rounded-lg border border-border"
         />
       ) : null}
-      {shown?.ok && shown.file.kind === "text" ? (
+      {filing ? <FilingSummaryCard summary={filing} viewer={viewer} raw={viewer === "staff" ? text : undefined} /> : null}
+      {!filing && shown?.ok && shown.file.kind === "text" ? (
         <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-4 text-sm">{text}</pre>
       ) : null}
       {ready && !shown?.ok ? <p>This file is not ready to look at yet.</p> : null}

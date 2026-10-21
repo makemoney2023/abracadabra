@@ -48,6 +48,8 @@ export type WorkPayload = {
   title: string;
   kind: string;
   summary: string | null;
+  /** Client-facing summary (plain words, no ids). Shown first to client members; summary stays the agent's note. */
+  clientSummary: string | null;
   content: string | null;
   attachments: { name: string; body: string }[];
   links: { label: string; url: string }[];
@@ -290,6 +292,7 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       title,
       kind,
       summary,
+      clientSummary: text(body.client_summary, 2000),
       content,
       attachments,
       links,
@@ -414,12 +417,14 @@ export async function resolveRoute(sql: Sql, agent: AgentPrincipal, payload: Wor
 
 // ---------- Filing ----------
 
-function summaryMarkdown(agent: AgentPrincipal, payload: WorkPayload, receivedAt: number): string {
+/** The summary page of a filing. src/lib/filing-summary.ts reads it back for display. */
+export function summaryMarkdown(agent: AgentPrincipal, payload: WorkPayload, receivedAt: number): string {
   const lines = [`# ${payload.title}`, "", `- Kind: ${payload.kind}`, `- Agent: ${agent.label} (${agent.agentId})`];
   lines.push(`- Finished: ${payload.finishedAt ?? new Date(receivedAt).toISOString()}`);
   if (payload.taskId) lines.push(`- Task: ${payload.taskId}`);
   if (payload.handoffTo) lines.push(`- Handed to: ${payload.handoffTo}`);
   lines.push(`- Ref: ${payload.externalId}`);
+  if (payload.clientSummary) lines.push("", "## For the client", "", payload.clientSummary);
   if (payload.summary) lines.push("", "## Summary", "", payload.summary);
   if (payload.handoffNote) lines.push("", "## Handoff", "", payload.handoffNote);
   if (payload.links.length) {
@@ -494,13 +499,15 @@ async function writeFiled(
   const folder = payload.folder ?? defaultFolder(input.now, payload.title);
   const taken = await takenPaths(sql, route.space.id, folder, agent.agentId, payload.supersedes);
   // Held: staff, Client Services and the client's agents see it; client members only after Client Services approves.
+  const files = filesFor(input.itemId, summary, payload, input.now, folder, taken);
+  const summaryPath = files[0]?.path ? `${files[0].path}.md` : null;
   const stored = await storeWorkflowOutput({
     sql,
     store,
     organizationId: route.organizationId,
     workspaceId: route.space.id,
     projectId: route.projectId,
-    files: filesFor(input.itemId, summary, payload, input.now, folder, taken),
+    files,
     tag: "copy",
     label: `From ${agent.label}`.slice(0, 120),
     now: input.now,
@@ -554,7 +561,7 @@ async function writeFiled(
   await sql.batch(writes);
   // Deliverable version, supersede marks, and the review gate: filing never closes a card.
   const review = await recordFiling(sql, {
-    itemId: input.itemId, batchId: stored.batchId, agent, payload, summary, organizationId: route.organizationId,
+    itemId: input.itemId, batchId: stored.batchId, agent, payload, summary, summaryPath, organizationId: route.organizationId,
     workspaceId: route.space.id, projectId: route.projectId, taskId: route.taskId, workRequestId: request, now: input.now,
   });
   return {

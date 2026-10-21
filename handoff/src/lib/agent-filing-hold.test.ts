@@ -21,6 +21,8 @@ import { clientServicesReview, listOpenReviews } from "./task-review";
 import { listClientUpdates } from "./client-work";
 import { createAgentTask } from "./agent-board";
 import { setOrganizationUpdateMode } from "@/db/crm";
+import { openDeliverable } from "@/db/deliverables";
+import { clientDetails, clientLead, parseFilingSummary } from "./filing-summary";
 
 const NOW = 1_700_000_000_000;
 const CTX = Symbol.for("__cloudflare-context__");
@@ -647,5 +649,42 @@ describe("folders", () => {
     const ctx = await setup();
     expect(await fileAgentWork(sql, store, ctx.agent, { ...work, external_id: "x", folder: "Social/../up" }, NOW)).toMatchObject({ ok: false, error: "invalid" });
     expect(await fileAgentWork(sql, store, ctx.agent, { ...work, external_id: "y", folder: 7 }, NOW)).toMatchObject({ ok: false, error: "invalid" });
+  });
+});
+
+describe("client-facing filing summary", () => {
+  it("client_summary is stored on the summary page and is what a client member reads first, with no internal ids", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx);
+    await file(ctx, {
+      external_id: "cs-1", task_id: taskId, finished_at: "2026-10-21T00:48:33.083Z",
+      client_summary: "Your October posts are ready. Nothing is posted yet.",
+      attachments: [{ name: "posts.md", body: "# Posts" }],
+    });
+    expect((await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 100 })).ok).toBe(true);
+    const deliverableId = (await sql.get<{ id: string }>("SELECT deliverable_id AS id FROM tasks WHERE id = ?", [taskId]))!.id;
+    const opened = (await openDeliverable(sql, ctx.member, deliverableId, "published"))!;
+    const page = opened.items.find((item) => item.format === "page" && item.copy_text?.startsWith("# "))!;
+    expect(page.copy_text).toContain("## For the client");
+    const summary = parseFilingSummary(page.copy_text)!;
+    expect(clientLead(summary)).toBe("Your October posts are ready. Nothing is posted yet.");
+    expect(clientDetails(summary)).toContain("Twelve posts for October.");
+    expect(summary.meta.find((entry) => entry.key === "Task")?.value).toBe(taskId);
+    expect(`${clientLead(summary)} ${clientDetails(summary)}`).not.toContain(taskId);
+    expect(`${clientLead(summary)} ${clientDetails(summary)}`).not.toContain("acme-lead");
+  });
+
+  it("a summary in a named folder is the page item only, not a second piece", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx);
+    const filed = await file(ctx, {
+      external_id: "cs-2", task_id: taskId, folder: "Social media",
+      attachments: [{ name: "posts.md", body: "# Posts" }, { name: "my - summary.md", body: "an attachment that only looks like one" }],
+    });
+    expect(filed.paths).toContain("Social media/October social posts - summary.md");
+    const items = await sql.all<{ title: string; format: string }>(
+      "SELECT title, format FROM deliverable_items WHERE work_item_id = ? ORDER BY sort", [filed.workItemId],
+    );
+    expect(items.map((item) => item.title)).toEqual(["October social posts", "my - summary.md", "posts.md"]);
   });
 });

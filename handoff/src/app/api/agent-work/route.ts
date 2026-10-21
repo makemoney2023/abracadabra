@@ -12,10 +12,11 @@ export const dynamic = "force-dynamic";
 /**
  * A client agent files work: anything finished (deliverables, notes, plans, logs). Bearer is the agent's own token (caw_...).
  * The client must be one of the agent's assignments. Anything that does not resolve waits as unfiled for staff.
- * Body: { external_id, title, kind?, summary?, content?, attachments?: [{ name, body }], links?: [{ label, url }],
+ * Body: { external_id, title, kind?, summary?, client_summary?, content?, attachments?: [{ name, body }], links?: [{ label, url }],
  *         client?: { organization_id?, domain?, space_slug? }, project_id?, task_id?, keep_task_open?,
  *         handoff?: { to, note? }, finished_at?, agent_id?, supersedes?: id | [ids], work_request_id?, thread_id?,
  *         deliverable_kind?, folder? }
+ * client_summary: what a client member reads first on Finished work (plain words, no ids). summary is the agent's note.
  * folder: where the files land in the space, like "Social/Facebook" (up to 6 levels). Default: Finished work/<date> <title>.
  * Files keep readable names (post-1.png); a name already in the folder gets " (2)", except names of filings it supersedes.
  * attachments[].body: text (a .html/.csv/.txt/... name keeps its extension) or a base64 data URL

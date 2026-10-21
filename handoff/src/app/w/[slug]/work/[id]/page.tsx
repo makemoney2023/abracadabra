@@ -3,11 +3,19 @@ import { notFound } from "next/navigation";
 import { listDeliverableFeedback, openDeliverable } from "@/db/deliverables";
 import { workspacesFor } from "@/db/records";
 import { openSession } from "@/lib/current";
+import { parseFilingSummary } from "@/lib/filing-summary";
+import { seesHeldWork } from "@/lib/held-work";
+import { FilingSummaryCard } from "@/components/filing-summary-card";
 import { ITEM_FORMATS } from "@/lib/deliverable-manifest";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
 import { ApproveAllForm, ApproveForm, ChangesForm, NoteForm } from "../forms";
+
+/** The filing's own summary page stored as a file ("summary.md", "<title> - summary.md", "summary (2).md"). */
+function isSummaryFile(title: string): boolean {
+  return /(^| - )summary( \(\d+\))?\.md$/i.test(title);
+}
 
 function safeLink(value: string | null): string | null {
   if (!value) return null;
@@ -35,11 +43,28 @@ export default async function FinishedPiecePage({
   const opened = await openDeliverable(sql, caller, id, "published");
   if (!opened || opened.deliverable.workspace_id !== workspace.id) notFound();
   const chosen = ITEM_FORMATS.find((item) => item === format) ?? null;
+  // Only the kinds this piece has (and the one picked), so the filter row stays short.
+  const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || opened.items.some((item) => item.format === itemFormat));
   const items = chosen ? opened.items.filter((item) => item.format === chosen) : opened.items;
   const notes = await listDeliverableFeedback(sql, caller, opened.deliverable.id);
   const version = opened.deliverable.published_version ?? opened.deliverable.version;
   const brief = opened.deliverable.kind === "brief";
   const briefItem = brief ? items.find((item) => item.title === "brief.md") ?? items[0] : undefined;
+  // Agent filings: the summary page renders as a card. Clients never see the agent, card or reference ids.
+  const viewer = seesHeldWork(caller, workspace.id) || caller.staff ? "staff" : "client";
+  const filings = new Map(
+    items.flatMap((item) => {
+      const parsed = item.format === "page" ? parseFilingSummary(item.copy_text) : null;
+      return parsed ? [[item.id, parsed] as const] : [];
+    }),
+  );
+  const fileLinks = Object.fromEntries(
+    items.filter((item) => !filings.has(item.id) && item.format !== "link").map((item) => [item.title.toLowerCase(), `#item-${item.id}`]),
+  );
+  // A file's section is its filing's title, already the heading of the card above it.
+  const filingTitles = new Set([...filings.values()].map((filing) => filing.title));
+  const filingFiles = (summaryItem: (typeof items)[number]) =>
+    items.filter((item) => item.id !== summaryItem.id && item.format !== "link" && item.section === summaryItem.section).length;
   return (
     <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-8 px-6 py-[4rem]">
       <div className="flex flex-col gap-2">
@@ -62,12 +87,12 @@ export default async function FinishedPiecePage({
           <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
         )}
       </div>
-      {brief ? null : (
+      {brief || shownFormats.length < 2 ? null : (
         <div className="flex flex-wrap gap-2">
           <Button variant={chosen ? "outline" : "default"} size="sm" asChild>
             <Link href={`/w/${slug}/work/${id}`}>All</Link>
           </Button>
-          {ITEM_FORMATS.map((itemFormat) => (
+          {shownFormats.map((itemFormat) => (
             <Button key={itemFormat} variant={chosen === itemFormat ? "default" : "outline"} size="sm" asChild>
               <Link href={`/w/${slug}/work/${id}?format=${itemFormat}`}>{ITEM_FORMAT_LABEL[itemFormat]}</Link>
             </Button>
@@ -76,56 +101,93 @@ export default async function FinishedPiecePage({
       )}
       {items.length === 0 ? <p className="text-sm text-muted-foreground">Nothing to look at yet.</p> : null}
       <ul className="flex flex-col gap-8">
-        {items.map((item) => (
-          <li key={item.id} className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-medium">{item.title}</h2>
-              <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
-            </div>
-            {item.section ? <p className="text-sm text-muted-foreground">{item.section}</p> : null}
-            {item.copy_text ? (
-              <p className={brief ? "whitespace-pre-wrap text-sm leading-6" : "text-sm"}>{item.copy_text}</p>
-            ) : null}
-            {safeLink(item.link_url) ? (
-              <a className="text-sm underline" href={safeLink(item.link_url) ?? "#"}>
-                Open link
-              </a>
-            ) : null}
-            <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
-              {listedMedia(item.media_json).map((media) =>
-                media.video ? (
-                  <video
-                    key={media.role}
-                    controls
-                    className="w-full rounded-md"
-                    src={`/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${media.role}`}
-                  />
-                ) : (
-                  // The picture is served only when this caller can see the space.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={media.role}
-                    alt={item.title || "Finished work"}
-                    className="w-full rounded-md"
-                    src={`/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${media.role}`}
-                  />
-                ),
-              )}
-            </div>
-            {brief ? null : (
-              <div className="flex flex-col gap-3">
-                <ApproveForm
-                  slug={slug}
-                  deliverableId={opened.deliverable.id}
-                  itemId={item.id}
-                  version={version}
-                  label="Approve"
+        {items.map((item) => {
+          const filing = filings.get(item.id);
+          if (filing) {
+            return (
+              <li key={item.id} id={`item-${item.id}`} className="flex scroll-mt-6 flex-col gap-3">
+                <FilingSummaryCard
+                  summary={filing}
+                  viewer={viewer}
+                  raw={viewer === "staff" ? item.copy_text ?? undefined : undefined}
+                  fileLinks={fileLinks}
+                  fileCount={filingFiles(item)}
                 />
-                <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
+                {brief ? null : (
+                  <div className="flex flex-col gap-3">
+                    <ApproveForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} label="Approve" />
+                    <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
+                  </div>
+                )}
+              </li>
+            );
+          }
+          if (isSummaryFile(item.title) && item.section && filingTitles.has(item.section)) return null;
+          const listed = listedMedia(item.media_json);
+          const media = listed.filter((entry) => entry.video || entry.image);
+          const storedFile = media.length === 0 && listed.length > 0;
+          return (
+            <li key={item.id} id={`item-${item.id}`} className="flex scroll-mt-6 flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-medium">{item.title}</h2>
+                <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
               </div>
-            )}
-          </li>
-        ))}
+              {item.section && !filingTitles.has(item.section) ? <p className="text-sm text-muted-foreground">{item.section}</p> : null}
+              {item.copy_text ? (
+                <p className={brief ? "whitespace-pre-wrap text-sm leading-6" : "text-sm"}>{item.copy_text}</p>
+              ) : null}
+              {safeLink(item.link_url) ? (
+                <a className="text-sm underline" href={safeLink(item.link_url) ?? "#"}>
+                  Open link
+                </a>
+              ) : null}
+              {storedFile ? (
+                <p className="text-sm text-muted-foreground">
+                  This file is in your{" "}
+                  <Link href={`/w/${slug}`} className="underline underline-offset-4">
+                    Files
+                  </Link>
+                  .
+                </p>
+              ) : null}
+              {media.length > 0 ? (
+                <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
+                  {media.map((entry) =>
+                    entry.video ? (
+                      <video
+                        key={entry.role}
+                        controls
+                        className="w-full rounded-md"
+                        src={`/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${entry.role}`}
+                      />
+                    ) : (
+                      // The picture is served only when this caller can see the space.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={entry.role}
+                        alt={item.title || "Finished work"}
+                        className="w-full rounded-md"
+                        src={`/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${entry.role}`}
+                      />
+                    ),
+                  )}
+                </div>
+              ) : null}
+              {brief ? null : (
+                <div className="flex flex-col gap-3">
+                  <ApproveForm
+                    slug={slug}
+                    deliverableId={opened.deliverable.id}
+                    itemId={item.id}
+                    version={version}
+                    label="Approve"
+                  />
+                  <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
       {notes.length > 0 ? (
         <section className="flex flex-col gap-3">
