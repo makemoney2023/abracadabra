@@ -3,9 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { DELIVERABLE_ERRORS, openDeliverable, recordFeedback, type FeedbackDecision } from "@/db/deliverables";
+import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { briefWakeReason, wakeOrganization } from "@/lib/agent-wake";
+import { openClientChangeRequest } from "@/lib/client-change-request";
 import { startRevision } from "@/lib/cursor-build";
 import { openSession } from "@/lib/current";
+import { FEEDBACK_SAVE_FAILED, SENT } from "./sent";
 
 export type FormState = { message: string };
 
@@ -20,20 +23,44 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
   const itemId = String(formData.get("itemId") ?? "");
   const version = Number(formData.get("version"));
   const slug = String(formData.get("slug") ?? "");
-  const saved = await recordFeedback(
-    sql,
-    caller,
-    {
-      deliverableId: String(formData.get("deliverableId") ?? ""),
-      itemId: itemId || null,
-      version: Number.isFinite(version) ? version : -1,
-      decision,
-      body: String(formData.get("body") ?? ""),
-    },
-    Date.now(),
-  );
+  const body = String(formData.get("body") ?? "");
+  let saved: Awaited<ReturnType<typeof recordFeedback>>;
+  try {
+    saved = await recordFeedback(
+      sql,
+      caller,
+      {
+        deliverableId: String(formData.get("deliverableId") ?? ""),
+        itemId: itemId || null,
+        version: Number.isFinite(version) ? version : -1,
+        decision,
+        body,
+      },
+      Date.now(),
+    );
+  } catch (error) {
+    console.error("feedbackAction: saving feedback failed", error);
+    return { message: FEEDBACK_SAVE_FAILED };
+  }
   if (!saved.ok) return { message: DELIVERABLE_ERRORS[saved.error] };
-  const opened = await openDeliverable(sql, caller, saved.value.id, caller.staff ? "working" : "published");
+  // The client's feedback is stored. What follows hands it on; a failure there is logged, not shown as an error.
+  try {
+    await handOn(sql, caller, { deliverableId: saved.value.id, feedbackId: saved.value.feedbackId, itemId: itemId || null, version, decision, body });
+  } catch (error) {
+    console.error("feedbackAction: handing feedback on failed", error);
+  }
+  revalidatePath(`/w/${slug}/work`);
+  revalidatePath(`/w/${slug}/work/${saved.value.id}`);
+  redirect(`/w/${slug}/work/${saved.value.id}?sent=${SENT[decision]}`);
+}
+
+async function handOn(
+  sql: Awaited<ReturnType<typeof openSession>>["sql"],
+  caller: Awaited<ReturnType<typeof openSession>>["caller"],
+  input: { deliverableId: string; feedbackId: string; itemId: string | null; version: number; decision: FeedbackDecision; body: string },
+): Promise<void> {
+  const { decision } = input;
+  const opened = await openDeliverable(sql, caller, input.deliverableId, caller.staff ? "working" : "published");
   const organizationId = opened?.deliverable.organization_id ?? "";
   const paused = organizationId
     ? await sql.get<{ agent_paused_at: number | null }>(
@@ -63,12 +90,23 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
       sql,
     );
   }
-  if (
-    opened &&
-    opened.deliverable.status === "changes_requested" &&
-    opened.deliverable.kind !== "brief" &&
-    opened.deliverable.kind !== "design_system"
-  ) {
+  if (!opened || decision !== "changes" || opened.deliverable.kind === "brief" || opened.deliverable.kind === "design_system") {
+    return;
+  }
+  if (!legacyStartsAllowed()) {
+    // AGENT_MODE=agents: a To do card for the client's agent, carrying the note, handed to that agent.
+    await openClientChangeRequest(sql, {
+      deliverableId: opened.deliverable.id,
+      itemId: input.itemId,
+      version: Number.isFinite(input.version) ? input.version : opened.deliverable.published_version ?? opened.deliverable.version,
+      feedbackId: input.feedbackId,
+      note: input.body,
+      author: caller.staff ? { kind: "staff", id: caller.userId ?? "staff" } : { kind: "client", id: caller.userId ?? "client" },
+      now: Date.now(),
+    });
+    return;
+  }
+  if (opened.deliverable.status === "changes_requested") {
     const sentAt = Date.now();
     await startRevision(sql, opened.deliverable.id, sentAt, (organizationId, revisionReason) =>
       wakeOrganization(
@@ -81,7 +119,4 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
       ),
     );
   }
-  revalidatePath(`/w/${slug}/work`);
-  revalidatePath(`/w/${slug}/work/${saved.value.id}`);
-  redirect(`/w/${slug}/work/${saved.value.id}`);
 }

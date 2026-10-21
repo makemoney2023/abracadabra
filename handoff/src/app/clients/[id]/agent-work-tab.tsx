@@ -10,6 +10,7 @@ const UPDATE_LABEL: Record<string, string> = {
   "client_agent.board": "Board",
   "client_agent.handoff": "Handoff",
   "client_agent.dispatch": "Handed to agent",
+  "client.changes_requested": "Client asked for changes",
   "client_agent.assigned": "Assigned",
   "client_agent.unassigned": "Unassigned",
   "client_agent.work_superseded": "Superseded",

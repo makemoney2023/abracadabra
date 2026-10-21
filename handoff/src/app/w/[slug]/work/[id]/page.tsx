@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
 import { ApproveAllForm, ApproveForm, ChangesForm, NoteForm } from "../forms";
+import { sentConfirmation } from "../sent";
 
 /** The filing's own summary page stored as a file ("summary.md", "<title> - summary.md", "summary (2).md"). */
 function isSummaryFile(title: string): boolean {
@@ -33,10 +34,11 @@ export default async function FinishedPiecePage({
   searchParams,
 }: {
   params: Promise<{ slug: string; id: string }>;
-  searchParams: Promise<{ format?: string }>;
+  searchParams: Promise<{ format?: string; sent?: string }>;
 }) {
   const { slug, id } = await params;
-  const { format } = await searchParams;
+  const { format, sent } = await searchParams;
+  const confirmation = sentConfirmation(sent);
   const { sql, caller } = await openSession();
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
@@ -67,6 +69,12 @@ export default async function FinishedPiecePage({
     items.filter((item) => item.id !== summaryItem.id && item.format !== "link" && item.section === summaryItem.section).length;
   return (
     <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-8 px-6 py-[4rem]">
+      {confirmation ? (
+        <div role="status" className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 px-5 py-4">
+          <p className="text-sm font-medium">{confirmation.title}</p>
+          <p className="text-sm text-muted-foreground">{confirmation.body}</p>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-2">
         <h1 className="font-heading text-4xl leading-tight">{opened.deliverable.title}</h1>
         <p className="text-sm text-muted-foreground">{DELIVERABLE_STATUS_LABEL[opened.deliverable.status]}</p>
