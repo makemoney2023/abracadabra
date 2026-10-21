@@ -56,7 +56,7 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 - [Milrcorr](https://milrcorr.com): Public site for StrongFoam's sister commercial fit-out work; request an estimate.
 - [PIRX](https://abra-ca-dabra.app/portfolio/pirx/): Runner app at pirx.ca with Projected Time, Supported Range, and five Structural Drivers; athletic estimates, not medical advice.
 - [StrongFoam](https://strongfoam.com/): Public site with an estimate a visitor can start and a booking.
-- [Schema](https://schema-two.vercel.app/): AI visibility score and repair.
+- [Schema](https://schema.abra-ca-dabra.app/): AI visibility score and repair.
 - [LLM Leverage](https://learn.abra-ca-dabra.app): Self-paced course plus a workshop path.
 - [Super Funnel](https://abra-ca-dabra.app/films.html): Associate app shown as film tours; no separate public app URL.
 
@@ -78,7 +78,7 @@ When a product already on the market does the job, the reply says so and points 
 - [Privacy](https://abra-ca-dabra.app/privacy): How we handle information.
 - [Start a project](https://abra-ca-dabra.app/start/): Write houdini@ or use the form; contact houdini@abra-ca-dabra.app.
 - [Readiness Check](https://check.abra-ca-dabra.app/check): Five-to-seven-minute score of pressure, readiness, growth, and site visibility.
-- [Schema](https://schema-two.vercel.app/): Scores how visible a site is to answer engines and generates the repair.
+- [Schema](https://schema.abra-ca-dabra.app/): Scores how visible a site is to answer engines and generates the repair.
 
 ## Blog
 

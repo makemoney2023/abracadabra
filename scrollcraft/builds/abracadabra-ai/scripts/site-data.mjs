@@ -544,7 +544,7 @@ export const cases = [
     slug: "schema",
     name: "Schema",
     kind: "product",
-    sameAs: "https://schema-two.vercel.app/",
+    sameAs: "https://schema.abra-ca-dabra.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
     summary: "See how easily AI search can find your site, and get the fixes to improve it.",
@@ -678,7 +678,7 @@ export const products = [
   {
     slug: "schema",
     name: "Schema",
-    sameAs: "https://schema-two.vercel.app/",
+    sameAs: "https://schema.abra-ca-dabra.app/",
     image: "/assets/schema-home.webp",
     imageAlt: "Schema home page: a URL field and an AI visibility check.",
     description: "See how easily AI search can find your site, and get the fixes to improve it.",

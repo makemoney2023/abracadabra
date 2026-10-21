@@ -180,7 +180,7 @@ Also listed at https://abra-ca-dabra.app/course/llm-leverage/
 
 When a product already on the market does the job, the reply says so and points there.
 
-Primary action: Start a project (houdini@abra-ca-dabra.app). Secondary: See what we've built (https://abra-ca-dabra.app/#work). Readiness Check: https://check.abra-ca-dabra.app/check. Schema: https://schema-two.vercel.app/.
+Primary action: Start a project (houdini@abra-ca-dabra.app). Secondary: See what we've built (https://abra-ca-dabra.app/#work). Readiness Check: https://check.abra-ca-dabra.app/check. Schema: https://schema.abra-ca-dabra.app/.
 
 ## Proof: pirx.ca
 

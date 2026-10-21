@@ -61,7 +61,7 @@ npx playwright install chromium   # once
 npm run test:e2e
 ```
 
-Deploy the public check with `npm run deploy` in this folder. That publishes Worker `readiness-check` at `https://check.abra-ca-dabra.app`.
+Deploy the public worker with `npm run deploy` in this folder. That publishes Worker `readiness-check` at `https://check.abra-ca-dabra.app` (Readiness Check) and `https://schema.abra-ca-dabra.app` (Schema scanner). `/` on the check host redirects to `/check`. `/` on the schema host, and on local dev, is the scanner. `NEXT_PUBLIC_SCHEMA_URL` overrides the Schema origin.
 
 ## API (current)
 
@@ -118,6 +118,15 @@ On every coding session, follow `startup-session` → read INTENT + design + `pr
 v1 implementation complete for public soft-gate flow + ops inbox/prospecting. Schema scans and ops prospecting use Cloudflare AI Search. Deploy/CI polish still open.
 
 ## Changelog
+
+### 2026-10-21 — Schema lives on its own Cloudflare host
+
+- **What changed** — The public Schema scanner is `https://schema.abra-ca-dabra.app`. The same Worker still serves the Readiness Check at `https://check.abra-ca-dabra.app`. `/` redirects to `/check` only on the check hostname. Schema pages use the marketing nav, Inter Tight, vermilion buttons, and a flat canvas.
+- **Why** — Public links still opened the old Vercel app, and the scanner chrome did not match the studio site.
+- **Code touchpoints** — `src/lib/hosts.ts`, `src/middleware.ts`, `wrangler.jsonc`, `src/app/page.tsx`, `src/app/scan/[token]/page.tsx`, `src/app/globals.css`, `src/app/sitemap.ts`, `src/lib/assessment/config.v1.json`
+- **Data-flow impact** — Marketing, discovery files, and the assessment specimen point at the Cloudflare Schema origin. The check host behavior is unchanged.
+- **API / schema impact** — none. New public env `NEXT_PUBLIC_SCHEMA_URL`.
+- **Verification** — `npx vitest run tests/unit/schema-host.test.ts` (4 passed) and `npm test` in `readiness-check/` (381 passed). Local `/` with `Host: check.abra-ca-dabra.app` returns 307 to `/check`. Local `/` on the schema host and on localhost stays the scanner. Enabled primary button is `#FF4B24` with ink `#170804`.
 
 ### 2026-10-09 — Page facts keep a real email and one phone
 

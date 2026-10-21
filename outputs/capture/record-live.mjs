@@ -109,7 +109,7 @@ const jobs = [
   },
   {
     id: "schema-home-scan",
-    url: "https://schema-two.vercel.app/",
+    url: "https://schema.abra-ca-dabra.app/",
     async play(page) {
       await page.waitForTimeout(2000);
       await page.mouse.wheel(0, 400);

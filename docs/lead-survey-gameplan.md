@@ -2,7 +2,7 @@
 
 **Status:** live at `https://check.abra-ca-dabra.app/check`. The app is in `readiness-check/` in this repo (copied from Schema commit `c170a2b`) because GitHub denied the push to `makemoney2023/schema`. Written 2026-09-23. Detailed in the design spec [readiness-check/2026-09-23-readiness-check-design.md](readiness-check/2026-09-23-readiness-check-design.md) and the implementation plan [readiness-check/2026-09-23-readiness-check-plan.md](readiness-check/2026-09-23-readiness-check-plan.md); where they differ from this document, the spec wins. The landing and guides answer. A finished scan posts the full schema package to Handoff, which files it as finished work on the Space for that domain and adds a Work-board task. Starting a check still returns "Missing Supabase admin env" until that project has the Supabase admin keys. Booking still needs a Cal.com working-session event.
 **Owner:** Abracadabra (houdini@abra-ca-dabra.app)
-**Depends on:** the Schema repo (`makemoney2023/schema`, live at schema-two.vercel.app), the Abracadabra site (`scrollcraft/builds/abracadabra-ai`, live at abra-ca-dabra.app), `docs/source-of-truth.md`.
+**Depends on:** the Schema repo (`makemoney2023/schema`, live at schema.abra-ca-dabra.app), the Abracadabra site (`scrollcraft/builds/abracadabra-ai`, live at abra-ca-dabra.app), `docs/source-of-truth.md`.
 
 ## 1. What we are building
 
@@ -243,7 +243,7 @@ Phase 1 can be reviewed by the founder as prose before any code exists; that is 
 ## 14. Decisions needed
 
 1. Booking tool: Cal.com (recommended) or Calendly. Who owns the calendar and who is notified.
-2. Hostname: `check.abra-ca-dabra.app` (recommended) or a path on schema-two.vercel.app.
+2. Hostname: `check.abra-ca-dabra.app` (recommended) or a path on schema.abra-ca-dabra.app.
 3. Gate: email before results (recommended) or results free with email for PDF and booking only.
 4. Public name of the check.
 5. Whether to notify ops per completion (email/Slack) or rely on the `/ops` queue.

@@ -1,11 +1,13 @@
 import type { MetadataRoute } from "next";
 import { CHECK_GUIDES } from "@/content/check-guides";
 import { checkUrl } from "@/lib/check-env";
+import { schemaUrl } from "@/lib/hosts";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = checkUrl();
   const lastModified = new Date();
   return [
+    { url: `${schemaUrl()}/`, lastModified, changeFrequency: "weekly", priority: 0.9 },
     { url: `${base}/`, lastModified, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/check`, lastModified, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/check/prospect`, lastModified, changeFrequency: "weekly", priority: 0.7 },
