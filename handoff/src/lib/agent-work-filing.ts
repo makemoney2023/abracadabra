@@ -7,6 +7,7 @@ import { cleanFolder, defaultFolder, fileStem } from "@/lib/work-folder";
 import { agentWorkLimits, MAX_ATTACHMENTS, storedBytes, tooBigMessage } from "@/lib/agent-work-limits";
 import { checkSupersedes, recordFiling, resolveFilingRequest, type FilingReview } from "@/lib/agent-filing-review";
 import { handOverWaitingTasks } from "@/lib/agent-dispatch";
+import { builtWorkByItem, builtWorkMarkdown, builtWorkWrites, parseBuiltWork, type BuiltWorkInput } from "@/lib/built-work";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 
 /**
@@ -73,13 +74,15 @@ export type WorkPayload = {
   folder: string | null;
   /** Skill paths the agent followed ("community/x/y/SKILL.md"). Checked against the published index after filing. */
   skillsUsed?: string[];
+  /** Websites and other things built, shown as cards in the client space (src/lib/built-work.ts). */
+  builtWork?: BuiltWorkInput[];
 };
 
 export type FileResult =
   | {
       ok: true; duplicate: boolean; state: "filed"; workItemId: string; organizationId: string; workspaceId: string;
       spaceSlug: string; projectId: string | null; paths: string[]; route: string; taskClosed: boolean; handoffTo: string | null; awaitingReview?: boolean;
-      held?: boolean; review?: FilingReview; folder?: string | null;
+      held?: boolean; review?: FilingReview; folder?: string | null; builtWork?: number;
     }
   | { ok: true; duplicate: boolean; state: "unfiled" | "received" | "discarded"; workItemId: string; reason: string | null }
   | { ok: false; error: "invalid"; message: string }
@@ -274,10 +277,14 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       links.push({ label, url });
     }
   }
+  const built = parseBuiltWork(body.built_work, attachments);
+  if (!built.ok) return { ok: false, message: built.message };
+  attachments.push(...built.added);
+  if (attachments.length > MAX_ATTACHMENTS) return { ok: false, message: `Up to ${MAX_ATTACHMENTS} attachments a filing, screenshots included. Split the rest into another filing on the same card.` };
   const content = typeof body.content === "string" && body.content.trim() ? body.content : null;
   const summary = text(body.summary, 4000);
-  if (!content && !summary && attachments.length === 0 && links.length === 0) {
-    return { ok: false, message: "Send content, a summary, attachments, or links." };
+  if (!content && !summary && attachments.length === 0 && links.length === 0 && built.items.length === 0) {
+    return { ok: false, message: "Send content, a summary, attachments, links, or built_work." };
   }
   const handoff = body.handoff && typeof body.handoff === "object" && !Array.isArray(body.handoff) ? (body.handoff as Record<string, unknown>) : {};
   const client = body.client && typeof body.client === "object" && !Array.isArray(body.client) ? (body.client as Record<string, unknown>) : {};
@@ -285,7 +292,7 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
   const rawSupersedes = typeof body.supersedes === "string" ? [body.supersedes] : Array.isArray(body.supersedes) ? body.supersedes : [];
   if (rawSupersedes.length > 20) return { ok: false, message: "supersedes takes up to 20 work item ids." };
   const supersedes = [...new Set(rawSupersedes.map((value) => text(value, 100)).filter((value): value is string => Boolean(value)))];
-  const deliverableKind = text(body.deliverable_kind, 30)?.toLowerCase() ?? null;
+  const deliverableKind = text(body.deliverable_kind, 30)?.toLowerCase() ?? (built.items.length ? "website" : null);
   const folder = cleanFolder(body.folder);
   if (!folder.ok) return { ok: false, message: folder.message };
   const skillsUsed = parseSkillsUsed(body.skills_used);
@@ -319,6 +326,7 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       deliverableKind,
       folder: folder.folder,
       skillsUsed: skillsUsed.paths,
+      builtWork: built.items,
     },
   };
 }
@@ -459,6 +467,7 @@ export function summaryMarkdown(agent: AgentPrincipal, payload: WorkPayload, rec
     lines.push("", "## Links", "");
     for (const link of payload.links) lines.push(`- [${link.label.replace(/[[\]]/g, "")}](${link.url})`);
   }
+  lines.push(...builtWorkMarkdown(payload.builtWork ?? []));
   if (payload.attachments.length) {
     lines.push("", "## Files", "");
     for (const file of payload.attachments) lines.push(`- ${file.name}`);
@@ -543,6 +552,20 @@ async function writeFiled(
     workItemId: input.itemId,
   });
   if (!stored.batchId || stored.stored.length === 0) return { ok: false };
+  const built = payload.builtWork ?? [];
+  const screenshotFiles = new Map<string, string>();
+  if (built.some((item) => item.screenshot)) {
+    const wanted = new Map<string, string>();
+    for (const file of files) {
+      const extension = file.name ? workflowFileExtension(file) : null;
+      if (file.name && file.path && extension) wanted.set(`${file.path}.${extension}`.toLowerCase(), file.name.toLowerCase());
+    }
+    const rows = await sql.all<{ id: string; relative_path: string }>("SELECT id, relative_path FROM files WHERE batch_id = ?", [stored.batchId]);
+    for (const row of rows) {
+      const name = wanted.get(row.relative_path.toLowerCase());
+      if (name) screenshotFiles.set(name, row.id);
+    }
+  }
   const request = await resolveFilingRequest(sql, {
     organizationId: route.organizationId, taskId: route.taskId, workRequestId: payload.workRequestId, threadId: payload.threadId,
     title: payload.title, summary: payload.summary, projectId: route.projectId, workspaceId: route.space.id, now: input.now,
@@ -574,6 +597,10 @@ async function writeFiled(
       ],
     },
   ];
+  writes.push(...builtWorkWrites({
+    workItemId: input.itemId, batchId: stored.batchId, organizationId: route.organizationId, workspaceId: route.space.id,
+    projectId: route.projectId, items: built, screenshotFiles, now: input.now,
+  }));
   if (payload.handoffTo) {
     writes.push({
       statement: `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
@@ -714,6 +741,7 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
     ok: true, duplicate: false, state: "filed", workItemId: itemId, organizationId: route.organizationId, workspaceId: route.space.id,
     spaceSlug: route.space.slug, projectId: route.projectId, paths: filed.paths, route: route.route, taskClosed: filed.taskClosed,
     handoffTo: payload.handoffTo, ...(filed.awaitingReview ? { awaitingReview: true } : {}), held: true, review: filed.review, folder: filed.folder,
+    ...(payload.builtWork?.length ? { builtWork: payload.builtWork.length } : {}),
   };
 }
 
@@ -736,6 +764,8 @@ export type WorkContextRow = {
   paths: string[];
   links: { label: string; url: string }[];
   filed_at: string;
+  /** Websites and other built work on this filing (title, live_url, preview_url, repo_url, description, status). */
+  built_work?: Record<string, unknown>[];
 };
 
 /**
@@ -784,10 +814,12 @@ export async function listAgentContext(
      ORDER BY i.filed_at DESC LIMIT ?`,
     [...orgs, since, query.kind ?? null, query.kind ?? null, query.handedToMe ? 1 : 0, agent.agentId, limit],
   );
+  const built = await builtWorkByItem(sql, rows.map((row) => row.id));
   return {
     ok: true,
     items: rows.map((row) => ({
       ...row,
+      ...(built.has(row.id) ? { built_work: built.get(row.id) } : {}),
       paths: JSON.parse(row.paths_json) as string[],
       links: JSON.parse(row.links_json) as { label: string; url: string }[],
       filed_at: new Date(row.filed_at).toISOString(),

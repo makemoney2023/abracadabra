@@ -16,6 +16,7 @@ import type { ObjectStore } from "@/lib/store/objects";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 import { handOverWaitingTasks } from "@/lib/agent-dispatch";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
+import { listBuiltWork, type BuiltWorkCard } from "@/lib/built-work";
 
 /**
  * Staff side of client agents: the unfiled inbox, the agents list, and the client "Agent work" panel.
@@ -496,12 +497,14 @@ export type ClientAgentWork = {
     supersededBy: string | null;
   }[];
   updates: { id: string; kind: string; body: string; actorId: string | null; at: number }[];
+  /** Websites and other built work this client's agents filed, held and retired ones included. */
+  built?: BuiltWorkCard[];
 };
 
 export async function listClientAgentWork(sql: Sql, caller: Caller, organizationId: string): Promise<ClientAgentWork> {
   const empty: ClientAgentWork = { agents: [], filed: [], updates: [] };
   if (!(await liveStaff(sql, caller)).ok) return empty;
-  const [agents, filed, updates] = await Promise.all([
+  const [agents, filed, updates, built] = await Promise.all([
     sql.all<{ id: string; label: string; role: string; revoked_at: number | null }>(
       `SELECT c.id, c.label, a.role, c.revoked_at FROM agent_assignments a JOIN client_agents c ON c.id = a.agent_id
        WHERE a.organization_id = ? AND a.ended_at IS NULL ORDER BY a.role, a.assigned_at`,
@@ -529,6 +532,7 @@ export async function listClientAgentWork(sql: Sql, caller: Caller, organization
        ORDER BY created_at DESC LIMIT 30`,
       [organizationId],
     ),
+    listBuiltWork(sql, { organizationId, clientView: false, includeHidden: true, limit: 40 }),
   ]);
   const parse = <T,>(raw: string, fallback: T): T => {
     try {
@@ -538,6 +542,7 @@ export async function listClientAgentWork(sql: Sql, caller: Caller, organization
     }
   };
   return {
+    built,
     agents: agents.map((row) => ({ id: row.id, label: row.label, role: row.role === "hire" ? "hire" : "lead", revoked: row.revoked_at != null })),
     filed: filed.map((row) => ({
       id: row.id,
