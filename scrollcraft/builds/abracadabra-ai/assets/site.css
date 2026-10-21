@@ -586,15 +586,16 @@ html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: backgro
 }
 
 .cloudflare__mark {
-  display: inline-block;
-  padding: 2.5rem;
-  margin: 0 0 0.5rem;
+  display: block;
+  padding: 0;
+  margin: 0 0 1.75rem;
 }
 
 .cloudflare__logo {
   display: block;
-  height: 2.5rem;
+  height: 4.75rem;
   width: auto;
+  max-width: 100%;
 }
 
 .cloudflare__copy p { max-width: 38rem; }
@@ -685,7 +686,8 @@ html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: backgro
 
 @media (max-width: 767px) {
   .cloudflare { padding-bottom: 5.5rem; }
-  .cloudflare__mark { padding: 1.5rem 0; }
+  .cloudflare__mark { margin: 0.5rem 0 1.5rem; }
+  .cloudflare__logo { height: 3.75rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
