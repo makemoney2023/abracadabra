@@ -25,6 +25,7 @@ export type ReportInput = {
   scoreBreakdown: unknown;
   pages: ReportPage[];
   findings: ReportFinding[];
+  robotsNote?: string | null;
 };
 
 export type ReportProps = {
@@ -38,6 +39,8 @@ export type ReportProps = {
   /** The worst pages first, at most PDF_PAGE_LIMIT. `pagesTotal` is every page scanned (the CSV has them all). */
   pages: ReportPage[];
   pagesTotal: number;
+  /** Deep scans: how robots.txt was followed. */
+  robotsNote: string | null;
   pagesFailed: number;
   pagesMissingSchema: number;
   /** Per section: label, pages, failed, without structured data. Worst sections first. */
@@ -83,6 +86,7 @@ export function buildReportProps(input: ReportInput): ReportProps {
     })),
     pages: worstPages(input.pages, PDF_PAGE_LIMIT),
     pagesTotal: input.pages.length,
+    robotsNote: input.robotsNote ?? null,
     pagesFailed: input.pages.filter((p) => p.fetchStatus !== "ok").length,
     pagesMissingSchema: input.pages.filter((p) => p.fetchStatus === "ok" && !p.hasJsonLd).length,
     sections: groupPages(input.pages).map((group) => ({

@@ -5,7 +5,7 @@ import type { CheckBindings } from "@/lib/cloudflare/sql";
 import { normalizeDomain } from "@/lib/domain";
 import { tokensMatch } from "@/lib/jobs/auth";
 import { deleteScan, insertScan } from "@/lib/scan/d1-store";
-import { resolveTier, tierConfig } from "@/lib/scan/tiers";
+import { resolveTier, tierConfig, TIER_PRICES } from "@/lib/scan/tiers";
 
 const bodySchema = z.object({
   url: z.string().min(1),
@@ -67,7 +67,14 @@ export async function POST(request: Request) {
     );
   }
   return NextResponse.json(
-    { token: scan.token, id: scan.id, status: scan.status, tier: decision.tier, pageLimit: decision.pageLimit },
+    {
+      token: scan.token,
+      id: scan.id,
+      status: scan.status,
+      tier: decision.tier,
+      pageLimit: decision.pageLimit,
+      price: TIER_PRICES[decision.tier],
+    },
     { status: 201 },
   );
 }

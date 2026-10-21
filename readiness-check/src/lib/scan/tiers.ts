@@ -1,6 +1,6 @@
 import { MAX_PAGES } from "@/lib/scoring/constants";
 
-/** Free is today's 40-page scan. The deep tiers are built but off until pricing and checkout are decided. */
+/** Free is today's 40-page scan. The deep tiers are built and priced but off (DEEP_SCAN_ENABLED) until checkout is wired. */
 export type ScanTier = "free" | "deep-200" | "deep-1000";
 
 export const SCAN_TIERS: readonly ScanTier[] = ["free", "deep-200", "deep-1000"];
@@ -9,6 +9,39 @@ export const DEFAULT_TIER_LIMITS: Readonly<Record<ScanTier, number>> = {
   free: MAX_PAGES,
   "deep-200": 200,
   "deep-1000": 1000,
+};
+
+export type TierPrice = {
+  /** What we charge, in cents. 0 for the free scan. */
+  amountCents: number;
+  currency: "usd";
+  /** As shown to buyers. */
+  display: string;
+  /** The generated fix files come with the scan (the free scan sells them separately). */
+  includesFixFiles: boolean;
+  label: string;
+};
+
+/**
+ * Tier prices. Nothing charges these yet: checkout for the deep tiers is not wired, and the tiers stay behind
+ * DEEP_SCAN_ENABLED. The free scan's separate fix-file offer (PRICE_DISPLAY / PRICE_AMOUNT_CENTS) is unchanged.
+ */
+export const TIER_PRICES: Readonly<Record<ScanTier, TierPrice>> = {
+  free: { amountCents: 0, currency: "usd", display: "Free", includesFixFiles: false, label: "Free scan, 40 pages" },
+  "deep-200": {
+    amountCents: 9999,
+    currency: "usd",
+    display: "$99.99",
+    includesFixFiles: true,
+    label: "Deep scan, 200 pages, fix files included",
+  },
+  "deep-1000": {
+    amountCents: 24999,
+    currency: "usd",
+    display: "$249.99",
+    includesFixFiles: true,
+    label: "Deep scan, 1,000 pages, fix files included",
+  },
 };
 
 /** Hard ceiling whatever the config says: one plan stays well inside a Worker's memory and D1 limits. */

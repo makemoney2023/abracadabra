@@ -16,6 +16,13 @@ CREATE TABLE IF NOT EXISTS readiness_scan_runs (
   finalized_at INTEGER,
   partial INTEGER NOT NULL DEFAULT 0 CHECK (partial IN (0, 1)),
   watchdog_rounds INTEGER NOT NULL DEFAULT 0,
+  -- URLs per chunk: 50, or fewer when robots.txt sets a Crawl-delay (deep scans only).
+  chunk_size INTEGER NOT NULL DEFAULT 50,
+  -- Deep scans follow robots.txt: 'ok', 'missing' (4xx: allow all), 'unreachable' (5xx/network: allow nothing),
+  -- or NULL for the free scan, which does not apply it.
+  robots_status TEXT,
+  robots_skipped INTEGER NOT NULL DEFAULT 0,
+  crawl_delay_ms INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );

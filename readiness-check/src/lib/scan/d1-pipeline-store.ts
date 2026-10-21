@@ -20,14 +20,21 @@ export type ScanRun = {
   finalizedAt: number | null;
   partial: boolean;
   watchdogRounds: number;
+  chunkSize: number;
+  robotsStatus: RobotsStatus | null;
+  robotsSkipped: number;
+  crawlDelayMs: number;
   createdAt: number;
 };
+
+export type RobotsStatus = "ok" | "missing" | "unreachable";
 
 export type ScanChunk = {
   index: number;
   urls: PrioritizedUrl[];
   status: "pending" | "done";
   attempts: number;
+  updatedAt: number;
 };
 
 export type ScanProgress = {
@@ -35,6 +42,10 @@ export type ScanProgress = {
   pagesDone: number;
   pagesTotal: number | null;
   partial: boolean;
+  /** Deep scans only: how robots.txt was read, how many URLs it ruled out, and the crawl delay followed. */
+  robotsStatus: RobotsStatus | null;
+  robotsSkipped: number;
+  crawlDelayMs: number;
 };
 
 type RunRow = {
@@ -52,8 +63,16 @@ type RunRow = {
   finalized_at: number | null;
   partial: number;
   watchdog_rounds: number;
+  chunk_size: number;
+  robots_status: string | null;
+  robots_skipped: number;
+  crawl_delay_ms: number;
   created_at: number;
 };
+
+function robotsStatus(value: string | null): RobotsStatus | null {
+  return value === "ok" || value === "missing" || value === "unreachable" ? value : null;
+}
 
 function mapRun(row: RunRow): ScanRun {
   return {
@@ -71,6 +90,10 @@ function mapRun(row: RunRow): ScanRun {
     finalizedAt: row.finalized_at,
     partial: row.partial === 1,
     watchdogRounds: Number(row.watchdog_rounds),
+    chunkSize: Number(row.chunk_size) || 50,
+    robotsStatus: robotsStatus(row.robots_status),
+    robotsSkipped: Number(row.robots_skipped),
+    crawlDelayMs: Number(row.crawl_delay_ms),
     createdAt: Number(row.created_at),
   };
 }
@@ -130,7 +153,8 @@ export function createD1PipelineStore(db: BoundSql) {
     const row = await db
       .prepare(
         `SELECT scan_id, tier, page_limit, pages_total, pages_done, chunks_total, chunks_done, search_count,
-                site_files_json, planned_at, finalize_claimed_at, finalized_at, partial, watchdog_rounds, created_at
+                site_files_json, planned_at, finalize_claimed_at, finalized_at, partial, watchdog_rounds, chunk_size,
+                robots_status, robots_skipped, crawl_delay_ms, created_at
          FROM readiness_scan_runs WHERE scan_id = ?`,
       )
       .bind(scanId)
@@ -158,18 +182,38 @@ export function createD1PipelineStore(db: BoundSql) {
      */
     async savePlan(
       scanId: string,
-      plan: { siteFiles: SiteFiles; searchCount: number; chunks: PrioritizedUrl[][] },
+      plan: {
+        siteFiles: SiteFiles;
+        searchCount: number;
+        chunks: PrioritizedUrl[][];
+        chunkSize?: number;
+        robots?: { status: RobotsStatus; skipped: number; crawlDelayMs: number } | null;
+      },
       now: number,
     ): Promise<boolean> {
       const pagesTotal = plan.chunks.reduce((sum, list) => sum + list.length, 0);
+      const robots = plan.robots ?? null;
       const statements: BoundStatement[] = [
         db
           .prepare(
             `UPDATE readiness_scan_runs
-             SET planned_at = ?, pages_total = ?, chunks_total = ?, search_count = ?, site_files_json = ?, updated_at = ?
+             SET planned_at = ?, pages_total = ?, chunks_total = ?, search_count = ?, site_files_json = ?,
+                 chunk_size = ?, robots_status = ?, robots_skipped = ?, crawl_delay_ms = ?, updated_at = ?
              WHERE scan_id = ? AND planned_at IS NULL`,
           )
-          .bind(now, pagesTotal, plan.chunks.length, plan.searchCount, JSON.stringify(compactSiteFiles(plan.siteFiles)), now, scanId),
+          .bind(
+            now,
+            pagesTotal,
+            plan.chunks.length,
+            plan.searchCount,
+            JSON.stringify(compactSiteFiles(plan.siteFiles)),
+            plan.chunkSize ?? 50,
+            robots?.status ?? null,
+            robots?.skipped ?? 0,
+            robots?.crawlDelayMs ?? 0,
+            now,
+            scanId,
+          ),
         ...plan.chunks.map((urls, index) =>
           db
             .prepare(
@@ -186,13 +230,19 @@ export function createD1PipelineStore(db: BoundSql) {
     async getChunk(scanId: string, index: number): Promise<ScanChunk | null> {
       const row = await db
         .prepare(
-          `SELECT chunk_index, urls_json, status, attempts FROM readiness_scan_chunks
+          `SELECT chunk_index, urls_json, status, attempts, updated_at FROM readiness_scan_chunks
            WHERE scan_id = ? AND chunk_index = ?`,
         )
         .bind(scanId, index)
-        .first<{ chunk_index: number; urls_json: string; status: "pending" | "done"; attempts: number }>();
+        .first<{ chunk_index: number; urls_json: string; status: "pending" | "done"; attempts: number; updated_at: number }>();
       if (!row) return null;
-      return { index: Number(row.chunk_index), urls: parseUrls(row.urls_json), status: row.status, attempts: Number(row.attempts) };
+      return {
+        index: Number(row.chunk_index),
+        urls: parseUrls(row.urls_json),
+        status: row.status,
+        attempts: Number(row.attempts),
+        updatedAt: Number(row.updated_at),
+      };
     },
 
     async pendingChunks(scanId: string): Promise<number[]> {
@@ -317,15 +367,29 @@ export function createD1PipelineStore(db: BoundSql) {
 export async function loadScanProgress(db: BoundSql, scanId: string): Promise<ScanProgress | null> {
   try {
     const row = await db
-      .prepare("SELECT tier, pages_done, pages_total, partial FROM readiness_scan_runs WHERE scan_id = ?")
+      .prepare(
+        `SELECT tier, pages_done, pages_total, partial, robots_status, robots_skipped, crawl_delay_ms
+         FROM readiness_scan_runs WHERE scan_id = ?`,
+      )
       .bind(scanId)
-      .first<{ tier: string; pages_done: number; pages_total: number | null; partial: number }>();
+      .first<{
+        tier: string;
+        pages_done: number;
+        pages_total: number | null;
+        partial: number;
+        robots_status: string | null;
+        robots_skipped: number;
+        crawl_delay_ms: number;
+      }>();
     if (!row) return null;
     return {
       tier: row.tier as ScanTier,
       pagesDone: Number(row.pages_done),
       pagesTotal: row.pages_total === null ? null : Number(row.pages_total),
       partial: row.partial === 1,
+      robotsStatus: robotsStatus(row.robots_status),
+      robotsSkipped: Number(row.robots_skipped ?? 0),
+      crawlDelayMs: Number(row.crawl_delay_ms ?? 0),
     };
   } catch {
     return null;

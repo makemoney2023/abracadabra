@@ -51,7 +51,7 @@ describe("POST /api/internal/deep-scans", () => {
     const response = await POST(post({ url: "https://acme.example", tier: "deep-1000" }));
     expect(response.status).toBe(201);
     const json = (await response.json()) as { id: string; tier: string; pageLimit: number };
-    expect(json).toMatchObject({ tier: "deep-1000", pageLimit: 1000 });
+    expect(json).toMatchObject({ tier: "deep-1000", pageLimit: 1000, price: { amountCents: 24999, display: "$249.99", includesFixFiles: true } });
     expect(mockSend).toHaveBeenCalledWith({ type: "scan", scanId: json.id });
     const run = await holder.env.DB!.prepare("SELECT tier, page_limit FROM readiness_scan_runs WHERE scan_id = ?")
       .bind(json.id)

@@ -74,7 +74,15 @@ describe("chunked scan pipeline", () => {
     const loaded = await loadScanByPublicToken(db, scan.token);
     expect(loaded?.scan.status).toBe("complete");
     expect(loaded?.pages).toHaveLength(40);
-    expect(loaded?.progress).toEqual({ tier: "free", pagesDone: 40, pagesTotal: 40, partial: false });
+    expect(loaded?.progress).toEqual({
+      tier: "free",
+      pagesDone: 40,
+      pagesTotal: 40,
+      partial: false,
+      robotsStatus: null,
+      robotsSkipped: 0,
+      crawlDelayMs: 0,
+    });
     // One chunk, run inline: no chunk messages, only the delayed watchdog (which then does nothing).
     expect(queue.messages.map((m) => m.body.type)).toEqual(["scan-watchdog"]);
     expect(queue.messages[0]!.delaySeconds).toBeGreaterThan(0);

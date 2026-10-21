@@ -190,6 +190,7 @@ export async function renderScanReportPdf(props: ReportProps, fontBytes: StudioF
       `${props.pagesTotal} pages scanned. ${props.pagesFailed} could not be fetched. ${props.pagesMissingSchema} have no structured data.`,
       { color: SOFT, gap: 6 },
     );
+    if (props.robotsNote) w.text(props.robotsNote, { color: SOFT, gap: 6 });
     if (props.sections.length > 1) {
       const sectionWidths = [contentWidth * 0.46, contentWidth * 0.18, contentWidth * 0.16, contentWidth * 0.2];
       w.row(["Section", "Pages", "Not fetched", "No structured data"], sectionWidths, { strong: true });

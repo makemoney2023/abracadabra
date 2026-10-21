@@ -13,6 +13,7 @@ import { ScorePreview } from "@/components/public/ScorePreview";
 import { UnlockForm } from "@/components/public/UnlockForm";
 import { Button } from "@/components/ui/button";
 import type { ScanPayload } from "@/lib/scan/present";
+import { robotsNote } from "@/lib/scan/robots-note";
 
 const POLL_MS = 2000;
 
@@ -155,8 +156,9 @@ export default function ScanPage() {
               <section className="space-y-2">
                 <h1 className="font-heading text-3xl tracking-tight">Scan failed</h1>
                 <p className="text-sm text-muted-foreground">
-                  Something went wrong while auditing {payload.domain}. Start a new scan from the
-                  home page.
+                  {robotsNote(payload.progress) && (payload.progress?.pagesTotal ?? 0) === 0
+                    ? robotsNote(payload.progress)
+                    : `Something went wrong while auditing ${payload.domain}. Start a new scan from the home page.`}
                 </p>
                 <Button asChild variant="outline" className="cursor-pointer">
                   <Link href="/">Try another URL</Link>
@@ -184,6 +186,12 @@ export default function ScanPage() {
                   <p className="rounded-lg border border-[var(--sc-hairline)] bg-[var(--sc-surface)] px-4 py-3 text-sm text-muted-foreground">
                     This scan read {payload.pageCount} of {payload.progress.pagesTotal} planned pages before its time
                     limit. The score covers the pages that were read.
+                  </p>
+                ) : null}
+
+                {robotsNote(payload.progress) ? (
+                  <p className="rounded-lg border border-[var(--sc-hairline)] bg-[var(--sc-surface)] px-4 py-3 text-sm text-muted-foreground">
+                    {robotsNote(payload.progress)}
                   </p>
                 ) : null}
 

@@ -85,7 +85,15 @@ describe("GET /api/scans/[token] progress", () => {
       .run();
     const { GET } = await import("@/app/api/scans/[token]/route");
     const json = (await (await GET(new Request("http://localhost/x"), ctx)).json()) as Record<string, unknown>;
-    expect(json.progress).toEqual({ tier: "deep-1000", pagesDone: 350, pagesTotal: 1000, partial: false });
+    expect(json.progress).toEqual({
+      tier: "deep-1000",
+      pagesDone: 350,
+      pagesTotal: 1000,
+      partial: false,
+      robotsStatus: null,
+      robotsSkipped: 0,
+      crawlDelayMs: 0,
+    });
     expect(json.pageCount).toBe(0);
   });
 

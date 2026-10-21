@@ -12,6 +12,8 @@ export type FakeSiteOptions = {
   /** Split the sitemap into a sitemap index with this many URLs per child sitemap. */
   childSize?: number;
   llmsTxt?: string | null;
+  /** robots.txt body, or an HTTP status it answers with (e.g. "404", "503"). Default allows everything. */
+  robots?: string | { status: string };
 };
 
 export type FakeSite = ScanSiteClient & { extracted: string[]; throwOnce: Set<string> };
@@ -45,7 +47,8 @@ export function fakeSite(options: FakeSiteOptions): FakeSite {
   } else {
     files.set(`${origin}/sitemap.xml`, `<?xml version="1.0"?><urlset>${locs(urls)}</urlset>`);
   }
-  files.set(`${origin}/robots.txt`, "User-agent: *\nAllow: /\n");
+  const robots = options.robots ?? "User-agent: *\nAllow: /\n";
+  if (typeof robots === "string") files.set(`${origin}/robots.txt`, robots);
   if (options.llmsTxt !== null) {
     files.set(`${origin}/llms.txt`, options.llmsTxt ?? `# Acme\n\n> We make things.\n\n## Pages\n\n- [Home](${origin}/): start here\n`);
   }
@@ -66,6 +69,7 @@ export function fakeSite(options: FakeSiteOptions): FakeSite {
       return list.map((url) => {
         const file = files.get(url);
         if (file) return { url, content: file };
+        if (typeof robots !== "string" && url === `${origin}/robots.txt`) return { url, content: "", error: robots.status };
         const path = url.slice(origin.length) || "/";
         const normalized = path === "" ? "/" : path;
         if (failing.has(normalized)) return { url, content: "", error: "500" };

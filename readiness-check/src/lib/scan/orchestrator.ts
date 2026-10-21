@@ -3,6 +3,7 @@ import { parseSitemapUrls } from "@/lib/detect/sitemap";
 import { computeOpsPriority } from "@/lib/ops/priority";
 import type { ParallelExtractResult, ParallelSearchResult } from "@/lib/parallel/types";
 import { probeUrl, type ProbeResult } from "@/lib/fetch-html";
+import { isAllowedByRobots, robotsRulesFromFetch, type RobotsRules } from "@/lib/robots-rules";
 import { prioritizeUrls, templateSeedUrls, type PrioritizedUrl } from "@/lib/prioritize-urls";
 import { MAX_PAGES } from "@/lib/scoring/constants";
 import { scoreScan } from "@/lib/scoring/score";
@@ -45,14 +46,20 @@ function urlKey(url: string): string {
 async function checkedSeeds(
   input: { origin: string; sitemapUrls: string[]; searchUrls: string[]; maxPages: number },
   probe: (url: string) => Promise<ProbeResult>,
+  crawl: Crawl = FREE_CRAWL,
 ): Promise<PrioritizedUrl[]> {
   const real = prioritizeUrls({ ...input, seedUrls: [] });
   const room = input.maxPages - real.length;
   if (room <= 0) return [];
-  const candidates = templateSeedUrls(input);
+  const candidates = templateSeedUrls(input).filter((seed) => crawl.allowed(seed.url));
   if (candidates.length === 0) return [];
   const taken = new Set(real.map((entry) => urlKey(entry.url)));
-  const results = await Promise.all(candidates.map((seed) => probe(seed.url)));
+  const results = crawl.pacer
+    ? await sequential(candidates, async (seed) => {
+        await crawl.pacer!.wait();
+        return probe(seed.url);
+      })
+    : await Promise.all(candidates.map((seed) => probe(seed.url)));
   const kept: PrioritizedUrl[] = [];
   candidates.forEach((seed, index) => {
     const result = results[index];
@@ -63,6 +70,36 @@ async function checkedSeeds(
     kept.push(seed);
   });
   return kept.slice(0, room);
+}
+
+/** Paces requests to one site: each wait() returns at least `ms` after the previous one. */
+export type Pacer = { ms: number; wait(): Promise<void> };
+
+export function createPacer(
+  ms: number,
+  sleep: (ms: number) => Promise<void> = (n) => new Promise((r) => setTimeout(r, n)),
+  /** Count the moment of creation as a request, so the first wait() also waits (a chunk right after the plan). */
+  startNow = false,
+): Pacer {
+  let last = startNow ? Date.now() : 0;
+  return {
+    ms,
+    async wait() {
+      const due = last + ms - Date.now();
+      if (last > 0 && due > 0) await sleep(due);
+      last = Date.now();
+    },
+  };
+}
+
+/** How a scan may crawl: which URLs robots.txt allows, and the pace. The free scan allows everything, unpaced. */
+export type Crawl = { allowed: (url: string) => boolean; pacer: Pacer | null };
+export const FREE_CRAWL: Crawl = { allowed: () => true, pacer: null };
+
+async function sequential<T, R>(items: T[], fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = [];
+  for (const item of items) out.push(await fn(item));
+  return out;
 }
 
 function originBase(origin: string): string {
@@ -95,15 +132,19 @@ export type SitemapLimits = {
   maxUrls: number;
 };
 
-export function sitemapLimits(maxPages: number): SitemapLimits {
+/** With a crawl delay, at most this many child sitemaps, so planning stays a couple of minutes. */
+const PACED_CHILD_SITEMAPS = 10;
+
+export function sitemapLimits(maxPages: number, paced = false): SitemapLimits {
   if (maxPages <= MAX_PAGES) return { maxChildren: FREE_CHILD_SITEMAPS, maxUrls: Number.POSITIVE_INFINITY };
-  return { maxChildren: DEEP_CHILD_SITEMAPS, maxUrls: maxPages * 10 };
+  return { maxChildren: paced ? PACED_CHILD_SITEMAPS : DEEP_CHILD_SITEMAPS, maxUrls: maxPages * 10 };
 }
 
 export async function resolveSitemapUrls(
   site: ScanSiteClient,
   sitemapXml: string | null,
   limits: SitemapLimits = sitemapLimits(MAX_PAGES),
+  pacer: Pacer | null = null,
 ): Promise<string[]> {
   if (!sitemapXml) return [];
 
@@ -116,8 +157,10 @@ export async function resolveSitemapUrls(
   const seenChildren = new Set<string>(queue);
   let read = 0;
   while (queue.length > 0 && read < limits.maxChildren && urls.size < limits.maxUrls) {
-    const batch = queue.splice(0, Math.min(SITEMAP_BATCH, limits.maxChildren - read));
+    // With a crawl delay, one child sitemap per request slot.
+    const batch = queue.splice(0, Math.min(pacer ? 1 : SITEMAP_BATCH, limits.maxChildren - read));
     read += batch.length;
+    if (pacer) await pacer.wait();
     const childResults = await site.extract(batch, { fullContent: true });
     for (const child of childResults) {
       const body = extractBody(child);
@@ -166,18 +209,28 @@ export function isCatastrophicFailure(input: {
 export const CATASTROPHIC_MESSAGE =
   "Catastrophic scan failure: no site files, search results, or fetchable home page";
 
+export type RobotsOutcome = {
+  status: RobotsRules["status"] | "not_applied";
+  /** Distinct candidate URLs (sitemap, search, home, guesses) that robots.txt disallows. */
+  skipped: number;
+  crawlDelayMs: number;
+  crawlDelayCapped: boolean;
+};
+
 export type ScanDiscovery = {
   siteFiles: SiteFiles;
   searchCount: number;
   /** Every URL the scan will read, in priority order, at most `maxPages`. */
   prioritized: PrioritizedUrl[];
+  robots: RobotsOutcome;
 };
 
 /** Plan step: site files, search, sitemap (index-aware), checked guesses, then the prioritized page list. */
 export async function discoverScanUrls(
   scan: Pick<ScanRecord, "origin" | "domain">,
-  deps: Pick<RunScanDeps, "site" | "probe">,
+  deps: Pick<RunScanDeps, "site" | "probe"> & { sleep?: (ms: number) => Promise<void> },
   maxPages: number = MAX_PAGES,
+  options: { respectRobots?: boolean } = {},
 ): Promise<ScanDiscovery> {
   const { site } = deps;
   const base = originBase(scan.origin);
@@ -195,20 +248,52 @@ export async function discoverScanUrls(
     llmsFullTxt: fileBody("llms-full.txt"),
   };
 
+  // Deep scans follow robots.txt (RFC 9309) for our user agent; the free scan reads as before.
+  const robotsRules = options.respectRobots
+    ? robotsRulesFromFetch(siteFileMap.get(normalizeExtractUrlKey(siteFileUrl(scan.origin, "robots.txt"))))
+    : null;
+  const skipped = new Set<string>();
+  const allowed = (url: string) => {
+    if (!robotsRules) return true;
+    if (isAllowedByRobots(url, robotsRules)) return true;
+    skipped.add(urlKey(url));
+    return false;
+  };
+  const pacer = robotsRules && robotsRules.crawlDelayMs > 0 ? createPacer(robotsRules.crawlDelayMs, deps.sleep) : null;
+  const crawl: Crawl = { allowed, pacer };
+
   const searchResults = await site.search(`Find important pages on ${scan.domain}`, {
     includeDomains: [scan.domain],
     maxResults: Math.min(maxPages, 200),
   });
-  const searchUrls = searchResults.map((r) => r.url).filter(Boolean);
+  const searchUrls = searchResults.map((r) => r.url).filter(Boolean).filter(allowed);
 
-  const sitemapUrls = await resolveSitemapUrls(site, siteFiles.sitemapXml, sitemapLimits(maxPages));
+  const sitemapUrls = (
+    await resolveSitemapUrls(site, siteFiles.sitemapXml, sitemapLimits(maxPages, Boolean(pacer)), pacer)
+  ).filter(allowed);
 
   const seedUrls = await checkedSeeds(
     { origin: base, sitemapUrls, searchUrls, maxPages },
     deps.probe ?? ((url) => probeUrl(url)),
+    crawl,
   );
-  const prioritized = prioritizeUrls({ origin: base, sitemapUrls, searchUrls, seedUrls, maxPages });
-  return { siteFiles, searchCount: searchUrls.length, prioritized };
+  // prioritizeUrls always adds the home page; drop it too if robots.txt disallows it.
+  const prioritized = prioritizeUrls({ origin: base, sitemapUrls, searchUrls, seedUrls, maxPages }).filter((entry) =>
+    allowed(entry.url),
+  );
+  return {
+    siteFiles,
+    searchCount: searchUrls.length,
+    prioritized,
+    robots: robotsRules
+      ? {
+          status: robotsRules.status,
+          skipped: skipped.size,
+          crawlDelayMs: robotsRules.crawlDelayMs,
+          crawlDelayCapped: robotsRules.crawlDelayCapped,
+        }
+      : { status: "not_applied", skipped: 0, crawlDelayMs: 0, crawlDelayCapped: false },
+  };
 }
 
 export type ScannedPages = {
@@ -223,17 +308,19 @@ export type ScannedPages = {
  */
 export async function scanPlannedPages(
   entries: PrioritizedUrl[],
-  input: { site: ScanSiteClient; origin: string; textLimitAt?: (index: number) => number },
+  input: { site: ScanSiteClient; origin: string; textLimitAt?: (index: number) => number; pacer?: Pacer | null },
 ): Promise<ScannedPages> {
   const { site } = input;
   const base = originBase(input.origin);
   const guessed = new Set(entries.filter((entry) => entry.source === "seed").map((entry) => entry.url));
 
   const pageExtractResults: ParallelExtractResult[] = [];
+  // With a crawl delay, one page per request slot; otherwise 10 at a time.
   for (const batch of chunk(
     entries.map((p) => p.url),
-    10,
+    input.pacer ? 1 : 10,
   )) {
+    if (input.pacer) await input.pacer.wait();
     const batchResults = await site.extract(batch, {
       objective: PAGE_EXTRACT_OBJECTIVE,
       fullContent: false,
