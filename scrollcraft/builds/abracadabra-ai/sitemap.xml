@@ -262,11 +262,11 @@
   <!-- blog-urls -->
   <url>
     <loc>https://abra-ca-dabra.app/blog</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/about/</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/blog/ai-agents-for-business</loc>
@@ -335,6 +335,10 @@
   <url>
     <loc>https://abra-ca-dabra.app/blog/how-can-ai-help-small-businesses</loc>
     <lastmod>2026-10-14</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq</loc>
+    <lastmod>2026-10-21</lastmod>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/blog/how-to-get-your-business-to-show-up-in-chatgpt</loc>

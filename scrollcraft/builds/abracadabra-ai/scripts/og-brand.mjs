@@ -25,7 +25,8 @@ export const OG = { width: 1200, height: 630, canvas: "#070706", ink: "#F5F0E8",
 function kerning(font, left, right) {
   try {
     const tables = font.position.getKerningTables("latn");
-    return font.position.getKerningValue(tables, left.index, right.index) || 0;
+    const value = font.position.getKerningValue(tables, left.index, right.index);
+    return Number.isFinite(value) ? value : 0;
   } catch {
     return 0;
   }
@@ -52,11 +53,25 @@ export function measure(text, options) {
   return layout(text, options).width;
 }
 
+// opentype.js's toPathData(2) sometimes prints NaN for a valid coordinate. Keep its output when it is
+// clean (so existing cards are unchanged) and fall back to plain toFixed formatting otherwise.
+function glyphPathData(path) {
+  const d = path.toPathData(2);
+  if (!d.includes("NaN")) return d;
+  const n = (value) => Number(value.toFixed(2));
+  return path.commands.map((c) => {
+    if (c.type === "M" || c.type === "L") return `${c.type}${n(c.x)} ${n(c.y)}`;
+    if (c.type === "Q") return `Q${n(c.x1)} ${n(c.y1)} ${n(c.x)} ${n(c.y)}`;
+    if (c.type === "C") return `C${n(c.x1)} ${n(c.y1)} ${n(c.x2)} ${n(c.y2)} ${n(c.x)} ${n(c.y)}`;
+    return "Z";
+  }).join("");
+}
+
 /** One line of outlined text. Returns { svg, width }. `anchor: "end"` right-aligns at x. */
 export function textPath(text, { x, y, size, font = "inter-600", tracking = 0, fill = OG.ink, anchor = "start", opacity }) {
   const { placed, width } = layout(text, { font, size, tracking });
   const left = anchor === "end" ? x - width : x;
-  const d = placed.map(({ glyph, at }) => glyph.getPath(left + at, y, size).toPathData(2)).join("");
+  const d = placed.map(({ glyph, at }) => glyphPathData(glyph.getPath(left + at, y, size))).join("");
   const alpha = opacity === undefined ? "" : ` fill-opacity="${opacity}"`;
   return { svg: `<path fill="${fill}"${alpha} d="${d}"/>`, width };
 }

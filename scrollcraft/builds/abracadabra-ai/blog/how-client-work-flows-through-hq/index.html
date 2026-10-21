@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Abracadabra Studio">
+<title>How Client Work Moves Through HQ and Our AI Agents | Abracadabra AI</title>
+<meta name="description" content="A request comes in, HQ files it, Grok Bot agents build it, Client Services checks it, and our team signs off before it lands in your own HQ space.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Abracadabra AI">
+<meta property="og:url" content="https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq">
+<meta property="og:title" content="How Client Work Moves Through HQ and Our AI Agents | Abracadabra AI">
+<meta property="og:description" content="A request comes in, HQ files it, Grok Bot agents build it, Client Services checks it, and our team signs off before it lands in your own HQ space.">
+<meta property="og:image" content="https://abra-ca-dabra.app/blog/og/how-client-work-flows-through-hq.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="How Client Work Moves Through HQ and Our AI Agents — Abracadabra AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How Client Work Moves Through HQ and Our AI Agents | Abracadabra AI">
+<meta name="twitter:description" content="A request comes in, HQ files it, Grok Bot agents build it, Client Services checks it, and our team signs off before it lands in your own HQ space.">
+<meta name="twitter:image" content="https://abra-ca-dabra.app/blog/og/how-client-work-flows-through-hq.jpg">
+<meta name="twitter:image:alt" content="How Client Work Moves Through HQ and Our AI Agents — Abracadabra AI">
+<meta name="theme-color" content="#070706">
+<link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preload" href="/assets/fonts/inter-tight-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/site.css?v=20261020b">
+
+<link rel="stylesheet" href="/blog/blog.css?v=20261021a">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://abra-ca-dabra.app/#org",
+      "name": "Abracadabra AI",
+      "url": "https://abra-ca-dabra.app/",
+      "email": "houdini@abra-ca-dabra.app",
+      "slogan": "From thought to working software"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://abra-ca-dabra.app/#website",
+      "url": "https://abra-ca-dabra.app/",
+      "name": "Abra-ca-dabra",
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      },
+      "inLanguage": "en"
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://abra-ca-dabra.app/#studio",
+      "name": "Abracadabra Studio",
+      "url": "https://abra-ca-dabra.app",
+      "parentOrganization": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      }
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq#post",
+      "headline": "How Client Work Moves Through HQ and Our AI Agents",
+      "description": "A request comes in, HQ files it, Grok Bot agents build it, Client Services checks it, and our team signs off before it lands in your own HQ space.",
+      "datePublished": "2026-10-21",
+      "dateModified": "2026-10-21",
+      "mainEntityOfPage": "https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq",
+      "url": "https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq",
+      "inLanguage": "en",
+      "keywords": "how AI agents deliver client work",
+      "articleSection": "AI agents",
+      "image": [
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/how-client-work-flows-through-hq/01.webp",
+          "width": 1280,
+          "height": 720,
+          "caption": "A dark software screen where a new request panel connects to a task board with To do, Doing, Review and Done columns"
+        },
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/how-client-work-flows-through-hq/02.webp",
+          "width": 1280,
+          "height": 720,
+          "caption": "Three small cards labelled Writing, Design and Code, each marked Working, feeding a Filed work panel marked Held for review"
+        },
+        {
+          "@type": "ImageObject",
+          "url": "https://abra-ca-dabra.app/blog/media/how-client-work-flows-through-hq/03.webp",
+          "width": 1280,
+          "height": 720,
+          "caption": "A review card with Approve and Send back buttons, joined to a Your space panel showing a Blog folder with typed files"
+        }
+      ],
+      "author": {
+        "@id": "https://abra-ca-dabra.app/#studio"
+      },
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      },
+      "citation": [
+        {
+          "@type": "CreativeWork",
+          "name": "Google Search's guidance about AI-generated content",
+          "url": "https://developers.google.com/search/blog/2023/02/google-search-and-ai-content",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Google Search Central"
+          },
+          "datePublished": "2023-02-08"
+        },
+        {
+          "@type": "CreativeWork",
+          "name": "AI Risk Management Framework",
+          "url": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "publisher": {
+            "@type": "Organization",
+            "name": "NIST"
+          },
+          "datePublished": "2023-01-26"
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://abra-ca-dabra.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Blog",
+          "item": "https://abra-ca-dabra.app/blog"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "How Client Work Moves Through HQ and Our AI Agents",
+          "item": "https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is HQ at Abracadabra?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "HQ is the app we use to run client work. It holds the request, the board, the files our agents make, and your own space where finished work is delivered."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do AI agents send work straight to clients?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Agents file their work to HQ, where it is held. Client Services checks it, a person on our team approves it, and only then does it show up in your space."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I send a request?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Email magic@abra-ca-dabra.app, or start a project on our site. If you already have work with us, you can also ask for changes on a piece in your space."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if the work is not right?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Client Services sends it back to the agent with a note, and the agent fixes it on the same card. If you ask for changes after delivery, HQ opens a new card for it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can you build a setup like this for my business?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Often, yes. Take the AI Readiness Check first. It scores where your work slows down and how ready your business is, and then we can talk about a build."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<header class="site-nav">
+  <a class="site-nav__mark" href="/" aria-label="Abracadabra AI home">abracadabra<span class="wm-dot">.</span></a>
+  <details class="site-nav__menu">
+    <summary class="site-nav__toggle" aria-label="Menu"><span class="site-nav__glyph" aria-hidden="true"></span></summary>
+  </details>
+  <nav class="site-nav__links" aria-label="Site">
+    <details class="site-nav__services"><summary>Services</summary><div class="site-nav__mega"><div class="site-nav__group" role="group" aria-label="Build"><p class="site-nav__fn-name" aria-hidden="true">Build</p><a class="site-nav__mega-link" href="/services/custom-apps/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg></span><span class="site-nav__text"><strong>Apps built around your workflow.</strong><span class="site-nav__desc">Software around the way the work already runs.</span></span></a><a class="site-nav__mega-link" href="/services/web-automation/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg></span><span class="site-nav__text"><strong>Put repetitive web work on autopilot.</strong><span class="site-nav__desc">Repetitive web jobs that run themselves.</span></span></a><a class="site-nav__mega-link" href="/services/answers-from-your-documents/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="M13.3 16.3 15 18"/></svg></span><span class="site-nav__text"><strong>Instant answers from your own documents.</strong><span class="site-nav__desc">Answers from the files you already keep.</span></span></a><a class="site-nav__mega-link" href="/services/safe-code-execution/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m7 11 2-2-2-2"/><path d="M11 13h4"/><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/></svg></span><span class="site-nav__text"><strong>Let AI run code, safely.</strong><span class="site-nav__desc">AI that can run code, with a fence around it.</span></span></a><a class="site-nav__mega-link" href="/services/machine-learning/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M9 13a4.5 4.5 0 0 0 3-4"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M12 13h4"/><path d="M12 18h6a2 2 0 0 1 2 2v1"/><path d="M12 8h8"/><path d="M16 8V5a2 2 0 0 1 2-2"/><circle cx="16" cy="13" r=".5"/><circle cx="18" cy="3" r=".5"/><circle cx="20" cy="21" r=".5"/><circle cx="20" cy="8" r=".5"/></svg></span><span class="site-nav__text"><strong>Machine learning that shows its working.</strong><span class="site-nav__desc">Models that show a number and the reasons.</span></span></a><a class="site-nav__mega-link" href="/services/mcp-connectors/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 22v-5"/><path d="M15 8V2"/><path d="M17 8a1 1 0 0 1 1 1v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1z"/><path d="M9 8V2"/></svg></span><span class="site-nav__text"><strong>Connect your AI to your tools.</strong><span class="site-nav__desc">Let your AI use your tools, safely.</span></span></a></div><div class="site-nav__group" role="group" aria-label="Create"><p class="site-nav__fn-name" aria-hidden="true">Create</p><a class="site-nav__mega-link" href="/services/ai-media/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m12.296 3.464 3.02 3.956"/><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3z"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m6.18 5.276 3.1 3.899"/></svg></span><span class="site-nav__text"><strong>On-brand images, video and voice, on demand.</strong><span class="site-nav__desc">On-brand images, video and voice.</span></span></a><a class="site-nav__mega-link" href="/services/voice-and-realtime-agents/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M13 2a9 9 0 0 1 9 9"/><path d="M13 6a5 5 0 0 1 5 5"/><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg></span><span class="site-nav__text"><strong>AI that answers your phone.</strong><span class="site-nav__desc">A voice that answers from your records.</span></span></a><a class="site-nav__mega-link" href="/services/ai-assistants-and-agents/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><span class="site-nav__text"><strong>AI assistants that actually get things done.</strong><span class="site-nav__desc">An assistant that finishes the request.</span></span></a></div><div class="site-nav__group" role="group" aria-label="Grow"><p class="site-nav__fn-name" aria-hidden="true">Grow</p><a class="site-nav__mega-link" href="/services/ai-visibility/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><path d="m16 16-1.9-1.9"/></svg></span><span class="site-nav__text"><strong>Get found in AI search.</strong><span class="site-nav__desc">Show up when someone asks an assistant.</span></span></a><a class="site-nav__mega-link" href="/services/search-grounded-research/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 5v16"/><path d="m16 12 2 2 4-4"/><path d="M22 6V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2h4.001A2 2 0 0022 17v-1.344"/></svg></span><span class="site-nav__text"><strong>Research you can trust, with every source cited.</strong><span class="site-nav__desc">Research you can open and check.</span></span></a><a class="site-nav__mega-link" href="/services/any-model-one-bill/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 17V7"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"/><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/></svg></span><span class="site-nav__text"><strong>Every AI model. One bill.</strong><span class="site-nav__desc">Every model, on one invoice.</span></span></a></div><div class="site-nav__group" role="group" aria-label="Learn"><p class="site-nav__fn-name" aria-hidden="true">Learn</p><a class="site-nav__mega-link" href="/course/llm-leverage/"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span><span class="site-nav__text"><strong>LLM Leverage</strong><span class="site-nav__desc">A course for better answers from any model.</span></span></a><a class="site-nav__mega-link" href="/blog"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg></span><span class="site-nav__text"><strong>Notes</strong><span class="site-nav__desc">How to put AI to work.</span></span></a><a class="site-nav__mega-link" href="/films.html"><span class="site-nav__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></svg></span><span class="site-nav__text"><strong>Films</strong><span class="site-nav__desc">The work, shown.</span></span></a></div></div></details>
+    <a href="/portfolio/">Work</a>
+    <a href="/products/">Products</a>
+    <a href="/blog">Blog</a>
+    <a href="/films.html">Films</a>
+    <a class="btn btn--primary site-nav__cta" href="/start/">Start a project</a>
+  </nav>
+</header>
+<script>
+  document.querySelectorAll(".site-nav").forEach(function (bar) {
+    var menu = bar.querySelector(".site-nav__menu");
+    var services = bar.querySelector(".site-nav__services");
+    var here = location.pathname;
+    if (here.slice(-10) === "index.html") here = here.slice(0, -10);
+    bar.querySelectorAll(".site-nav__links a:not(.site-nav__cta)").forEach(function (link) {
+      var path = link.getAttribute("href") || "";
+      var top = link.parentElement && link.parentElement.classList.contains("site-nav__links");
+      if (here === path || (top && path !== "/" && here.indexOf(path) === 0)) link.setAttribute("aria-current", "page");
+    });
+    if (services && here.indexOf("/services/") === 0) services.querySelector("summary").classList.add("is-current");
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () {
+        document.documentElement.style.setProperty("--nav-h", bar.offsetHeight + "px");
+      }).observe(bar);
+    }
+    bar.addEventListener("click", function (event) {
+      if (!event.target.closest("a")) return;
+      if (menu) menu.open = false;
+      if (services) services.open = false;
+    });
+    if (menu) {
+      menu.addEventListener("toggle", function () {
+        document.documentElement.classList.toggle("menu-open", menu.open);
+      });
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape") return;
+    var services = document.querySelector(".site-nav__services");
+    var menu = document.querySelector(".site-nav__menu");
+    if (services && services.open) {
+      services.open = false;
+      var summary = services.querySelector("summary");
+      if (summary) summary.focus();
+      return;
+    }
+    if (menu && menu.open) {
+      menu.open = false;
+      var toggle = menu.querySelector("summary");
+      if (toggle) toggle.focus();
+    }
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    var clock = document.querySelector("[data-clock]");
+    if (clock) {
+      var zone = clock.getAttribute("data-clock");
+      var tick = function () {
+        try {
+          clock.textContent = new Intl.DateTimeFormat("en-CA", {
+            timeZone: zone, hour: "numeric", minute: "2-digit", timeZoneName: "short",
+          }).format(new Date());
+        } catch (error) { /* keep the timezone name */ }
+      };
+      tick();
+      setInterval(tick, 60000);
+    }
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    document.querySelectorAll("video.loop-film").forEach(function (video) {
+      function stop() { video.pause(); }
+      if (reduce.matches) {
+        stop();
+        video.addEventListener("play", stop);
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (reduce.matches || !entry.isIntersecting) stop();
+          else video.play().catch(function () {});
+        });
+      }, { threshold: 0.35 });
+      observer.observe(video);
+    });
+  });
+</script>
+
+<main id="top" class="blog-post">
+<header class="content-hero">
+<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li><li><a href="/blog">Blog</a></li><li aria-current="page">How Client Work Moves Through HQ and Our AI Agents</li></ol></nav>
+<div class="hero-copy">
+<p class="kicker">AI agents · how AI agents deliver client work</p>
+<h1>How Client Work Moves Through HQ and Our AI Agents</h1>
+<p class="dek">A request comes in, HQ files it, Grok Bot agents build it, Client Services checks it, and our team signs off before it lands in your own HQ space.</p>
+<p class="byline">By <a href="/about/">Abracadabra Studio</a> · <time datetime="2026-10-21">2026-10-21</time></p>
+
+</div>
+<figure class="content-hero-photo"><picture><source srcset="/blog/media/how-client-work-flows-through-hq/01.webp" type="image/webp"><img src="/blog/media/how-client-work-flows-through-hq/01.jpg" alt="A dark software screen where a new request panel connects to a task board with To do, Doing, Review and Done columns" width="1280" height="720"></picture><figcaption>A request lands on the board as a card.</figcaption></figure>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<div class="post-layout">
+<article>
+<div class="prose post-prose">
+<p><strong>Here is the short answer.</strong> A client sends us a request, and HQ turns it into a card on that client’s board. Grok Bot agents with the right skills build the work and file it back to HQ, where it is held. Client Services checks it against the request, and a person on our team approves it. Only then does it appear in the client’s own space in HQ.</p>
+
+<p>This note walks through each step. It is the same path we use for our own site, and it is the kind of system we build for clients who want agents doing real work. If you want to know whether your business is ready for that, the <a href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a> is the place to start.</p>
+<figure class="post-figure post-diagram"><a href="/blog/media/how-client-work-flows-through-hq/flow.svg" title="Open the full-size diagram"><img src="/blog/media/how-client-work-flows-through-hq/flow.svg" alt="Representative diagram of six steps: a request comes in, it becomes a card, specialist agents build, Client Services reviews, our team approves, and the work is delivered to your space, with a send-back loop from review to the agents" width="1280" height="720" loading="lazy" decoding="async"></a><figcaption>Representative diagram of the flow, simplified. The step names follow the HQ board. <a href="/blog/media/how-client-work-flows-through-hq/flow.svg">Open full size</a>.</figcaption></figure>
+
+<h2 id="what-happens-when-you-send-us-a-request">What happens when you send us a request?</h2>
+<p>Most requests start as an email to <a href="mailto:magic@abra-ca-dabra.app">magic@abra-ca-dabra.app</a>. HQ logs each message that reaches that inbox and puts it in front of Client Services. It does not fire back an automatic reply. If the sender is already a client, the email lands on that client’s record. If not, it opens a lead, and we follow up like any new inquiry.</p>
+<p>You can also start from the <a href="/start/">start a project</a> form on our site. And if you already have work with us, you can ask for changes on a piece right inside your space. All three paths end up in the same place, which is a person or an agent reading what you asked for.</p>
+<h2 id="how-does-a-request-become-a-card-in-hq">How does a request become a card in HQ?</h2>
+<p>Client Services reads the request and hands it to the lead agent for that client. Each client has a lead agent, and some clients have helper agents too. The lead creates a card on the client’s board, inside the right project. When Client Services gives it a link to your email, the card keeps that link, so the work always points back to what you asked for.</p>
+<p>The board has four columns. They are To do, Doing, Waiting on Client Services, and Done. A new card starts in To do. When an agent picks it up, it moves to Doing. Every move shows up on the client’s timeline and in the Client Services feed, so nothing changes without a trace.</p>
+<figure class="post-figure post-diagram"><a href="/blog/media/how-client-work-flows-through-hq/board.svg" title="Open the full-size diagram"><img src="/blog/media/how-client-work-flows-through-hq/board.svg" alt="Representative diagram of the HQ board columns To do, Doing, Waiting on Client Services and Done, with a send-back loop into Doing and a change request that opens a new card in To do" width="1280" height="720" loading="lazy" decoding="async"></a><figcaption>Representative diagram of the path a card takes on the HQ board. <a href="/blog/media/how-client-work-flows-through-hq/board.svg">Open full size</a>.</figcaption></figure>
+
+<h2 id="who-builds-the-work">Who builds the work?</h2>
+<p>The agents do. Each one is a Grok Bot agent that we set up for a client and give a clear role. The lead can keep a card or hand it to a helper agent on the same client. A card can also carry skill packs from our skill library, such as copywriting or search work. The agent reads those skills while it works and can list the ones it followed when it files.</p>
+<p>For this note, that meant writing the article, making the pictures and drawing the diagrams. It also meant building the page on the site and testing it before anyone saw it. Agents are fast, but speed is not the point. The point is that a clear request plus the right skills gives a first draft that is worth a careful review.</p>
+<figure class="post-figure"><picture><source srcset="/blog/media/how-client-work-flows-through-hq/02.webp" type="image/webp"><img src="/blog/media/how-client-work-flows-through-hq/02.jpg" alt="Three small cards labelled Writing, Design and Code, each marked Working, feeding a Filed work panel marked Held for review" width="1280" height="720"></picture></figure>
+
+<p>When an agent is done, it files the work to HQ. A filing carries the files, a short note for our team, and a plain summary written for the client. Filing moves the card to Waiting on Client Services. The files are stored, but they are held, and the client cannot see them yet.</p>
+<h2 id="how-does-client-services-review-it">How does Client Services review it?</h2>
+<p>Client Services checks the work against the request. Did it answer what was asked? Is anything wrong, missing, or off brand? Are the facts right? If something is off, Client Services sends the card back with a note. The work stays held, and the agent fixes it and files again on the same card.</p>
+<aside class="cta cta-inline"><p>Want agents doing real work in your business? See where you stand first.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="how-client-work-flows-through-hq" data-track-placement="inline" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=how-client-work-flows-through-hq&amp;utm_content=inline">Run the Readiness Check</a></aside>
+
+<h2 id="why-does-a-person-on-our-team-approve-every-piece">Why does a person on our team approve every piece?</h2>
+<p>Agents can draft a lot of work, and we want all of it checked before it goes out. So nothing is released to a client, and no update is sent, until a person on our team says yes. HQ is built to hold the work until that review is done. By default it does not email clients when work is approved. It drafts an update for us to send ourselves.</p>
+<p>Google says it rewards helpful, original content no matter how it was made, and that using AI just to game rankings breaks its rules.<sup><a href="#source-google-ai-content">1</a></sup> We read that as a reason to put a careful review between the draft and the client. NIST’s AI Risk Management Framework is a voluntary guide to building trust into how AI is designed, built and used.<sup><a href="#source-nist-ai-rmf">2</a></sup> Ours is a small version of the same idea. A person stays on the hook for what ships.</p>
+<figure class="post-figure"><picture><source srcset="/blog/media/how-client-work-flows-through-hq/03.webp" type="image/webp"><img src="/blog/media/how-client-work-flows-through-hq/03.jpg" alt="A review card with Approve and Send back buttons, joined to a Your space panel showing a Blog folder with typed files" width="1280" height="720"></picture></figure>
+
+<h2 id="what-do-you-see-in-your-hq-space-and-when">What do you see in your HQ space, and when?</h2>
+<p>While work is held, it stays out of your folders. You won’t find it in previews, downloads, shared links or search inside your space, and you get no email about it. Once our team approves it, the files appear in a named folder, like Blog or Social. Each file shows its type, and images get a small thumbnail, so you can tell what is what without opening everything.</p>
+<p>The note at the top of each delivery is written for you. It says what we made and what you should look at. It leaves out our internal notes, file paths and agent names.</p>
+<figure class="post-figure post-diagram"><a href="/blog/media/how-client-work-flows-through-hq/visibility.svg" title="Open the full-size diagram"><img src="/blog/media/how-client-work-flows-through-hq/visibility.svg" alt="Representative diagram comparing held work, which stays out of your folders, previews, search and email, with approved work, which appears in a named folder with file types, thumbnails and a short update" width="1280" height="720" loading="lazy" decoding="async"></a><figcaption>Representative diagram of what you can see in your space before and after approval. <a href="/blog/media/how-client-work-flows-through-hq/visibility.svg">Open full size</a>.</figcaption></figure>
+
+<h2 id="what-if-you-want-changes">What if you want changes?</h2>
+<p>Ask for them on the piece in your space. HQ opens a new card called Changes requested, with your note on it, in To do. It goes back to the agent that made the work, or to the lead if that agent has moved on. From there it follows the same path again. The agent builds, Client Services checks, and our team approves before you see it.</p>
+<h2 id="could-this-work-in-your-business">Could this work in your business?</h2>
+<p>This setup is not only for agencies. Any team that gets requests, does work, and sends it back for sign-off can run a version of it. It might be a quote, a report, a page on your site, or a reply to a customer. We build these systems around how your work already flows. Some of them are <a href="/services/custom-apps/">custom apps</a>, and some are <a href="/services/ai-assistants-and-agents/">AI assistants and agents</a>. You can see more of what we have shipped in our <a href="/portfolio/">portfolio</a>.</p>
+<p>The first step is knowing where you stand. The <a href="https://check.abra-ca-dabra.app/check">AI Readiness Check</a> asks how your business runs today and gives you scores, a band and tips for each section. Take it, then <a href="/start/">start a project</a> or write to <a href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app</a>, and we will look at it with you.</p>
+
+</div>
+<section id="faq"><h2>Questions</h2><div class="faq-list"><details><summary>What is HQ at Abracadabra?</summary><p>HQ is the app we use to run client work. It holds the request, the board, the files our agents make, and your own space where finished work is delivered.</p></details><details><summary>Do AI agents send work straight to clients?</summary><p>No. Agents file their work to HQ, where it is held. Client Services checks it, a person on our team approves it, and only then does it show up in your space.</p></details><details><summary>How do I send a request?</summary><p>Email magic@abra-ca-dabra.app, or start a project on our site. If you already have work with us, you can also ask for changes on a piece in your space.</p></details><details><summary>What happens if the work is not right?</summary><p>Client Services sends it back to the agent with a note, and the agent fixes it on the same card. If you ask for changes after delivery, HQ opens a new card for it.</p></details><details><summary>Can you build a setup like this for my business?</summary><p>Often, yes. Take the AI Readiness Check first. It scores where your work slows down and how ready your business is, and then we can talk about a build.</p></details></div></section>
+<section id="sources"><h2>Sources</h2><ol><li id="source-google-ai-content"><a href="https://developers.google.com/search/blog/2023/02/google-search-and-ai-content">Google Search’s guidance about AI-generated content</a>. Google Search Central. 2023-02-08.</li><li id="source-nist-ai-rmf"><a href="https://www.nist.gov/itl/ai-risk-management-framework">AI Risk Management Framework</a>. NIST. 2023-01-26.</li></ol></section>
+<aside class="author-box"><p class="kicker">Author</p><h2>Abracadabra Studio</h2><p>The notes are written by the people who design, build and run AI-powered tools at Abracadabra. Every number names its source.</p><a href="/about/">About us</a></aside>
+<section id="related" class="post-related"><h2>Related</h2><ul class="cards"><li data-pillar="AI agents"><a href="/blog/ai-agents-for-business"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-agents-for-business/01.webp" type="image/webp"><img src="/blog/media/ai-agents-for-business/01.jpg" alt="A person seen from behind at a laptop in a workshop, with a second person beside them, looking at a screen together" width="1280" height="720"></picture></span><span class="kicker">AI agents</span><strong>AI Agents for Business: When to Use One</strong><span class="card-dek">When an AI agent is worth it, when a simple workflow is the better buy, and why a person should still check the output.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>11 min read</span></span></a></li><li data-pillar="AI agents"><a href="/blog/ai-agents-vs-agentic-ai"><span class="post-card-photo"><picture><source srcset="/blog/media/ai-agents-vs-agentic-ai/01.webp" type="image/webp"><img src="/blog/media/ai-agents-vs-agentic-ai/01.jpg" alt="Two people at a workbench, one holding a pen over a sheet and the other holding a phone, faces turned away" width="1280" height="720"></picture></span><span class="kicker">AI agents</span><strong>AI Agents vs Agentic AI: A Plain Split</strong><span class="card-dek">An agent takes a goal and chooses tools. Agentic AI is the wider bet, and many of those projects are forecast to be canceled. Start with a workflow.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>9 min read</span></span></a></li><li data-pillar="AI agents"><a href="/blog/what-is-an-ai-agent"><span class="post-card-photo"><picture><source srcset="/blog/media/what-is-an-ai-agent/01.webp" type="image/webp"><img src="/blog/media/what-is-an-ai-agent/01.jpg" alt="A person at a service counter with a laptop and a notepad, seen from the side so the face stays out of view" width="1280" height="720"></picture></span><span class="kicker">AI agents</span><strong>What Is an AI Agent? A Plain Answer for Owners</strong><span class="card-dek">An agent chooses a step from what it just found. A workflow follows a path you wrote. This note uses Anthropic’s split and McKinsey’s count of who is scaling.</span><span class="card-meta"><time datetime="2026-10-14">October 14, 2026</time><span aria-hidden="true">·</span><span>12 min read</span></span></a></li></ul></section>
+<section id="all-notes"><h2>All notes</h2><ul><li><a href="/blog/ai-agents-for-business">AI Agents for Business: When to Use One</a></li><li><a href="/blog/ai-agents-vs-agentic-ai">AI Agents vs Agentic AI: A Plain Split</a></li><li><a href="/blog/ai-automation-agency-vs-consultant">AI Automation Agency vs Consultant: Who to Hire</a></li><li><a href="/blog/ai-automation-for-small-business">AI Automation for Small Business: Which Job First</a></li><li><a href="/blog/ai-consultant-for-small-business">AI Consultant for Small Business: What to Ask</a></li><li><a href="/blog/ai-for-small-business-2027">AI for Small Business: What the Surveys Still Say</a></li><li><a href="/blog/ai-implementation-framework">An AI Implementation Framework in Five Stages</a></li><li><a href="/blog/ai-readiness-assessment-questionnaire">AI Readiness Assessment Questionnaire: The Themes</a></li><li><a href="/blog/ai-readiness-assessment">AI Readiness Assessment: What It Measures and How to Score</a></li><li><a href="/blog/ai-readiness-checklist">AI Readiness Checklist Before You Buy a Tool</a></li><li><a href="/blog/ai-readiness-framework">An AI Readiness Framework an Owner Can Score</a></li><li><a href="/blog/ai-ready-data">AI-Ready Data: What a Small Business Needs First</a></li><li><a href="/blog/ai-strategy-for-small-business">AI Strategy for Small Business: Start With the Job</a></li><li><a href="/blog/answer-engine-optimization">Answer Engine Optimization: What Google Still Requires</a></li><li><a href="/blog/business-process-automation-ai">Business Process Automation With AI: Write the Job</a></li><li><a href="/blog/generative-engine-optimization-vs-seo">Generative Engine Optimization vs SEO</a></li><li><a href="/blog/how-can-ai-help-small-businesses">How Can AI Help a Small Business? What Surveys Count</a></li><li><a href="/blog/how-to-get-your-business-to-show-up-in-chatgpt">How to Show Up in ChatGPT and AI Overviews</a></li><li><a href="/blog/how-to-use-ai-in-your-business">How to Use AI in Your Business: Twelve Jobs</a></li><li><a href="/blog/is-my-business-ready-for-ai">Is My Business Ready for AI? Signs to Read First</a></li><li><a href="/blog/off-the-shelf-ai-or-custom-software">Off-the-Shelf AI or Custom Software</a></li><li><a href="/blog/what-is-an-ai-agent">What Is an AI Agent? A Plain Answer for Owners</a></li><li><a href="/blog/what-is-llms-txt">What Is llms.txt, and Who Actually Reads It</a></li><li><a href="/blog/why-ai-pilots-stall">Why AI Pilots Stall After the Demo</a></li></ul></section>
+<aside class="cta cta-close"><p>Want agents doing real work in your business? See where you stand first.</p><a class="btn btn--primary" href="/start/">Start a project</a><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="how-client-work-flows-through-hq" data-track-placement="close" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=how-client-work-flows-through-hq&amp;utm_content=close">Run the Readiness Check</a></aside>
+</article>
+<aside class="post-aside">
+<nav class="toc post-toc" aria-label="On this page"><details class="toc__sheet"><summary>On this page</summary><p>On this page</p><ol><li><a href="#what-happens-when-you-send-us-a-request">What happens when you send us a request?</a></li><li><a href="#how-does-a-request-become-a-card-in-hq">How does a request become a card in HQ?</a></li><li><a href="#who-builds-the-work">Who builds the work?</a></li><li><a href="#how-does-client-services-review-it">How does Client Services review it?</a></li><li><a href="#why-does-a-person-on-our-team-approve-every-piece">Why does a person on our team approve every piece?</a></li><li><a href="#what-do-you-see-in-your-hq-space-and-when">What do you see in your HQ space, and when?</a></li><li><a href="#what-if-you-want-changes">What if you want changes?</a></li><li><a href="#could-this-work-in-your-business">Could this work in your business?</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></details><div class="toc__rail"><p>On this page</p><ol><li><a href="#what-happens-when-you-send-us-a-request">What happens when you send us a request?</a></li><li><a href="#how-does-a-request-become-a-card-in-hq">How does a request become a card in HQ?</a></li><li><a href="#who-builds-the-work">Who builds the work?</a></li><li><a href="#how-does-client-services-review-it">How does Client Services review it?</a></li><li><a href="#why-does-a-person-on-our-team-approve-every-piece">Why does a person on our team approve every piece?</a></li><li><a href="#what-do-you-see-in-your-hq-space-and-when">What do you see in your HQ space, and when?</a></li><li><a href="#what-if-you-want-changes">What if you want changes?</a></li><li><a href="#could-this-work-in-your-business">Could this work in your business?</a></li><li><a href="#faq">Questions</a></li><li><a href="#sources">Sources</a></li></ol></div></nav>
+</aside>
+</div>
+</main>
+<aside class="cta cta-sticky"><p>Want agents doing real work in your business? See where you stand first.</p><a class="btn btn--secondary" data-track="readiness_cta_clicked" data-track-slug="how-client-work-flows-through-hq" data-track-placement="sticky" href="https://check.abra-ca-dabra.app/check?utm_source=blog&amp;utm_medium=cta&amp;utm_campaign=how-client-work-flows-through-hq&amp;utm_content=sticky">Take the Readiness Check</a></aside>
+<footer class="site-foot">
+  <div class="site-close">
+  <p class="site-close__line">Have something to make?</p>
+  <p class="site-close__actions" data-actions>
+    <a class="btn btn--primary" href="/start/">Start a project</a>
+    <a class="btn btn--tertiary" href="mailto:houdini@abra-ca-dabra.app">houdini@abra-ca-dabra.app <span class="btn__arrow" aria-hidden="true">→</span></a>
+  </p>
+</div>
+  <p class="site-foot__word" aria-label="Abracadabra">abracadabra<span class="wm-dot">.</span></p>
+  <nav class="site-foot__links" aria-label="Footer">
+    <a href="/services/#search">Search &amp; AI visibility</a>
+    <a href="/services/#marketing">Marketing</a>
+    <a href="/services/#sales">Sales</a>
+    <a href="/services/#service">Customer service</a>
+    <a href="/services/#operations">Operations</a>
+    <a href="/portfolio/">Design</a>
+    <a href="/services/#platform">Platform</a>
+    <a href="/services/">Services</a>
+    <a href="/portfolio/">Work</a>
+    <a href="/products/">Products</a>
+    <a href="/course/llm-leverage/">Course</a>
+    <a href="/blog">Blog</a>
+    <a href="/films.html">Films</a>
+    <a href="/privacy">Privacy</a>
+  </nav>
+  <p class="site-foot__meta">
+    <span>Toronto</span>
+    <span data-clock="America/Toronto">America/Toronto</span>
+    <span>© 2026 Abracadabra AI</span>
+    <a href="/privacy">Privacy</a>
+  </p>
+  <script type="module" src="/assets/chat-widget.js?v=20261020a"></script>
+</footer>
+</body>
+</html>

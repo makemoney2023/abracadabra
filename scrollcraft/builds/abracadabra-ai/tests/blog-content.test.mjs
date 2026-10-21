@@ -64,7 +64,7 @@ function graph(html) {
 describe("blog content", () => {
   it("validates frontmatter, three images, and sourced numbers", async () => {
     const posts = await loadPosts();
-    assert.equal(posts.length, 24);
+    assert.equal(posts.length, 25);
     for (const post of posts) {
       assert.equal(post.images.length, 3);
       assert.ok(post.images.every((image) => image.alt.trim().length >= 12));
@@ -148,6 +148,25 @@ describe("blog content", () => {
       }
       assert.equal(html.includes("/02.png"), false, post.slug);
       assert.equal(html.includes("/03.png"), false, post.slug);
+    }
+  });
+
+  it("places representative diagrams as labelled SVG figures", async () => {
+    const posts = await loadPosts();
+    const withDiagrams = posts.filter((post) => post.diagrams?.length);
+    assert.ok(withDiagrams.length >= 1);
+    for (const post of withDiagrams) {
+      const html = await text(`blog/${post.slug}/index.html`);
+      for (const diagram of post.diagrams) {
+        assert.match(diagram.caption, /^Representative diagram/, diagram.src);
+        const tag = `<figure class="post-figure post-diagram"><a href="${diagram.src}" title="Open the full-size diagram"><img src="${diagram.src}" alt="${escAttr(diagram.alt)}" width="1280" height="720" loading="lazy" decoding="async"></a><figcaption>`;
+        assert.ok(html.includes(tag), `${post.slug} ${diagram.src}`);
+        const svg = await text(diagram.src.slice(1));
+        assert.match(svg, /^<\?xml[^>]*>\s*<svg [^>]*viewBox="0 0 1280 720"/);
+        assert.doesNotMatch(svg, /NaN/);
+        assert.doesNotMatch(svg, /<text\b/, "diagram text is drawn as outlines");
+      }
+      assert.doesNotMatch(html, /<!--diagram:/);
     }
   });
 
@@ -268,7 +287,7 @@ describe("blog content", () => {
     assert.match(index, /<a class="featured-post" data-pillar="AI readiness" href="\/blog\/ai-readiness-assessment">/);
     assert.match(index, /<fieldset class="pillar-filter"><legend>Filter by topic<\/legend>/);
     assert.match(index, /<input type="radio" name="pillar" id="pillar-all" checked>/);
-    const times = index.match(/<time datetime="2026-10-14">October 14, 2026<\/time>/g) ?? [];
+    const times = index.match(/<time datetime="\d{4}-\d{2}-\d{2}">[A-Z][a-z]+ \d{1,2}, \d{4}<\/time>/g) ?? [];
     const reads = index.match(/\d+ min read/g) ?? [];
     assert.equal(times.length, posts.length);
     assert.equal(reads.length, posts.length);

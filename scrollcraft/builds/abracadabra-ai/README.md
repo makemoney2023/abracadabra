@@ -4,6 +4,15 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 
 The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
 
+## Blog note on how client work moves through HQ, plus representative diagrams — 2026-10-21
+
+- **What changed** — New note `/blog/how-client-work-flows-through-hq` ("How Client Work Moves Through HQ and Our AI Agents"): a request comes in, it becomes an HQ card, Grok Bot agents build, Client Services reviews, our team approves, and the work lands in the client's HQ space. Three software-style images (service-image look) and three SVG diagrams, each labelled as representative. Notes can now list `diagrams:` in front matter (src under `/blog/media/<slug>/*.svg`, alt, caption) and place each with `<!--diagram:N-->`; `scripts/blog-diagrams.mjs` draws them with every word as Inter Tight / IBM Plex Sans outlines. `BLOG_AS_OF` in `npm run build` / `npm test` is now 2026-10-21 so the note is public in the index, sitemap, RSS, `llms.txt` and `llms-full.txt`. `og-brand.mjs` falls back to its own path formatting when opentype.js prints `NaN` (seen on "ns" in Plex Sans); clean paths are unchanged, so existing cards are byte-identical.
+- **Why** — Client Services asked for a note explaining how Abracadabra, HQ and our agents deliver client work, with diagrams and readiness-check calls to action.
+- **Code touchpoints** — `content/blog/how-client-work-flows-through-hq.md`, `content/images/how-client-work-flows-through-hq-0{1,2,3}.jpg`, `content/calendar-image-prompts.json`, `content/blog/body-alt.json`, `scripts/blog.mjs`, `scripts/blog-diagrams.mjs`, `scripts/og-brand.mjs`, `scripts/site-pages.mjs` (stylesheet version), `blog/blog.css`, `package.json`, `tests/blog-content.test.mjs`.
+- **Data-flow impact** — Regenerated blog pages (the new note appears in every note's All notes list), index, RSS, sitemap, `llms.txt`, `llms-full.txt`, and the `blog.css?v=` query on generated pages.
+- **API / schema impact** — The new note ships BlogPosting, BreadcrumbList and FAQPage JSON-LD like every note. Diagrams are not added to the BlogPosting `image` list (it stays the three photographs).
+- **Verification** — `CHROME_PATH=/usr/bin/google-chrome npm test`.
+
 ## Guessed-path redirects — 2026-10-21
 
 - **What changed** — `/contact`, `/contact/`, `/book` and `/book/` 301 to `/start/`. `/faq` and `/faq/` 301 to `/#faq`, the homepage FAQ section.
