@@ -26,6 +26,9 @@ export type Action =
   | "file.download"
   | "file.tag"
   | "file.release"
+  | "library_file.select"
+  | "view_link.manage"
+  | "article_promotion.create"
   | "knowledge.manage";
 
 export type AuthzTarget = {
@@ -82,11 +85,14 @@ export function can(caller: Caller, action: Action, target: AuthzTarget = {}): b
     case "batch.delete":
     case "batch.export":
     case "file.tag":
+    case "library_file.select":
+    case "article_promotion.create":
       return staffOnWorkspace(caller, workspaceId);
     case "invite.member":
     case "share.copy":
     case "member.remove":
     case "knowledge.manage":
+    case "view_link.manage":
       return staffOnWorkspace(caller, workspaceId) || owner;
     case "batch.create":
       return staffOnWorkspace(caller, workspaceId) || client;

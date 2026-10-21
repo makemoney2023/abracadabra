@@ -42,6 +42,7 @@ const STEPS = [
   { file: "0038_social_phase2.sql", table: "social_autopost" },
   { file: "0039_social_agent_plans.sql", table: "social_post_targets" },
   { file: "0040_social_cadence_limits.sql", column: { table: "social_autopost", name: "limits_json" } },
+  { file: "0041_library_artifacts.sql", table: "library_file_selections" },
 ] as const;
 
 type Step = (typeof STEPS)[number];

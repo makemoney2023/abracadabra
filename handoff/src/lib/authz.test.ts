@@ -70,6 +70,9 @@ const matrix: { action: Action; allowed: [boolean, boolean, boolean, boolean] }[
   { action: "batch.export", allowed: [true, true, false, false] },
   { action: "batch.delete", allowed: [true, true, false, false] },
   { action: "file.release", allowed: [true, false, false, false] },
+  { action: "library_file.select", allowed: [true, true, false, false] },
+  { action: "view_link.manage", allowed: [true, true, true, false] },
+  { action: "article_promotion.create", allowed: [true, true, false, false] },
   { action: "workspace.archive", allowed: [true, true, false, false] },
   { action: "workspace.export", allowed: [true, false, false, false] },
   { action: "workspace.purge", allowed: [true, false, false, false] },
@@ -98,6 +101,9 @@ describe("can", () => {
     expect(can(unassigned, "workspace.view", { workspaceId: WORKSPACE })).toBe(false);
     expect(can(unassigned, "file.download", { workspaceId: WORKSPACE })).toBe(false);
     expect(can(unassigned, "share.copy", { workspaceId: WORKSPACE })).toBe(false);
+    expect(can(unassigned, "library_file.select", { workspaceId: WORKSPACE })).toBe(false);
+    expect(can(unassigned, "view_link.manage", { workspaceId: WORKSPACE })).toBe(false);
+    expect(can(unassigned, "article_promotion.create", { workspaceId: WORKSPACE })).toBe(false);
     expect(can(unassigned, "batch.create", { workspaceId: WORKSPACE })).toBe(false);
   });
 

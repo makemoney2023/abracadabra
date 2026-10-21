@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import type { Caller } from "@/lib/authz";
+import { selectLibraryFile } from "@/lib/artifact-metadata";
 import { migrate } from "./migrate";
 import {
   batchesFor,
@@ -201,5 +202,19 @@ describe("handoff D1 isolation", () => {
         [NOW],
       ),
     ).rejects.toThrow();
+  });
+
+  it("does not let an operator select a clean file in another workspace", async () => {
+    const sql = await database();
+    await seed(sql);
+    await sql.run(
+      `INSERT INTO organizations (id, name, kind, created_at, updated_at) VALUES ('org-a', 'Alpha', 'client', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run("UPDATE workspaces SET organization_id = 'org-a' WHERE id = 'ws-a'");
+    const otherOperator = caller("user-op-b");
+    const selected = await selectLibraryFile(sql, otherOperator, "file-a-clean", NOW);
+    expect(selected.ok).toBe(false);
+    expect(await sql.get("SELECT id FROM library_file_selections WHERE file_id = 'file-a-clean'")).toBeUndefined();
   });
 });

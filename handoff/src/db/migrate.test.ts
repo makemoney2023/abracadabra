@@ -57,6 +57,7 @@ describe("statementsFromMigration", () => {
       "0038_social_phase2.sql",
       "0039_social_agent_plans.sql",
       "0040_social_cadence_limits.sql",
+      "0041_library_artifacts.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);
@@ -309,6 +310,24 @@ describe("agent social plans", () => {
       expect.arrayContaining(["id", "post_id", "account_id", "outcome", "updated_at"]),
     );
     expect(uniqueColumnSets(db, "social_post_targets")).toEqual(expect.arrayContaining([["post_id", "account_id"]]));
+    await migrate(sqliteSql(db));
+  });
+
+  it("creates library metadata, relations, and file selections, then migrates again", async () => {
+    const db = new DatabaseSync(":memory:");
+    await migrate(sqliteSql(db));
+    expect(columnNames(db, "deliverable_artifact_metadata")).toEqual(
+      expect.arrayContaining(["organization_id", "workspace_id", "deliverable_id", "item_id", "version", "canonical_url", "source_file_id", "updated_at"]),
+    );
+    expect(uniqueColumnSets(db, "deliverable_artifact_metadata")).toEqual(expect.arrayContaining([["item_id", "version"]]));
+    expect(columnNames(db, "artifact_relations")).toEqual(
+      expect.arrayContaining(["source_kind", "source_id", "source_version", "target_kind", "target_id", "target_version", "relation_kind"]),
+    );
+    expect(columnNames(db, "library_file_selections")).toEqual(
+      expect.arrayContaining(["workspace_id", "file_id", "selected_by", "selected_at", "revoked_by", "revoked_at"]),
+    );
+    const partial = db.prepare("SELECT sql FROM sqlite_master WHERE name = 'library_file_selections_active'").get() as { sql: string };
+    expect(partial.sql.toLowerCase()).toContain("where revoked_at is null");
     await migrate(sqliteSql(db));
   });
 });
