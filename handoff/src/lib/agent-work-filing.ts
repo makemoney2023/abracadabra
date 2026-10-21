@@ -1,7 +1,8 @@
 import { normalizeDomain } from "@/db/crm";
 import type { Sql } from "@/db/sql";
 import type { ObjectStore } from "@/lib/store/objects";
-import { storeWorkflowOutput, type WorkflowFile } from "@/lib/workflow-files";
+import { storeWorkflowOutput, workflowFileExtension, type WorkflowFile } from "@/lib/workflow-files";
+import { cleanFolder, defaultFolder, fileStem } from "@/lib/work-folder";
 import { agentWorkLimits, MAX_ATTACHMENTS, storedBytes, tooBigMessage } from "@/lib/agent-work-limits";
 import { checkSupersedes, recordFiling, resolveFilingRequest, type FilingReview } from "@/lib/agent-filing-review";
 import { handOverWaitingTasks } from "@/lib/agent-dispatch";
@@ -65,13 +66,15 @@ export type WorkPayload = {
   threadId: string | null;
   /** Deliverable kind for the card's deliverable (social_pack, website, document, brief, design_system, other). */
   deliverableKind: string | null;
+  /** Folder in the space, like "Social/Facebook". null: Finished work/<date> <title>. */
+  folder: string | null;
 };
 
 export type FileResult =
   | {
       ok: true; duplicate: boolean; state: "filed"; workItemId: string; organizationId: string; workspaceId: string;
       spaceSlug: string; projectId: string | null; paths: string[]; route: string; taskClosed: boolean; handoffTo: string | null; awaitingReview?: boolean;
-      held?: boolean; review?: FilingReview;
+      held?: boolean; review?: FilingReview; folder?: string | null;
     }
   | { ok: true; duplicate: boolean; state: "unfiled" | "received" | "discarded"; workItemId: string; reason: string | null }
   | { ok: false; error: "invalid"; message: string }
@@ -95,10 +98,6 @@ function text(raw: unknown, max: number): string | null {
   if (typeof raw !== "string") return null;
   const value = raw.trim();
   return value ? value.slice(0, max) : null;
-}
-
-function slug(value: string, max = 40): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, max).replace(/-+$/g, "");
 }
 
 // ---------- Agents, assignments, tokens ----------
@@ -282,6 +281,8 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
   if (rawSupersedes.length > 20) return { ok: false, message: "supersedes takes up to 20 work item ids." };
   const supersedes = [...new Set(rawSupersedes.map((value) => text(value, 100)).filter((value): value is string => Boolean(value)))];
   const deliverableKind = text(body.deliverable_kind, 30)?.toLowerCase() ?? null;
+  const folder = cleanFolder(body.folder);
+  if (!folder.ok) return { ok: false, message: folder.message };
   return {
     ok: true,
     payload: {
@@ -308,6 +309,7 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       workRequestId: text(body.work_request_id, 100),
       threadId: text(body.thread_id, 500),
       deliverableKind,
+      folder: folder.folder,
     },
   };
 }
@@ -432,18 +434,53 @@ function summaryMarkdown(agent: AgentPrincipal, payload: WorkPayload, receivedAt
   return lines.join("\n");
 }
 
-function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number): WorkflowFile[] {
-  const date = new Date(now).toISOString().slice(0, 10);
-  const run = `${date}-${slug(payload.title) || "work"}-${itemId.slice(0, 6)}`;
-  const files: WorkflowFile[] = [{ workflow: "work", run, node: "summary", body: summary }];
-  if (payload.content?.trim().startsWith("data:")) files.push({ workflow: "work", run, node: "content", body: payload.content });
-  const used = new Set(["summary", "content"]);
-  for (const file of payload.attachments) {
-    let node = slug(file.name.replace(/\.[a-z0-9]{1,8}$/i, ""), 50) || "file";
-    while (used.has(node)) node = `${node}-2`;
-    used.add(node);
-    files.push({ workflow: "work", run, node, body: file.body, name: file.name });
+function likeEscape(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
+/**
+ * Names already used in the folder (lowercase), so a new filing gets "post-1 (2).png" instead of clashing. Hidden
+ * batches don't count, and neither do the filings this one supersedes: the replacement keeps their names.
+ */
+async function takenPaths(sql: Sql, workspaceId: string, folder: string, agentId: string, supersedes: string[]): Promise<Set<string>> {
+  const replaced = supersedes.length ? supersedes.map(() => "?").join(", ") : "NULL";
+  const rows = await sql.all<{ path: string }>(
+    `SELECT lower(f.relative_path) AS path FROM files f JOIN batches b ON b.id = f.batch_id
+     WHERE f.workspace_id = ? AND b.discarded_at IS NULL AND b.deleted_at IS NULL AND b.hidden_at IS NULL
+       AND f.object_deleted_at IS NULL AND f.relative_path LIKE ? ESCAPE '\\'
+       AND (b.work_item_id IS NULL OR b.work_item_id NOT IN (
+         SELECT id FROM agent_work_items WHERE id IN (${replaced}) OR (agent_id = ? AND external_id IN (${replaced}))
+       ))`,
+    [workspaceId, `${likeEscape(folder)}/%`, ...supersedes, agentId, ...supersedes],
+  );
+  return new Set(rows.map((row) => row.path));
+}
+
+/** Files for a filing: the summary plus attachments, under the agent's folder with readable names. */
+function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number, folder: string, taken: Set<string>): WorkflowFile[] {
+  const run = itemId.slice(0, 8);
+  // Keyed on the exact stored name (same extension logic as storage), so post.md and post.html can sit side by side.
+  const claim = (stem: string, file: Pick<WorkflowFile, "body" | "name">): string => {
+    const extension = workflowFileExtension(file) ?? "md";
+    for (let n = 1; ; n += 1) {
+      const candidate = n === 1 ? `${folder}/${stem}` : `${folder}/${stem} (${n})`;
+      const key = `${candidate}.${extension}`.toLowerCase();
+      if (!taken.has(key)) {
+        taken.add(key);
+        return candidate;
+      }
+    }
+  };
+  const summaryStem = payload.folder ? `${fileStem(payload.title)} - summary` : "summary";
+  const files: WorkflowFile[] = [{ workflow: "work", run, node: "summary", body: summary, path: claim(summaryStem, { body: summary }) }];
+  if (payload.content?.trim().startsWith("data:")) {
+    files.push({ workflow: "work", run, node: "content", body: payload.content, path: claim("content", { body: payload.content }) });
   }
+  for (const file of payload.attachments) {
+    const stem = fileStem(file.name);
+    files.push({ workflow: "work", run, node: stem, body: file.body, name: file.name, path: claim(stem, file) });
+  }
+  void now;
   return files;
 }
 
@@ -451,9 +488,11 @@ async function writeFiled(
   sql: Sql,
   store: ObjectStore,
   input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; route: Extract<Route, { ok: true }>; actor: string; now: number },
-): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview?: boolean; review: FilingReview } | { ok: false }> {
+): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview?: boolean; review: FilingReview; folder: string } | { ok: false }> {
   const { route, payload, agent } = input;
   const summary = summaryMarkdown(agent, payload, input.now);
+  const folder = payload.folder ?? defaultFolder(input.now, payload.title);
+  const taken = await takenPaths(sql, route.space.id, folder, agent.agentId, payload.supersedes);
   // Held: staff, Client Services and the client's agents see it; client members only after Client Services approves.
   const stored = await storeWorkflowOutput({
     sql,
@@ -461,7 +500,7 @@ async function writeFiled(
     organizationId: route.organizationId,
     workspaceId: route.space.id,
     projectId: route.projectId,
-    files: filesFor(input.itemId, summary, payload, input.now),
+    files: filesFor(input.itemId, summary, payload, input.now, folder, taken),
     tag: "copy",
     label: `From ${agent.label}`.slice(0, 120),
     now: input.now,
@@ -477,12 +516,12 @@ async function writeFiled(
     {
       statement: `UPDATE agent_work_items SET state = 'filed', organization_id = ?, workspace_id = ?, project_id = ?, task_id = ?, task_closed = 0,
                     handoff_to = ?, handoff_note = ?, route = ?, unfiled_reason = NULL, payload_json = NULL, payload_key = NULL, context_md = ?, batch_id = ?,
-                    paths_json = ?, filed_by = ?, filed_at = ?, updated_at = ?, supersedes_json = ?, work_request_id = ?
+                    paths_json = ?, filed_by = ?, filed_at = ?, updated_at = ?, supersedes_json = ?, work_request_id = ?, folder = ?
                   WHERE id = ?`,
       params: [
         route.organizationId, route.space.id, route.projectId, route.taskId, payload.handoffTo, payload.handoffNote,
         route.route, summary.slice(0, CONTEXT_LIMIT), stored.batchId, JSON.stringify(stored.stored), input.actor, input.now, input.now,
-        JSON.stringify(payload.supersedes), request, input.itemId,
+        JSON.stringify(payload.supersedes), request, folder, input.itemId,
       ],
     },
     {
@@ -519,7 +558,7 @@ async function writeFiled(
     workspaceId: route.space.id, projectId: route.projectId, taskId: route.taskId, workRequestId: request, now: input.now,
   });
   return {
-    ok: true, paths: stored.stored, batchId: stored.batchId, taskClosed: false,
+    ok: true, paths: stored.stored, batchId: stored.batchId, taskClosed: false, folder,
     ...(review.awaitingReview ? { awaitingReview: true } : {}), review,
   };
 }
@@ -639,7 +678,7 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
   return {
     ok: true, duplicate: false, state: "filed", workItemId: itemId, organizationId: route.organizationId, workspaceId: route.space.id,
     spaceSlug: route.space.slug, projectId: route.projectId, paths: filed.paths, route: route.route, taskClosed: filed.taskClosed,
-    handoffTo: payload.handoffTo, ...(filed.awaitingReview ? { awaitingReview: true } : {}), held: true, review: filed.review,
+    handoffTo: payload.handoffTo, ...(filed.awaitingReview ? { awaitingReview: true } : {}), held: true, review: filed.review, folder: filed.folder,
   };
 }
 

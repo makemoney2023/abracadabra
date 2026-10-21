@@ -34,6 +34,7 @@ const STEPS = [
   { file: "0030_today_feed.sql", table: "staff_feed_seen" },
   { file: "0031_task_agent_owner.sql", index: "tasks_agent_assignee" },
   { file: "0032_agent_filing_hold.sql", index: "batches_work_item" },
+  { file: "0033_agent_work_folder.sql", index: "agent_work_items_folder" },
 ] as const;
 
 type Step = (typeof STEPS)[number];
@@ -88,8 +89,18 @@ function alreadyAddedColumn(statement: string, error: unknown): boolean {
   return /^ALTER\s+TABLE\s+\S+\s+ADD\s+COLUMN\b/i.test(statement) && error instanceof Error && /duplicate column name/i.test(error.message);
 }
 
+/**
+ * HANDOFF_SKIP_MIGRATIONS (comma-separated file names) holds steps back. A preview version shares the live D1, so a
+ * preview upload sets it to keep a new step off the live database until the real deploy. Never set it on a deploy.
+ */
+export function skippedMigrations(value = process.env.HANDOFF_SKIP_MIGRATIONS): Set<string> {
+  return new Set((value ?? "").split(",").map((name) => name.trim()).filter(Boolean));
+}
+
 export async function migrate(sql: Sql): Promise<void> {
+  const skipped = skippedMigrations();
   for (const step of STEPS) {
+    if (skipped.has(step.file)) continue;
     if (await stepApplied(sql, step)) continue;
     const file = MIGRATION_SQL[step.file];
     if (!file) throw new Error(`Missing migration ${step.file}`);

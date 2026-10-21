@@ -19,6 +19,11 @@ export type WorkflowFile = {
    * txt, ...) keeps that extension instead of becoming .md. Data URLs still go by their content.
    */
   name?: string;
+  /**
+   * Exact place in the space without the extension, like "Social/Facebook/post-1" (agent filings with folders).
+   * When set, workflow, run and node only label the file; the extension still comes from the content.
+   */
+  path?: string;
 };
 
 /** Text types whose given extension is kept. HTML and SVG stay download-only (see preview.ts). */
@@ -52,6 +57,15 @@ export function keptTextExtension(name: string | undefined, body: string): strin
   return extension;
 }
 
+/** The extension storeWorkflowOutput will give this file, or null when it would be skipped. Same order as below. */
+export function workflowFileExtension(file: Pick<WorkflowFile, "body" | "bytes" | "name">): string | null {
+  if (file.bytes && isPdfBytes(file.bytes)) return "pdf";
+  if (file.bytes && isPngBytes(file.bytes)) return "png";
+  const kept = keptTextExtension(file.name, file.body);
+  if (kept) return kept;
+  return adaptArtifact(file.body)?.extension ?? null;
+}
+
 export type StoredWorkflowFiles = {
   batchId: string | null;
   stored: string[];
@@ -81,9 +95,10 @@ function slug(value: string): string {
 
 /** Path inside the client space. A blank name returns null. */
 export function workflowSpacePath(
-  file: Pick<WorkflowFile, "workflow" | "run" | "node">,
+  file: Pick<WorkflowFile, "workflow" | "run" | "node" | "path">,
   extension = "md",
 ): string | null {
+  if (file.path) return /^[a-z0-9]{1,8}$/.test(extension) ? `${file.path}.${extension}` : null;
   const workflow = slug(file.workflow);
   const run = slug(file.run);
   const node = slug(file.node);

@@ -179,7 +179,7 @@ describe("filing", () => {
     const result = await fileAgentWork(sql, store, principal, work, NOW);
     expect(result).toMatchObject({ ok: true, state: "filed", duplicate: false, workspaceId: spaceId, spaceSlug: "acme-example", route: "only_space" });
     if (!result.ok || result.state !== "filed") throw new Error("not filed");
-    expect(result.paths[0]).toMatch(/^agent\/work\/2023-11-14-spring-promo-landing-page-copy-[0-9a-f]{6}\/summary\.md$/);
+    expect(result.paths[0]).toBe("Finished work/2023-11-14 Spring promo landing page copy/summary.md");
     const file = await sql.get<{ object_key: string; status: string; workspace_id: string }>("SELECT object_key, status, workspace_id FROM files");
     expect(file?.workspace_id).toBe(spaceId);
     expect(file?.status).toBe("uploaded");
