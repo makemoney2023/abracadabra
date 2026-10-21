@@ -14,7 +14,43 @@ export type WorkflowFile = {
   body: string;
   /** Raw PDF bytes. When set, the body is not used. */
   bytes?: Uint8Array;
+  /**
+   * The name the sender gave (an agent attachment). A text body named with an allowed text extension (html, csv,
+   * txt, ...) keeps that extension instead of becoming .md. Data URLs still go by their content.
+   */
+  name?: string;
 };
+
+/** Text types whose given extension is kept. HTML and SVG stay download-only (see preview.ts). */
+export const KEPT_TEXT_EXTENSIONS: Record<string, string> = {
+  html: "text/html",
+  htm: "text/html",
+  csv: "text/csv",
+  txt: "text/plain",
+  xml: "application/xml",
+  css: "text/css",
+  md: "text/markdown",
+  json: "application/json",
+  svg: "image/svg+xml",
+};
+
+/** The kept extension for a named text body, or null when content detection decides. */
+export function keptTextExtension(name: string | undefined, body: string): string | null {
+  if (!name) return null;
+  const match = /\.([a-z0-9]{1,8})$/i.exec(name.trim());
+  const extension = match?.[1]?.toLowerCase() ?? "";
+  if (!KEPT_TEXT_EXTENSIONS[extension]) return null;
+  const trimmed = body.trim();
+  if (!trimmed || trimmed.startsWith("data:") || trimmed.startsWith("%PDF")) return null;
+  if (extension === "json") {
+    try {
+      JSON.parse(trimmed);
+    } catch {
+      return null;
+    }
+  }
+  return extension;
+}
 
 export type StoredWorkflowFiles = {
   batchId: string | null;
@@ -77,6 +113,10 @@ export async function storeWorkflowOutput(input: {
   workspaceId?: string | null;
   /** Batch label shown in the space. Defaults to "From the swarm". */
   label?: string;
+  /** Agent filings: held (staff, Client Services and agents only) until Client Services approves. */
+  hold?: boolean;
+  /** The agent_work_items row this batch carries. */
+  workItemId?: string | null;
 }): Promise<StoredWorkflowFiles> {
   const prepared = input.files.flatMap((file) => {
     if (file.bytes && isPdfBytes(file.bytes)) {
@@ -88,6 +128,12 @@ export async function storeWorkflowOutput(input: {
       const relativePath = workflowSpacePath(file, "png");
       if (!relativePath) return [];
       return [{ relativePath, bytes: file.bytes, contentType: "image/png" }];
+    }
+    const kept = keptTextExtension(file.name, file.body);
+    if (kept) {
+      const relativePath = workflowSpacePath(file, kept);
+      if (!relativePath) return [];
+      return [{ relativePath, bytes: new TextEncoder().encode(file.body), contentType: KEPT_TEXT_EXTENSIONS[kept]! }];
     }
     const adapted = adaptArtifact(file.body);
     if (!adapted) return [];
@@ -154,9 +200,10 @@ export async function storeWorkflowOutput(input: {
   try {
     await input.sql.run(
       `INSERT INTO batches (
-        id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at
-      ) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?, NULL, NULL)`,
-      [batchId, space.id, ACTOR, input.label ?? LABEL, input.now, input.now],
+        id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at,
+        held_at, work_item_id
+      ) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?, NULL, NULL, ?, ?)`,
+      [batchId, space.id, ACTOR, input.label ?? LABEL, input.now, input.now, input.hold ? input.now : null, input.workItemId ?? null],
     );
     for (const file of rows) {
       await input.sql.run(

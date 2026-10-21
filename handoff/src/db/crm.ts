@@ -1901,6 +1901,43 @@ export async function organizationInternal(sql: Sql, caller: Caller, organizatio
   return row?.is_internal === 1;
 }
 
+/** How a client hears about approved agent work: draft (Client Services drafts it in magic@) or auto (the "is ready" email). */
+export async function organizationUpdateMode(sql: Sql, caller: Caller, organizationId: string): Promise<"draft" | "auto"> {
+  if (!staffUserId(caller)) return "draft";
+  const row = await sql.get<{ client_update_mode: string | null }>("SELECT client_update_mode FROM organizations WHERE id = ?", [organizationId]);
+  return row?.client_update_mode === "auto" ? "auto" : "draft";
+}
+
+/** Staff switch on the client's Settings tab. Default draft: nothing is emailed to the client automatically. */
+export async function setOrganizationUpdateMode(
+  sql: Sql,
+  caller: Caller,
+  input: { organizationId: string; mode: string },
+  now: number,
+): Promise<CrmResult<{ mode: "draft" | "auto" }>> {
+  const actorId = staffUserId(caller);
+  if (!actorId) return { ok: false, error: "forbidden" };
+  if (input.mode !== "draft" && input.mode !== "auto") return { ok: false, error: "invalid" };
+  const row = await sql.get<{ client_update_mode: string | null }>("SELECT client_update_mode FROM organizations WHERE id = ?", [input.organizationId]);
+  if (!row) return { ok: false, error: "missing" };
+  if ((row.client_update_mode ?? "draft") === input.mode) return { ok: true, value: { mode: input.mode } };
+  await sql.run("UPDATE organizations SET client_update_mode = ?, updated_at = ? WHERE id = ?", [input.mode, now, input.organizationId]);
+  await sql.run(
+    `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, created_at)
+     VALUES (?, ?, 'note', 'staff', ?, ?, ?)`,
+    [
+      crypto.randomUUID(),
+      input.organizationId,
+      actorId,
+      input.mode === "auto"
+        ? "Client updates: approved agent work now emails the client's space members automatically."
+        : "Client updates: approved agent work becomes a suggested update for Client Services to draft in magic@. Nothing is emailed automatically.",
+      now,
+    ],
+  );
+  return { ok: true, value: { mode: input.mode } };
+}
+
 /** Staff toggle on the client's Settings tab. */
 export async function setOrganizationInternal(
   sql: Sql,

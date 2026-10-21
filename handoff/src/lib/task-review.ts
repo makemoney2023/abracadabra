@@ -4,6 +4,7 @@ import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { moveTaskStage, type MoveTaskInput, type MoveTaskResult } from "@/lib/task-stage";
 import { columnOf } from "@/lib/board-model";
 import { nextColumnPosition } from "@/lib/task-position";
+import { releaseHeldWork, type ReleaseResult } from "@/lib/agent-filing-review";
 
 type ReviewRow = {
   id: string;
@@ -24,7 +25,9 @@ export type ReviewInput = Omit<MoveTaskInput, "to" | "direction" | "position" | 
   note?: string;
 };
 
-export type ReviewResult = MoveTaskResult | { ok: false; error: "not_in_review" | "note_required" };
+export type ReviewResult =
+  | (MoveTaskResult & { release?: ReleaseResult })
+  | { ok: false; error: "not_in_review" | "note_required" };
 
 async function loadReview(sql: Sql, taskId: string): Promise<ReviewRow | undefined> {
   return sql.get<ReviewRow>(
@@ -66,7 +69,8 @@ async function logReview(
 
 /**
  * Staff decision on a card in Review.
- * approve: to done (same as a done move, so filing and the feed see it).
+ * approve: to done (same as a done move, so filing and the feed see it), then the card's held agent filings are
+ *   released to the client, the deliverable version is published, and the client notice is posted (draft by default).
  * progress: back to its own stage as in progress. Starts nothing; with AGENT_MODE=agents the lead agent gets a
  *   "changes" handoff with the note.
  * build: a normal move to build with the note as the instruction, so legacy starts a Cursor run (as a build move
@@ -86,7 +90,9 @@ export async function decideReview(sql: Sql, input: ReviewInput): Promise<Review
     if (!moved.ok) return moved;
     await sql.run("UPDATE tasks SET review_note = NULL WHERE id = ?", [task.id]);
     await logReview(sql, task, "approve", note, input);
-    return moved;
+    // Held agent filings on this card go to the client now; send back (below) keeps them held.
+    const release = await releaseHeldWork(sql, { taskId: task.id, now: input.now, actor: { kind: input.actor.kind === "staff" ? "staff" : "system", id: input.actor.id } });
+    return release.released.length ? { ...moved, release } : moved;
   }
 
   if (input.decision === "build") {
@@ -149,7 +155,14 @@ export type OpenReview = {
   /** Who moved it to Review, from the timeline. */
   requested_by: { kind: string; id: string | null } | null;
   agents: { agent_id: string; role: string }[];
-  filed_work: { id: string; agent_id: string; kind: string; title: string; paths: string[]; links: unknown[]; filed_at: string | null }[];
+  filed_work: {
+    id: string; agent_id: string; kind: string; title: string; paths: string[]; links: unknown[]; filed_at: string | null;
+    /** held: waiting on this review; released: the client sees it; superseded / withdrawn: retired; published: filed before the hold. */
+    visibility: "held" | "released" | "superseded" | "withdrawn" | "published";
+    deliverable_id: string | null; deliverable_version: number | null; superseded_by: string | null; work_request_id: string | null;
+  }[];
+  deliverable: { id: string; title: string; version: number; published_version: number | null } | null;
+  work_request: { id: string; subject: string; client_email: string | null; source_thread_id: string | null; source_message_id: string } | null;
 };
 
 /** Open Review cards for Client Services, oldest ask first. organizationId narrows to one client. */
@@ -180,11 +193,31 @@ export async function listOpenReviews(sql: Sql, input: { organizationId?: string
        WHERE a.organization_id = ? AND a.ended_at IS NULL AND c.revoked_at IS NULL ORDER BY a.role, a.assigned_at`,
       [row.organization_id],
     );
-    const work = await sql.all<{ id: string; agent_id: string; kind: string; title: string; paths_json: string | null; links_json: string; filed_at: number | null }>(
-      `SELECT id, agent_id, kind, title, paths_json, links_json, filed_at FROM agent_work_items
-       WHERE task_id = ? AND state = 'filed' ORDER BY filed_at DESC LIMIT 20`,
+    const work = await sql.all<{
+      id: string; agent_id: string; kind: string; title: string; paths_json: string | null; links_json: string; filed_at: number | null;
+      held_at: number | null; released_at: number | null; retracted_at: number | null; superseded_by: string | null; deliverable_id: string | null;
+      deliverable_version: number | null; work_request_id: string | null;
+    }>(
+      `SELECT i.id, i.agent_id, i.kind, i.title, i.paths_json, i.links_json, i.filed_at, b.held_at, i.released_at, i.retracted_at, i.superseded_by,
+              i.deliverable_id, i.deliverable_version, i.work_request_id
+       FROM agent_work_items i LEFT JOIN batches b ON b.id = i.batch_id
+       WHERE i.task_id = ? AND i.state = 'filed' ORDER BY i.filed_at DESC LIMIT 20`,
       [row.id],
     );
+    const cardRow = await sql.get<{ deliverable_id: string | null; work_request_id: string | null }>("SELECT deliverable_id, work_request_id FROM tasks WHERE id = ?", [row.id]);
+    const deliverable = cardRow?.deliverable_id
+      ? await sql.get<{ id: string; title: string; version: number; published_version: number | null }>(
+          "SELECT id, title, version, published_version FROM deliverables WHERE id = ?",
+          [cardRow.deliverable_id],
+        )
+      : undefined;
+    const requestId = cardRow?.work_request_id ?? work.find((item) => item.work_request_id)?.work_request_id ?? null;
+    const request = requestId
+      ? await sql.get<{ id: string; subject: string; client_email: string | null; source_thread_id: string | null; source_message_id: string }>(
+          "SELECT id, subject, client_email, source_thread_id, source_message_id FROM client_work_requests WHERE id = ?",
+          [requestId],
+        )
+      : undefined;
     const parse = (raw: string | null): unknown[] => {
       try {
         const value = raw ? JSON.parse(raw) : [];
@@ -213,7 +246,22 @@ export async function listOpenReviews(sql: Sql, input: { organizationId?: string
         paths: parse(item.paths_json).filter((path): path is string => typeof path === "string"),
         links: parse(item.links_json),
         filed_at: item.filed_at == null ? null : new Date(item.filed_at).toISOString(),
+        visibility: item.retracted_at != null
+          ? "withdrawn" as const
+          : item.superseded_by
+            ? "superseded" as const
+            : item.released_at != null
+              ? "released" as const
+              : item.held_at != null
+                ? "held" as const
+                : "published" as const,
+        deliverable_id: item.deliverable_id,
+        deliverable_version: item.deliverable_version,
+        superseded_by: item.superseded_by,
+        work_request_id: item.work_request_id,
       })),
+      deliverable: deliverable ?? null,
+      work_request: request ?? null,
     });
   }
   return out;

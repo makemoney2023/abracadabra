@@ -8,6 +8,7 @@ import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { listFolderFiles } from "@/lib/downloads";
 import { listFileReads } from "@/lib/knowledge";
+import { seesHeldWork } from "@/lib/held-work";
 import { openSession } from "@/lib/current";
 import { previewKind, previewableStatus } from "@/lib/preview";
 import { ensureUploadShare, sharePageUrl } from "@/lib/share-link";
@@ -27,7 +28,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
   const showUpload = canDrop && (open.length > 0 || staffDrop);
   const canShare = can(caller, "share.copy", { workspaceId: workspace.id });
   const canRead = can(caller, "knowledge.manage", { workspaceId: workspace.id });
-  const reads = canRead ? await listFileReads(sql, workspace.id) : [];
+  const reads = canRead ? await listFileReads(sql, workspace.id, undefined, { clientView: !seesHeldWork(caller, workspace.id) }) : [];
   const uploadHref =
     open.length === 1 ? `/w/${workspace.slug}/drop?request=${open[0].id}` : `/w/${workspace.slug}/drop`;
   const headerList = await headers();
@@ -86,6 +87,7 @@ export default async function WorkspaceHome({ params }: { params: Promise<{ slug
               sizeBytes: file.sizeBytes,
               status: file.status,
               deletable: file.createdBy === caller.userId,
+              heldNote: file.hold === "held" ? "Held for Client Services review" : file.hold === "hidden" ? "Retired: hidden from client" : null,
               previewHref:
                 previewableStatus(file.status) && previewKind(file.name) !== "none"
                   ? `/w/${workspace.slug}/files/${file.id}`

@@ -75,6 +75,7 @@
     "HANDOFF_APP_ORIGIN": "https://handoff.abra-ca-dabra.app",
     "AGENT_URL": "https://agent.abra-ca-dabra.app",
     "SWARM_ORIGIN": "https://agent-swarm-orchestrator.abracadabra-ai.workers.dev",
-    "MCP_PORTAL_URL": "https://mcp.abra-ca-dabra.app/mcp"
+    "MCP_PORTAL_URL": "https://mcp.abra-ca-dabra.app/mcp",
+    "AGENT_WORK_MAX_MB": "10"
   }
 }

@@ -13,6 +13,7 @@ import {
   logCall,
   mergeOrganizations,
   setOrganizationInternal,
+  setOrganizationUpdateMode,
   type CrmError,
   type OrgKind,
 } from "@/db/crm";
@@ -396,6 +397,13 @@ export async function saveSearchConsoleGrantAction(formData: FormData): Promise<
 }
 
 /** Settings tab: hide or show this client on Today (internal, test, or vendor). */
+export async function setUpdateModeAction(formData: FormData): Promise<void> {
+  const { sql, caller } = await requireHqStaffPage();
+  const organizationId = String(formData.get("organizationId") ?? "");
+  await setOrganizationUpdateMode(sql, caller, { organizationId, mode: String(formData.get("mode") ?? "") }, Date.now());
+  revalidatePath(`/clients/${organizationId}`);
+}
+
 export async function setInternalAction(formData: FormData): Promise<void> {
   const { sql, caller } = await requireHqStaffPage();
   const organizationId = String(formData.get("organizationId") ?? "");

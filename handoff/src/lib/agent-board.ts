@@ -3,6 +3,7 @@ import { dispatchTask, liveClientAgent } from "@/lib/agent-dispatch";
 import { agentMode } from "@/lib/agent-mode";
 import { resolveClientRef, type AgentPrincipal } from "@/lib/agent-work-filing";
 import { nextColumnPosition } from "@/lib/task-position";
+import { resolveFilingRequest } from "@/lib/agent-filing-review";
 import { moveTaskStage, type MoveTaskResult } from "@/lib/task-stage";
 import { BOARD_COLUMN_LABEL, columnOf as boardColumnOf, toColumn, type BoardColumn } from "@/lib/board-model";
 import type { SkillBucket } from "@/lib/skill-library";
@@ -396,9 +397,12 @@ export async function createAgentTask(
     client?: unknown; projectId?: string | null; title: string; note?: string | null; stage?: string | null;
     /** Agent id of the card's owner on the same client. A hire's own cards default to itself and can't name another. */
     assignee?: string | null;
+    /** The Client Services request this card answers (POST /api/client-services/requests), or its email thread id. */
+    workRequestId?: string | null;
+    threadId?: string | null;
     now: number;
   },
-): Promise<{ ok: true; task: BoardTask; activityId: string } | BoardError> {
+): Promise<{ ok: true; task: BoardTask; activityId: string; workRequestId?: string | null } | BoardError> {
   const title = input.title.trim().slice(0, 200);
   if (!title) return { ok: false, status: 400, message: "title is required." };
   const asked = toColumn(input.stage ?? "todo");
@@ -447,6 +451,11 @@ export async function createAgentTask(
   } else if (!lead) {
     assignee = agent.agentId;
   }
+  const workRequestId = input.workRequestId?.trim() || null;
+  if (workRequestId) {
+    const known = await sql.get<{ id: string }>("SELECT id FROM client_work_requests WHERE id = ? AND organization_id = ?", [workRequestId, organizationId]);
+    if (!known) return { ok: false, status: 400, message: "work_request_id is not a request of this client." };
+  }
   const id = crypto.randomUUID();
   const position = await nextColumnPosition(sql, { organizationId, projectId, column: stage });
   await sql.run(
@@ -457,7 +466,17 @@ export async function createAgentTask(
   const row = { id, title, organization_id: organizationId, project_id: projectId };
   const note = input.note?.trim().slice(0, 4000) || null;
   const owner = assignee && assignee !== agent.agentId ? ` Assigned to ${assignee}.` : "";
-  const activityId = await record(sql, agent, row, "create", `Added task "${title}".${owner}${note ? ` ${note}` : ""}`, { stage, note, assignee }, input.now);
+  const threadId = input.threadId?.trim() || null;
+  const linked = workRequestId || threadId
+    ? await resolveFilingRequest(sql, {
+        organizationId, taskId: id, workRequestId, threadId, title, summary: note, projectId,
+        workspaceId: await spaceFor(sql, projectId), now: input.now,
+      })
+    : null;
+  const activityId = await record(
+    sql, agent, row, "create", `Added task "${title}".${owner}${note ? ` ${note}` : ""}`,
+    { stage, note, assignee, ...(linked ? { work_request_id: linked } : {}) }, input.now,
+  );
   return {
     ok: true,
     task: {
@@ -465,5 +484,6 @@ export async function createAgentTask(
       skill_packs: [], assignee_agent_id: assignee, updated_at: new Date(input.now).toISOString(),
     },
     activityId,
+    ...(linked ? { workRequestId: linked } : {}),
   };
 }

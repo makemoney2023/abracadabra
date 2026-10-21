@@ -258,6 +258,7 @@ async function searchWorkspaces(
   workspaceIds: readonly string[],
   query: string,
   tag: string | undefined,
+  clientView = false,
 ): Promise<unknown[]> {
   const hits = [];
   for (const workspaceId of workspaceIds) {
@@ -267,6 +268,7 @@ async function searchWorkspaces(
       query,
       understander: understanderFromRuntime(),
       tag,
+      clientView,
     });
     hits.push(...found);
     if (hits.length >= 8) break;
@@ -288,14 +290,15 @@ async function callTool(sql: Sql, principal: KnowledgePrincipal, name: string, a
       return rpcError(id, -32001, "A project key stays on its space.", 403);
     }
     if (name === "list_files") {
-      const rows = await listFileReads(sql, principal.workspaceId, tag);
+      // A space key can sit with the client: held agent filings stay out until Client Services releases them.
+      const rows = await listFileReads(sql, principal.workspaceId, tag, { clientView: true });
       const text = rows.length === 0 ? "No files have been read yet." : JSON.stringify(rows);
       return rpcResult(id, textResult(text));
     }
     if (name === "search_files") {
       const query = args.query?.trim() ?? "";
       if (!query) return rpcResult(id, textResult("Type a few words to search."));
-      const hits = await searchWorkspaces(sql, [principal.workspaceId], query, tag);
+      const hits = await searchWorkspaces(sql, [principal.workspaceId], query, tag, true);
       const text = hits.length === 0 ? "No files matched." : JSON.stringify(hits);
       return rpcResult(id, textResult(text));
     }
