@@ -1,6 +1,6 @@
 # Social publishing through Zernio
 
-Status: Phase 1 built (this PR). Phases 2 to 4 are the plan.
+Status: Phases 1, 2 and 3 built. Phase 4 is the plan.
 
 ## Goal
 
@@ -34,19 +34,20 @@ Finished work is already shaped for posting. `deliverable_items` carry `channel`
 4. **Post a piece** (`/deliverables/[id]`): each piece with a caption or media has "Post to social". Staff pick the client's accounts and choose Save as draft, Schedule (date, time, time zone), or Post now. Schedule and Post now need the client to have approved that piece. HQ copies the piece's media from R2 into Zernio (presigned upload), then creates one Zernio post for all the chosen accounts. The row is written before the call, so a failure is visible and a retry does not double-post.
 5. **Media rules.** A carousel sends its slides in order. Otherwise the `main` file is sent (or `square` when there is no `main`). A video's `poster` becomes its thumbnail. PDFs go only to LinkedIn. Video and images are not mixed in one post.
 
-## Phase 2: status and blogs
+## Phase 2: status and per-network options (built)
 
-- Zernio webhooks (`post.published`, `post.failed`) to `POST /api/zernio/webhook`, routed by `profiles[0].externalId`. Replaces refresh-on-open.
-- The one-minute cron on worker `handoff` refreshes posts due in the last hour.
+- Zernio webhooks to `POST /api/zernio/webhook`: post events by Zernio post id, account events by `profiles[0].externalId`. Signed with `ZERNIO_WEBHOOK_SECRET`; registered with `npm run zernio:webhook`.
+- The one-minute cron on worker `handoff` refreshes posts due in the last six hours that still say sending or scheduled.
+- Large videos stream from R2 into Zernio.
 - Per-network text (`customContent`) and per-network options: YouTube title and tags, first comment.
 
 Blog article posting and Pinterest options are out of scope for now.
 
-## Phase 3: let the client and the agent drive it
+## Phase 3: let the client and the agent drive it (built)
 
 - The client connects accounts from their own space (`/w/[slug]/social`) with the same link. Staff stay able to do it for them.
-- A content calendar per client: every scheduled post on a month view, drag to move (`PUT /v1/posts/{id}`).
-- HQ chat and agent tools: `list_social_accounts`, `schedule_piece`, `list_scheduled_posts`. Approval rules stay the same: only approved pieces can be scheduled.
+- A content calendar per client: scheduled posts grouped by day, with Move (`PUT /v1/posts/{id}`) and Cancel (`DELETE /v1/posts/{id}`).
+- HQ chat tools: `list_social_accounts`, `list_social_posts`, `schedule_social` (approval card). Only approved pieces can be scheduled.
 - Auto-schedule on approval: a client setting picks accounts and a cadence; approving a piece queues it in the next open slot.
 
 ## Phase 4: results
@@ -58,7 +59,7 @@ Blog article posting and Pinterest options are out of scope for now.
 
 - First 2 connected accounts are free, then $6 per account per month for accounts 1 to 10, $3 for 11 to 100. Blog sites count as accounts.
 - 60 requests a minute on the free tier, 600 on paid. HQ calls Zernio only on staff actions and tab opens.
-- A Worker reads the whole media file into memory before the upload. Videos above about 100 MB should move to a streamed copy (R2 presigned GET handed to Zernio) in Phase 2.
+- Videos stream from R2 into Zernio's presigned upload (FixedLengthStream), so a large file is not held in Worker memory. Pictures are small and still read whole.
 
 ## Risks
 

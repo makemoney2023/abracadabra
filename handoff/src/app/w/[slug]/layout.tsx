@@ -63,6 +63,11 @@ export default async function WorkspaceLayout({
               <Link href={`/w/${workspace.slug}/people`}>People</Link>
             </Button>
           ) : null}
+          {can(caller, "invite.member", { workspaceId: workspace.id }) ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/w/${workspace.slug}/social`}>Social</Link>
+            </Button>
+          ) : null}
           {can(caller, "workspace.configure", { workspaceId: workspace.id }) ||
           can(caller, "workspace.archive", { workspaceId: workspace.id }) ||
           caller.operatorOf.includes(workspace.id) ? (

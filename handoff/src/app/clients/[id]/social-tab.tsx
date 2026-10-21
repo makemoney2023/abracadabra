@@ -3,17 +3,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { POST_STATUS_LABEL, type SocialAccount, type SocialPost } from "@/lib/social";
+import type { Autopost } from "@/lib/social-autopost";
 import { POST_TYPE_LABEL } from "@/lib/social-plan";
 import { CONNECT_PLATFORMS, PLATFORM_LABEL, isBlogPlatform } from "@/lib/zernio";
 import { connectSocialAction } from "../social-actions";
-import { DisconnectSocialForm } from "../social-forms";
+import { AutopostForm, CancelSocialPostForm, DisconnectSocialForm, MoveSocialPostForm } from "../social-forms";
 
 export type SocialView = {
   configured: boolean;
   syncError: string | null;
   accounts: SocialAccount[];
   posts: SocialPost[];
+  autopost: Autopost;
   notice: string;
+  now: number;
 };
 
 const NOTICE: Record<string, string> = {
@@ -22,18 +25,106 @@ const NOTICE: Record<string, string> = {
   setup: "Zernio is not set up yet.",
 };
 
-function when(post: SocialPost): string {
+function accountLabel(account: SocialAccount): string {
+  return `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`;
+}
+
+function dayKey(at: number, timeZone: string): string {
+  return new Date(at).toLocaleDateString("en-US", { timeZone, weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+function timeOf(at: number, timeZone: string): string {
+  return new Date(at).toLocaleTimeString("en-US", { timeZone, hour: "numeric", minute: "2-digit" });
+}
+
+function links(post: SocialPost): string[] {
+  try {
+    return Object.values(JSON.parse(post.published_urls ?? "{}") as Record<string, string>);
+  } catch {
+    return [];
+  }
+}
+
+function accountCount(post: SocialPost): number {
+  try {
+    return (JSON.parse(post.account_ids) as string[]).length;
+  } catch {
+    return 0;
+  }
+}
+
+function PostLine({ post, organizationId, showActions }: { post: SocialPost; organizationId: string; showActions: boolean }) {
+  const zone = post.timezone || "UTC";
   const at = post.scheduled_for ?? post.created_at;
-  const text = new Date(at).toLocaleString("en-US", {
-    timeZone: post.timezone || "UTC",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-  return `${text} ${post.timezone || "UTC"}`;
+  return (
+    <li className="flex flex-col gap-1 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted-foreground tabular-nums">{timeOf(at, zone)}</span>
+        <span className="font-medium">{post.item_title}</span>
+        <Badge variant="secondary">{POST_TYPE_LABEL[post.post_type]}</Badge>
+        <Badge variant={post.status === "failed" ? "destructive" : "outline"}>
+          {post.error === "Cancelled." ? "Cancelled" : POST_STATUS_LABEL[post.status]}
+        </Badge>
+        {showActions && post.status === "scheduled" ? (
+          <>
+            <MoveSocialPostForm organizationId={organizationId} postId={post.id} timezone={zone} />
+            <CancelSocialPostForm organizationId={organizationId} postId={post.id} />
+          </>
+        ) : null}
+        {showActions && post.status === "draft" ? <CancelSocialPostForm organizationId={organizationId} postId={post.id} /> : null}
+      </div>
+      <span className="text-muted-foreground">
+        {zone} · {accountCount(post)} account(s) ·{" "}
+        <Link className="underline" href={`/deliverables/${post.deliverable_id}`}>
+          {post.deliverable_title}
+        </Link>
+      </span>
+      {links(post).length > 0 ? (
+        <span className="flex flex-wrap gap-3">
+          {links(post).map((url) => (
+            <a key={url} className="underline" href={url} target="_blank" rel="noreferrer">
+              {new URL(url).hostname.replace(/^www\./, "")}
+            </a>
+          ))}
+        </span>
+      ) : null}
+      {post.error && post.error !== "Cancelled." ? <span className="whitespace-pre-line text-status-late">{post.error}</span> : null}
+      {post.skipped ? <span className="whitespace-pre-line text-muted-foreground">Skipped: {post.skipped}</span> : null}
+    </li>
+  );
+}
+
+/** Upcoming posts grouped by day, in each post's own time zone. */
+function Calendar({ posts, organizationId }: { posts: SocialPost[]; organizationId: string }) {
+  const days = new Map<string, SocialPost[]>();
+  for (const post of posts) {
+    const key = dayKey(post.scheduled_for ?? post.created_at, post.timezone || "UTC");
+    days.set(key, [...(days.get(key) ?? []), post]);
+  }
+  return (
+    <div className="flex flex-col gap-5">
+      {[...days.entries()].map(([day, rows]) => (
+        <section key={day} className="flex flex-col gap-2">
+          <h3 className="text-sm font-semibold">{day}</h3>
+          <ul className="flex flex-col gap-3 border-l border-border pl-4">
+            {rows.map((post) => (
+              <PostLine key={post.id} post={post} organizationId={organizationId} showActions />
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
 }
 
 export function SocialTab({ organizationId, social }: { organizationId: string; social: SocialView }) {
   const notice = NOTICE[social.notice];
+  const postable = social.accounts.filter((account) => account.is_active && !isBlogPlatform(account.platform));
+  const upcoming = social.posts
+    .filter((post) => post.status === "scheduled" && (post.scheduled_for ?? 0) >= social.now - 3_600_000)
+    .sort((left, right) => (left.scheduled_for ?? 0) - (right.scheduled_for ?? 0));
+  const upcomingIds = new Set(upcoming.map((post) => post.id));
+  const history = social.posts.filter((post) => !upcomingIds.has(post.id));
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -89,30 +180,48 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Posts</CardTitle>
-          <CardDescription>Finished work sent to this client&apos;s accounts. Post from a finished-work page.</CardDescription>
+          <CardTitle>Calendar</CardTitle>
+          <CardDescription>Scheduled posts, by day. Move or cancel one before it goes out.</CardDescription>
         </CardHeader>
         <CardContent>
-          {social.posts.length === 0 ? (
+          {upcoming.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nothing scheduled. Schedule from a finished-work page.</p>
+          ) : (
+            <Calendar posts={upcoming} organizationId={organizationId} />
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Auto-schedule</CardTitle>
+          <CardDescription>
+            When a client approves a piece, it goes into the next free day and time below, as its own post type.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {postable.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Connect an account first.</p>
+          ) : (
+            <AutopostForm
+              organizationId={organizationId}
+              accounts={postable.map((account) => ({ id: account.id, label: accountLabel(account) }))}
+              settings={social.autopost}
+            />
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Sent and drafts</CardTitle>
+          <CardDescription>Everything else sent for this client, newest first.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {history.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nothing sent yet.</p>
           ) : (
             <ul className="flex flex-col gap-4">
-              {social.posts.map((post) => (
-                <li key={post.id} className="flex flex-col gap-1 text-sm">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{post.item_title}</span>
-                    <Badge variant="secondary">{POST_TYPE_LABEL[post.post_type]}</Badge>
-                    <Badge variant={post.status === "failed" ? "destructive" : "outline"}>{POST_STATUS_LABEL[post.status]}</Badge>
-                  </div>
-                  <span className="text-muted-foreground">
-                    {when(post)} · {(JSON.parse(post.account_ids) as string[]).length} account(s) ·{" "}
-                    <Link className="underline" href={`/deliverables/${post.deliverable_id}`}>
-                      {post.deliverable_title}
-                    </Link>
-                  </span>
-                  {post.error ? <span className="whitespace-pre-line text-status-late">{post.error}</span> : null}
-                  {post.skipped ? <span className="whitespace-pre-line text-muted-foreground">Skipped: {post.skipped}</span> : null}
-                </li>
+              {history.map((post) => (
+                <PostLine key={post.id} post={post} organizationId={organizationId} showActions />
               ))}
             </ul>
           )}

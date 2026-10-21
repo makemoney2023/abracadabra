@@ -1,6 +1,7 @@
 import type { Sql } from "@/db/sql";
 import type { Caller } from "./authz";
 import { sendPiece, zonedTimeToUtc } from "./social";
+import { WEEKDAY_LABEL } from "./social-plan";
 import type { ObjectStore } from "./store/objects";
 import type { ZernioClient } from "./zernio";
 
@@ -16,7 +17,6 @@ export type Autopost = {
 
 export const DEFAULT_AUTOPOST: Autopost = { enabled: false, accountIds: [], weekdays: [1, 2, 3, 4, 5], times: ["09:00"], timezone: "UTC" };
 
-export const WEEKDAY_LABEL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /** Posting to a client is automatic only for the accounts staff picked, at the client's set times. */
 const SYSTEM_CALLER: Caller = { userId: null, staff: { superAdmin: false }, operatorOf: [], memberships: [] };

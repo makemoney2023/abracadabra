@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
 import type { Caller } from "./authz";
+import { runHqTool } from "./hq-tools";
 import {
   cancelSocialPost,
   listSocialPosts,
@@ -364,5 +365,29 @@ describe("auto-schedule on approval", () => {
     expect(await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).toEqual({ scheduled: 0, failed: [] });
     const activity = await sql.get<{ actor_kind: string }>("SELECT actor_kind FROM activities WHERE kind = 'social.post'");
     expect(activity?.actor_kind).toBe("system");
+  });
+});
+
+describe("HQ chat social tools", () => {
+  it("lists accounts and posts, and schedule_social waits for approval then schedules every approved piece", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at) VALUES ('staff-1', 'staff@example.com', 0, ?, NULL)`,
+      [NOW],
+    );
+    const { zernio, posts } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    const social = { zernio, store };
+    const accounts = await runHqTool(sql, staff, { tool: "list_social_accounts", input: { organizationId: "org-1" } }, NOW, { social });
+    expect(accounts).toMatchObject({ ok: true, value: expect.arrayContaining([expect.objectContaining({ id: "ig", platform: "instagram" })]) });
+    const input = { organizationId: "org-1", deliverableId: "d-1", accountIds: ["ig"], mode: "scheduled", startAt: "2027-03-01T09:00", timezone: "UTC", gapMinutes: 60 };
+    const gated = await runHqTool(sql, staff, { tool: "schedule_social", input, idempotencyKey: "k1" }, NOW, { social });
+    expect(gated).toMatchObject({ needsApproval: true });
+    expect(posts).toHaveLength(0);
+    const done = await runHqTool(sql, staff, { tool: "schedule_social", input, idempotencyKey: "k2", approved: true }, NOW, { social });
+    expect(done).toMatchObject({ ok: true, value: { sent: 2, failed: [expect.objectContaining({ title: "Piece i-open" })] } });
+    expect(posts.map((post) => post.scheduledFor)).toEqual(["2027-03-01T09:00:00.000Z", "2027-03-01T10:00:00.000Z"]);
+    const listed = await runHqTool(sql, staff, { tool: "list_social_posts", input: { organizationId: "org-1" } }, NOW, { social });
+    expect((listed as { value: unknown[] }).value).toHaveLength(2);
   });
 });

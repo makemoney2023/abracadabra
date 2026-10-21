@@ -19,6 +19,8 @@ export function asPostType(value: string): PostType | null {
   return POST_TYPE_SET.has(value) ? (value as PostType) : null;
 }
 
+export const WEEKDAY_LABEL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export type MediaKind = "image" | "video" | "gif" | "document";
 
 export type StoredMedia = { r2_key: string; role: string; content_type: string; size?: number };

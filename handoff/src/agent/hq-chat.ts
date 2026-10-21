@@ -55,6 +55,13 @@ const toolInput = z.object({
   dueAt: z.number().optional(),
   everyMs: z.number().optional(),
   mcpServerIds: z.array(z.string()).optional(),
+  itemIds: z.array(z.string()).optional(),
+  accountIds: z.array(z.string()).optional(),
+  mode: z.string().optional(),
+  postType: z.string().optional(),
+  startAt: z.string().optional(),
+  timezone: z.string().optional(),
+  gapMinutes: z.number().optional(),
 });
 
 async function callHq(origin: string, token: string, name: string, input: Record<string, unknown>, approved: boolean): Promise<unknown> {

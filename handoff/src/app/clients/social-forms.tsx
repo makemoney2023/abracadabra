@@ -5,8 +5,16 @@ import { ActionField, ActionForm } from "@/components/action-form";
 import { FormDrawer } from "@/components/form-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { POST_TYPES, POST_TYPE_LABEL, type PostType } from "@/lib/social-plan";
-import { disconnectSocialAction, sendToSocialAction } from "./social-actions";
+import { POST_TYPES, POST_TYPE_LABEL, WEEKDAY_LABEL, type PostType } from "@/lib/social-plan";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  cancelSocialPostAction,
+  disconnectSocialAction,
+  moveSocialPostAction,
+  saveAutopostAction,
+  savePieceSettingsAction,
+  sendToSocialAction,
+} from "./social-actions";
 
 const selectClass = "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
@@ -63,6 +71,25 @@ function browserTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
+/** Defaults to the browser's zone; `initial` wins when given (a saved client setting). */
+function TimeZoneField({ initial }: { initial?: string }) {
+  const browserZone = React.useSyncExternalStore(noSubscribe, browserTimeZone, () => "UTC");
+  const [picked, setPicked] = React.useState<string | null>(initial ?? null);
+  const timezone = picked ?? browserZone;
+  const zones = React.useMemo(() => timeZones(), []);
+  return (
+    <ActionField name="timezone" label="Time zone">
+      <select name="timezone" className={selectClass} value={timezone} onChange={(event) => setPicked(event.target.value)}>
+        {(zones.includes(timezone) ? zones : [timezone, ...zones]).map((zone) => (
+          <option key={zone} value={zone}>
+            {zone}
+          </option>
+        ))}
+      </select>
+    </ActionField>
+  );
+}
+
 function SelectAll({
   label,
   ids,
@@ -113,10 +140,6 @@ export function SendToSocialForm({
   const [pieceIds, setPieceIds] = React.useState(() => new Set(pieces.filter((piece) => piece.approved).map((piece) => piece.id)));
   const [accountIds, setAccountIds] = React.useState(() => new Set(accounts.map((account) => account.id)));
   const [mode, setMode] = React.useState<"draft" | "scheduled" | "now">("scheduled");
-  const browserZone = React.useSyncExternalStore(noSubscribe, browserTimeZone, () => "UTC");
-  const [picked, setTimezone] = React.useState<string | null>(null);
-  const timezone = picked ?? browserZone;
-  const zones = React.useMemo(() => timeZones(), []);
   const waiting = pieces.filter((piece) => pieceIds.has(piece.id) && !piece.approved).length;
   return (
     <ActionForm
@@ -198,20 +221,152 @@ export function SendToSocialForm({
           </ActionField>
         </>
       ) : null}
-      <ActionField name="timezone" label="Time zone">
-        <select name="timezone" className={selectClass} value={timezone} onChange={(event) => setTimezone(event.target.value)}>
-          {(zones.includes(timezone) ? zones : [timezone, ...zones]).map((zone) => (
-            <option key={zone} value={zone}>
-              {zone}
-            </option>
-          ))}
-        </select>
-      </ActionField>
+      <TimeZoneField />
       {mode !== "draft" && waiting > 0 ? (
         <p className="text-sm text-muted-foreground">
           {waiting} picked piece{waiting === 1 ? " is" : "s are"} not approved by the client. Those stay unsent.
         </p>
       ) : null}
+    </ActionForm>
+  );
+}
+
+/** Text per network, a first comment, and YouTube tags, kept with one piece and used by every later send. */
+export function PieceSettingsForm({
+  deliverableId,
+  itemId,
+  title,
+  platforms,
+  texts,
+  firstComment,
+  tags,
+}: {
+  deliverableId: string;
+  itemId: string;
+  title: string;
+  platforms: { id: string; label: string }[];
+  texts: Record<string, string>;
+  firstComment: string;
+  tags: string;
+}) {
+  const custom = Object.keys(texts).length;
+  return (
+    <FormDrawer
+      title={`Text per network: ${title}`}
+      description="Leave a box empty to use the piece's caption."
+      trigger={
+        <Button variant="outline" size="sm">
+          {custom > 0 ? `Text per network (${custom})` : "Text per network"}
+        </Button>
+      }
+    >
+      <ActionForm action={savePieceSettingsAction} submitLabel="Save" pendingLabel="Saving">
+        <input type="hidden" name="deliverableId" value={deliverableId} />
+        <input type="hidden" name="itemId" value={itemId} />
+        {platforms.map((platform) => (
+          <ActionField key={platform.id} name={`text:${platform.id}`} label={platform.label}>
+            <Textarea name={`text:${platform.id}`} rows={3} defaultValue={texts[platform.id] ?? ""} />
+          </ActionField>
+        ))}
+        <ActionField name="firstComment" label="First comment (Instagram, Facebook, LinkedIn, YouTube, Threads, X)">
+          <Textarea name="firstComment" rows={2} defaultValue={firstComment} />
+        </ActionField>
+        <ActionField name="tags" label="YouTube tags, comma separated">
+          <Input name="tags" defaultValue={tags} />
+        </ActionField>
+      </ActionForm>
+    </FormDrawer>
+  );
+}
+
+export function MoveSocialPostForm({ organizationId, postId, timezone }: { organizationId: string; postId: string; timezone: string }) {
+  return (
+    <FormDrawer
+      title="Move post"
+      description="Pick the new time. Zernio posts it then."
+      trigger={
+        <Button variant="outline" size="sm">
+          Move
+        </Button>
+      }
+    >
+      <ActionForm action={moveSocialPostAction} submitLabel="Move" pendingLabel="Moving">
+        <input type="hidden" name="organizationId" value={organizationId} />
+        <input type="hidden" name="postId" value={postId} />
+        <ActionField name="startAt" label="New time">
+          <Input type="datetime-local" name="startAt" required />
+        </ActionField>
+        <TimeZoneField initial={timezone} />
+      </ActionForm>
+    </FormDrawer>
+  );
+}
+
+export function CancelSocialPostForm({ organizationId, postId }: { organizationId: string; postId: string }) {
+  return (
+    <FormDrawer
+      title="Cancel post"
+      description="It comes off Zernio and will not post. The piece stays in finished work."
+      trigger={
+        <Button variant="outline" size="sm">
+          Cancel
+        </Button>
+      }
+    >
+      <ActionForm action={cancelSocialPostAction} submitLabel="Cancel post" pendingLabel="Cancelling">
+        <input type="hidden" name="organizationId" value={organizationId} />
+        <input type="hidden" name="postId" value={postId} />
+      </ActionForm>
+    </FormDrawer>
+  );
+}
+
+/** When on, each piece the client approves is scheduled into the next free slot on these accounts. */
+export function AutopostForm({
+  organizationId,
+  accounts,
+  settings,
+}: {
+  organizationId: string;
+  accounts: SendAccount[];
+  settings: { enabled: boolean; accountIds: string[]; weekdays: number[]; times: string[]; timezone: string };
+}) {
+  const [accountIds, setAccountIds] = React.useState(() => new Set(settings.accountIds));
+  return (
+    <ActionForm action={saveAutopostAction} submitLabel="Save auto-schedule" pendingLabel="Saving">
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <input type="checkbox" name="enabled" defaultChecked={settings.enabled} />
+        Schedule each piece the client approves
+      </label>
+      <fieldset className="flex flex-col gap-2">
+        <SelectAll label="All accounts" ids={accounts.map((account) => account.id)} selected={accountIds} onChange={setAccountIds} />
+        {accounts.map((account) => (
+          <label key={account.id} className="flex items-center gap-2 pl-6 text-sm">
+            <input
+              type="checkbox"
+              name="accountId"
+              value={account.id}
+              checked={accountIds.has(account.id)}
+              onChange={(event) => setAccountIds((current) => toggle(current, account.id, event.target.checked))}
+            />
+            {account.label}
+          </label>
+        ))}
+      </fieldset>
+      <fieldset className="flex flex-wrap gap-3">
+        <legend className="mb-1 text-sm font-medium">Days</legend>
+        {WEEKDAY_LABEL.map((label, day) => (
+          <label key={label} className="flex items-center gap-1.5 text-sm">
+            <input type="checkbox" name="weekday" value={day} defaultChecked={settings.weekdays.includes(day)} />
+            {label}
+          </label>
+        ))}
+      </fieldset>
+      <ActionField name="times" label="Times (24-hour, comma separated)">
+        <Input name="times" defaultValue={settings.times.join(", ")} placeholder="09:00, 17:30" />
+      </ActionField>
+      <TimeZoneField initial={settings.timezone === "UTC" && !settings.enabled ? undefined : settings.timezone} />
     </ActionForm>
   );
 }
