@@ -1,5 +1,9 @@
 # Changelog
 
+## Prices: 40-page fix files $99.99, deep 200 $149.99, deep 1000 $249.99 — 2026-10-21
+
+**Offer (config only).** The free scan stays free. 40-page fix files go from $149.99 to $99.99 (`PRICE_DISPLAY=$99.99`, `PRICE_AMOUNT_CENTS=9999` in `wrangler.jsonc`). With the $10 credit, the panel reads "you pay $89.99". Deep tiers (`TIER_PRICES`): 200 pages $149.99, 1,000 pages $249.99, fix files included. `scripts/stripe-setup.mjs` now defaults to 9999 (lookup key `schema_fix_files_9999_usd`). It has not been run, and checkout is unchanged and unwired for deep tiers.
+
 ## Deep scans: chunked plan / chunk / finalize, 200 and 1000 page tiers behind a flag — 2026-10-21
 
 **Chunked scans.** Every scan now runs as plan → chunks of 50 URLs → finalize over `scan-jobs` (`src/lib/scan/pipeline.ts`, store in `src/lib/scan/d1-pipeline-store.ts`). Each chunk writes its rows and bumps `pages_done` in one `db.batch()`. Duplicate deliveries do not double-count, a chunk that failed part-way is retried by the queue, exactly one invocation finalizes, and a delayed watchdog re-sends lost chunks and finalizes a stuck scan as partial after 30 minutes. The free 40-page scan is one chunk run inline, so it still finishes in one invocation with the same pages and score as before.
