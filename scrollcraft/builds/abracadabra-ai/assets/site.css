@@ -579,16 +579,119 @@ html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: backgro
 
 .cloudflare { padding: 4.5rem 0 5rem; text-align: left; }
 
+.cloudflare__grid {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+}
+
 .cloudflare__mark {
-  display: inline-block;
-  padding: 2.5rem;
-  margin: 0 0 0.5rem;
+  display: block;
+  padding: 0;
+  margin: 0 0 1.75rem;
 }
 
 .cloudflare__logo {
   display: block;
-  height: 2.5rem;
+  height: 4.75rem;
   width: auto;
+  max-width: 100%;
+}
+
+.cloudflare__copy p { max-width: 38rem; }
+
+.cloudflare__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  font-family: var(--label);
+}
+
+/* Featured note card: same surface, border, radius and shadow as the service cards. */
+.cloudflare__feature {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-surface-1);
+  border: var(--ui-border);
+  border-radius: var(--ui-r-card);
+  box-shadow: var(--ui-shadow);
+  overflow: hidden;
+  transition: border-color var(--t-med), transform var(--t-med);
+}
+
+.cloudflare__feature:hover { border-color: var(--ui-border-hover); }
+
+.cloudflare__feature:focus-within { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+.cloudflare__media {
+  background: var(--ui-grid), var(--ui-surface-0);
+  border-bottom: var(--ui-border);
+}
+
+.cloudflare__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.cloudflare__body { padding: 1.25rem 1.25rem 1.4rem; }
+
+.cloudflare__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin: 0 0 0.75rem;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+.cloudflare__title {
+  margin: 0 0 0.5rem;
+  font: 600 clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem)/1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.cloudflare__title a { color: var(--ink); text-decoration: none; }
+
+/* The whole card is the link target; the heading link stays the one accessible name. */
+.cloudflare__title a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+
+.cloudflare__title a:focus-visible { outline: none; }
+
+.cloudflare__dek { margin: 0 0 1rem; color: var(--ink-soft); }
+
+.cloudflare__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  color: var(--accent);
+  font: 600 0.95rem/1 var(--label);
+}
+
+.cloudflare__arrow { transition: transform var(--t-fast); }
+
+.cloudflare__feature:hover .cloudflare__arrow { transform: translateX(3px); }
+
+@media (min-width: 960px) {
+  .cloudflare__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 3.5rem; }
+}
+
+@media (max-width: 767px) {
+  .cloudflare { padding-bottom: 5.5rem; }
+  .cloudflare__mark { margin: 0.5rem 0 1.5rem; }
+  .cloudflare__logo { height: 3.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloudflare__feature, .cloudflare__arrow { transition: none; }
 }
 
 .faq { padding: 1rem 0 3rem; }

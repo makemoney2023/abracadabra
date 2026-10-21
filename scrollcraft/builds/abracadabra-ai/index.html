@@ -35,7 +35,7 @@
 <link rel="preload" href="assets/fonts/inter-tight-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/fonts.css?v=20261019n">
-<link rel="stylesheet" href="assets/site.css?v=20261020b">
+<link rel="stylesheet" href="assets/site.css?v=20261021b">
 <link rel="stylesheet" href="assets/pirx-shot.css?v=20261019n">
 <link rel="stylesheet" href="assets/restored-motion.css?v=20261019n">
 <script>(function(d){d.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('wm-js');setTimeout(function(){d.classList.add('wm-on','wm-dot-on')},4500)}catch(e){}})(document.documentElement);</script>
@@ -850,12 +850,28 @@
 </section>
 
 <section id="cloudflare" class="cloudflare" aria-labelledby="cloudflare-title">
-  <div class="wrap">
-    <div class="cloudflare__mark">
-      <img class="cloudflare__logo" src="assets/logos/cloudflare.svg" alt="Cloudflare" width="218" height="81">
+  <div class="wrap cloudflare__grid">
+    <div class="cloudflare__copy">
+      <div class="cloudflare__mark">
+        <img class="cloudflare__logo" src="assets/logos/cloudflare.svg" alt="Cloudflare" width="218" height="81">
+      </div>
+      <h2 id="cloudflare-title">Apps that scale, proudly built with Cloudflare.</h2>
+      <p>They grow with your business, from the first user to millions, without a rebuild, and stay fast, secure, and available wherever your customers are.</p>
+      <ul class="cloudflare__pills" aria-label="What the platform gives our apps">
+        <li class="ui-pill ui-pill--done">Security built in</li>
+        <li class="ui-pill ui-pill--progress">AI tools on the same network</li>
+        <li class="ui-pill ui-pill--progress">Runs close to every visitor</li>
+      </ul>
     </div>
-    <h2 id="cloudflare-title">Apps that scale, proudly built with Cloudflare.</h2>
-    <p>They grow with your business, from the first user to millions, without a rebuild, and stay fast, secure, and available wherever your customers are.</p>
+    <article class="cloudflare__feature" aria-labelledby="cloudflare-feature-title">
+      <div class="cloudflare__media"><picture><source srcset="/blog/media/why-we-build-on-cloudflare/03.webp" type="image/webp"><img src="/blog/media/why-we-build-on-cloudflare/03.jpg" alt="A dark app screen marked Live, with a dotted world map, joined by thin lines to panels for a SQL database, file storage, a job queue marked Queued, and a usage card marked Pay for use" width="1280" height="720" loading="lazy" decoding="async"></picture></div>
+      <div class="cloudflare__body">
+        <p class="cloudflare__meta"><span class="ui-pill ui-pill--action">New note</span><span><time datetime="2026-10-21">October 21, 2026</time><span aria-hidden="true"> · </span>7 min read</span></p>
+        <h3 id="cloudflare-feature-title" class="cloudflare__title"><a href="/blog/why-we-build-on-cloudflare">Why We Build on Cloudflare: Security, AI and the Edge</a></h3>
+        <p class="cloudflare__dek">Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.</p>
+        <span class="cloudflare__more" aria-hidden="true">Read the note <span class="cloudflare__arrow">→</span></span>
+      </div>
+    </article>
   </div>
 </section>
 
