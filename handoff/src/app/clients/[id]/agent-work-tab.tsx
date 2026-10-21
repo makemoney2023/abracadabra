@@ -11,6 +11,18 @@ const UPDATE_LABEL: Record<string, string> = {
   "client_agent.dispatch": "Handed to agent",
   "client_agent.assigned": "Assigned",
   "client_agent.unassigned": "Unassigned",
+  "client_agent.work_superseded": "Superseded",
+  "client_agent.work_withdrawn": "Withdrawn",
+  "client_work.update_ready": "Client update to draft",
+};
+
+const VISIBILITY: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+  held: { label: "Held for review", variant: "default" },
+  released: { label: "Released to client", variant: "secondary" },
+  superseded: { label: "Superseded", variant: "outline" },
+  replacing: { label: "Client sees it until the new version is approved", variant: "outline" },
+  withdrawn: { label: "Withdrawn", variant: "outline" },
+  published: { label: "In space (before hold)", variant: "outline" },
 };
 
 export function AgentWorkTab({ organizationId, work, now }: { organizationId: string; work: ClientAgentWork; now: number }) {
@@ -20,7 +32,8 @@ export function AgentWorkTab({ organizationId, work, now }: { organizationId: st
         <CardHeader>
           <CardTitle>Agent work</CardTitle>
           <CardDescription>
-            Everything this client&apos;s agents filed, newest first. Each item lives in the client&apos;s space.
+            Everything this client&apos;s agents filed, newest first. New filings are held: the client sees them only once
+            Client Services approves the card.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -33,6 +46,8 @@ export function AgentWorkTab({ organizationId, work, now }: { organizationId: st
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{item.title}</span>
                     <Badge variant="secondary">{item.kind}</Badge>
+                    <Badge variant={VISIBILITY[item.visibility]?.variant ?? "outline"}>{VISIBILITY[item.visibility]?.label ?? item.visibility}</Badge>
+                    {item.deliverableVersion != null ? <Badge variant="outline">v{item.deliverableVersion}</Badge> : null}
                     {item.taskTitle ? (
                       <Badge variant="outline">{item.taskClosed ? `Done: ${item.taskTitle}` : `Task: ${item.taskTitle}`}</Badge>
                     ) : null}

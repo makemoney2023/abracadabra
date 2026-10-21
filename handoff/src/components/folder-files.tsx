@@ -15,6 +15,8 @@ export type FolderRow = {
   moreHref: string | null;
   previewHref: string | null;
   deletable: boolean;
+  /** Staff only: an agent filing held until Client Services approves (client members don't see it). */
+  heldNote?: string | null;
 };
 
 async function responseMessage(response: Response, fallback: string): Promise<string> {
@@ -50,6 +52,7 @@ function FileActions({
         <p className="truncate text-sm font-medium">{label}</p>
         <p className="text-xs text-muted-foreground">
           {fileStatusLabel(file.status)} · {formatFileSize(file.sizeBytes)}
+          {file.heldNote ? <span className="ml-2 rounded-sm bg-amber-100 px-1.5 py-0.5 font-medium text-amber-900">{file.heldNote}</span> : null}
         </p>
       </div>
       {file.previewHref ? (

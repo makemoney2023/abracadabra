@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 
 /**
  * New task on a client's board. Bearer agent token.
- * Body: { title, note?, stage?: todo|doing (old names describe|engineer still work), client?, project_id?, assignee? }
+ * Body: { title, note?, stage?: todo|doing (old names describe|engineer still work), client?, project_id?, assignee?,
+ *         work_request_id?, thread_id? }
+ * work_request_id (from Client Services' handoff) or thread_id links the card, its filings and the feed to the email.
  * assignee: agent id on the same client (lead only for someone else; a hire's cards default to itself). 400 if that
  * agent is not on the client. List project ids with GET /api/agent-projects.
  */
@@ -30,6 +32,8 @@ export async function POST(request: Request) {
     note: typeof body?.note === "string" ? body.note : null,
     stage: typeof body?.stage === "string" ? body.stage : null,
     assignee: typeof body?.assignee === "string" ? body.assignee : null,
+    workRequestId: typeof body?.work_request_id === "string" ? body.work_request_id : null,
+    threadId: typeof body?.thread_id === "string" ? body.thread_id : null,
     now: Date.now(),
   });
   if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });

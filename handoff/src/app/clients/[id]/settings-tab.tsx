@@ -2,18 +2,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MergeForm } from "../activity-forms";
-import { saveSearchConsoleGrantAction, setInternalAction } from "../actions";
+import { saveSearchConsoleGrantAction, setInternalAction, setUpdateModeAction } from "../actions";
 
 export function SettingsTab({
   keepId,
   others,
   searchConsoleResource,
   internal = false,
+  updateMode = "draft",
 }: {
   keepId: string;
   others: { id: string; name: string }[];
   searchConsoleResource: string;
   internal?: boolean;
+  updateMode?: "draft" | "auto";
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -32,6 +34,25 @@ export function SettingsTab({
             <input type="hidden" name="internal" value={internal ? "0" : "1"} />
             <Button type="submit" variant="outline">
               {internal ? "Show on Today" : "Hide from Today"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Client updates on approved work</CardTitle>
+          <CardDescription>
+            {updateMode === "auto"
+              ? "Automatic: when Client Services approves agent work, the client's space members get the \"is ready\" email."
+              : "Draft (default): when Client Services approves agent work, it gets a suggested update to draft in magic@ for approval. Nothing is emailed to the client automatically."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={setUpdateModeAction} className="flex items-center gap-3">
+            <input type="hidden" name="organizationId" value={keepId} />
+            <input type="hidden" name="mode" value={updateMode === "auto" ? "draft" : "auto"} />
+            <Button type="submit" variant="outline">
+              {updateMode === "auto" ? "Switch to draft for approval" : "Switch to automatic email"}
             </Button>
           </form>
         </CardContent>

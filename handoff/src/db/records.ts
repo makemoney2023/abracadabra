@@ -1,6 +1,7 @@
 import { getTableName } from "drizzle-orm";
 import type { Caller } from "@/lib/authz";
 import { isBatchActive } from "@/lib/batches";
+import { clientVisibleBatch, seesHeldWork } from "@/lib/held-work";
 import { workspaces } from "./schema";
 import type { Sql } from "./sql";
 
@@ -74,9 +75,24 @@ async function scoped<T extends ScopedRecord>(
   const allowed = workspaceId ? ids.filter((id) => id === workspaceId) : ids;
   if (allowed.length === 0) return [];
   const placeholders = allowed.map(() => "?").join(", ");
+  if (table !== "batches" && table !== "files") {
+    return sql.all<T>(
+      `SELECT * FROM ${table} WHERE workspace_id IN (${placeholders}) ORDER BY id`,
+      allowed,
+    );
+  }
+  // Held agent filings: staff on the space see them, client members only once Client Services released them.
+  const staffOn = allowed.filter((id) => seesHeldWork(caller, id));
+  const clientOn = allowed.filter((id) => !seesHeldWork(caller, id));
+  const marks = (ids: string[]) => (ids.length ? ids.map(() => "?").join(", ") : "NULL");
+  const visible = table === "batches"
+    ? clientVisibleBatch(table)
+    : `batch_id IN (SELECT b.id FROM batches b WHERE b.workspace_id = files.workspace_id AND ${clientVisibleBatch("b")})`;
   return sql.all<T>(
-    `SELECT * FROM ${table} WHERE workspace_id IN (${placeholders}) ORDER BY id`,
-    allowed,
+    `SELECT * FROM ${table}
+     WHERE workspace_id IN (${marks(staffOn)}) OR (workspace_id IN (${marks(clientOn)}) AND ${visible})
+     ORDER BY id`,
+    [...staffOn, ...clientOn],
   );
 }
 

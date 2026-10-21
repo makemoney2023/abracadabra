@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
+import { batchVisibleTo } from "@/lib/held-work";
 import { openSession } from "@/lib/current";
 import { previewKind, previewableStatus, readPreviewFile } from "@/lib/preview";
 
@@ -12,6 +13,9 @@ type FileRow = {
   object_deleted_at: number | null;
   discarded_at: number | null;
   deleted_at: number | null;
+  held_at: number | null;
+  released_at: number | null;
+  hidden_at: number | null;
 };
 
 export default async function FilePreviewPage({
@@ -25,7 +29,7 @@ export default async function FilePreviewPage({
   if (!workspace) notFound();
   if (!can(caller, "file.download", { workspaceId: workspace.id })) notFound();
   const row = await sql.get<FileRow>(
-    `SELECT f.id, f.relative_path, f.status, f.object_deleted_at, b.discarded_at, b.deleted_at
+    `SELECT f.id, f.relative_path, f.status, f.object_deleted_at, b.discarded_at, b.deleted_at, b.held_at, b.released_at, b.hidden_at
      FROM files f
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
      WHERE f.id = ? AND f.workspace_id = ?`,
@@ -34,6 +38,7 @@ export default async function FilePreviewPage({
   if (!row || row.object_deleted_at !== null || row.discarded_at !== null || row.deleted_at !== null) {
     notFound();
   }
+  if (!batchVisibleTo(caller, workspace.id, row)) notFound();
   const kind = previewKind(row.relative_path);
   const name = row.relative_path.split("/").pop() ?? row.relative_path;
   const ready = previewableStatus(row.status) && kind !== "none";

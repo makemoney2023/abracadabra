@@ -48,6 +48,7 @@ describe("statementsFromMigration", () => {
       "0029_task_skill_packs.sql",
       "0030_today_feed.sql",
       "0031_task_agent_owner.sql",
+      "0032_agent_filing_hold.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);

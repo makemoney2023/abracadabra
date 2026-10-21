@@ -2,6 +2,8 @@ import { normalizeDomain } from "@/db/crm";
 import type { Sql } from "@/db/sql";
 import { cleanEmail, companyDomain } from "@/lib/intake/consume";
 import { planProjectSpace } from "@/lib/project-space";
+import { releaseHeldWork } from "@/lib/agent-filing-review";
+import { clientServicesReview } from "@/lib/task-review";
 
 /** Above this many estimated hours, or a "large" size, a request waits for staff on the HQ board. */
 export const AUTO_START_MAX_HOURS = 16;
@@ -515,6 +517,10 @@ const UPDATE_KINDS = [
   "client_agent.dispatch",
   "client_agent.board",
   "email.received",
+  "client_work.handoff",
+  "client_work.update_ready",
+  "client_agent.work_superseded",
+  "client_agent.work_withdrawn",
 ] as const;
 
 type ActivityRow = {
@@ -587,8 +593,17 @@ export async function syncClientUpdates(sql: Sql, now: number, origin: string): 
       if (space) links.push({ label: "Space", url: `${origin}/w/${space.slug}` });
       links.push({ label: "Review API", url: `${origin}/api/client-services/spaces/${workspaceId}` });
       needsReview = await sql.all(
-        `SELECT id AS deliverable_id, title, status, COALESCE(published_version, version) AS version FROM deliverables
-         WHERE workspace_id = ? AND status IN ('in_review', 'changes_requested') ORDER BY updated_at DESC LIMIT 20`,
+        `SELECT d.id AS deliverable_id, d.title,
+                CASE WHEN held.n > 0 THEN 'held_for_review' ELSE d.status END AS status,
+                CASE WHEN held.n > 0 THEN d.version ELSE COALESCE(d.published_version, d.version) END AS version
+         FROM deliverables d
+         LEFT JOIN (
+           SELECT deliverable_id, count(*) AS n FROM agent_work_items
+           WHERE state = 'filed' AND released_at IS NULL AND retracted_at IS NULL AND superseded_by IS NULL AND deliverable_id IS NOT NULL
+           GROUP BY deliverable_id
+         ) held ON held.deliverable_id = d.id
+         WHERE d.workspace_id = ? AND (d.status IN ('in_review', 'changes_requested') OR held.n > 0)
+         ORDER BY d.updated_at DESC LIMIT 20`,
         [workspaceId],
       );
     }
@@ -634,6 +649,13 @@ export type ClientUpdate = {
   work_request_id: string | null;
   links: { label: string; url: string }[];
   needs_review: { deliverable_id: string; title: string; status: string; version: number }[];
+  /**
+   * client_work.update_ready only: the update Client Services drafts in magic@ for approval (draft mode). Nothing was
+   * sent. to/subject/body are a suggestion; thread_id and source_message_id point at the original email.
+   */
+  suggested_update?: {
+    to: string | null; subject: string; body: string; thread_id: string | null; source_message_id: string | null; space_slug: string | null;
+  };
 };
 
 export async function listClientUpdates(
@@ -650,12 +672,14 @@ export async function listClientUpdates(
   const rows = await sql.all<{
     id: string; kind: string; created_at: number; summary: string; organization_id: string | null; org_name: string | null;
     org_domain: string | null; project_id: string | null; project_name: string | null; project_status: string | null;
-    workspace_id: string | null; work_request_id: string | null; links_json: string; needs_review_json: string;
+    workspace_id: string | null; work_request_id: string | null; links_json: string; needs_review_json: string; activity_data: string | null;
   }>(
     `SELECT u.id, u.kind, u.created_at, u.summary, u.organization_id, o.name AS org_name, o.domain AS org_domain,
             u.project_id, p.name AS project_name, p.status AS project_status, u.workspace_id, u.work_request_id,
-            u.links_json, u.needs_review_json
+            u.links_json, u.needs_review_json,
+            CASE WHEN u.kind = 'client_work.update_ready' THEN a.data_json ELSE NULL END AS activity_data
      FROM client_service_updates u
+     LEFT JOIN activities a ON a.id = u.activity_id
      LEFT JOIN organizations o ON o.id = u.organization_id
      LEFT JOIN projects p ON p.id = u.project_id
      WHERE u.created_at > ? ORDER BY u.created_at, u.rowid LIMIT 200`,
@@ -672,7 +696,22 @@ export async function listClientUpdates(
     work_request_id: row.work_request_id,
     links: JSON.parse(row.links_json),
     needs_review: JSON.parse(row.needs_review_json),
+    ...(row.activity_data ? suggestedUpdate(row.activity_data) : {}),
   }));
+}
+
+function suggestedUpdate(raw: string): Pick<ClientUpdate, "suggested_update"> {
+  const data = parse(raw);
+  const value = data.suggested_update;
+  if (!value || typeof value !== "object") return {};
+  const entry = value as Record<string, unknown>;
+  const str = (key: string) => (typeof entry[key] === "string" ? (entry[key] as string) : null);
+  return {
+    suggested_update: {
+      to: str("to"), subject: str("subject") ?? "", body: str("body") ?? "", thread_id: str("thread_id"),
+      source_message_id: str("source_message_id"), space_slug: str("space_slug"),
+    },
+  };
 }
 
 // ---------- Review access for Client Services (read + comment + approve only) ----------
@@ -716,7 +755,24 @@ export async function readSpaceForReview(sql: Sql, spaceId: string) {
        WHERE deliverable_id = ? ORDER BY created_at`,
       [deliverable.id],
     );
-    out.push({ ...deliverable, review_version: version, items, feedback });
+    // A newer working version with held agent filings is what Client Services reviews next.
+    const pending = deliverable.published_version != null && deliverable.version > deliverable.published_version
+      ? await sql.all(
+          `SELECT id, section, format, channel, title, copy_text, media_json, link_url, status FROM deliverable_items
+           WHERE deliverable_id = ? AND version = ? ORDER BY sort`,
+          [deliverable.id, deliverable.version],
+        )
+      : [];
+    const held = await sql.all<{ id: string; title: string; agent_id: string; deliverable_version: number | null }>(
+      `SELECT id, title, agent_id, deliverable_version FROM agent_work_items
+       WHERE deliverable_id = ? AND state = 'filed' AND released_at IS NULL AND retracted_at IS NULL AND superseded_by IS NULL ORDER BY filed_at`,
+      [deliverable.id],
+    );
+    out.push({
+      ...deliverable, review_version: version, items, feedback,
+      ...(pending.length ? { pending_version: deliverable.version, pending_items: pending } : {}),
+      held_filings: held,
+    });
   }
   const tasks = space.project_id
     ? await sql.all(
@@ -799,5 +855,19 @@ export async function reviewDeliverable(
     ],
   });
   await sql.batch(writes);
+  if (input.decision === "approve" && !itemId) {
+    // The card in review that carries this deliverable is approved the same way; otherwise release by deliverable.
+    const card = await sql.get<{ id: string }>(
+      "SELECT id FROM tasks WHERE deliverable_id = ? AND status != 'done' AND review_requested_at IS NOT NULL LIMIT 1",
+      [row.id],
+    );
+    if (card) {
+      await clientServicesReview(sql, { taskId: card.id, action: "approve", now: input.now });
+    } else {
+      await releaseHeldWork(sql, { deliverableId: row.id, now: input.now });
+    }
+    const fresh = await sql.get<{ status: string }>("SELECT status FROM deliverables WHERE id = ?", [row.id]);
+    status = fresh?.status ?? status;
+  }
   return { ok: true, status, organizationId: space.organization_id };
 }

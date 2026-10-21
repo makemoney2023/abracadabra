@@ -1,3 +1,4 @@
+import { clientVisibleBatch } from "@/lib/held-work";
 import type { Caller } from "@/lib/authz";
 import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
@@ -307,15 +308,18 @@ export async function searchSpace(input: {
   query: string;
   understander: Understander | null;
   tag?: string;
+  /** Client-facing callers (a space key): held agent filings stay out until Client Services releases them. */
+  clientView?: boolean;
 }): Promise<SearchHit[]> {
   const tag = input.tag ?? null;
+  const held = input.clientView ? `AND ${clientVisibleBatch("b")}` : "";
   const rows = await input.sql.all<PassageRow>(
     `SELECT f.relative_path AS file_name, p.body AS passage, r.summary AS summary,
             r.status AS status, f.tag AS tag, p.embedding
      FROM file_passages p
      JOIN files f ON f.id = p.file_id AND f.object_deleted_at IS NULL
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
-       AND b.discarded_at IS NULL AND b.deleted_at IS NULL
+       AND b.discarded_at IS NULL AND b.deleted_at IS NULL ${held}
      LEFT JOIN file_reads r ON r.file_id = p.file_id
      WHERE p.workspace_id = ?
        AND (? IS NULL OR f.tag = ?)
@@ -362,6 +366,8 @@ export async function listFileReads(
   sql: Sql,
   workspaceId: string | readonly string[],
   tag?: string,
+  /** Client-facing callers: held agent filings stay out until Client Services releases them. */
+  options: { clientView?: boolean } = {},
 ): Promise<ListedFile[]> {
   const ids = typeof workspaceId === "string" ? [workspaceId] : [...workspaceId];
   if (ids.length === 0) return [];
@@ -379,7 +385,7 @@ export async function listFileReads(
      FROM file_reads r
      JOIN files f ON f.id = r.file_id AND f.object_deleted_at IS NULL
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
-       AND b.discarded_at IS NULL AND b.deleted_at IS NULL
+       AND b.discarded_at IS NULL AND b.deleted_at IS NULL ${options.clientView ? `AND ${clientVisibleBatch("b")}` : ""}
      WHERE r.workspace_id IN (${placeholders})
        AND (? IS NULL OR f.tag = ?)
      ORDER BY f.relative_path`,

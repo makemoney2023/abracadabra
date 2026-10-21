@@ -58,6 +58,7 @@ export function ClientBody({
   searchConsoleResource,
   agentWork,
   internal = false,
+  updateMode = "draft",
 }: {
   tab: ClientTabId;
   page: number;
@@ -90,6 +91,8 @@ export function ClientBody({
   searchConsoleResource: string;
   /** Hidden from Today as internal, test, or vendor. */
   internal?: boolean;
+  /** Client updates on approved agent work: draft (default) or auto. */
+  updateMode?: "draft" | "auto";
   agentWork?: ClientAgentWork;
 }) {
   if (tab === "work") {
@@ -128,7 +131,7 @@ export function ClientBody({
   if (tab === "activity") return <ActivityTab organizationId={client.id} timeline={timeline} page={page} />;
   if (tab === "settings") {
     return (
-      <SettingsTab keepId={client.id} others={others} searchConsoleResource={searchConsoleResource} internal={internal} />
+      <SettingsTab keepId={client.id} others={others} searchConsoleResource={searchConsoleResource} internal={internal} updateMode={updateMode} />
     );
   }
   return (

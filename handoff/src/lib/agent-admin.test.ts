@@ -221,11 +221,12 @@ describe("unfiled inbox", () => {
     const { staff, acme, acmeSpace, bolt, itemId, todo } = await unfiledItem();
     expect(await staffFileUnfiled(sql, store, staff, { id: itemId, target: `${bolt}:${acmeSpace}`, taskId: "keep", now: NOW })).toMatchObject({ ok: false, field: "target" });
     expect(await staffFileUnfiled(sql, store, outsider, { id: itemId, target: `${acme}:${acmeSpace}`, taskId: "keep", now: NOW })).toMatchObject({ ok: false });
-    expect(await staffFileUnfiled(sql, store, staff, { id: itemId, target: `${acme}:${acmeSpace}`, taskId: "keep", now: NOW + 1 })).toEqual({ ok: true, message: "Filed, and the task is done." });
-    expect((await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = ?", [todo]))?.status).toBe("done");
+    expect(await staffFileUnfiled(sql, store, staff, { id: itemId, target: `${acme}:${acmeSpace}`, taskId: "keep", now: NOW + 1 })).toEqual({ ok: true, message: "Filed. It is held until Client Services approves it." });
+    // Filing never closes the card: it waits on Client Services review.
+    expect(await sql.get<{ status: string; review: number | null }>("SELECT status, review_requested_at AS review FROM tasks WHERE id = ?", [todo])).toEqual({ status: "doing", review: NOW + 1 });
     expect(await unfiledCount(sql, NOW + 2)).toBe(0);
     const panel = await listClientAgentWork(sql, staff, acme);
-    expect(panel.filed[0]).toMatchObject({ title: "Spring promo copy", taskTitle: "Write promo copy", taskClosed: true, spaceSlug: "acme-dental" });
+    expect(panel.filed[0]).toMatchObject({ title: "Spring promo copy", taskTitle: "Write promo copy", taskClosed: false, spaceSlug: "acme-dental", visibility: "held" });
     expect(panel.filed[0]?.batchId).toBeTruthy();
     expect(panel.filed[0]?.paths.length).toBeGreaterThan(0);
   });
@@ -233,7 +234,7 @@ describe("unfiled inbox", () => {
   it("files with no task when staff pick none, and refuses another client's task", async () => {
     const { staff, bolt, boltSpace, itemId, todo } = await unfiledItem();
     expect(await staffFileUnfiled(sql, store, staff, { id: itemId, target: `${bolt}:${boltSpace}`, taskId: todo, now: NOW })).toMatchObject({ ok: false });
-    expect(await staffFileUnfiled(sql, store, staff, { id: itemId, target: `${bolt}:${boltSpace}`, taskId: "", now: NOW })).toEqual({ ok: true, message: "Filed." });
+    expect(await staffFileUnfiled(sql, store, staff, { id: itemId, target: `${bolt}:${boltSpace}`, taskId: "", now: NOW })).toEqual({ ok: true, message: "Filed. It is held until Client Services approves it." });
     expect((await sql.get<{ status: string }>("SELECT status FROM tasks WHERE id = ?", [todo]))?.status).toBe("todo");
   });
 

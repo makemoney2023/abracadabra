@@ -4,6 +4,7 @@ import { openHandoffDb } from "@/db/open";
 import { resolveClientRef } from "@/lib/agent-work-filing";
 import { clientServicesAuthorized } from "@/lib/client-services-auth";
 import { listOpenReviews } from "@/lib/task-review";
+import { listFilings } from "@/lib/agent-filing-review";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic";
  * Client Services reads the cards waiting on its review. Bearer CLIENT_SERVICES_TOKEN.
  * ?client= (organization id, domain, or space slug) narrows to one client. ?limit= up to 200.
  * Each review has the task, client, project, stage, the ask's note and who asked, the client's agents, and the
- * work filed against the task (space paths and links).
+ * work filed against the task (space paths, links, and visibility: held until approved, released, superseded, withdrawn),
+ * the card's deliverable and the originating request (email thread). loose_filings: held filings on no card.
  */
 export async function GET(request: Request) {
   if (!clientServicesAuthorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -28,5 +30,6 @@ export async function GET(request: Request) {
   }
   const limit = Number(url.searchParams.get("limit") ?? "100");
   const reviews = await listOpenReviews(sql, { organizationId, limit: Number.isFinite(limit) ? limit : 100 });
-  return NextResponse.json({ reviews });
+  const looseFilings = await listFilings(sql, { organizationId, loose: true, limit: 50 });
+  return NextResponse.json({ reviews, loose_filings: looseFilings });
 }

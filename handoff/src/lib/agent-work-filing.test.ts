@@ -86,6 +86,7 @@ afterEach(() => {
   delete process.env.CLIENT_SERVICES_TOKEN;
   delete process.env.HANDOFF_OBJECT_PATH;
   delete process.env.AGENT_MODE;
+  delete process.env.AGENT_WORK_MAX_MB;
 });
 
 async function org(name: string, domain: string, kind = "client"): Promise<string> {
@@ -379,6 +380,7 @@ describe("routes", () => {
     );
     expect(again.status).toBe(200);
 
+    process.env.AGENT_WORK_MAX_MB = "1";
     const huge = await agentWorkPost(
       new Request("https://hq.example/api/agent-work", {
         method: "POST",
@@ -387,6 +389,7 @@ describe("routes", () => {
       }),
     );
     expect(huge.status).toBe(413);
+    expect(((await huge.json()) as { error: string }).error).toContain("one filing takes up to 1 MB");
   });
 });
 
@@ -466,18 +469,19 @@ describe("handoffs", () => {
 });
 
 describe("task completion", () => {
-  it("moves the linked task to done once filed, unless keep_task_open", async () => {
+  it("filing never closes the card: it waits on Client Services, unless keep_task_open", async () => {
     const acme = await org("Acme", "acme.example");
     await space(acme, "acme-example");
     const { principal: agent } = await agentFor(acme);
     const one = await task(acme, null, "One");
     const two = await task(acme, null, "Two");
-    expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t1", task_id: one }, NOW)).toMatchObject({ state: "filed", taskClosed: true });
+    expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t1", task_id: one }, NOW)).toMatchObject({ state: "filed", taskClosed: false, awaitingReview: true });
     expect(await fileAgentWork(sql, store, agent, { ...work, external_id: "t2", task_id: two, keep_task_open: true }, NOW)).toMatchObject({ state: "filed", taskClosed: false });
-    const rows = await sql.all<{ title: string; status: string }>("SELECT title, status FROM tasks ORDER BY title");
-    expect(rows).toEqual([{ title: "One", status: "done" }, { title: "Two", status: "todo" }]);
-    const moved = await sql.get<{ actor_id: string }>("SELECT actor_id FROM activities WHERE kind = 'agent.task_stage'");
+    const rows = await sql.all<{ title: string; status: string; review: number | null }>("SELECT title, status, review_requested_at AS review FROM tasks ORDER BY title");
+    expect(rows).toEqual([{ title: "One", status: "doing", review: NOW }, { title: "Two", status: "todo", review: null }]);
+    const moved = await sql.get<{ actor_id: string; data_json: string }>("SELECT actor_id, data_json FROM activities WHERE kind = 'agent.task_stage'");
     expect(moved?.actor_id).toBe("acme-agent");
+    expect(JSON.parse(moved!.data_json)).toMatchObject({ taskId: one, stage: "review" });
   });
 
   it("unfiled work does not close the task", async () => {
