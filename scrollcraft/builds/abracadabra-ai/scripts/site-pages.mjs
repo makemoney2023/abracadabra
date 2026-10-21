@@ -1163,6 +1163,13 @@ function siteRedirects() {
     "/portfolio/canadian-discount-appliances/ /portfolio/ 301",
     "/products/showdesk /portfolio/ 301",
     "/products/showdesk/ /portfolio/ 301",
+    // Common guessed paths: contact and booking live on /start/, the FAQ on the homepage.
+    "/contact /start/ 301",
+    "/contact/ /start/ 301",
+    "/book /start/ 301",
+    "/book/ /start/ 301",
+    "/faq /#faq 301",
+    "/faq/ /#faq 301",
   ];
   return [...rewrites, ...moved].join("\n");
 }

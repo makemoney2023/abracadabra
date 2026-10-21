@@ -4,6 +4,15 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 
 The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
 
+## Guessed-path redirects — 2026-10-21
+
+- **What changed** — `/contact`, `/contact/`, `/book` and `/book/` 301 to `/start/`. `/faq` and `/faq/` 301 to `/#faq`, the homepage FAQ section.
+- **Why** — Visitors and site scanners try these common paths; they returned the 404 page.
+- **Code touchpoints** — `scripts/site-pages.mjs` (`siteRedirects`), `_redirects`, `tests/site-pages.test.mjs`.
+- **Data-flow impact** — Six new 301 lines inside the generated `# site-redirects` block. Other unknown paths still serve `404.html`.
+- **API / schema impact** — None.
+- **Verification** — `node --test tests/site-pages.test.mjs tests/cloudflare-deploy.test.mjs`; preview alias checked with curl.
+
 ## AI discovery files (llms.txt) — 2026-10-21
 
 - **What changed** — `llms.txt` and `llms-full.txt` follow [llmstxt.org](https://llmstxt.org): H1, blockquote summary, markdown `- [title](url): note` entries, and an Optional link to `llms-full.txt`. Service lines use real titles (for example Voice and realtime agents) with the sales headline as the note. Build markers, "Rules for quoting", and "Do not mention CTR" are gone from the public files. `llms-full.txt` covers overview, services, portfolio, products, how a project works, pirx.ca proof, and cleaned blog posts (no `<!--image:-->` / `<!--cta:inline-->` placeholders; `[^footnote]` resolved to publisher citations). Last updated is stamped at build time.
