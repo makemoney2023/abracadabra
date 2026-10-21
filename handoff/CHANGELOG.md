@@ -2,6 +2,11 @@
 
 ## 2026-10-21
 
+- **What changed** — `SOCIAL_AGENT_ACTIONS` is `on` in `wrangler.jsonc` and `wrangler.hq.jsonc`, so agent writes on `/api/agent-social/*` and the HQ `save_social_variant` tool are live in production.
+- **Rollback** — Set `SOCIAL_AGENT_ACTIONS` back to `off` in both configs and redeploy. Leave migrations 0039 and 0040 in place.
+
+## 2026-10-21
+
 - **What changed** — A stored YouTube variant title is the title that gets posted. A title locked into a publish plan wins over a stale option on that variant. Piece settings that only set `youtube_title` still do not change a direct send. A denied plan reports the reason it was prepared with, including an empty selection. An approved picture sent only to YouTube stays allowed and blocked as "YouTube needs one video."
 - **Why** — Review of the social agent plans found the send path always used the piece title, and HQ execute of a denied plan recomputed policy without the approval flag, so every denial came back as unapproved.
 - **Code touchpoints** — `handoff/src/lib/social.ts`, `handoff/src/lib/social-commands.ts`, `handoff/src/lib/social-plans.ts`, `handoff/src/lib/social-tools.ts`.
