@@ -7,6 +7,7 @@ import { parseFilingSummary } from "@/lib/filing-summary";
 import { batchVisibleTo, seesHeldWork } from "@/lib/held-work";
 import { openSession } from "@/lib/current";
 import { previewKind, previewableStatus, readPreviewFile } from "@/lib/preview";
+import { fileProvenance, folderBreadcrumbs } from "@/lib/source-provenance";
 
 type FileRow = {
   id: string;
@@ -52,12 +53,40 @@ export default async function FilePreviewPage({
   // An agent filing's summary page reads as the same card as Finished work; clients never see its internal ids.
   const filing = /\.md$/i.test(name) ? parseFilingSummary(text) : null;
   const viewer = seesHeldWork(caller, workspace.id) || caller.staff ? "staff" : "client";
+  const provenance = await fileProvenance(sql, workspace.id, fileId, workspace.slug);
 
   return (
     <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-6 px-6 py-10">
+      <nav aria-label="Folder" className="flex flex-wrap gap-2 text-sm">
+        {folderBreadcrumbs(row.relative_path).map((crumb) => (
+          <Link key={crumb.path || "root"} className="inline-flex min-h-11 items-center underline" href={crumb.path ? `/w/${slug}?folder=${encodeURIComponent(crumb.path)}` : `/w/${slug}`}>
+            {crumb.name}
+          </Link>
+        ))}
+      </nav>
       <Link href={`/w/${workspace.slug}`} className="text-sm">
         Back to files
       </Link>
+      {provenance.usedIn.length > 0 ? (
+        <section>
+          <h2 className="text-sm font-medium">Used in</h2>
+          <ul>
+            {provenance.usedIn.map((link) => (
+              <li key={link.href}><Link className="text-sm underline" href={link.href}>{link.title}</Link></li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {provenance.deliveredAs.length > 0 ? (
+        <section>
+          <h2 className="text-sm font-medium">Delivered as</h2>
+          <ul>
+            {provenance.deliveredAs.map((link) => (
+              <li key={`${link.href}-delivered`}><Link className="text-sm underline" href={link.href}>{link.title}</Link></li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <h1 className="font-heading text-4xl leading-tight">{name}</h1>
       {kind === "none" ? <p>We cannot show this kind of file.</p> : null}
       {kind !== "none" && !previewableStatus(row.status) ? <p>This file is not ready to look at yet.</p> : null}

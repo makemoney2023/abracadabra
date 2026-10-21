@@ -1,0 +1,45 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requireHqStaffPage } from "@/lib/current";
+import { articleSocialPromoEnabled, createArticlePromotionDraft } from "@/lib/article-promotions";
+import { inspectCanonicalUrl } from "@/lib/library-artifacts";
+import { recordLibraryMetric } from "@/lib/library-metrics";
+
+export type PromotionState = { message: string };
+
+export async function createArticlePromotionAction(_previous: PromotionState, formData: FormData): Promise<PromotionState> {
+  if (!articleSocialPromoEnabled()) return { message: "Promotion is off." };
+  const { sql, caller } = await requireHqStaffPage();
+  const sourceItemId = String(formData.get("sourceItemId") ?? "");
+  const sourceVersion = Number(formData.get("sourceVersion") ?? "");
+  const shown = String(formData.get("canonicalUrl") ?? "");
+  const platforms = formData.getAll("platforms").map((value) => String(value));
+  const source = await sql.get<{ canonical_url: string | null; link_url: string | null; organization_id: string; workspace_id: string }>(
+    `SELECT m.canonical_url, i.link_url, d.organization_id, d.workspace_id
+     FROM deliverable_items i
+     JOIN deliverables d ON d.id = i.deliverable_id
+     LEFT JOIN deliverable_artifact_metadata m ON m.item_id = i.id AND m.version = i.version
+     WHERE i.id = ? AND i.version = ?`,
+    [sourceItemId, sourceVersion],
+  );
+  const canonical = inspectCanonicalUrl(source?.canonical_url ?? source?.link_url, "legacy");
+  if (!source || !canonical.ok || canonical.url !== shown) return { message: "The article link changed. Refresh and try again." };
+  const result = await createArticlePromotionDraft(sql, caller, {
+    sourceItemId,
+    sourceVersion,
+    platforms,
+    externalId: `${sourceItemId}:${sourceVersion}:${[...platforms].sort().join(",")}`,
+    tracking: { source: platforms[0]?.toLowerCase(), medium: "social", campaign: "article" },
+  }, Date.now());
+  if (!result.ok) return { message: "Could not create the draft." };
+  await recordLibraryMetric(sql, {
+    name: "article_promotion_created",
+    organizationId: source.organization_id,
+    workspaceId: source.workspace_id,
+    actorId: caller.userId,
+    artifactType: "article",
+  });
+  revalidatePath(`/deliverables/${result.deliverableId}`);
+  return { message: result.duplicate ? "That draft is already saved." : "Draft saved. Review it before anyone posts it." };
+}

@@ -17,17 +17,17 @@ export function ShareLink({ url }: { url: string }) {
 
   return (
     <section className="flex flex-col gap-2 rounded-xl border border-border px-4 py-4">
-      <p className="text-sm">Share this link. Anyone with it can add files.</p>
+      <p className="text-sm">Anyone with this upload link can add files.</p>
       <div className="flex flex-wrap items-center gap-2">
         <input
           readOnly
           value={url}
-          aria-label="Share link"
+          aria-label="Upload link"
           className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
           onFocus={(event) => event.currentTarget.select()}
         />
         <Button type="button" variant="outline" onClick={() => void copy()}>
-          {copied ? "Copied" : "Copy link"}
+          {copied ? "Copied" : "Copy upload link"}
         </Button>
       </div>
     </section>

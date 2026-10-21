@@ -25,7 +25,15 @@ export function proxy(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
   }
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if (path === "/view" || path.startsWith("/view/")) {
+    response.headers.set("x-robots-tag", "noindex, nofollow");
+    response.headers.set("content-security-policy", "frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'");
+    response.headers.set("x-frame-options", "DENY");
+    response.headers.set("referrer-policy", "no-referrer");
+    response.headers.set("x-content-type-options", "nosniff");
+  }
+  return response;
 }
 
 export const config = {

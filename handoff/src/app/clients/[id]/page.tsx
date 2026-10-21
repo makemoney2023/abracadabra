@@ -38,6 +38,7 @@ import { getAutopost } from "@/lib/social-autopost";
 import { getAgentPublishMode } from "@/lib/social-policy-settings";
 import { openZernio } from "@/lib/zernio";
 import type { SocialView } from "./social-tab";
+import { staffLibrarySummaries } from "@/lib/library-queries";
 import { SetContextLabel } from "@/components/context-bar";
 import { PageFrame } from "@/components/page-frame";
 import { StatusDot } from "@/components/status-dot";
@@ -262,6 +263,7 @@ export default async function ClientPage({
           updateMode={tab === "settings" ? await organizationUpdateMode(sql, caller, client.id) : "draft"}
           agentWork={agentWork}
           social={social}
+          librarySummaries={tab === "files" ? await staffLibrarySummaries(sql, caller, linked) : []}
         />
       </PageFrame>
     </StaffShell>

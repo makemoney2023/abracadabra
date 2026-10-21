@@ -26,6 +26,7 @@ import { SocialTab, type SocialView } from "./social-tab";
 import { ThreadsTab } from "./threads-tab";
 import { WorkTab } from "./work-tab";
 import type { ClientTabId } from "./tabs";
+import type { StaffLibrarySummaryModel } from "@/components/library/staff-library-summary";
 
 export function ClientBody({
   tab,
@@ -61,6 +62,7 @@ export function ClientBody({
   internal = false,
   updateMode = "draft",
   social,
+  librarySummaries = [],
 }: {
   tab: ClientTabId;
   page: number;
@@ -97,6 +99,7 @@ export function ClientBody({
   updateMode?: "draft" | "auto";
   agentWork?: ClientAgentWork;
   social?: SocialView;
+  librarySummaries?: StaffLibrarySummaryModel[];
 }) {
   if (tab === "work") {
     return (
@@ -119,7 +122,7 @@ export function ClientBody({
   if (tab === "social" && social) return <SocialTab organizationId={client.id} social={social} />;
   if (tab === "threads") return <ThreadsTab organizationId={client.id} threads={threads} />;
   if (tab === "agents") return <AgentWorkTab organizationId={client.id} work={agentWork ?? { agents: [], filed: [], updates: [] }} now={now} />;
-  if (tab === "files") return <FilesTab organizationId={client.id} linked={linked} free={free} />;
+  if (tab === "files") return <FilesTab organizationId={client.id} linked={linked} free={free} summaries={librarySummaries} />;
   if (tab === "repos") {
     return (
       <ReposTab

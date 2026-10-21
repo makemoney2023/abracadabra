@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { feedbackAction, type FormState } from "./actions";
@@ -61,6 +61,14 @@ export function ChangesForm({
   placeholder?: string;
 }) {
   const [state, action, pending] = useActionState(feedbackAction, initial);
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button type="button" className="min-h-11 text-left text-sm underline" onClick={() => setOpen(true)}>
+        {label}
+      </button>
+    );
+  }
   return (
     <form action={action} className="flex flex-col gap-2">
       <input type="hidden" name="slug" value={slug} />

@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StaffShell } from "../../staff-shell";
 import { AddItemForm, PublishForm, PullForm } from "../forms";
-import { PublishingComposer } from "@/components/social/publishing-composer";
 import { SocialPieceCard } from "@/components/social/social-piece-card";
 import { itemDestinationPlatforms, previewPlatforms } from "@/components/social/platform-post-preview";
 import { collectionSummary, isSocialItemFormat, pieceCardView } from "@/components/social/social-piece-view";
@@ -24,6 +23,10 @@ import { POST_STATUS_LABEL, listSocialAccounts, listSocialPosts, pieceSettings }
 import { POST_TYPE_LABEL, defaultPostType, pieceMedia } from "@/lib/social-plan";
 import { PLATFORM_LABEL, isBlogPlatform, zernioApiKey } from "@/lib/zernio";
 import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
+import { ArticlePromotionDialog } from "@/components/library/article-promotion-dialog";
+import { articleSocialPromoEnabled, trackedArticleUrl } from "@/lib/article-promotions";
+import { inspectCanonicalUrl } from "@/lib/library-artifacts";
+import { createArticlePromotionAction } from "./article-promotion-actions";
 
 export default async function DeliverablePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -113,12 +116,22 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                     </li>
                   );
                 }
+                const canonical = item.format === "link" ? inspectCanonicalUrl(item.link_url, "legacy") : null;
                 return (
                   <li key={item.id} className="flex flex-col gap-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium">{item.title}</p>
                       <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
                     </div>
+                    {articleSocialPromoEnabled() && item.status === "approved" && canonical && canonical.ok ? (
+                      <ArticlePromotionDialog
+                        sourceItemId={item.id}
+                        sourceVersion={item.version}
+                        canonicalUrl={canonical.url}
+                        exampleOutbound={trackedArticleUrl(canonical.url, { source: "linkedin", medium: "social", campaign: "article" })}
+                        action={createArticlePromotionAction}
+                      />
+                    ) : null}
                     {item.copy_text && !isSocialItemFormat(item.format) ? <p className="text-sm">{item.copy_text}</p> : null}
                     {isSocialItemFormat(item.format) ? (
                       <SocialPieceCard
@@ -213,19 +226,6 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
               <p className="text-sm text-muted-foreground">Add pieces before you post.</p>
             ) : (
               <div className="flex flex-col gap-6">
-                <PublishingComposer
-                  pieces={pieces.map((piece) => ({
-                    id: piece.id,
-                    title: piece.title,
-                    approved: piece.approved,
-                    compatible: piece.compatible,
-                    postType: piece.defaultType,
-                  }))}
-                  accounts={postable.map((account) => ({
-                    id: account.id,
-                    label: `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`,
-                  }))}
-                />
                 <SendToSocialForm
                   deliverableId={deliverable.id}
                   pieces={pieces}

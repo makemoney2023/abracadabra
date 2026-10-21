@@ -17,6 +17,10 @@ import { Button } from "@/components/ui/button";
 import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
 import { ApproveAllForm, ApproveForm, ChangesForm, NoteForm } from "../forms";
 import { sentConfirmation } from "../sent";
+import { can } from "@/lib/authz";
+import { CollectionItemState, CollectionReviewFooter, CollectionReviewHeader } from "@/components/library/collection-review";
+import { ViewLinkDialog } from "@/components/library/view-link-dialog";
+import { libraryViewLinksEnabled } from "@/lib/library-shares";
 
 /** The filing's own summary page stored as a file ("summary.md", "<title> - summary.md", "summary (2).md"). */
 function isSummaryFile(title: string): boolean {
@@ -90,9 +94,18 @@ export default async function FinishedPiecePage({
           <p className="text-sm text-muted-foreground">{confirmation.body}</p>
         </div>
       ) : null}
+      <CollectionReviewHeader
+        title={opened.deliverable.title}
+        status={DELIVERABLE_STATUS_LABEL[opened.deliverable.status]}
+        version={version}
+        deliveredAt={opened.deliverable.published_at}
+        reviewed={items.filter((item) => item.status === "approved" || item.status === "changes_requested").length}
+        total={items.length}
+        approved={items.filter((item) => item.status === "approved").length}
+        changes={items.filter((item) => item.status === "changes_requested").length}
+        pending={items.filter((item) => item.status === "pending").length}
+      />
       <div className="flex flex-col gap-2">
-        <h1 className="font-heading text-4xl leading-tight">{opened.deliverable.title}</h1>
-        <p className="text-sm text-muted-foreground">{DELIVERABLE_STATUS_LABEL[opened.deliverable.status]}</p>
         {brief && briefItem ? (
           <div className="flex flex-col gap-6">
             <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label="Approve" />
@@ -106,9 +119,7 @@ export default async function FinishedPiecePage({
             />
             <NoteForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
           </div>
-        ) : (
-          <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={approveAllLabel} />
-        )}
+        ) : null}
       </div>
       {brief || shownFormats.length < 2 ? null : (
         <div className="flex flex-wrap gap-2">
@@ -156,6 +167,7 @@ export default async function FinishedPiecePage({
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-medium">{item.title}</h2>
                 <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
+                <CollectionItemState status={item.status} />
               </div>
               {item.section && !filingTitles.has(item.section) ? <p className="text-sm text-muted-foreground">{item.section}</p> : null}
               {item.copy_text && !social ? (
@@ -239,6 +251,20 @@ export default async function FinishedPiecePage({
           );
         })}
       </ul>
+      {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
+        <ViewLinkDialog
+          workspaceId={workspace.id}
+          items={items.map((item) => ({ resourceKind: "deliverable_item" as const, resourceId: item.id, resourceVersion: version }))}
+        />
+      ) : null}
+      {brief ? null : (
+        <CollectionReviewFooter
+          pending={items.filter((item) => item.status === "pending").length}
+          changes={items.filter((item) => item.status === "changes_requested").length}
+        >
+          <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending").length})`} />
+        </CollectionReviewFooter>
+      )}
       {notes.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-medium">Notes</h2>

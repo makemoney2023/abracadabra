@@ -2,6 +2,15 @@
 
 ## 2026-10-21
 
+- **What changed** — Finished work opens in the Library at `/w/[slug]/library`, with search, type, status, and sort in the query string. `/w/[slug]/work` keeps that query and opens the Library. Collection review shows version, delivery date, and how many pieces are reviewed. Change requests stay closed until chosen. A view link is `/view/[token]` and is separate from the upload link at `/share/[token]`. Article promotion can save a local social draft. Both new flags ship off.
+- **Why** — Clients need one place to read finished work, and a read-only link must not become an upload link or a blog post through Zernio.
+- **Code touchpoints** — `handoff/src/lib/library-queries.ts`, `handoff/src/lib/library-shares.ts`, `handoff/src/lib/article-promotions.ts`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/src/app/view/[token]/`, `handoff/src/app/api/workspaces/[workspaceId]/view-links/`, `handoff/migrations/0042_library_shares.sql`, `handoff/migrations/0043_article_promotions.sql`.
+- **Data-flow impact** — Library reads local rows only. View links store a token hash. Promotion writes a draft `social_pack`, pending items, variants, a collection, and `promotes` relations in one batch. It does not call `sendPieces`, `autoScheduleApproved`, or Zernio.
+- **API / schema impact** — Additive tables in migrations 0042 and 0043. `LIBRARY_VIEW_LINKS` and `ARTICLE_SOCIAL_PROMO` default off. `HANDOFF_SHARE_HASH_PEPPER` is a Worker secret and is not in git.
+- **Verification** — Focused Vitest suites for the Library query, shares, promotions, routes, and components, plus `tsc --noEmit`.
+
+## 2026-10-21
+
 - **What changed** — Finished social work is shown in the frame of the network it is for. A Facebook post has the page header, caption above the media, and Like, Comment, and Share. An Instagram post has the profile header, the media first, and the caption underneath. A carousel shows one slide at a time, with the count, dots, and previous and next controls. Reels, Shorts, and Stories use a tall frame. Staff and the client see the same preview. A piece with no destination yet still uses its format, so a carousel does not become a stack of files.
 - **Why** — Finished work should look like the post a person will publish, not a generic file card.
 - **Code touchpoints** — `handoff/src/components/social/platform-post-preview.ts`, `handoff/src/components/social/platform-post-preview-view.tsx`, `handoff/src/components/social/social-piece-card.tsx`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.

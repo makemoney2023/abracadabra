@@ -77,6 +77,8 @@
     "SWARM_ORIGIN": "https://agent-swarm-orchestrator.abracadabra-ai.workers.dev",
     "MCP_PORTAL_URL": "https://mcp.abra-ca-dabra.app/mcp",
     "AGENT_WORK_MAX_MB": "10",
-    "SOCIAL_AGENT_ACTIONS": "on"
+    "SOCIAL_AGENT_ACTIONS": "on",
+    "LIBRARY_VIEW_LINKS": "off",
+    "ARTICLE_SOCIAL_PROMO": "off"
   }
 }

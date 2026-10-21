@@ -4,15 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkSpaceForm } from "../link-space-form";
+import { StaffLibrarySummary, type StaffLibrarySummaryModel } from "@/components/library/staff-library-summary";
 
 export function FilesTab({
   organizationId,
   linked,
   free,
+  summaries = [],
 }: {
   organizationId: string;
   linked: WorkspaceLink[];
   free: WorkspaceLink[];
+  summaries?: StaffLibrarySummaryModel[];
 }) {
   return (
     <Card>
@@ -21,6 +24,13 @@ export function FilesTab({
         <LinkSpaceForm organizationId={organizationId} spaces={free} label="Link a space" />
       </CardHeader>
       <CardContent>
+        {summaries.length > 0 ? (
+          <div className="mb-4 flex flex-col gap-3">
+            {summaries.map((summary) => (
+              <StaffLibrarySummary key={summary.workspaceId} summary={summary} />
+            ))}
+          </div>
+        ) : null}
         {linked.length === 0 ? (
           <p className="text-sm text-muted-foreground">No space linked yet.</p>
         ) : (

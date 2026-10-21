@@ -264,6 +264,29 @@ export async function listAgentSocialPieces(
   return { ok: true as const, pieces };
 }
 
+export type LocalTargetState = {
+  outcome: string;
+  url?: string | null;
+  postStatus?: string | null;
+};
+
+/** Publication state from local post and target rows. This does not call the social provider. */
+export function localPublication(targets: LocalTargetState[], postStatus: string | null = null): "not_published" | "ready" | "scheduled" | "publishing" | "published" | "partially_published" | "needs_attention" {
+  const outcomes = targets.map((target) => target.outcome);
+  const success = outcomes.filter((outcome) => outcome === "succeeded" || outcome === "published").length;
+  const failed = outcomes.filter((outcome) => outcome === "failed" || outcome === "uncertain").length;
+  if (success > 0 && failed > 0) return "partially_published";
+  if (failed > 0) return "needs_attention";
+  if (outcomes.some((outcome) => outcome === "publishing" || outcome === "sending")) return "publishing";
+  if (outcomes.some((outcome) => outcome === "scheduled")) return "scheduled";
+  if (outcomes.length > 0 && success === outcomes.length) return "published";
+  if (postStatus === "partial" || postStatus === "failed") return success > 0 ? "partially_published" : "needs_attention";
+  if (postStatus === "sending") return "publishing";
+  if (postStatus === "scheduled") return "scheduled";
+  if (postStatus === "published") return "published";
+  return "not_published";
+}
+
 export function parseSocialInstant(value: string | null): number | null {
   if (!value) return null;
   if (/^\d+$/.test(value)) return Number(value);
