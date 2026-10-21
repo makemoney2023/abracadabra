@@ -179,7 +179,9 @@ async function pickVersion(sql: Sql, deliverable: { id: string; version: number;
 export async function recordFiling(
   sql: Sql,
   input: {
-    itemId: string; batchId: string; agent: AgentPrincipal; payload: WorkPayload; summary: string; organizationId: string;
+    itemId: string; batchId: string; agent: AgentPrincipal; payload: WorkPayload; summary: string;
+    /** Stored path of the filing's summary file ("<folder>/summary.md" or "<folder>/<title> - summary.md"). */
+    summaryPath?: string | null; organizationId: string;
     workspaceId: string; projectId: string | null; taskId: string | null; workRequestId: string | null; now: number;
   },
 ): Promise<FilingReview> {
@@ -244,7 +246,8 @@ export async function recordFiling(
     writes.push(item(payload.title, "page", input.summary.slice(0, COPY_LIMIT), "[]", null));
     for (const file of files) {
       const name = file.relative_path.split("/").pop() ?? file.relative_path;
-      if (name.startsWith("summary.")) continue;
+      // The summary is the page item above; its stored file ("summary.md", or "<title> - summary.md" in a named folder) is not a piece.
+      if (file.relative_path === input.summaryPath || /^summary( \(\d+\))?\.md$/i.test(name)) continue;
       const shaped = itemForPath(file.relative_path, file.object_key);
       writes.push(item(name, shaped.format, null, shaped.mediaJson, null));
     }

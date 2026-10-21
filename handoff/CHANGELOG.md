@@ -2,6 +2,17 @@
 
 ## 2026-10-20
 
+- **What changed** — Finished work no longer shows an agent filing as raw markdown. The filing's summary page renders as a card: title, "Delivered" date in Toronto time, the short summary, link pills, an "N files below" note, and the long content behind "Show details" (sanitized markdown, mobile-first type). Client members never see the agent and teammate ids, `Task:`/`Ref:`/`Kind:`/`Finished:` lines, the handoff note or the duplicate Files list; staff get "Details for staff" with all of it. Inline file names in the content link to the file on the page. Empty media boxes are gone. The same card shows on the staff deliverable page and when a `summary.md` is previewed. New optional `client_summary` on `POST /api/agent-work`.
+- **Why** — Christopher opened the Abracadabra space on his phone and the top of Finished work was one long block of unrendered markdown with internal ids and a raw UTC timestamp.
+- **Code touchpoints** — `handoff/src/lib/filing-summary.ts` (new), `handoff/src/components/{filing-summary-card,markdown}.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/app/w/[slug]/files/[fileId]/page.tsx`, `handoff/src/app/deliverables/[id]/page.tsx`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/app/api/agent-work/route.ts`, `handoff/README.md`
+- **Data-flow impact** — Display only. Stored summary pages are read as they are; nothing is rewritten. `client_summary`, when sent, is written as a `## For the client` section of the same page.
+- **API / schema impact** — Additive: optional `client_summary` (2,000 characters). No migration. The agent API still returns the full summary.
+- **Rollback** — Revert the PR. Pages go back to the raw text; filings that sent `client_summary` keep it as one more markdown section.
+- **Status fix** — A deliverable Client Services approved stays `in_review` ("Waiting for a look") for the client, but no longer shows in Client Services' needs-review lists (the updates feed, including older snapshots, and the space review API, which now says `client_services: "approved"`). The staff deliverable page reads "Approved by Client Services, waiting for the client". The client asking for changes, or a new held filing, brings it back. No migration and no data change; it applies to deliverables already approved (8964371e) as well.
+- **Verification** — see the PR.
+
+## 2026-10-20
+
 - **What changed** — Space folders and file types. The space file list is a collapsible folder tree (closed by default, counts, Open all / Close all), every file shows a type badge (Image · PNG, PDF, Doc · MD, HTML, Spreadsheet, Zip…) and images get a lazy thumbnail. Agents file into an optional `folder` (`Social/Facebook`; default `Finished work/<date> <title>`) with readable file names; a clash gets ` (2)`, and a filing keeps the names of the filings it supersedes. Migration 0033 stores the folder on the filing. `HANDOFF_SKIP_MIGRATIONS` holds a migration back on previews that share the production D1.
 - **Why** — Clients could not tell file types apart without opening each file, and finished work had no structure.
 - **Code touchpoints** — `handoff/migrations/0033_agent_work_folder.sql`, `handoff/src/db/{migrate,migration-sql}.ts`, `handoff/src/lib/{file-type,work-folder,file-label,agent-work-filing,workflow-files}.ts`, `handoff/src/components/folder-files.tsx`, `handoff/src/app/api/agent-work/route.ts`

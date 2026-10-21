@@ -27,7 +27,11 @@ export function fileLabel(input: { title?: string; role?: string }): string {
   return "File";
 }
 
-export function listedMedia(mediaJson: string): { role: string; video: boolean }[] {
+/**
+ * Media to show for a piece. image is false for a stored text, HTML or other non-picture file (an agent filing's
+ * .md or .html attachment), which must not go in an <img>. A role with no content type is a picture, as before.
+ */
+export function listedMedia(mediaJson: string): { role: string; video: boolean; image: boolean }[] {
   try {
     const parsed = JSON.parse(mediaJson) as unknown;
     if (!Array.isArray(parsed)) return [];
@@ -36,7 +40,8 @@ export function listedMedia(mediaJson: string): { role: string; video: boolean }
       const role = (entry as { role?: unknown }).role;
       const contentType = (entry as { content_type?: unknown }).content_type;
       if (typeof role !== "string" || !role) return [];
-      return [{ role, video: typeof contentType === "string" && contentType.startsWith("video/") }];
+      const type = typeof contentType === "string" ? contentType.toLowerCase() : "";
+      return [{ role, video: type.startsWith("video/"), image: type === "" || type.startsWith("image/") }];
     });
   } catch {
     return [];
