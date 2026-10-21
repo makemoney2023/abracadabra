@@ -64,7 +64,7 @@ function graph(html) {
 describe("blog content", () => {
   it("validates frontmatter, three images, and sourced numbers", async () => {
     const posts = await loadPosts();
-    assert.equal(posts.length, 25);
+    assert.equal(posts.length, 26);
     for (const post of posts) {
       assert.equal(post.images.length, 3);
       assert.ok(post.images.every((image) => image.alt.trim().length >= 12));

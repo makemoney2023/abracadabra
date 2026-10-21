@@ -123,5 +123,10 @@
     "Stylized dark-mode software UI in the service-image style: a small New request inbox panel with a Filed pill, joined by a thin cyan connector to a task board with To do, Doing, Review and Done columns, one card marked In progress.",
     "Stylized dark-mode software UI in the service-image style: three small cards labelled Writing, Design and Code, each with a cyan Working pill, joined by thin cyan connectors to a Filed work panel with an amber Held for review pill.",
     "Stylized dark-mode software UI in the service-image style: a Ready to release review card with an orange Approve button and a gray Send back button, joined by a thin cyan connector to a Your space panel with a Blog folder and typed files."
+  ],
+  "why-we-build-on-cloudflare": [
+    "Stylized dark-mode software UI in the service-image style: an Incoming traffic panel with one row marked Blocked, joined by a thin cyan connector to a Security checks panel listing DDoS, WAF rules, Bot check and TLS with Passed and Challenged pills, joined to a Your app panel with a green Protected pill. No logos.",
+    "Stylized dark-mode software UI in the service-image style: an Agent panel with a cyan Working pill, joined by thin cyan connectors to four tool cards labelled Models, Gateway, Search and Browser with Ready, Cached, Indexed and Running pills. No logos.",
+    "Stylized dark-mode software UI in the service-image style: an Edge app panel with a green Live pill and a dotted world map, joined by thin cyan connectors to SQL database, File storage and Job queue panels and a usage card with a green Pay for use pill. No logos."
   ]
 }

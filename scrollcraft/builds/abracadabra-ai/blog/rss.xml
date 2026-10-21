@@ -180,5 +180,12 @@
       <pubDate>Wed, 14 Oct 2026 00:00:00 GMT</pubDate>
       <description>Pilots stall when the data, the risk controls, or the value was never named. Surveys show use is common and scaling is rare. The demo is not the process.</description>
     </item>
+    <item>
+      <title>Why We Build on Cloudflare: Security, AI and the Edge</title>
+      <link>https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare</link>
+      <guid>https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare</guid>
+      <pubDate>Wed, 21 Oct 2026 00:00:00 GMT</pubDate>
+      <description>Our site, our Readiness Check and HQ all run on Cloudflare. Here is what the platform gives us for safety, AI tools, data and cost, with sources.</description>
+    </item>
   </channel>
 </rss>

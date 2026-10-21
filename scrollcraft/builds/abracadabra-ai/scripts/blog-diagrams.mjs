@@ -228,11 +228,92 @@ function boardDiagram() {
   });
 }
 
+/** Our own apps on Cloudflare (why-we-build-on-cloudflare). Names follow the wrangler configs. */
+function stackDiagram() {
+  const parts = [];
+  const x0 = 64;
+  const w = 260;
+  const gap = 42;
+  const edgeY = 150;
+  const edgeH = 96;
+  const appY = 316;
+  const appH = 300;
+  // Edge band.
+  parts.push(panel(x0, edgeY, 1152, edgeH, true));
+  parts.push(text("Cloudflare network edge", { x: x0 + 24, y: edgeY + 40, size: 22, font: "inter-600", fill: C.ink }));
+  parts.push(text("Every request is checked here first", { x: x0 + 24, y: edgeY + 70, size: 16, font: "plex-400", fill: C.soft }));
+  let px = x0 + 470;
+  for (const [label, tone] of [["DDoS protection", "green"], ["WAF rules", "green"], ["Bot checks", "amber"], ["TLS", "green"]]) {
+    const chip = pill(px, edgeY + 34, label, tone);
+    parts.push(chip.svg);
+    px += chip.w + 14;
+  }
+  const apps = [
+    { title: "Marketing site", lines: ["Pages, blog and the", "chat front door"], chips: [["Static assets", "muted"], ["Service binding", "muted"]] },
+    { title: "Chat", lines: ["Text and voice chat", "for visitors"], chips: [["Workers AI", "cyan"], ["Durable Objects", "cyan"], ["Turnstile", "amber"]] },
+    { title: "Readiness Check", lines: ["Free site scan, with", "deep scans on a queue"], chips: [["D1 database", "cyan"], ["Queues", "cyan"], ["Follows robots.txt", "green"]] },
+    { title: "HQ and agents", lines: ["Client work, files", "and our agents"], chips: [["D1 and R2", "cyan"], ["Workers AI, AI Gateway", "cyan"], ["Agents SDK", "accent"]] },
+  ];
+  apps.forEach((app, i) => {
+    const x = x0 + i * (w + gap);
+    parts.unshift(connector([[x + w / 2, edgeY + edgeH], [x + w / 2, appY]]));
+    if (i < 2) parts.unshift(connector([[x + w, appY + 150], [x + w + gap, appY + 150]], { dashed: true }));
+    parts.push(panel(x, appY, w, appH, i === 3));
+    parts.push(windowDots(x + 22, appY + 22));
+    parts.push(text(app.title, { x: x + 20, y: appY + 70, size: 22, font: "inter-600", fill: C.ink }));
+    app.lines.forEach((line, j) => parts.push(text(line, { x: x + 20, y: appY + 100 + j * 22, size: 16, font: "plex-400", fill: C.soft })));
+    app.chips.forEach(([label, tone], j) => parts.push(pill(x + 20, appY + 160 + j * 40, label, tone).svg));
+  });
+  const visitors = pill(0, 0, "Visitors and crawlers", "muted");
+  const vx = x0 + 1152 - 24 - visitors.w;
+  parts.unshift(connector([[vx + visitors.w / 2, edgeY - 18], [vx + visitors.w / 2, edgeY]]));
+  parts.push(pill(vx, edgeY - 46, "Visitors and crawlers", "muted", { backed: true }).svg);
+  return frame({
+    eyebrow: "REPRESENTATIVE DIAGRAM",
+    title: "How our own apps sit on Cloudflare",
+    footnote: "Simplified for illustration. Dashed lines are calls from one Worker to another. No client data is shown.",
+    body: parts.join("\n"),
+  });
+}
+
+/** The layers a request passes on the way to an app (why-we-build-on-cloudflare). */
+function requestPathDiagram() {
+  const w = 360;
+  const h = 206;
+  const xs = [64, 460, 856];
+  const top = 140;
+  const bottom = 440;
+  const parts = [];
+  parts.push(stepNode({ x: xs[0], y: top, step: "01", title: "Encrypted with TLS", lines: ["Free certificates through", "Universal SSL."], status: "On by default", tone: "green" }));
+  parts.push(stepNode({ x: xs[1], y: top, step: "02", title: "DDoS screening", lines: ["Floods of fake traffic are", "stopped at the edge."], status: "All plans", tone: "green" }));
+  parts.push(stepNode({ x: xs[2], y: top, step: "03", title: "WAF rules", lines: ["Requests are matched", "against sets of rules."], status: "Managed and custom", tone: "cyan" }));
+  parts.push(stepNode({ x: xs[2], y: bottom, step: "04", title: "Bot checks", lines: ["Scripts are told apart", "from real people."], status: "Depends on plan", tone: "amber" }));
+  parts.push(stepNode({ x: xs[1], y: bottom, step: "05", title: "Turnstile and Access", lines: ["A person check on the chat,", "an ID check on staff tools."], status: "Where needed", tone: "amber" }));
+  parts.push(stepNode({ x: xs[0], y: bottom, step: "06", title: "Reaches the app", lines: ["Only checked traffic", "gets to the code."], status: "Protected", tone: "green", highlight: true }));
+  const midTop = top + h / 2;
+  const midBottom = bottom + h / 2;
+  parts.unshift(connector([[xs[0] + w, midTop], [xs[1], midTop]]));
+  parts.unshift(connector([[xs[1] + w, midTop], [xs[2], midTop]]));
+  parts.unshift(connector([[xs[2] + w / 2, top + h], [xs[2] + w / 2, bottom]]));
+  parts.unshift(connector([[xs[2], midBottom], [xs[1] + w, midBottom]]));
+  parts.unshift(connector([[xs[1], midBottom], [xs[0] + w, midBottom]]));
+  return frame({
+    eyebrow: "REPRESENTATIVE DIAGRAM",
+    title: "The checks a request passes before it reaches an app",
+    footnote: "Simplified for illustration. Which layers apply depends on the plan and the setup.",
+    body: parts.join("\n"),
+  });
+}
+
 export const DIAGRAMS = {
   "how-client-work-flows-through-hq": {
     "flow.svg": flowDiagram,
     "visibility.svg": visibilityDiagram,
     "board.svg": boardDiagram,
+  },
+  "why-we-build-on-cloudflare": {
+    "stack.svg": stackDiagram,
+    "request-path.svg": requestPathDiagram,
   },
 };
 
