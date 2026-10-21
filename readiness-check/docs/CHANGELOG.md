@@ -1,5 +1,13 @@
 # Changelog
 
+## Scanner: real pages before guessed paths — 2026-10-21
+
+**Guessed paths are checked, not counted.** The scanner still tries common paths (`/contact`, `/faq`, `/pricing`, `/book`, …), but only for page types the sitemap and search results don't already cover. Each guess gets a cheap existence check first (`probeUrl` in `src/lib/fetch-html.ts`: HEAD, or GET when HEAD is refused with 403/405/501; 3 s timeout; scanner user agent; redirects followed). Only 2xx/3xx guesses go to extraction, and a guess that redirects onto a page already in the list is dropped. A guess that still fails extraction is dropped silently. `PAGES_FETCH_FAILED` now counts only sitemap and search URLs.
+
+**Real pages get the 40-page budget.** `prioritizeUrls` orders home, then sitemap and search URLs, then guesses. In a first pass each page type, or each top-level section for unclassified pages (`/portfolio/`, `/start/`), gets at most 8 slots (`PER_TYPE_FIRST_PASS`); what the cap held back fills any room left before guesses. A site with 24 blog posts and 13 service pages now still gets its portfolio, products and contact pages scanned.
+
+**Touchpoints.** `src/lib/prioritize-urls.ts` (`templateSeedUrls`, `PER_TYPE_FIRST_PASS`, `source` on each URL), `src/lib/scan/orchestrator.ts` (`probe` dependency, guesses dropped on failure), `src/lib/fetch-html.ts` (`probeUrl`, `SCANNER_USER_AGENT`). Tests: `tests/unit/prioritize-urls.test.ts`, `tests/unit/fetch-html.test.ts`, `tests/integration/orchestrator.test.ts`. No schema or API change.
+
 ## Schema fix files: $149.99 offer, working generation, D1 unlock/PDF/refresh — 2026-10-20
 
 **Offer (config only).** wrangler vars: `PRICE_DISPLAY=$149.99`, `PRICE_AMOUNT_CENTS=14999`, `PRICE_CURRENCY=usd`, `CREDIT_AMOUNT_CENTS=1000`. The panel reads "Buy the files $149.99" and "$10 credit applied at checkout, you pay $139.99". Checkout auto-applies `STRIPE_CREDIT_COUPON_ID` via `discounts[0][coupon]` and leaves promotion codes off (Stripe won't take both). With a credit configured, buying stays off until the coupon id is set too, so the panel never promises a credit Stripe won't apply. Currency is USD: the repo defaults to `usd` everywhere. Confirm before creating the Price.

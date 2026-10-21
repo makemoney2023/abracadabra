@@ -2,7 +2,8 @@ import { detectJsonLd } from "@/lib/detect/jsonld";
 import { parseSitemapUrls } from "@/lib/detect/sitemap";
 import { computeOpsPriority } from "@/lib/ops/priority";
 import type { ParallelExtractResult, ParallelSearchResult } from "@/lib/parallel/types";
-import { prioritizeUrls } from "@/lib/prioritize-urls";
+import { probeUrl, type ProbeResult } from "@/lib/fetch-html";
+import { prioritizeUrls, templateSeedUrls, type PrioritizedUrl } from "@/lib/prioritize-urls";
 import { MAX_PAGES } from "@/lib/scoring/constants";
 import { scoreScan } from "@/lib/scoring/score";
 import type { DetectedPage, SiteFiles } from "@/lib/types";
@@ -29,7 +30,40 @@ export type ScanSiteClient = {
 export type RunScanDeps = {
   site: ScanSiteClient;
   repo: ScanRepository;
+  /** Existence check for guessed template URLs. Defaults to a short HEAD/GET with the scanner user agent. */
+  probe?: (url: string) => Promise<ProbeResult>;
 };
+
+function urlKey(url: string): string {
+  return normalizeExtractUrlKey(url);
+}
+
+/**
+ * Guessed template URLs for page types the site does not publish, kept only when a cheap check says they exist,
+ * and only when there is room under MAX_PAGES. A guess that redirects onto a page already in the list is dropped.
+ */
+async function checkedSeeds(
+  input: { origin: string; sitemapUrls: string[]; searchUrls: string[] },
+  probe: (url: string) => Promise<ProbeResult>,
+): Promise<PrioritizedUrl[]> {
+  const real = prioritizeUrls({ ...input, seedUrls: [] });
+  const room = MAX_PAGES - real.length;
+  if (room <= 0) return [];
+  const candidates = templateSeedUrls(input);
+  if (candidates.length === 0) return [];
+  const taken = new Set(real.map((entry) => urlKey(entry.url)));
+  const results = await Promise.all(candidates.map((seed) => probe(seed.url)));
+  const kept: PrioritizedUrl[] = [];
+  candidates.forEach((seed, index) => {
+    const result = results[index];
+    if (!result?.exists) return;
+    const landed = urlKey(result.finalUrl ?? seed.url);
+    if (taken.has(landed)) return;
+    taken.add(landed);
+    kept.push(seed);
+  });
+  return kept.slice(0, room);
+}
 
 function originBase(origin: string): string {
   return origin.endsWith("/") ? origin.slice(0, -1) : origin;
@@ -134,11 +168,14 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
 
     const sitemapUrls = await resolveSitemapUrls(site, siteFiles.sitemapXml);
 
+    const seedUrls = await checkedSeeds({ origin: base, sitemapUrls, searchUrls }, deps.probe ?? ((url) => probeUrl(url)));
     const prioritized = prioritizeUrls({
       origin: base,
       sitemapUrls,
       searchUrls,
+      seedUrls,
     });
+    const guessed = new Set(prioritized.filter((entry) => entry.source === "seed").map((entry) => entry.url));
 
     const pageExtractResults: ParallelExtractResult[] = [];
     for (const batch of chunk(
@@ -158,7 +195,14 @@ export async function runScan(scanId: string, deps: RunScanDeps): Promise<void> 
     const markdownByUrl = new Map<string, string>();
     const extractBlocksByUrl = new Map<string, unknown[]>();
 
-    const draftPages: DetectedPage[] = prioritized.map((entry) => {
+    // A guessed URL that still cannot be extracted was never the site's page: drop it instead of counting a failure.
+    const reachable = prioritized.filter((entry) => {
+      if (!guessed.has(entry.url)) return true;
+      const extracted = pageResultMap.get(normalizeExtractUrlKey(entry.url));
+      return Boolean(extracted?.content) && !extracted?.error;
+    });
+
+    const draftPages: DetectedPage[] = reachable.map((entry) => {
       const extracted = pageResultMap.get(normalizeExtractUrlKey(entry.url));
       const ok = Boolean(extracted?.content) && !extracted?.error;
       const content = extracted?.content ?? "";
