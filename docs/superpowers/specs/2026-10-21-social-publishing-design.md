@@ -38,8 +38,9 @@ Finished work is already shaped for posting. `deliverable_items` carry `channel`
 
 - Zernio webhooks (`post.published`, `post.failed`) to `POST /api/zernio/webhook`, routed by `profiles[0].externalId`. Replaces refresh-on-open.
 - The one-minute cron on worker `handoff` refreshes posts due in the last hour.
-- Blog posting: a `page` piece (or a `document` deliverable) goes to a connected WordPress or Wix site through `POST /v1/accounts/{id}/blogs/{blogId}/articles` (`title`, `bodyHtml`, `image`, `publishDate`).
-- Per-network text (`customContent`) and per-network options: Pinterest board, YouTube title and tags, TikTok privacy, Instagram story or reel, first comment.
+- Per-network text (`customContent`) and per-network options: YouTube title and tags, first comment.
+
+Blog article posting and Pinterest options are out of scope for now.
 
 ## Phase 3: let the client and the agent drive it
 
