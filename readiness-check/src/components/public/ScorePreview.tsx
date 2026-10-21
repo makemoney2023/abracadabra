@@ -36,6 +36,8 @@ export type ScorePreviewProps = {
   scoreBreakdown: unknown;
   topGaps: ScanGap[];
   pagesMissingJsonLd?: PageMissingJsonLd[];
+  /** Every page without JSON-LD; the list shows the first ones and the page matrix has the rest. */
+  pagesMissingJsonLdTotal?: number;
   pillarWhy?: Record<keyof ScoreBreakdown, PillarWhy> | null;
   scoreSummary?: ScoreSummary | null;
   actions?: ReactNode;
@@ -47,6 +49,7 @@ export function ScorePreview({
   scoreBreakdown,
   topGaps,
   pagesMissingJsonLd = [],
+  pagesMissingJsonLdTotal,
   pillarWhy,
   scoreSummary,
   actions,
@@ -188,7 +191,7 @@ export function ScorePreview({
 
         <div className="space-y-2 pt-2">
           <h4 className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-            Pages missing JSON-LD ({pagesMissingJsonLd.length})
+            Pages missing JSON-LD ({pagesMissingJsonLdTotal ?? pagesMissingJsonLd.length})
           </h4>
           {pagesMissingJsonLd.length === 0 ? (
             <p className="text-sm text-muted-foreground">All fetched pages include JSON-LD.</p>
@@ -215,6 +218,11 @@ export function ScorePreview({
               ))}
             </ul>
           )}
+          {pagesMissingJsonLdTotal && pagesMissingJsonLdTotal > pagesMissingJsonLd.length ? (
+            <p className="text-xs text-muted-foreground">
+              Showing {pagesMissingJsonLd.length} of {pagesMissingJsonLdTotal}. The page matrix and CSV list them all.
+            </p>
+          ) : null}
         </div>
       </div>
     </section>

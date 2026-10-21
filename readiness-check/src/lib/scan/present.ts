@@ -1,6 +1,8 @@
 import { buildPillarWhy, type PillarWhy } from "@/lib/scoring/pillar-why";
 import { buildScoreSummary, type ScoreSummary } from "@/lib/scoring/score-summary";
 import type { ScoreBreakdown } from "@/lib/types";
+import type { ScanProgress } from "@/lib/scan/d1-pipeline-store";
+import { MAX_PAGES } from "@/lib/scoring/constants";
 
 export type ScanGap = {
   code: string;
@@ -33,6 +35,7 @@ export type FullScanView = {
     hasJsonLd: boolean;
     schemaTypes: string[];
   }>;
+  progress?: ScanProgress | null;
 };
 
 type ScanPayloadBase = {
@@ -42,6 +45,12 @@ type ScanPayloadBase = {
   scoreBreakdown: unknown;
   topGaps: ScanGap[];
   pagesMissingJsonLd: PageMissingJsonLd[];
+  /** All pages without JSON-LD. The free list above shows at most MAX_PAGES of them; the matrix has the rest. */
+  pagesMissingJsonLdTotal: number;
+  /** Pages recorded for this scan (the matrix itself stays behind the email unlock). */
+  pageCount: number;
+  /** pages_done / pages_total while a chunked scan runs. Null for scans from before chunked runs. */
+  progress: ScanProgress | null;
   pillarWhy: Record<keyof ScoreBreakdown, PillarWhy>;
   scoreSummary: ScoreSummary;
   /** Every issue the scan recorded. Free: no email, no payment. */
@@ -84,7 +93,8 @@ export function selectPagesMissingJsonLd(
  */
 export function selectScanPayload(full: FullScanView, unlocked: boolean): ScanPayload {
   const topGaps = selectTopGaps(full.findings);
-  const pagesMissingJsonLd = selectPagesMissingJsonLd(full.pages);
+  const missing = selectPagesMissingJsonLd(full.pages);
+  const pagesMissingJsonLd = missing.slice(0, MAX_PAGES);
   const pillarWhy = buildPillarWhy(full.scoreBreakdown, full.findings, full.pages);
   const scoreSummary = buildScoreSummary({
     domain: full.domain,
@@ -99,6 +109,9 @@ export function selectScanPayload(full: FullScanView, unlocked: boolean): ScanPa
     scoreBreakdown: full.scoreBreakdown,
     topGaps,
     pagesMissingJsonLd,
+    pagesMissingJsonLdTotal: missing.length,
+    pageCount: full.pages.length,
+    progress: full.progress ?? null,
     pillarWhy,
     scoreSummary,
     findings: full.findings,

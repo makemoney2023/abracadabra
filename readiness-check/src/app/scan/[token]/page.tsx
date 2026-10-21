@@ -16,12 +16,18 @@ import type { ScanPayload } from "@/lib/scan/present";
 
 const POLL_MS = 2000;
 
-function stageLabel(status: string): string {
+function stageLabel(status: string, progress: ScanPayload["progress"]): string {
+  const deep = progress && progress.tier !== "free";
   switch (status) {
     case "queued":
       return "Queued — waiting for workers";
     case "running":
-      return "Scanning priority pages and site files (usually under a minute)";
+      if (progress?.pagesTotal) {
+        return `Scanned ${progress.pagesDone} of ${progress.pagesTotal} pages${deep ? " (a deep scan takes a few minutes)" : ""}`;
+      }
+      return deep
+        ? "Reading site files and sitemap to plan the deep scan"
+        : "Scanning priority pages and site files (usually under a minute)";
     case "complete":
       return "Scan complete";
     case "failed":
@@ -119,10 +125,29 @@ export default function ScanPage() {
                 <h1 className="font-heading text-3xl tracking-tight sm:text-4xl">
                   {payload.domain}
                 </h1>
-                <p className="text-sm text-muted-foreground">{stageLabel(payload.status)}</p>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full w-1/3 animate-[progress_1.4s_ease-in-out_infinite] rounded-full bg-accent" />
-                </div>
+                <p className="text-sm text-muted-foreground" aria-live="polite">
+                  {stageLabel(payload.status, payload.progress)}
+                </p>
+                {payload.progress?.pagesTotal ? (
+                  <div
+                    className="h-1.5 overflow-hidden rounded-full bg-muted"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={payload.progress.pagesTotal}
+                    aria-valuenow={payload.progress.pagesDone}
+                  >
+                    <div
+                      className="h-full rounded-full bg-accent transition-[width] duration-500"
+                      style={{
+                        width: `${Math.max(4, Math.round((100 * payload.progress.pagesDone) / payload.progress.pagesTotal))}%`,
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full w-1/3 animate-[progress_1.4s_ease-in-out_infinite] rounded-full bg-accent" />
+                  </div>
+                )}
               </section>
             )}
 
@@ -147,12 +172,20 @@ export default function ScanPage() {
                   scoreBreakdown={payload.scoreBreakdown}
                   topGaps={payload.topGaps}
                   pagesMissingJsonLd={payload.pagesMissingJsonLd}
+                  pagesMissingJsonLdTotal={payload.pagesMissingJsonLdTotal}
                   pillarWhy={payload.pillarWhy}
                   scoreSummary={payload.scoreSummary}
                   actions={
                     <ScanReportActions token={token} unlocked={payload.unlocked} />
                   }
                 />
+
+                {payload.progress?.partial && payload.progress.pagesTotal ? (
+                  <p className="rounded-lg border border-[var(--sc-hairline)] bg-[var(--sc-surface)] px-4 py-3 text-sm text-muted-foreground">
+                    This scan read {payload.pageCount} of {payload.progress.pagesTotal} planned pages before its time
+                    limit. The score covers the pages that were read.
+                  </p>
+                ) : null}
 
                 {/* Free: every issue and what each page needs. */}
                 <FindingsList findings={payload.findings} />
@@ -172,7 +205,7 @@ export default function ScanPage() {
                   </div>
                 ) : (
                   <>
-                    <PageMatrix pages={payload.pages} />
+                    <PageMatrix pages={payload.pages} csvHref={`/api/scans/${token}/csv`} />
                     <div className="no-print border-t border-border/70 pt-8">
                       <ScanReportActions token={token} unlocked />
                     </div>

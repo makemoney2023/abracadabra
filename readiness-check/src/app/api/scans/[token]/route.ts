@@ -21,7 +21,9 @@ export async function GET(_request: Request, context: RouteContext) {
 
   let loaded: Awaited<ReturnType<typeof loadScanByPublicToken>>;
   try {
-    loaded = await loadScanByPublicToken(db, token);
+    // Status polls while a scan runs skip the page rows; a finished report skips the bulky evidence column.
+    loaded = await loadScanByPublicToken(db, token, { pages: "none" });
+    if (loaded?.scan.status === "complete") loaded = await loadScanByPublicToken(db, token, { pages: "matrix" });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to load scan" },
@@ -46,6 +48,7 @@ export async function GET(_request: Request, context: RouteContext) {
     scoreBreakdown: loaded.scan.score_breakdown,
     pages: loaded.pages,
     findings: loaded.findings,
+    progress: loaded.progress,
   };
 
   return NextResponse.json(selectScanPayload(full, unlocked));

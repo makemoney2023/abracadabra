@@ -73,7 +73,9 @@ Deploy the public check with `npm run deploy` in this folder. That publishes Wor
 | `POST` | `/api/scans/[token]/fixes/refresh` | HTML fact refresh (≤5 critical URLs) → persist `evidence` + return prefills/`requiredFields` |
 | `POST` | `/api/scans/[token]/unlock` | Soft-gate unlock (`{ email }`) → httpOnly cookie + `{ unlocked: true }` |
 | `POST` | `/api/scans/[token]/opt-in` | Public opt-in → upsert lead, ensure `ops_queue` `new`, link `scan.lead_id` |
-| `GET` | `/api/scans/[token]/pdf` | PDF report (requires unlock cookie only) |
+| `GET` | `/api/scans/[token]/pdf` | PDF report: summary, sections, the 50 worst pages (requires unlock cookie only) |
+| `GET` | `/api/scans/[token]/csv` | Every scanned page as CSV, worst first (same unlock as the page matrix) |
+| `POST` | `/api/internal/deep-scans` | Internal: `{ url, tier: "deep-200" \| "deep-1000" }` with `x-job-token`. 403 unless `DEEP_SCAN_ENABLED=1` |
 | `GET` | `/api/ops/scans/[token]` | Ops full scan detail — pages + findings (staff session) |
 | `GET` | `/api/ops/queue` | Ops inbox list (staff) — filters: `status`, `hasEmail`, `minScore`, `maxScore` |
 | `PATCH` | `/api/ops/queue/[id]` | Update status/notes + audit row (staff) |
@@ -82,6 +84,25 @@ Deploy the public check with `npm run deploy` in this folder. That publishes Wor
 | `GET/POST/PUT` | `/api/inngest` | Inngest serve (`scan/requested`, `prospect/requested`) |
 
 Unlock for public detail: httpOnly cookie `scan_unlock_${token}=1` after email unlock. No query-param bypass. Ops uses `GET /api/ops/scans/[token]`.
+
+## Scan tiers and chunked scans
+
+| Tier | Pages | How it starts |
+|------|-------|---------------|
+| `free` | 40 | `POST /api/scans` (public, unchanged) |
+| `deep-200` | 200 | `POST /api/internal/deep-scans`, only with `DEEP_SCAN_ENABLED=1` |
+| `deep-1000` | 1000 | same |
+
+Limits come from `src/lib/scan/tiers.ts`; `SCAN_TIER_LIMITS="free=40,deep-200=200,deep-1000=1000"` overrides them (ceiling 1000). `DEEP_SCAN_ENABLED` is `"0"` in `wrangler.jsonc`. Nothing charges for a deep scan yet: price and checkout are open questions.
+
+Every scan runs as plan → chunks of 50 URLs → finalize on queue `scan-jobs` (`src/lib/scan/pipeline.ts`):
+
+- **plan** (`{ type: "scan" }`) reads site files, search, and the sitemap (sitemap indexes: 5 child sitemaps for free, up to 50 and 10× the page budget for deep), checks guessed paths, prioritizes up to the tier limit (each type or section gets a fifth in the first pass), and stores the plan and its chunks in one D1 transaction. It sends chunks 1…n with `sendBatch` and runs chunk 0 itself. A free scan is one chunk, so it still finishes in one invocation.
+- **chunk** (`{ type: "scan-chunk", chunk }`) reads its URLs 10 at a time, writes its rows and bumps `pages_done` in one `db.batch()`. A duplicate delivery replaces the chunk's rows and does not count twice. Nothing is held between chunks.
+- **finalize**: the invocation that completes the last chunk claims finalize (one winner; a claim older than 10 minutes can be taken over), scores from the stored rows and writes findings and the score.
+- **watchdog** (`{ type: "scan-watchdog" }`, sent with a 10-minute delay) re-sends pending chunks and retries a lost finalize. 30 minutes after planning it finalizes with the pages that were read and marks the run partial; the report says so.
+
+The scan page shows `pages_done / pages_total`. Pages after the first 40 of a deep scan keep a 1,500-character text excerpt instead of 12,000, so a 1,000-page scan stays a few MB in the shared `handoff` D1. Extract results that are already HTML are not fetched a second time for schema, so the old 12-fetch cap only applies to markdown backends. Migration `migrations/0014_scan_runs.sql` (two new tables) must be applied to `handoff` before this code is deployed.
 
 ## Agent setup
 

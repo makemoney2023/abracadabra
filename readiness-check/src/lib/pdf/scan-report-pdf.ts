@@ -182,10 +182,28 @@ export async function renderScanReportPdf(props: ReportProps, fontBytes: StudioF
   w.heading("Pillars");
   for (const p of props.pillars) w.row([p.label, String(p.score)], [contentWidth - 60, 60]);
 
-  w.heading("Page matrix");
+  w.heading("Pages");
   if (props.pages.length === 0) {
     w.text("No pages recorded.", { color: SOFT });
   } else {
+    w.text(
+      `${props.pagesTotal} pages scanned. ${props.pagesFailed} could not be fetched. ${props.pagesMissingSchema} have no structured data.`,
+      { color: SOFT, gap: 6 },
+    );
+    if (props.sections.length > 1) {
+      const sectionWidths = [contentWidth * 0.46, contentWidth * 0.18, contentWidth * 0.16, contentWidth * 0.2];
+      w.row(["Section", "Pages", "Not fetched", "No structured data"], sectionWidths, { strong: true });
+      for (const section of props.sections) {
+        w.row([section.label, String(section.total), String(section.failed), String(section.missingSchema)], sectionWidths);
+      }
+      w.y -= 8;
+    }
+    if (props.pagesTotal > props.pages.length) {
+      w.text(
+        `The ${props.pages.length} pages with the most issues are listed below. The CSV download has all ${props.pagesTotal}.`,
+        { color: SOFT, gap: 6 },
+      );
+    }
     const widths = [contentWidth * 0.52, contentWidth * 0.16, contentWidth * 0.14, contentWidth * 0.18];
     w.row(["Page", "Type", "Fetched", "Structured data"], widths, { strong: true });
     for (const page of props.pages) {

@@ -1,6 +1,7 @@
 /** Report data shared by the PDF renderers. No PDF library imports here. */
 import { buildScoreSummary } from "@/lib/scoring/score-summary";
 import type { ScoreBreakdown } from "@/lib/types";
+import { groupPages, PDF_PAGE_LIMIT, worstPages } from "@/lib/scan/page-groups";
 
 export type ReportPage = {
   url: string;
@@ -34,7 +35,13 @@ export type ReportProps = {
   summaryBody: string;
   summaryDrivers: string[];
   pillars: Array<{ label: string; score: number }>;
+  /** The worst pages first, at most PDF_PAGE_LIMIT. `pagesTotal` is every page scanned (the CSV has them all). */
   pages: ReportPage[];
+  pagesTotal: number;
+  pagesFailed: number;
+  pagesMissingSchema: number;
+  /** Per section: label, pages, failed, without structured data. Worst sections first. */
+  sections: Array<{ label: string; total: number; failed: number; missingSchema: number }>;
   findings: ReportFinding[];
 };
 
@@ -74,7 +81,16 @@ export function buildReportProps(input: ReportInput): ReportProps {
       label,
       score: typeof breakdown[key] === "number" ? (breakdown[key] as number) : 0,
     })),
-    pages: input.pages,
+    pages: worstPages(input.pages, PDF_PAGE_LIMIT),
+    pagesTotal: input.pages.length,
+    pagesFailed: input.pages.filter((p) => p.fetchStatus !== "ok").length,
+    pagesMissingSchema: input.pages.filter((p) => p.fetchStatus === "ok" && !p.hasJsonLd).length,
+    sections: groupPages(input.pages).map((group) => ({
+      label: group.label,
+      total: group.pages.length,
+      failed: group.failed,
+      missingSchema: group.missingSchema,
+    })),
     findings: input.findings,
   };
 }

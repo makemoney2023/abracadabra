@@ -1,5 +1,7 @@
 import { nanoid } from "nanoid";
-import type { BoundSql } from "@/lib/cloudflare/sql";
+import type { BoundSql, BoundStatement } from "@/lib/cloudflare/sql";
+import { createD1PipelineStore, loadScanProgress, ROWS_PER_INSERT, runBatch } from "@/lib/scan/d1-pipeline-store";
+import type { ScanTier } from "@/lib/scan/tiers";
 import { PUBLIC_SCAN_LIMIT } from "@/lib/rate-limit";
 import type {
   ScanFindingRecord,
@@ -165,6 +167,8 @@ export async function insertScan(
     source: "public" | "ops";
     organizationId?: string | null;
     now?: number;
+    /** Deep tiers record their page limit up front. A free scan gets its run row when it is planned. */
+    tier?: { tier: ScanTier; pageLimit: number };
   },
 ): Promise<{ id: string; token: string; status: "queued" }> {
   const id = crypto.randomUUID();
@@ -178,16 +182,29 @@ export async function insertScan(
     )
     .bind(id, token, input.domain, input.origin, input.source, input.organizationId ?? null, now)
     .run();
+  if (input.tier && input.tier.tier !== "free") {
+    await createD1PipelineStore(db).createRun(id, input.tier.tier, input.tier.pageLimit, now);
+  }
   return { id, token, status: "queued" };
 }
 
 export async function deleteScan(db: BoundSql, scanId: string): Promise<void> {
+  await db.prepare("DELETE FROM readiness_scan_runs WHERE scan_id = ?").bind(scanId).run().catch(() => undefined);
   await db.prepare("DELETE FROM readiness_scan_findings WHERE scan_id = ?").bind(scanId).run();
   await db.prepare("DELETE FROM readiness_scan_pages WHERE scan_id = ?").bind(scanId).run();
   await db.prepare("DELETE FROM readiness_scans WHERE id = ?").bind(scanId).run();
 }
 
-export async function loadScanByPublicToken(db: BoundSql, token: string) {
+/**
+ * `pages: "full"` (default) loads every column; "matrix" skips the bulky evidence column (page matrix, PDF, CSV);
+ * "none" skips the page rows (status polls while a scan runs).
+ */
+export async function loadScanByPublicToken(
+  db: BoundSql,
+  token: string,
+  options: { pages?: "full" | "matrix" | "none" } = {},
+) {
+  const pageMode = options.pages ?? "full";
   const scan = await db
     .prepare(
       `SELECT id, domain, origin, source, status, score_total, score_breakdown_json, public_token
@@ -206,13 +223,20 @@ export async function loadScanByPublicToken(db: BoundSql, token: string) {
     }>();
   if (!scan) return null;
 
-  const pages = await db
-    .prepare(
-      `SELECT url, page_type, fetch_status, has_json_ld, schema_types_json, evidence_json
-       FROM readiness_scan_pages WHERE scan_id = ?`,
-    )
-    .bind(scan.id)
-    .all<PageRow>();
+  const pages =
+    pageMode === "none"
+      ? { results: [] as PageRow[] }
+      : await db
+          .prepare(
+            pageMode === "full"
+              ? `SELECT url, page_type, fetch_status, has_json_ld, schema_types_json, evidence_json
+                 FROM readiness_scan_pages WHERE scan_id = ? ORDER BY rowid`
+              : `SELECT url, page_type, fetch_status, has_json_ld, schema_types_json, '{}' AS evidence_json
+                 FROM readiness_scan_pages WHERE scan_id = ? ORDER BY rowid`,
+          )
+          .bind(scan.id)
+          .all<PageRow>();
+  const progress = await loadScanProgress(db, scan.id);
   const findings = await db
     .prepare(
       `SELECT code, severity, passed, message, page_url, evidence_json
@@ -233,6 +257,7 @@ export async function loadScanByPublicToken(db: BoundSql, token: string) {
       public_token: scan.public_token,
     },
     pages: (pages.results ?? []).map(mapPage),
+    progress,
     findings: (findings.results ?? []).map(mapFinding),
   };
 }
@@ -274,17 +299,18 @@ export function createD1ScanRepository(db: BoundSql): ScanRepository {
     },
 
     async saveFindings(scanId, findings: ScanFindingRecord[]) {
-      await db.prepare("DELETE FROM readiness_scan_findings WHERE scan_id = ?").bind(scanId).run();
-      for (const finding of findings) {
-        const evidence = { ...(finding.evidence ?? {}) };
-        if (finding.pageUrl) evidence.page_url = finding.pageUrl;
-        await db
-          .prepare(
-            `INSERT INTO readiness_scan_findings
-              (id, scan_id, page_url, code, severity, passed, message, evidence_json)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          )
-          .bind(
+      // One transaction of multi-row inserts: a 1,000-page scan can have hundreds of per-page findings,
+      // and one INSERT per row would run into D1's per-invocation query limit.
+      const statements: BoundStatement[] = [
+        db.prepare("DELETE FROM readiness_scan_findings WHERE scan_id = ?").bind(scanId),
+      ];
+      for (let i = 0; i < findings.length; i += ROWS_PER_INSERT) {
+        const slice = findings.slice(i, i + ROWS_PER_INSERT);
+        const values = slice.map(() => "(?, ?, ?, ?, ?, ?, ?, ?)").join(", ");
+        const args = slice.flatMap((finding) => {
+          const evidence = { ...(finding.evidence ?? {}) };
+          if (finding.pageUrl) evidence.page_url = finding.pageUrl;
+          return [
             crypto.randomUUID(),
             scanId,
             finding.pageUrl ?? null,
@@ -293,9 +319,19 @@ export function createD1ScanRepository(db: BoundSql): ScanRepository {
             finding.passed ? 1 : 0,
             finding.message,
             JSON.stringify(evidence),
-          )
-          .run();
+          ];
+        });
+        statements.push(
+          db
+            .prepare(
+              `INSERT INTO readiness_scan_findings
+                (id, scan_id, page_url, code, severity, passed, message, evidence_json)
+               VALUES ${values}`,
+            )
+            .bind(...args),
+        );
       }
+      await runBatch(db, statements);
     },
 
     async markComplete(scanId, scoreTotal, scoreBreakdown) {

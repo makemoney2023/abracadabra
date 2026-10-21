@@ -44,6 +44,8 @@ type PrioritizeUrlsInput = {
   searchUrls: string[];
   /** Guessed template URLs already checked to exist. Omit to add unchecked guesses for uncovered types. */
   seedUrls?: PrioritizedUrl[];
+  /** Page budget for the scan tier. Defaults to the free scan's MAX_PAGES. */
+  maxPages?: number;
 };
 
 export type PrioritizedUrlSource = "home" | "sitemap" | "search" | "seed";
@@ -150,6 +152,11 @@ export function classifyPageType(url: string, origin: string): string {
  */
 export const PER_TYPE_FIRST_PASS = Math.ceil(MAX_PAGES / 5);
 
+/** The same one-fifth share for any page budget: 8 of 40, 40 of 200, 200 of 1000. */
+export function perTypeFirstPass(maxPages: number = MAX_PAGES): number {
+  return Math.max(1, Math.ceil(maxPages / 5));
+}
+
 function capGroup(entry: PrioritizedUrl): string {
   if (entry.pageType !== "other") return entry.pageType;
   try {
@@ -195,6 +202,8 @@ export function templateSeedUrls(input: SeedInput): PrioritizedUrl[] {
  */
 export function prioritizeUrls(input: PrioritizeUrlsInput): PrioritizedUrl[] {
   const { origin, sitemapUrls, searchUrls } = input;
+  const maxPages = input.maxPages ?? MAX_PAGES;
+  const perType = perTypeFirstPass(maxPages);
   const home = homeUrl(origin);
   const homeKey = normalizeUrlKey(home);
 
@@ -225,7 +234,7 @@ export function prioritizeUrls(input: PrioritizeUrlsInput): PrioritizedUrl[] {
   const result: PrioritizedUrl[] = [{ url: home, pageType: "home", source: "home" }];
   const seenResult = new Set<string>([homeKey]);
   function push(entry: PrioritizedUrl): void {
-    if (result.length >= MAX_PAGES) return;
+    if (result.length >= maxPages) return;
     const key = normalizeUrlKey(entry.url);
     if (seenResult.has(key)) return;
     seenResult.add(key);
@@ -237,7 +246,7 @@ export function prioritizeUrls(input: PrioritizeUrlsInput): PrioritizedUrl[] {
   for (const entry of [...classified, ...sitemapOther, ...searchOther]) {
     const group = capGroup(entry);
     const count = perGroup.get(group) ?? 0;
-    if (count >= PER_TYPE_FIRST_PASS) {
+    if (count >= perType) {
       overflow.push(entry);
       continue;
     }
@@ -249,5 +258,5 @@ export function prioritizeUrls(input: PrioritizeUrlsInput): PrioritizedUrl[] {
   const seeds = input.seedUrls ?? templateSeedUrls({ origin, sitemapUrls, searchUrls });
   for (const seed of seeds) push({ ...seed, source: "seed" });
 
-  return result.slice(0, MAX_PAGES);
+  return result.slice(0, maxPages);
 }

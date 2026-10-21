@@ -32,7 +32,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
   let loaded: Awaited<ReturnType<typeof loadScanByPublicToken>>;
   try {
-    loaded = await loadScanByPublicToken(db, token);
+    loaded = await loadScanByPublicToken(db, token, { pages: "matrix" });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to load scan" },

@@ -1,5 +1,19 @@
 # Changelog
 
+## Deep scans: chunked plan / chunk / finalize, 200 and 1000 page tiers behind a flag — 2026-10-21
+
+**Chunked scans.** Every scan now runs as plan → chunks of 50 URLs → finalize over `scan-jobs` (`src/lib/scan/pipeline.ts`, store in `src/lib/scan/d1-pipeline-store.ts`). Each chunk writes its rows and bumps `pages_done` in one `db.batch()`. Duplicate deliveries do not double-count, a chunk that failed part-way is retried by the queue, exactly one invocation finalizes, and a delayed watchdog re-sends lost chunks and finalizes a stuck scan as partial after 30 minutes. The free 40-page scan is one chunk run inline, so it still finishes in one invocation with the same pages and score as before.
+
+**Tiers.** `free` 40, `deep-200`, `deep-1000` (`src/lib/scan/tiers.ts`, `SCAN_TIER_LIMITS` override). Deep tiers need `DEEP_SCAN_ENABLED=1` (off) and start only from `POST /api/internal/deep-scans` with the internal job token. The public endpoint ignores any tier. No prices and no checkout: those are open questions.
+
+**Report.** Progress (`pages_done / pages_total`) on the scan page. The page matrix groups pages by type or top-level section, shows sections with failures first and the worst pages first, and pages through each section 25 rows at a time. The PDF has the summary, a per-section table and the 50 worst pages. New CSV download of every page (`/api/scans/[token]/csv`), behind the same email unlock as the matrix. The free "pages missing JSON-LD" list shows at most 40 and gives the total.
+
+**Lighter D1 use.** Status polls skip page rows, and the matrix, PDF and CSV skip the evidence column. Deep pages after the first 40 keep a 1,500-character text excerpt. Findings and pages are written as multi-row inserts in one transaction (D1 query limit per invocation). HTML extract results are no longer fetched twice for schema: the `MAX_SCHEMA_HTML_FETCHES=12` cap now only applies to markdown backends.
+
+**Migration.** `migrations/0014_scan_runs.sql`: new tables `readiness_scan_runs` and `readiness_scan_chunks`, plus an index on `readiness_scan_pages (scan_id, url)`. Nothing existing is altered. Not applied to production. Apply it before deploying this code.
+
+**Touchpoints.** `src/lib/scan/{pipeline,d1-pipeline-store,tiers,page-groups,site-files-store,orchestrator,schema-html,page-record,d1-store,present}.ts`, `src/lib/jobs/{dispatch,run-cloudflare,auth}.ts`, `src/app/api/internal/deep-scans/route.ts`, `src/app/api/scans/[token]/{route,csv/route,pdf/route}.ts`, `src/lib/pdf/{report-props,scan-report-pdf}.ts`, `src/components/public/{PageMatrix,ScorePreview}.tsx`, `src/app/scan/[token]/page.tsx`. Tests: `tests/integration/{scan-pipeline,deep-scan-route,scan-csv-route}.test.ts`, `tests/unit/{scan-tiers,page-groups,site-files-store,schema-html-lifted}.test.ts`.
+
 ## Scanner: real pages before guessed paths — 2026-10-21
 
 **Guessed paths are checked, not counted.** The scanner still tries common paths (`/contact`, `/faq`, `/pricing`, `/book`, …), but only for page types the sitemap and search results don't already cover. Each guess gets a cheap existence check first (`probeUrl` in `src/lib/fetch-html.ts`: HEAD, or GET when HEAD is refused with 403/405/501; 3 s timeout; scanner user agent; redirects followed). Only 2xx/3xx guesses go to extraction, and a guess that redirects onto a page already in the list is dropped. A guess that still fails extraction is dropped silently. `PAGES_FETCH_FAILED` now counts only sitemap and search URLs.
