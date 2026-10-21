@@ -89,8 +89,8 @@ Unlock for public detail: httpOnly cookie `scan_unlock_${token}=1` after email u
 
 | Tier | Pages | Price | How it starts |
 |------|-------|-------|---------------|
-| `free` | 40 | Free (fix files sold separately, `PRICE_DISPLAY`) | `POST /api/scans` (public, unchanged) |
-| `deep-200` | 200 | $99.99, fix files included | `POST /api/internal/deep-scans`, only with `DEEP_SCAN_ENABLED=1` |
+| `free` | 40 | Free (40-page fix files $99.99, `PRICE_DISPLAY`) | `POST /api/scans` (public, unchanged) |
+| `deep-200` | 200 | $149.99, fix files included | `POST /api/internal/deep-scans`, only with `DEEP_SCAN_ENABLED=1` |
 | `deep-1000` | 1000 | $249.99, fix files included | same |
 
 Limits and prices come from `src/lib/scan/tiers.ts` (`TIER_PRICES`, USD cents); `SCAN_TIER_LIMITS="free=40,deep-200=200,deep-1000=1000"` overrides the limits (ceiling 1000). `DEEP_SCAN_ENABLED` is `"0"` in `wrangler.jsonc`. Nothing charges for a deep scan yet: checkout for the deep tiers is not wired. The internal endpoint returns the tier's `price` with the new scan.

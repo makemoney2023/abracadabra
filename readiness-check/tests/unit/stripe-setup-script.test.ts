@@ -58,7 +58,7 @@ describe("scripts/stripe-setup.mjs", () => {
     expect(live.err).not.toContain("sk_live_abc");
   });
 
-  it("creates the product, $149.99 price and $10 coupon once, then reuses them", () => {
+  it("creates the product, $99.99 price and $10 coupon once, then reuses them", () => {
     const state = path.join(dir, "state.json");
     const key = { STRIPE_SECRET_KEY: "sk_test_secret123" };
     const first = run(key, state, preload);
@@ -71,7 +71,7 @@ describe("scripts/stripe-setup.mjs", () => {
     expect(first.out + first.err).not.toContain("sk_test_secret123");
 
     const saved = JSON.parse(readFileSync(state, "utf8"));
-    expect(saved.prices[0]).toMatchObject({ unit_amount: 14999, currency: "usd", product: "schema_fix_files" });
+    expect(saved.prices[0]).toMatchObject({ unit_amount: 9999, currency: "usd", product: "schema_fix_files" });
     expect(saved.coupons.schema_files_credit_10_usd).toMatchObject({ amount_off: 1000, currency: "usd", duration: "once" });
     expect(saved.writes).toEqual(["/products", "/prices", "/coupons"]);
 

@@ -24,14 +24,14 @@ export type TierPrice = {
 
 /**
  * Tier prices. Nothing charges these yet: checkout for the deep tiers is not wired, and the tiers stay behind
- * DEEP_SCAN_ENABLED. The free scan's separate fix-file offer (PRICE_DISPLAY / PRICE_AMOUNT_CENTS) is unchanged.
+ * DEEP_SCAN_ENABLED. The free scan's separate 40-page fix-file offer is PRICE_DISPLAY / PRICE_AMOUNT_CENTS ($99.99) in wrangler.jsonc.
  */
 export const TIER_PRICES: Readonly<Record<ScanTier, TierPrice>> = {
   free: { amountCents: 0, currency: "usd", display: "Free", includesFixFiles: false, label: "Free scan, 40 pages" },
   "deep-200": {
-    amountCents: 9999,
+    amountCents: 14999,
     currency: "usd",
-    display: "$99.99",
+    display: "$149.99",
     includesFixFiles: true,
     label: "Deep scan, 200 pages, fix files included",
   },

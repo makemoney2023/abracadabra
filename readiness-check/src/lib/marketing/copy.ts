@@ -92,7 +92,7 @@ export function buyLabel(priceDisplay: string | null | undefined): string {
   return priceDisplay ? `${PAYWALL_COPY.buy} ${priceDisplay}` : PAYWALL_COPY.buy;
 }
 
-/** "$10 credit applied at checkout, you pay $139.99" — only when both amounts are configured. */
+/** "$10 credit applied at checkout, you pay $89.99" — only when both amounts are configured. */
 export function creditLine(
   creditDisplay: string | null | undefined,
   payDisplay: string | null | undefined,

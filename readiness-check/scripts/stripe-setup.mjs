@@ -4,7 +4,7 @@
  *
  * Creates (or finds) — idempotently, safe to re-run:
  *   - Product  id "schema_fix_files"               "Schema fix files"
- *   - Price    lookup_key "schema_fix_files_14999_usd"   $149.99 one-time, on that product
+ *   - Price    lookup_key "schema_fix_files_9999_usd"    $99.99 one-time, on that product
  *   - Coupon   id "schema_files_credit_10_usd"     $10 off, once
  *
  * Prints only the IDs, as the env lines to set on the Worker:
@@ -13,7 +13,7 @@
  *
  * Usage:
  *   STRIPE_SECRET_KEY=sk_test_… node scripts/stripe-setup.mjs
- *   (optional) PRICE_AMOUNT_CENTS=14999 CREDIT_AMOUNT_CENTS=1000 PRICE_CURRENCY=usd
+ *   (optional) PRICE_AMOUNT_CENTS=9999 CREDIT_AMOUNT_CENTS=1000 PRICE_CURRENCY=usd
  *
  * Refuses live keys (sk_live_/rk_live_). It never prints the key.
  */
@@ -22,7 +22,7 @@ const API = "https://api.stripe.com/v1";
 const PRODUCT_ID = "schema_fix_files";
 
 const key = process.env.STRIPE_SECRET_KEY?.trim() ?? "";
-const priceCents = Number(process.env.PRICE_AMOUNT_CENTS ?? 14999);
+const priceCents = Number(process.env.PRICE_AMOUNT_CENTS ?? 9999);
 const creditCents = Number(process.env.CREDIT_AMOUNT_CENTS ?? 1000);
 const currency = (process.env.PRICE_CURRENCY ?? "usd").toLowerCase();
 

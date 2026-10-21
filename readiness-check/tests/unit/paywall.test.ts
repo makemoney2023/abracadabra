@@ -17,25 +17,25 @@ const FULL_ENV = {
   STRIPE_PRICE_ID: "price_test",
 };
 
-describe("offer: $149.99 with a $10 checkout credit", () => {
-  const OFFER = { PRICE_AMOUNT_CENTS: "14999", PRICE_CURRENCY: "usd", CREDIT_AMOUNT_CENTS: "1000" };
+describe("offer: $99.99 with a $10 checkout credit", () => {
+  const OFFER = { PRICE_AMOUNT_CENTS: "9999", PRICE_CURRENCY: "usd", CREDIT_AMOUNT_CENTS: "1000" };
 
   it("formats the price, credit, and what you pay from config", async () => {
     const { offerFrom } = await import("@/lib/paywall/config");
     expect(offerFrom(OFFER)).toEqual({
-      priceDisplay: "$149.99",
+      priceDisplay: "$99.99",
       creditDisplay: "$10",
-      payDisplay: "$139.99",
+      payDisplay: "$89.99",
       currency: "usd",
     });
-    expect(offerFrom({ ...OFFER, PRICE_DISPLAY: "$149.99 USD" }).priceDisplay).toBe("$149.99 USD");
+    expect(offerFrom({ ...OFFER, PRICE_DISPLAY: "$99.99 USD" }).priceDisplay).toBe("$99.99 USD");
   });
 
   it("shows no credit without a price, without a credit, or when the credit isn't below the price", async () => {
     const { offerFrom } = await import("@/lib/paywall/config");
     expect(offerFrom({}).creditDisplay).toBeNull();
     expect(offerFrom({}).priceDisplay).toBeNull();
-    expect(offerFrom({ PRICE_AMOUNT_CENTS: "14999" }).payDisplay).toBeNull();
+    expect(offerFrom({ PRICE_AMOUNT_CENTS: "9999" }).payDisplay).toBeNull();
     expect(offerFrom({ PRICE_AMOUNT_CENTS: "1000", CREDIT_AMOUNT_CENTS: "1000" }).creditDisplay).toBeNull();
     expect(offerFrom({ PRICE_AMOUNT_CENTS: "abc", CREDIT_AMOUNT_CENTS: "1000" }).creditDisplay).toBeNull();
   });
@@ -53,9 +53,9 @@ describe("offer: $149.99 with a $10 checkout credit", () => {
 
   it("panel copy reads as Christopher set it", async () => {
     const { creditLine } = await import("@/lib/marketing/copy");
-    expect(buyLabel("$149.99")).toBe("Buy the files $149.99");
-    expect(creditLine("$10", "$139.99")).toBe("$10 credit applied at checkout, you pay $139.99");
-    expect(creditLine(null, "$139.99")).toBeNull();
+    expect(buyLabel("$99.99")).toBe("Buy the files $99.99");
+    expect(creditLine("$10", "$89.99")).toBe("$10 credit applied at checkout, you pay $89.99");
+    expect(creditLine(null, "$89.99")).toBeNull();
   });
 });
 
@@ -86,7 +86,7 @@ describe("buy button label", () => {
     expect(buyLabel(null)).toBe("Buy the files");
     expect(buyLabel(undefined)).toBe("Buy the files");
     expect(buyLabel("CA$X")).toBe("Buy the files CA$X");
-    expect(buyLabel("$149.99")).toBe("Buy the files $149.99");
+    expect(buyLabel("$99.99")).toBe("Buy the files $99.99");
   });
 
   it("visible copy avoids the word brief and tech names in labels", () => {

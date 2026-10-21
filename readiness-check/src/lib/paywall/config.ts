@@ -14,7 +14,7 @@
  *                                   Defaults to a key derived from STRIPE_WEBHOOK_SECRET.
  *
  * Offer (display only; Stripe charges the Price minus the coupon):
- * - PRICE_AMOUNT_CENTS     (var) list price in minor units, e.g. 14999. Formats the label
+ * - PRICE_AMOUNT_CENTS     (var) list price in minor units, e.g. 9999. Formats the label
  *                                when PRICE_DISPLAY is unset, and works out "you pay".
  * - PRICE_CURRENCY         (var) ISO code, default "usd". Must match the Stripe Price.
  * - CREDIT_AMOUNT_CENTS    (var, optional) credit taken off at checkout, e.g. 1000.
@@ -29,11 +29,11 @@
 export type PaywallEnv = Record<string, string | undefined>;
 
 export type Offer = {
-  /** "$149.99", or null when no price is configured (button then reads "Buy the files"). */
+  /** "$99.99", or null when no price is configured (button then reads "Buy the files"). */
   priceDisplay: string | null;
   /** "$10", or null when there's no checkout credit. */
   creditDisplay: string | null;
-  /** "$139.99" — what the buyer pays after the credit; null without a credit. */
+  /** "$89.99" — what the buyer pays after the credit; null without a credit. */
   payDisplay: string | null;
   currency: string;
 };
@@ -69,7 +69,7 @@ function cents(env: PaywallEnv, name: string): number | null {
   return value > 0 ? value : null;
 }
 
-/** "$149.99", "$10" (whole amounts drop the cents), "CA$10" for non-USD dollar codes. */
+/** "$99.99", "$10" (whole amounts drop the cents), "CA$10" for non-USD dollar codes. */
 export function formatMoney(amountCents: number, currency = "usd"): string {
   const whole = amountCents % 100 === 0;
   return new Intl.NumberFormat("en-US", {

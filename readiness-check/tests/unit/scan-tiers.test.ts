@@ -67,7 +67,7 @@ describe("tier prices", () => {
   it("prices the deep tiers with fix files included and keeps the free scan free", async () => {
     const { TIER_PRICES } = await import("@/lib/scan/tiers");
     expect(TIER_PRICES.free).toMatchObject({ amountCents: 0, includesFixFiles: false });
-    expect(TIER_PRICES["deep-200"]).toMatchObject({ amountCents: 9999, display: "$99.99", currency: "usd", includesFixFiles: true });
+    expect(TIER_PRICES["deep-200"]).toMatchObject({ amountCents: 14999, display: "$149.99", currency: "usd", includesFixFiles: true });
     expect(TIER_PRICES["deep-1000"]).toMatchObject({ amountCents: 24999, display: "$249.99", currency: "usd", includesFixFiles: true });
   });
 });
