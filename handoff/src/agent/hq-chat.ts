@@ -3,6 +3,7 @@ import { convertToModelMessages, stepCountIs, streamText, tool, type ToolSet } f
 import { z } from "zod";
 import { createWorkersAI } from "workers-ai-provider";
 import { chatContextLine, type ChatPageContext } from "../lib/hq-chat-context";
+import { postSkillEvent, readEvent, searchEvent, type SkillToolEvent } from "../lib/hq-chat-skill-log";
 import { HQ_CHAT_PLAYBOOK } from "../lib/hq-chat-playbook";
 import { closeDanglingStreamParts, rechunkSseResponse } from "../lib/hq-chat-stream";
 import { hqChatConnectDecision, verifyHqChatToken } from "../lib/hq-chat-token";
@@ -84,19 +85,27 @@ function chatTools(origin: string, token: string): ToolSet {
 const skillQuery = z.object({ query: z.string() });
 const skillPath = z.object({ path: z.string() });
 
-function skillTools(bucket: R2Bucket | undefined): ToolSet {
+export function skillTools(bucket: R2Bucket | undefined, log: (event: SkillToolEvent) => void = () => undefined): ToolSet {
   return {
     search_skills: tool({
       description:
         "Search the skill library by the work staff describe. Fields: query. Each hit includes the .cursor/skills path a Cursor agent should read.",
       inputSchema: skillQuery,
-      execute: async ({ query }) => searchPublishedSkills(bucket, query),
+      execute: async ({ query }) => {
+        const result = await searchPublishedSkills(bucket, query);
+        log(searchEvent(query, result));
+        return result;
+      },
     }),
     read_skill: tool({
       description:
         "Read one skill file before telling a Cursor agent which steps to follow. Fields: path, from search_skills.",
       inputSchema: skillPath,
-      execute: async ({ path }) => readPublishedSkill(bucket, path),
+      execute: async ({ path }) => {
+        const result = await readPublishedSkill(bucket, path);
+        log(readEvent(path, result));
+        return result;
+      },
     }),
   };
 }
@@ -162,7 +171,22 @@ export class HqChat extends AIChatAgent<ChatBindings> {
       model: workersai("@cf/moonshotai/kimi-k2.7-code"),
       system: page ? `${SYSTEM} ${page}` : SYSTEM,
       messages: await convertToModelMessages(this.messages),
-      tools: { ...chatTools(this.env.HQ_ORIGIN ?? "", token), ...skillTools(this.env.SKILLS) },
+      tools: {
+        ...chatTools(this.env.HQ_ORIGIN ?? "", token),
+        ...skillTools(this.env.SKILLS, (event) => {
+          const where = context && typeof context === "object" ? (context as ChatPageContext) : {};
+          const work = postSkillEvent(this.env.HQ_ORIGIN ?? "", token, {
+            ...event,
+            ...(where.organizationId ? { organization_id: where.organizationId } : {}),
+            ...(where.taskId ? { task_id: where.taskId } : {}),
+          });
+          try {
+            this.ctx.waitUntil(work);
+          } catch {
+            void work;
+          }
+        }),
+      },
       stopWhen: stepCountIs(8),
     });
     return rechunkSseResponse(result.toUIMessageStreamResponse());

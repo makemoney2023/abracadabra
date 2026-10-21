@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { listAgentDispatches } from "@/lib/agent-dispatch";
-import { agentForToken, fileAgentWork, listAgentContext } from "@/lib/agent-work-filing";
+import { agentForToken, fileAgentWork, listAgentContext, parseSkillsUsed } from "@/lib/agent-work-filing";
 import { agentWorkLimits, tooBigMessage } from "@/lib/agent-work-limits";
-import { hqOrigin } from "@/lib/client-services-auth";
+import { cfEnv, hqOrigin } from "@/lib/client-services-auth";
 import { openObjectStore } from "@/lib/store/objects";
+import type { SkillBucket } from "@/lib/skill-library";
+import { loadCatalog } from "@/lib/skill-packs";
+import { recordSkillsUsed } from "@/lib/skill-usage";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +18,9 @@ export const dynamic = "force-dynamic";
  * Body: { external_id, title, kind?, summary?, client_summary?, content?, attachments?: [{ name, body }], links?: [{ label, url }],
  *         client?: { organization_id?, domain?, space_slug? }, project_id?, task_id?, keep_task_open?,
  *         handoff?: { to, note? }, finished_at?, agent_id?, supersedes?: id | [ids], work_request_id?, thread_id?,
- *         deliverable_kind?, folder? }
+ *         deliverable_kind?, folder?, skills_used?: ["community/marketingskills/copywriting/SKILL.md", ...] }
+ * skills_used: the library skills this work followed (up to 30). Each is checked against the published index; unknown
+ * paths are dropped and listed back as skills_unknown. Each kept path is logged as a cite in the skill usage table.
  * client_summary: what a client member reads first on Finished work (plain words, no ids). summary is the agent's note.
  * folder: where the files land in the space, like "Social/Facebook" (up to 6 levels). Default: Finished work/<date> <title>.
  * Files keep readable names (post-1.png); a name already in the folder gets " (2)", except names of filings it supersedes.
@@ -46,11 +51,13 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Check the body." }, { status: 400 });
   }
-  const result = await fileAgentWork(sql, openObjectStore(), agent, payload, Date.now());
+  const now = Date.now();
+  const result = await fileAgentWork(sql, openObjectStore(), agent, payload, now);
   if (!result.ok) {
     if (result.error === "too_big") return NextResponse.json({ error: result.message, code: "too_big", limit_mb: limits.maxMb }, { status: 413 });
     return NextResponse.json({ error: result.message }, { status: result.error === "forbidden" ? 403 : 400 });
   }
+  const skills = await skillsUsedFor(sql, agent, payload, result.duplicate ? null : result.workItemId, now);
   if (result.state === "filed") {
     return NextResponse.json(
       {
@@ -77,6 +84,7 @@ export async function POST(request: Request) {
               superseded: result.review.superseded,
             }
           : {}),
+        ...skills,
         ...(result.review && !result.review.deliverableId
           ? { note: "Held with no card: no review will release it. File it again with task_id and supersedes, or withdraw it." }
           : {}),
@@ -85,9 +93,25 @@ export async function POST(request: Request) {
     );
   }
   return NextResponse.json(
-    { ok: true, duplicate: result.duplicate, state: result.state, work_item_id: result.workItemId, reason: result.reason },
+    { ok: true, duplicate: result.duplicate, state: result.state, work_item_id: result.workItemId, reason: result.reason, ...skills },
     { status: result.duplicate ? 200 : 202 },
   );
+}
+
+/** skills_used on a new filing: stored, logged as cites, and echoed back. A repeat (duplicate) records nothing. */
+async function skillsUsedFor(
+  sql: Awaited<ReturnType<typeof openHandoffDb>>,
+  agent: NonNullable<Awaited<ReturnType<typeof agentForToken>>>,
+  payload: unknown,
+  workItemId: string | null,
+  now: number,
+): Promise<{ skills_used?: string[]; skills_unknown?: string[] }> {
+  const parsed = parseSkillsUsed((payload as { skills_used?: unknown } | null)?.skills_used);
+  if (!workItemId || !parsed.ok || parsed.paths.length === 0) return {};
+  const catalog = await loadCatalog(cfEnv().SKILLS as SkillBucket | undefined).catch(() => null);
+  const known = catalog && catalog.ok ? new Set(catalog.skills.map((skill) => skill.path)) : null;
+  const recorded = await recordSkillsUsed(sql, { agent, workItemId, paths: parsed.paths, known, now });
+  return { skills_used: recorded.used, ...(recorded.unknown.length ? { skills_unknown: recorded.unknown } : {}) };
 }
 
 /**
