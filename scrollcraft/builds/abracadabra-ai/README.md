@@ -4,6 +4,15 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 
 The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
 
+## AI discovery files (llms.txt) — 2026-10-21
+
+- **What changed** — `llms.txt` and `llms-full.txt` follow [llmstxt.org](https://llmstxt.org): H1, blockquote summary, markdown `- [title](url): note` entries, and an Optional link to `llms-full.txt`. Service lines use real titles (for example Voice and realtime agents) with the sales headline as the note. Build markers, "Rules for quoting", and "Do not mention CTR" are gone from the public files. `llms-full.txt` covers overview, services, portfolio, products, how a project works, pirx.ca proof, and cleaned blog posts (no `<!--image:-->` / `<!--cta:inline-->` placeholders; `[^footnote]` resolved to publisher citations). Last updated is stamped at build time.
+- **Why** — Schema / Readiness Check scored AI discovery files 8/20 (llms.txt present but not useful; llms-full missing or thin) because neither file had markdown links.
+- **Code touchpoints** — `scripts/llms-discovery.mjs`, `scripts/blog.mjs`, `scripts/site-pages.mjs`, `llms.txt`, `llms-full.txt`, `tests/llms-discovery.test.mjs`, `tests/blog-content.test.mjs`.
+- **Data-flow impact** — Blog and site-pages builds both rewrite the two files from shared helpers. No HTML comments remain in the committed output.
+- **API / schema impact** — None.
+- **Verification** — `node --test tests/llms-discovery.test.mjs tests/blog-content.test.mjs tests/site-pages.test.mjs`.
+
 ## Chat on the site — 2026-10-19
 
 - **What changed** — Every catalog page loads a studio chat panel. A visitor can book a thirty-minute working session in the panel, open the AI Readiness Check, or leave a name and email. Cal.com opens inside the panel when `CAL_LINK` is set. With no link, the panel asks for two times.

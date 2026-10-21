@@ -9,6 +9,7 @@ import { textPath, wordmark, wrapToWidth } from "./og-brand.mjs";
 import { z } from "zod";
 import { headLinks, siteFooter, siteHeader } from "./site-chrome.mjs";
 import { smartQuotesHtml } from "./typography.mjs";
+import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 export const SITE = "https://abra-ca-dabra.app";
@@ -815,23 +816,8 @@ async function writeSitemap(posts) {
 }
 
 async function writeLlms(posts) {
-  const live = posts.filter((post) => isPublic(post));
-  const lines = live.length
-    ? live.map((post) => `- ${post.title}: ${SITE}/blog/${post.slug}`)
-    : ["- No post is public on this date. Scheduled notes stay out of this list until datePublished."];
-  const inner = `\n## Blog\n\nIndex: ${SITE}/blog\nAbout: ${SITE}/about/\nPrivacy: ${SITE}/privacy\n\n${lines.join("\n")}\n`;
-  const path = join(root, "llms.txt");
-  let text = await readFile(path, "utf8");
-  const start = "<!-- blog-live:start -->";
-  const end = "<!-- blog-live:end -->";
-  if (!text.includes(start)) {
-    text = `${text.trim()}\n\n${start}${inner}${end}\n`;
-  } else {
-    text = text.replace(new RegExp(`${start}[\\s\\S]*?${end}`), `${start}${inner}${end}`);
-  }
-  await writeFile(path, text);
-  const full = `# Abracadabra AI blog, full text\n\nGenerated ${asOf()}. Only posts with datePublished on or before that day are included.\n\n${live.map((post) => `## ${post.title}\n\n${post.body}\n`).join("\n") || "No live posts.\n"}`;
-  await writeFile(join(root, "llms-full.txt"), full);
+  const updated = new Date().toISOString().slice(0, 10);
+  await writeDiscoveryFiles(root, posts, { updated, isPublicFn: isPublic });
 }
 
 function injectPerson(html) {
