@@ -25,7 +25,7 @@ const columns: Column<StaffRow>[] = [
       <span className="inline-flex items-center gap-2">
         <span
           aria-hidden
-          className="inline-flex size-7 items-center justify-center rounded-full bg-muted font-mono text-[11px]"
+          className="inline-flex size-7 items-center justify-center rounded-full bg-muted font-label font-medium text-[11px]"
         >
           {personInitials(row.email)}
         </span>

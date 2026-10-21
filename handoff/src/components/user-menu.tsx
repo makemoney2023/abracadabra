@@ -25,7 +25,7 @@ export function UserMenu({ person }: { person: HqPerson }) {
           type="button"
           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[11px]">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted font-label font-medium text-[11px]">
             {initials(person.email)}
           </span>
           <span className="min-w-0 group-data-[collapsible=icon]:hidden">

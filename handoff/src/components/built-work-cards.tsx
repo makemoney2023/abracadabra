@@ -87,7 +87,7 @@ export function BuiltWorkCards({
   return (
     <section data-slot="built-work" data-viewer={viewer} aria-labelledby="built-work-heading" className="flex flex-col gap-4">
       <header className="flex flex-col gap-1">
-        <p className="font-mono text-xs tracking-wide text-optic">{cards.length === 1 ? "1 project" : `${cards.length} projects`}</p>
+        <p className="eyebrow text-xs text-optic">{cards.length === 1 ? "1 project" : `${cards.length} projects`}</p>
         <h2 id="built-work-heading" className="font-heading text-2xl leading-tight">{heading}</h2>
         {intro ? <p className="text-sm text-muted-foreground">{intro}</p> : null}
       </header>

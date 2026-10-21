@@ -26,7 +26,7 @@ export function StatusBadge({
       data-slot="status-badge"
       data-tone={token.tone}
       className={cn(
-        "inline-flex h-5 w-fit shrink-0 items-center rounded-4xl px-2 font-mono text-[11px] font-medium whitespace-nowrap uppercase",
+        "inline-flex h-5 w-fit shrink-0 items-center rounded-4xl px-2 eyebrow text-[11px] whitespace-nowrap",
         TONE_BG[token.tone],
         className,
       )}

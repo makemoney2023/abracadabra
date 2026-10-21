@@ -2,6 +2,15 @@
 
 ## 2026-10-21
 
+- **What changed** — HQ and client spaces use the marketing site's type system. Body text is IBM Plex Sans (400, 400 italic, 500, 600), and headings, labels and the wordmark are Inter Tight (500, 600) instead of Tektur. Both are self-hosted from the same Latin-subset woff2 files the site uses (OFL, licences in `src/app/fonts`), through `next/font/local`. Headings are 600 with tight negative tracking (-0.015em, -0.03em with 1.08 leading on page titles) and balanced wrapping. Small uppercase labels (table headers, sidebar groups, metric labels, status badges, menu and command-palette group headings, kickers) move from Plex Mono to an `eyebrow` utility: Inter Tight 500, 0.12em tracking, case-sensitive forms. The "Handoff" mark uses a `wordmark` utility. Body is 1.5 leading with `text-wrap: pretty`, and times use tabular figures. Plex Mono stays for code, ids, hosts and times.
+- **Why** — Christopher asked for HQ and handoff typography to match abra-ca-dabra.app.
+- **Code touchpoints** — `handoff/src/app/layout.tsx`, `handoff/src/app/globals.css` (tokens `--font-heading`, `--font-label`, `--tracking-*`, `--leading-display`; utilities `eyebrow`, `wordmark`), `handoff/src/app/fonts/*` (new), plus class swaps in shared components (`ui/table`, `ui/select`, `ui/dropdown-menu`, `status-badge`, `metric`, `page-frame`, `data-table`, `command-palette`, `filing-summary-card`, `built-work-cards`, `user-menu`) and a few page headers (login, staff chrome and nav, Today, the space layout, invites, share, auth callback, home).
+- **Performance** — 7 font files, as before: Plex Sans ×4, Inter Tight ×2 and Plex Mono 400 ×1 (it was 3 Plex Sans, 2 Tektur and 2 Plex Mono). About 141 KB of Plex Sans and Inter Tight woff2 plus the Plex Mono file, hashed and cached immutable under `/_next/static/media`, with size-adjusted fallbacks so text doesn't shift when they load.
+- **Not changed** — Colours, sizes, spacing and layout. Emails still use the Tektur/Plex web-font stack (`src/lib/brand/studio.ts`); that can be a follow-up.
+- **Rollback** — Revert the PR. No data or schema change.
+
+## 2026-10-21
+
 - **What changed** — Contacts get an optional postal address (street, unit, city, province or state, postal code, country). Staff set it from the Add person form on the HQ client page; the Overview shows it under each person and under the main contact. New `GET/POST/PATCH /api/agent-contacts` on the hq. host: any agent on a client reads its contacts; the client's lead agent adds and edits them on its own client only.
 - **Why** — Christopher wants client agents (LioCorr's lead first) to keep the client's people up to date, with mailing addresses, without a staff round trip.
 - **Code touchpoints** — `handoff/migrations/0036_contact_address.sql`, `handoff/src/db/{migrate,migration-sql,crm}.ts`, `handoff/src/lib/agent-contacts.ts` (new), `handoff/src/app/api/agent-contacts/route.ts` (new), `handoff/src/app/clients/{actions.ts,activity-forms.tsx,[id]/overview-tab.tsx}`, `handoff/README.md`

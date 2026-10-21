@@ -39,7 +39,7 @@ export function HqHome({
   }
   return (
     <PageFrame title="Sign in" description="Sign in to see clients and file spaces." width="narrow">
-      <p className="font-mono text-xs tracking-wide text-optic">Handoff</p>
+      <p className="wordmark text-sm text-optic">Handoff</p>
       {linkExpired ? (
         <p className="text-sm text-muted-foreground" role="status">
           That link has run out. Ask for a new one.
