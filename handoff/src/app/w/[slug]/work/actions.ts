@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { DELIVERABLE_ERRORS, openDeliverable, recordFeedback, type FeedbackDecision } from "@/db/deliverables";
+import { setPieceShelf } from "@/lib/finished-shelf";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { briefWakeReason, wakeOrganization } from "@/lib/agent-wake";
 import { openClientChangeRequest } from "@/lib/client-change-request";
@@ -18,6 +19,26 @@ export type FormState = { message: string };
 
 function isDecision(value: string): value is FeedbackDecision {
   return value === "approve" || value === "changes" || value === "comment";
+}
+
+export async function shelfAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const { sql, caller } = await openSession();
+  const slug = String(formData.get("slug") ?? "");
+  const deliverableId = String(formData.get("deliverableId") ?? "");
+  const itemId = String(formData.get("itemId") ?? "");
+  const version = Number(formData.get("version"));
+  const removed = String(formData.get("removed") ?? "") === "1";
+  const saved = await setPieceShelf(
+    sql,
+    caller,
+    { deliverableId, itemId, version: Number.isFinite(version) ? version : -1, removed },
+    Date.now(),
+  );
+  if (!saved.ok) return { message: saved.error };
+  revalidatePath(`/w/${slug}/library`);
+  revalidatePath(`/w/${slug}/work/${deliverableId}`);
+  revalidatePath(`/w/${slug}/social`);
+  redirect(`/w/${slug}/work/${deliverableId}?item=${encodeURIComponent(itemId)}&sent=${removed ? "removed" : "restored"}`);
 }
 
 export async function feedbackAction(_previous: FormState, formData: FormData): Promise<FormState> {

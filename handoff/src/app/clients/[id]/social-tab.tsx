@@ -6,7 +6,7 @@ import { calendarPosts } from "@/components/social/calendar-posts";
 import { calendarTimeZone } from "@/components/social/social-calendar";
 import { SocialOperationsPanel } from "@/components/social/social-operations-panel";
 import { POST_STATUS_LABEL, type SocialAccount, type SocialPost } from "@/lib/social";
-import { approvalControlLabel, CADENCE_SENTENCE, type Autopost } from "@/lib/social-autopost";
+import { CADENCE_SENTENCE, type Autopost } from "@/lib/social-autopost";
 import type { SocialReviewPiece } from "@/lib/social-review";
 import { POST_TYPE_LABEL } from "@/lib/social-plan";
 import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, isBlogPlatform } from "@/lib/zernio";
@@ -177,7 +177,7 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
         <CardHeader>
           <CardTitle>Calendar</CardTitle>
           <CardDescription>
-            Day, week, or month in {timeZone}. Pieces waiting for a look stay beside the grid. Drag a scheduled post to move it, or open it and pick a time.
+            Day, week, or month in {timeZone}. Pieces that need a look stay in the Library. Drag a scheduled post to move it, or open it and pick a time.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -188,9 +188,9 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
             now={social.now}
             waiting={social.waiting}
             ready={social.ready}
-            approveLabel={approvalControlLabel(social.autopost)}
             organizationId={organizationId}
             canReschedule
+            librarySlug={social.waiting[0]?.slug ?? social.ready[0]?.slug ?? social.catalog[0]?.slug ?? ""}
           />
         </CardContent>
       </Card>

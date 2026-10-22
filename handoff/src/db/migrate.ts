@@ -46,6 +46,7 @@ const STEPS = [
   { file: "0042_library_shares.sql", table: "library_share_unlock_sessions" },
   { file: "0043_article_promotions.sql", table: "article_promotion_idempotency" },
   { file: "0044_agent_media.sql", table: "agent_media" },
+  { file: "0045_library_item_removed.sql", column: { table: "deliverable_items", name: "removed_at" } },
 ] as const;
 
 type Step = (typeof STEPS)[number];

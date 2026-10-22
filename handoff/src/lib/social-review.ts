@@ -71,5 +71,15 @@ export async function listSocialReviewPieces(
       });
     }
   }
-  return { ...boardLists(pieces, liveItemIds), catalog: pieces };
+  const ids = pieces.map((piece) => piece.id);
+  const hidden = ids.length === 0
+    ? new Set<string>()
+    : new Set(
+        (await sql.all<{ id: string }>(
+          `SELECT id FROM deliverable_items WHERE removed_at IS NOT NULL AND id IN (${ids.map(() => "?").join(", ")})`,
+          ids,
+        )).map((row) => row.id),
+      );
+  const visible = pieces.filter((piece) => !hidden.has(piece.id));
+  return { ...boardLists(visible, liveItemIds), catalog: pieces };
 }

@@ -6,6 +6,7 @@ import { filePreviewSrc } from "@/lib/file-type";
 import { listViewLinks } from "@/lib/library-shares";
 import { localPublication } from "@/lib/social-queries";
 import { pictureAddress, pictureRole, type PictureMedia } from "@/lib/picture-role";
+import { pieceOpenHref } from "@/lib/finished-shelf";
 import {
   LIBRARY_ARTIFACT_TYPES,
   projectLibraryArtifact,
@@ -33,6 +34,8 @@ export type LibraryListQuery = {
   projectId?: string;
   platform?: string;
   needsAction?: boolean;
+  /** When true, list pieces that were taken off the shelf. The active shelf hides them. */
+  removed?: boolean;
   search?: string;
   sort?: LibrarySort;
   cursor?: string | null;
@@ -291,7 +294,7 @@ function projectItems(rows: ItemRow[], targets: TargetRow[], promotions: Promoti
       updatedAt: row.updated_at,
       audience,
       destinations: attached.destinations,
-      href: `/w/${query.slug ?? query.workspaceId}/work/${row.deliverable_id}`,
+      href: pieceOpenHref(query.slug ?? query.workspaceId, row.deliverable_id, row.id),
       previewSrc: previewSrc(row.media_json, row.deliverable_id, row.id),
       promotionMedia: promotionMedia(row.media_json, row.deliverable_id, row.id),
       promotedBy,
@@ -433,7 +436,7 @@ function relatedOutcomeExists(itemAlias: string, condition: string): string {
 }
 
 function itemCtes(query: LibraryListQuery, includeHeld: boolean, search: string, sort?: LibrarySort): { sql: string; params: unknown[] } {
-  const params: unknown[] = [query.workspaceId, includeHeld ? 1 : 0, includeHeld ? 1 : 0];
+  const params: unknown[] = [query.workspaceId, includeHeld ? 1 : 0, includeHeld ? 1 : 0, query.removed ? 1 : 0];
   const projectSql = query.projectId ? " AND d.project_id = ?" : "";
   if (query.projectId) params.push(query.projectId);
   const searchSql = searchClause(
@@ -505,6 +508,7 @@ function itemCtes(query: LibraryListQuery, includeHeld: boolean, search: string,
           SELECT 1 FROM agent_work_items gone
           WHERE gone.id = i.work_item_id AND (gone.retracted_at IS NOT NULL OR gone.superseded_by IS NOT NULL)
         )
+        AND (i.removed_at IS NOT NULL) = ?
         ${projectSql}
         ${searchSql}
     ),

@@ -1,6 +1,6 @@
 # Space library: pictures first
 
-**Status:** built. The rail, the Library card, Share, Sources, and the file tile follow this document.
+**Status:** built. The Library card, Share, Sources, and the file tile follow this document. The social side rail of every piece was replaced on 2026-10-22: Social is the calendar, and a count links back to the Library.
 **Updated:** 2026-10-22
 **Amends the presentation in** [handoff-library-and-sharing-design.md](superpowers/specs/2026-10-21-handoff-library-and-sharing-design.md). The records, the view-link token, and the approval write stay as that spec describes them. Labels, the social rail, and what a card looks like follow this document.
 
@@ -56,20 +56,21 @@ We do not copy Frame.io’s frame comments, Replay’s separate review product, 
 ## Locked decisions
 
 1. **One picture picker.** Prefer an image role named `poster`, then `cover`, then `thumbnail`, then `square`, then `main`, then any other image. A video file is never the `img` source. A piece with only video shows a tile that says Video. A broken image hides and leaves that tile.
-2. **The card is the link.** The Library card’s click target is the picture and its title, going to the same finished-work page Review goes to today. There is no second underline called Review.
+2. **The card is the link.** The Library card’s click target is the picture and its title. It opens that piece (`?item=`), not the whole set. There is no second underline called Review.
 3. **The decision words stay on the open piece.** Approve and Ask for a change stay the forms that already write feedback. The grid does not approve on click.
 4. **Share is a mode.** The dashed checkbox and the “Copy view link” box are hidden until the person presses Share. The button, the dialog, and the public page say Share. The table stays `library_shares`. The route stays `/view/[token]`. An upload link stays `/share/[token]`.
 5. **A share page shows the pictures it contains.** Those images are served by the view token, for items already on that share. They do not reuse the signed-in deliverable media route.
 6. **One status phrase on the card.** `needs_review` reads “Needs a look”. `changes_requested` reads “Changes asked”. The stored status values stay. Filters can still offer the finer staff states.
 7. **Sources uses the Library grid.** An image file uses `/api/files/{id}/preview` when `thumbnailable` is true. Show in Library stays a button on that tile. Folder, scan, and download rules stay.
 8. **No new table, no new approval write, no second calendar.**
-9. **A generated still is a file.** After it is selected into the Library, the card uses the same file preview. A generated clip shows Video. `agent_media` itself is not a Library card. Filing it is what puts the bytes in the space.
+9. **When the work is done, one piece has one home.** Files stay the uploads. The Library is the shelf. Opening a card opens that piece (`?item=`), with Approve, Ask for a change, and Remove. Social shows the calendar and a count, not the same cards again. Remove sets `removed_at`. It does not delete the files. A post that is still going out has to be cancelled first. Put back clears `removed_at`. Removed pieces stay under Removed on the Library.
+10. **A generated still is a file.** After it is selected into the Library, the card uses the same file preview. A generated clip shows Video. `agent_media` itself is not a Library card. Filing it is what puts the bytes in the space.
 
 ## The screens
 
-### Social rail
+### Social
 
-Each row is a square picture, about 4.5rem, then one line of title, then one line of status and deliverable name. The caption stays in the detail. A carousel shows the chosen still and a count when there is more than one image. The same picker feeds the calendar chip, so the chip and the rail show the same frame.
+Social is the calendar. Above it, a count says how many pieces need a look, and how many approved pieces are not on the calendar. Each count links to the Library. The piece itself is not listed again here. The calendar chip still uses the same picture picker.
 
 ### Library
 

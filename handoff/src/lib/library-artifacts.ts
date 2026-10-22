@@ -227,6 +227,9 @@ function actionsFor(input: ArtifactProjectionInput, type: LibraryArtifactType, s
   } else if (type === "file") actions.push({ kind: "open_file", label: "Open file", href: input.href ?? null });
   else actions.push({ kind: "preview", label: "Preview", href: input.href ?? null });
   if (type === "article" && link?.ok) actions.push({ kind: "copy_link", label: "Copy link", href: null, copyValue: link.url });
+  if (input.href?.includes("?item=") && !actions.some((action) => action.href === input.href)) {
+    actions.push({ kind: "preview", label: "Open", href: input.href });
+  }
   return actions;
 }
 

@@ -7,7 +7,7 @@ import { calendarPosts } from "@/components/social/calendar-posts";
 import { calendarTimeZone } from "@/components/social/social-calendar";
 import { SocialOperationsPanel } from "@/components/social/social-operations-panel";
 import { listSocialAccounts, listSocialPosts, syncSocialAccounts, type SocialAccount, type SocialPost } from "@/lib/social";
-import { approvalControlLabel, DEFAULT_AUTOPOST, getAutopost, type Autopost } from "@/lib/social-autopost";
+import { DEFAULT_AUTOPOST, getAutopost, type Autopost } from "@/lib/social-autopost";
 import { listSocialReviewPieces } from "@/lib/social-review";
 import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, openZernio } from "@/lib/zernio";
 import { sentConfirmation } from "../work/sent";
@@ -124,7 +124,7 @@ export default async function SpaceSocialPage({
         <CardHeader>
           <CardTitle>Calendar</CardTitle>
           <CardDescription>
-            Day, week, or month. Times are in {timeZone}. Open a piece to approve it or ask for a change.
+            Day, week, or month. Times are in {timeZone}. Approve a piece in the Library. This page is the calendar.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -135,9 +135,9 @@ export default async function SpaceSocialPage({
             now={now}
             waiting={review.waiting}
             ready={review.ready}
-            approveLabel={approvalControlLabel(cadence)}
             organizationId={organization?.id ?? ""}
             canReschedule={false}
+            librarySlug={slug}
           />
         </CardContent>
       </Card>

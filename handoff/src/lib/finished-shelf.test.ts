@@ -1,0 +1,111 @@
+import { DatabaseSync } from "node:sqlite";
+import { describe, expect, it } from "vitest";
+import { migrate } from "@/db/migrate";
+import { sqliteSql, type Sql } from "@/db/sql";
+import type { Caller } from "./authz";
+import { listLibraryArtifacts } from "./library-queries";
+import { listSocialReviewPieces } from "./social-review";
+import { pieceOpenHref, setPieceShelf, shelfNote, shelfPostBlock, shelfRemoveBlock } from "./finished-shelf";
+
+const NOW = 1_800_000_000_000;
+const client: Caller = { userId: "c-1", staff: null, operatorOf: [], memberships: [{ workspaceId: "ws-1", role: "client_owner" }] };
+const stranger: Caller = { userId: "c-2", staff: null, operatorOf: [], memberships: [] };
+
+async function database(): Promise<Sql> {
+  const sql = sqliteSql(new DatabaseSync(":memory:"));
+  await migrate(sql);
+  await sql.run(
+    `INSERT INTO organizations (id, name, kind, created_at, updated_at) VALUES ('org-1', 'Acme', 'client', ?, ?)`,
+    [NOW, NOW],
+  );
+  await sql.run(
+    `INSERT INTO workspaces (
+       id, slug, name, display_name, sender_name, policy_profile, quota_bytes, retention_days,
+       request_digest, status, opened_at, organization_id
+     ) VALUES ('ws-1', 'acme', 'Acme', 'Acme Studio', 'Studio', 'standard', 1000, 30, 0, 'active', ?, 'org-1')`,
+    [NOW],
+  );
+  await sql.run(
+    `INSERT INTO memberships (id, workspace_id, user_id, email, role, created_at)
+     VALUES ('m-1', 'ws-1', 'c-1', 'client@example.com', 'client_owner', ?)`,
+    [NOW],
+  );
+  await sql.run(
+    `INSERT INTO deliverables (
+       id, organization_id, workspace_id, title, kind, status, version, published_version,
+       actor_kind, created_at, updated_at
+     ) VALUES ('d-1', 'org-1', 'ws-1', 'October social', 'social_pack', 'in_review', 1, 1, 'staff', ?, ?)`,
+    [NOW, NOW],
+  );
+  const item = (id: string, status: string) =>
+    sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, format, channel, title, copy_text, media_json, status, sort
+       ) VALUES (?, 'd-1', 1, 'static', 'instagram', ?, 'Caption', '[]', ?, 0)`,
+      [id, id, status],
+    );
+  await item("open", "pending");
+  await item("live", "approved");
+  await item("failed", "approved");
+  await sql.run(
+    `INSERT INTO social_posts (
+       id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, status, created_at, updated_at
+     ) VALUES ('post-live', 'org-1', 'd-1', 'live', 1, '[]', 'scheduled', 'feed', 'scheduled', ?, ?),
+            ('post-failed', 'org-1', 'd-1', 'failed', 1, '[]', 'now', 'feed', 'failed', ?, ?)`,
+    [NOW, NOW, NOW, NOW],
+  );
+  return sql;
+}
+
+describe("finished work shelf", () => {
+  it("opens one piece and tells Social to point at the Library", () => {
+    expect(pieceOpenHref("acme", "d-1", "open")).toBe("/w/acme/work/d-1?item=open");
+    expect(shelfNote("waiting", 0)).toEqual({ text: "Nothing needs a look." });
+    expect(shelfNote("waiting", 1)).toEqual({ text: "1 piece needs a look.", status: "needs_review" });
+    expect(shelfNote("waiting", 3).text).toBe("3 pieces need a look.");
+    expect(shelfNote("ready", 0).text).toBe("Approved work is on the calendar, or not ready yet.");
+    expect(shelfNote("ready", 1)).toEqual({ text: "1 approved piece is not on the calendar.", status: "ready" });
+    expect(shelfNote("ready", 2).text).toBe("2 approved pieces are not on the calendar.");
+    expect(shelfRemoveBlock(["failed"])).toBeNull();
+    expect(shelfRemoveBlock(["scheduled"])).toBe("Cancel the post on Social before you remove this.");
+    expect(shelfPostBlock(null)).toBeNull();
+    expect(shelfPostBlock(NOW)).toBe("That piece was removed from the Library.");
+  });
+
+  it("removes a piece from the Library and from the Social lists, and puts it back", async () => {
+    const sql = await database();
+    const removed = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "open", version: 1, removed: true }, NOW);
+    expect(removed).toEqual({ ok: true });
+    const again = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "open", version: 1, removed: true }, NOW + 1);
+    expect(again).toEqual({ ok: true });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM activities WHERE kind = 'library_item_removed'"))?.n).toBe(1);
+
+    const library = await listLibraryArtifacts(sql, client, { workspaceId: "ws-1", slug: "acme" });
+    expect(library.ok && library.page.artifacts.some((artifact) => artifact.sourceId === "open")).toBe(false);
+    const shelf = await listLibraryArtifacts(sql, client, { workspaceId: "ws-1", slug: "acme", removed: true });
+    expect(shelf.ok && shelf.page.artifacts.map((artifact) => artifact.sourceId)).toEqual(["open"]);
+    expect(shelf.ok && shelf.page.artifacts[0]?.actions.some((action) => action.href === "/w/acme/work/d-1?item=open")).toBe(true);
+
+    const social = await listSocialReviewPieces(sql, client, { id: "ws-1", slug: "acme", display_name: "Acme Studio" }, new Set());
+    expect(social.waiting.map((piece) => piece.id)).not.toContain("open");
+    expect(social.catalog.map((piece) => piece.id)).toContain("open");
+
+    const restored = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "open", version: 1, removed: false }, NOW + 2);
+    expect(restored).toEqual({ ok: true });
+    const back = await listLibraryArtifacts(sql, client, { workspaceId: "ws-1", slug: "acme" });
+    expect(back.ok && back.page.artifacts.some((artifact) => artifact.sourceId === "open")).toBe(true);
+  });
+
+  it("keeps a live post, and hides the piece from someone outside the space", async () => {
+    const sql = await database();
+    const blocked = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "live", version: 1, removed: true }, NOW);
+    expect(blocked).toEqual({ ok: false, error: "Cancel the post on Social before you remove this." });
+    expect((await sql.get<{ removed_at: number | null }>("SELECT removed_at FROM deliverable_items WHERE id = 'live'"))?.removed_at).toBeNull();
+
+    const failed = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "failed", version: 1, removed: true }, NOW);
+    expect(failed).toEqual({ ok: true });
+
+    const hidden = await setPieceShelf(sql, stranger, { deliverableId: "d-1", itemId: "open", version: 1, removed: true }, NOW);
+    expect(hidden).toEqual({ ok: false, error: "That piece is not here." });
+  });
+});

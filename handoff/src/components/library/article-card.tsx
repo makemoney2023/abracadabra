@@ -6,9 +6,10 @@ import { StatusMark, TypePlate } from "./type-plate";
 export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
   const model = articleCardModel(artifact);
   const date = libraryDateLabel(artifact.publishedAt);
+  const piece = artifact.actions.find((action) => action.href?.includes("?item="));
   const review = artifact.actions.find((action) => action.kind === "review" || action.kind === "view_request");
-  const openHref = review?.href ?? model.readHref;
-  const external = !review?.href && Boolean(model.readHref);
+  const openHref = piece?.href ?? review?.href ?? model.readHref;
+  const external = !piece && !review?.href && Boolean(model.readHref);
   const picture = (
     <>
       <TypePlate artifact={artifact} />

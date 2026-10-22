@@ -129,6 +129,7 @@ export function LibraryBrowser({
             Needs action
           </label>
           <input type="hidden" name="type" value={query.type ?? ""} />
+          {query.removed ? <input type="hidden" name="removed" value="1" /> : null}
           <button type="submit" className="min-h-11 rounded-md bg-primary px-3 text-sm text-primary-foreground">Show results</button>
           <Link className="inline-flex min-h-11 items-center text-sm underline" href={libraryHref(slug, {})}>Clear filters</Link>
         </form>
@@ -136,7 +137,7 @@ export function LibraryBrowser({
       {error ? <p role="alert">{error}</p> : null}
       <LibraryGallery
         artifacts={page?.artifacts ?? []}
-        empty={emptyLibraryCopy({ search: query.search, type: query.type })}
+        empty={emptyLibraryCopy({ search: query.search, type: query.type, removed: query.removed === "1" })}
         emptyAction={emptyAction}
         viewLink={viewLink}
         promotionAction={promotionAction}
@@ -147,19 +148,24 @@ export function LibraryBrowser({
   );
 }
 
-const FINDER_KEYS = ["type", "status", "platform", "project", "from", "to", "sort", "needs"] as const;
+const FINDER_KEYS = ["type", "status", "platform", "project", "from", "to", "sort", "needs", "removed"] as const;
 
 function LibraryFinder({ slug, query }: { slug: string; query: Record<string, string | undefined> }) {
-  const looking = query.status === "needs_review";
+  const looking = query.status === "needs_review" && query.removed !== "1";
+  const removed = query.removed === "1";
   const tab = looking ? "border-optic bg-optic/10 text-optic" : "border-border";
-  const all = !looking ? "border-optic bg-optic/10 text-optic" : "border-border";
+  const removedTab = removed ? "border-optic bg-optic/10 text-optic" : "border-border";
+  const all = !looking && !removed ? "border-optic bg-optic/10 text-optic" : "border-border";
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${all}`} href={libraryHref(slug, { ...query, status: undefined, needs: undefined, cursor: undefined })}>
+      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${all}`} href={libraryHref(slug, { ...query, status: undefined, needs: undefined, removed: undefined, cursor: undefined })}>
         All
       </Link>
-      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${tab}`} href={libraryHref(slug, { ...query, status: "needs_review", needs: undefined, cursor: undefined })}>
+      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${tab}`} href={libraryHref(slug, { ...query, status: "needs_review", needs: undefined, removed: undefined, cursor: undefined })}>
         Needs a look
+      </Link>
+      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${removedTab}`} href={libraryHref(slug, { ...query, status: undefined, needs: undefined, removed: "1", cursor: undefined })}>
+        Removed
       </Link>
       <form action={`/w/${slug}/library`} className="flex min-w-[12rem] flex-1 items-center gap-2">
         {FINDER_KEYS.map((key) => query[key] ? <input key={key} type="hidden" name={key} value={query[key]} /> : null)}

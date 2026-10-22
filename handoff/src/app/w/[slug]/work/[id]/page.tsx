@@ -15,7 +15,7 @@ import { approvalControlLabel, getAutopost } from "@/lib/social-autopost";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
-import { ApproveAllForm, ApproveForm, ChangesForm, NoteForm } from "../forms";
+import { ApproveAllForm, ChangesForm, NoteForm, PieceDecision } from "../forms";
 import { sentConfirmation } from "../sent";
 import { can } from "@/lib/authz";
 import { CollectionItemState, CollectionReviewFooter, CollectionReviewHeader } from "@/components/library/collection-review";
@@ -45,20 +45,28 @@ export default async function FinishedPiecePage({
   searchParams,
 }: {
   params: Promise<{ slug: string; id: string }>;
-  searchParams: Promise<{ format?: string; sent?: string }>;
+  searchParams: Promise<{ format?: string; sent?: string; item?: string }>;
 }) {
   const { slug, id } = await params;
-  const { format, sent } = await searchParams;
+  const { format, sent, item } = await searchParams;
   const confirmation = sentConfirmation(sent);
   const { sql, caller } = await openSession();
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
   const opened = await openDeliverable(sql, caller, id, "published");
   if (!opened || opened.deliverable.workspace_id !== workspace.id) notFound();
-  const chosen = ITEM_FORMATS.find((item) => item === format) ?? null;
+  const chosen = ITEM_FORMATS.find((itemFormat) => itemFormat === format) ?? null;
+  const focusId = opened.items.some((row) => row.id === item) ? item ?? null : null;
   // Only the kinds this piece has (and the one picked), so the filter row stays short.
-  const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || opened.items.some((item) => item.format === itemFormat));
-  const items = chosen ? opened.items.filter((item) => item.format === chosen) : opened.items;
+  const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || opened.items.some((row) => row.format === itemFormat));
+  const pool = focusId ? opened.items.filter((row) => row.id === focusId) : opened.items;
+  const items = !focusId && chosen ? pool.filter((row) => row.format === chosen) : pool;
+  const removedAt = new Map(
+    (await sql.all<{ id: string; removed_at: number | null }>(
+      "SELECT id, removed_at FROM deliverable_items WHERE deliverable_id = ? AND version = ?",
+      [opened.deliverable.id, opened.deliverable.published_version ?? opened.deliverable.version],
+    )).map((row) => [row.id, row.removed_at] as const),
+  );
   const notes = await listDeliverableFeedback(sql, caller, opened.deliverable.id);
   const version = opened.deliverable.published_version ?? opened.deliverable.version;
   const articleMetadata = new Map(
@@ -126,6 +134,11 @@ export default async function FinishedPiecePage({
         changes={items.filter((item) => item.status === "changes_requested").length}
         pending={items.filter((item) => item.status === "pending").length}
       />
+      <p className="flex flex-wrap gap-3 text-sm">
+        <Link className="underline" href={`/w/${slug}/library`}>Back to Library</Link>
+        {focusId ? <Link className="underline" href={`/w/${slug}/work/${id}`}>See the whole set</Link> : null}
+      </p>
+      {focusId ? <p className="text-sm text-muted-foreground">This is the piece. Approve it, ask for a change, or remove it.</p> : null}
       {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
         <details className="rounded-2xl border border-border bg-card p-3">
           <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-optic">Share</summary>
@@ -165,10 +178,14 @@ export default async function FinishedPiecePage({
                   fileCount={filingFiles(item)}
                 />
                 {brief ? null : (
-                  <div className="flex flex-col gap-3">
-                    <ApproveForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} label="Approve" />
-                    <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
-                  </div>
+                  <PieceDecision
+                    slug={slug}
+                    deliverableId={opened.deliverable.id}
+                    itemId={item.id}
+                    version={version}
+                    removed={removedAt.get(item.id) != null}
+                    approveLabel="Approve"
+                  />
                 )}
               </li>
             );
@@ -276,21 +293,20 @@ export default async function FinishedPiecePage({
                 </div>
               ) : null}
               {brief ? null : (
-                <div className="flex flex-col gap-3">
-                  <ApproveForm
-                    slug={slug}
-                    deliverableId={opened.deliverable.id}
-                    itemId={item.id}
-                    version={version}
-                    label={isSocialItemFormat(item.format) ? approveLabel : "Approve"}
-                  />
-                  <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
-                </div>
+                <PieceDecision
+                  slug={slug}
+                  deliverableId={opened.deliverable.id}
+                  itemId={item.id}
+                  version={version}
+                  removed={removedAt.get(item.id) != null}
+                  approveLabel={isSocialItemFormat(item.format) ? approveLabel : "Approve"}
+                />
               )}
             </li>
           );
         })}
       </ul>
+      {focusId && !brief ? null : (
       <CollectionReviewFooter
         pending={items.filter((item) => item.status === "pending").length}
         changes={items.filter((item) => item.status === "changes_requested").length}
@@ -314,6 +330,7 @@ export default async function FinishedPiecePage({
             <p className="text-sm text-muted-foreground">Nothing is waiting for approval.</p>
         )}
       </CollectionReviewFooter>
+      )}
       {notes.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-medium">Notes</h2>

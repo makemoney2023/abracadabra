@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A Library card opens that one piece. Approve, ask for a change, and Remove are on the piece. Social shows the calendar and a count that links back to the Library. Remove hides the piece from both lists. Put back brings it back. A live post has to be cancelled first.
+- **Why** — The Library, the finished-work page, and Social each listed the same work, and nothing could leave the list.
+- **Code touchpoints** — `handoff/src/lib/finished-shelf.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/lib/social-review.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/migrations/0045_library_item_removed.sql`.
+- **Data-flow impact** — Approval still writes deliverable feedback. Remove writes `removed_at` and an activity. Scheduling skips a removed piece.
+- **API / schema impact** — `deliverable_items.removed_at` in migration `0045`. No new route.
+- **Verification** — `npx vitest run src/lib/finished-shelf.test.ts src/lib/library-queries.test.ts src/lib/social-review.test.ts src/db/migrate.test.ts src/components/library/library-browser.test.tsx src/components/library/artifact-card.test.tsx`.
+
+## 2026-10-22
+
 - **What changed** — A still an agent generated and then put in the Library shows as that picture. A clip shows the word Video. The social rail, the Library card, and a share already led with the picture.
 - **Why** — Cloudflare stills and clips are filed as ordinary files. Selected files were still name cards on the Library, so a generated png looked like a filename.
 - **Code touchpoints** — `handoff/src/lib/file-type.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/type-plate.tsx`, `handoff/src/components/library/sources-browser.tsx`, `handoff/src/components/library/public-library-view.tsx`.

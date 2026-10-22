@@ -3,19 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { moveSocialPostAction } from "@/app/clients/social-actions";
-import { ApproveForm, ChangesForm } from "@/app/w/[slug]/work/forms";
 import { CancelSocialPostForm, MoveSocialPostForm } from "@/app/clients/social-forms";
+import { shelfNote } from "@/lib/finished-shelf";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import type { SocialReviewPiece } from "@/lib/social-review";
 import { pictureAddress } from "@/lib/picture-role";
-import { clientSocialReview } from "./client-social-review";
-import { ReviewList } from "./social-rail";
-import { SocialPieceCard } from "./social-piece-card";
-import { pieceCardView } from "./social-piece-view";
+import { libraryHref } from "@/components/library/library-view";
 import { operationsView, type AttentionRow, type OperationsPost } from "./social-operations";
-import { calendarStatusLabel, visibleReview } from "./social-board";
+import { calendarStatusLabel } from "./social-board";
 import { SocialCalendarView, type CalendarEvent } from "./social-calendar-view";
 
 export type OperationsCard = OperationsPost & {
@@ -37,7 +33,7 @@ const ATTENTION_LABEL: Record<string, string> = {
   uncertain_outcome: "Outcome unclear",
 };
 
-/** Attention, the pieces waiting for a decision, and one day/week/month calendar. */
+/** Attention, a count that links to the Library, and one day/week/month calendar. */
 export function SocialOperationsPanel({
   attention,
   posts,
@@ -45,9 +41,9 @@ export function SocialOperationsPanel({
   now,
   waiting,
   ready,
-  approveLabel,
   organizationId,
   canReschedule,
+  librarySlug = "",
 }: {
   attention: AttentionRow[];
   posts: OperationsCard[];
@@ -55,9 +51,9 @@ export function SocialOperationsPanel({
   now: number;
   waiting: SocialReviewPiece[];
   ready: SocialReviewPiece[];
-  approveLabel: string;
   organizationId: string;
   canReschedule: boolean;
+  librarySlug?: string;
 }) {
   const router = useRouter();
   const [account, setAccount] = React.useState("");
@@ -79,14 +75,8 @@ export function SocialOperationsPanel({
   const platforms = [...new Set(posts.map((post) => post.platform).filter(Boolean))];
   const collections = [...new Set(posts.map((post) => post.collection).filter(Boolean))];
   const statuses = [...new Set(posts.map((post) => post.state).filter(Boolean))];
-  const review = visibleReview(waiting, platform);
-  const approved = visibleReview(ready, platform);
   const selectedPost = posts.find((post) => post.id === selectedId) ?? null;
-  const selectedPiece =
-    review.find((piece) => piece.id === selectedId) ??
-    approved.find((piece) => piece.id === selectedId) ??
-    review.find((piece) => piece.id === selectedPost?.itemId) ??
-    null;
+  const shelfSlug = librarySlug || waiting[0]?.slug || ready[0]?.slug || "";
   const events: CalendarEvent[] = filtered.map((post) => ({
     id: post.id,
     title: post.title,
@@ -141,18 +131,8 @@ export function SocialOperationsPanel({
         <Choice label="Collection" value={collection} options={collections.map((value) => ({ value, label: value }))} onChange={setCollection} />
         <Choice label="Status" value={status} options={statuses.map((value) => ({ value, label: calendarStatusLabel(value) }))} onChange={setStatus} />
       </div>
-      <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-        <div className="flex flex-col gap-4">
-          <ReviewList title="Waiting for a look" empty="Nothing is waiting for a look." pieces={review} selectedId={selectedId} onSelect={setSelectedId} />
-          <ReviewList
-            title="Approved, not on the calendar"
-            empty="Approved work is on the calendar, or not ready yet."
-            pieces={approved}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
-        </div>
-        <div className="flex flex-col gap-3">
+      <ShelfNotes slug={shelfSlug} waiting={waiting.length} ready={ready.length} />
+      <div className="flex flex-col gap-3">
           <div className="hidden sm:block">
             <SocialCalendarView
               posts={events}
@@ -179,83 +159,26 @@ export function SocialOperationsPanel({
           </div>
           {moveMessage ? <p role="status" className="text-sm text-muted-foreground">{moveMessage}</p> : null}
           {canReschedule ? <p className="text-xs text-muted-foreground">Drag a scheduled post to another day or hour. The time of day stays unless you drop it on an hour.</p> : null}
-        </div>
       </div>
-      {selectedPiece ? (
-        <PieceDetail piece={selectedPiece} approveLabel={approveLabel} organizationId={organizationId} canReschedule={canReschedule} />
-      ) : selectedPost ? (
+      {selectedPost ? (
         <PostDetail post={selectedPost} organizationId={organizationId} canReschedule={canReschedule} timeZone={timeZone} />
       ) : null}
     </section>
   );
 }
 
-function PieceDetail({
-  piece,
-  approveLabel,
-  organizationId,
-  canReschedule,
-}: {
-  piece: SocialReviewPiece;
-  approveLabel: string;
-  organizationId: string;
-  canReschedule: boolean;
-}) {
-  const returnTo = canReschedule ? `/clients/${organizationId}?tab=social` : `/w/${piece.slug}/social`;
-  const network = piece.platforms[0];
-  const summary = network
-    ? clientSocialReview({
-        title: piece.title,
-        caption: piece.caption,
-        mediaRoles: piece.media.map((item) => item.role),
-        platform: network,
-        targetState: piece.status,
-        cadenceEnabled: approveLabel !== "Approve",
-        cadenceLabel: approveLabel,
-        previewSlots: [],
-        fingerprint: "shown",
-        confirmedFingerprint: "shown",
-        role: "owner",
-      })
-    : null;
-  const view = pieceCardView({
-    title: piece.title,
-    format: piece.format,
-    caption: piece.caption,
-    mediaJson: JSON.stringify(piece.media.map((item) => ({ role: item.role, content_type: item.contentType, r2_key: item.role }))),
-    status: piece.status,
-    targets: piece.platforms.map((platform) => ({ platform, outcome: "unpublished" })),
-  });
+function ShelfNotes({ slug, waiting, ready }: { slug: string; waiting: number; ready: number }) {
+  const look = shelfNote("waiting", waiting);
+  const approved = shelfNote("ready", ready);
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border p-4">
-      <p className="text-sm text-muted-foreground">{piece.deliverableTitle}</p>
-      {summary ? <p className="text-sm">{summary.platformState}</p> : null}
-      <SocialPieceCard
-        view={view}
-        caption={piece.caption}
-        accountName={piece.accountName}
-        platforms={piece.platforms}
-        media={piece.media.map((item) => ({
-          role: item.role,
-          video: item.video,
-          alt: piece.title,
-          src: `/api/deliverables/${piece.deliverableId}/items/${piece.id}/media/${item.role}`,
-        }))}
-      />
-      {piece.status === "approved" ? (
-        canReschedule ? (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/deliverables/${piece.deliverableId}`}>Schedule from finished work</Link>
-          </Button>
-        ) : (
-          <p className="text-sm text-muted-foreground">Approved. It is not on the calendar yet.</p>
-        )
-      ) : (
-        <div className="flex flex-col gap-3">
-          <ApproveForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} label={approveLabel} returnTo={returnTo} />
-          <ChangesForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} returnTo={returnTo} />
-        </div>
-      )}
+    <div className="flex flex-col gap-1 text-sm">
+      <p>
+        {look.status && slug ? <Link className="underline" href={libraryHref(slug, { status: look.status })}>{look.text}</Link> : look.text}
+        {look.status ? " Open it in the Library." : null}
+      </p>
+      <p>
+        {approved.status && slug ? <Link className="underline" href={libraryHref(slug, { status: approved.status })}>{approved.text}</Link> : approved.text}
+      </p>
     </div>
   );
 }

@@ -19,10 +19,11 @@ function externalAction(kind: string): boolean {
 
 export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
   if (artifact.artifactType === "article") return <ArticleCard artifact={artifact} />;
-  const action = artifact.actions[0];
+  const piece = artifact.actions.find((item) => item.href?.includes("?item="));
+  const action = piece ?? artifact.actions[0];
   const href = action?.href ?? null;
   const external = action ? externalAction(action.kind) : false;
-  const secondary = artifact.actions.slice(1).filter((item) => item.href);
+  const secondary = artifact.actions.filter((item) => item !== action && item.href);
   const body = (
     <>
       <div className="relative">
