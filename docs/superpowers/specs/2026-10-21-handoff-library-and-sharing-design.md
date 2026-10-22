@@ -8,6 +8,7 @@ Status: Draft for review
 **Feature ID:** HLS
 **Surfaces:** Handoff client space, Handoff HQ, finished work, files, Zernio-backed social publishing
 **Implementation:** [Handoff Library implementation plan](../plans/2026-10-21-handoff-library-and-sharing.md)
+**Presentation:** [Space library gameplan](../../space-library-gameplan.md). Labels, the social rail, and how a card and a share look follow that gameplan. The records in this spec stay.
 **Builds on:** [Handoff portal](2026-10-05-handoff-portal-design.md), [social publishing](2026-10-21-social-publishing-design.md), and [agent-managed social publishing](2026-10-21-agent-managed-social-publishing-design.md)
 
 Handoff should present completed work as a client-facing Library, not as three unrelated destinations for files, finished work, and social operations. A client should be able to find an article, open its published URL, copy that URL, review its source files, see the social posts promoting it, and share a polished read-only Handoff page without understanding how the work was stored.

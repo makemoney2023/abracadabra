@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A gameplan for the Space library and the social side rail. The rail, the Library, Sources, and a share page lead with the picture. Review stops being a link, and sharing is a button.
+- **Why** — The rail and the Library show names, and Review and the view link sound like the same action.
+- **Code touchpoints** — `docs/space-library-gameplan.md`, `README.md`, `docs/superpowers/specs/2026-10-21-handoff-library-and-sharing-design.md`.
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — none.
+- **Verification** — Checked against the current rail, Library cards, Sources list, and public share page.
+
+## 2026-10-22
+
 - **What changed** — Social on the client profile and in the client space is one day, week, and month calendar, with the pieces waiting for a look beside it. Approving or asking for a change from that calendar is the same decision as on the finished-work page, and returns to the calendar. Staff can drag a scheduled post to another day or hour.
 - **Why** — The old schedule was a day list on the profile and a separate coming-up list in the space, so approval and the plan were not the same screen.
 - **Code touchpoints** — `handoff/src/components/social/social-calendar.ts`, `handoff/src/components/social/social-board.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/lib/social-review.ts`, `handoff/src/app/clients/[id]/social-tab.tsx`, `handoff/src/app/w/[slug]/social/page.tsx`, `handoff/src/app/w/[slug]/work/actions.ts`.
