@@ -80,7 +80,6 @@ export default async function SpaceSocialPage({
         </div>
       ) : null}
       {notice ? <p role="status" className="text-sm">{notice}</p> : null}
-      {query.schedule ? <p role="status" className="text-sm text-muted-foreground">{query.schedule}</p> : null}
       <Card>
         <CardHeader>
           <CardTitle>Your accounts</CardTitle>

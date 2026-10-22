@@ -711,6 +711,38 @@ export async function placeSocialPiece(
   );
 }
 
+/** The same clock time on the next day that is still at least a minute ahead. */
+export function nextScheduledInstant(scheduledFor: number | null, timeZone: string, now: number): number {
+  const zone = timeZone || "UTC";
+  if (scheduledFor != null && scheduledFor >= now + 60_000) return scheduledFor;
+  const basis = new Date(scheduledFor ?? now);
+  let hour = "09";
+  let minute = "00";
+  try {
+    const clock = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", hour: "2-digit", minute: "2-digit" }).formatToParts(basis);
+    hour = (clock.find((part) => part.type === "hour")?.value ?? "09").padStart(2, "0");
+    minute = (clock.find((part) => part.type === "minute")?.value ?? "00").padStart(2, "0");
+  } catch {
+    hour = "09";
+    minute = "00";
+  }
+  for (let day = 0; day < 14; day += 1) {
+    let stamp = "";
+    try {
+      const date = new Intl.DateTimeFormat("en-US", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(now + day * 86_400_000));
+      const year = date.find((part) => part.type === "year")?.value;
+      const month = date.find((part) => part.type === "month")?.value;
+      const dayOfMonth = date.find((part) => part.type === "day")?.value;
+      if (year && month && dayOfMonth) stamp = `${year}-${month}-${dayOfMonth}T${hour}:${minute}`;
+    } catch {
+      stamp = "";
+    }
+    const at = stamp ? zonedTimeToUtc(stamp, zone) : null;
+    if (at != null && at >= now + 60_000) return at;
+  }
+  return now + 5 * 60_000;
+}
+
 export async function retryFailedSocialPost(
   sql: Sql,
   zernio: ZernioClient,
@@ -742,7 +774,7 @@ export async function retryFailedSocialPost(
       accountIds,
       mode: "scheduled",
       postType: (post.post_type as PostType) || null,
-      scheduledFor: post.scheduled_for,
+      scheduledFor: nextScheduledInstant(post.scheduled_for, post.timezone || "UTC", now),
       timezone: post.timezone || "UTC",
       retryPostId: post.id,
     },

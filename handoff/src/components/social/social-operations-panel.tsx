@@ -133,7 +133,9 @@ export function SocialOperationsPanel({
     if (result.ok) router.refresh();
   };
   const approveReturn = canReschedule ? `/clients/${organizationId}?tab=social` : selectedPiece ? `/w/${selectedPiece.slug}/social` : "";
-  const approveNode = armed && selectedPiece?.status === "pending" ? (
+  const inWaitingList = selectedPiece ? review.some((piece) => piece.id === selectedPiece.id) : false;
+  const wantsApprove = armed && selectedPiece != null && selectedPiece.status !== "approved";
+  const approveNode = wantsApprove && inWaitingList && selectedPiece ? (
     <ApproveForm slug={selectedPiece.slug} deliverableId={selectedPiece.deliverableId} itemId={selectedPiece.id} version={selectedPiece.version} label={approveLabel} returnTo={approveReturn} />
   ) : null;
   return (
@@ -222,7 +224,7 @@ export function SocialOperationsPanel({
         </div>
       </div>
       {selectedPiece ? (
-        <PieceDetail piece={selectedPiece} approveLabel={approveLabel} organizationId={organizationId} canReschedule={canReschedule} />
+        <PieceDetail piece={selectedPiece} approveLabel={approveLabel} organizationId={organizationId} canReschedule={canReschedule} showApprove={wantsApprove && !inWaitingList} />
       ) : selectedPost ? (
         <PostDetail post={selectedPost} organizationId={organizationId} canReschedule={canReschedule} timeZone={timeZone} />
       ) : null}
@@ -235,11 +237,13 @@ function PieceDetail({
   approveLabel,
   organizationId,
   canReschedule,
+  showApprove,
 }: {
   piece: SocialReviewPiece;
   approveLabel: string;
   organizationId: string;
   canReschedule: boolean;
+  showApprove: boolean;
 }) {
   const returnTo = canReschedule ? `/clients/${organizationId}?tab=social` : `/w/${piece.slug}/social`;
   const network = piece.platforms[0];
@@ -288,10 +292,13 @@ function PieceDetail({
             <Link href={`/deliverables/${piece.deliverableId}`}>Schedule from finished work</Link>
           </Button>
         ) : (
-          <p className="text-sm text-muted-foreground">Approved. The studio still has to put it on a day.</p>
+          <p className="text-sm text-muted-foreground">
+            {approveLabel === "Approve" ? "Approved. The studio still has to put it on a day." : "Approved. It is not on the calendar yet."}
+          </p>
         )
       ) : (
         <div className="flex flex-col gap-3">
+          {showApprove ? <ApproveForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} label={approveLabel} returnTo={returnTo} /> : null}
           <ChangesForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} returnTo={returnTo} />
         </div>
       )}

@@ -69,7 +69,7 @@ Migration `handoff/migrations/0046_item_source_file.sql`, copied into `handoff/s
 ALTER TABLE deliverable_items ADD COLUMN source_file_id TEXT REFERENCES files(id);
 ```
 
-A second click finds the latest item with that `source_file_id` on this workspace. Pending, changes asked, or approved with no live post redirects to that item. A failed post for that item redirects to the staff calendar with that post selected. A posted item shows the form again only after the person confirms another piece.
+A second click finds the latest item with that `source_file_id` on this workspace. Pending, changes asked, or approved with no live post redirects to that item. If that pack is still a draft, this click publishes it. A failed post for that item redirects to the staff calendar with that post selected. A posted item shows the form again only after the person confirms another piece. The file must be clean, and the staff person must be able to see the space. A blog or Pinterest account is not offered. When the Library is open on the client host, the redirect goes to the staff host.
 
 Staff redirect: `/clients/{organizationId}?tab=social&piece={itemId}`.
 
@@ -129,7 +129,7 @@ Tests:
 
 `ReviewList` takes Approve as an optional node for one row. The panel passes `ApproveForm` with the same `slug`, `deliverableId`, `itemId`, `version`, `label`, and `returnTo` the detail uses. The row button stays `type="button"` and only selects. The form's button is `type="submit"`.
 
-Approve mounts when the person has clicked that row in this visit, or when the URL contains `piece` for that id. An approved row has no Approve button. Changes stay in `PieceDetail`.
+Approve mounts when the person has clicked that row in this visit, or when the URL contains `piece` for that id. It mounts for a piece that is pending or has changes asked, because that is the decision the detail used to write. An approved row has no Approve button. Changes stay in `PieceDetail`. When a network filter hides the row, the same form stays in the detail.
 
 Tests:
 
@@ -165,7 +165,7 @@ Tests:
 
 `sendPiece` takes optional `retryPostId`. The post must belong to this item and version and have status `failed`. The call keeps that id, updates the row, and does not insert a second `social_posts` row.
 
-The failed chip on the day offers **Retry** to staff. Retry calls `sendPiece` with that `retryPostId`, the same account ids, and `mode: "scheduled"` at the post's existing time when that time is still at least one minute ahead. A time that is too soon returns the existing time error and leaves the failed row in place.
+The failed chip on the day offers **Retry** to staff. Retry calls `sendPiece` with that `retryPostId` and the same account ids. When the stored time is still at least one minute ahead, that time is kept. When it is not, Retry keeps the clock time and moves it to the next day that is still ahead, on the same row.
 
 `boardLists` ready list excludes an approved piece whose item id has a failed post on the current version. The calendar still shows the chip.
 

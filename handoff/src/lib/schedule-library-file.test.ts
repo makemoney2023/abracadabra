@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
 import type { Caller } from "./authz";
-import { scheduleLibraryFile } from "./schedule-library-file";
+import { scheduleLibraryFile, schedulePlatforms } from "./schedule-library-file";
 import type { ObjectStore } from "./store/objects";
 
 const NOW = 1_800_000_000_000;
@@ -157,5 +157,55 @@ describe("scheduleLibraryFile", () => {
     expect(old).toEqual({ published_version: 1, version: 1 });
     const kept = await sql.get<{ n: number }>("SELECT count(*) AS n FROM deliverable_items WHERE deliverable_id = 'd-old'");
     expect(kept?.n).toBe(1);
+  });
+
+  it("refuses a file that is not clean and a staff person who cannot see the space", async () => {
+    const sql = await database();
+    await sql.run("UPDATE files SET status = 'rejected' WHERE id = 'file-png'");
+    const store = memoryStore({ "ws-1/batch-1/file-png": PNG });
+    expect(await scheduleLibraryFile(sql, store, staff, { workspaceId: "ws-1", fileId: "file-png", channel: "instagram", caption: "Morning light" }, NOW)).toMatchObject({ ok: false });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM deliverable_items"))?.n).toBe(0);
+    const outsider: Caller = { userId: "staff-2", staff: { superAdmin: false }, operatorOf: [], memberships: [] };
+    await sql.run("UPDATE files SET status = 'clean' WHERE id = 'file-png'");
+    const hidden = await scheduleLibraryFile(sql, store, outsider, { workspaceId: "ws-1", fileId: "file-png", channel: "instagram", caption: "Morning light" }, NOW);
+    expect(hidden).toMatchObject({ ok: false, error: "forbidden" });
+    expect(Object.keys(store.files)).toEqual(["ws-1/batch-1/file-png"]);
+  });
+
+  it("publishes an existing draft piece instead of adding another", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, workspace_id, title, kind, status, version, actor_kind, actor_id, created_at, updated_at
+       ) VALUES ('d-draft', 'org-1', 'ws-1', 'hero.png', 'social_pack', 'draft', 1, 'staff', 'staff-1', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, format, channel, title, copy_text, media_json, status, sort, source_file_id
+       ) VALUES ('i-draft', 'd-draft', 1, 'static', 'instagram', 'hero.png', 'Morning light', '[]', 'pending', 0, 'file-png')`,
+    );
+    const saved = await scheduleLibraryFile(
+      sql,
+      memoryStore({ "ws-1/batch-1/file-png": PNG }),
+      staff,
+      { workspaceId: "ws-1", fileId: "file-png", channel: "instagram", caption: "Morning light" },
+      NOW,
+    );
+    expect(saved).toMatchObject({ ok: true, itemId: "i-draft" });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM deliverable_items"))?.n).toBe(1);
+    expect((await sql.get<{ published_version: number; status: string }>("SELECT published_version, status FROM deliverables WHERE id = 'd-draft'"))).toEqual({
+      published_version: 1,
+      status: "in_review",
+    });
+  });
+
+  it("offers one option per network and skips blogs", () => {
+    expect(schedulePlatforms([
+      { platform: "instagram", is_active: 1 },
+      { platform: "instagram", is_active: 1 },
+      { platform: "wordpress", is_active: 1 },
+      { platform: "linkedin", is_active: 0 },
+    ])).toEqual([{ value: "instagram", label: "Instagram" }]);
   });
 });

@@ -124,7 +124,7 @@ export function SourcesBrowser({
                   </button>
                 </form>
               ) : null}
-              {schedule && schedulableMedia(file.name) ? (
+              {schedule && file.status === "clean" && schedulableMedia(file.name) ? (
                 <ScheduleThisForm workspaceId={schedule.workspaceId} fileId={file.id} platforms={schedule.platforms} action={schedule.action} />
               ) : null}
             </li>

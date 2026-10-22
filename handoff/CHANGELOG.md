@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — Schedule this publishes a piece that was left as a draft, refuses a file that is not clean or a space the person cannot see, and returns staff to the staff host. Retry keeps a past post's clock time and moves it to the next day that is still ahead. Approve stays available for a piece with changes asked.
+- **Why** — A second click could open a piece the client never sees, Retry failed once the original time had passed, and asking for a change removed the only way to approve.
+- **Code touchpoints** — `handoff/src/lib/schedule-library-file.ts`, `handoff/src/lib/social.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/app/w/[slug]/library/schedule-action.ts`, `handoff/src/components/library/sources-browser.tsx`.
+- **Data-flow impact** — A draft piece from this file is published on the next Schedule this. A retry updates the same failed post at a future time.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/schedule-library-file.test.ts src/lib/social.test.ts src/components/social/social-rail.test.tsx`, plus `npx tsc --noEmit`.
+
+## 2026-10-22
+
 - **What changed** — Staff can turn a Library photo or clip into one social piece with a network and a caption. The client approves it from the clicked row. Staff drop the approved piece onto a day. A failed send retries the same post. A clip keeps the still it started from. A bare Library visit with work waiting opens on Needs a look.
 - **Why** — A picture could be seen, and it still could not travel from the Library onto a day as one piece.
 - **Code touchpoints** — `handoff/src/lib/schedule-library-file.ts`, `handoff/src/lib/social.ts`, `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/components/social/social-rail.tsx`, `handoff/src/components/library/schedule-this-form.tsx`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/migrations/0045_media_poster.sql`, `handoff/migrations/0046_item_source_file.sql`.

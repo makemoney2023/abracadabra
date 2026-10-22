@@ -11,6 +11,7 @@ import {
   refreshDueSocialPosts,
   refreshSocialPosts,
   rescheduleSocialPost,
+  nextScheduledInstant,
   retryFailedSocialPost,
   savePieceSettings,
   sendPiece,
@@ -233,6 +234,25 @@ describe("social publishing", () => {
     expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(1);
     const row = await sql.get<{ status: string; error: string | null }>("SELECT status, error FROM social_posts WHERE id = 'post-failed'");
     expect(row).toEqual({ status: "scheduled", error: null });
+  });
+
+  it("moves a past failed post forward and keeps the same row", async () => {
+    const sql = await database();
+    const { zernio } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    await sql.run(
+      `INSERT INTO social_posts (
+         id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, scheduled_for, timezone, status, error, created_by, created_at, updated_at
+       ) VALUES ('post-old', 'org-1', 'd-1', 'i-pic', 1, '["ig"]', 'scheduled', 'feed', ?, 'UTC', 'failed', 'nope', 'staff-1', ?, ?)`,
+      [NOW - 3_600_000, NOW, NOW],
+    );
+    const at = nextScheduledInstant(NOW - 3_600_000, "UTC", NOW);
+    expect(at).toBeGreaterThanOrEqual(NOW + 60_000);
+    const retried = await retryFailedSocialPost(sql, zernio, store, staff, "post-old", NOW);
+    expect(retried).toMatchObject({ ok: true, postId: "post-old" });
+    const row = await sql.get<{ scheduled_for: number }>("SELECT scheduled_for FROM social_posts WHERE id = 'post-old'");
+    expect(row?.scheduled_for).toBe(at);
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(1);
   });
 
   it("refuses to schedule a piece the client has not approved, but allows a draft", async () => {
