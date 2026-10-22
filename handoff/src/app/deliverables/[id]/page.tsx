@@ -25,6 +25,7 @@ import { PLATFORM_LABEL, isBlogPlatform, zernioApiKey } from "@/lib/zernio";
 import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
 import { ArticlePromotionDialog } from "@/components/library/article-promotion-dialog";
 import { articleSocialPromoEnabled, articlePromotionAllowed } from "@/lib/article-promotions";
+import { piecesOnShelf } from "@/lib/finished-shelf";
 import { inspectCanonicalUrl } from "@/lib/library-artifacts";
 import { promotionMedia } from "@/lib/library-queries";
 import { createArticlePromotionAction } from "./article-promotion-actions";
@@ -81,6 +82,13 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
         sent: latest ? `${POST_STATUS_LABEL[latest.status]} as ${POST_TYPE_LABEL[latest.post_type].toLowerCase()}` : null,
       };
     });
+  const removedIds = new Set(
+    (await sql.all<{ id: string }>(
+      "SELECT id FROM deliverable_items WHERE deliverable_id = ? AND removed_at IS NOT NULL",
+      [deliverable.id],
+    )).map((row) => row.id),
+  );
+  const shelf = piecesOnShelf(pieces, removedIds);
   const socialItems = items.filter((item) => isSocialItemFormat(item.format));
   const summary = collectionSummary(
     socialItems.map((item) => ({
@@ -223,7 +231,9 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
           <CardHeader>
             <CardTitle>Post to social</CardTitle>
             <CardDescription>
-              Send the caption, pictures, and video of each piece to this client&apos;s accounts. Pick all to schedule the whole round.
+              Send the caption, pictures, and video of each piece still on the shelf.
+              All pieces means every piece still in this round
+              {shelf.skipped.length > 0 ? ` (left out: ${shelf.skipped.join(", ")})` : ""}.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -236,13 +246,15 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                   Connect accounts
                 </Link>
               </p>
-            ) : pieces.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Add pieces before you post.</p>
+            ) : shelf.shown.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {shelf.skipped.length > 0 ? `Removed from the Library: ${shelf.skipped.join(", ")}.` : "Add pieces before you post."}
+              </p>
             ) : (
               <div className="flex flex-col gap-6">
                 <SendToSocialForm
                   deliverableId={deliverable.id}
-                  pieces={pieces}
+                  pieces={shelf.shown}
                   accounts={postable.map((account) => ({
                     id: account.id,
                     label: `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`,

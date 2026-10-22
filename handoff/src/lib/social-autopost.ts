@@ -219,7 +219,8 @@ export async function autoScheduleApproved(
   if (!settings.enabled || settings.accountIds.length === 0) return result;
   const approved = await sql.all<{ id: string; title: string }>(
     `SELECT i.id, i.title FROM deliverable_items i
-     WHERE i.deliverable_id = ? AND i.version = ? AND i.status = 'approved' AND i.format NOT IN ('page', 'link', 'file')
+     WHERE i.deliverable_id = ? AND i.version = ? AND i.status = 'approved' AND i.removed_at IS NULL
+       AND i.format NOT IN ('page', 'link', 'file')
      AND NOT EXISTS (
        SELECT 1 FROM social_posts p WHERE p.item_id = i.id AND p.version = i.version
        AND p.status IN ('sending', 'scheduled', 'published', 'partial')

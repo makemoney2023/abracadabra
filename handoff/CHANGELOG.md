@@ -2,12 +2,39 @@
 
 ## 2026-10-22
 
+- **What changed** — The finished-work shelf and placing a Library picture on a day are both live. Remove uses migration `0047`. The calendar still lists pieces beside the grid so an approved piece can be dropped on a day, and the same counts link back to the Library.
+- **Why** — The two passes landed on different branches and both have to stay.
+- **Code touchpoints** — `handoff/src/lib/social-review.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/components/social/social-rail.tsx`, `handoff/migrations/0047_library_item_removed.sql`.
+- **Data-flow impact** — Removed pieces leave the waiting and ready lists. A drop still calls `sendPiece`. A removed piece with a live post is still blocked.
+- **API / schema impact** — `deliverable_items.removed_at` in migration `0047`, after `0045_media_poster.sql` and `0046_item_source_file.sql`.
+- **Verification** — Shelf, social review, schedule, rail, and migrate tests.
+
+## 2026-10-22
+
+- **What changed** — Approve all leaves a removed piece pending. A hire can remove a piece while its filing is still held. The Removed shelf lists only removed pieces. Putting a piece back shows its failed card again. A view link the lead opens is recorded as that agent.
+- **Why** — The first pass of the desk still approved hidden pieces, refused the only remove a hire is allowed, and mixed files into Removed.
+- **Code touchpoints** — `handoff/src/lib/finished-shelf.ts`, `handoff/src/db/deliverables.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/lib/agent-library.ts`, `handoff/src/lib/agent-filing-review.ts`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.
+- **Data-flow impact** — Approve all and the round status ignore `removed_at`. An unpublished held item can take `removed_at`. Releasing one filing no longer releases a batch that still holds another filing.
+- **API / schema impact** — none.
+- **Verification** — Shelf, deliverable feedback, Library list, and agent-library route tests.
+
+## 2026-10-22
+
 - **What changed** — Schedule this publishes a piece that was left as a draft, refuses a file that is not clean or a space the person cannot see, and returns staff to the staff host. Retry keeps a past post's clock time and moves it to the next day that is still ahead. Approve stays available for a piece with changes asked.
 - **Why** — A second click could open a piece the client never sees, Retry failed once the original time had passed, and asking for a change removed the only way to approve.
 - **Code touchpoints** — `handoff/src/lib/schedule-library-file.ts`, `handoff/src/lib/social.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/app/w/[slug]/library/schedule-action.ts`, `handoff/src/components/library/sources-browser.tsx`.
 - **Data-flow impact** — A draft piece from this file is published on the next Schedule this. A retry updates the same failed post at a future time.
 - **API / schema impact** — none.
 - **Verification** — `npx vitest run src/lib/schedule-library-file.test.ts src/lib/social.test.ts src/components/social/social-rail.test.tsx`, plus `npx tsc --noEmit`.
+
+## 2026-10-22
+
+- **What changed** — A sent round is an index of pictures. The open piece is the proof, with Approve, ask for a change, Remove, and a staff schedule form. Post to social skips removed pieces and names them. Failed cards leave the calendar when the piece is removed. The assigned lead can list the Library, remove or restore a piece, choose a file, open a view link, and release its own held round. The pieces stay unapproved.
+- **Why** — The client was still looking at the whole set to decide one piece, and the agent piece list was the working copy, including pieces already taken off the shelf.
+- **Code touchpoints** — `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/lib/finished-shelf.ts`, `handoff/src/lib/social-queries.ts`, `handoff/src/lib/social-plans.ts`, `handoff/src/lib/agent-library.ts`, `handoff/src/app/api/agent-library/`, `handoff/src/lib/agent-filing-review.ts`, `handoff/src/app/api/agent-work/[id]/route.ts`.
+- **Data-flow impact** — Scheduling reads the published round and skips `removed_at`. Release sets `published_version` and leaves item status `pending`. A failed post for a removed piece is marked `Piece removed.`
+- **API / schema impact** — `GET /api/agent-library`, `POST /api/agent-library/shelf`, `POST /api/agent-library/files`, `POST /api/agent-library/shares`, and `POST /api/agent-work/:id` `{ action: "release" }`. No new migration.
+- **Verification** — `npx vitest run` on the shelf, Library cards, social queries, social plans, social commands, and `src/app/api/agent-library/agent-library-routes.test.ts`. `npx eslint` on the touched files. `npx tsc --noEmit` reports only the older `LayoutProps` and `PageProps` errors. A signed-in click from Library to Remove to Social was not run here.
 
 ## 2026-10-22
 
@@ -20,6 +47,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A plan for the next pass on finished work. The set becomes an index, the open piece stays the proof, and the assigned Grok lead runs the staff chores on that same shelf.
+- **Why** — The shelf stopped the triple list. Scheduling, the whole set, and the agent piece query still sit apart from it. The agents are the staff for those chores. The client still approves.
+- **Code touchpoints** — `docs/superpowers/plans/2026-10-22-premium-finished-work.md`, `README.md`.
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — none.
+- **Verification** — Read against `setPieceShelf`, `currentPieces`, Post to social, and `/api/agent-social`.
+
+## 2026-10-22
+
 - **What changed** — The place-and-decide plan now keeps one piece per Library file, requires a network and a caption before the client sees it, sends staff to the calendar that can place it, and retries a failed send on the same post. The month overflow line stays "+N more".
 - **Why** — The first draft of the plan sent an unfinished piece to the client calendar, where a drop cannot place it, and a failed send could become a second post.
 - **Code touchpoints** — `docs/place-and-decide-plan.md`.
@@ -29,12 +65,22 @@
 
 ## 2026-10-22
 
+- **What changed** — A Library card opens that one piece. Approve, ask for a change, and Remove are on the piece. Social shows the calendar and a count that links back to the Library. Remove hides the piece from both lists. Put back brings it back. A live post has to be cancelled first.
+- **Why** — The Library, the finished-work page, and Social each listed the same work, and nothing could leave the list.
+- **Code touchpoints** — `handoff/src/lib/finished-shelf.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/lib/social-review.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/migrations/0047_library_item_removed.sql`.
+- **Data-flow impact** — Approval still writes deliverable feedback. Remove writes `removed_at` and an activity. Scheduling skips a removed piece.
+- **API / schema impact** — `deliverable_items.removed_at` in migration `0047`. No new route.
+- **Verification** — `npx vitest run src/lib/finished-shelf.test.ts src/lib/library-queries.test.ts src/lib/social-review.test.ts src/db/migrate.test.ts src/components/library/library-browser.test.tsx src/components/library/artifact-card.test.tsx`.
+
+## 2026-10-22
+
 - **What changed** — A plan for the next Library and calendar pass: drop an approved piece onto a day, turn a Library still into a piece that needs a look, keep a clip's starting still, open on Needs a look, approve on the selected row, and name what a month day is hiding.
 - **Why** — The pictures are on the screen. The next gap is placing one on a day and landing on the decision.
 - **Code touchpoints** — `docs/place-and-decide-plan.md`, `docs/space-library-gameplan.md`, `README.md`.
 - **Data-flow impact** — none. The plan is not built.
 - **API / schema impact** — The plan calls for `agent_media.source_media_id` and `file_posters` when that slice is built. This commit adds neither.
 - **Verification** — Checked against `sendPiece`, `dropTime`, `ApproveForm`, `agent_media`, and the Library finder.
+
 
 ## 2026-10-22
 

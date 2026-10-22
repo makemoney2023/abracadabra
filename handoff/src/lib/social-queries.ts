@@ -5,6 +5,8 @@ import { getAutopost, nextSlots } from "./social-autopost";
 import { agentActor } from "./social-actor";
 import { evaluateSocialPolicy, type AgentPublishMode, type SocialActor, type SocialCapability } from "./social-policy";
 import { defaultPostType, pieceMedia, type MediaKind } from "./social-plan";
+import { libraryHref } from "@/components/library/library-view";
+import { shelfNote } from "./finished-shelf";
 import { isEligibleSocialPlatform } from "./zernio";
 import type { ItemFormat } from "./deliverable-manifest";
 
@@ -119,6 +121,8 @@ type ItemRow = {
   format: ItemFormat;
   status: string;
   media_json: string;
+  published_version: number | null;
+  removed_at: number | null;
 };
 
 type PostRow = {
@@ -136,10 +140,12 @@ type PostRow = {
 
 async function currentPieces(sql: Sql, organizationId: string): Promise<ItemRow[]> {
   return sql.all<ItemRow>(
-    `SELECT i.id, i.deliverable_id, i.version, i.title, i.format, i.status, i.media_json
+    `SELECT i.id, i.deliverable_id, i.version, i.title, i.format, i.status, i.media_json,
+            d.published_version AS published_version, i.removed_at AS removed_at
      FROM deliverable_items i
      JOIN deliverables d ON d.id = i.deliverable_id
-     WHERE d.organization_id = ? AND i.version = d.version AND i.format NOT IN ('page', 'link', 'file')
+     WHERE d.organization_id = ? AND i.version = COALESCE(d.published_version, d.version)
+       AND i.format NOT IN ('page', 'link', 'file')
      ORDER BY i.sort, i.id`,
     [organizationId],
   );
@@ -154,6 +160,8 @@ async function orgPosts(sql: Sql, organizationId: string): Promise<PostRow[]> {
 }
 
 function pieceState(item: ItemRow, posts: PostRow[], attentionIds: Set<string>): string {
+  if (item.published_version == null) return "held";
+  if (item.removed_at != null) return "removed";
   if (attentionIds.has(item.id) || attentionIds.has(`${item.id}:${item.version}`)) return "attention";
   if (item.status === "changes_requested") return "changes";
   if (item.status !== "approved") return "review";
@@ -183,15 +191,33 @@ export async function socialOverview(sql: Sql, agent: AgentPrincipal, client: un
   ]);
   const taken = posts.flatMap((post) => (post.scheduled_for == null ? [] : [post.scheduled_for]));
   const liveIds = new Set(
-    posts.filter((post) => LIVE.includes(post.status)).map((post) => `${post.item_id}:${post.version}`),
+    posts.filter((post) => LIVE.includes(post.status)).map((post) => post.item_id),
   );
-  const readyCount = pieces.filter((item) => item.status === "approved" && !liveIds.has(`${item.id}:${item.version}`)).length;
+  const onShelf = pieces.filter((item) => item.published_version != null && item.removed_at == null);
+  const needsALook = onShelf.filter((item) => item.status === "pending" || item.status === "changes_requested").length;
+  const approvedNotScheduled = onShelf.filter((item) => item.status === "approved" && !liveIds.has(item.id)).length;
+  const readyCount = approvedNotScheduled;
   const policy = evaluateSocialPolicy(resolved.actor, "read");
   const mode = resolved.actor.kind === "agent" ? resolved.actor.mode : "draft";
+  const assignment = assignmentFor(agent, resolved.organizationId);
+  const space = assignment?.workspaceId
+    ? await sql.get<{ slug: string }>("SELECT slug FROM workspaces WHERE id = ?", [assignment.workspaceId])
+    : await sql.get<{ slug: string }>("SELECT slug FROM workspaces WHERE organization_id = ? ORDER BY opened_at LIMIT 1", [resolved.organizationId]);
+  const slug = space?.slug ?? "";
+  const look = shelfNote("waiting", needsALook);
+  const approved = shelfNote("ready", approvedNotScheduled);
   return {
     ok: true as const,
     organizationId: resolved.organizationId,
     policy: { mode, authorization: policy.authorization, reasonCode: policy.reasonCode, capabilities: policy.capabilities },
+    needsALook,
+    approvedNotScheduled,
+    needsALookText: look.text,
+    approvedNotScheduledText: approved.text,
+    library: {
+      needsALook: slug ? libraryHref(slug, { status: look.status }) : null,
+      approvedNotScheduled: slug ? libraryHref(slug, { status: approved.status }) : null,
+    },
     accountHealth: accounts
       .filter((row) => isEligibleSocialPlatform(row.platform))
       .map((row) => ({
@@ -259,8 +285,10 @@ export async function listAgentSocialPieces(
     state: pieceState(item, posts, attentionIds),
     media: mediaSummary(item.media_json),
   }));
+  const wantRemoved = filter.state === "removed";
+  pieces = pieces.filter((piece) => (piece.state === "removed") === wantRemoved);
   if (filter.deliverableId) pieces = pieces.filter((piece) => piece.deliverableId === filter.deliverableId);
-  if (filter.state) pieces = pieces.filter((piece) => piece.state === filter.state);
+  if (filter.state && filter.state !== "removed") pieces = pieces.filter((piece) => piece.state === filter.state);
   return { ok: true as const, pieces };
 }
 

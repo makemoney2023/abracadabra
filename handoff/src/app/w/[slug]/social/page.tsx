@@ -125,7 +125,7 @@ export default async function SpaceSocialPage({
         <CardHeader>
           <CardTitle>Calendar</CardTitle>
           <CardDescription>
-            Day, week, or month. Times are in {timeZone}. Open a piece to approve it or ask for a change.
+            Day, week, or month. Times are in {timeZone}. Approve a piece in the Library. This page is the calendar.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -142,6 +142,7 @@ export default async function SpaceSocialPage({
             initialPieceId={query.piece || null}
             initialPostId={query.post || null}
             scheduleNotice={query.schedule || null}
+            librarySlug={slug}
           />
         </CardContent>
       </Card>

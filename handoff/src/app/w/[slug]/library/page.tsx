@@ -58,6 +58,7 @@ export default async function LibraryPage({
     projectId: read("project"),
     cursor: read("cursor"),
     needsAction: read("needs") === "1",
+    removed: read("removed") === "1",
     includeHeld: seesHeldWork(caller, workspace.id),
     deliveredFrom: utcDay(read("from"), false),
     deliveredTo: utcDay(read("to"), true),
@@ -70,6 +71,7 @@ export default async function LibraryPage({
     platform: read("platform"),
     project: read("project"),
     needs: read("needs"),
+    removed: read("removed") === "1" ? "1" : undefined,
     from: read("from"),
     to: read("to"),
   };
@@ -136,7 +138,7 @@ export default async function LibraryPage({
       <div className="flex flex-col gap-2">
         <p className="eyebrow text-optic">Finished work</p>
         <h1 className="font-heading text-4xl leading-tight">Library</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">Files are everything uploaded. The Library is the work ready to look at.</p>
+        <p className="max-w-2xl text-sm text-muted-foreground">Files are everything uploaded. The Library is finished work. Open a piece to approve it, ask for a change, or remove it. Social is the calendar.</p>
         {result.ok ? (
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             <span className="rounded-full bg-muted px-3 py-1.5 tabular-nums">{result.page.counts.total} items</span>

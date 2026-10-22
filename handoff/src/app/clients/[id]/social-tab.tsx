@@ -180,7 +180,7 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
         <CardHeader>
           <CardTitle>Calendar</CardTitle>
           <CardDescription>
-            Day, week, or month in {timeZone}. Pieces waiting for a look stay beside the grid. Drag a scheduled post to move it, or open it and pick a time.
+            Day, week, or month in {timeZone}. Pieces that need a look stay in the Library and beside the calendar. Drag a scheduled post to move it, or drag an approved piece onto a day.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -197,6 +197,7 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
             initialPieceId={social.pieceId || null}
             initialPostId={social.postId || null}
             scheduleNotice={social.scheduleNotice || null}
+            librarySlug={social.waiting[0]?.slug ?? social.ready[0]?.slug ?? social.catalog[0]?.slug ?? ""}
           />
         </CardContent>
       </Card>

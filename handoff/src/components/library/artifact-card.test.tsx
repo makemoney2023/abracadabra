@@ -77,6 +77,31 @@ describe("library cards", () => {
     expect(html).not.toContain("Link unavailable");
   });
 
+  it("shows the public post under the title and keeps the picture on the piece", () => {
+    const posted = projectLibraryArtifact({
+      sourceKind: "deliverable_item",
+      sourceId: "post-1",
+      version: 1,
+      workspaceId: "ws-1",
+      organizationId: "org-1",
+      title: "Launch post",
+      format: "static",
+      channel: "linkedin",
+      approval: "approved",
+      publication: "published",
+      updatedAt: 3,
+      audience: "client",
+      href: "/w/acme/work/d-1?item=post-1",
+      previewSrc: "/pic.png",
+      destinations: [{ platform: "linkedin", outcome: "succeeded", url: "https://www.linkedin.com/feed/update/launch" }],
+    });
+    const html = renderToStaticMarkup(createElement(ArtifactCard, { artifact: posted }));
+    expect(html).toContain('href="/w/acme/work/d-1?item=post-1"');
+    expect(html).toContain("https://www.linkedin.com/feed/update/launch");
+    expect(html).toContain('src="/pic.png"');
+    expect(html.indexOf('href="/w/acme/work/d-1?item=post-1"')).toBeLessThan(html.indexOf("https://www.linkedin.com/feed/update/launch"));
+  });
+
   it("keeps a failed copy selectable", () => {
     expect(copyLinkFeedback(false)).toEqual({ message: "Could not copy", showUrl: true });
     expect(copyLinkFeedback(true).message).toBe("Copied");

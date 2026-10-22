@@ -154,6 +154,7 @@ export async function createViewLink(
     allowDownloads?: boolean;
     showExternalLinks?: boolean;
     items: { resourceKind: "deliverable_item" | "built_work" | "file"; resourceId: string; resourceVersion: number }[];
+    createdByKind?: "staff" | "client" | "agent" | "system";
   },
   now: number,
   origin: string,
@@ -175,7 +176,7 @@ export async function createViewLink(
          id, organization_id, workspace_id, token_hash, title, expires_at, passcode_hash, allow_downloads,
          show_external_links, created_by_kind, created_by_id, created_at, updated_at
        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      params: [id, workspace.organization_id, input.workspaceId, await sha256(token), input.title ?? null, input.expiresAt ?? null, passcode, input.allowDownloads ? 1 : 0, input.showExternalLinks === false ? 0 : 1, caller.staff ? "staff" : "client", caller.userId, now, now],
+      params: [id, workspace.organization_id, input.workspaceId, await sha256(token), input.title ?? null, input.expiresAt ?? null, passcode, input.allowDownloads ? 1 : 0, input.showExternalLinks === false ? 0 : 1, input.createdByKind ?? (caller.staff ? "staff" : "client"), caller.userId, now, now],
     },
     ...input.items.map((item, index) => ({
       statement: `INSERT INTO library_share_items (

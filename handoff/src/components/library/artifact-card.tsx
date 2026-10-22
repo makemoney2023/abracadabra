@@ -20,10 +20,14 @@ function externalAction(kind: string): boolean {
 
 export function ArtifactCard({ artifact, schedule }: { artifact: LibraryArtifact; schedule?: ReactNode }) {
   if (artifact.artifactType === "article") return <ArticleCard artifact={artifact} />;
-  const action = artifact.actions[0];
+  const piece = artifact.actions.find((item) => item.href?.includes("?item="));
+  const action = piece ?? artifact.actions[0];
   const href = action?.href ?? null;
   const external = action ? externalAction(action.kind) : false;
-  const secondary = artifact.actions.slice(1).filter((item) => item.href);
+  const postUrl = artifact.destinations.find((destination) => destination.url)?.url
+    ?? artifact.actions.find((item) => item.kind === "open_post" && item.href?.startsWith("http"))?.href
+    ?? null;
+  const secondary = artifact.actions.filter((item) => item !== action && item.href && item.href !== postUrl);
   const body = (
     <>
       <div className="relative">
@@ -41,6 +45,9 @@ export function ArtifactCard({ artifact, schedule }: { artifact: LibraryArtifact
         </a>
       ) : body}
       {schedule}
+      {postUrl ? (
+        <a className="break-all text-sm underline" href={postUrl} target="_blank" rel="noreferrer noopener">{postUrl}</a>
+      ) : null}
       {artifact.promotesTitle ? <p className="text-sm">Promotes: {artifact.promotesTitle}</p> : null}
       {artifact.destinations.length > 0 ? (
         <ul className="flex flex-wrap gap-2 text-xs">

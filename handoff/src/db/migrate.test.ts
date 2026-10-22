@@ -63,6 +63,7 @@ describe("statementsFromMigration", () => {
       "0044_agent_media.sql",
       "0045_media_poster.sql",
       "0046_item_source_file.sql",
+      "0047_library_item_removed.sql",
     ]) {
       const disk = readFileSync(path.join(process.cwd(), "migrations", file), "utf8");
       expect(MIGRATION_SQL[file]).toBe(disk);

@@ -16,5 +16,12 @@ export function sentConfirmation(value: string | undefined): { title: string; bo
   }
   if (value === "approved") return { title: "Thanks, that's approved.", body: "We'll take it from here." };
   if (value === "note") return { title: "Your note is saved.", body: "The team will see it." };
+  if (value === "removed") {
+    return {
+      title: "Removed from the Library.",
+      body: "It is off the Social list too. The files stay. Put it back any time.",
+    };
+  }
+  if (value === "restored") return { title: "It's back in the Library.", body: "Open Social when you want it on the calendar." };
   return null;
 }

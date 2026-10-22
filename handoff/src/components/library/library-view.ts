@@ -37,8 +37,9 @@ export const LIBRARY_PLATFORMS: { id: string; label: string }[] = [
   { id: "googlebusiness", label: "Google Business" },
 ];
 
-/** One phrase for a piece, on the Library card and on the social rail. */
+/** One phrase for a piece, on the Library card. */
 export function statusPhrase(status: string): string {
+  if (status === "removed") return "Removed";
   if (status === "pending" || status === "needs_review") return "Needs a look";
   if (status === "changes_requested") return "Changes asked";
   if (status in LIBRARY_STATUS_LABEL) return LIBRARY_STATUS_LABEL[status as LibraryStatus];
@@ -88,8 +89,9 @@ export function nextLibraryHref(slug: string, current: Record<string, string | u
   return libraryHref(slug, { ...current, cursor });
 }
 
-export function emptyLibraryCopy(input: { search?: string; type?: string }): string {
+export function emptyLibraryCopy(input: { search?: string; type?: string; removed?: boolean }): string {
   if (input.search) return `No results for “${input.search}”.`;
+  if (input.removed) return "Nothing has been removed.";
   if (input.type === "article") return "No articles yet.";
   return "Finished work will appear here after the studio sends it.";
 }

@@ -26,7 +26,7 @@ export function approvalTone(input: { state: string; approval?: string; cancelle
 }
 
 export function postOnCalendar(post: { status: string; error: string | null; scheduledFor: number | null }): boolean {
-  if (post.error === "Cancelled.") return false;
+  if (post.error === "Cancelled." || post.error === "Piece removed.") return false;
   if (post.scheduledFor == null && post.status === "draft") return false;
   return post.status === "scheduled" || post.status === "published" || post.status === "partial" || post.status === "failed" || post.status === "sending" || post.status === "draft";
 }

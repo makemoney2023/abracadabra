@@ -6,9 +6,11 @@ import { StatusMark, TypePlate } from "./type-plate";
 export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
   const model = articleCardModel(artifact);
   const date = libraryDateLabel(artifact.publishedAt);
+  const piece = artifact.actions.find((action) => action.href?.includes("?item="));
   const review = artifact.actions.find((action) => action.kind === "review" || action.kind === "view_request");
-  const openHref = review?.href ?? model.readHref;
-  const external = !review?.href && Boolean(model.readHref);
+  const openHref = piece?.href ?? review?.href ?? model.readHref;
+  const external = !piece && !review?.href && Boolean(model.readHref);
+  const postUrl = artifact.destinations.find((destination) => destination.url)?.url ?? null;
   const picture = (
     <>
       <TypePlate artifact={artifact} />
@@ -22,6 +24,9 @@ export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
           {picture}
         </a>
       ) : picture}
+      {postUrl ? (
+        <a className="break-all text-sm underline" href={postUrl} target="_blank" rel="noreferrer noopener">{postUrl}</a>
+      ) : null}
       <p className="eyebrow text-muted-foreground">Article</p>
       {model.dek ? <p className="text-sm">{model.dek}</p> : null}
       <p className="break-all text-sm text-muted-foreground">

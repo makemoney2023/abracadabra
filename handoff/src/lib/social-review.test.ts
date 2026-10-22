@@ -81,4 +81,19 @@ describe("social review pieces", () => {
     expect(lists.waiting).toEqual([]);
     expect(lists.ready).toEqual([]);
   });
+
+  it("hides a removed piece from the lists and keeps a held post off Ready", async () => {
+    const sql = await database();
+    await sql.run("UPDATE deliverable_items SET removed_at = ? WHERE id = 'pending'", [NOW]);
+    const lists = await listSocialReviewPieces(
+      sql,
+      client,
+      { id: "ws-1", slug: "acme", display_name: "Acme Studio" },
+      new Set(["live"]),
+      new Set(["ready"]),
+    );
+    expect(lists.waiting.map((piece) => piece.id)).toEqual(["changes"]);
+    expect(lists.ready).toEqual([]);
+    expect(lists.catalog.map((piece) => piece.id)).toContain("pending");
+  });
 });

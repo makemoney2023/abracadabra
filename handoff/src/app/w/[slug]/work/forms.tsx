@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { feedbackAction, type FormState } from "./actions";
+import { feedbackAction, shelfAction, type FormState } from "./actions";
 
 const initial: FormState = { message: "" };
 
@@ -110,6 +110,70 @@ export function NoteForm({
       <Textarea name="body" required maxLength={2000} placeholder="A note for the studio" aria-label="A note for the studio" />
       <Button type="submit" size="sm" variant="outline" disabled={pending}>
         {pending ? "Saving…" : "Add a note"}
+      </Button>
+      <Status message={state.message} />
+    </form>
+  );
+}
+
+export function PieceDecision({
+  slug,
+  deliverableId,
+  itemId,
+  version,
+  removed,
+  approveLabel,
+}: {
+  slug: string;
+  deliverableId: string;
+  itemId: string;
+  version: number;
+  removed: boolean;
+  approveLabel: string;
+}) {
+  if (removed) {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">Removed from the Library. The files stay.</p>
+        <ShelfForm slug={slug} deliverableId={deliverableId} itemId={itemId} version={version} removed={false} label="Put back" />
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3">
+      <ApproveForm slug={slug} deliverableId={deliverableId} itemId={itemId} version={version} label={approveLabel} />
+      <ChangesForm slug={slug} deliverableId={deliverableId} itemId={itemId} version={version} />
+      <ShelfForm slug={slug} deliverableId={deliverableId} itemId={itemId} version={version} removed label="Remove" />
+      <p className="text-sm text-muted-foreground">Remove takes it off the Library and off Social. The files stay.</p>
+    </div>
+  );
+}
+
+function ShelfForm({
+  slug,
+  deliverableId,
+  itemId,
+  version,
+  removed,
+  label,
+}: {
+  slug: string;
+  deliverableId: string;
+  itemId: string;
+  version: number;
+  removed: boolean;
+  label: string;
+}) {
+  const [state, action, pending] = useActionState(shelfAction, initial);
+  return (
+    <form action={action}>
+      <input type="hidden" name="slug" value={slug} />
+      <input type="hidden" name="deliverableId" value={deliverableId} />
+      <input type="hidden" name="itemId" value={itemId} />
+      <input type="hidden" name="version" value={version} />
+      <input type="hidden" name="removed" value={removed ? "1" : "0"} />
+      <Button type="submit" size="sm" variant={removed ? "outline" : "default"} disabled={pending}>
+        {pending ? "Saving…" : label}
       </Button>
       <Status message={state.message} />
     </form>

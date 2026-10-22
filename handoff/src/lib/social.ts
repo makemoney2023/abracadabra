@@ -1,6 +1,7 @@
 import type { Caller } from "./authz";
 import type { ItemFormat } from "./deliverable-manifest";
 import type { Sql } from "@/db/sql";
+import { shelfPostBlock } from "./finished-shelf";
 import { reconcilePostedTargets } from "./social-attention";
 import { commandAuthorized, readCommandGate } from "./social-commands";
 import { allowedSocialOptionKeys } from "./social-preflight";
@@ -224,6 +225,7 @@ type ItemRow = {
   media_json: string;
   channel: string | null;
   status: "pending" | "approved" | "changes_requested";
+  removed_at: number | null;
   sort: number;
   organization_id: string;
   project_id: string | null;
@@ -233,7 +235,7 @@ type ItemRow = {
 
 async function loadItem(sql: Sql, deliverableId: string, itemId: string): Promise<ItemRow | undefined> {
   return sql.get<ItemRow>(
-    `SELECT i.id, i.deliverable_id, i.version, i.format, i.title, i.copy_text, i.media_json, i.channel, i.status, i.sort,
+    `SELECT i.id, i.deliverable_id, i.version, i.format, i.title, i.copy_text, i.media_json, i.channel, i.status, i.removed_at, i.sort,
        d.organization_id, d.project_id, d.workspace_id, d.title AS deliverable_title
      FROM deliverable_items i JOIN deliverables d ON d.id = i.deliverable_id
      WHERE i.id = ? AND i.deliverable_id = ?`,
@@ -445,6 +447,8 @@ export async function sendPiece(
   if (!commandAuthorized(caller)) return { ok: false, error: "You can't do that.", skipped: [] };
   const item = await loadItem(sql, input.deliverableId, input.itemId);
   if (!item) return { ok: false, error: "That piece is not here.", skipped: [] };
+  const removed = shelfPostBlock(item.removed_at);
+  if (removed) return { ok: false, error: removed, skipped: [] };
   if (input.mode !== "draft" && item.status !== "approved") {
     return { ok: false, error: `"${item.title}" is not approved by the client yet. Save it as a draft instead.`, skipped: [] };
   }

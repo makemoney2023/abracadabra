@@ -15,10 +15,14 @@ import { approvalControlLabel, getAutopost } from "@/lib/social-autopost";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
-import { ApproveAllForm, ApproveForm, ChangesForm, NoteForm } from "../forms";
+import { ApproveAllForm, ChangesForm, NoteForm, PieceDecision } from "../forms";
 import { sentConfirmation } from "../sent";
 import { can } from "@/lib/authz";
+import { CollectionIndex } from "@/components/library/collection-index";
 import { CollectionItemState, CollectionReviewFooter, CollectionReviewHeader } from "@/components/library/collection-review";
+import { ProofSchedule } from "@/components/social/proof-schedule";
+import { removalLine } from "@/lib/finished-shelf";
+import { isEligibleSocialPlatform, PLATFORM_LABEL } from "@/lib/zernio";
 import { ArticleCard } from "@/components/library/article-card";
 import { ViewLinkDialog } from "@/components/library/view-link-dialog";
 import { libraryViewLinksEnabled, listViewLinks } from "@/lib/library-shares";
@@ -45,20 +49,28 @@ export default async function FinishedPiecePage({
   searchParams,
 }: {
   params: Promise<{ slug: string; id: string }>;
-  searchParams: Promise<{ format?: string; sent?: string }>;
+  searchParams: Promise<{ format?: string; sent?: string; item?: string }>;
 }) {
   const { slug, id } = await params;
-  const { format, sent } = await searchParams;
+  const { format, sent, item } = await searchParams;
   const confirmation = sentConfirmation(sent);
   const { sql, caller } = await openSession();
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
   const opened = await openDeliverable(sql, caller, id, "published");
   if (!opened || opened.deliverable.workspace_id !== workspace.id) notFound();
-  const chosen = ITEM_FORMATS.find((item) => item === format) ?? null;
+  const chosen = ITEM_FORMATS.find((itemFormat) => itemFormat === format) ?? null;
+  const focusId = opened.items.some((row) => row.id === item) ? item ?? null : null;
   // Only the kinds this piece has (and the one picked), so the filter row stays short.
-  const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || opened.items.some((item) => item.format === itemFormat));
-  const items = chosen ? opened.items.filter((item) => item.format === chosen) : opened.items;
+  const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || opened.items.some((row) => row.format === itemFormat));
+  const pool = focusId ? opened.items.filter((row) => row.id === focusId) : opened.items;
+  const items = !focusId && chosen ? pool.filter((row) => row.format === chosen) : pool;
+  const removedAt = new Map(
+    (await sql.all<{ id: string; removed_at: number | null }>(
+      "SELECT id, removed_at FROM deliverable_items WHERE deliverable_id = ? AND version = ?",
+      [opened.deliverable.id, opened.deliverable.published_version ?? opened.deliverable.version],
+    )).map((row) => [row.id, row.removed_at] as const),
+  );
   const notes = await listDeliverableFeedback(sql, caller, opened.deliverable.id);
   const version = opened.deliverable.published_version ?? opened.deliverable.version;
   const articleMetadata = new Map(
@@ -96,6 +108,38 @@ export default async function FinishedPiecePage({
   const hasSocial = opened.items.some((item) => isSocialItemFormat(item.format));
   const approveAllLabel = autopost.enabled && hasSocial ? approveLabel.replace(/^Approve\b/, "Approve all") : "Approve all";
   const filingTitles = new Set([...filings.values()].map((filing) => filing.title));
+  const indexPieces = items.flatMap((item) => {
+    if (isSummaryFile(item.title) && item.section && filingTitles.has(item.section)) return [];
+    const picture = listedMedia(item.media_json).find((entry) => entry.image || entry.video);
+    return [{
+      id: item.id,
+      title: item.title,
+      status: removedAt.get(item.id) != null ? "removed" : item.status,
+      previewSrc: picture ? `/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${picture.role}` : null,
+    }];
+  });
+  const removal = focusId
+    ? await sql.get<{ actor_kind: string; actor_id: string | null; created_at: number }>(
+        `SELECT actor_kind, actor_id, created_at FROM activities
+         WHERE workspace_id = ? AND kind = 'library_item_removed' AND json_extract(data_json, '$.itemId') = ?
+         ORDER BY created_at DESC LIMIT 1`,
+        [workspace.id, focusId],
+      )
+    : undefined;
+  const scheduleAccounts = focusId && viewer === "staff"
+    ? (await sql.all<{ id: string; platform: string; username: string | null; display_name: string | null }>(
+        `SELECT id, platform, username, display_name FROM social_accounts
+         WHERE organization_id = ? AND is_active = 1 ORDER BY platform, username`,
+        [opened.deliverable.organization_id],
+      )).flatMap((account) => (
+        isEligibleSocialPlatform(account.platform)
+          ? [{
+              id: account.id,
+              label: `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? "Account"}`,
+            }]
+          : []
+      ))
+    : [];
   const destinations = await itemDestinationPlatforms(sql, opened.deliverable.id);
   const viewShares = libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id })
     ? await listViewLinks(sql, caller, workspace.id)
@@ -124,8 +168,13 @@ export default async function FinishedPiecePage({
         total={items.length}
         approved={items.filter((item) => item.status === "approved").length}
         changes={items.filter((item) => item.status === "changes_requested").length}
-        pending={items.filter((item) => item.status === "pending").length}
+        pending={items.filter((item) => item.status === "pending" && removedAt.get(item.id) == null).length}
       />
+      <p className="flex flex-wrap gap-3 text-sm">
+        <Link className="underline" href={`/w/${slug}/library`}>Back to Library</Link>
+        {focusId ? <Link className="underline" href={`/w/${slug}/work/${id}`}>See the whole set</Link> : null}
+      </p>
+      {focusId ? <p className="text-sm text-muted-foreground">This is the piece. Approve it, ask for a change, or remove it.</p> : null}
       {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
         <details className="rounded-2xl border border-border bg-card p-3">
           <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-optic">Share</summary>
@@ -150,6 +199,10 @@ export default async function FinishedPiecePage({
           ))}
         </div>
       )}
+      {!focusId && !brief ? (
+        <CollectionIndex slug={slug} deliverableId={opened.deliverable.id} pieces={indexPieces} />
+      ) : (
+      <>
       {items.length === 0 ? <p className="text-sm text-muted-foreground">Nothing to look at yet.</p> : null}
       <ul className="flex flex-col gap-8">
         {items.map((item) => {
@@ -165,11 +218,31 @@ export default async function FinishedPiecePage({
                   fileCount={filingFiles(item)}
                 />
                 {brief ? null : (
-                  <div className="flex flex-col gap-3">
-                    <ApproveForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} label="Approve" />
-                    <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
-                  </div>
+                  <PieceDecision
+                    slug={slug}
+                    deliverableId={opened.deliverable.id}
+                    itemId={item.id}
+                    version={version}
+                    removed={removedAt.get(item.id) != null}
+                    approveLabel="Approve"
+                  />
                 )}
+                {focusId && removedAt.get(item.id) != null && removal ? (
+                  <p className="text-sm text-muted-foreground">
+                    {removalLine({ viewer, actorKind: removal.actor_kind, actorId: removal.actor_id ?? "Studio", at: removal.created_at })}
+                  </p>
+                ) : null}
+                {focusId && isSocialItemFormat(item.format) ? (
+                  <ProofSchedule
+                    staff={viewer === "staff"}
+                    approved={item.status === "approved" && removedAt.get(item.id) == null}
+                    deliverableId={opened.deliverable.id}
+                    itemId={item.id}
+                    version={version}
+                    organizationId={opened.deliverable.organization_id}
+                    accounts={scheduleAccounts}
+                  />
+                ) : null}
               </li>
             );
           }
@@ -276,24 +349,41 @@ export default async function FinishedPiecePage({
                 </div>
               ) : null}
               {brief ? null : (
-                <div className="flex flex-col gap-3">
-                  <ApproveForm
-                    slug={slug}
-                    deliverableId={opened.deliverable.id}
-                    itemId={item.id}
-                    version={version}
-                    label={isSocialItemFormat(item.format) ? approveLabel : "Approve"}
-                  />
-                  <ChangesForm slug={slug} deliverableId={opened.deliverable.id} itemId={item.id} version={version} />
-                </div>
+                <PieceDecision
+                  slug={slug}
+                  deliverableId={opened.deliverable.id}
+                  itemId={item.id}
+                  version={version}
+                  removed={removedAt.get(item.id) != null}
+                  approveLabel={isSocialItemFormat(item.format) ? approveLabel : "Approve"}
+                />
               )}
+              {focusId && removedAt.get(item.id) != null && removal ? (
+                <p className="text-sm text-muted-foreground">
+                  {removalLine({ viewer, actorKind: removal.actor_kind, actorId: removal.actor_id ?? "Studio", at: removal.created_at })}
+                </p>
+              ) : null}
+              {focusId && isSocialItemFormat(item.format) ? (
+                <ProofSchedule
+                  staff={viewer === "staff"}
+                  approved={item.status === "approved" && removedAt.get(item.id) == null}
+                  deliverableId={opened.deliverable.id}
+                  itemId={item.id}
+                  version={version}
+                  organizationId={opened.deliverable.organization_id}
+                  accounts={scheduleAccounts}
+                />
+              ) : null}
             </li>
           );
         })}
       </ul>
+      </>
+      )}
+      {focusId && !brief ? null : (
       <CollectionReviewFooter
-        pending={items.filter((item) => item.status === "pending").length}
-        changes={items.filter((item) => item.status === "changes_requested").length}
+        pending={items.filter((item) => item.status === "pending" && removedAt.get(item.id) == null).length}
+        changes={items.filter((item) => item.status === "changes_requested" && removedAt.get(item.id) == null).length}
       >
         {brief && briefItem ? (
           <div className="flex flex-col gap-3">
@@ -308,12 +398,13 @@ export default async function FinishedPiecePage({
             />
             <NoteForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
           </div>
-        ) : items.some((item) => item.status === "pending") ? (
-            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending").length})`} />
+        ) : items.some((item) => item.status === "pending" && removedAt.get(item.id) == null) ? (
+            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending" && removedAt.get(item.id) == null).length})`} />
           ) : (
             <p className="text-sm text-muted-foreground">Nothing is waiting for approval.</p>
         )}
       </CollectionReviewFooter>
+      )}
       {notes.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-medium">Notes</h2>

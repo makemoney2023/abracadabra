@@ -193,4 +193,33 @@ describe("prepareSocialPlan", () => {
       loadExecutablePlan(sql, { organizationId: "org-1", actor: staff, planId: ready.planId, planHash: ready.planHash, now: NOW }),
     ).rejects.toMatchObject({ status: 409, reasonCode: "stale_plan" });
   });
+
+  it("does not schedule a removed piece or an unpublished round", async () => {
+    const sql = await database();
+    await sql.run("UPDATE deliverable_items SET removed_at = ? WHERE id = 'i-other'", [NOW]);
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, project_id, workspace_id, title, kind, status, version, published_version,
+         actor_kind, actor_id, created_at, updated_at
+       ) VALUES ('d-draft', 'org-1', NULL, 'ws-1', 'Draft round', 'social_pack', 'draft', 1, NULL, 'staff', 'staff-1', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+       ) VALUES ('i-draft', 'd-draft', 1, NULL, 'static', NULL, 'Working copy', 'Caption', ?, NULL, 'approved', 0)`,
+      [JSON.stringify([{ r2_key: "pic", role: "main", content_type: "image/png" }])],
+    );
+    const prepared = await prepareSocialPlan(sql, {
+      organizationId: "org-1",
+      actor: staff,
+      action: "schedule",
+      mode: "explicit",
+      itemIds: ["i-other", "i-draft", "i-pic"],
+      accountIds: ["ig"],
+      timing,
+      now: NOW,
+    });
+    expect(prepared.executable.map((row) => row.itemId)).toEqual(["i-pic"]);
+  });
 });

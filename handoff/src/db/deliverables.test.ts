@@ -207,6 +207,32 @@ describe("finished work", () => {
     expect(stale.ok).toBe(true);
   });
 
+  it("approve all leaves a removed piece pending", async () => {
+    const sql = await database();
+    const created = await createDeliverable(
+      sql,
+      staff,
+      { organizationId: "org-1", projectId: "project-1", workspaceId: "ws-1", title: "Launch posts", kind: "social_pack" },
+      NOW,
+    );
+    if (!created.ok) throw new Error("create");
+    const first = await addDeliverableItem(sql, staff, { deliverableId: created.value.id, title: "Cover", format: "static" }, NOW);
+    const second = await addDeliverableItem(sql, staff, { deliverableId: created.value.id, title: "Story", format: "story" }, NOW);
+    if (!first.ok || !second.ok) throw new Error("items");
+    await publishDeliverable(sql, staff, created.value.id, NOW);
+    await sql.run("UPDATE deliverable_items SET removed_at = ? WHERE id = ?", [NOW, second.value.id]);
+    const all = await recordFeedback(
+      sql,
+      client,
+      { deliverableId: created.value.id, itemId: null, version: 1, decision: "approve", body: "" },
+      NOW + 1,
+    );
+    expect(all.ok).toBe(true);
+    expect((await sql.get<{ status: string }>("SELECT status FROM deliverable_items WHERE id = ?", [first.value.id]))?.status).toBe("approved");
+    expect((await sql.get<{ status: string }>("SELECT status FROM deliverable_items WHERE id = ?", [second.value.id]))?.status).toBe("pending");
+    expect((await openDeliverable(sql, client, created.value.id, "published"))?.deliverable.status).toBe("approved");
+  });
+
   it("keeps the published round when a new one is pulled from a repo manifest", async () => {
     const sql = await database();
     const created = await createDeliverable(

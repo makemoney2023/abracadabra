@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { moveSocialPostAction, placeSocialPieceAction } from "@/app/clients/social-actions";
 import { ApproveForm, ChangesForm } from "@/app/w/[slug]/work/forms";
 import { CancelSocialPostForm, MoveSocialPostForm, RetrySocialPostForm } from "@/app/clients/social-forms";
+import { shelfNote } from "@/lib/finished-shelf";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import type { SocialReviewPiece } from "@/lib/social-review";
 import { pictureAddress } from "@/lib/picture-role";
+import { libraryHref } from "@/components/library/library-view";
 import { clientSocialReview } from "./client-social-review";
 import { ReviewList, waitingHeading } from "./social-rail";
 import { SocialPieceCard } from "./social-piece-card";
@@ -51,6 +53,7 @@ export function SocialOperationsPanel({
   initialPieceId = null,
   initialPostId = null,
   scheduleNotice = null,
+  librarySlug = "",
 }: {
   attention: AttentionRow[];
   posts: OperationsCard[];
@@ -64,6 +67,7 @@ export function SocialOperationsPanel({
   initialPieceId?: string | null;
   initialPostId?: string | null;
   scheduleNotice?: string | null;
+  librarySlug?: string;
 }) {
   const router = useRouter();
   const [account, setAccount] = React.useState("");
@@ -92,6 +96,7 @@ export function SocialOperationsPanel({
   const statuses = [...new Set(posts.map((post) => post.state).filter(Boolean))];
   const review = visibleReview(waiting, platform);
   const approved = visibleReview(ready, platform);
+  const shelfSlug = librarySlug || waiting[0]?.slug || ready[0]?.slug || "";
   const selectedPost = posts.find((post) => post.id === selectedId) ?? null;
   const selectedPiece =
     review.find((piece) => piece.id === selectedId) ??
@@ -171,6 +176,7 @@ export function SocialOperationsPanel({
         <Choice label="Collection" value={collection} options={collections.map((value) => ({ value, label: value }))} onChange={setCollection} />
         <Choice label="Status" value={status} options={statuses.map((value) => ({ value, label: calendarStatusLabel(value) }))} onChange={setStatus} />
       </div>
+      <ShelfNotes slug={shelfSlug} waiting={waiting.length} ready={ready.length} />
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
         <div className="flex flex-col gap-4">
           <ReviewList
@@ -302,6 +308,21 @@ function PieceDetail({
           <ChangesForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} returnTo={returnTo} />
         </div>
       )}
+    </div>
+  );
+}
+
+function ShelfNotes({ slug, waiting, ready }: { slug: string; waiting: number; ready: number }) {
+  const look = shelfNote("waiting", waiting);
+  const approved = shelfNote("ready", ready);
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      <p>
+        {look.status && slug ? <Link className="underline" href={libraryHref(slug, { status: look.status })}>{look.text}</Link> : look.text}
+      </p>
+      <p>
+        {approved.status && slug ? <Link className="underline" href={libraryHref(slug, { status: approved.status })}>{approved.text}</Link> : approved.text}
+      </p>
     </div>
   );
 }
