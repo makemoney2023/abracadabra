@@ -65,7 +65,9 @@ describe("library browser", () => {
     expect(html).toContain("No results for");
     expect(html).toContain(">Clear search</a>");
     expect(html).toContain('href="/w/acme/library?status=published"');
-    expect(html).toContain("Copy view link");
-    expect(html).not.toContain("Share finished work");
+    expect(html).toContain(">Share</button>");
+    expect(html).toContain("Needs a look");
+    expect(html).not.toContain("Add to view link");
+    expect(html).not.toContain("Copy view link");
   });
 });

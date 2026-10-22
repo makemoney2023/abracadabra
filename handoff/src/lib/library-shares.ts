@@ -4,6 +4,9 @@ import type { Sql } from "@/db/sql";
 import { flagEnabled, workerEnv } from "@/lib/worker-env";
 import { recordLibraryMetric } from "@/lib/library-metrics";
 import { deriveArtifactType, type LibraryArtifactType } from "@/lib/library-artifacts";
+import { pictureRole, type PictureMedia } from "@/lib/picture-role";
+import { previewContentType } from "@/lib/preview";
+import { thumbnailable } from "@/lib/file-type";
 
 const PBKDF2_ITERATIONS = 310_000;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -257,7 +260,7 @@ function available(share: ShareRow, now: number): boolean {
   return share.revoked_at == null && (share.expires_at == null || share.expires_at > now);
 }
 
-export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string; artifactType: LibraryArtifactType }[] } } | { ok: false; error: "unavailable" | "locked" }> {
+export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string; artifactType: LibraryArtifactType; hasPicture: boolean }[] } } | { ok: false; error: "unavailable" | "locked" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "unavailable" };
   if (!shareHashPepperAvailable()) return { ok: false, error: "unavailable" };
   const share = await shareByToken(sql, token);
@@ -274,12 +277,14 @@ export async function openViewLink(sql: Sql, token: string, now: number, session
   for (const item of items) {
     if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version, "pinned"))) continue;
     const presentation = await itemPresentation(sql, item.resource_kind, item.resource_id, item.resource_version);
+    const picture = await storedPicture(sql, item.resource_kind, item.resource_id, item.resource_version);
     visible.push({
       publicId: item.public_id,
       title: presentation.title,
       externalUrl: share.show_external_links ? presentation.externalUrl : null,
       kind: item.resource_kind,
       artifactType: presentation.artifactType,
+      hasPicture: picture != null,
     });
   }
   if (visible.length === 0) return { ok: false, error: "unavailable" };
@@ -454,6 +459,76 @@ export async function viewDownload(sql: Sql, token: string, publicId: string, no
   if (!(await visibleItem(sql, share.workspace_id, "file", item.resource_id, item.resource_version))) return { ok: false, status: 404 };
   const file = await sql.get<{ relative_path: string }>("SELECT relative_path FROM files WHERE id = ?", [item.resource_id]);
   return { ok: true, fileId: item.resource_id, shareId: share.id, filename: file?.relative_path.split("/").pop() || "download" };
+}
+
+/** A still for one item on this share. A public id from another share does not resolve. */
+export async function viewPicture(
+  sql: Sql,
+  token: string,
+  publicId: string,
+  now: number,
+  sessionToken?: string | null,
+): Promise<{ ok: true; shareId: string; key: string; contentType: string } | { ok: false; status: 404 }> {
+  if (!libraryViewLinksEnabled()) return { ok: false, status: 404 };
+  const share = await shareByToken(sql, token);
+  if (!share || !available(share, now)) return { ok: false, status: 404 };
+  if (share.passcode_hash) {
+    const sessionOk = sessionToken ? await validSession(sql, share.id, sessionToken, now) : false;
+    if (!sessionOk) return { ok: false, status: 404 };
+  }
+  const item = await sql.get<{ resource_id: string; resource_kind: string; resource_version: number }>(
+    "SELECT resource_id, resource_kind, resource_version FROM library_share_items WHERE share_id = ? AND public_id = ?",
+    [share.id, publicId],
+  );
+  if (!item) return { ok: false, status: 404 };
+  if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version, "pinned"))) return { ok: false, status: 404 };
+  const picture = await storedPicture(sql, item.resource_kind, item.resource_id, item.resource_version);
+  if (!picture) return { ok: false, status: 404 };
+  return { ok: true, shareId: share.id, key: picture.key, contentType: picture.contentType };
+}
+
+function pictureEntries(mediaJson: string): { media: PictureMedia[]; stored: { role: string; key: string; contentType: string }[] } {
+  try {
+    const parsed = JSON.parse(mediaJson) as unknown;
+    if (!Array.isArray(parsed)) return { media: [], stored: [] };
+    const stored = parsed.flatMap((entry) => {
+      if (!entry || typeof entry !== "object") return [];
+      const role = (entry as { role?: unknown }).role;
+      const key = (entry as { r2_key?: unknown }).r2_key;
+      const contentType = (entry as { content_type?: unknown }).content_type;
+      if (typeof role !== "string" || typeof key !== "string" || typeof contentType !== "string") return [];
+      if (!contentType.toLowerCase().startsWith("image/")) return [];
+      return [{ role, key, contentType }];
+    });
+    return {
+      media: stored.map((entry) => ({ role: entry.role, contentType: entry.contentType, video: false })),
+      stored,
+    };
+  } catch {
+    return { media: [], stored: [] };
+  }
+}
+
+async function storedPicture(sql: Sql, kind: string, id: string, version: number): Promise<{ key: string; contentType: string } | null> {
+  if (kind === "deliverable_item") {
+    const row = await sql.get<{ media_json: string }>("SELECT media_json FROM deliverable_items WHERE id = ? AND version = ?", [id, version]);
+    if (!row) return null;
+    const entries = pictureEntries(row.media_json);
+    const role = pictureRole(entries.media);
+    const match = entries.stored.find((entry) => entry.role === role);
+    return match ? { key: match.key, contentType: match.contentType } : null;
+  }
+  if (kind === "file") {
+    const row = await sql.get<{ object_key: string; relative_path: string; status: string }>(
+      "SELECT object_key, relative_path, status FROM files WHERE id = ?",
+      [id],
+    );
+    if (!row || row.status !== "clean" || !thumbnailable(row.relative_path)) return null;
+    const contentType = previewContentType(row.relative_path);
+    if (!contentType.startsWith("image/")) return null;
+    return { key: row.object_key, contentType };
+  }
+  return null;
 }
 
 export function viewUnlockSetCookie(cookie: ReturnType<typeof viewUnlockCookie>): string {

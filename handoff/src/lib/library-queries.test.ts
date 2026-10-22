@@ -156,11 +156,35 @@ describe("library queries", () => {
       expect(titles).not.toContain("Retired site");
       expect(titles).not.toContain("Secret draft");
       expect(titles).not.toContain("raw.pdf");
+      const still = page.page.artifacts.find((artifact) => artifact.title === "brief.pdf");
+      expect(still?.previewSrc).toBeNull();
       const staffPage = await listLibraryArtifacts(sql, staff, { workspaceId: "ws-1", includeHeld: true });
       expect(staffPage.ok && staffPage.page.artifacts.some((artifact) => artifact.title === "Held site")).toBe(true);
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+
+  it("shows a selected generated still and leaves a clip without a picture", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO files (
+         id, batch_id, workspace_id, relative_path, extension, size_bytes, object_key, tag, status, scan_attempts, created_at
+       ) VALUES ('file-still', 'batch-file', 'ws-1', 'Social/hero.png', 'png', 12, 'ws-1/batch-file/file-still', 'source', 'clean', 0, ?),
+                ('file-clip', 'batch-file', 'ws-1', 'Social/clip.mp4', 'mp4', 12, 'ws-1/batch-file/file-clip', 'source', 'clean', 0, ?)`,
+      [NOW - 10, NOW - 9],
+    );
+    await sql.run(
+      `INSERT INTO library_file_selections (id, organization_id, workspace_id, file_id, selected_by, selected_at)
+       VALUES ('sel-still', 'org-1', 'ws-1', 'file-still', 'staff-1', ?),
+              ('sel-clip', 'org-1', 'ws-1', 'file-clip', 'staff-1', ?)`,
+      [NOW - 10, NOW - 9],
+    );
+    const page = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", includeHeld: true });
+    expect(page.ok).toBe(true);
+    if (!page.ok) return;
+    expect(page.page.artifacts.find((artifact) => artifact.title === "hero.png")?.previewSrc).toBe("/api/files/file-still/preview");
+    expect(page.page.artifacts.find((artifact) => artifact.title === "clip.mp4")?.previewSrc).toBeNull();
   });
 
   it("keeps partial social outcomes and pages a family without losing the boundary", async () => {

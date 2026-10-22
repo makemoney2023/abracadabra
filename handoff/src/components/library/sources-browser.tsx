@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { filterSourceFiles, folderBreadcrumbs, type SourceListFile } from "@/lib/source-provenance";
+import { filePlateWord, filePreviewSrc } from "@/lib/file-type";
 import { toggleSourceAction } from "@/app/w/[slug]/sources-actions";
 
 export function SourcesBrowser({
@@ -71,11 +72,22 @@ export function SourcesBrowser({
         <button type="submit" className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm">Apply</button>
       </form>
       {shown.length === 0 ? <p className="text-sm text-muted-foreground">No files match.</p> : null}
-      <ul className="flex flex-col gap-3">
-        {shown.map((file) => (
-          <li key={file.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3">
-            <div>
-              <Link className="text-sm underline" href={`/w/${slug}/files/${file.id}`}>{file.name}</Link>
+      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        {shown.map((file) => {
+          const preview = filePreviewSrc(file.id, file.name);
+          const plate = filePlateWord(file.name) === "video" ? "Video" : "File";
+          return (
+            <li key={file.id} className="flex flex-col gap-2 rounded-xl border border-border p-3">
+              <Link href={`/w/${slug}/files/${file.id}`} className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-muted">
+                {preview ? (
+                  // Session preview of a picture the caller can already open.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={preview} alt="" className="size-full object-cover" />
+                ) : (
+                  <span className="eyebrow text-optic">{plate}</span>
+                )}
+              </Link>
+              <p className="truncate text-sm" title={file.name}>{file.name}</p>
               <p className="text-sm text-muted-foreground">{file.status}{file.selected ? " · In the Library" : ""}</p>
               {file.usedIn && file.usedIn.length > 0 ? (
                 <p className="text-sm">
@@ -99,19 +111,19 @@ export function SourcesBrowser({
                   ))}
                 </p>
               ) : null}
-            </div>
-            {canSelect && file.status === "clean" ? (
-              <form action={toggleSourceAction}>
-                <input type="hidden" name="slug" value={slug} />
-                <input type="hidden" name="fileId" value={file.id} />
-                <input type="hidden" name="selected" value={file.selected ? "1" : "0"} />
-                <button type="submit" className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm">
-                  {file.selected ? "Remove from Library" : "Show in Library"}
-                </button>
-              </form>
-            ) : null}
-          </li>
-        ))}
+              {canSelect && file.status === "clean" ? (
+                <form action={toggleSourceAction}>
+                  <input type="hidden" name="slug" value={slug} />
+                  <input type="hidden" name="fileId" value={file.id} />
+                  <input type="hidden" name="selected" value={file.selected ? "1" : "0"} />
+                  <button type="submit" className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm">
+                    {file.selected ? "Remove from Library" : "Show in Library"}
+                  </button>
+                </form>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

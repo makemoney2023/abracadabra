@@ -92,7 +92,7 @@ function TypeTile({ file }: { file: FolderRow }) {
   const thumb = file.previewHref && thumbnailable(file.name) ? `/api/files/${file.id}/preview` : null;
   return (
     <div
-      className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40"
+      className="flex size-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40"
       aria-hidden="true"
     >
       {thumb ? (

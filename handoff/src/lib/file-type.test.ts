@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildFolderTree, displayPath } from "./file-label";
-import { fileType, thumbnailable } from "./file-type";
+import { filePlateWord, filePreviewSrc, fileType, thumbnailable } from "./file-type";
 import { cleanFolder, defaultFolder, fileStem } from "./work-folder";
 
 describe("file type badge", () => {
@@ -24,6 +24,15 @@ describe("file type badge", () => {
     expect(thumbnailable("a/b.webp")).toBe(true);
     expect(thumbnailable("logo.svg")).toBe(false);
     expect(thumbnailable("brief.pdf")).toBe(false);
+    expect(thumbnailable("Social/hero.png")).toBe(true);
+    expect(thumbnailable("Social/clip.mp4")).toBe(false);
+  });
+
+  it("points a library still at the file preview and names a clip as video", () => {
+    expect(filePreviewSrc("file-still", "Finished work/hero.png")).toBe("/api/files/file-still/preview");
+    expect(filePreviewSrc("file-clip", "Finished work/clip.mp4")).toBeNull();
+    expect(filePlateWord("Finished work/clip.mp4")).toBe("video");
+    expect(filePlateWord("Finished work/hero.png")).toBeNull();
   });
 });
 

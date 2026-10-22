@@ -2,6 +2,33 @@
 
 ## 2026-10-22
 
+- **What changed** — A still an agent generated and then put in the Library shows as that picture. A clip shows the word Video. The social rail, the Library card, and a share already led with the picture.
+- **Why** — Cloudflare stills and clips are filed as ordinary files. Selected files were still name cards on the Library, so a generated png looked like a filename.
+- **Code touchpoints** — `handoff/src/lib/file-type.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/type-plate.tsx`, `handoff/src/components/library/sources-browser.tsx`, `handoff/src/components/library/public-library-view.tsx`.
+- **Data-flow impact** — The preview is the existing signed-in file preview. A share of a picture file still uses the view token. A clip is not turned into a poster.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/file-type.test.ts src/lib/library-queries.test.ts src/components/library/sources-browser.test.tsx src/components/library/view-links.test.tsx`.
+
+## 2026-10-22
+
+- **What changed** — The social rail, the Library, Sources, and a share page lead with the picture. A Library card opens the work. Share is a button, and the public page shows the pictures on that share. Needs a look and Changes asked are the words on the card and the rail.
+- **Why** — The rail and the Library showed names, and Review and the view link sounded like the same action.
+- **Code touchpoints** — `handoff/src/lib/picture-role.ts`, `handoff/src/components/social/social-rail.tsx`, `handoff/src/components/library/library-gallery.tsx`, `handoff/src/components/library/artifact-card.tsx`, `handoff/src/components/library/public-library-view.tsx`, `handoff/src/lib/library-shares.ts`, `handoff/src/app/view/[token]/media/[publicId]/route.ts`, `handoff/src/components/library/sources-browser.tsx`.
+- **Data-flow impact** — Approval is unchanged. A share image is read only after the view token authorizes that item.
+- **API / schema impact** — `GET /view/[token]/media/[publicId]` streams one still for an item on that share. No migration.
+- **Verification** — `npx vitest run` on the social rail, calendar pictures, library cards, sources, and view links, plus `npx tsc --noEmit` and eslint on the changed files.
+
+## 2026-10-22
+
+- **What changed** — A gameplan for the Space library and the social side rail. The rail, the Library, Sources, and a share page lead with the picture. Review stops being a link, and sharing is a button.
+- **Why** — The rail and the Library show names, and Review and the view link sound like the same action.
+- **Code touchpoints** — `docs/space-library-gameplan.md`, `README.md`, `docs/superpowers/specs/2026-10-21-handoff-library-and-sharing-design.md`.
+- **Data-flow impact** — none. The plan was written first, then built in the entry above.
+- **API / schema impact** — none.
+- **Verification** — Checked against the current rail, Library cards, Sources list, and public share page.
+
+## 2026-10-22
+
 - **What changed** — A Grok agent chooses the image or video model for the job, and a generated file does not have to belong to a card or a social post.
 - **Why** — The first route required a card and a model from a short list, which read as if HQ picked a default and the file was headed for social.
 - **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.

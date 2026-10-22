@@ -46,7 +46,7 @@ export async function listSocialReviewPieces(
   caller: Caller,
   workspace: { id: string; slug: string; display_name: string },
   liveItemIds: Set<string>,
-): Promise<{ waiting: SocialReviewPiece[]; ready: SocialReviewPiece[] }> {
+): Promise<{ waiting: SocialReviewPiece[]; ready: SocialReviewPiece[]; catalog: SocialReviewPiece[] }> {
   const cards = await listWorkspaceDeliverables(sql, caller, workspace.id);
   const pieces: SocialReviewPiece[] = [];
   for (const card of cards) {
@@ -71,5 +71,5 @@ export async function listSocialReviewPieces(
       });
     }
   }
-  return boardLists(pieces, liveItemIds);
+  return { ...boardLists(pieces, liveItemIds), catalog: pieces };
 }

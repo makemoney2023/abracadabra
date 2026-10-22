@@ -128,7 +128,7 @@ export default async function FinishedPiecePage({
       />
       {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
         <details className="rounded-2xl border border-border bg-card p-3">
-          <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-optic">Copy view link</summary>
+          <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-optic">Share</summary>
           <div className="mt-3">
             <ViewLinkDialog
               workspaceId={workspace.id}

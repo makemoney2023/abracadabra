@@ -66,9 +66,9 @@ export default async function SpaceSocialPage({
   );
   const review = organization
     ? await listSocialReviewPieces(sql, caller, { id: workspace.id, slug, display_name: workspace.display_name }, live)
-    : { waiting: [], ready: [] };
+    : { waiting: [], ready: [], catalog: [] };
   const timeZone = calendarTimeZone(cadence, posts.map((post) => post.timezone || ""));
-  const cards = calendarPosts(posts, accounts, [...review.waiting, ...review.ready]);
+  const cards = calendarPosts(posts, accounts, review.catalog);
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-[4rem]">
       <h1 className="font-heading text-4xl leading-tight">Social</h1>

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Caller } from "@/lib/authz";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { clientIpFromHeaders, createViewLink, coarseUserAgent, libraryViewLinksEnabled, listViewLinks, openViewLink, refreshViewLink, revokeViewLink, shareHashPepperAvailable, unlockViewLink, viewDownload } from "./library-shares";
+import { clientIpFromHeaders, createViewLink, coarseUserAgent, libraryViewLinksEnabled, listViewLinks, openViewLink, refreshViewLink, revokeViewLink, shareHashPepperAvailable, unlockViewLink, viewDownload, viewPicture } from "./library-shares";
 
 const NOW = 1_800_000_000_000;
 const owner: Caller = { userId: "owner-1", staff: null, operatorOf: [], memberships: [{ workspaceId: "ws-1", role: "client_owner" }] };
@@ -252,6 +252,38 @@ describe("library view links", () => {
     expect(listed.ok && listed.shares[0]?.events).toHaveLength(8);
     expect(listed.ok && listed.shares[0]?.events.map((event) => event.at))
       .toEqual([NOW + 12, NOW + 11, NOW + 10, NOW + 9, NOW + 8, NOW + 7, NOW + 6, NOW + 5]);
+  });
+
+  it("returns the poster for this share and nothing for another share", async () => {
+    const sql = await database();
+    process.env.LIBRARY_VIEW_LINKS = "on";
+    process.env.HANDOFF_SHARE_HASH_PEPPER = "pepper";
+    await sql.run(
+      "UPDATE deliverable_items SET media_json = ? WHERE id = 'item-1'",
+      [JSON.stringify([
+        { r2_key: "objects/wide.png", role: "main", content_type: "image/png" },
+        { r2_key: "objects/hero.png", role: "poster", content_type: "image/jpeg" },
+      ])],
+    );
+    const first = await createViewLink(sql, owner, {
+      workspaceId: "ws-1",
+      items: [{ resourceKind: "deliverable_item", resourceId: "item-1", resourceVersion: 1 }],
+    }, NOW, "https://handoff.example");
+    const second = await createViewLink(sql, owner, {
+      workspaceId: "ws-1",
+      items: [{ resourceKind: "deliverable_item", resourceId: "item-1", resourceVersion: 1 }],
+    }, NOW, "https://handoff.example");
+    expect(first.ok && second.ok).toBe(true);
+    if (!first.ok || !second.ok) return;
+    const opened = await openViewLink(sql, first.url.split("/view/")[1] ?? "", NOW);
+    const other = await openViewLink(sql, second.url.split("/view/")[1] ?? "", NOW);
+    expect(opened.ok && opened.view.items[0]?.hasPicture).toBe(true);
+    expect(JSON.stringify(opened)).not.toContain("objects/hero.png");
+    const publicId = opened.ok ? opened.view.items[0]?.publicId ?? "" : "";
+    const picture = await viewPicture(sql, first.url.split("/view/")[1] ?? "", publicId, NOW);
+    expect(picture.ok && picture.key).toBe("objects/hero.png");
+    expect(picture.ok && picture.contentType).toBe("image/jpeg");
+    expect(blocked(await viewPicture(sql, first.url.split("/view/")[1] ?? "", other.ok ? other.view.items[0]?.publicId ?? "" : "", NOW))).toBe(404);
   });
 });
 

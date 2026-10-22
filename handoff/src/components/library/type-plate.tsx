@@ -1,4 +1,5 @@
 import type { LibraryArtifact } from "@/lib/library-artifacts";
+import { filePlateWord } from "@/lib/file-type";
 import { ArtifactThumbnail } from "./artifact-thumbnail";
 import { LIBRARY_STATUS_LABEL, libraryDateLabel, libraryStatusClass } from "./library-view";
 
@@ -14,12 +15,13 @@ const PLATE: Record<string, string> = {
 
 export function TypePlate({ artifact }: { artifact: LibraryArtifact }) {
   const date = libraryDateLabel(artifact.publishedAt ?? artifact.updatedAt);
+  const fallback = artifact.artifactType === "file" ? (filePlateWord(artifact.title) ?? "file") : artifact.artifactType;
   return (
     <div className={`relative flex aspect-[4/3] items-end overflow-hidden rounded-xl border border-border bg-gradient-to-br ${PLATE[artifact.artifactType] ?? "from-muted"} to-card p-4`}>
       <ArtifactThumbnail
         src={artifact.previewSrc}
         title={artifact.title}
-        fallback={artifact.artifactType}
+        fallback={fallback}
       />
       {date ? <time className="relative text-xs text-ink" dateTime={date}>{date}</time> : null}
     </div>

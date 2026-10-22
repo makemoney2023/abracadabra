@@ -7,11 +7,22 @@ export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
   const model = articleCardModel(artifact);
   const date = libraryDateLabel(artifact.publishedAt);
   const review = artifact.actions.find((action) => action.kind === "review" || action.kind === "view_request");
+  const openHref = review?.href ?? model.readHref;
+  const external = !review?.href && Boolean(model.readHref);
+  const picture = (
+    <>
+      <TypePlate artifact={artifact} />
+      <h2 className="font-heading text-2xl">{model.title}</h2>
+    </>
+  );
   return (
     <article className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-3">
-      <TypePlate artifact={artifact} />
+      {openHref ? (
+        <a className="flex flex-col gap-3" href={openHref} target={external ? "_blank" : undefined} rel={external ? "noreferrer noopener" : undefined}>
+          {picture}
+        </a>
+      ) : picture}
       <p className="eyebrow text-muted-foreground">Article</p>
-      <h2 className="font-heading text-2xl">{model.title}</h2>
       {model.dek ? <p className="text-sm">{model.dek}</p> : null}
       <p className="break-all text-sm text-muted-foreground">
         {model.hostname ?? "No public link yet"}
@@ -47,16 +58,11 @@ export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
         </ul>
       ) : null}
       <div className="mt-auto flex flex-wrap gap-2">
-        {review?.href ? (
-          <a className="inline-flex min-h-11 items-center rounded-md bg-primary px-3 text-sm text-primary-foreground" href={review.href}>
-            {review.label}
-          </a>
-        ) : null}
-        {model.readHref ? (
+        {model.readHref && review ? (
           <a className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm" href={model.readHref} target="_blank" rel="noreferrer noopener">
             Read article
           </a>
-        ) : !review ? (
+        ) : !openHref ? (
           <p className="text-sm">Link unavailable</p>
         ) : null}
         {model.copyValue ? <CopyLinkButton url={model.copyValue} workspaceId={artifact.workspaceId} /> : null}

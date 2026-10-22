@@ -49,14 +49,14 @@ export function ViewLinkDialog({
       });
       const body = (await response.json()) as { url?: string; id?: string; error?: string };
       if (!response.ok || !body.url) {
-        setMessage("Could not create the view link.");
+        setMessage("Could not create the share.");
         return;
       }
       setUrl(body.url);
       if (body.id) setCreated((current) => [...current, { id: body.id ?? "", title: String(formData.get("title") ?? "") || null, expiresAt: days > 0 ? Date.now() + days * 24 * 60 * 60 * 1000 : null, revokedAt: null }]);
-      setMessage("View link ready. Copy it now. It is not shown again.");
+      setMessage("Share ready. Copy it now. It is not shown again.");
     } catch {
-      setMessage("Could not create the view link.");
+      setMessage("Could not create the share.");
     } finally {
       setPending(false);
     }
@@ -75,24 +75,24 @@ export function ViewLinkDialog({
     setMessage("");
     const response = await fetch(`/api/workspaces/${workspaceId}/view-links/${shareId}`, { method: "PATCH" });
     if (!response.ok) {
-      setMessage("Could not update the view link.");
+      setMessage("Could not update the share.");
       return;
     }
     setFresh((current) => ({ ...current, [shareId]: true }));
-    setMessage("View link now uses the latest version.");
+    setMessage("Share now uses the latest version.");
   }
 
   async function revoke(shareId: string) {
     setMessage("");
     const response = await fetch(`/api/workspaces/${workspaceId}/view-links/${shareId}`, { method: "DELETE" });
-    setMessage(response.ok ? "View link revoked." : "Could not revoke the view link.");
+    setMessage(response.ok ? "Share revoked." : "Could not revoke the share.");
     if (response.ok) setGone((current) => ({ ...current, [shareId]: true }));
   }
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-sm font-medium">Create view link</h2>
-      <p className="text-sm text-muted-foreground">A view link lets someone look at the selected work. It does not let them upload.</p>
+      <h2 className="text-sm font-medium">Share</h2>
+      <p className="text-sm text-muted-foreground">Someone with this share can look at the selected work. It does not let them upload.</p>
       <form action={create} className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm">
           Title
@@ -119,14 +119,14 @@ export function ViewLinkDialog({
           Show article and site links
         </label>
         <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-3 text-sm text-primary-foreground sm:col-span-2" disabled={pending || items.length === 0}>
-          {pending ? "Creating…" : items.length === 0 ? "Select work first" : `Create view link (${items.length})`}
+          {pending ? "Creating…" : items.length === 0 ? "Select work first" : `Share (${items.length})`}
         </button>
       </form>
       {url ? (
         <div className="flex flex-col gap-2">
-          <input readOnly value={url} aria-label="View link" className="min-h-11 break-all rounded-md border border-border bg-background px-3 text-sm" />
+          <input readOnly value={url} aria-label="Share" className="min-h-11 break-all rounded-md border border-border bg-background px-3 text-sm" />
           <button type="button" className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm" onClick={() => void copy()}>
-            Copy view link
+            Copy share
           </button>
         </div>
       ) : null}
@@ -135,7 +135,7 @@ export function ViewLinkDialog({
           {live.map((share) => (
             <li key={share.id} className="flex flex-col gap-2 rounded-xl border border-border p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span>{share.title || "Untitled view link"}{share.expiresAt ? ` · expires ${new Date(share.expiresAt).toLocaleDateString("en-CA")}` : ""}</span>
+                <span>{share.title || "Untitled share"}{share.expiresAt ? ` · expires ${new Date(share.expiresAt).toLocaleDateString("en-CA")}` : ""}</span>
                 <span className="flex gap-3">
                   {share.newer && !fresh[share.id] ? (
                     <button type="button" className="inline-flex min-h-11 items-center underline" onClick={() => void update(share.id)}>
