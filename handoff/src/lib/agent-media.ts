@@ -1,13 +1,17 @@
 import type { Sql } from "@/db/sql";
 import type { AgentPrincipal } from "@/lib/agent-work-filing";
-import { mediaModel, listMediaModels, type MediaKind, type MediaModel } from "@/lib/agent-media-models";
+import { mediaModel, listMediaModels, type MediaFit, type MediaKind, type MediaModel } from "@/lib/agent-media-models";
 import { fluxInput } from "@/lib/flux-input";
 import type { ObjectStore } from "@/lib/store/objects";
 
 const PROMPT_MAX = 2000;
 const IMAGE_MAX_BYTES = 8 * 1024 * 1024;
 const VIDEO_MAX_BYTES = 20 * 1024 * 1024;
-const DURATIONS = new Set([4, 6, 8]);
+function listed(values: readonly number[]): string {
+  if (values.length <= 1) return String(values[0] ?? "");
+  if (values.length === 2) return `${values[0]} or ${values[1]}`;
+  return `${values.slice(0, -1).join(", ")}, or ${values[values.length - 1]}`;
+}
 
 export type MediaView = {
   ok: true;
@@ -34,7 +38,7 @@ type MediaRow = {
   external_id: string;
   agent_id: string;
   organization_id: string;
-  task_id: string;
+  task_id: string | null;
   model: string;
   kind: MediaKind;
   state: "ready" | "running" | "failed";
@@ -48,7 +52,7 @@ type MediaRow = {
 
 type Request = {
   externalId: string;
-  taskId: string;
+  taskId: string | null;
   client: string | null;
   model: MediaModel;
   prompt: string;
@@ -57,11 +61,13 @@ type Request = {
   durationSeconds: number | null;
 };
 
-export function publicMediaModels() {
-  return listMediaModels().map((model) => ({
+export function publicMediaModels(fits?: MediaFit | null) {
+  return listMediaModels(fits ?? undefined).map((model) => ({
     id: model.id,
     kind: model.kind,
     reference_image: model.referenceImage,
+    fits: model.fits,
+    note: model.note,
   }));
 }
 
@@ -77,13 +83,13 @@ export async function generateAgentMedia(input: {
   if (!input.agent || input.agent.assignments.length === 0) return refuse(401, "Unauthorized.");
   const parsed = parseRequest(input.body);
   if (!parsed.ok) return refuse(400, parsed.message);
-  const task = await openTask(input.sql, input.agent, parsed.request);
-  if (!task.ok) return refuse(task.status, task.message);
+  const place = await placeFor(input.sql, input.agent, parsed.request);
+  if (!place.ok) return refuse(place.status, place.message);
   const existing = await findByExternal(input.sql, input.agent.agentId, parsed.request.externalId);
   if (existing) return { ok: true, status: 200, view: viewOf(existing) };
 
   if (!input.ai) return refuse(503, "Media generation is not configured.");
-  const reference = await referenceImage(input.sql, input.store, input.agent, task.organizationId, parsed.request);
+  const reference = await referenceImage(input.sql, input.store, input.agent, place.organizationId, parsed.request);
   if (!reference.ok) return refuse(reference.status, reference.message);
 
   let outcome: Outcome;
@@ -93,7 +99,7 @@ export async function generateAgentMedia(input: {
   } catch {
     return refuse(502, "The model did not answer.");
   }
-  return finish(input, input.agent, parsed.request, task, outcome);
+  return finish(input, input.agent, parsed.request, place, outcome);
 }
 
 export async function readAgentMedia(input: {
@@ -158,30 +164,61 @@ function parseRequest(body: unknown): { ok: true; request: Request } | { ok: fal
   const prompt = text(record.prompt, PROMPT_MAX + 1);
   const modelId = text(record.model, 120);
   if (!externalId) return { ok: false, message: "external_id is required." };
-  if (!taskId) return { ok: false, message: "task_id is required." };
-  if (!prompt) return { ok: false, message: "prompt is required." };
-  if (prompt.length > PROMPT_MAX) return { ok: false, message: "prompt can be 2,000 characters." };
   if (!modelId) return { ok: false, message: "model is required." };
   const model = mediaModel(modelId);
   if (!model) return { ok: false, message: "That model is not available." };
+  if (model.promptField !== "omit") {
+    if (!prompt) return { ok: false, message: "prompt is required." };
+    if (prompt.length > PROMPT_MAX) return { ok: false, message: "prompt can be 2,000 characters." };
+  }
   const aspect = text(record.aspect_ratio, 12);
   if (aspect && !/^[0-9]{1,2}:[0-9]{1,2}$/.test(aspect)) return { ok: false, message: "aspect_ratio must look like 1:1 or 16:9." };
+  const allowed = model.durationAllowed ?? (model.kind === "video" ? [4, 6, 8] : []);
   let duration: number | null = null;
   if (record.duration_seconds != null) {
-    if (typeof record.duration_seconds !== "number" || !DURATIONS.has(record.duration_seconds)) {
-      return { ok: false, message: "duration_seconds must be 4, 6, or 8." };
+    if (typeof record.duration_seconds !== "number" || !allowed.includes(record.duration_seconds)) {
+      return { ok: false, message: `duration_seconds must be ${listed(allowed)}.` };
     }
     duration = record.duration_seconds;
-  } else if (model.kind === "video") {
-    duration = 6;
+  } else if (allowed.length > 0) {
+    duration = allowed.includes(6) ? 6 : allowed[0];
   }
   const imageMediaId = text(record.image_media_id, 100);
   if (model.referenceImage === "required" && !imageMediaId) return { ok: false, message: "image_media_id is required for this model." };
   if (model.referenceImage === "none" && imageMediaId) return { ok: false, message: "This model does not take a reference image." };
   return {
     ok: true,
-    request: { externalId, taskId, client: text(record.client, 255), model, prompt, imageMediaId, aspectRatio: aspect, durationSeconds: duration },
+    request: { externalId, taskId, client: text(record.client, 255), model, prompt: prompt ?? "", imageMediaId, aspectRatio: aspect, durationSeconds: duration },
   };
+}
+
+async function placeFor(
+  sql: Sql,
+  agent: AgentPrincipal,
+  request: Request,
+): Promise<{ ok: true; organizationId: string; projectId: string | null } | { ok: false; status: number; message: string }> {
+  if (!request.taskId) return clientFor(sql, agent, request.client);
+  return openTask(sql, agent, request);
+}
+
+async function clientFor(
+  sql: Sql,
+  agent: AgentPrincipal,
+  client: string | null,
+): Promise<{ ok: true; organizationId: string; projectId: string | null } | { ok: false; status: number; message: string }> {
+  if (!client) {
+    if (agent.assignments.length === 1) {
+      const only = agent.assignments[0];
+      return { ok: true, organizationId: only.organizationId, projectId: only.projectId };
+    }
+    return { ok: false, status: 400, message: "Name the client." };
+  }
+  const byId = agent.assignments.find((row) => row.organizationId === client);
+  if (byId) return { ok: true, organizationId: byId.organizationId, projectId: byId.projectId };
+  const byDomain = await sql.get<{ id: string }>("SELECT id FROM organizations WHERE domain = ? AND archived_at IS NULL", [client.toLowerCase()]);
+  const match = byDomain ? agent.assignments.find((row) => row.organizationId === byDomain.id) : undefined;
+  if (!match) return { ok: false, status: 403, message: "That client is not one you are assigned to." };
+  return { ok: true, organizationId: match.organizationId, projectId: match.projectId };
 }
 
 async function openTask(
@@ -223,10 +260,25 @@ async function referenceImage(
 
 async function runInput(request: Request, image: string | null): Promise<unknown> {
   if (request.model.input === "multipart") return fluxInput(request.prompt);
-  const body: Record<string, unknown> = { prompt: request.prompt };
+  const body: Record<string, unknown> = { ...(request.model.defaults ?? {}) };
+  if (request.model.promptField === "prompt") body.prompt = request.prompt;
+  if (request.model.promptField === "instruction") body.instruction = request.prompt;
   if (request.aspectRatio) body.aspect_ratio = request.aspectRatio;
-  if (request.durationSeconds) body.duration = `${request.durationSeconds}s`;
-  if (image) body.image = image;
+  if (request.durationSeconds && request.model.duration === "label") body.duration = `${request.durationSeconds}s`;
+  if (request.durationSeconds && request.model.duration === "seconds") body.duration = request.durationSeconds;
+  if (image && request.model.imageField !== "omit") {
+    const encoded = request.model.imageEncoding === "base64" ? image.replace(/^data:[^;,]+;base64,/, "") : image;
+    if (request.model.imageShape === "keyframes") {
+      body.mode = "i2v";
+      body.keyframes = encoded;
+    } else if (request.model.imageShape === "url") {
+      body[request.model.imageField] = { url: encoded };
+    } else if (request.model.imageShape === "list") {
+      body[request.model.imageField] = [encoded];
+    } else {
+      body[request.model.imageField] = encoded;
+    }
+  }
   return body;
 }
 
@@ -417,7 +469,7 @@ async function findByExternal(sql: Sql, agentId: string, externalId: string): Pr
 }
 
 async function insertRow(sql: Sql, row: {
-  id: string; externalId: string; agentId: string; organizationId: string; taskId: string; model: string; kind: MediaKind;
+  id: string; externalId: string; agentId: string; organizationId: string; taskId: string | null; model: string; kind: MediaKind;
   state: "ready" | "running" | "failed"; contentType: string | null; byteLength: number | null; r2Key: string | null;
   jobId: string | null; name: string | null; error: string | null; now: number;
 }): Promise<void> {
@@ -433,7 +485,7 @@ async function logMedia(
   sql: Sql,
   agent: AgentPrincipal,
   task: { organizationId: string; projectId: string | null },
-  event: { mediaId: string; model: string; kind: MediaKind; bytes: number; taskId: string; now: number },
+  event: { mediaId: string; model: string; kind: MediaKind; bytes: number; taskId: string | null; now: number },
 ): Promise<void> {
   await sql.run(
     `INSERT INTO activities (id, organization_id, project_id, kind, actor_kind, actor_id, body, data_json, created_at)

@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A Grok agent chooses the image or video model for the job, and a generated file does not have to belong to a card or a social post.
+- **Why** — The first route required a card and a model from a short list, which read as if HQ picked a default and the file was headed for social.
+- **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.
+- **Data-flow impact** — Generation still writes R2 and `agent_media`. `task_id` is null when there is no card. No social row is written. Filing with `media_ids` stays optional held work.
+- **API / schema impact** — `GET /api/agent-media/models` adds `fits`, `note`, and `?fits=`. `POST /api/agent-media` makes `task_id` optional and `prompt` optional for upscale and background removal. `agent_media.task_id` is nullable in `0044` (that migration has not shipped).
+- **Verification** — `npx vitest run src/lib/agent-media-models.test.ts src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/db/migrate.test.ts src/lib/workflow-files.test.ts`.
+
+## 2026-10-22
+
 - **What changed** — An assigned Grok agent can generate a still or a clip through HQ and file those files on a card.
 - **Why** — With the swarm off, the old Flux stage never runs, and a video data URL was stored as markdown.
 - **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/lib/workflow-files.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.

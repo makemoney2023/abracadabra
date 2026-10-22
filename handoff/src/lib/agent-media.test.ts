@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { GET as getModels } from "@/app/api/agent-media/models/route";
 import { POST as postMedia } from "@/app/api/agent-media/route";
 import { migrate } from "@/db/migrate";
 import { d1Sql, type D1Like, type Sql } from "@/db/sql";
@@ -215,6 +216,164 @@ describe("generateAgentMedia", () => {
     expect(fetched).toBe("https://cdn.example/now.mp4");
     expect(result).toMatchObject({ ok: true, status: 201, view: { state: "ready", content_type: "video/mp4" } });
     expect(JSON.stringify(result)).not.toContain("cdn.example");
+  });
+
+  it("refuses to pick a model when the agent does not name one", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme");
+    const { principal } = await agentFor(acme);
+    const calls: unknown[] = [];
+    const result = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "run:hero", prompt: "A quiet shop" },
+      now: NOW,
+      ai: pngAi(calls),
+    });
+    expect(result).toMatchObject({ ok: false, status: 400, message: "model is required." });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("stores a still for the only assigned client when there is no card", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme");
+    const { principal } = await agentFor(acme);
+    const result = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "run:loose", model: DEFAULT_STILL, prompt: "A quiet shop" },
+      now: NOW,
+      ai: pngAi([]),
+    });
+    expect(result).toMatchObject({ ok: true, status: 201, view: { state: "ready", kind: "image" } });
+    const row = await sql.get<{ task_id: string | null; organization_id: string }>("SELECT task_id, organization_id FROM agent_media");
+    expect(row?.task_id).toBeNull();
+    expect(row?.organization_id).toBe(acme);
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(0);
+    if (!result.ok) throw new Error("still failed");
+    const filed = await fileAgentWork(sql, store, principal, { external_id: "file-loose", title: "Loose still", media_ids: [result.view.media_id] }, NOW);
+    expect(filed).toMatchObject({ ok: true, state: "filed" });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(0);
+  });
+
+  it("asks which client when the agent has several and no card", async () => {
+    const acme = await org("Acme", "acme.example");
+    const other = await org("Other", "other.example");
+    await space(acme, "acme");
+    await space(other, "other");
+    const { token } = await agentFor(acme);
+    await registerClientAgent(sql, { agentId: "acme-agent", label: "Acme agent", organizationId: other, actor: "test", now: NOW });
+    const principal = await agentForToken(sql, `Bearer ${token}`);
+    const missing = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "run:which", model: DEFAULT_STILL, prompt: "A quiet shop" },
+      now: NOW,
+      ai: pngAi([]),
+    });
+    expect(missing).toMatchObject({ ok: false, status: 400, message: "Name the client." });
+    const named = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "run:which", model: DEFAULT_STILL, prompt: "A quiet shop", client: "other.example" },
+      now: NOW,
+      ai: pngAi([]),
+    });
+    expect(named).toMatchObject({ ok: true, status: 201 });
+    const row = await sql.get<{ organization_id: string; task_id: string | null }>("SELECT organization_id, task_id FROM agent_media");
+    expect(row).toEqual({ organization_id: other, task_id: null });
+  });
+
+  it("sends the reference still in the field that model expects", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme");
+    const { principal } = await agentFor(acme);
+    const still = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "run:plate", model: DEFAULT_STILL, prompt: "A plate" },
+      now: NOW,
+      ai: pngAi([]),
+    });
+    if (!still.ok) throw new Error("still failed");
+    const calls: { model: string; input: unknown }[] = [];
+    const clip = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "clip:from-still", model: DEFAULT_CLIP, prompt: "The plate turns", image_media_id: still.view.media_id, duration_seconds: 4 },
+      now: NOW,
+      ai: { async run(model, input) { calls.push({ model, input }); return { job_id: "job-still" }; } },
+    });
+    expect(clip).toMatchObject({ ok: true, status: 202 });
+    expect(calls[0]?.model).toBe(DEFAULT_CLIP);
+    expect(calls[0]?.input).toMatchObject({ prompt: "The plate turns", duration: "4s", image_input: PNG });
+    expect(calls[0]?.input).not.toHaveProperty("image");
+    const sharper = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "run:sharp", model: "pruna/p-image-upscale", image_media_id: still.view.media_id },
+      now: NOW,
+      ai: { async run(_model, input) { calls.push({ model: "pruna/p-image-upscale", input }); return { image: PNG }; } },
+    });
+    expect(sharper).toMatchObject({ ok: true, status: 201, view: { kind: "image" } });
+    expect(calls[1]?.input).toEqual({ image: expect.stringMatching(/^data:image\/png;base64,/) });
+    const flux = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "clip:flux", model: "black-forest-labs/flux-3-video", prompt: "The plate turns" },
+      now: NOW,
+      ai: { async run(_model, input) { calls.push({ model: "black-forest-labs/flux-3-video", input }); return { job_id: "job-flux" }; } },
+    });
+    expect(flux).toMatchObject({ ok: true, status: 202 });
+    expect(calls[2]?.input).toMatchObject({ mode: "t2v", duration: 6, prompt: "The plate turns" });
+    const tooShort = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "clip:flux-short", model: "black-forest-labs/flux-3-video", prompt: "The plate turns", duration_seconds: 4 },
+      now: NOW,
+      ai: pngAi([]),
+    });
+    expect(tooShort).toMatchObject({ ok: false, status: 400, message: "duration_seconds must be 6 or 8." });
+    const animated = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "clip:p", model: "pruna/p-video", prompt: "The plate turns", image_media_id: still.view.media_id },
+      now: NOW,
+      ai: { async run(_model, input) { calls.push({ model: "pruna/p-video", input }); return { job_id: "job-p" }; } },
+    });
+    expect(animated).toMatchObject({ ok: true, status: 202 });
+    expect(calls[3]?.input).toMatchObject({ prompt: "The plate turns", duration: 6, fps: 24, resolution: "720p", image: expect.stringMatching(/^data:image\/png;base64,/) });
+  });
+});
+
+describe("model catalog route", () => {
+  it("returns only the models that fit the job", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme");
+    const { token } = await agentFor(acme);
+    (globalThis as Record<symbol, unknown>)[CTX] = { env: { DB: d1 } };
+    const response = await getModels(new Request("https://hq.example/api/agent-media/models?fits=text-to-video", {
+      headers: { authorization: `Bearer ${token}` },
+    }));
+    expect(response.status).toBe(200);
+    const body = await response.json() as { models: { id: string; fits: string[]; note: string }[] };
+    expect(body.models.some((model) => model.id === DEFAULT_CLIP)).toBe(true);
+    expect(body.models.some((model) => model.id === DEFAULT_STILL)).toBe(false);
+    expect(body.models.every((model) => model.fits.includes("text-to-video") && model.note.length > 0)).toBe(true);
+    const bad = await getModels(new Request("https://hq.example/api/agent-media/models?fits=poster", {
+      headers: { authorization: `Bearer ${token}` },
+    }));
+    expect(bad.status).toBe(400);
   });
 });
 

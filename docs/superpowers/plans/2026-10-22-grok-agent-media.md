@@ -2,7 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Let an assigned Grok agent generate a still or a clip through HQ, using Cloudflare's image and video models, and file the bytes on the client's card.
+**Goal:** Let an assigned Grok agent generate a still or a clip through HQ, using Cloudflare's image and video models, and keep the bytes for that client.
+
+**Revised the same day:** The agent picks the model from `fits` on `GET /api/agent-media/models` (`?fits=` filters). HQ does not substitute a default. `task_id` is optional. A generated file is not a social post. Filing it with `media_ids` is ordinary held work, and social posting is a later choice.
 
 **Architecture:** Grok agents stay outside the Worker. They keep using a `caw_` bearer against `hq.abra-ca-dabra.app`. HQ already has the Workers AI binding, so a new agent route calls `env.AI.run` and writes the bytes into the client space. The agent never receives a Cloudflare token. The swarm stays off. Video does not travel back through the JSON filing body.
 

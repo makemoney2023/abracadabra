@@ -18,8 +18,9 @@ async function mediaAi(): Promise<MediaAi | null> {
 }
 
 /**
- * Generate a still or a clip for an open card. Bearer is the agent's caw_ token.
- * Body: { external_id, task_id, model, prompt, client?, image_media_id?, aspect_ratio?, duration_seconds? }
+ * Generate a still or a clip for a client this agent is assigned to. Bearer is the agent's caw_ token.
+ * Body: { external_id, model, prompt, task_id?, client?, image_media_id?, aspect_ratio?, duration_seconds? }
+ * The agent names the model. HQ does not post the file to social.
  * A clip that is still rendering returns state "running". Poll GET /api/agent-media/:id.
  */
 export async function POST(request: Request) {
