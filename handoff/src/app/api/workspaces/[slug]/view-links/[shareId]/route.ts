@@ -15,8 +15,8 @@ async function gate(sql: Sql, caller: Caller, workspaceId: string): Promise<Resp
   return null;
 }
 
-export async function DELETE(request: Request, context: { params: Promise<{ workspaceId: string; shareId: string }> }) {
-  const { workspaceId, shareId } = await context.params;
+export async function DELETE(request: Request, context: { params: Promise<{ slug: string; shareId: string }> }) {
+  const { slug: workspaceId, shareId } = await context.params;
   const sql = await openHandoffDb();
   await migrate(sql);
   const caller = await getCaller(sql, cookieValue(request, SESSION_COOKIE), Date.now());

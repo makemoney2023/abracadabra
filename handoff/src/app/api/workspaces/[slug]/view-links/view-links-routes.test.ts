@@ -85,9 +85,9 @@ function call(method: "GET" | "POST" | "DELETE", token: string, workspaceId = WO
     headers: { cookie: `handoff_session=${token}`, "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  if (method === "DELETE") return DELETE(request, { params: Promise.resolve({ workspaceId, shareId }) });
-  if (method === "POST") return POST(request, { params: Promise.resolve({ workspaceId }) });
-  return GET(request, { params: Promise.resolve({ workspaceId }) });
+  if (method === "DELETE") return DELETE(request, { params: Promise.resolve({ slug: workspaceId, shareId }) });
+  if (method === "POST") return POST(request, { params: Promise.resolve({ slug: workspaceId }) });
+  return GET(request, { params: Promise.resolve({ slug: workspaceId }) });
 }
 
 describe("view link routes", () => {

@@ -30,8 +30,8 @@ async function gate(sql: Sql, caller: Caller, workspaceId: string): Promise<Resp
   return null;
 }
 
-export async function GET(request: Request, context: { params: Promise<{ workspaceId: string }> }) {
-  const { workspaceId } = await context.params;
+export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
+  const { slug: workspaceId } = await context.params;
   const { sql, caller } = await session(request);
   const denied = await gate(sql, caller, workspaceId);
   if (denied) return denied;
@@ -40,8 +40,8 @@ export async function GET(request: Request, context: { params: Promise<{ workspa
   return Response.json({ shares: listed.shares });
 }
 
-export async function POST(request: Request, context: { params: Promise<{ workspaceId: string }> }) {
-  const { workspaceId } = await context.params;
+export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
+  const { slug: workspaceId } = await context.params;
   const { sql, caller } = await session(request);
   const denied = await gate(sql, caller, workspaceId);
   if (denied) return denied;

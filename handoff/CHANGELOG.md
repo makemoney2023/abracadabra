@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — View-link routes live under `/api/workspaces/[slug]/view-links`. The segment is still the workspace id. The folder name matches the other workspace routes.
+- **Why** — Next.js refuses to start when the same dynamic path uses two different names, and that 500 took down the client and staff apps.
+- **Code touchpoints** — `handoff/src/app/api/workspaces/[slug]/view-links/`.
+- **Data-flow impact** — none.
+- **API / schema impact** — The URL is unchanged.
+- **Verification** — `npx vitest run src/app/api/workspaces/[slug]/view-links/view-links-routes.test.ts`, then redeploy.
+
+## 2026-10-22
+
 - **What changed** — `LIBRARY_VIEW_LINKS` and `ARTICLE_SOCIAL_PROMO` are `on` in `wrangler.jsonc` and `wrangler.hq.jsonc`. Both flags, and `HANDOFF_SHARE_HASH_PEPPER`, are read from the Worker binding when `process.env` is empty. The pepper stays a Worker secret.
 - **Why** — View links and article promotion drafts are ready to use. A Wrangler var is not visible as `process.env` inside the Worker.
 - **Code touchpoints** — `handoff/src/lib/worker-env.ts`, `handoff/src/lib/library-shares.ts`, `handoff/src/lib/article-promotions.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`.
