@@ -2,6 +2,24 @@
 
 ## 2026-10-22
 
+- **What changed** — A Grok agent chooses the image or video model for the job, and a generated file does not have to belong to a card or a social post.
+- **Why** — The first route required a card and a model from a short list, which read as if HQ picked a default and the file was headed for social.
+- **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.
+- **Data-flow impact** — Generation still writes R2 and `agent_media`. `task_id` is null when there is no card. No social row is written. Filing with `media_ids` stays optional held work.
+- **API / schema impact** — `GET /api/agent-media/models` adds `fits`, `note`, and `?fits=`. `POST /api/agent-media` makes `task_id` optional and `prompt` optional for upscale and background removal. `agent_media.task_id` is nullable in `0044`.
+- **Verification** — `npx vitest run src/lib/agent-media-models.test.ts src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/db/migrate.test.ts src/lib/workflow-files.test.ts`.
+
+## 2026-10-22
+
+- **What changed** — An assigned Grok agent can generate a still or a clip through HQ and file those files on a card.
+- **Why** — With the swarm off, the old Flux stage never runs, and a video data URL was stored as markdown.
+- **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/lib/workflow-files.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.
+- **Data-flow impact** — The agent calls HQ over HTTPS. HQ calls the Workers AI binding, writes the bytes to R2, and copies them into the filing when `media_ids` is set. The agent does not receive a provider URL.
+- **API / schema impact** — `GET /api/agent-media/models`, `POST /api/agent-media`, `GET /api/agent-media/:media_id`. `POST /api/agent-work` accepts `media_ids`. New table `agent_media`.
+- **Verification** — `npx vitest run src/lib/agent-media-models.test.ts src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/db/migrate.test.ts src/lib/workflow-files.test.ts`.
+
+## 2026-10-22
+
 - **What changed** — Social on the client profile and in the client space is one day, week, and month calendar, with the pieces waiting for a look beside it. Approving or asking for a change from that calendar is the same decision as on the finished-work page, and returns to the calendar. Staff can drag a scheduled post to another day or hour.
 - **Why** — The old schedule was a day list on the profile and a separate coming-up list in the space, so approval and the plan were not the same screen.
 - **Code touchpoints** — `handoff/src/components/social/social-calendar.ts`, `handoff/src/components/social/social-board.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/lib/social-review.ts`, `handoff/src/app/clients/[id]/social-tab.tsx`, `handoff/src/app/w/[slug]/social/page.tsx`, `handoff/src/app/w/[slug]/work/actions.ts`.

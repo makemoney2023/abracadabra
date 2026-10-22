@@ -9,6 +9,7 @@ import { checkSupersedes, recordFiling, resolveFilingRequest, type FilingReview 
 import { handOverWaitingTasks } from "@/lib/agent-dispatch";
 import { builtWorkByItem, builtWorkMarkdown, builtWorkWrites, parseBuiltWork, type BuiltWorkInput } from "@/lib/built-work";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
+import { readyMediaBytes } from "@/lib/agent-media";
 
 /**
  * Work from client agents (Grok Bot teammates and hires) lands in the right client space on its own.
@@ -82,6 +83,8 @@ export type WorkPayload = {
   builtWork?: BuiltWorkInput[];
   /** Finished before it was filed (already_delivered: true, or kind "catalog"): approval publishes it as delivered, with no client update. */
   alreadyDelivered?: boolean;
+  /** Ready stills or clips from POST /api/agent-media. The bytes are copied into this filing. */
+  mediaIds: string[];
 };
 
 export type FileResult =
@@ -93,6 +96,7 @@ export type FileResult =
   | { ok: true; duplicate: boolean; state: "unfiled" | "received" | "discarded"; workItemId: string; reason: string | null }
   | { ok: false; error: "invalid"; message: string }
   | { ok: false; error: "forbidden"; message: string }
+  | { ok: false; error: "conflict"; message: string }
   | { ok: false; error: "too_big"; message: string };
 
 type Write = { statement: string; params: readonly unknown[] };
@@ -289,8 +293,10 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
   if (attachments.length > MAX_ATTACHMENTS) return { ok: false, message: `Up to ${MAX_ATTACHMENTS} attachments a filing, screenshots included. Split the rest into another filing on the same card.` };
   const content = typeof body.content === "string" && body.content.trim() ? body.content : null;
   const summary = text(body.summary, 4000);
-  if (!content && !summary && attachments.length === 0 && links.length === 0 && built.items.length === 0) {
-    return { ok: false, message: "Send content, a summary, attachments, links, or built_work." };
+  const mediaIds = parseMediaIds(body.media_ids);
+  if (!mediaIds.ok) return { ok: false, message: mediaIds.message };
+  if (!content && !summary && attachments.length === 0 && links.length === 0 && built.items.length === 0 && mediaIds.ids.length === 0) {
+    return { ok: false, message: "Send content, a summary, attachments, links, built_work, or media_ids." };
   }
   const handoff = body.handoff && typeof body.handoff === "object" && !Array.isArray(body.handoff) ? (body.handoff as Record<string, unknown>) : {};
   const client = body.client && typeof body.client === "object" && !Array.isArray(body.client) ? (body.client as Record<string, unknown>) : {};
@@ -334,8 +340,22 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       skillsUsed: skillsUsed.paths,
       builtWork: built.items,
       alreadyDelivered: body.already_delivered === true || kind === "catalog",
+      mediaIds: mediaIds.ids,
     },
   };
+}
+
+function parseMediaIds(raw: unknown): { ok: true; ids: string[] } | { ok: false; message: string } {
+  if (raw == null) return { ok: true, ids: [] };
+  if (!Array.isArray(raw)) return { ok: false, message: "media_ids must be a list." };
+  if (raw.length > 12) return { ok: false, message: "media_ids takes up to 12 files." };
+  const ids: string[] = [];
+  for (const value of raw) {
+    const id = text(value, 100);
+    if (!id || !/^[0-9a-f-]{36}$/i.test(id)) return { ok: false, message: "Each media_ids entry must be a media id." };
+    if (!ids.includes(id)) ids.push(id);
+  }
+  return { ok: true, ids };
 }
 
 export const MAX_SKILLS_USED = 30;
@@ -506,10 +526,10 @@ async function takenPaths(sql: Sql, workspaceId: string, folder: string, agentId
 }
 
 /** Files for a filing: the summary plus attachments, under the agent's folder with readable names. */
-function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number, folder: string, taken: Set<string>): WorkflowFile[] {
+function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number, folder: string, taken: Set<string>, media: { name: string; bytes: Uint8Array; contentType: string }[] = []): WorkflowFile[] {
   const run = itemId.slice(0, 8);
   // Keyed on the exact stored name (same extension logic as storage), so post.md and post.html can sit side by side.
-  const claim = (stem: string, file: Pick<WorkflowFile, "body" | "name">): string => {
+  const claim = (stem: string, file: Pick<WorkflowFile, "body" | "name" | "bytes" | "contentType">): string => {
     const extension = workflowFileExtension(file) ?? "md";
     for (let n = 1; ; n += 1) {
       const candidate = n === 1 ? `${folder}/${stem}` : `${folder}/${stem} (${n})`;
@@ -529,6 +549,19 @@ function filesFor(itemId: string, summary: string, payload: WorkPayload, now: nu
     const stem = fileStem(file.name);
     files.push({ workflow: "work", run, node: stem, body: file.body, name: file.name, path: claim(stem, file) });
   }
+  for (const file of media) {
+    const stem = fileStem(file.name);
+    files.push({
+      workflow: "work",
+      run,
+      node: stem,
+      body: "",
+      bytes: file.bytes,
+      contentType: file.contentType,
+      name: file.name,
+      path: claim(stem, { body: "", bytes: file.bytes, contentType: file.contentType, name: file.name }),
+    });
+  }
   void now;
   return files;
 }
@@ -536,14 +569,14 @@ function filesFor(itemId: string, summary: string, payload: WorkPayload, now: nu
 async function writeFiled(
   sql: Sql,
   store: ObjectStore,
-  input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; route: Extract<Route, { ok: true }>; actor: string; now: number },
+  input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; route: Extract<Route, { ok: true }>; actor: string; now: number; media?: { name: string; bytes: Uint8Array; contentType: string }[] },
 ): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview?: boolean; review: FilingReview; folder: string } | { ok: false }> {
   const { route, payload, agent } = input;
   const summary = summaryMarkdown(agent, payload, input.now);
   const folder = payload.folder ?? defaultFolder(input.now, payload.title);
   const taken = await takenPaths(sql, route.space.id, folder, agent.agentId, payload.supersedes);
   // Held: staff, Client Services and the client's agents see it; client members only after Client Services approves.
-  const files = filesFor(input.itemId, summary, payload, input.now, folder, taken);
+  const files = filesFor(input.itemId, summary, payload, input.now, folder, taken, input.media ?? []);
   const summaryPath = files[0]?.path ? `${files[0].path}.md` : null;
   const stored = await storeWorkflowOutput({
     sql,
@@ -709,6 +742,13 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
     const known = await sql.get<{ id: string }>("SELECT id FROM client_work_requests WHERE id = ? AND organization_id = ?", [payload.workRequestId, route.organizationId]);
     if (!known) return { ok: false, error: "invalid", message: "work_request_id is not a request of this client." };
   }
+  let media: { name: string; bytes: Uint8Array; contentType: string }[] = [];
+  if (payload.mediaIds.length) {
+    if (!route.ok) return { ok: false, error: "invalid", message: "media_ids need a client this agent is assigned to." };
+    const loaded = await readyMediaBytes(sql, store, agent, route.organizationId, payload.mediaIds);
+    if (!loaded.ok) return { ok: false, error: loaded.error, message: loaded.message };
+    media = loaded.files;
+  }
 
   const itemId = crypto.randomUUID();
   // A big payload (attachments) waits in R2 while it is received or unfiled; the D1 row keeps a light copy.
@@ -739,7 +779,7 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
     await markUnfiled(sql, itemId, agent, payload, route.reason, route.organizationId, route.suggestedOrganizationId, now);
     return { ok: true, duplicate: false, state: "unfiled", workItemId: itemId, reason: route.reason };
   }
-  const filed = await writeFiled(sql, store, { itemId, agent, payload, route, actor: "auto", now });
+  const filed = await writeFiled(sql, store, { itemId, agent, payload, route, actor: "auto", now, media });
   if (filed.ok && payloadKey) await store.remove(payloadKey).catch(() => undefined);
   if (!filed.ok) {
     await markUnfiled(sql, itemId, agent, payload, "space_rejected", route.organizationId, null, now);

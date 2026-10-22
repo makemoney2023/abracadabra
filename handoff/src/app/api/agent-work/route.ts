@@ -60,7 +60,8 @@ export async function POST(request: Request) {
   const result = await fileAgentWork(sql, openObjectStore(), agent, payload, now);
   if (!result.ok) {
     if (result.error === "too_big") return NextResponse.json({ error: result.message, code: "too_big", limit_mb: limits.maxMb }, { status: 413 });
-    return NextResponse.json({ error: result.message }, { status: result.error === "forbidden" ? 403 : 400 });
+    const status = result.error === "forbidden" ? 403 : result.error === "conflict" ? 409 : 400;
+    return NextResponse.json({ error: result.message }, { status });
   }
   const skills = await skillsUsedFor(sql, agent, payload, result.duplicate ? null : result.workItemId, now);
   if (result.state === "filed") {
