@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A plan for the next pass on finished work. The set becomes an index, the open piece stays the proof, and the assigned Grok lead runs the staff chores on that same shelf.
+- **Why** — The shelf stopped the triple list. Scheduling, the whole set, and the agent piece query still sit apart from it. The agents are the staff for those chores. The client still approves.
+- **Code touchpoints** — `docs/superpowers/plans/2026-10-22-premium-finished-work.md`, `README.md`.
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — none.
+- **Verification** — Read against `setPieceShelf`, `currentPieces`, Post to social, and `/api/agent-social`.
+
+## 2026-10-22
+
 - **What changed** — A Library card opens that one piece. Approve, ask for a change, and Remove are on the piece. Social shows the calendar and a count that links back to the Library. Remove hides the piece from both lists. Put back brings it back. A live post has to be cancelled first.
 - **Why** — The Library, the finished-work page, and Social each listed the same work, and nothing could leave the list.
 - **Code touchpoints** — `handoff/src/lib/finished-shelf.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/lib/social-review.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/migrations/0045_library_item_removed.sql`.
