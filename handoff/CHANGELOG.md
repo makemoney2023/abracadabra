@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — The place-and-decide plan now keeps one piece per Library file, requires a network and a caption before the client sees it, sends staff to the calendar that can place it, and retries a failed send on the same post. The month overflow line stays "+N more".
+- **Why** — The first draft of the plan sent an unfinished piece to the client calendar, where a drop cannot place it, and a failed send could become a second post.
+- **Code touchpoints** — `docs/place-and-decide-plan.md`.
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — The plan calls for `agent_media.source_media_id`, `file_posters`, and `deliverable_items.source_file_id` when those slices are built. This commit adds none of them.
+- **Verification** — Checked against `sendPiece`, `addDeliverableItem`, `publishDeliverable`, `autoScheduleApproved`, `boardLists`, and the staff and client social pages.
+
+## 2026-10-22
+
 - **What changed** — A plan for the next Library and calendar pass: drop an approved piece onto a day, turn a Library still into a piece that needs a look, keep a clip's starting still, open on Needs a look, approve on the selected row, and name what a month day is hiding.
 - **Why** — The pictures are on the screen. The next gap is placing one on a day and landing on the decision.
 - **Code touchpoints** — `docs/place-and-decide-plan.md`, `docs/space-library-gameplan.md`, `README.md`.
