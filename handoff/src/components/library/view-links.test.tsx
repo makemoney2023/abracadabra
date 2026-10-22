@@ -32,16 +32,27 @@ describe("view link presentation", () => {
     const shown = renderToStaticMarkup(
       <PublicLibraryView
         token="tok"
-        result={{ ok: true, view: { title: "Q4", downloads: true, items: [{ publicId: "pub-1", title: "Q4 article", externalUrl: "https://news.example/q4", kind: "deliverable_item" }] } }}
+        result={{ ok: true, view: { title: "Q4", downloads: true, items: [{ publicId: "pub-1", title: "Q4 article", externalUrl: "https://news.example/q4", kind: "deliverable_item", artifactType: "article" }] } }}
       />,
     );
     expect(shown).toContain("https://news.example/q4");
+    expect(shown).toContain("Article");
+    expect(shown).toContain("Read article");
+    expect(shown).not.toContain(">Open</a>");
     expect(shown).not.toContain("Download");
     expect(shown).toContain("break-all");
+    const website = renderToStaticMarkup(
+      <PublicLibraryView
+        token="tok"
+        result={{ ok: true, view: { title: "Q4", downloads: false, items: [{ publicId: "pub-site", title: "Campaign site", externalUrl: "https://site.example", kind: "built_work", artifactType: "website" }] } }}
+      />,
+    );
+    expect(website).toContain("Website");
+    expect(website).toContain("Visit site");
     const file = renderToStaticMarkup(
       <PublicLibraryView
         token="tok"
-        result={{ ok: true, view: { title: "Q4", downloads: true, items: [{ publicId: "pub-2", title: "brief.pdf", externalUrl: null, kind: "file" }] } }}
+        result={{ ok: true, view: { title: "Q4", downloads: true, items: [{ publicId: "pub-2", title: "brief.pdf", externalUrl: null, kind: "file", artifactType: "file" }] } }}
       />,
     );
     expect(file).toContain("Download");

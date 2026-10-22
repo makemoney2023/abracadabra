@@ -59,6 +59,14 @@ export function LibraryBrowser({
 }) {
   const activeFilters = ["search", "status", "platform", "from", "to", "project", "needs"]
     .filter((key) => Boolean(query[key])).length;
+  const emptyAction = query.search
+    ? {
+        label: "Clear search",
+        href: libraryHref(slug, { ...query, search: undefined, cursor: undefined }),
+      }
+    : activeFilters > 0 || query.type
+      ? { label: "Clear filters", href: libraryHref(slug, {}) }
+      : null;
   return (
     <div className="flex flex-col gap-6">
       <LibraryTypeTabs slug={slug} query={query} counts={page?.counts} />
@@ -128,6 +136,7 @@ export function LibraryBrowser({
       <LibraryGallery
         artifacts={page?.artifacts ?? []}
         empty={emptyLibraryCopy({ search: query.search, type: query.type })}
+        emptyAction={emptyAction}
         viewLink={viewLink}
         promotionAction={promotionAction}
         promotionTargets={promotionTargets}

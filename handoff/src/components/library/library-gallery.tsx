@@ -12,12 +12,14 @@ type ShareSummary = { id: string; title: string | null; expiresAt: number | null
 export function LibraryGallery({
   artifacts,
   empty,
+  emptyAction,
   viewLink,
   promotionAction,
   promotionTargets = [],
 }: {
   artifacts: LibraryArtifact[];
   empty: string;
+  emptyAction?: { label: string; href: string } | null;
   viewLink?: { workspaceId: string; shares: ShareSummary[] } | null;
   promotionAction?: ((previous: PromotionState, formData: FormData) => Promise<PromotionState>) | null;
   promotionTargets?: { id: string; title: string }[];
@@ -75,7 +77,7 @@ export function LibraryGallery({
         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card/60 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium">Share finished work</p>
+              <p className="text-sm font-medium">Copy view link</p>
               <p className="text-sm text-muted-foreground">
                 {chosen.length === 0 ? "Select cards below, then create a read-only view link." : `${chosen.length} selected`}
               </p>
@@ -89,7 +91,7 @@ export function LibraryGallery({
           <ViewLinkDialog workspaceId={viewLink.workspaceId} items={items} shares={viewLink.shares} />
         </div>
       ) : null}
-      {artifacts.length === 0 ? <LibraryEmpty message={empty} /> : null}
+      {artifacts.length === 0 ? <LibraryEmpty message={empty} action={emptyAction} /> : null}
       {viewLink ? (
         <fieldset className="min-w-0">
           <legend className="mb-3 text-sm font-medium">Select finished work</legend>

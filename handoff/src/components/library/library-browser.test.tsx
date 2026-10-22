@@ -38,4 +38,34 @@ describe("library browser", () => {
     expect(html).toContain('value="project-1" selected');
     expect(html).toContain("Search and filters");
   });
+
+  it("offers to clear only the search when other filters are active", () => {
+    const html = renderToStaticMarkup(
+      <LibraryBrowser
+        slug="acme"
+        page={{
+          artifacts: [],
+          nextCursor: null,
+          counts: {
+            total: 0,
+            article: 0,
+            social: 0,
+            video: 0,
+            image: 0,
+            website: 0,
+            document: 0,
+            file: 0,
+          },
+        }}
+        query={{ search: "missing", status: "published", cursor: "old-page" }}
+        viewLink={{ workspaceId: "ws-1", shares: [] }}
+      />,
+    );
+
+    expect(html).toContain("No results for");
+    expect(html).toContain(">Clear search</a>");
+    expect(html).toContain('href="/w/acme/library?status=published"');
+    expect(html).toContain("Copy view link");
+    expect(html).not.toContain("Share finished work");
+  });
 });

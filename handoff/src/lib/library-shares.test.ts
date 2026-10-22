@@ -58,6 +58,12 @@ async function database(): Promise<Sql> {
     "INSERT INTO deliverable_items (id, deliverable_id, version, format, title, media_json, link_url, status, sort, work_item_id) VALUES ('item-1', 'd-1', 1, 'link', 'Q4 article', '[]', 'https://news.example/q4', 'approved', 0, 'work-item-1')",
   );
   await sql.run(
+    `INSERT INTO deliverable_artifact_metadata (
+       id, organization_id, workspace_id, deliverable_id, item_id, version, artifact_type, canonical_url, article_status, created_at, updated_at
+     ) VALUES ('meta-1', 'org-1', 'ws-1', 'd-1', 'item-1', 1, 'article', 'https://news.example/q4', 'published', ?, ?)`,
+    [NOW, NOW],
+  );
+  await sql.run(
     `INSERT INTO built_work (
        id, work_item_id, batch_id, organization_id, workspace_id, title, live_url, status, created_at
      ) VALUES ('built-1', 'work-built-1', 'batch-1', 'org-1', 'ws-1', 'Campaign site', 'https://site.example', 'live', ?)`,
@@ -123,6 +129,7 @@ describe("library view links", () => {
     if (!unlocked.ok) return;
     const opened = await openViewLink(sql, token, NOW, unlocked.cookie.value, { ip: "203.0.113.9", userAgent: "Mozilla/5.0 (Windows NT 10.0) Chrome/120.0.0.0" });
     expect(opened.ok && opened.view.items[0]?.title).toBe("Q4 article");
+    expect(opened.ok && opened.view.items[0]?.artifactType).toBe("article");
     expect(opened.ok && JSON.stringify(opened.view)).not.toContain("item-1");
     const access = await sql.get<{ user_agent: string | null; ip_hash: string | null }>("SELECT user_agent, ip_hash FROM library_share_events WHERE kind = 'opened'");
     expect(access?.user_agent).toBe("desktop-chrome");

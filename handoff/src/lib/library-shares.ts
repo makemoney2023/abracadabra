@@ -3,6 +3,7 @@ import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { flagEnabled, workerEnv } from "@/lib/worker-env";
 import { recordLibraryMetric } from "@/lib/library-metrics";
+import { deriveArtifactType, type LibraryArtifactType } from "@/lib/library-artifacts";
 
 const PBKDF2_ITERATIONS = 310_000;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -256,7 +257,7 @@ function available(share: ShareRow, now: number): boolean {
   return share.revoked_at == null && (share.expires_at == null || share.expires_at > now);
 }
 
-export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string }[] } } | { ok: false; error: "unavailable" | "locked" }> {
+export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string; artifactType: LibraryArtifactType }[] } } | { ok: false; error: "unavailable" | "locked" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "unavailable" };
   if (!shareHashPepperAvailable()) return { ok: false, error: "unavailable" };
   const share = await shareByToken(sql, token);
@@ -272,9 +273,14 @@ export async function openViewLink(sql: Sql, token: string, now: number, session
   const visible = [];
   for (const item of items) {
     if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version, "pinned"))) continue;
-    const title = await itemTitle(sql, item.resource_kind, item.resource_id, item.resource_version);
-    const external = share.show_external_links ? await itemUrl(sql, item.resource_kind, item.resource_id, item.resource_version) : null;
-    visible.push({ publicId: item.public_id, title, externalUrl: external, kind: item.resource_kind });
+    const presentation = await itemPresentation(sql, item.resource_kind, item.resource_id, item.resource_version);
+    visible.push({
+      publicId: item.public_id,
+      title: presentation.title,
+      externalUrl: share.show_external_links ? presentation.externalUrl : null,
+      kind: item.resource_kind,
+      artifactType: presentation.artifactType,
+    });
   }
   if (visible.length === 0) return { ok: false, error: "unavailable" };
   await noteShareAccess(sql, share.id, "opened", now, audit);
@@ -346,24 +352,49 @@ export async function noteShareAccess(sql: Sql, shareId: string, kind: "opened" 
   );
 }
 
-async function itemTitle(sql: Sql, kind: string, id: string, version = 0): Promise<string> {
-  if (kind === "deliverable_item") return (await sql.get<{ title: string }>("SELECT title FROM deliverable_items WHERE id = ? AND version = ?", [id, version]))?.title ?? "Finished work";
-  if (kind === "built_work") return (await sql.get<{ title: string }>("SELECT title FROM built_work WHERE id = ?", [id]))?.title ?? "Website";
-  return (await sql.get<{ relative_path: string }>("SELECT relative_path FROM files WHERE id = ?", [id]))?.relative_path.split("/").pop() ?? "File";
-}
-
-async function itemUrl(sql: Sql, kind: string, id: string, version: number): Promise<string | null> {
+async function itemPresentation(sql: Sql, kind: string, id: string, version: number): Promise<{
+  title: string;
+  externalUrl: string | null;
+  artifactType: LibraryArtifactType;
+}> {
   if (kind === "deliverable_item") {
-    const row = await sql.get<{ canonical_url: string | null; link_url: string | null }>(
-      `SELECT m.canonical_url, i.link_url FROM deliverable_items i
+    const row = await sql.get<{
+      title: string;
+      format: string;
+      channel: string | null;
+      link_url: string | null;
+      canonical_url: string | null;
+      artifact_type: string | null;
+      metadata_id: string | null;
+    }>(
+      `SELECT i.title, i.format, i.channel, i.link_url, m.canonical_url, m.artifact_type, m.id AS metadata_id
+       FROM deliverable_items i
        LEFT JOIN deliverable_artifact_metadata m ON m.item_id = i.id AND m.version = i.version
        WHERE i.id = ? AND i.version = ?`,
       [id, version],
     );
-    return row?.canonical_url ?? row?.link_url ?? null;
+    return {
+      title: row?.title ?? "Finished work",
+      externalUrl: row?.canonical_url ?? row?.link_url ?? null,
+      artifactType: deriveArtifactType({
+        sourceKind: "deliverable_item",
+        format: row?.format,
+        channel: row?.channel,
+        hasArticleMetadata: Boolean(row?.metadata_id),
+        artifactTypeOverride: row?.artifact_type,
+      }),
+    };
   }
-  if (kind === "built_work") return (await sql.get<{ live_url: string | null }>("SELECT live_url FROM built_work WHERE id = ?", [id]))?.live_url ?? null;
-  return null;
+  if (kind === "built_work") {
+    const row = await sql.get<{ title: string; live_url: string | null }>("SELECT title, live_url FROM built_work WHERE id = ?", [id]);
+    return { title: row?.title ?? "Website", externalUrl: row?.live_url ?? null, artifactType: "website" };
+  }
+  const row = await sql.get<{ relative_path: string }>("SELECT relative_path FROM files WHERE id = ?", [id]);
+  return {
+    title: row?.relative_path.split("/").pop() ?? "File",
+    externalUrl: null,
+    artifactType: "file",
+  };
 }
 
 async function validSession(sql: Sql, shareId: string, token: string, now: number): Promise<boolean> {

@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — Empty Library searches now offer a one-click search reset without discarding the remaining filters. Upload-link copy results are announced to assistive technology, collection item states use readable status badges, and the selection panel explicitly says “Copy view link.” Public view links now identify the artifact type and use specific actions such as “Read article” and “Visit site.”
+- **Why** — The final UX audit found a small set of current, reproducible gaps in recovery, accessibility feedback, and public-link clarity.
+- **Code touchpoints** — `handoff/src/components/library/`, `handoff/src/components/share-link.tsx`, and `handoff/src/lib/library-shares.ts`.
+- **Data-flow impact** — Opening a public view link projects each item’s presentation metadata once, including its normalized artifact type.
+- **API / schema impact** — The internal public-view response adds `artifactType`; no migration.
+- **Verification** — `npm test`, `npm run typecheck:agent`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+
+## 2026-10-22
+
 - **What changed** — The Library keeps its type navigation on Sources, tucks optional filters and view-link settings behind deliberate controls, and shows a compact finished/needs-attention summary. Article promotion previews the exact tracked URL for every selected network, can copy only the selected article media into a new or existing draft, and links a promoted article back to its social collection. Collection review now reads article metadata instead of guessing from legacy link text and shows a clean unavailable-media fallback. Archived built work is excluded from Library counts, and public links stop exposing work after it is archived, withdrawn, or superseded. Workspace APIs accept either the route slug or the internal workspace id.
 - **Why** — The first pass exposed the new capabilities but made common browsing noisy, hid navigation on Sources, and left promotion and public-link edge cases ambiguous.
 - **Code touchpoints** — `handoff/src/components/library/`, `handoff/src/components/social/platform-post-preview-view.tsx`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/app/api/workspaces/[slug]/`, `handoff/src/lib/library-queries.ts`, `handoff/src/lib/article-promotions.ts`, `handoff/src/lib/library-shares.ts`, `handoff/src/app/view/[token]/`, `handoff/src/proxy.ts`.

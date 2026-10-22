@@ -1,7 +1,18 @@
-const KIND_LABEL: Record<string, string> = {
+import type { LibraryArtifactType } from "@/lib/library-artifacts";
+
+const TYPE_LABEL: Record<LibraryArtifactType, string> = {
+  article: "Article",
+  social: "Social",
+  video: "Video",
+  image: "Image",
+  website: "Website",
+  document: "Document",
   file: "File",
-  built_work: "Website",
-  deliverable_item: "Finished work",
+};
+
+const ACTION_LABEL: Partial<Record<LibraryArtifactType, string>> = {
+  article: "Read article",
+  website: "Visit site",
 };
 
 export function PublicLibraryView({
@@ -10,7 +21,7 @@ export function PublicLibraryView({
 }: {
   token: string;
   result:
-    | { ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind?: string }[] } }
+    | { ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind?: string; artifactType?: LibraryArtifactType }[] } }
     | { ok: false; error: "unavailable" | "locked" };
 }) {
   if (!result.ok && result.error === "locked") {
@@ -48,11 +59,11 @@ export function PublicLibraryView({
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {result.view.items.map((item) => (
           <li key={item.publicId} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-            <p className="eyebrow text-optic">{KIND_LABEL[item.kind ?? ""] ?? "Finished work"}</p>
+            <p className="eyebrow text-optic">{item.artifactType ? TYPE_LABEL[item.artifactType] : "Finished work"}</p>
             <p className="font-heading text-2xl">{item.title}</p>
             {item.externalUrl ? (
               <a className="break-all text-sm underline" href={item.externalUrl} target="_blank" rel="noreferrer noopener">
-                Open
+                {item.artifactType ? ACTION_LABEL[item.artifactType] ?? "Open" : "Open"}
               </a>
             ) : null}
             {result.view.downloads && item.kind === "file" ? (

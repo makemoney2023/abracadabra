@@ -61,6 +61,17 @@ export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
   );
 }
 
-export function LibraryEmpty({ message }: { message: string }) {
-  return <p className="text-sm text-muted-foreground">{message}</p>;
+export function LibraryEmpty({
+  message,
+  action,
+}: {
+  message: string;
+  action?: { label: string; href: string } | null;
+}) {
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <p className="text-sm text-muted-foreground">{message}</p>
+      {action ? <a className="inline-flex min-h-11 items-center text-sm underline" href={action.href}>{action.label}</a> : null}
+    </div>
+  );
 }
