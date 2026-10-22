@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { clock } from "@/lib/clock";
@@ -16,6 +16,10 @@ export default async function PublicViewPage({ params }: { params: Promise<{ tok
   const sql = await openHandoffDb();
   await migrate(sql);
   const jar = await cookies();
-  const opened = await openViewLink(sql, token, clock(), jar.get("library_view")?.value);
+  const headerList = await headers();
+  const opened = await openViewLink(sql, token, clock(), jar.get("library_view")?.value, {
+    ip: headerList.get("cf-connecting-ip") ?? headerList.get("x-forwarded-for"),
+    userAgent: headerList.get("user-agent"),
+  });
   return <PublicLibraryView token={token} result={opened} />;
 }

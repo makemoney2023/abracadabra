@@ -3,12 +3,19 @@
 import { useState } from "react";
 import { copyLinkFeedback } from "./library-view";
 
-export function CopyLinkButton({ url }: { url: string }) {
+export function CopyLinkButton({ url, workspaceId }: { url: string; workspaceId?: string }) {
   const [feedback, setFeedback] = useState<{ message: string; showUrl: boolean } | null>(null);
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
       setFeedback(copyLinkFeedback(true));
+      if (workspaceId) {
+        void fetch(`/api/workspaces/${workspaceId}/library-metrics`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: "library_link_copied" }),
+        }).catch(() => undefined);
+      }
     } catch {
       setFeedback(copyLinkFeedback(false));
     }

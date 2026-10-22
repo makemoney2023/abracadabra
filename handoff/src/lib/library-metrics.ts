@@ -1,6 +1,16 @@
 import type { Sql } from "@/db/sql";
 
-export type LibraryMetricName = "library_listed" | "view_link_created" | "view_link_opened" | "view_link_downloaded" | "article_promotion_created";
+export type LibraryMetricName =
+  | "library_listed"
+  | "library_search_empty"
+  | "library_link_copied"
+  | "view_link_created"
+  | "view_link_opened"
+  | "view_link_updated"
+  | "view_link_revoked"
+  | "view_link_download_attempted"
+  | "view_link_downloaded"
+  | "article_promotion_created";
 
 export type LibraryMetric = {
   name: LibraryMetricName;

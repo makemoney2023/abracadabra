@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 type ViewItem = { resourceKind: "deliverable_item" | "built_work" | "file"; resourceId: string; resourceVersion: number };
-type ShareSummary = { id: string; title: string | null; expiresAt: number | null; revokedAt: number | null };
+type ShareEvent = { kind: string; at: number; userAgent: string | null };
+type ShareSummary = { id: string; title: string | null; expiresAt: number | null; revokedAt: number | null; newer?: boolean; events?: ShareEvent[] };
 
 const EXPIRY = [
   { value: "", label: "No expiry" },
@@ -26,6 +27,7 @@ export function ViewLinkDialog({
   const [pending, setPending] = useState(false);
   const [created, setCreated] = useState<ShareSummary[]>([]);
   const [gone, setGone] = useState<Record<string, boolean>>({});
+  const [fresh, setFresh] = useState<Record<string, boolean>>({});
   const live = [...shares, ...created].filter((share) => share.revokedAt == null && !gone[share.id]);
 
   async function create(formData: FormData) {
@@ -67,6 +69,17 @@ export function ViewLinkDialog({
     } catch {
       setMessage("Could not copy");
     }
+  }
+
+  async function update(shareId: string) {
+    setMessage("");
+    const response = await fetch(`/api/workspaces/${workspaceId}/view-links/${shareId}`, { method: "PATCH" });
+    if (!response.ok) {
+      setMessage("Could not update the view link.");
+      return;
+    }
+    setFresh((current) => ({ ...current, [shareId]: true }));
+    setMessage("View link now uses the latest version.");
   }
 
   async function revoke(shareId: string) {
@@ -120,11 +133,28 @@ export function ViewLinkDialog({
       {live.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {live.map((share) => (
-            <li key={share.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <span>{share.title || "Untitled view link"}{share.expiresAt ? ` · expires ${new Date(share.expiresAt).toLocaleDateString("en-CA")}` : ""}</span>
-              <button type="button" className="inline-flex min-h-11 items-center underline" onClick={() => void revoke(share.id)}>
-                Revoke
-              </button>
+            <li key={share.id} className="flex flex-col gap-2 rounded-xl border border-border p-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span>{share.title || "Untitled view link"}{share.expiresAt ? ` · expires ${new Date(share.expiresAt).toLocaleDateString("en-CA")}` : ""}</span>
+                <span className="flex gap-3">
+                  {share.newer && !fresh[share.id] ? (
+                    <button type="button" className="inline-flex min-h-11 items-center underline" onClick={() => void update(share.id)}>
+                      Update to the latest version
+                    </button>
+                  ) : null}
+                  <button type="button" className="inline-flex min-h-11 items-center underline" onClick={() => void revoke(share.id)}>
+                    Revoke
+                  </button>
+                </span>
+              </div>
+              {share.newer && !fresh[share.id] ? <p>A newer version is available</p> : null}
+              {share.events && share.events.length > 0 ? (
+                <ul className="text-muted-foreground">
+                  {share.events.map((event) => (
+                    <li key={`${event.kind}-${event.at}`}>{event.kind} · {new Date(event.at).toLocaleString("en-CA", { hour12: false })}{event.userAgent ? ` · ${event.userAgent}` : ""}</li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
         </ul>

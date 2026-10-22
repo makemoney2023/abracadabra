@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A view link keeps the version that was shared. When a later round is published, the sender sees that a newer version is available and can update the link. Opens and downloads record a coarse browser label and an IP hash, and the sender can see that history. Library opens, empty searches, copied article links, view-link updates, revokes, and download attempts are counted without storing the link or the search text.
+- **Why** — A new round must not silently replace a link someone already sent, and an open needs a record.
+- **Code touchpoints** — `handoff/src/lib/library-shares.ts`, `handoff/src/lib/library-metrics.ts`, `handoff/src/app/api/workspaces/[slug]/view-links/[shareId]/route.ts`, `handoff/src/app/api/workspaces/[slug]/library-metrics/route.ts`, `handoff/src/app/view/[token]/`, `handoff/src/components/library/view-link-dialog.tsx`.
+- **Data-flow impact** — The pinned item stays readable after a newer round is published. Updating the link re-pins the current published items and writes an `updated` event.
+- **API / schema impact** — `PATCH /api/workspaces/[slug]/view-links/[shareId]` updates the pin. `POST /api/workspaces/[slug]/library-metrics` records an article-link copy. No migration.
+- **Verification** — `npx vitest run src/lib/library-shares.test.ts src/lib/library-metrics.test.ts src/components/library` and `npx tsc --noEmit`.
+
+## 2026-10-22
+
 - **What changed** — The Library is a gallery. Cards show a type plate or preview, date, and status. Filters include status, platform, date, and needs action, and the counts follow those filters. Pagination no longer drops records after the first hundred in a family. A view link is built from selected work, can expire, and offers a file download only for a file. A published article can become a social draft, and opening the form again can save another draft. Collection review uses the article card for a link, and hides Approve all when nothing is pending. Finished work and Sources are no longer extra items beside Library in the workspace nav.
 - **Why** — The first Library pass stored the data but hid records, miscounted review work, and presented finished work as a stack of plain text.
 - **Code touchpoints** — `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/lib/article-promotions.ts`, `handoff/src/lib/library-shares.ts`.

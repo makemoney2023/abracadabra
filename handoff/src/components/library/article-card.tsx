@@ -42,7 +42,7 @@ export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
         ) : (
           <p className="text-sm">Link unavailable</p>
         )}
-        {model.copyValue ? <CopyLinkButton url={model.copyValue} /> : null}
+        {model.copyValue ? <CopyLinkButton url={model.copyValue} workspaceId={artifact.workspaceId} /> : null}
       </div>
     </article>
   );

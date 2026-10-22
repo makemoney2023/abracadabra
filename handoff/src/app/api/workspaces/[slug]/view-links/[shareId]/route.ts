@@ -3,7 +3,8 @@ import { openHandoffDb } from "@/db/open";
 import { can, type Caller } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { cookieValue } from "@/lib/downloads";
-import { revokeViewLink } from "@/lib/library-shares";
+import { recordLibraryMetric } from "@/lib/library-metrics";
+import { refreshViewLink, revokeViewLink } from "@/lib/library-shares";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -24,5 +25,21 @@ export async function DELETE(request: Request, context: { params: Promise<{ slug
   if (denied) return denied;
   const revoked = await revokeViewLink(sql, caller, workspaceId, shareId, Date.now());
   if (!revoked.ok) return Response.json({ error: "missing" }, { status: revoked.error === "missing" ? 404 : 403 });
+  await recordLibraryMetric(sql, { name: "view_link_revoked", organizationId: revoked.organizationId, workspaceId, actorId: caller.userId });
   return Response.json({ ok: true });
+}
+
+export async function PATCH(request: Request, context: { params: Promise<{ slug: string; shareId: string }> }) {
+  const { slug: workspaceId, shareId } = await context.params;
+  const sql = await openHandoffDb();
+  await migrate(sql);
+  const caller = await getCaller(sql, cookieValue(request, SESSION_COOKIE), Date.now());
+  const denied = await gate(sql, caller, workspaceId);
+  if (denied) return denied;
+  const updated = await refreshViewLink(sql, caller, workspaceId, shareId, Date.now());
+  if (!updated.ok) return Response.json({ error: "missing" }, { status: updated.error === "missing" ? 404 : 403 });
+  if (updated.updated) {
+    await recordLibraryMetric(sql, { name: "view_link_updated", organizationId: updated.organizationId, workspaceId, actorId: caller.userId });
+  }
+  return Response.json({ updated: updated.updated });
 }

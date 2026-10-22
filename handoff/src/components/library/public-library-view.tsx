@@ -1,3 +1,9 @@
+const KIND_LABEL: Record<string, string> = {
+  file: "File",
+  built_work: "Website",
+  deliverable_item: "Finished work",
+};
+
 export function PublicLibraryView({
   token,
   result,
@@ -42,6 +48,7 @@ export function PublicLibraryView({
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {result.view.items.map((item) => (
           <li key={item.publicId} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
+            <p className="eyebrow text-optic">{KIND_LABEL[item.kind ?? ""] ?? "Finished work"}</p>
             <p className="font-heading text-2xl">{item.title}</p>
             {item.externalUrl ? (
               <a className="break-all text-sm underline" href={item.externalUrl} target="_blank" rel="noreferrer noopener">

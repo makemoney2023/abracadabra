@@ -11,6 +11,12 @@ describe("view link presentation", () => {
     expect(dialog).toContain("Create view link");
     expect(dialog).toContain("It does not let them upload.");
     expect(dialog).not.toContain("Share link");
+    const newer = renderToStaticMarkup(
+      <ViewLinkDialog workspaceId="ws-1" items={[]} shares={[{ id: "share-1", title: "Q4", expiresAt: null, revokedAt: null, newer: true, events: [{ kind: "opened", at: 1_800_000_000_000, userAgent: "desktop-chrome" }] }]} />,
+    );
+    expect(newer).toContain("A newer version is available");
+    expect(newer).toContain("desktop-chrome");
+    expect(newer).toContain("Update to the latest version");
     const unavailable = renderToStaticMarkup(<PublicLibraryView token="tok" result={{ ok: false, error: "unavailable" }} />);
     expect(unavailable).toContain("This link is not available");
     expect(unavailable).not.toContain("item-1");

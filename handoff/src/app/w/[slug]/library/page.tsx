@@ -13,6 +13,7 @@ import { listLibraryArtifacts, type LibrarySort } from "@/lib/library-queries";
 import type { LibraryArtifactType, LibraryStatus } from "@/lib/library-artifacts";
 import { openSession } from "@/lib/current";
 import { createArticlePromotionAction } from "@/app/deliverables/[id]/article-promotion-actions";
+import { recordLibraryMetric } from "@/lib/library-metrics";
 
 const TYPES = new Set(["article", "social", "video", "image", "website", "document", "file"]);
 const STATUSES = new Set(["changes_requested", "needs_attention", "needs_review", "publishing", "scheduled", "partially_published", "published", "ready", "approved", "draft"]);
@@ -79,6 +80,25 @@ export default async function LibraryPage({
     ? await sql.all<{ file_id: string }>("SELECT file_id FROM library_file_selections WHERE workspace_id = ? AND revoked_at IS NULL", [workspace.id])
     : [];
   const selectedIds = new Set(selected.map((row) => row.file_id));
+  const organization = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM workspaces WHERE id = ?", [workspace.id]);
+  if (result.ok && !read("cursor") && organization?.organization_id) {
+    await recordLibraryMetric(sql, {
+      name: "library_listed",
+      organizationId: organization.organization_id,
+      workspaceId: workspace.id,
+      actorId: caller.userId,
+      count: result.page.counts.total,
+    });
+    if (read("search") && result.page.counts.total === 0) {
+      await recordLibraryMetric(sql, {
+        name: "library_search_empty",
+        organizationId: organization.organization_id,
+        workspaceId: workspace.id,
+        actorId: caller.userId,
+        count: 0,
+      });
+    }
+  }
   return (
     <main className="mx-auto flex w-full max-w-[76rem] flex-1 flex-col gap-6 px-6 py-12">
       <div className="flex flex-col gap-2">
