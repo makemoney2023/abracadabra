@@ -4,9 +4,9 @@ import { StatusMark, TypePlate } from "./type-plate";
 
 const ACTION_LABEL: Record<string, string> = {
   visit_site: "Visit site",
-  review: "Review",
-  view_request: "View request",
-  view_schedule: "View schedule",
+  review: "Approve",
+  view_request: "See the changes",
+  view_schedule: "On the calendar",
   open_post: "Open post",
   preview: "Preview",
   open_file: "Open file",
@@ -20,14 +20,25 @@ function externalAction(kind: string): boolean {
 export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
   if (artifact.artifactType === "article") return <ArticleCard artifact={artifact} />;
   const action = artifact.actions[0];
-  const label = action ? ACTION_LABEL[action.kind] ?? action.label : "Open";
+  const href = action?.href ?? null;
+  const external = action ? externalAction(action.kind) : false;
   const secondary = artifact.actions.slice(1).filter((item) => item.href);
+  const body = (
+    <>
+      <div className="relative">
+        <TypePlate artifact={artifact} />
+        <span className="absolute left-3 top-3"><StatusMark status={artifact.primaryStatus} /></span>
+      </div>
+      <h2 className="line-clamp-1 text-base font-medium">{artifact.title}</h2>
+    </>
+  );
   return (
     <article className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-3">
-      <TypePlate artifact={artifact} />
-      <p className="eyebrow text-muted-foreground">{artifact.artifactType}</p>
-      <h2 className="font-heading text-2xl">{artifact.title}</h2>
-      <StatusMark status={artifact.primaryStatus} />
+      {href ? (
+        <a className="flex flex-col gap-3" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer noopener" : undefined}>
+          {body}
+        </a>
+      ) : body}
       {artifact.promotesTitle ? <p className="text-sm">Promotes: {artifact.promotesTitle}</p> : null}
       {artifact.destinations.length > 0 ? (
         <ul className="flex flex-wrap gap-2 text-xs">
@@ -36,13 +47,6 @@ export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
           ))}
         </ul>
       ) : null}
-      {action?.href ? (
-        <a className="mt-auto inline-flex min-h-11 items-center text-sm underline" href={action.href} target={externalAction(action.kind) ? "_blank" : undefined} rel={externalAction(action.kind) ? "noreferrer noopener" : undefined}>
-          {label}
-        </a>
-      ) : (
-        <p className="mt-auto text-sm">{label}</p>
-      )}
       {secondary.length > 0 ? (
         <details>
           <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm underline">More actions</summary>

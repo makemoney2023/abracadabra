@@ -2,10 +2,19 @@
 
 ## 2026-10-22
 
+- **What changed** — The social rail, the Library, Sources, and a share page lead with the picture. A Library card opens the work. Share is a button, and the public page shows the pictures on that share. Needs a look and Changes asked are the words on the card and the rail.
+- **Why** — The rail and the Library showed names, and Review and the view link sounded like the same action.
+- **Code touchpoints** — `handoff/src/lib/picture-role.ts`, `handoff/src/components/social/social-rail.tsx`, `handoff/src/components/library/library-gallery.tsx`, `handoff/src/components/library/artifact-card.tsx`, `handoff/src/components/library/public-library-view.tsx`, `handoff/src/lib/library-shares.ts`, `handoff/src/app/view/[token]/media/[publicId]/route.ts`, `handoff/src/components/library/sources-browser.tsx`.
+- **Data-flow impact** — Approval is unchanged. A share image is read only after the view token authorizes that item.
+- **API / schema impact** — `GET /view/[token]/media/[publicId]` streams one still for an item on that share. No migration.
+- **Verification** — `npx vitest run` on the social rail, calendar pictures, library cards, sources, and view links, plus `npx tsc --noEmit` and eslint on the changed files.
+
+## 2026-10-22
+
 - **What changed** — A gameplan for the Space library and the social side rail. The rail, the Library, Sources, and a share page lead with the picture. Review stops being a link, and sharing is a button.
 - **Why** — The rail and the Library show names, and Review and the view link sound like the same action.
 - **Code touchpoints** — `docs/space-library-gameplan.md`, `README.md`, `docs/superpowers/specs/2026-10-21-handoff-library-and-sharing-design.md`.
-- **Data-flow impact** — none. The plan is not built.
+- **Data-flow impact** — none. The plan was written first, then built in the entry above.
 - **API / schema impact** — none.
 - **Verification** — Checked against the current rail, Library cards, Sources list, and public share page.
 

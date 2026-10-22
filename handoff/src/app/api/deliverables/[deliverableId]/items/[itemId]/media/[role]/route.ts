@@ -1,21 +1,20 @@
 import { migrate } from "@/db/migrate";
 import { visibleMedia } from "@/db/deliverables";
 import { openHandoffDb } from "@/db/open";
-import { MEDIA_ROLES } from "@/lib/deliverable-manifest";
 import { cookieValue } from "@/lib/downloads";
 import { openObjectStore } from "@/lib/store/objects";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-const ROLES = new Set<string>(MEDIA_ROLES);
+const ROLE = /^[\w.-]{1,64}$/;
 
 export async function GET(
   request: Request,
   context: { params: Promise<{ deliverableId: string; itemId: string; role: string }> },
 ) {
   const { deliverableId, itemId, role } = await context.params;
-  if (!ROLES.has(role)) return new Response(null, { status: 404 });
+  if (!ROLE.test(role)) return new Response(null, { status: 404 });
   const sql = await openHandoffDb();
   await migrate(sql);
   const caller = await getCaller(sql, cookieValue(request, SESSION_COOKIE), Date.now());

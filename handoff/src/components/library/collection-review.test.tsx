@@ -30,7 +30,7 @@ describe("collection review", () => {
     expect(header).toContain("1 approved");
     expect(header).toContain("2 pending");
     const itemState = renderToStaticMarkup(<CollectionItemState status="changes_requested" />);
-    expect(itemState).toContain("Changes requested");
+    expect(itemState).toContain("Changes asked");
     expect(itemState).toContain("rounded-full");
     const footer = renderToStaticMarkup(
       <CollectionReviewFooter pending={2} changes={1}>

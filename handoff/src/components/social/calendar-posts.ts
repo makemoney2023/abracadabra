@@ -1,4 +1,5 @@
 import type { SocialAccount, SocialPost } from "@/lib/social";
+import { pictureRole, type PictureMedia } from "@/lib/picture-role";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import { postOnCalendar } from "./social-board";
 
@@ -32,9 +33,10 @@ function firstAccount(post: SocialPost): string {
 export function calendarPosts(
   posts: SocialPost[],
   accounts: SocialAccount[],
-  pieces: { id: string; status: string }[],
+  pieces: { id: string; status: string; media?: PictureMedia[] }[],
 ): CalendarCard[] {
   const approval = new Map(pieces.map((piece) => [piece.id, piece.status]));
+  const media = new Map(pieces.map((piece) => [piece.id, piece.media ?? []]));
   return posts.flatMap((post) => {
     if (!postOnCalendar({ status: post.status, error: post.error, scheduledFor: post.scheduled_for })) return [];
     const accountId = firstAccount(post);
@@ -48,7 +50,7 @@ export function calendarPosts(
       state: post.status,
       at: post.scheduled_for ?? post.created_at,
       timezone: post.timezone || "UTC",
-      thumbnailRole: "main",
+      thumbnailRole: pictureRole(media.get(post.item_id) ?? []) ?? "",
       deliverableId: post.deliverable_id,
       itemId: post.item_id,
       accountId,

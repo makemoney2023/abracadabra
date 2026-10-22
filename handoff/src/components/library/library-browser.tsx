@@ -69,6 +69,7 @@ export function LibraryBrowser({
       : null;
   return (
     <div className="flex flex-col gap-6">
+      <LibraryFinder slug={slug} query={query} />
       <LibraryTypeTabs slug={slug} query={query} counts={page?.counts} />
       <details className="rounded-2xl border border-border bg-card" open={activeFilters > 0}>
         <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-3 px-4 text-sm font-medium">
@@ -142,6 +143,31 @@ export function LibraryBrowser({
         promotionTargets={promotionTargets}
       />
       {page?.nextCursor ? <Link className="inline-flex min-h-11 items-center text-sm underline" href={nextLibraryHref(slug, query, page.nextCursor)}>Next</Link> : null}
+    </div>
+  );
+}
+
+const FINDER_KEYS = ["type", "status", "platform", "project", "from", "to", "sort", "needs"] as const;
+
+function LibraryFinder({ slug, query }: { slug: string; query: Record<string, string | undefined> }) {
+  const looking = query.status === "needs_review";
+  const tab = looking ? "border-optic bg-optic/10 text-optic" : "border-border";
+  const all = !looking ? "border-optic bg-optic/10 text-optic" : "border-border";
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${all}`} href={libraryHref(slug, { ...query, status: undefined, needs: undefined, cursor: undefined })}>
+        All
+      </Link>
+      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${tab}`} href={libraryHref(slug, { ...query, status: "needs_review", needs: undefined, cursor: undefined })}>
+        Needs a look
+      </Link>
+      <form action={`/w/${slug}/library`} className="flex min-w-[12rem] flex-1 items-center gap-2">
+        {FINDER_KEYS.map((key) => query[key] ? <input key={key} type="hidden" name={key} value={query[key]} /> : null)}
+        <label className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+          Search
+          <input name="search" defaultValue={query.search ?? ""} className="min-h-11 w-full rounded-md border border-border bg-background px-3" />
+        </label>
+      </form>
     </div>
   );
 }

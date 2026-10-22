@@ -69,10 +69,11 @@ describe("library cards", () => {
       previewSrc: "/api/preview/review",
     });
     const html = renderToStaticMarkup(createElement(ArticleCard, { artifact: awaitingReview }));
-    expect(html).toContain("Review");
     expect(html).toContain("/w/acme/work/d-review");
+    expect(html).toContain("Needs a look");
     expect(html).toContain("Copy link");
     expect(html).toContain('alt="Preview of Review this article"');
+    expect(html).not.toContain(">Review<");
     expect(html).not.toContain("Link unavailable");
   });
 
@@ -96,8 +97,9 @@ describe("library cards", () => {
       href: "https://live.example",
     });
     const html = renderToStaticMarkup(createElement(ArtifactCard, { artifact: site }));
-    expect(html).toContain("Visit site");
     expect(html).toContain("https://live.example");
+    expect(html).toContain("Live site");
+    expect(html).toContain('target="_blank"');
     const href = nextLibraryHref("acme", { type: "article", search: "Q4" }, "cursor-1");
     expect(href).toContain("/w/acme/library?");
     expect(href).toContain("type=article");
@@ -132,15 +134,25 @@ describe("library cards", () => {
     expect(html).toContain("/w/acme/library?type=article&amp;search=brief");
   });
 
-  it("presents view-link selection as one named group with a visible action", () => {
+  it("keeps share selection behind the Share button", () => {
     const html = renderToStaticMarkup(createElement(LibraryGallery, {
       artifacts: [article],
       empty: "Nothing here.",
       viewLink: { workspaceId: "ws-1", shares: [] },
     }));
-    expect(html).toContain("<fieldset");
-    expect(html).toContain("Select finished work");
-    expect(html).toContain("Create view link");
-    expect(html).not.toContain("<details");
+    expect(html).toContain(">Share</button>");
+    expect(html).not.toContain("checkbox");
+    expect(html).not.toContain("Add to view link");
+    expect(html).not.toContain("Create view link");
+    const sharing = renderToStaticMarkup(createElement(LibraryGallery, {
+      artifacts: [article],
+      empty: "Nothing here.",
+      viewLink: { workspaceId: "ws-1", shares: [] },
+      initialSharing: true,
+    }));
+    expect(sharing).toContain("checkbox");
+    expect(sharing).toContain("Select Q4 article");
+    expect(sharing).toContain(">Share<");
+    expect(sharing).toContain("It does not let them upload.");
   });
 });

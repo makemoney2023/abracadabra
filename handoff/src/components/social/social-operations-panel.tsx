@@ -9,7 +9,9 @@ import { ApproveForm, ChangesForm } from "@/app/w/[slug]/work/forms";
 import { CancelSocialPostForm, MoveSocialPostForm } from "@/app/clients/social-forms";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import type { SocialReviewPiece } from "@/lib/social-review";
+import { pictureAddress } from "@/lib/picture-role";
 import { clientSocialReview } from "./client-social-review";
+import { ReviewList } from "./social-rail";
 import { SocialPieceCard } from "./social-piece-card";
 import { pieceCardView } from "./social-piece-view";
 import { operationsView, type AttentionRow, type OperationsPost } from "./social-operations";
@@ -33,12 +35,6 @@ const ATTENTION_LABEL: Record<string, string> = {
   missing_requirement: "Missing a requirement",
   stale_plan: "Plan is out of date",
   uncertain_outcome: "Outcome unclear",
-};
-
-const REVIEW_LABEL: Record<string, string> = {
-  pending: "Needs a look",
-  changes_requested: "Changes asked",
-  approved: "Approved",
 };
 
 /** Attention, the pieces waiting for a decision, and one day/week/month calendar. */
@@ -100,7 +96,7 @@ export function SocialOperationsPanel({
     approval: post.approval,
     cancelled: post.cancelled,
     itemId: post.itemId,
-    thumbnailSrc: post.deliverableId && post.itemId ? `/api/deliverables/${post.deliverableId}/items/${post.itemId}/media/${post.thumbnailRole || "main"}` : undefined,
+    thumbnailSrc: post.deliverableId && post.itemId && post.thumbnailRole ? pictureAddress(post.deliverableId, post.itemId, post.thumbnailRole) : undefined,
   }));
   const move = async (postId: string, startAt: string) => {
     const body = new FormData();
@@ -191,47 +187,6 @@ export function SocialOperationsPanel({
         <PostDetail post={selectedPost} organizationId={organizationId} canReschedule={canReschedule} timeZone={timeZone} />
       ) : null}
     </section>
-  );
-}
-
-function ReviewList({
-  title,
-  empty,
-  pieces,
-  selectedId,
-  onSelect,
-}: {
-  title: string;
-  empty: string;
-  pieces: SocialReviewPiece[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-semibold">
-        {title} <span className="text-muted-foreground">({pieces.length})</span>
-      </h3>
-      {pieces.length === 0 ? <p className="text-sm text-muted-foreground">{empty}</p> : null}
-      <ul className="flex flex-col gap-2">
-        {pieces.map((piece) => (
-          <li key={piece.id}>
-            <button
-              type="button"
-              onClick={() => onSelect(piece.id)}
-              aria-pressed={selectedId === piece.id}
-              className={`flex w-full flex-col gap-1 rounded-xl border px-3 py-2 text-left text-sm ${selectedId === piece.id ? "border-foreground" : "border-border"}`}
-            >
-              <span className="font-medium">{piece.title}</span>
-              <span className="text-xs text-muted-foreground">
-                {REVIEW_LABEL[piece.status] ?? piece.status} · {piece.deliverableTitle}
-              </span>
-              {piece.caption ? <span className="line-clamp-2 text-xs text-muted-foreground">{piece.caption}</span> : null}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 

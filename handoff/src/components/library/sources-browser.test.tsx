@@ -41,4 +41,21 @@ describe("sources browser", () => {
     expect(html).not.toContain("file-2");
     expect(html).toContain("min-h-11");
   });
+
+  it("shows a picture for a photo and no preview image for a pdf", () => {
+    const html = renderToStaticMarkup(
+      <SourcesBrowser
+        slug="acme"
+        canSelect
+        query={{}}
+        files={[
+          { id: "pic-1", name: "brand/window.png", status: "clean", selected: false },
+          { id: "doc-1", name: "brand/brief.pdf", status: "clean", selected: false },
+        ]}
+      />,
+    );
+    expect(html).toContain("/api/files/pic-1/preview");
+    expect(html).toContain("Show in Library");
+    expect(html).not.toContain("/api/files/doc-1/preview");
+  });
 });

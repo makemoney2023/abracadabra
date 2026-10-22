@@ -4,6 +4,7 @@ import type { Sql } from "@/db/sql";
 import { seesHeldWork } from "@/lib/held-work";
 import { listViewLinks } from "@/lib/library-shares";
 import { localPublication } from "@/lib/social-queries";
+import { pictureAddress, pictureRole, type PictureMedia } from "@/lib/picture-role";
 import {
   LIBRARY_ARTIFACT_TYPES,
   projectLibraryArtifact,
@@ -353,23 +354,27 @@ function searchClause(columns: string[], search: string, params: unknown[], extr
   return ` AND (${parts.join(" OR ")})`;
 }
 
-function previewSrc(mediaJson: string, deliverableId: string, itemId: string): string | null {
+export function previewSrc(mediaJson: string, deliverableId: string, itemId: string): string | null {
+  const role = pictureRole(mediaEntries(mediaJson));
+  if (!role) return null;
+  return pictureAddress(deliverableId, itemId, role);
+}
+
+function mediaEntries(mediaJson: string): PictureMedia[] {
   try {
     const parsed = JSON.parse(mediaJson) as unknown;
-    if (!Array.isArray(parsed)) return null;
-    for (const entry of parsed) {
-      if (!entry || typeof entry !== "object") continue;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((entry) => {
+      if (!entry || typeof entry !== "object") return [];
       const role = (entry as { role?: unknown }).role;
       const contentType = (entry as { content_type?: unknown }).content_type;
-      if (typeof role !== "string" || !role) continue;
-      const type = typeof contentType === "string" ? contentType.toLowerCase() : "";
-      if (type.startsWith("video/") || (type && !type.startsWith("image/"))) continue;
-      return `/api/deliverables/${deliverableId}/items/${itemId}/media/${encodeURIComponent(role)}`;
-    }
+      if (typeof role !== "string" || !role) return [];
+      const type = typeof contentType === "string" ? contentType : undefined;
+      return [{ role, contentType: type, video: type?.toLowerCase().startsWith("video/") ?? false }];
+    });
   } catch {
-    return null;
+    return [];
   }
-  return null;
 }
 
 export function promotionMedia(mediaJson: string, deliverableId: string, itemId: string): LibraryArtifact["promotionMedia"] {

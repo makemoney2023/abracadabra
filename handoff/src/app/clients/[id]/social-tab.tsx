@@ -28,6 +28,7 @@ export type SocialView = {
   now: number;
   waiting: SocialReviewPiece[];
   ready: SocialReviewPiece[];
+  catalog: SocialReviewPiece[];
   sent: string;
 };
 
@@ -106,7 +107,7 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
   const notice = NOTICE[social.notice];
   const confirmation = sentConfirmation(social.sent);
   const postable = social.accounts.filter((account) => account.is_active && !isBlogPlatform(account.platform));
-  const cards = calendarPosts(social.posts, social.accounts, [...social.waiting, ...social.ready]);
+  const cards = calendarPosts(social.posts, social.accounts, social.catalog);
   const onCalendar = new Set(cards.map((post) => post.id));
   const history = social.posts.filter((post) => !onCalendar.has(post.id));
   const timeZone = calendarTimeZone(

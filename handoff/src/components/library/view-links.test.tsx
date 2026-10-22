@@ -8,9 +8,10 @@ describe("view link presentation", () => {
     const dialog = renderToStaticMarkup(
       <ViewLinkDialog workspaceId="ws-1" items={[{ resourceKind: "deliverable_item", resourceId: "item-1", resourceVersion: 1 }]} />,
     );
-    expect(dialog).toContain("Create view link");
+    expect(dialog).toContain(">Share<");
     expect(dialog).toContain("It does not let them upload.");
     expect(dialog).not.toContain("Share link");
+    expect(dialog).not.toContain("view link");
     const newer = renderToStaticMarkup(
       <ViewLinkDialog workspaceId="ws-1" items={[]} shares={[{ id: "share-1", title: "Q4", expiresAt: null, revokedAt: null, newer: true, events: [{ kind: "opened", at: 1_800_000_000_000, userAgent: "desktop-chrome" }] }]} />,
     );
@@ -23,10 +24,11 @@ describe("view link presentation", () => {
     const hidden = renderToStaticMarkup(
       <PublicLibraryView
         token="tok"
-        result={{ ok: true, view: { title: "Q4", downloads: false, items: [{ publicId: "pub-1", title: "Q4 article", externalUrl: null }] } }}
+        result={{ ok: true, view: { title: "Q4", downloads: false, items: [{ publicId: "pub-1", title: "Q4 article", externalUrl: null, hasPicture: true }] } }}
       />,
     );
     expect(hidden).toContain("Q4 article");
+    expect(hidden).toContain("/view/tok/media/pub-1");
     expect(hidden).not.toContain("Download");
     expect(hidden).not.toContain("Open");
     const shown = renderToStaticMarkup(

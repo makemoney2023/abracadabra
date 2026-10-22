@@ -121,7 +121,7 @@ export default async function LibraryPage({
       <div className="flex flex-col gap-2">
         <p className="eyebrow text-optic">Finished work</p>
         <h1 className="font-heading text-4xl leading-tight">Library</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">Articles, social posts, pictures, video, websites, and the source files the studio has put in front of you.</p>
+        <p className="max-w-2xl text-sm text-muted-foreground">Files are everything uploaded. The Library is the work ready to look at.</p>
         {result.ok ? (
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             <span className="rounded-full bg-muted px-3 py-1.5 tabular-nums">{result.page.counts.total} items</span>

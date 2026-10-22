@@ -1,6 +1,6 @@
 # Space library: pictures first
 
-**Status:** plan. Nothing in this document is built.
+**Status:** built. The rail, the Library card, Share, Sources, and the file tile follow this document.
 **Updated:** 2026-10-22
 **Amends the presentation in** [handoff-library-and-sharing-design.md](superpowers/specs/2026-10-21-handoff-library-and-sharing-design.md). The records, the view-link token, and the approval write stay as that spec describes them. Labels, the social rail, and what a card looks like follow this document.
 

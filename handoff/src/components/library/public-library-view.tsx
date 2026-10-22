@@ -21,13 +21,13 @@ export function PublicLibraryView({
 }: {
   token: string;
   result:
-    | { ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind?: string; artifactType?: LibraryArtifactType }[] } }
+    | { ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind?: string; artifactType?: LibraryArtifactType; hasPicture?: boolean }[] } }
     | { ok: false; error: "unavailable" | "locked" };
 }) {
   if (!result.ok && result.error === "locked") {
     return (
       <main className="mx-auto flex w-full max-w-[36rem] flex-1 flex-col gap-6 px-6 py-16">
-        <p className="eyebrow text-optic">View link</p>
+        <p className="eyebrow text-optic">Share</p>
         <h1 className="font-heading text-4xl">This link is locked</h1>
         <form className="flex flex-col gap-3" method="post" action={`/view/${encodeURIComponent(token)}/unlock`}>
           <label className="flex flex-col gap-1 text-sm">
@@ -59,6 +59,11 @@ export function PublicLibraryView({
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {result.view.items.map((item) => (
           <li key={item.publicId} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
+            {item.hasPicture ? (
+              // The picture is served by this share token, and only for an item already on the share.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img alt="" src={`/view/${encodeURIComponent(token)}/media/${encodeURIComponent(item.publicId)}`} className="aspect-[4/3] w-full rounded-xl object-cover" />
+            ) : null}
             <p className="eyebrow text-optic">{item.artifactType ? TYPE_LABEL[item.artifactType] : "Finished work"}</p>
             <p className="font-heading text-2xl">{item.title}</p>
             {item.externalUrl ? (

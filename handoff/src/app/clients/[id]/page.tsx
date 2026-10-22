@@ -96,7 +96,7 @@ async function loadSocial(
       .filter((post) => post.status === "sending" || post.status === "scheduled" || post.status === "published" || post.status === "partial")
       .map((post) => post.item_id),
   );
-  const review = space ? await listSocialReviewPieces(sql, caller, space, live) : { waiting: [], ready: [] };
+  const review = space ? await listSocialReviewPieces(sql, caller, space, live) : { waiting: [], ready: [], catalog: [] };
   return {
     configured: Boolean(zernio),
     syncError,
@@ -109,6 +109,7 @@ async function loadSocial(
     now: clock(),
     waiting: review.waiting,
     ready: review.ready,
+    catalog: review.catalog,
     sent,
   };
 }

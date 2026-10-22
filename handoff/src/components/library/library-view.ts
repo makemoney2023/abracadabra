@@ -13,9 +13,9 @@ export const LIBRARY_TABS: { type: LibraryArtifactType | "all"; label: string }[
 ];
 
 export const LIBRARY_STATUS_LABEL: Record<LibraryStatus, string> = {
-  changes_requested: "Changes requested",
+  changes_requested: "Changes asked",
   needs_attention: "Needs attention",
-  needs_review: "Needs review",
+  needs_review: "Needs a look",
   publishing: "Publishing",
   scheduled: "Scheduled",
   partially_published: "Partly published",
@@ -36,6 +36,14 @@ export const LIBRARY_PLATFORMS: { id: string; label: string }[] = [
   { id: "bluesky", label: "Bluesky" },
   { id: "googlebusiness", label: "Google Business" },
 ];
+
+/** One phrase for a piece, on the Library card and on the social rail. */
+export function statusPhrase(status: string): string {
+  if (status === "pending" || status === "needs_review") return "Needs a look";
+  if (status === "changes_requested") return "Changes asked";
+  if (status in LIBRARY_STATUS_LABEL) return LIBRARY_STATUS_LABEL[status as LibraryStatus];
+  return status;
+}
 
 export function libraryStatusClass(status: LibraryStatus): string {
   if (status === "changes_requested" || status === "needs_attention") return "bg-status-late text-status-late-fg";
