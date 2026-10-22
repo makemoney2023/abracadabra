@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — An assigned Grok agent can generate a still or a clip through HQ and file those files on a card.
+- **Why** — With the swarm off, the old Flux stage never runs, and a video data URL was stored as markdown.
+- **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/lib/workflow-files.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.
+- **Data-flow impact** — The agent calls HQ over HTTPS. HQ calls the Workers AI binding, writes the bytes to R2, and copies them into the filing when `media_ids` is set. The agent does not receive a provider URL.
+- **API / schema impact** — `GET /api/agent-media/models`, `POST /api/agent-media`, `GET /api/agent-media/:media_id`. `POST /api/agent-work` accepts `media_ids`. New table `agent_media`.
+- **Verification** — `npx vitest run src/lib/agent-media-models.test.ts src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/db/migrate.test.ts src/lib/workflow-files.test.ts`.
+
+## 2026-10-22
+
 - **What changed** — Empty Library searches now offer a one-click search reset without discarding the remaining filters. Upload-link copy results are announced to assistive technology, collection item states use readable status badges, and the selection panel explicitly says “Copy view link.” Public view links now identify the artifact type and use specific actions such as “Read article” and “Visit site.”
 - **Why** — The final UX audit found a small set of current, reproducible gaps in recovery, accessibility feedback, and public-link clarity.
 - **Code touchpoints** — `handoff/src/components/library/`, `handoff/src/components/share-link.tsx`, and `handoff/src/lib/library-shares.ts`.

@@ -126,7 +126,7 @@ Response when the clip is still running:
 | `handoff/src/app/api/agent-media/models/route.ts` | GET list. |
 | `handoff/src/app/api/agent-media/route.ts` | POST generate. |
 | `handoff/src/app/api/agent-media/[mediaId]/route.ts` | GET status. |
-| `handoff/migrations/0041_agent_media.sql` | `agent_media` rows. |
+| `handoff/migrations/0044_agent_media.sql` | `agent_media` rows. `0041` was already used. |
 | `handoff/src/lib/agent-work-filing.ts` | Accept `media_ids` and attach stored bytes. |
 | `handoff/src/lib/workflow-files.ts` | Store `video/mp4` bytes as a file, not markdown. |
 | `handoff/README.md` | One section under client agent work filing. |
@@ -140,47 +140,47 @@ Do not change `swarm/`. Do not call `fluxRun` from the new route. Do not put `AI
 
 **Files:** `handoff/src/lib/agent-media-models.ts`, `handoff/src/lib/agent-media-models.test.ts`
 
-- [ ] **Step 1:** Write a test that the default still is `@cf/black-forest-labs/flux-2-klein-9b`, the default clip is `google/veo-3.1-fast`, an unknown id is rejected, and `google/veo-3.1-fast` is `video`.
-- [ ] **Step 2:** Run `cd handoff && npx vitest run src/lib/agent-media-models.test.ts` and confirm the failure.
-- [ ] **Step 3:** Add the tables above as data. Export `mediaModel(id)` and `listMediaModels()`.
-- [ ] **Step 4:** Re-run the test.
+- [x] **Step 1:** Write a test that the default still is `@cf/black-forest-labs/flux-2-klein-9b`, the default clip is `google/veo-3.1-fast`, an unknown id is rejected, and `google/veo-3.1-fast` is `video`.
+- [x] **Step 2:** Run `cd handoff && npx vitest run src/lib/agent-media-models.test.ts` and confirm the failure.
+- [x] **Step 3:** Add the tables above as data. Export `mediaModel(id)` and `listMediaModels()`.
+- [x] **Step 4:** Re-run the test.
 
 ### Task 2: Store a still
 
-**Files:** migration `0041_agent_media.sql`, `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media.test.ts`, `handoff/src/app/api/agent-media/route.ts`, `handoff/src/app/api/agent-media/models/route.ts`
+**Files:** migration `0044_agent_media.sql`, `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media.test.ts`, `handoff/src/app/api/agent-media/route.ts`, `handoff/src/app/api/agent-media/models/route.ts`
 
 Table `agent_media`: `id`, `external_id`, `agent_id`, `organization_id`, `task_id`, `model`, `kind`, `state` (`ready` or `running` or `failed`), `content_type`, `byte_length`, `r2_key`, `error`, `created_at`. Unique `(agent_id, external_id)`.
 
-- [ ] **Step 1:** Test that a token with no assignment gets 401, a task on another client gets 403, and a known still model with a fake `AI.run` writes one R2 object and returns `state: ready` plus `media_id`. A second POST with the same `external_id` does not call `AI.run` again.
-- [ ] **Step 2:** Run the test and confirm it fails.
-- [ ] **Step 3:** Implement. Multipart only for `flux-2-klein-9b`, via the existing `fluxInput`. Every other still is `env.AI.run(model, { prompt })`. Decode the image bytes the binding returns (`image` base64 or raw bytes). Write them with the space's object store. Cap the prompt at 2,000 characters and the output at 8 MB.
-- [ ] **Step 4:** Re-run the test. Log `client_agent.media` with model, task id, and byte length. Do not log the prompt.
+- [x] **Step 1:** Test that a token with no assignment gets 401, a task on another client gets 403, and a known still model with a fake `AI.run` writes one R2 object and returns `state: ready` plus `media_id`. A second POST with the same `external_id` does not call `AI.run` again.
+- [x] **Step 2:** Run the test and confirm it fails.
+- [x] **Step 3:** Implement. Multipart only for `flux-2-klein-9b`, via the existing `fluxInput`. Every other still is `env.AI.run(model, { prompt })`. Decode the image bytes the binding returns (`image` base64 or raw bytes). Write them with the space's object store. Cap the prompt at 2,000 characters and the output at 8 MB.
+- [x] **Step 4:** Re-run the test. Log `client_agent.media` with model, task id, and byte length. Do not log the prompt.
 
 ### Task 3: Store a clip without blocking the filing cap
 
 **Files:** `handoff/src/lib/agent-media.ts`, `handoff/src/app/api/agent-media/[mediaId]/route.ts`, tests in `agent-media.test.ts`
 
-- [ ] **Step 1:** Test that a video model returns `state: running` and `job_id` when `AI.run` returns a job handle, and that GET later stores `video/mp4` bytes when the handle completes. Test that a finished URL is fetched by HQ and stored the same way. Test that the agent response has no provider URL and no base64 video.
-- [ ] **Step 2:** Run the test and confirm it fails.
-- [ ] **Step 3:** Implement the poll on GET. Duration is 4, 6, or 8 seconds; reject anything else. If the binding blocks until the file exists, store it and return `ready` from POST. One clip per `external_id`.
-- [ ] **Step 4:** Extend `storeWorkflowOutput` so a `video/mp4` byte buffer is stored as `video/mp4`, and `itemForPath` records that content type. A `data:video/mp4` string still becomes markdown, so the agent cannot sneak a clip through the old attachment field.
-- [ ] **Step 5:** Re-run the test.
+- [x] **Step 1:** Test that a video model returns `state: running` and `job_id` when `AI.run` returns a job handle, and that GET later stores `video/mp4` bytes when the handle completes. Test that a finished URL is fetched by HQ and stored the same way. Test that the agent response has no provider URL and no base64 video.
+- [x] **Step 2:** Run the test and confirm it fails.
+- [x] **Step 3:** Implement the poll on GET. Duration is 4, 6, or 8 seconds; reject anything else. If the binding blocks until the file exists, store it and return `ready` from POST. One clip per `external_id`.
+- [x] **Step 4:** Extend `storeWorkflowOutput` so a `video/mp4` byte buffer is stored as `video/mp4`, and `itemForPath` records that content type. A `data:video/mp4` string still becomes markdown, so the agent cannot sneak a clip through the old attachment field.
+- [x] **Step 5:** Re-run the test.
 
 ### Task 4: Attach stored media to a filing
 
 **Files:** `handoff/src/lib/agent-work-filing.ts`, `handoff/src/lib/agent-work-filing.test.ts`
 
-- [ ] **Step 1:** Test that `POST /api/agent-work` with `media_ids: [id]` and no attachment body writes the stored still or clip into the filing folder, held like any other agent batch. A media id from another agent or another client is 403 and stores nothing. A `running` id is 409.
-- [ ] **Step 2:** Run the test and confirm it fails.
-- [ ] **Step 3:** Load the `agent_media` row, copy its R2 bytes into the filing through `storeWorkflowOutput`, and leave the original row in place so a later clip can use `image_media_id`.
-- [ ] **Step 4:** Re-run `npx vitest run src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/lib/agent-media-models.test.ts`.
+- [x] **Step 1:** Test that `POST /api/agent-work` with `media_ids: [id]` and no attachment body writes the stored still or clip into the filing folder, held like any other agent batch. A media id from another agent or another client is 403 and stores nothing. A `running` id is 409.
+- [x] **Step 2:** Run the test and confirm it fails.
+- [x] **Step 3:** Load the `agent_media` row, copy its R2 bytes into the filing through `storeWorkflowOutput`, and leave the original row in place so a later clip can use `image_media_id`.
+- [x] **Step 4:** Re-run `npx vitest run src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/lib/agent-media-models.test.ts`.
 
 ### Task 5: Docs
 
 **Files:** `handoff/README.md` (Client agent work filing), `handoff/CHANGELOG.md`
 
-- [ ] **Step 1:** Document the three routes, the `caw_` bearer, the required `task_id`, the allowlist, and that clips come back as `media_id` values to pass on `POST /api/agent-work`. State the size and duration caps.
-- [ ] **Step 2:** Changelog delta dated 2026-10-22: what changed, why, touchpoints, data-flow (agent HTTPS → HQ `AI.run` → R2 → filing), API impact (new routes plus `media_ids`).
+- [x] **Step 1:** Document the three routes, the `caw_` bearer, the required `task_id`, the allowlist, and that clips come back as `media_id` values to pass on `POST /api/agent-work`. State the size and duration caps.
+- [x] **Step 2:** Changelog delta dated 2026-10-22: what changed, why, touchpoints, data-flow (agent HTTPS → HQ `AI.run` → R2 → filing), API impact (new routes plus `media_ids`).
 
 ## Out of scope
 
