@@ -1,6 +1,8 @@
 "use server";
 
+import { isSocialItemFormat } from "@/components/social/social-piece-view";
 import { openSession } from "@/lib/current";
+import { SHELF_REMOVED } from "@/lib/finished-shelf";
 import { PlanError, prepareSocialPlan } from "@/lib/social-plans";
 
 export type ScheduleFormState = {
@@ -23,13 +25,19 @@ export async function preparePieceScheduleAction(_previous: ScheduleFormState, f
   if (!deliverableId || !itemId || !organizationId || accountIds.length === 0 || Number.isNaN(startAt)) {
     return { message: initialMessage };
   }
-  const row = await sql.get<{ workspace_id: string; organization_id: string }>(
-    "SELECT workspace_id, organization_id FROM deliverables WHERE id = ?",
-    [deliverableId],
+  const row = await sql.get<{ workspace_id: string; organization_id: string; format: string; status: string; removed_at: number | null }>(
+    `SELECT d.workspace_id, d.organization_id, i.format, i.status, i.removed_at
+     FROM deliverable_items i JOIN deliverables d ON d.id = i.deliverable_id
+     WHERE d.id = ? AND d.organization_id = ? AND i.id = ?
+       AND d.published_version IS NOT NULL AND i.version = d.published_version`,
+    [deliverableId, organizationId, itemId],
   );
-  if (!row || row.organization_id !== organizationId) return { message: "That piece is not here." };
+  if (!row) return { message: "That piece is not here." };
+  if (row.removed_at != null) return { message: SHELF_REMOVED };
+  if (!isSocialItemFormat(row.format)) return { message: "That piece does not go on the calendar." };
   const staff = Boolean(caller.staff) || caller.operatorOf.includes(row.workspace_id);
   if (!staff) return { message: "Only the studio can schedule this." };
+  if (row.status !== "approved") return { message: "The client has not approved this piece." };
   const now = Date.now();
   try {
     const plan = await prepareSocialPlan(sql, {

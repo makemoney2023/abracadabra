@@ -17,13 +17,17 @@ describe("collection index", () => {
       createElement(CollectionIndex, {
         slug: "acme",
         deliverableId: "d-1",
-        pieces: [{ id: "open", title: "Launch post", status: "pending", previewSrc: "/pic.png" }],
+        pieces: [
+          { id: "open", title: "Launch post", status: "pending", previewSrc: "/pic.png" },
+          { id: "gone", title: "Old post", status: "removed", previewSrc: null },
+        ],
       }),
     );
     expect(html).toContain('href="/w/acme/work/d-1?item=open"');
     expect(html).toContain("Launch post");
+    expect(html).toContain("Removed");
     expect(html).toContain('src="/pic.png"');
-    expect(html).not.toContain("Remove");
+    expect(html).not.toContain(">Remove<");
   });
 
   it("keeps Remove on the open piece", () => {

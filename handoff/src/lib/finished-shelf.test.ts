@@ -119,10 +119,55 @@ describe("finished work shelf", () => {
     expect(failed).toEqual({ ok: true });
     const failedPost = await sql.get<{ status: string; error: string | null }>("SELECT status, error FROM social_posts WHERE id = 'post-failed'");
     expect(postOnCalendar({ status: failedPost?.status ?? "", error: failedPost?.error ?? null, scheduledFor: 1 })).toBe(false);
+    const restored = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "failed", version: 1, removed: false }, NOW + 1);
+    expect(restored).toEqual({ ok: true });
+    const back = await sql.get<{ error: string | null }>("SELECT error FROM social_posts WHERE id = 'post-failed'");
+    expect(postOnCalendar({ status: "failed", error: back?.error ?? null, scheduledFor: 1 })).toBe(true);
     const livePost = await sql.get<{ status: string }>("SELECT status FROM social_posts WHERE id = 'post-live'");
     expect(livePost?.status).toBe("scheduled");
 
     const hidden = await setPieceShelf(sql, stranger, { deliverableId: "d-1", itemId: "open", version: 1, removed: true }, NOW);
     expect(hidden).toEqual({ ok: false, error: "That piece is not here." });
+  });
+
+  it("lets a hire take a held, unpublished piece off the shelf", async () => {
+    const sql = await database();
+    await sql.run(
+      "INSERT INTO client_agents (id, label, token_hash, created_by, created_at, updated_at) VALUES ('ada', 'Ada', 'hash-ada', 'test', ?, ?)",
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, workspace_id, title, kind, status, version, published_version, actor_kind, created_at, updated_at
+       ) VALUES ('d-held', 'org-1', 'ws-1', 'Held round', 'social_pack', 'draft', 1, NULL, 'agent', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO batches (id, workspace_id, created_by, created_at, last_activity_at, held_at)
+       VALUES ('batch-held', 'ws-1', 'agent:ada', ?, ?, ?)`,
+      [NOW, NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO agent_work_items (
+         id, agent_id, external_id, state, kind, title, organization_id, workspace_id, batch_id,
+         deliverable_id, deliverable_version, created_at, updated_at
+       ) VALUES ('work-held', 'ada', 'held-1', 'filed', 'social', 'Held round', 'org-1', 'ws-1', 'batch-held', 'd-held', 1, ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, format, channel, title, copy_text, media_json, status, sort, work_item_id
+       ) VALUES ('held', 'd-held', 1, 'static', 'instagram', 'Held piece', 'Caption', '[]', 'pending', 0, 'work-held')`,
+    );
+    const hire: Caller = { userId: "ada", staff: null, operatorOf: ["ws-1"], memberships: [] };
+    const removed = await setPieceShelf(sql, hire, { deliverableId: "d-held", itemId: "held", version: 1, removed: true }, NOW, {
+      kind: "agent",
+      id: "ada",
+      workspaceId: "ws-1",
+    });
+    expect(removed).toEqual({ ok: true });
+    expect((await sql.get<{ removed_at: number | null }>("SELECT removed_at FROM deliverable_items WHERE id = 'held'"))?.removed_at).toBe(NOW);
+    const loose = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "open", version: 2, removed: true }, NOW);
+    expect(loose).toEqual({ ok: false, error: "That choice is not valid." });
   });
 });

@@ -213,18 +213,20 @@ export async function setAgentShare(
     if (!revoked.ok) return fail(404, "not_found", "That view link is not here.");
     return { ok: true, id: input.shareId };
   }
-  if (input.itemIds.length === 0) return fail(400, "invalid_body", "Name the pieces to share.");
+  const itemIds = [...new Set(input.itemIds)];
+  if (itemIds.length === 0) return fail(400, "invalid_body", "Name the pieces to share.");
   const rows = await sql.all<{ id: string; version: number }>(
     `SELECT i.id, i.version
      FROM deliverable_items i JOIN deliverables d ON d.id = i.deliverable_id
      WHERE d.organization_id = ? AND d.workspace_id = ? AND d.published_version IS NOT NULL
        AND i.version = d.published_version AND i.removed_at IS NULL
-       AND i.id IN (${input.itemIds.map(() => "?").join(", ")})`,
-    [space.organizationId, space.workspaceId, ...input.itemIds],
+       AND i.id IN (${itemIds.map(() => "?").join(", ")})`,
+    [space.organizationId, space.workspaceId, ...itemIds],
   );
-  if (rows.length !== input.itemIds.length) return fail(404, "not_found", "That piece is not here.");
+  if (rows.length !== itemIds.length) return fail(404, "not_found", "That piece is not here.");
   const created = await createViewLink(sql, caller, {
     workspaceId: space.workspaceId,
+    createdByKind: "agent",
     items: rows.map((row) => ({ resourceKind: "deliverable_item" as const, resourceId: row.id, resourceVersion: row.version })),
   }, now, origin);
   if (!created.ok) {

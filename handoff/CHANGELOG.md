@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — Approve all leaves a removed piece pending. A hire can remove a piece while its filing is still held. The Removed shelf lists only removed pieces. Putting a piece back shows its failed card again. A view link the lead opens is recorded as that agent.
+- **Why** — The first pass of the desk still approved hidden pieces, refused the only remove a hire is allowed, and mixed files into Removed.
+- **Code touchpoints** — `handoff/src/lib/finished-shelf.ts`, `handoff/src/db/deliverables.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/lib/agent-library.ts`, `handoff/src/lib/agent-filing-review.ts`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.
+- **Data-flow impact** — Approve all and the round status ignore `removed_at`. An unpublished held item can take `removed_at`. Releasing one filing no longer releases a batch that still holds another filing.
+- **API / schema impact** — none.
+- **Verification** — Shelf, deliverable feedback, Library list, and agent-library route tests.
+
+## 2026-10-22
+
 - **What changed** — A sent round is an index of pictures. The open piece is the proof, with Approve, ask for a change, Remove, and a staff schedule form. Post to social skips removed pieces and names them. Failed cards leave the calendar when the piece is removed. The assigned lead can list the Library, remove or restore a piece, choose a file, open a view link, and release its own held round. The pieces stay unapproved.
 - **Why** — The client was still looking at the whole set to decide one piece, and the agent piece list was the working copy, including pieces already taken off the shelf.
 - **Code touchpoints** — `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/lib/finished-shelf.ts`, `handoff/src/lib/social-queries.ts`, `handoff/src/lib/social-plans.ts`, `handoff/src/lib/agent-library.ts`, `handoff/src/app/api/agent-library/`, `handoff/src/lib/agent-filing-review.ts`, `handoff/src/app/api/agent-work/[id]/route.ts`.

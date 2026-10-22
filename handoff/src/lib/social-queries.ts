@@ -191,11 +191,11 @@ export async function socialOverview(sql: Sql, agent: AgentPrincipal, client: un
   ]);
   const taken = posts.flatMap((post) => (post.scheduled_for == null ? [] : [post.scheduled_for]));
   const liveIds = new Set(
-    posts.filter((post) => LIVE.includes(post.status)).map((post) => `${post.item_id}:${post.version}`),
+    posts.filter((post) => LIVE.includes(post.status)).map((post) => post.item_id),
   );
   const onShelf = pieces.filter((item) => item.published_version != null && item.removed_at == null);
   const needsALook = onShelf.filter((item) => item.status === "pending" || item.status === "changes_requested").length;
-  const approvedNotScheduled = onShelf.filter((item) => item.status === "approved" && !liveIds.has(`${item.id}:${item.version}`)).length;
+  const approvedNotScheduled = onShelf.filter((item) => item.status === "approved" && !liveIds.has(item.id)).length;
   const readyCount = approvedNotScheduled;
   const policy = evaluateSocialPolicy(resolved.actor, "read");
   const mode = resolved.actor.kind === "agent" ? resolved.actor.mode : "draft";

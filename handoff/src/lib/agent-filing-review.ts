@@ -519,15 +519,26 @@ export async function releaseOwnRound(
   }
   const deliverableId = row.deliverable_id;
   const publishedVersion = row.deliverable_version;
-  await sql.batch([
+  const others = row.batch_id
+    ? await sql.get<{ n: number }>(
+        `SELECT COUNT(*) AS n FROM agent_work_items
+         WHERE batch_id = ? AND id != ? AND state = 'filed' AND released_at IS NULL AND retracted_at IS NULL`,
+        [row.batch_id, row.id],
+      )
+    : undefined;
+  const writes: { statement: string; params: unknown[] }[] = [
     {
       statement: "UPDATE agent_work_items SET released_at = ?, updated_at = ? WHERE id = ?",
       params: [input.now, input.now, row.id],
     },
-    {
+  ];
+  if (row.batch_id && (others?.n ?? 0) === 0) {
+    writes.push({
       statement: "UPDATE batches SET released_at = ? WHERE id = ? AND released_at IS NULL",
       params: [input.now, row.batch_id],
-    },
+    });
+  }
+  writes.push(
     {
       statement: `UPDATE deliverables SET published_version = ?, version = MAX(version, ?), published_at = ?, status = 'in_review', updated_at = ? WHERE id = ?`,
       params: [publishedVersion, publishedVersion, input.now, input.now, deliverableId],
@@ -546,7 +557,8 @@ export async function releaseOwnRound(
         input.now,
       ],
     },
-  ]);
+  );
+  await sql.batch(writes);
   const org = await sql.get<{ client_update_mode: string | null }>("SELECT client_update_mode FROM organizations WHERE id = ?", [row.organization_id]);
   if (org?.client_update_mode === "auto") {
     const sent = await sql.get<{ deliverable_id: string }>("SELECT deliverable_id FROM deliverable_notices WHERE deliverable_id = ? AND version = ?", [deliverableId, publishedVersion]);

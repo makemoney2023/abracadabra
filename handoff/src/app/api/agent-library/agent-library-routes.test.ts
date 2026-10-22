@@ -201,6 +201,9 @@ describe("agent library desk", () => {
     expect((await sql.get<{ removed_at: number | null }>("SELECT removed_at FROM deliverable_items WHERE id = 'i-live'"))?.removed_at).toBeNull();
     const hireTry = await postShelf(write("/shelf", hire, { client: "acme.example", itemId: "i-open", version: 1, removed: true }));
     expect(hireTry.status).toBe(403);
+    const heldRemove = await postShelf(write("/shelf", hire, { client: "acme.example", itemId: "i-held", version: 1, removed: true }));
+    expect(heldRemove.status).toBe(200);
+    expect((await sql.get<{ removed_at: number | null }>("SELECT removed_at FROM deliverable_items WHERE id = 'i-held'"))?.removed_at).not.toBeNull();
     expect((await sql.get<{ removed_at: number | null }>("SELECT removed_at FROM deliverable_items WHERE id = 'i-open'"))?.removed_at).toBeNull();
     const removed = await postShelf(write("/shelf", lead, { client: "acme.example", itemId: "i-open", version: 1, removed: true }));
     expect(removed.status).toBe(200);
@@ -221,6 +224,8 @@ describe("agent library desk", () => {
     expect(selected.status).toBe(200);
     const shown = await listLibraryArtifacts(sql, client, { workspaceId: "ws-1", slug: "acme" });
     expect(shown.ok && shown.page.artifacts.some((artifact) => artifact.sourceId === "f-1")).toBe(true);
+    const removedShelf = await listLibraryArtifacts(sql, client, { workspaceId: "ws-1", slug: "acme", removed: true });
+    expect(removedShelf.ok && removedShelf.page.artifacts.some((artifact) => artifact.sourceId === "f-1")).toBe(false);
     const hidden = await postFiles(write("/files", lead, { client: "acme.example", fileId: "f-1", selected: false }));
     expect(hidden.status).toBe(200);
     const after = await listLibraryArtifacts(sql, client, { workspaceId: "ws-1", slug: "acme" });
@@ -235,10 +240,14 @@ describe("agent library desk", () => {
     const before = (await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n;
     const foreign = await postShares(write("/shares", lead, { client: "acme.example", action: "create", itemIds: ["i-other"] }));
     expect(foreign.status).toBe(404);
-    const created = await postShares(write("/shares", lead, { client: "acme.example", action: "create", itemIds: ["i-open"] }));
+    const created = await postShares(write("/shares", lead, { client: "acme.example", action: "create", itemIds: ["i-open", "i-open"] }));
     expect(created.status).toBe(200);
     const share = await created.json() as { id: string; url: string };
     expect(share.url).toContain("/view/");
+    expect((await sql.get<{ created_by_kind: string; created_by_id: string }>(
+      "SELECT created_by_kind, created_by_id FROM library_shares WHERE id = ?",
+      [share.id],
+    ))).toMatchObject({ created_by_kind: "agent", created_by_id: "acme-lead" });
     expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(before);
     const revoked = await postShares(write("/shares", lead, { client: "acme.example", action: "revoke", shareId: share.id }));
     expect(revoked.status).toBe(200);

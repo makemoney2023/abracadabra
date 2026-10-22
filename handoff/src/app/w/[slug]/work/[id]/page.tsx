@@ -114,7 +114,7 @@ export default async function FinishedPiecePage({
     return [{
       id: item.id,
       title: item.title,
-      status: item.status,
+      status: removedAt.get(item.id) != null ? "removed" : item.status,
       previewSrc: picture ? `/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${picture.role}` : null,
     }];
   });
@@ -168,7 +168,7 @@ export default async function FinishedPiecePage({
         total={items.length}
         approved={items.filter((item) => item.status === "approved").length}
         changes={items.filter((item) => item.status === "changes_requested").length}
-        pending={items.filter((item) => item.status === "pending").length}
+        pending={items.filter((item) => item.status === "pending" && removedAt.get(item.id) == null).length}
       />
       <p className="flex flex-wrap gap-3 text-sm">
         <Link className="underline" href={`/w/${slug}/library`}>Back to Library</Link>
@@ -232,7 +232,7 @@ export default async function FinishedPiecePage({
                     {removalLine({ viewer, actorKind: removal.actor_kind, actorId: removal.actor_id ?? "Studio", at: removal.created_at })}
                   </p>
                 ) : null}
-                {focusId ? (
+                {focusId && isSocialItemFormat(item.format) ? (
                   <ProofSchedule
                     staff={viewer === "staff"}
                     approved={item.status === "approved" && removedAt.get(item.id) == null}
@@ -363,7 +363,7 @@ export default async function FinishedPiecePage({
                   {removalLine({ viewer, actorKind: removal.actor_kind, actorId: removal.actor_id ?? "Studio", at: removal.created_at })}
                 </p>
               ) : null}
-              {focusId ? (
+              {focusId && isSocialItemFormat(item.format) ? (
                 <ProofSchedule
                   staff={viewer === "staff"}
                   approved={item.status === "approved" && removedAt.get(item.id) == null}
@@ -382,8 +382,8 @@ export default async function FinishedPiecePage({
       )}
       {focusId && !brief ? null : (
       <CollectionReviewFooter
-        pending={items.filter((item) => item.status === "pending").length}
-        changes={items.filter((item) => item.status === "changes_requested").length}
+        pending={items.filter((item) => item.status === "pending" && removedAt.get(item.id) == null).length}
+        changes={items.filter((item) => item.status === "changes_requested" && removedAt.get(item.id) == null).length}
       >
         {brief && briefItem ? (
           <div className="flex flex-col gap-3">
@@ -398,8 +398,8 @@ export default async function FinishedPiecePage({
             />
             <NoteForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
           </div>
-        ) : items.some((item) => item.status === "pending") ? (
-            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending").length})`} />
+        ) : items.some((item) => item.status === "pending" && removedAt.get(item.id) == null) ? (
+            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending" && removedAt.get(item.id) == null).length})`} />
           ) : (
             <p className="text-sm text-muted-foreground">Nothing is waiting for approval.</p>
         )}

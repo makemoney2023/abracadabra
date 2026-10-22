@@ -39,6 +39,7 @@ export const LIBRARY_PLATFORMS: { id: string; label: string }[] = [
 
 /** One phrase for a piece, on the Library card. */
 export function statusPhrase(status: string): string {
+  if (status === "removed") return "Removed";
   if (status === "pending" || status === "needs_review") return "Needs a look";
   if (status === "changes_requested") return "Changes asked";
   if (status in LIBRARY_STATUS_LABEL) return LIBRARY_STATUS_LABEL[status as LibraryStatus];

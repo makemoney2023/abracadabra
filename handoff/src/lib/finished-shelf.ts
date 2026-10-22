@@ -85,9 +85,10 @@ export async function setPieceShelf(
     organization_id: string;
     project_id: string | null;
     workspace_id: string;
+    version: number;
     published_version: number | null;
   }>(
-    `SELECT id, organization_id, project_id, workspace_id, published_version
+    `SELECT id, organization_id, project_id, workspace_id, version, published_version
      FROM deliverables WHERE id = ?`,
     [input.deliverableId],
   );
@@ -98,7 +99,9 @@ export async function setPieceShelf(
     const visible = await workspacesFor(sql, caller);
     if (!visible.some((space) => space.id === row.workspace_id)) return { ok: false, error: SHELF_MISSING };
   }
-  if (row.published_version == null || input.version !== row.published_version) return { ok: false, error: SHELF_INVALID };
+  const published = row.published_version != null && input.version === row.published_version;
+  const held = row.published_version == null && input.version === row.version && await filingStillHeld(sql, input.itemId, input.version);
+  if (!published && !held) return { ok: false, error: SHELF_INVALID };
   const item = await sql.get<{ id: string; removed_at: number | null }>(
     "SELECT id, removed_at FROM deliverable_items WHERE id = ? AND deliverable_id = ? AND version = ?",
     [input.itemId, input.deliverableId, input.version],
@@ -131,6 +134,12 @@ export async function setPieceShelf(
         WHERE item_id = ? AND version = ? AND status = 'failed' AND COALESCE(error, '') != 'Cancelled.'`,
       params: [PIECE_REMOVED_ERROR, now, input.itemId, input.version],
     });
+  } else {
+    writes.push({
+      statement: `UPDATE social_posts SET error = NULL, updated_at = ?
+        WHERE item_id = ? AND version = ? AND status = 'failed' AND error = ?`,
+      params: [now, input.itemId, input.version, PIECE_REMOVED_ERROR],
+    });
   }
   writes.push({
     statement: `INSERT INTO activities (
@@ -151,4 +160,18 @@ export async function setPieceShelf(
   });
   await sql.batch(writes);
   return { ok: true };
+}
+
+/** A hire may remove a piece only while its filing is still held and unpublished. */
+async function filingStillHeld(sql: Sql, itemId: string, version: number): Promise<boolean> {
+  const row = await sql.get<{ held: number }>(
+    `SELECT 1 AS held FROM deliverable_items i
+     JOIN agent_work_items w ON w.id = i.work_item_id
+     JOIN batches b ON b.id = w.batch_id
+     WHERE i.id = ? AND i.version = ?
+       AND w.state = 'filed' AND w.released_at IS NULL AND w.retracted_at IS NULL AND w.superseded_by IS NULL
+       AND b.held_at IS NOT NULL AND b.released_at IS NULL AND b.discarded_at IS NULL AND b.deleted_at IS NULL`,
+    [itemId, version],
+  );
+  return Boolean(row);
 }

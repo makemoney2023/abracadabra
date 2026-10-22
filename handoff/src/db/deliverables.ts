@@ -120,6 +120,16 @@ async function itemsFor(sql: Sql, deliverableId: string, version: number): Promi
   );
 }
 
+async function shelfStatus(sql: Sql, deliverableId: string, version: number, items: { id: string; status: string }[]): Promise<DeliverableStatus> {
+  const removed = new Set(
+    (await sql.all<{ id: string }>(
+      "SELECT id FROM deliverable_items WHERE deliverable_id = ? AND version = ? AND removed_at IS NOT NULL",
+      [deliverableId, version],
+    )).map((item) => item.id),
+  );
+  return statusFromItems(items.filter((item) => !removed.has(item.id)));
+}
+
 function statusFromItems(items: { status: string }[]): DeliverableStatus {
   if (items.some((item) => item.status === "changes_requested")) return "changes_requested";
   if (items.length > 0 && items.every((item) => item.status === "approved")) return "approved";
@@ -350,7 +360,7 @@ async function cardsFor(
     if (!staffView && row.published_version == null) continue;
     if (!staffView && row.published_version != null) {
       const items = await itemsFor(sql, row.id, row.published_version);
-      visible.push({ ...row, status: statusFromItems(items) });
+      visible.push({ ...row, status: await shelfStatus(sql, row.id, row.published_version, items) });
     } else {
       visible.push(row);
     }
@@ -391,7 +401,7 @@ export async function openDeliverable(
   if (row.published_version == null) return undefined;
   const items = await itemsFor(sql, row.id, row.published_version);
   return {
-    deliverable: { ...row, status: statusFromItems(items) },
+    deliverable: { ...row, status: await shelfStatus(sql, row.id, row.published_version, items) },
     items,
   };
 }
@@ -436,7 +446,14 @@ export async function recordFeedback(
   if (input.decision === "changes" && !input.itemId) return { ok: false, error: "invalid" };
   const items = await itemsFor(sql, row.id, input.version);
   if (input.itemId && !items.some((item) => item.id === input.itemId)) return { ok: false, error: "invalid" };
+  const removedIds = new Set(
+    (await sql.all<{ id: string }>(
+      "SELECT id FROM deliverable_items WHERE deliverable_id = ? AND version = ? AND removed_at IS NOT NULL",
+      [row.id, input.version],
+    )).map((item) => item.id),
+  );
   const next = items.map((item) => {
+    if (input.itemId == null && removedIds.has(item.id)) return item.status;
     if (input.decision === "comment") return item.status;
     if (input.itemId == null && input.decision === "approve" && item.status === "pending") return "approved" as const;
     if (item.id === input.itemId && input.decision === "approve") return "approved" as const;
@@ -474,14 +491,14 @@ export async function recordFeedback(
   if (input.decision === "approve" && input.itemId == null) {
     writes.push({
       statement: `UPDATE deliverable_items SET status = 'approved'
-        WHERE deliverable_id = ? AND version = ? AND status = 'pending'`,
+        WHERE deliverable_id = ? AND version = ? AND status = 'pending' AND removed_at IS NULL`,
       params: [row.id, input.version],
     });
   }
   if (input.decision !== "comment" && row.version === row.published_version) {
     writes.push({
       statement: "UPDATE deliverables SET status = ?, updated_at = ? WHERE id = ?",
-      params: [statusFromItems(next.map((status) => ({ status }))), now, row.id],
+      params: [statusFromItems(items.flatMap((item, index) => removedIds.has(item.id) ? [] : [{ status: next[index] ?? item.status }])), now, row.id],
     });
   }
   writes.push(activity(row, "deliverable_feedback", actorKind, caller.userId, body || "Approved.", now));

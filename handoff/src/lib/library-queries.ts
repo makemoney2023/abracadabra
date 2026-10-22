@@ -206,13 +206,14 @@ export async function listLibraryArtifacts(
   const counts: Record<string, number> = { total: 0 };
   for (const artifactType of LIBRARY_ARTIFACT_TYPES) counts[artifactType] = 0;
   let needsAction = 0;
+  const removedOnly = query.removed === true;
   const [items, sites, files, itemCounts, siteCounts, fileCounts] = await Promise.all([
     loadItems(sql, query, includeHeld, search, sort, cursor, type),
-    loadSites(sql, query, includeHeld, search, sort, cursor, type),
-    loadFiles(sql, query, includeHeld, search, sort, cursor, type),
+    removedOnly ? Promise.resolve([]) : loadSites(sql, query, includeHeld, search, sort, cursor, type),
+    removedOnly ? Promise.resolve([]) : loadFiles(sql, query, includeHeld, search, sort, cursor, type),
     countItems(sql, query, includeHeld, search),
-    countSites(sql, query, includeHeld, search),
-    countFiles(sql, query, includeHeld, search),
+    removedOnly ? Promise.resolve([]) : countSites(sql, query, includeHeld, search),
+    removedOnly ? Promise.resolve([]) : countFiles(sql, query, includeHeld, search),
   ]);
   for (const row of [...itemCounts, ...siteCounts, ...fileCounts]) {
     const count = Number(row.count);
