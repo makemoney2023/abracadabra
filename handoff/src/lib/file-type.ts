@@ -84,3 +84,13 @@ export function fileType(name: string): FileType {
 export function thumbnailable(name: string): boolean {
   return ["jpg", "jpeg", "png", "webp", "gif"].includes(fileExtension(name));
 }
+
+/** Preview address for a still in the Library. A clip has no still. */
+export function filePreviewSrc(fileId: string, name: string): string | null {
+  return thumbnailable(name) ? `/api/files/${fileId}/preview` : null;
+}
+
+/** The plate word for a file that is a clip. A still uses its picture instead. */
+export function filePlateWord(name: string): "video" | null {
+  return fileType(name).kind === "video" ? "video" : null;
+}

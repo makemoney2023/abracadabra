@@ -12,8 +12,10 @@ export type WorkflowFile = {
   run: string;
   node: string;
   body: string;
-  /** Raw PDF bytes. When set, the body is not used. */
+  /** Raw file bytes. When set, the body is not used. */
   bytes?: Uint8Array;
+  /** Content type for bytes HQ already decoded (a still or a clip). */
+  contentType?: string;
   /**
    * The name the sender gave (an agent attachment). A text body named with an allowed text extension (html, csv,
    * txt, ...) keeps that extension instead of becoming .md. Data URLs still go by their content.
@@ -58,7 +60,18 @@ export function keptTextExtension(name: string | undefined, body: string): strin
 }
 
 /** The extension storeWorkflowOutput will give this file, or null when it would be skipped. Same order as below. */
-export function workflowFileExtension(file: Pick<WorkflowFile, "body" | "bytes" | "name">): string | null {
+const STORED_BYTES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "video/mp4": "mp4",
+  "application/pdf": "pdf",
+};
+
+export function workflowFileExtension(file: Pick<WorkflowFile, "body" | "bytes" | "name" | "contentType">): string | null {
+  const typed = file.bytes && file.contentType ? STORED_BYTES[file.contentType] : undefined;
+  if (typed) return typed;
   if (file.bytes && isPdfBytes(file.bytes)) return "pdf";
   if (file.bytes && isPngBytes(file.bytes)) return "png";
   const kept = keptTextExtension(file.name, file.body);
@@ -134,6 +147,12 @@ export async function storeWorkflowOutput(input: {
   workItemId?: string | null;
 }): Promise<StoredWorkflowFiles> {
   const prepared = input.files.flatMap((file) => {
+    const typed = file.bytes && file.contentType ? STORED_BYTES[file.contentType] : undefined;
+    if (file.bytes && typed) {
+      const relativePath = workflowSpacePath(file, typed);
+      if (!relativePath) return [];
+      return [{ relativePath, bytes: file.bytes, contentType: file.contentType! }];
+    }
     if (file.bytes && isPdfBytes(file.bytes)) {
       const relativePath = workflowSpacePath(file, "pdf");
       if (!relativePath) return [];

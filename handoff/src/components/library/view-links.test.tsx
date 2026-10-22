@@ -59,5 +59,13 @@ describe("view link presentation", () => {
     );
     expect(file).toContain("Download");
     expect(file).toContain("/view/tok/files/pub-2");
+    const clip = renderToStaticMarkup(
+      <PublicLibraryView
+        token="tok"
+        result={{ ok: true, view: { title: "Q4", downloads: false, items: [{ publicId: "pub-clip", title: "clip.mp4", externalUrl: null, kind: "file", artifactType: "file" }] } }}
+      />,
+    );
+    expect(clip).toContain("Video");
+    expect(clip).not.toContain("<img");
   });
 });

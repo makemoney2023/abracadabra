@@ -51,11 +51,14 @@ describe("sources browser", () => {
         files={[
           { id: "pic-1", name: "brand/window.png", status: "clean", selected: false },
           { id: "doc-1", name: "brand/brief.pdf", status: "clean", selected: false },
+          { id: "clip-1", name: "brand/clip.mp4", status: "clean", selected: false },
         ]}
       />,
     );
     expect(html).toContain("/api/files/pic-1/preview");
     expect(html).toContain("Show in Library");
     expect(html).not.toContain("/api/files/doc-1/preview");
+    expect(html).toContain("Video");
+    expect(html).not.toContain("/api/files/clip-1/preview");
   });
 });

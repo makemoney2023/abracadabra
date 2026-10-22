@@ -1,4 +1,5 @@
 import type { LibraryArtifactType } from "@/lib/library-artifacts";
+import { filePlateWord } from "@/lib/file-type";
 
 const TYPE_LABEL: Record<LibraryArtifactType, string> = {
   article: "Article",
@@ -63,6 +64,8 @@ export function PublicLibraryView({
               // The picture is served by this share token, and only for an item already on the share.
               // eslint-disable-next-line @next/next/no-img-element
               <img alt="" src={`/view/${encodeURIComponent(token)}/media/${encodeURIComponent(item.publicId)}`} className="aspect-[4/3] w-full rounded-xl object-cover" />
+            ) : filePlateWord(item.title) === "video" ? (
+              <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-muted text-sm">Video</div>
             ) : null}
             <p className="eyebrow text-optic">{item.artifactType ? TYPE_LABEL[item.artifactType] : "Finished work"}</p>
             <p className="font-heading text-2xl">{item.title}</p>

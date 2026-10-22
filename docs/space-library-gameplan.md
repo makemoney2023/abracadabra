@@ -63,6 +63,7 @@ We do not copy Frame.io’s frame comments, Replay’s separate review product, 
 6. **One status phrase on the card.** `needs_review` reads “Needs a look”. `changes_requested` reads “Changes asked”. The stored status values stay. Filters can still offer the finer staff states.
 7. **Sources uses the Library grid.** An image file uses `/api/files/{id}/preview` when `thumbnailable` is true. Show in Library stays a button on that tile. Folder, scan, and download rules stay.
 8. **No new table, no new approval write, no second calendar.**
+9. **A generated still is a file.** After it is selected into the Library, the card uses the same file preview. A generated clip shows Video. `agent_media` itself is not a Library card. Filing it is what puts the bytes in the space.
 
 ## The screens
 

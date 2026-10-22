@@ -90,6 +90,7 @@ const CONTENT_TYPES: Record<string, string> = {
   jpeg: "image/jpeg",
   webp: "image/webp",
   gif: "image/gif",
+  mp4: "video/mp4",
   md: "text/markdown",
   txt: "text/plain",
 };
@@ -98,7 +99,7 @@ const CONTENT_TYPES: Record<string, string> = {
 export function itemForPath(path: string, objectKey: string | null): { format: ItemFormat; mediaJson: string } {
   const extension = path.split(".").pop()?.toLowerCase() ?? "";
   const image = extension === "png" || extension === "jpg" || extension === "jpeg" || extension === "webp" || extension === "gif";
-  const format: ItemFormat = image ? "static" : extension === "pdf" || extension === "json" ? "file" : "page";
+  const format: ItemFormat = image ? "static" : extension === "pdf" || extension === "json" || extension === "mp4" ? "file" : "page";
   if (!objectKey) return { format, mediaJson: "[]" };
   return {
     format,

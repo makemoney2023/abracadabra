@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A still an agent generated and then put in the Library shows as that picture. A clip shows the word Video. The social rail, the Library card, and a share already led with the picture.
+- **Why** — Cloudflare stills and clips are filed as ordinary files. Selected files were still name cards on the Library, so a generated png looked like a filename.
+- **Code touchpoints** — `handoff/src/lib/file-type.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/type-plate.tsx`, `handoff/src/components/library/sources-browser.tsx`, `handoff/src/components/library/public-library-view.tsx`.
+- **Data-flow impact** — The preview is the existing signed-in file preview. A share of a picture file still uses the view token. A clip is not turned into a poster.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/file-type.test.ts src/lib/library-queries.test.ts src/components/library/sources-browser.test.tsx src/components/library/view-links.test.tsx`.
+
+## 2026-10-22
+
 - **What changed** — The social rail, the Library, Sources, and a share page lead with the picture. A Library card opens the work. Share is a button, and the public page shows the pictures on that share. Needs a look and Changes asked are the words on the card and the rail.
 - **Why** — The rail and the Library showed names, and Review and the view link sounded like the same action.
 - **Code touchpoints** — `handoff/src/lib/picture-role.ts`, `handoff/src/components/social/social-rail.tsx`, `handoff/src/components/library/library-gallery.tsx`, `handoff/src/components/library/artifact-card.tsx`, `handoff/src/components/library/public-library-view.tsx`, `handoff/src/lib/library-shares.ts`, `handoff/src/app/view/[token]/media/[publicId]/route.ts`, `handoff/src/components/library/sources-browser.tsx`.
@@ -17,6 +26,24 @@
 - **Data-flow impact** — none. The plan was written first, then built in the entry above.
 - **API / schema impact** — none.
 - **Verification** — Checked against the current rail, Library cards, Sources list, and public share page.
+
+## 2026-10-22
+
+- **What changed** — A Grok agent chooses the image or video model for the job, and a generated file does not have to belong to a card or a social post.
+- **Why** — The first route required a card and a model from a short list, which read as if HQ picked a default and the file was headed for social.
+- **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.
+- **Data-flow impact** — Generation still writes R2 and `agent_media`. `task_id` is null when there is no card. No social row is written. Filing with `media_ids` stays optional held work.
+- **API / schema impact** — `GET /api/agent-media/models` adds `fits`, `note`, and `?fits=`. `POST /api/agent-media` makes `task_id` optional and `prompt` optional for upscale and background removal. `agent_media.task_id` is nullable in `0044`.
+- **Verification** — `npx vitest run src/lib/agent-media-models.test.ts src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/db/migrate.test.ts src/lib/workflow-files.test.ts`.
+
+## 2026-10-22
+
+- **What changed** — An assigned Grok agent can generate a still or a clip through HQ and file those files on a card.
+- **Why** — With the swarm off, the old Flux stage never runs, and a video data URL was stored as markdown.
+- **Code touchpoints** — `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-media-models.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/lib/workflow-files.ts`, `handoff/src/app/api/agent-media/`, `handoff/migrations/0044_agent_media.sql`.
+- **Data-flow impact** — The agent calls HQ over HTTPS. HQ calls the Workers AI binding, writes the bytes to R2, and copies them into the filing when `media_ids` is set. The agent does not receive a provider URL.
+- **API / schema impact** — `GET /api/agent-media/models`, `POST /api/agent-media`, `GET /api/agent-media/:media_id`. `POST /api/agent-work` accepts `media_ids`. New table `agent_media`.
+- **Verification** — `npx vitest run src/lib/agent-media-models.test.ts src/lib/agent-media.test.ts src/lib/agent-work-filing.test.ts src/db/migrate.test.ts src/lib/workflow-files.test.ts`.
 
 ## 2026-10-22
 

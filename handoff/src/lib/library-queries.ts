@@ -2,6 +2,7 @@ import type { Caller } from "@/lib/authz";
 import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { seesHeldWork } from "@/lib/held-work";
+import { filePreviewSrc } from "@/lib/file-type";
 import { listViewLinks } from "@/lib/library-shares";
 import { localPublication } from "@/lib/social-queries";
 import { pictureAddress, pictureRole, type PictureMedia } from "@/lib/picture-role";
@@ -334,6 +335,7 @@ function projectFiles(rows: FileRow[], audience: LibraryAudience, slug: string):
       updatedAt: row.created_at,
       audience,
       href: `/w/${slug}/files/${row.id}`,
+      previewSrc: filePreviewSrc(row.id, row.relative_path),
     });
     return { sort: row.sort_value, rank: 2, id: row.id, version: 0, artifact };
   });
