@@ -1,14 +1,14 @@
 import type { Caller } from "@/lib/authz";
 import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
+import { flagEnabled, workerEnv } from "@/lib/worker-env";
 
 const PBKDF2_ITERATIONS = 310_000;
 const WINDOW_MS = 15 * 60 * 1000;
 const SESSION_MS = 30 * 60 * 1000;
 
-export function libraryViewLinksEnabled(value = process.env.LIBRARY_VIEW_LINKS): boolean {
-  const flag = (value ?? "").trim().toLowerCase();
-  return flag === "1" || flag === "true" || flag === "on";
+export function libraryViewLinksEnabled(value?: string): boolean {
+  return flagEnabled("LIBRARY_VIEW_LINKS", value);
 }
 
 function bytesToB64(bytes: Uint8Array): string {
@@ -51,7 +51,7 @@ async function passcodeMatches(passcode: string, stored: string): Promise<boolea
   return sameBytes(new Uint8Array(bits), b64ToBytes(hash));
 }
 
-async function ipHash(ip: string, pepper = process.env.HANDOFF_SHARE_HASH_PEPPER, production = process.env.NODE_ENV === "production"): Promise<string> {
+async function ipHash(ip: string, pepper = workerEnv("HANDOFF_SHARE_HASH_PEPPER"), production = process.env.NODE_ENV === "production"): Promise<string> {
   if (!pepper) {
     if (production) throw new Error("missing_pepper");
     pepper = "development-only";

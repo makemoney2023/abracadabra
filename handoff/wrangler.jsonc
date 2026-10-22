@@ -95,7 +95,7 @@
     "AGENT_URL": "https://agent.abra-ca-dabra.app",
     "SWARM_ORIGIN": "https://agent-swarm-orchestrator.abracadabra-ai.workers.dev",
     "SOCIAL_AGENT_ACTIONS": "on",
-    "LIBRARY_VIEW_LINKS": "off",
-    "ARTICLE_SOCIAL_PROMO": "off"
+    "LIBRARY_VIEW_LINKS": "on",
+    "ARTICLE_SOCIAL_PROMO": "on"
   }
 }

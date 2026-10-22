@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-22
+
+- **What changed** — `LIBRARY_VIEW_LINKS` and `ARTICLE_SOCIAL_PROMO` are `on` in `wrangler.jsonc` and `wrangler.hq.jsonc`. Both flags, and `HANDOFF_SHARE_HASH_PEPPER`, are read from the Worker binding when `process.env` is empty. The pepper stays a Worker secret.
+- **Why** — View links and article promotion drafts are ready to use. A Wrangler var is not visible as `process.env` inside the Worker.
+- **Code touchpoints** — `handoff/src/lib/worker-env.ts`, `handoff/src/lib/library-shares.ts`, `handoff/src/lib/article-promotions.ts`, `handoff/wrangler.jsonc`, `handoff/wrangler.hq.jsonc`.
+- **Data-flow impact** — Creating a view link and a promotion draft is available to the roles that already had those actions. Promotion still does not call Zernio.
+- **API / schema impact** — none. Rollback is setting both vars back to `off` and redeploying.
+- **Verification** — `npx vitest run src/lib/library-metrics.test.ts src/lib/library-shares.test.ts src/lib/article-promotions.test.ts`.
+
 ## 2026-10-21
 
 - **What changed** — Finished work opens in the Library at `/w/[slug]/library`, with search, type, status, and sort in the query string. `/w/[slug]/work` keeps that query and opens the Library. Collection review shows version, delivery date, and how many pieces are reviewed. Change requests stay closed until chosen. A view link is `/view/[token]` and is separate from the upload link at `/share/[token]`. Article promotion can save a local social draft. Both new flags ship off.

@@ -57,9 +57,9 @@ The Library is `/w/[slug]/library`. It reads deliverables, built websites, and f
 
 An article link is the canonical URL on the piece. A social destination URL is the public post link stored after a send. A view link is neither of those. Copy view link creates `/view/[token]`. Copy upload link is still `/share/[token]` and still lets someone add files. The two labels stay different.
 
-`LIBRARY_VIEW_LINKS` is `off` in both Wrangler configs. Creation and the public page stay closed until it is `1`, `true`, or `on`. `HANDOFF_SHARE_HASH_PEPPER` is a Worker secret for unlock attempts. Do not commit it and do not send it to the browser. Without that pepper in production, unlock fails closed. Downloads on a view link are off unless the creator turns them on. A download uses the public id on that link, not the file's own id. Revoking the link, or a file that is no longer clean, returns the same unavailable page.
+`LIBRARY_VIEW_LINKS` is `on` in both Wrangler configs. Staff and client owners can create a view link, and `/view/[token]` opens it. `HANDOFF_SHARE_HASH_PEPPER` is a Worker secret for unlock attempts. Do not commit it and do not send it to the browser. Without that pepper in production, unlock fails closed. Downloads on a view link are off unless the creator turns them on. A download uses the public id on that link, not the file's own id. Revoking the link, or a file that is no longer clean, returns the same unavailable page.
 
-`ARTICLE_SOCIAL_PROMO` is `off` in both Wrangler configs. When it is on, staff can save an approved article as a draft social pack. That draft is reviewed at `/w/[slug]/work/[id]`. It does not call Zernio, and it does not change the article URL. WordPress, Wix, and Pinterest are not choices. Blog posts are not published through Zernio.
+`ARTICLE_SOCIAL_PROMO` is `on` in both Wrangler configs. Staff can save an approved article as a draft social pack. That draft is reviewed at `/w/[slug]/work/[id]`. It does not call Zernio, and it does not change the article URL. WordPress, Wix, and Pinterest are not choices. Blog posts are not published through Zernio.
 
 Set either flag back to `off` and redeploy to hide the button. Signed-in Library reads stay available. Existing Post to social, `schedule_social`, approval cadence, webhooks, and the cron stay on their current paths.
 

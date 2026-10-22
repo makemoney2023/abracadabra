@@ -78,7 +78,7 @@
     "MCP_PORTAL_URL": "https://mcp.abra-ca-dabra.app/mcp",
     "AGENT_WORK_MAX_MB": "10",
     "SOCIAL_AGENT_ACTIONS": "on",
-    "LIBRARY_VIEW_LINKS": "off",
-    "ARTICLE_SOCIAL_PROMO": "off"
+    "LIBRARY_VIEW_LINKS": "on",
+    "ARTICLE_SOCIAL_PROMO": "on"
   }
 }

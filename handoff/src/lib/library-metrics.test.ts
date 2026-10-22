@@ -5,6 +5,9 @@ import { sqliteSql } from "@/db/sql";
 import { articleSocialPromoEnabled } from "./article-promotions";
 import { libraryViewLinksEnabled } from "./library-shares";
 import { libraryMetric, metricOmitsSecrets, recordLibraryMetric } from "./library-metrics";
+import { workerEnv } from "./worker-env";
+
+const CLOUDFLARE_CONTEXT = Symbol.for("__cloudflare-context__");
 
 describe("library flags and metrics", () => {
   it("keeps both flags off until they are explicitly on", () => {
@@ -12,6 +15,19 @@ describe("library flags and metrics", () => {
     expect(libraryViewLinksEnabled("off")).toBe(false);
     expect(articleSocialPromoEnabled("")).toBe(false);
     expect(articleSocialPromoEnabled("on")).toBe(true);
+    delete process.env.LIBRARY_VIEW_LINKS;
+    delete process.env.ARTICLE_SOCIAL_PROMO;
+    delete process.env.HANDOFF_SHARE_HASH_PEPPER;
+    (globalThis as Record<symbol, unknown>)[CLOUDFLARE_CONTEXT] = {
+      env: { LIBRARY_VIEW_LINKS: "on", ARTICLE_SOCIAL_PROMO: "on", HANDOFF_SHARE_HASH_PEPPER: "bound-pepper" },
+    };
+    expect(libraryViewLinksEnabled()).toBe(true);
+    expect(articleSocialPromoEnabled()).toBe(true);
+    expect(workerEnv("HANDOFF_SHARE_HASH_PEPPER")).toBe("bound-pepper");
+    process.env.LIBRARY_VIEW_LINKS = "off";
+    expect(libraryViewLinksEnabled()).toBe(false);
+    delete process.env.LIBRARY_VIEW_LINKS;
+    delete (globalThis as Record<symbol, unknown>)[CLOUDFLARE_CONTEXT];
   });
 
   it("records a count without a token, passcode, or URL", async () => {

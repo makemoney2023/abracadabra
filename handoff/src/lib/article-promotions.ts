@@ -2,15 +2,15 @@ import type { Caller } from "@/lib/authz";
 import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { inspectCanonicalUrl } from "@/lib/library-artifacts";
+import { flagEnabled } from "@/lib/worker-env";
 import { isBlogPlatform } from "@/lib/zernio";
 
 const BLOCKED = new Set(["wordpress", "wix", "pinterest"]);
 
 export const ARTICLE_PROMO_PLATFORMS = ["linkedin", "facebook", "instagram", "twitter", "threads", "tiktok", "youtube", "bluesky", "googlebusiness"] as const;
 
-export function articleSocialPromoEnabled(value = process.env.ARTICLE_SOCIAL_PROMO): boolean {
-  const flag = (value ?? "").trim().toLowerCase();
-  return flag === "1" || flag === "true" || flag === "on";
+export function articleSocialPromoEnabled(value?: string): boolean {
+  return flagEnabled("ARTICLE_SOCIAL_PROMO", value);
 }
 
 export async function createArticlePromotionDraft(
