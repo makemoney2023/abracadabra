@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A plan for the next Library and calendar pass: drop an approved piece onto a day, turn a Library still into a piece that needs a look, keep a clip's starting still, open on Needs a look, approve on the selected row, and name what a month day is hiding.
+- **Why** — The pictures are on the screen. The next gap is placing one on a day and landing on the decision.
+- **Code touchpoints** — `docs/place-and-decide-plan.md`, `docs/space-library-gameplan.md`, `README.md`.
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — The plan calls for `agent_media.source_media_id` and `file_posters` when that slice is built. This commit adds neither.
+- **Verification** — Checked against `sendPiece`, `dropTime`, `ApproveForm`, `agent_media`, and the Library finder.
+
+## 2026-10-22
+
 - **What changed** — A still an agent generated and then put in the Library shows as that picture. A clip shows the word Video. The social rail, the Library card, and a share already led with the picture.
 - **Why** — Cloudflare stills and clips are filed as ordinary files. Selected files were still name cards on the Library, so a generated png looked like a filename.
 - **Code touchpoints** — `handoff/src/lib/file-type.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/type-plate.tsx`, `handoff/src/components/library/sources-browser.tsx`, `handoff/src/components/library/public-library-view.tsx`.
