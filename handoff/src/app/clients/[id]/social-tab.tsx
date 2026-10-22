@@ -2,11 +2,15 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SocialOperationsPanel, type OperationsCard } from "@/components/social/social-operations-panel";
+import { calendarPosts } from "@/components/social/calendar-posts";
+import { calendarTimeZone } from "@/components/social/social-calendar";
+import { SocialOperationsPanel } from "@/components/social/social-operations-panel";
 import { POST_STATUS_LABEL, type SocialAccount, type SocialPost } from "@/lib/social";
-import { CADENCE_SENTENCE, type Autopost } from "@/lib/social-autopost";
+import { approvalControlLabel, CADENCE_SENTENCE, type Autopost } from "@/lib/social-autopost";
+import type { SocialReviewPiece } from "@/lib/social-review";
 import { POST_TYPE_LABEL } from "@/lib/social-plan";
 import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, isBlogPlatform } from "@/lib/zernio";
+import { sentConfirmation } from "@/app/w/[slug]/work/sent";
 import { connectSocialAction } from "../social-actions";
 import { AgentPublishModeForm, AutopostForm, CancelSocialPostForm, DisconnectSocialForm, MoveSocialPostForm } from "../social-forms";
 
@@ -22,6 +26,9 @@ export type SocialView = {
   agentMode: string;
   notice: string;
   now: number;
+  waiting: SocialReviewPiece[];
+  ready: SocialReviewPiece[];
+  sent: string;
 };
 
 const NOTICE: Record<string, string> = {
@@ -34,10 +41,6 @@ function accountLabel(account: SocialAccount): string {
   return `${PLATFORM_LABEL[account.platform] ?? account.platform} · ${account.display_name ?? account.username ?? account.id}`;
 }
 
-function dayKey(at: number, timeZone: string): string {
-  return new Date(at).toLocaleDateString("en-US", { timeZone, weekday: "long", month: "long", day: "numeric", year: "numeric" });
-}
-
 function timeOf(at: number, timeZone: string): string {
   return new Date(at).toLocaleTimeString("en-US", { timeZone, hour: "numeric", minute: "2-digit" });
 }
@@ -48,36 +51,6 @@ function links(post: SocialPost): string[] {
   } catch {
     return [];
   }
-}
-
-function firstAccount(post: SocialPost): string {
-  try {
-    const ids = JSON.parse(post.account_ids) as unknown;
-    return Array.isArray(ids) && typeof ids[0] === "string" ? ids[0] : "";
-  } catch {
-    return "";
-  }
-}
-
-function platformOf(post: SocialPost, accounts: SocialAccount[]): string {
-  const id = firstAccount(post);
-  return accounts.find((account) => account.id === id)?.platform ?? "";
-}
-
-function operationCards(social: SocialView): OperationsCard[] {
-  return social.posts.map((post) => ({
-    id: post.id,
-    title: post.item_title ?? "Post",
-    platform: platformOf(post, social.accounts),
-    state: post.status,
-    at: post.scheduled_for ?? post.created_at,
-    timezone: post.timezone || "UTC",
-    thumbnailRole: "main",
-    deliverableId: post.deliverable_id,
-    itemId: post.item_id,
-    accountId: firstAccount(post),
-    collection: post.deliverable_title ?? "",
-  }));
 }
 
 function accountCount(post: SocialPost): number {
@@ -129,39 +102,25 @@ function PostLine({ post, organizationId, showActions }: { post: SocialPost; org
   );
 }
 
-/** Upcoming posts grouped by day, in each post's own time zone. */
-function Calendar({ posts, organizationId }: { posts: SocialPost[]; organizationId: string }) {
-  const days = new Map<string, SocialPost[]>();
-  for (const post of posts) {
-    const key = dayKey(post.scheduled_for ?? post.created_at, post.timezone || "UTC");
-    days.set(key, [...(days.get(key) ?? []), post]);
-  }
-  return (
-    <div className="flex flex-col gap-5">
-      {[...days.entries()].map(([day, rows]) => (
-        <section key={day} className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold">{day}</h3>
-          <ul className="flex flex-col gap-3 border-l border-border pl-4">
-            {rows.map((post) => (
-              <PostLine key={post.id} post={post} organizationId={organizationId} showActions />
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
-  );
-}
-
 export function SocialTab({ organizationId, social }: { organizationId: string; social: SocialView }) {
   const notice = NOTICE[social.notice];
+  const confirmation = sentConfirmation(social.sent);
   const postable = social.accounts.filter((account) => account.is_active && !isBlogPlatform(account.platform));
-  const upcoming = social.posts
-    .filter((post) => post.status === "scheduled" && (post.scheduled_for ?? 0) >= social.now - 3_600_000)
-    .sort((left, right) => (left.scheduled_for ?? 0) - (right.scheduled_for ?? 0));
-  const upcomingIds = new Set(upcoming.map((post) => post.id));
-  const history = social.posts.filter((post) => !upcomingIds.has(post.id));
+  const cards = calendarPosts(social.posts, social.accounts, [...social.waiting, ...social.ready]);
+  const onCalendar = new Set(cards.map((post) => post.id));
+  const history = social.posts.filter((post) => !onCalendar.has(post.id));
+  const timeZone = calendarTimeZone(
+    social.autopost,
+    social.posts.map((post) => post.timezone || ""),
+  );
   return (
     <div className="flex flex-col gap-6">
+      {confirmation ? (
+        <div role="status" aria-live="polite" tabIndex={-1} className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 px-5 py-4">
+          <p className="text-sm font-medium">{confirmation.title}</p>
+          <p className="text-sm text-muted-foreground">{confirmation.body}</p>
+        </div>
+      ) : null}
       <Card id="account_health">
         <CardHeader>
           <CardTitle>Accounts</CardTitle>
@@ -215,24 +174,23 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Operations</CardTitle>
-          <CardDescription>Attention comes first. Move and cancel on the calendar still send directly.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SocialOperationsPanel attention={social.attention} posts={operationCards(social)} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
           <CardTitle>Calendar</CardTitle>
-          <CardDescription>Scheduled posts, by day. Move or cancel one before it goes out.</CardDescription>
+          <CardDescription>
+            Day, week, or month in {timeZone}. Pieces waiting for a look stay beside the grid. Drag a scheduled post to move it, or open it and pick a time.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing scheduled. Schedule from a finished-work page.</p>
-          ) : (
-            <Calendar posts={upcoming} organizationId={organizationId} />
-          )}
+          <SocialOperationsPanel
+            attention={social.attention}
+            posts={cards}
+            timeZone={timeZone}
+            now={social.now}
+            waiting={social.waiting}
+            ready={social.ready}
+            approveLabel={approvalControlLabel(social.autopost)}
+            organizationId={organizationId}
+            canReschedule
+          />
         </CardContent>
       </Card>
       <Card id="cadence">
@@ -263,8 +221,8 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
       </Card>
       <Card id="history">
         <CardHeader>
-          <CardTitle>Sent and drafts</CardTitle>
-          <CardDescription>Everything else sent for this client, newest first.</CardDescription>
+          <CardTitle>Cancelled and untimed drafts</CardTitle>
+          <CardDescription>Scheduled and posted work is on the calendar, including past days.</CardDescription>
         </CardHeader>
         <CardContent>
           {history.length === 0 ? (

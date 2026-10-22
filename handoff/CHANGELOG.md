@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — Social on the client profile and in the client space is one day, week, and month calendar, with the pieces waiting for a look beside it. Approving or asking for a change from that calendar is the same decision as on the finished-work page, and returns to the calendar. Staff can drag a scheduled post to another day or hour.
+- **Why** — The old schedule was a day list on the profile and a separate coming-up list in the space, so approval and the plan were not the same screen.
+- **Code touchpoints** — `handoff/src/components/social/social-calendar.ts`, `handoff/src/components/social/social-board.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/lib/social-review.ts`, `handoff/src/app/clients/[id]/social-tab.tsx`, `handoff/src/app/w/[slug]/social/page.tsx`, `handoff/src/app/w/[slug]/work/actions.ts`.
+- **Data-flow impact** — Approval still records feedback and, when cadence is on, still auto-schedules. The calendar reads the same posts and published pieces.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/components/social src/lib/social-review.test.ts src/app/w/[slug]/work/return-path.test.ts src/lib/social.test.ts` and `npx tsc --noEmit`.
+
+## 2026-10-22
+
 - **What changed** — Empty Library searches now offer a one-click search reset without discarding the remaining filters. Upload-link copy results are announced to assistive technology, collection item states use readable status badges, and the selection panel explicitly says “Copy view link.” Public view links now identify the artifact type and use specific actions such as “Read article” and “Visit site.”
 - **Why** — The final UX audit found a small set of current, reproducible gaps in recovery, accessibility feedback, and public-link clarity.
 - **Code touchpoints** — `handoff/src/components/library/`, `handoff/src/components/share-link.tsx`, and `handoff/src/lib/library-shares.ts`.

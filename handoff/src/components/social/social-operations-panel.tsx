@@ -2,21 +2,74 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { moveSocialPostAction } from "@/app/clients/social-actions";
+import { ApproveForm, ChangesForm } from "@/app/w/[slug]/work/forms";
+import { CancelSocialPostForm, MoveSocialPostForm } from "@/app/clients/social-forms";
+import { PLATFORM_LABEL } from "@/lib/zernio";
+import type { SocialReviewPiece } from "@/lib/social-review";
+import { clientSocialReview } from "./client-social-review";
+import { SocialPieceCard } from "./social-piece-card";
+import { pieceCardView } from "./social-piece-view";
 import { operationsView, type AttentionRow, type OperationsPost } from "./social-operations";
+import { calendarStatusLabel, visibleReview } from "./social-board";
+import { SocialCalendarView, type CalendarEvent } from "./social-calendar-view";
 
 export type OperationsCard = OperationsPost & {
   deliverableId: string;
   itemId: string;
   accountId: string;
+  accountLabel: string;
   collection: string;
+  approval?: string;
+  cancelled?: boolean;
 };
 
-/** Attention first. New queue labels open a plan review. They do not move or cancel a post. */
-export function SocialOperationsPanel({ attention, posts }: { attention: AttentionRow[]; posts: OperationsCard[] }) {
+const ATTENTION_LABEL: Record<string, string> = {
+  disconnected_account: "Needs sign-in",
+  upload_failure: "Upload failed",
+  rejected_target: "Rejected",
+  missing_requirement: "Missing a requirement",
+  stale_plan: "Plan is out of date",
+  uncertain_outcome: "Outcome unclear",
+};
+
+const REVIEW_LABEL: Record<string, string> = {
+  pending: "Needs a look",
+  changes_requested: "Changes asked",
+  approved: "Approved",
+};
+
+/** Attention, the pieces waiting for a decision, and one day/week/month calendar. */
+export function SocialOperationsPanel({
+  attention,
+  posts,
+  timeZone,
+  now,
+  waiting,
+  ready,
+  approveLabel,
+  organizationId,
+  canReschedule,
+}: {
+  attention: AttentionRow[];
+  posts: OperationsCard[];
+  timeZone: string;
+  now: number;
+  waiting: SocialReviewPiece[];
+  ready: SocialReviewPiece[];
+  approveLabel: string;
+  organizationId: string;
+  canReschedule: boolean;
+}) {
+  const router = useRouter();
   const [account, setAccount] = React.useState("");
   const [platform, setPlatform] = React.useState("");
   const [collection, setCollection] = React.useState("");
   const [status, setStatus] = React.useState("");
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [moveMessage, setMoveMessage] = React.useState("");
   const filtered = posts.filter((post) => {
     if (account && post.accountId !== account) return false;
     if (platform && post.platform !== platform) return false;
@@ -25,51 +78,266 @@ export function SocialOperationsPanel({ attention, posts }: { attention: Attenti
     return true;
   });
   const wide = operationsView({ narrow: false, attention, posts: filtered });
-  const narrow = operationsView({ narrow: true, attention, posts: filtered });
-  const accounts = [...new Set(posts.map((post) => post.accountId).filter(Boolean))];
+  const phone = operationsView({ narrow: true, attention, posts: filtered });
+  const accounts = [...new Map(posts.filter((post) => post.accountId).map((post) => [post.accountId, post.accountLabel || post.accountId])).entries()];
   const platforms = [...new Set(posts.map((post) => post.platform).filter(Boolean))];
   const collections = [...new Set(posts.map((post) => post.collection).filter(Boolean))];
   const statuses = [...new Set(posts.map((post) => post.state).filter(Boolean))];
+  const review = visibleReview(waiting, platform);
+  const approved = visibleReview(ready, platform);
+  const selectedPost = posts.find((post) => post.id === selectedId) ?? null;
+  const selectedPiece =
+    review.find((piece) => piece.id === selectedId) ??
+    approved.find((piece) => piece.id === selectedId) ??
+    review.find((piece) => piece.id === selectedPost?.itemId) ??
+    null;
+  const events: CalendarEvent[] = filtered.map((post) => ({
+    id: post.id,
+    title: post.title,
+    platform: post.platform,
+    state: post.state,
+    at: post.at,
+    approval: post.approval,
+    cancelled: post.cancelled,
+    itemId: post.itemId,
+    thumbnailSrc: post.deliverableId && post.itemId ? `/api/deliverables/${post.deliverableId}/items/${post.itemId}/media/${post.thumbnailRole || "main"}` : undefined,
+  }));
+  const move = async (postId: string, startAt: string) => {
+    const body = new FormData();
+    body.set("organizationId", organizationId);
+    body.set("postId", postId);
+    body.set("startAt", startAt);
+    body.set("timezone", timeZone);
+    const result = await moveSocialPostAction(null, body);
+    setMoveMessage(result.ok ? result.message : result.error);
+    if (result.ok) router.refresh();
+  };
   return (
     <section id="attention" className="flex flex-col gap-4">
-      <h3 className="text-sm font-semibold">Needs attention</h3>
-      {wide.recoveries.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nothing needs attention.</p>
-      ) : (
-        <ul className="flex flex-col gap-2 text-sm">
-          {wide.recoveries.map((item) => (
-            <li key={item.id}>
-              {item.action === "connect" ? "Connect" : item.action === "retry" ? "Retry" : "Review"} · opens a plan review
-            </li>
-          ))}
-        </ul>
-      )}
+      {canReschedule || attention.length > 0 ? (
+        <>
+          <h3 className="text-sm font-semibold">Needs attention</h3>
+          {wide.recoveries.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nothing needs attention.</p>
+          ) : (
+            <ul className="flex flex-col gap-2 text-sm">
+              {attention.map((item) => {
+                const recovery = wide.recoveries.find((row) => row.id === item.id);
+                return (
+                  <li key={item.id}>
+                    {PLATFORM_LABEL[item.platform] ?? item.platform} · {ATTENTION_LABEL[item.kind] ?? "Review"}
+                    {recovery?.action === "connect" ? (
+                      <>
+                        {" "}
+                        · <a className="underline" href="#account_health">Sign in again</a>
+                      </>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      ) : null}
       <div className="flex flex-wrap gap-2 text-sm">
-        <Filter label="Account" value={account} options={accounts} onChange={setAccount} />
-        <Filter label="Platform" value={platform} options={platforms} onChange={setPlatform} />
-        <Filter label="Collection" value={collection} options={collections} onChange={setCollection} />
-        <Filter label="Status" value={status} options={statuses} onChange={setStatus} />
+        <Choice label="Account" value={account} options={accounts.map(([value, label]) => ({ value, label }))} onChange={setAccount} />
+        <Choice label="Platform" value={platform} options={platforms.map((value) => ({ value, label: PLATFORM_LABEL[value] ?? value }))} onChange={setPlatform} />
+        <Choice label="Collection" value={collection} options={collections.map((value) => ({ value, label: value }))} onChange={setCollection} />
+        <Choice label="Status" value={status} options={statuses.map((value) => ({ value, label: calendarStatusLabel(value) }))} onChange={setStatus} />
       </div>
-      <div className="hidden flex-col gap-3 sm:flex">
-        <p className="text-sm text-muted-foreground">Week</p>
-        <CardList cards={wide.cards as (OperationsCard & { localTime: string })[]} />
+      <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
+        <div className="flex flex-col gap-4">
+          <ReviewList title="Waiting for a look" empty="Nothing is waiting for a look." pieces={review} selectedId={selectedId} onSelect={setSelectedId} />
+          <ReviewList
+            title="Approved, not on the calendar"
+            empty="Approved work is on the calendar, or not ready yet."
+            pieces={approved}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="hidden sm:block">
+            <SocialCalendarView
+              posts={events}
+              timeZone={timeZone}
+              now={now}
+              initialMode={wide.calendar.mode}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              canReschedule={canReschedule}
+              onMove={canReschedule ? move : undefined}
+            />
+          </div>
+          <div className="sm:hidden">
+            <SocialCalendarView
+              posts={events}
+              timeZone={timeZone}
+              now={now}
+              initialMode={phone.calendar.mode}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              canReschedule={canReschedule}
+              onMove={canReschedule ? move : undefined}
+            />
+          </div>
+          {moveMessage ? <p role="status" className="text-sm text-muted-foreground">{moveMessage}</p> : null}
+          {canReschedule ? <p className="text-xs text-muted-foreground">Drag a scheduled post to another day or hour. The time of day stays unless you drop it on an hour.</p> : null}
+        </div>
       </div>
-      <div className="flex flex-col gap-3 sm:hidden">
-        <p className="text-sm text-muted-foreground">Agenda</p>
-        <CardList cards={narrow.cards as (OperationsCard & { localTime: string })[]} />
-      </div>
-      <ul className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-        {wide.queueActions.map((action) => (
-          <li key={action.action}>
-            {action.action} opens a plan review
-          </li>
-        ))}
-      </ul>
+      {selectedPiece ? (
+        <PieceDetail piece={selectedPiece} approveLabel={approveLabel} organizationId={organizationId} canReschedule={canReschedule} />
+      ) : selectedPost ? (
+        <PostDetail post={selectedPost} organizationId={organizationId} canReschedule={canReschedule} timeZone={timeZone} />
+      ) : null}
     </section>
   );
 }
 
-function Filter({
+function ReviewList({
+  title,
+  empty,
+  pieces,
+  selectedId,
+  onSelect,
+}: {
+  title: string;
+  empty: string;
+  pieces: SocialReviewPiece[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-sm font-semibold">
+        {title} <span className="text-muted-foreground">({pieces.length})</span>
+      </h3>
+      {pieces.length === 0 ? <p className="text-sm text-muted-foreground">{empty}</p> : null}
+      <ul className="flex flex-col gap-2">
+        {pieces.map((piece) => (
+          <li key={piece.id}>
+            <button
+              type="button"
+              onClick={() => onSelect(piece.id)}
+              aria-pressed={selectedId === piece.id}
+              className={`flex w-full flex-col gap-1 rounded-xl border px-3 py-2 text-left text-sm ${selectedId === piece.id ? "border-foreground" : "border-border"}`}
+            >
+              <span className="font-medium">{piece.title}</span>
+              <span className="text-xs text-muted-foreground">
+                {REVIEW_LABEL[piece.status] ?? piece.status} · {piece.deliverableTitle}
+              </span>
+              {piece.caption ? <span className="line-clamp-2 text-xs text-muted-foreground">{piece.caption}</span> : null}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PieceDetail({
+  piece,
+  approveLabel,
+  organizationId,
+  canReschedule,
+}: {
+  piece: SocialReviewPiece;
+  approveLabel: string;
+  organizationId: string;
+  canReschedule: boolean;
+}) {
+  const returnTo = canReschedule ? `/clients/${organizationId}?tab=social` : `/w/${piece.slug}/social`;
+  const network = piece.platforms[0];
+  const summary = network
+    ? clientSocialReview({
+        title: piece.title,
+        caption: piece.caption,
+        mediaRoles: piece.media.map((item) => item.role),
+        platform: network,
+        targetState: piece.status,
+        cadenceEnabled: approveLabel !== "Approve",
+        cadenceLabel: approveLabel,
+        previewSlots: [],
+        fingerprint: "shown",
+        confirmedFingerprint: "shown",
+        role: "owner",
+      })
+    : null;
+  const view = pieceCardView({
+    title: piece.title,
+    format: piece.format,
+    caption: piece.caption,
+    mediaJson: JSON.stringify(piece.media.map((item) => ({ role: item.role, content_type: item.contentType, r2_key: item.role }))),
+    status: piece.status,
+    targets: piece.platforms.map((platform) => ({ platform, outcome: "unpublished" })),
+  });
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border p-4">
+      <p className="text-sm text-muted-foreground">{piece.deliverableTitle}</p>
+      {summary ? <p className="text-sm">{summary.platformState}</p> : null}
+      <SocialPieceCard
+        view={view}
+        caption={piece.caption}
+        accountName={piece.accountName}
+        platforms={piece.platforms}
+        media={piece.media.map((item) => ({
+          role: item.role,
+          video: item.video,
+          alt: piece.title,
+          src: `/api/deliverables/${piece.deliverableId}/items/${piece.id}/media/${item.role}`,
+        }))}
+      />
+      {piece.status === "approved" ? (
+        canReschedule ? (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/deliverables/${piece.deliverableId}`}>Schedule from finished work</Link>
+          </Button>
+        ) : (
+          <p className="text-sm text-muted-foreground">Approved. It is not on the calendar yet.</p>
+        )
+      ) : (
+        <div className="flex flex-col gap-3">
+          <ApproveForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} label={approveLabel} returnTo={returnTo} />
+          <ChangesForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} returnTo={returnTo} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostDetail({
+  post,
+  organizationId,
+  canReschedule,
+  timeZone,
+}: {
+  post: OperationsCard;
+  organizationId: string;
+  canReschedule: boolean;
+  timeZone: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-border p-4 text-sm">
+      <p className="font-medium">{post.title}</p>
+      <p className="text-muted-foreground">
+        {(PLATFORM_LABEL[post.platform] ?? post.platform) || "Post"} · {calendarStatusLabel(post.state)} · {timeZone}
+      </p>
+      {post.collection ? (
+        <Link className="underline" href={`/deliverables/${post.deliverableId}`}>
+          {post.collection}
+        </Link>
+      ) : null}
+      {canReschedule && post.state === "scheduled" ? (
+        <div className="flex flex-wrap gap-2">
+          <MoveSocialPostForm organizationId={organizationId} postId={post.id} timezone={timeZone} />
+          <CancelSocialPostForm organizationId={organizationId} postId={post.id} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Choice({
   label,
   value,
   options,
@@ -77,7 +345,7 @@ function Filter({
 }: {
   label: string;
   value: string;
-  options: string[];
+  options: { value: string; label: string }[];
   onChange: (value: string) => void;
 }) {
   return (
@@ -86,38 +354,11 @@ function Filter({
       <select className="h-8 rounded-md border border-input bg-transparent px-2" value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="">All</option>
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>
     </label>
-  );
-}
-
-function CardList({ cards }: { cards: (OperationsCard & { localTime: string })[] }) {
-  if (cards.length === 0) return <p className="text-sm text-muted-foreground">No posts in this view.</p>;
-  return (
-    <ul className="flex flex-col gap-3">
-      {cards.map((card) => (
-        <li key={card.id} className="flex items-center gap-3 text-sm">
-          {card.deliverableId && card.itemId ? (
-            // The picture is served only when this caller can see the space.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt=""
-              className="h-10 w-10 rounded-md object-cover"
-              src={`/api/deliverables/${card.deliverableId}/items/${card.itemId}/media/${card.thumbnailRole || "main"}`}
-            />
-          ) : null}
-          <span className="text-muted-foreground">{card.platform || "Post"}</span>
-          <Link className="font-medium underline" href={`/deliverables/${card.deliverableId}`}>
-            {card.title}
-          </Link>
-          <span>{card.state}</span>
-          <span className="tabular-nums text-muted-foreground">{card.localTime}</span>
-        </li>
-      ))}
-    </ul>
   );
 }

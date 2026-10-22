@@ -3,11 +3,14 @@ import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { clock } from "@/lib/clock";
 import { openSession } from "@/lib/current";
-import { clientSocialReview } from "@/components/social/client-social-review";
+import { calendarPosts } from "@/components/social/calendar-posts";
+import { calendarTimeZone } from "@/components/social/social-calendar";
+import { SocialOperationsPanel } from "@/components/social/social-operations-panel";
 import { listSocialAccounts, listSocialPosts, syncSocialAccounts, type SocialAccount, type SocialPost } from "@/lib/social";
-import { approvalControlLabel, cadenceFingerprint, DEFAULT_AUTOPOST, getAutopost, type Autopost } from "@/lib/social-autopost";
-import { POST_TYPE_LABEL } from "@/lib/social-plan";
-import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, isEligibleSocialPlatform, openZernio } from "@/lib/zernio";
+import { approvalControlLabel, DEFAULT_AUTOPOST, getAutopost, type Autopost } from "@/lib/social-autopost";
+import { listSocialReviewPieces } from "@/lib/social-review";
+import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, openZernio } from "@/lib/zernio";
+import { sentConfirmation } from "../work/sent";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,10 +27,12 @@ export default async function SpaceSocialPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ social?: string }>;
+  searchParams: Promise<{ social?: string; sent?: string }>;
 }) {
   const { slug } = await params;
-  const notice = NOTICE[(await searchParams).social ?? ""];
+  const query = await searchParams;
+  const notice = NOTICE[query.social ?? ""];
+  const confirmation = sentConfirmation(query.sent);
   const { sql, caller } = await openSession();
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace || !can(caller, "invite.member", { workspaceId: workspace.id })) notFound();
@@ -49,19 +54,30 @@ export default async function SpaceSocialPage({
   if (organization) {
     [accounts, posts, cadence] = await Promise.all([
       listSocialAccounts(sql, organization.id),
-      listSocialPosts(sql, { organizationId: organization.id }, 100),
+      listSocialPosts(sql, { organizationId: organization.id }, 200),
       getAutopost(sql, organization.id),
     ]);
   }
-  const fingerprint = cadence ? cadenceFingerprint(cadence) : "";
-  const accountById = new Map(accounts.map((account) => [account.id, account]));
   const now = clock();
-  const upcoming = posts
-    .filter((post) => post.status === "scheduled" && (post.scheduled_for ?? 0) >= now)
-    .sort((left, right) => (left.scheduled_for ?? 0) - (right.scheduled_for ?? 0));
+  const live = new Set(
+    posts
+      .filter((post) => post.status === "sending" || post.status === "scheduled" || post.status === "published" || post.status === "partial")
+      .map((post) => post.item_id),
+  );
+  const review = organization
+    ? await listSocialReviewPieces(sql, caller, { id: workspace.id, slug, display_name: workspace.display_name }, live)
+    : { waiting: [], ready: [] };
+  const timeZone = calendarTimeZone(cadence, posts.map((post) => post.timezone || ""));
+  const cards = calendarPosts(posts, accounts, [...review.waiting, ...review.ready]);
   return (
-    <main className="mx-auto flex w-full max-w-[40rem] flex-1 flex-col gap-8 px-6 py-[4rem]">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-[4rem]">
       <h1 className="font-heading text-4xl leading-tight">Social</h1>
+      {confirmation ? (
+        <div role="status" aria-live="polite" tabIndex={-1} className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 px-5 py-4">
+          <p className="text-sm font-medium">{confirmation.title}</p>
+          <p className="text-sm text-muted-foreground">{confirmation.body}</p>
+        </div>
+      ) : null}
       {notice ? <p role="status" className="text-sm">{notice}</p> : null}
       <Card>
         <CardHeader>
@@ -106,56 +122,23 @@ export default async function SpaceSocialPage({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Coming up</CardTitle>
-          <CardDescription>Posts we have scheduled for you.</CardDescription>
+          <CardTitle>Calendar</CardTitle>
+          <CardDescription>
+            Day, week, or month. Times are in {timeZone}. Open a piece to approve it or ask for a change.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing scheduled right now.</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {upcoming.map((post) => {
-                let accountId = "";
-                try {
-                  const ids = JSON.parse(post.account_ids) as unknown;
-                  accountId = Array.isArray(ids) && typeof ids[0] === "string" ? ids[0] : "";
-                } catch {
-                  accountId = "";
-                }
-                const account = accountById.get(accountId);
-                const platform = account && account.is_active && isEligibleSocialPlatform(account.platform) ? account.platform : "";
-                const review = platform
-                  ? clientSocialReview({
-                      title: post.item_title ?? "Post",
-                      caption: "",
-                      mediaRoles: ["main"],
-                      platform,
-                      targetState: "scheduled",
-                      cadenceEnabled: Boolean(cadence?.enabled),
-                      cadenceLabel: cadence ? approvalControlLabel(cadence) : "Approve",
-                      previewSlots: [],
-                      fingerprint,
-                      confirmedFingerprint: fingerprint,
-                      role: "owner",
-                    })
-                  : null;
-                return (
-                <li key={post.id} className="flex flex-col gap-0.5 text-sm">
-                  <span className="font-medium">{post.item_title}</span>
-                  <span className="text-muted-foreground">
-                    {new Date(post.scheduled_for ?? 0).toLocaleString("en-US", {
-                      timeZone: post.timezone || "UTC",
-                      dateStyle: "full",
-                      timeStyle: "short",
-                    })}{" "}
-                    · {POST_TYPE_LABEL[post.post_type]}
-                  </span>
-                  {review ? <span>{review.platformState}</span> : null}
-                </li>
-                );
-              })}
-            </ul>
-          )}
+          <SocialOperationsPanel
+            attention={[]}
+            posts={cards}
+            timeZone={timeZone}
+            now={now}
+            waiting={review.waiting}
+            ready={review.ready}
+            approveLabel={approvalControlLabel(cadence)}
+            organizationId={organization?.id ?? ""}
+            canReschedule={false}
+          />
         </CardContent>
       </Card>
     </main>

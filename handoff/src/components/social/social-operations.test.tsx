@@ -31,7 +31,7 @@ describe("social operations", () => {
       { id: "a4", action: null },
     ]);
     expect(view.calendar.mode).toBe("week");
-    expect(view.calendar.modes).toEqual(["week", "month", "agenda"]);
+    expect(view.calendar.modes).toEqual(["day", "week", "month"]);
     expect(view.filters).toEqual(["account", "platform", "collection", "status"]);
     expect(view.cards[0]).toMatchObject({
       thumbnailRole: "main",
@@ -47,8 +47,8 @@ describe("social operations", () => {
     expect(view.reachable).toEqual(["account_health", "cadence", "history"]);
   });
 
-  it("falls back to an agenda on a narrow width", () => {
+  it("opens on the day view on a narrow width", () => {
     const view = operationsView({ narrow: true, attention: [], posts: [] });
-    expect(view.calendar.mode).toBe("agenda");
+    expect(view.calendar.mode).toBe("day");
   });
 });

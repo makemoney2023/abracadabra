@@ -28,6 +28,20 @@ describe("client social review", () => {
     });
     expect(view.canReconnect).toBe(true);
     expect(view.calendarReadOnly).toBe(true);
+    const pending = clientSocialReview({
+      title: "Shelf",
+      caption: "Line",
+      mediaRoles: ["main"],
+      platform: "instagram",
+      targetState: "pending",
+      cadenceEnabled: false,
+      cadenceLabel: "Approve",
+      previewSlots: [],
+      fingerprint: "a",
+      confirmedFingerprint: "a",
+      role: "owner",
+    });
+    expect(pending.platformState).toBe("Needs a look on Instagram");
   });
 
   it("uses a plain approve label when cadence is off and blocks a stale preview", () => {

@@ -33,6 +33,8 @@ import { connectorGrant } from "@/lib/connector-grants";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { listSocialAccounts, listSocialPosts, refreshSocialPosts, syncSocialAccounts } from "@/lib/social";
+import { listSocialReviewPieces } from "@/lib/social-review";
+import { workspacesFor } from "@/db/records";
 import { listOpenSocialAttention } from "@/lib/social-attention";
 import { getAutopost } from "@/lib/social-autopost";
 import { getAgentPublishMode } from "@/lib/social-policy-settings";
@@ -61,8 +63,10 @@ function asHealth(value: string): StatusHealth | null {
 /** Opening the Social tab refreshes the client's accounts and the posts that should have gone out by now. */
 async function loadSocial(
   sql: Awaited<ReturnType<typeof requireHqStaffPage>>["sql"],
+  caller: Awaited<ReturnType<typeof requireHqStaffPage>>["caller"],
   client: { id: string; name: string },
   notice: string,
+  sent: string,
 ): Promise<SocialView> {
   const zernio = openZernio();
   let syncError: string | null = null;
@@ -81,7 +85,32 @@ async function loadSocial(
     listOpenSocialAttention(sql, client.id),
     getAgentPublishMode(sql, client.id),
   ]);
-  return { configured: Boolean(zernio), syncError, accounts, posts, autopost, attention, agentMode, notice, now: clock() };
+  const spaces = await sql.all<{ id: string; slug: string; display_name: string }>(
+    "SELECT id, slug, display_name FROM workspaces WHERE organization_id = ? AND status != 'purged' ORDER BY slug",
+    [client.id],
+  );
+  const visible = new Set((await workspacesFor(sql, caller)).map((space) => space.id));
+  const space = spaces.find((row) => visible.has(row.id)) ?? null;
+  const live = new Set(
+    posts
+      .filter((post) => post.status === "sending" || post.status === "scheduled" || post.status === "published" || post.status === "partial")
+      .map((post) => post.item_id),
+  );
+  const review = space ? await listSocialReviewPieces(sql, caller, space, live) : { waiting: [], ready: [] };
+  return {
+    configured: Boolean(zernio),
+    syncError,
+    accounts,
+    posts,
+    autopost,
+    attention,
+    agentMode,
+    notice,
+    now: clock(),
+    waiting: review.waiting,
+    ready: review.ready,
+    sent,
+  };
 }
 
 function pageNumber(raw: string | undefined): number {
@@ -95,7 +124,7 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string; social?: string }>;
+  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string; social?: string; sent?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -172,7 +201,7 @@ export default async function ClientPage({
     listUnassignedSwarmRuns(sql, caller, client.id),
   ]);
   const agentWork = tab === "agents" ? await listClientAgentWork(sql, caller, client.id) : undefined;
-  const social = tab === "social" ? await loadSocial(sql, client, query.social ?? "") : undefined;
+  const social = tab === "social" ? await loadSocial(sql, caller, client, query.social ?? "", query.sent ?? "") : undefined;
   const swarm = tab === "work" ? await boardSwarmExtras(sql) : { runningTaskIds: [], packs: [] };
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;

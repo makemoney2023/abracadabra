@@ -22,12 +22,14 @@ export function ApproveForm({
   itemId,
   version,
   label,
+  returnTo = "",
 }: {
   slug: string;
   deliverableId: string;
   itemId: string;
   version: number;
   label: string;
+  returnTo?: string;
 }) {
   const [state, action, pending] = useActionState(feedbackAction, initial);
   return (
@@ -37,6 +39,7 @@ export function ApproveForm({
       <input type="hidden" name="itemId" value={itemId} />
       <input type="hidden" name="version" value={version} />
       <input type="hidden" name="decision" value="approve" />
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
       <Button type="submit" size="sm" disabled={pending}>
         {pending ? "Saving…" : label}
       </Button>
@@ -52,6 +55,7 @@ export function ChangesForm({
   version,
   label = "Ask for changes",
   placeholder = "What should change?",
+  returnTo = "",
 }: {
   slug: string;
   deliverableId: string;
@@ -59,6 +63,7 @@ export function ChangesForm({
   version: number;
   label?: string;
   placeholder?: string;
+  returnTo?: string;
 }) {
   const [state, action, pending] = useActionState(feedbackAction, initial);
   const [open, setOpen] = useState(false);
@@ -76,6 +81,7 @@ export function ChangesForm({
       <input type="hidden" name="itemId" value={itemId} />
       <input type="hidden" name="version" value={version} />
       <input type="hidden" name="decision" value="changes" />
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
       <Textarea name="body" required maxLength={2000} placeholder={placeholder} aria-label={placeholder} />
       <Button type="submit" size="sm" variant="outline" disabled={pending}>
         {pending ? "Sending…" : label}

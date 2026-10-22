@@ -25,13 +25,13 @@ function localTime(at: number, timeZone: string): string {
 }
 
 /**
- * Staff operations layout. Attention is first. Queue actions open a plan review.
- * Existing Move and Cancel forms stay the direct staff path.
+ * Staff operations layout. Attention is first. The calendar is day, week, or month.
+ * A narrow screen opens on the day. Move and Cancel stay the direct staff path.
  */
 export function operationsView(input: { narrow: boolean; attention: AttentionRow[]; posts: OperationsPost[] }): {
   sections: string[];
   recoveries: { id: string; action: "connect" | "retry" | null }[];
-  calendar: { mode: "week" | "month" | "agenda"; modes: ["week", "month", "agenda"] };
+  calendar: { mode: "day" | "week" | "month"; modes: ["day", "week", "month"] };
   filters: ["account", "platform", "collection", "status"];
   cards: (OperationsPost & { localTime: string })[];
   queueActions: { action: "move" | "cancel" | "retry"; opens: "plan_review"; mutatesDirectly: false }[];
@@ -40,7 +40,7 @@ export function operationsView(input: { narrow: boolean; attention: AttentionRow
   return {
     sections: ["attention", "calendar", "queue"],
     recoveries: input.attention.map((item) => ({ id: item.id, action: RECOVERY[item.kind] ?? null })),
-    calendar: { mode: input.narrow ? "agenda" : "week", modes: ["week", "month", "agenda"] },
+    calendar: { mode: input.narrow ? "day" : "week", modes: ["day", "week", "month"] },
     filters: ["account", "platform", "collection", "status"],
     cards: input.posts.map((post) => ({ ...post, localTime: localTime(post.at, post.timezone) })),
     queueActions: [

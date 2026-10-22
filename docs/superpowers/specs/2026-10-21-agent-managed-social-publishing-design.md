@@ -227,7 +227,7 @@ It lists incompatible and omitted targets before execution. No server-side skip 
 The client Social tab becomes an operations view:
 
 1. **Needs attention:** failed posts, disconnected accounts, rejected media, missing required data.
-2. **Calendar:** week by default, with month and agenda alternatives.
+2. **Calendar:** week by default on a wide screen, day on a narrow screen, with day, week, and month. The same grid is the client space calendar.
 3. **Ready queue:** approved unscheduled pieces.
 4. **Accounts:** connected accounts and health.
 5. **Publishing cadence:** standing slots and next available times.
@@ -261,7 +261,7 @@ Clients see a simpler experience:
 - media and caption together;
 - platform previews;
 - approve, approve with recommended schedule, or request changes;
-- read-only upcoming calendar by default;
+- the same day, week, and month calendar, read-only, with the pieces waiting for a look beside it;
 - account-health and reconnect actions for owners.
 
 Zernio is not named in client-facing copy.

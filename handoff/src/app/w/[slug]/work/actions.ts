@@ -11,6 +11,7 @@ import { openSession } from "@/lib/current";
 import { autoScheduleApproved } from "@/lib/social-autopost";
 import { openObjectStore } from "@/lib/store/objects";
 import { openZernio } from "@/lib/zernio";
+import { appendSent, feedbackReturnPath } from "./return-path";
 import { FEEDBACK_SAVE_FAILED, SENT } from "./sent";
 
 export type FormState = { message: string };
@@ -54,7 +55,10 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
   }
   revalidatePath(`/w/${slug}/work`);
   revalidatePath(`/w/${slug}/work/${saved.value.id}`);
-  redirect(`/w/${slug}/work/${saved.value.id}?sent=${SENT[decision]}`);
+  revalidatePath(`/w/${slug}/social`);
+  const next = feedbackReturnPath(slug, String(formData.get("returnTo") ?? ""), Boolean(caller.staff));
+  if (next?.startsWith("/clients/")) revalidatePath(next.split("?")[0] ?? next);
+  redirect(next ? appendSent(next, SENT[decision]) : `/w/${slug}/work/${saved.value.id}?sent=${SENT[decision]}`);
 }
 
 async function handOn(

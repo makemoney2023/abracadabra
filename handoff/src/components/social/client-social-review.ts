@@ -18,6 +18,9 @@ function stateWord(state: string): string {
   if (state === "scheduled") return "Scheduled";
   if (state === "unpublished") return "Not published";
   if (state === "published" || state === "succeeded") return "Published";
+  if (state === "pending") return "Needs a look";
+  if (state === "changes_requested") return "Changes asked";
+  if (state === "approved") return "Approved";
   return state.slice(0, 1).toUpperCase() + state.slice(1);
 }
 
