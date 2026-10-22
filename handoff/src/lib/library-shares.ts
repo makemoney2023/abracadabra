@@ -519,11 +519,20 @@ async function storedPicture(sql: Sql, kind: string, id: string, version: number
     return match ? { key: match.key, contentType: match.contentType } : null;
   }
   if (kind === "file") {
-    const row = await sql.get<{ object_key: string; relative_path: string; status: string }>(
-      "SELECT object_key, relative_path, status FROM files WHERE id = ?",
+    const row = await sql.get<{ object_key: string; relative_path: string; status: string; poster_key: string | null; poster_path: string | null; poster_status: string | null }>(
+      `SELECT f.object_key, f.relative_path, f.status, p.object_key AS poster_key, p.relative_path AS poster_path, p.status AS poster_status
+       FROM files f
+       LEFT JOIN file_posters fp ON fp.file_id = f.id
+       LEFT JOIN files p ON p.id = fp.poster_file_id
+       WHERE f.id = ?`,
       [id],
     );
-    if (!row || row.status !== "clean" || !thumbnailable(row.relative_path)) return null;
+    if (!row) return null;
+    if (row.poster_key && row.poster_path && row.poster_status === "clean" && thumbnailable(row.poster_path)) {
+      const posterType = previewContentType(row.poster_path);
+      if (posterType.startsWith("image/")) return { key: row.poster_key, contentType: posterType };
+    }
+    if (row.status !== "clean" || !thumbnailable(row.relative_path)) return null;
     const contentType = previewContentType(row.relative_path);
     if (!contentType.startsWith("image/")) return null;
     return { key: row.object_key, contentType };

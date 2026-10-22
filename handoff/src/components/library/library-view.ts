@@ -66,6 +66,15 @@ export const LIBRARY_SORTS: { sort: LibrarySort; label: string }[] = [
   { sort: "needs_action", label: "Needs action first" },
 ];
 
+const OPENING_KEYS = ["type", "status", "search", "platform", "project", "from", "to", "needs", "cursor"] as const;
+
+/** A bare Library visit with work waiting opens on Needs a look. All uses status=all so it stays. */
+export function libraryOpeningTarget(query: Record<string, string | undefined>, needsAction: number): "needs_review" | null {
+  if (OPENING_KEYS.some((key) => query[key])) return null;
+  if (needsAction > 0) return "needs_review";
+  return null;
+}
+
 export function libraryHref(slug: string, query: Record<string, string | undefined>): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {

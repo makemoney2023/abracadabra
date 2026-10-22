@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — Staff can turn a Library photo or clip into one social piece with a network and a caption. The client approves it from the clicked row. Staff drop the approved piece onto a day. A failed send retries the same post. A clip keeps the still it started from. A bare Library visit with work waiting opens on Needs a look.
+- **Why** — A picture could be seen, and it still could not travel from the Library onto a day as one piece.
+- **Code touchpoints** — `handoff/src/lib/schedule-library-file.ts`, `handoff/src/lib/social.ts`, `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/components/social/social-rail.tsx`, `handoff/src/components/library/schedule-this-form.tsx`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/migrations/0045_media_poster.sql`, `handoff/migrations/0046_item_source_file.sql`.
+- **Data-flow impact** — Schedule this copies file bytes into deliverable media and publishes one pending item. A drop calls `sendPiece`. A retry updates the failed `social_posts` row. Approval still writes the same feedback. Cadence failure is shown on the calendar.
+- **API / schema impact** — `agent_media.source_media_id`, `file_posters`, and `deliverable_items.source_file_id`. No new public route.
+- **Verification** — `npx vitest run` on social, library, agent media, schedule, and migrate tests, plus `npx tsc --noEmit` and eslint on the changed files.
+
+## 2026-10-22
+
 - **What changed** — The place-and-decide plan now keeps one piece per Library file, requires a network and a caption before the client sees it, sends staff to the calendar that can place it, and retries a failed send on the same post. The month overflow line stays "+N more".
 - **Why** — The first draft of the plan sent an unfinished piece to the client calendar, where a drop cannot place it, and a failed send could become a second post.
 - **Code touchpoints** — `docs/place-and-decide-plan.md`.

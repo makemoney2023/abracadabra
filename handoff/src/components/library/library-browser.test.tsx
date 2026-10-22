@@ -1,6 +1,16 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { LibraryBrowser } from "./library-browser";
+import { libraryOpeningTarget } from "./library-view";
+
+describe("library opening", () => {
+  it("opens on needs a look only when the visit has no filters and something is waiting", () => {
+    expect(libraryOpeningTarget({}, 1)).toBe("needs_review");
+    expect(libraryOpeningTarget({}, 0)).toBeNull();
+    expect(libraryOpeningTarget({ type: "social" }, 2)).toBeNull();
+    expect(libraryOpeningTarget({ status: "all" }, 2)).toBeNull();
+  });
+});
 
 describe("library browser", () => {
   it("keeps every discovery control in the URL form, including project", () => {
@@ -67,6 +77,7 @@ describe("library browser", () => {
     expect(html).toContain('href="/w/acme/library?status=published"');
     expect(html).toContain(">Share</button>");
     expect(html).toContain("Needs a look");
+    expect(html).toContain('href="/w/acme/library?search=missing&amp;status=all"');
     expect(html).not.toContain("Add to view link");
     expect(html).not.toContain("Copy view link");
   });

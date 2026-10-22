@@ -157,6 +157,17 @@ function activity(
   };
 }
 
+function storedMediaJson(value: string | null | undefined): string | null {
+  if (value == null || value.trim() === "") return "[]";
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    return JSON.stringify(parsed);
+  } catch {
+    return null;
+  }
+}
+
 function cleanTitle(value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed || trimmed.length > 200) return null;
@@ -237,6 +248,8 @@ export async function addDeliverableItem(
     section?: string | null;
     channel?: string | null;
     linkUrl?: string | null;
+    mediaJson?: string | null;
+    sourceFileId?: string | null;
   },
   now: number,
 ): Promise<DeliverableResult<{ id: string }>> {
@@ -246,6 +259,15 @@ export async function addDeliverableItem(
   if (!staff.ok) return staff;
   const title = cleanTitle(input.title);
   if (!title || !FORMATS.has(input.format)) return { ok: false, error: "invalid" };
+  const mediaJson = storedMediaJson(input.mediaJson);
+  if (mediaJson == null) return { ok: false, error: "invalid" };
+  if (input.sourceFileId) {
+    const source = await sql.get<{ id: string }>("SELECT id FROM files WHERE id = ? AND workspace_id = ?", [
+      input.sourceFileId,
+      row.workspace_id,
+    ]);
+    if (!source) return { ok: false, error: "invalid" };
+  }
   const plan = nextWorking(row);
   const existing = plan.bump ? [] : await itemsFor(sql, row.id, plan.version);
   const sort = existing.reduce((max, item) => Math.max(max, item.sort), -1) + 1;
@@ -259,8 +281,8 @@ export async function addDeliverableItem(
   }
   writes.push({
     statement: `INSERT INTO deliverable_items (
-      id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, 'pending', ?)`,
+      id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort, source_file_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
     params: [
       id,
       row.id,
@@ -270,8 +292,10 @@ export async function addDeliverableItem(
       input.channel?.trim() || null,
       title,
       input.copyText?.trim() || null,
+      mediaJson,
       input.linkUrl?.trim() || null,
       sort,
+      input.sourceFileId?.trim() || null,
     ],
   });
   writes.push(activity(row, "deliverable_item", "staff", staff.value, title, now));

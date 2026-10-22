@@ -11,7 +11,7 @@ import { openSession } from "@/lib/current";
 import { autoScheduleApproved } from "@/lib/social-autopost";
 import { openObjectStore } from "@/lib/store/objects";
 import { openZernio } from "@/lib/zernio";
-import { appendSent, feedbackReturnPath } from "./return-path";
+import { appendQuery, appendSent, feedbackReturnPath } from "./return-path";
 import { FEEDBACK_SAVE_FAILED, SENT } from "./sent";
 
 export type FormState = { message: string };
@@ -48,8 +48,9 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
   }
   if (!saved.ok) return { message: DELIVERABLE_ERRORS[saved.error] };
   // The client's feedback is stored. What follows hands it on; a failure there is logged, not shown as an error.
+  let scheduleError: string | null = null;
   try {
-    await handOn(sql, caller, { deliverableId: saved.value.id, feedbackId: saved.value.feedbackId, itemId: itemId || null, version, decision, body });
+    scheduleError = await handOn(sql, caller, { deliverableId: saved.value.id, feedbackId: saved.value.feedbackId, itemId: itemId || null, version, decision, body });
   } catch (error) {
     console.error("feedbackAction: handing feedback on failed", error);
   }
@@ -58,15 +59,17 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
   revalidatePath(`/w/${slug}/social`);
   const next = feedbackReturnPath(slug, String(formData.get("returnTo") ?? ""), Boolean(caller.staff));
   if (next?.startsWith("/clients/")) revalidatePath(next.split("?")[0] ?? next);
-  redirect(next ? appendSent(next, SENT[decision]) : `/w/${slug}/work/${saved.value.id}?sent=${SENT[decision]}`);
+  const destination = next ? appendSent(next, SENT[decision]) : `/w/${slug}/work/${saved.value.id}?sent=${SENT[decision]}`;
+  redirect(scheduleError ? appendQuery(destination, "schedule", scheduleError) : destination);
 }
 
 async function handOn(
   sql: Awaited<ReturnType<typeof openSession>>["sql"],
   caller: Awaited<ReturnType<typeof openSession>>["caller"],
   input: { deliverableId: string; feedbackId: string; itemId: string | null; version: number; decision: FeedbackDecision; body: string },
-): Promise<void> {
+): Promise<string | null> {
   const { decision } = input;
+  let scheduleError: string | null = null;
   const opened = await openDeliverable(sql, caller, input.deliverableId, caller.staff ? "working" : "published");
   const organizationId = opened?.deliverable.organization_id ?? "";
   const paused = organizationId
@@ -107,11 +110,14 @@ async function handOn(
         { deliverableId: opened.deliverable.id, itemIds: input.itemId ? [input.itemId] : null },
         Date.now(),
       );
-      if (auto.failed.length > 0) console.error("feedbackAction: auto-schedule", auto.failed.join(" "));
+      if (auto.failed.length > 0) {
+        console.error("feedbackAction: auto-schedule", auto.failed.join(" "));
+        scheduleError = auto.failed[0] ?? "Cadence could not place this piece.";
+      }
     }
   }
   if (!opened || decision !== "changes" || opened.deliverable.kind === "brief" || opened.deliverable.kind === "design_system") {
-    return;
+    return scheduleError;
   }
   if (!legacyStartsAllowed()) {
     // AGENT_MODE=agents: a To do card for the client's agent, carrying the note, handed to that agent.
@@ -124,7 +130,7 @@ async function handOn(
       author: caller.staff ? { kind: "staff", id: caller.userId ?? "staff" } : { kind: "client", id: caller.userId ?? "client" },
       now: Date.now(),
     });
-    return;
+    return scheduleError;
   }
   if (opened.deliverable.status === "changes_requested") {
     const sentAt = Date.now();
@@ -139,4 +145,5 @@ async function handOn(
       ),
     );
   }
+  return scheduleError;
 }

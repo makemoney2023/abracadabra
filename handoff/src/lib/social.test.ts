@@ -7,9 +7,11 @@ import { runHqTool } from "./hq-tools";
 import {
   cancelSocialPost,
   listSocialPosts,
+  placeSocialPiece,
   refreshDueSocialPosts,
   refreshSocialPosts,
   rescheduleSocialPost,
+  retryFailedSocialPost,
   savePieceSettings,
   sendPiece,
   sendPieces,
@@ -186,6 +188,51 @@ describe("social publishing", () => {
     expect(posts[0].platforms[1].platformSpecificData).toMatchObject({ title: "Piece i-vid" });
     const row = await sql.get<{ post_type: string }>("SELECT post_type FROM social_posts");
     expect(row?.post_type).toBe("short");
+  });
+
+  it("drops an approved piece onto one matching account and refuses a second account or a failed post", async () => {
+    const sql = await database();
+    const { zernio, posts } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    await sql.run("UPDATE deliverable_items SET channel = 'instagram' WHERE id = 'i-pic'");
+    const placed = await placeSocialPiece(sql, zernio, store, staff, { deliverableId: "d-1", itemId: "i-pic", startAt: "2027-06-04T09:00", timezone: "UTC" }, NOW);
+    expect(placed.ok).toBe(true);
+    expect(posts[0]?.scheduledFor).toBe(new Date(Date.parse("2027-06-04T09:00:00.000Z")).toISOString());
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(1);
+    await sql.run(
+      `INSERT INTO social_accounts (id, organization_id, platform, username, display_name, is_active, synced_at)
+       VALUES ('ig-2', 'org-1', 'instagram', 'acme-2', 'Acme 2', 1, ?)`,
+      [NOW],
+    );
+    await sql.run("UPDATE deliverable_items SET channel = 'instagram' WHERE id = 'i-vid'");
+    const two = await placeSocialPiece(sql, zernio, store, staff, { deliverableId: "d-1", itemId: "i-vid", startAt: "2027-06-05T09:00", timezone: "UTC" }, NOW);
+    expect(two).toMatchObject({ ok: false });
+    await sql.run("DELETE FROM social_accounts WHERE id = 'ig-2'");
+    await sql.run("UPDATE deliverable_items SET channel = 'facebook' WHERE id = 'i-vid'");
+    const none = await placeSocialPiece(sql, zernio, store, staff, { deliverableId: "d-1", itemId: "i-vid", startAt: "2027-06-05T09:00", timezone: "UTC" }, NOW);
+    expect(none).toMatchObject({ ok: false });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(1);
+    await sql.run("UPDATE social_posts SET status = 'failed', error = 'nope' WHERE item_id = 'i-pic'");
+    const again = await placeSocialPiece(sql, zernio, store, staff, { deliverableId: "d-1", itemId: "i-pic", startAt: "2027-06-06T11:00", timezone: "UTC" }, NOW);
+    expect(again).toMatchObject({ ok: false, error: "This piece already has a failed post. Retry it from the day." });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(1);
+  });
+
+  it("retries a failed post on the same row", async () => {
+    const sql = await database();
+    const { zernio } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    await sql.run(
+      `INSERT INTO social_posts (
+         id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, scheduled_for, timezone, status, error, created_by, created_at, updated_at
+       ) VALUES ('post-failed', 'org-1', 'd-1', 'i-pic', 1, '["ig"]', 'scheduled', 'feed', ?, 'UTC', 'failed', 'nope', 'staff-1', ?, ?)`,
+      [NOW + 3_600_000, NOW, NOW],
+    );
+    const retried = await retryFailedSocialPost(sql, zernio, store, staff, "post-failed", NOW);
+    expect(retried).toMatchObject({ ok: true, postId: "post-failed", status: "scheduled" });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM social_posts"))?.n).toBe(1);
+    const row = await sql.get<{ status: string; error: string | null }>("SELECT status, error FROM social_posts WHERE id = 'post-failed'");
+    expect(row).toEqual({ status: "scheduled", error: null });
   });
 
   it("refuses to schedule a piece the client has not approved, but allows a draft", async () => {

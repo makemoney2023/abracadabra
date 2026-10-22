@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { LibraryArtifact } from "@/lib/library-artifacts";
 import { ArticleCard } from "./article-card";
 import { StatusMark, TypePlate } from "./type-plate";
@@ -17,7 +18,7 @@ function externalAction(kind: string): boolean {
   return kind === "visit_site" || kind === "open_post" || kind === "read_article";
 }
 
-export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
+export function ArtifactCard({ artifact, schedule }: { artifact: LibraryArtifact; schedule?: ReactNode }) {
   if (artifact.artifactType === "article") return <ArticleCard artifact={artifact} />;
   const action = artifact.actions[0];
   const href = action?.href ?? null;
@@ -39,6 +40,7 @@ export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
           {body}
         </a>
       ) : body}
+      {schedule}
       {artifact.promotesTitle ? <p className="text-sm">Promotes: {artifact.promotesTitle}</p> : null}
       {artifact.destinations.length > 0 ? (
         <ul className="flex flex-wrap gap-2 text-xs">

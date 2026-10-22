@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   cancelSocialPostAction,
   disconnectSocialAction,
+  retrySocialPostAction,
   moveSocialPostAction,
   saveAgentPublishModeAction,
   saveAutopostAction,
@@ -26,6 +27,15 @@ const MODE_LABEL: Record<(typeof AGENT_MODES)[number], string> = {
 };
 
 const selectClass = "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
+
+export function RetrySocialPostForm({ organizationId, postId }: { organizationId: string; postId: string }) {
+  return (
+    <ActionForm action={retrySocialPostAction} submitLabel="Retry" pendingLabel="Retrying">
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <input type="hidden" name="postId" value={postId} />
+    </ActionForm>
+  );
+}
 
 export function DisconnectSocialForm({ organizationId, accountId }: { organizationId: string; accountId: string }) {
   return (

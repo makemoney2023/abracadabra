@@ -30,6 +30,9 @@ export type SocialView = {
   ready: SocialReviewPiece[];
   catalog: SocialReviewPiece[];
   sent: string;
+  pieceId: string;
+  postId: string;
+  scheduleNotice: string;
 };
 
 const NOTICE: Record<string, string> = {
@@ -191,6 +194,9 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
             approveLabel={approvalControlLabel(social.autopost)}
             organizationId={organizationId}
             canReschedule
+            initialPieceId={social.pieceId || null}
+            initialPostId={social.postId || null}
+            scheduleNotice={social.scheduleNotice || null}
           />
         </CardContent>
       </Card>

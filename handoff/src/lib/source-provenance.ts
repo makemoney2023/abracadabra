@@ -82,6 +82,7 @@ export type SourceListFile = {
   selected?: boolean;
   usedIn?: { title: string; href: string }[];
   deliveredAs?: { title: string; href: string }[];
+  posterFileId?: string | null;
 };
 
 export function filterSourceFiles(

@@ -1,6 +1,6 @@
 # Place a picture, then decide
 
-**Status:** plan. Nothing in this document is built.
+**Status:** built. The six slices below are in the app.
 **Updated:** 2026-10-22
 **Follows:** [space-library-gameplan.md](space-library-gameplan.md), which is built. Pictures already lead. This plan is how a finished picture becomes one social piece, how that piece gets a network and a caption before a client sees it, and how an approved piece lands on one day.
 
@@ -110,7 +110,7 @@ Tests:
 
 ## Slice 3. Open on the piece that needs a look
 
-`LibraryPage` redirects to `?status=needs_review` when the request has no `type`, `status`, `search`, `platform`, `project`, `from`, `to`, `needs`, or `cursor`, and `needsAction` is greater than zero. All remains the explicit chip, and that URL has no status.
+`LibraryPage` redirects to `?status=needs_review` when the request has no `type`, `status`, `search`, `platform`, `project`, `from`, `to`, `needs`, or `cursor`, and `needsAction` is greater than zero. All is the explicit chip `?status=all`, so a later click stays on everything.
 
 On both social screens, when `piece` is absent and `waiting` is not empty, the detail shows `waiting[0]`. Approve is not mounted for that arrival. The calendar stays on the week, or the day on a narrow screen.
 

@@ -36,6 +36,18 @@ describe("social board", () => {
     expect(lists.ready.map((piece) => piece.id)).toEqual(["ready"]);
   });
 
+  it("keeps a failed post off the ready rail", () => {
+    const lists = boardLists(
+      [
+        { id: "failed", status: "approved" },
+        { id: "ready", status: "approved" },
+      ],
+      new Set(),
+      new Set(["failed"]),
+    );
+    expect(lists.ready.map((piece) => piece.id)).toEqual(["ready"]);
+  });
+
   it("does not hide a piece that has no network yet when a network filter is on", () => {
     const pieces = [
       { id: "open", platforms: [] as string[] },

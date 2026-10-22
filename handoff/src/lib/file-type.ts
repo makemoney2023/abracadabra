@@ -90,6 +90,19 @@ export function filePreviewSrc(fileId: string, name: string): string | null {
   return thumbnailable(name) ? `/api/files/${fileId}/preview` : null;
 }
 
+/** Preview address for the still a clip started from. */
+export function posterPreviewSrc(fileId: string, posterFileId: string | null | undefined): string | null {
+  void fileId;
+  if (!posterFileId) return null;
+  return `/api/files/${posterFileId}/preview`;
+}
+
+/** A photo or a clip can become a social piece. A PDF cannot. */
+export function schedulableMedia(name: string): boolean {
+  const kind = fileType(name).kind;
+  return kind === "image" || kind === "video";
+}
+
 /** The plate word for a file that is a clip. A still uses its picture instead. */
 export function filePlateWord(name: string): "video" | null {
   return fileType(name).kind === "video" ? "video" : null;

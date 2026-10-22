@@ -27,7 +27,7 @@ export default async function SpaceSocialPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ social?: string; sent?: string }>;
+  searchParams: Promise<{ social?: string; sent?: string; piece?: string; post?: string; schedule?: string }>;
 }) {
   const { slug } = await params;
   const query = await searchParams;
@@ -64,8 +64,9 @@ export default async function SpaceSocialPage({
       .filter((post) => post.status === "sending" || post.status === "scheduled" || post.status === "published" || post.status === "partial")
       .map((post) => post.item_id),
   );
+  const held = new Set(posts.filter((post) => post.status === "failed").map((post) => post.item_id));
   const review = organization
-    ? await listSocialReviewPieces(sql, caller, { id: workspace.id, slug, display_name: workspace.display_name }, live)
+    ? await listSocialReviewPieces(sql, caller, { id: workspace.id, slug, display_name: workspace.display_name }, live, held)
     : { waiting: [], ready: [], catalog: [] };
   const timeZone = calendarTimeZone(cadence, posts.map((post) => post.timezone || ""));
   const cards = calendarPosts(posts, accounts, review.catalog);
@@ -79,6 +80,7 @@ export default async function SpaceSocialPage({
         </div>
       ) : null}
       {notice ? <p role="status" className="text-sm">{notice}</p> : null}
+      {query.schedule ? <p role="status" className="text-sm text-muted-foreground">{query.schedule}</p> : null}
       <Card>
         <CardHeader>
           <CardTitle>Your accounts</CardTitle>
@@ -138,6 +140,9 @@ export default async function SpaceSocialPage({
             approveLabel={approvalControlLabel(cadence)}
             organizationId={organization?.id ?? ""}
             canReschedule={false}
+            initialPieceId={query.piece || null}
+            initialPostId={query.post || null}
+            scheduleNotice={query.schedule || null}
           />
         </CardContent>
       </Card>

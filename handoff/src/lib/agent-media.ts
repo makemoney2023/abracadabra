@@ -48,6 +48,7 @@ type MediaRow = {
   job_id: string | null;
   name: string | null;
   error: string | null;
+  source_media_id: string | null;
 };
 
 type Request = {
@@ -134,8 +135,8 @@ export async function readyMediaBytes(
   agent: AgentPrincipal,
   organizationId: string,
   ids: string[],
-): Promise<{ ok: true; files: { name: string; bytes: Uint8Array; contentType: string }[] } | { ok: false; error: "forbidden" | "conflict" | "invalid"; message: string }> {
-  const files: { name: string; bytes: Uint8Array; contentType: string }[] = [];
+): Promise<{ ok: true; files: { id: string; sourceMediaId: string | null; name: string; bytes: Uint8Array; contentType: string }[] } | { ok: false; error: "forbidden" | "conflict" | "invalid"; message: string }> {
+  const files: { id: string; sourceMediaId: string | null; name: string; bytes: Uint8Array; contentType: string }[] = [];
   for (const id of ids) {
     const row = await sql.get<MediaRow>("SELECT * FROM agent_media WHERE id = ?", [id]);
     if (!row || row.agent_id !== agent.agentId || row.organization_id !== organizationId) {
@@ -147,7 +148,7 @@ export async function readyMediaBytes(
     }
     const bytes = await store.read(row.r2_key);
     if (!bytes) return { ok: false, error: "invalid", message: "That media file is missing." };
-    files.push({ name: row.name, bytes, contentType: row.content_type });
+    files.push({ id: row.id, sourceMediaId: row.source_media_id, name: row.name, bytes, contentType: row.content_type });
   }
   return { ok: true, files };
 }
@@ -327,6 +328,7 @@ async function finish(
       jobId: outcome.jobId,
       name,
       error: null,
+      sourceMediaId: request.imageMediaId,
       now: input.now,
     });
     await logMedia(input.sql, agent, task, { mediaId: id, model: request.model.id, kind: "video", bytes: 0, taskId: request.taskId, now: input.now });
@@ -394,6 +396,7 @@ async function saveReady(
     jobId: null,
     name,
     error: null,
+    sourceMediaId: request.imageMediaId,
     now: input.now,
   });
   await logMedia(input.sql, agent, task, { mediaId: id, model: request.model.id, kind: request.model.kind, bytes: bytes.byteLength, taskId: request.taskId, now: input.now });
@@ -471,13 +474,13 @@ async function findByExternal(sql: Sql, agentId: string, externalId: string): Pr
 async function insertRow(sql: Sql, row: {
   id: string; externalId: string; agentId: string; organizationId: string; taskId: string | null; model: string; kind: MediaKind;
   state: "ready" | "running" | "failed"; contentType: string | null; byteLength: number | null; r2Key: string | null;
-  jobId: string | null; name: string | null; error: string | null; now: number;
+  jobId: string | null; name: string | null; error: string | null; sourceMediaId: string | null; now: number;
 }): Promise<void> {
   await sql.run(
     `INSERT INTO agent_media (
-      id, external_id, agent_id, organization_id, task_id, model, kind, state, content_type, byte_length, r2_key, job_id, name, error, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [row.id, row.externalId, row.agentId, row.organizationId, row.taskId, row.model, row.kind, row.state, row.contentType, row.byteLength, row.r2Key, row.jobId, row.name, row.error, row.now, row.now],
+      id, external_id, agent_id, organization_id, task_id, model, kind, state, content_type, byte_length, r2_key, job_id, name, error, source_media_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [row.id, row.externalId, row.agentId, row.organizationId, row.taskId, row.model, row.kind, row.state, row.contentType, row.byteLength, row.r2Key, row.jobId, row.name, row.error, row.sourceMediaId, row.now, row.now],
   );
 }
 

@@ -185,6 +185,11 @@ describe("library queries", () => {
     if (!page.ok) return;
     expect(page.page.artifacts.find((artifact) => artifact.title === "hero.png")?.previewSrc).toBe("/api/files/file-still/preview");
     expect(page.page.artifacts.find((artifact) => artifact.title === "clip.mp4")?.previewSrc).toBeNull();
+    await sql.run("INSERT INTO file_posters (file_id, poster_file_id) VALUES ('file-clip', 'file-still')");
+    const withPoster = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", includeHeld: true });
+    expect(withPoster.ok).toBe(true);
+    if (!withPoster.ok) return;
+    expect(withPoster.page.artifacts.find((artifact) => artifact.title === "clip.mp4")?.previewSrc).toBe("/api/files/file-still/preview");
   });
 
   it("keeps partial social outcomes and pages a family without losing the boundary", async () => {

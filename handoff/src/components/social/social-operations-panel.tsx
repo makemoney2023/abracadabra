@@ -4,14 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { moveSocialPostAction } from "@/app/clients/social-actions";
+import { moveSocialPostAction, placeSocialPieceAction } from "@/app/clients/social-actions";
 import { ApproveForm, ChangesForm } from "@/app/w/[slug]/work/forms";
-import { CancelSocialPostForm, MoveSocialPostForm } from "@/app/clients/social-forms";
+import { CancelSocialPostForm, MoveSocialPostForm, RetrySocialPostForm } from "@/app/clients/social-forms";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import type { SocialReviewPiece } from "@/lib/social-review";
 import { pictureAddress } from "@/lib/picture-role";
 import { clientSocialReview } from "./client-social-review";
-import { ReviewList } from "./social-rail";
+import { ReviewList, waitingHeading } from "./social-rail";
 import { SocialPieceCard } from "./social-piece-card";
 import { pieceCardView } from "./social-piece-view";
 import { operationsView, type AttentionRow, type OperationsPost } from "./social-operations";
@@ -48,6 +48,9 @@ export function SocialOperationsPanel({
   approveLabel,
   organizationId,
   canReschedule,
+  initialPieceId = null,
+  initialPostId = null,
+  scheduleNotice = null,
 }: {
   attention: AttentionRow[];
   posts: OperationsCard[];
@@ -58,14 +61,22 @@ export function SocialOperationsPanel({
   approveLabel: string;
   organizationId: string;
   canReschedule: boolean;
+  initialPieceId?: string | null;
+  initialPostId?: string | null;
+  scheduleNotice?: string | null;
 }) {
   const router = useRouter();
   const [account, setAccount] = React.useState("");
   const [platform, setPlatform] = React.useState("");
   const [collection, setCollection] = React.useState("");
   const [status, setStatus] = React.useState("");
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
-  const [moveMessage, setMoveMessage] = React.useState("");
+  const [selectedId, setSelectedId] = React.useState<string | null>(initialPostId || initialPieceId || waiting[0]?.id || null);
+  const [armed, setArmed] = React.useState(Boolean(initialPieceId || initialPostId));
+  const [moveMessage, setMoveMessage] = React.useState(scheduleNotice ?? "");
+  const choose = (id: string) => {
+    setSelectedId(id);
+    setArmed(true);
+  };
   const filtered = posts.filter((post) => {
     if (account && post.accountId !== account) return false;
     if (platform && post.platform !== platform) return false;
@@ -108,6 +119,23 @@ export function SocialOperationsPanel({
     setMoveMessage(result.ok ? result.message : result.error);
     if (result.ok) router.refresh();
   };
+  const place = async (pieceId: string, startAt: string) => {
+    const piece = approved.find((row) => row.id === pieceId) ?? review.find((row) => row.id === pieceId);
+    if (!piece) return;
+    const body = new FormData();
+    body.set("organizationId", organizationId);
+    body.set("deliverableId", piece.deliverableId);
+    body.set("itemId", pieceId);
+    body.set("startAt", startAt);
+    body.set("timezone", timeZone);
+    const result = await placeSocialPieceAction(null, body);
+    setMoveMessage(result.ok ? result.message : result.error);
+    if (result.ok) router.refresh();
+  };
+  const approveReturn = canReschedule ? `/clients/${organizationId}?tab=social` : selectedPiece ? `/w/${selectedPiece.slug}/social` : "";
+  const approveNode = armed && selectedPiece?.status === "pending" ? (
+    <ApproveForm slug={selectedPiece.slug} deliverableId={selectedPiece.deliverableId} itemId={selectedPiece.id} version={selectedPiece.version} label={approveLabel} returnTo={approveReturn} />
+  ) : null;
   return (
     <section id="attention" className="flex flex-col gap-4">
       {canReschedule || attention.length > 0 ? (
@@ -143,13 +171,23 @@ export function SocialOperationsPanel({
       </div>
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
         <div className="flex flex-col gap-4">
-          <ReviewList title="Waiting for a look" empty="Nothing is waiting for a look." pieces={review} selectedId={selectedId} onSelect={setSelectedId} />
+          <ReviewList
+            title={waitingHeading(review.length)}
+            empty="Nothing is waiting for a look."
+            pieces={review}
+            selectedId={selectedId}
+            onSelect={choose}
+            showCount={false}
+            approvePieceId={approveNode ? selectedPiece?.id ?? null : null}
+            approve={approveNode}
+          />
           <ReviewList
             title="Approved, not on the calendar"
             empty="Approved work is on the calendar, or not ready yet."
             pieces={approved}
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            onSelect={choose}
+            draggableIds={canReschedule ? approved.map((piece) => piece.id) : []}
           />
         </div>
         <div className="flex flex-col gap-3">
@@ -160,9 +198,10 @@ export function SocialOperationsPanel({
               now={now}
               initialMode={wide.calendar.mode}
               selectedId={selectedId}
-              onSelect={setSelectedId}
+              onSelect={choose}
               canReschedule={canReschedule}
               onMove={canReschedule ? move : undefined}
+              onPlace={canReschedule ? place : undefined}
             />
           </div>
           <div className="sm:hidden">
@@ -172,13 +211,14 @@ export function SocialOperationsPanel({
               now={now}
               initialMode={phone.calendar.mode}
               selectedId={selectedId}
-              onSelect={setSelectedId}
+              onSelect={choose}
               canReschedule={canReschedule}
               onMove={canReschedule ? move : undefined}
+              onPlace={canReschedule ? place : undefined}
             />
           </div>
           {moveMessage ? <p role="status" className="text-sm text-muted-foreground">{moveMessage}</p> : null}
-          {canReschedule ? <p className="text-xs text-muted-foreground">Drag a scheduled post to another day or hour. The time of day stays unless you drop it on an hour.</p> : null}
+          {canReschedule ? <p className="text-xs text-muted-foreground">Drag a scheduled post to another day or hour, or drag an approved piece onto a day. The time of day stays unless you drop it on an hour.</p> : null}
         </div>
       </div>
       {selectedPiece ? (
@@ -248,11 +288,10 @@ function PieceDetail({
             <Link href={`/deliverables/${piece.deliverableId}`}>Schedule from finished work</Link>
           </Button>
         ) : (
-          <p className="text-sm text-muted-foreground">Approved. It is not on the calendar yet.</p>
+          <p className="text-sm text-muted-foreground">Approved. The studio still has to put it on a day.</p>
         )
       ) : (
         <div className="flex flex-col gap-3">
-          <ApproveForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} label={approveLabel} returnTo={returnTo} />
           <ChangesForm slug={piece.slug} deliverableId={piece.deliverableId} itemId={piece.id} version={piece.version} returnTo={returnTo} />
         </div>
       )}
@@ -288,6 +327,7 @@ function PostDetail({
           <CancelSocialPostForm organizationId={organizationId} postId={post.id} />
         </div>
       ) : null}
+      {canReschedule && post.state === "failed" ? <RetrySocialPostForm organizationId={organizationId} postId={post.id} /> : null}
     </div>
   );
 }
