@@ -42,12 +42,46 @@ export async function fileProvenance(
   });
 }
 
+export async function workspaceFileProvenance(
+  sql: Sql,
+  workspaceId: string,
+  slug: string,
+): Promise<Map<string, { usedIn: { title: string; href: string }[]; deliveredAs: { title: string; href: string }[] }>> {
+  const [used, delivered] = await Promise.all([
+    sql.all<{ file_id: string; title: string; deliverable_id: string }>(
+      `SELECT m.source_file_id AS file_id, i.title, i.deliverable_id
+       FROM deliverable_artifact_metadata m
+       JOIN deliverable_items i ON i.id = m.item_id AND i.version = m.version
+       WHERE m.workspace_id = ? AND m.source_file_id IS NOT NULL`,
+      [workspaceId],
+    ),
+    sql.all<{ file_id: string; title: string; deliverable_id: string }>(
+      `SELECT r.target_id AS file_id, i.title, i.deliverable_id
+       FROM artifact_relations r
+       JOIN deliverable_items i ON i.id = r.source_id AND i.version = r.source_version
+       WHERE r.workspace_id = ? AND r.target_kind = 'file' AND r.source_kind = 'deliverable_item'`,
+      [workspaceId],
+    ),
+  ]);
+  const indexed = new Map<string, { usedIn: { title: string; href: string }[]; deliveredAs: { title: string; href: string }[] }>();
+  const entry = (fileId: string) => {
+    const current = indexed.get(fileId) ?? { usedIn: [], deliveredAs: [] };
+    indexed.set(fileId, current);
+    return current;
+  };
+  for (const row of used) entry(row.file_id).usedIn.push({ title: row.title, href: `/w/${slug}/work/${row.deliverable_id}` });
+  for (const row of delivered) entry(row.file_id).deliveredAs.push({ title: row.title, href: `/w/${slug}/work/${row.deliverable_id}` });
+  return indexed;
+}
+
 export type SourceListFile = {
   id: string;
   name: string;
   status: string;
   updatedAt?: number;
   selected?: boolean;
+  usedIn?: { title: string; href: string }[];
+  deliveredAs?: { title: string; href: string }[];
 };
 
 export function filterSourceFiles(

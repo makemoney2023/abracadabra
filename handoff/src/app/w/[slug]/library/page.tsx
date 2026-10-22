@@ -1,6 +1,5 @@
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { LibraryBrowser } from "@/components/library/library-browser";
+import { LibraryBrowser, LibraryTypeTabs } from "@/components/library/library-browser";
 import { SourcesBrowser } from "@/components/library/sources-browser";
 import { can } from "@/lib/authz";
 import { articleSocialPromoEnabled } from "@/lib/article-promotions";
@@ -8,12 +7,12 @@ import { libraryViewLinksEnabled, listViewLinks } from "@/lib/library-shares";
 import { workspacesFor } from "@/db/records";
 import { listFolderFiles } from "@/lib/downloads";
 import { seesHeldWork } from "@/lib/held-work";
-import { isHqHost } from "@/lib/host";
 import { listLibraryArtifacts, type LibrarySort } from "@/lib/library-queries";
 import type { LibraryArtifactType, LibraryStatus } from "@/lib/library-artifacts";
 import { openSession } from "@/lib/current";
 import { createArticlePromotionAction } from "@/app/deliverables/[id]/article-promotion-actions";
 import { recordLibraryMetric } from "@/lib/library-metrics";
+import { workspaceFileProvenance } from "@/lib/source-provenance";
 
 const TYPES = new Set(["article", "social", "video", "image", "website", "document", "file"]);
 const STATUSES = new Set(["changes_requested", "needs_attention", "needs_review", "publishing", "scheduled", "partially_published", "published", "ready", "approved", "draft"]);
@@ -70,13 +69,29 @@ export default async function LibraryPage({
     from: read("from"),
     to: read("to"),
   };
-  const host = (await headers()).get("host") ?? "";
   const canManageLinks = libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id });
   const shares = canManageLinks ? await listViewLinks(sql, caller, workspace.id) : null;
-  const canPromote = isHqHost(host) && articleSocialPromoEnabled() && can(caller, "article_promotion.create", { workspaceId: workspace.id });
-  const canSelect = type === "file" && can(caller, "library_file.select", { workspaceId: workspace.id });
-  const sourceFiles = canSelect ? await listFolderFiles(sql, caller, workspace.id) : [];
-  const selected = canSelect
+  const canPromote = articleSocialPromoEnabled() && can(caller, "article_promotion.create", { workspaceId: workspace.id });
+  const promotionTargets = canPromote
+    ? await sql.all<{ id: string; title: string }>(
+        "SELECT id, title FROM deliverables WHERE workspace_id = ? AND kind = 'social_pack' AND status = 'draft' ORDER BY updated_at DESC LIMIT 50",
+        [workspace.id],
+      )
+    : [];
+  const showSources = type === "file";
+  const canSelect = showSources && can(caller, "library_file.select", { workspaceId: workspace.id });
+  const projects = showSources ? [] : await sql.all<{ id: string; name: string }>(
+    `SELECT DISTINCT p.id, p.name
+     FROM projects p
+     JOIN deliverables d ON d.project_id = p.id
+     WHERE d.workspace_id = ?
+     ORDER BY p.name
+     LIMIT 100`,
+    [workspace.id],
+  );
+  const sourceFiles = showSources ? await listFolderFiles(sql, caller, workspace.id) : [];
+  const sourceProvenance = showSources ? await workspaceFileProvenance(sql, workspace.id, slug) : new Map();
+  const selected = showSources
     ? await sql.all<{ file_id: string }>("SELECT file_id FROM library_file_selections WHERE workspace_id = ? AND revoked_at IS NULL", [workspace.id])
     : [];
   const selectedIds = new Set(selected.map((row) => row.file_id));
@@ -86,6 +101,7 @@ export default async function LibraryPage({
       name: "library_listed",
       organizationId: organization.organization_id,
       workspaceId: workspace.id,
+      actorKind: caller.staff ? "staff" : "system",
       actorId: caller.userId,
       count: result.page.counts.total,
     });
@@ -94,6 +110,7 @@ export default async function LibraryPage({
         name: "library_search_empty",
         organizationId: organization.organization_id,
         workspaceId: workspace.id,
+        actorKind: caller.staff ? "staff" : "system",
         actorId: caller.userId,
         count: 0,
       });
@@ -105,31 +122,49 @@ export default async function LibraryPage({
         <p className="eyebrow text-optic">Finished work</p>
         <h1 className="font-heading text-4xl leading-tight">Library</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">Articles, social posts, pictures, video, websites, and the source files the studio has put in front of you.</p>
+        {result.ok ? (
+          <div className="mt-2 flex flex-wrap gap-2 text-sm">
+            <span className="rounded-full bg-muted px-3 py-1.5 tabular-nums">{result.page.counts.total} items</span>
+            {result.page.needsAction > 0 ? (
+              <span className="rounded-full bg-status-waiting px-3 py-1.5 text-status-waiting-fg tabular-nums">
+                {result.page.needsAction} need attention
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-      {canSelect ? (
-        <SourcesBrowser
+      {showSources ? (
+        <div className="flex flex-col gap-6">
+          <LibraryTypeTabs slug={slug} query={filters} counts={result.ok ? result.page.counts : null} />
+          <SourcesBrowser
+            slug={slug}
+            canSelect={canSelect}
+            listPath={`/w/${slug}/library`}
+            persist={{ type: "file" }}
+            query={{ search: read("search"), status: read("scan"), sort: read("fileSort"), folder: read("folder") }}
+            files={sourceFiles.map((file) => ({
+              id: file.id,
+              name: file.name,
+              status: file.status,
+              updatedAt: file.createdAt,
+              selected: selectedIds.has(file.id),
+              usedIn: sourceProvenance.get(file.id)?.usedIn,
+              deliveredAs: sourceProvenance.get(file.id)?.deliveredAs,
+            }))}
+          />
+        </div>
+      ) : (
+        <LibraryBrowser
           slug={slug}
-          canSelect
-          listPath={`/w/${slug}/library`}
-          persist={{ type: "file" }}
-          query={{ search: read("search"), status: read("scan"), sort: read("fileSort"), folder: read("folder") }}
-          files={sourceFiles.map((file) => ({
-            id: file.id,
-            name: file.name,
-            status: file.status,
-            updatedAt: file.createdAt,
-            selected: selectedIds.has(file.id),
-          }))}
+          page={result.ok ? result.page : null}
+          query={filters}
+          error={result.ok ? null : "Check the search and try again."}
+          viewLink={canManageLinks && shares?.ok ? { workspaceId: workspace.id, shares: shares.shares } : null}
+          promotionAction={canPromote ? createArticlePromotionAction : null}
+          promotionTargets={promotionTargets}
+          projects={projects}
         />
-      ) : null}
-      <LibraryBrowser
-        slug={slug}
-        page={result.ok ? result.page : null}
-        query={filters}
-        error={result.ok ? null : "Check the search and try again."}
-        viewLink={canManageLinks && shares?.ok ? { workspaceId: workspace.id, shares: shares.shares } : null}
-        promotionAction={canPromote ? createArticlePromotionAction : null}
-      />
+      )}
     </main>
   );
 }

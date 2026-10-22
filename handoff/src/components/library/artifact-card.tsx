@@ -13,11 +13,15 @@ const ACTION_LABEL: Record<string, string> = {
   unavailable: "Link unavailable",
 };
 
+function externalAction(kind: string): boolean {
+  return kind === "visit_site" || kind === "open_post" || kind === "read_article";
+}
+
 export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
   if (artifact.artifactType === "article") return <ArticleCard artifact={artifact} />;
   const action = artifact.actions[0];
   const label = action ? ACTION_LABEL[action.kind] ?? action.label : "Open";
-  const external = action?.kind === "visit_site" || action?.kind === "open_post" || action?.kind === "read_article";
+  const secondary = artifact.actions.slice(1).filter((item) => item.href);
   return (
     <article className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-3">
       <TypePlate artifact={artifact} />
@@ -33,12 +37,26 @@ export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
         </ul>
       ) : null}
       {action?.href ? (
-        <a className="mt-auto inline-flex min-h-11 items-center text-sm underline" href={action.href} target={external ? "_blank" : undefined} rel={external ? "noreferrer noopener" : undefined}>
+        <a className="mt-auto inline-flex min-h-11 items-center text-sm underline" href={action.href} target={externalAction(action.kind) ? "_blank" : undefined} rel={externalAction(action.kind) ? "noreferrer noopener" : undefined}>
           {label}
         </a>
       ) : (
         <p className="mt-auto text-sm">{label}</p>
       )}
+      {secondary.length > 0 ? (
+        <details>
+          <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm underline">More actions</summary>
+          <ul className="flex flex-col gap-1">
+            {secondary.map((item) => (
+              <li key={`${item.kind}-${item.href}`}>
+                <a className="inline-flex min-h-11 items-center text-sm underline" href={item.href ?? "#"} target={externalAction(item.kind) ? "_blank" : undefined} rel={externalAction(item.kind) ? "noreferrer noopener" : undefined}>
+                  {ACTION_LABEL[item.kind] ?? item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </article>
   );
 }

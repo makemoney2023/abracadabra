@@ -32,6 +32,7 @@ export function proxy(request: NextRequest) {
     response.headers.set("x-frame-options", "DENY");
     response.headers.set("referrer-policy", "no-referrer");
     response.headers.set("x-content-type-options", "nosniff");
+    response.headers.set("cache-control", "private, no-store");
   }
   return response;
 }

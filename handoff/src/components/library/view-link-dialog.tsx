@@ -91,7 +91,7 @@ export function ViewLinkDialog({
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-sm font-medium">View link</h2>
+      <h2 className="text-sm font-medium">Create view link</h2>
       <p className="text-sm text-muted-foreground">A view link lets someone look at the selected work. It does not let them upload.</p>
       <form action={create} className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm">

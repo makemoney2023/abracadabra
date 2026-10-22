@@ -36,7 +36,11 @@ export function metricOmitsSecrets(payload: Record<string, unknown>): boolean {
 
 export async function recordLibraryMetric(
   sql: Sql,
-  input: LibraryMetric & { organizationId: string; actorId?: string | null },
+  input: LibraryMetric & {
+    organizationId: string;
+    actorKind: "staff" | "system";
+    actorId?: string | null;
+  },
   now = Date.now(),
 ): Promise<void> {
   const data = libraryMetric(input);
@@ -44,7 +48,7 @@ export async function recordLibraryMetric(
   await sql.run(
     `INSERT INTO activities (
        id, organization_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at
-     ) VALUES (?, ?, ?, ?, 'staff', ?, NULL, ?, ?)`,
-    [crypto.randomUUID(), input.organizationId, input.workspaceId ?? null, `library.${input.name}`, input.actorId ?? null, JSON.stringify(data), now],
+     ) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+    [crypto.randomUUID(), input.organizationId, input.workspaceId ?? null, `library.${input.name}`, input.actorKind, input.actorId ?? null, JSON.stringify(data), now],
   );
 }

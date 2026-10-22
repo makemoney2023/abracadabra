@@ -8,6 +8,20 @@ const PBKDF2_ITERATIONS = 310_000;
 const WINDOW_MS = 15 * 60 * 1000;
 const SESSION_MS = 30 * 60 * 1000;
 
+export function shareHashPepperAvailable(
+  production = process.env.NODE_ENV === "production",
+  pepper = workerEnv("HANDOFF_SHARE_HASH_PEPPER"),
+): boolean {
+  return !production || Boolean(pepper);
+}
+
+export function clientIpFromHeaders(headers: Headers): string {
+  const cloudflare = headers.get("cf-connecting-ip")?.trim();
+  if (cloudflare) return cloudflare;
+  const forwarded = headers.get("x-forwarded-for") ?? "";
+  return forwarded.split(",")[0]?.trim() || "0.0.0.0";
+}
+
 export function libraryViewLinksEnabled(value?: string): boolean {
   return flagEnabled("LIBRARY_VIEW_LINKS", value);
 }
@@ -88,6 +102,10 @@ async function visibleItem(sql: Sql, workspaceId: string, kind: string, id: stri
        JOIN deliverables d ON d.id = i.deliverable_id
        WHERE d.workspace_id = ? AND i.id = ? AND i.version = ? ${versionSql}
          AND NOT EXISTS (
+           SELECT 1 FROM agent_work_items gone
+           WHERE gone.id = i.work_item_id AND (gone.retracted_at IS NOT NULL OR gone.superseded_by IS NOT NULL)
+         )
+         AND NOT EXISTS (
            SELECT 1 FROM agent_work_items hw
            WHERE hw.deliverable_id = d.id AND hw.deliverable_version = i.version AND hw.state = 'filed'
              AND hw.released_at IS NULL AND hw.retracted_at IS NULL AND hw.superseded_by IS NULL
@@ -108,8 +126,12 @@ async function visibleItem(sql: Sql, workspaceId: string, kind: string, id: stri
   if (kind === "built_work") {
     const row = await sql.get<{ ok: number }>(
       `SELECT 1 AS ok FROM built_work bw
+       JOIN agent_work_items w ON w.id = bw.work_item_id
        JOIN batches b ON b.id = bw.batch_id
-       WHERE bw.workspace_id = ? AND bw.id = ? AND (b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL`,
+       WHERE bw.workspace_id = ? AND bw.id = ? AND bw.status != 'archived'
+         AND w.state = 'filed' AND w.retracted_at IS NULL AND w.superseded_by IS NULL
+         AND b.deleted_at IS NULL AND b.discarded_at IS NULL
+         AND (b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL`,
       [workspaceId, id],
     );
     return Boolean(row) && version === 0;
@@ -133,6 +155,7 @@ export async function createViewLink(
   origin: string,
 ): Promise<{ ok: true; url: string; id: string } | { ok: false; error: "disabled" | "forbidden" | "missing" | "invalid" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "disabled" };
+  if (!shareHashPepperAvailable()) return { ok: false, error: "invalid" };
   if (!can(caller, "view_link.manage", { workspaceId: input.workspaceId })) return { ok: false, error: "forbidden" };
   const workspace = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM workspaces WHERE id = ?", [input.workspaceId]);
   if (!workspace?.organization_id || input.items.length === 0) return { ok: false, error: "missing" };
@@ -175,7 +198,15 @@ export async function listViewLinks(sql: Sql, caller: Caller, workspaceId: strin
   const marks = ids.map(() => "?").join(", ");
   const [events, newer] = await Promise.all([
     sql.all<{ share_id: string; kind: string; at: number; user_agent: string | null }>(
-      `SELECT share_id, kind, at, user_agent FROM library_share_events WHERE share_id IN (${marks}) ORDER BY at DESC`,
+      `SELECT share_id, kind, at, user_agent
+       FROM (
+         SELECT share_id, kind, at, user_agent,
+                ROW_NUMBER() OVER (PARTITION BY share_id ORDER BY at DESC) AS event_rank
+         FROM library_share_events
+         WHERE share_id IN (${marks})
+       )
+       WHERE event_rank <= 8
+       ORDER BY share_id, at DESC`,
       ids,
     ),
     sql.all<{ share_id: string }>(
@@ -196,7 +227,7 @@ export async function listViewLinks(sql: Sql, caller: Caller, workspaceId: strin
       expiresAt: share.expires_at,
       revokedAt: share.revoked_at,
       newer: newerIds.has(share.id),
-      events: events.filter((event) => event.share_id === share.id).slice(0, 8).map((event) => ({ kind: event.kind, at: event.at, userAgent: event.user_agent })),
+      events: events.filter((event) => event.share_id === share.id).map((event) => ({ kind: event.kind, at: event.at, userAgent: event.user_agent })),
     })),
   };
 }
@@ -227,11 +258,12 @@ function available(share: ShareRow, now: number): boolean {
 
 export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string }[] } } | { ok: false; error: "unavailable" | "locked" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "unavailable" };
+  if (!shareHashPepperAvailable()) return { ok: false, error: "unavailable" };
   const share = await shareByToken(sql, token);
   if (!share || !available(share, now)) return { ok: false, error: "unavailable" };
   if (share.passcode_hash) {
-    const sessionOk = sessionToken ? await validSession(sql, share.id, sessionToken, now) : false;
-    if (!sessionOk) return { ok: false, error: "locked" };
+    if (!sessionToken) return { ok: false, error: "locked" };
+    if (!(await validSession(sql, share.id, sessionToken, now))) return { ok: false, error: "unavailable" };
   }
   const items = await sql.all<{ public_id: string; resource_kind: string; resource_id: string; resource_version: number }>(
     "SELECT public_id, resource_kind, resource_id, resource_version FROM library_share_items WHERE share_id = ? ORDER BY sort",
@@ -246,7 +278,12 @@ export async function openViewLink(sql: Sql, token: string, now: number, session
   }
   if (visible.length === 0) return { ok: false, error: "unavailable" };
   await noteShareAccess(sql, share.id, "opened", now, audit);
-  await recordLibraryMetric(sql, { name: "view_link_opened", organizationId: share.organization_id, workspaceId: share.workspace_id });
+  await recordLibraryMetric(sql, {
+    name: "view_link_opened",
+    organizationId: share.organization_id,
+    workspaceId: share.workspace_id,
+    actorKind: "system",
+  });
   return { ok: true, view: { title: share.title ?? "Finished work", downloads: share.allow_downloads === 1, items: visible } };
 }
 
@@ -301,14 +338,7 @@ export async function refreshViewLink(sql: Sql, caller: Caller, workspaceId: str
 }
 
 export async function noteShareAccess(sql: Sql, shareId: string, kind: "opened" | "downloaded" | "updated" | "revoked", now: number, audit?: ShareAudit): Promise<void> {
-  let hashed: string | null = null;
-  if (audit?.ip) {
-    try {
-      hashed = await ipHash(audit.ip);
-    } catch {
-      hashed = null;
-    }
-  }
+  const hashed = audit?.ip ? await ipHash(audit.ip) : null;
   const agent = coarseUserAgent(audit?.userAgent);
   await sql.run(
     "INSERT INTO library_share_events (id, share_id, kind, at, user_agent, ip_hash) VALUES (?, ?, ?, ?, ?, ?)",

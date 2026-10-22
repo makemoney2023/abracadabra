@@ -33,6 +33,7 @@ export async function createArticlePromotionDraft(
     sourceVersion: number;
     targetDeliverableId?: string | null;
     platforms: string[];
+    selectedMediaKeys?: string[];
     externalId: string;
     tracking?: { source?: string; medium?: string; campaign?: string; content?: string };
   },
@@ -63,6 +64,25 @@ export async function createArticlePromotionDraft(
   if (!canonical.ok) return { ok: false, error: "invalid" };
   const platforms = [...new Set(input.platforms.map((platform) => platform.toLowerCase()))].filter((platform) => !BLOCKED.has(platform) && !isBlogPlatform(platform));
   if (platforms.length === 0 || !input.externalId) return { ok: false, error: "invalid" };
+  let sourceMedia: { r2_key: string; role: string; content_type: string; size?: number }[];
+  try {
+    const parsed = JSON.parse(source.media_json) as unknown;
+    sourceMedia = Array.isArray(parsed)
+      ? parsed.filter((entry): entry is (typeof sourceMedia)[number] =>
+          Boolean(entry)
+          && typeof (entry as { r2_key?: unknown }).r2_key === "string"
+          && typeof (entry as { role?: unknown }).role === "string"
+          && typeof (entry as { content_type?: unknown }).content_type === "string")
+      : [];
+  } catch {
+    sourceMedia = [];
+  }
+  const selectedKeys = input.selectedMediaKeys;
+  const selectedMedia = selectedKeys === undefined
+    ? sourceMedia
+    : sourceMedia.filter((entry) => selectedKeys.includes(entry.r2_key));
+  if (selectedKeys && selectedMedia.length !== new Set(selectedKeys).size) return { ok: false, error: "invalid" };
+  const mediaJson = JSON.stringify(selectedMedia);
   const actorId = caller.userId ?? "staff";
   const existing = await sql.get<{ response_json: string }>(
     "SELECT response_json FROM article_promotion_idempotency WHERE actor_kind = 'staff' AND actor_id = ? AND external_id = ?",
@@ -72,7 +92,6 @@ export async function createArticlePromotionDraft(
     const parsed = JSON.parse(existing.response_json) as { deliverableId: string };
     return { ok: true, deliverableId: parsed.deliverableId, duplicate: true };
   }
-  const outbound = trackedArticleUrl(canonical.url, input.tracking);
   let deliverableId = input.targetDeliverableId ?? "";
   let version = 1;
   const statements: { statement: string; params: unknown[] }[] = [];
@@ -94,13 +113,14 @@ export async function createArticlePromotionDraft(
   }
   const itemIds: string[] = [];
   platforms.forEach((platform, index) => {
+    const outbound = trackedArticleUrl(canonical.url, { ...input.tracking, source: platform });
     const itemId = crypto.randomUUID();
     itemIds.push(itemId);
     statements.push({
       statement: `INSERT INTO deliverable_items (
          id, deliverable_id, version, format, channel, title, copy_text, media_json, link_url, status, sort
        ) VALUES (?, ?, ?, 'static', ?, ?, ?, ?, NULL, 'pending', ?)`,
-      params: [itemId, deliverableId, version, platform, source.title, `${source.title}\n${outbound}`, source.media_json, index],
+      params: [itemId, deliverableId, version, platform, source.title, `${source.title}\n${outbound}`, mediaJson, index],
     });
     statements.push({
       statement: `INSERT INTO social_variants (

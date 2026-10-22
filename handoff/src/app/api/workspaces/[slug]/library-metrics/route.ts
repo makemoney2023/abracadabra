@@ -5,6 +5,7 @@ import type { Sql } from "@/db/sql";
 import { cookieValue } from "@/lib/downloads";
 import { recordLibraryMetric, type LibraryMetricName } from "@/lib/library-metrics";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
+import { resolveWorkspaceRouteId } from "@/lib/workspace-route";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,10 @@ async function session(request: Request): Promise<{ sql: Sql; caller: Caller }> 
 }
 
 export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
-  const { slug: workspaceId } = await context.params;
+  const { slug } = await context.params;
   const { sql, caller } = await session(request);
+  const workspaceId = await resolveWorkspaceRouteId(sql, slug);
+  if (!workspaceId) return Response.json({ error: "missing" }, { status: 404 });
   if (!can(caller, "workspace.view", { workspaceId })) return Response.json({ error: "missing" }, { status: 404 });
   let name: string;
   try {
@@ -34,6 +37,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
     name: name as LibraryMetricName,
     organizationId: space.organization_id,
     workspaceId,
+    actorKind: caller.staff ? "staff" : "system",
     actorId: caller.userId,
     artifactType: "article",
   });

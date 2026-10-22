@@ -89,4 +89,39 @@ describe("article promotion drafts", () => {
     expect(promotionRequestId({ requested: campaign, sourceItemId: "item-1", sourceVersion: 1, platforms: ["facebook"] })).toBe(campaign);
     expect(promotionRequestId({ requested: "retry", sourceItemId: "item-1", sourceVersion: 1, platforms: ["facebook", "linkedin"] })).toBe("item-1:1:facebook,linkedin");
   });
+
+  it("builds platform-specific links and only copies selected source media", async () => {
+    const sql = await database();
+    process.env.ARTICLE_SOCIAL_PROMO = "on";
+    const hero = { r2_key: "ws-1/articles/hero.jpg", role: "main", content_type: "image/jpeg" };
+    const crop = { r2_key: "ws-1/articles/crop.jpg", role: "square", content_type: "image/jpeg" };
+    await sql.run("UPDATE deliverable_items SET media_json = ? WHERE id = 'item-1'", [JSON.stringify([hero, crop])]);
+
+    expect(failed(await createArticlePromotionDraft(sql, staff, {
+      sourceItemId: "item-1",
+      sourceVersion: 1,
+      platforms: ["linkedin"],
+      selectedMediaKeys: ["foreign/key.jpg"],
+      externalId: "promo-invalid-media",
+    }, NOW))).toBe("invalid");
+
+    const created = await createArticlePromotionDraft(sql, staff, {
+      sourceItemId: "item-1",
+      sourceVersion: 1,
+      platforms: ["linkedin", "facebook"],
+      selectedMediaKeys: [crop.r2_key],
+      externalId: "promo-platform-links",
+      tracking: { medium: "social", campaign: "q4" },
+    }, NOW);
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    const rows = await sql.all<{ channel: string; copy_text: string; media_json: string }>(
+      "SELECT channel, copy_text, media_json FROM deliverable_items WHERE deliverable_id = ? ORDER BY channel",
+      [created.deliverableId],
+    );
+    expect(rows).toHaveLength(2);
+    expect(rows.find((row) => row.channel === "facebook")?.copy_text).toContain("utm_source=facebook");
+    expect(rows.find((row) => row.channel === "linkedin")?.copy_text).toContain("utm_source=linkedin");
+    expect(rows.every((row) => row.media_json === JSON.stringify([crop]))).toBe(true);
+  });
 });

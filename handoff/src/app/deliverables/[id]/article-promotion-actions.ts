@@ -15,6 +15,7 @@ export async function createArticlePromotionAction(_previous: PromotionState, fo
   const sourceVersion = Number(formData.get("sourceVersion") ?? "");
   const shown = String(formData.get("canonicalUrl") ?? "");
   const platforms = formData.getAll("platforms").map((value) => String(value));
+  const selectedMediaKeys = formData.getAll("selectedMediaKeys").map((value) => String(value));
   const source = await sql.get<{ canonical_url: string | null; link_url: string | null; organization_id: string; workspace_id: string; slug: string }>(
     `SELECT m.canonical_url, i.link_url, d.organization_id, d.workspace_id, w.slug
      FROM deliverable_items i
@@ -29,7 +30,9 @@ export async function createArticlePromotionAction(_previous: PromotionState, fo
   const result = await createArticlePromotionDraft(sql, caller, {
     sourceItemId,
     sourceVersion,
+    targetDeliverableId: String(formData.get("targetDeliverableId") ?? "") || null,
     platforms,
+    selectedMediaKeys: formData.has("mediaSelectionPresented") ? selectedMediaKeys : undefined,
     externalId: promotionRequestId({
       requested: String(formData.get("externalId") ?? ""),
       sourceItemId,
@@ -38,11 +41,19 @@ export async function createArticlePromotionAction(_previous: PromotionState, fo
     }),
     tracking: { source: platforms[0]?.toLowerCase(), medium: "social", campaign: "article" },
   }, Date.now());
-  if (!result.ok) return { message: "Could not create the draft." };
+  if (!result.ok) {
+    const message = result.error === "invalid"
+      ? "Choose an approved or published article, a valid draft, and media from this article."
+      : result.error === "forbidden"
+        ? "You do not have permission to create this draft."
+        : "Could not create the draft.";
+    return { message };
+  }
   await recordLibraryMetric(sql, {
     name: "article_promotion_created",
     organizationId: source.organization_id,
     workspaceId: source.workspace_id,
+    actorKind: "staff",
     actorId: caller.userId,
     artifactType: "article",
   });

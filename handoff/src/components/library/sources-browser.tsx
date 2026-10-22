@@ -38,7 +38,7 @@ export function SourcesBrowser({
           <span key={crumb.path || "root"} className="inline-flex items-center gap-2">
             {index > 0 ? <span aria-hidden="true">/</span> : null}
             <Link className="inline-flex min-h-11 items-center underline" href={hrefFor(crumb.path)}>
-              {crumb.name}
+              {index === 0 && root.includes("/library") ? "Sources" : crumb.name}
             </Link>
           </span>
         ))}
@@ -77,6 +77,28 @@ export function SourcesBrowser({
             <div>
               <Link className="text-sm underline" href={`/w/${slug}/files/${file.id}`}>{file.name}</Link>
               <p className="text-sm text-muted-foreground">{file.status}{file.selected ? " · In the Library" : ""}</p>
+              {file.usedIn && file.usedIn.length > 0 ? (
+                <p className="text-sm">
+                  Used in{" "}
+                  {file.usedIn.map((artifact, index) => (
+                    <span key={artifact.href}>
+                      {index > 0 ? ", " : null}
+                      <Link className="underline" href={artifact.href}>{artifact.title}</Link>
+                    </span>
+                  ))}
+                </p>
+              ) : null}
+              {file.deliveredAs && file.deliveredAs.length > 0 ? (
+                <p className="text-sm">
+                  Delivered as{" "}
+                  {file.deliveredAs.map((artifact, index) => (
+                    <span key={artifact.href}>
+                      {index > 0 ? ", " : null}
+                      <Link className="underline" href={artifact.href}>{artifact.title}</Link>
+                    </span>
+                  ))}
+                </p>
+              ) : null}
             </div>
             {canSelect && file.status === "clean" ? (
               <form action={toggleSourceAction}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { PostFrame } from "./platform-post-preview";
 
 export type PreviewMedia = {
@@ -9,12 +9,30 @@ export type PreviewMedia = {
   video: boolean;
 };
 
+const subscribeNoop = () => () => {};
+
 function Slide({ item, tall }: { item: PreviewMedia; tall: boolean }) {
+  const [failed, setFailed] = useState(!item.src);
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
   const className = tall ? "aspect-[9/16] w-full object-cover" : "aspect-square w-full object-cover";
-  if (item.video) return <video controls className={className} src={item.src} />;
+  if (failed) {
+    return (
+      <div
+        role="img"
+        aria-label={`${item.alt}: preview unavailable`}
+        className={`${className} grid place-items-center bg-neutral-900 px-6 text-center text-sm font-medium text-white`}
+      >
+        Preview unavailable
+      </div>
+    );
+  }
+  if (!mounted) {
+    return <div aria-label={`${item.alt}: loading preview`} className={`${className} bg-neutral-900`} />;
+  }
+  if (item.video) return <video controls className={className} src={item.src} onError={() => setFailed(true)} />;
   // The picture is served only when this caller can see the space.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img alt={item.alt} className={className} src={item.src} />;
+  return <img alt={item.alt} className={className} src={item.src} onError={() => setFailed(true)} />;
 }
 
 function Stage({ frame, media }: { frame: PostFrame; media: PreviewMedia[] }) {
@@ -23,7 +41,7 @@ function Stage({ frame, media }: { frame: PostFrame; media: PreviewMedia[] }) {
   const [index, setIndex] = useState(0);
   const current = slides[index] ?? slides[0];
   const carousel = frame.layout === "carousel" && count > 1;
-  const picture = current ? <Slide item={current} tall={frame.tall} /> : <div className={frame.tall ? "aspect-[9/16] bg-neutral-900" : "aspect-square bg-neutral-200"} />;
+  const picture = current ? <Slide key={`${index}:${current.src}`} item={current} tall={frame.tall} /> : <div className={frame.tall ? "aspect-[9/16] bg-neutral-900" : "aspect-square bg-neutral-200"} />;
   return (
     <div className="relative bg-black" data-layout={frame.layout}>
       {picture}

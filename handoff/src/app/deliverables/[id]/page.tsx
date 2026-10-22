@@ -24,8 +24,9 @@ import { POST_TYPE_LABEL, defaultPostType, pieceMedia } from "@/lib/social-plan"
 import { PLATFORM_LABEL, isBlogPlatform, zernioApiKey } from "@/lib/zernio";
 import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
 import { ArticlePromotionDialog } from "@/components/library/article-promotion-dialog";
-import { articleSocialPromoEnabled, articlePromotionAllowed, trackedArticleUrl } from "@/lib/article-promotions";
+import { articleSocialPromoEnabled, articlePromotionAllowed } from "@/lib/article-promotions";
 import { inspectCanonicalUrl } from "@/lib/library-artifacts";
+import { promotionMedia } from "@/lib/library-queries";
 import { createArticlePromotionAction } from "./article-promotion-actions";
 
 export default async function DeliverablePage({ params }: { params: Promise<{ id: string }> }) {
@@ -60,6 +61,12 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
       [deliverable.id],
     )).map((row) => [`${row.item_id}:${row.version}`, row.article_status] as const),
   );
+  const promotionTargets = articleSocialPromoEnabled()
+    ? await sql.all<{ id: string; title: string }>(
+        "SELECT id, title FROM deliverables WHERE workspace_id = ? AND kind = 'social_pack' AND status = 'draft' ORDER BY updated_at DESC LIMIT 50",
+        [deliverable.workspace_id],
+      )
+    : [];
   const pieces = items
     .filter((item) => !(item.format === "page" && parseFilingSummary(item.copy_text)))
     .map((item) => {
@@ -134,7 +141,8 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                         sourceItemId={item.id}
                         sourceVersion={item.version}
                         canonicalUrl={canonical.url}
-                        exampleOutbound={trackedArticleUrl(canonical.url, { source: "linkedin", medium: "social", campaign: "article" })}
+                        media={promotionMedia(item.media_json, deliverable.id, item.id)}
+                        targets={promotionTargets.filter((target) => target.id !== deliverable.id)}
                         action={createArticlePromotionAction}
                       />
                     ) : null}

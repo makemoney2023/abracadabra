@@ -1,4 +1,5 @@
 import type { LibraryArtifact } from "@/lib/library-artifacts";
+import { ArtifactThumbnail } from "./artifact-thumbnail";
 import { LIBRARY_STATUS_LABEL, libraryDateLabel, libraryStatusClass } from "./library-view";
 
 const PLATE: Record<string, string> = {
@@ -15,13 +16,11 @@ export function TypePlate({ artifact }: { artifact: LibraryArtifact }) {
   const date = libraryDateLabel(artifact.publishedAt ?? artifact.updatedAt);
   return (
     <div className={`relative flex aspect-[4/3] items-end overflow-hidden rounded-xl border border-border bg-gradient-to-br ${PLATE[artifact.artifactType] ?? "from-muted"} to-card p-4`}>
-      {artifact.previewSrc ? (
-        // Preview bytes are served by the deliverable media route, which checks the caller.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={artifact.previewSrc} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <span className="eyebrow text-optic">{artifact.artifactType}</span>
-      )}
+      <ArtifactThumbnail
+        src={artifact.previewSrc}
+        title={artifact.title}
+        fallback={artifact.artifactType}
+      />
       {date ? <time className="relative text-xs text-ink" dateTime={date}>{date}</time> : null}
     </div>
   );

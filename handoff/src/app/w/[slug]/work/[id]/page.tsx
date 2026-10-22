@@ -61,6 +61,22 @@ export default async function FinishedPiecePage({
   const items = chosen ? opened.items.filter((item) => item.format === chosen) : opened.items;
   const notes = await listDeliverableFeedback(sql, caller, opened.deliverable.id);
   const version = opened.deliverable.published_version ?? opened.deliverable.version;
+  const articleMetadata = new Map(
+    (await sql.all<{
+      item_id: string;
+      artifact_type: string;
+      dek: string | null;
+      canonical_url: string | null;
+      author_name: string | null;
+      external_published_at: number | null;
+      article_status: string | null;
+    }>(
+      `SELECT item_id, artifact_type, dek, canonical_url, author_name, external_published_at, article_status
+       FROM deliverable_artifact_metadata
+       WHERE deliverable_id = ? AND version = ?`,
+      [opened.deliverable.id, version],
+    )).map((row) => [row.item_id, row] as const),
+  );
   const brief = opened.deliverable.kind === "brief";
   const briefItem = brief ? items.find((item) => item.title === "brief.md") ?? items[0] : undefined;
   // Agent filings: the summary page renders as a card. Clients never see the agent, card or reference ids.
@@ -94,7 +110,7 @@ export default async function FinishedPiecePage({
   return (
     <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-8 px-6 py-[4rem] pb-28">
       {confirmation ? (
-        <div role="status" className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 px-5 py-4">
+        <div role="status" aria-live="polite" tabIndex={-1} className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 px-5 py-4">
           <p className="text-sm font-medium">{confirmation.title}</p>
           <p className="text-sm text-muted-foreground">{confirmation.body}</p>
         </div>
@@ -110,22 +126,18 @@ export default async function FinishedPiecePage({
         changes={items.filter((item) => item.status === "changes_requested").length}
         pending={items.filter((item) => item.status === "pending").length}
       />
-      <div className="flex flex-col gap-2">
-        {brief && briefItem ? (
-          <div className="flex flex-col gap-6">
-            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label="Approve" />
-            <ChangesForm
-              slug={slug}
-              deliverableId={opened.deliverable.id}
-              itemId={briefItem.id}
-              version={version}
-              label="Deny"
-              placeholder="Why are you denying this?"
+      {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
+        <details className="rounded-2xl border border-border bg-card p-3">
+          <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium text-optic">Copy view link</summary>
+          <div className="mt-3">
+            <ViewLinkDialog
+              workspaceId={workspace.id}
+              shares={viewShares?.ok ? viewShares.shares : []}
+              items={items.map((item) => ({ resourceKind: "deliverable_item" as const, resourceId: item.id, resourceVersion: version }))}
             />
-            <NoteForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
           </div>
-        ) : null}
-      </div>
+        </details>
+      ) : null}
       {brief || shownFormats.length < 2 ? null : (
         <div className="flex flex-wrap gap-2">
           <Button variant={chosen ? "outline" : "default"} size="sm" asChild>
@@ -162,7 +174,8 @@ export default async function FinishedPiecePage({
             );
           }
           if (isSummaryFile(item.title) && item.section && filingTitles.has(item.section)) return null;
-          const link = safeLink(item.link_url);
+          const metadata = articleMetadata.get(item.id);
+          const link = safeLink(metadata?.canonical_url ?? item.link_url);
           const article = item.format === "link"
             ? projectLibraryArtifact({
                 sourceKind: "deliverable_item",
@@ -172,11 +185,13 @@ export default async function FinishedPiecePage({
                 organizationId: opened.deliverable.organization_id,
                 title: item.title,
                 format: "link",
-                hasArticleMetadata: true,
+                hasArticleMetadata: metadata?.artifact_type === "article" || Boolean(metadata) || item.format === "link",
                 canonicalUrl: link,
-                dek: item.copy_text && item.copy_text.length <= 280 ? item.copy_text : null,
+                dek: metadata?.dek ?? (item.copy_text && item.copy_text.length <= 280 ? item.copy_text : null),
+                authorName: metadata?.author_name,
+                publishedAt: metadata?.external_published_at ?? opened.deliverable.published_at,
                 approval: item.status === "approved" ? "approved" : item.status === "changes_requested" ? "changes_requested" : "needs_review",
-                publication: "not_published",
+                publication: metadata?.article_status === "published" ? "published" : "not_published",
                 updatedAt: opened.deliverable.updated_at,
                 audience: viewer === "staff" ? "staff" : "client",
                 href: `#item-${item.id}`,
@@ -276,25 +291,29 @@ export default async function FinishedPiecePage({
           );
         })}
       </ul>
-      {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
-        <ViewLinkDialog
-          workspaceId={workspace.id}
-          shares={viewShares?.ok ? viewShares.shares : []}
-          items={items.map((item) => ({ resourceKind: "deliverable_item" as const, resourceId: item.id, resourceVersion: version }))}
-        />
-      ) : null}
-      {brief ? null : (
-        <CollectionReviewFooter
-          pending={items.filter((item) => item.status === "pending").length}
-          changes={items.filter((item) => item.status === "changes_requested").length}
-        >
-          {items.some((item) => item.status === "pending") ? (
+      <CollectionReviewFooter
+        pending={items.filter((item) => item.status === "pending").length}
+        changes={items.filter((item) => item.status === "changes_requested").length}
+      >
+        {brief && briefItem ? (
+          <div className="flex flex-col gap-3">
+            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label="Approve" />
+            <ChangesForm
+              slug={slug}
+              deliverableId={opened.deliverable.id}
+              itemId={briefItem.id}
+              version={version}
+              label="Deny"
+              placeholder="Why are you denying this?"
+            />
+            <NoteForm slug={slug} deliverableId={opened.deliverable.id} version={version} />
+          </div>
+        ) : items.some((item) => item.status === "pending") ? (
             <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending").length})`} />
           ) : (
             <p className="text-sm text-muted-foreground">Nothing is waiting for approval.</p>
-          )}
-        </CollectionReviewFooter>
-      )}
+        )}
+      </CollectionReviewFooter>
       {notes.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-medium">Notes</h2>
