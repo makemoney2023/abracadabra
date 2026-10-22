@@ -94,6 +94,7 @@ describe("folder files", () => {
         sizeBytes: 2048,
         status: "clean",
         createdBy: "user-member",
+        createdAt: NOW,
         hold: null,
       },
     ]);

@@ -1,14 +1,8 @@
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
-import { LIBRARY_PUBLIC_HEADERS, unlockViewLink, viewUnlockSetCookie } from "@/lib/library-shares";
+import { clientIpFromHeaders, LIBRARY_PUBLIC_HEADERS, unlockViewLink, viewUnlockSetCookie } from "@/lib/library-shares";
 
 export const dynamic = "force-dynamic";
-
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for") ?? "";
-  const first = forwarded.split(",")[0]?.trim();
-  return first || "0.0.0.0";
-}
 
 async function passcodeFrom(request: Request): Promise<string> {
   const type = request.headers.get("content-type") ?? "";
@@ -24,7 +18,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   const { token } = await context.params;
   const sql = await openHandoffDb();
   await migrate(sql);
-  const result = await unlockViewLink(sql, token, await passcodeFrom(request), clientIp(request), Date.now());
+  const result = await unlockViewLink(sql, token, await passcodeFrom(request), clientIpFromHeaders(request.headers), Date.now());
   if (!result.ok) {
     const message = result.status === 429 ? "Try again later." : "This link is not available.";
     return new Response(message, { status: result.status, headers: LIBRARY_PUBLIC_HEADERS });

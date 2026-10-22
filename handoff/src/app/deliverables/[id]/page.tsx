@@ -24,8 +24,9 @@ import { POST_TYPE_LABEL, defaultPostType, pieceMedia } from "@/lib/social-plan"
 import { PLATFORM_LABEL, isBlogPlatform, zernioApiKey } from "@/lib/zernio";
 import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
 import { ArticlePromotionDialog } from "@/components/library/article-promotion-dialog";
-import { articleSocialPromoEnabled, trackedArticleUrl } from "@/lib/article-promotions";
+import { articleSocialPromoEnabled, articlePromotionAllowed } from "@/lib/article-promotions";
 import { inspectCanonicalUrl } from "@/lib/library-artifacts";
+import { promotionMedia } from "@/lib/library-queries";
 import { createArticlePromotionAction } from "./article-promotion-actions";
 
 export default async function DeliverablePage({ params }: { params: Promise<{ id: string }> }) {
@@ -54,6 +55,18 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
     label: PLATFORM_LABEL[platform] ?? platform,
   }));
   const settingsByItem = new Map(await Promise.all(items.map(async (item) => [item.id, await pieceSettings(sql, item.id)] as const)));
+  const articleStatus = new Map(
+    (await sql.all<{ item_id: string; version: number; article_status: string | null }>(
+      "SELECT item_id, version, article_status FROM deliverable_artifact_metadata WHERE deliverable_id = ?",
+      [deliverable.id],
+    )).map((row) => [`${row.item_id}:${row.version}`, row.article_status] as const),
+  );
+  const promotionTargets = articleSocialPromoEnabled()
+    ? await sql.all<{ id: string; title: string }>(
+        "SELECT id, title FROM deliverables WHERE workspace_id = ? AND kind = 'social_pack' AND status = 'draft' ORDER BY updated_at DESC LIMIT 50",
+        [deliverable.workspace_id],
+      )
+    : [];
   const pieces = items
     .filter((item) => !(item.format === "page" && parseFilingSummary(item.copy_text)))
     .map((item) => {
@@ -123,12 +136,13 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                       <p className="font-medium">{item.title}</p>
                       <Badge variant="secondary">{ITEM_FORMAT_LABEL[item.format]}</Badge>
                     </div>
-                    {articleSocialPromoEnabled() && item.status === "approved" && canonical && canonical.ok ? (
+                    {articleSocialPromoEnabled() && canonical && canonical.ok && articlePromotionAllowed({ itemStatus: item.status, articleStatus: articleStatus.get(`${item.id}:${item.version}`) ?? null }) ? (
                       <ArticlePromotionDialog
                         sourceItemId={item.id}
                         sourceVersion={item.version}
                         canonicalUrl={canonical.url}
-                        exampleOutbound={trackedArticleUrl(canonical.url, { source: "linkedin", medium: "social", campaign: "article" })}
+                        media={promotionMedia(item.media_json, deliverable.id, item.id)}
+                        targets={promotionTargets.filter((target) => target.id !== deliverable.id)}
                         action={createArticlePromotionAction}
                       />
                     ) : null}

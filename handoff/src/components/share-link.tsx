@@ -4,14 +4,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function ShareLink({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
+      setCopyStatus("copied");
     } catch {
-      setCopied(false);
+      setCopyStatus("failed");
     }
   }
 
@@ -27,9 +27,12 @@ export function ShareLink({ url }: { url: string }) {
           onFocus={(event) => event.currentTarget.select()}
         />
         <Button type="button" variant="outline" onClick={() => void copy()}>
-          {copied ? "Copied" : "Copy upload link"}
+          {copyStatus === "copied" ? "Copied" : "Copy upload link"}
         </Button>
       </div>
+      <p className="text-sm text-muted-foreground" role="status" aria-live="polite" aria-atomic="true">
+        {copyStatus === "copied" ? "Upload link copied." : copyStatus === "failed" ? "Could not copy. Select the link and copy it manually." : ""}
+      </p>
     </section>
   );
 }

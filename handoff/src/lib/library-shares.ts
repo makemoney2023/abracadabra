@@ -2,10 +2,26 @@ import type { Caller } from "@/lib/authz";
 import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { flagEnabled, workerEnv } from "@/lib/worker-env";
+import { recordLibraryMetric } from "@/lib/library-metrics";
+import { deriveArtifactType, type LibraryArtifactType } from "@/lib/library-artifacts";
 
 const PBKDF2_ITERATIONS = 310_000;
 const WINDOW_MS = 15 * 60 * 1000;
 const SESSION_MS = 30 * 60 * 1000;
+
+export function shareHashPepperAvailable(
+  production = process.env.NODE_ENV === "production",
+  pepper = workerEnv("HANDOFF_SHARE_HASH_PEPPER"),
+): boolean {
+  return !production || Boolean(pepper);
+}
+
+export function clientIpFromHeaders(headers: Headers): string {
+  const cloudflare = headers.get("cf-connecting-ip")?.trim();
+  if (cloudflare) return cloudflare;
+  const forwarded = headers.get("x-forwarded-for") ?? "";
+  return forwarded.split(",")[0]?.trim() || "0.0.0.0";
+}
 
 export function libraryViewLinksEnabled(value?: string): boolean {
   return flagEnabled("LIBRARY_VIEW_LINKS", value);
@@ -61,16 +77,35 @@ async function ipHash(ip: string, pepper = workerEnv("HANDOFF_SHARE_HASH_PEPPER"
   return Buffer.from(signature).toString("hex");
 }
 
+export function coarseUserAgent(value: string | null | undefined): string {
+  const agent = (value ?? "").slice(0, 240);
+  if (!agent.trim()) return "unknown";
+  const mobile = /mobile|iphone|android/i.test(agent);
+  const family = /edg\//i.test(agent) ? "edge" : /firefox|fxios/i.test(agent) ? "firefox" : /chrome|crios/i.test(agent) ? "chrome" : /safari/i.test(agent) ? "safari" : "other";
+  if (/bot|spider|crawl/i.test(agent)) return "bot";
+  return `${mobile ? "mobile" : "desktop"}-${family}`;
+}
+
+export type ShareAudit = { ip?: string | null; userAgent?: string | null };
+export type ShareHistoryEvent = { kind: string; at: number; userAgent: string | null };
+
 export function viewUnlockCookie(token: string): { name: "library_view"; value: string; httpOnly: true; secure: true; sameSite: "lax"; maxAge: number } {
   return { name: "library_view", value: token, httpOnly: true, secure: true, sameSite: "lax", maxAge: SESSION_MS / 1000 };
 }
 
-async function visibleItem(sql: Sql, workspaceId: string, kind: string, id: string, version: number): Promise<boolean> {
+async function visibleItem(sql: Sql, workspaceId: string, kind: string, id: string, version: number, mode: "current" | "pinned" = "current"): Promise<boolean> {
   if (kind === "deliverable_item") {
+    const versionSql = mode === "pinned"
+      ? "AND d.published_version IS NOT NULL AND i.version <= d.published_version"
+      : "AND d.published_version = i.version";
     const row = await sql.get<{ ok: number }>(
       `SELECT 1 AS ok FROM deliverable_items i
        JOIN deliverables d ON d.id = i.deliverable_id
-       WHERE d.workspace_id = ? AND i.id = ? AND i.version = ? AND d.published_version = i.version
+       WHERE d.workspace_id = ? AND i.id = ? AND i.version = ? ${versionSql}
+         AND NOT EXISTS (
+           SELECT 1 FROM agent_work_items gone
+           WHERE gone.id = i.work_item_id AND (gone.retracted_at IS NOT NULL OR gone.superseded_by IS NOT NULL)
+         )
          AND NOT EXISTS (
            SELECT 1 FROM agent_work_items hw
            WHERE hw.deliverable_id = d.id AND hw.deliverable_version = i.version AND hw.state = 'filed'
@@ -92,8 +127,12 @@ async function visibleItem(sql: Sql, workspaceId: string, kind: string, id: stri
   if (kind === "built_work") {
     const row = await sql.get<{ ok: number }>(
       `SELECT 1 AS ok FROM built_work bw
+       JOIN agent_work_items w ON w.id = bw.work_item_id
        JOIN batches b ON b.id = bw.batch_id
-       WHERE bw.workspace_id = ? AND bw.id = ? AND (b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL`,
+       WHERE bw.workspace_id = ? AND bw.id = ? AND bw.status != 'archived'
+         AND w.state = 'filed' AND w.retracted_at IS NULL AND w.superseded_by IS NULL
+         AND b.deleted_at IS NULL AND b.discarded_at IS NULL
+         AND (b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL`,
       [workspaceId, id],
     );
     return Boolean(row) && version === 0;
@@ -117,6 +156,7 @@ export async function createViewLink(
   origin: string,
 ): Promise<{ ok: true; url: string; id: string } | { ok: false; error: "disabled" | "forbidden" | "missing" | "invalid" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "disabled" };
+  if (!shareHashPepperAvailable()) return { ok: false, error: "invalid" };
   if (!can(caller, "view_link.manage", { workspaceId: input.workspaceId })) return { ok: false, error: "forbidden" };
   const workspace = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM workspaces WHERE id = ?", [input.workspaceId]);
   if (!workspace?.organization_id || input.items.length === 0) return { ok: false, error: "missing" };
@@ -131,8 +171,8 @@ export async function createViewLink(
       statement: `INSERT INTO library_shares (
          id, organization_id, workspace_id, token_hash, title, expires_at, passcode_hash, allow_downloads,
          show_external_links, created_by_kind, created_by_id, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'staff', ?, ?, ?)`,
-      params: [id, workspace.organization_id, input.workspaceId, await sha256(token), input.title ?? null, input.expiresAt ?? null, passcode, input.allowDownloads ? 1 : 0, input.showExternalLinks === false ? 0 : 1, caller.userId, now, now],
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      params: [id, workspace.organization_id, input.workspaceId, await sha256(token), input.title ?? null, input.expiresAt ?? null, passcode, input.allowDownloads ? 1 : 0, input.showExternalLinks === false ? 0 : 1, caller.staff ? "staff" : "client", caller.userId, now, now],
     },
     ...input.items.map((item, index) => ({
       statement: `INSERT INTO library_share_items (
@@ -148,31 +188,67 @@ export async function createViewLink(
   return { ok: true, url: `${origin}/view/${token}`, id };
 }
 
-export async function listViewLinks(sql: Sql, caller: Caller, workspaceId: string): Promise<{ ok: true; shares: { id: string; title: string | null; expiresAt: number | null; revokedAt: number | null }[] } | { ok: false; error: "forbidden" }> {
+export async function listViewLinks(sql: Sql, caller: Caller, workspaceId: string): Promise<{ ok: true; shares: { id: string; title: string | null; expiresAt: number | null; revokedAt: number | null; newer: boolean; events: ShareHistoryEvent[] }[] } | { ok: false; error: "forbidden" }> {
   if (!can(caller, "view_link.manage", { workspaceId })) return { ok: false, error: "forbidden" };
   const shares = await sql.all<{ id: string; title: string | null; expires_at: number | null; revoked_at: number | null }>(
     "SELECT id, title, expires_at, revoked_at FROM library_shares WHERE workspace_id = ? ORDER BY created_at DESC",
     [workspaceId],
   );
-  return { ok: true, shares: shares.map((share) => ({ id: share.id, title: share.title, expiresAt: share.expires_at, revokedAt: share.revoked_at })) };
+  if (shares.length === 0) return { ok: true, shares: [] };
+  const ids = shares.map((share) => share.id);
+  const marks = ids.map(() => "?").join(", ");
+  const [events, newer] = await Promise.all([
+    sql.all<{ share_id: string; kind: string; at: number; user_agent: string | null }>(
+      `SELECT share_id, kind, at, user_agent
+       FROM (
+         SELECT share_id, kind, at, user_agent,
+                ROW_NUMBER() OVER (PARTITION BY share_id ORDER BY at DESC) AS event_rank
+         FROM library_share_events
+         WHERE share_id IN (${marks})
+       )
+       WHERE event_rank <= 8
+       ORDER BY share_id, at DESC`,
+      ids,
+    ),
+    sql.all<{ share_id: string }>(
+      `SELECT DISTINCT i.share_id AS share_id
+       FROM library_share_items i
+       JOIN deliverable_items di ON di.id = i.resource_id AND di.version = i.resource_version
+       JOIN deliverables d ON d.id = di.deliverable_id
+       WHERE i.share_id IN (${marks}) AND i.resource_kind = 'deliverable_item' AND d.published_version > i.resource_version`,
+      ids,
+    ),
+  ]);
+  const newerIds = new Set(newer.map((row) => row.share_id));
+  return {
+    ok: true,
+    shares: shares.map((share) => ({
+      id: share.id,
+      title: share.title,
+      expiresAt: share.expires_at,
+      revokedAt: share.revoked_at,
+      newer: newerIds.has(share.id),
+      events: events.filter((event) => event.share_id === share.id).map((event) => ({ kind: event.kind, at: event.at, userAgent: event.user_agent })),
+    })),
+  };
 }
 
-export async function revokeViewLink(sql: Sql, caller: Caller, workspaceId: string, shareId: string, now: number): Promise<{ ok: true } | { ok: false; error: "forbidden" | "missing" }> {
+export async function revokeViewLink(sql: Sql, caller: Caller, workspaceId: string, shareId: string, now: number): Promise<{ ok: true; organizationId: string } | { ok: false; error: "forbidden" | "missing" }> {
   if (!can(caller, "view_link.manage", { workspaceId })) return { ok: false, error: "forbidden" };
-  const share = await sql.get<{ id: string }>("SELECT id FROM library_shares WHERE id = ? AND workspace_id = ?", [shareId, workspaceId]);
+  const share = await sql.get<{ id: string; organization_id: string }>("SELECT id, organization_id FROM library_shares WHERE id = ? AND workspace_id = ?", [shareId, workspaceId]);
   if (!share) return { ok: false, error: "missing" };
   await sql.batch([
     { statement: "UPDATE library_shares SET revoked_at = ?, updated_at = ? WHERE id = ?", params: [now, now, shareId] },
     { statement: "INSERT INTO library_share_events (id, share_id, kind, at) VALUES (?, ?, 'revoked', ?)", params: [crypto.randomUUID(), shareId, now] },
   ]);
-  return { ok: true };
+  return { ok: true, organizationId: share.organization_id };
 }
 
-type ShareRow = { id: string; workspace_id: string; expires_at: number | null; revoked_at: number | null; passcode_hash: string | null; allow_downloads: number; show_external_links: number; title: string | null };
+type ShareRow = { id: string; organization_id: string; workspace_id: string; expires_at: number | null; revoked_at: number | null; passcode_hash: string | null; allow_downloads: number; show_external_links: number; title: string | null };
 
 async function shareByToken(sql: Sql, token: string): Promise<ShareRow | undefined> {
   return sql.get<ShareRow>(
-    "SELECT id, workspace_id, expires_at, revoked_at, passcode_hash, allow_downloads, show_external_links, title FROM library_shares WHERE token_hash = ?",
+    "SELECT id, organization_id, workspace_id, expires_at, revoked_at, passcode_hash, allow_downloads, show_external_links, title FROM library_shares WHERE token_hash = ?",
     [await sha256(token)],
   );
 }
@@ -181,13 +257,14 @@ function available(share: ShareRow, now: number): boolean {
   return share.revoked_at == null && (share.expires_at == null || share.expires_at > now);
 }
 
-export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null }[] } } | { ok: false; error: "unavailable" | "locked" }> {
+export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string; artifactType: LibraryArtifactType }[] } } | { ok: false; error: "unavailable" | "locked" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "unavailable" };
+  if (!shareHashPepperAvailable()) return { ok: false, error: "unavailable" };
   const share = await shareByToken(sql, token);
   if (!share || !available(share, now)) return { ok: false, error: "unavailable" };
   if (share.passcode_hash) {
-    const sessionOk = sessionToken ? await validSession(sql, share.id, sessionToken, now) : false;
-    if (!sessionOk) return { ok: false, error: "locked" };
+    if (!sessionToken) return { ok: false, error: "locked" };
+    if (!(await validSession(sql, share.id, sessionToken, now))) return { ok: false, error: "unavailable" };
   }
   const items = await sql.all<{ public_id: string; resource_kind: string; resource_id: string; resource_version: number }>(
     "SELECT public_id, resource_kind, resource_id, resource_version FROM library_share_items WHERE share_id = ? ORDER BY sort",
@@ -195,34 +272,129 @@ export async function openViewLink(sql: Sql, token: string, now: number, session
   );
   const visible = [];
   for (const item of items) {
-    if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version))) continue;
-    const title = await itemTitle(sql, item.resource_kind, item.resource_id);
-    const external = share.show_external_links ? await itemUrl(sql, item.resource_kind, item.resource_id, item.resource_version) : null;
-    visible.push({ publicId: item.public_id, title, externalUrl: external });
+    if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version, "pinned"))) continue;
+    const presentation = await itemPresentation(sql, item.resource_kind, item.resource_id, item.resource_version);
+    visible.push({
+      publicId: item.public_id,
+      title: presentation.title,
+      externalUrl: share.show_external_links ? presentation.externalUrl : null,
+      kind: item.resource_kind,
+      artifactType: presentation.artifactType,
+    });
   }
   if (visible.length === 0) return { ok: false, error: "unavailable" };
-  await sql.run("INSERT INTO library_share_events (id, share_id, kind, at) VALUES (?, ?, 'opened', ?)", [crypto.randomUUID(), share.id, now]);
+  await noteShareAccess(sql, share.id, "opened", now, audit);
+  await recordLibraryMetric(sql, {
+    name: "view_link_opened",
+    organizationId: share.organization_id,
+    workspaceId: share.workspace_id,
+    actorKind: "system",
+  });
   return { ok: true, view: { title: share.title ?? "Finished work", downloads: share.allow_downloads === 1, items: visible } };
 }
 
-async function itemTitle(sql: Sql, kind: string, id: string): Promise<string> {
-  if (kind === "deliverable_item") return (await sql.get<{ title: string }>("SELECT title FROM deliverable_items WHERE id = ?", [id]))?.title ?? "Finished work";
-  if (kind === "built_work") return (await sql.get<{ title: string }>("SELECT title FROM built_work WHERE id = ?", [id]))?.title ?? "Website";
-  return (await sql.get<{ relative_path: string }>("SELECT relative_path FROM files WHERE id = ?", [id]))?.relative_path.split("/").pop() ?? "File";
+export async function refreshViewLink(sql: Sql, caller: Caller, workspaceId: string, shareId: string, now: number): Promise<{ ok: true; updated: boolean; organizationId: string } | { ok: false; error: "forbidden" | "missing" }> {
+  if (!can(caller, "view_link.manage", { workspaceId })) return { ok: false, error: "forbidden" };
+  const share = await sql.get<{ id: string; organization_id: string }>("SELECT id, organization_id FROM library_shares WHERE id = ? AND workspace_id = ? AND revoked_at IS NULL", [shareId, workspaceId]);
+  if (!share) return { ok: false, error: "missing" };
+  const items = await sql.all<{ share_item_id: string; resource_id: string; resource_version: number; deliverable_id: string; published_version: number | null }>(
+    `SELECT i.id AS share_item_id, i.resource_id, i.resource_version, d.id AS deliverable_id, d.published_version
+     FROM library_share_items i
+     JOIN deliverable_items di ON di.id = i.resource_id AND di.version = i.resource_version
+     JOIN deliverables d ON d.id = di.deliverable_id
+     WHERE i.share_id = ? AND i.resource_kind = 'deliverable_item' AND d.workspace_id = ?`,
+    [shareId, workspaceId],
+  );
+  const groups = new Map<string, { published: number; shareItemIds: string[] }>();
+  for (const item of items) {
+    if (item.published_version == null || item.published_version <= item.resource_version) continue;
+    const group = groups.get(item.deliverable_id) ?? { published: item.published_version, shareItemIds: [] };
+    group.shareItemIds.push(item.share_item_id);
+    groups.set(item.deliverable_id, group);
+  }
+  const statements: { statement: string; params: unknown[] }[] = [];
+  for (const [deliverableId, group] of groups) {
+    const nextItems = await sql.all<{ id: string; version: number }>(
+      "SELECT id, version FROM deliverable_items WHERE deliverable_id = ? AND version = ? ORDER BY sort, title",
+      [deliverableId, group.published],
+    );
+    const visible = [];
+    for (const next of nextItems) {
+      if (await visibleItem(sql, workspaceId, "deliverable_item", next.id, next.version)) visible.push(next);
+    }
+    if (visible.length === 0) continue;
+    for (const shareItemId of group.shareItemIds) {
+      statements.push({ statement: "DELETE FROM library_share_items WHERE id = ? AND share_id = ?", params: [shareItemId, shareId] });
+    }
+    visible.forEach((next, index) => {
+      statements.push({
+        statement: `INSERT INTO library_share_items (id, share_id, public_id, resource_kind, resource_id, resource_version, sort)
+          VALUES (?, ?, ?, 'deliverable_item', ?, ?, ?)`,
+        params: [crypto.randomUUID(), shareId, crypto.randomUUID(), next.id, next.version, index],
+      });
+    });
+  }
+  if (statements.length === 0) return { ok: true, updated: false, organizationId: share.organization_id };
+  statements.push(
+    { statement: "UPDATE library_shares SET updated_at = ? WHERE id = ?", params: [now, shareId] },
+    { statement: "INSERT INTO library_share_events (id, share_id, kind, at) VALUES (?, ?, 'updated', ?)", params: [crypto.randomUUID(), shareId, now] },
+  );
+  await sql.batch(statements);
+  return { ok: true, updated: true, organizationId: share.organization_id };
 }
 
-async function itemUrl(sql: Sql, kind: string, id: string, version: number): Promise<string | null> {
+export async function noteShareAccess(sql: Sql, shareId: string, kind: "opened" | "downloaded" | "updated" | "revoked", now: number, audit?: ShareAudit): Promise<void> {
+  const hashed = audit?.ip ? await ipHash(audit.ip) : null;
+  const agent = coarseUserAgent(audit?.userAgent);
+  await sql.run(
+    "INSERT INTO library_share_events (id, share_id, kind, at, user_agent, ip_hash) VALUES (?, ?, ?, ?, ?, ?)",
+    [crypto.randomUUID(), shareId, kind, now, agent === "unknown" ? null : agent, hashed],
+  );
+}
+
+async function itemPresentation(sql: Sql, kind: string, id: string, version: number): Promise<{
+  title: string;
+  externalUrl: string | null;
+  artifactType: LibraryArtifactType;
+}> {
   if (kind === "deliverable_item") {
-    const row = await sql.get<{ canonical_url: string | null; link_url: string | null }>(
-      `SELECT m.canonical_url, i.link_url FROM deliverable_items i
+    const row = await sql.get<{
+      title: string;
+      format: string;
+      channel: string | null;
+      link_url: string | null;
+      canonical_url: string | null;
+      artifact_type: string | null;
+      metadata_id: string | null;
+    }>(
+      `SELECT i.title, i.format, i.channel, i.link_url, m.canonical_url, m.artifact_type, m.id AS metadata_id
+       FROM deliverable_items i
        LEFT JOIN deliverable_artifact_metadata m ON m.item_id = i.id AND m.version = i.version
        WHERE i.id = ? AND i.version = ?`,
       [id, version],
     );
-    return row?.canonical_url ?? row?.link_url ?? null;
+    return {
+      title: row?.title ?? "Finished work",
+      externalUrl: row?.canonical_url ?? row?.link_url ?? null,
+      artifactType: deriveArtifactType({
+        sourceKind: "deliverable_item",
+        format: row?.format,
+        channel: row?.channel,
+        hasArticleMetadata: Boolean(row?.metadata_id),
+        artifactTypeOverride: row?.artifact_type,
+      }),
+    };
   }
-  if (kind === "built_work") return (await sql.get<{ live_url: string | null }>("SELECT live_url FROM built_work WHERE id = ?", [id]))?.live_url ?? null;
-  return null;
+  if (kind === "built_work") {
+    const row = await sql.get<{ title: string; live_url: string | null }>("SELECT title, live_url FROM built_work WHERE id = ?", [id]);
+    return { title: row?.title ?? "Website", externalUrl: row?.live_url ?? null, artifactType: "website" };
+  }
+  const row = await sql.get<{ relative_path: string }>("SELECT relative_path FROM files WHERE id = ?", [id]);
+  return {
+    title: row?.relative_path.split("/").pop() ?? "File",
+    externalUrl: null,
+    artifactType: "file",
+  };
 }
 
 async function validSession(sql: Sql, shareId: string, token: string, now: number): Promise<boolean> {

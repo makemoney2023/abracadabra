@@ -12,6 +12,7 @@ export async function selectSourceAction(formData: FormData): Promise<SourceActi
   const result = await selectLibraryFile(sql, caller, String(formData.get("fileId") ?? ""), Date.now());
   if (!result.ok) return { ok: false, error: result.error };
   revalidatePath(`/w/${slug}`);
+  revalidatePath(`/w/${slug}/library`);
   return { ok: true };
 }
 
@@ -21,5 +22,11 @@ export async function revokeSourceAction(formData: FormData): Promise<SourceActi
   const result = await revokeLibraryFile(sql, caller, String(formData.get("fileId") ?? ""), Date.now());
   if (!result.ok) return { ok: false, error: result.error };
   revalidatePath(`/w/${slug}`);
+  revalidatePath(`/w/${slug}/library`);
   return { ok: true };
+}
+
+export async function toggleSourceAction(formData: FormData): Promise<void> {
+  const selected = String(formData.get("selected") ?? "") === "1";
+  await (selected ? revokeSourceAction : selectSourceAction)(formData);
 }

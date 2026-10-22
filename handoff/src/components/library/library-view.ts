@@ -25,6 +25,31 @@ export const LIBRARY_STATUS_LABEL: Record<LibraryStatus, string> = {
   draft: "Draft",
 };
 
+export const LIBRARY_PLATFORMS: { id: string; label: string }[] = [
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "facebook", label: "Facebook" },
+  { id: "instagram", label: "Instagram" },
+  { id: "twitter", label: "X" },
+  { id: "threads", label: "Threads" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "youtube", label: "YouTube" },
+  { id: "bluesky", label: "Bluesky" },
+  { id: "googlebusiness", label: "Google Business" },
+];
+
+export function libraryStatusClass(status: LibraryStatus): string {
+  if (status === "changes_requested" || status === "needs_attention") return "bg-status-late text-status-late-fg";
+  if (status === "needs_review" || status === "scheduled" || status === "publishing") return "bg-status-waiting text-status-waiting-fg";
+  if (status === "partially_published") return "bg-status-blocked text-status-blocked-fg";
+  if (status === "published" || status === "ready" || status === "approved") return "bg-status-active text-status-active-fg";
+  return "bg-status-neutral text-status-neutral-fg";
+}
+
+export function libraryDateLabel(value: number | null | undefined): string | null {
+  if (!value || value < 1_000_000_000_000) return null;
+  return new Date(value).toLocaleDateString("en-CA");
+}
+
 export const LIBRARY_SORTS: { sort: LibrarySort; label: string }[] = [
   { sort: "delivered", label: "Recently delivered" },
   { sort: "updated", label: "Recently updated" },

@@ -7,7 +7,7 @@ import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
 import { openObjectStore } from "@/lib/store/objects";
-import { DELETE } from "./[shareId]/route";
+import { DELETE, PATCH } from "./[shareId]/route";
 import { GET as downloadViewFile } from "../../../../view/[token]/files/[shareItemPublicId]/route";
 import { POST as unlockView } from "../../../../view/[token]/unlock/route";
 import { GET, POST } from "./route";
@@ -79,13 +79,14 @@ async function seed(sql: Sql): Promise<void> {
   await openObjectStore().put(objectKey, new TextEncoder().encode("file"));
 }
 
-function call(method: "GET" | "POST" | "DELETE", token: string, workspaceId = WORKSPACE, body?: unknown, shareId = "share"): Promise<Response> {
+function call(method: "GET" | "POST" | "PATCH" | "DELETE", token: string, workspaceId = WORKSPACE, body?: unknown, shareId = "share"): Promise<Response> {
   const request = new Request(`https://handoff.example/api/workspaces/${workspaceId}/view-links`, {
     method,
     headers: { cookie: `handoff_session=${token}`, "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (method === "DELETE") return DELETE(request, { params: Promise.resolve({ slug: workspaceId, shareId }) });
+  if (method === "PATCH") return PATCH(request, { params: Promise.resolve({ slug: workspaceId, shareId }) });
   if (method === "POST") return POST(request, { params: Promise.resolve({ slug: workspaceId }) });
   return GET(request, { params: Promise.resolve({ slug: workspaceId }) });
 }
@@ -156,6 +157,20 @@ describe("view link routes", () => {
     expect(events.map((event) => event.kind)).toContain("created");
   });
 
+  it("accepts the public workspace slug as well as the workspace id", async () => {
+    await db();
+    process.env.LIBRARY_VIEW_LINKS = "on";
+    const created = await call("POST", "owner-token", "acme", {
+      items: [{ resourceKind: "deliverable_item", resourceId: "item-1", resourceVersion: 1 }],
+    });
+    expect(created.status).toBe(201);
+    const body = (await created.json()) as { id: string };
+    const listed = await call("GET", "owner-token", "acme");
+    expect(listed.status).toBe(200);
+    const revoked = await call("DELETE", "owner-token", "acme", undefined, body.id);
+    expect(revoked.status).toBe(200);
+  });
+
   it("locks a passcode, rate limits unlock, and downloads only the shared public file", async () => {
     await db();
     process.env.LIBRARY_VIEW_LINKS = "on";
@@ -222,5 +237,26 @@ describe("view link routes", () => {
     expect(file.headers.get("x-frame-options")).toBe("DENY");
     expect(await file.text()).toBe("file");
     expect(file.headers.get("content-disposition")).not.toContain(FILE_ID);
+  });
+
+  it("refreshes a view link only for an authorized owner", async () => {
+    const sql = await db();
+    process.env.LIBRARY_VIEW_LINKS = "on";
+    const created = await call("POST", "owner-token", WORKSPACE, {
+      items: [{ resourceKind: "deliverable_item", resourceId: "item-1", resourceVersion: 1 }],
+    });
+    const body = (await created.json()) as { id: string };
+    expect((await call("PATCH", "member-token", WORKSPACE, undefined, body.id)).status).toBe(403);
+    expect((await call("PATCH", "owner-token", WORKSPACE, undefined, "missing-share")).status).toBe(404);
+
+    await sql.run("UPDATE deliverables SET version = 2, published_version = 2 WHERE id = 'd-1'");
+    await sql.run(
+      "INSERT INTO deliverable_items (id, deliverable_id, version, format, title, media_json, link_url, status, sort) VALUES ('item-2', 'd-1', 2, 'link', 'Q4 revised', '[]', 'https://news.example/q4', 'approved', 0)",
+    );
+    const refreshed = await call("PATCH", "owner-token", WORKSPACE, undefined, body.id);
+    expect(refreshed.status).toBe(200);
+    await expect(refreshed.json()).resolves.toEqual({ updated: true });
+    const activity = await sql.get<{ actor_kind: string }>("SELECT actor_kind FROM activities WHERE kind = 'library.view_link_updated'");
+    expect(activity?.actor_kind).toBe("system");
   });
 });

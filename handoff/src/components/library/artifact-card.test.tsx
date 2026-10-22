@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { projectLibraryArtifact } from "@/lib/library-artifacts";
 import { ArticleCard } from "./article-card";
 import { ArtifactCard } from "./artifact-card";
-import { LibraryBrowser } from "./library-browser";
+import { LibraryBrowser, LibraryTypeTabs } from "./library-browser";
+import { LibraryGallery } from "./library-gallery";
 import { copyLinkFeedback, emptyLibraryCopy, libraryHref, nextLibraryHref } from "./library-view";
 
 const article = projectLibraryArtifact({
@@ -24,6 +25,7 @@ const article = projectLibraryArtifact({
   publication: "partially_published",
   updatedAt: 1,
   audience: "client",
+  promotionCollections: [{ id: "promo-1", title: "Q4 social campaign", href: "/w/acme/work/promo-1" }],
   destinations: [
     { platform: "linkedin", outcome: "succeeded", url: "https://www.linkedin.com/feed/update/1" },
     { platform: "instagram", outcome: "failed" },
@@ -43,7 +45,35 @@ describe("library cards", () => {
     expect(html).toContain('target="_blank"');
     expect(html).toContain("noopener");
     expect(html).toContain("https://news.example/q4?utm_source=keep");
+    expect(html).toContain("View promotion collection");
+    expect(html).toContain("/w/acme/work/promo-1");
     expect(html).not.toContain("Zernio");
+  });
+
+  it("keeps review and canonical-link actions visible for an article awaiting review", () => {
+    const awaitingReview = projectLibraryArtifact({
+      sourceKind: "deliverable_item",
+      sourceId: "item-review",
+      version: 1,
+      workspaceId: "ws-1",
+      organizationId: "org-1",
+      title: "Review this article",
+      format: "link",
+      hasArticleMetadata: true,
+      canonicalUrl: "https://news.example/review",
+      approval: "needs_review",
+      publication: "not_published",
+      updatedAt: 2,
+      audience: "client",
+      href: "/w/acme/work/d-review",
+      previewSrc: "/api/preview/review",
+    });
+    const html = renderToStaticMarkup(createElement(ArticleCard, { artifact: awaitingReview }));
+    expect(html).toContain("Review");
+    expect(html).toContain("/w/acme/work/d-review");
+    expect(html).toContain("Copy link");
+    expect(html).toContain('alt="Preview of Review this article"');
+    expect(html).not.toContain("Link unavailable");
   });
 
   it("keeps a failed copy selectable", () => {
@@ -85,8 +115,32 @@ describe("library cards", () => {
     }));
     expect(html).toContain("No articles yet.");
     expect(html).toContain("Sources");
-    expect(html).toContain("grid-cols-1");
+    expect(html).toContain("xl:grid-cols-3");
+    expect(html).toContain("Recently delivered");
     expect(html).toContain("min-h-11");
     expect(html).toContain("/w/acme/library?type=social");
+  });
+
+  it("keeps the shared Library navigation available on Sources", () => {
+    const html = renderToStaticMarkup(createElement(LibraryTypeTabs, {
+      slug: "acme",
+      query: { type: "file", search: "brief" },
+      counts: { total: 4, file: 2 },
+    }));
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain("Sources");
+    expect(html).toContain("/w/acme/library?type=article&amp;search=brief");
+  });
+
+  it("presents view-link selection as one named group with a visible action", () => {
+    const html = renderToStaticMarkup(createElement(LibraryGallery, {
+      artifacts: [article],
+      empty: "Nothing here.",
+      viewLink: { workspaceId: "ws-1", shares: [] },
+    }));
+    expect(html).toContain("<fieldset");
+    expect(html).toContain("Select finished work");
+    expect(html).toContain("Create view link");
+    expect(html).not.toContain("<details");
   });
 });

@@ -87,6 +87,11 @@ export type LibraryArtifact = {
   destinations: DestinationChip[];
   actions: LibraryAction[];
   updatedAt: number;
+  previewSrc: string | null;
+  promotionMedia: { key: string; role: string; contentType: string; previewSrc: string | null }[];
+  promotedBy: number;
+  promotesTitle: string | null;
+  promotionCollections: { id: string; title: string; href: string }[];
 };
 
 export type ArtifactProjectionInput = {
@@ -111,6 +116,11 @@ export type ArtifactProjectionInput = {
   destinations?: DestinationInput[];
   href?: string | null;
   productionWrite?: boolean;
+  previewSrc?: string | null;
+  promotionMedia?: { key: string; role: string; contentType: string; previewSrc: string | null }[];
+  promotedBy?: number;
+  promotesTitle?: string | null;
+  promotionCollections?: { id: string; title: string; href: string }[];
 };
 
 export function artifactKey(input: { sourceKind: LibrarySourceKind; sourceId: string; version?: number | null }): string {
@@ -245,5 +255,10 @@ export function projectLibraryArtifact(input: ArtifactProjectionInput): LibraryA
     destinations: destinationChips(input.destinations ?? [], input.audience),
     actions: actionsFor(input, type, status, inspected),
     updatedAt: input.updatedAt,
+    previewSrc: input.previewSrc ?? null,
+    promotionMedia: input.promotionMedia ?? [],
+    promotedBy: input.promotedBy ?? 0,
+    promotesTitle: input.promotesTitle ?? null,
+    promotionCollections: input.promotionCollections ?? [],
   };
 }

@@ -10,7 +10,7 @@ const initial: FormState = { message: "" };
 function Status({ message }: { message: string }) {
   if (!message) return null;
   return (
-    <p role="status" className="text-sm text-muted-foreground">
+    <p role="status" aria-live="polite" tabIndex={-1} className="text-sm text-muted-foreground">
       {message}
     </p>
   );

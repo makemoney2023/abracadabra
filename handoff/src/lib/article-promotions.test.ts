@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Caller } from "@/lib/authz";
 import { migrate } from "@/db/migrate";
 import { sqliteSql } from "@/db/sql";
-import { createArticlePromotionDraft } from "./article-promotions";
+import { articlePromotionAllowed, createArticlePromotionDraft, promotionRequestId } from "./article-promotions";
 
 const NOW = 1_800_000_000_000;
 const staff: Caller = { userId: "staff-1", staff: { superAdmin: true }, operatorOf: [], memberships: [] };
@@ -68,5 +68,60 @@ describe("article promotion drafts", () => {
     expect(article?.link_url).toBe("https://news.example/q4");
     expect(await sql.get("SELECT id FROM social_posts")).toBeUndefined();
     expect(await sql.get("SELECT relation_kind FROM artifact_relations")).toEqual({ relation_kind: "promotes" });
+  });
+
+  it("promotes a published article that is still pending, and keeps a fresh campaign id", async () => {
+    const sql = await database();
+    process.env.ARTICLE_SOCIAL_PROMO = "on";
+    await sql.run("UPDATE deliverable_items SET status = 'pending' WHERE id = 'item-1'");
+    expect(articlePromotionAllowed({ itemStatus: "pending", articleStatus: null })).toBe(false);
+    expect(failed(await createArticlePromotionDraft(sql, staff, { sourceItemId: "item-1", sourceVersion: 1, platforms: ["linkedin"], externalId: "promo-pending" }, NOW))).toBe("invalid");
+    await sql.run(
+      `INSERT INTO deliverable_artifact_metadata (
+         id, organization_id, workspace_id, deliverable_id, item_id, version, artifact_type, canonical_url, article_status, created_at, updated_at
+       ) VALUES ('meta-1', 'org-1', 'ws-1', 'd-1', 'item-1', 1, 'article', 'https://news.example/q4', 'published', ?, ?)`,
+      [NOW, NOW],
+    );
+    expect(articlePromotionAllowed({ itemStatus: "pending", articleStatus: "published" })).toBe(true);
+    const created = await createArticlePromotionDraft(sql, staff, { sourceItemId: "item-1", sourceVersion: 1, platforms: ["facebook"], externalId: "promo-published" }, NOW);
+    expect(created.ok).toBe(true);
+    const campaign = "11111111-1111-4111-8111-111111111111";
+    expect(promotionRequestId({ requested: campaign, sourceItemId: "item-1", sourceVersion: 1, platforms: ["facebook"] })).toBe(campaign);
+    expect(promotionRequestId({ requested: "retry", sourceItemId: "item-1", sourceVersion: 1, platforms: ["facebook", "linkedin"] })).toBe("item-1:1:facebook,linkedin");
+  });
+
+  it("builds platform-specific links and only copies selected source media", async () => {
+    const sql = await database();
+    process.env.ARTICLE_SOCIAL_PROMO = "on";
+    const hero = { r2_key: "ws-1/articles/hero.jpg", role: "main", content_type: "image/jpeg" };
+    const crop = { r2_key: "ws-1/articles/crop.jpg", role: "square", content_type: "image/jpeg" };
+    await sql.run("UPDATE deliverable_items SET media_json = ? WHERE id = 'item-1'", [JSON.stringify([hero, crop])]);
+
+    expect(failed(await createArticlePromotionDraft(sql, staff, {
+      sourceItemId: "item-1",
+      sourceVersion: 1,
+      platforms: ["linkedin"],
+      selectedMediaKeys: ["foreign/key.jpg"],
+      externalId: "promo-invalid-media",
+    }, NOW))).toBe("invalid");
+
+    const created = await createArticlePromotionDraft(sql, staff, {
+      sourceItemId: "item-1",
+      sourceVersion: 1,
+      platforms: ["linkedin", "facebook"],
+      selectedMediaKeys: [crop.r2_key],
+      externalId: "promo-platform-links",
+      tracking: { medium: "social", campaign: "q4" },
+    }, NOW);
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    const rows = await sql.all<{ channel: string; copy_text: string; media_json: string }>(
+      "SELECT channel, copy_text, media_json FROM deliverable_items WHERE deliverable_id = ? ORDER BY channel",
+      [created.deliverableId],
+    );
+    expect(rows).toHaveLength(2);
+    expect(rows.find((row) => row.channel === "facebook")?.copy_text).toContain("utm_source=facebook");
+    expect(rows.find((row) => row.channel === "linkedin")?.copy_text).toContain("utm_source=linkedin");
+    expect(rows.every((row) => row.media_json === JSON.stringify([crop]))).toBe(true);
   });
 });

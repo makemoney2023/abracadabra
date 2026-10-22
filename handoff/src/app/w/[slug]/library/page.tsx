@@ -1,17 +1,28 @@
 import { notFound } from "next/navigation";
-import { LibraryBrowser } from "@/components/library/library-browser";
-import { ViewLinkDialog } from "@/components/library/view-link-dialog";
+import { LibraryBrowser, LibraryTypeTabs } from "@/components/library/library-browser";
+import { SourcesBrowser } from "@/components/library/sources-browser";
 import { can } from "@/lib/authz";
-import { libraryViewLinksEnabled } from "@/lib/library-shares";
+import { articleSocialPromoEnabled } from "@/lib/article-promotions";
+import { libraryViewLinksEnabled, listViewLinks } from "@/lib/library-shares";
 import { workspacesFor } from "@/db/records";
+import { listFolderFiles } from "@/lib/downloads";
 import { seesHeldWork } from "@/lib/held-work";
 import { listLibraryArtifacts, type LibrarySort } from "@/lib/library-queries";
 import type { LibraryArtifactType, LibraryStatus } from "@/lib/library-artifacts";
 import { openSession } from "@/lib/current";
+import { createArticlePromotionAction } from "@/app/deliverables/[id]/article-promotion-actions";
+import { recordLibraryMetric } from "@/lib/library-metrics";
+import { workspaceFileProvenance } from "@/lib/source-provenance";
 
 const TYPES = new Set(["article", "social", "video", "image", "website", "document", "file"]);
 const STATUSES = new Set(["changes_requested", "needs_attention", "needs_review", "publishing", "scheduled", "partially_published", "published", "ready", "approved", "draft"]);
 const SORTS = new Set(["delivered", "updated", "published", "title", "needs_action"]);
+
+function utcDay(value: string | undefined, end: boolean): number | undefined {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  const time = Date.parse(`${value}T${end ? "23:59:59.999" : "00:00:00.000"}Z`);
+  return Number.isNaN(time) ? undefined : time;
+}
 
 export default async function LibraryPage({
   params,
@@ -44,21 +55,116 @@ export default async function LibraryPage({
     cursor: read("cursor"),
     needsAction: read("needs") === "1",
     includeHeld: seesHeldWork(caller, workspace.id),
+    deliveredFrom: utcDay(read("from"), false),
+    deliveredTo: utcDay(read("to"), true),
   });
-  const filters = { type: read("type"), status: read("status"), sort: read("sort"), search: read("search"), platform: read("platform"), project: read("project"), needs: read("needs") };
-  const viewItems = result.ok
-    ? result.page.artifacts.flatMap((artifact) => {
-        if (artifact.sourceKind !== "deliverable_item" && artifact.sourceKind !== "built_work" && artifact.sourceKind !== "file") return [];
-        return [{ resourceKind: artifact.sourceKind, resourceId: artifact.sourceId, resourceVersion: artifact.version ?? 0 }];
-      })
+  const filters = {
+    type: read("type"),
+    status: read("status"),
+    sort: read("sort"),
+    search: read("search"),
+    platform: read("platform"),
+    project: read("project"),
+    needs: read("needs"),
+    from: read("from"),
+    to: read("to"),
+  };
+  const canManageLinks = libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id });
+  const shares = canManageLinks ? await listViewLinks(sql, caller, workspace.id) : null;
+  const canPromote = articleSocialPromoEnabled() && can(caller, "article_promotion.create", { workspaceId: workspace.id });
+  const promotionTargets = canPromote
+    ? await sql.all<{ id: string; title: string }>(
+        "SELECT id, title FROM deliverables WHERE workspace_id = ? AND kind = 'social_pack' AND status = 'draft' ORDER BY updated_at DESC LIMIT 50",
+        [workspace.id],
+      )
     : [];
+  const showSources = type === "file";
+  const canSelect = showSources && can(caller, "library_file.select", { workspaceId: workspace.id });
+  const projects = showSources ? [] : await sql.all<{ id: string; name: string }>(
+    `SELECT DISTINCT p.id, p.name
+     FROM projects p
+     JOIN deliverables d ON d.project_id = p.id
+     WHERE d.workspace_id = ?
+     ORDER BY p.name
+     LIMIT 100`,
+    [workspace.id],
+  );
+  const sourceFiles = showSources ? await listFolderFiles(sql, caller, workspace.id) : [];
+  const sourceProvenance = showSources ? await workspaceFileProvenance(sql, workspace.id, slug) : new Map();
+  const selected = showSources
+    ? await sql.all<{ file_id: string }>("SELECT file_id FROM library_file_selections WHERE workspace_id = ? AND revoked_at IS NULL", [workspace.id])
+    : [];
+  const selectedIds = new Set(selected.map((row) => row.file_id));
+  const organization = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM workspaces WHERE id = ?", [workspace.id]);
+  if (result.ok && !read("cursor") && organization?.organization_id) {
+    await recordLibraryMetric(sql, {
+      name: "library_listed",
+      organizationId: organization.organization_id,
+      workspaceId: workspace.id,
+      actorKind: caller.staff ? "staff" : "system",
+      actorId: caller.userId,
+      count: result.page.counts.total,
+    });
+    if (read("search") && result.page.counts.total === 0) {
+      await recordLibraryMetric(sql, {
+        name: "library_search_empty",
+        organizationId: organization.organization_id,
+        workspaceId: workspace.id,
+        actorKind: caller.staff ? "staff" : "system",
+        actorId: caller.userId,
+        count: 0,
+      });
+    }
+  }
   return (
-    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-6 px-6 py-[4rem]">
-      <h1 className="font-heading text-4xl leading-tight">Library</h1>
-      {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
-        <ViewLinkDialog workspaceId={workspace.id} items={viewItems} />
-      ) : null}
-      <LibraryBrowser slug={slug} page={result.ok ? result.page : null} query={filters} error={result.ok ? null : "Check the search and try again."} />
+    <main className="mx-auto flex w-full max-w-[76rem] flex-1 flex-col gap-6 px-6 py-12">
+      <div className="flex flex-col gap-2">
+        <p className="eyebrow text-optic">Finished work</p>
+        <h1 className="font-heading text-4xl leading-tight">Library</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">Articles, social posts, pictures, video, websites, and the source files the studio has put in front of you.</p>
+        {result.ok ? (
+          <div className="mt-2 flex flex-wrap gap-2 text-sm">
+            <span className="rounded-full bg-muted px-3 py-1.5 tabular-nums">{result.page.counts.total} items</span>
+            {result.page.needsAction > 0 ? (
+              <span className="rounded-full bg-status-waiting px-3 py-1.5 text-status-waiting-fg tabular-nums">
+                {result.page.needsAction} need attention
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+      {showSources ? (
+        <div className="flex flex-col gap-6">
+          <LibraryTypeTabs slug={slug} query={filters} counts={result.ok ? result.page.counts : null} />
+          <SourcesBrowser
+            slug={slug}
+            canSelect={canSelect}
+            listPath={`/w/${slug}/library`}
+            persist={{ type: "file" }}
+            query={{ search: read("search"), status: read("scan"), sort: read("fileSort"), folder: read("folder") }}
+            files={sourceFiles.map((file) => ({
+              id: file.id,
+              name: file.name,
+              status: file.status,
+              updatedAt: file.createdAt,
+              selected: selectedIds.has(file.id),
+              usedIn: sourceProvenance.get(file.id)?.usedIn,
+              deliveredAs: sourceProvenance.get(file.id)?.deliveredAs,
+            }))}
+          />
+        </div>
+      ) : (
+        <LibraryBrowser
+          slug={slug}
+          page={result.ok ? result.page : null}
+          query={filters}
+          error={result.ok ? null : "Check the search and try again."}
+          viewLink={canManageLinks && shares?.ok ? { workspaceId: workspace.id, shares: shares.shares } : null}
+          promotionAction={canPromote ? createArticlePromotionAction : null}
+          promotionTargets={promotionTargets}
+          projects={projects}
+        />
+      )}
     </main>
   );
 }

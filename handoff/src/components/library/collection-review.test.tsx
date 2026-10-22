@@ -29,7 +29,9 @@ describe("collection review", () => {
     expect(header).toContain("1 of 3 reviewed");
     expect(header).toContain("1 approved");
     expect(header).toContain("2 pending");
-    expect(renderToStaticMarkup(<CollectionItemState status="changes_requested" />)).toContain("Changes requested");
+    const itemState = renderToStaticMarkup(<CollectionItemState status="changes_requested" />);
+    expect(itemState).toContain("Changes requested");
+    expect(itemState).toContain("rounded-full");
     const footer = renderToStaticMarkup(
       <CollectionReviewFooter pending={2} changes={1}>
         <button type="submit">Approve all (2)</button>

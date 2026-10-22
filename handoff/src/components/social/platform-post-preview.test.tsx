@@ -58,4 +58,16 @@ describe("in-situ post frames", () => {
     expect(html).not.toContain("/two.jpg");
     expect(html.match(/data-dot=/g)).toHaveLength(3);
   });
+
+  it("shows a readable fallback when preview media is unavailable", () => {
+    const html = renderToStaticMarkup(
+      createElement(PlatformPostPreview, {
+        accountName: "Acme",
+        frames: platformPostFrames({ postType: "feed", caption: "A post", slides: 1, platforms: ["instagram"] }),
+        media: [{ src: "", alt: "Missing campaign image", video: false }],
+      }),
+    );
+    expect(html).toContain("Preview unavailable");
+    expect(html).not.toContain("<img");
+  });
 });

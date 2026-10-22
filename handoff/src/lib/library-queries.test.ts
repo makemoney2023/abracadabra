@@ -3,26 +3,30 @@ import { describe, expect, it, vi } from "vitest";
 import type { Caller } from "@/lib/authz";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { LIBRARY_PAGE_SIZE, listLibraryArtifacts } from "./library-queries";
+import { LIBRARY_PAGE_SIZE, listLibraryArtifacts, staffLibrarySummaries } from "./library-queries";
 
 const NOW = 1_800_000_000_000;
 const member: Caller = { userId: "member-1", staff: null, operatorOf: [], memberships: [{ workspaceId: "ws-1", role: "client_member" }] };
 const staff: Caller = { userId: "staff-1", staff: { superAdmin: false }, operatorOf: ["ws-1"], memberships: [] };
 
-function watched(sql: Sql): { sql: Sql; reads: () => number } {
+function watched(sql: Sql): { sql: Sql; reads: () => number; statements: () => string[] } {
   let reads = 0;
+  const statements: string[] = [];
   return {
     reads: () => reads,
+    statements: () => statements,
     sql: {
       exec: async (statement) => sql.exec(statement),
       run: async (statement, params) => sql.run(statement, params),
       batch: async (statements) => sql.batch(statements),
       all: async (statement, params) => {
         reads += 1;
+        statements.push(statement);
         return sql.all(statement, params);
       },
       get: async (statement, params) => {
         reads += 1;
+        statements.push(statement);
         return sql.get(statement, params);
       },
     },
@@ -70,8 +74,9 @@ async function database(): Promise<Sql> {
     `INSERT INTO built_work (
        id, work_item_id, batch_id, organization_id, workspace_id, title, live_url, status, created_at
      ) VALUES ('built-live', 'work-live', 'batch-live', 'org-1', 'ws-1', 'Live site', 'https://live.example', 'live', ?),
+              ('built-archived', 'work-live', 'batch-live', 'org-1', 'ws-1', 'Retired site', 'https://retired.example', 'archived', ?),
               ('built-held', 'work-held', 'batch-held', 'org-1', 'ws-1', 'Held site', 'https://held.example', 'live', ?)`,
-    [NOW, NOW - 10],
+    [NOW, NOW - 5, NOW - 10],
   );
   await sql.run(
     `INSERT INTO deliverables (
@@ -148,6 +153,7 @@ describe("library queries", () => {
       expect(titles).toContain("Live site");
       expect(titles).toContain("brief.pdf");
       expect(titles).not.toContain("Held site");
+      expect(titles).not.toContain("Retired site");
       expect(titles).not.toContain("Secret draft");
       expect(titles).not.toContain("raw.pdf");
       const staffPage = await listLibraryArtifacts(sql, staff, { workspaceId: "ws-1", includeHeld: true });
@@ -159,14 +165,50 @@ describe("library queries", () => {
 
   it("keeps partial social outcomes and pages a family without losing the boundary", async () => {
     const sql = await database();
+    await sql.run(
+      `INSERT INTO artifact_relations (
+         id, organization_id, workspace_id, source_kind, source_id, source_version,
+         target_kind, target_id, target_version, relation_kind, created_by_kind, created_by_id, created_at
+       ) VALUES ('promo-edge', 'org-1', 'ws-1', 'deliverable_item', 'item-social', 1,
+                 'deliverable_item', 'item-article', 1, 'promotes', 'staff', 'staff-1', ?)`,
+      [NOW],
+    );
     const social = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", platform: "linkedin" });
     expect(social.ok).toBe(true);
     if (!social.ok) return;
-    expect(social.page.artifacts.map((artifact) => artifact.title)).toEqual(["LinkedIn launch"]);
-    const article = social.page.artifacts[0];
-    expect(article?.primaryStatus).toBe("partially_published");
-    expect(article?.destinations.map((destination) => destination.state)).toEqual(expect.arrayContaining(["published", "failed"]));
-    expect(JSON.stringify(article)).not.toContain("rejected the picture");
+    expect(social.page.artifacts.map((artifact) => artifact.title)).toEqual(expect.arrayContaining(["Q4 article", "LinkedIn launch"]));
+    const socialArtifact = social.page.artifacts.find((artifact) => artifact.title === "LinkedIn launch");
+    expect(socialArtifact?.primaryStatus).toBe("partially_published");
+    expect(socialArtifact?.destinations.map((destination) => destination.state)).toEqual(expect.arrayContaining(["published", "failed"]));
+    expect(JSON.stringify(socialArtifact)).not.toContain("rejected the picture");
+    const articlePage = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", type: "article" });
+    expect(articlePage.ok && articlePage.page.artifacts[0]?.destinations.map((destination) => destination.state))
+      .toEqual(expect.arrayContaining(["published", "failed"]));
+    expect(articlePage.ok && articlePage.page.artifacts[0]?.promotionCollections).toEqual([
+      expect.objectContaining({ id: "d-live", href: "/w/ws-1/work/d-live" }),
+    ]);
+    const promotionAccountSearch = await listLibraryArtifacts(sql, member, {
+      workspaceId: "ws-1",
+      search: "Acme LinkedIn",
+    });
+    expect(promotionAccountSearch.ok && promotionAccountSearch.page.artifacts.map((artifact) => artifact.title))
+      .toEqual(expect.arrayContaining(["Q4 article", "LinkedIn launch"]));
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, format, channel, title, copy_text, media_json, status, sort
+       ) VALUES ('item-pending-no-target', 'd-live', 1, 'static', 'linkedin', 'Pending without a target', 'Caption', '[]', 'approved', 2)`,
+    );
+    await sql.run(
+      `INSERT INTO social_posts (
+         id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, status, created_at, updated_at
+       ) VALUES ('post-pending-no-target', 'org-1', 'd-live', 'item-pending-no-target', 1, '[]', 'draft', 'feed', 'draft', ?, ?)`,
+      [NOW, NOW],
+    );
+    const pendingWithoutTarget = await listLibraryArtifacts(sql, member, {
+      workspaceId: "ws-1",
+      search: "Pending without a target",
+    });
+    expect(pendingWithoutTarget.ok && pendingWithoutTarget.page.artifacts[0]?.primaryStatus).toBe("ready");
     const staffSocial = await listLibraryArtifacts(sql, staff, { workspaceId: "ws-1", platform: "linkedin" });
     expect(staffSocial.ok && JSON.stringify(staffSocial.page.artifacts[0])).toContain("rejected the picture");
 
@@ -183,9 +225,73 @@ describe("library queries", () => {
     expect(first.ok && first.page.artifacts).toHaveLength(LIBRARY_PAGE_SIZE);
     expect(second.ok && second.page.artifacts.length).toBeGreaterThan(0);
     if (!first.ok || !second.ok) return;
+    const normalizedCursor = JSON.parse(Buffer.from(first.page.nextCursor!, "base64url").toString("utf8")) as {
+      order: string;
+      id: string;
+      version: number;
+    };
+    expect(normalizedCursor).toMatchObject({
+      order: "title",
+      id: first.page.artifacts.at(-1)?.sourceId,
+      version: first.page.artifacts.at(-1)?.version,
+    });
+    expect(await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", sort: "updated", cursor: first.page.nextCursor }))
+      .toEqual({ ok: false, error: "invalid" });
     const seen = new Set(first.page.artifacts.map((artifact) => artifact.artifactKey));
     expect(second.page.artifacts.every((artifact) => !seen.has(artifact.artifactKey))).toBe(true);
     expect(first.page.counts.total).toBeGreaterThan(LIBRARY_PAGE_SIZE);
+  });
+
+  it("pages past the first hundred records and counts only the active filters", async () => {
+    const sql = await database();
+    for (let index = 0; index < 120; index += 1) {
+      await sql.run(
+        `INSERT INTO deliverable_items (
+           id, deliverable_id, version, format, title, copy_text, media_json, link_url, status, sort
+         ) VALUES (?, 'd-live', 1, 'page', ?, ?, '[]', NULL, 'approved', ?)`,
+        [`note-${String(index).padStart(3, "0")}`, `Note ${String(index).padStart(3, "0")}`, index % 2 === 0 ? "field notes" : "other", index],
+      );
+    }
+    const titles: string[] = [];
+    let cursor: string | null = null;
+    let total = 0;
+    for (let pageNumber = 0; pageNumber < 12; pageNumber += 1) {
+      const page = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", sort: "title", cursor });
+      expect(page.ok).toBe(true);
+      if (!page.ok) return;
+      total = page.page.counts.total;
+      titles.push(...page.page.artifacts.map((artifact) => artifact.title));
+      cursor = page.page.nextCursor;
+      if (!cursor) break;
+    }
+    expect(titles.filter((title) => title.startsWith("Note "))).toHaveLength(120);
+    expect(total).toBeGreaterThanOrEqual(120);
+    expect(new Set(titles).size).toBe(titles.length);
+    const published = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", status: "published" });
+    expect(published.ok).toBe(true);
+    if (!published.ok) return;
+    expect(published.page.artifacts.every((artifact) => artifact.primaryStatus === "published")).toBe(true);
+    expect(published.page.counts.total).toBe(published.page.artifacts.length);
+    expect(published.page.counts.total).toBe(2);
+    expect(published.page.counts.total).toBeLessThan(total);
+    const excerpt = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", search: "field notes" });
+    expect(excerpt.ok && excerpt.page.counts.total).toBe(60);
+    const account = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", search: "Acme LinkedIn" });
+    expect(account.ok && account.page.artifacts.map((artifact) => artifact.title)).toEqual(["LinkedIn launch"]);
+  });
+
+  it("counts every item that needs review, not only the first page", async () => {
+    const sql = await database();
+    for (let index = 0; index < 30; index += 1) {
+      await sql.run(
+        `INSERT INTO deliverable_items (
+           id, deliverable_id, version, format, title, media_json, link_url, status, sort
+         ) VALUES (?, 'd-live', 1, 'page', ?, '[]', NULL, 'pending', ?)`,
+        [`review-${index}`, `Review ${index}`, index],
+      );
+    }
+    const summaries = await staffLibrarySummaries(sql, staff, [{ id: "ws-1", slug: "acme", display_name: "Acme" }]);
+    expect(summaries[0]?.reviewNeeded).toBe(30);
   });
 
   it("rejects an overlong search before querying", async () => {
@@ -194,5 +300,119 @@ describe("library queries", () => {
     const result = await listLibraryArtifacts(probe.sql, member, { workspaceId: "ws-1", search: "a".repeat(201) });
     expect(result).toEqual({ ok: false, error: "invalid" });
     expect(probe.reads()).toBe(0);
+  });
+
+  it("keeps exact active-filter tab counts independent of the active type", async () => {
+    const sql = await database();
+    const typed = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", type: "article" });
+    expect(typed.ok).toBe(true);
+    if (!typed.ok) return;
+    expect(typed.page.artifacts.map((artifact) => artifact.artifactType)).toEqual(["article"]);
+    expect(typed.page.counts).toMatchObject({
+      total: 4,
+      article: 1,
+      social: 1,
+      website: 1,
+      file: 1,
+    });
+
+    const project = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", projectId: "project-1", type: "article" });
+    expect(project.ok && project.page.counts).toMatchObject({ total: 2, article: 1, social: 1, website: 0, file: 0 });
+    const older = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", deliveredTo: NOW - 1 });
+    expect(older.ok && older.page.artifacts.map((artifact) => artifact.title)).toEqual(["brief.pdf"]);
+    expect(older.ok && older.page.counts.total).toBe(1);
+  });
+
+  it("uses source id and version to page tied normalized sort values", async () => {
+    const sql = await database();
+    for (let index = 29; index >= 0; index -= 1) {
+      await sql.run(
+        `INSERT INTO deliverable_items (
+           id, deliverable_id, version, format, title, media_json, link_url, status, sort
+         ) VALUES (?, 'd-live', 1, 'page', 'Same title', '[]', NULL, 'approved', ?)`,
+        [`tie-${String(index).padStart(2, "0")}`, index],
+      );
+    }
+    const ids: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const page = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", search: "Same title", sort: "title", cursor });
+      expect(page.ok).toBe(true);
+      if (!page.ok) return;
+      ids.push(...page.page.artifacts.map((artifact) => artifact.sourceId));
+      cursor = page.page.nextCursor;
+    } while (cursor);
+    expect(ids).toEqual(Array.from({ length: 30 }, (_, index) => `tie-${String(index).padStart(2, "0")}`));
+  });
+
+  it("does not repeat tied sort values across source-family page boundaries", async () => {
+    const sql = await database();
+    for (let index = 0; index < 18; index += 1) {
+      await sql.run(
+        `INSERT INTO deliverable_items (
+           id, deliverable_id, version, format, title, media_json, link_url, status, sort
+         ) VALUES (?, 'd-live', 1, 'page', 'Cross-family tie', '[]', NULL, 'approved', ?)`,
+        [`family-item-${String(index).padStart(2, "0")}`, index],
+      );
+      await sql.run(
+        `INSERT INTO built_work (
+           id, work_item_id, batch_id, organization_id, workspace_id, title, live_url, status, created_at
+         ) VALUES (?, 'work-live', 'batch-live', 'org-1', 'ws-1', 'Cross-family tie', ?, 'live', ?)`,
+        [`family-site-${String(index).padStart(2, "0")}`, `https://site-${index}.example`, NOW - index],
+      );
+    }
+    const keys: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const page = await listLibraryArtifacts(sql, member, {
+        workspaceId: "ws-1",
+        search: "Cross-family tie",
+        sort: "title",
+        cursor,
+      });
+      expect(page.ok).toBe(true);
+      if (!page.ok) return;
+      keys.push(...page.page.artifacts.map((artifact) => artifact.artifactKey));
+      cursor = page.page.nextCursor;
+    } while (cursor);
+    expect(keys).toHaveLength(36);
+    expect(new Set(keys).size).toBe(36);
+  });
+
+  it("rejects malformed cursors and keeps source and social reads bounded", async () => {
+    const sql = await database();
+    const baselineProbe = watched(sql);
+    const baseline = await listLibraryArtifacts(baselineProbe.sql, member, { workspaceId: "ws-1" });
+    expect(baseline.ok).toBe(true);
+    const baselineSourceReads = baselineProbe.statements()
+      .filter((statement) => /\bFROM (deliverable_items|built_work|library_file_selections)\b/.test(statement))
+      .length;
+    const malformed = Buffer.from(JSON.stringify({ sort: "x", rank: "bad", id: "item" })).toString("base64url");
+    expect(await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", cursor: malformed }))
+      .toEqual({ ok: false, error: "invalid" });
+
+    for (let index = 0; index < 220; index += 1) {
+      await sql.run(
+        `INSERT INTO deliverable_items (
+           id, deliverable_id, version, format, title, media_json, link_url, status, sort
+         ) VALUES (?, 'd-live', 1, 'page', ?, '[]', NULL, 'approved', ?)`,
+        [`bounded-${String(index).padStart(3, "0")}`, `Bounded ${index}`, index],
+      );
+    }
+    const probe = watched(sql);
+    const result = await listLibraryArtifacts(probe.sql, member, { workspaceId: "ws-1" });
+    expect(result.ok).toBe(true);
+    const reads = probe.statements().filter((statement) => /\bFROM (deliverable_items|built_work|library_file_selections)\b/.test(statement));
+    expect(reads.length).toBeGreaterThan(0);
+    expect(reads).toHaveLength(baselineSourceReads);
+    const countReads = reads.filter((statement) => /\bCOUNT\(\*\)/i.test(statement));
+    const sourceRows = reads.filter((statement) => !/\bCOUNT\(\*\)/i.test(statement));
+    expect(countReads).toHaveLength(3);
+    expect(sourceRows).toHaveLength(3);
+    expect(sourceRows.every((statement) => /\bLIMIT \?/i.test(statement))).toBe(true);
+    expect(reads.every((statement) => !/\bOFFSET \?/i.test(statement))).toBe(true);
+    expect(sourceRows.every((statement) => /\? IS NULL OR/i.test(statement))).toBe(true);
+    const socialReads = probe.statements().filter((statement) => /^\s*SELECT p\.item_id/m.test(statement));
+    expect(socialReads.every((statement) => /p\.item_id IN \(/.test(statement))).toBe(true);
   });
 });

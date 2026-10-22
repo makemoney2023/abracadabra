@@ -13,6 +13,18 @@ export function articleSocialPromoEnabled(value?: string): boolean {
   return flagEnabled("ARTICLE_SOCIAL_PROMO", value);
 }
 
+export function articlePromotionAllowed(input: { itemStatus: string; articleStatus: string | null }): boolean {
+  return input.itemStatus === "approved" || input.articleStatus === "published";
+}
+
+const CAMPAIGN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function promotionRequestId(input: { requested: string; sourceItemId: string; sourceVersion: number; platforms: string[] }): string {
+  const requested = input.requested.trim();
+  if (CAMPAIGN_ID.test(requested)) return requested;
+  return `${input.sourceItemId}:${input.sourceVersion}:${[...input.platforms].sort().join(",")}`;
+}
+
 export async function createArticlePromotionDraft(
   sql: Sql,
   caller: Caller,
@@ -21,6 +33,7 @@ export async function createArticlePromotionDraft(
     sourceVersion: number;
     targetDeliverableId?: string | null;
     platforms: string[];
+    selectedMediaKeys?: string[];
     externalId: string;
     tracking?: { source?: string; medium?: string; campaign?: string; content?: string };
   },
@@ -33,10 +46,11 @@ export async function createArticlePromotionDraft(
     status: string;
     title: string;
     media_json: string;
+    article_status: string | null;
     canonical_url: string | null;
     link_url: string | null;
   }>(
-    `SELECT d.organization_id, d.workspace_id, i.status, i.title, i.media_json, m.canonical_url, i.link_url
+    `SELECT d.organization_id, d.workspace_id, i.status, i.title, i.media_json, m.article_status, m.canonical_url, i.link_url
      FROM deliverable_items i
      JOIN deliverables d ON d.id = i.deliverable_id
      LEFT JOIN deliverable_artifact_metadata m ON m.item_id = i.id AND m.version = i.version
@@ -45,11 +59,30 @@ export async function createArticlePromotionDraft(
   );
   if (!source) return { ok: false, error: "missing" };
   if (!can(caller, "article_promotion.create", { workspaceId: source.workspace_id })) return { ok: false, error: "forbidden" };
-  if (source.status !== "approved") return { ok: false, error: "invalid" };
+  if (!articlePromotionAllowed({ itemStatus: source.status, articleStatus: source.article_status })) return { ok: false, error: "invalid" };
   const canonical = inspectCanonicalUrl(source.canonical_url ?? source.link_url, "legacy");
   if (!canonical.ok) return { ok: false, error: "invalid" };
   const platforms = [...new Set(input.platforms.map((platform) => platform.toLowerCase()))].filter((platform) => !BLOCKED.has(platform) && !isBlogPlatform(platform));
   if (platforms.length === 0 || !input.externalId) return { ok: false, error: "invalid" };
+  let sourceMedia: { r2_key: string; role: string; content_type: string; size?: number }[];
+  try {
+    const parsed = JSON.parse(source.media_json) as unknown;
+    sourceMedia = Array.isArray(parsed)
+      ? parsed.filter((entry): entry is (typeof sourceMedia)[number] =>
+          Boolean(entry)
+          && typeof (entry as { r2_key?: unknown }).r2_key === "string"
+          && typeof (entry as { role?: unknown }).role === "string"
+          && typeof (entry as { content_type?: unknown }).content_type === "string")
+      : [];
+  } catch {
+    sourceMedia = [];
+  }
+  const selectedKeys = input.selectedMediaKeys;
+  const selectedMedia = selectedKeys === undefined
+    ? sourceMedia
+    : sourceMedia.filter((entry) => selectedKeys.includes(entry.r2_key));
+  if (selectedKeys && selectedMedia.length !== new Set(selectedKeys).size) return { ok: false, error: "invalid" };
+  const mediaJson = JSON.stringify(selectedMedia);
   const actorId = caller.userId ?? "staff";
   const existing = await sql.get<{ response_json: string }>(
     "SELECT response_json FROM article_promotion_idempotency WHERE actor_kind = 'staff' AND actor_id = ? AND external_id = ?",
@@ -59,7 +92,6 @@ export async function createArticlePromotionDraft(
     const parsed = JSON.parse(existing.response_json) as { deliverableId: string };
     return { ok: true, deliverableId: parsed.deliverableId, duplicate: true };
   }
-  const outbound = trackedArticleUrl(canonical.url, input.tracking);
   let deliverableId = input.targetDeliverableId ?? "";
   let version = 1;
   const statements: { statement: string; params: unknown[] }[] = [];
@@ -81,13 +113,14 @@ export async function createArticlePromotionDraft(
   }
   const itemIds: string[] = [];
   platforms.forEach((platform, index) => {
+    const outbound = trackedArticleUrl(canonical.url, { ...input.tracking, source: platform });
     const itemId = crypto.randomUUID();
     itemIds.push(itemId);
     statements.push({
       statement: `INSERT INTO deliverable_items (
          id, deliverable_id, version, format, channel, title, copy_text, media_json, link_url, status, sort
        ) VALUES (?, ?, ?, 'static', ?, ?, ?, ?, NULL, 'pending', ?)`,
-      params: [itemId, deliverableId, version, platform, source.title, `${source.title}\n${outbound}`, source.media_json, index],
+      params: [itemId, deliverableId, version, platform, source.title, `${source.title}\n${outbound}`, mediaJson, index],
     });
     statements.push({
       statement: `INSERT INTO social_variants (

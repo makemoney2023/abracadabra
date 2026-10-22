@@ -44,8 +44,15 @@ describe("library flags and metrics", () => {
        ) VALUES ('ws-1', 'acme', 'Acme', 'Acme', 'Studio', 'standard', 1000, 30, 0, 'active', ?, 'org-1')`,
       [now],
     );
-    await recordLibraryMetric(sql, { name: "article_promotion_created", organizationId: "org-1", workspaceId: "ws-1", artifactType: "article" }, now);
-    const row = await sql.get<{ data_json: string }>("SELECT data_json FROM activities");
+    await recordLibraryMetric(sql, {
+      name: "article_promotion_created",
+      organizationId: "org-1",
+      workspaceId: "ws-1",
+      artifactType: "article",
+      actorKind: "system",
+    }, now);
+    const row = await sql.get<{ data_json: string; actor_kind: string }>("SELECT data_json, actor_kind FROM activities");
+    expect(row?.actor_kind).toBe("system");
     expect(row?.data_json).toContain("article_promotion_created");
     expect(row?.data_json).not.toContain("http");
   });

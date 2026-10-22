@@ -2,11 +2,47 @@
 
 ## 2026-10-22
 
-- **What changed** — View-link routes live under `/api/workspaces/[slug]/view-links`. The segment is still the workspace id. The folder name matches the other workspace routes.
+- **What changed** — Empty Library searches now offer a one-click search reset without discarding the remaining filters. Upload-link copy results are announced to assistive technology, collection item states use readable status badges, and the selection panel explicitly says “Copy view link.” Public view links now identify the artifact type and use specific actions such as “Read article” and “Visit site.”
+- **Why** — The final UX audit found a small set of current, reproducible gaps in recovery, accessibility feedback, and public-link clarity.
+- **Code touchpoints** — `handoff/src/components/library/`, `handoff/src/components/share-link.tsx`, and `handoff/src/lib/library-shares.ts`.
+- **Data-flow impact** — Opening a public view link projects each item’s presentation metadata once, including its normalized artifact type.
+- **API / schema impact** — The internal public-view response adds `artifactType`; no migration.
+- **Verification** — `npm test`, `npm run typecheck:agent`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+
+## 2026-10-22
+
+- **What changed** — The Library keeps its type navigation on Sources, tucks optional filters and view-link settings behind deliberate controls, and shows a compact finished/needs-attention summary. Article promotion previews the exact tracked URL for every selected network, can copy only the selected article media into a new or existing draft, and links a promoted article back to its social collection. Collection review now reads article metadata instead of guessing from legacy link text and shows a clean unavailable-media fallback. Archived built work is excluded from Library counts, and public links stop exposing work after it is archived, withdrawn, or superseded. Workspace APIs accept either the route slug or the internal workspace id.
+- **Why** — The first pass exposed the new capabilities but made common browsing noisy, hid navigation on Sources, and left promotion and public-link edge cases ambiguous.
+- **Code touchpoints** — `handoff/src/components/library/`, `handoff/src/components/social/platform-post-preview-view.tsx`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/app/api/workspaces/[slug]/`, `handoff/src/lib/library-queries.ts`, `handoff/src/lib/article-promotions.ts`, `handoff/src/lib/library-shares.ts`, `handoff/src/app/view/[token]/`, `handoff/src/proxy.ts`.
+- **Data-flow impact** — Library reads remain local. Promotion still creates only reviewable local drafts; each network receives its own tracked article URL. Public view authorization continues to fail closed.
+- **API / schema impact** — No migration or response-contract change.
+- **Verification** — `npm test`, `npm run typecheck:agent`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
+
+## 2026-10-22
+
+- **What changed** — A view link keeps the version that was shared. When a later round is published, the sender sees that a newer version is available and can update the link. Opens and downloads record a coarse browser label and an IP hash, and the sender can see that history. Library opens, empty searches, copied article links, view-link updates, revokes, and download attempts are counted without storing the link or the search text.
+- **Why** — A new round must not silently replace a link someone already sent, and an open needs a record.
+- **Code touchpoints** — `handoff/src/lib/library-shares.ts`, `handoff/src/lib/library-metrics.ts`, `handoff/src/app/api/workspaces/[slug]/view-links/[shareId]/route.ts`, `handoff/src/app/api/workspaces/[slug]/library-metrics/route.ts`, `handoff/src/app/view/[token]/`, `handoff/src/components/library/view-link-dialog.tsx`.
+- **Data-flow impact** — The pinned item stays readable after a newer round is published. Updating the link re-pins the current published items and writes an `updated` event.
+- **API / schema impact** — `PATCH /api/workspaces/[slug]/view-links/[shareId]` updates the pin. `POST /api/workspaces/[slug]/library-metrics` records an article-link copy. No migration.
+- **Verification** — `npx vitest run src/lib/library-shares.test.ts src/lib/library-metrics.test.ts src/components/library` and `npx tsc --noEmit`.
+
+## 2026-10-22
+
+- **What changed** — The Library is a gallery. Cards show a type plate or preview, date, and status. Filters include status, platform, date, and needs action, and the counts follow those filters. Pagination no longer drops records after the first hundred in a family. A view link is built from selected work, can expire, and offers a file download only for a file. A published article can become a social draft, and opening the form again can save another draft. Collection review uses the article card for a link, and hides Approve all when nothing is pending. Finished work and Sources are no longer extra items beside Library in the workspace nav.
+- **Why** — The first Library pass stored the data but hid records, miscounted review work, and presented finished work as a stack of plain text.
+- **Code touchpoints** — `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/lib/article-promotions.ts`, `handoff/src/lib/library-shares.ts`.
+- **Data-flow impact** — Library reads remain local. A client owner who creates a view link is stored as `client`. Promotion still writes only a local draft.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/library-queries.test.ts src/lib/library-shares.test.ts src/lib/article-promotions.test.ts src/components/library src/lib/folder-files.test.ts` and `npx tsc --noEmit`.
+
+## 2026-10-22
+
+- **What changed** — View-link routes live under `/api/workspaces/[slug]/view-links`. The segment accepts either the public workspace slug or the workspace id, and the folder name matches the other workspace routes.
 - **Why** — Next.js refuses to start when the same dynamic path uses two different names, and that 500 took down the client and staff apps.
 - **Code touchpoints** — `handoff/src/app/api/workspaces/[slug]/view-links/`.
 - **Data-flow impact** — none.
-- **API / schema impact** — The URL is unchanged.
+- **API / schema impact** — Existing id-based callers remain compatible; slug-based callers now resolve correctly.
 - **Verification** — `npx vitest run src/app/api/workspaces/[slug]/view-links/view-links-routes.test.ts`, then redeploy.
 
 ## 2026-10-22

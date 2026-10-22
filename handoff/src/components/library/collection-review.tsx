@@ -39,7 +39,12 @@ export function CollectionReviewHeader({
 }
 
 export function CollectionItemState({ status }: { status: string }) {
-  return <p className="text-sm">{STATUS_LABEL[status] ?? status}</p>;
+  const attention = status === "changes_requested";
+  return (
+    <p className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-medium ${attention ? "bg-status-late text-status-late-fg" : "bg-status-neutral text-status-neutral-fg"}`}>
+      {STATUS_LABEL[status] ?? status}
+    </p>
+  );
 }
 
 export function CollectionReviewFooter({

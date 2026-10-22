@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/app/w/[slug]/sources-actions", () => ({
   selectSourceAction: async () => ({ ok: true }),
   revokeSourceAction: async () => ({ ok: true }),
+  toggleSourceAction: async () => undefined,
 }));
 
 import { SourcesBrowser } from "./sources-browser";
@@ -16,7 +17,14 @@ describe("sources browser", () => {
         canSelect
         query={{ folder: "brand", search: "brief" }}
         files={[
-          { id: "file-1", name: "brand/brief.pdf", status: "clean", selected: false },
+          {
+            id: "file-1",
+            name: "brand/brief.pdf",
+            status: "clean",
+            selected: false,
+            usedIn: [{ title: "Launch article", href: "/w/acme/work/article-1" }],
+            deliveredAs: [{ title: "Campaign brief", href: "/w/acme/work/brief-1" }],
+          },
           { id: "file-2", name: "brand/raw.pdf", status: "pending" },
         ]}
       />,
@@ -26,6 +34,10 @@ describe("sources browser", () => {
     expect(html).toContain("Show in Library");
     expect(html).toContain("/w/acme/files/file-1");
     expect(html).toContain("/w/acme?folder=brand");
+    expect(html).toContain("Used in");
+    expect(html).toContain("Launch article");
+    expect(html).toContain("Delivered as");
+    expect(html).toContain("Campaign brief");
     expect(html).not.toContain("file-2");
     expect(html).toContain("min-h-11");
   });

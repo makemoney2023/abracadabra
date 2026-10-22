@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { requireHqStaffPage } from "@/lib/current";
-import { articleSocialPromoEnabled, createArticlePromotionDraft } from "@/lib/article-promotions";
+import { articleSocialPromoEnabled, createArticlePromotionDraft, promotionRequestId } from "@/lib/article-promotions";
 import { inspectCanonicalUrl } from "@/lib/library-artifacts";
 import { recordLibraryMetric } from "@/lib/library-metrics";
 
-export type PromotionState = { message: string };
+export type PromotionState = { message: string; href?: string };
 
 export async function createArticlePromotionAction(_previous: PromotionState, formData: FormData): Promise<PromotionState> {
   if (!articleSocialPromoEnabled()) return { message: "Promotion is off." };
@@ -15,10 +15,12 @@ export async function createArticlePromotionAction(_previous: PromotionState, fo
   const sourceVersion = Number(formData.get("sourceVersion") ?? "");
   const shown = String(formData.get("canonicalUrl") ?? "");
   const platforms = formData.getAll("platforms").map((value) => String(value));
-  const source = await sql.get<{ canonical_url: string | null; link_url: string | null; organization_id: string; workspace_id: string }>(
-    `SELECT m.canonical_url, i.link_url, d.organization_id, d.workspace_id
+  const selectedMediaKeys = formData.getAll("selectedMediaKeys").map((value) => String(value));
+  const source = await sql.get<{ canonical_url: string | null; link_url: string | null; organization_id: string; workspace_id: string; slug: string }>(
+    `SELECT m.canonical_url, i.link_url, d.organization_id, d.workspace_id, w.slug
      FROM deliverable_items i
      JOIN deliverables d ON d.id = i.deliverable_id
+     JOIN workspaces w ON w.id = d.workspace_id
      LEFT JOIN deliverable_artifact_metadata m ON m.item_id = i.id AND m.version = i.version
      WHERE i.id = ? AND i.version = ?`,
     [sourceItemId, sourceVersion],
@@ -28,18 +30,38 @@ export async function createArticlePromotionAction(_previous: PromotionState, fo
   const result = await createArticlePromotionDraft(sql, caller, {
     sourceItemId,
     sourceVersion,
+    targetDeliverableId: String(formData.get("targetDeliverableId") ?? "") || null,
     platforms,
-    externalId: `${sourceItemId}:${sourceVersion}:${[...platforms].sort().join(",")}`,
+    selectedMediaKeys: formData.has("mediaSelectionPresented") ? selectedMediaKeys : undefined,
+    externalId: promotionRequestId({
+      requested: String(formData.get("externalId") ?? ""),
+      sourceItemId,
+      sourceVersion,
+      platforms,
+    }),
     tracking: { source: platforms[0]?.toLowerCase(), medium: "social", campaign: "article" },
   }, Date.now());
-  if (!result.ok) return { message: "Could not create the draft." };
+  if (!result.ok) {
+    const message = result.error === "invalid"
+      ? "Choose an approved or published article, a valid draft, and media from this article."
+      : result.error === "forbidden"
+        ? "You do not have permission to create this draft."
+        : "Could not create the draft.";
+    return { message };
+  }
   await recordLibraryMetric(sql, {
     name: "article_promotion_created",
     organizationId: source.organization_id,
     workspaceId: source.workspace_id,
+    actorKind: "staff",
     actorId: caller.userId,
     artifactType: "article",
   });
   revalidatePath(`/deliverables/${result.deliverableId}`);
-  return { message: result.duplicate ? "That draft is already saved." : "Draft saved. Review it before anyone posts it." };
+  if (source.slug) revalidatePath(`/w/${source.slug}/library`);
+  const href = source.slug ? `/w/${source.slug}/work/${result.deliverableId}` : undefined;
+  return {
+    message: result.duplicate ? "That draft is already saved." : "Draft saved. Review it before anyone posts it.",
+    href,
+  };
 }
