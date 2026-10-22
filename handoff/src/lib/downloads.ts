@@ -365,6 +365,7 @@ export type FolderFile = {
   createdBy: string;
   /** held: an agent filing waiting on Client Services; hidden: superseded or withdrawn. Only staff get these rows. */
   hold: "held" | "hidden" | null;
+  createdAt?: number;
 };
 
 /** Files still in the folder. Thrown-away uploads stay out of the list. */
@@ -384,11 +385,12 @@ export async function listFolderFiles(
     size_bytes: number;
     status: string;
     created_by: string;
+    created_at: number;
     held_at: number | null;
     released_at: number | null;
     hidden_at: number | null;
   }>(
-    `SELECT f.id, f.batch_id, f.relative_path, f.size_bytes, f.status, b.created_by, b.held_at, b.released_at, b.hidden_at
+    `SELECT f.id, f.batch_id, f.relative_path, f.size_bytes, f.status, b.created_by, f.created_at, b.held_at, b.released_at, b.hidden_at
      FROM files f
      JOIN batches b ON b.id = f.batch_id AND b.workspace_id = f.workspace_id
      WHERE f.batch_id IN (${placeholders})
@@ -405,6 +407,7 @@ export async function listFolderFiles(
     sizeBytes: row.size_bytes,
     status: row.status,
     createdBy: row.created_by,
+    createdAt: row.created_at,
     hold: row.hidden_at != null ? "hidden" as const : row.held_at != null && row.released_at == null ? "held" as const : null,
   }));
 }

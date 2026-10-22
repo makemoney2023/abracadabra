@@ -26,11 +26,19 @@ describe("view link presentation", () => {
     const shown = renderToStaticMarkup(
       <PublicLibraryView
         token="tok"
-        result={{ ok: true, view: { title: "Q4", downloads: true, items: [{ publicId: "pub-1", title: "Q4 article", externalUrl: "https://news.example/q4" }] } }}
+        result={{ ok: true, view: { title: "Q4", downloads: true, items: [{ publicId: "pub-1", title: "Q4 article", externalUrl: "https://news.example/q4", kind: "deliverable_item" }] } }}
       />,
     );
     expect(shown).toContain("https://news.example/q4");
-    expect(shown).toContain("Download");
+    expect(shown).not.toContain("Download");
     expect(shown).toContain("break-all");
+    const file = renderToStaticMarkup(
+      <PublicLibraryView
+        token="tok"
+        result={{ ok: true, view: { title: "Q4", downloads: true, items: [{ publicId: "pub-2", title: "brief.pdf", externalUrl: null, kind: "file" }] } }}
+      />,
+    );
+    expect(file).toContain("Download");
+    expect(file).toContain("/view/tok/files/pub-2");
   });
 });

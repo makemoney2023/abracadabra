@@ -51,13 +51,7 @@ export default async function WorkspaceLayout({
             <Link href={`/w/${workspace.slug}`}>Files</Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/w/${workspace.slug}/library?type=file`}>Sources</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
             <Link href={`/w/${workspace.slug}/library`}>Library</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/w/${workspace.slug}/work`}>Finished work</Link>
           </Button>
           {can(caller, "request.manage", { workspaceId: workspace.id }) ? (
             <Button variant="outline" size="sm" asChild>

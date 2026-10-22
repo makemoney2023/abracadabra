@@ -1,20 +1,24 @@
 import type { LibraryArtifact } from "@/lib/library-artifacts";
 import { CopyLinkButton } from "./copy-link-button";
-import { articleCardModel } from "./library-view";
+import { articleCardModel, libraryDateLabel } from "./library-view";
+import { StatusMark, TypePlate } from "./type-plate";
 
 export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
   const model = articleCardModel(artifact);
+  const date = libraryDateLabel(artifact.publishedAt);
   return (
-    <article className="flex flex-col gap-3 rounded-2xl border border-border p-4">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">Article</p>
+    <article className="flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-3">
+      <TypePlate artifact={artifact} />
+      <p className="eyebrow text-muted-foreground">Article</p>
       <h2 className="font-heading text-2xl">{model.title}</h2>
       {model.dek ? <p className="text-sm">{model.dek}</p> : null}
       <p className="break-all text-sm text-muted-foreground">
         {model.hostname ?? "No public link yet"}
         {model.author ? ` · ${model.author}` : ""}
-        {artifact.publishedAt ? ` · ${new Date(artifact.publishedAt).toLocaleDateString("en-CA")}` : ""}
+        {date ? ` · ${date}` : ""}
       </p>
-      <p className="text-sm">{model.status}</p>
+      <StatusMark status={artifact.primaryStatus} />
+      {artifact.promotedBy > 0 ? <p className="text-sm">Promoted by {artifact.promotedBy} {artifact.promotedBy === 1 ? "post" : "posts"}</p> : null}
       {artifact.destinations.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
           {artifact.destinations.map((destination) => (
@@ -30,7 +34,7 @@ export function ArticleCard({ artifact }: { artifact: LibraryArtifact }) {
           ))}
         </ul>
       ) : null}
-      <div className="flex flex-wrap gap-2">
+      <div className="mt-auto flex flex-wrap gap-2">
         {model.readHref ? (
           <a className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm" href={model.readHref} target="_blank" rel="noreferrer noopener">
             Read article

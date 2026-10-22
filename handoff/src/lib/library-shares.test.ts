@@ -68,7 +68,8 @@ describe("library view links", () => {
     expect(token.length).toBeGreaterThanOrEqual(42);
     const listed = await listViewLinks(sql, owner, "ws-1");
     expect(listed.ok && JSON.stringify(listed.shares)).not.toContain(token);
-    const stored = await sql.get<{ token_hash: string; passcode_hash: string }>("SELECT token_hash, passcode_hash FROM library_shares");
+    const stored = await sql.get<{ token_hash: string; passcode_hash: string; created_by_kind: string }>("SELECT token_hash, passcode_hash, created_by_kind FROM library_shares");
+    expect(stored?.created_by_kind).toBe("client");
     expect(stored?.token_hash).not.toContain(token);
     expect(stored?.passcode_hash?.startsWith("pbkdf2-sha256$310000$")).toBe(true);
     expect(failed(await openViewLink(sql, token, NOW))).toBe("locked");

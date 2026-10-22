@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — The Library is a gallery. Cards show a type plate or preview, date, and status. Filters include status, platform, date, and needs action, and the counts follow those filters. Pagination no longer drops records after the first hundred in a family. A view link is built from selected work, can expire, and offers a file download only for a file. A published article can become a social draft, and opening the form again can save another draft. Collection review uses the article card for a link, and hides Approve all when nothing is pending. Finished work and Sources are no longer extra items beside Library in the workspace nav.
+- **Why** — The first Library pass stored the data but hid records, miscounted review work, and presented finished work as a stack of plain text.
+- **Code touchpoints** — `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/src/app/w/[slug]/layout.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/lib/article-promotions.ts`, `handoff/src/lib/library-shares.ts`.
+- **Data-flow impact** — Library reads remain local. A client owner who creates a view link is stored as `client`. Promotion still writes only a local draft.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/library-queries.test.ts src/lib/library-shares.test.ts src/lib/article-promotions.test.ts src/components/library src/lib/folder-files.test.ts` and `npx tsc --noEmit`.
+
+## 2026-10-22
+
 - **What changed** — View-link routes live under `/api/workspaces/[slug]/view-links`. The segment is still the workspace id. The folder name matches the other workspace routes.
 - **Why** — Next.js refuses to start when the same dynamic path uses two different names, and that 500 took down the client and staff apps.
 - **Code touchpoints** — `handoff/src/app/api/workspaces/[slug]/view-links/`.

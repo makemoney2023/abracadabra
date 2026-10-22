@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/app/w/[slug]/sources-actions", () => ({
   selectSourceAction: async () => ({ ok: true }),
   revokeSourceAction: async () => ({ ok: true }),
+  toggleSourceAction: async () => undefined,
 }));
 
 import { SourcesBrowser } from "./sources-browser";

@@ -13,6 +13,18 @@ export function articleSocialPromoEnabled(value?: string): boolean {
   return flagEnabled("ARTICLE_SOCIAL_PROMO", value);
 }
 
+export function articlePromotionAllowed(input: { itemStatus: string; articleStatus: string | null }): boolean {
+  return input.itemStatus === "approved" || input.articleStatus === "published";
+}
+
+const CAMPAIGN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function promotionRequestId(input: { requested: string; sourceItemId: string; sourceVersion: number; platforms: string[] }): string {
+  const requested = input.requested.trim();
+  if (CAMPAIGN_ID.test(requested)) return requested;
+  return `${input.sourceItemId}:${input.sourceVersion}:${[...input.platforms].sort().join(",")}`;
+}
+
 export async function createArticlePromotionDraft(
   sql: Sql,
   caller: Caller,
@@ -33,10 +45,11 @@ export async function createArticlePromotionDraft(
     status: string;
     title: string;
     media_json: string;
+    article_status: string | null;
     canonical_url: string | null;
     link_url: string | null;
   }>(
-    `SELECT d.organization_id, d.workspace_id, i.status, i.title, i.media_json, m.canonical_url, i.link_url
+    `SELECT d.organization_id, d.workspace_id, i.status, i.title, i.media_json, m.article_status, m.canonical_url, i.link_url
      FROM deliverable_items i
      JOIN deliverables d ON d.id = i.deliverable_id
      LEFT JOIN deliverable_artifact_metadata m ON m.item_id = i.id AND m.version = i.version
@@ -45,7 +58,7 @@ export async function createArticlePromotionDraft(
   );
   if (!source) return { ok: false, error: "missing" };
   if (!can(caller, "article_promotion.create", { workspaceId: source.workspace_id })) return { ok: false, error: "forbidden" };
-  if (source.status !== "approved") return { ok: false, error: "invalid" };
+  if (!articlePromotionAllowed({ itemStatus: source.status, articleStatus: source.article_status })) return { ok: false, error: "invalid" };
   const canonical = inspectCanonicalUrl(source.canonical_url ?? source.link_url, "legacy");
   if (!canonical.ok) return { ok: false, error: "invalid" };
   const platforms = [...new Set(input.platforms.map((platform) => platform.toLowerCase()))].filter((platform) => !BLOCKED.has(platform) && !isBlogPlatform(platform));

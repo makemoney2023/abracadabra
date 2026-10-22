@@ -19,8 +19,10 @@ import { ApproveAllForm, ApproveForm, ChangesForm, NoteForm } from "../forms";
 import { sentConfirmation } from "../sent";
 import { can } from "@/lib/authz";
 import { CollectionItemState, CollectionReviewFooter, CollectionReviewHeader } from "@/components/library/collection-review";
+import { ArticleCard } from "@/components/library/article-card";
 import { ViewLinkDialog } from "@/components/library/view-link-dialog";
-import { libraryViewLinksEnabled } from "@/lib/library-shares";
+import { libraryViewLinksEnabled, listViewLinks } from "@/lib/library-shares";
+import { projectLibraryArtifact } from "@/lib/library-artifacts";
 
 /** The filing's own summary page stored as a file ("summary.md", "<title> - summary.md", "summary (2).md"). */
 function isSummaryFile(title: string): boolean {
@@ -79,6 +81,9 @@ export default async function FinishedPiecePage({
   const approveAllLabel = autopost.enabled && hasSocial ? approveLabel.replace(/^Approve\b/, "Approve all") : "Approve all";
   const filingTitles = new Set([...filings.values()].map((filing) => filing.title));
   const destinations = await itemDestinationPlatforms(sql, opened.deliverable.id);
+  const viewShares = libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id })
+    ? await listViewLinks(sql, caller, workspace.id)
+    : null;
   const socialSettings = new Map(
     await Promise.all(
       items.filter((item) => isSocialItemFormat(item.format)).map(async (item) => [item.id, await pieceSettings(sql, item.id)] as const),
@@ -87,7 +92,7 @@ export default async function FinishedPiecePage({
   const filingFiles = (summaryItem: (typeof items)[number]) =>
     items.filter((item) => item.id !== summaryItem.id && item.format !== "link" && item.section === summaryItem.section).length;
   return (
-    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-8 px-6 py-[4rem]">
+    <main className="mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-8 px-6 py-[4rem] pb-28">
       {confirmation ? (
         <div role="status" className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 px-5 py-4">
           <p className="text-sm font-medium">{confirmation.title}</p>
@@ -157,6 +162,26 @@ export default async function FinishedPiecePage({
             );
           }
           if (isSummaryFile(item.title) && item.section && filingTitles.has(item.section)) return null;
+          const link = safeLink(item.link_url);
+          const article = item.format === "link"
+            ? projectLibraryArtifact({
+                sourceKind: "deliverable_item",
+                sourceId: item.id,
+                version,
+                workspaceId: workspace.id,
+                organizationId: opened.deliverable.organization_id,
+                title: item.title,
+                format: "link",
+                hasArticleMetadata: true,
+                canonicalUrl: link,
+                dek: item.copy_text && item.copy_text.length <= 280 ? item.copy_text : null,
+                approval: item.status === "approved" ? "approved" : item.status === "changes_requested" ? "changes_requested" : "needs_review",
+                publication: "not_published",
+                updatedAt: opened.deliverable.updated_at,
+                audience: viewer === "staff" ? "staff" : "client",
+                href: `#item-${item.id}`,
+              })
+            : null;
           const listed = listedMedia(item.media_json);
           const media = listed.filter((entry) => entry.video || entry.image);
           const storedFile = media.length === 0 && listed.length > 0;
@@ -170,11 +195,11 @@ export default async function FinishedPiecePage({
                 <CollectionItemState status={item.status} />
               </div>
               {item.section && !filingTitles.has(item.section) ? <p className="text-sm text-muted-foreground">{item.section}</p> : null}
-              {item.copy_text && !social ? (
+              {item.copy_text && !social && !article ? (
                 <p className={brief ? "whitespace-pre-wrap text-sm leading-6" : "text-sm"}>{item.copy_text}</p>
               ) : null}
-              {safeLink(item.link_url) ? (
-                <a className="text-sm underline" href={safeLink(item.link_url) ?? "#"}>
+              {article ? <ArticleCard artifact={article} /> : link ? (
+                <a className="text-sm underline" href={link}>
                   Open link
                 </a>
               ) : null}
@@ -254,6 +279,7 @@ export default async function FinishedPiecePage({
       {libraryViewLinksEnabled() && can(caller, "view_link.manage", { workspaceId: workspace.id }) ? (
         <ViewLinkDialog
           workspaceId={workspace.id}
+          shares={viewShares?.ok ? viewShares.shares : []}
           items={items.map((item) => ({ resourceKind: "deliverable_item" as const, resourceId: item.id, resourceVersion: version }))}
         />
       ) : null}
@@ -262,7 +288,11 @@ export default async function FinishedPiecePage({
           pending={items.filter((item) => item.status === "pending").length}
           changes={items.filter((item) => item.status === "changes_requested").length}
         >
-          <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending").length})`} />
+          {items.some((item) => item.status === "pending") ? (
+            <ApproveAllForm slug={slug} deliverableId={opened.deliverable.id} version={version} label={`${approveAllLabel} (${items.filter((item) => item.status === "pending").length})`} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Nothing is waiting for approval.</p>
+          )}
         </CollectionReviewFooter>
       )}
       {notes.length > 0 ? (

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Caller } from "@/lib/authz";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { LIBRARY_PAGE_SIZE, listLibraryArtifacts } from "./library-queries";
+import { LIBRARY_PAGE_SIZE, listLibraryArtifacts, staffLibrarySummaries } from "./library-queries";
 
 const NOW = 1_800_000_000_000;
 const member: Caller = { userId: "member-1", staff: null, operatorOf: [], memberships: [{ workspaceId: "ws-1", role: "client_member" }] };
@@ -186,6 +186,58 @@ describe("library queries", () => {
     const seen = new Set(first.page.artifacts.map((artifact) => artifact.artifactKey));
     expect(second.page.artifacts.every((artifact) => !seen.has(artifact.artifactKey))).toBe(true);
     expect(first.page.counts.total).toBeGreaterThan(LIBRARY_PAGE_SIZE);
+  });
+
+  it("pages past the first hundred records and counts only the active filters", async () => {
+    const sql = await database();
+    for (let index = 0; index < 120; index += 1) {
+      await sql.run(
+        `INSERT INTO deliverable_items (
+           id, deliverable_id, version, format, title, copy_text, media_json, link_url, status, sort
+         ) VALUES (?, 'd-live', 1, 'page', ?, ?, '[]', NULL, 'approved', ?)`,
+        [`note-${String(index).padStart(3, "0")}`, `Note ${String(index).padStart(3, "0")}`, index % 2 === 0 ? "field notes" : "other", index],
+      );
+    }
+    const titles: string[] = [];
+    let cursor: string | null = null;
+    let total = 0;
+    for (let pageNumber = 0; pageNumber < 12; pageNumber += 1) {
+      const page = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", sort: "title", cursor });
+      expect(page.ok).toBe(true);
+      if (!page.ok) return;
+      total = page.page.counts.total;
+      titles.push(...page.page.artifacts.map((artifact) => artifact.title));
+      cursor = page.page.nextCursor;
+      if (!cursor) break;
+    }
+    expect(titles.filter((title) => title.startsWith("Note "))).toHaveLength(120);
+    expect(total).toBeGreaterThanOrEqual(120);
+    expect(new Set(titles).size).toBe(titles.length);
+    const published = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", status: "published" });
+    expect(published.ok).toBe(true);
+    if (!published.ok) return;
+    expect(published.page.artifacts.every((artifact) => artifact.primaryStatus === "published")).toBe(true);
+    expect(published.page.counts.total).toBe(published.page.artifacts.length);
+    expect(published.page.counts.total).toBe(2);
+    expect(published.page.counts.total).toBeLessThan(total);
+    const excerpt = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", search: "field notes" });
+    expect(excerpt.ok && excerpt.page.counts.total).toBe(60);
+    const account = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1", search: "Acme LinkedIn" });
+    expect(account.ok && account.page.artifacts.map((artifact) => artifact.title)).toEqual(["LinkedIn launch"]);
+  });
+
+  it("counts every item that needs review, not only the first page", async () => {
+    const sql = await database();
+    for (let index = 0; index < 30; index += 1) {
+      await sql.run(
+        `INSERT INTO deliverable_items (
+           id, deliverable_id, version, format, title, media_json, link_url, status, sort
+         ) VALUES (?, 'd-live', 1, 'page', ?, '[]', NULL, 'pending', ?)`,
+        [`review-${index}`, `Review ${index}`, index],
+      );
+    }
+    const summaries = await staffLibrarySummaries(sql, staff, [{ id: "ws-1", slug: "acme", display_name: "Acme" }]);
+    expect(summaries[0]?.reviewNeeded).toBe(30);
   });
 
   it("rejects an overlong search before querying", async () => {

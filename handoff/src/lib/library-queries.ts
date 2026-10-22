@@ -18,7 +18,6 @@ import {
 
 export const LIBRARY_PAGE_SIZE = 24;
 export const LIBRARY_SEARCH_MAX = 200;
-const FAMILY_LIMIT = 100;
 const TIME_BASE = 1_000_000_000_000_000;
 
 export type LibrarySort = "delivered" | "updated" | "published" | "title" | "needs_action";
@@ -35,12 +34,15 @@ export type LibraryListQuery = {
   cursor?: string | null;
   includeHeld?: boolean;
   slug?: string;
+  deliveredFrom?: number;
+  deliveredTo?: number;
 };
 
 export type LibraryPage = {
   artifacts: LibraryArtifact[];
   nextCursor: string | null;
   counts: Record<string, number>;
+  needsAction: number;
 };
 
 type Cursor = { sort: string; rank: number; id: string; version: number };
@@ -80,7 +82,7 @@ function after(row: Cursor, cursor: Cursor | null): boolean {
   if (row.rank < cursor.rank) return false;
   if (row.id > cursor.id) return true;
   if (row.id < cursor.id) return false;
-  return row.version > cursor.version;
+  return row.version >= cursor.version;
 }
 
 function approvalOf(itemStatus: string, deliverableStatus: string): LibraryApproval {
@@ -126,7 +128,10 @@ type ItemRow = {
   external_published_at: number | null;
   artifact_type: string | null;
   article_status: string | null;
+  media_json: string;
 };
+
+type PromotionEdge = { sourceId: string; sourceVersion: number; targetId: string; targetVersion: number; title: string };
 
 type TargetRow = {
   item_id: string;
@@ -185,35 +190,53 @@ export async function listLibraryArtifacts(
   const audience: LibraryAudience = includeHeld || seesHeldWork(caller, query.workspaceId) ? "staff" : "client";
   const sort = query.sort ?? "delivered";
   const type = query.type && query.type !== "all" ? query.type : null;
-  const [items, sites, files, targets, counts] = await Promise.all([
-    loadItems(sql, query, includeHeld, search, type),
-    loadSites(sql, query, includeHeld, search, type),
-    loadFiles(sql, query, includeHeld, search, type),
+  const [items, sites, files, targets, promotions] = await Promise.all([
+    loadItems(sql, query, includeHeld, search),
+    loadSites(sql, query, includeHeld, search),
+    loadFiles(sql, query, includeHeld, search),
     loadTargets(sql, query.workspaceId),
-    countFamilies(sql, query, includeHeld, search),
+    loadPromotions(sql, query.workspaceId),
   ]);
-    const candidates = [...projectItems(items, targets, audience, sort, query), ...projectSites(sites, audience, sort), ...projectFiles(files, audience, sort, query.slug ?? query.workspaceId)]
-    .filter((row) => !type || row.artifact.artifactType === type)
+  const candidates = [
+    ...projectItems(items, targets, promotions, audience, sort, query),
+    ...projectSites(sites, audience, sort),
+    ...projectFiles(files, audience, sort, query.slug ?? query.workspaceId),
+  ];
+  const matched = candidates
     .filter((row) => !query.status || row.artifact.primaryStatus === query.status)
     .filter((row) => !query.needsAction || NEEDS_ACTION.has(row.artifact.primaryStatus))
     .filter((row) => !query.platform || row.artifact.destinations.some((destination) => destination.platform === query.platform))
+    .filter((row) => query.deliveredFrom == null || stamp(row.artifact) >= query.deliveredFrom)
+    .filter((row) => query.deliveredTo == null || stamp(row.artifact) <= query.deliveredTo);
+  const counts: Record<string, number> = { total: matched.length };
+  for (const artifactType of LIBRARY_ARTIFACT_TYPES) counts[artifactType] = 0;
+  for (const row of matched) counts[row.artifact.artifactType] = (counts[row.artifact.artifactType] ?? 0) + 1;
+  const visible = matched
+    .filter((row) => !type || row.artifact.artifactType === type)
     .filter((row) => after(row, cursor))
     .sort((left, right) => left.sort.localeCompare(right.sort) || left.rank - right.rank || left.id.localeCompare(right.id) || left.version - right.version);
-  const page = candidates.slice(0, LIBRARY_PAGE_SIZE);
-  const next = candidates[LIBRARY_PAGE_SIZE];
+  const page = visible.slice(0, LIBRARY_PAGE_SIZE);
+  const next = visible[LIBRARY_PAGE_SIZE];
   return {
     ok: true,
     page: {
       artifacts: page.map((row) => row.artifact),
       nextCursor: next ? encodeCursor(next) : null,
       counts,
+      needsAction: matched.filter((row) => NEEDS_ACTION.has(row.artifact.primaryStatus)).length,
     },
   };
 }
 
-function projectItems(rows: ItemRow[], targets: TargetRow[], audience: LibraryAudience, sort: LibrarySort, query: LibraryListQuery): Candidate[] {
+function stamp(artifact: LibraryArtifact): number {
+  return artifact.publishedAt ?? artifact.updatedAt;
+}
+
+function projectItems(rows: ItemRow[], targets: TargetRow[], promotions: PromotionEdge[], audience: LibraryAudience, sort: LibrarySort, query: LibraryListQuery): Candidate[] {
   return rows.map((row) => {
     const attached = targetsFor(targets, row.id, row.version);
+    const promotedBy = promotions.filter((edge) => edge.targetId === row.id && edge.targetVersion === row.version).length;
+    const promotesTitle = promotions.find((edge) => edge.sourceId === row.id && edge.sourceVersion === row.version)?.title ?? null;
     const approval = approvalOf(row.status, row.deliverable_status);
     const artifactType = row.artifact_type;
     const publication = publicationOf({
@@ -245,6 +268,9 @@ function projectItems(rows: ItemRow[], targets: TargetRow[], audience: LibraryAu
       audience,
       destinations: attached.destinations,
       href: `/w/${query.slug ?? query.workspaceId}/work/${row.deliverable_id}`,
+      previewSrc: previewSrc(row.media_json, row.deliverable_id, row.id),
+      promotedBy,
+      promotesTitle,
     });
     const key = sortKey(sort, { delivered, updated: row.updated_at, published: row.external_published_at, title: row.title, status: artifact.primaryStatus });
     return { sort: key, rank: 0, id: row.id, version: row.version, artifact };
@@ -289,28 +315,61 @@ function projectFiles(rows: { id: string; workspace_id: string; organization_id:
   });
 }
 
-function searchClause(columns: string[], search: string, params: unknown[]): string {
+function searchClause(columns: string[], search: string, params: unknown[], extraSql = ""): string {
   if (!search) return "";
   const pattern = like(search);
-  params.push(...columns.map(() => pattern));
-  return ` AND (${columns.map((column) => `lower(COALESCE(${column}, '')) LIKE ? ESCAPE '\\'`).join(" OR ")})`;
+  const parts = columns.map((column) => {
+    params.push(pattern);
+    return `lower(COALESCE(${column}, '')) LIKE ? ESCAPE '\\'`;
+  });
+  if (extraSql) {
+    const marks = extraSql.match(/\?/g)?.length ?? 0;
+    for (let index = 0; index < marks; index += 1) params.push(pattern);
+    parts.push(extraSql);
+  }
+  return ` AND (${parts.join(" OR ")})`;
 }
 
-async function loadItems(sql: Sql, query: LibraryListQuery, includeHeld: boolean, search: string, type: LibraryArtifactType | null): Promise<ItemRow[]> {
-  if (type && type !== "article" && type !== "social" && type !== "video" && type !== "image" && type !== "document") return [];
+function previewSrc(mediaJson: string, deliverableId: string, itemId: string): string | null {
+  try {
+    const parsed = JSON.parse(mediaJson) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    for (const entry of parsed) {
+      if (!entry || typeof entry !== "object") continue;
+      const role = (entry as { role?: unknown }).role;
+      const contentType = (entry as { content_type?: unknown }).content_type;
+      if (typeof role !== "string" || !role) continue;
+      const type = typeof contentType === "string" ? contentType.toLowerCase() : "";
+      if (type.startsWith("video/") || (type && !type.startsWith("image/"))) continue;
+      return `/api/deliverables/${deliverableId}/items/${itemId}/media/${encodeURIComponent(role)}`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+async function loadItems(sql: Sql, query: LibraryListQuery, includeHeld: boolean, search: string): Promise<ItemRow[]> {
   const params: unknown[] = [query.workspaceId, includeHeld ? 1 : 0];
-  let typeSql = "";
-  if (type === "article") typeSql = " AND (m.artifact_type = 'article' OR (i.format = 'link' AND m.id IS NOT NULL))";
-  if (type === "document") typeSql = " AND i.format IN ('page', 'file', 'link') AND COALESCE(m.artifact_type, '') != 'article'";
-  if (type === "social") typeSql = " AND (i.channel IS NOT NULL OR m.artifact_type = 'social')";
-  if (type === "video") typeSql = " AND i.format IN ('video', 'ad_video') AND i.channel IS NULL";
-  if (type === "image") typeSql = " AND i.format IN ('static', 'carousel', 'story', 'ad_static', 'ad_carousel') AND i.channel IS NULL AND COALESCE(m.artifact_type, '') != 'article'";
   const projectSql = query.projectId ? " AND d.project_id = ?" : "";
   if (query.projectId) params.push(query.projectId);
-  const searchSql = searchClause(["i.title", "m.dek", "m.canonical_url", "i.link_url", "projects.name"], search, params);
-  params.push(FAMILY_LIMIT);
+  const searchSql = searchClause(
+    ["i.title", "i.copy_text", "i.section", "m.dek", "m.canonical_url", "m.author_name", "i.link_url", "projects.name"],
+    search,
+    params,
+    `EXISTS (
+      SELECT 1 FROM social_posts sp
+      LEFT JOIN social_post_targets spt ON spt.post_id = sp.id
+      LEFT JOIN social_accounts sa ON sa.id = spt.account_id
+      WHERE sp.item_id = i.id AND sp.version = i.version
+        AND (
+          lower(COALESCE(spt.platform, '')) LIKE ? ESCAPE '\\'
+          OR lower(COALESCE(sa.display_name, '')) LIKE ? ESCAPE '\\'
+        )
+    )`,
+  );
   return sql.all<ItemRow>(
-    `SELECT i.id, i.version, i.title, i.format, i.channel, i.copy_text, i.link_url, i.status,
+    `SELECT i.id, i.version, i.title, i.format, i.channel, i.copy_text, i.link_url, i.status, i.media_json,
             d.id AS deliverable_id, d.organization_id, d.workspace_id, d.project_id, projects.name AS project_name,
             d.status AS deliverable_status, d.published_at, d.updated_at,
             m.dek, m.canonical_url, m.author_name, m.external_published_at, m.artifact_type, m.article_status
@@ -331,19 +390,15 @@ async function loadItems(sql: Sql, query: LibraryListQuery, includeHeld: boolean
          WHERE gone.id = i.work_item_id AND (gone.retracted_at IS NOT NULL OR gone.superseded_by IS NOT NULL)
        )
        ${projectSql}
-       ${typeSql}
        ${searchSql}
-     ORDER BY COALESCE(d.published_at, m.external_published_at, d.updated_at) DESC, i.id, i.version
-     LIMIT ?`,
+     ORDER BY COALESCE(d.published_at, m.external_published_at, d.updated_at) DESC, i.id, i.version`,
     [query.workspaceId, includeHeld ? 1 : 0, includeHeld ? 1 : 0, ...params.slice(2)],
   );
 }
 
-async function loadSites(sql: Sql, query: LibraryListQuery, includeHeld: boolean, search: string, type: LibraryArtifactType | null) {
-  if (type && type !== "website") return [];
+async function loadSites(sql: Sql, query: LibraryListQuery, includeHeld: boolean, search: string) {
   const params: unknown[] = [query.workspaceId, includeHeld ? 1 : 0];
   const searchSql = searchClause(["bw.title", "bw.description", "bw.live_url"], search, params);
-  params.push(FAMILY_LIMIT);
   return sql.all<{ id: string; organization_id: string; workspace_id: string; title: string; live_url: string | null; preview_url: string | null; created_at: number; description: string | null }>(
     `SELECT bw.id, bw.organization_id, bw.workspace_id, bw.title, bw.live_url, bw.preview_url, bw.created_at, bw.description
      FROM built_work bw
@@ -352,17 +407,14 @@ async function loadSites(sql: Sql, query: LibraryListQuery, includeHeld: boolean
      WHERE bw.workspace_id = ? AND w.state = 'filed' AND b.deleted_at IS NULL AND b.discarded_at IS NULL
        AND (? = 1 OR ((b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL))
        ${searchSql}
-     ORDER BY bw.created_at DESC, bw.id
-     LIMIT ?`,
+     ORDER BY bw.created_at DESC, bw.id`,
     params,
   );
 }
 
-async function loadFiles(sql: Sql, query: LibraryListQuery, includeHeld: boolean, search: string, type: LibraryArtifactType | null) {
-  if (type && type !== "file") return [];
+async function loadFiles(sql: Sql, query: LibraryListQuery, includeHeld: boolean, search: string) {
   const params: unknown[] = [query.workspaceId, includeHeld ? 1 : 0];
   const searchSql = searchClause(["f.relative_path"], search, params);
-  params.push(FAMILY_LIMIT);
   return sql.all<{ id: string; workspace_id: string; organization_id: string; relative_path: string; created_at: number }>(
     `SELECT f.id, f.workspace_id, w.organization_id AS organization_id, f.relative_path, f.created_at
      FROM library_file_selections s
@@ -373,8 +425,7 @@ async function loadFiles(sql: Sql, query: LibraryListQuery, includeHeld: boolean
        AND b.deleted_at IS NULL AND b.discarded_at IS NULL
        AND (? = 1 OR ((b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL))
        ${searchSql}
-     ORDER BY f.created_at DESC, f.id
-     LIMIT ?`,
+     ORDER BY f.created_at DESC, f.id`,
     params,
   );
 }
@@ -391,19 +442,21 @@ async function loadTargets(sql: Sql, workspaceId: string): Promise<TargetRow[]> 
   );
 }
 
-async function countFamilies(sql: Sql, query: LibraryListQuery, includeHeld: boolean, search: string): Promise<Record<string, number>> {
-  const counts: Record<string, number> = { total: 0 };
-  for (const type of LIBRARY_ARTIFACT_TYPES) counts[type] = 0;
-  const [items, sites, files] = await Promise.all([
-    loadItems(sql, { ...query, type: "all" }, includeHeld, search, null),
-    loadSites(sql, query, includeHeld, search, null),
-    loadFiles(sql, query, includeHeld, search, null),
-  ]);
-  for (const row of projectItems(items, [], "client", "delivered", query)) counts[row.artifact.artifactType] = (counts[row.artifact.artifactType] ?? 0) + 1;
-  counts.website = sites.length;
-  counts.file = files.length;
-  counts.total = LIBRARY_ARTIFACT_TYPES.reduce((sum, type) => sum + (counts[type] ?? 0), 0);
-  return counts;
+async function loadPromotions(sql: Sql, workspaceId: string): Promise<PromotionEdge[]> {
+  const rows = await sql.all<{ source_id: string; source_version: number; target_id: string; target_version: number; title: string }>(
+    `SELECT r.source_id, r.source_version, r.target_id, r.target_version, i.title
+     FROM artifact_relations r
+     JOIN deliverable_items i ON i.id = r.target_id AND i.version = r.target_version
+     WHERE r.workspace_id = ? AND r.relation_kind = 'promotes' AND r.target_kind = 'deliverable_item'`,
+    [workspaceId],
+  );
+  return rows.map((row) => ({
+    sourceId: row.source_id,
+    sourceVersion: row.source_version,
+    targetId: row.target_id,
+    targetVersion: row.target_version,
+    title: row.title,
+  }));
 }
 
 export async function staffLibrarySummaries(
@@ -411,24 +464,21 @@ export async function staffLibrarySummaries(
   caller: Caller,
   spaces: { id: string; slug: string; display_name: string }[],
 ): Promise<{ workspaceId: string; slug: string; name: string; counts: Record<string, number>; reviewNeeded: number; recent: { title: string; status: string }[]; viewLinks: { live: number; revoked: number } }[]> {
-  const summaries = [];
-  for (const space of spaces) {
-    const [listed, review, links] = await Promise.all([
+  return Promise.all(spaces.map(async (space) => {
+    const [listed, links] = await Promise.all([
       listLibraryArtifacts(sql, caller, { workspaceId: space.id, slug: space.slug, includeHeld: true }),
-      listLibraryArtifacts(sql, caller, { workspaceId: space.id, slug: space.slug, includeHeld: true, needsAction: true }),
       listViewLinks(sql, caller, space.id),
     ]);
     const artifacts = listed.ok ? listed.page.artifacts : [];
     const shares = links.ok ? links.shares : [];
-    summaries.push({
+    return {
       workspaceId: space.id,
       slug: space.slug,
       name: space.display_name,
       counts: listed.ok ? listed.page.counts : {},
-      reviewNeeded: review.ok ? review.page.artifacts.length : 0,
+      reviewNeeded: listed.ok ? listed.page.needsAction : 0,
       recent: artifacts.slice(0, 3).map((artifact) => ({ title: artifact.title, status: artifact.primaryStatus })),
       viewLinks: { live: shares.filter((share) => share.revokedAt == null).length, revoked: shares.filter((share) => share.revokedAt != null).length },
-    });
-  }
-  return summaries;
+    };
+  }));
 }

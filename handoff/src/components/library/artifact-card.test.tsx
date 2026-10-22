@@ -85,7 +85,8 @@ describe("library cards", () => {
     }));
     expect(html).toContain("No articles yet.");
     expect(html).toContain("Sources");
-    expect(html).toContain("grid-cols-1");
+    expect(html).toContain("xl:grid-cols-3");
+    expect(html).toContain("Recently delivered");
     expect(html).toContain("min-h-11");
     expect(html).toContain("/w/acme/library?type=social");
   });

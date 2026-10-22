@@ -131,8 +131,8 @@ export async function createViewLink(
       statement: `INSERT INTO library_shares (
          id, organization_id, workspace_id, token_hash, title, expires_at, passcode_hash, allow_downloads,
          show_external_links, created_by_kind, created_by_id, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'staff', ?, ?, ?)`,
-      params: [id, workspace.organization_id, input.workspaceId, await sha256(token), input.title ?? null, input.expiresAt ?? null, passcode, input.allowDownloads ? 1 : 0, input.showExternalLinks === false ? 0 : 1, caller.userId, now, now],
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      params: [id, workspace.organization_id, input.workspaceId, await sha256(token), input.title ?? null, input.expiresAt ?? null, passcode, input.allowDownloads ? 1 : 0, input.showExternalLinks === false ? 0 : 1, caller.staff ? "staff" : "client", caller.userId, now, now],
     },
     ...input.items.map((item, index) => ({
       statement: `INSERT INTO library_share_items (
@@ -181,7 +181,7 @@ function available(share: ShareRow, now: number): boolean {
   return share.revoked_at == null && (share.expires_at == null || share.expires_at > now);
 }
 
-export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null }[] } } | { ok: false; error: "unavailable" | "locked" }> {
+export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string }[] } } | { ok: false; error: "unavailable" | "locked" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "unavailable" };
   const share = await shareByToken(sql, token);
   if (!share || !available(share, now)) return { ok: false, error: "unavailable" };
@@ -198,7 +198,7 @@ export async function openViewLink(sql: Sql, token: string, now: number, session
     if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version))) continue;
     const title = await itemTitle(sql, item.resource_kind, item.resource_id);
     const external = share.show_external_links ? await itemUrl(sql, item.resource_kind, item.resource_id, item.resource_version) : null;
-    visible.push({ publicId: item.public_id, title, externalUrl: external });
+    visible.push({ publicId: item.public_id, title, externalUrl: external, kind: item.resource_kind });
   }
   if (visible.length === 0) return { ok: false, error: "unavailable" };
   await sql.run("INSERT INTO library_share_events (id, share_id, kind, at) VALUES (?, ?, 'opened', ?)", [crypto.randomUUID(), share.id, now]);

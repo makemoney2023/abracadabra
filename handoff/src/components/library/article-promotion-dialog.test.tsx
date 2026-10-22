@@ -16,6 +16,8 @@ describe("article promotion dialog", () => {
     expect(html).toContain("https://news.example/q4");
     expect(html).toContain("utm_source=linkedin");
     expect(html).toContain("Create draft");
+    expect(html).toContain("LinkedIn");
+    expect(html).toContain("name=\"externalId\"");
     expect(html).toContain("It does not post.");
     expect(html).not.toContain("wordpress");
     expect(html).not.toContain("wix");
