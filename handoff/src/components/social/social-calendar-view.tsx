@@ -80,12 +80,40 @@ function Chip({
   );
 }
 
-function dropTime(event: React.DragEvent, day: string, hourOverride: string | undefined): { id: string; startAt: string } | null {
-  const id = event.dataTransfer.getData("text/post-id");
-  const hour = hourOverride ?? event.dataTransfer.getData("text/post-hour");
-  const minute = event.dataTransfer.getData("text/post-minute");
-  if (!id || hour === "" || minute === "") return null;
-  return { id, startAt: `${day}T${hour.padStart(2, "0")}:${minute.padStart(2, "0")}` };
+function stamp(day: string, hour: string, minute: string): string {
+  return `${day}T${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+}
+
+/** A scheduled post keeps its clock time. An approved piece uses 9:00 unless it already has a time, and an hour drop changes the hour. */
+export function dropPayload(
+  input: { postId: string; pieceId: string; hour: string; minute: string },
+  day: string,
+  hourOverride?: string,
+): { kind: "post" | "piece"; id: string; startAt: string } | null {
+  if (input.postId) {
+    const hour = hourOverride ?? input.hour;
+    if (hour === "" || input.minute === "") return null;
+    return { kind: "post", id: input.postId, startAt: stamp(day, hour, input.minute) };
+  }
+  if (input.pieceId) {
+    const hour = hourOverride ?? (input.hour === "" ? "9" : input.hour);
+    const minute = input.minute === "" ? "0" : input.minute;
+    return { kind: "piece", id: input.pieceId, startAt: stamp(day, hour, minute) };
+  }
+  return null;
+}
+
+function dropTime(event: React.DragEvent, day: string, hourOverride: string | undefined): { kind: "post" | "piece"; id: string; startAt: string } | null {
+  return dropPayload(
+    {
+      postId: event.dataTransfer.getData("text/post-id"),
+      pieceId: event.dataTransfer.getData("text/piece-id"),
+      hour: event.dataTransfer.getData("text/post-hour") || event.dataTransfer.getData("text/piece-hour"),
+      minute: event.dataTransfer.getData("text/post-minute") || event.dataTransfer.getData("text/piece-minute"),
+    },
+    day,
+    hourOverride,
+  );
 }
 
 /** Day, week, and month for one client's posts, in one time zone. */
@@ -98,6 +126,7 @@ export function SocialCalendarView({
   onSelect,
   canReschedule,
   onMove,
+  onPlace,
 }: {
   posts: CalendarEvent[];
   timeZone: string;
@@ -107,15 +136,18 @@ export function SocialCalendarView({
   onSelect: (id: string) => void;
   canReschedule: boolean;
   onMove?: (postId: string, startAt: string) => void;
+  onPlace?: (pieceId: string, startAt: string) => void;
 }) {
   const [mode, setMode] = React.useState<CalendarMode>(initialMode);
   const [anchor, setAnchor] = React.useState(now);
   const calendar = buildSocialCalendar({ mode, anchor, now, timeZone, posts });
   const acceptDrop = (event: React.DragEvent, day: string, hour?: string) => {
-    if (!onMove) return;
+    if (!onMove && !onPlace) return;
     event.preventDefault();
     const move = dropTime(event, day, hour);
-    if (move) onMove(move.id, move.startAt);
+    if (!move) return;
+    if (move.kind === "post") onMove?.(move.id, move.startAt);
+    else onPlace?.(move.id, move.startAt);
   };
   return (
     <div className="flex flex-col gap-3">
@@ -151,7 +183,7 @@ export function SocialCalendarView({
                 key={hour}
                 className="grid grid-cols-[4.5rem_1fr] gap-2 px-2 py-1"
                 onDragOver={(event) => {
-                  if (onMove) event.preventDefault();
+                  if (onMove || onPlace) event.preventDefault();
                 }}
                 onDrop={(event) => day && acceptDrop(event, day.key, String(hour))}
               >
@@ -178,7 +210,7 @@ export function SocialCalendarView({
                 key={day.key}
                 className={`flex min-h-28 flex-col gap-1 bg-background p-1.5 ${day.inMonth ? "" : "opacity-50"} ${day.isToday ? "bg-muted/50" : ""}`}
                 onDragOver={(event) => {
-                  if (onMove) event.preventDefault();
+                  if (onMove || onPlace) event.preventDefault();
                 }}
                 onDrop={(event) => acceptDrop(event, day.key)}
               >

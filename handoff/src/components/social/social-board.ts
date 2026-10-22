@@ -35,11 +35,12 @@ export function postOnCalendar(post: { status: string; error: string | null; sch
 export function boardLists<T extends { id: string; status: string }>(
   pieces: T[],
   liveItemIds: Set<string>,
+  heldItemIds: Set<string> = new Set(),
 ): { waiting: T[]; ready: T[] } {
   const waiting = pieces.filter((piece) => piece.status === "pending" || piece.status === "changes_requested");
   const pending = waiting.filter((piece) => piece.status === "pending");
   const changes = waiting.filter((piece) => piece.status === "changes_requested");
-  const ready = pieces.filter((piece) => piece.status === "approved" && !liveItemIds.has(piece.id));
+  const ready = pieces.filter((piece) => piece.status === "approved" && !liveItemIds.has(piece.id) && !heldItemIds.has(piece.id));
   return { waiting: [...pending, ...changes], ready };
 }
 

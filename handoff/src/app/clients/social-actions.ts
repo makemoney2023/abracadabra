@@ -11,7 +11,9 @@ import {
   cancelSocialPost,
   connectLink,
   disconnectSocialAccount,
+  placeSocialPiece,
   rescheduleSocialPost,
+  retryFailedSocialPost,
   savePieceSettings,
   sendPieces,
   zonedTimeToUtc,
@@ -210,6 +212,45 @@ export async function moveSocialPostAction(
   if (!moved.ok) return fail(moved.error);
   revalidatePath(socialTab(String(formData.get("organizationId") ?? "")));
   return ok("Moved.");
+}
+
+export async function placeSocialPieceAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const zernio = openZernio();
+  if (!zernio) return fail(NOT_SET_UP);
+  const timezone = String(formData.get("timezone") ?? "UTC") || "UTC";
+  const placed = await placeSocialPiece(
+    sql,
+    zernio,
+    openObjectStore(),
+    caller,
+    {
+      deliverableId: String(formData.get("deliverableId") ?? ""),
+      itemId: String(formData.get("itemId") ?? ""),
+      startAt: String(formData.get("startAt") ?? ""),
+      timezone,
+    },
+    Date.now(),
+  );
+  if (!placed.ok) return fail(placed.error);
+  revalidatePath(socialTab(String(formData.get("organizationId") ?? "")));
+  return ok("Scheduled.");
+}
+
+export async function retrySocialPostAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const { sql, caller } = await requireHqStaffPage();
+  const zernio = openZernio();
+  if (!zernio) return fail(NOT_SET_UP);
+  const retried = await retryFailedSocialPost(sql, zernio, openObjectStore(), caller, String(formData.get("postId") ?? ""), Date.now());
+  if (!retried.ok) return fail(retried.error);
+  revalidatePath(socialTab(String(formData.get("organizationId") ?? "")));
+  return ok("Retrying that post.");
 }
 
 export async function cancelSocialPostAction(

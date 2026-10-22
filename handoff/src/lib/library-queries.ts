@@ -2,7 +2,7 @@ import type { Caller } from "@/lib/authz";
 import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { seesHeldWork } from "@/lib/held-work";
-import { filePreviewSrc } from "@/lib/file-type";
+import { filePreviewSrc, posterPreviewSrc } from "@/lib/file-type";
 import { listViewLinks } from "@/lib/library-shares";
 import { localPublication } from "@/lib/social-queries";
 import { pictureAddress, pictureRole, type PictureMedia } from "@/lib/picture-role";
@@ -335,7 +335,7 @@ function projectFiles(rows: FileRow[], audience: LibraryAudience, slug: string):
       updatedAt: row.created_at,
       audience,
       href: `/w/${slug}/files/${row.id}`,
-      previewSrc: filePreviewSrc(row.id, row.relative_path),
+      previewSrc: posterPreviewSrc(row.id, row.poster_file_id) ?? filePreviewSrc(row.id, row.relative_path),
     });
     return { sort: row.sort_value, rank: 2, id: row.id, version: 0, artifact };
   });
@@ -746,6 +746,7 @@ type FileRow = {
   relative_path: string;
   created_at: number;
   sort_value: string;
+  poster_file_id: string | null;
 };
 
 function fileCte(query: LibraryListQuery, includeHeld: boolean, search: string, sort?: LibrarySort): { sql: string; params: unknown[] } {
@@ -754,9 +755,11 @@ function fileCte(query: LibraryListQuery, includeHeld: boolean, search: string, 
   const projectSql = query.projectId ? " AND 0 = 1" : "";
   const base = `file_raw AS (
     SELECT f.id, f.workspace_id, w.organization_id AS organization_id, f.relative_path, f.created_at,
+           fp.poster_file_id AS poster_file_id,
            'file' AS artifact_type, 'approved' AS primary_status
     FROM library_file_selections s
     JOIN files f ON f.id = s.file_id
+    LEFT JOIN file_posters fp ON fp.file_id = f.id
     JOIN workspaces w ON w.id = f.workspace_id
     JOIN batches b ON b.id = f.batch_id
     WHERE s.workspace_id = ? AND s.revoked_at IS NULL AND f.status = 'clean'
@@ -827,7 +830,7 @@ async function loadFiles(
   const seek = seekClause(cursor, 2, "0");
   return sql.all<FileRow>(
     `WITH ${ctes.sql}
-     SELECT id, workspace_id, organization_id, relative_path, created_at, sort_value
+     SELECT id, workspace_id, organization_id, relative_path, created_at, sort_value, poster_file_id
      FROM file_sorted
      WHERE 1 = 1${filters.sql}${seek.sql}
      ORDER BY sort_value, id

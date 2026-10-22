@@ -2,6 +2,42 @@
 
 ## 2026-10-22
 
+- **What changed** — Schedule this publishes a piece that was left as a draft, refuses a file that is not clean or a space the person cannot see, and returns staff to the staff host. Retry keeps a past post's clock time and moves it to the next day that is still ahead. Approve stays available for a piece with changes asked.
+- **Why** — A second click could open a piece the client never sees, Retry failed once the original time had passed, and asking for a change removed the only way to approve.
+- **Code touchpoints** — `handoff/src/lib/schedule-library-file.ts`, `handoff/src/lib/social.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/app/w/[slug]/library/schedule-action.ts`, `handoff/src/components/library/sources-browser.tsx`.
+- **Data-flow impact** — A draft piece from this file is published on the next Schedule this. A retry updates the same failed post at a future time.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/schedule-library-file.test.ts src/lib/social.test.ts src/components/social/social-rail.test.tsx`, plus `npx tsc --noEmit`.
+
+## 2026-10-22
+
+- **What changed** — Staff can turn a Library photo or clip into one social piece with a network and a caption. The client approves it from the clicked row. Staff drop the approved piece onto a day. A failed send retries the same post. A clip keeps the still it started from. A bare Library visit with work waiting opens on Needs a look.
+- **Why** — A picture could be seen, and it still could not travel from the Library onto a day as one piece.
+- **Code touchpoints** — `handoff/src/lib/schedule-library-file.ts`, `handoff/src/lib/social.ts`, `handoff/src/lib/agent-media.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/components/social/social-rail.tsx`, `handoff/src/components/library/schedule-this-form.tsx`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/migrations/0045_media_poster.sql`, `handoff/migrations/0046_item_source_file.sql`.
+- **Data-flow impact** — Schedule this copies file bytes into deliverable media and publishes one pending item. A drop calls `sendPiece`. A retry updates the failed `social_posts` row. Approval still writes the same feedback. Cadence failure is shown on the calendar.
+- **API / schema impact** — `agent_media.source_media_id`, `file_posters`, and `deliverable_items.source_file_id`. No new public route.
+- **Verification** — `npx vitest run` on social, library, agent media, schedule, and migrate tests, plus `npx tsc --noEmit` and eslint on the changed files.
+
+## 2026-10-22
+
+- **What changed** — The place-and-decide plan now keeps one piece per Library file, requires a network and a caption before the client sees it, sends staff to the calendar that can place it, and retries a failed send on the same post. The month overflow line stays "+N more".
+- **Why** — The first draft of the plan sent an unfinished piece to the client calendar, where a drop cannot place it, and a failed send could become a second post.
+- **Code touchpoints** — `docs/place-and-decide-plan.md`.
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — The plan calls for `agent_media.source_media_id`, `file_posters`, and `deliverable_items.source_file_id` when those slices are built. This commit adds none of them.
+- **Verification** — Checked against `sendPiece`, `addDeliverableItem`, `publishDeliverable`, `autoScheduleApproved`, `boardLists`, and the staff and client social pages.
+
+## 2026-10-22
+
+- **What changed** — A plan for the next Library and calendar pass: drop an approved piece onto a day, turn a Library still into a piece that needs a look, keep a clip's starting still, open on Needs a look, approve on the selected row, and name what a month day is hiding.
+- **Why** — The pictures are on the screen. The next gap is placing one on a day and landing on the decision.
+- **Code touchpoints** — `docs/place-and-decide-plan.md`, `docs/space-library-gameplan.md`, `README.md`.
+- **Data-flow impact** — none. The plan is not built.
+- **API / schema impact** — The plan calls for `agent_media.source_media_id` and `file_posters` when that slice is built. This commit adds neither.
+- **Verification** — Checked against `sendPiece`, `dropTime`, `ApproveForm`, `agent_media`, and the Library finder.
+
+## 2026-10-22
+
 - **What changed** — A still an agent generated and then put in the Library shows as that picture. A clip shows the word Video. The social rail, the Library card, and a share already led with the picture.
 - **Why** — Cloudflare stills and clips are filed as ordinary files. Selected files were still name cards on the Library, so a generated png looked like a filename.
 - **Code touchpoints** — `handoff/src/lib/file-type.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/type-plate.tsx`, `handoff/src/components/library/sources-browser.tsx`, `handoff/src/components/library/public-library-view.tsx`.

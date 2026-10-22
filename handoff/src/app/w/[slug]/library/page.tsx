@@ -1,5 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { LibraryBrowser, LibraryTypeTabs } from "@/components/library/library-browser";
+import { libraryOpeningTarget } from "@/components/library/library-view";
+import { scheduleLibraryFileAction } from "./schedule-action";
 import { SourcesBrowser } from "@/components/library/sources-browser";
 import { can } from "@/lib/authz";
 import { articleSocialPromoEnabled } from "@/lib/article-promotions";
@@ -8,6 +10,8 @@ import { workspacesFor } from "@/db/records";
 import { listFolderFiles } from "@/lib/downloads";
 import { seesHeldWork } from "@/lib/held-work";
 import { listLibraryArtifacts, type LibrarySort } from "@/lib/library-queries";
+import { schedulePlatforms } from "@/lib/schedule-library-file";
+import { listSocialAccounts } from "@/lib/social";
 import type { LibraryArtifactType, LibraryStatus } from "@/lib/library-artifacts";
 import { openSession } from "@/lib/current";
 import { createArticlePromotionAction } from "@/app/deliverables/[id]/article-promotion-actions";
@@ -95,7 +99,18 @@ export default async function LibraryPage({
     ? await sql.all<{ file_id: string }>("SELECT file_id FROM library_file_selections WHERE workspace_id = ? AND revoked_at IS NULL", [workspace.id])
     : [];
   const selectedIds = new Set(selected.map((row) => row.file_id));
+  const opening = libraryOpeningTarget(filters, result.ok ? result.page.needsAction : 0);
+  if (opening) redirect(`/w/${slug}/library?status=${opening}`);
   const organization = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM workspaces WHERE id = ?", [workspace.id]);
+  const platforms = caller.staff && organization?.organization_id ? schedulePlatforms(await listSocialAccounts(sql, organization.organization_id)) : [];
+  const schedule = caller.staff ? { workspaceId: workspace.id, platforms, action: scheduleLibraryFileAction } : null;
+  const posterRows = showSources && sourceFiles.length > 0
+    ? await sql.all<{ file_id: string; poster_file_id: string }>(
+        `SELECT file_id, poster_file_id FROM file_posters WHERE file_id IN (${sourceFiles.map(() => "?").join(", ")})`,
+        sourceFiles.map((file) => file.id),
+      )
+    : [];
+  const posterOf = new Map(posterRows.map((row) => [row.file_id, row.poster_file_id]));
   if (result.ok && !read("cursor") && organization?.organization_id) {
     await recordLibraryMetric(sql, {
       name: "library_listed",
@@ -150,7 +165,9 @@ export default async function LibraryPage({
               selected: selectedIds.has(file.id),
               usedIn: sourceProvenance.get(file.id)?.usedIn,
               deliveredAs: sourceProvenance.get(file.id)?.deliveredAs,
+              posterFileId: posterOf.get(file.id) ?? null,
             }))}
+            schedule={schedule}
           />
         </div>
       ) : (
@@ -163,6 +180,7 @@ export default async function LibraryPage({
           promotionAction={canPromote ? createArticlePromotionAction : null}
           promotionTargets={promotionTargets}
           projects={projects}
+          schedule={schedule}
         />
       )}
     </main>

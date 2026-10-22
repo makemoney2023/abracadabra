@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { filterSourceFiles, folderBreadcrumbs, type SourceListFile } from "@/lib/source-provenance";
-import { filePlateWord, filePreviewSrc } from "@/lib/file-type";
+import { filePlateWord, filePreviewSrc, posterPreviewSrc, schedulableMedia } from "@/lib/file-type";
 import { toggleSourceAction } from "@/app/w/[slug]/sources-actions";
+import { ScheduleThisForm, type ScheduleState } from "./schedule-this-form";
 
 export function SourcesBrowser({
   slug,
@@ -10,6 +11,7 @@ export function SourcesBrowser({
   canSelect,
   listPath,
   persist = {},
+  schedule = null,
 }: {
   slug: string;
   files: SourceListFile[];
@@ -17,6 +19,7 @@ export function SourcesBrowser({
   canSelect: boolean;
   listPath?: string;
   persist?: Record<string, string | undefined>;
+  schedule?: { workspaceId: string; platforms: { value: string; label: string }[]; action: (previous: ScheduleState, formData: FormData) => Promise<ScheduleState> } | null;
 }) {
   const shown = filterSourceFiles(files, query);
   const root = listPath ?? `/w/${slug}`;
@@ -74,7 +77,7 @@ export function SourcesBrowser({
       {shown.length === 0 ? <p className="text-sm text-muted-foreground">No files match.</p> : null}
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {shown.map((file) => {
-          const preview = filePreviewSrc(file.id, file.name);
+          const preview = posterPreviewSrc(file.id, file.posterFileId) ?? filePreviewSrc(file.id, file.name);
           const plate = filePlateWord(file.name) === "video" ? "Video" : "File";
           return (
             <li key={file.id} className="flex flex-col gap-2 rounded-xl border border-border p-3">
@@ -120,6 +123,9 @@ export function SourcesBrowser({
                     {file.selected ? "Remove from Library" : "Show in Library"}
                   </button>
                 </form>
+              ) : null}
+              {schedule && file.status === "clean" && schedulableMedia(file.name) ? (
+                <ScheduleThisForm workspaceId={schedule.workspaceId} fileId={file.id} platforms={schedule.platforms} action={schedule.action} />
               ) : null}
             </li>
           );

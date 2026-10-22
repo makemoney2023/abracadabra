@@ -222,6 +222,7 @@ type ItemRow = {
   title: string;
   copy_text: string | null;
   media_json: string;
+  channel: string | null;
   status: "pending" | "approved" | "changes_requested";
   sort: number;
   organization_id: string;
@@ -232,7 +233,7 @@ type ItemRow = {
 
 async function loadItem(sql: Sql, deliverableId: string, itemId: string): Promise<ItemRow | undefined> {
   return sql.get<ItemRow>(
-    `SELECT i.id, i.deliverable_id, i.version, i.format, i.title, i.copy_text, i.media_json, i.status, i.sort,
+    `SELECT i.id, i.deliverable_id, i.version, i.format, i.title, i.copy_text, i.media_json, i.channel, i.status, i.sort,
        d.organization_id, d.project_id, d.workspace_id, d.title AS deliverable_title
      FROM deliverable_items i JOIN deliverables d ON d.id = i.deliverable_id
      WHERE i.id = ? AND i.deliverable_id = ?`,
@@ -396,6 +397,8 @@ export type SendPieceInput = {
   /** Unix ms for mode "scheduled". */
   scheduledFor: number | null;
   timezone: string;
+  /** When set, update this failed post instead of inserting another row. */
+  retryPostId?: string | null;
   /**
    * Options locked into a publish plan for this destination.
    * Direct sends, including schedule_social, leave this unset.
@@ -447,6 +450,17 @@ export async function sendPiece(
   }
   if (input.mode === "scheduled" && (input.scheduledFor == null || input.scheduledFor < now + 60_000)) {
     return { ok: false, error: "Pick a time at least one minute from now.", skipped: [] };
+  }
+  let retryId: string | null = null;
+  if (input.retryPostId) {
+    const existing = await sql.get<{ id: string; item_id: string; version: number; status: string }>(
+      "SELECT id, item_id, version, status FROM social_posts WHERE id = ?",
+      [input.retryPostId],
+    );
+    if (!existing || existing.item_id !== item.id || existing.version !== item.version || existing.status !== "failed") {
+      return { ok: false, error: "That post cannot be retried.", skipped: [] };
+    }
+    retryId = existing.id;
   }
   const wanted = [...new Set(input.accountIds)];
   if (wanted.length === 0) return { ok: false, error: "Pick at least one account.", skipped: [] };
@@ -524,29 +538,41 @@ export async function sendPiece(
     return { ok: false, error: `No picked account can take "${item.title}" as a ${POST_TYPE_LABEL[postType].toLowerCase()}.`, skipped };
   }
 
-  const postId = crypto.randomUUID();
-  await sql.run(
-    `INSERT INTO social_posts (
-       id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, skipped, scheduled_for,
-       timezone, status, zernio_post_id, error, created_by, created_at, updated_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sending', NULL, NULL, ?, ?, ?)`,
-    [
-      postId,
-      item.organization_id,
-      item.deliverable_id,
-      item.id,
-      item.version,
-      JSON.stringify(targets.map((target) => target.accountId)),
-      input.mode,
-      postType,
-      skipped.length > 0 ? skipped.join("\n") : null,
-      input.mode === "scheduled" ? input.scheduledFor : null,
-      input.timezone || null,
-      caller.userId,
-      now,
-      now,
-    ],
-  );
+  const postId = retryId ?? crypto.randomUUID();
+  const accountIds = JSON.stringify(targets.map((target) => target.accountId));
+  const skippedText = skipped.length > 0 ? skipped.join("\n") : null;
+  const scheduledFor = input.mode === "scheduled" ? input.scheduledFor : null;
+  if (retryId) {
+    await sql.run(
+      `UPDATE social_posts
+       SET account_ids = ?, mode = ?, post_type = ?, skipped = ?, scheduled_for = ?, timezone = ?, status = 'sending', error = NULL, updated_at = ?
+       WHERE id = ?`,
+      [accountIds, input.mode, postType, skippedText, scheduledFor, input.timezone || null, now, postId],
+    );
+  } else {
+    await sql.run(
+      `INSERT INTO social_posts (
+         id, organization_id, deliverable_id, item_id, version, account_ids, mode, post_type, skipped, scheduled_for,
+         timezone, status, zernio_post_id, error, created_by, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'sending', NULL, NULL, ?, ?, ?)`,
+      [
+        postId,
+        item.organization_id,
+        item.deliverable_id,
+        item.id,
+        item.version,
+        accountIds,
+        input.mode,
+        postType,
+        skippedText,
+        scheduledFor,
+        input.timezone || null,
+        caller.userId,
+        now,
+        now,
+      ],
+    );
+  }
 
   try {
     const name = item.id.slice(0, 8);
@@ -638,6 +664,122 @@ export async function sendPiece(
     await syncPostTargets(sql, postId, item.organization_id, linked, "failed", Date.now());
     return { ok: false, error: `"${item.title}" did not send: ${message}`, skipped };
   }
+}
+
+/** Schedules one approved piece onto the single active account for its network. */
+export async function placeSocialPiece(
+  sql: Sql,
+  zernio: ZernioClient,
+  store: ObjectStore,
+  caller: Caller,
+  input: { deliverableId: string; itemId: string; startAt: string; timezone: string },
+  now: number,
+): Promise<SendResult> {
+  if (!commandAuthorized(caller)) return { ok: false, error: "You can't do that.", skipped: [] };
+  const item = await loadItem(sql, input.deliverableId, input.itemId);
+  if (!item) return { ok: false, error: "That piece is not here.", skipped: [] };
+  if (item.status !== "approved") return { ok: false, error: `"${item.title}" is not approved by the client yet.`, skipped: [] };
+  const failed = await sql.get<{ id: string }>(
+    "SELECT id FROM social_posts WHERE item_id = ? AND version = ? AND status = 'failed' LIMIT 1",
+    [item.id, item.version],
+  );
+  if (failed) return { ok: false, error: "This piece already has a failed post. Retry it from the day.", skipped: [] };
+  const channel = item.channel?.trim() ?? "";
+  if (!channel) return { ok: false, error: "This piece has no network.", skipped: [] };
+  const accounts = await sql.all<{ id: string }>(
+    "SELECT id FROM social_accounts WHERE organization_id = ? AND is_active = 1 AND platform = ?",
+    [item.organization_id, channel],
+  );
+  if (accounts.length !== 1) return { ok: false, error: `No single ${channel} account can take this piece.`, skipped: [] };
+  const at = zonedTimeToUtc(input.startAt, input.timezone);
+  if (at == null) return { ok: false, error: "Pick a date and time.", skipped: [] };
+  return sendPiece(
+    sql,
+    zernio,
+    store,
+    caller,
+    {
+      deliverableId: item.deliverable_id,
+      itemId: item.id,
+      accountIds: [accounts[0].id],
+      mode: "scheduled",
+      postType: null,
+      scheduledFor: at,
+      timezone: input.timezone,
+    },
+    now,
+  );
+}
+
+/** The same clock time on the next day that is still at least a minute ahead. */
+export function nextScheduledInstant(scheduledFor: number | null, timeZone: string, now: number): number {
+  const zone = timeZone || "UTC";
+  if (scheduledFor != null && scheduledFor >= now + 60_000) return scheduledFor;
+  const basis = new Date(scheduledFor ?? now);
+  let hour = "09";
+  let minute = "00";
+  try {
+    const clock = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", hour: "2-digit", minute: "2-digit" }).formatToParts(basis);
+    hour = (clock.find((part) => part.type === "hour")?.value ?? "09").padStart(2, "0");
+    minute = (clock.find((part) => part.type === "minute")?.value ?? "00").padStart(2, "0");
+  } catch {
+    hour = "09";
+    minute = "00";
+  }
+  for (let day = 0; day < 14; day += 1) {
+    let stamp = "";
+    try {
+      const date = new Intl.DateTimeFormat("en-US", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(now + day * 86_400_000));
+      const year = date.find((part) => part.type === "year")?.value;
+      const month = date.find((part) => part.type === "month")?.value;
+      const dayOfMonth = date.find((part) => part.type === "day")?.value;
+      if (year && month && dayOfMonth) stamp = `${year}-${month}-${dayOfMonth}T${hour}:${minute}`;
+    } catch {
+      stamp = "";
+    }
+    const at = stamp ? zonedTimeToUtc(stamp, zone) : null;
+    if (at != null && at >= now + 60_000) return at;
+  }
+  return now + 5 * 60_000;
+}
+
+export async function retryFailedSocialPost(
+  sql: Sql,
+  zernio: ZernioClient,
+  store: ObjectStore,
+  caller: Caller,
+  postId: string,
+  now: number,
+): Promise<SendResult> {
+  const post = await sql.get<{ id: string; deliverable_id: string; item_id: string; account_ids: string; post_type: string; scheduled_for: number | null; timezone: string | null; status: string }>(
+    "SELECT id, deliverable_id, item_id, account_ids, post_type, scheduled_for, timezone, status FROM social_posts WHERE id = ?",
+    [postId],
+  );
+  if (!post || post.status !== "failed") return { ok: false, error: "That post cannot be retried.", skipped: [] };
+  let accountIds: string[] = [];
+  try {
+    const parsed = JSON.parse(post.account_ids) as unknown;
+    accountIds = Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    accountIds = [];
+  }
+  return sendPiece(
+    sql,
+    zernio,
+    store,
+    caller,
+    {
+      deliverableId: post.deliverable_id,
+      itemId: post.item_id,
+      accountIds,
+      mode: "scheduled",
+      postType: (post.post_type as PostType) || null,
+      scheduledFor: nextScheduledInstant(post.scheduled_for, post.timezone || "UTC", now),
+      timezone: post.timezone || "UTC",
+      retryPostId: post.id,
+    },
+    now,
+  );
 }
 
 export type SendAllInput = {

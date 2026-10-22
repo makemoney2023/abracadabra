@@ -18,7 +18,11 @@ export function feedbackReturnPath(slug: string, raw: string, staff: boolean): s
 }
 
 export function appendSent(path: string, sent: string): string {
+  return appendQuery(path, "sent", sent);
+}
+
+export function appendQuery(path: string, key: string, value: string): string {
   const url = new URL(path, "https://handoff.local");
-  url.searchParams.set("sent", sent);
+  url.searchParams.set(key, value.slice(0, 300));
   return `${url.pathname}${url.search}`;
 }

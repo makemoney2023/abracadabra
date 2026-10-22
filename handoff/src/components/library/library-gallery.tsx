@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import type { LibraryArtifact } from "@/lib/library-artifacts";
+import { schedulableMedia } from "@/lib/file-type";
 import { ArticlePromotionDialog } from "./article-promotion-dialog";
 import { ArtifactCard, LibraryEmpty } from "./artifact-card";
+import { ScheduleThisForm, type ScheduleState } from "./schedule-this-form";
 import { ViewLinkDialog } from "./view-link-dialog";
 
 type PromotionState = { message: string; href?: string };
@@ -55,6 +57,7 @@ export function LibraryGallery({
   promotionAction,
   promotionTargets = [],
   initialSharing = false,
+  schedule = null,
 }: {
   artifacts: LibraryArtifact[];
   empty: string;
@@ -63,6 +66,7 @@ export function LibraryGallery({
   promotionAction?: ((previous: PromotionState, formData: FormData) => Promise<PromotionState>) | null;
   promotionTargets?: { id: string; title: string }[];
   initialSharing?: boolean;
+  schedule?: { workspaceId: string; platforms: { value: string; label: string }[]; action: (previous: ScheduleState, formData: FormData) => Promise<ScheduleState> } | null;
 }) {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [sharing, setSharing] = useState(initialSharing);
@@ -84,7 +88,12 @@ export function LibraryGallery({
                 Select
               </label>
             ) : null}
-            <ArtifactCard artifact={artifact} />
+            <ArtifactCard
+              artifact={artifact}
+              schedule={schedule && artifact.sourceKind === "file" && schedulableMedia(artifact.title) ? (
+                <ScheduleThisForm workspaceId={schedule.workspaceId} fileId={artifact.sourceId} platforms={schedule.platforms} action={schedule.action} />
+              ) : null}
+            />
             {promotionAction
             && artifact.artifactType === "article"
             && (artifact.primaryStatus === "approved" || artifact.primaryStatus === "published")

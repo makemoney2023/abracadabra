@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type DragEvent, type ReactNode } from "react";
 import { statusPhrase } from "@/components/library/library-view";
 import { pictureAddress, pictureCount, pictureRole } from "@/lib/picture-role";
 import type { SocialReviewPiece } from "@/lib/social-review";
+
+export function waitingHeading(count: number): string {
+  if (count === 1) return "1 needs a look";
+  if (count > 1) return `${count} need a look`;
+  return "Waiting for a look";
+}
 
 export function ReviewList({
   title,
@@ -11,17 +17,25 @@ export function ReviewList({
   pieces,
   selectedId,
   onSelect,
+  showCount = true,
+  draggableIds = [],
+  approvePieceId = null,
+  approve = null,
 }: {
   title: string;
   empty: string;
   pieces: SocialReviewPiece[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  showCount?: boolean;
+  draggableIds?: string[];
+  approvePieceId?: string | null;
+  approve?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-semibold">
-        {title} <span className="text-muted-foreground">({pieces.length})</span>
+        {title} {showCount ? <span className="text-muted-foreground">({pieces.length})</span> : null}
       </h3>
       {pieces.length === 0 ? <p className="text-sm text-muted-foreground">{empty}</p> : null}
       <ul className="flex flex-col gap-2">
@@ -29,12 +43,22 @@ export function ReviewList({
           const role = pictureRole(piece.media);
           const count = pictureCount(piece.media);
           const videoOnly = !role && piece.media.some((item) => item.video);
+          const draggable = draggableIds.includes(piece.id);
           return (
             <li key={piece.id}>
               <button
                 type="button"
                 onClick={() => onSelect(piece.id)}
                 aria-pressed={selectedId === piece.id}
+                {...(draggable
+                  ? {
+                      draggable: true,
+                      onDragStart: (event: DragEvent<HTMLButtonElement>) => {
+                        event.dataTransfer.setData("text/piece-id", piece.id);
+                        event.dataTransfer.effectAllowed = "move";
+                      },
+                    }
+                  : {})}
                 className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm ${selectedId === piece.id ? "border-foreground" : "border-border"}`}
               >
                 <RailThumb
@@ -49,6 +73,7 @@ export function ReviewList({
                   </span>
                 </span>
               </button>
+              {approve && approvePieceId === piece.id ? approve : null}
             </li>
           );
         })}

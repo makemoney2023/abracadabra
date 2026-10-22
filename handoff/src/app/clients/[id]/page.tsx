@@ -67,6 +67,9 @@ async function loadSocial(
   client: { id: string; name: string },
   notice: string,
   sent: string,
+  pieceId: string,
+  postId: string,
+  scheduleNotice: string,
 ): Promise<SocialView> {
   const zernio = openZernio();
   let syncError: string | null = null;
@@ -96,7 +99,8 @@ async function loadSocial(
       .filter((post) => post.status === "sending" || post.status === "scheduled" || post.status === "published" || post.status === "partial")
       .map((post) => post.item_id),
   );
-  const review = space ? await listSocialReviewPieces(sql, caller, space, live) : { waiting: [], ready: [], catalog: [] };
+  const held = new Set(posts.filter((post) => post.status === "failed").map((post) => post.item_id));
+  const review = space ? await listSocialReviewPieces(sql, caller, space, live, held) : { waiting: [], ready: [], catalog: [] };
   return {
     configured: Boolean(zernio),
     syncError,
@@ -111,6 +115,9 @@ async function loadSocial(
     ready: review.ready,
     catalog: review.catalog,
     sent,
+    pieceId,
+    postId,
+    scheduleNotice,
   };
 }
 
@@ -125,7 +132,7 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string; social?: string; sent?: string }>;
+  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string; social?: string; sent?: string; piece?: string; post?: string; schedule?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -202,7 +209,7 @@ export default async function ClientPage({
     listUnassignedSwarmRuns(sql, caller, client.id),
   ]);
   const agentWork = tab === "agents" ? await listClientAgentWork(sql, caller, client.id) : undefined;
-  const social = tab === "social" ? await loadSocial(sql, caller, client, query.social ?? "", query.sent ?? "") : undefined;
+  const social = tab === "social" ? await loadSocial(sql, caller, client, query.social ?? "", query.sent ?? "", query.piece ?? "", query.post ?? "", query.schedule ?? "") : undefined;
   const swarm = tab === "work" ? await boardSwarmExtras(sql) : { runningTaskIds: [], packs: [] };
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;

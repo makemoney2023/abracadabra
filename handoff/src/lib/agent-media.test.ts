@@ -311,6 +311,8 @@ describe("generateAgentMedia", () => {
       ai: { async run(model, input) { calls.push({ model, input }); return { job_id: "job-still" }; } },
     });
     expect(clip).toMatchObject({ ok: true, status: 202 });
+    if (!clip.ok) throw new Error("clip failed");
+    expect((await sql.get<{ source_media_id: string | null }>("SELECT source_media_id FROM agent_media WHERE id = ?", [clip.view.media_id]))?.source_media_id).toBe(still.view.media_id);
     expect(calls[0]?.model).toBe(DEFAULT_CLIP);
     expect(calls[0]?.input).toMatchObject({ prompt: "The plate turns", duration: "4s", image_input: PNG });
     expect(calls[0]?.input).not.toHaveProperty("image");
@@ -397,6 +399,38 @@ describe("file stored media", () => {
     expect(filed).toMatchObject({ ok: true, state: "filed" });
     if (!filed.ok || filed.state !== "filed") throw new Error("not filed");
     expect(filed.paths.some((item) => item.endsWith("hero.png"))).toBe(true);
+    const clip = await generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "clip:from-hero", task_id: taskId, model: DEFAULT_CLIP, prompt: "The shop opens", image_media_id: still.view.media_id, duration_seconds: 4 },
+      now: NOW,
+      ai: { async run() { return { job_id: "job-hero" }; } },
+    });
+    if (!clip.ok) throw new Error("clip failed");
+    const finished = await readAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      mediaId: clip.view.media_id,
+      now: NOW + 5,
+      ai: { async run() { return { video: "https://cdn.example/clip.mp4" }; } },
+      fetchImpl: (async () => {
+        const bytes = new Uint8Array(16);
+        bytes.set([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70], 0);
+        return new Response(bytes, { headers: { "content-type": "video/mp4" } });
+      }) as typeof fetch,
+    });
+    expect(finished.ok).toBe(true);
+    const both = await fileAgentWork(sql, store, principal, { external_id: "file-both", title: "Hero clip", media_ids: [still.view.media_id, clip.view.media_id] }, NOW + 6);
+    expect(both).toMatchObject({ ok: true, state: "filed" });
+    const poster = await sql.get<{ poster_file_id: string }>(
+      `SELECT fp.poster_file_id FROM file_posters fp
+       JOIN files clip_file ON clip_file.id = fp.file_id
+       JOIN files still_file ON still_file.id = fp.poster_file_id
+       WHERE clip_file.relative_path LIKE '%.mp4' AND still_file.relative_path LIKE '%.png'`,
+    );
+    expect(poster?.poster_file_id).toBeTruthy();
     const saved = await sql.get<{ declared_content_type: string; held_at: number | null }>(
       "SELECT f.declared_content_type, b.held_at FROM files f JOIN batches b ON b.id = f.batch_id WHERE f.relative_path LIKE '%hero.png'",
     );
@@ -406,7 +440,7 @@ describe("file stored media", () => {
     const stolen = await fileAgentWork(sql, store, other.principal, { external_id: "file-2", title: "Stolen", media_ids: [still.view.media_id] }, NOW);
     expect(stolen).toMatchObject({ ok: false, error: "forbidden" });
     expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM agent_work_items"))?.n).toBe(before);
-    const clip = await generateAgentMedia({
+    const running = await generateAgentMedia({
       sql,
       store,
       agent: principal,
@@ -414,8 +448,8 @@ describe("file stored media", () => {
       now: NOW,
       ai: { async run() { return { job_id: "job-9" }; } },
     });
-    if (!clip.ok) throw new Error("clip failed");
-    const early = await fileAgentWork(sql, store, principal, { external_id: "file-3", title: "Too soon", media_ids: [clip.view.media_id] }, NOW);
+    if (!running.ok) throw new Error("clip failed");
+    const early = await fileAgentWork(sql, store, principal, { external_id: "file-3", title: "Too soon", media_ids: [running.view.media_id] }, NOW);
     expect(early).toMatchObject({ ok: false, error: "conflict" });
     expect(adaptArtifact("data:video/mp4;base64,AAAAIGZ0eXAAAA==")?.kind).toBe("markdown");
   });

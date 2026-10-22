@@ -525,8 +525,34 @@ async function takenPaths(sql: Sql, workspaceId: string, folder: string, agentId
   return new Set(rows.map((row) => row.path));
 }
 
+async function rememberPosters(
+  sql: Sql,
+  batchId: string,
+  links: { mediaId: string; sourceMediaId: string | null; relativePath: string }[],
+): Promise<void> {
+  if (links.length === 0) return;
+  const rows = await sql.all<{ id: string; relative_path: string }>("SELECT id, relative_path FROM files WHERE batch_id = ?", [batchId]);
+  const byPath = new Map(rows.map((row) => [row.relative_path.toLowerCase(), row.id]));
+  const fileOf = new Map<string, string>();
+  for (const link of links) {
+    const id = byPath.get(link.relativePath.toLowerCase());
+    if (id) fileOf.set(link.mediaId, id);
+  }
+  for (const link of links) {
+    if (!link.sourceMediaId) continue;
+    const clip = fileOf.get(link.mediaId);
+    const still = fileOf.get(link.sourceMediaId);
+    if (!clip || !still || clip === still) continue;
+    await sql.run(
+      `INSERT INTO file_posters (file_id, poster_file_id) VALUES (?, ?)
+       ON CONFLICT (file_id) DO UPDATE SET poster_file_id = excluded.poster_file_id`,
+      [clip, still],
+    );
+  }
+}
+
 /** Files for a filing: the summary plus attachments, under the agent's folder with readable names. */
-function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number, folder: string, taken: Set<string>, media: { name: string; bytes: Uint8Array; contentType: string }[] = []): WorkflowFile[] {
+function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number, folder: string, taken: Set<string>, media: { id?: string; sourceMediaId?: string | null; name: string; bytes: Uint8Array; contentType: string }[] = []): { files: WorkflowFile[]; mediaPaths: { mediaId: string; sourceMediaId: string | null; relativePath: string }[] } {
   const run = itemId.slice(0, 8);
   // Keyed on the exact stored name (same extension logic as storage), so post.md and post.html can sit side by side.
   const claim = (stem: string, file: Pick<WorkflowFile, "body" | "name" | "bytes" | "contentType">): string => {
@@ -542,6 +568,7 @@ function filesFor(itemId: string, summary: string, payload: WorkPayload, now: nu
   };
   const summaryStem = payload.folder ? `${fileStem(payload.title)} - summary` : "summary";
   const files: WorkflowFile[] = [{ workflow: "work", run, node: "summary", body: summary, path: claim(summaryStem, { body: summary }) }];
+  const mediaPaths: { mediaId: string; sourceMediaId: string | null; relativePath: string }[] = [];
   if (payload.content?.trim().startsWith("data:")) {
     files.push({ workflow: "work", run, node: "content", body: payload.content, path: claim("content", { body: payload.content }) });
   }
@@ -551,6 +578,10 @@ function filesFor(itemId: string, summary: string, payload: WorkPayload, now: nu
   }
   for (const file of media) {
     const stem = fileStem(file.name);
+    const stored = { body: "", bytes: file.bytes, contentType: file.contentType, name: file.name };
+    const path = claim(stem, stored);
+    const extension = workflowFileExtension(stored);
+    if (file.id && extension) mediaPaths.push({ mediaId: file.id, sourceMediaId: file.sourceMediaId ?? null, relativePath: `${path}.${extension}` });
     files.push({
       workflow: "work",
       run,
@@ -559,24 +590,25 @@ function filesFor(itemId: string, summary: string, payload: WorkPayload, now: nu
       bytes: file.bytes,
       contentType: file.contentType,
       name: file.name,
-      path: claim(stem, { body: "", bytes: file.bytes, contentType: file.contentType, name: file.name }),
+      path,
     });
   }
   void now;
-  return files;
+  return { files, mediaPaths };
 }
 
 async function writeFiled(
   sql: Sql,
   store: ObjectStore,
-  input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; route: Extract<Route, { ok: true }>; actor: string; now: number; media?: { name: string; bytes: Uint8Array; contentType: string }[] },
+  input: { itemId: string; agent: AgentPrincipal; payload: WorkPayload; route: Extract<Route, { ok: true }>; actor: string; now: number; media?: { id?: string; sourceMediaId?: string | null; name: string; bytes: Uint8Array; contentType: string }[] },
 ): Promise<{ ok: true; paths: string[]; batchId: string; taskClosed: boolean; awaitingReview?: boolean; review: FilingReview; folder: string } | { ok: false }> {
   const { route, payload, agent } = input;
   const summary = summaryMarkdown(agent, payload, input.now);
   const folder = payload.folder ?? defaultFolder(input.now, payload.title);
   const taken = await takenPaths(sql, route.space.id, folder, agent.agentId, payload.supersedes);
   // Held: staff, Client Services and the client's agents see it; client members only after Client Services approves.
-  const files = filesFor(input.itemId, summary, payload, input.now, folder, taken, input.media ?? []);
+  const prepared = filesFor(input.itemId, summary, payload, input.now, folder, taken, input.media ?? []);
+  const files = prepared.files;
   const summaryPath = files[0]?.path ? `${files[0].path}.md` : null;
   const stored = await storeWorkflowOutput({
     sql,
@@ -592,6 +624,7 @@ async function writeFiled(
     workItemId: input.itemId,
   });
   if (!stored.batchId || stored.stored.length === 0) return { ok: false };
+  await rememberPosters(sql, stored.batchId, prepared.mediaPaths);
   const built = payload.builtWork ?? [];
   const screenshotFiles = new Map<string, string>();
   if (built.some((item) => item.screenshot)) {
@@ -742,7 +775,7 @@ export async function fileAgentWork(sql: Sql, store: ObjectStore, agent: AgentPr
     const known = await sql.get<{ id: string }>("SELECT id FROM client_work_requests WHERE id = ? AND organization_id = ?", [payload.workRequestId, route.organizationId]);
     if (!known) return { ok: false, error: "invalid", message: "work_request_id is not a request of this client." };
   }
-  let media: { name: string; bytes: Uint8Array; contentType: string }[] = [];
+  let media: { id: string; sourceMediaId: string | null; name: string; bytes: Uint8Array; contentType: string }[] = [];
   if (payload.mediaIds.length) {
     if (!route.ok) return { ok: false, error: "invalid", message: "media_ids need a client this agent is assigned to." };
     const loaded = await readyMediaBytes(sql, store, agent, route.organizationId, payload.mediaIds);

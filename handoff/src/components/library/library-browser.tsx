@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { LibraryArtifact } from "@/lib/library-artifacts";
 import type { LibraryPage } from "@/lib/library-queries";
 import { LibraryGallery } from "./library-gallery";
+import type { ScheduleState } from "./schedule-this-form";
 import { LIBRARY_PLATFORMS, LIBRARY_SORTS, LIBRARY_STATUS_LABEL, LIBRARY_TABS, emptyLibraryCopy, libraryHref, nextLibraryHref } from "./library-view";
 
 type PromotionState = { message: string; href?: string };
@@ -47,6 +48,7 @@ export function LibraryBrowser({
   promotionAction = null,
   promotionTargets = [],
   projects = [],
+  schedule = null,
 }: {
   slug: string;
   page: Pick<LibraryPage, "artifacts" | "nextCursor" | "counts"> | null;
@@ -56,9 +58,10 @@ export function LibraryBrowser({
   promotionAction?: ((previous: PromotionState, formData: FormData) => Promise<PromotionState>) | null;
   promotionTargets?: { id: string; title: string }[];
   projects?: { id: string; name: string }[];
+  schedule?: { workspaceId: string; platforms: { value: string; label: string }[]; action: (previous: ScheduleState, formData: FormData) => Promise<ScheduleState> } | null;
 }) {
   const activeFilters = ["search", "status", "platform", "from", "to", "project", "needs"]
-    .filter((key) => Boolean(query[key])).length;
+    .filter((key) => (key === "status" ? Boolean(query.status && query.status !== "all") : Boolean(query[key]))).length;
   const emptyAction = query.search
     ? {
         label: "Clear search",
@@ -141,6 +144,7 @@ export function LibraryBrowser({
         viewLink={viewLink}
         promotionAction={promotionAction}
         promotionTargets={promotionTargets}
+        schedule={schedule}
       />
       {page?.nextCursor ? <Link className="inline-flex min-h-11 items-center text-sm underline" href={nextLibraryHref(slug, query, page.nextCursor)}>Next</Link> : null}
     </div>
@@ -155,7 +159,7 @@ function LibraryFinder({ slug, query }: { slug: string; query: Record<string, st
   const all = !looking ? "border-optic bg-optic/10 text-optic" : "border-border";
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${all}`} href={libraryHref(slug, { ...query, status: undefined, needs: undefined, cursor: undefined })}>
+      <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${all}`} href={libraryHref(slug, { ...query, status: "all", needs: undefined, cursor: undefined })}>
         All
       </Link>
       <Link className={`inline-flex min-h-11 items-center rounded-full border px-3 text-sm ${tab}`} href={libraryHref(slug, { ...query, status: "needs_review", needs: undefined, cursor: undefined })}>
