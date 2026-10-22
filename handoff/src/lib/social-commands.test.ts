@@ -234,7 +234,7 @@ describe("social commands", () => {
       timing: scheduled,
       now: NOW,
     });
-    await fresh.run("UPDATE deliverables SET version = 2, updated_at = ? WHERE id = 'd-1'", [NOW]);
+    await fresh.run("UPDATE deliverables SET version = 2, published_version = 2, updated_at = ? WHERE id = 'd-1'", [NOW]);
     await expect(
       executeSocialPlan(fresh, {
         organizationId: "org-1",

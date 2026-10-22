@@ -23,7 +23,10 @@ export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
   const action = piece ?? artifact.actions[0];
   const href = action?.href ?? null;
   const external = action ? externalAction(action.kind) : false;
-  const secondary = artifact.actions.filter((item) => item !== action && item.href);
+  const postUrl = artifact.destinations.find((destination) => destination.url)?.url
+    ?? artifact.actions.find((item) => item.kind === "open_post" && item.href?.startsWith("http"))?.href
+    ?? null;
+  const secondary = artifact.actions.filter((item) => item !== action && item.href && item.href !== postUrl);
   const body = (
     <>
       <div className="relative">
@@ -40,6 +43,9 @@ export function ArtifactCard({ artifact }: { artifact: LibraryArtifact }) {
           {body}
         </a>
       ) : body}
+      {postUrl ? (
+        <a className="break-all text-sm underline" href={postUrl} target="_blank" rel="noreferrer noopener">{postUrl}</a>
+      ) : null}
       {artifact.promotesTitle ? <p className="text-sm">Promotes: {artifact.promotesTitle}</p> : null}
       {artifact.destinations.length > 0 ? (
         <ul className="flex flex-wrap gap-2 text-xs">

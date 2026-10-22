@@ -5,7 +5,8 @@ import { sqliteSql, type Sql } from "@/db/sql";
 import type { Caller } from "./authz";
 import { listLibraryArtifacts } from "./library-queries";
 import { listSocialReviewPieces } from "./social-review";
-import { pieceOpenHref, setPieceShelf, shelfNote, shelfPostBlock, shelfRemoveBlock } from "./finished-shelf";
+import { pieceOpenHref, piecesOnShelf, removalLine, setPieceShelf, shelfNote, shelfPostBlock, shelfRemoveBlock } from "./finished-shelf";
+import { postOnCalendar } from "@/components/social/social-board";
 
 const NOW = 1_800_000_000_000;
 const client: Caller = { userId: "c-1", staff: null, operatorOf: [], memberships: [{ workspaceId: "ws-1", role: "client_owner" }] };
@@ -66,10 +67,19 @@ describe("finished work shelf", () => {
     expect(shelfNote("ready", 0).text).toBe("Approved work is on the calendar, or not ready yet.");
     expect(shelfNote("ready", 1)).toEqual({ text: "1 approved piece is not on the calendar.", status: "ready" });
     expect(shelfNote("ready", 2).text).toBe("2 approved pieces are not on the calendar.");
-    expect(shelfRemoveBlock(["failed"])).toBeNull();
-    expect(shelfRemoveBlock(["scheduled"])).toBe("Cancel the post on Social before you remove this.");
+    expect(shelfRemoveBlock([{ status: "failed", id: "post-failed" }], "org-1")).toBeNull();
+    expect(shelfRemoveBlock([{ status: "scheduled", id: "post-live" }], "org-1")).toBe(
+      "Cancel the post on Social before you remove this. Post post-live is on /clients/org-1?tab=social.",
+    );
+    expect(removalLine({ viewer: "client", actorKind: "agent", actorId: "ada", at: NOW })).toContain("Studio");
+    expect(removalLine({ viewer: "client", actorKind: "agent", actorId: "ada", at: NOW })).not.toContain("ada");
+    expect(removalLine({ viewer: "staff", actorKind: "agent", actorId: "ada", at: NOW })).toContain("ada");
     expect(shelfPostBlock(null)).toBeNull();
     expect(shelfPostBlock(NOW)).toBe("That piece was removed from the Library.");
+    expect(piecesOnShelf([{ id: "a", title: "Kept" }, { id: "b", title: "Gone" }], new Set(["b"]))).toEqual({
+      shown: [{ id: "a", title: "Kept" }],
+      skipped: ["Gone"],
+    });
   });
 
   it("removes a piece from the Library and from the Social lists, and puts it back", async () => {
@@ -99,11 +109,18 @@ describe("finished work shelf", () => {
   it("keeps a live post, and hides the piece from someone outside the space", async () => {
     const sql = await database();
     const blocked = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "live", version: 1, removed: true }, NOW);
-    expect(blocked).toEqual({ ok: false, error: "Cancel the post on Social before you remove this." });
+    expect(blocked.ok).toBe(false);
+    if (blocked.ok) return;
+    expect(blocked.error).toContain("post-live");
+    expect(blocked.error).toContain("/clients/org-1?tab=social");
     expect((await sql.get<{ removed_at: number | null }>("SELECT removed_at FROM deliverable_items WHERE id = 'live'"))?.removed_at).toBeNull();
 
     const failed = await setPieceShelf(sql, client, { deliverableId: "d-1", itemId: "failed", version: 1, removed: true }, NOW);
     expect(failed).toEqual({ ok: true });
+    const failedPost = await sql.get<{ status: string; error: string | null }>("SELECT status, error FROM social_posts WHERE id = 'post-failed'");
+    expect(postOnCalendar({ status: failedPost?.status ?? "", error: failedPost?.error ?? null, scheduledFor: 1 })).toBe(false);
+    const livePost = await sql.get<{ status: string }>("SELECT status FROM social_posts WHERE id = 'post-live'");
+    expect(livePost?.status).toBe("scheduled");
 
     const hidden = await setPieceShelf(sql, stranger, { deliverableId: "d-1", itemId: "open", version: 1, removed: true }, NOW);
     expect(hidden).toEqual({ ok: false, error: "That piece is not here." });

@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A sent round is an index of pictures. The open piece is the proof, with Approve, ask for a change, Remove, and a staff schedule form. Post to social skips removed pieces and names them. Failed cards leave the calendar when the piece is removed. The assigned lead can list the Library, remove or restore a piece, choose a file, open a view link, and release its own held round. The pieces stay unapproved.
+- **Why** — The client was still looking at the whole set to decide one piece, and the agent piece list was the working copy, including pieces already taken off the shelf.
+- **Code touchpoints** — `handoff/src/app/w/[slug]/work/[id]/page.tsx`, `handoff/src/lib/finished-shelf.ts`, `handoff/src/lib/social-queries.ts`, `handoff/src/lib/social-plans.ts`, `handoff/src/lib/agent-library.ts`, `handoff/src/app/api/agent-library/`, `handoff/src/lib/agent-filing-review.ts`, `handoff/src/app/api/agent-work/[id]/route.ts`.
+- **Data-flow impact** — Scheduling reads the published round and skips `removed_at`. Release sets `published_version` and leaves item status `pending`. A failed post for a removed piece is marked `Piece removed.`
+- **API / schema impact** — `GET /api/agent-library`, `POST /api/agent-library/shelf`, `POST /api/agent-library/files`, `POST /api/agent-library/shares`, and `POST /api/agent-work/:id` `{ action: "release" }`. No new migration.
+- **Verification** — `npx vitest run` on the shelf, Library cards, social queries, social plans, social commands, and `src/app/api/agent-library/agent-library-routes.test.ts`. `npx eslint` on the touched files. `npx tsc --noEmit` reports only the older `LayoutProps` and `PageProps` errors. A signed-in click from Library to Remove to Social was not run here.
+
+## 2026-10-22
+
 - **What changed** — A plan for the next pass on finished work. The set becomes an index, the open piece stays the proof, and the assigned Grok lead runs the staff chores on that same shelf.
 - **Why** — The shelf stopped the triple list. Scheduling, the whole set, and the agent piece query still sit apart from it. The agents are the staff for those chores. The client still approves.
 - **Code touchpoints** — `docs/superpowers/plans/2026-10-22-premium-finished-work.md`, `README.md`.

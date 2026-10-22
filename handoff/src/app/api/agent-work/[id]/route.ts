@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { agentForToken, readAgentContextItem } from "@/lib/agent-work-filing";
-import { withdrawFiling } from "@/lib/agent-filing-review";
+import { releaseOwnRound, withdrawFiling } from "@/lib/agent-filing-review";
 
 export const dynamic = "force-dynamic";
 
@@ -34,10 +34,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   } catch {
     return NextResponse.json({ error: "Check the body." }, { status: 400 });
   }
-  if (body?.action !== "withdraw" && body?.action !== "retract") {
-    return NextResponse.json({ error: "action must be withdraw. To replace a filing, POST /api/agent-work with supersedes." }, { status: 400 });
-  }
   const { id } = await context.params;
+  if (body?.action === "release") {
+    const released = await releaseOwnRound(sql, { id, agent, now: Date.now() });
+    if (!released.ok) return NextResponse.json({ error: released.message, reasonCode: released.reasonCode }, { status: released.status });
+    return NextResponse.json({ ok: true, deliverable_id: released.deliverableId, published_version: released.publishedVersion, released: true });
+  }
+  if (body?.action !== "withdraw" && body?.action !== "retract") {
+    return NextResponse.json({ error: "action must be withdraw or release. To replace a filing, POST /api/agent-work with supersedes." }, { status: 400 });
+  }
   const done = await withdrawFiling(sql, {
     id,
     by: { kind: "agent", agent },

@@ -160,6 +160,51 @@ describe("social read models", () => {
     expect(own.authorization).toBe("allowed");
   });
 
+  it("reads the published shelf and counts it the same way as the client page", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort, removed_at
+       ) VALUES ('i-look', 'd-1', 1, NULL, 'static', NULL, 'Needs a look', 'Caption', '[]', NULL, 'pending', 1, NULL),
+              ('i-gone', 'd-1', 1, NULL, 'static', NULL, 'Gone', 'Caption', '[]', NULL, 'pending', 2, ?),
+              ('i-shelf', 'd-1', 1, NULL, 'static', NULL, 'Waiting to schedule', 'Caption', '[]', NULL, 'approved', 3, NULL)`,
+      [NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, project_id, workspace_id, title, kind, status, version, published_version,
+         actor_kind, actor_id, created_at, updated_at
+       ) VALUES ('d-draft', 'org-1', NULL, 'ws-1', 'Draft round', 'social_pack', 'draft', 1, NULL, 'staff', 'staff-1', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+       ) VALUES ('i-draft', 'd-draft', 1, NULL, 'static', NULL, 'Working copy', 'Caption', '[]', NULL, 'pending', 0)`,
+    );
+    const pieces = await listAgentSocialPieces(sql, lead, { client: "acme.example" }, NOW);
+    expect(pieces.ok).toBe(true);
+    if (!pieces.ok) return;
+    expect(pieces.pieces.map((piece) => piece.itemId)).not.toContain("i-gone");
+    expect(pieces.pieces.find((piece) => piece.itemId === "i-draft")?.state).toBe("held");
+    expect(pieces.pieces.find((piece) => piece.itemId === "i-draft")?.state).not.toBe("review");
+    const removed = await listAgentSocialPieces(sql, lead, { client: "acme.example", state: "removed" }, NOW);
+    expect(removed.ok).toBe(true);
+    if (!removed.ok) return;
+    expect(removed.pieces.map((piece) => piece.itemId)).toEqual(["i-gone"]);
+    const other = await listAgentSocialPieces(sql, lead, { client: "other.example" }, NOW);
+    expect(other.ok).toBe(false);
+    const overview = await socialOverview(sql, lead, { domain: "acme.example" }, NOW);
+    expect(overview.ok).toBe(true);
+    if (!overview.ok) return;
+    expect(overview.needsALook).toBe(1);
+    expect(overview.approvedNotScheduled).toBe(1);
+    expect(overview.needsALookText).toBe("1 piece needs a look.");
+    expect(overview.approvedNotScheduledText).toBe("1 approved piece is not on the calendar.");
+    expect(overview.library.needsALook).toBe("/w/acme/library?status=needs_review");
+    expect(overview.library.approvedNotScheduled).toBe("/w/acme/library?status=ready");
+  });
+
   it("treats the agent-actions flag as off unless it is explicitly on", () => {
     expect(socialAgentActionsEnabled()).toBe(false);
     process.env.SOCIAL_AGENT_ACTIONS = "on";

@@ -20,6 +20,7 @@ describe("social board", () => {
     expect(postOnCalendar({ status: "draft", error: null, scheduledFor: 1 })).toBe(true);
     expect(postOnCalendar({ status: "draft", error: null, scheduledFor: null })).toBe(false);
     expect(postOnCalendar({ status: "scheduled", error: "Cancelled.", scheduledFor: 1 })).toBe(false);
+    expect(postOnCalendar({ status: "failed", error: "Piece removed.", scheduledFor: 1 })).toBe(false);
   });
 
   it("puts pieces that need a look ahead of change requests, and approved work with no live post in the ready list", () => {

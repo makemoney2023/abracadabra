@@ -201,9 +201,10 @@ async function loadContext(sql: Sql, input: PrepareSocialPlanInput): Promise<{ f
     return { flight: { executable: [], blocked: [], warnings: [], reason: "selection_required" }, cadenceRevision: cadence?.updated_at ?? null };
   }
   const items = await sql.all<ItemRecord>(
-    `SELECT i.id, i.version, d.version AS current_version, i.title, i.format, i.status, i.media_json, i.deliverable_id
+    `SELECT i.id, i.version, i.version AS current_version, i.title, i.format, i.status, i.media_json, i.deliverable_id
      FROM deliverable_items i JOIN deliverables d ON d.id = i.deliverable_id
-     WHERE d.organization_id = ? AND i.version = d.version AND i.id IN (${input.itemIds.map(() => "?").join(", ")})`,
+     WHERE d.organization_id = ? AND d.published_version IS NOT NULL AND i.version = d.published_version
+       AND i.removed_at IS NULL AND i.id IN (${input.itemIds.map(() => "?").join(", ")})`,
     [input.organizationId, ...input.itemIds],
   );
   const settings = items.length

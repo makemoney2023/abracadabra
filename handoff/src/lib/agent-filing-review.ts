@@ -1,5 +1,5 @@
 import type { Sql } from "@/db/sql";
-import type { AgentPrincipal, WorkPayload } from "@/lib/agent-work-filing";
+import { assignmentFor, type AgentPrincipal, type WorkPayload } from "@/lib/agent-work-filing";
 import { itemForPath } from "@/lib/artifact-adapter";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { queueProductEvent } from "@/lib/notifications";
@@ -462,6 +462,100 @@ export async function releaseHeldWork(
     );
   }
   return { released: ids, hidden, deliverableId, publishedVersion, notice: mode };
+}
+
+export type OwnReleaseResult =
+  | { ok: true; deliverableId: string; publishedVersion: number }
+  | { ok: false; status: 403 | 404 | 409; reasonCode: string; message: string };
+
+/**
+ * The lead releases its own held round onto the client shelf.
+ * Pieces stay unapproved. Mail goes out only when the client already uses automatic updates.
+ */
+export async function releaseOwnRound(
+  sql: Sql,
+  input: { id: string; agent: AgentPrincipal; now: number },
+): Promise<OwnReleaseResult> {
+  const row = await sql.get<{
+    id: string;
+    agent_id: string;
+    organization_id: string | null;
+    workspace_id: string | null;
+    project_id: string | null;
+    title: string;
+    state: string;
+    batch_id: string | null;
+    retracted_at: number | null;
+    released_at: number | null;
+    deliverable_id: string | null;
+    deliverable_version: number | null;
+  }>(
+    `SELECT id, agent_id, organization_id, workspace_id, project_id, title, state, batch_id, retracted_at, released_at,
+            deliverable_id, deliverable_version
+     FROM agent_work_items WHERE id = ?`,
+    [input.id],
+  );
+  if (!row || row.state !== "filed" || row.retracted_at != null || !row.organization_id) {
+    return { ok: false, status: 404, reasonCode: "not_found", message: "No such filing." };
+  }
+  const assignment = assignmentFor(input.agent, row.organization_id);
+  if (!assignment || row.agent_id !== input.agent.agentId) {
+    return { ok: false, status: 404, reasonCode: "not_found", message: "No such filing." };
+  }
+  if (assignment.role !== "lead") {
+    return { ok: false, status: 403, reasonCode: "forbidden", message: "Only the lead can release a round." };
+  }
+  const policy = await sql.get<{ mode: string }>("SELECT mode FROM social_agent_policies WHERE organization_id = ?", [row.organization_id]);
+  const mode = policy?.mode === "observe" || policy?.mode === "draft" || policy?.mode === "schedule_approved" || policy?.mode === "managed" ? policy.mode : "draft";
+  if (mode !== "schedule_approved" && mode !== "managed") {
+    return { ok: false, status: 403, reasonCode: "policy_mode", message: "This client still waits for a person to release the round." };
+  }
+  const batch = row.batch_id
+    ? await sql.get<{ held_at: number | null; released_at: number | null }>("SELECT held_at, released_at FROM batches WHERE id = ?", [row.batch_id])
+    : undefined;
+  const held = Boolean(batch && batch.held_at != null && batch.released_at == null && row.released_at == null);
+  if (!held || !row.deliverable_id || row.deliverable_version == null) {
+    return { ok: false, status: 409, reasonCode: "not_held", message: "That round is not held." };
+  }
+  const deliverableId = row.deliverable_id;
+  const publishedVersion = row.deliverable_version;
+  await sql.batch([
+    {
+      statement: "UPDATE agent_work_items SET released_at = ?, updated_at = ? WHERE id = ?",
+      params: [input.now, input.now, row.id],
+    },
+    {
+      statement: "UPDATE batches SET released_at = ? WHERE id = ? AND released_at IS NULL",
+      params: [input.now, row.batch_id],
+    },
+    {
+      statement: `UPDATE deliverables SET published_version = ?, version = MAX(version, ?), published_at = ?, status = 'in_review', updated_at = ? WHERE id = ?`,
+      params: [publishedVersion, publishedVersion, input.now, input.now, deliverableId],
+    },
+    {
+      statement: `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
+        VALUES (?, ?, ?, ?, 'deliverable_published', 'agent', ?, ?, ?, ?)`,
+      params: [
+        crypto.randomUUID(),
+        row.organization_id,
+        row.project_id,
+        row.workspace_id,
+        input.agent.agentId,
+        `${row.title} (v${publishedVersion}) is released to the client space.`,
+        JSON.stringify({ deliverable_id: deliverableId, version: publishedVersion, work_item_id: row.id, approved: false }),
+        input.now,
+      ],
+    },
+  ]);
+  const org = await sql.get<{ client_update_mode: string | null }>("SELECT client_update_mode FROM organizations WHERE id = ?", [row.organization_id]);
+  if (org?.client_update_mode === "auto") {
+    const sent = await sql.get<{ deliverable_id: string }>("SELECT deliverable_id FROM deliverable_notices WHERE deliverable_id = ? AND version = ?", [deliverableId, publishedVersion]);
+    if (!sent) {
+      await sql.run("INSERT INTO deliverable_notices (deliverable_id, version, sent_at) VALUES (?, ?, ?)", [deliverableId, publishedVersion, input.now]);
+      await queueProductEvent(sql, { kind: "deliverable.published", deliverableId, version: publishedVersion, title: row.title }, input.now);
+    }
+  }
+  return { ok: true, deliverableId, publishedVersion };
 }
 
 // ---------- Withdraw ----------

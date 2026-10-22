@@ -1,5 +1,7 @@
 # Premium finished work, run by the Grok agents
 
+> **Status:** Implemented on `cursor/finished-work-shelf-f3c1`. The tasks below are the record of what shipped. A signed-in browser pass of Library → piece → Remove → Social was not run in that change.
+
 > **For agentic workers:** Implement one task at a time. Write the failing test first, confirm the intended failure, then make the smallest complete change. Do not start the next task while the current test is red.
 
 **Goal:** Make Files, the Library, and Social feel like one finished-work desk. The client sees pictures and one next step. The assigned Grok lead does the staff job on that same desk.
