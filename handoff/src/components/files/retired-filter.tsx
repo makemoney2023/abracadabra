@@ -3,18 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-
-/** Query value that turns the filter on. Pages read it with `showRetired`. */
-export const RETIRED_PARAM = "retired";
-
-export function showRetired(value: string | string[] | undefined): boolean {
-  return value === "1";
-}
-
-/** "Show retired (2)" or "Show retired", for the count line next to the switch. */
-export function retiredLabel(count: number): string {
-  return count > 0 ? `Show retired (${count})` : "Show retired";
-}
+import { RETIRED_PARAM, retiredLabel } from "@/lib/retired-param";
 
 /**
  * Retired files (superseded or withdrawn agent filings) are hidden from Files by default. Staff flip this to see them.
