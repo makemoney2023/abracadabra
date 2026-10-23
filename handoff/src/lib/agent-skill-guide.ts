@@ -86,6 +86,14 @@ a plan for an agent that is not allowed is 403. You prepare a plan, then run it.
 external_id (your idempotency key) on every write; reuse it to retry safely, and use a new one for a new post.
   1. Card first: the deliverable's card must be Done and the piece approved. Save the caption for the network if it is not saved yet
      (PATCH $HQ/api/agent-social/pieces/<item id>/variants). You cannot change the caption of a post that is already scheduled: 409 post_scheduled.
+     Approving one piece: if the piece is still pending and you are allowed to approve (a client lead in schedule_approved or managed mode, or a
+     hire staff granted can_approve), approve exactly that piece. It is the same item-level approval a staff member or the client gives:
+       POST $HQ/api/agent-social/items/<item id>/approve   {"client":"<domain>","external_id":"approve-<item>-v1","deliverable_id":"<id>","reason":"<who asked, e.g. Christopher said so in chat>"}
+       POST $HQ/api/agent-social/items/<item id>/unapprove  (same body) puts an approved piece back to pending, until it is scheduled.
+     It only changes that one piece, at the published version, and it never schedules or posts: prepare and run a plan afterwards (steps 2 and 3).
+     Never approve a sibling you were not asked about (a poster picture approved by mistake would be a separate picture post). Errors: 403 (not
+     allowed, feature off, or mode draft or observe), 404 not_found, 409 stale_version / piece_removed / not_social_piece / deliverable_not_reviewable /
+     changes_requested / project_excluded / post_scheduled, 429 rate_limited. Approving twice is safe: changed:false. Every approval is logged with your agent id and reason.
   2. Prepare:
      POST $HQ/api/agent-social/plans   {"client":"<domain>","external_id":"li-<work item>-v1","action":"schedule","deliverable_id":"<id>","work_item_id":"<Done card id>",
        "selection":{"mode":"explicit","item_ids":["<item id>"],"account_ids":["<linkedin account id>"]},
@@ -101,7 +109,7 @@ external_id (your idempotency key) on every write; reuse it to retry safely, and
   4. Status: GET $HQ/api/agent-social/plans/<planId> (outcomes), GET $HQ/api/agent-social/posts?client=<domain>, GET $HQ/api/agent-social/attention.
   5. Move or cancel a scheduled post: POST $HQ/api/agent-social/posts/<post id>/move-plan {"client","external_id","scheduled_for"} or /cancel-plan,
      then the same approval and execute. A failed post shows in attention; ask staff before retrying with a token that has expired.
-Limits per agent and client: 20 plans an hour, 10 posts a day, 3 publish-now a day (429 rate_limited). You cannot sweep: name the pieces.
+Limits per agent and client: 20 plans an hour, 10 posts a day, 3 publish-now a day, 30 approvals an hour (429 rate_limited). You cannot sweep: name the pieces.
 Alt text is not supported yet; do not promise it.
 
 ## Client Services
