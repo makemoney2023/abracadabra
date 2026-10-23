@@ -713,6 +713,8 @@ export const course = {
   sameAs: "https://learn.abra-ca-dabra.app",
   image: "/assets/llmcourse-home.webp",
   imageAlt: "LLM Leverage course home: a lesson preview and a rollout path.",
+  cardImage: "/assets/llmcourse-live-ui.webp",
+  cardImageAlt: "The live LLM Leverage course site at learn.abra-ca-dabra.app: the abracadabra bar, the course menu and the headline \u201cLLM Leverage: Train teams to get reliable AI output\u2014not longer prompts.\u201d on a dark page.",
   description: "A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, each with a quiz you pass at 75%.",
 };
 
@@ -724,8 +726,8 @@ export const productCards = [
     name: course.name,
     href: course.sameAs,
     external: true,
-    image: course.image,
-    imageAlt: course.imageAlt,
+    image: course.cardImage,
+    imageAlt: course.cardImageAlt,
     description: course.description,
     ariaLabel: "LLM Leverage course: open the course at learn.abra-ca-dabra.app",
     type: "Course",
