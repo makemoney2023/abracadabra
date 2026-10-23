@@ -160,6 +160,7 @@ const SPLIT_SIZES = "(min-width: 1024px) 46vw, 100vw";
 const ASSET_SIZE = {
   "/assets/schema-home.webp": [1600, 1000],
   "/assets/llmcourse-home.webp": [1600, 1000],
+  "/assets/llmcourse-live-ui.webp": [1600, 1000],
   "/assets/superfunnel-getting-started.webp": [1920, 1080],
   "/assets/strongfoam-erp-demo.webp": [1920, 1080],
   "/assets/course-hero-bg.webp": [1280, 720],
