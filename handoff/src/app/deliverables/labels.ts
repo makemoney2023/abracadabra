@@ -48,6 +48,16 @@ export function listedMedia(mediaJson: string): { role: string; video: boolean; 
   }
 }
 
+/**
+ * Media for a piece shown as a file or a plain card. When it holds a clip, its "poster" picture is the frame shown before
+ * play (poster), not a second picture beside the player.
+ */
+export function playableMedia(mediaJson: string): { items: { role: string; video: boolean; image: boolean }[]; poster: string | null } {
+  const all = listedMedia(mediaJson);
+  const poster = all.some((entry) => entry.video) ? (all.find((entry) => entry.role === "poster" && entry.image)?.role ?? null) : null;
+  return { items: all.filter((entry) => (entry.video || entry.image) && entry.role !== poster), poster };
+}
+
 export const ITEM_FORMAT_LABEL: Record<ItemFormat, string> = {
   video: "Video",
   static: "Picture",

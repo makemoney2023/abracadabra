@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { Caller } from "@/lib/authz";
 import { migrate } from "@/db/migrate";
 import { sqliteSql, type Sql } from "@/db/sql";
-import { clientIpFromHeaders, createViewLink, coarseUserAgent, libraryViewLinksEnabled, listViewLinks, openViewLink, refreshViewLink, revokeViewLink, shareHashPepperAvailable, unlockViewLink, viewDownload, viewPicture } from "./library-shares";
+import { clientIpFromHeaders, createViewLink, coarseUserAgent, libraryViewLinksEnabled, listViewLinks, openViewLink, refreshViewLink, revokeViewLink, shareHashPepperAvailable, unlockViewLink, viewDownload, viewPicture, viewVideo } from "./library-shares";
 
 const NOW = 1_800_000_000_000;
 const owner: Caller = { userId: "owner-1", staff: null, operatorOf: [], memberships: [{ workspaceId: "ws-1", role: "client_owner" }] };
@@ -284,6 +284,55 @@ describe("library view links", () => {
     expect(picture.ok && picture.key).toBe("objects/hero.png");
     expect(picture.ok && picture.contentType).toBe("image/jpeg");
     expect(blocked(await viewPicture(sql, first.url.split("/view/")[1] ?? "", other.ok ? other.view.items[0]?.publicId ?? "" : "", NOW))).toBe(404);
+  });
+
+  it("streams a shared clip with its poster, only for an item on this share", async () => {
+    const sql = await database();
+    process.env.LIBRARY_VIEW_LINKS = "on";
+    process.env.HANDOFF_SHARE_HASH_PEPPER = "pepper";
+    await sql.run(
+      "UPDATE deliverable_items SET media_json = ? WHERE id = 'item-1'",
+      [JSON.stringify([
+        { r2_key: "objects/clip.mp4", role: "main", content_type: "video/mp4" },
+        { r2_key: "objects/poster.png", role: "poster", content_type: "image/png" },
+      ])],
+    );
+    const share = await createViewLink(sql, owner, {
+      workspaceId: "ws-1",
+      items: [{ resourceKind: "deliverable_item", resourceId: "item-1", resourceVersion: 1 }],
+    }, NOW, "https://handoff.example");
+    expect(share.ok).toBe(true);
+    if (!share.ok) return;
+    const token = share.url.split("/view/")[1] ?? "";
+    const opened = await openViewLink(sql, token, NOW);
+    expect(opened.ok && opened.view.items[0]).toMatchObject({ hasVideo: true, hasPicture: true });
+    expect(JSON.stringify(opened)).not.toContain("objects/clip.mp4");
+    const publicId = opened.ok ? opened.view.items[0]?.publicId ?? "" : "";
+    const clip = await viewVideo(sql, token, publicId, NOW);
+    expect(clip.ok && clip.key).toBe("objects/clip.mp4");
+    expect(clip.ok && clip.contentType).toBe("video/mp4");
+    const poster = await viewPicture(sql, token, publicId, NOW);
+    expect(poster.ok && poster.key).toBe("objects/poster.png");
+    expect(blocked(await viewVideo(sql, token, "not-an-item", NOW))).toBe(404);
+    expect(blocked(await viewVideo(sql, "wrong-token", publicId, NOW))).toBe(404);
+    expect((await revokeViewLink(sql, owner, "ws-1", share.id, NOW)).ok).toBe(true);
+    expect(blocked(await viewVideo(sql, token, publicId, NOW))).toBe(404);
+  });
+
+  it("does not offer a clip for a picture-only item", async () => {
+    const sql = await database();
+    process.env.LIBRARY_VIEW_LINKS = "on";
+    process.env.HANDOFF_SHARE_HASH_PEPPER = "pepper";
+    await sql.run("UPDATE deliverable_items SET media_json = ? WHERE id = 'item-1'", [JSON.stringify([{ r2_key: "objects/hero.png", role: "main", content_type: "image/png" }])]);
+    const share = await createViewLink(sql, owner, {
+      workspaceId: "ws-1",
+      items: [{ resourceKind: "deliverable_item", resourceId: "item-1", resourceVersion: 1 }],
+    }, NOW, "https://handoff.example");
+    if (!share.ok) throw new Error("no share");
+    const token = share.url.split("/view/")[1] ?? "";
+    const opened = await openViewLink(sql, token, NOW);
+    expect(opened.ok && opened.view.items[0]?.hasVideo).toBe(false);
+    expect(blocked(await viewVideo(sql, token, opened.ok ? opened.view.items[0]?.publicId ?? "" : "", NOW))).toBe(404);
   });
 });
 

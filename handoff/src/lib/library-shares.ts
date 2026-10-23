@@ -7,6 +7,7 @@ import { deriveArtifactType, type LibraryArtifactType } from "@/lib/library-arti
 import { pictureRole, type PictureMedia } from "@/lib/picture-role";
 import { previewContentType } from "@/lib/preview";
 import { thumbnailable } from "@/lib/file-type";
+import { videoTypeForName } from "@/lib/video-files";
 
 const PBKDF2_ITERATIONS = 310_000;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -261,7 +262,7 @@ function available(share: ShareRow, now: number): boolean {
   return share.revoked_at == null && (share.expires_at == null || share.expires_at > now);
 }
 
-export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string; artifactType: LibraryArtifactType; hasPicture: boolean }[] } } | { ok: false; error: "unavailable" | "locked" }> {
+export async function openViewLink(sql: Sql, token: string, now: number, sessionToken?: string | null, audit?: ShareAudit): Promise<{ ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind: string; artifactType: LibraryArtifactType; hasPicture: boolean; hasVideo: boolean }[] } } | { ok: false; error: "unavailable" | "locked" }> {
   if (!libraryViewLinksEnabled()) return { ok: false, error: "unavailable" };
   if (!shareHashPepperAvailable()) return { ok: false, error: "unavailable" };
   const share = await shareByToken(sql, token);
@@ -279,6 +280,7 @@ export async function openViewLink(sql: Sql, token: string, now: number, session
     if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version, "pinned"))) continue;
     const presentation = await itemPresentation(sql, item.resource_kind, item.resource_id, item.resource_version);
     const picture = await storedPicture(sql, item.resource_kind, item.resource_id, item.resource_version);
+    const video = await storedVideo(sql, item.resource_kind, item.resource_id, item.resource_version);
     visible.push({
       publicId: item.public_id,
       title: presentation.title,
@@ -286,6 +288,7 @@ export async function openViewLink(sql: Sql, token: string, now: number, session
       kind: item.resource_kind,
       artifactType: presentation.artifactType,
       hasPicture: picture != null,
+      hasVideo: video != null,
     });
   }
   if (visible.length === 0) return { ok: false, error: "unavailable" };
@@ -539,6 +542,60 @@ async function storedPicture(sql: Sql, kind: string, id: string, version: number
     return { key: row.object_key, contentType };
   }
   return null;
+}
+
+/** The clip of a shared item, when it has one: a deliverable item's video media, or a clean MP4, WebM or MOV file. */
+async function storedVideo(sql: Sql, kind: string, id: string, version: number): Promise<{ key: string; contentType: string } | null> {
+  if (kind === "deliverable_item") {
+    const row = await sql.get<{ media_json: string }>("SELECT media_json FROM deliverable_items WHERE id = ? AND version = ?", [id, version]);
+    if (!row) return null;
+    try {
+      const parsed = JSON.parse(row.media_json) as unknown;
+      if (!Array.isArray(parsed)) return null;
+      for (const entry of parsed) {
+        if (!entry || typeof entry !== "object") continue;
+        const key = (entry as { r2_key?: unknown }).r2_key;
+        const contentType = (entry as { content_type?: unknown }).content_type;
+        if (typeof key === "string" && typeof contentType === "string" && contentType.toLowerCase().startsWith("video/")) return { key, contentType };
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+  if (kind === "file") {
+    const row = await sql.get<{ object_key: string; relative_path: string; status: string }>("SELECT object_key, relative_path, status FROM files WHERE id = ?", [id]);
+    const video = row ? videoTypeForName(row.relative_path) : null;
+    if (!row || !video || row.status !== "clean") return null;
+    return { key: row.object_key, contentType: video.contentType };
+  }
+  return null;
+}
+
+/** A clip for one item on this share. Same checks as viewPicture; a public id from another share does not resolve. */
+export async function viewVideo(
+  sql: Sql,
+  token: string,
+  publicId: string,
+  now: number,
+  sessionToken?: string | null,
+): Promise<{ ok: true; shareId: string; key: string; contentType: string } | { ok: false; status: 404 }> {
+  if (!libraryViewLinksEnabled()) return { ok: false, status: 404 };
+  const share = await shareByToken(sql, token);
+  if (!share || !available(share, now)) return { ok: false, status: 404 };
+  if (share.passcode_hash) {
+    const sessionOk = sessionToken ? await validSession(sql, share.id, sessionToken, now) : false;
+    if (!sessionOk) return { ok: false, status: 404 };
+  }
+  const item = await sql.get<{ resource_id: string; resource_kind: string; resource_version: number }>(
+    "SELECT resource_id, resource_kind, resource_version FROM library_share_items WHERE share_id = ? AND public_id = ?",
+    [share.id, publicId],
+  );
+  if (!item) return { ok: false, status: 404 };
+  if (!(await visibleItem(sql, share.workspace_id, item.resource_kind, item.resource_id, item.resource_version, "pinned"))) return { ok: false, status: 404 };
+  const video = await storedVideo(sql, item.resource_kind, item.resource_id, item.resource_version);
+  if (!video) return { ok: false, status: 404 };
+  return { ok: true, shareId: share.id, key: video.key, contentType: video.contentType };
 }
 
 export function viewUnlockSetCookie(cookie: ReturnType<typeof viewUnlockCookie>): string {

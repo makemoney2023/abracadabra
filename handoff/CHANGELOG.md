@@ -11,6 +11,15 @@
 
 ## 2026-10-22
 
+- **What changed** — HQ accepts MP4, WebM and MOV clips from `POST /api/agent-work`, stores them as real files, and plays them in Files, the piece and set pages, and shared view links. A clip's poster is the picture beside it named `<clip name>-poster.png|jpg|webp`.
+- **Why** — A video could only be filed as an animated picture. The Schema video had no way to be reviewed in HQ.
+- **Code touchpoints** — `handoff/src/lib/video-files.ts`, `handoff/src/lib/range-response.ts`, `handoff/src/lib/video-posters.ts`, `handoff/src/components/video-player.tsx`, `handoff/src/lib/artifact-adapter.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/lib/preview.ts`, `handoff/src/lib/store/objects.ts`, `handoff/src/lib/library-shares.ts`, `handoff/src/app/view/[token]/video/[publicId]/route.ts`.
+- **Data-flow impact** — The clip type is read from its bytes, not its name. A fake or unsupported `data:video/*` is refused with a 400. Clips are served with Range support, so they play and seek without loading the whole file. Approval, hold and view-link rules are the same as for pictures. Nothing is written to social posts.
+- **API / schema impact** — No schema change. Uploads still use the `AGENT_WORK_MAX_MB` limit (10 MB decoded by default). New route `GET /view/<token>/video/<id>`.
+- **Verification** — `npx vitest run src/lib/video-files.test.ts src/lib/range-response.test.ts src/lib/video-playback.test.ts src/components/video-player.test.tsx src/lib/library-shares.test.ts src/lib/host.test.ts`; checked in Chrome and with curl Range requests against a local server.
+
+## 2026-10-22
+
 - **What changed** — A post caption is stored on its picture and shown with that picture. The caption sheet stays in Files.
 - **Why** — The words for a Schema or Readiness Check post were still a separate note, apart from the image.
 - **Code touchpoints** — `handoff/src/lib/library-context.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/artifact-card.tsx`, `handoff/src/components/library/collection-index.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.

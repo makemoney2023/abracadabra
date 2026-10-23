@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminPathForSpaces, clientSpaceHref, decideHost, hqOriginForHost, isHqHost } from "./host";
+import { adminPathForSpaces, clientSpaceHref, decideHost, hqOriginForHost, isHqHost, isViewVideoPath } from "./host";
 
 const STAFF_DEV = "handoff-hq.abracadabra-ai.workers.dev";
 
@@ -94,5 +94,16 @@ describe("adminPathForSpaces", () => {
     expect(adminPathForSpaces("/spaces/new")).toBe("/admin/workspaces/new");
     expect(adminPathForSpaces("/spaces/staff")).toBe("/admin/staff");
     expect(adminPathForSpaces("/clients")).toBeNull();
+  });
+});
+
+describe("isViewVideoPath", () => {
+  it("is only the clip stream of a view link, so every other view response stays no-store", () => {
+    expect(isViewVideoPath("/view/tok/video/pub-1")).toBe(true);
+    expect(isViewVideoPath("/view/tok/media/pub-1")).toBe(false);
+    expect(isViewVideoPath("/view/tok/files/pub-1")).toBe(false);
+    expect(isViewVideoPath("/view/tok")).toBe(false);
+    expect(isViewVideoPath("/view/tok/video/pub-1/extra")).toBe(false);
+    expect(isViewVideoPath("/api/files/x/video/y")).toBe(false);
   });
 });

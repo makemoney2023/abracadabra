@@ -3,8 +3,9 @@ import type { Caller } from "@/lib/authz";
 import { can } from "@/lib/authz";
 import type { Sql } from "@/db/sql";
 import { openObjectStore } from "@/lib/store/objects";
+import { videoTypeForName } from "@/lib/video-files";
 
-export type PreviewKind = "image" | "pdf" | "text" | "none";
+export type PreviewKind = "image" | "pdf" | "text" | "video" | "none";
 
 const IMAGE = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
 const TEXT = new Set(["txt", "md", "csv", "json", "log"]);
@@ -17,12 +18,13 @@ export function fileExtension(name: string): string {
   return base.slice(dot + 1).toLowerCase();
 }
 
-/** Pictures, PDFs, and plain text can be shown. HTML and SVG stay closed. */
+/** Pictures, PDFs, clips, and plain text can be shown. HTML and SVG stay closed. */
 export function previewKind(name: string): PreviewKind {
   const extension = fileExtension(name);
   if (IMAGE.has(extension)) return "image";
   if (extension === "pdf") return "pdf";
   if (TEXT.has(extension)) return "text";
+  if (videoTypeForName(name)) return "video";
   return "none";
 }
 
@@ -38,6 +40,8 @@ export function previewContentType(name: string): string {
   if (extension === "gif") return "image/gif";
   if (extension === "webp") return "image/webp";
   if (extension === "pdf") return "application/pdf";
+  const video = videoTypeForName(name);
+  if (video) return video.contentType;
   if (TEXT.has(extension)) return "text/plain; charset=utf-8";
   return "application/octet-stream";
 }
@@ -81,12 +85,22 @@ export type PreviewFile = {
   disposition: string;
 };
 
-/** Session preview. Download stays closed until a file is clean. */
-export async function readPreviewFile(input: {
+/** A previewable file the caller may see, before any bytes are read. Clips are streamed from this, not loaded. */
+export type PreviewAccess = {
+  name: string;
+  status: string;
+  kind: PreviewKind;
+  key: string;
+  contentType: string;
+  disposition: string;
+};
+
+/** The same checks as a session preview, without reading the object. 404 for anything the caller may not see. */
+export async function openPreviewAccess(input: {
   sql: Sql;
   caller: Caller;
   fileId: string;
-}): Promise<{ ok: true; file: PreviewFile } | { ok: false; status: number }> {
+}): Promise<{ ok: true; file: PreviewAccess } | { ok: false; status: number }> {
   const row = await previewRow(input.sql, input.fileId);
   if (!row || row.object_deleted_at !== null || row.discarded_at !== null || row.deleted_at !== null) {
     return { ok: false, status: 404 };
@@ -98,17 +112,31 @@ export async function readPreviewFile(input: {
   if (!previewableStatus(row.status) || previewKind(row.relative_path) === "none") {
     return { ok: false, status: 404 };
   }
-  const bytes = await openObjectStore().read(row.object_key);
-  if (!bytes) return { ok: false, status: 404 };
   return {
     ok: true,
     file: {
       name: row.relative_path,
       status: row.status,
       kind: previewKind(row.relative_path),
-      bytes,
+      key: row.object_key,
       contentType: previewContentType(row.relative_path),
       disposition: inlineDisposition(row.relative_path),
     },
   };
+}
+
+/** Session preview. Download stays closed until a file is clean. Clips use openPreviewAccess and stream instead. */
+export async function readPreviewFile(input: {
+  sql: Sql;
+  caller: Caller;
+  fileId: string;
+}): Promise<{ ok: true; file: PreviewFile } | { ok: false; status: number }> {
+  const access = await openPreviewAccess(input);
+  if (!access.ok) return access;
+  if (access.file.kind === "video") return { ok: false, status: 404 };
+  const bytes = await openObjectStore().read(access.file.key);
+  if (!bytes) return { ok: false, status: 404 };
+  const { key, ...rest } = access.file;
+  void key;
+  return { ok: true, file: { ...rest, bytes } };
 }

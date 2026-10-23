@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { adminPathForSpaces, decideHost, hqHostName, hqOriginForHost, isHqHost } from "@/lib/host";
+import { adminPathForSpaces, decideHost, hqHostName, hqOriginForHost, isHqHost, isViewVideoPath } from "@/lib/host";
 
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
@@ -32,7 +32,7 @@ export function proxy(request: NextRequest) {
     response.headers.set("x-frame-options", "DENY");
     response.headers.set("referrer-policy", "no-referrer");
     response.headers.set("x-content-type-options", "nosniff");
-    response.headers.set("cache-control", "private, no-store");
+    response.headers.set("cache-control", isViewVideoPath(path) ? "private, no-cache" : "private, no-store");
   }
   return response;
 }
