@@ -62,7 +62,18 @@ export const postSchema = z.object({
   citations: z.array(citationSchema).min(1),
   /** Optional representative diagrams, drawn by scripts/blog-diagrams.mjs and placed with <!--diagram:N-->. */
   diagrams: z.array(diagramSchema).max(4).optional(),
+  /** Optional product pages a note is about; they become schema.org `mentions` on the BlogPosting. */
+  mentionsProducts: z.array(z.enum(["hq"])).optional(),
 });
+
+const PRODUCT_MENTIONS = {
+  hq: {
+    "@type": "SoftwareApplication",
+    "@id": `${SITE}/products/hq/#product`,
+    name: "HQ",
+    url: `${SITE}/products/hq/`,
+  },
+};
 
 export const BANNED = [
   /\bstreamline\b/i,
@@ -383,6 +394,7 @@ function graphForPost(post, htmlPath) {
         inLanguage: "en",
         keywords: post.primaryQuery,
         articleSection: post.pillar,
+        ...(post.mentionsProducts?.length ? { mentions: post.mentionsProducts.map((key) => PRODUCT_MENTIONS[key]) } : {}),
         image: images,
         author: { "@id": AUTHOR_ID },
         publisher: { "@id": ORG_ID },

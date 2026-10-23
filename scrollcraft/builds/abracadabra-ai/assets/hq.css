@@ -1,0 +1,110 @@
+/* HQ product page (/products/hq/) and the homepage #hq section.
+   Illustrated mockups and the data-flow diagram are inline SVG with sample content.
+   Tokens come from site.css; the fallbacks keep the sheet safe on any page. */
+
+.hq-page,
+.hq-home {
+  --hq-surface: var(--ui-surface-1, #11110f);
+  --hq-border: var(--line, rgba(245, 240, 232, 0.14));
+  --hq-cyan: #8debf2;
+  --hq-green: #c6ffb3;
+  --hq-soft: #aaa49a;
+}
+
+/* ---- Illustrated figures ------------------------------------------ */
+.hq-shot { margin: 0; }
+.hq-shot svg { display: block; width: 100%; height: auto; border-radius: 10px; box-shadow: var(--ui-shadow, 0 18px 48px -12px rgba(0, 0, 0, 0.6)); }
+.hq-shot figcaption,
+.hq-flow figcaption {
+  margin-top: 0.6rem;
+  font: 400 0.85rem/1.4 "IBM Plex Sans", sans-serif;
+  color: var(--hq-soft);
+}
+
+/* ---- Hero --------------------------------------------------------- */
+.hq-hero { display: grid; gap: 2rem; align-items: center; padding-top: 1rem; }
+.hq-hero__copy { max-width: 40rem; }
+.hq-hero__media { min-width: 0; }
+@media (min-width: 62rem) {
+  .hq-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(2rem, 5vw, 4.5rem); }
+}
+
+/* ---- Sections ----------------------------------------------------- */
+.hq-section { padding-block: clamp(2.5rem, 6vw, 4.5rem); border-top: 1px solid var(--hq-border); }
+main.site-page > .hq-section { padding-top: clamp(2.5rem, 6vw, 4.5rem); }
+.hq-section h2 { max-width: 22ch; }
+.hq-section h3 { margin-top: 1.4rem; }
+.hq-more { margin-top: 1.5rem; color: var(--hq-soft); }
+.hq-more a, .hq-split a { color: var(--hq-cyan); }
+
+/* ---- Data-flow diagram -------------------------------------------- */
+.hq-flow { margin: 2rem 0 0; }
+.hq-flow svg { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--hq-border); }
+.hq-flow__tall { display: none; max-width: 30rem; margin-inline: auto; }
+@media (max-width: 52rem) {
+  .hq-flow__wide { display: none; }
+  .hq-flow__tall { display: block; }
+}
+.hq-steps { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 0.75rem; counter-reset: hq-step; }
+.hq-steps li { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 0.9rem; padding: 1rem 1.1rem; background: var(--hq-surface); border: 1px solid var(--hq-border); border-radius: 8px; }
+.hq-steps h3 { margin: 0 0 0.25rem; font-size: 1.1rem; }
+.hq-steps p { margin: 0; color: var(--hq-soft); max-width: none; }
+.hq-steps__n { font: 500 0.85rem/1.9 "IBM Plex Sans", sans-serif; color: #ff8a6b; letter-spacing: 0.04em; }
+@media (min-width: 52rem) {
+  .hq-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- Split rows --------------------------------------------------- */
+.hq-split { display: grid; gap: 2rem; align-items: center; }
+.hq-split__copy, .hq-split__media { min-width: 0; }
+.hq-split__copy p { color: var(--hq-soft); max-width: 40rem; }
+.hq-split__copy > p:first-of-type:not(.eyebrow) { color: var(--ink, #f5f0e8); }
+@media (min-width: 62rem) {
+  .hq-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(2rem, 5vw, 4.5rem); }
+  .hq-split--flip .hq-split__copy { order: 2; }
+  .hq-split--flip .hq-split__media { order: 1; }
+}
+.hq-points { list-style: none; margin: 1.1rem 0 0; padding: 0; display: grid; gap: 0.6rem; }
+.hq-points li { padding: 0.75rem 1rem; border-left: 2px solid var(--accent, #ff4b24); background: var(--hq-surface); border-radius: 0 8px 8px 0; color: var(--hq-soft); max-width: 40rem; }
+.hq-points strong { color: var(--ink, #f5f0e8); font-family: "Inter Tight", sans-serif; font-weight: 600; }
+.hq-networks { display: flex; flex-wrap: wrap; gap: 0.4rem 0.5rem; list-style: none; margin: 0.9rem 0 0; padding: 0; }
+.hq-networks li { padding: 0.2rem 0.7rem; border: 1px solid var(--hq-border); border-radius: 999px; font: 500 0.9rem/1.5 "Inter Tight", sans-serif; color: var(--ink, #f5f0e8); background: var(--hq-surface); }
+
+/* ---- Security, FAQ, CTA ------------------------------------------- */
+.hq-security p { max-width: 42rem; color: var(--hq-soft); }
+.hq-security a { color: var(--hq-cyan); }
+.hq-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; margin: 1.1rem 0 0; padding: 0; font-family: "Inter Tight", sans-serif; }
+.hq-faq .faq-list { max-width: 46rem; margin-top: 1rem; }
+.hq-cta { margin-top: clamp(2rem, 5vw, 3.5rem); padding-block: clamp(2rem, 5vw, 3.5rem) !important; border: 1px solid var(--hq-border); border-radius: 8px; }
+
+/* ---- Homepage section --------------------------------------------- */
+.hq-home { border-top: 1px solid var(--hq-border); }
+.hq-home h2 { max-width: 20ch; }
+.hq-home__beats { list-style: none; margin: 2.2rem 0 0; padding: 0; display: grid; gap: 1.75rem; }
+.hq-home__beat { min-width: 0; }
+.hq-home__beat h3 { margin: 1rem 0 0.35rem; }
+.hq-home__beat p { margin: 0; color: var(--hq-soft); max-width: 34rem; }
+.hq-home__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; margin: 2.2rem 0 0; }
+.hq-home__more { margin: 1.1rem 0 0; color: var(--hq-soft); }
+.hq-home__more a { color: var(--hq-cyan); }
+@media (min-width: 52rem) {
+  .hq-home__beats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+}
+
+/* ---- Motion (opacity only, off for reduced motion) ---------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .hq-flow-loop, .hq-mock-slot { animation: hq-pulse 3s ease-in-out infinite; }
+  .hq-flow-link { animation: hq-pulse 2.4s ease-in-out infinite; }
+  .hq-mock-pulse { animation: hq-pulse 3.2s ease-in-out infinite; }
+}
+@keyframes hq-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) {
+  .hq-flow-loop, .hq-flow-link, .hq-mock-pulse, .hq-mock-slot { animation: none !important; }
+}
+
+/* ---- Spacing fixes ------------------------------------------------- */
+.hq-section .eyebrow, .hq-home .eyebrow { margin: 0 0 0.55rem; }
+.hq-section h2, .hq-home h2 { margin-top: 0; }
+@media (min-width: 52rem) {
+  .hq-steps li:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}

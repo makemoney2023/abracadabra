@@ -2,7 +2,7 @@
 
 > We design, build and run AI-powered tools that fit your business, not the other way around.
 
-Abracadabra AI turns a description of how you already work into production software. AI takes a task; a person stays where the relationship matters. Contact houdini@abra-ca-dabra.app. Site https://abra-ca-dabra.app/. Last updated: 2026-10-21.
+Abracadabra AI turns a description of how you already work into production software. AI takes a task; a person stays where the relationship matters. Contact houdini@abra-ca-dabra.app. Site https://abra-ca-dabra.app/. Last updated: 2026-10-23.
 
 ## What we build
 
@@ -45,9 +45,12 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 
 ## Products and course
 
-- [Products](https://abra-ca-dabra.app/products/): Products you can open today.
+- [Products](https://abra-ca-dabra.app/products/): Schema, Super Funnel and HQ.
 - [Schema](https://abra-ca-dabra.app/products/schema/): See how easily AI search can find your site, and get the fixes to improve it.
 - [Super Funnel](https://abra-ca-dabra.app/products/super-funnel/): A sales app for associates, shown in a 66-second tour of the dashboard, setup and pipeline.
+- [HQ](https://abra-ca-dabra.app/products/hq/): The client workspace where Abracadabra's team and digital workers deliver your work. Review it, approve it, and schedule approved posts to your social networks.
+- [How client work moves through HQ](https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq): How a request becomes a card, agents build, Client Services reviews, and you approve before anything is released.
+- [What is an AI agent?](https://abra-ca-dabra.app/blog/what-is-an-ai-agent): A plain answer for owners, and how digital workers fit in.
 - [LLM Leverage](https://abra-ca-dabra.app/course/llm-leverage/): A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, each with a quiz you pass at 75%.
 - [LLM Leverage course (learn)](https://learn.abra-ca-dabra.app): Self-paced course for better answers from any model.
 

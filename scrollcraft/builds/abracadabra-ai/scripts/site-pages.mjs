@@ -2,7 +2,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { ORG_ID, SITE, WEBSITE_ID } from "./blog.mjs";
+import { ORG_ID, SITE, WEBSITE_ID, loadPosts } from "./blog.mjs";
 import { headLinks, intakeForm, siteFooter, siteHeader } from "./site-chrome.mjs";
 import { smartQuotesHtml } from "./typography.mjs";
 import {
@@ -17,6 +17,7 @@ import {
   gatewayLogos,
   offerings,
   placeholders,
+  hqProduct,
   products,
 } from "./site-data.mjs";
 import { pirxChartHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
@@ -24,6 +25,10 @@ import { READINESS_URL, processIntro, processSteps, salesPages } from "./service
 import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
+import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody } from "./hq-page.mjs";
+import { writeHqAssets } from "./hq-assets.mjs";
+
+export const HQ_CSS = "/assets/hq.css?v=20261023a";
 
 const HOME_OG_ALT = "The abracadabra wordmark with an orange dot, above the headline: Let us bring your ideas to life.";
 
@@ -263,7 +268,7 @@ async function writePlate(file, label, title) {
   await sharp(Buffer.from(plateSvg({ label, title }))).jpeg({ quality: 82, mozjpeg: true }).toFile(file);
 }
 
-function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeight, ogAlt, json, body, footer = "full" }) {
+function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeight, ogAlt, json, body, footer = "full", extraHead = "" }) {
   const graph = JSON.stringify(json);
   if (graph.includes("PLACEHOLDER") || graph.includes("AggregateRating") || /"offers"\s*:/.test(graph)) {
     throw new Error(`Schema for ${canonical} includes a banned field`);
@@ -295,7 +300,7 @@ function shell({ title, description, canonical, robots, ogImage, ogWidth, ogHeig
 ${headLinks()}
 <link rel="stylesheet" href="/blog/blog.css?v=20261021a">
 <link rel="stylesheet" href="/assets/pirx-shot.css?v=20261019n">
-<script type="application/ld+json">
+${extraHead}<script type="application/ld+json">
 ${jsonLd(json)}
 </script>
 </head>
@@ -996,10 +1001,52 @@ ${pageActions("/start/", "Start a project", `/portfolio/${item.caseSlug}/`, "Rea
   await writePage(`products/${item.slug}/index.html`, html);
 }
 
+async function renderHq() {
+  const url = `${SITE}${HQ_PATH}`;
+  const crumbs = [
+    { name: "Home", href: "/", url: `${SITE}/` },
+    { name: "Products", href: "/products/", url: `${SITE}/products/` },
+    { name: "HQ", href: HQ_PATH, url },
+  ];
+  const posts = (await loadPosts()).filter((post) => post.live !== false);
+  const g = hqGraphNodes({ SITE, ORG_ID, WEBSITE_ID, crumbList, crumbs, posts });
+  const og = await plateOrPhoto("product-hq", "Product", "HQ", hqProduct.image);
+  const page = {
+    ...pageNode({
+      type: "WebPage",
+      id: `${url}#webpage`,
+      url,
+      name: "HQ, the client workspace",
+      description: HQ_PAGE_DESCRIPTION,
+      image: `${SITE}${hqProduct.image}`,
+    }),
+    breadcrumb: { "@id": g.breadcrumbId },
+    about: { "@id": g.productId },
+    mainEntity: { "@id": g.productId },
+    hasPart: { "@id": g.faqId },
+    mentions: g.mentions,
+    relatedLink: g.related,
+  };
+  const html = shell({
+    title: pageTitle("HQ, the client workspace"),
+    description: HQ_PAGE_DESCRIPTION,
+    canonical: url,
+    robots: "index,follow",
+    ogImage: og.url,
+    ogWidth: og.width,
+    ogHeight: og.height,
+    ogAlt: hqProduct.imageAlt,
+    json: baseGraph(page, g.nodes),
+    extraHead: `<link rel="stylesheet" href="${HQ_CSS}">\n`,
+    body: hqPageBody({ crumbs: visibleCrumbs(crumbs), pageActions, sectionHeading }),
+  });
+  await writePage(`products/${hqProduct.slug}/index.html`, html);
+}
+
 async function renderProductsHub() {
   const url = `${SITE}/products/`;
   const title = "Products | Abracadabra AI";
-  const description = "Ready-made tools you can try today: Schema and Super Funnel.";
+  const description = "Schema and Super Funnel, ready-made tools you can try today, and HQ, the workspace where we deliver client work.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Products", href: "/products/", url },
@@ -1018,7 +1065,7 @@ async function renderProductsHub() {
       },
     })),
   };
-  const og = await plateOrPhoto("products", "Products", "Two systems, live", null);
+  const og = await plateOrPhoto("products", "Products", "Three products, one studio", null);
   const cards = products.map((item) => `<li><a href="/products/${item.slug}/">${assetMedia(item.image, item.imageAlt, { lazy: true })}<strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
   const html = shell({
     title,
@@ -1042,10 +1089,10 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
   title: "Software you can use today.",
-  dek: "<p>Ready-made tools you can try today: Schema and Super Funnel.</p>",
+  dek: "<p>Ready-made tools you can try today, Schema and Super Funnel, and HQ, the workspace where we deliver client work.</p>",
 })}
-${collectionIndex([[products.length, "products"], ["Live", "and ready to open"], ["Real", "screens and workflows"]])}
-<ul class="cards cards--pair">${cards}</ul>
+${collectionIndex([[products.length, "products"], ["Live", "Schema and Super Funnel"], ["HQ", "our client workspace"]])}
+<ul class="cards">${cards}</ul>
 </main>`,
   });
   await writePage("products/index.html", html);
@@ -1161,6 +1208,8 @@ function siteRedirects() {
     "/portfolio/showdesk/ /portfolio/ 301",
     "/portfolio/canadian-discount-appliances /portfolio/ 301",
     "/portfolio/canadian-discount-appliances/ /portfolio/ 301",
+    "/hq /products/hq/ 301",
+    "/hq/ /products/hq/ 301",
     "/products/showdesk /portfolio/ 301",
     "/products/showdesk/ /portfolio/ 301",
     // Common guessed paths: contact and booking live on /start/, the FAQ on the homepage.
@@ -1314,6 +1363,7 @@ async function patchHome() {
   html = fill(html, "<!-- MODELS -->", "<!-- /MODELS -->", modelsHtml());
   html = fill(html, "<!-- OFFERINGS -->", "<!-- /OFFERINGS -->", offeringsHtml());
   html = fill(html, "<!-- CLIENTS -->", "<!-- /CLIENTS -->", clientProofHtml(proof.entries));
+  html = fill(html, "<!-- HQ -->", "<!-- /HQ -->", hqHomeSection());
   html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", "");
   html = fill(html, "<!-- PROOF -->", "<!-- /PROOF -->", homeProofHtml());
   await writeFile(path, smartQuotesHtml(html));
@@ -1353,6 +1403,7 @@ async function patchLlms() {
 }
 
 export async function buildSitePages() {
+  await writeHqAssets();
   await writeServiceImages();
   await writePirxChartImages();
   await rm(join(root, "offerings"), { recursive: true, force: true });
@@ -1361,7 +1412,10 @@ export async function buildSitePages() {
   await renderPortfolioHub();
   for (const item of cases) await renderCase(item);
   await renderProductsHub();
-  for (const item of products) await renderProduct(item);
+  for (const item of products) {
+    if (item.custom) await renderHq();
+    else await renderProduct(item);
+  }
   await renderCourse();
   await renderStart();
   await renderMissing();

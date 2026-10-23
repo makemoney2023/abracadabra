@@ -107,8 +107,10 @@ function buildLlmsTxt({ posts, updated }) {
     ...cases.map((item) => mdEntry(item.name, `${SITE}/portfolio/${item.slug}/`, item.summary)),
   ];
   const productLines = [
-    mdEntry("Products", `${SITE}/products/`, "Products you can open today"),
+    mdEntry("Products", `${SITE}/products/`, "Schema, Super Funnel and HQ"),
     ...products.map((item) => mdEntry(item.name, `${SITE}/products/${item.slug}/`, item.description)),
+    mdEntry("How client work moves through HQ", `${SITE}/blog/how-client-work-flows-through-hq`, "How a request becomes a card, agents build, Client Services reviews, and you approve before anything is released"),
+    mdEntry("What is an AI agent?", `${SITE}/blog/what-is-an-ai-agent`, "A plain answer for owners, and how digital workers fit in"),
     mdEntry(course.name, `${SITE}/course/${course.slug}/`, course.description),
     mdEntry("LLM Leverage course (learn)", COURSE_URL, "Self-paced course for better answers from any model"),
   ];
@@ -205,7 +207,7 @@ function buildLlmsFullTxt({ posts, updated }) {
     .join("\n\n");
   const productBlocks = [
     ...products.map(
-      (item) => `### ${item.name}\n\n${item.description}\n\n${SITE}/products/${item.slug}/`,
+      (item) => `### ${item.name}\n\n${item.llmsBody ?? item.description}\n\n${SITE}/products/${item.slug}/`,
     ),
     `### ${course.name}\n\n${course.description}\n\n${COURSE_URL}\nAlso listed at ${SITE}/course/${course.slug}/`,
   ].join("\n\n");
@@ -232,7 +234,7 @@ ${mdEntry("llms.txt", `${SITE}/llms.txt`, "Short quotable index with markdown pa
 ${mdEntry("Home", `${SITE}/`, "Studio overview")}
 ${mdEntry("Services", `${SITE}/services/`, "Service menu")}
 ${mdEntry("Portfolio", `${SITE}/portfolio/`, "Named shipped systems")}
-${mdEntry("Products", `${SITE}/products/`, "Products you can open today")}
+${mdEntry("Products", `${SITE}/products/`, "Schema, Super Funnel and HQ")}
 ${mdEntry("Blog", `${SITE}/blog`, "Notes with named sources")}
 
 ## Overview
