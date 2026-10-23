@@ -11,7 +11,9 @@ import {
   type TaskStatus,
 } from "@/db/crm";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   createMilestoneAction,
@@ -20,6 +22,7 @@ import {
   postStatusAction,
   publishStatusAction,
   saveProjectDescriptionAction,
+  setProjectLibraryAction,
   updateProjectAction,
   updateTaskStatusAction,
   type FormState,
@@ -66,6 +69,22 @@ function updateSaved(message: string): boolean {
   return message === "Draft saved." || message === "Update published.";
 }
 
+/** The Library is part of the social pipeline, so print and other non-social projects can leave it out. */
+function LibraryOption({ id, defaultChecked }: { id: string; defaultChecked: boolean }) {
+  return (
+    <div className="flex items-start gap-3">
+      <input type="hidden" name="libraryOption" value="1" />
+      <Checkbox id={id} name="includeInLibrary" defaultChecked={defaultChecked} className="mt-0.5" />
+      <div className="flex flex-col gap-1">
+        <Label htmlFor={id}>Show finished work in the Library</Label>
+        <p className="text-xs text-muted-foreground">
+          The Library is part of the social pipeline. Turn this off for print and other non-social work. Its files stay in Files.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function ProjectForm({ organizationId }: { organizationId: string }) {
   const [state, action, pending] = useActionState(createProjectAction, initial);
   return (
@@ -79,6 +98,7 @@ export function ProjectForm({ organizationId }: { organizationId: string }) {
         Due date
         <Input id="project-due" name="due" type="date" />
       </label>
+      <LibraryOption id="project-library-new" defaultChecked />
       <Button type="submit" disabled={pending}>
         {pending ? "Adding" : "Add a project"}
       </Button>
@@ -114,6 +134,29 @@ export function ProjectDescriptionForm({
       </label>
       <Button type="submit" size="sm" disabled={pending} className="self-start">
         {pending ? "Saving" : "Save requirements"}
+      </Button>
+      <Status message={state.message} />
+    </form>
+  );
+}
+
+export function ProjectLibraryForm({
+  projectId,
+  organizationId,
+  includeInLibrary,
+}: {
+  projectId: string;
+  organizationId: string;
+  includeInLibrary: boolean;
+}) {
+  const [state, action, pending] = useActionState(setProjectLibraryAction, initial);
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      <input type="hidden" name="projectId" value={projectId} />
+      <input type="hidden" name="organizationId" value={organizationId} />
+      <LibraryOption id="project-library" defaultChecked={includeInLibrary} />
+      <Button type="submit" size="sm" variant="outline" disabled={pending} className="self-start">
+        {pending ? "Saving" : "Save Library option"}
       </Button>
       <Status message={state.message} />
     </form>

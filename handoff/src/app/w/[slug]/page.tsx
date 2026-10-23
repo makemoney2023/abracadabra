@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { workspacesFor } from "@/db/records";
 import { can } from "@/lib/authz";
 import { listBuiltWork } from "@/lib/built-work";
-import { listFolderFiles } from "@/lib/downloads";
+import { RetiredFilter, showRetired } from "@/components/files/retired-filter";
+import { listFolderFiles, retiredFileCount } from "@/lib/downloads";
 import { listFileReads } from "@/lib/knowledge";
 import { seesHeldWork } from "@/lib/held-work";
 import { openSession } from "@/lib/current";
@@ -19,16 +20,22 @@ import { KnowledgeTools } from "./knowledge-tools";
 
 export default async function WorkspaceHome({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
+  const query = await searchParams;
   const { sql, caller } = await openSession();
   const workspace = (await workspacesFor(sql, caller)).find((row) => row.slug === slug);
   if (!workspace) notFound();
   const requests = await workspaceRequests(sql, workspace.id);
   const open = requests.filter((request) => request.status === "open");
-  const files = await listFolderFiles(sql, caller, workspace.id);
+  const everyFile = await listFolderFiles(sql, caller, workspace.id, { includeRetired: true });
+  const retiredShown = showRetired(query.retired);
+  const retiredCount = retiredFileCount(everyFile);
+  const files = retiredShown ? everyFile : everyFile.filter((file) => file.hold !== "hidden");
   const staffView = seesHeldWork(caller, workspace.id);
   const built = await listBuiltWork(sql, { workspaceId: workspace.id, clientView: !staffView });
   const canDrop = can(caller, "batch.create", { workspaceId: workspace.id });
@@ -66,6 +73,7 @@ export default async function WorkspaceHome({
       />
       {canShare ? <ShareLink url={shareUrl} /> : null}
       {canRead ? <KnowledgeTools slug={workspace.slug} reads={reads} /> : null}
+      {staffView && (retiredCount > 0 || retiredShown) ? <RetiredFilter count={retiredCount} checked={retiredShown} /> : null}
       {built.length > 0 && files.length > 0 ? <h2 className="font-heading text-2xl leading-tight">Files</h2> : null}
       {files.length === 0 && built.length > 0 ? null : files.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border px-6 py-12">

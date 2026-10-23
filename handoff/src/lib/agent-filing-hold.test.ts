@@ -365,8 +365,9 @@ describe("supersede and withdraw", () => {
     const visible = await listFolderFiles(sql, ctx.member, ctx.spaceId);
     expect(visible.some((row) => row.batchId === old.batchId)).toBe(false);
     expect(visible.length).toBeGreaterThan(0);
-    // Staff still see the retired batch, labelled.
-    expect((await listFolderFiles(sql, ctx.staff, ctx.spaceId)).find((row) => row.batchId === old.batchId)?.hold).toBe("hidden");
+    // Staff do not see the retired batch by default, and still see it, labelled, with the retired filter on.
+    expect((await listFolderFiles(sql, ctx.staff, ctx.spaceId)).some((row) => row.batchId === old.batchId)).toBe(false);
+    expect((await listFolderFiles(sql, ctx.staff, ctx.spaceId, { includeRetired: true })).find((row) => row.batchId === old.batchId)?.hold).toBe("hidden");
   });
 
   it("supersedes also takes the agent's own external_id", async () => {

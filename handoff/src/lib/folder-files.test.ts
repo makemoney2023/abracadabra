@@ -3,7 +3,7 @@ import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import type { Sql } from "@/db/sql";
 import type { Caller } from "@/lib/authz";
-import { listFolderFiles } from "@/lib/downloads";
+import { listFolderFiles, retiredFileCount } from "@/lib/downloads";
 
 const WORKSPACE = "11111111-1111-4111-8111-111111111111";
 const OTHER = "99999999-9999-4999-8999-999999999999";
@@ -17,6 +17,8 @@ const member: Caller = {
   operatorOf: [],
   memberships: [{ workspaceId: WORKSPACE, role: "client_member" }],
 };
+
+const staff: Caller = { userId: "user-staff", staff: { superAdmin: true }, operatorOf: [], memberships: [] };
 
 const outsider: Caller = {
   userId: "user-out",
@@ -104,5 +106,30 @@ describe("folder files", () => {
     const sql = await memoryDb();
     await seed(sql);
     expect(await listFolderFiles(sql, outsider, WORKSPACE)).toEqual([]);
+  });
+
+  it("hides retired files (a superseded or withdrawn filing) by default, and shows them when asked", async () => {
+    const sql = await memoryDb();
+    await seed(sql);
+    await sql.run("INSERT INTO staff (user_id, email, is_super_admin, created_at, revoked_at) VALUES ('user-staff', 'staff@example.com', 1, ?, NULL)", [NOW]);
+    await sql.run(
+      `INSERT INTO batches (
+        id, workspace_id, request_id, created_by, label, note, created_at, last_activity_at, discarded_at, deleted_at, held_at, hidden_at
+      ) VALUES ('batch-retired', ?, NULL, 'agent-1', NULL, NULL, ?, ?, NULL, NULL, ?, ?)`,
+      [WORKSPACE, NOW, NOW, NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO files (
+        id, batch_id, workspace_id, relative_path, extension, size_bytes, object_key, tag, status, scan_attempts, created_at
+      ) VALUES ('file-retired', 'batch-retired', ?, 'draft-v1.pdf', 'pdf', 10, 'key-3', 'other', 'clean', 0, ?)`,
+      [WORKSPACE, NOW],
+    );
+    const hidden = await listFolderFiles(sql, staff, WORKSPACE);
+    expect(hidden.map((file) => file.name)).toEqual(["logo.png"]);
+    const all = await listFolderFiles(sql, staff, WORKSPACE, { includeRetired: true });
+    expect(all.map((file) => [file.name, file.hold])).toEqual([["draft-v1.pdf", "hidden"], ["logo.png", null]]);
+    expect(retiredFileCount(all)).toBe(1);
+    expect(retiredFileCount(hidden)).toBe(0);
+    expect((await listFolderFiles(sql, member, WORKSPACE, { includeRetired: true })).map((file) => file.name)).toEqual(["logo.png"]);
   });
 });

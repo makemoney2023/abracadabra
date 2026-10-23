@@ -10,12 +10,12 @@ import type { Caller } from "@/lib/authz";
 import { GET as boardGet } from "@/app/api/agent-board/route";
 import { POST as boardCreatePost } from "@/app/api/agent-board/tasks/route";
 import { POST as boardTaskPost } from "@/app/api/agent-board/tasks/[taskId]/route";
-import { GET as projectsGet, POST as projectsPost } from "@/app/api/agent-projects/route";
+import { GET as projectsGet, PATCH as projectsPatch, POST as projectsPost } from "@/app/api/agent-projects/route";
 import { GET as csProjectsGet } from "@/app/api/client-services/projects/route";
 import { POST as agentWorkPost } from "@/app/api/agent-work/route";
 import { assignTaskAgent, createAgentTask, parseBoardAction, updateAgentTask } from "./agent-board";
 import { handOverWaitingTasks, listAgentDispatches } from "./agent-dispatch";
-import { createAgentProject, listAgentProjects } from "./agent-projects";
+import { createAgentProject, listAgentProjects, updateAgentProject } from "./agent-projects";
 import { agentForToken, endAssignment, fileAgentWork, registerClientAgent } from "./agent-work-filing";
 import { localObjectStore } from "./store/objects";
 import { decideReview } from "./task-review";
@@ -319,6 +319,57 @@ describe("agent projects", () => {
     expect(byHire.status).toBe(403);
     const elsewhere = await createAgentProject(sql, lead.principal, { client: { domain: "other.example" }, name: "Shop 2", now: NOW });
     expect(elsewhere).toMatchObject({ ok: false, status: 403 });
+  });
+});
+
+describe("agent projects: Library option", () => {
+  it("lists include_in_library, on for every project that already exists", async () => {
+    const { lead, site } = await setup();
+    const listed = await listAgentProjects(sql, lead.principal, {});
+    expect(listed).toMatchObject({ ok: true, projects: [{ id: site, include_in_library: true }] });
+  });
+
+  it("a lead opens a print project that stays out of the Library, and a plain create keeps it in", async () => {
+    const { lead } = await setup();
+    const print = await projectsPost(
+      new Request("https://hq.example/api/agent-projects", bearer(lead.token, { method: "POST", body: JSON.stringify({ name: "Print brochure", include_in_library: false }) })),
+    );
+    expect(print.status).toBe(201);
+    const printBody = (await print.json()) as { project: { id: string; include_in_library: boolean } };
+    expect(printBody.project.include_in_library).toBe(false);
+    expect((await sql.get<{ include_in_library: number }>("SELECT include_in_library FROM projects WHERE id = ?", [printBody.project.id]))?.include_in_library).toBe(0);
+    const plain = await createAgentProject(sql, lead.principal, { name: "Spring posts", now: NOW + 1 });
+    expect(plain).toMatchObject({ ok: true, created: true, project: { include_in_library: true } });
+    const bad = await projectsPost(
+      new Request("https://hq.example/api/agent-projects", bearer(lead.token, { method: "POST", body: JSON.stringify({ name: "Odd", include_in_library: "no" }) })),
+    );
+    expect(bad.status).toBe(400);
+  });
+
+  it("a duplicate name returns the existing project and does not change its Library option", async () => {
+    const { lead } = await setup();
+    const again = await createAgentProject(sql, lead.principal, { name: "website", includeInLibrary: false, now: NOW + 1 });
+    expect(again).toMatchObject({ ok: true, created: false, project: { include_in_library: true } });
+  });
+
+  it("a lead switches an existing project off and on; a hire and another client's lead get 403", async () => {
+    const { lead, hire, otherLead, site } = await setup();
+    const off = await projectsPatch(
+      new Request("https://hq.example/api/agent-projects", bearer(lead.token, { method: "PATCH", body: JSON.stringify({ project_id: site, include_in_library: false }) })),
+    );
+    expect(off.status).toBe(200);
+    expect(await off.json()).toMatchObject({ ok: true, project: { id: site, include_in_library: false } });
+    const activity = await sql.get<{ n: number }>("SELECT COUNT(*) AS n FROM activities WHERE kind = 'client_agent.board' AND json_extract(data_json, '$.action') = 'set_project_library'");
+    expect(activity?.n).toBe(1);
+    expect(await updateAgentProject(sql, hire.principal, { projectId: site, includeInLibrary: true, now: NOW })).toMatchObject({ ok: false, status: 403 });
+    expect(await updateAgentProject(sql, otherLead.principal, { projectId: site, includeInLibrary: true, now: NOW })).toMatchObject({ ok: false, status: 404 });
+    expect(await updateAgentProject(sql, lead.principal, { projectId: "missing", includeInLibrary: true, now: NOW })).toMatchObject({ ok: false, status: 404 });
+    const on = await updateAgentProject(sql, lead.principal, { projectId: site, includeInLibrary: true, now: NOW + 1 });
+    expect(on).toMatchObject({ ok: true, project: { include_in_library: true } });
+    const missingField = await projectsPatch(
+      new Request("https://hq.example/api/agent-projects", bearer(lead.token, { method: "PATCH", body: JSON.stringify({ project_id: site }) })),
+    );
+    expect(missingField.status).toBe(400);
   });
 });
 

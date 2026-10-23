@@ -406,6 +406,17 @@ describe("runHqTool", () => {
     expect(kept?.description).not.toContain("A different brief.");
   });
 
+  it("create_project keeps a print project out of the Library only when asked", async () => {
+    const sql = await database();
+    const organizationId = await client(sql);
+    const print = await runHqTool(sql, staff, { tool: "create_project", input: { organizationId, name: "Brochure", include_in_library: false }, idempotencyKey: "proj-print" }, NOW);
+    const printId = String((valueOf(print) as { id?: string } | undefined)?.id ?? "");
+    expect((await sql.get<{ include_in_library: number }>("SELECT include_in_library FROM projects WHERE id = ?", [printId]))?.include_in_library).toBe(0);
+    const social = await runHqTool(sql, staff, { tool: "create_project", input: { organizationId, name: "Posts" }, idempotencyKey: "proj-social" }, NOW);
+    const socialId = String((valueOf(social) as { id?: string } | undefined)?.id ?? "");
+    expect((await sql.get<{ include_in_library: number }>("SELECT include_in_library FROM projects WHERE id = ?", [socialId]))?.include_in_library).toBe(1);
+  });
+
   it("turns an approved client request into a brief piece and records who decided", async () => {
     const sql = await database();
     const organizationId = await client(sql);

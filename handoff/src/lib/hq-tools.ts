@@ -542,7 +542,8 @@ async function perform(
     );
   }
   if (tool === "create_project") {
-    return createProjectTool(sql, caller, organizationId, text(input, "name"), text(input, "description"), now);
+    const outOfLibrary = input.include_in_library === false || input.include_in_library === "false" || input.include_in_library === 0;
+    return createProjectTool(sql, caller, organizationId, text(input, "name"), text(input, "description"), now, !outOfLibrary);
   }
   if (tool === "assign_space_project") {
     return fromCrm(
@@ -1492,8 +1493,9 @@ async function createProjectTool(
   name: string,
   description: string,
   now: number,
+  includeInLibrary = true,
 ): Promise<HqToolResult> {
-  const created = await createProject(sql, caller, { organizationId, name }, now);
+  const created = await createProject(sql, caller, { organizationId, name, includeInLibrary }, now);
   if (!created.ok) return fromCrm(created);
   const note = description.trim().slice(0, 4_000);
   let projectDescription = created.value.description;

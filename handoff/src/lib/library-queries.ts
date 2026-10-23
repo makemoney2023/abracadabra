@@ -8,6 +8,7 @@ import { localPublication } from "@/lib/social-queries";
 import { pictureAddress, pictureRole, type PictureMedia } from "@/lib/picture-role";
 import { pieceOpenHref } from "@/lib/finished-shelf";
 import { FILE_BUILD_CONTEXT_SQL, ITEM_BUILD_CONTEXT_SQL } from "@/lib/library-context";
+import { libraryEligibleSql, libraryProjectOk, spaceProjectSql } from "@/lib/project-library";
 import {
   LIBRARY_ARTIFACT_TYPES,
   projectLibraryArtifact,
@@ -518,6 +519,7 @@ function itemCtes(query: LibraryListQuery, includeHeld: boolean, search: string,
         )
         AND (i.removed_at IS NOT NULL) = ?
         AND NOT ${ITEM_BUILD_CONTEXT_SQL}
+        AND ${libraryEligibleSql("d.project_id", "d.workspace_id")}
         ${projectSql}
         ${searchSql}
     ),
@@ -679,6 +681,7 @@ function siteCte(query: LibraryListQuery, includeHeld: boolean, search: string, 
     WHERE bw.workspace_id = ? AND w.state = 'filed' AND bw.status != 'archived'
       AND b.deleted_at IS NULL AND b.discarded_at IS NULL
       AND (? = 1 OR ((b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL))
+      AND ${libraryEligibleSql("bw.project_id", "bw.workspace_id")}
       ${projectSql}
       ${searchSql}
   )`;
@@ -779,6 +782,7 @@ function fileCte(query: LibraryListQuery, includeHeld: boolean, search: string, 
       AND NOT ${FILE_BUILD_CONTEXT_SQL}
       AND b.deleted_at IS NULL AND b.discarded_at IS NULL
       AND (? = 1 OR ((b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL))
+      AND ${libraryProjectOk(spaceProjectSql("f.workspace_id"))}
       ${projectSql}
       ${searchSql}
   ),

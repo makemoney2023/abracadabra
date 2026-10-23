@@ -70,6 +70,8 @@ export type ProjectRow = {
   created_at: number;
   updated_at: number;
   description: string | null;
+  /** 1: finished work lists in the Library (the social pipeline). 0: the project opted out, print for example. */
+  include_in_library: number;
 };
 
 export type MilestoneRow = {
@@ -222,7 +224,7 @@ export type TodayBoard = {
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const PROJECT_COLUMNS =
-  "id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at, description";
+  "id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at, description, include_in_library";
 const MILESTONE_COLUMNS = "id, project_id, name, due_at, done_at, sort";
 const STATUS_COLUMNS =
   "id, project_id, organization_id, health, audience, body, state, actor_kind, actor_id, created_at, published_at";
@@ -1265,7 +1267,7 @@ export async function listProjects(
   }
   return sql.all<ProjectRow>(
     `SELECT p.id, p.organization_id, p.deal_id, p.name, p.status, p.owner_user_id,
-            p.starts_at, p.due_at, p.created_at, p.updated_at, p.description
+            p.starts_at, p.due_at, p.created_at, p.updated_at, p.description, p.include_in_library
      FROM projects p
      JOIN organizations o ON o.id = p.organization_id
      WHERE o.archived_at IS NULL
@@ -1281,7 +1283,7 @@ export async function projectById(
   if (!staffUserId(caller)) return undefined;
   return sql.get<ProjectRow>(
     `SELECT p.id, p.organization_id, p.deal_id, p.name, p.status, p.owner_user_id,
-            p.starts_at, p.due_at, p.created_at, p.updated_at, p.description
+            p.starts_at, p.due_at, p.created_at, p.updated_at, p.description, p.include_in_library
      FROM projects p
      JOIN organizations o ON o.id = p.organization_id
      WHERE p.id = ? AND o.archived_at IS NULL`,
@@ -1329,7 +1331,7 @@ export async function attachLooseHome(
 export async function createProject(
   sql: Sql,
   caller: Caller,
-  input: { organizationId: string; name: string; dueAt?: number | null; status?: ProjectStatus },
+  input: { organizationId: string; name: string; dueAt?: number | null; status?: ProjectStatus; includeInLibrary?: boolean },
   now: number,
 ): Promise<CrmResult<ProjectRow>> {
   const actorId = staffUserId(caller);
@@ -1355,9 +1357,9 @@ export async function createProject(
   const id = crypto.randomUUID();
   await sql.run(
     `INSERT INTO projects (
-       id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at
-     ) VALUES (?, ?, NULL, ?, ?, ?, NULL, ?, ?, ?)`,
-    [id, input.organizationId, name, status, actorId, dueAt, now, now],
+       id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at, include_in_library
+     ) VALUES (?, ?, NULL, ?, ?, ?, NULL, ?, ?, ?, ?)`,
+    [id, input.organizationId, name, status, actorId, dueAt, now, now, input.includeInLibrary === false ? 0 : 1],
   );
   const row = await sql.get<ProjectRow>(`SELECT ${PROJECT_COLUMNS} FROM projects WHERE id = ?`, [id]);
   if (!row) return { ok: false, error: "missing" };
@@ -1399,6 +1401,20 @@ export async function updateProject(
 }
 
 /** What the project is for. An empty note clears it. */
+/** Staff switch whether a project's finished work lists in the Library. Nothing is deleted either way. */
+export async function setProjectLibrary(
+  sql: Sql,
+  caller: Caller,
+  input: { projectId: string; include: boolean },
+  now: number,
+): Promise<CrmResult<{ id: string }>> {
+  if (!staffUserId(caller)) return { ok: false, error: "forbidden" };
+  const project = await openProject(sql, input.projectId);
+  if (!project) return { ok: false, error: "missing" };
+  await sql.run("UPDATE projects SET include_in_library = ?, updated_at = ? WHERE id = ?", [input.include ? 1 : 0, now, project.id]);
+  return { ok: true, value: { id: project.id } };
+}
+
 export async function saveProjectDescription(
   sql: Sql,
   caller: Caller,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
-import { createAgentProject, listAgentProjects } from "@/lib/agent-projects";
+import { createAgentProject, listAgentProjects, updateAgentProject } from "@/lib/agent-projects";
 import { agentForToken } from "@/lib/agent-work-filing";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,9 @@ export async function GET(request: Request) {
 }
 
 /**
- * The client's lead agent opens a project. Bearer agent token. Body: { name, description?, client? }
+ * The client's lead agent opens a project. Bearer agent token. Body: { name, description?, client?, include_in_library? }
+ * include_in_library: false keeps the project's finished work out of the Library (print and other non-social work);
+ * default true. Not a boolean: 400.
  * client: org id, domain, or space slug (string), or { organization_id | domain | space_slug }; optional with one client.
  * The project gets its own space (or the client's one unlinked space). Same name (any case): the existing project,
  * created: false. Hires get 403. 409 past 20 open projects.
@@ -45,12 +47,42 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Check the body." }, { status: 400 });
   }
+  if (body?.include_in_library !== undefined && typeof body.include_in_library !== "boolean") {
+    return NextResponse.json({ error: "include_in_library must be true or false." }, { status: 400 });
+  }
   const result = await createAgentProject(sql, agent, {
     client: clientRef(body?.client),
     name: typeof body?.name === "string" ? body.name : "",
     description: typeof body?.description === "string" ? body.description : null,
+    includeInLibrary: typeof body?.include_in_library === "boolean" ? body.include_in_library : undefined,
     now: Date.now(),
   });
   if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });
   return NextResponse.json(result, { status: result.created ? 201 : 200 });
+}
+
+/**
+ * The client's lead agent switches a project in or out of the Library. Bearer agent token.
+ * Body: { project_id, include_in_library: boolean }. Nothing is deleted; files stay in Files. Hires 403; a project that
+ * is not on this agent's clients 404.
+ */
+export async function PATCH(request: Request) {
+  const sql = await openHandoffDb();
+  await migrate(sql);
+  const agent = await agentForToken(sql, request.headers.get("authorization"));
+  if (!agent) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  let body: Record<string, unknown>;
+  try {
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "Check the body." }, { status: 400 });
+  }
+  const projectId = typeof body?.project_id === "string" ? body.project_id.trim() : "";
+  if (!projectId) return NextResponse.json({ error: "project_id is required." }, { status: 400 });
+  if (typeof body?.include_in_library !== "boolean") {
+    return NextResponse.json({ error: "include_in_library must be true or false." }, { status: 400 });
+  }
+  const result = await updateAgentProject(sql, agent, { projectId, includeInLibrary: body.include_in_library, now: Date.now() });
+  if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });
+  return NextResponse.json(result);
 }

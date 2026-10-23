@@ -10,7 +10,8 @@ import { can } from "@/lib/authz";
 import { articleSocialPromoEnabled } from "@/lib/article-promotions";
 import { libraryViewLinksEnabled, listViewLinks } from "@/lib/library-shares";
 import { workspacesFor } from "@/db/records";
-import { listFolderFiles } from "@/lib/downloads";
+import { RetiredFilter, showRetired } from "@/components/files/retired-filter";
+import { listFolderFiles, retiredFileCount } from "@/lib/downloads";
 import { seesHeldWork } from "@/lib/held-work";
 import { listLibraryArtifacts, type LibrarySort } from "@/lib/library-queries";
 import { schedulePlatforms } from "@/lib/schedule-library-file";
@@ -98,7 +99,10 @@ export default async function LibraryPage({
      LIMIT 100`,
     [workspace.id],
   );
-  const sourceFiles = showSources ? await listFolderFiles(sql, caller, workspace.id) : [];
+  const everySourceFile = showSources ? await listFolderFiles(sql, caller, workspace.id, { includeRetired: true }) : [];
+  const retiredShown = showRetired(read("retired"));
+  const retiredCount = retiredFileCount(everySourceFile);
+  const sourceFiles = retiredShown ? everySourceFile : everySourceFile.filter((file) => file.hold !== "hidden");
   const sourceProvenance = showSources ? await workspaceFileProvenance(sql, workspace.id, slug) : new Map();
   const selected = showSources
     ? await sql.all<{ file_id: string }>("SELECT file_id FROM library_file_selections WHERE workspace_id = ? AND revoked_at IS NULL", [workspace.id])
@@ -107,6 +111,11 @@ export default async function LibraryPage({
   const opening = libraryOpeningTarget(filters, result.ok ? result.page.needsAction : 0);
   if (opening) redirect(`/w/${slug}/library?status=${opening}`);
   const organization = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM workspaces WHERE id = ?", [workspace.id]);
+  const optedOut = await sql.get<{ id: string; name: string }>(
+    `SELECT p.id, p.name FROM workspaces w JOIN projects p ON p.id = w.project_id
+     WHERE w.id = ? AND p.include_in_library = 0`,
+    [workspace.id],
+  );
   const platforms = caller.staff && organization?.organization_id ? schedulePlatforms(await listSocialAccounts(sql, organization.organization_id)) : [];
   const schedule = caller.staff ? { workspaceId: workspace.id, platforms, action: scheduleLibraryFileAction } : null;
   const autopost = caller.staff && organization?.organization_id ? await getAutopost(sql, organization.organization_id) : null;
@@ -154,6 +163,13 @@ export default async function LibraryPage({
         <p className="eyebrow text-optic">Finished work</p>
         <h1 className="font-heading text-4xl leading-tight">Library</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">Files are everything uploaded. The Library is finished work. Open a piece to approve it, ask for a change, or remove it. Social is the calendar.</p>
+        {optedOut ? (
+          <p className="max-w-2xl rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground" role="note">
+            {caller.staff
+              ? `The project "${optedOut.name}" is set to stay out of the Library, so its finished work is not listed here. Its files are in Files. Change this on the project page.`
+              : "This project's work is not listed in the Library. Its files are in Files."}
+          </p>
+        ) : null}
         {result.ok ? (
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             <span className="rounded-full bg-muted px-3 py-1.5 tabular-nums">{result.page.counts.total} items</span>
@@ -168,11 +184,12 @@ export default async function LibraryPage({
       {showSources ? (
         <div className="flex flex-col gap-6">
           <LibraryTypeTabs slug={slug} query={filters} counts={result.ok ? result.page.counts : null} />
+          {seesHeldWork(caller, workspace.id) && (retiredCount > 0 || retiredShown) ? <RetiredFilter count={retiredCount} checked={retiredShown} /> : null}
           <SourcesBrowser
             slug={slug}
             canSelect={canSelect}
             listPath={`/w/${slug}/library`}
-            persist={{ type: "file" }}
+            persist={{ type: "file", retired: retiredShown ? "1" : undefined }}
             query={{ search: read("search"), status: read("scan"), sort: read("fileSort"), folder: read("folder") }}
             files={sourceFiles.map((file) => ({
               id: file.id,

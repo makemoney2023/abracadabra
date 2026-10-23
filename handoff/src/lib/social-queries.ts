@@ -9,6 +9,7 @@ import { libraryHref } from "@/components/library/library-view";
 import { shelfNote } from "./finished-shelf";
 import { isEligibleSocialPlatform } from "./zernio";
 import type { ItemFormat } from "./deliverable-manifest";
+import { libraryEligibleSql } from "./project-library";
 
 const LIVE = ["sending", "scheduled", "published", "partial"];
 
@@ -146,6 +147,7 @@ async function currentPieces(sql: Sql, organizationId: string): Promise<ItemRow[
      JOIN deliverables d ON d.id = i.deliverable_id
      WHERE d.organization_id = ? AND i.version = COALESCE(d.published_version, d.version)
        AND i.format NOT IN ('page', 'link', 'file')
+       AND ${libraryEligibleSql("d.project_id", "d.workspace_id")}
      ORDER BY i.sort, i.id`,
     [organizationId],
   );

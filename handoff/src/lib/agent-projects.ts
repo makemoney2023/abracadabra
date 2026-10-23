@@ -20,6 +20,8 @@ export type ProjectListRow = {
   status: string;
   open: boolean;
   description: string | null;
+  /** false: the project opted out of the Library (print, for example). Its files stay in Files. */
+  include_in_library: boolean;
   space: { id: string; slug: string } | null;
   /** Cards on this project that are not done. */
   open_cards: number;
@@ -33,10 +35,10 @@ export async function listClientProjects(sql: Sql, organizationIds: string[], op
   if (organizationIds.length === 0) return [];
   const marks = organizationIds.map(() => "?").join(", ");
   const rows = await sql.all<{
-    id: string; organization_id: string; organization_name: string; name: string; status: string; description: string | null;
+    id: string; organization_id: string; organization_name: string; name: string; status: string; description: string | null; include_in_library: number;
     space_id: string | null; space_slug: string | null; open_cards: number; created_at: number;
   }>(
-    `SELECT p.id, p.organization_id, o.name AS organization_name, p.name, p.status, p.description, p.created_at,
+    `SELECT p.id, p.organization_id, o.name AS organization_name, p.name, p.status, p.description, p.include_in_library, p.created_at,
             (SELECT w.id FROM workspaces w WHERE w.project_id = p.id AND w.status = 'active' ORDER BY w.opened_at LIMIT 1) AS space_id,
             (SELECT w.slug FROM workspaces w WHERE w.project_id = p.id AND w.status = 'active' ORDER BY w.opened_at LIMIT 1) AS space_slug,
             (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.status != 'done') AS open_cards
@@ -55,6 +57,7 @@ export async function listClientProjects(sql: Sql, organizationIds: string[], op
     status: row.status,
     open: OPEN_STATUSES.includes(row.status),
     description: row.description,
+    include_in_library: row.include_in_library !== 0,
     space: row.space_id && row.space_slug ? { id: row.space_id, slug: row.space_slug } : null,
     open_cards: Number(row.open_cards ?? 0),
     created_at: new Date(row.created_at).toISOString(),
@@ -78,12 +81,13 @@ export async function listAgentProjects(
 
 /**
  * POST /api/agent-projects: the client's lead agent opens a project, with its own Space (or the client's one loose
- * Space). A name the client already has (any case) returns that project, created: false. Hires get 403.
+ * Space). A name the client already has (any case) returns that project, created: false, and leaves its Library option
+ * alone. Hires get 403. includeInLibrary false keeps the project's finished work out of the Library (print, for example).
  */
 export async function createAgentProject(
   sql: Sql,
   agent: AgentPrincipal,
-  input: { client?: unknown; name: string; description?: string | null; now: number },
+  input: { client?: unknown; name: string; description?: string | null; includeInLibrary?: boolean; now: number },
 ): Promise<{ ok: true; created: boolean; project: ProjectListRow } | ProjectsError> {
   const name = input.name.trim().replace(/\s+/g, " ").slice(0, 200);
   if (!name) return { ok: false, status: 400, message: "name is required." };
@@ -116,7 +120,7 @@ export async function createAgentProject(
     return { ok: false, status: 409, message: `This client already has ${MAX_OPEN_PROJECTS} open projects. Ask Client Services to close one first.` };
   }
   const description = input.description?.trim().slice(0, 4000) || null;
-  const plan = await planProjectSpace(sql, { organizationId, name, description, status: "active", now: input.now });
+  const plan = await planProjectSpace(sql, { organizationId, name, description, status: "active", includeInLibrary: input.includeInLibrary, now: input.now });
   const activity = {
     statement: `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
                 VALUES (?, ?, ?, ?, 'client_agent.board', 'agent', ?, ?, ?, ?)`,
@@ -134,4 +138,43 @@ export async function createAgentProject(
   await sql.batch([...plan.writes, activity]);
   const [project] = (await listClientProjects(sql, [organizationId], { includeClosed: true })).filter((row) => row.id === plan.projectId);
   return { ok: true, created: true, project };
+}
+
+/**
+ * PATCH /api/agent-projects: the client's lead agent switches whether a project's finished work lists in the Library.
+ * Nothing is deleted or moved; the project's files stay in Files. Hires get 403; a project that is not on one of this
+ * agent's clients is 404.
+ */
+export async function updateAgentProject(
+  sql: Sql,
+  agent: AgentPrincipal,
+  input: { projectId: string; includeInLibrary: boolean; now: number },
+): Promise<{ ok: true; project: ProjectListRow } | ProjectsError> {
+  const row = await sql.get<{ organization_id: string }>("SELECT organization_id FROM projects WHERE id = ?", [input.projectId]);
+  if (!row || !agent.assignments.some((assignment) => assignment.organizationId === row.organization_id)) {
+    return { ok: false, status: 404, message: "That project is not on one of this agent's clients." };
+  }
+  if (!isLeadOn(agent, row.organization_id)) return { ok: false, status: 403, message: "Only the client's lead agent changes a project." };
+  const [before] = (await listClientProjects(sql, [row.organization_id], { includeClosed: true })).filter((project) => project.id === input.projectId);
+  if (before && before.include_in_library !== input.includeInLibrary) {
+    await sql.batch([
+      { statement: "UPDATE projects SET include_in_library = ?, updated_at = ? WHERE id = ?", params: [input.includeInLibrary ? 1 : 0, input.now, input.projectId] },
+      {
+        statement: `INSERT INTO activities (id, organization_id, project_id, workspace_id, kind, actor_kind, actor_id, body, data_json, created_at)
+                    VALUES (?, ?, ?, ?, 'client_agent.board', 'agent', ?, ?, ?, ?)`,
+        params: [
+          crypto.randomUUID(),
+          row.organization_id,
+          input.projectId,
+          before.space?.id ?? null,
+          agent.agentId,
+          `${agent.label}: ${input.includeInLibrary ? "Put" : "Took"} project "${before.name}" ${input.includeInLibrary ? "in" : "out of"} the Library.`.slice(0, 2000),
+          JSON.stringify({ action: "set_project_library", project_id: input.projectId, include_in_library: input.includeInLibrary, agent_id: agent.agentId }),
+          input.now,
+        ],
+      },
+    ]);
+  }
+  const [project] = (await listClientProjects(sql, [row.organization_id], { includeClosed: true })).filter((entry) => entry.id === input.projectId);
+  return { ok: true, project };
 }
