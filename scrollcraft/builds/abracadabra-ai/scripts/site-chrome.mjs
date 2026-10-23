@@ -55,7 +55,6 @@ const navGroups = [
 const learnLinks = [
   ["LLM Leverage", "/course/llm-leverage/", "A course for better answers from any model."],
   ["Notes", "/blog", "How to put AI to work."],
-  ["Films", "/films.html", "The work, shown."],
 ];
 
 function groupHtml(label, links) {
@@ -130,7 +129,6 @@ export function siteHeader({ home = false } = {}) {
     <a href="/portfolio/">Case studies</a>
     <a href="/products/">Products</a>
     <a href="/blog">Blog</a>
-    <a href="/films.html">Films</a>
     <a class="btn btn--primary site-nav__cta" href="${start}">Start a project</a>
   </nav>
 </header>
@@ -235,7 +233,6 @@ export function siteFooter({ band = "full" } = {}) {
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
-    <a href="/films.html">Films</a>
     <a href="/privacy">Privacy</a>
   </nav>
   <p class="site-foot__meta">

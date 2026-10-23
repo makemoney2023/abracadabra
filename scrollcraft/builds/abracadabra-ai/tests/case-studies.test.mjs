@@ -16,18 +16,18 @@ test("the top nav and footer say Case studies, never Work, on every page", () =>
   }
 });
 
-test("the case studies page lists only PiRX and keeps its URL, title and H1", () => {
+test("the case studies page lists only PiRX and the Super Funnel System, and keeps its URL, title and H1", () => {
   const html = read("portfolio/index.html");
   assert.match(html, /<title>Case studies \| Abracadabra AI<\/title>/);
   assert.match(html, /<h1>Case studies\.<\/h1>/);
   const main = html.slice(html.indexOf("<main"), html.indexOf("</main>"));
   const cards = main.match(/<ul class="cards">[\s\S]*?<\/ul>/)[0];
-  assert.deepEqual([...cards.matchAll(/href="([^"]+)"/g)].map((m) => m[1]), ["/portfolio/pirx/"]);
-  assert.equal(/super funnel|milrcorr|strongfoam|renew|superpatch/i.test(main), false);
+  assert.deepEqual([...cards.matchAll(/href="([^"]+)"/g)].map((m) => m[1]), ["/portfolio/pirx/", "/portfolio/super-funnel/"]);
+  assert.equal(/milrcorr|strongfoam|renew implants/i.test(main), false);
   const graph = JSON.parse(html.match(/<script type="application\/ld\+json">\s*([\s\S]*?)<\/script>/)[1])["@graph"];
   const list = graph.find((n) => n["@type"] === "ItemList");
-  assert.equal(list.numberOfItems, 1);
-  assert.deepEqual(list.itemListElement.map((i) => i.url), ["https://abra-ca-dabra.app/portfolio/pirx/"]);
+  assert.equal(list.numberOfItems, 2);
+  assert.deepEqual(list.itemListElement.map((i) => i.url), ["https://abra-ca-dabra.app/portfolio/pirx/", "https://abra-ca-dabra.app/portfolio/super-funnel/"]);
 });
 
 test("other case pages stay reachable by direct URL and are not noindexed", () => {

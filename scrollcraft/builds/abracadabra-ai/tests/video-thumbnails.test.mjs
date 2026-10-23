@@ -35,9 +35,10 @@ for (const [file, count] of [["index.html", SHOW_HOME_WORK ? 3 : 1], ["films.htm
   });
 }
 
+// 21 = 1 HQ + 12 films page + 8 Super Funnel case study page (+2 homepage when the Work section shows)
 test("every sitemap video thumbnail is a JPG under assets/films/thumbs (plus the HQ video poster)", () => {
   const xml = readFileSync(join(root, "sitemap.xml"), "utf8");
   const locs = [...xml.matchAll(/<video:thumbnail_loc>([^<]+)</g)].map((m) => m[1]);
-  assert.equal(locs.length, SHOW_HOME_WORK ? 15 : 13);
+  assert.equal(locs.length, SHOW_HOME_WORK ? 23 : 21);
   for (const loc of locs) assert.match(loc, /^https:\/\/abra-ca-dabra\.app\/assets\/(?:films\/thumbs\/[a-z-]+|video\/hq-product-landscape)\.jpg$/);
 });

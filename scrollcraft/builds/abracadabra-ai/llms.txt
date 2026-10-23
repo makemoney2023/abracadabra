@@ -35,7 +35,7 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 - [Portfolio](https://abra-ca-dabra.app/portfolio/): Named systems the studio has shipped.
 - [Schema](https://abra-ca-dabra.app/portfolio/schema/): See how easily AI search can find your site, and get the fixes to improve it.
 - [LLM Leverage](https://abra-ca-dabra.app/portfolio/llm-leverage/): A self-paced course for better answers from any model, plus a workshop path.
-- [Super Funnel](https://abra-ca-dabra.app/portfolio/super-funnel/): A sales app for associates, shown in a 66-second tour.
+- [Super Funnel System](https://abra-ca-dabra.app/portfolio/super-funnel/): A field app for SuperPatch associates: one shared link becomes a credited lead, a nine-step pipeline and the exact message to send next. Eight film tours.
 - [pirx.ca](https://abra-ca-dabra.app/portfolio/pirx/): We designed and built the PIRX app, its machine learning, and the blogs. From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90 days, Jul 18 to Oct 17, 2026.
 - [SuperPatch products](https://abra-ca-dabra.app/portfolio/superpatch-products/): Public product pages: the offer, the comparison, and the questions a buyer asks.
 - [Milrcorr](https://abra-ca-dabra.app/portfolio/milrcorr/): The public site for StrongFoam's sister commercial fit-out work. A visitor can see the work and request an estimate.
@@ -60,7 +60,7 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 - [StrongFoam](https://strongfoam.com/): Public site with an estimate a visitor can start and a booking.
 - [Schema](https://schema.abra-ca-dabra.app/): AI visibility score and repair.
 - [LLM Leverage](https://learn.abra-ca-dabra.app): Self-paced course plus a workshop path.
-- [Super Funnel](https://abra-ca-dabra.app/films.html): Associate app shown as film tours; no separate public app URL.
+- [Super Funnel System](https://abra-ca-dabra.app/portfolio/super-funnel/): SuperPatch field app: one shared link becomes a credited lead and a nine-step pipeline; case study with eight film tours.
 
 ## How a project works
 
