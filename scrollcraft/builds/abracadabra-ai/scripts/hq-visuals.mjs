@@ -106,10 +106,10 @@ export const FLOW_STEPS = [
   { n: "04", title: "Review", owner: "Client Services", tone: "amber", detail: "Checked against your request. Sent back with a note, or released to your space.", status: "Held until released" },
   { n: "05", title: "You approve", owner: "You", tone: "green", detail: "Approve each piece, ask for a change, or remove it.", status: "Your call" },
   { n: "06", title: "Delivery", owner: "HQ", tone: "green", detail: "Finished work sits in named folders, each file showing its type.", status: "In your space" },
-  { n: "07", title: "Social calendar", owner: "HQ", tone: "accent", detail: "Approved pieces only. Approving a piece takes the next open slot.", status: "Approved only" },
+  { n: "07", title: "Social calendar", owner: "HQ", tone: "accent", detail: "Once a piece is approved and your accounts are connected, it is scheduled into your next open slot.", status: "Approved only" },
 ];
 
-export const FLOW_ALT = "Data-flow diagram in seven steps. You send a request. HQ turns it into a card with a plan. Digital workers build and file the work, which is held. Client Services reviews it and sends it back with a note or releases it to your space. You approve each piece, ask for a change or remove it. Finished work is delivered to named folders. Approved pieces take the next open slot on your social calendar. A change request opens a new card. Held work stays out of your folders, previews and search.";
+export const FLOW_ALT = "Data-flow diagram in seven steps. You send a request. HQ turns it into a card with a plan. Digital workers build and file the work, which is held. Client Services reviews it and sends it back with a note or releases it to your space. You approve each piece, ask for a change or remove it. Finished work is delivered to named folders. Once a piece is approved and your accounts are connected, it is scheduled into your next open slot. Only approved pieces can be scheduled. A change request opens a new card. Held work stays out of your folders, previews and search.";
 
 /** Wide 1600x900 diagram. */
 export function flowDiagramWide({ mode = "live", id = "hq-flow-wide" } = {}) {
@@ -119,8 +119,8 @@ export function flowDiagramWide({ mode = "live", id = "hq-flow-wide" } = {}) {
   const nodeW = 188;
   const gap = 24;
   const x0 = 70;
-  const top = 316;
-  const nodeH = 262;
+  const top = 300;
+  const nodeH = 304;
   const xs = FLOW_STEPS.map((_, i) => x0 + i * (nodeW + gap));
   const out = [svgOpen(W, H, { title: "How work moves through HQ", desc: FLOW_ALT, id, mode })];
   out.push(`<defs><pattern id="${id}-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#F5F0E8" stroke-opacity="0.035"/></pattern>`
@@ -163,7 +163,7 @@ export function flowDiagramWide({ mode = "live", id = "hq-flow-wide" } = {}) {
     const titleLines = k.lines(s.title, nodeW - 32, { font: "inter-600", size: 23 }, 2);
     titleLines.forEach((line, li) => out.push(k.text(line, { x: x + 16, y: top + 76 + li * 27, size: 23, font: "inter-600", fill: C.ink })));
     const dy = top + 76 + (titleLines.length - 1) * 27 + 30;
-    k.lines(s.detail, nodeW - 32, { font: "plex-400", size: 16 }, 6).forEach((line, li) => out.push(k.text(line, { x: x + 16, y: dy + li * 22, size: 16, font: "plex-400", fill: C.soft })));
+    k.lines(s.detail, nodeW - 32, { font: "plex-400", size: 16 }, 8).forEach((line, li) => out.push(k.text(line, { x: x + 16, y: dy + li * 22, size: 16, font: "plex-400", fill: C.soft })));
     if (s.status) {
       const p = k.pill(x + 16, top + nodeH - 44, s.status, s.tone === "muted" ? "muted" : s.tone, { size: 12 });
       out.push(p.svg);
@@ -374,7 +374,7 @@ export function socialMockup({ mode = "live", id = "hq-social" } = {}) {
   // Approval line.
   o.push(k.panel(24, 332, 396, 86, { fill: C.panel }));
   o.push(k.pill(40, 346, "Approved by you", "green", { size: 12 }).svg);
-  k.lines("Approving a piece takes the next open slot. Nothing goes out before you approve.", 360, { font: "plex-400", size: 14 }, 3).forEach((line, li) => o.push(k.text(line, { x: 40, y: 394 + li * 0 + li * 20 - 0, size: 14, font: "plex-400", fill: C.soft })));
+  k.lines("Once a piece is approved and your accounts are connected, it is scheduled into your next open slot.", 360, { font: "plex-400", size: 14 }, 3).forEach((line, li) => o.push(k.text(line, { x: 40, y: 394 + li * 0 + li * 20 - 0, size: 14, font: "plex-400", fill: C.soft })));
   // Networks.
     o.push(k.panel(548, gy, 148, 354, { fill: C.panel }));
   o.push(k.text("Networks", { x: 562, y: gy + 24, size: 13, font: "plex-500", fill: C.cyan }));

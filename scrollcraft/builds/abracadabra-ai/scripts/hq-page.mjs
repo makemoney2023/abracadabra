@@ -12,6 +12,7 @@ export const HQ_PATH = "/products/hq/";
 export const READINESS = "https://check.abra-ca-dabra.app/check";
 export const HQ_ARTICLE = "/blog/how-client-work-flows-through-hq";
 export const AGENT_ARTICLE = "/blog/what-is-an-ai-agent";
+export const COURSE = "/course/llm-leverage/";
 export const CLOUDFLARE_ARTICLE = "/blog/why-we-build-on-cloudflare";
 export const HQ_DESCRIPTION = hqProduct.description;
 export const HQ_PAGE_DESCRIPTION = "HQ is where our team and digital workers deliver your work. Review it, approve it, and schedule approved posts to Instagram, LinkedIn and more.";
@@ -23,7 +24,7 @@ export const hqFaqs = [
   ["Does anything reach me or my social networks without approval?", "No. Work an agent files is held until it has been reviewed and released. Only finished work you have approved can be scheduled or posted."],
   ["Which social networks does HQ post to?", `${NETWORKS.slice(0, -1).join(", ")} and ${NETWORKS.at(-1)}. Your accounts connect through each network's own sign-in.`],
   ["What are digital workers?", "AI agents we set up for your business, each with a clear role. They work from cards on your board, use skills picked for each task, and file their work for review."],
-  ["How do I get started?", "Take the Readiness Check, a five-to-seven-minute questionnaire about how your business runs today. It gives you scores and next steps, and you can book a thirty-minute working session if you want one."],
+  ["How do I get started?", "Take the Readiness Check, a five-to-seven-minute questionnaire about how your business runs today. It gives you next steps for your business, and you can book a thirty-minute working session if you want one."],
 ];
 
 const flowSteps = [
@@ -33,7 +34,7 @@ const flowSteps = [
   ["Review", "Client Services checks the work against your request, and a person on our team signs off. If something is off, it goes back to the agent with a note."],
   ["You approve", "Once the work is released to your space, you open a piece and approve it, ask for a change, or remove it. A change request opens a new card."],
   ["Delivery", "Finished work sits in named folders in your space, like Blog or Social. Each file shows its type, and pictures show a small thumbnail."],
-  ["Social calendar", "Approved work can be scheduled to your connected social networks. Approving a piece takes the next open slot on your calendar."],
+  ["Social calendar", "Only approved work can be scheduled to your social networks. Once a piece is approved and your accounts are connected, it is scheduled into your next open slot."],
 ];
 
 function esc(value) {
@@ -75,7 +76,7 @@ export function hqPageBody({ crumbs, pageActions, sectionHeading }) {
 ${crumbs}
 <p class="eyebrow">Product</p>
 <h1>One place to request, review and approve the work.</h1>
-<div class="page-header__lede lede"><p>HQ is the workspace where our team and a crew of digital workers get your work done. Nothing reaches your folders, and nothing reaches your social networks, until it has been reviewed and you have approved it.</p></div>
+<div class="page-header__lede lede"><p>HQ is the workspace where our team and a crew of digital workers get your work done. Nothing reaches your folders, and nothing reaches your social networks, until it has been reviewed and you have approved it.</p><p>HQ is for CEOs and business owners leveraging AI across their businesses.</p></div>
 ${pageActions(READINESS, "Take the Readiness Check", HQ_ARTICLE, "How client work moves through HQ")}
 </div>
 <div class="hq-hero__media">${figure("board", { id: "hq-hero-board" })}</div>
@@ -96,7 +97,7 @@ ${split({
   bullets: [
     ["Held by default.", "Work an agent files stays out of your folders, previews, shared links and search until it is released."],
     ["Client Services reviews first.", "It checks the work against your request, and sends it back to the agent with a note when something is off."],
-    ["You make the call.", "Approve a piece, ask for a change, or remove it. Removed work can be put back."],
+    ["You make the call.", "Approve a piece, ask for a change, or remove it. Removed work can be put back in your Library."],
   ],
   media: figure("review", { id: "hq-review-mock" }),
 })}
@@ -114,7 +115,7 @@ ${split({
   id: "social",
   eyebrow: "Social, automated",
   title: "Approved work goes onto your social calendar.",
-  intro: `<p>Automated social posting is live in HQ, since October 21, 2026. Each client has a Social page with a calendar. Connect your accounts through each network's own sign-in, and approved finished work takes the next open slot.</p>${networkList()}`,
+  intro: `<p>Automated social posting is live in HQ, since October 21, 2026. Each client has a Social page with a calendar. Connect your accounts through each network's own sign-in. Once a piece is approved and your accounts are connected, it is scheduled into your next open slot.</p>${networkList()}`,
   bullets: [
     ["Approved work only.", "Only finished work you have approved can be scheduled or posted. Work that is still held cannot."],
     ["Nothing goes out on its own.", "Nothing is posted until you approve it."],
@@ -129,7 +130,7 @@ ${split({
   intro: `<p>Behind every card is a digital worker: an AI agent set up for your business with a clear role. Each client has a lead agent, and some have helper agents too. They read the card, build the work and file it to HQ for review. Think of it as a bench of specialists you do not have to hire or manage.</p>
 <h3>Skills chosen for every task</h3>
 <p>Agents do not carry a fixed toolkit. For each card, an agent searches HQ's skill library for what the task needs, such as copywriting, design or search. It loads the skills that fit, attaches the skill packs to the card, and follows them. When it files the work, it lists the skills it used and says whether each one helped, with a short note.</p>
-<p>New to agents? Read <a href="${AGENT_ARTICLE}">What Is an AI Agent? A Plain Answer for Owners</a>.</p>`,
+<p>New to agents? Read <a href="${AGENT_ARTICLE}">What Is an AI Agent? A Plain Answer for Owners</a>. Want your own team to get more from AI first? Take the <a href="${COURSE}">LLM Leverage course</a>, a self-paced course for better answers from any model.</p>`,
   media: figure("workers", { id: "hq-workers-mock" }),
   flip: true,
 })}
@@ -137,8 +138,14 @@ ${split({
 <section id="security" class="hq-section hq-security" aria-labelledby="security-title">
 <p class="eyebrow">Security and AI</p>
 <h2 id="security-title">Built on Cloudflare.</h2>
-<p>HQ runs on Cloudflare, like our website and our Readiness Check. Security is built into the platform, and so are its AI tools. <a href="${CLOUDFLARE_ARTICLE}">Read why we build on Cloudflare</a>, with sources.</p>
-<ul class="hq-pills" aria-label="What the platform gives HQ"><li class="ui-pill ui-pill--done">Security built in</li><li class="ui-pill ui-pill--progress">AI tools on the same network</li></ul>
+<p>HQ runs on Cloudflare Workers, like our website and our Readiness Check. Each point below is something HQ uses today. Our note on <a href="${CLOUDFLARE_ARTICLE}">why we build on Cloudflare</a> has the sources and says which tools we use and which we only plan to.</p>
+<ul class="hq-points">
+<li><strong>Attacks are stopped at the edge.</strong> HQ is served through the Cloudflare network, which detects and mitigates DDoS attacks automatically. <a href="https://developers.cloudflare.com/ddos-protection/">Cloudflare's docs</a> list this protection as available on all plans.</li>
+<li><strong>Files and records are encrypted.</strong> Your files are stored in Cloudflare R2 and HQ's records in Cloudflare D1. Cloudflare's docs say <a href="https://developers.cloudflare.com/r2/reference/data-security/">R2</a> and <a href="https://developers.cloudflare.com/d1/reference/data-security/">D1</a> both encrypt stored data at rest and move data over TLS.</li>
+<li><strong>Staff tools sit behind Access.</strong> The private tool server our agents use is guarded by <a href="https://developers.cloudflare.com/cloudflare-one/access-controls/policies/">Cloudflare Access</a>, part of Cloudflare One. HQ presents a service token to get in.</li>
+<li><strong>AI runs on the same platform.</strong> HQ calls Workers AI through <a href="https://developers.cloudflare.com/ai-gateway/">Cloudflare AI Gateway</a>, which Cloudflare describes as giving visibility and control over AI apps with analytics, logging and rate limiting. Our agents are built on the Cloudflare Agents SDK.</li>
+</ul>
+<ul class="hq-pills" aria-label="What the platform gives HQ"><li class="ui-pill ui-pill--done">DDoS protection</li><li class="ui-pill ui-pill--done">Encrypted files and records</li><li class="ui-pill ui-pill--done">Access for staff tools</li><li class="ui-pill ui-pill--progress">Workers AI and AI Gateway</li></ul>
 </section>
 
 <section id="faq" class="hq-section hq-faq" aria-labelledby="hq-faq-title">
@@ -148,7 +155,7 @@ ${faq}
 </section>
 
 <section class="product-page__next premium-cta hq-cta">
-${sectionHeading("Start here", "See where your business stands first.", "The Readiness Check is a five-to-seven-minute questionnaire about how your business runs today. It gives you scores and next steps.")}
+${sectionHeading("Start here", "See where your business stands first.", "The Readiness Check is a five-to-seven-minute questionnaire about how your business runs today. It gives you next steps for your business.")}
 ${pageActions(READINESS, "Take the Readiness Check", "/start/", "Start a project")}
 </section>
 </main>`;
@@ -161,11 +168,11 @@ export function hqHomeSection() {
   <div class="wrap">
     <p class="eyebrow">HQ</p>
     <h2 id="hq-title">One place to request, review and approve the work.</h2>
-    <p class="lede">HQ is the workspace where your Abracadabra team and a crew of digital workers deliver. Nothing reaches your folders or your social networks until it has been reviewed and you have approved it.</p>
+    <p class="lede">HQ is the workspace where your Abracadabra team and a crew of digital workers deliver. Nothing reaches your folders or your social networks until it has been reviewed and you have approved it. It is for CEOs and business owners leveraging AI across their businesses.</p>
     <ol class="hq-home__beats">
       ${beat("board", "Request it", "Each request becomes a card on your board, with a plan for the work.")}
       ${beat("review", "Review it", "Finished work is held, checked by Client Services, then released for you to approve, change or remove.")}
-      ${beat("social", "Schedule it", `Approved work takes the next open slot on your social calendar: ${NETWORKS.slice(0, -1).join(", ")} and ${NETWORKS.at(-1)}.`)}
+      ${beat("social", "Schedule it", `Once a piece is approved and your accounts are connected, it is scheduled into your next open slot. Networks: ${NETWORKS.slice(0, -1).join(", ")} and ${NETWORKS.at(-1)}.`)}
     </ol>
     <p class="hq-home__actions" data-actions><a class="btn btn--secondary" href="${HQ_PATH}">Meet HQ</a><a class="btn btn--tertiary" href="${HQ_ARTICLE}">How client work moves through HQ <span class="btn__arrow" aria-hidden="true">→</span></a></p>
     <p class="hq-home__more">Our digital workers search a skill library for every task. New to agents? <a href="${AGENT_ARTICLE}">What is an AI agent?</a></p>

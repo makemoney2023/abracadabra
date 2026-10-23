@@ -326,7 +326,11 @@ function baseGraph(pageNode, extra) {
   };
 }
 
-function pageNode({ type, id, url, name, description, image }) {
+/** Pages changed on this date carry it as dateModified and sitemap lastmod. */
+const HQ_MODIFIED = "2026-10-23";
+const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/"]);
+
+function pageNode({ type, id, url, name, description, image, modified = MODIFIED }) {
   const node = {
     "@type": type,
     "@id": id,
@@ -336,7 +340,7 @@ function pageNode({ type, id, url, name, description, image }) {
     isPartOf: { "@id": WEBSITE_ID },
     publisher: { "@id": ORG_ID },
     inLanguage: "en",
-    dateModified: MODIFIED,
+    dateModified: modified,
   };
   if (image) node.primaryImageOfPage = { "@type": "ImageObject", url: image };
   return node;
@@ -1018,6 +1022,7 @@ async function renderHq() {
       url,
       name: "HQ, the client workspace",
       description: HQ_PAGE_DESCRIPTION,
+      modified: HQ_MODIFIED,
       image: `${SITE}${hqProduct.image}`,
     }),
     breadcrumb: { "@id": g.breadcrumbId },
@@ -1046,7 +1051,7 @@ async function renderHq() {
 async function renderProductsHub() {
   const url = `${SITE}/products/`;
   const title = "Products | Abracadabra AI";
-  const description = "Schema and Super Funnel, ready-made tools you can try today, and HQ, the workspace where we deliver client work.";
+  const description = "Schema and Super Funnel are ready-made tools you can try today. HQ is our client workspace, which you start with the Readiness Check or a project.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Products", href: "/products/", url },
@@ -1083,13 +1088,14 @@ async function renderProductsHub() {
       url,
       name: "Products",
       description,
+      modified: HQ_MODIFIED,
     }), [crumbList(crumbs), list]),
     body: `<main id="top" class="site-page collection-page collection-page--products">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
-  title: "Software you can use today.",
-  dek: "<p>Ready-made tools you can try today, Schema and Super Funnel, and HQ, the workspace where we deliver client work.</p>",
+  title: "Software from the studio.",
+  dek: `<p>Schema and Super Funnel are ready-made tools you can try today. HQ is the workspace where we deliver client work. You start with the <a href="${READINESS_URL}">Readiness Check</a> or <a href="/start/">Start a project</a>.</p>`,
 })}
 ${collectionIndex([[products.length, "products"], ["Live", "Schema and Super Funnel"], ["HQ", "our client workspace"]])}
 <ul class="cards">${cards}</ul>
@@ -1178,7 +1184,7 @@ function siteUrls() {
     "/start/",
     "/start/thanks/",
   ];
-  return paths.map((path) => `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${MODIFIED}</lastmod>\n  </url>`).join("\n");
+  return paths.map((path) => `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED}</lastmod>\n  </url>`).join("\n");
 }
 
 function siteRedirects() {
@@ -1381,8 +1387,8 @@ async function patchSitemap() {
   const path = join(root, "sitemap.xml");
   let xml = await readFile(path, "utf8");
   xml = xml.replace(
-    "<loc>https://abra-ca-dabra.app/</loc>\n    <lastmod>2026-10-07</lastmod>",
-    `<loc>https://abra-ca-dabra.app/</loc>\n    <lastmod>${MODIFIED}</lastmod>`,
+    /<loc>https:\/\/abra-ca-dabra\.app\/<\/loc>\n    <lastmod>[0-9-]+<\/lastmod>/,
+    `<loc>https://abra-ca-dabra.app/</loc>\n    <lastmod>${HQ_MODIFIED}</lastmod>`,
   );
   xml = fill(xml, "<!-- site-urls -->", "<!-- /site-urls -->", siteUrls());
   await writeFile(path, xml);
