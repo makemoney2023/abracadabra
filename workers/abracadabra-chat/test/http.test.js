@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { SITE_KNOWLEDGE_VERSION } from "../src/site-knowledge.js";
 import test from "node:test";
 import { signHex } from "../src/handoff.js";
 import { handleRequest, runAlarm } from "../src/http.js";
@@ -61,6 +62,7 @@ test("config is public and foreign origins are refused", async () => {
     turnstileSiteKey: "site",
     voiceEnabled: false,
     greeting: "Ask a plain question. A person reviews anything we follow up on.",
+    knowledge: SITE_KNOWLEDGE_VERSION,
   });
   const blocked = await call("/api/chat/config", { ...h, method: "GET", origin: "https://evil.example" });
   assert.equal(blocked.status, 403);

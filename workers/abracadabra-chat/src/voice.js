@@ -3,6 +3,8 @@
 // Text to speech: Deepgram Aura-2 through the AI Gateway, streamed as raw PCM.
 // Audio is never stored. Only the words are kept, like a typed chat.
 
+import { SITE_PRODUCTS, SITE_WORK } from "./site-knowledge.js";
+
 export const STT_MODEL = "@cf/deepgram/flux";
 export const TTS_MODEL = "@cf/deepgram/aura-2-en";
 export const TTS_SPEAKER = "luna";
@@ -21,7 +23,12 @@ export const FILLERS = ["Let me check.", "One sec.", "Good question.", "Just a m
 export const FILLER_AFTER_MS = 1200;
 export const EAGER_EOT_THRESHOLD = "0.5";
 export const FILLER_PATH = "/assets/voice/filler-";
-export const KEYTERMS = ["Abracadabra", "Readiness Check", "Cal.com"];
+// Words speech-to-text should expect: the studio, the next steps, and every product and case study by its spoken name.
+export const KEYTERMS = [...new Set([
+  "Abracadabra", "Readiness Check", "Cal.com",
+  ...SITE_PRODUCTS.map((item) => item.name),
+  ...SITE_WORK.map((item) => item.name.replace(/\s+(?:System|website|products)$/i, "").replace(/\.ca$/i, "").replace(/\/.*$/, "")),
+])];
 
 const AURA_SPEAKERS = new Set([
   "amalthea", "andromeda", "apollo", "arcas", "aries", "asteria", "athena", "atlas", "aurora", "callista",

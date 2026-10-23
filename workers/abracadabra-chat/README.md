@@ -76,13 +76,22 @@ the answer queues after it. The filler's echo does not count as a barge-in; talk
 
 ## Site knowledge
 
-The assistant answers from `src/site-knowledge.js`: the public work, the ten services, process, cost wording, next steps, and a short "Why Cloudflare" list (about 1.2k tokens). It is generated from the marketing site's own data (`scrollcraft/builds/abracadabra-ai/scripts/site-data.mjs` and `service-sales.mjs`):
+The assistant (typed chat and the voice call alike) answers only from `src/site-knowledge.js`: every case study, the products (Schema, LLM Leverage, HQ) with a short detail line each, the twelve services, every other page in `sitemap.xml` (named by its own `<title>` and meta description), every Notes article by title, process, cost wording, next steps, and a short "Why Cloudflare" list (about 3.5k tokens). Nothing is typed by hand except the PIRX and MCP locked-wording lines and the Cloudflare list. It is generated from the marketing site's own source and built pages (`scrollcraft/builds/abracadabra-ai/scripts/site-data.mjs`, `service-sales.mjs`, `super-funnel-case.mjs`, `sitemap.xml`, `**/index.html`):
 
 ```sh
-npm run knowledge
+npm run knowledge          # regenerate after any page, product or case-study change
+npm run knowledge:check    # exit 1 if src/site-knowledge.js is stale
+npm run knowledge:live     # read-only: does the deployed chat match this checkout? (GET /api/chat/config "knowledge")
 ```
 
-A test fails when the file is out of date, when it names a page that does not exist, or when a case-study name is not in the site source. The answer filter (`postCheck`) drops links to pages that are not in `SITE_PATHS`, turns copied paths into full links, keeps the closing booking or Readiness Check sentence when it trims, and replaces any reply that denies the portfolio or calls the work free.
+Drift guards:
+
+- `test/knowledge.test.js` fails when the file is out of date, when a sitemap page, product card or case study is missing from it, when it names a page that does not exist, or when it says "free" or a price.
+- `npm run deploy` (this Worker) and `npm run deploy` in the marketing folder both run `--check` first, and the marketing tests include `tests/chat-knowledge.test.mjs`. A site change therefore cannot ship without the regenerated file.
+- `.github/workflows/chat-knowledge.yml` runs the check and these tests on every PR touching either folder.
+- `GET /api/chat/config` returns `knowledge`, a 12-character fingerprint of the knowledge, so `npm run knowledge:live` shows whether the live Worker is current. The knowledge is baked in at deploy: after the regenerated file merges, deploy this Worker (by hand, `npx wrangler deploy`; it is not on Workers Builds).
+
+The answer filter (`postCheck`) drops links to pages that are not in `SITE_PATHS`, turns copied paths into full links, keeps the closing booking or Readiness Check sentence when it trims, and replaces any reply that denies the portfolio or calls anything free (the Readiness Check included). When the model is down, `localReply` still answers a question that names a product or case study ("Tell me about HQ") from its knowledge line and page. Voice speech-to-text is primed with every product and case-study name (`KEYTERMS`), so it hears "HQ" and "Super Funnel".
 
 ## Voice
 

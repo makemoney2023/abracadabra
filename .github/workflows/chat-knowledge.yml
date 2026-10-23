@@ -1,0 +1,35 @@
+name: Chat knowledge is current
+
+# The website chat and its voice call answer only from workers/abracadabra-chat/src/site-knowledge.js, generated from
+# the marketing site (scrollcraft/builds/abracadabra-ai). This fails a PR that changes a page, product or case study
+# without regenerating it (cd workers/abracadabra-chat && npm run knowledge). No dependencies, no secrets.
+on:
+  pull_request:
+    paths:
+      - "workers/abracadabra-chat/**"
+      - "scrollcraft/builds/abracadabra-ai/**"
+      - ".github/workflows/chat-knowledge.yml"
+  push:
+    branches: [main]
+    paths:
+      - "workers/abracadabra-chat/**"
+      - "scrollcraft/builds/abracadabra-ai/**"
+      - ".github/workflows/chat-knowledge.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  chat-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: workers/abracadabra-chat
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/build-site-knowledge.mjs --check
+      - run: node --test test/*.test.js

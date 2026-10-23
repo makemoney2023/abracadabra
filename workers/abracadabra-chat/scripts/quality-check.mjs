@@ -41,6 +41,15 @@ const CASES = [
   ["What is MCP?", /model context protocol|connect|tools/i, PRICE],
   ["how does this work?", /voice|call|phone/i, null, true, { path: "/services/voice-and-realtime-agents/", title: "Voice and realtime agents | Abracadabra" }],
   ["How much is it?", /quote|session|depend|scope/i, PRICE, true, { path: "/services/custom-apps/", title: "Custom apps | Abracadabra" }],
+  // Products and pages that must be known (HQ was missing before Oct 23, 2026).
+  ["Tell me about HQ", /workspace|approv|digital workers/i, /not sure what|don't know|no (such|product)|headquarters/i],
+  ["Tell me about HQ", /workspace|approv|digital workers/i, /not sure what|don't know|no (such|product)|headquarters/i, true],
+  ["What is Schema?", /AI search|answer engine|visib|find your site/i, PRICE],
+  ["Tell me about the Super Funnel", /associate|SuperPatch|lead|pipeline/i, /products\/super-funnel|66-second/i],
+  ["Is the Readiness Check free?", /five to seven|minutes|check/i, /\bfree\b|no cost/i],
+  ["How much does HQ cost?", /quote|session|project|price each/i, PRICE],
+  ["What products do you have?", /HQ/, null],
+  ["Can I book a call with you?", /session|book|calendar|thirty/i, null],
 ];
 
 async function answer(model, [text, , , voice, page]) {

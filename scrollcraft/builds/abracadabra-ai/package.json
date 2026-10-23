@@ -6,6 +6,7 @@
     "build": "BLOG_AS_OF=2026-10-21 node scripts/build-blog.mjs && node scripts/site-pages.mjs",
     "test": "BLOG_AS_OF=2026-10-21 node scripts/build-blog.mjs && node scripts/site-pages.mjs && node --test tests/*.test.mjs",
     "preview": "wrangler dev",
+    "predeploy": "node ../../../workers/abracadabra-chat/scripts/build-site-knowledge.mjs --check",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

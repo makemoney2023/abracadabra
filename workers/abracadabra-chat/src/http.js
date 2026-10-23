@@ -18,6 +18,7 @@ import {
 import { recentWeeks, recordSession, STATS_MAX_WEEKS, statsCsv, statsStore, weekSummary } from "./stats.js";
 import { applyChatEvent, blankSession, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
 import { VoiceCall } from "./realtime.js";
+import { SITE_KNOWLEDGE_VERSION } from "./site-knowledge.js";
 import { VOICE_CALLS_PER_SESSION, VOICE_TURNS_PER_SESSION, voiceEnabled } from "./voice.js";
 
 const HQ_RETRIES = 5;
@@ -118,6 +119,7 @@ function publicConfig(env) {
     turnstileSiteKey: String(env.TURNSTILE_SITE_KEY || "").trim(),
     voiceEnabled: voiceEnabled(env),
     greeting: "Ask a plain question. A person reviews anything we follow up on.",
+    knowledge: SITE_KNOWLEDGE_VERSION,
   };
 }
 
