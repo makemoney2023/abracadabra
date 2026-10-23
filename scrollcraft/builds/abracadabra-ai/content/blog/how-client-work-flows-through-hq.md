@@ -2,7 +2,8 @@
 title: "How Client Work Moves Through HQ and Our AI Agents"
 description: "A request comes in, HQ files it, Grok Bot agents build it, Client Services checks it, and our team signs off before it lands in your own HQ space."
 datePublished: "2026-10-21"
-dateModified: "2026-10-21"
+dateModified: "2026-10-23"
+mentionsProducts: [hq]
 pillar: "AI agents"
 cluster: "agents"
 primaryQuery: "how AI agents deliver client work"
@@ -59,7 +60,7 @@ citations:
 ---
 Here is the short answer. A client sends us a request, and HQ turns it into a card on that client's board. Grok Bot agents with the right skills build the work and file it back to HQ, where it is held. Client Services checks it against the request, and a person on our team approves it. Only then does it appear in the client's own space in HQ.
 
-This note walks through each step. It is the same path we use for our own site, and it is the kind of system we build for clients who want agents doing real work. If you want to know whether your business is ready for that, the [AI Readiness Check](https://check.abra-ca-dabra.app/check) is the place to start.
+This note walks through each step. HQ also has its own page: see [HQ, the client workspace](/products/hq/). The path below is the same one we use for our own site, and it is the kind of system we build for clients who want agents doing real work. If you want to know whether your business is ready for that, the [AI Readiness Check](https://check.abra-ca-dabra.app/check) is the place to start.
 
 <!--diagram:1-->
 
@@ -115,6 +116,6 @@ Ask for them on the piece in your space. HQ opens a new card called Changes requ
 
 ## Could this work in your business?
 
-This setup is not only for agencies. Any team that gets requests, does work, and sends it back for sign-off can run a version of it. It might be a quote, a report, a page on your site, or a reply to a customer. We build these systems around how your work already flows. Some of them are [custom apps](/services/custom-apps/), and some are [AI assistants and agents](/services/ai-assistants-and-agents/). You can see more of what we have shipped in our [portfolio](/portfolio/).
+This setup is not only for agencies. Any team that gets requests, does work, and sends it back for sign-off can run a version of it. It might be a quote, a report, a page on your site, or a reply to a customer. We build these systems around how your work already flows. Some of them are [custom apps](/services/custom-apps/), and some are [AI assistants and agents](/services/ai-assistants-and-agents/). You can see more of what we have shipped in our [portfolio](/portfolio/). If you want to see HQ itself, including how approved work reaches a social calendar, read the [HQ product page](/products/hq/). And if agents are new to you, [What Is an AI Agent? A Plain Answer for Owners](/blog/what-is-an-ai-agent) is a good place to start.
 
 The first step is knowing where you stand. The [AI Readiness Check](https://check.abra-ca-dabra.app/check) asks how your business runs today and gives you scores, a band and tips for each section. Take it, then [start a project](/start/) or write to houdini@abra-ca-dabra.app, and we will look at it with you.
