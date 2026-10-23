@@ -18,6 +18,7 @@ export function SocialPieceCard({
   platforms,
   captions,
   accountName,
+  showNextAction = true,
 }: {
   view: PieceCardView;
   media: PieceCardMedia[];
@@ -25,6 +26,8 @@ export function SocialPieceCard({
   platforms?: string[];
   captions?: Record<string, string>;
   accountName: string;
+  /** Off for a post that already has a time: the next step is not "Schedule". */
+  showNextAction?: boolean;
 }) {
   const roles = new Set(view.preview.roles);
   const matched = roles.size > 0 ? media.filter((item) => roles.has(item.role)) : media;
@@ -41,7 +44,7 @@ export function SocialPieceCard({
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <p className="font-medium">{view.title}</p>
         <span className="text-muted-foreground">{view.postType}</span>
-        <span className="text-muted-foreground">{view.nextAction}</span>
+        {showNextAction ? <span className="text-muted-foreground">{view.nextAction}</span> : null}
       </div>
       <PlatformPostPreview
         frames={frames}

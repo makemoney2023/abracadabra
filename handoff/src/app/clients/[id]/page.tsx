@@ -40,6 +40,7 @@ import { listOpenSocialAttention } from "@/lib/social-attention";
 import { getAutopost } from "@/lib/social-autopost";
 import { getAgentPublishMode } from "@/lib/social-policy-settings";
 import { openZernio } from "@/lib/zernio";
+import { loadPostPreviews } from "@/lib/social-post-previews";
 import type { SocialView } from "./social-tab";
 import { staffLibrarySummaries } from "@/lib/library-queries";
 import { SetContextLabel } from "@/components/context-bar";
@@ -98,6 +99,7 @@ async function loadSocial(
   const live = scheduledItemIds(posts);
   const held = new Set(posts.filter((post) => post.status === "failed").map((post) => post.item_id));
   const review = space ? await listSocialReviewPieces(sql, caller, space, live, held) : { waiting: [], ready: [], catalog: [] };
+  const previews = await loadPostPreviews(sql, posts, accounts, { staff: true });
   return {
     configured: Boolean(zernio),
     syncError,
@@ -115,6 +117,7 @@ async function loadSocial(
     pieceId,
     postId,
     scheduleNotice,
+    previews,
   };
 }
 

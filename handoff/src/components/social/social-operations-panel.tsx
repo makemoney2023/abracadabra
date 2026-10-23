@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { moveSocialPostAction, placeSocialPieceAction } from "@/app/clients/social-actions";
 import { ApproveForm, ChangesForm } from "@/app/w/[slug]/work/forms";
-import { CancelSocialPostForm, MoveSocialPostForm, RetrySocialPostForm } from "@/app/clients/social-forms";
 import { pieceOpenHref, shelfNote } from "@/lib/finished-shelf";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import type { SocialReviewPiece } from "@/lib/social-review";
@@ -18,7 +17,9 @@ import { SocialPieceCard } from "./social-piece-card";
 import { pieceCardView } from "./social-piece-view";
 import { operationsView, type AttentionRow, type OperationsPost } from "./social-operations";
 import { calendarStatusLabel, visibleReview } from "./social-board";
-import { SocialCalendarView, type CalendarEvent } from "./social-calendar-view";
+import { SocialCalendarView, type CalendarEvent, type QuickAction } from "./social-calendar-view";
+import { fallbackPreview, SocialPostPreview, type PreviewIntent } from "./social-post-preview";
+import type { PostPreviewData } from "./post-preview-model";
 
 export type OperationsCard = OperationsPost & {
   deliverableId: string;
@@ -54,6 +55,7 @@ export function SocialOperationsPanel({
   initialPostId = null,
   scheduleNotice = null,
   librarySlug = "",
+  previews = {},
 }: {
   attention: AttentionRow[];
   posts: OperationsCard[];
@@ -68,6 +70,8 @@ export function SocialOperationsPanel({
   initialPostId?: string | null;
   scheduleNotice?: string | null;
   librarySlug?: string;
+  /** What each post's preview shows, by post id. A post with no entry opens with what the calendar card knows. */
+  previews?: Record<string, PostPreviewData>;
 }) {
   const router = useRouter();
   const [account, setAccount] = React.useState("");
@@ -77,10 +81,20 @@ export function SocialOperationsPanel({
   const [selectedId, setSelectedId] = React.useState<string | null>(initialPostId || initialPieceId || waiting[0]?.id || null);
   const [armed, setArmed] = React.useState(Boolean(initialPieceId || initialPostId));
   const [moveMessage, setMoveMessage] = React.useState(scheduleNotice ?? "");
+  const [open, setOpen] = React.useState<{ id: string; intent: PreviewIntent } | null>(
+    initialPostId && posts.some((post) => post.id === initialPostId) ? { id: initialPostId, intent: "view" } : null,
+  );
   const choose = (id: string) => {
     setSelectedId(id);
     setArmed(true);
   };
+  const opener = React.useRef<HTMLElement | null>(null);
+  const openPost = (id: string, intent: PreviewIntent = "view") => {
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    choose(id);
+    if (posts.some((post) => post.id === id)) setOpen({ id, intent });
+  };
+  const quick = (id: string, action: QuickAction) => openPost(id, action);
   const openPiece = (piece: SocialReviewPiece) => pieceOpenHref(piece.slug, piece.deliverableId, piece.id);
   const filtered = posts.filter((post) => {
     if (account && post.accountId !== account) return false;
@@ -138,6 +152,7 @@ export function SocialOperationsPanel({
     setMoveMessage(result.ok ? result.message : result.error);
     if (result.ok) router.refresh();
   };
+  const openPostCard = open ? posts.find((post) => post.id === open.id) ?? null : null;
   const approveReturn = canReschedule ? `/clients/${organizationId}?tab=social` : selectedPiece ? `/w/${selectedPiece.slug}/social` : "";
   const inWaitingList = selectedPiece ? review.some((piece) => piece.id === selectedPiece.id) : false;
   const wantsApprove = armed && selectedPiece != null && selectedPiece.status !== "approved";
@@ -209,10 +224,11 @@ export function SocialOperationsPanel({
               now={now}
               initialMode={wide.calendar.mode}
               selectedId={selectedId}
-              onSelect={choose}
+              onSelect={openPost}
               canReschedule={canReschedule}
               onMove={canReschedule ? move : undefined}
               onPlace={canReschedule ? place : undefined}
+              onQuick={canReschedule ? quick : undefined}
             />
           </div>
           <div className="sm:hidden">
@@ -222,10 +238,11 @@ export function SocialOperationsPanel({
               now={now}
               initialMode={phone.calendar.mode}
               selectedId={selectedId}
-              onSelect={choose}
+              onSelect={openPost}
               canReschedule={canReschedule}
               onMove={canReschedule ? move : undefined}
               onPlace={canReschedule ? place : undefined}
+              onQuick={canReschedule ? quick : undefined}
             />
           </div>
           {moveMessage ? <p role="status" className="text-sm text-muted-foreground">{moveMessage}</p> : null}
@@ -234,8 +251,20 @@ export function SocialOperationsPanel({
       </div>
       {selectedPiece ? (
         <PieceDetail piece={selectedPiece} approveLabel={approveLabel} organizationId={organizationId} canReschedule={canReschedule} showApprove={wantsApprove && !inWaitingList} />
-      ) : selectedPost ? (
-        <PostDetail post={selectedPost} organizationId={organizationId} canReschedule={canReschedule} timeZone={timeZone} />
+      ) : null}
+      {openPostCard ? (
+        <SocialPostPreview
+          data={previews[openPostCard.id] ?? fallbackPreview({ ...openPostCard, accountLabel: openPostCard.accountLabel })}
+          others={Object.values(previews)}
+          intent={open?.intent ?? "view"}
+          canAct={canReschedule}
+          organizationId={organizationId}
+          librarySlug={librarySlug}
+          now={now}
+          onClose={() => setOpen(null)}
+          onDone={setMoveMessage}
+          restoreFocus={() => opener.current?.focus()}
+        />
       ) : null}
     </section>
   );
@@ -326,39 +355,6 @@ function ShelfNotes({ slug, waiting, ready }: { slug: string; waiting: number; r
       <p>
         {approved.status && slug ? <Link className="underline" href={libraryHref(slug, { status: approved.status })}>{approved.text}</Link> : approved.text}
       </p>
-    </div>
-  );
-}
-
-function PostDetail({
-  post,
-  organizationId,
-  canReschedule,
-  timeZone,
-}: {
-  post: OperationsCard;
-  organizationId: string;
-  canReschedule: boolean;
-  timeZone: string;
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border p-4 text-sm">
-      <p className="font-medium">{post.title}</p>
-      <p className="text-muted-foreground">
-        {(PLATFORM_LABEL[post.platform] ?? post.platform) || "Post"} · {calendarStatusLabel(post.state)} · {timeZone}
-      </p>
-      {post.collection ? (
-        <Link className="underline" href={`/deliverables/${post.deliverableId}`}>
-          {post.collection}
-        </Link>
-      ) : null}
-      {canReschedule && post.state === "scheduled" ? (
-        <div className="flex flex-wrap gap-2">
-          <MoveSocialPostForm organizationId={organizationId} postId={post.id} timezone={timeZone} />
-          <CancelSocialPostForm organizationId={organizationId} postId={post.id} />
-        </div>
-      ) : null}
-      {canReschedule && post.state === "failed" ? <RetrySocialPostForm organizationId={organizationId} postId={post.id} /> : null}
     </div>
   );
 }
