@@ -158,6 +158,9 @@ export type UsageRow = {
   reads: number;
   cites: number;
   attaches: number;
+  /** Agents' own verdicts from skill_feedback: this skill (or a skill in this pack) helped / did not help. */
+  useful: number;
+  notUseful: number;
   cards: number;
   reviewed: number;
   approved: number;
@@ -171,7 +174,7 @@ export type UsageRow = {
 export type UsageStats = {
   days: UsageWindow;
   since: number;
-  totals: { lists: number; searches: number; reads: number; cites: number; attaches: number; detaches: number; failedReads: number };
+  totals: { lists: number; searches: number; reads: number; cites: number; attaches: number; detaches: number; failedReads: number; useful: number; notUseful: number };
   packs: UsageRow[];
   skills: UsageRow[];
   /** Library packs with no read, cite, or attach since tracking started. */
@@ -186,11 +189,26 @@ export function usageWindow(raw: unknown): UsageWindow {
   return (USAGE_WINDOWS as readonly number[]).includes(value) ? (value as UsageWindow) : 30;
 }
 
-type Acc = { name: string; reads: number; cites: number; attaches: number; cards: Set<string>; agents: Set<string>; last: number | null };
+type Acc = {
+  name: string;
+  reads: number;
+  cites: number;
+  attaches: number;
+  useful: number;
+  notUseful: number;
+  cards: Set<string>;
+  agents: Set<string>;
+  last: number | null;
+};
+
+function accFor(map: Map<string, Acc>, key: string, name: string): Acc {
+  const acc = map.get(key) ?? { name, reads: 0, cites: 0, attaches: 0, useful: 0, notUseful: 0, cards: new Set<string>(), agents: new Set<string>(), last: null };
+  map.set(key, acc);
+  return acc;
+}
 
 function bump(map: Map<string, Acc>, key: string, name: string, row: EventRow): Acc {
-  const acc = map.get(key) ?? { name, reads: 0, cites: 0, attaches: 0, cards: new Set<string>(), agents: new Set<string>(), last: null };
-  map.set(key, acc);
+  const acc = accFor(map, key, name);
   if (row.task_id) acc.cards.add(row.task_id);
   if (row.actor_id) acc.agents.add(row.actor_id);
   acc.last = Math.max(acc.last ?? 0, row.at);
@@ -198,6 +216,37 @@ function bump(map: Map<string, Acc>, key: string, name: string, row: EventRow): 
   else if (row.event === "cite") acc.cites += 1;
   else if (row.event === "attach") acc.attaches += 1;
   return acc;
+}
+
+/**
+ * Adds each agent verdict in the window to its pack and skill. A skill with feedback but no read still gets a row.
+ * Best effort: with the skill_feedback table missing the counts stay zero.
+ */
+async function addFeedback(sql: Sql, since: number, packs: Map<string, Acc>, skills: Map<string, Acc>, skillNames?: Map<string, string>): Promise<void> {
+  let rows: { path: string; useful: number; task_id: string | null; agent_id: string | null; at: number }[];
+  try {
+    rows = await sql.all(
+      "SELECT path, useful, task_id, agent_id, at FROM skill_feedback WHERE at >= ? ORDER BY at DESC LIMIT 20000",
+      [since],
+    );
+  } catch {
+    return;
+  }
+  for (const row of rows) {
+    const pack = packOfPath(row.path);
+    const parts = row.path.split("/");
+    const targets = [
+      accFor(packs, pack, pack.split("/").filter(Boolean).slice(-1)[0] ?? pack),
+      accFor(skills, row.path, skillNames?.get(row.path) ?? parts[parts.length - 2] ?? row.path),
+    ];
+    for (const acc of targets) {
+      if (Number(row.useful) === 1) acc.useful += 1;
+      else acc.notUseful += 1;
+      if (row.task_id) acc.cards.add(row.task_id);
+      if (row.agent_id) acc.agents.add(row.agent_id);
+      acc.last = Math.max(acc.last ?? 0, row.at);
+    }
+  }
 }
 
 /** Latest review decision per card, and whether it was ever sent back. Reads both review activity kinds. */
@@ -245,6 +294,8 @@ function finish(map: Map<string, Acc>, reviews: Map<string, { latest: string; se
         reads: acc.reads,
         cites: acc.cites,
         attaches: acc.attaches,
+        useful: acc.useful,
+        notUseful: acc.notUseful,
         cards: acc.cards.size,
         reviewed,
         approved,
@@ -271,7 +322,7 @@ export async function skillUsageStats(
      FROM skill_events WHERE at >= ? GROUP BY event`,
     [since],
   );
-  const totals = { lists: 0, searches: 0, reads: 0, cites: 0, attaches: 0, detaches: 0, failedReads: 0 };
+  const totals = { lists: 0, searches: 0, reads: 0, cites: 0, attaches: 0, detaches: 0, failedReads: 0, useful: 0, notUseful: 0 };
   for (const row of counts) {
     const n = Number(row.n);
     if (row.event === "list") totals.lists = n;
@@ -282,6 +333,15 @@ export async function skillUsageStats(
     } else if (row.event === "cite") totals.cites = n;
     else if (row.event === "attach") totals.attaches = n;
     else if (row.event === "detach") totals.detaches = n;
+  }
+  try {
+    const verdicts = await sql.all<{ useful: number; n: number }>("SELECT useful, COUNT(*) AS n FROM skill_feedback WHERE at >= ? GROUP BY useful", [since]);
+    for (const row of verdicts) {
+      if (Number(row.useful) === 1) totals.useful = Number(row.n);
+      else totals.notUseful = Number(row.n);
+    }
+  } catch {
+    // Feedback is optional: with the table missing the counts stay zero.
   }
   const rows = await sql.all<EventRow>(
     `SELECT event, path, prefix, task_id, actor_id, at, status FROM skill_events
@@ -300,7 +360,8 @@ export async function skillUsageStats(
       bump(skills, path, input.skillNames?.get(path) ?? parts[parts.length - 2] ?? path, row);
     }
   }
-  const cards = [...new Set(rows.map((row) => row.task_id).filter((id): id is string => Boolean(id)))];
+  await addFeedback(sql, since, packs, skills, input.skillNames);
+  const cards = [...new Set([...packs.values(), ...skills.values()].flatMap((acc) => [...acc.cards]))];
   const reviews = await reviewOutcomes(sql, cards);
 
   const used = await sql.all<{ prefix: string | null; path: string | null }>(
@@ -362,4 +423,44 @@ export async function recordSkillsUsed(
     );
   });
   return { used, unknown };
+}
+
+/**
+ * Stores a filing's skill_feedback (one row per skill) after the response. Paths not in the published index are dropped
+ * and returned as unknown; with no index reachable every well-formed path is kept. Never throws.
+ */
+export async function recordSkillFeedback(
+  sql: Sql,
+  input: { agent: AgentPrincipal; workItemId: string; items: { path: string; useful: boolean; note: string | null }[]; known: Set<string> | null; now: number },
+): Promise<{ recorded: { path: string; useful: boolean }[]; unknown: string[] }> {
+  const kept = input.known ? input.items.filter((item) => input.known!.has(item.path)) : [...input.items];
+  const unknown = input.known ? input.items.filter((item) => !input.known!.has(item.path)).map((item) => item.path) : [];
+  const recorded = kept.map((item) => ({ path: item.path, useful: item.useful }));
+  if (!kept.length) return { recorded, unknown };
+  await afterResponse(async () => {
+    const row = await sql.get<{ task_id: string | null; organization_id: string | null }>(
+      "SELECT task_id, organization_id FROM agent_work_items WHERE id = ? AND agent_id = ?",
+      [input.workItemId, input.agent.agentId],
+    );
+    if (!row) return;
+    await sql.batch(
+      kept.map((item) => ({
+        statement: `INSERT INTO skill_feedback (id, at, agent_id, organization_id, task_id, work_item_id, path, prefix, useful, note, source)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'filing')`,
+        params: [
+          crypto.randomUUID(),
+          input.now,
+          input.agent.agentId,
+          row.organization_id,
+          row.task_id,
+          input.workItemId,
+          item.path,
+          packOfPath(item.path),
+          item.useful ? 1 : 0,
+          item.note,
+        ],
+      })),
+    );
+  });
+  return { recorded, unknown };
 }

@@ -204,10 +204,11 @@ export async function attachedOnOpenCards(
 }
 
 /** Text for a lead handoff: what is on the card, and how to add more. */
-export function skillHint(taskId: string, attached: string[]): { attached: string[]; library: string; attach: string } {
+export function skillHint(taskId: string, attached: string[]): { attached: string[]; library: string; guide: string; attach: string } {
   return {
     attached,
     library: "GET /api/agent-skill-library",
+    guide: "GET /api/agent-skill-guide",
     attach: `POST /api/agent-board/tasks/${taskId} {"action":"attach_skills","prefixes":["<pack prefix, e.g. community/marketingskills/>"]}`,
   };
 }
