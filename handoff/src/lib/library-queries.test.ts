@@ -165,6 +165,42 @@ describe("library queries", () => {
     }
   });
 
+  it("leaves notes and source links in Files and lists the finished piece", async () => {
+    const sql = await database();
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, format, channel, title, copy_text, media_json, link_url, status, sort
+       ) VALUES ('item-note', 'd-live', 1, 'page', NULL, 'how-client-work.md', NULL, '[]', NULL, 'pending', 2),
+                ('item-pr', 'd-live', 1, 'link', NULL, 'Pull request #173', NULL, '[]', 'https://github.com/makemoney2023/abracadabra/pull/173', 'pending', 3),
+                ('item-repo', 'd-live', 1, 'link', NULL, 'Repository', NULL, '[]', 'https://github.com/makemoney2023/squareassembly', 'approved', 4),
+                ('item-shot', 'd-live', 1, 'static', NULL, 'homepage.png', NULL, '[{"r2_key":"k","role":"main","content_type":"image/png"}]', NULL, 'approved', 5)`,
+    );
+    await sql.run(
+      `INSERT INTO files (
+         id, batch_id, workspace_id, relative_path, extension, size_bytes, object_key, tag, status, scan_attempts, created_at
+       ) VALUES ('file-note', 'batch-file', 'ws-1', 'Q4/notes.md', 'md', 12, 'ws-1/batch-file/file-note', 'source', 'clean', 0, ?)`,
+      [NOW - 8],
+    );
+    await sql.run(
+      `INSERT INTO library_file_selections (id, organization_id, workspace_id, file_id, selected_by, selected_at)
+       VALUES ('sel-note', 'org-1', 'ws-1', 'file-note', 'staff-1', ?)`,
+      [NOW - 8],
+    );
+    const page = await listLibraryArtifacts(sql, member, { workspaceId: "ws-1" });
+    expect(page.ok).toBe(true);
+    if (!page.ok) return;
+    const titles = page.page.artifacts.map((artifact) => artifact.title);
+    expect(titles).toContain("homepage.png");
+    expect(titles).toContain("Q4 article");
+    expect(titles).toContain("brief.pdf");
+    expect(titles).not.toContain("how-client-work.md");
+    expect(titles).not.toContain("Pull request #173");
+    expect(titles).not.toContain("Repository");
+    expect(titles).not.toContain("notes.md");
+    const stored = await sql.get<{ id: string }>("SELECT id FROM files WHERE id = 'file-note'");
+    expect(stored?.id).toBe("file-note");
+  });
+
   it("shows a selected generated still and leaves a clip without a picture", async () => {
     const sql = await database();
     await sql.run(
