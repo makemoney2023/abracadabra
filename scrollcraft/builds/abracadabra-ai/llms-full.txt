@@ -10,7 +10,7 @@ Full site text for answer engines. Generated 2026-10-23. Contact houdini@abra-ca
 - [Home](https://abra-ca-dabra.app/): Studio overview.
 - [Services](https://abra-ca-dabra.app/services/): Service menu.
 - [Portfolio](https://abra-ca-dabra.app/portfolio/): Named shipped systems.
-- [Products](https://abra-ca-dabra.app/products/): Schema, Super Funnel and HQ.
+- [Products](https://abra-ca-dabra.app/products/): Schema, the LLM Leverage course and HQ.
 - [Blog](https://abra-ca-dabra.app/blog): Notes with named sources.
 
 ## Overview
@@ -158,12 +158,6 @@ https://abra-ca-dabra.app/portfolio/renew-implants/
 See how easily AI search can find your site, and get the fixes to improve it.
 
 https://abra-ca-dabra.app/products/schema/
-
-### Super Funnel
-
-A sales app for associates, shown in a 66-second tour of the dashboard, setup and pipeline.
-
-https://abra-ca-dabra.app/products/super-funnel/
 
 ### HQ
 

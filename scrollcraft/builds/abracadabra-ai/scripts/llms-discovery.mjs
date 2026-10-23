@@ -107,7 +107,7 @@ function buildLlmsTxt({ posts, updated }) {
     ...cases.map((item) => mdEntry(item.name, `${SITE}/portfolio/${item.slug}/`, item.summary)),
   ];
   const productLines = [
-    mdEntry("Products", `${SITE}/products/`, "Schema, Super Funnel and HQ"),
+    mdEntry("Products", `${SITE}/products/`, "Schema, the LLM Leverage course and HQ"),
     ...products.map((item) => mdEntry(item.name, `${SITE}/products/${item.slug}/`, item.description)),
     mdEntry("How client work moves through HQ", `${SITE}/blog/how-client-work-flows-through-hq`, "How a request becomes a card, agents build, Client Services reviews, and you approve before anything is released"),
     mdEntry("What is an AI agent?", `${SITE}/blog/what-is-an-ai-agent`, "A plain answer for owners, and how digital workers fit in"),
@@ -234,7 +234,7 @@ ${mdEntry("llms.txt", `${SITE}/llms.txt`, "Short quotable index with markdown pa
 ${mdEntry("Home", `${SITE}/`, "Studio overview")}
 ${mdEntry("Services", `${SITE}/services/`, "Service menu")}
 ${mdEntry("Portfolio", `${SITE}/portfolio/`, "Named shipped systems")}
-${mdEntry("Products", `${SITE}/products/`, "Schema, Super Funnel and HQ")}
+${mdEntry("Products", `${SITE}/products/`, "Schema, the LLM Leverage course and HQ")}
 ${mdEntry("Blog", `${SITE}/blog`, "Notes with named sources")}
 
 ## Overview

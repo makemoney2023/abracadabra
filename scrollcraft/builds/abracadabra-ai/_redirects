@@ -53,8 +53,6 @@
 /products/ /products/index.html 200
 /products/schema /products/schema/index.html 200
 /products/schema/ /products/schema/index.html 200
-/products/super-funnel /products/super-funnel/index.html 200
-/products/super-funnel/ /products/super-funnel/index.html 200
 /products/hq /products/hq/index.html 200
 /products/hq/ /products/hq/index.html 200
 /course/llm-leverage /course/llm-leverage/index.html 200
@@ -97,6 +95,8 @@
 /hq/ /products/hq/ 301
 /products/showdesk /portfolio/ 301
 /products/showdesk/ /portfolio/ 301
+/products/super-funnel /portfolio/super-funnel/ 301
+/products/super-funnel/ /portfolio/super-funnel/ 301
 /contact /start/ 301
 /contact/ /start/ 301
 /book /start/ 301

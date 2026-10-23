@@ -15,7 +15,7 @@ import { measure, textPath, wrapToWidth } from "./og-brand.mjs";
 export const CAPTION = "Illustrative interface. Sample content.";
 export const NETWORKS = ["Instagram", "Facebook", "LinkedIn", "TikTok", "X", "YouTube", "Threads", "Google Business", "Bluesky"];
 
-const C = {
+export const C = {
   canvas: "#0B0B0A",
   panel: "#161615",
   panel2: "#1D1D1A",
@@ -29,7 +29,7 @@ const C = {
   amber: "#F5C46B",
 };
 
-const TONES = {
+export const TONES = {
   cyan: { text: C.cyan, fill: "rgba(141,235,242,0.09)", stroke: "rgba(141,235,242,0.40)" },
   accent: { text: C.accentText, fill: "rgba(255,75,36,0.11)", stroke: "rgba(255,75,36,0.50)" },
   green: { text: C.green, fill: "rgba(198,255,179,0.09)", stroke: "rgba(198,255,179,0.40)" },
@@ -44,12 +44,12 @@ const FACE = {
   "plex-500": { family: "'IBM Plex Sans', sans-serif", weight: 500 },
 };
 
-function esc(value) {
+export function esc(value) {
   return String(value).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 }
 
 /** A tiny drawing kit bound to one render mode. */
-function kit(mode) {
+export function kit(mode) {
   const outline = mode === "outline";
   const width = (value, { size, font = "plex-400", tracking = 0 }) => measure(value, { font, size, tracking });
   const text = (value, { x, y, size, font = "plex-400", fill = C.ink, tracking = 0, anchor = "start" }) => {
@@ -88,7 +88,7 @@ function kit(mode) {
   return { text, width, lines, pill, panel, dots, windowFrame, button, outline };
 }
 
-function svgOpen(w, h, { title, desc, id, mode }) {
+export function svgOpen(w, h, { title, desc, id, mode }) {
   const xml = mode === "outline" ? `<?xml version="1.0" encoding="UTF-8"?>\n` : "";
   const attrs = mode === "outline" ? ` width="${w}" height="${h}"` : "";
   return `${xml}<svg xmlns="http://www.w3.org/2000/svg"${attrs} viewBox="0 0 ${w} ${h}" role="img" aria-labelledby="${id}-t ${id}-d" focusable="false">`

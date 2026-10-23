@@ -568,7 +568,7 @@ export const cases = [
   {
     slug: "super-funnel",
     name: "Super Funnel",
-    kind: "product",
+    kind: "work",
     sameAs: "https://abra-ca-dabra.app/films.html",
     image: "/assets/superfunnel-getting-started.webp",
     imageAlt: "Super Funnel Getting started film poster.",
@@ -698,19 +698,11 @@ export const products = [
     slug: "schema",
     name: "Schema",
     sameAs: "https://schema.abra-ca-dabra.app/",
-    image: "/assets/schema-home.webp",
-    imageAlt: "Schema home page: a URL field and an AI visibility check.",
+    image: "/assets/schema/schema-scanner-ui.webp",
+    imageAlt: "Illustrative Schema scanner report for example.com: a URL field, a status ring and five areas with status pills and bars. Sample content.",
     description: "See how easily AI search can find your site, and get the fixes to improve it.",
     caseSlug: "schema",
-  },
-  {
-    slug: "super-funnel",
-    name: "Super Funnel",
-    sameAs: "https://abra-ca-dabra.app/films.html",
-    image: "/assets/superfunnel-getting-started.webp",
-    imageAlt: "Super Funnel Getting started film poster.",
-    description: "A sales app for associates, shown in a 66-second tour of the dashboard, setup and pipeline.",
-    caseSlug: "super-funnel",
+    illustrative: true,
   },
   hqProduct,
 ];
@@ -723,6 +715,23 @@ export const course = {
   imageAlt: "LLM Leverage course home: a lesson preview and a rollout path.",
   description: "A self-paced course for better answers from any model, with a workshop path beside it. Twelve modules, each with a quiz you pass at 75%.",
 };
+
+/** The cards on the Products page, in order. The course card opens the course site; the others open a page here. */
+export const productCards = [
+  { ...products[0], href: `/products/${products[0].slug}/`, type: "SoftwareApplication" },
+  {
+    slug: course.slug,
+    name: course.name,
+    href: course.sameAs,
+    external: true,
+    image: course.image,
+    imageAlt: course.imageAlt,
+    description: course.description,
+    ariaLabel: "LLM Leverage course: open the course at learn.abra-ca-dabra.app",
+    type: "Course",
+  },
+  { ...products[1], href: `/products/${products[1].slug}/`, type: "SoftwareApplication" },
+];
 
 export const PLACEHOLDER = "PLACEHOLDER — needs owner sign-off";
 

@@ -509,3 +509,9 @@ npm run deploy
 | `robots.txt`, `sitemap.xml`, `llms.txt` | Crawler files. Deploy them at the site root next to `index.html`. |
 
 Walkthrough legs live in `assets/world/` (desktop `.mp4`, mobile `-m.mp4`, WebP posters). Encoded per the scroll-world skill: `-g 8 -keyint_min 8 -sc_threshold 0 +faststart`, crf 20; mobile 720w at `-g 4`, crf 23. Review and improvement plan: [`docs/scroll-world-review.md`](../../../docs/scroll-world-review.md).
+
+## Products page: Super Funnel out, LLM Leverage in, new Schema card (2026-10-23)
+
+- Super Funnel is client work, so it is no longer a product. `/products/super-funnel/` is gone and 301s to `/portfolio/super-funnel/` (the work page stays). It is out of the Products page, the products ItemList, the sitemap product entries and the products lines in `llms.txt` and `llms-full.txt`. The portfolio entry, the films page, the homepage work rail and the about page still show it as work, and the homepage work list now points at the portfolio page.
+- The Products page cards are Schema, LLM Leverage (a course, linking to https://learn.abra-ca-dabra.app, with the same description facts as `/course/llm-leverage/`) and HQ. The ItemList carries Schema and HQ as SoftwareApplication and LLM Leverage as a Course, with no offers, ratings or prices.
+- The Schema card and `/products/schema/` use an illustrated mockup of the scanner report in the studio design (`scripts/schema-visuals.mjs`, written to `assets/schema/schema-scanner-ui.{svg,png,webp}` by `scripts/schema-assets.mjs`). Sample content only: no real scan, no score, no client data.
