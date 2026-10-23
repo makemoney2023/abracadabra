@@ -119,6 +119,17 @@ describe("agent deliverable items", () => {
     ]);
   });
 
+  it("stores an mp4 as a video piece in a social pack and as a file in a document", async () => {
+    const actor = { keyId: "key-1", organizationId: "org-1" };
+    const pack = (await runAgentWork(sql, actor, "create_deliverable", { requestId: "pack", title: "Social", kind: "social_pack" }, NOW)) as { deliverableId: string };
+    const doc = await deliverable();
+    await runAgentWork(sql, actor, "add_deliverable_item", { requestId: "clip-pack", deliverableId: pack.deliverableId, path: "clip.mp4", objectKey: "space/batch/clip" }, NOW);
+    await runAgentWork(sql, actor, "add_deliverable_item", { requestId: "clip-doc", deliverableId: doc, path: "clip.mp4", objectKey: "space/batch/clip2" }, NOW);
+    const rows = await sql.all<{ deliverable_id: string; format: string }>("SELECT deliverable_id, format FROM deliverable_items");
+    expect(rows.find((row) => row.deliverable_id === pack.deliverableId)?.format).toBe("video");
+    expect(rows.find((row) => row.deliverable_id === doc)?.format).toBe("file");
+  });
+
   it("stores a png path as a static image and markdown as a page", async () => {
     const deliverableId = await deliverable();
     await runAgentWork(

@@ -702,8 +702,8 @@ async function createAgentDeliverable(sql: Sql, actor: AgentActor, args: WorkArg
 async function addAgentItem(sql: Sql, actor: AgentActor, args: WorkArgs, now: number): Promise<unknown> {
   const deliverableId = args.deliverableId?.trim() ?? "";
   if (!deliverableId) throw new AgentWorkError("Name a deliverable.");
-  const row = await sql.get<{ id: string; version: number; organization_id: string; status: string }>(
-    "SELECT id, version, organization_id, status FROM deliverables WHERE id = ?",
+  const row = await sql.get<{ id: string; version: number; organization_id: string; status: string; kind: string }>(
+    "SELECT id, version, organization_id, status, kind FROM deliverables WHERE id = ?",
     [deliverableId],
   );
   if (!row || row.organization_id !== actor.organizationId) throw new AgentWorkError("That deliverable is not in this organization.");
@@ -718,7 +718,7 @@ async function addAgentItem(sql: Sql, actor: AgentActor, args: WorkArgs, now: nu
     [row.id, row.version],
   );
   const id = crypto.randomUUID();
-  const item = itemForPath(itemTitle, objectKey);
+  const item = itemForPath(itemTitle, objectKey, { socialPack: row.kind === "social_pack" });
   await sql.run(
     `INSERT INTO deliverable_items (
       id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
