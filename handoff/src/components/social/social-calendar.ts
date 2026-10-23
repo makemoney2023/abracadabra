@@ -82,7 +82,7 @@ function zonedParts(instant: number, timeZone: string): ZonedParts {
 }
 
 /** Wall-clock "YYYY-MM-DDTHH:mm" in an IANA zone, as unix ms. Matches the send form's converter. */
-function zonedToUtc(local: string, timeZone: string): number | null {
+export function zonedToUtc(local: string, timeZone: string): number | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(local.trim());
   if (!match) return null;
   let format: Intl.DateTimeFormat;
@@ -111,6 +111,12 @@ function zonedToUtc(local: string, timeZone: string): number | null {
   };
   const first = wall - offsetAt(wall);
   return wall - offsetAt(first);
+}
+
+/** The "YYYY-MM-DDTHH:mm" a datetime-local field shows for an instant in an IANA zone. */
+export function zonedInputValue(instant: number, timeZone: string): string {
+  const parts = zonedParts(instant, timeZone || "UTC");
+  return `${parts.key}T${pad(parts.hour)}:${pad(parts.minute)}`;
 }
 
 function addDays(key: string, days: number, timeZone: string): string {

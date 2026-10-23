@@ -2,6 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { LibraryBrowser, LibraryTypeTabs } from "@/components/library/library-browser";
 import { libraryOpeningTarget } from "@/components/library/library-view";
 import { scheduleLibraryFileAction } from "./schedule-action";
+import { libraryBulkAction } from "./bulk-action";
+import { getAutopost } from "@/lib/social-autopost";
+import { WEEKDAY_LABEL } from "@/lib/social-plan";
 import { SourcesBrowser } from "@/components/library/sources-browser";
 import { can } from "@/lib/authz";
 import { articleSocialPromoEnabled } from "@/lib/article-promotions";
@@ -106,6 +109,18 @@ export default async function LibraryPage({
   const organization = await sql.get<{ organization_id: string | null }>("SELECT organization_id FROM workspaces WHERE id = ?", [workspace.id]);
   const platforms = caller.staff && organization?.organization_id ? schedulePlatforms(await listSocialAccounts(sql, organization.organization_id)) : [];
   const schedule = caller.staff ? { workspaceId: workspace.id, platforms, action: scheduleLibraryFileAction } : null;
+  const autopost = caller.staff && organization?.organization_id ? await getAutopost(sql, organization.organization_id) : null;
+  const bulk = caller.staff && !showSources
+    ? {
+        slug,
+        removedView: read("removed") === "1",
+        cadence: {
+          enabled: Boolean(autopost?.enabled && autopost.accountIds.length > 0),
+          line: autopost ? `Slots: ${autopost.weekdays.map((day) => WEEKDAY_LABEL[day] ?? String(day)).join(", ")} at ${autopost.times.join(", ")} (${autopost.timezone}).` : "",
+        },
+        action: libraryBulkAction,
+      }
+    : null;
   const posterRows = showSources && sourceFiles.length > 0
     ? await sql.all<{ file_id: string; poster_file_id: string }>(
         `SELECT file_id, poster_file_id FROM file_posters WHERE file_id IN (${sourceFiles.map(() => "?").join(", ")})`,
@@ -183,6 +198,7 @@ export default async function LibraryPage({
           promotionTargets={promotionTargets}
           projects={projects}
           schedule={schedule}
+          bulk={bulk}
         />
       )}
     </main>

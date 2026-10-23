@@ -19,7 +19,7 @@ export type SocialReviewPiece = {
   platforms: string[];
 };
 
-function reviewMedia(mediaJson: string): SocialReviewPiece["media"] {
+export function reviewMedia(mediaJson: string): SocialReviewPiece["media"] {
   try {
     const parsed = JSON.parse(mediaJson) as unknown;
     if (!Array.isArray(parsed)) return [];

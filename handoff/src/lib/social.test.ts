@@ -6,6 +6,7 @@ import type { Caller } from "./authz";
 import { runHqTool } from "./hq-tools";
 import {
   cancelSocialPost,
+  listSocialAccounts,
   listSocialPosts,
   placeSocialPiece,
   refreshDueSocialPosts,
@@ -21,6 +22,8 @@ import {
 } from "./social";
 import { signIntakeBody } from "./intake/sign";
 import { DEFAULT_AUTOPOST, autoScheduleApproved, getAutopost, nextSlots, parseTimes, saveAutopost } from "./social-autopost";
+import { REMOVE_REFUSAL, RESCHEDULE_REFUSAL, postActionState } from "./social-post-guard";
+import { loadPostPreviews } from "./social-post-previews";
 import { applyZernioEvent, verifyZernioSignature } from "./social-webhook";
 import type { ObjectStore } from "./store/objects";
 import type { ZernioAccount, ZernioClient, ZernioPostInput } from "./zernio";
@@ -402,6 +405,106 @@ describe("social publishing, phase 2", () => {
     if (!second.ok) throw new Error(second.error);
     expect(await cancelSocialPost(sql, zernio, staff, second.postId, NOW)).toEqual({ ok: true });
     expect(deletes).toEqual(["zp-2"]);
+  });
+});
+
+describe("staff reschedule and remove guards", () => {
+  async function postWith(status: string, scheduleAt = NOW + 3_600_000) {
+    const sql = await database();
+    const fake = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, fake.zernio, { id: "org-1", name: "Acme" }, NOW);
+    const sent = await sendPiece(sql, fake.zernio, store, staff, { ...base, itemId: "i-pic", accountIds: ["ig"], mode: "scheduled", scheduledFor: scheduleAt }, NOW);
+    if (!sent.ok) throw new Error(sent.error);
+    await sql.run("UPDATE social_posts SET status = ? WHERE id = ?", [status, sent.postId]);
+    return { sql, postId: sent.postId, ...fake };
+  }
+
+  it.each(["sending", "published", "partial", "failed"])("refuses to move or cancel a %s post and never calls Zernio", async (status) => {
+    const { sql, zernio, postId, moves, deletes } = await postWith(status);
+    expect(postActionState({ status })).toMatchObject({ canReschedule: false, canRemove: false });
+    expect(await rescheduleSocialPost(sql, zernio, staff, { postId, scheduledFor: NOW + 7_200_000, timezone: "UTC" }, NOW)).toEqual({ ok: false, error: RESCHEDULE_REFUSAL });
+    expect(await cancelSocialPost(sql, zernio, staff, postId, NOW)).toEqual({ ok: false, error: REMOVE_REFUSAL });
+    expect(moves).toEqual([]);
+    expect(deletes).toEqual([]);
+    const [post] = await listSocialPosts(sql, { organizationId: "org-1" });
+    expect(post).toMatchObject({ status, scheduled_for: NOW + 3_600_000 });
+    expect(post.error).not.toBe("Cancelled.");
+  });
+
+  it("can remove a draft but not move it, matching what the preview offers", async () => {
+    const { sql, zernio, postId, moves, deletes } = await postWith("draft");
+    expect(postActionState({ status: "draft" })).toMatchObject({ canReschedule: false, canRemove: true });
+    expect(await rescheduleSocialPost(sql, zernio, staff, { postId, scheduledFor: NOW + 7_200_000, timezone: "UTC" }, NOW)).toMatchObject({ ok: false });
+    expect(await cancelSocialPost(sql, zernio, staff, postId, NOW)).toEqual({ ok: true });
+    expect(moves).toEqual([]);
+    expect(deletes).toHaveLength(1);
+  });
+
+  it("moves a scheduled post to a future time, stores the zone, and rejects a past time", async () => {
+    const { sql, zernio, postId, moves } = await postWith("scheduled");
+    expect(postActionState({ status: "scheduled" })).toMatchObject({ canReschedule: true, canRemove: true });
+    expect(await rescheduleSocialPost(sql, zernio, staff, { postId, scheduledFor: NOW + 30_000, timezone: "America/Toronto" }, NOW)).toMatchObject({ ok: false });
+    expect(moves).toEqual([]);
+    expect(await rescheduleSocialPost(sql, zernio, staff, { postId, scheduledFor: NOW + 9_000_000, timezone: "America/Toronto" }, NOW)).toEqual({ ok: true });
+    const [post] = await listSocialPosts(sql, { organizationId: "org-1" });
+    expect(post).toMatchObject({ status: "scheduled", scheduled_for: NOW + 9_000_000, timezone: "America/Toronto" });
+  });
+
+  it("removes a scheduled post: it leaves the scheduler and stays on our list as cancelled", async () => {
+    const { sql, zernio, postId, deletes } = await postWith("scheduled");
+    expect(await cancelSocialPost(sql, zernio, staff, postId, NOW)).toEqual({ ok: true });
+    expect(deletes).toEqual(["zp-1"]);
+    const [post] = await listSocialPosts(sql, { organizationId: "org-1" });
+    expect(post).toMatchObject({ status: "failed", error: "Cancelled." });
+    expect(await cancelSocialPost(sql, zernio, staff, postId, NOW)).toEqual({ ok: false, error: REMOVE_REFUSAL });
+  });
+
+  it("gives a client no way to move or remove a post", async () => {
+    const { sql, zernio, postId, moves, deletes } = await postWith("scheduled");
+    expect(await rescheduleSocialPost(sql, zernio, client, { postId, scheduledFor: NOW + 7_200_000, timezone: "UTC" }, NOW)).toMatchObject({ ok: false });
+    expect(await cancelSocialPost(sql, zernio, client, postId, NOW)).toMatchObject({ ok: false });
+    expect(moves).toEqual([]);
+    expect(deletes).toEqual([]);
+  });
+});
+
+describe("calendar post previews", () => {
+  it("carries the caption, per-network text, media, accounts and public links for each calendar post", async () => {
+    const sql = await database();
+    const { zernio } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    await savePieceSettings(sql, staff, "i-pic", { texts: { instagram: "Instagram only words" }, firstComment: "", tags: "" }, NOW);
+    const sent = await sendPiece(sql, zernio, store, staff, { ...base, itemId: "i-pic", accountIds: ["ig"], mode: "scheduled", scheduledFor: NOW + 3_600_000 }, NOW);
+    if (!sent.ok) throw new Error(sent.error);
+    await sql.run("UPDATE social_posts SET error = 'Boom from Zernio', published_urls = ? WHERE id = ?", [JSON.stringify({ ig: "https://instagram.com/p/1", bad: "javascript:alert(1)" }), sent.postId]);
+    const posts = await listSocialPosts(sql, { organizationId: "org-1" });
+    const accounts = await listSocialAccounts(sql, "org-1");
+    const staffView = (await loadPostPreviews(sql, posts, accounts, { staff: true }))[sent.postId];
+    expect(staffView).toMatchObject({
+      title: "Piece i-pic",
+      caption: "Caption",
+      captions: { instagram: "Instagram only words" },
+      media: [{ role: "main", video: false, contentType: "image/png" }],
+      scheduledFor: NOW + 3_600_000,
+      hasScheduledCopy: true,
+      error: "Boom from Zernio",
+    });
+    expect(staffView.accounts[0]).toMatchObject({ id: "ig", platform: "instagram" });
+    expect(staffView.publishedLinks).toEqual([{ platform: "instagram", url: "https://instagram.com/p/1" }]);
+    const clientView = (await loadPostPreviews(sql, posts, accounts, { staff: false }))[sent.postId];
+    expect(clientView.error).toBeNull();
+    expect(clientView.skipped).toBeNull();
+  });
+
+  it("leaves a cancelled post off the previews, like the calendar", async () => {
+    const sql = await database();
+    const { zernio } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    const sent = await sendPiece(sql, zernio, store, staff, { ...base, itemId: "i-pic", accountIds: ["ig"], mode: "scheduled", scheduledFor: NOW + 3_600_000 }, NOW);
+    if (!sent.ok) throw new Error(sent.error);
+    await cancelSocialPost(sql, zernio, staff, sent.postId, NOW);
+    const posts = await listSocialPosts(sql, { organizationId: "org-1" });
+    expect(await loadPostPreviews(sql, posts, await listSocialAccounts(sql, "org-1"), { staff: true })).toEqual({});
   });
 });
 

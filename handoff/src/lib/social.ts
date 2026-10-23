@@ -4,6 +4,7 @@ import type { Sql } from "@/db/sql";
 import { shelfPostBlock } from "./finished-shelf";
 import { reconcilePostedTargets } from "./social-attention";
 import { commandAuthorized, readCommandGate } from "./social-commands";
+import { REMOVE_REFUSAL, RESCHEDULE_REFUSAL, canRemoveStatus, canRescheduleStatus } from "./social-post-guard";
 import { allowedSocialOptionKeys } from "./social-preflight";
 import { storedSocialVariants, type SocialVariant } from "./social-variants";
 import type { ObjectStore } from "./store/objects";
@@ -1039,7 +1040,7 @@ export async function rescheduleSocialPost(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const row = await ownPost(sql, caller, input.postId);
   if (!row || !row.zernio_post_id) return { ok: false, error: "That post is not here." };
-  if (row.status !== "scheduled") return { ok: false, error: "Only a scheduled post can move." };
+  if (!canRescheduleStatus(row.status)) return { ok: false, error: RESCHEDULE_REFUSAL };
   if (input.scheduledFor < now + 60_000) return { ok: false, error: "Pick a time at least one minute from now." };
   try {
     await zernio.reschedulePost(row.zernio_post_id, new Date(input.scheduledFor).toISOString(), input.timezone || "UTC");
@@ -1065,7 +1066,7 @@ export async function cancelSocialPost(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const row = await ownPost(sql, caller, postId);
   if (!row || !row.zernio_post_id) return { ok: false, error: "That post is not here." };
-  if (row.status !== "scheduled" && row.status !== "draft") return { ok: false, error: "Only a scheduled post or a draft can be cancelled." };
+  if (!canRemoveStatus(row.status)) return { ok: false, error: REMOVE_REFUSAL };
   try {
     await zernio.deletePost(row.zernio_post_id);
   } catch (error) {
