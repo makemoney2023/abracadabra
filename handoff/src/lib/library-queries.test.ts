@@ -173,7 +173,8 @@ describe("library queries", () => {
        ) VALUES ('item-note', 'd-live', 1, 'page', NULL, 'how-client-work.md', NULL, '[]', NULL, 'pending', 2),
                 ('item-pr', 'd-live', 1, 'link', NULL, 'Pull request #173', NULL, '[]', 'https://github.com/makemoney2023/abracadabra/pull/173', 'pending', 3),
                 ('item-repo', 'd-live', 1, 'link', NULL, 'Repository', NULL, '[]', 'https://github.com/makemoney2023/squareassembly', 'approved', 4),
-                ('item-shot', 'd-live', 1, 'static', NULL, 'homepage.png', NULL, '[{"r2_key":"k","role":"main","content_type":"image/png"}]', NULL, 'approved', 5)`,
+                ('item-sheet', 'd-live', 1, 'page', NULL, 'Facebook posts', '**Caption:**\nCan it read your website?', '[]', NULL, 'pending', 6),
+                ('item-shot', 'd-live', 1, 'static', NULL, 'schema-1.png', 'Can it read your website?', '[{"r2_key":"k","role":"main","content_type":"image/png"}]', NULL, 'approved', 5)`,
     );
     await sql.run(
       `INSERT INTO files (
@@ -190,7 +191,9 @@ describe("library queries", () => {
     expect(page.ok).toBe(true);
     if (!page.ok) return;
     const titles = page.page.artifacts.map((artifact) => artifact.title);
-    expect(titles).toContain("homepage.png");
+    expect(titles).toContain("schema-1.png");
+    expect(titles).not.toContain("Facebook posts");
+    expect(page.page.artifacts.find((artifact) => artifact.title === "schema-1.png")?.dek).toBe("Can it read your website?");
     expect(titles).toContain("Q4 article");
     expect(titles).toContain("brief.pdf");
     expect(titles).not.toContain("how-client-work.md");

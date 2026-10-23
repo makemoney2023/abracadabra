@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A post caption is stored on its picture and shown with that picture. The caption sheet stays in Files.
+- **Why** — The words for a Schema or Readiness Check post were still a separate note, apart from the image.
+- **Code touchpoints** — `handoff/src/lib/library-context.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/artifact-card.tsx`, `handoff/src/components/library/collection-index.tsx`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.
+- **Data-flow impact** — The picture's `copy_text` is the caption. A page whose body is a caption list is not a Library card.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/library-queries.test.ts src/lib/library-context.test.ts src/components/library/collection-index.test.tsx`.
+
+## 2026-10-22
+
 - **What changed** — A revision of one piece keeps the rest of the published set. Pictures that were dropped get their captions back from the notes filed with them.
 - **Why** — Asking for a change on the LinkedIn banner published a round that contained only that banner, so the Schema and Readiness Check posts left the Library.
 - **Code touchpoints** — `handoff/src/lib/shelf-carry.ts`, `handoff/src/lib/agent-filing-review.ts`, `handoff/src/db/migrate.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/artifact-card.tsx`.

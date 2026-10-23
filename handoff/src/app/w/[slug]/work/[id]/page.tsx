@@ -27,7 +27,7 @@ import { ArticleCard } from "@/components/library/article-card";
 import { ViewLinkDialog } from "@/components/library/view-link-dialog";
 import { libraryViewLinksEnabled, listViewLinks } from "@/lib/library-shares";
 import { projectLibraryArtifact } from "@/lib/library-artifacts";
-import { isBuildContext } from "@/lib/library-context";
+import { isBuildContext, isCaptionSheet } from "@/lib/library-context";
 
 /** The filing's own summary page stored as a file ("summary.md", "<title> - summary.md", "summary (2).md"). */
 function isSummaryFile(title: string): boolean {
@@ -62,7 +62,10 @@ export default async function FinishedPiecePage({
   if (!opened || opened.deliverable.workspace_id !== workspace.id) notFound();
   const chosen = ITEM_FORMATS.find((itemFormat) => itemFormat === format) ?? null;
   const brief = opened.deliverable.kind === "brief";
-  const finished = opened.items.filter((row) => brief || !isBuildContext({ title: row.title, linkUrl: row.link_url }));
+  const finished = opened.items.filter((row) => brief || (
+    !isBuildContext({ title: row.title, linkUrl: row.link_url })
+    && !isCaptionSheet({ format: row.format, copyText: row.copy_text })
+  ));
   const focusId = finished.some((row) => row.id === item) ? item ?? null : null;
   // Only the kinds this piece has (and the one picked), so the filter row stays short.
   const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || finished.some((row) => row.format === itemFormat));
@@ -116,6 +119,7 @@ export default async function FinishedPiecePage({
     return [{
       id: item.id,
       title: item.title,
+      caption: picture && item.copy_text?.trim() ? item.copy_text.trim() : null,
       status: removedAt.get(item.id) != null ? "removed" : item.status,
       previewSrc: picture ? `/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${picture.role}` : null,
     }];
@@ -285,7 +289,7 @@ export default async function FinishedPiecePage({
                 <CollectionItemState status={item.status} />
               </div>
               {item.section && !filingTitles.has(item.section) ? <p className="text-sm text-muted-foreground">{item.section}</p> : null}
-              {item.copy_text && !social && !article ? (
+              {item.copy_text && !social && !article && media.length === 0 ? (
                 <p className={brief ? "whitespace-pre-wrap text-sm leading-6" : "text-sm"}>{item.copy_text}</p>
               ) : null}
               {article ? <ArticleCard artifact={article} /> : link ? (
@@ -328,7 +332,7 @@ export default async function FinishedPiecePage({
                   }))}
                 />
               ) : media.length > 0 ? (
-                <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
+                <div className="mx-auto flex w-full max-w-sm flex-col gap-3 rounded-2xl border border-border p-4">
                   {media.map((entry) =>
                     entry.video ? (
                       <video
@@ -348,6 +352,7 @@ export default async function FinishedPiecePage({
                       />
                     ),
                   )}
+                  {item.copy_text?.trim() ? <p className="whitespace-pre-wrap text-sm">{item.copy_text.trim()}</p> : null}
                 </div>
               ) : null}
               {brief ? null : (
