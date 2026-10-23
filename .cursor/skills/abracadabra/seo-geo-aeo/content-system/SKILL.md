@@ -98,11 +98,11 @@ Rules on top of that order:
 
 Locked terms are hard fails. The writer must get the client's table first, check every draft against it, and add a test or gate if the site has one. A good table has these columns: **trap**, **rule**, **why**. Typical entries are: a product term that must always be capitalised one way, a competitor or method that must never be named, a metric that must be shown in one unit only, a feature the product does not have, and a list of banned words.
 
-### Worked example (another business's table, for shape only)
+### Worked example (a made-up client, for shape only)
 
-The table below belongs to PIRX, a running-performance product at pirx.ca. It is not an Abracadabra rule and must not be applied to any other client. It only shows what a good locked-terms table looks like.
+The table below is an invented example for a fictional running-performance product. It is not a rule for any real client and must not be applied to one. It only shows what a good locked-terms table looks like. Replace it with the client's own table before writing.
 
-| Trap | PIRX rule |
+| Trap | Example rule |
 |---|---|
 | Abbreviation for a record | Banned. Always the full product term. |
 | The five drivers | Only the five named drivers, spelled exactly, summing to the total. |
@@ -128,7 +128,7 @@ Put thresholds in the content plan so they are per-site and checkable. Defaults 
 
 | Rule | Default threshold |
 |---|---|
-| Reading level | Flesch-Kincaid grade set per client. The source system used grade 5 or lower for a consumer audience; use 8 or lower for general business readers unless the client says otherwise. Prose only: strip frontmatter, JSX, code and link syntax before scoring. |
+| Reading level | Flesch-Kincaid grade set per client. A consumer-audience client may need grade 5 or lower; use 8 or lower for general business readers unless the client says otherwise. Prose only: strip frontmatter, JSX, code and link syntax before scoring. |
 | Length | 1,500 to 2,000 words of prose. Excludes frontmatter, FAQs, the table, stat blocks and CTAs. |
 | Em dashes | Zero. |
 | Uniqueness | 3-gram shingle Jaccard similarity below 0.25 against every other post. Each post owns one primary query. |
