@@ -358,6 +358,65 @@ describe("generateAgentMedia", () => {
   });
 });
 
+describe("model failures", () => {
+  async function failing(error: unknown, model = DEFAULT_STILL) {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme");
+    const { principal } = await agentFor(acme);
+    return generateAgentMedia({
+      sql,
+      store,
+      agent: principal,
+      body: { external_id: "run:fail", task_id: await task(acme), model, prompt: "A private brief" },
+      now: NOW,
+      ai: { async run() { throw error; } },
+    });
+  }
+
+  it("answers 402 when the account is out of model credit", async () => {
+    const result = await failing(Object.assign(new Error("AiError: payment required"), { status: 402 }), "google/nano-banana-2");
+    expect(result).toEqual({ ok: false, status: 402, message: "Model credits exhausted on the Cloudflare account.", reason: "credits_exhausted" });
+    expect((await sql.get<{ n: number }>("SELECT count(*) AS n FROM agent_media"))?.n).toBe(0);
+  });
+
+  it("answers 502 with a safe reason for other failures", async () => {
+    expect(await failing(Object.assign(new Error("400 unknown provider"), { status: 400 }))).toMatchObject({ ok: false, status: 502, reason: "bad_input" });
+  });
+
+  it("answers 502 model_error for an unexplained failure and logs without the prompt", async () => {
+    const logged: unknown[][] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => { logged.push(args); };
+    try {
+      const result = await failing(new Error("upstream said: A private brief is not allowed"));
+      expect(result).toMatchObject({ ok: false, status: 502, reason: "model_error", message: "The model did not answer (model_error)." });
+    } finally {
+      console.error = original;
+    }
+    expect(logged).toHaveLength(1);
+    expect(logged[0][0]).toBe("agent-media model failure");
+    const line = JSON.stringify(logged[0]);
+    expect(line).toContain(DEFAULT_STILL);
+    expect(line).not.toContain("private brief");
+  });
+
+  it("returns the status and reason from the route and keeps the error key", async () => {
+    const acme = await org("Acme", "acme.example");
+    await space(acme, "acme");
+    const { token } = await agentFor(acme);
+    (globalThis as Record<symbol, unknown>)[CTX] = {
+      env: { DB: d1, AI: { async run() { throw Object.assign(new Error("payment required"), { status: 402 }); } } },
+    };
+    const response = await postMedia(new Request("https://hq.example/api/agent-media", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ external_id: "run:402", task_id: await task(acme), model: "google/nano-banana-2", prompt: "A shop" }),
+    }));
+    expect(response.status).toBe(402);
+    expect(await response.json()).toEqual({ error: "Model credits exhausted on the Cloudflare account.", reason: "credits_exhausted" });
+  });
+});
+
 describe("model catalog route", () => {
   it("returns only the models that fit the job", async () => {
     const acme = await org("Acme", "acme.example");
