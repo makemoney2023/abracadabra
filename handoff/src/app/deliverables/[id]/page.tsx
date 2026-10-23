@@ -22,7 +22,8 @@ import { PieceSettingsForm, SendToSocialForm } from "../../clients/social-forms"
 import { POST_STATUS_LABEL, listSocialAccounts, listSocialPosts, pieceSettings } from "@/lib/social";
 import { POST_TYPE_LABEL, defaultPostType, pieceMedia } from "@/lib/social-plan";
 import { PLATFORM_LABEL, isBlogPlatform, zernioApiKey } from "@/lib/zernio";
-import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia } from "../labels";
+import { DELIVERABLE_KIND_LABEL, DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, fileLabel, listedMedia, playableMedia } from "../labels";
+import { VideoPlayer } from "@/components/video-player";
 import { ArticlePromotionDialog } from "@/components/library/article-promotion-dialog";
 import { articleSocialPromoEnabled, articlePromotionAllowed } from "@/lib/article-promotions";
 import { piecesOnShelf } from "@/lib/finished-shelf";
@@ -184,13 +185,16 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                       />
                     ) : (
                     <div className="mx-auto w-full max-w-sm rounded-2xl border border-border p-4">
-                      {listedMedia(item.media_json).filter((media) => media.video || media.image).map((media) =>
+                      {(() => {
+                        const playable = playableMedia(item.media_json);
+                        return playable.items.map((media) =>
                         media.video ? (
-                          <video
+                          <VideoPlayer
                             key={media.role}
-                            controls
-                            className="w-full rounded-md"
+                            title={fileLabel({ title: item.title, role: media.role })}
+                            className="w-full rounded-md bg-black"
                             src={`/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`}
+                            poster={playable.poster ? `/api/deliverables/${deliverable.id}/items/${item.id}/media/${playable.poster}` : null}
                           />
                         ) : (
                           // The picture is served only when this caller can see the space.
@@ -202,7 +206,8 @@ export default async function DeliverablePage({ params }: { params: Promise<{ id
                             src={`/api/deliverables/${deliverable.id}/items/${item.id}/media/${media.role}`}
                           />
                         ),
-                      )}
+                        );
+                      })()}
                     </div>
                     )}
                     {networks.length > 0 ? (

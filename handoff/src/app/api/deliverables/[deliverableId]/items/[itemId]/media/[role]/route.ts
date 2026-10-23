@@ -2,6 +2,7 @@ import { migrate } from "@/db/migrate";
 import { visibleMedia } from "@/db/deliverables";
 import { openHandoffDb } from "@/db/open";
 import { cookieValue } from "@/lib/downloads";
+import { objectResponse } from "@/lib/range-response";
 import { openObjectStore } from "@/lib/store/objects";
 import { getCaller, SESSION_COOKIE } from "@/lib/session";
 
@@ -20,6 +21,16 @@ export async function GET(
   const caller = await getCaller(sql, cookieValue(request, SESSION_COOKIE), Date.now());
   const media = await visibleMedia(sql, caller, deliverableId, itemId, role);
   if (!media) return new Response(null, { status: 404 });
+  if (media.contentType.toLowerCase().startsWith("video/")) {
+    // A clip streams with Range support so it plays and seeks. Same visibility checks as a picture.
+    return objectResponse({
+      store: openObjectStore(),
+      key: media.key,
+      contentType: media.contentType,
+      request,
+      headers: { "content-security-policy": "default-src 'none'; media-src 'self'; sandbox" },
+    });
+  }
   const bytes = await openObjectStore().read(media.key);
   if (!bytes) return new Response(null, { status: 404 });
   return new Response(Buffer.from(bytes), {

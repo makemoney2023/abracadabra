@@ -1,6 +1,9 @@
 import type { Sql } from "@/db/sql";
 import { assignmentFor, type AgentPrincipal, type WorkPayload } from "@/lib/agent-work-filing";
 import { itemForPath } from "@/lib/artifact-adapter";
+import { videoTypeForName } from "@/lib/video-files";
+import { isNamedPoster } from "@/lib/video-posters";
+import { previewContentType } from "@/lib/preview";
 import { captionForImage, carryForwardWrites } from "@/lib/shelf-carry";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { queueProductEvent } from "@/lib/notifications";
@@ -177,6 +180,20 @@ async function pickVersion(sql: Sql, deliverable: { id: string; version: number;
   return sentBack ? deliverable.version + 1 : deliverable.version;
 }
 
+/** A clip's media_json gains its poster picture (role "poster") when one is linked. Pictures and files are unchanged. */
+function withPoster(mediaJson: string, file: { relative_path: string; poster_path: string | null; poster_key: string | null }): string {
+  if (!file.poster_key || !file.poster_path || !videoTypeForName(file.relative_path)) return mediaJson;
+  const type = previewContentType(file.poster_path);
+  if (!type.startsWith("image/")) return mediaJson;
+  try {
+    const parsed = JSON.parse(mediaJson) as unknown[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return mediaJson;
+    return JSON.stringify([...parsed, { r2_key: file.poster_key, role: "poster", content_type: type, size: 0 }]);
+  } catch {
+    return mediaJson;
+  }
+}
+
 export async function recordFiling(
   sql: Sql,
   input: {
@@ -233,8 +250,12 @@ export async function recordFiling(
       }));
     }
     // Items: the summary is the page copy; every other stored file is an item; each link is a link item.
-    const files = await sql.all<{ relative_path: string; object_key: string }>(
-      "SELECT relative_path, object_key FROM files WHERE batch_id = ? AND status != 'failed' ORDER BY relative_path",
+    const files = await sql.all<{ relative_path: string; object_key: string; poster_path: string | null; poster_key: string | null }>(
+      `SELECT f.relative_path, f.object_key, p.relative_path AS poster_path, p.object_key AS poster_key
+       FROM files f
+       LEFT JOIN file_posters fp ON fp.file_id = f.id
+       LEFT JOIN files p ON p.id = fp.poster_file_id AND p.status != 'failed'
+       WHERE f.batch_id = ? AND f.status != 'failed' ORDER BY f.relative_path`,
       [input.batchId],
     );
     const sortBase = await sql.get<{ n: number | null }>("SELECT MAX(sort) AS n FROM deliverable_items WHERE deliverable_id = ? AND version = ?", [deliverableId, version]);
@@ -258,9 +279,11 @@ export async function recordFiling(
       const name = file.relative_path.split("/").pop() ?? file.relative_path;
       // The summary is the page item above; its stored file ("summary.md", or "<title> - summary.md" in a named folder) is not a piece.
       if (file.relative_path === input.summaryPath || /^summary( \(\d+\))?\.md$/i.test(name)) continue;
+      // A picture named "<clip>-poster.png" belongs to its clip (shown before play). It is not a piece of its own.
+      if (isNamedPoster(file, files)) continue;
       incomingTitles.push(name.slice(0, 200));
       const shaped = itemForPath(file.relative_path, file.object_key);
-      writes.push(item(name, shaped.format, captionForImage(notes, name), shaped.mediaJson, null));
+      writes.push(item(name, shaped.format, captionForImage(notes, name), withPoster(shaped.mediaJson, file), null));
     }
     for (const link of payload.links) {
       incomingTitles.push(link.label.slice(0, 200));
