@@ -166,3 +166,63 @@ export async function readAgentSkill(
   const body = (await object.text()).slice(0, MAX_SKILL_BYTES);
   return { ok: true, path: relative, version: await sha12(body), body };
 }
+
+export type SkillGrantRow = {
+  id: string;
+  scope: "agent" | "client";
+  agent_id: string | null;
+  organization_id: string | null;
+  organization_name: string | null;
+  prefix: string;
+  granted_by: string;
+  granted_at: string;
+  revoked_at: string | null;
+};
+
+/**
+ * GET /api/client-services/skill-grants: skill grants, newest first. Live ones by default; includeRevoked adds revoked
+ * ones. agentId keeps one agent's own grants; organizationId keeps one client's grants (every agent on it).
+ */
+export async function listSkillGrants(
+  sql: Sql,
+  input: { agentId?: string | null; organizationId?: string | null; includeRevoked?: boolean },
+): Promise<SkillGrantRow[]> {
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (!input.includeRevoked) where.push("g.revoked_at IS NULL");
+  if (input.agentId) {
+    where.push("g.agent_id = ?");
+    params.push(input.agentId.trim().toLowerCase());
+  }
+  if (input.organizationId) {
+    where.push("g.organization_id = ?");
+    params.push(input.organizationId);
+  }
+  const rows = await sql.all<{
+    id: string;
+    agent_id: string | null;
+    organization_id: string | null;
+    name: string | null;
+    prefix: string;
+    granted_by: string;
+    created_at: number;
+    revoked_at: number | null;
+  }>(
+    `SELECT g.id, g.agent_id, g.organization_id, o.name, g.prefix, g.granted_by, g.created_at, g.revoked_at
+     FROM skill_grants g LEFT JOIN organizations o ON o.id = g.organization_id
+     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
+     ORDER BY g.created_at DESC, g.prefix LIMIT 1000`,
+    params,
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    scope: row.agent_id ? "agent" : "client",
+    agent_id: row.agent_id,
+    organization_id: row.organization_id,
+    organization_name: row.name,
+    prefix: row.prefix,
+    granted_by: row.granted_by,
+    granted_at: new Date(row.created_at).toISOString(),
+    revoked_at: row.revoked_at == null ? null : new Date(row.revoked_at).toISOString(),
+  }));
+}

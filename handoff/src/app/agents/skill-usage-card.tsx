@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DataTable, type Column } from "@/components/data-table";
 import { EmptyState } from "@/components/empty-state";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRelative } from "@/lib/format";
 import { USAGE_WINDOWS, type UsageRow, type UsageStats } from "@/lib/skill-usage";
@@ -8,6 +9,12 @@ import { cn } from "@/lib/utils";
 
 function rate(row: UsageRow): string {
   return row.approvalRate == null ? "—" : `${Math.round(row.approvalRate * 100)}%`;
+}
+
+/** A Useful / Not useful count from agents' skill_feedback. Zero shows a quiet dash. */
+function Verdict({ count, tone }: { count: number; tone: "useful" | "not-useful" }) {
+  if (count === 0) return <span className="text-muted-foreground">—</span>;
+  return <Badge variant={tone === "useful" ? "secondary" : "outline"}>{count}</Badge>;
 }
 
 function columns(kind: "pack" | "skill", now: number): Column<UsageRow>[] {
@@ -25,6 +32,31 @@ function columns(kind: "pack" | "skill", now: number): Column<UsageRow>[] {
     { key: "reads", header: "Reads", align: "right", cell: (row) => row.reads },
     { key: "cites", header: "Cited", align: "right", cell: (row) => row.cites },
     ...(kind === "pack" ? [{ key: "attaches", header: "Attached", align: "right" as const, cell: (row: UsageRow) => row.attaches }] : []),
+    { key: "useful", header: "Useful", align: "right", cell: (row) => <Verdict count={row.useful} tone="useful" /> },
+    { key: "notUseful", header: "Not useful", align: "right", cell: (row) => <Verdict count={row.notUseful} tone="not-useful" /> },
+    {
+      key: "usefulRate",
+      header: "Useful rate",
+      align: "right",
+      cell: (row) =>
+        row.usefulRate == null ? (
+          <span className="text-muted-foreground">—</span>
+        ) : (
+          <span title={`${row.useful} useful of ${row.useful + row.notUseful} ratings`}>{Math.round(row.usefulRate * 100)}%</span>
+        ),
+    },
+    {
+      key: "lastNote",
+      header: "Latest note",
+      cell: (row) =>
+        row.lastNote ? (
+          <span className="block max-w-56 truncate text-xs text-muted-foreground" title={row.lastNote}>
+            {row.lastNote}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
     { key: "cards", header: "Cards", align: "right", cell: (row) => row.cards },
     { key: "approved", header: "Approved", align: "right", cell: (row) => row.approved },
     { key: "sentBack", header: "Sent back", align: "right", cell: (row) => row.sentBack },
@@ -38,7 +70,7 @@ function columns(kind: "pack" | "skill", now: number): Column<UsageRow>[] {
 }
 
 /**
- * Agents page: is the library being used, and does it help? Reads and cites per pack and skill, and how Client Services
+ * Agents page: is the library being used, and does it help? Reads and cites per pack and skill, whether agents marked a skill Useful or Not useful on their filings, and how Client Services
  * reviewed the cards that used them. Approval = cards whose latest review is approve, of the cards reviewed.
  */
 export function SkillUsageCard({ stats, now }: { stats: UsageStats; now: number }) {
@@ -49,7 +81,7 @@ export function SkillUsageCard({ stats, now }: { stats: UsageStats; now: number 
         <div className="space-y-1">
           <CardTitle>Skill usage</CardTitle>
           <CardDescription>
-            Last {stats.days} days: {t.reads} reads, {t.cites} cited on filings, {t.attaches} attached to cards, {t.searches} searches.
+            Last {stats.days} days: {t.reads} reads, {t.cites} cited on filings, {t.useful} marked useful, {t.notUseful} not useful, {t.attaches} attached to cards, {t.searches} searches.
             {stats.trackingSince == null ? " Nothing logged yet." : ` Tracking since ${formatRelative(stats.trackingSince, now)}.`}
           </CardDescription>
         </div>

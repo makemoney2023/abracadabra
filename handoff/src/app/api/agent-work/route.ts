@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { migrate } from "@/db/migrate";
 import { openHandoffDb } from "@/db/open";
 import { listAgentDispatches } from "@/lib/agent-dispatch";
-import { agentForToken, fileAgentWork, listAgentContext, parseSkillsUsed } from "@/lib/agent-work-filing";
+import { agentForToken, fileAgentWork, listAgentContext, parseSkillFeedback, parseSkillsUsed } from "@/lib/agent-work-filing";
 import { agentWorkLimits, tooBigMessage } from "@/lib/agent-work-limits";
 import { cfEnv, hqOrigin } from "@/lib/client-services-auth";
 import { openObjectStore } from "@/lib/store/objects";
 import type { SkillBucket } from "@/lib/skill-library";
 import { loadCatalog } from "@/lib/skill-packs";
-import { recordSkillsUsed } from "@/lib/skill-usage";
+import { recordSkillFeedback, recordSkillsUsed } from "@/lib/skill-usage";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +19,7 @@ export const dynamic = "force-dynamic";
  *         client?: { organization_id?, domain?, space_slug? }, project_id?, task_id?, keep_task_open?,
  *         handoff?: { to, note? }, finished_at?, agent_id?, supersedes?: id | [ids], work_request_id?, thread_id?,
  *         deliverable_kind?, folder?, skills_used?: ["community/marketingskills/copywriting/SKILL.md", ...],
+ *         skill_feedback?: [{ path, useful: boolean, note? }, ...],
  *         already_delivered?, built_work?: { title, live_url?, preview_url?, repo_url?, description?, status?, screenshot? } | [up to 12] }
  * built_work: websites and other things we built, shown as cards in the client space once Client Services approves.
  *   live_url or preview_url is required (https). status: live | preview | in_progress | archived. screenshot: an image
@@ -26,6 +27,9 @@ export const dynamic = "force-dynamic";
  * already_delivered: true (or kind "catalog"): finished before it was filed. Approval publishes it approved, no client update.
  * skills_used: the library skills this work followed (up to 30). Each is checked against the published index; unknown
  * paths are dropped and listed back as skills_unknown. Each kept path is logged as a cite in the skill usage table.
+ * skill_feedback: did a skill help? Up to 30 entries, one per SKILL.md path: { path, useful: true | false, note? (up to 500
+ * characters) }. Paths not in the published index are dropped and listed back as skill_feedback_unknown; the rest are
+ * stored (table skill_feedback) and counted as Useful / Not useful per pack and skill on the Agents page. See GET /api/agent-skill-guide.
  * client_summary: what a client member reads first on Finished work (plain words, no ids). summary is the agent's note.
  * folder: where the files land in the space, like "Social/Facebook" (up to 6 levels). Default: Finished work/<date> <title>.
  * Files keep readable names (post-1.png); a name already in the folder gets " (2)", except names of filings it supersedes.
@@ -107,20 +111,41 @@ export async function POST(request: Request) {
   );
 }
 
-/** skills_used on a new filing: stored, logged as cites, and echoed back. A repeat (duplicate) records nothing. */
+type SkillsReport = {
+  skills_used?: string[];
+  skills_unknown?: string[];
+  skill_feedback?: { path: string; useful: boolean }[];
+  skill_feedback_unknown?: string[];
+};
+
+/** skills_used and skill_feedback on a new filing: stored, logged, and echoed back. A repeat (duplicate) records nothing. */
 async function skillsUsedFor(
   sql: Awaited<ReturnType<typeof openHandoffDb>>,
   agent: NonNullable<Awaited<ReturnType<typeof agentForToken>>>,
   payload: unknown,
   workItemId: string | null,
   now: number,
-): Promise<{ skills_used?: string[]; skills_unknown?: string[] }> {
-  const parsed = parseSkillsUsed((payload as { skills_used?: unknown } | null)?.skills_used);
-  if (!workItemId || !parsed.ok || parsed.paths.length === 0) return {};
+): Promise<SkillsReport> {
+  const body = payload as { skills_used?: unknown; skill_feedback?: unknown } | null;
+  const parsed = parseSkillsUsed(body?.skills_used);
+  const feedback = parseSkillFeedback(body?.skill_feedback);
+  const hasUsed = parsed.ok && parsed.paths.length > 0;
+  const hasFeedback = feedback.ok && feedback.items.length > 0;
+  if (!workItemId || (!hasUsed && !hasFeedback)) return {};
   const catalog = await loadCatalog(cfEnv().SKILLS as SkillBucket | undefined).catch(() => null);
   const known = catalog && catalog.ok ? new Set(catalog.skills.map((skill) => skill.path)) : null;
-  const recorded = await recordSkillsUsed(sql, { agent, workItemId, paths: parsed.paths, known, now });
-  return { skills_used: recorded.used, ...(recorded.unknown.length ? { skills_unknown: recorded.unknown } : {}) };
+  const out: SkillsReport = {};
+  if (parsed.ok && hasUsed) {
+    const recorded = await recordSkillsUsed(sql, { agent, workItemId, paths: parsed.paths, known, now });
+    out.skills_used = recorded.used;
+    if (recorded.unknown.length) out.skills_unknown = recorded.unknown;
+  }
+  if (feedback.ok && hasFeedback) {
+    const recorded = await recordSkillFeedback(sql, { agent, workItemId, items: feedback.items, known, now });
+    out.skill_feedback = recorded.recorded;
+    if (recorded.unknown.length) out.skill_feedback_unknown = recorded.unknown;
+  }
+  return out;
 }
 
 /**

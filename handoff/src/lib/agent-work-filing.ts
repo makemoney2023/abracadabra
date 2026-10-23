@@ -81,6 +81,8 @@ export type WorkPayload = {
   folder: string | null;
   /** Skill paths the agent followed ("community/x/y/SKILL.md"). Checked against the published index after filing. */
   skillsUsed?: string[];
+  /** Did each skill help? skill_feedback entries, one per skill path. Checked against the published index after filing. */
+  skillFeedback?: SkillFeedbackInput[];
   /** Websites and other things built, shown as cards in the client space (src/lib/built-work.ts). */
   builtWork?: BuiltWorkInput[];
   /** Finished before it was filed (already_delivered: true, or kind "catalog"): approval publishes it as delivered, with no client update. */
@@ -319,6 +321,8 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
   if (!folder.ok) return { ok: false, message: folder.message };
   const skillsUsed = parseSkillsUsed(body.skills_used);
   if (!skillsUsed.ok) return { ok: false, message: skillsUsed.message };
+  const skillFeedback = parseSkillFeedback(body.skill_feedback);
+  if (!skillFeedback.ok) return { ok: false, message: skillFeedback.message };
   return {
     ok: true,
     payload: {
@@ -348,6 +352,7 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       deliverableKind,
       folder: folder.folder,
       skillsUsed: skillsUsed.paths,
+      skillFeedback: skillFeedback.items,
       builtWork: built.items,
       alreadyDelivered: body.already_delivered === true || kind === "catalog",
       mediaIds: mediaIds.ids,
@@ -388,6 +393,33 @@ export function parseSkillsUsed(raw: unknown): { ok: true; paths: string[] } | {
     if (!paths.includes(relative)) paths.push(relative);
   }
   return { ok: true, paths };
+}
+
+export type SkillFeedbackInput = { path: string; useful: boolean; note: string | null };
+
+const MAX_FEEDBACK_NOTE = 500;
+
+/**
+ * skill_feedback: [{ path, useful: boolean, note? }], up to 30, one per skill path (a repeat keeps the last). path is a
+ * SKILL.md path like skills_used; useful must be true or false; note is plain words, cut at 500 characters.
+ */
+export function parseSkillFeedback(raw: unknown): { ok: true; items: SkillFeedbackInput[] } | { ok: false; message: string } {
+  if (raw == null) return { ok: true, items: [] };
+  if (!Array.isArray(raw)) return { ok: false, message: "skill_feedback must be a list like [{ path, useful, note? }]." };
+  if (raw.length > MAX_SKILLS_USED) return { ok: false, message: `skill_feedback takes up to ${MAX_SKILLS_USED} entries.` };
+  const byPath = new Map<string, SkillFeedbackInput>();
+  for (const value of raw) {
+    const entry = value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+    const key = entry && typeof entry.path === "string" ? skillObjectKey(entry.path) : null;
+    const relative = key ? key.slice("skills/".length) : null;
+    if (!entry || !relative || relative.startsWith("org/") || !relative.includes("/")) {
+      return { ok: false, message: "skill_feedback: each entry needs a skill path like community/marketingskills/copywriting/SKILL.md." };
+    }
+    if (typeof entry.useful !== "boolean") return { ok: false, message: `skill_feedback: useful must be true or false for ${relative}.` };
+    const note = typeof entry.note === "string" && entry.note.trim() ? entry.note.trim().slice(0, MAX_FEEDBACK_NOTE) : null;
+    byPath.set(relative, { path: relative, useful: entry.useful, note });
+  }
+  return { ok: true, items: [...byPath.values()] };
 }
 
 // ---------- Routing ----------

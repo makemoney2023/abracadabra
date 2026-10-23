@@ -158,7 +158,7 @@ export type DispatchRow = {
   title: string;
   note: string | null;
   /** Packs attached to the card now, and how to browse the library and attach more. */
-  skills: { attached: string[]; library: string; attach: string };
+  skills: { attached: string[]; library: string; guide: string; attach: string };
   created_at: string;
 };
 
