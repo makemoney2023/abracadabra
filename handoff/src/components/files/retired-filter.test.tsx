@@ -7,7 +7,8 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("folder=brand"),
 }));
 
-import { RetiredFilter, retiredLabel, showRetired } from "./retired-filter";
+import { RetiredFilter } from "./retired-filter";
+import { retiredLabel, showRetired } from "@/lib/retired-param";
 
 describe("retired filter", () => {
   it("renders a labelled switch that is off by default and counts the hidden files", () => {
