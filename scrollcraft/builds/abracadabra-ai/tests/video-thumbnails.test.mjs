@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { SHOW_HOME_WORK } from "../scripts/site-data.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://abra-ca-dabra.app/";
@@ -18,7 +19,7 @@ function videoObjects(file) {
   return out;
 }
 
-for (const [file, count] of [["index.html", 3], ["films.html", 12]]) {
+for (const [file, count] of [["index.html", SHOW_HOME_WORK ? 3 : 1], ["films.html", 12]]) {
   test(`${file} VideoObjects carry a crawlable 1280x720 JPG thumbnail`, async () => {
     const videos = videoObjects(file);
     assert.equal(videos.length, count);
@@ -37,6 +38,6 @@ for (const [file, count] of [["index.html", 3], ["films.html", 12]]) {
 test("every sitemap video thumbnail is a JPG under assets/films/thumbs (plus the HQ video poster)", () => {
   const xml = readFileSync(join(root, "sitemap.xml"), "utf8");
   const locs = [...xml.matchAll(/<video:thumbnail_loc>([^<]+)</g)].map((m) => m[1]);
-  assert.equal(locs.length, 15);
+  assert.equal(locs.length, SHOW_HOME_WORK ? 15 : 13);
   for (const loc of locs) assert.match(loc, /^https:\/\/abra-ca-dabra\.app\/assets\/(?:films\/thumbs\/[a-z-]+|video\/hq-product-landscape)\.jpg$/);
 });

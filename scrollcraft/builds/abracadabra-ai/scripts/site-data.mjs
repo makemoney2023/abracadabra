@@ -540,6 +540,13 @@ export const familyLogos = [
 ];
 
 /** Case studies shown in the top nav page (/portfolio/) listing and its structured data. Every other case page stays live by direct URL. */
+/**
+ * Homepage "Work that's already running" section (kicker "Work", Sell/Operate/Build/Find/Teach tabs).
+ * false = hidden: not rendered, and its JSON-LD nodes and sitemap video entries are not emitted either.
+ * true  = restored exactly as it was. The markup and data live in home-work.mjs.
+ */
+export const SHOW_HOME_WORK = false;
+
 export const LISTED_CASE_SLUGS = ["pirx"];
 
 export const cases = [

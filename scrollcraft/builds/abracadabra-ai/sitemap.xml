@@ -26,22 +26,8 @@
       <video:publication_date>2026-10-23</video:publication_date>
     </video:video>
 <!-- /hq-video -->
-    <video:video>
-      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-getting-started.jpg</video:thumbnail_loc>
-      <video:title>Super Funnel, Getting started</video:title>
-      <video:description>Home dashboard, setup, pipeline, and nav.</video:description>
-      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-getting-started.mp4</video:content_loc>
-      <video:duration>66</video:duration>
-      <video:publication_date>2026-10-07</video:publication_date>
-    </video:video>
-    <video:video>
-      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/llmcourse-home-lesson.jpg</video:thumbnail_loc>
-      <video:title>LLM Leverage home and lesson capture</video:title>
-      <video:description>Live capture of the LLM Leverage course home and a lesson.</video:description>
-      <video:content_loc>https://abra-ca-dabra.app/assets/films/llmcourse-home-lesson.mp4</video:content_loc>
-      <video:duration>10</video:duration>
-      <video:publication_date>2026-09-11</video:publication_date>
-    </video:video>
+    <!-- home-work-videos -->
+    <!-- /home-work-videos -->
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/walkthrough.html</loc>

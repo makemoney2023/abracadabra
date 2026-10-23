@@ -12,6 +12,7 @@ import {
   PLACEHOLDER,
   businessFunctions,
   LISTED_CASE_SLUGS,
+  SHOW_HOME_WORK,
   cases,
   course,
   familyLogos,
@@ -28,6 +29,7 @@ import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
 import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody, hqVideoNode, hqVideoSection, hqVideoSitemap } from "./hq-page.mjs";
+import { HOME_WORK_HASPART_LINE, HOME_WORK_HTML, HOME_WORK_LD_IDS, HOME_WORK_LD_TEXT, HOME_WORK_SITEMAP_XML } from "./home-work.mjs";
 import { writeHqAssets } from "./hq-assets.mjs";
 import { writeSchemaAssets } from "./schema-assets.mjs";
 
@@ -1379,7 +1381,21 @@ async function patchHome() {
   const videoNode = JSON.stringify(hqVideoNode(SITE, ORG_ID), null, 2).replace(/^/gm, "    ");
   const nodePattern = /    \{\n      "@type": "VideoObject",\n      "@id": "[^"]*#video-hq-product"[\s\S]*?\n    \}(?=,\n)/;
   if (!nodePattern.test(html)) throw new Error("Missing HQ VideoObject node in index.html");
-  html = html.replace(nodePattern, () => videoNode);
+  // The "Work that's already running" section, its JSON-LD nodes and its link from the WebPage node: all in, or all out.
+  html = fill(html, "<!-- HOME-WORK -->", "<!-- /HOME-WORK -->", SHOW_HOME_WORK ? HOME_WORK_HTML : "");
+  for (const id of HOME_WORK_LD_IDS) {
+    const stale = new RegExp(`    \\{\\n      "@type": "[A-Za-z]+",\\n      "@id": "${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[\\s\\S]*?\\n    \\},\\n`);
+    html = html.replace(stale, "");
+  }
+  html = html.replace(HOME_WORK_HASPART_LINE, "");
+  const [filmNodeA, filmNodeB, workListNode] = HOME_WORK_LD_TEXT;
+  html = html.replace(nodePattern, () => (SHOW_HOME_WORK ? `${videoNode},\n${filmNodeA},\n${filmNodeB}` : videoNode));
+  if (SHOW_HOME_WORK) {
+    const faqNode = /    \{\n      "@type": "FAQPage",\n      "@id": "[^"]*#faq"/;
+    if (!faqNode.test(html)) throw new Error("Missing FAQPage node in index.html");
+    html = html.replace(faqNode, (match) => `${workListNode},\n${match}`);
+  }
+  if (SHOW_HOME_WORK) html = html.replace(/(      "inLanguage": "en",\n)(      "video": \{ "@id": "[^"]*#video-hq-product" \})/, (_, a, b) => `${a}${HOME_WORK_HASPART_LINE}${b}`);
   html = fill(html, "<!-- HQ -->", "<!-- /HQ -->", hqHomeSection());
   html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", "");
   html = fill(html, "<!-- PROOF -->", "<!-- /PROOF -->", homeProofHtml());
@@ -1402,6 +1418,8 @@ async function patchSitemap() {
     `<loc>https://abra-ca-dabra.app/</loc>\n    <lastmod>${HQ_MODIFIED}</lastmod>`,
   );
   xml = fill(xml, "<!-- hq-video -->", "<!-- /hq-video -->", hqVideoSitemap(SITE));
+  xml = xml.replace(/ *<!-- home-work-videos -->[\s\S]*?<!-- \/home-work-videos -->\n/, () =>
+    `    <!-- home-work-videos -->\n${SHOW_HOME_WORK ? `${HOME_WORK_SITEMAP_XML}\n` : ""}    <!-- /home-work-videos -->\n`);
   xml = fill(xml, "<!-- site-urls -->", "<!-- /site-urls -->", siteUrls());
   await writeFile(path, xml);
 }

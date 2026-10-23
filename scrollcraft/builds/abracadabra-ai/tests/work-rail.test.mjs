@@ -5,7 +5,12 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const index = readFileSync(join(root, "index.html"), "utf8");
+import { SHOW_HOME_WORK } from "../scripts/site-data.mjs";
+import { HOME_WORK_HTML, HOME_WORK_LD_TEXT } from "../scripts/home-work.mjs";
+
+const page = readFileSync(join(root, "index.html"), "utf8");
+// The work rail is hidden behind SHOW_HOME_WORK; its markup and data are checked from code either way.
+const index = SHOW_HOME_WORK ? page : `${HOME_WORK_HTML}\n${HOME_WORK_LD_TEXT.join("\n")}\n${page}`;
 
 test("the work rail plays Getting started and no other Super Funnel cut", () => {
   const rail = index.match(
