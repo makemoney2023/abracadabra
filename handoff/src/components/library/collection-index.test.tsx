@@ -18,13 +18,14 @@ describe("collection index", () => {
         slug: "acme",
         deliverableId: "d-1",
         pieces: [
-          { id: "open", title: "Launch post", status: "pending", previewSrc: "/pic.png" },
+          { id: "open", title: "schema-1.png", caption: "Can it read your website?", status: "pending", previewSrc: "/pic.png" },
           { id: "gone", title: "Old post", status: "removed", previewSrc: null },
         ],
       }),
     );
     expect(html).toContain('href="/w/acme/work/d-1?item=open"');
-    expect(html).toContain("Launch post");
+    expect(html).toContain("schema-1.png");
+    expect(html).toContain("Can it read your website?");
     expect(html).toContain("Removed");
     expect(html).toContain('src="/pic.png"');
     expect(html).not.toContain(">Remove<");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isBuildContext } from "./library-context";
+import { isBuildContext, isCaptionSheet } from "./library-context";
 
 describe("library build context", () => {
   it("treats markdown notes and GitHub source links as context", () => {
@@ -15,5 +15,11 @@ describe("library build context", () => {
     expect(isBuildContext({ title: "Live site", linkUrl: "https://squareassembly.com" })).toBe(false);
     expect(isBuildContext({ title: "Preview", linkUrl: "https://squareassembly.abracadabra-ai.workers.dev" })).toBe(false);
     expect(isBuildContext({ title: "Blog: How Client Work Moves Through HQ and Our AI Agents" })).toBe(false);
+  });
+
+  it("keeps a caption on the image instead of a caption page", () => {
+    expect(isCaptionSheet({ format: "page", copyText: "**Caption:**\nCan it read your website?" })).toBe(true);
+    expect(isCaptionSheet({ format: "static", copyText: "Can it read your website?" })).toBe(false);
+    expect(isCaptionSheet({ format: "page", copyText: "Square Assembly website" })).toBe(false);
   });
 });

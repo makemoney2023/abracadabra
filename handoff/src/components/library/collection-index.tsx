@@ -4,6 +4,7 @@ import { statusPhrase } from "./library-view";
 export type IndexPiece = {
   id: string;
   title: string;
+  caption?: string | null;
   status: string;
   previewSrc: string | null;
 };
@@ -33,6 +34,7 @@ export function CollectionIndex({
                 <span className="text-sm text-muted-foreground">Picture</span>
               )}
             </span>
+            {piece.caption ? <span className="line-clamp-3 text-sm">{piece.caption}</span> : null}
             <span className="truncate text-sm font-medium">{piece.title}</span>
             <span className="text-xs text-muted-foreground">{statusPhrase(piece.status)}</span>
           </a>
