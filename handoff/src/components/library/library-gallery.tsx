@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { BulkResult } from "@/lib/library-bulk-shared";
 import type { LibraryArtifact } from "@/lib/library-artifacts";
 import { schedulableMedia } from "@/lib/file-type";
 import { ArticlePromotionDialog } from "./article-promotion-dialog";
 import { ArtifactCard, LibraryEmpty } from "./artifact-card";
+import { BulkResultNote, LibraryBulkBar, type BulkConfig } from "./library-bulk-bar";
+import { bulkSelectable } from "./library-bulk-view";
 import { ScheduleThisForm, type ScheduleState } from "./schedule-this-form";
 import { ViewLinkDialog } from "./view-link-dialog";
 
@@ -58,6 +63,7 @@ export function LibraryGallery({
   promotionTargets = [],
   initialSharing = false,
   schedule = null,
+  bulk = null,
 }: {
   artifacts: LibraryArtifact[];
   empty: string;
@@ -67,10 +73,17 @@ export function LibraryGallery({
   promotionTargets?: { id: string; title: string }[];
   initialSharing?: boolean;
   schedule?: { workspaceId: string; platforms: { value: string; label: string }[]; action: (previous: ScheduleState, formData: FormData) => Promise<ScheduleState> } | null;
+  bulk?: BulkConfig | null;
 }) {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [sharing, setSharing] = useState(initialSharing);
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<Record<string, boolean>>({});
+  const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
   const chosen = artifacts.filter((artifact) => selected[artifact.artifactKey]);
+  const selectable = artifacts.filter(bulkSelectable);
+  const bulkChosen = selectable.filter((artifact) => picked[artifact.artifactKey]);
+  const allPicked = selectable.length > 0 && bulkChosen.length === selectable.length;
   const gallery = (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {artifacts.map((artifact) => {
@@ -87,6 +100,20 @@ export function LibraryGallery({
                 />
                 Select
               </label>
+            ) : null}
+            {bulk && selecting ? (
+              bulkSelectable(artifact) ? (
+                <label className="mb-2 flex min-h-11 items-center gap-2 text-sm">
+                  <Checkbox
+                    aria-label={`Select ${artifact.title}`}
+                    checked={picked[artifact.artifactKey] === true}
+                    onCheckedChange={(value) => setPicked((current) => ({ ...current, [artifact.artifactKey]: value === true }))}
+                  />
+                  Select
+                </label>
+              ) : (
+                <p className="mb-2 flex min-h-11 items-center text-sm text-muted-foreground">Not approved or removed here</p>
+              )
             ) : null}
             <ArtifactCard
               artifact={artifact}
@@ -120,18 +147,49 @@ export function LibraryGallery({
   );
   return (
     <div className="flex flex-col gap-4">
-      {viewLink ? (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm"
-            aria-pressed={sharing}
-            onClick={() => setSharing((current) => !current)}
-          >
-            {sharing ? "Done" : "Share"}
-          </button>
+      {viewLink || bulk ? (
+        <div className="flex flex-wrap justify-end gap-2">
+          {bulk ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              aria-pressed={selecting}
+              onClick={() => {
+                setSelecting((current) => !current);
+                setSharing(false);
+                setPicked({});
+              }}
+            >
+              {selecting ? "Done selecting" : "Select"}
+            </Button>
+          ) : null}
+          {viewLink ? (
+            <button
+              type="button"
+              className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm"
+              aria-pressed={sharing}
+              onClick={() => {
+                setSharing((current) => !current);
+                setSelecting(false);
+              }}
+            >
+              {sharing ? "Done" : "Share"}
+            </button>
+          ) : null}
         </div>
       ) : null}
+      {bulk && selecting && selectable.length > 0 ? (
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <Checkbox
+            aria-label={`Select all ${selectable.length} on this page`}
+            checked={allPicked ? true : bulkChosen.length > 0 ? "indeterminate" : false}
+            onCheckedChange={(value) => setPicked(value === true ? Object.fromEntries(selectable.map((artifact) => [artifact.artifactKey, true])) : {})}
+          />
+          Select all {selectable.length} on this page
+        </label>
+      ) : null}
+      {bulk && bulkResult ? <BulkResultNote result={bulkResult} onDismiss={() => setBulkResult(null)} /> : null}
       {viewLink && sharing ? (
         <LibraryShareSelection
           workspaceId={viewLink.workspaceId}
@@ -143,6 +201,17 @@ export function LibraryGallery({
       ) : null}
       {artifacts.length === 0 ? <LibraryEmpty message={empty} action={emptyAction} /> : null}
       {gallery}
+      {bulk && selecting ? (
+        <LibraryBulkBar
+          config={bulk}
+          chosen={bulkChosen}
+          onClear={() => setPicked({})}
+          onDone={(result) => {
+            setBulkResult(result);
+            setPicked({});
+          }}
+        />
+      ) : null}
     </div>
   );
 }
