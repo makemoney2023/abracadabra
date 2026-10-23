@@ -77,8 +77,13 @@ test("video files exist, stay under 6 MB, and the graph and sitemap read the sam
   const attr = (n) => section.match(new RegExp(`data-src-${n}="([^"]+)"`))[1];
   assert.equal(`https://abra-ca-dabra.app${attr("landscape")}`, video.contentUrl);
   assert.ok(statSync(join(root, attr("portrait").slice(1))).size < 6 * 1024 * 1024);
-  // With no approved vertical cut, portrait screens use the landscape file and cover is not applied to them.
-  if (attr("portrait") === attr("landscape")) assert.equal(section.includes("hq-video--has-portrait"), false);
+  // The approved v5 vertical cut is its own file with its own 1080x1920 poster, and the cover styling is on.
+  assert.notEqual(attr("portrait"), attr("landscape"));
+  assert.equal(attr("portrait"), "/assets/video/hq-product-portrait.mp4");
+  assert.match(section, /data-poster-portrait="\/assets\/video\/hq-product-portrait\.jpg"/);
+  assert.match(section, /<source media="\(max-aspect-ratio: 1\/1\)" srcset="\/assets\/video\/hq-product-portrait\.jpg" width="1080" height="1920">/);
+  assert.ok(section.includes("hq-video--has-portrait"));
+  assert.ok(statSync(join(root, "assets/video/hq-product-portrait.jpg")).size < 6 * 1024 * 1024);
   const xml = read("sitemap.xml");
   assert.ok(xml.includes(`<video:content_loc>${video.contentUrl}</video:content_loc>`));
   assert.ok(xml.includes("<video:duration>56</video:duration>"));
