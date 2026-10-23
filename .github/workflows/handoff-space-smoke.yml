@@ -1,0 +1,40 @@
+name: Handoff Space smoke test
+
+# Builds handoff with `next build` (the build production runs through OpenNext), starts it on a seeded local SQLite
+# file and requests the staff Space, Library and Project pages. It needs no Cloudflare account and no secrets.
+# It exists because a server page calling a function exported from a "use client" file (PR #206) returns HTTP 200
+# with an error boundary, so unit tests and a plain build both pass while every Space page is broken.
+on:
+  pull_request:
+    paths:
+      - "handoff/**"
+      - ".github/workflows/handoff-space-smoke.yml"
+  push:
+    branches: [main]
+    paths:
+      - "handoff/**"
+      - ".github/workflows/handoff-space-smoke.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: handoff-space-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-spaces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: handoff
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: handoff/package-lock.json
+      - run: npm ci
+      - run: npm run smoke:spaces
