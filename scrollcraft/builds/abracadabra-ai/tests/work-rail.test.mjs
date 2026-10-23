@@ -50,5 +50,5 @@ test("the work list counts Super Funnel as the film on file", () => {
   assert.match(index, /"name": "Super Funnel"/);
   assert.match(index, /"url": "https:\/\/abra-ca-dabra\.app\/products\/super-funnel\/"/);
   assert.match(index, /"sameAs": "https:\/\/abra-ca-dabra\.app\/films\.html"/);
-  assert.match(index, /"dateModified": "2026-10-15"/);
+  assert.match(index, /"dateModified": "2026-10-23"/);
 });

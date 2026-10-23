@@ -55,6 +55,8 @@
 /products/schema/ /products/schema/index.html 200
 /products/super-funnel /products/super-funnel/index.html 200
 /products/super-funnel/ /products/super-funnel/index.html 200
+/products/hq /products/hq/index.html 200
+/products/hq/ /products/hq/index.html 200
 /course/llm-leverage /course/llm-leverage/index.html 200
 /course/llm-leverage/ /course/llm-leverage/index.html 200
 /start /start/index.html 200
@@ -91,6 +93,8 @@
 /portfolio/showdesk/ /portfolio/ 301
 /portfolio/canadian-discount-appliances /portfolio/ 301
 /portfolio/canadian-discount-appliances/ /portfolio/ 301
+/hq /products/hq/ 301
+/hq/ /products/hq/ 301
 /products/showdesk /portfolio/ 301
 /products/showdesk/ /portfolio/ 301
 /contact /start/ 301

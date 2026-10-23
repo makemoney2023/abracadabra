@@ -18,7 +18,7 @@ function videoObjects(file) {
   return out;
 }
 
-for (const [file, count] of [["index.html", 2], ["films.html", 12]]) {
+for (const [file, count] of [["index.html", 3], ["films.html", 12]]) {
   test(`${file} VideoObjects carry a crawlable 1280x720 JPG thumbnail`, async () => {
     const videos = videoObjects(file);
     assert.equal(videos.length, count);
@@ -26,7 +26,7 @@ for (const [file, count] of [["index.html", 2], ["films.html", 12]]) {
       for (const key of ["name", "description", "thumbnailUrl", "uploadDate", "contentUrl", "duration"]) {
         assert.ok(v[key], `${v["@id"]} has ${key}`);
       }
-      assert.ok(v.thumbnailUrl.startsWith(`${SITE}assets/films/thumbs/`), v.thumbnailUrl);
+      assert.ok(v.thumbnailUrl.startsWith(`${SITE}assets/films/thumbs/`) || v.thumbnailUrl === `${SITE}assets/video/hq-product-landscape.jpg`, v.thumbnailUrl);
       const meta = await sharp(join(root, v.thumbnailUrl.slice(SITE.length))).metadata();
       assert.equal(meta.format, "jpeg");
       assert.ok(meta.width >= 1280 && meta.height >= 720, v.thumbnailUrl);
@@ -34,9 +34,9 @@ for (const [file, count] of [["index.html", 2], ["films.html", 12]]) {
   });
 }
 
-test("every sitemap video thumbnail is a JPG under assets/films/thumbs", () => {
+test("every sitemap video thumbnail is a JPG under assets/films/thumbs (plus the HQ video poster)", () => {
   const xml = readFileSync(join(root, "sitemap.xml"), "utf8");
   const locs = [...xml.matchAll(/<video:thumbnail_loc>([^<]+)</g)].map((m) => m[1]);
-  assert.equal(locs.length, 14);
-  for (const loc of locs) assert.match(loc, /^https:\/\/abra-ca-dabra\.app\/assets\/films\/thumbs\/[a-z-]+\.jpg$/);
+  assert.equal(locs.length, 15);
+  for (const loc of locs) assert.match(loc, /^https:\/\/abra-ca-dabra\.app\/assets\/(?:films\/thumbs\/[a-z-]+|video\/hq-product-landscape)\.jpg$/);
 });

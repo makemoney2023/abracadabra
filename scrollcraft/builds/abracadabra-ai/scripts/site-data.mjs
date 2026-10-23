@@ -674,6 +674,25 @@ export const cases = [
   },
 ];
 
+export const hqProduct = {
+  slug: "hq",
+  name: "HQ",
+  custom: true,
+  image: "/assets/hq/hq-data-flow.webp",
+  imageAlt: "Illustrative data-flow diagram of HQ: a request becomes a card, digital workers build, Client Services reviews, you approve, and approved work reaches your folders and social calendar.",
+  description: "The client workspace where Abracadabra's team and digital workers deliver your work. Review it, approve it, and schedule approved posts to your social networks.",
+  llmsBody: [
+    "HQ is the client workspace where Abracadabra's team and a crew of digital workers (AI agents set up for your business) get your work done. It is for CEOs and business owners leveraging AI across their businesses. Nothing reaches your folders, and nothing reaches your social networks, until it has been reviewed and you have approved it.",
+    "How work flows: a request comes in by email, the start-a-project form, or a note on a piece in your space. A card opens on your project board with a plan for what each piece of work must make. Digital workers build and file the work, which is held. Client Services checks it against your request and a person on our team signs off. You approve each piece, ask for a change, or remove it. Finished work sits in named folders with each file's type shown. Approved work can be scheduled to your social calendar.",
+    "Social posting: automated social posting is live in HQ, since October 21, 2026. Each client has a Social page with a calendar. Networks: Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky. Accounts connect through each network's own sign-in. Only client-approved finished work can be scheduled or posted. Once a piece is approved and your accounts are connected, it is scheduled into your next open slot.",
+    "Digital workers: for each card an agent searches HQ's skill library for what the task needs, loads the skills that fit, attaches the skill packs to the card, and follows them. When it files the work it lists the skills it used and says whether each one helped.",
+    "HQ runs on Cloudflare Workers, like the Abracadabra site and the Readiness Check. HQ is served through the Cloudflare network, which mitigates DDoS attacks automatically. Files are stored in Cloudflare R2 and records in Cloudflare D1, both encrypted at rest. The private tool server our agents use is guarded by Cloudflare Access. HQ calls Workers AI through Cloudflare AI Gateway, and our agents are built on the Cloudflare Agents SDK. The pictures on the HQ page are illustrations with sample content, not screenshots of a client's space.",
+    "Related notes: How Client Work Moves Through HQ and Our AI Agents (https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq); What Is an AI Agent? A Plain Answer for Owners (https://abra-ca-dabra.app/blog/what-is-an-ai-agent); Why We Build on Cloudflare (https://abra-ca-dabra.app/blog/why-we-build-on-cloudflare).",
+    "Learn to use AI yourself first: the LLM Leverage course (https://abra-ca-dabra.app/course/llm-leverage/).",
+    "Next step: take the Readiness Check, a five-to-seven-minute questionnaire about how your business runs today (https://check.abra-ca-dabra.app/check).",
+  ].join("\n\n"),
+};
+
 export const products = [
   {
     slug: "schema",
@@ -693,6 +712,7 @@ export const products = [
     description: "A sales app for associates, shown in a 66-second tour of the dashboard, setup and pipeline.",
     caseSlug: "super-funnel",
   },
+  hqProduct,
 ];
 
 export const course = {
