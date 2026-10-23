@@ -248,7 +248,7 @@ describe("agent scheduling: permission model", () => {
     await allow({ canSchedule: true, canPublishNow: true });
     const allowed = await plan(token, scheduleBody({ action: "publish_now", timing: undefined }));
     expect(allowed.status).toBe(200);
-    expect(allowed.json.authorization).toBe("confirmation_required");
+    expect(allowed.json.authorization).toBe("allowed");
   });
 
   it("does not grant a permission to an agent that is not assigned to the client, and writes an audit row", async () => {
@@ -430,53 +430,111 @@ describe("agent scheduling: running a plan", () => {
     expect(await sql.all("SELECT id FROM social_posts")).toHaveLength(0);
   });
 
-  it("publish now needs a staff approval for each plan, and the approval is bound to that plan hash", async () => {
+  it("publishes now without a per-post approval when the permission, a Done card and an approved piece line up", async () => {
     const token = await seed();
     await allow({ canPublishNow: true });
     const prepared = await plan(token, scheduleBody({ action: "publish_now", timing: undefined }));
-    expect(prepared.json.authorization).toBe("confirmation_required");
-    expect((await readPlan(token, prepared.json.planId)).approval.status).toBe("awaiting_staff");
-    const noToken = await run(token, prepared.json.planId, { external_id: "exec-1", plan_hash: prepared.json.planHash });
-    expect(noToken.status).toBe(403);
-    expect(noToken.json.reasonCode).toBe("confirmation_required");
-    const forged = await run(token, prepared.json.planId, { external_id: "exec-2", plan_hash: prepared.json.planHash, confirmation_token: "made-up" });
-    expect(forged.status).toBe(403);
-    expect(posts).toHaveLength(0);
-
-    const staff = { kind: "staff" as const, id: "staff-1" };
-    await expect(approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.json.planId, planHash: "wrong", staff, now: NOW })).rejects.toMatchObject({ reasonCode: "stale_plan" });
-    await expect(approveAgentSocialPlan(sql, { organizationId: "org-2", planId: prepared.json.planId, planHash: prepared.json.planHash, staff, now: NOW })).rejects.toMatchObject({ status: 404 });
-    const agentSelf = { kind: "agent" as const, id: "social-content-ops", role: "hire" as const, assigned: true, mode: "managed" as const, grant: [], revoke: [] };
-    await expect(approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.json.planId, planHash: prepared.json.planHash, staff: agentSelf, now: NOW })).rejects.toMatchObject({ reasonCode: "role_denied" });
-
-    const approved = await approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.json.planId, planHash: prepared.json.planHash, staff, now: NOW });
-    const again = await approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.json.planId, planHash: prepared.json.planHash, staff, now: NOW });
-    expect(again.id).toBe(approved.id);
-    const seen = await readPlan(token, prepared.json.planId);
-    expect(seen.approval).toMatchObject({ status: "approved", confirmationToken: approved.id });
-
-    const done = await run(token, prepared.json.planId, { external_id: "exec-3", plan_hash: prepared.json.planHash, confirmation_token: approved.id });
+    expect(prepared.status).toBe(200);
+    expect(prepared.json.authorization).toBe("allowed");
+    expect((await readPlan(token, prepared.json.planId)).approval.status).toBe("not_required");
+    const done = await run(token, prepared.json.planId, { external_id: "exec-1", plan_hash: prepared.json.planHash });
     expect(done.status).toBe(200);
     expect(posts).toHaveLength(1);
     expect(posts[0]?.publishNow).toBe(true);
-    // The approval is single-use: a second plan needs a second approval.
+    expect(posts[0]?.platforms?.[0]?.platform).toBe("linkedin");
+    // Idempotent: the same key replays, a new plan for the same piece is blocked as a duplicate.
+    const replay = await run(token, prepared.json.planId, { external_id: "exec-1", plan_hash: prepared.json.planHash });
+    expect(replay.json.duplicate).toBe(true);
+    expect(posts).toHaveLength(1);
     const second = await plan(token, scheduleBody({ action: "publish_now", timing: undefined }));
     expect(second.json.rows).toHaveLength(0);
+    expect(second.json.blocked[0]?.reason).toBe("duplicate");
     const kinds = (await sql.all<{ kind: string }>("SELECT kind FROM activities")).map((row) => row.kind);
-    expect(kinds).toContain("social.plan.approved");
+    expect(kinds.filter((kind) => kind.startsWith("social.")).length).toBeGreaterThanOrEqual(3);
   });
 
-  it("does not show an approval token to a different agent", async () => {
+  it("fails closed for publish now: no permission, canPublishNow off, card not Done, piece unapproved, stale plan, project out", async () => {
+    const token = await seed();
+    const body = () => scheduleBody({ action: "publish_now", timing: undefined });
+    expect((await plan(token, body())).status).toBe(403);
+    await allow({ canPublishNow: false });
+    expect((await plan(token, body())).status).toBe(403);
+    await allow({ canPublishNow: true });
+    const notDone = await plan(token, scheduleBody({ action: "publish_now", timing: undefined, deliverable_id: "d-2", work_item_id: "t-2", selection: { mode: "explicit", item_ids: ["i-2"], account_ids: ["li"] } }));
+    expect(notDone.status).toBe(409);
+    const unapproved = await plan(token, scheduleBody({ action: "publish_now", timing: undefined, selection: { mode: "explicit", item_ids: ["i-3"], account_ids: ["li"] } }));
+    expect(unapproved.json.rows).toHaveLength(0);
+    expect(unapproved.json.blocked[0]?.reason).toBe("unapproved");
+    const prepared = await plan(token, body());
+    expect(prepared.json.rows).toHaveLength(1);
+    await sql.run("UPDATE tasks SET status = 'doing' WHERE id = 't-1'");
+    const stale = await run(token, prepared.json.planId, { external_id: "exec-1", plan_hash: prepared.json.planHash });
+    expect(stale.status).toBe(409);
+    expect(stale.json.reasonCode).toBe("stale_plan");
+    await sql.run("UPDATE tasks SET status = 'done' WHERE id = 't-1'");
+    const again = await plan(token, body());
+    await allow({ canSchedule: true, canPublishNow: false });
+    const revoked = await run(token, again.json.planId, { external_id: "exec-2", plan_hash: again.json.planHash });
+    expect(revoked.status).toBe(403);
+    await allow({ canPublishNow: true });
+    await sql.run("INSERT INTO projects (id, organization_id, name, status, created_at, updated_at, include_in_library) VALUES ('p-1', 'org-1', 'Print', 'active', ?, ?, 0)", [NOW, NOW]);
+    await sql.run("UPDATE deliverables SET project_id = 'p-1' WHERE id = 'd-1'");
+    const excluded = await plan(token, body());
+    expect(excluded.json.blocked[0]?.reason).toBe("project_excluded");
+    expect(posts).toHaveLength(0);
+  });
+
+  it("does not publish now in a client whose mode is still draft without a confirmation", async () => {
     const token = await seed();
     await allow({ canPublishNow: true });
+    await sql.run("UPDATE social_agent_policies SET mode = 'draft' WHERE organization_id = 'org-1'");
     const prepared = await plan(token, scheduleBody({ action: "publish_now", timing: undefined }));
+    expect(prepared.json.authorization).toBe("confirmation_required");
+    const blocked = await run(token, prepared.json.planId, { external_id: "exec-1", plan_hash: prepared.json.planHash });
+    expect(blocked.status).toBe(403);
+    expect(posts).toHaveLength(0);
+  });
+
+  async function scheduledPost(token: string) {
+    const prepared = await plan(token, scheduleBody());
+    await run(token, prepared.json.planId, { external_id: "exec-1", plan_hash: prepared.json.planHash });
+    const post = await sql.get<{ id: string }>("SELECT id FROM social_posts WHERE status = 'scheduled'");
+    return post!.id;
+  }
+
+  it("cancel needs a staff approval bound to the plan hash, single use, and an agent cannot approve itself", async () => {
+    const token = await seed();
+    await allow();
+    const postId = await scheduledPost(token);
+    const { POST: postCancel } = await import("@/app/api/agent-social/posts/[postId]/cancel-plan/route");
+    const cancel = await postCancel(write(`/posts/${postId}/cancel-plan`, token, { client: "acme.example", external_id: "cx-1" }), { params: Promise.resolve({ postId }) });
+    expect(cancel.status).toBe(200);
+    const prepared = (await cancel.json()) as PlanJson;
+    expect(prepared.authorization).toBe("confirmation_required");
+    expect((await readPlan(token, prepared.planId)).approval.status).toBe("awaiting_staff");
+    expect((await run(token, prepared.planId, { external_id: "cx-run", plan_hash: prepared.planHash })).status).toBe(403);
+    expect((await run(token, prepared.planId, { external_id: "cx-run2", plan_hash: prepared.planHash, confirmation_token: "made-up" })).status).toBe(403);
+
     const staff = { kind: "staff" as const, id: "staff-1" };
-    await approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.json.planId, planHash: prepared.json.planHash, staff, now: NOW });
+    await expect(approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.planId, planHash: "wrong", staff, now: Date.now() })).rejects.toMatchObject({ reasonCode: "stale_plan" });
+    await expect(approveAgentSocialPlan(sql, { organizationId: "org-2", planId: prepared.planId, planHash: prepared.planHash, staff, now: Date.now() })).rejects.toMatchObject({ status: 404 });
+    const agentSelf = { kind: "agent" as const, id: "social-content-ops", role: "hire" as const, assigned: true, mode: "managed" as const, grant: [], revoke: [] };
+    await expect(approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.planId, planHash: prepared.planHash, staff: agentSelf, now: Date.now() })).rejects.toMatchObject({ reasonCode: "role_denied" });
+
+    const approved = await approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.planId, planHash: prepared.planHash, staff, now: Date.now() });
+    const again = await approveAgentSocialPlan(sql, { organizationId: "org-1", planId: prepared.planId, planHash: prepared.planHash, staff, now: Date.now() });
+    expect(again.id).toBe(approved.id);
+    expect((await readPlan(token, prepared.planId)).approval).toMatchObject({ status: "approved", confirmationToken: approved.id });
     const other = await registerClientAgent(sql, { agentId: "other-agent", label: "Other", organizationId: "org-1", workspaceId: "ws-1", role: "hire", actor: "test", now: NOW });
     if (!other.ok || !other.token) throw new Error("agent");
-    const seen = await readPlan(other.token, prepared.json.planId);
+    const seen = await readPlan(other.token, prepared.planId);
     expect(seen.approval.confirmationToken).toBeUndefined();
-    expect(seen.approval.status).toBe("awaiting_staff");
+    const done = await run(token, prepared.planId, { external_id: "cx-run3", plan_hash: prepared.planHash, confirmation_token: approved.id });
+    expect(done.status).toBe(200);
+    const reuse = await run(token, prepared.planId, { external_id: "cx-run4", plan_hash: prepared.planHash, confirmation_token: approved.id });
+    expect(reuse.status).toBe(409);
+    const kinds = (await sql.all<{ kind: string }>("SELECT kind FROM activities")).map((row) => row.kind);
+    expect(kinds).toContain("social.plan.approved");
   });
 
   it("makes reschedule and cancel staff-approved for a function agent", async () => {
@@ -546,9 +604,7 @@ describe("agent scheduling: rate limits", () => {
     await sql.run("DELETE FROM social_publish_plans WHERE id LIKE 'fill-%'");
     await fillPlans(3, "publish_now", true);
     const nowPlan = await plan(token, scheduleBody({ action: "publish_now", timing: undefined }));
-    const staff = { kind: "staff" as const, id: "staff-1" };
-    const approved = await approveAgentSocialPlan(sql, { organizationId: "org-1", planId: nowPlan.json.planId, planHash: nowPlan.json.planHash, staff, now: Date.now() });
-    const capped = await run(token, nowPlan.json.planId, { external_id: "exec-2", plan_hash: nowPlan.json.planHash, confirmation_token: approved.id });
+    const capped = await run(token, nowPlan.json.planId, { external_id: "exec-2", plan_hash: nowPlan.json.planHash });
     expect(capped.status).toBe(429);
     expect(posts).toHaveLength(0);
   });

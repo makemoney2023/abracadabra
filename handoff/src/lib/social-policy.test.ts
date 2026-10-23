@@ -117,6 +117,13 @@ describe("evaluateSocialPolicy", () => {
       authorization: "confirmation_required",
       reasonCode: "confirmation_required",
     });
+    // A granted function agent needs no per-post approval once the client allows scheduling; cancel and move still do.
+    expect(evaluateSocialPolicy(hire("managed", granted("social.publish_now")), "publish_now", { contentApproved: true })).toMatchObject({
+      authorization: "allowed",
+    });
+    expect(evaluateSocialPolicy(hire("schedule_approved", granted("social.publish_now")), "publish_now", { contentApproved: true }).authorization).toBe("allowed");
+    expect(evaluateSocialPolicy(hire("managed", granted("social.publish_now")), "publish_now").reasonCode).toBe("unapproved");
+    expect(evaluateSocialPolicy(hire("managed", granted("social.schedule.manage")), "cancel", { contentApproved: true }).authorization).toBe("confirmation_required");
     expect(evaluateSocialPolicy(hire("managed", granted("social.cadence.manage")), "cadence_change").authorization).toBe(
       "confirmation_required",
     );

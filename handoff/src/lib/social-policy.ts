@@ -156,8 +156,12 @@ export function evaluateSocialPolicy(
     if (modeReason) return deny(modeReason);
   }
 
-  // A function agent (a hire) can ask to move a post, but staff approve it. Leads, staff and the client's people are not held to this.
-  if (CONFIRM.has(action) || (actor.kind === "agent" && actor.role === "hire" && action === "reschedule")) {
+  // A function agent (a hire) only holds publish_now when staff granted it, so a Done and approved card is enough: no
+  // per-post approval. It can only ask to move a post; staff approve that. Leads, staff and the client's people are unchanged.
+  // In a client whose mode is still draft it keeps the confirmation, so a granted agent never out-runs the client's mode.
+  const functionAgent = actor.kind === "agent" && actor.role === "hire";
+  const publishUnattended = functionAgent && action === "publish_now" && actor.kind === "agent" && actor.mode !== "draft";
+  if ((CONFIRM.has(action) && !publishUnattended) || (functionAgent && action === "reschedule")) {
     return { authorization: "confirmation_required", reasonCode: "confirmation_required", capabilities };
   }
   return { authorization: "allowed", reasonCode: "allowed", capabilities };
