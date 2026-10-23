@@ -2,6 +2,7 @@ import { normalizeDomain } from "@/db/crm";
 import { internalFlag } from "@/lib/internal-orgs";
 import type { Sql } from "@/db/sql";
 import { LIMITS } from "@/lib/policy/limits";
+import { assignFunctionAgentsToClient } from "@/lib/function-agents";
 
 export type SchemaFileResult =
   | { ok: true; duplicate: boolean }
@@ -90,6 +91,7 @@ export async function fileSchemaPackage(sql: Sql, payload: unknown, now: number)
          VALUES (?, ?, ?, ?, 'client', ?, ?, ?)`,
         [id, businessName, domain, origin, internalFlag(businessName, domain), now, now],
       );
+      await assignFunctionAgentsToClient(sql, id, now);
       org = { id };
     }
 
