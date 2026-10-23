@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — HQ lists use one shadcn-style data table. Clients, Projects, Schema, Spaces, Agents, GitHub repos and Leads (list view) gain a toolbar with search, filter menus, a Columns menu and a row-density switch, a footer with the row range, rows per page and page links, sticky headers with sort arrows, avatar chips for owners, one-line truncation with a tooltip, and relative times that show the full date on hover. Clients, Projects, Schema, Spaces, Agents and GitHub filter rows from `?q=` and filter params. Clients and Leads keep the page's own search. The empty state uses the shadcn `Empty` pieces.
+- **Why** — The HQ tables were plain: no search or paging on long lists, no way to hide a column, and dates with no detail.
+- **Code touchpoints** — `handoff/src/components/data-table.tsx`, `handoff/src/components/data-table-query.ts`, `handoff/src/components/data-table-toolbar.tsx`, `handoff/src/components/data-table-footer.tsx`, `handoff/src/components/data-table-columns.tsx`, `handoff/src/components/data-table-density.tsx`, `handoff/src/components/data-table-cells.tsx`, `handoff/src/components/data-table-row-click.tsx`, `handoff/src/components/truncated-text.tsx`, `handoff/src/components/empty-state.tsx`, `handoff/src/components/ui/{avatar,empty,pagination,table}.tsx`, and the `DataTable` pages under `handoff/src/app/` (`clients`, `leads`, `projects`, `schema`, `admin`, `agents`, `settings/github`).
+- **Data-flow impact** — Table state is in the URL: `?q=`, one param per filter (for example `?kind=Lead`), `?page=`, `?size=` and the existing `?sort=`. Any change but a page link goes back to page 1. Hidden columns are saved in this browser (`localStorage`, `hq:columns:v1:<table>`) and applied before the table paints. No queries changed.
+- **API / schema impact** — none. No migration. `DataTable` props are backward compatible; `search`, `filters`, `pageSize`, `columnPicker`, `query`, `rowLabel` and `Column.truncate` are new and optional.
+- **Verification** — `npx vitest run src/components/data-table-query.test.ts src/components/data-table.test.tsx src/components/data-table-sort.test.ts`, `npx tsc --noEmit`, `npm run typecheck:agent`, `npm test`, `npm run build`.
+
+## 2026-10-22
+
 - **What changed** — HQ accepts MP4, WebM and MOV clips from `POST /api/agent-work`, stores them as real files, and plays them in Files, the piece and set pages, and shared view links. A clip's poster is the picture beside it named `<clip name>-poster.png|jpg|webp`.
 - **Why** — A video could only be filed as an animated picture. The Schema video had no way to be reviewed in HQ.
 - **Code touchpoints** — `handoff/src/lib/video-files.ts`, `handoff/src/lib/range-response.ts`, `handoff/src/lib/video-posters.ts`, `handoff/src/components/video-player.tsx`, `handoff/src/lib/artifact-adapter.ts`, `handoff/src/lib/agent-work-filing.ts`, `handoff/src/lib/preview.ts`, `handoff/src/lib/store/objects.ts`, `handoff/src/lib/library-shares.ts`, `handoff/src/app/view/[token]/video/[publicId]/route.ts`.

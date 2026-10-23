@@ -4,6 +4,7 @@ import { requireHqStaffPage } from "@/lib/current";
 import { formatRelative } from "@/lib/format";
 import { sortRows } from "@/components/data-table-sort";
 import { DataTable, type Column } from "@/components/data-table";
+import { PersonChip, RelativeTime } from "@/components/data-table-cells";
 import { EmptyState } from "@/components/empty-state";
 import { PageFrame } from "@/components/page-frame";
 import { StatusBadge } from "@/components/status-badge";
@@ -54,6 +55,7 @@ function leadColumns(now: number): Column<LeadRow>[] {
       key: "contact",
       header: "Contact",
       sortable: true,
+      truncate: "14rem",
       cell: (row) => row.contact || null,
     },
     {
@@ -89,19 +91,20 @@ function leadColumns(now: number): Column<LeadRow>[] {
       key: "next",
       header: "Next step",
       sortable: true,
+      truncate: "18rem",
       cell: (row) => row.nextStep || null,
     },
     {
       key: "owner",
       header: "Owner",
       sortable: true,
-      cell: (row) => row.ownerLabel || null,
+      cell: (row) => (row.ownerLabel ? <PersonChip initials={row.ownerLabel} name="" /> : null),
     },
     {
       key: "updated",
       header: "Updated",
       sortable: true,
-      cell: (row) => (row.updated == null ? null : formatRelative(row.updated, now)),
+      cell: (row) => <RelativeTime at={row.updated} now={now} />,
     },
   ];
 }
@@ -109,7 +112,16 @@ function leadColumns(now: number): Column<LeadRow>[] {
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; stage?: string; owner?: string; q?: string; sort?: string; routing?: string }>;
+  searchParams: Promise<{
+    view?: string;
+    stage?: string;
+    owner?: string;
+    q?: string;
+    sort?: string;
+    routing?: string;
+    page?: string;
+    size?: string;
+  }>;
 }) {
   const query = await searchParams;
   const view = leadsView(query.view);
@@ -203,8 +215,12 @@ export default async function LeadsPage({
             rows={visible}
             rowKey={(row) => row.id}
             rowHref={(row) => `/clients/${row.organizationId}`}
+            rowLabel={(row) => row.company}
             sort={sort}
             basePath={basePath}
+            query={query}
+            pageSize={50}
+            columnPicker
             empty={
               <EmptyState
                 title={filtered ? "No leads match" : "No leads yet"}

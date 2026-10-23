@@ -2,11 +2,13 @@ import { workspacesFor } from "@/db/records";
 import type { Sql } from "@/db/sql";
 import { clock } from "@/lib/clock";
 import { requireSuperAdminPage } from "@/lib/current";
-import { formatBytes, formatCount, formatRelative } from "@/lib/format";
+import { formatBytes, formatCount } from "@/lib/format";
 import { clientSpaceHref } from "@/lib/host";
 import { liveTemplates } from "@/lib/store/workspaces";
 import { sortRows } from "@/components/data-table-sort";
 import { DataTable, type Column } from "@/components/data-table";
+import { PersonChip, RelativeTime } from "@/components/data-table-cells";
+import { firstParam, type RawQuery } from "@/components/data-table-query";
 import { EmptyState } from "@/components/empty-state";
 import { ExternalLink } from "@/components/external-link";
 import { NewSpaceDrawer } from "./new-workspace-form";
@@ -87,7 +89,12 @@ function columns(now: number): Column<SpaceRow>[] {
       cell: (row) => <span className="font-medium">{row.space}</span>,
     },
     { key: "client", header: "Client", sortable: true, cell: (row) => row.client },
-    { key: "owner", header: "Owner", sortable: true, cell: (row) => row.owner },
+    {
+      key: "owner",
+      header: "Owner",
+      sortable: true,
+      cell: (row) => (row.owner ? <PersonChip email={row.owner} /> : null),
+    },
     {
       key: "files",
       header: "Files",
@@ -106,7 +113,7 @@ function columns(now: number): Column<SpaceRow>[] {
       key: "uploaded",
       header: "Last upload",
       sortable: true,
-      cell: (row) => (row.lastUpload === null ? "" : formatRelative(row.lastUpload, now)),
+      cell: (row) => <RelativeTime at={row.lastUpload} now={now} />,
     },
     {
       key: "open",
@@ -119,10 +126,10 @@ function columns(now: number): Column<SpaceRow>[] {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<RawQuery>;
 }) {
   const query = await searchParams;
-  const sort = typeof query.sort === "string" ? query.sort : undefined;
+  const sort = firstParam(query.sort) || undefined;
   const { sql, caller } = await requireSuperAdminPage();
   const now = clock();
   const [workspaces, templates] = await Promise.all([workspacesFor(sql, caller), liveTemplates(sql)]);
@@ -156,6 +163,10 @@ export default async function AdminPage({
         rowKey={(row) => row.id}
         sort={sort}
         basePath="/spaces"
+        query={query}
+        search={{ label: "Search spaces", text: (row) => `${row.space} ${row.slug} ${row.client} ${row.owner}` }}
+        pageSize={25}
+        columnPicker
         empty={<EmptyState title="No spaces yet." body="Add a space when a client needs a folder." />}
       />
     </div>

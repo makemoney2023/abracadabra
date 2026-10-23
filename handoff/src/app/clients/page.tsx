@@ -11,16 +11,16 @@ import {
 import { clock } from "@/lib/clock";
 import { clientRows, type ClientPlan, type ClientRow, type ClientWorkItem } from "@/lib/client-rows";
 import { requireHqStaffPage } from "@/lib/current";
-import { formatRelative } from "@/lib/format";
 import { statusToken } from "@/lib/status-token";
 import { sortRows } from "@/components/data-table-sort";
 import { DataTable, type Column } from "@/components/data-table";
+import { PersonChip, RelativeTime } from "@/components/data-table-cells";
+import { firstParam, type RawQuery } from "@/components/data-table-query";
 import { EmptyState } from "@/components/empty-state";
 import { PageFrame } from "@/components/page-frame";
 import { StatusDot } from "@/components/status-dot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { StaffShell } from "../staff-shell";
 import { NewClientDrawer } from "./client-form";
 
@@ -56,7 +56,8 @@ function sortValue(row: ClientRow, key: string): string | number | null {
   return "";
 }
 
-const columns: Column<ClientRow>[] = [
+function columns(now: number): Column<ClientRow>[] {
+  return [
   {
     key: "name",
     header: "Client",
@@ -81,7 +82,12 @@ const columns: Column<ClientRow>[] = [
         </span>
       ) : null,
   },
-  { key: "owner", header: "Owner", sortable: true, cell: (row) => row.owner },
+  {
+    key: "owner",
+    header: "Owner",
+    sortable: true,
+    cell: (row) => (row.owner ? <PersonChip email={row.owner} /> : null),
+  },
   {
     key: "openWork",
     header: "Open work",
@@ -89,23 +95,24 @@ const columns: Column<ClientRow>[] = [
     align: "right",
     cell: (row) => row.openWork,
   },
-  { key: "nextStep", header: "Next step", sortable: true, cell: (row) => row.nextStep },
+  { key: "nextStep", header: "Next step", sortable: true, truncate: "18rem", cell: (row) => row.nextStep },
   {
     key: "lastActivity",
     header: "Last activity",
     sortable: true,
-    cell: (row) => (row.lastActivity == null ? "" : formatRelative(row.lastActivity)),
+    cell: (row) => <RelativeTime at={row.lastActivity} now={now} />,
   },
-];
+  ];
+}
 
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; sort?: string }>;
+  searchParams: Promise<RawQuery>;
 }) {
   const query = await searchParams;
-  const q = typeof query.q === "string" ? query.q : "";
-  const sort = typeof query.sort === "string" ? query.sort : undefined;
+  const q = firstParam(query.q);
+  const sort = firstParam(query.sort) || undefined;
   const { sql, caller } = await requireHqStaffPage();
   const now = clock();
   const [orgs, tasks, projects, deals, health, activity, staff] = await Promise.all([
@@ -175,26 +182,23 @@ export default async function ClientsPage({
           />
         }
       >
-        <form action="/clients" className="flex max-w-md items-center gap-2">
-          <Input
-            name="q"
-            defaultValue={q}
-            placeholder="Search clients"
-            aria-label="Search clients"
-            data-hq-search
-          />
-          {sort ? <input type="hidden" name="sort" value={sort} /> : null}
-          <Button type="submit" variant="outline">
-            Search
-          </Button>
-        </form>
         <DataTable
-          columns={columns}
+          columns={columns(now)}
           rows={rows}
           rowKey={(row) => row.id}
           rowHref={(row) => `/clients/${row.id}`}
+          rowLabel={(row) => row.name}
           sort={sort}
           basePath={basePath}
+          query={query}
+          search={{ label: "Search clients" }}
+          filters={[
+            { key: "kind", label: "Kind", get: (row) => KIND_LABEL[row.kind] },
+            { key: "health", label: "Health", get: (row) => (row.health ? statusToken("health", row.health).label : null) },
+            { key: "owner", label: "Owner", get: (row) => row.owner },
+          ]}
+          pageSize={25}
+          columnPicker
           empty={
             <EmptyState
               title={emptyTitle}

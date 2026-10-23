@@ -7,6 +7,8 @@ import { stripAnswerPrefix } from "@/lib/schema-report";
 import { statusToken } from "@/lib/status-token";
 import { sortRows } from "@/components/data-table-sort";
 import { DataTable, type Column } from "@/components/data-table";
+import { RelativeTime } from "@/components/data-table-cells";
+import { firstParam, type RawQuery } from "@/components/data-table-query";
 import { EmptyState } from "@/components/empty-state";
 import { Metric } from "@/components/metric";
 import { PageFrame } from "@/components/page-frame";
@@ -108,7 +110,7 @@ function columns(now: number): Column<SchemaHistoryRow>[] {
       key: "checked",
       header: "Checked",
       sortable: true,
-      cell: (row) => formatRelative(row.checked, now),
+      cell: (row) => <RelativeTime at={row.checked} now={now} />,
     },
     {
       key: "result",
@@ -137,9 +139,9 @@ function columns(now: number): Column<SchemaHistoryRow>[] {
   ];
 }
 
-export default async function SchemaPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
+export default async function SchemaPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
   const query = await searchParams;
-  const sort = typeof query.sort === "string" ? query.sort : undefined;
+  const sort = firstParam(query.sort) || undefined;
   const { sql } = await requireHqStaffPage();
   const checks = await recentSchemaChecks(sql);
   const now = clock();
@@ -208,8 +210,14 @@ export default async function SchemaPage({ searchParams }: { searchParams: Promi
           rows={ordered}
           rowKey={(row) => row.id}
           rowHref={(row) => (row.clientId ? `/clients/${row.clientId}` : "")}
+          rowLabel={(row) => row.site}
           sort={sort}
           basePath="/schema"
+          query={query}
+          search={{ label: "Search checks", text: (row) => `${row.site} ${row.domain} ${row.prose} ${row.contacts}` }}
+          filters={[{ key: "result", label: "Result", get: (row) => (row.flag ? statusToken("schema", row.flag).label : null) }]}
+          pageSize={25}
+          columnPicker
           empty={<EmptyState title="No checks yet." body="Run a check to read a site." />}
         />
       </PageFrame>
