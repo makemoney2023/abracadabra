@@ -27,6 +27,7 @@ import { ArticleCard } from "@/components/library/article-card";
 import { ViewLinkDialog } from "@/components/library/view-link-dialog";
 import { libraryViewLinksEnabled, listViewLinks } from "@/lib/library-shares";
 import { projectLibraryArtifact } from "@/lib/library-artifacts";
+import { isBuildContext } from "@/lib/library-context";
 
 /** The filing's own summary page stored as a file ("summary.md", "<title> - summary.md", "summary (2).md"). */
 function isSummaryFile(title: string): boolean {
@@ -60,10 +61,12 @@ export default async function FinishedPiecePage({
   const opened = await openDeliverable(sql, caller, id, "published");
   if (!opened || opened.deliverable.workspace_id !== workspace.id) notFound();
   const chosen = ITEM_FORMATS.find((itemFormat) => itemFormat === format) ?? null;
-  const focusId = opened.items.some((row) => row.id === item) ? item ?? null : null;
+  const brief = opened.deliverable.kind === "brief";
+  const finished = opened.items.filter((row) => brief || !isBuildContext({ title: row.title, linkUrl: row.link_url }));
+  const focusId = finished.some((row) => row.id === item) ? item ?? null : null;
   // Only the kinds this piece has (and the one picked), so the filter row stays short.
-  const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || opened.items.some((row) => row.format === itemFormat));
-  const pool = focusId ? opened.items.filter((row) => row.id === focusId) : opened.items;
+  const shownFormats = ITEM_FORMATS.filter((itemFormat) => itemFormat === chosen || finished.some((row) => row.format === itemFormat));
+  const pool = focusId ? finished.filter((row) => row.id === focusId) : finished;
   const items = !focusId && chosen ? pool.filter((row) => row.format === chosen) : pool;
   const removedAt = new Map(
     (await sql.all<{ id: string; removed_at: number | null }>(
@@ -89,7 +92,6 @@ export default async function FinishedPiecePage({
       [opened.deliverable.id, version],
     )).map((row) => [row.item_id, row] as const),
   );
-  const brief = opened.deliverable.kind === "brief";
   const briefItem = brief ? items.find((item) => item.title === "brief.md") ?? items[0] : undefined;
   // Agent filings: the summary page renders as a card. Clients never see the agent, card or reference ids.
   const viewer = seesHeldWork(caller, workspace.id) || caller.staff ? "staff" : "client";

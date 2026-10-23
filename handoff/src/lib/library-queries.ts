@@ -7,6 +7,7 @@ import { listViewLinks } from "@/lib/library-shares";
 import { localPublication } from "@/lib/social-queries";
 import { pictureAddress, pictureRole, type PictureMedia } from "@/lib/picture-role";
 import { pieceOpenHref } from "@/lib/finished-shelf";
+import { FILE_BUILD_CONTEXT_SQL, ITEM_BUILD_CONTEXT_SQL } from "@/lib/library-context";
 import {
   LIBRARY_ARTIFACT_TYPES,
   projectLibraryArtifact,
@@ -510,6 +511,7 @@ function itemCtes(query: LibraryListQuery, includeHeld: boolean, search: string,
           WHERE gone.id = i.work_item_id AND (gone.retracted_at IS NOT NULL OR gone.superseded_by IS NOT NULL)
         )
         AND (i.removed_at IS NOT NULL) = ?
+        AND NOT ${ITEM_BUILD_CONTEXT_SQL}
         ${projectSql}
         ${searchSql}
     ),
@@ -768,6 +770,7 @@ function fileCte(query: LibraryListQuery, includeHeld: boolean, search: string, 
     JOIN workspaces w ON w.id = f.workspace_id
     JOIN batches b ON b.id = f.batch_id
     WHERE s.workspace_id = ? AND s.revoked_at IS NULL AND f.status = 'clean'
+      AND NOT ${FILE_BUILD_CONTEXT_SQL}
       AND b.deleted_at IS NULL AND b.discarded_at IS NULL
       AND (? = 1 OR ((b.held_at IS NULL OR b.released_at IS NOT NULL) AND b.hidden_at IS NULL))
       ${projectSql}

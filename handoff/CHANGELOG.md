@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — The Library lists the finished piece. Markdown notes and GitHub pull requests or repositories stay in Files.
+- **Why** — The shelf was also showing the notes and source links that produced the work.
+- **Code touchpoints** — `handoff/src/lib/library-context.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.
+- **Data-flow impact** — Library counts and the open set skip those rows. The file rows stay in Files.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/library-queries.test.ts src/lib/library-context.test.ts`.
+
+## 2026-10-22
+
 - **What changed** — The finished-work shelf and placing a Library picture on a day are both live. Remove uses migration `0047`. The calendar still lists pieces beside the grid so an approved piece can be dropped on a day, and the same counts link back to the Library.
 - **Why** — The two passes landed on different branches and both have to stay.
 - **Code touchpoints** — `handoff/src/lib/social-review.ts`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/components/social/social-rail.tsx`, `handoff/migrations/0047_library_item_removed.sql`.
