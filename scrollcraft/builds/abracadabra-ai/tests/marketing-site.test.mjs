@@ -360,7 +360,7 @@ test('site nav uses a compact sheet below 900px and a full bar from 1024px', asy
       const rect = link.getBoundingClientRect();
       return { height: rect.height, text: link.textContent.trim(), right: rect.right, viewport: innerWidth };
     }));
-    for (const name of ['Work', 'Products', 'Blog', 'Films', 'Start a project']) {
+    for (const name of ['Case studies', 'Products', 'Blog', 'Films', 'Start a project']) {
       const link = opened.find((item) => item.text === name);
       assert.ok(link, `${width}px ${name}`);
       assert.ok(link.right <= link.viewport + 1, `${width}px ${name} is clipped`);
@@ -393,7 +393,7 @@ test('site nav uses a compact sheet below 900px and a full bar from 1024px', asy
       const rect = link.getBoundingClientRect();
       return { height: rect.height, left: rect.left, right: rect.right, text: link.textContent.trim(), viewport: innerWidth };
     }));
-    for (const name of ['Work', 'Products', 'Blog', 'Films', 'Start a project']) {
+    for (const name of ['Case studies', 'Products', 'Blog', 'Films', 'Start a project']) {
       const link = bar.find((item) => item.text === name);
       assert.ok(link, `${width}px ${name}`);
       assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);
@@ -462,7 +462,7 @@ test('open Services menu stacks page links under the function list on a phone', 
     const menu = document.querySelector('.site-nav__links');
     const services = document.querySelector('.site-nav__services');
     const platform = document.querySelector('.site-nav__group .site-nav__fn-name');
-    const portfolio = [...menu.querySelectorAll(':scope > a')].find((link) => link.textContent.trim() === 'Work');
+    const portfolio = [...menu.querySelectorAll(':scope > a')].find((link) => link.textContent.trim() === 'Case studies');
     const cta = menu.querySelector('.site-nav__cta');
     const place = (node) => {
       const box = node.getBoundingClientRect();

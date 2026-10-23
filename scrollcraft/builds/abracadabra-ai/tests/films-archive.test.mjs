@@ -114,7 +114,8 @@ test("the StrongFoam CRM/ERP film plays on the films page and its case study", (
   const page = readFileSync(join(root, "portfolio/strongfoam-crm/index.html"), "utf8");
   assert.match(page, /<video class="case-film" controls playsinline preload="none" poster="\/assets\/films\/thumbs\/strongfoam-erp-demo\.jpg" src="\/assets\/films\/strongfoam-erp-demo\.mp4"/);
   const hub = readFileSync(join(root, "portfolio/index.html"), "utf8");
-  assert.match(hub, /<a href="\/portfolio\/strongfoam-crm\/"><img src="\/assets\/strongfoam-erp-demo\.webp"/);
+  // The case studies listing shows only PiRX for now; this case page stays live by direct URL.
+  assert.equal(hub.includes('href="/portfolio/strongfoam-crm/"'), false);
   for (const file of ["assets/films/strongfoam-erp-demo.mp4", "assets/films/thumbs/strongfoam-erp-demo.jpg", "assets/strongfoam-erp-demo.webp"]) {
     assert.equal(existsSync(join(root, file)), true, `${file} is on disk`);
   }

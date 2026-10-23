@@ -127,7 +127,7 @@ export function siteHeader({ home = false } = {}) {
   </details>
   <nav class="site-nav__links" aria-label="Site">
     ${servicesNav()}
-    <a href="/portfolio/">Work</a>
+    <a href="/portfolio/">Case studies</a>
     <a href="/products/">Products</a>
     <a href="/blog">Blog</a>
     <a href="/films.html">Films</a>
@@ -231,7 +231,7 @@ export function siteFooter({ band = "full" } = {}) {
   <nav class="site-foot__links" aria-label="Footer">
     ${functionFoot()}
     <a href="/services/">Services</a>
-    <a href="/portfolio/">Work</a>
+    <a href="/portfolio/">Case studies</a>
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>

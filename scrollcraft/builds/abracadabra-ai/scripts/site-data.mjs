@@ -539,6 +539,9 @@ export const familyLogos = [
   { name: "BAAI", file: "baai.svg" },
 ];
 
+/** Case studies shown in the top nav page (/portfolio/) listing and its structured data. Every other case page stays live by direct URL. */
+export const LISTED_CASE_SLUGS = ["pirx"];
+
 export const cases = [
   {
     slug: "schema",

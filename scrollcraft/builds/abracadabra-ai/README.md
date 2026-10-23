@@ -4,6 +4,12 @@ Marketing site for custom software. Copy comes from [`docs/source-of-truth.md`](
 
 The floating chat is `assets/chat-widget.js`. It talks to `/api/chat/*`, which this Worker proxies to the `abracadabra-chat` Worker. Booking, the readiness check, and the contact card all happen inside the panel. The handoff mail goes to houdini@ only after a person on our side is meant to read it. Visitors are not emailed by the chat.
 
+## Top nav "Case studies", listing shows PiRX only — 2026-10-23
+
+- **What changed** — The top-nav and footer item "Work" is now "Case studies" on every page (`scripts/site-chrome.mjs`, the 404 links). It still links to `/portfolio/`, which keeps its URL (no redirects) and now has the title "Case studies | Abracadabra AI", the H1 "Case studies." and lists only pirx.ca (`/portfolio/pirx/`). The listing and its ItemList JSON-LD read `LISTED_CASE_SLUGS` in `scripts/site-data.mjs`; add a slug there to list another case study.
+- **Not removed** — Every other case page (Milrcorr, StrongFoam, Renew Implants, SuperPatch, Schema, LLM Leverage, Super Funnel) stays live and indexable by direct URL, and stays in the sitemap and llms files. Their breadcrumb now reads "Case studies" and their "see all" link says "See all case studies".
+- **Left as is (report items)** — The homepage "Work that's already running" section and tabs, the About page client list, the Films page, the homepage client proof strip, and the llms.txt "Portfolio" section still name other clients.
+
 ## HQ product page, homepage HQ section and data-flow diagram — 2026-10-23
 
 - **What changed** — New product page `/products/hq/` ("One place to request, review and approve the work."): hero board mockup, a seven-step data-flow diagram (request, plan, agents build, review, you approve, delivery, social calendar), review and approval, folders and file types, automated social posting (approved work only; Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky as plain text), digital workers and the per-task skill library, Cloudflare security and AI, a five-question FAQ and a Readiness Check call to action. The homepage gets an `#hq` section between `#clients` and `#models-band` with three small mockups and links to the page and to the note on how client work moves through HQ. The Products hub lists HQ as a third card. `/hq` redirects to `/products/hq/`.
