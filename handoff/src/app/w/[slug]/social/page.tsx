@@ -9,6 +9,7 @@ import { SocialOperationsPanel } from "@/components/social/social-operations-pan
 import { listSocialAccounts, listSocialPosts, syncSocialAccounts, type SocialAccount, type SocialPost } from "@/lib/social";
 import { approvalControlLabel, DEFAULT_AUTOPOST, getAutopost, type Autopost } from "@/lib/social-autopost";
 import { listSocialReviewPieces } from "@/lib/social-review";
+import { scheduledItemIds } from "@/components/social/social-board";
 import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, openZernio } from "@/lib/zernio";
 import { sentConfirmation } from "../work/sent";
 import { Badge } from "@/components/ui/badge";
@@ -59,11 +60,7 @@ export default async function SpaceSocialPage({
     ]);
   }
   const now = clock();
-  const live = new Set(
-    posts
-      .filter((post) => post.status === "sending" || post.status === "scheduled" || post.status === "published" || post.status === "partial")
-      .map((post) => post.item_id),
-  );
+  const live = scheduledItemIds(posts);
   const held = new Set(posts.filter((post) => post.status === "failed").map((post) => post.item_id));
   const review = organization
     ? await listSocialReviewPieces(sql, caller, { id: workspace.id, slug, display_name: workspace.display_name }, live, held)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { approvalTone, boardLists, calendarStatusLabel, postOnCalendar, visibleReview } from "./social-board";
+import { approvalTone, boardLists, calendarStatusLabel, postOnCalendar, scheduledItemIds, visibleReview } from "./social-board";
 
 describe("social board", () => {
   it("colors a post by the decision that matters first", () => {
@@ -63,5 +63,21 @@ describe("social board", () => {
     expect(calendarStatusLabel("draft")).toBe("Draft");
     expect(calendarStatusLabel("published")).toBe("Posted");
     expect(calendarStatusLabel("draft").toLowerCase()).not.toContain("zernio");
+  });
+
+  it("takes an approved piece off the rail once a post is on the calendar for it", () => {
+    const posts = [
+      { item_id: "sent", status: "sending", scheduled_for: 1 },
+      { item_id: "booked", status: "scheduled", scheduled_for: 2 },
+      { item_id: "posted", status: "published", scheduled_for: 3 },
+      { item_id: "some", status: "partial", scheduled_for: 4 },
+      { item_id: "dated-draft", status: "draft", scheduled_for: 5 },
+      { item_id: "undated-draft", status: "draft", scheduled_for: null },
+      { item_id: "failed", status: "failed", scheduled_for: 6 },
+    ];
+    const scheduled = scheduledItemIds(posts);
+    expect([...scheduled].sort()).toEqual(["booked", "dated-draft", "posted", "sent", "some"]);
+    const pieces = ["booked", "dated-draft", "undated-draft", "unplaced"].map((id) => ({ id, status: "approved" }));
+    expect(boardLists(pieces, scheduled).ready.map((piece) => piece.id)).toEqual(["undated-draft", "unplaced"]);
   });
 });

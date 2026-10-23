@@ -31,6 +31,26 @@ export function postOnCalendar(post: { status: string; error: string | null; sch
   return post.status === "scheduled" || post.status === "published" || post.status === "partial" || post.status === "failed" || post.status === "sending" || post.status === "draft";
 }
 
+/**
+ * Pieces that already have a post on the calendar: going out, sent, or a dated draft.
+ * Approving a piece puts it on the next free slot, which writes one of these rows,
+ * so this is what takes it off the side rail. A failed or cancelled post does not count.
+ */
+export function scheduledItemIds(
+  posts: readonly { item_id: string; status: string; scheduled_for: number | null }[],
+): Set<string> {
+  return new Set(
+    posts
+      .filter((post) =>
+        post.status === "sending" ||
+        post.status === "scheduled" ||
+        post.status === "published" ||
+        post.status === "partial" ||
+        (post.status === "draft" && post.scheduled_for != null))
+      .map((post) => post.item_id),
+  );
+}
+
 /** Pending first, then change requests. Approved work is not waiting. */
 export function boardLists<T extends { id: string; status: string }>(
   pieces: T[],

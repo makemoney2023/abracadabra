@@ -34,6 +34,7 @@ import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { listSocialAccounts, listSocialPosts, refreshSocialPosts, syncSocialAccounts } from "@/lib/social";
 import { listSocialReviewPieces } from "@/lib/social-review";
+import { scheduledItemIds } from "@/components/social/social-board";
 import { workspacesFor } from "@/db/records";
 import { listOpenSocialAttention } from "@/lib/social-attention";
 import { getAutopost } from "@/lib/social-autopost";
@@ -94,11 +95,7 @@ async function loadSocial(
   );
   const visible = new Set((await workspacesFor(sql, caller)).map((space) => space.id));
   const space = spaces.find((row) => visible.has(row.id)) ?? null;
-  const live = new Set(
-    posts
-      .filter((post) => post.status === "sending" || post.status === "scheduled" || post.status === "published" || post.status === "partial")
-      .map((post) => post.item_id),
-  );
+  const live = scheduledItemIds(posts);
   const held = new Set(posts.filter((post) => post.status === "failed").map((post) => post.item_id));
   const review = space ? await listSocialReviewPieces(sql, caller, space, live, held) : { waiting: [], ready: [], catalog: [] };
   return {
