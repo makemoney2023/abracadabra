@@ -2,6 +2,15 @@
 
 ## 2026-10-23
 
+- **What changed** — CI: a Space smoke test. `npm run smoke:spaces` runs the production build (`next build`), starts the app with `next start` on a seeded throwaway SQLite database (a staff session, one Space whose project stays out of the Library and one that is in it, each with a live and a retired file), and requests as staff `/w/<slug>`, `/w/<slug>?retired=1`, `/w/<slug>/library`, `/w/<slug>/library?type=file` and two project pages. It fails on a non-200, a missing page marker, or an error in the server log (for example "Attempted to call ... from the server"). A new GitHub Actions workflow, `.github/workflows/handoff-space-smoke.yml`, runs it on every pull request and push to main that touches `handoff/`. No secrets or Cloudflare account are needed. `next.config.ts` skips the local Workers emulation only when `HANDOFF_SMOKE_NO_CLOUDFLARE=1`.
+- **Why** — PR #206 shipped a server page that called a function exported from a `"use client"` file. The response was HTTP 200 with an error boundary, so unit tests and a plain build passed while every Space page failed (fixed in #207).
+- **Code touchpoints** — `handoff/scripts/smoke-spaces.ts`, `handoff/package.json`, `handoff/next.config.ts`, `.github/workflows/handoff-space-smoke.yml`.
+- **Data-flow impact** — None. Tests only; the smoke database is a temp file.
+- **API / schema impact** — None.
+- **Verification** — The smoke test passes on main and fails (5 pages, plus the server log) when #207 is reverted. `npm test`, `npm run lint`, `npm run typecheck:agent`, `tsc --noEmit`.
+
+## 2026-10-23
+
 - **What changed** — Fix: every Space page (`/w/<slug>` and `/w/<slug>/library`) failed after PR #206. Those server pages called `showRetired()`, which #206 exported from `retired-filter.tsx`, a `"use client"` file. Next refuses to call a function exported from a client file on the server ("Attempted to call showRetired() from the server but showRetired is on the client"), so opening a Space showed the not-found page. `showRetired`, `retiredLabel` and `RETIRED_PARAM` now live in `handoff/src/lib/retired-param.ts` (not a client file); the client file keeps only the `RetiredFilter` component.
 - **Why** — Opening a Space from HQ returned 404 after #206 deployed. Unit tests import the helper directly and cannot see the client/server boundary, so a new guard test reads the sources.
 - **Code touchpoints** — `handoff/src/lib/retired-param.ts`, `handoff/src/components/files/retired-filter.tsx`, `handoff/src/app/w/[slug]/page.tsx`, `handoff/src/app/w/[slug]/library/page.tsx`, `handoff/src/lib/client-boundary.test.ts`.

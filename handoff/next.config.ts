@@ -7,4 +7,6 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-void initOpenNextCloudflareForDev();
+// The Space smoke test (scripts/smoke-spaces.ts) runs `next start` against a local SQLite file with no Cloudflare
+// account, so it turns the local Workers emulation off. Never set this in a real environment.
+if (process.env.HANDOFF_SMOKE_NO_CLOUDFLARE !== "1") void initOpenNextCloudflareForDev();
