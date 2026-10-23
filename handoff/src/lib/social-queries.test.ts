@@ -205,6 +205,38 @@ describe("social read models", () => {
     expect(overview.library.approvedNotScheduled).toBe("/w/acme/library?status=ready");
   });
 
+  it("leaves a project that opted out of the Library out of the social pieces and counts", async () => {
+    const sql = await database();
+    const before = await socialOverview(sql, lead, { domain: "acme.example" }, NOW);
+    if (!before.ok) throw new Error("overview failed");
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, created_at, updated_at, include_in_library)
+       VALUES ('p-print', 'org-1', 'Print run', 'active', ?, ?, 0)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverables (
+         id, organization_id, project_id, workspace_id, title, kind, status, version, published_version,
+         actor_kind, actor_id, created_at, updated_at
+       ) VALUES ('d-print', 'org-1', 'p-print', 'ws-1', 'Print brochure', 'document', 'in_review', 1, 1, 'staff', 'staff-1', ?, ?)`,
+      [NOW, NOW],
+    );
+    await sql.run(
+      `INSERT INTO deliverable_items (
+         id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort
+       ) VALUES ('i-print', 'd-print', 1, NULL, 'static', NULL, 'Brochure', NULL, '[]', NULL, 'approved', 0)`,
+    );
+    const pieces = await listAgentSocialPieces(sql, lead, { client: "acme.example" }, NOW);
+    expect(pieces.ok && pieces.pieces.map((piece) => piece.itemId)).not.toContain("i-print");
+    const overview = await socialOverview(sql, lead, { domain: "acme.example" }, NOW);
+    expect(overview.ok && overview.approvedNotScheduled).toBe(before.approvedNotScheduled);
+    await sql.run("UPDATE projects SET include_in_library = 1 WHERE id = 'p-print'");
+    const back = await listAgentSocialPieces(sql, lead, { client: "acme.example" }, NOW);
+    expect(back.ok && back.pieces.map((piece) => piece.itemId)).toContain("i-print");
+    const after = await socialOverview(sql, lead, { domain: "acme.example" }, NOW);
+    expect(after.ok && after.approvedNotScheduled).toBe(before.approvedNotScheduled + 1);
+  });
+
   it("treats the agent-actions flag as off unless it is explicitly on", () => {
     expect(socialAgentActionsEnabled()).toBe(false);
     process.env.SOCIAL_AGENT_ACTIONS = "on";

@@ -41,6 +41,8 @@ export async function planProjectSpace(
     dealId?: string | null;
     description?: string | null;
     status?: "planned" | "active";
+    /** false: the new project stays out of the Library (print and other non-social work). Default true. */
+    includeInLibrary?: boolean;
     /** Slug words for a new Space of an existing project (a new project already uses its name). */
     spaceName?: string | null;
     now: number;
@@ -56,8 +58,8 @@ export async function planProjectSpace(
     projectId = crypto.randomUUID();
     writes.push({
       statement: `INSERT INTO projects (
-         id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at, description
-       ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?, ?)`,
+         id, organization_id, deal_id, name, status, owner_user_id, starts_at, due_at, created_at, updated_at, description, include_in_library
+       ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?, ?, ?)`,
       params: [
         projectId,
         input.organizationId,
@@ -67,6 +69,7 @@ export async function planProjectSpace(
         input.now,
         input.now,
         input.description?.slice(0, 4000) ?? null,
+        input.includeInLibrary === false ? 0 : 1,
       ],
     });
   }

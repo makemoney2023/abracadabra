@@ -593,6 +593,27 @@ describe("auto-schedule on approval", () => {
   });
 });
 
+describe("auto-schedule skips projects that opted out of the Library", () => {
+  it("posts nothing for a print project's approved pieces, and posts again once the project is switched on", async () => {
+    const sql = await database();
+    const { zernio, posts } = fakeZernio(ACCOUNTS);
+    await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
+    await sql.run(
+      `INSERT INTO projects (id, organization_id, name, status, created_at, updated_at, include_in_library)
+       VALUES ('p-print', 'org-1', 'Print run', 'active', ?, ?, 0)`,
+      [NOW, NOW],
+    );
+    await sql.run("UPDATE deliverables SET project_id = 'p-print' WHERE id = 'd-1'");
+    expect(
+      await saveAutopost(sql, staff, "org-1", { enabled: true, accountIds: ["ig"], weekdays: [0, 1, 2, 3, 4, 5, 6], times: ["09:00"], timezone: "UTC" }, NOW),
+    ).toEqual({ ok: true });
+    expect(await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).toEqual({ scheduled: 0, failed: [] });
+    expect(posts).toHaveLength(0);
+    await sql.run("UPDATE projects SET include_in_library = 1 WHERE id = 'p-print'");
+    expect((await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).scheduled).toBe(2);
+  });
+});
+
 describe("HQ chat social tools", () => {
   it("lists accounts and posts, and schedule_social waits for approval then schedules every approved piece", async () => {
     const sql = await database();

@@ -15,6 +15,7 @@ import {
   postStatusUpdate,
   publishStatusUpdate,
   saveProjectDescription,
+  setProjectLibrary,
   updateProject,
   updateTask,
   type CrmError,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/requirement-tasks";
 import { packsFromTemplates } from "@/lib/pack-picker";
 import { askPackModel, assignOpenTaskPacks } from "@/lib/task-packs";
+import { includeFromForm } from "@/lib/project-library";
 import { dayToUtc } from "./dates";
 
 export type FormState = { message: string };
@@ -72,7 +74,7 @@ export async function createProjectAction(_previous: FormState, formData: FormDa
   const created = await createProject(
     sql,
     caller,
-    { organizationId, name: String(formData.get("name") ?? ""), dueAt: due },
+    { organizationId, name: String(formData.get("name") ?? ""), dueAt: due, includeInLibrary: includeFromForm(formData) },
     Date.now(),
   );
   if (!created.ok) return { message: messageFor(created.error, "Give the project a name.") };
@@ -92,6 +94,18 @@ export async function updateProjectAction(_previous: FormState, formData: FormDa
   if (!saved.ok) return { message: messageFor(saved.error, "Pick a status.") };
   refreshProject(projectId, organizationId);
   return { message: "Status saved." };
+}
+
+export async function setProjectLibraryAction(_previous: FormState, formData: FormData): Promise<FormState> {
+  const { sql, caller } = await requireHqStaffPage();
+  const projectId = String(formData.get("projectId") ?? "");
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const include = includeFromForm(formData);
+  const saved = await setProjectLibrary(sql, caller, { projectId, include }, Date.now());
+  if (!saved.ok) return { message: messageFor(saved.error, "Pick an option.") };
+  refreshProject(projectId, organizationId);
+  revalidatePath("/w", "layout");
+  return { message: include ? "In the Library." : "Out of the Library." };
 }
 
 export async function saveProjectDescriptionAction(_previous: FormState, formData: FormData): Promise<FormState> {

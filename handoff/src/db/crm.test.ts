@@ -34,6 +34,7 @@ import {
   publishStatusUpdate,
   todayFor,
   updateProject,
+  setProjectLibrary,
   updateTask,
   normalizeDomain,
   organizationById,
@@ -763,12 +764,23 @@ describe("projects and work", () => {
     expect(project.ok).toBe(true);
     if (!project.ok) return;
     expect(project.value.status).toBe("planned");
+    expect(project.value.include_in_library).toBe(1);
     expect(project.value.description).toBeNull();
     expect(project.value.organization_id).toBe(made.value.id);
     expect(project.value.owner_user_id).toBe("staff-1");
     expect(await listProjects(sql, staff, made.value.id)).toEqual([project.value]);
     const loaded = await projectById(sql, staff, project.value.id);
     expect(loaded?.name).toBe("Site");
+    const printed = await createProject(sql, staff, { organizationId: made.value.id, name: "Print run", includeInLibrary: false }, NOW);
+    if (!printed.ok) throw new Error("print project");
+    expect(printed.value.include_in_library).toBe(0);
+    expect((await projectById(sql, staff, printed.value.id))?.include_in_library).toBe(0);
+    const sameName = await createProject(sql, staff, { organizationId: made.value.id, name: "print run", includeInLibrary: true }, NOW);
+    expect(sameName.ok && sameName.value.include_in_library).toBe(0);
+    expect(await setProjectLibrary(sql, staff, { projectId: printed.value.id, include: true }, NOW + 1)).toEqual({ ok: true, value: { id: printed.value.id } });
+    expect((await projectById(sql, staff, printed.value.id))?.include_in_library).toBe(1);
+    expect(await setProjectLibrary(sql, { userId: "x", staff: null, operatorOf: [], memberships: [] }, { projectId: printed.value.id, include: false }, NOW)).toEqual({ ok: false, error: "forbidden" });
+    expect(await setProjectLibrary(sql, staff, { projectId: "nope", include: false }, NOW)).toEqual({ ok: false, error: "missing" });
     const moved = await updateProject(sql, staff, { projectId: project.value.id, status: "active" }, NOW + 1);
     expect(moved.ok).toBe(true);
     expect((await projectById(sql, staff, project.value.id))?.status).toBe("active");

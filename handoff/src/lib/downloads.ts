@@ -368,11 +368,15 @@ export type FolderFile = {
   createdAt?: number;
 };
 
-/** Files still in the folder. Thrown-away uploads stay out of the list. */
+/**
+ * Files still in the folder. Thrown-away uploads stay out of the list. Retired files (a superseded or withdrawn agent
+ * filing, hold "hidden") are left out too unless includeRetired is set, which only staff ever get rows for.
+ */
 export async function listFolderFiles(
   sql: Sql,
   caller: Caller,
   workspaceId: string,
+  options: { includeRetired?: boolean } = {},
 ): Promise<FolderFile[]> {
   const visible = await batchesFor(sql, caller, workspaceId);
   if (visible.length === 0) return [];
@@ -400,16 +404,23 @@ export async function listFolderFiles(
      ORDER BY f.relative_path`,
     ids,
   );
-  return rows.map((row) => ({
-    id: row.id,
-    batchId: row.batch_id,
-    name: row.relative_path,
-    sizeBytes: row.size_bytes,
-    status: row.status,
-    createdBy: row.created_by,
-    createdAt: row.created_at,
-    hold: row.hidden_at != null ? "hidden" as const : row.held_at != null && row.released_at == null ? "held" as const : null,
-  }));
+  return rows
+    .filter((row) => options.includeRetired === true || row.hidden_at == null)
+    .map((row) => ({
+      id: row.id,
+      batchId: row.batch_id,
+      name: row.relative_path,
+      sizeBytes: row.size_bytes,
+      status: row.status,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      hold: row.hidden_at != null ? "hidden" as const : row.held_at != null && row.released_at == null ? "held" as const : null,
+    }));
+}
+
+/** How many of these files are retired. Used for the "Show retired" filter count. */
+export function retiredFileCount(files: { hold: FolderFile["hold"] }[]): number {
+  return files.filter((file) => file.hold === "hidden").length;
 }
 
 const OPEN_UPLOAD = new Set(["pending", "uploading", "uploaded", "scanning"]);

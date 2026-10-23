@@ -220,7 +220,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   create_project: {
     label: "Create a project",
     description:
-      "New project for a client. description is the brief in the staff member's words and is stored on the project. A name that already exists returns that project and fills an empty description. One loose space and one loose repo on that client are attached. Several stay listed as looseSpaces and looseRepos. Fields: organizationId, name, description.",
+      "New project for a client. description is the brief in the staff member's words and is stored on the project. A name that already exists returns that project and fills an empty description. One loose space and one loose repo on that client are attached. Several stay listed as looseSpaces and looseRepos. The Library is part of the social pipeline: pass include_in_library false for print and other non-social projects so their finished work stays out of it (default true). Fields: organizationId, name, description, include_in_library.",
   },
   assign_space_project: {
     label: "Assign a space",

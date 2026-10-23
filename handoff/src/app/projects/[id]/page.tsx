@@ -42,6 +42,7 @@ import { AssignRepoForm, AssignSpaceForm } from "../../clients/repo-forms";
 import {
   MilestoneForm,
   ProjectDescriptionForm,
+  ProjectLibraryForm,
   ProjectStatusForm,
   ProjectTaskForm,
   PublishUpdateForm,
@@ -314,6 +315,11 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   projectId={project.id}
                   organizationId={project.organization_id}
                   status={project.status}
+                />
+                <ProjectLibraryForm
+                  projectId={project.id}
+                  organizationId={project.organization_id}
+                  includeInLibrary={project.include_in_library !== 0}
                 />
                 {updates.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No update yet.</p>

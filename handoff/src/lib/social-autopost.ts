@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { libraryEligibleSql } from "./project-library";
 import type { Caller } from "./authz";
 import { commandAuthorized, readCommandGate } from "./social-commands";
 import { sendPiece, zonedTimeToUtc } from "./social";
@@ -217,6 +218,12 @@ export async function autoScheduleApproved(
   }
   const settings = await getAutopost(sql, deliverable.organization_id);
   if (!settings.enabled || settings.accountIds.length === 0) return result;
+  // A project that opted out of the Library (print, for example) is not social work: never auto-post it.
+  const eligible = await sql.get<{ id: string }>(
+    `SELECT d.id FROM deliverables d WHERE d.id = ? AND ${libraryEligibleSql("d.project_id", "d.workspace_id")}`,
+    [input.deliverableId],
+  );
+  if (!eligible) return result;
   const approved = await sql.all<{ id: string; title: string }>(
     `SELECT i.id, i.title FROM deliverable_items i
      WHERE i.deliverable_id = ? AND i.version = ? AND i.status = 'approved' AND i.removed_at IS NULL
