@@ -95,4 +95,37 @@ describe("social review rail", () => {
     );
     expect(client).not.toContain("draggable");
   });
+
+  it("links each row to the piece's approval screen when the rail is given addresses", () => {
+    const html = renderToStaticMarkup(
+      <ReviewList
+        title="Waiting for a look"
+        empty=""
+        selectedId="item-1"
+        onSelect={() => undefined}
+        hrefFor={(row) => `/w/${row.slug}/work/${row.deliverableId}?item=${row.id}`}
+        pieces={[piece({ id: "item-1" }), piece({ id: "item-2", title: "Second" })]}
+      />,
+    );
+    expect(html).toContain('href="/w/acme/work/d-1?item=item-1"');
+    expect(html).toContain('href="/w/acme/work/d-1?item=item-2"');
+    expect(html).toContain('aria-current="true"');
+    expect(html).not.toContain("<button");
+  });
+
+  it("keeps an approved row draggable onto the calendar while it links to its page", () => {
+    const html = renderToStaticMarkup(
+      <ReviewList
+        title="Approved, not on the calendar"
+        empty=""
+        selectedId={null}
+        onSelect={() => undefined}
+        draggableIds={["item-1"]}
+        hrefFor={(row) => `/w/${row.slug}/work/${row.deliverableId}?item=${row.id}`}
+        pieces={[piece({ id: "item-1", status: "approved" })]}
+      />,
+    );
+    expect(html).toContain('draggable="true"');
+    expect(html).toContain('href="/w/acme/work/d-1?item=item-1"');
+  });
 });

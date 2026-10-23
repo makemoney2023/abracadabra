@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { moveSocialPostAction, placeSocialPieceAction } from "@/app/clients/social-actions";
 import { ApproveForm, ChangesForm } from "@/app/w/[slug]/work/forms";
 import { CancelSocialPostForm, MoveSocialPostForm, RetrySocialPostForm } from "@/app/clients/social-forms";
-import { shelfNote } from "@/lib/finished-shelf";
+import { pieceOpenHref, shelfNote } from "@/lib/finished-shelf";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import type { SocialReviewPiece } from "@/lib/social-review";
 import { pictureAddress } from "@/lib/picture-role";
@@ -81,6 +81,7 @@ export function SocialOperationsPanel({
     setSelectedId(id);
     setArmed(true);
   };
+  const openPiece = (piece: SocialReviewPiece) => pieceOpenHref(piece.slug, piece.deliverableId, piece.id);
   const filtered = posts.filter((post) => {
     if (account && post.accountId !== account) return false;
     if (platform && post.platform !== platform) return false;
@@ -186,6 +187,7 @@ export function SocialOperationsPanel({
             selectedId={selectedId}
             onSelect={choose}
             showCount={false}
+            hrefFor={openPiece}
             approvePieceId={approveNode ? selectedPiece?.id ?? null : null}
             approve={approveNode}
           />
@@ -195,6 +197,7 @@ export function SocialOperationsPanel({
             pieces={approved}
             selectedId={selectedId}
             onSelect={choose}
+            hrefFor={openPiece}
             draggableIds={canReschedule ? approved.map((piece) => piece.id) : []}
           />
         </div>

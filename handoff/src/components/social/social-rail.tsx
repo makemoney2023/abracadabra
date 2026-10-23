@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type DragEvent, type ReactNode } from "react";
 import { statusPhrase } from "@/components/library/library-view";
 import { pictureAddress, pictureCount, pictureRole } from "@/lib/picture-role";
@@ -21,6 +22,7 @@ export function ReviewList({
   draggableIds = [],
   approvePieceId = null,
   approve = null,
+  hrefFor,
 }: {
   title: string;
   empty: string;
@@ -31,6 +33,8 @@ export function ReviewList({
   draggableIds?: string[];
   approvePieceId?: string | null;
   approve?: ReactNode;
+  /** Where a row goes when it is clicked. Without it a row only selects. */
+  hrefFor?: (piece: SocialReviewPiece) => string;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -46,20 +50,11 @@ export function ReviewList({
           const draggable = draggableIds.includes(piece.id);
           return (
             <li key={piece.id}>
-              <button
-                type="button"
-                onClick={() => onSelect(piece.id)}
-                aria-pressed={selectedId === piece.id}
-                {...(draggable
-                  ? {
-                      draggable: true,
-                      onDragStart: (event: DragEvent<HTMLButtonElement>) => {
-                        event.dataTransfer.setData("text/piece-id", piece.id);
-                        event.dataTransfer.effectAllowed = "move";
-                      },
-                    }
-                  : {})}
-                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm ${selectedId === piece.id ? "border-foreground" : "border-border"}`}
+              <Row
+                href={hrefFor ? hrefFor(piece) : null}
+                selected={selectedId === piece.id}
+                onSelect={() => onSelect(piece.id)}
+                dragId={draggable ? piece.id : null}
               >
                 <RailThumb
                   src={role ? pictureAddress(piece.deliverableId, piece.id, role) : null}
@@ -72,13 +67,51 @@ export function ReviewList({
                     {statusPhrase(piece.status)} · {piece.deliverableTitle}
                   </span>
                 </span>
-              </button>
+              </Row>
               {approve && approvePieceId === piece.id ? approve : null}
             </li>
           );
         })}
       </ul>
     </div>
+  );
+}
+
+/** One rail entry: a link to the piece's approval screen, or a plain select button. */
+function Row({
+  href,
+  selected,
+  onSelect,
+  dragId,
+  children,
+}: {
+  href: string | null;
+  selected: boolean;
+  onSelect: () => void;
+  dragId: string | null;
+  children: ReactNode;
+}) {
+  const className = `flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm ${selected ? "border-foreground" : "border-border"}`;
+  const drag = dragId
+    ? {
+        draggable: true,
+        onDragStart: (event: DragEvent<HTMLElement>) => {
+          event.dataTransfer.setData("text/piece-id", dragId);
+          event.dataTransfer.effectAllowed = "move";
+        },
+      }
+    : {};
+  if (href) {
+    return (
+      <Link href={href} aria-current={selected ? "true" : undefined} className={className} {...drag}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onSelect} aria-pressed={selected} className={className} {...drag}>
+      {children}
+    </button>
   );
 }
 

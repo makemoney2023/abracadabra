@@ -78,6 +78,10 @@ export async function feedbackAction(_previous: FormState, formData: FormData): 
   revalidatePath(`/w/${slug}/work`);
   revalidatePath(`/w/${slug}/work/${saved.value.id}`);
   revalidatePath(`/w/${slug}/social`);
+  // Approving can put the piece on the calendar, which takes it off the Social side rail and the Library's counts.
+  revalidatePath(`/w/${slug}/library`);
+  const owner = await sql.get<{ organization_id: string }>("SELECT organization_id FROM deliverables WHERE id = ?", [saved.value.id]);
+  if (owner?.organization_id) revalidatePath(`/clients/${owner.organization_id}`);
   const next = feedbackReturnPath(slug, String(formData.get("returnTo") ?? ""), Boolean(caller.staff));
   if (next?.startsWith("/clients/")) revalidatePath(next.split("?")[0] ?? next);
   const destination = next ? appendSent(next, SENT[decision]) : `/w/${slug}/work/${saved.value.id}?sent=${SENT[decision]}`;

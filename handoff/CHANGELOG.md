@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-23
+
+- **What changed** — On the Social tab (client space `/w/<slug>/social` and the staff `/clients/<id>?tab=social`), each entry in the left rail ("Waiting for a look" and "Approved, not on the calendar") is now a link that opens the piece's approval screen, `/w/<slug>/work/<deliverable>?item=<piece>`. Approved entries can still be dragged onto the calendar. A piece leaves the rail once a post for it is on the calendar: sending, scheduled, published, partly published, or a dated draft. Approving a piece now also refreshes the Library and the staff client page, so the rail is current when you come back.
+- **Why** — Clicking an entry only highlighted it, and an approved piece that had been placed on the next free slot could be left on the rail.
+- **Code touchpoints** — `handoff/src/components/social/social-rail.tsx`, `handoff/src/components/social/social-operations-panel.tsx`, `handoff/src/components/social/social-board.ts` (`scheduledItemIds`), `handoff/src/app/w/[slug]/social/page.tsx`, `handoff/src/app/clients/[id]/page.tsx`, `handoff/src/app/w/[slug]/work/actions.ts`.
+- **Data-flow impact** — Reads only: the same `social_posts` rows, now with dated drafts counted as on the calendar. Approval still goes through `feedbackAction` and `autoScheduleApproved`; it adds `revalidatePath` for the Library and the client page and one read of `deliverables.organization_id`.
+- **API / schema impact** — none. No migration.
+- **Verification** — `TZ=UTC npx vitest run src/components/social`, `npx tsc --noEmit`, `npx eslint` on the touched files, `TZ=UTC npm test`, `npm run build`.
+
 ## 2026-10-22
 
 - **What changed** — `POST /api/agent-media` now says why a model call failed. A 402 from the model (the Cloudflare account has no partner-model credit) comes back as HTTP 402 `Model credits exhausted on the Cloudflare account.` with `reason: "credits_exhausted"`. Other failures stay 502 with a short safe sentence and a `reason` of `bad_input`, `rate_limited`, `empty_output` or `model_error`. The real status and a redacted one-line detail go to the server log (`agent-media model failure`), with no prompt, image or key. Also, `flux-2-dev` is now sent as multipart, and the Flux multipart body is passed as a stream, as Cloudflare's Workers AI docs show for `flux-2-dev` and `flux-2-klein-9b`.
