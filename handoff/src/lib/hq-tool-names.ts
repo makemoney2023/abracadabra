@@ -190,7 +190,7 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
   set_agent_social_permission: {
     label: "Set an agent's social permission",
     description:
-      "Turn scheduling on or off for one function agent on one client. canSchedule lets it schedule, move and cancel (move and cancel still need approval); canPublishNow also lets it publish now, with no per-post approval when the card is Done and the piece approved. Default is off. Fields: organizationId, agentId, canSchedule, canPublishNow, platforms.",
+      "Turn scheduling on or off for one function agent on one client. canSchedule lets it schedule, move and cancel (move and cancel still need approval); canPublishNow also lets it publish now, with no per-post approval when the card is Done and the piece approved. canApprove lets it approve or un-approve a single social piece (it never schedules; leave it out to keep the current value). Default is off. Fields: organizationId, agentId, canSchedule, canPublishNow, canApprove, platforms.",
   },
   list_work_requests: { label: "Client requests", description: "Requests from client email and Slack. Fields: organizationId." },
   create_client: {

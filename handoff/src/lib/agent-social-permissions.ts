@@ -11,6 +11,8 @@ export type AgentSocialPermission = {
   organizationId: string;
   canSchedule: boolean;
   canPublishNow: boolean;
+  /** May approve or un-approve one social piece (migration 0052). Independent of scheduling. */
+  canApprove: boolean;
   platforms: string[];
 };
 
@@ -25,8 +27,8 @@ function platformList(raw: string | null | undefined): string[] {
 }
 
 export async function getAgentSocialPermission(sql: Sql, agentId: string, organizationId: string): Promise<AgentSocialPermission | null> {
-  const row = await sql.get<{ can_schedule: number; can_publish_now: number; platforms: string }>(
-    "SELECT can_schedule, can_publish_now, platforms FROM agent_social_permissions WHERE agent_id = ? AND organization_id = ?",
+  const row = await sql.get<{ can_schedule: number; can_publish_now: number; can_approve: number; platforms: string }>(
+    "SELECT can_schedule, can_publish_now, can_approve, platforms FROM agent_social_permissions WHERE agent_id = ? AND organization_id = ?",
     [agentId, organizationId],
   );
   if (!row) return null;
@@ -35,6 +37,7 @@ export async function getAgentSocialPermission(sql: Sql, agentId: string, organi
     organizationId,
     canSchedule: row.can_schedule === 1,
     canPublishNow: row.can_schedule === 1 && row.can_publish_now === 1,
+    canApprove: row.can_approve === 1,
     platforms: platformList(row.platforms),
   };
 }
@@ -43,14 +46,16 @@ export async function getAgentSocialPermission(sql: Sql, agentId: string, organi
  * What the policy evaluator should add for this agent. A lead is left alone (`platforms: null` means no network limit).
  * A hire with no permission loses every scheduling capability, so a plan is denied as `capability_revoked`. A hire
  * with can_schedule keeps schedule, reschedule, cancel and retry requests; publish-now only comes with can_publish_now.
+ * Approving a piece (social.approve) is its own flag, can_approve, and does not depend on can_schedule.
  */
 export function permissionEffect(
   role: "lead" | "hire",
   permission: AgentSocialPermission | null,
 ): { grant: SocialCapability[]; revoke: SocialCapability[]; platforms: string[] | null } {
   if (role === "lead") return { grant: [], revoke: [], platforms: null };
-  if (!permission || !permission.canSchedule) return { grant: [], revoke: [...SCHEDULING_CAPS], platforms: permission?.platforms ?? [...DEFAULT_AGENT_PLATFORMS] };
-  const grant: SocialCapability[] = permission.canPublishNow ? ["social.publish_now"] : [];
+  const approve: SocialCapability[] = permission?.canApprove ? ["social.approve"] : [];
+  if (!permission || !permission.canSchedule) return { grant: approve, revoke: [...SCHEDULING_CAPS], platforms: permission?.platforms ?? [...DEFAULT_AGENT_PLATFORMS] };
+  const grant: SocialCapability[] = [...approve, ...(permission.canPublishNow ? (["social.publish_now"] as SocialCapability[]) : [])];
   const revoke: SocialCapability[] = permission.canPublishNow ? [] : ["social.publish_now"];
   return { grant, revoke, platforms: permission.platforms };
 }
@@ -64,6 +69,8 @@ export async function setAgentSocialPermission(
     organizationId: string;
     canSchedule: boolean;
     canPublishNow?: boolean;
+    /** Leave undefined to keep what the row already says (a new row starts off). */
+    canApprove?: boolean;
     platforms?: string[];
     now: number;
   },
@@ -77,13 +84,14 @@ export async function setAgentSocialPermission(
   if (!assigned) return { ok: false, reasonCode: "not_assigned" };
   const platforms = platformList((input.platforms ?? DEFAULT_AGENT_PLATFORMS).join(","));
   const canPublishNow = input.canSchedule && input.canPublishNow === true;
+  const canApprove = input.canApprove ?? (await getAgentSocialPermission(sql, input.agentId, input.organizationId))?.canApprove ?? false;
   await sql.run(
-    `INSERT INTO agent_social_permissions (agent_id, organization_id, can_schedule, can_publish_now, platforms, granted_by, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO agent_social_permissions (agent_id, organization_id, can_schedule, can_publish_now, can_approve, platforms, granted_by, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (agent_id, organization_id) DO UPDATE SET can_schedule = excluded.can_schedule,
-       can_publish_now = excluded.can_publish_now, platforms = excluded.platforms, granted_by = excluded.granted_by,
-       updated_at = excluded.updated_at`,
-    [input.agentId, input.organizationId, input.canSchedule ? 1 : 0, canPublishNow ? 1 : 0, platforms.join(","), `${input.by.kind}:${input.by.id}`, input.now],
+       can_publish_now = excluded.can_publish_now, can_approve = excluded.can_approve, platforms = excluded.platforms,
+       granted_by = excluded.granted_by, updated_at = excluded.updated_at`,
+    [input.agentId, input.organizationId, input.canSchedule ? 1 : 0, canPublishNow ? 1 : 0, canApprove ? 1 : 0, platforms.join(","), `${input.by.kind}:${input.by.id}`, input.now],
   );
   await sql.run(
     `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
@@ -94,10 +102,10 @@ export async function setAgentSocialPermission(
       input.by.kind === "staff" ? "staff" : "system",
       input.by.id,
       `Set social publishing permission for ${input.agentId}.`,
-      JSON.stringify({ agentId: input.agentId, canSchedule: input.canSchedule, canPublishNow, platforms }),
+      JSON.stringify({ agentId: input.agentId, canSchedule: input.canSchedule, canPublishNow, canApprove, platforms }),
       input.now,
     ],
   );
-  return { ok: true, permission: { agentId: input.agentId, organizationId: input.organizationId, canSchedule: input.canSchedule, canPublishNow, platforms } };
+  return { ok: true, permission: { agentId: input.agentId, organizationId: input.organizationId, canSchedule: input.canSchedule, canPublishNow, canApprove, platforms } };
 }
 

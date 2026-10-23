@@ -324,6 +324,7 @@ async function setAgentPermission(sql: Sql, userId: string, orgId: string, input
     organizationId: orgId,
     canSchedule: input.canSchedule === true,
     canPublishNow: input.canPublishNow === true,
+    canApprove: typeof input.canApprove === "boolean" ? input.canApprove : undefined,
     platforms,
     now,
   });

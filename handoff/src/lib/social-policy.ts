@@ -10,6 +10,7 @@ export const SOCIAL_CAPABILITIES = [
   "social.account.disconnect",
   "social.failure.retry",
   "social.analytics.read",
+  "social.approve",
 ] as const;
 
 export type SocialCapability = (typeof SOCIAL_CAPABILITIES)[number];
@@ -26,6 +27,7 @@ export type SocialAction =
   | "reschedule"
   | "cancel"
   | "publish_now"
+  | "approve_piece"
   | "retry"
   | "cadence_change"
   | "connect"
@@ -84,6 +86,7 @@ const ACTION_CAPABILITY: Partial<Record<SocialAction, SocialCapability>> = {
   reschedule: "social.schedule.manage",
   cancel: "social.schedule.manage",
   publish_now: "social.publish_now",
+  approve_piece: "social.approve",
   retry: "social.failure.retry",
   cadence_change: "social.cadence.manage",
   connect: "social.account.connect",
@@ -111,7 +114,7 @@ function visibleCapabilities(actor: SocialActor, held: Set<SocialCapability>): S
   const ordered = SOCIAL_CAPABILITIES.filter((cap) => held.has(cap));
   if (actor.kind !== "agent") return ordered;
   if (actor.mode === "observe") return ordered.filter((cap) => cap === "social.read" || cap === "social.analytics.read");
-  if (actor.mode === "draft") return ordered.filter((cap) => cap !== "social.schedule" && cap !== "social.failure.retry");
+  if (actor.mode === "draft") return ordered.filter((cap) => cap !== "social.schedule" && cap !== "social.failure.retry" && cap !== "social.approve");
   if (actor.mode === "schedule_approved") return ordered.filter((cap) => cap !== "social.failure.retry");
   return ordered;
 }
@@ -119,7 +122,7 @@ function visibleCapabilities(actor: SocialActor, held: Set<SocialCapability>): S
 function modeDenial(mode: AgentPublishMode, action: SocialAction): string | null {
   if (action === "read" || action === "policy_change") return null;
   if (mode === "observe") return "policy_observe";
-  if (mode === "draft" && (action === "schedule" || action === "reschedule" || action === "retry")) return "policy_draft";
+  if (mode === "draft" && (action === "schedule" || action === "reschedule" || action === "retry" || action === "approve_piece")) return "policy_draft";
   if (mode === "schedule_approved" && (action === "reschedule" || action === "retry")) return "policy_mode";
   return null;
 }
