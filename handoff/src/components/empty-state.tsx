@@ -1,9 +1,18 @@
 import * as React from "react";
 
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 
 /**
  * The one empty state for every HQ list. Plain words, one next step.
+ * Built on the shadcn `Empty` pieces.
  */
 export function EmptyState({
   icon,
@@ -19,26 +28,20 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div
+    <Empty
       data-slot="empty-state"
-      className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border px-6 py-12 text-center",
-        className,
-      )}
+      className={cn("rounded-lg border border-dashed border-border py-12", className)}
     >
-      {icon ? (
-        <div
-          aria-hidden
-          className="flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground [&_svg]:size-5"
-        >
-          {icon}
-        </div>
-      ) : null}
-      <div className="space-y-1">
-        <p className="font-heading text-base font-medium text-foreground">{title}</p>
-        {body ? <p className="mx-auto max-w-sm text-sm text-muted-foreground">{body}</p> : null}
-      </div>
-      {action ? <div className="flex items-center gap-2">{action}</div> : null}
-    </div>
+      <EmptyHeader>
+        {icon ? (
+          <EmptyMedia variant="icon" aria-hidden>
+            {icon}
+          </EmptyMedia>
+        ) : null}
+        <EmptyTitle className="text-base">{title}</EmptyTitle>
+        {body ? <EmptyDescription>{body}</EmptyDescription> : null}
+      </EmptyHeader>
+      {action ? <EmptyContent className="flex-row justify-center">{action}</EmptyContent> : null}
+    </Empty>
   );
 }

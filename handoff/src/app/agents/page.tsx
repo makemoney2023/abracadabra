@@ -15,10 +15,10 @@ import { suggestPacksForClient, type PackSuggestion } from "@/lib/skill-suggest"
 import { SkillUsageCard } from "./skill-usage-card";
 import { cfEnv } from "@/lib/client-services-auth";
 import { requireHqStaffPage } from "@/lib/current";
-import { formatRelative } from "@/lib/format";
 import type { SkillBucket } from "@/lib/skill-library";
 import { isLiveSuperAdmin } from "@/lib/store/staff";
 import { DataTable, type Column } from "@/components/data-table";
+import { RelativeTime } from "@/components/data-table-cells";
 import { EmptyState } from "@/components/empty-state";
 import { PageFrame } from "@/components/page-frame";
 import { Badge } from "@/components/ui/badge";
@@ -43,10 +43,11 @@ const STATUS: Record<AgentRow["status"], { label: string; variant: "secondary" |
   revoked: { label: "Revoked", variant: "destructive" },
 };
 
-export default async function AgentsPage({ searchParams }: { searchParams?: Promise<{ usage?: string }> }) {
+export default async function AgentsPage({ searchParams }: { searchParams?: Promise<{ usage?: string; q?: string; status?: string }> }) {
   const { sql, caller } = await requireHqStaffPage();
   const query = (await searchParams) ?? {};
   const days = usageWindow(query.usage);
+  const basePath = query.usage ? `/agents?usage=${encodeURIComponent(query.usage)}` : "/agents";
   const [agents, clientGrants, choices, packs, isAdmin] = await Promise.all([
     listAgentsForStaff(sql, caller),
     listClientGrants(sql, caller),
@@ -138,7 +139,8 @@ export default async function AgentsPage({ searchParams }: { searchParams?: Prom
     {
       key: "lastActivity",
       header: "Last activity",
-      cell: (row) => (row.lastActivity == null ? <span className="text-muted-foreground">Never</span> : formatRelative(row.lastActivity, now)),
+      cell: (row) =>
+        row.lastActivity == null ? <span className="text-muted-foreground">Never</span> : <RelativeTime at={row.lastActivity} now={now} />,
     },
     {
       key: "actions",
@@ -167,6 +169,17 @@ export default async function AgentsPage({ searchParams }: { searchParams?: Prom
             columns={columns}
             rows={agents}
             rowKey={(row) => row.id}
+            basePath={basePath}
+            id="agents"
+            query={query}
+            search={{
+              label: "Search agents",
+              text: (row) =>
+                `${row.label} ${row.id} ${row.assignments.map((item) => item.organizationName).join(" ")}`,
+            }}
+            filters={[{ key: "status", label: "Status", get: (row) => STATUS[row.status].label }]}
+            pageSize={25}
+            columnPicker
             empty={
               <EmptyState
                 title="No agents yet"

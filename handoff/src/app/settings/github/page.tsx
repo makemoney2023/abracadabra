@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { sortRows } from "@/components/data-table-sort";
 import { DataTable, type Column } from "@/components/data-table";
+import { RelativeTime } from "@/components/data-table-cells";
+import { firstParam, type RawQuery } from "@/components/data-table-query";
 import { EmptyState } from "@/components/empty-state";
 import { ExternalLink } from "@/components/external-link";
 import { StatusDot } from "@/components/status-dot";
@@ -9,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { clock } from "@/lib/clock";
 import { requireHqSuperAdminPage } from "@/lib/current";
-import { formatCount, formatRelative } from "@/lib/format";
+import { formatCount } from "@/lib/format";
 import { githubInstallHref, listVisibleRepos, type VisibleInstall } from "@/lib/github/app";
 import { rememberInstallations } from "@/lib/github/installs";
 import { readGithubSecrets } from "@/lib/github/secrets";
@@ -48,7 +50,7 @@ function columns(now: number): Column<RepoTableRow>[] {
       key: "activity",
       header: "Last activity",
       sortable: true,
-      cell: (row) => (row.lastAt == null ? "" : formatRelative(row.lastAt, now)),
+      cell: (row) => <RelativeTime at={row.lastAt} now={now} />,
     },
   ];
 }
@@ -95,7 +97,7 @@ function connectionCards(installs: VisibleInstall[]) {
 export default async function GithubSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<RawQuery>;
 }) {
   const { sql } = await requireHqSuperAdminPage();
   const secrets = readGithubSecrets();
@@ -137,7 +139,7 @@ export default async function GithubSettingsPage({
   const query = await searchParams;
   const rows = sortRows(
     repoTableRows(listed.value, mapped),
-    query.sort,
+    firstParam(query.sort) || undefined,
     sortValue,
   );
 
@@ -148,8 +150,11 @@ export default async function GithubSettingsPage({
         columns={columns(now)}
         rows={rows}
         rowKey={(row) => String(row.id)}
-        sort={query.sort}
+        sort={firstParam(query.sort) || undefined}
         basePath="/settings/github"
+        query={query}
+        search={{ label: "Search repos", text: (row) => `${row.fullName} ${row.client}` }}
+        pageSize={25}
         empty={<EmptyState title="No repos on this install." body="Install the app on a repo, then open this page again." />}
       />
     </div>

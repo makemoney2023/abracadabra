@@ -24,8 +24,8 @@ export function nextSort(current: string | undefined, key: string): string {
 }
 
 /**
- * Header link for one column. Keeps the rest of the query string and drops
- * `sort` when the cycle turns the column off.
+ * Header link for one column. Keeps the rest of the query string, goes back
+ * to page 1, and drops `sort` when the cycle turns the column off.
  */
 export function sortHref(basePath: string, sort: string | undefined, key: string): string {
   const next = nextSort(sort, key);
@@ -37,6 +37,8 @@ export function sortHref(basePath: string, sort: string | undefined, key: string
   const params = new URLSearchParams(queryAt >= 0 ? bare.slice(queryAt + 1) : "");
   if (next) params.set("sort", next);
   else params.delete("sort");
+  // A new order starts again at the first page.
+  params.delete("page");
   const qs = params.toString();
   return `${path}${qs ? `?${qs}` : ""}${hash}`;
 }

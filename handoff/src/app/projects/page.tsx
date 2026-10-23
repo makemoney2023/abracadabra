@@ -1,10 +1,11 @@
 import { STATUS_HEALTHS, listProjects, listWork, type StatusHealth } from "@/db/crm";
 import { clock } from "@/lib/clock";
 import { requireHqStaffPage } from "@/lib/current";
-import { formatRelative } from "@/lib/format";
 import { statusToken } from "@/lib/status-token";
 import { sortRows } from "@/components/data-table-sort";
 import { DataTable, type Column } from "@/components/data-table";
+import { RelativeTime } from "@/components/data-table-cells";
+import { firstParam, type RawQuery } from "@/components/data-table-query";
 import { EmptyState } from "@/components/empty-state";
 import { PageFrame } from "@/components/page-frame";
 import { StatusBadge } from "@/components/status-badge";
@@ -71,7 +72,7 @@ function columns(now: number): Column<ProjectIndexRow>[] {
       key: "due",
       header: "Due",
       sortable: true,
-      cell: (row) => (row.dueAt === null ? "" : formatRelative(row.dueAt, now)),
+      cell: (row) => <RelativeTime at={row.dueAt} now={now} />,
     },
     {
       key: "open",
@@ -86,10 +87,10 @@ function columns(now: number): Column<ProjectIndexRow>[] {
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<RawQuery>;
 }) {
   const query = await searchParams;
-  const sort = typeof query.sort === "string" ? query.sort : undefined;
+  const sort = firstParam(query.sort) || undefined;
   const { sql, caller } = await requireHqStaffPage();
   const now = clock();
   const [projects, tasks, orgs, health] = await Promise.all([
@@ -129,8 +130,21 @@ export default async function ProjectsPage({
           rows={rows}
           rowKey={(row) => row.id}
           rowHref={(row) => `/projects/${row.id}`}
+          rowLabel={(row) => row.project}
           sort={sort}
           basePath="/projects"
+          query={query}
+          search={{
+            label: "Search projects",
+            text: (row) => `${row.client} ${row.project} ${row.status}`,
+          }}
+          filters={[
+            { key: "status", label: "Status", get: (row) => statusToken("project", row.status).label },
+            { key: "health", label: "Health", get: (row) => (row.health ? statusToken("health", row.health).label : null) },
+            { key: "client", label: "Client", get: (row) => row.client },
+          ]}
+          pageSize={25}
+          columnPicker
           empty={<EmptyState title="No projects yet." body="Projects show up here when a client has one." />}
         />
       </PageFrame>

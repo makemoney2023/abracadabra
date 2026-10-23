@@ -81,4 +81,8 @@ describe("sortRows", () => {
     sortRows(rows, "name", get);
     expect(rows).toEqual(copy);
   });
+
+  it("goes back to page 1 when the order changes", () => {
+    expect(sortHref("/clients?page=3&q=foam", undefined, "name")).toBe("/clients?q=foam&sort=name");
+  });
 });
