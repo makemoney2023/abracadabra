@@ -8,6 +8,7 @@ import { calendarTimeZone } from "@/components/social/social-calendar";
 import { SocialOperationsPanel } from "@/components/social/social-operations-panel";
 import { listSocialAccounts, listSocialPosts, syncSocialAccounts, type SocialAccount, type SocialPost } from "@/lib/social";
 import { approvalControlLabel, DEFAULT_AUTOPOST, getAutopost, type Autopost } from "@/lib/social-autopost";
+import { loadPostPreviews } from "@/lib/social-post-previews";
 import { listSocialReviewPieces } from "@/lib/social-review";
 import { scheduledItemIds } from "@/components/social/social-board";
 import { ELIGIBLE_CONNECT_PLATFORMS, PLATFORM_LABEL, openZernio } from "@/lib/zernio";
@@ -67,6 +68,7 @@ export default async function SpaceSocialPage({
     : { waiting: [], ready: [], catalog: [] };
   const timeZone = calendarTimeZone(cadence, posts.map((post) => post.timezone || ""));
   const cards = calendarPosts(posts, accounts, review.catalog);
+  const previews = await loadPostPreviews(sql, posts, accounts, { staff: false });
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-[4rem]">
       <h1 className="font-heading text-4xl leading-tight">Social</h1>
@@ -140,6 +142,7 @@ export default async function SpaceSocialPage({
             initialPostId={query.post || null}
             scheduleNotice={query.schedule || null}
             librarySlug={slug}
+            previews={previews}
           />
         </CardContent>
       </Card>

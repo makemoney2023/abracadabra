@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { CalendarClockIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { postActionState } from "@/lib/social-post-guard";
 import { PLATFORM_LABEL } from "@/lib/zernio";
 import { approvalTone, calendarStatusLabel, type ApprovalTone } from "./social-board";
 import {
@@ -35,48 +37,73 @@ const TONE: Record<ApprovalTone, string> = {
   draft: "border-muted-foreground/40",
 };
 
+export type QuickAction = "reschedule" | "remove";
+
 const MODE_LABEL: Record<CalendarMode, string> = { day: "Day", week: "Week", month: "Month" };
+
+const QUICK_BUTTON =
+  "inline-flex size-6 items-center justify-center rounded-md border border-border bg-background text-foreground opacity-0 outline-none hover:bg-muted focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/chip:opacity-100 group-focus-within/chip:opacity-100";
 
 function Chip({
   post,
   selected,
   draggable,
   onSelect,
+  onQuick,
 }: {
   post: PlacedPost & CalendarEvent;
   selected: boolean;
   draggable: boolean;
   onSelect: (id: string) => void;
+  onQuick?: (id: string, action: QuickAction) => void;
 }) {
   const tone = approvalTone({ state: post.state, approval: post.approval, cancelled: post.cancelled });
   if (!tone) return null;
+  const allowed = onQuick ? postActionState({ status: post.state }) : null;
   return (
-    <button
-      type="button"
-      draggable={draggable}
-      onDragStart={(event) => {
-        event.dataTransfer.setData("text/post-id", post.id);
-        event.dataTransfer.setData("text/post-hour", String(post.hour));
-        event.dataTransfer.setData("text/post-minute", String(post.minute));
-        event.dataTransfer.effectAllowed = "move";
-      }}
-      onClick={() => onSelect(post.id)}
-      className={`flex w-full flex-col gap-0.5 rounded-md border border-l-4 px-1.5 py-1 text-left text-xs ${TONE[tone]} ${selected ? "ring-2 ring-ring" : ""}`}
-      aria-pressed={selected}
-    >
-      <span className="flex items-center gap-1">
-        {post.thumbnailSrc ? (
-          // The picture is served only when this caller can see the space.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt="" className="size-5 rounded object-cover" src={post.thumbnailSrc} onError={(event) => { event.currentTarget.style.display = "none"; }} />
-        ) : null}
-        <span className="tabular-nums text-muted-foreground">{post.timeLabel}</span>
-      </span>
-      <span className="truncate font-medium">{post.title}</span>
-      <span className="truncate text-muted-foreground">
-        {(PLATFORM_LABEL[post.platform] ?? post.platform) || "Post"} · {calendarStatusLabel(post.state)}
-      </span>
-    </button>
+    <div className="group/chip relative">
+      <button
+        type="button"
+        draggable={draggable}
+        onDragStart={(event) => {
+          event.dataTransfer.setData("text/post-id", post.id);
+          event.dataTransfer.setData("text/post-hour", String(post.hour));
+          event.dataTransfer.setData("text/post-minute", String(post.minute));
+          event.dataTransfer.effectAllowed = "move";
+        }}
+        onClick={() => onSelect(post.id)}
+        className={`flex w-full flex-col gap-0.5 rounded-md border border-l-4 px-1.5 py-1 text-left text-xs ${TONE[tone]} ${selected ? "ring-2 ring-ring" : ""}`}
+        aria-pressed={selected}
+        aria-haspopup="dialog"
+      >
+        <span className="flex items-center gap-1">
+          {post.thumbnailSrc ? (
+            // The picture is served only when this caller can see the space.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img alt="" className="size-5 rounded object-cover" src={post.thumbnailSrc} onError={(event) => { event.currentTarget.style.display = "none"; }} />
+          ) : null}
+          <span className="tabular-nums text-muted-foreground">{post.timeLabel}</span>
+        </span>
+        <span className="truncate font-medium">{post.title}</span>
+        <span className="truncate text-muted-foreground">
+          {(PLATFORM_LABEL[post.platform] ?? post.platform) || "Post"} · {calendarStatusLabel(post.state)}
+        </span>
+      </button>
+      {allowed && (allowed.canReschedule || allowed.canRemove) ? (
+        <span className="absolute bottom-1 right-1 flex gap-1" data-testid="chip-quick-actions">
+          {allowed.canReschedule ? (
+            <button type="button" className={QUICK_BUTTON} aria-label={`Reschedule ${post.title}`} onClick={() => onQuick?.(post.id, "reschedule")}>
+              <CalendarClockIcon className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+          {allowed.canRemove ? (
+            <button type="button" className={QUICK_BUTTON} aria-label={`Remove ${post.title}`} onClick={() => onQuick?.(post.id, "remove")}>
+              <Trash2Icon className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -127,6 +154,7 @@ export function SocialCalendarView({
   canReschedule,
   onMove,
   onPlace,
+  onQuick,
 }: {
   posts: CalendarEvent[];
   timeZone: string;
@@ -137,6 +165,8 @@ export function SocialCalendarView({
   canReschedule: boolean;
   onMove?: (postId: string, startAt: string) => void;
   onPlace?: (pieceId: string, startAt: string) => void;
+  /** Small Reschedule and Remove buttons on a chip, shown on hover and keyboard focus. Staff only. */
+  onQuick?: (postId: string, action: QuickAction) => void;
 }) {
   const [mode, setMode] = React.useState<CalendarMode>(initialMode);
   const [anchor, setAnchor] = React.useState(now);
@@ -190,7 +220,7 @@ export function SocialCalendarView({
                 <span className="pt-1 text-xs tabular-nums text-muted-foreground">{hourLabel(hour)}</span>
                 <div className="flex min-h-8 flex-col gap-1">
                   {rows.map((post) => (
-                    <Chip key={post.id} post={post} selected={selectedId === post.id} draggable={canReschedule && post.state === "scheduled"} onSelect={onSelect} />
+                    <Chip key={post.id} post={post} selected={selectedId === post.id} draggable={canReschedule && post.state === "scheduled"} onSelect={onSelect} onQuick={onQuick} />
                   ))}
                 </div>
               </div>
@@ -227,7 +257,7 @@ export function SocialCalendarView({
                 {mode === "month" && day.posts.length > 3 ? (
                   <>
                     {day.posts.slice(0, 2).map((post) => (
-                      <Chip key={post.id} post={post} selected={selectedId === post.id} draggable={canReschedule && post.state === "scheduled"} onSelect={onSelect} />
+                      <Chip key={post.id} post={post} selected={selectedId === post.id} draggable={canReschedule && post.state === "scheduled"} onSelect={onSelect} onQuick={onQuick} />
                     ))}
                     <button
                       type="button"
@@ -242,7 +272,7 @@ export function SocialCalendarView({
                   </>
                 ) : (
                   day.posts.map((post) => (
-                    <Chip key={post.id} post={post} selected={selectedId === post.id} draggable={canReschedule && post.state === "scheduled"} onSelect={onSelect} />
+                    <Chip key={post.id} post={post} selected={selectedId === post.id} draggable={canReschedule && post.state === "scheduled"} onSelect={onSelect} onQuick={onQuick} />
                   ))
                 )}
               </section>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { calendarPosts } from "@/components/social/calendar-posts";
 import { calendarTimeZone } from "@/components/social/social-calendar";
+import type { PostPreviewData } from "@/components/social/post-preview-model";
 import { SocialOperationsPanel } from "@/components/social/social-operations-panel";
 import { POST_STATUS_LABEL, type SocialAccount, type SocialPost } from "@/lib/social";
 import { approvalControlLabel, CADENCE_SENTENCE, type Autopost } from "@/lib/social-autopost";
@@ -33,6 +34,7 @@ export type SocialView = {
   pieceId: string;
   postId: string;
   scheduleNotice: string;
+  previews: Record<string, PostPreviewData>;
 };
 
 const NOTICE: Record<string, string> = {
@@ -194,6 +196,7 @@ export function SocialTab({ organizationId, social }: { organizationId: string; 
             approveLabel={approvalControlLabel(social.autopost)}
             organizationId={organizationId}
             canReschedule
+            previews={social.previews}
             initialPieceId={social.pieceId || null}
             initialPostId={social.postId || null}
             scheduleNotice={social.scheduleNotice || null}
