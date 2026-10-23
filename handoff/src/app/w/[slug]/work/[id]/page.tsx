@@ -14,7 +14,8 @@ import { pieceSettings } from "@/lib/social";
 import { approvalControlLabel, getAutopost } from "@/lib/social-autopost";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia } from "../../../../deliverables/labels";
+import { DELIVERABLE_STATUS_LABEL, ITEM_FORMAT_LABEL, listedMedia, playableMedia } from "../../../../deliverables/labels";
+import { VideoPlayer } from "@/components/video-player";
 import { ApproveAllForm, ChangesForm, NoteForm, PieceDecision } from "../forms";
 import { sentConfirmation } from "../sent";
 import { can } from "@/lib/authz";
@@ -115,13 +116,16 @@ export default async function FinishedPiecePage({
   const filingTitles = new Set([...filings.values()].map((filing) => filing.title));
   const indexPieces = items.flatMap((item) => {
     if (isSummaryFile(item.title) && item.section && filingTitles.has(item.section)) return [];
-    const picture = listedMedia(item.media_json).find((entry) => entry.image || entry.video);
+    const listed = listedMedia(item.media_json);
+    const picture = listed.find((entry) => entry.image || entry.video);
+    // The thumbnail is a still: a clip's poster, else the first picture. A clip itself is never an <img>.
+    const still = listed.find((entry) => entry.role === "poster" && entry.image) ?? listed.find((entry) => entry.image && !entry.video);
     return [{
       id: item.id,
       title: item.title,
       caption: picture && item.copy_text?.trim() ? item.copy_text.trim() : null,
       status: removedAt.get(item.id) != null ? "removed" : item.status,
-      previewSrc: picture ? `/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${picture.role}` : null,
+      previewSrc: still ? `/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${still.role}` : null,
     }];
   });
   const removal = focusId
@@ -278,6 +282,7 @@ export default async function FinishedPiecePage({
             : null;
           const listed = listedMedia(item.media_json);
           const media = listed.filter((entry) => entry.video || entry.image);
+          const playable = playableMedia(item.media_json);
           const storedFile = media.length === 0 && listed.length > 0;
           const social = isSocialItemFormat(item.format);
           const settings = socialSettings.get(item.id);
@@ -333,13 +338,14 @@ export default async function FinishedPiecePage({
                 />
               ) : media.length > 0 ? (
                 <div className="mx-auto flex w-full max-w-sm flex-col gap-3 rounded-2xl border border-border p-4">
-                  {media.map((entry) =>
+                  {playable.items.map((entry) =>
                     entry.video ? (
-                      <video
+                      <VideoPlayer
                         key={entry.role}
-                        controls
-                        className="w-full rounded-md"
+                        title={item.title || "Finished work"}
+                        className="w-full rounded-md bg-black"
                         src={`/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${entry.role}`}
+                        poster={playable.poster ? `/api/deliverables/${opened.deliverable.id}/items/${item.id}/media/${playable.poster}` : null}
                       />
                     ) : (
                       // The picture is served only when this caller can see the space.

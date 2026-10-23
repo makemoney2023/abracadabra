@@ -29,7 +29,7 @@ function Slide({ item, tall }: { item: PreviewMedia; tall: boolean }) {
   if (!mounted) {
     return <div aria-label={`${item.alt}: loading preview`} className={`${className} bg-neutral-900`} />;
   }
-  if (item.video) return <video controls className={className} src={item.src} onError={() => setFailed(true)} />;
+  if (item.video) return <video controls playsInline preload="metadata" className={className} src={item.src} onError={() => setFailed(true)} />;
   // The picture is served only when this caller can see the space.
   // eslint-disable-next-line @next/next/no-img-element
   return <img alt={item.alt} className={className} src={item.src} onError={() => setFailed(true)} />;

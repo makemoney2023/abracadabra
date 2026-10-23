@@ -1,5 +1,6 @@
 import type { LibraryArtifactType } from "@/lib/library-artifacts";
 import { filePlateWord } from "@/lib/file-type";
+import { VideoPlayer } from "@/components/video-player";
 
 const TYPE_LABEL: Record<LibraryArtifactType, string> = {
   article: "Article",
@@ -22,7 +23,7 @@ export function PublicLibraryView({
 }: {
   token: string;
   result:
-    | { ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind?: string; artifactType?: LibraryArtifactType; hasPicture?: boolean }[] } }
+    | { ok: true; view: { title: string; downloads: boolean; items: { publicId: string; title: string; externalUrl: string | null; kind?: string; artifactType?: LibraryArtifactType; hasPicture?: boolean; hasVideo?: boolean }[] } }
     | { ok: false; error: "unavailable" | "locked" };
 }) {
   if (!result.ok && result.error === "locked") {
@@ -60,7 +61,16 @@ export function PublicLibraryView({
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {result.view.items.map((item) => (
           <li key={item.publicId} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-            {item.hasPicture ? (
+            {item.hasVideo ? (
+              // The clip is served by this share token, and only for an item already on the share. The still is its poster.
+              <VideoPlayer
+                src={`/view/${encodeURIComponent(token)}/video/${encodeURIComponent(item.publicId)}`}
+                poster={item.hasPicture ? `/view/${encodeURIComponent(token)}/media/${encodeURIComponent(item.publicId)}` : null}
+                title={item.title}
+                name={item.title}
+                className="aspect-[4/3] w-full rounded-xl bg-black object-contain"
+              />
+            ) : item.hasPicture ? (
               // The picture is served by this share token, and only for an item already on the share.
               // eslint-disable-next-line @next/next/no-img-element
               <img alt="" src={`/view/${encodeURIComponent(token)}/media/${encodeURIComponent(item.publicId)}`} className="aspect-[4/3] w-full rounded-xl object-cover" />

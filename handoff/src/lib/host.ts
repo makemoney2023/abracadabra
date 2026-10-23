@@ -118,3 +118,11 @@ export function decideHost(input: {
   }
   return { kind: "allow" };
 }
+
+/**
+ * The clip stream of a read-only view link. Everything else under /view is "no-store"; a clip is read in ranged pieces
+ * (Safari and iOS ask for bytes=0-1, then the rest), so it is "private, no-cache" instead: still private, checked on every use.
+ */
+export function isViewVideoPath(path: string): boolean {
+  return /^\/view\/[^/]+\/video\/[^/]+$/.test(path);
+}

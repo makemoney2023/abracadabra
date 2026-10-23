@@ -10,6 +10,8 @@ import { handOverWaitingTasks } from "@/lib/agent-dispatch";
 import { builtWorkByItem, builtWorkMarkdown, builtWorkWrites, parseBuiltWork, type BuiltWorkInput } from "@/lib/built-work";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
 import { readyMediaBytes } from "@/lib/agent-media";
+import { inspectVideoDataUrl } from "@/lib/video-files";
+import { namedPosterPairs } from "@/lib/video-posters";
 
 /**
  * Work from client agents (Grok Bot teammates and hires) lands in the right client space on its own.
@@ -287,6 +289,14 @@ export function parseWorkPayload(raw: unknown): { ok: true; payload: WorkPayload
       links.push({ label, url });
     }
   }
+  for (const file of attachments) {
+    const video = inspectVideoDataUrl(file.body, file.name);
+    if (video.kind === "refused") return { ok: false, message: video.message };
+  }
+  if (typeof body.content === "string") {
+    const video = inspectVideoDataUrl(body.content, "content");
+    if (video.kind === "refused") return { ok: false, message: video.message };
+  }
   const built = parseBuiltWork(body.built_work, attachments);
   if (!built.ok) return { ok: false, message: built.message };
   attachments.push(...built.added);
@@ -551,6 +561,20 @@ async function rememberPosters(
   }
 }
 
+/**
+ * A picture attached next to a clip as "<clip name>-poster.png|jpg|webp" is that clip's poster (the frame shown before play).
+ * Same table as generated clips (file_posters); an explicit link from media_ids is never replaced.
+ */
+async function rememberNamedPosters(sql: Sql, batchId: string): Promise<void> {
+  const rows = await sql.all<{ id: string; relative_path: string }>("SELECT id, relative_path FROM files WHERE batch_id = ?", [batchId]);
+  for (const pair of namedPosterPairs(rows)) {
+    await sql.run(
+      "INSERT INTO file_posters (file_id, poster_file_id) VALUES (?, ?) ON CONFLICT (file_id) DO NOTHING",
+      [pair.videoId, pair.posterId],
+    );
+  }
+}
+
 /** Files for a filing: the summary plus attachments, under the agent's folder with readable names. */
 function filesFor(itemId: string, summary: string, payload: WorkPayload, now: number, folder: string, taken: Set<string>, media: { id?: string; sourceMediaId?: string | null; name: string; bytes: Uint8Array; contentType: string }[] = []): { files: WorkflowFile[]; mediaPaths: { mediaId: string; sourceMediaId: string | null; relativePath: string }[] } {
   const run = itemId.slice(0, 8);
@@ -625,6 +649,7 @@ async function writeFiled(
   });
   if (!stored.batchId || stored.stored.length === 0) return { ok: false };
   await rememberPosters(sql, stored.batchId, prepared.mediaPaths);
+  await rememberNamedPosters(sql, stored.batchId);
   const built = payload.builtWork ?? [];
   const screenshotFiles = new Map<string, string>();
   if (built.some((item) => item.screenshot)) {

@@ -1,4 +1,6 @@
-export type ArtifactKind = "markdown" | "json" | "pdf" | "image";
+import { sniffVideoBytes } from "./video-files";
+
+export type ArtifactKind = "markdown" | "json" | "pdf" | "image" | "video";
 
 export type ItemFormat = "page" | "file" | "static";
 
@@ -9,6 +11,8 @@ export type AdaptedArtifact = {
   bytes: Uint8Array;
   format: ItemFormat;
 };
+
+const VIDEO_DECLARED = new Set(["video/mp4", "video/webm", "video/quicktime"]);
 
 const IMAGES: Record<string, { extension: string; contentType: string }> = {
   "image/png": { extension: "png", contentType: "image/png" },
@@ -58,6 +62,13 @@ export function adaptArtifact(body: string): AdaptedArtifact | null {
     if (bytes && type === "application/pdf" && isPdf(bytes)) {
       return { kind: "pdf", extension: "pdf", contentType: "application/pdf", bytes, format: "file" };
     }
+    if (bytes && type.startsWith("video/")) {
+      // A clip: the bytes must really be MP4, WebM or MOV (decided from the bytes, not the declared type).
+      const video = sniffVideoBytes(bytes);
+      if (video && VIDEO_DECLARED.has(type)) {
+        return { kind: "video", extension: video.extension, contentType: video.contentType, bytes, format: "file" };
+      }
+    }
     return markdown(body);
   }
   if (trimmed.startsWith("%PDF") && isPdf(utf8(trimmed))) {
@@ -91,6 +102,8 @@ const CONTENT_TYPES: Record<string, string> = {
   webp: "image/webp",
   gif: "image/gif",
   mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
   md: "text/markdown",
   txt: "text/plain",
 };
@@ -99,7 +112,7 @@ const CONTENT_TYPES: Record<string, string> = {
 export function itemForPath(path: string, objectKey: string | null): { format: ItemFormat; mediaJson: string } {
   const extension = path.split(".").pop()?.toLowerCase() ?? "";
   const image = extension === "png" || extension === "jpg" || extension === "jpeg" || extension === "webp" || extension === "gif";
-  const format: ItemFormat = image ? "static" : extension === "pdf" || extension === "json" || extension === "mp4" ? "file" : "page";
+  const format: ItemFormat = image ? "static" : extension === "pdf" || extension === "json" || extension === "mp4" || extension === "webm" || extension === "mov" ? "file" : "page";
   if (!objectKey) return { format, mediaJson: "[]" };
   return {
     format,

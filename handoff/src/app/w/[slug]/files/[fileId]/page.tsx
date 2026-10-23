@@ -6,6 +6,7 @@ import { FilingSummaryCard } from "@/components/filing-summary-card";
 import { parseFilingSummary } from "@/lib/filing-summary";
 import { batchVisibleTo, seesHeldWork } from "@/lib/held-work";
 import { openSession } from "@/lib/current";
+import { VideoPlayer } from "@/components/video-player";
 import { previewKind, previewableStatus, readPreviewFile } from "@/lib/preview";
 import { fileProvenance, folderBreadcrumbs } from "@/lib/source-provenance";
 
@@ -45,7 +46,11 @@ export default async function FilePreviewPage({
   const kind = previewKind(row.relative_path);
   const name = row.relative_path.split("/").pop() ?? row.relative_path;
   const ready = previewableStatus(row.status) && kind !== "none";
-  const shown = ready ? await readPreviewFile({ sql, caller, fileId }) : null;
+  // A clip is streamed by the preview route, so the page does not load its bytes; the access checks already passed above.
+  const shown = ready && kind !== "video" ? await readPreviewFile({ sql, caller, fileId }) : null;
+  const poster = kind === "video"
+    ? await sql.get<{ poster_file_id: string }>("SELECT poster_file_id FROM file_posters WHERE file_id = ?", [fileId])
+    : undefined;
   const text =
     shown?.ok && shown.file.kind === "text"
       ? new TextDecoder("utf-8", { fatal: false }).decode(shown.file.bytes)
@@ -95,6 +100,14 @@ export default async function FilePreviewPage({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={`/api/files/${fileId}/preview`} alt={name} className="max-h-[70vh] max-w-full rounded-lg border border-border" />
       ) : null}
+      {ready && kind === "video" ? (
+        <VideoPlayer
+          src={`/api/files/${fileId}/preview`}
+          poster={poster ? `/api/files/${poster.poster_file_id}/preview` : null}
+          title={name}
+          name={row.relative_path}
+        />
+      ) : null}
       {shown?.ok && shown.file.kind === "pdf" ? (
         <iframe
           title={name}
@@ -106,7 +119,7 @@ export default async function FilePreviewPage({
       {!filing && shown?.ok && shown.file.kind === "text" ? (
         <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/40 p-4 text-sm">{text}</pre>
       ) : null}
-      {ready && !shown?.ok ? <p>This file is not ready to look at yet.</p> : null}
+      {ready && kind !== "video" && !shown?.ok ? <p>This file is not ready to look at yet.</p> : null}
       <p className="text-sm text-muted-foreground">
         You can look at this file here. A download link appears on the file list when the check is done.
       </p>

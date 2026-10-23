@@ -30,7 +30,9 @@ export const dynamic = "force-dynamic";
  * folder: where the files land in the space, like "Social/Facebook" (up to 6 levels). Default: Finished work/<date> <title>.
  * Files keep readable names (post-1.png); a name already in the folder gets " (2)", except names of filings it supersedes.
  * attachments[].body: text (a .html/.csv/.txt/... name keeps its extension) or a base64 data URL
- * (data:image/png|jpeg|webp|gif;base64,... or data:application/pdf;base64,...).
+ * (data:image/png|jpeg|webp|gif;base64,... or data:application/pdf;base64,... or data:video/mp4|webm|quicktime;base64,...).
+ * A clip (MP4, WebM or MOV) must really be one (checked from its bytes, else 400) and plays in HQ with a Range-aware player.
+ * A picture attached as "<clip name>-poster.png|jpg|webp" in the same filing is that clip's poster.
  * Size: AGENT_WORK_MAX_MB (default 10) MB of files after decoding; the JSON may be about 4/3 of that plus 1 MB. Over: 413.
  * Filed work is held: client members see it only after Client Services approves the card. A task_id never closes the
  * card: it goes to Waiting on Client Services (a Done card is reopened), unless keep_task_open is true.
