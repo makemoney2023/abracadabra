@@ -45,6 +45,8 @@ export type SocialActor =
       mode: AgentPublishMode;
       grant: SocialCapability[];
       revoke: SocialCapability[];
+      /** Networks this agent may post to. null: no limit (a client lead). A hire carries its permission row's list. */
+      platforms?: string[] | null;
     };
 
 export type PolicyResult = {
@@ -154,7 +156,8 @@ export function evaluateSocialPolicy(
     if (modeReason) return deny(modeReason);
   }
 
-  if (CONFIRM.has(action)) {
+  // A function agent (a hire) can ask to move a post, but staff approve it. Leads, staff and the client's people are not held to this.
+  if (CONFIRM.has(action) || (actor.kind === "agent" && actor.role === "hire" && action === "reschedule")) {
     return { authorization: "confirmation_required", reasonCode: "confirmation_required", capabilities };
   }
   return { authorization: "allowed", reasonCode: "allowed", capabilities };

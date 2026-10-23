@@ -1,4 +1,5 @@
 import type { Sql } from "@/db/sql";
+import { getAgentSocialPermission, permissionEffect } from "./agent-social-permissions";
 import { assignmentFor, resolveClientRef, type AgentPrincipal } from "./agent-work-filing";
 import { clientRefFrom } from "./agent-contacts";
 import { getAutopost, nextSlots } from "./social-autopost";
@@ -95,10 +96,19 @@ export async function resolveAgentClient(
   const assignment = assignmentFor(agent, organizationId);
   if (!assignment) return fail(403, "not_assigned", "This agent is not assigned to that client.");
   const policy = await loadPolicy(sql, organizationId);
+  // A hire (every function agent) only schedules or publishes when it was explicitly granted; a lead is unchanged.
+  const effect = permissionEffect(assignment.role, await getAgentSocialPermission(sql, agent.agentId, organizationId));
   return {
     ok: true,
     organizationId,
-    actor: agentActor({ agentId: agent.agentId, assignment, mode: policy.mode, grant: policy.grant, revoke: policy.revoke }),
+    actor: agentActor({
+      agentId: agent.agentId,
+      assignment,
+      mode: policy.mode,
+      grant: [...policy.grant, ...effect.grant],
+      revoke: [...policy.revoke, ...effect.revoke],
+      platforms: effect.platforms,
+    }),
   };
 }
 
@@ -426,6 +436,8 @@ export async function getAgentSocialPlan(sql: Sql, agent: AgentPrincipal, planId
   const row = await sql.get<{
     id: string;
     organization_id: string;
+    actor_kind: string;
+    actor_id: string;
     action: string;
     rows_json: string;
     blocked_json: string;
@@ -436,8 +448,8 @@ export async function getAgentSocialPlan(sql: Sql, agent: AgentPrincipal, planId
     executed_at: number | null;
     result_json: string | null;
   }>(
-    `SELECT id, organization_id, action, rows_json, blocked_json, warnings_json, plan_hash, authorization,
-            expires_at, executed_at, result_json
+    `SELECT id, organization_id, actor_kind, actor_id, action, rows_json, blocked_json, warnings_json, plan_hash,
+            authorization, expires_at, executed_at, result_json
      FROM social_publish_plans WHERE id = ?`,
     [planId],
   );
@@ -459,12 +471,31 @@ export async function getAgentSocialPlan(sql: Sql, agent: AgentPrincipal, planId
       outcomes = [];
     }
   }
+  // The staff approval for this plan, if any. Only the agent that prepared the plan gets the token.
+  let approval: { status: "not_required" | "awaiting_staff" | "approved" | "used"; confirmationToken?: string; expiresAt?: string } = {
+    status: "not_required",
+  };
+  if (row.authorization === "confirmation_required") {
+    approval = { status: "awaiting_staff" };
+    if (row.actor_kind === "agent" && row.actor_id === agent.agentId) {
+      const confirmation = await sql.get<{ id: string; expires_at: number; used_at: number | null }>(
+        `SELECT id, expires_at, used_at FROM social_confirmations
+         WHERE plan_id = ? AND plan_hash = ? AND approver_kind = 'staff' ORDER BY created_at DESC LIMIT 1`,
+        [row.id, row.plan_hash],
+      );
+      if (confirmation?.used_at != null) approval = { status: "used" };
+      else if (confirmation && confirmation.expires_at > Date.now()) {
+        approval = { status: "approved", confirmationToken: confirmation.id, expiresAt: new Date(confirmation.expires_at).toISOString() };
+      }
+    }
+  }
   return {
     ok: true as const,
     planId: row.id,
     planHash: row.plan_hash,
     action: row.action,
     authorization: row.authorization,
+    approval,
     expiresAt: new Date(row.expires_at).toISOString(),
     executedAt: row.executed_at == null ? null : new Date(row.executed_at).toISOString(),
     rows,

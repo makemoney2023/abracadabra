@@ -52,6 +52,7 @@ const STEPS = [
   { file: "0048_skill_feedback.sql", index: "skill_feedback_work_item" },
   { file: "0049_function_agents.sql", index: "client_agents_kind" },
   { file: "0050_project_library_option.sql", column: { table: "projects", name: "include_in_library" } },
+  { file: "0051_agent_social_permissions.sql", table: "agent_social_permissions" },
 ] as const;
 
 type Step = (typeof STEPS)[number];

@@ -294,6 +294,14 @@ export async function saveSocialVariant(sql: Sql, input: SaveSocialVariantInput)
   const item = await itemContext(sql, input.itemId);
   if (!item || item.organization_id !== input.organizationId) throw new PlanError(404, "not_found");
   if (item.version !== input.version || item.current_version !== input.version) throw new PlanError(409, "stale_source");
+  // A function agent may not rewrite the words of a post that is already queued or out. Changing it takes a staff card.
+  if (input.actor.kind === "agent" && input.actor.role === "hire") {
+    const queued = await sql.get<{ id: string }>(
+      "SELECT id FROM social_posts WHERE item_id = ? AND version = ? AND status IN ('sending', 'scheduled', 'published', 'partial') LIMIT 1",
+      [input.itemId, input.version],
+    );
+    if (queued) throw new PlanError(409, "post_scheduled");
+  }
 
   const existing = await sql.get<{ id: string; revision: number }>(
     "SELECT id, revision FROM social_variants WHERE item_id = ? AND version = ? AND platform = ?",

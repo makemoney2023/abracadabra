@@ -102,6 +102,8 @@ describe("evaluateSocialPolicy", () => {
     expect(evaluateSocialPolicy(lead("schedule_approved"), "reschedule").reasonCode).toBe("policy_mode");
     expect(evaluateSocialPolicy(lead("schedule_approved"), "retry").reasonCode).toBe("policy_mode");
     expect(evaluateSocialPolicy(lead("managed"), "reschedule").authorization).toBe("allowed");
+    // A function agent (hire) can only ask to move a post: staff approve it.
+    expect(evaluateSocialPolicy(hire("managed", { grant: ["social.schedule.manage"] }), "reschedule").authorization).toBe("confirmation_required");
     expect(evaluateSocialPolicy(hire("managed"), "retry").authorization).toBe("allowed");
     expect(evaluateSocialPolicy(lead("managed"), "disconnect").authorization).toBe("confirmation_required");
   });
