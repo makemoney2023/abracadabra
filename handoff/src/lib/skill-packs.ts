@@ -207,7 +207,7 @@ export async function attachedOnOpenCards(
 export function skillHint(taskId: string, attached: string[]): { attached: string[]; library: string; guide: string; attach: string } {
   return {
     attached,
-    library: "GET /api/agent-skill-library",
+    library: `GET /api/agent-skill-library?q=<what the task needs, e.g. caption>&task_id=${taskId}`,
     guide: "GET /api/agent-skill-guide",
     attach: `POST /api/agent-board/tasks/${taskId} {"action":"attach_skills","prefixes":["<pack prefix, e.g. community/marketingskills/>"]}`,
   };

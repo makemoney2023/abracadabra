@@ -284,6 +284,23 @@ describe("usage logging", () => {
     ]);
   });
 
+  it("an attached pack keeps counting in usage after its card is done", async () => {
+    const { org, project } = await client();
+    const { auth } = await agent(org);
+    const taskId = await card(org, project);
+    const act = (body: unknown) =>
+      boardTaskPost(new Request(`https://hq.example/api/agent-board/tasks/${taskId}`, { method: "POST", headers: auth, body: JSON.stringify(body) }), {
+        params: Promise.resolve({ taskId }),
+      });
+    expect((await act({ action: "attach_skills", prefixes: ["community/marketingskills/"] })).status).toBe(200);
+    await sql.run("UPDATE tasks SET status = 'done' WHERE id = ?", [taskId]);
+    const stats = await skillUsageStats(sql, { now: NOW + DAY, days: 30, libraryPacks: [] });
+    expect(stats.totals.attaches).toBe(1);
+    expect(stats.packs.find((row) => row.key === "community/marketingskills/")).toMatchObject({ attaches: 1, cards: 1 });
+    // A done card can no longer take new attachments.
+    expect((await act({ action: "attach_skills", prefixes: ["community/notfair-seo/"] })).status).toBe(409);
+  });
+
   it("never fails a request when the log write fails", async () => {
     const { org } = await client();
     const { auth } = await agent(org);

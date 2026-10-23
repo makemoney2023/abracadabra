@@ -15,6 +15,8 @@ function row(overrides: Partial<UsageRow>): UsageRow {
     attaches: 0,
     useful: 0,
     notUseful: 0,
+    usefulRate: null,
+    lastNote: null,
     cards: 1,
     reviewed: 0,
     approved: 0,
@@ -42,12 +44,15 @@ describe("SkillUsageCard feedback columns", () => {
   it("shows Useful and Not useful columns with each pack's counts and the window totals", () => {
     const html = renderToStaticMarkup(
       <TooltipProvider>
-        <SkillUsageCard stats={stats([row({ useful: 3, notUseful: 1 }), row({ key: "community/notfair-seo/", name: "notfair-seo" })])} now={NOW} />
+        <SkillUsageCard stats={stats([row({ useful: 3, notUseful: 1, usefulRate: 0.75, lastNote: "Clear hook structure." }), row({ key: "community/notfair-seo/", name: "notfair-seo" })])} now={NOW} />
       </TooltipProvider>,
     );
     expect(html).toContain(">Useful<");
     expect(html).toContain(">Not useful<");
     expect(html).toContain("3 marked useful, 1 not useful");
+    expect(html).toContain(">Useful rate<");
+    expect(html).toContain("75%");
+    expect(html).toContain("Clear hook structure.");
     expect(html).toContain('data-slot="badge"');
     expect(html).toContain(">3</span>");
     expect(html).toContain(">1</span>");

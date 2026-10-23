@@ -161,6 +161,10 @@ export type UsageRow = {
   /** Agents' own verdicts from skill_feedback: this skill (or a skill in this pack) helped / did not help. */
   useful: number;
   notUseful: number;
+  /** useful / (useful + not useful), 0..1, or null when nobody has rated it. */
+  usefulRate: number | null;
+  /** The newest note an agent left with a verdict, or null. */
+  lastNote: string | null;
   cards: number;
   reviewed: number;
   approved: number;
@@ -196,13 +200,15 @@ type Acc = {
   attaches: number;
   useful: number;
   notUseful: number;
+  lastNote: string | null;
+  lastNoteAt: number;
   cards: Set<string>;
   agents: Set<string>;
   last: number | null;
 };
 
 function accFor(map: Map<string, Acc>, key: string, name: string): Acc {
-  const acc = map.get(key) ?? { name, reads: 0, cites: 0, attaches: 0, useful: 0, notUseful: 0, cards: new Set<string>(), agents: new Set<string>(), last: null };
+  const acc = map.get(key) ?? { name, reads: 0, cites: 0, attaches: 0, useful: 0, notUseful: 0, lastNote: null, lastNoteAt: -1, cards: new Set<string>(), agents: new Set<string>(), last: null };
   map.set(key, acc);
   return acc;
 }
@@ -223,10 +229,10 @@ function bump(map: Map<string, Acc>, key: string, name: string, row: EventRow): 
  * Best effort: with the skill_feedback table missing the counts stay zero.
  */
 async function addFeedback(sql: Sql, since: number, packs: Map<string, Acc>, skills: Map<string, Acc>, skillNames?: Map<string, string>): Promise<void> {
-  let rows: { path: string; useful: number; task_id: string | null; agent_id: string | null; at: number }[];
+  let rows: { path: string; useful: number; note: string | null; task_id: string | null; agent_id: string | null; at: number }[];
   try {
     rows = await sql.all(
-      "SELECT path, useful, task_id, agent_id, at FROM skill_feedback WHERE at >= ? ORDER BY at DESC LIMIT 20000",
+      "SELECT path, useful, note, task_id, agent_id, at FROM skill_feedback WHERE at >= ? ORDER BY at DESC LIMIT 20000",
       [since],
     );
   } catch {
@@ -245,6 +251,11 @@ async function addFeedback(sql: Sql, since: number, packs: Map<string, Acc>, ski
       if (row.task_id) acc.cards.add(row.task_id);
       if (row.agent_id) acc.agents.add(row.agent_id);
       acc.last = Math.max(acc.last ?? 0, row.at);
+      const note = row.note?.trim();
+      if (note && row.at >= acc.lastNoteAt) {
+        acc.lastNote = note;
+        acc.lastNoteAt = row.at;
+      }
     }
   }
 }
@@ -296,6 +307,8 @@ function finish(map: Map<string, Acc>, reviews: Map<string, { latest: string; se
         attaches: acc.attaches,
         useful: acc.useful,
         notUseful: acc.notUseful,
+        usefulRate: acc.useful + acc.notUseful ? acc.useful / (acc.useful + acc.notUseful) : null,
+        lastNote: acc.lastNote,
         cards: acc.cards.size,
         reviewed,
         approved,

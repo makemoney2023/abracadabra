@@ -277,7 +277,7 @@ describe("lead handoffs and task removal", () => {
     const [dispatch] = await listAgentDispatches(sql, principal);
     expect(dispatch?.task_id).toBe(id);
     expect(dispatch?.skills.attached).toEqual(["community/marketingskills/"]);
-    expect(dispatch?.skills.library).toBe("GET /api/agent-skill-library");
+    expect(dispatch?.skills.library).toBe(`GET /api/agent-skill-library?q=<what the task needs, e.g. caption>&task_id=${id}`);
     expect(dispatch?.skills.attach).toContain(`POST /api/agent-board/tasks/${id}`);
     expect(dispatch?.skills.attach).toContain("attach_skills");
     const stored = await sql.get<{ data_json: string }>("SELECT data_json FROM activities WHERE kind = 'client_agent.dispatch'");

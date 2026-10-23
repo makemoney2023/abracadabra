@@ -210,9 +210,10 @@ describe("skill_feedback on filings", () => {
     const usage = await stats();
     expect(usage.totals).toMatchObject({ useful: 1, notUseful: 1, cites: 1 });
     expect(usage.packs.find((row) => row.key === "community/marketingskills/")).toMatchObject({ useful: 1, notUseful: 1, cites: 1 });
-    expect(usage.skills.find((row) => row.key === "community/marketingskills/copywriting/SKILL.md")).toMatchObject({ useful: 1, notUseful: 0 });
+    expect(usage.skills.find((row) => row.key === "community/marketingskills/copywriting/SKILL.md")).toMatchObject({ useful: 1, notUseful: 0, usefulRate: 1, lastNote: "Clear structure." });
+    expect(usage.packs.find((row) => row.key === "community/marketingskills/")).toMatchObject({ usefulRate: 0.5 });
     // page-cro was never read or cited but still gets a row from its verdict.
-    expect(usage.skills.find((row) => row.key === "community/marketingskills/page-cro/SKILL.md")).toMatchObject({ useful: 0, notUseful: 1, reads: 0, cites: 0 });
+    expect(usage.skills.find((row) => row.key === "community/marketingskills/page-cro/SKILL.md")).toMatchObject({ useful: 0, notUseful: 1, reads: 0, cites: 0, usefulRate: 0, lastNote: "Assumes ecommerce." });
   });
 
   it("records feedback without skills_used, and a repeated filing records nothing more", async () => {
@@ -260,7 +261,8 @@ describe("agent skills guide", () => {
     expect(asAgent.headers.get("content-type")).toMatch(/text\/markdown/);
     const text = await asAgent.text();
     expect(text).toBe(AGENT_SKILL_GUIDE);
-    for (const word of ["Discover", "Pick", "Load", "Attach", "Cite", "skill_feedback", "useful"]) expect(text).toContain(word);
+    for (const word of ["requirements -> search -> pick -> load with task_id -> attach to the card -> apply -> cite", "?q=caption", "skills_used", "skill_feedback", "useful", "one-line note", "Optional: staff allow-list"]) expect(text).toContain(word);
+    expect(text).not.toMatch(/granted pack|ask for a grant/i);
     const asCs = await guideGet(new Request("https://hq.example/api/agent-skill-guide?format=json", { headers: csHeaders }));
     expect(asCs.status).toBe(200);
     expect(await asCs.json()).toEqual({ guide: AGENT_SKILL_GUIDE });

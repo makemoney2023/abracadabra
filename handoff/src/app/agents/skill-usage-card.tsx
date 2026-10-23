@@ -34,6 +34,29 @@ function columns(kind: "pack" | "skill", now: number): Column<UsageRow>[] {
     ...(kind === "pack" ? [{ key: "attaches", header: "Attached", align: "right" as const, cell: (row: UsageRow) => row.attaches }] : []),
     { key: "useful", header: "Useful", align: "right", cell: (row) => <Verdict count={row.useful} tone="useful" /> },
     { key: "notUseful", header: "Not useful", align: "right", cell: (row) => <Verdict count={row.notUseful} tone="not-useful" /> },
+    {
+      key: "usefulRate",
+      header: "Useful rate",
+      align: "right",
+      cell: (row) =>
+        row.usefulRate == null ? (
+          <span className="text-muted-foreground">—</span>
+        ) : (
+          <span title={`${row.useful} useful of ${row.useful + row.notUseful} ratings`}>{Math.round(row.usefulRate * 100)}%</span>
+        ),
+    },
+    {
+      key: "lastNote",
+      header: "Latest note",
+      cell: (row) =>
+        row.lastNote ? (
+          <span className="block max-w-56 truncate text-xs text-muted-foreground" title={row.lastNote}>
+            {row.lastNote}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
     { key: "cards", header: "Cards", align: "right", cell: (row) => row.cards },
     { key: "approved", header: "Approved", align: "right", cell: (row) => row.approved },
     { key: "sentBack", header: "Sent back", align: "right", cell: (row) => row.sentBack },
