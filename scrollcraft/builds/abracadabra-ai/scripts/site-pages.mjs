@@ -11,6 +11,8 @@ import {
   OFFERINGS_KICKER,
   PLACEHOLDER,
   businessFunctions,
+  LISTED_CASE_SLUGS,
+  SHOW_HOME_WORK,
   cases,
   course,
   familyLogos,
@@ -27,6 +29,7 @@ import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
 import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody, hqVideoNode, hqVideoSection, hqVideoSitemap } from "./hq-page.mjs";
+import { HOME_WORK_HASPART_LINE, HOME_WORK_HTML, HOME_WORK_LD_IDS, HOME_WORK_LD_TEXT, HOME_WORK_SITEMAP_XML } from "./home-work.mjs";
 import { writeHqAssets } from "./hq-assets.mjs";
 import { writeSchemaAssets } from "./schema-assets.mjs";
 
@@ -331,7 +334,7 @@ function baseGraph(pageNode, extra) {
 
 /** Pages changed on this date carry it as dateModified and sitemap lastmod. */
 const HQ_MODIFIED = "2026-10-23";
-const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/"]);
+const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/", "/portfolio/"]);
 
 function pageNode({ type, id, url, name, description, image, modified = MODIFIED }) {
   const node = {
@@ -818,12 +821,12 @@ function caseStudyBody(item, crumbs, relatedHtml) {
     ? "See the product"
     : item.slug === "llm-leverage"
       ? "See the course"
-      : "Explore all work";
+      : "See all case studies";
 
   return `<main id="top" class="site-page case-study">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
-  kicker: "Portfolio",
+  kicker: "Case studies",
   title: esc(item.name),
   dek: `<p>${esc(item.summary)}</p>`,
   actions: pageActions(liveHref, liveLabel, product, productLabel),
@@ -839,7 +842,7 @@ ${sectionHeading("Inside the system", "The real interface, in motion.")}
 </section>` : ""}
 <section class="case-study__next">
 <div>${sectionHeading("Make the next one yours", "Build around the work you already do.")}</div>
-<div>${relatedHtml}${pageActions("/start/", "Start a project", "/portfolio/", "See all work")}</div>
+<div>${relatedHtml}${pageActions("/start/", "Start a project", "/portfolio/", "See all case studies")}</div>
 </section>
 </main>`;
 }
@@ -851,7 +854,7 @@ async function renderCase(item) {
   const description = clip(item.summary, 155);
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
-    { name: "Portfolio", href: "/portfolio/", url: `${SITE}/portfolio/` },
+    { name: "Case studies", href: "/portfolio/", url: `${SITE}/portfolio/` },
     { name: item.name, href: path, url },
   ];
   const og = await plateOrPhoto(`portfolio-${item.slug}`, "Portfolio", item.name, item.image || null);
@@ -885,25 +888,26 @@ async function renderCase(item) {
 
 async function renderPortfolioHub() {
   const url = `${SITE}/portfolio/`;
-  const title = "Portfolio | Abracadabra AI";
-  const description = "Live work you can open and try, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants and pirx.ca.";
+  const title = "Case studies | Abracadabra AI";
+  const listed = cases.filter((item) => LISTED_CASE_SLUGS.includes(item.slug));
+  const description = "A case study of pirx.ca: the PIRX app, its machine learning and the blogs we designed and built.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
-    { name: "Portfolio", href: "/portfolio/", url },
+    { name: "Case studies", href: "/portfolio/", url },
   ];
   const list = {
     "@type": "ItemList",
-    name: "Portfolio",
-    numberOfItems: cases.length,
-    itemListElement: cases.map((item, index) => ({
+    name: "Case studies",
+    numberOfItems: listed.length,
+    itemListElement: listed.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
       url: `${SITE}/portfolio/${item.slug}/`,
     })),
   };
-  const og = await plateOrPhoto("portfolio", "Portfolio", "Named systems, open and running", null);
-  const cards = cases.map((item) => {
+  const og = await plateOrPhoto("portfolio", "Case studies", "pirx.ca, open and running", null);
+  const cards = listed.map((item) => {
     const photo = item.cardImage
       ? shotImg(item.cardImage, { lazy: true })
       : item.image
@@ -924,17 +928,17 @@ async function renderPortfolioHub() {
       type: "CollectionPage",
       id: `${url}#webpage`,
       url,
-      name: "Portfolio",
+      name: "Case studies",
       description,
     }), [crumbList(crumbs), list]),
     body: `<main id="top" class="site-page collection-page collection-page--portfolio">
 ${pageHero({
   crumbs: visibleCrumbs(crumbs),
-  kicker: "Portfolio",
-  title: "Work that's live.",
-  dek: "<p>Live work you can open and try, including Milrcorr, StrongFoam, SuperPatch products, Renew Implants and pirx.ca.</p>",
+  kicker: "Case studies",
+  title: "Case studies.",
+  dek: "<p>A case study of pirx.ca: the PIRX app, its machine learning and the blogs we designed and built.</p>",
 })}
-${collectionIndex([[cases.length, "named systems"], ["Live", "screens, not mockups"], ["Open", "the work and try it"]])}
+${collectionIndex([[listed.length, listed.length === 1 ? "case study" : "case studies"], ["Live", "screens, not mockups"], ["Open", "the work and try it"]])}
 <ul class="cards">${cards}</ul>
 </main>`,
   });
@@ -1358,7 +1362,7 @@ async function renderMissing() {
 <h1>That page vanished.</h1>
 <p class="lede">The page is gone. The work is still here.</p>
 <p class="hero__actions" data-actions><a class="btn btn--primary" href="/start/">Start a project</a><a class="btn btn--secondary" href="/">Back to home</a><a class="btn btn--tertiary" href="/portfolio/">See the work <span class="btn__arrow" aria-hidden="true">→</span></a></p>
-<ul class="missing-links"><li><a href="/services/">Services</a></li><li><a href="/portfolio/">Work</a></li><li><a href="/products/">Products</a></li><li><a href="/blog">Blog</a></li></ul>
+<ul class="missing-links"><li><a href="/services/">Services</a></li><li><a href="/portfolio/">Case studies</a></li><li><a href="/products/">Products</a></li><li><a href="/blog">Blog</a></li></ul>
 </main>`,
   });
   await writePage("404.html", html);
@@ -1377,7 +1381,21 @@ async function patchHome() {
   const videoNode = JSON.stringify(hqVideoNode(SITE, ORG_ID), null, 2).replace(/^/gm, "    ");
   const nodePattern = /    \{\n      "@type": "VideoObject",\n      "@id": "[^"]*#video-hq-product"[\s\S]*?\n    \}(?=,\n)/;
   if (!nodePattern.test(html)) throw new Error("Missing HQ VideoObject node in index.html");
-  html = html.replace(nodePattern, () => videoNode);
+  // The "Work that's already running" section, its JSON-LD nodes and its link from the WebPage node: all in, or all out.
+  html = fill(html, "<!-- HOME-WORK -->", "<!-- /HOME-WORK -->", SHOW_HOME_WORK ? HOME_WORK_HTML : "");
+  for (const id of HOME_WORK_LD_IDS) {
+    const stale = new RegExp(`    \\{\\n      "@type": "[A-Za-z]+",\\n      "@id": "${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[\\s\\S]*?\\n    \\},\\n`);
+    html = html.replace(stale, "");
+  }
+  html = html.replace(HOME_WORK_HASPART_LINE, "");
+  const [filmNodeA, filmNodeB, workListNode] = HOME_WORK_LD_TEXT;
+  html = html.replace(nodePattern, () => (SHOW_HOME_WORK ? `${videoNode},\n${filmNodeA},\n${filmNodeB}` : videoNode));
+  if (SHOW_HOME_WORK) {
+    const faqNode = /    \{\n      "@type": "FAQPage",\n      "@id": "[^"]*#faq"/;
+    if (!faqNode.test(html)) throw new Error("Missing FAQPage node in index.html");
+    html = html.replace(faqNode, (match) => `${workListNode},\n${match}`);
+  }
+  if (SHOW_HOME_WORK) html = html.replace(/(      "inLanguage": "en",\n)(      "video": \{ "@id": "[^"]*#video-hq-product" \})/, (_, a, b) => `${a}${HOME_WORK_HASPART_LINE}${b}`);
   html = fill(html, "<!-- HQ -->", "<!-- /HQ -->", hqHomeSection());
   html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", "");
   html = fill(html, "<!-- PROOF -->", "<!-- /PROOF -->", homeProofHtml());
@@ -1400,6 +1418,8 @@ async function patchSitemap() {
     `<loc>https://abra-ca-dabra.app/</loc>\n    <lastmod>${HQ_MODIFIED}</lastmod>`,
   );
   xml = fill(xml, "<!-- hq-video -->", "<!-- /hq-video -->", hqVideoSitemap(SITE));
+  xml = xml.replace(/ *<!-- home-work-videos -->[\s\S]*?<!-- \/home-work-videos -->\n/, () =>
+    `    <!-- home-work-videos -->\n${SHOW_HOME_WORK ? `${HOME_WORK_SITEMAP_XML}\n` : ""}    <!-- /home-work-videos -->\n`);
   xml = fill(xml, "<!-- site-urls -->", "<!-- /site-urls -->", siteUrls());
   await writeFile(path, xml);
 }

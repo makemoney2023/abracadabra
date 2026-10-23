@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { SHOW_HOME_WORK } from "../scripts/site-data.mjs";
+import { HOME_WORK_HTML } from "../scripts/home-work.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFileSync(join(root, path), "utf8");
@@ -27,7 +29,7 @@ const offerings = [
 test("the homepage runs hero, models, functions, then Cloudflare before the FAQ", () => {
   const index = read("index.html");
   const ids = [...index.matchAll(/<section id="([^"]+)"/g)].map((match) => match[1]);
-  const order = ["hero", "models", "services", "showcase", "models-band", "proof", "notes", "cloudflare", "faq", "start"];
+  const order = ["hero", "models", "services", ...(SHOW_HOME_WORK ? ["showcase"] : []), "models-band", "proof", "notes", "cloudflare", "faq", "start"];
   let last = -1;
   for (const id of order) {
     const at = ids.indexOf(id);
@@ -49,7 +51,7 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.equal(index.includes("0.62rem"), false);
   assert.equal(index.includes("0.58rem"), false);
   assert.equal(index.includes("The next room is the receipt"), false);
-  const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf('id="showcase"'));
+  const servicesBlock = index.slice(index.indexOf('id="services"'), index.indexOf("<!-- HOME-WORK -->"));
   assert.equal((servicesBlock.match(/href="\/services\//g) || []).length, 12);
   const cardIds = [...servicesBlock.matchAll(/<li class="card fn-card" id="fn-([a-z-]+)"/g)].map((match) => match[1]);
   assert.deepEqual(cardIds, ["search", "marketing", "sales", "service", "mcp-connectors", "machine-learning", "operations", "design", "platform"]);
@@ -75,9 +77,11 @@ test("the homepage runs hero, models, functions, then Cloudflare before the FAQ"
   assert.match(index, /class="site-nav__services"/);
   assert.equal((index.match(/class="site-nav__fn"/g) || []).length, 0);
   assert.equal(index.includes("Recording coming"), false);
-  assert.match(index, /assets\/video\/strongfoam-loop\.webm/);
-  assert.match(index, /assets\/video\/milrcorr-loop\.mp4/);
-  assert.match(index, /muted playsinline loop preload="none"/);
+  // The loop films live in the "Work that's already running" section: on the page when it shows, in code when hidden.
+  const workSection = SHOW_HOME_WORK ? index : HOME_WORK_HTML;
+  assert.match(workSection, /assets\/video\/strongfoam-loop\.webm/);
+  assert.match(workSection, /assets\/video\/milrcorr-loop\.mp4/);
+  assert.match(workSection, /muted playsinline loop preload="none"/);
   assert.match(index, /assets\/restored-motion\.css/);
   assert.match(index, /assets\/restored-motion\.js/);
   const motionOrder = ["hero", "name", "compiler", "time", "range", "models"];
