@@ -246,6 +246,12 @@ export async function listLibraryArtifacts(
   };
 }
 
+function captionLine(copy: string | null): string | null {
+  const text = copy?.replace(/\s+/g, " ").trim();
+  if (!text) return null;
+  return text.length > 220 ? `${text.slice(0, 217)}…` : text;
+}
+
 function projectItems(rows: ItemRow[], targets: TargetRow[], promotions: PromotionEdge[], audience: LibraryAudience, query: LibraryListQuery): Candidate[] {
   return rows.map((row) => {
     const promoting = promotions
@@ -288,7 +294,7 @@ function projectItems(rows: ItemRow[], targets: TargetRow[], promotions: Promoti
       hasArticleMetadata: row.artifact_type === "article" || Boolean(row.dek || row.canonical_url || row.article_status),
       artifactTypeOverride: artifactType,
       canonicalUrl: row.canonical_url ?? row.link_url,
-      dek: row.dek,
+      dek: row.dek ?? (row.format === "page" ? null : captionLine(row.copy_text)),
       authorName: row.author_name,
       publishedAt: delivered,
       approval,

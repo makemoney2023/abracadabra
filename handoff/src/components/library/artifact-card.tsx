@@ -35,6 +35,7 @@ export function ArtifactCard({ artifact, schedule }: { artifact: LibraryArtifact
         <span className="absolute left-3 top-3"><StatusMark status={artifact.primaryStatus} /></span>
       </div>
       <h2 className="line-clamp-1 text-base font-medium">{artifact.title}</h2>
+      {artifact.dek ? <p className="line-clamp-3 text-sm text-muted-foreground">{artifact.dek}</p> : null}
     </>
   );
   return (

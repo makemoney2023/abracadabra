@@ -2,6 +2,15 @@
 
 ## 2026-10-22
 
+- **What changed** — A revision of one piece keeps the rest of the published set. Pictures that were dropped get their captions back from the notes filed with them.
+- **Why** — Asking for a change on the LinkedIn banner published a round that contained only that banner, so the Schema and Readiness Check posts left the Library.
+- **Code touchpoints** — `handoff/src/lib/shelf-carry.ts`, `handoff/src/lib/agent-filing-review.ts`, `handoff/src/db/migrate.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/components/library/artifact-card.tsx`.
+- **Data-flow impact** — On startup, pieces missing from a published round are copied back from the previous round. New filings do the same before that round is published.
+- **API / schema impact** — none.
+- **Verification** — `npx vitest run src/lib/shelf-carry.test.ts src/lib/agent-filing-hold.test.ts src/lib/library-queries.test.ts`.
+
+## 2026-10-22
+
 - **What changed** — The Library lists the finished piece. Markdown notes and GitHub pull requests or repositories stay in Files.
 - **Why** — The shelf was also showing the notes and source links that produced the work.
 - **Code touchpoints** — `handoff/src/lib/library-context.ts`, `handoff/src/lib/library-queries.ts`, `handoff/src/app/w/[slug]/work/[id]/page.tsx`.
