@@ -8,6 +8,7 @@ export function agentActor(input: {
   mode?: AgentPublishMode;
   grant?: SocialCapability[];
   revoke?: SocialCapability[];
+  platforms?: string[] | null;
 }): SocialActor {
   return {
     kind: "agent",
@@ -17,5 +18,6 @@ export function agentActor(input: {
     mode: input.mode ?? "draft",
     grant: input.grant ?? [],
     revoke: input.revoke ?? [],
+    platforms: input.platforms ?? null,
   };
 }

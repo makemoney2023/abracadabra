@@ -45,6 +45,8 @@ export type SocialActor =
       mode: AgentPublishMode;
       grant: SocialCapability[];
       revoke: SocialCapability[];
+      /** Networks this agent may post to. null: no limit (a client lead). A hire carries its permission row's list. */
+      platforms?: string[] | null;
     };
 
 export type PolicyResult = {
@@ -154,7 +156,12 @@ export function evaluateSocialPolicy(
     if (modeReason) return deny(modeReason);
   }
 
-  if (CONFIRM.has(action)) {
+  // A function agent (a hire) only holds publish_now when staff granted it, so a Done and approved card is enough: no
+  // per-post approval. It can only ask to move a post; staff approve that. Leads, staff and the client's people are unchanged.
+  // In a client whose mode is still draft it keeps the confirmation, so a granted agent never out-runs the client's mode.
+  const functionAgent = actor.kind === "agent" && actor.role === "hire";
+  const publishUnattended = functionAgent && action === "publish_now" && actor.kind === "agent" && actor.mode !== "draft";
+  if ((CONFIRM.has(action) && !publishUnattended) || (functionAgent && action === "reschedule")) {
     return { authorization: "confirmation_required", reasonCode: "confirmation_required", capabilities };
   }
   return { authorization: "allowed", reasonCode: "allowed", capabilities };

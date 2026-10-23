@@ -2,7 +2,8 @@ import type { Sql } from "@/db/sql";
 import type { Caller } from "./authz";
 import type { ItemFormat } from "./deliverable-manifest";
 import { getAutopost, nextSlots } from "./social-autopost";
-import { executeSocialPlan, issueConfirmation } from "./social-commands";
+import { setAgentSocialPermission } from "./agent-social-permissions";
+import { approveAgentSocialPlan, executeSocialPlan, issueConfirmation } from "./social-commands";
 import { asPostType, defaultPostType, pieceMedia, type PostType } from "./social-plan";
 import type { SocialAction, SocialActor } from "./social-policy";
 import { listSocialAccounts, listSocialPosts, sendPieces, zonedTimeToUtc, type SendMode } from "./social";
@@ -30,6 +31,8 @@ export const SOCIAL_WRITE_TOOLS = [
   "prepare_social_disconnect",
   "save_social_variant",
   "execute_social_plan",
+  "approve_agent_social_plan",
+  "set_agent_social_permission",
 ] as const;
 
 const PROVIDER_ACTIONS = new Set<SocialAction>([
@@ -174,6 +177,8 @@ const PLAN_TOOLS = new Set<string>([
   "prepare_social_disconnect",
   "save_social_variant",
   "execute_social_plan",
+  "approve_agent_social_plan",
+  "set_agent_social_permission",
 ]);
 
 const LIVE_POST = new Set(["sending", "scheduled", "published", "partial"]);
@@ -282,7 +287,48 @@ async function runSocialPlanTool(
   if (tool === "prepare_social_retry") return prepareRetry(sql, actor, orgId, input, now);
   if (tool === "prepare_social_cadence") return prepareCadence(sql, actor, orgId, input, now);
   if (tool === "save_social_variant") return saveVariant(sql, actor, orgId, input, now);
+  if (tool === "approve_agent_social_plan") return approveAgentPlan(sql, actor, orgId, input, now);
+  if (tool === "set_agent_social_permission") return setAgentPermission(sql, caller.userId, orgId, input, now);
   return executePlan(sql, actor, orgId, input, now, deps);
+}
+
+async function approveAgentPlan(sql: Sql, actor: SocialActor, orgId: string, input: Record<string, unknown>, now: number): Promise<Result> {
+  const planId = text(input, "planId");
+  const planHash = text(input, "planHash");
+  if (!planId || !planHash) return { ok: false, error: "invalid" };
+  try {
+    const approved = await approveAgentSocialPlan(sql, { organizationId: orgId, planId, planHash, staff: actor, now, note: nullable(input, "note") ?? undefined });
+    return {
+      ok: true,
+      value: {
+        approved: true,
+        action: approved.action,
+        agentId: approved.agentId,
+        expiresAt: new Date(approved.expiresAt).toISOString(),
+        note: "The agent can now run the plan. Nothing has posted yet.",
+      },
+    };
+  } catch (error) {
+    if (error instanceof PlanError) return error.status === 404 ? { ok: false, error: "missing" } : { ok: true, value: { approved: false, reasonCode: error.reasonCode } };
+    throw error;
+  }
+}
+
+async function setAgentPermission(sql: Sql, userId: string, orgId: string, input: Record<string, unknown>, now: number): Promise<Result> {
+  const agentId = text(input, "agentId");
+  if (!agentId) return { ok: false, error: "invalid" };
+  const platforms = Array.isArray(input.platforms) ? input.platforms.filter((item): item is string => typeof item === "string") : undefined;
+  const result = await setAgentSocialPermission(sql, {
+    by: { kind: "staff", id: userId },
+    agentId,
+    organizationId: orgId,
+    canSchedule: input.canSchedule === true,
+    canPublishNow: input.canPublishNow === true,
+    platforms,
+    now,
+  });
+  if (!result.ok) return { ok: true, value: { updated: false, reasonCode: result.reasonCode } };
+  return { ok: true, value: { updated: true, ...result.permission } };
 }
 
 async function staffOverview(sql: Sql, orgId: string, now: number) {

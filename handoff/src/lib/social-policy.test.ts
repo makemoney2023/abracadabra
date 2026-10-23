@@ -102,6 +102,8 @@ describe("evaluateSocialPolicy", () => {
     expect(evaluateSocialPolicy(lead("schedule_approved"), "reschedule").reasonCode).toBe("policy_mode");
     expect(evaluateSocialPolicy(lead("schedule_approved"), "retry").reasonCode).toBe("policy_mode");
     expect(evaluateSocialPolicy(lead("managed"), "reschedule").authorization).toBe("allowed");
+    // A function agent (hire) can only ask to move a post: staff approve it.
+    expect(evaluateSocialPolicy(hire("managed", { grant: ["social.schedule.manage"] }), "reschedule").authorization).toBe("confirmation_required");
     expect(evaluateSocialPolicy(hire("managed"), "retry").authorization).toBe("allowed");
     expect(evaluateSocialPolicy(lead("managed"), "disconnect").authorization).toBe("confirmation_required");
   });
@@ -115,6 +117,13 @@ describe("evaluateSocialPolicy", () => {
       authorization: "confirmation_required",
       reasonCode: "confirmation_required",
     });
+    // A granted function agent needs no per-post approval once the client allows scheduling; cancel and move still do.
+    expect(evaluateSocialPolicy(hire("managed", granted("social.publish_now")), "publish_now", { contentApproved: true })).toMatchObject({
+      authorization: "allowed",
+    });
+    expect(evaluateSocialPolicy(hire("schedule_approved", granted("social.publish_now")), "publish_now", { contentApproved: true }).authorization).toBe("allowed");
+    expect(evaluateSocialPolicy(hire("managed", granted("social.publish_now")), "publish_now").reasonCode).toBe("unapproved");
+    expect(evaluateSocialPolicy(hire("managed", granted("social.schedule.manage")), "cancel", { contentApproved: true }).authorization).toBe("confirmation_required");
     expect(evaluateSocialPolicy(hire("managed", granted("social.cadence.manage")), "cadence_change").authorization).toBe(
       "confirmation_required",
     );

@@ -46,6 +46,8 @@ export const GATED_HQ_TOOLS = new Set([
   "delete_project",
   "schedule_social",
   "execute_social_plan",
+  "approve_agent_social_plan",
+  "set_agent_social_permission",
 ]);
 
 /** Every tool the chat model may call besides the reads. A tool missing here is invisible to the model. */
@@ -179,6 +181,16 @@ export const HQ_TOOL_HELP: Record<string, { label: string; description: string }
     label: "Execute a social plan",
     description:
       "Run one prepared social plan after the approval card. Sends only the rows in that plan. Fields: organizationId, planId, planHash, externalId.",
+  },
+  approve_agent_social_plan: {
+    label: "Approve an agent's social plan",
+    description:
+      "Approve one plan a function agent prepared (cancel or move; publish now needs no approval once the agent is granted it). The agent then runs it with the approval token. Nothing posts until the agent executes it. Fields: organizationId, planId, planHash, note.",
+  },
+  set_agent_social_permission: {
+    label: "Set an agent's social permission",
+    description:
+      "Turn scheduling on or off for one function agent on one client. canSchedule lets it schedule, move and cancel (move and cancel still need approval); canPublishNow also lets it publish now, with no per-post approval when the card is Done and the piece approved. Default is off. Fields: organizationId, agentId, canSchedule, canPublishNow, platforms.",
   },
   list_work_requests: { label: "Client requests", description: "Requests from client email and Slack. Fields: organizationId." },
   create_client: {

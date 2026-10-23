@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Sql } from "@/db/sql";
 import type { ItemFormat } from "./deliverable-manifest";
+import { libraryEligibleSql } from "./project-library";
 import { notePreflightAttention, noteStalePlan } from "./social-attention";
 import { pieceMedia } from "./social-plan";
 import { evaluateSocialPolicy, type SocialAction, type SocialActor } from "./social-policy";
@@ -290,20 +291,75 @@ async function loadContext(sql: Sql, input: PrepareSocialPlanInput): Promise<{ f
     }
     return ids.map((accountId) => ({ itemId: row.item_id, version: row.version, accountId }));
   });
+  const flight = preflight({
+    mode: input.mode,
+    itemIds: input.itemIds,
+    accountIds: input.accountIds,
+    pieces,
+    accounts: accounts.map((row) => ({ id: row.id, platform: row.platform, active: row.is_active === 1 })),
+    live,
+    timing: input.timing,
+    overrides: input.overrides,
+    options: input.options,
+  });
   return {
     cadenceRevision: cadence?.updated_at ?? null,
-    flight: preflight({
-      mode: input.mode,
-      itemIds: input.itemIds,
-      accountIds: input.accountIds,
-      pieces,
-      accounts: accounts.map((row) => ({ id: row.id, platform: row.platform, active: row.is_active === 1 })),
-      live,
-      timing: input.timing,
-      overrides: input.overrides,
-      options: input.options,
-    }),
+    flight: await applyAgentGuards(sql, input, items, accounts, flight),
   };
+}
+
+/**
+ * Extra checks for a function agent (a hire) that schedules or publishes (they run at prepare and again at execute, because execute
+ * recomputes the plan and compares its hash). A row that fails moves from executable to blocked with a reason:
+ * card_not_done (the deliverable's work card is missing or not Done), project_excluded (the project opted out of the
+ * Library), platform_not_allowed (the network is not in this agent's permission). Staff, client and lead-agent actors are not
+ * held to these.
+ */
+async function applyAgentGuards(
+  sql: Sql,
+  input: PrepareSocialPlanInput,
+  items: ItemRecord[],
+  accounts: { id: string; platform: string }[],
+  flight: PreflightResult,
+): Promise<PreflightResult> {
+  const actor = input.actor;
+  if (actor.kind !== "agent" || actor.role !== "hire" || (input.action !== "schedule" && input.action !== "publish_now") || flight.executable.length === 0) return flight;
+  const deliverableOf = new Map(items.map((row) => [row.id, row.deliverable_id]));
+  const deliverableIds = [...new Set(items.map((row) => row.deliverable_id))];
+  const marks = deliverableIds.map(() => "?").join(", ");
+  const cards = deliverableIds.length
+    ? await sql.all<{ deliverable_id: string; status: string }>(
+        `SELECT deliverable_id, status FROM tasks WHERE deliverable_id IN (${marks})`,
+        deliverableIds,
+      )
+    : [];
+  const cardsByDeliverable = new Map<string, string[]>();
+  for (const card of cards) cardsByDeliverable.set(card.deliverable_id, [...(cardsByDeliverable.get(card.deliverable_id) ?? []), card.status]);
+  const excluded = deliverableIds.length
+    ? new Set(
+        (
+          await sql.all<{ id: string }>(
+            `SELECT d.id FROM deliverables d WHERE d.id IN (${marks}) AND NOT (${libraryEligibleSql("d.project_id", "d.workspace_id")})`,
+            deliverableIds,
+          )
+        ).map((row) => row.id),
+      )
+    : new Set<string>();
+  const platformOf = new Map(accounts.map((row) => [row.id, row.platform]));
+  const allowed = actor.platforms ? new Set(actor.platforms) : null;
+  const executable: PreflightRow[] = [];
+  const blocked = [...flight.blocked];
+  for (const row of flight.executable) {
+    const deliverableId = deliverableOf.get(row.itemId) ?? "";
+    const statuses = cardsByDeliverable.get(deliverableId) ?? [];
+    let reason: string | null = null;
+    if (statuses.length === 0 || statuses.some((status) => status !== "done")) reason = "card_not_done";
+    else if (excluded.has(deliverableId)) reason = "project_excluded";
+    else if (allowed && !allowed.has(platformOf.get(row.accountId) ?? row.platform)) reason = "platform_not_allowed";
+    if (reason) blocked.push({ ...row, eligible: false, reason });
+    else executable.push(row);
+  }
+  return { ...flight, executable, blocked };
 }
 
 /** An empty executable list is unapproved only when every block is the approval check. */

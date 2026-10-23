@@ -83,6 +83,68 @@ export async function issueConfirmation(
   return { id, expiresAt };
 }
 
+/**
+ * Staff approve a plan an agent prepared (publish-now, cancel, or a move). The agent cannot approve its own plan:
+ * issueConfirmation only accepts the plan's own actor, and an agent has no route to it. This is the staff side. It
+ * writes a confirmation the agent then passes to execute as confirmation_token, and a row on the client timeline.
+ * Asking twice returns the same live confirmation.
+ */
+export async function approveAgentSocialPlan(
+  sql: Sql,
+  input: { organizationId: string; planId: string; planHash: string; staff: SocialActor; now: number; note?: string },
+): Promise<{ id: string; expiresAt: number; action: string; agentId: string }> {
+  if (input.staff.kind !== "staff") throw new PlanError(403, "role_denied");
+  const row = await sql.get<{
+    organization_id: string;
+    actor_kind: ActorStorageKind;
+    actor_id: string;
+    action: string;
+    plan_hash: string;
+    authorization: string;
+    expires_at: number;
+    executed_at: number | null;
+  }>(
+    `SELECT organization_id, actor_kind, actor_id, action, plan_hash, authorization, expires_at, executed_at
+     FROM social_publish_plans WHERE id = ?`,
+    [input.planId],
+  );
+  if (!row || row.organization_id !== input.organizationId) throw new PlanError(404, "not_found");
+  if (row.actor_kind !== "agent") throw new PlanError(409, "not_an_agent_plan");
+  if (row.plan_hash !== input.planHash) throw new PlanError(409, "stale_plan");
+  if (row.expires_at <= input.now || row.executed_at != null) throw new PlanError(409, "stale_plan");
+  if (row.authorization === "denied") throw new PlanError(403, "denied");
+  if (row.authorization !== "confirmation_required") throw new PlanError(409, "approval_not_needed");
+  const live = await sql.get<{ id: string; expires_at: number }>(
+    `SELECT id, expires_at FROM social_confirmations
+     WHERE plan_id = ? AND plan_hash = ? AND action = ? AND used_at IS NULL AND expires_at > ? ORDER BY created_at DESC LIMIT 1`,
+    [input.planId, input.planHash, row.action, input.now],
+  );
+  if (live) return { id: live.id, expiresAt: live.expires_at, action: row.action, agentId: row.actor_id };
+  const expiresAt = Math.min(row.expires_at, input.now + CONFIRM_SHORT_TTL_MS);
+  const id = crypto.randomUUID();
+  await sql.batch([
+    {
+      statement: `INSERT INTO social_confirmations (
+         id, plan_id, plan_hash, action, approver_kind, approver_id, note, expires_at, created_at
+       ) VALUES (?, ?, ?, ?, 'staff', ?, ?, ?, ?)`,
+      params: [id, input.planId, input.planHash, row.action, input.staff.id, input.note ?? null, expiresAt, input.now],
+    },
+    {
+      statement: `INSERT INTO activities (id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at)
+        VALUES (?, ?, 'social.plan.approved', 'staff', ?, ?, ?, ?)`,
+      params: [
+        crypto.randomUUID(),
+        input.organizationId,
+        input.staff.id,
+        `Approved an agent's ${row.action.replace("_", " ")} plan.`,
+        JSON.stringify({ planId: input.planId, planHash: input.planHash, action: row.action, agentId: row.actor_id, confirmationId: id, note: input.note ?? null }),
+        input.now,
+      ],
+    },
+  ]);
+  return { id, expiresAt, action: row.action, agentId: row.actor_id };
+}
+
 async function consumeConfirmation(
   sql: Sql,
   input: { confirmationId: string; planId: string; planHash: string; action: string; now: number },

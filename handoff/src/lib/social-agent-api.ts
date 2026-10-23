@@ -1,11 +1,12 @@
 import type { Sql } from "@/db/sql";
 import type { SocialWriteResult } from "@/app/api/agent-social/http";
 import { clientRefFrom } from "./agent-contacts";
+import { AGENT_SOCIAL_LIMITS } from "./agent-social-limits";
 import type { AgentPrincipal } from "./agent-work-filing";
 import { executeSocialPlan } from "./social-commands";
 import { asPostType } from "./social-plan";
 import { actorStorageKind, PlanError, prepareCommandPlan, prepareSocialPlan, type PreparedPlan } from "./social-plans";
-import type { SocialAction } from "./social-policy";
+import { evaluateSocialPolicy, type SocialAction, type SocialActor } from "./social-policy";
 import { resolveAgentClient, socialAgentActionsEnabled } from "./social-queries";
 import { saveSocialVariant, type SocialVariant } from "./social-variants";
 import { storeForCommands, zernioForCommands } from "./social-runtime";
@@ -137,6 +138,71 @@ function missingStore(): ObjectStore {
   };
 }
 
+/**
+ * Scheduling and publishing from an agent names its work card and deliverable. They must agree, and the card must be
+ * Done, before any plan is prepared. (Preparing and executing also re-check the card, the project's Library setting
+ * and the allowed network in loadContext.)
+ */
+async function bindWork(
+  sql: Sql,
+  organizationId: string,
+  itemIds: string[],
+  body: Record<string, unknown>,
+  selection: Record<string, unknown>,
+): Promise<SocialWriteResult | null> {
+  const deliverableId = text(body.deliverable_id ?? body.deliverableId ?? selection.deliverable_id ?? selection.deliverableId);
+  const workItemId = text(body.work_item_id ?? body.workItemId ?? selection.work_item_id ?? selection.workItemId);
+  if (!deliverableId) return fail(400, "deliverable_required", "A deliverable id is required.");
+  if (!workItemId) return fail(400, "work_item_required", "A work item id is required.");
+  const deliverable = await sql.get<{ id: string }>(
+    "SELECT id FROM deliverables WHERE id = ? AND organization_id = ?",
+    [deliverableId, organizationId],
+  );
+  if (!deliverable) return fail(404, "not_found", "That deliverable is not on this client.");
+  const card = await sql.get<{ id: string; deliverable_id: string | null; status: string }>(
+    "SELECT id, deliverable_id, status FROM tasks WHERE id = ? AND organization_id = ?",
+    [workItemId, organizationId],
+  );
+  if (!card) return fail(404, "not_found", "That work item is not on this client.");
+  if (card.deliverable_id !== deliverableId) return fail(409, "work_item_mismatch", "That work item does not belong to that deliverable.");
+  if (card.status !== "done") return fail(409, "card_not_done", "That work item is not Done.");
+  if (itemIds.length > 0) {
+    const marks = itemIds.map(() => "?").join(", ");
+    const owned = await sql.all<{ id: string }>(`SELECT id FROM deliverable_items WHERE deliverable_id = ? AND id IN (${marks})`, [deliverableId, ...itemIds]);
+    if (owned.length !== new Set(itemIds).size) return fail(409, "deliverable_mismatch", "Those pieces do not belong to that deliverable.");
+  }
+  return null;
+}
+
+/** Fixed-window limits per agent and client. Counts every plan an agent prepared, so a loop is stopped early. */
+async function rateLimited(sql: Sql, actor: SocialActor, organizationId: string, action: string, phase: "prepare" | "execute", now: number): Promise<SocialWriteResult | null> {
+  if (actor.kind !== "agent" || actor.role !== "hire" || (action !== "schedule" && action !== "publish_now")) return null;
+  const hour = now - 60 * 60 * 1000;
+  const day = now - 24 * 60 * 60 * 1000;
+  const count = async (statement: string, params: unknown[]) => (await sql.get<{ n: number }>(statement, params))?.n ?? 0;
+  if (phase === "prepare") {
+    const prepared = await count(
+      "SELECT COUNT(*) AS n FROM social_publish_plans WHERE organization_id = ? AND actor_kind = 'agent' AND actor_id = ? AND action IN ('schedule', 'publish_now') AND created_at > ?",
+      [organizationId, actor.id, hour],
+    );
+    if (prepared >= AGENT_SOCIAL_LIMITS.plansPerHour) return fail(429, "rate_limited", "Too many plans. Try again later.", { retryAfterSeconds: 3600 });
+    return null;
+  }
+  const executed = await count(
+    "SELECT COUNT(*) AS n FROM social_publish_plans WHERE organization_id = ? AND actor_kind = 'agent' AND actor_id = ? AND action IN ('schedule', 'publish_now') AND executed_at > ?",
+    [organizationId, actor.id, day],
+  );
+  if (executed >= AGENT_SOCIAL_LIMITS.executionsPerDay) return fail(429, "rate_limited", "Too many posts today. Try again later.", { retryAfterSeconds: 86400 });
+  if (action === "publish_now") {
+    const now1 = await count(
+      "SELECT COUNT(*) AS n FROM social_publish_plans WHERE organization_id = ? AND actor_kind = 'agent' AND actor_id = ? AND action = 'publish_now' AND executed_at > ?",
+      [organizationId, actor.id, day],
+    );
+    if (now1 >= AGENT_SOCIAL_LIMITS.publishNowPerDay) return fail(429, "rate_limited", "Too many publish-now posts today. Try again later.", { retryAfterSeconds: 86400 });
+  }
+  return null;
+}
+
 export async function postSocialPlan(sql: Sql, agent: AgentPrincipal, body: Record<string, unknown>, now: number): Promise<SocialWriteResult> {
   const external = requiredExternal(body);
   if (!("value" in external)) return writesOff() ?? external;
@@ -149,12 +215,23 @@ export async function postSocialPlan(sql: Sql, agent: AgentPrincipal, body: Reco
   const timing = timingFrom(body, action as SocialAction, now);
   if (timing === "missing" || timing === "invalid") return fail(400, "invalid_timing", "That timing is not usable.");
   const selection = body.selection && typeof body.selection === "object" && !Array.isArray(body.selection) ? (body.selection as Record<string, unknown>) : {};
+  const itemIds = stringList(selection.item_ids ?? selection.itemIds);
+  const standing = evaluateSocialPolicy(client.actor, action as SocialAction, { contentApproved: true });
+  // A denied plan (mode, role, permission) is answered by the plan itself. An empty selection is too.
+  if ((action === "schedule" || action === "publish_now") && client.actor.kind === "agent" && client.actor.role === "hire" && standing.authorization !== "denied" && itemIds.length > 0) {
+    // Agents may not sweep ("eligible"): they name one deliverable and its card.
+    if (selection.mode === "eligible") return fail(400, "selection_required", "Name the pieces to post.");
+    const limited = await rateLimited(sql, client.actor, client.organizationId, action, "prepare", now);
+    if (limited) return limited;
+    const unbound = await bindWork(sql, client.organizationId, itemIds, body, selection);
+    if (unbound) return unbound;
+  }
   const prepared = await prepareSocialPlan(sql, {
     organizationId: client.organizationId,
     actor: client.actor,
     action: action as SocialAction,
     mode: selection.mode === "eligible" ? "eligible" : "explicit",
-    itemIds: stringList(selection.item_ids ?? selection.itemIds),
+    itemIds,
     accountIds: stringList(selection.account_ids ?? selection.accountIds),
     timing,
     timezone: text(body.timezone) ?? "UTC",
@@ -176,13 +253,19 @@ export async function executeAgentSocialPlan(
   if (!("value" in external)) return external;
   const planHash = text(body.plan_hash ?? body.planHash);
   if (!planHash) return fail(400, "plan_hash_required", "A plan hash is required.");
-  const stored = await sql.get<{ organization_id: string }>("SELECT organization_id FROM social_publish_plans WHERE id = ?", [planId]);
+  const stored = await sql.get<{ organization_id: string; action: string }>("SELECT organization_id, action FROM social_publish_plans WHERE id = ?", [planId]);
   if (!stored) return fail(404, "not_found", "That plan is not on this client.");
   const client = body.client == null ? { organization_id: stored.organization_id } : clientRefFrom(body.client);
   const resolved = await resolveAgentClient(sql, agent, client);
   if (!resolved.ok || resolved.organizationId !== stored.organization_id) {
     return fail(404, "not_found", "That plan is not on this client.");
   }
+  // Execute does not re-run the policy by itself. An agent switched off, or moved off this client, after it prepared
+  // a plan must not be able to run it.
+  const standing = evaluateSocialPolicy(resolved.actor, stored.action as SocialAction, { contentApproved: true });
+  if (standing.authorization === "denied") return fail(403, standing.reasonCode, "That plan is not allowed.");
+  const limited = await rateLimited(sql, resolved.actor, resolved.organizationId, stored.action, "execute", now);
+  if (limited) return limited;
   try {
     const result = await executeSocialPlan(sql, {
       organizationId: resolved.organizationId,
@@ -371,6 +454,7 @@ export async function postRetryPlan(
 function variantMessage(reasonCode: string): string {
   if (reasonCode === "feature_disabled") return "Agent social actions are off.";
   if (reasonCode === "conflict") return "That variant changed. Read it again and retry.";
+  if (reasonCode === "post_scheduled") return "That post is already scheduled or published. Ask staff to change it with a card.";
   if (reasonCode === "stale_source") return "That piece version is no longer current.";
   if (reasonCode === "not_found") return "That piece is not on this client.";
   if (reasonCode === "unsupported_options") return "That network does not accept those options.";

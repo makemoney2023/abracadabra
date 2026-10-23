@@ -79,6 +79,31 @@ needs, the way you choose a skill, then create the card with that agent as its a
   POST $HQ/api/agent-board/tasks/<card id>   {"action":"move","to":"doing"}
 Pick from the descriptions. If none fits, keep the card yourself and say so in its note. The function agent then searches the library for its own skills.
 
+## Scheduling a social post (only if staff turned it on for you)
+
+A function agent can schedule or publish a LinkedIn post only when staff turned that on for you on this client. It is off by default;
+a plan for an agent that is not allowed is 403. You prepare a plan, then run it. Nothing posts when you prepare. Send an
+external_id (your idempotency key) on every write; reuse it to retry safely, and use a new one for a new post.
+  1. Card first: the deliverable's card must be Done and the piece approved. Save the caption for the network if it is not saved yet
+     (PATCH $HQ/api/agent-social/pieces/<item id>/variants). You cannot change the caption of a post that is already scheduled: 409 post_scheduled.
+  2. Prepare:
+     POST $HQ/api/agent-social/plans   {"client":"<domain>","external_id":"li-<work item>-v1","action":"schedule","deliverable_id":"<id>","work_item_id":"<Done card id>",
+       "selection":{"mode":"explicit","item_ids":["<item id>"],"account_ids":["<linkedin account id>"]},
+       "timing":{"mode":"scheduled","start_at":"2026-11-02T14:00:00Z"},"timezone":"America/Toronto"}
+     For "now" use "action":"publish_now" and no timing (needs publish-now permission too; a Done and approved card is enough, no staff approval). GET $HQ/api/agent-social/accounts lists the connected LinkedIn account.
+     The response has planId, planHash, authorization, rows (will post) and blocked (with a reason each: unapproved, card_not_done,
+     project_excluded, platform_not_allowed, duplicate, ...). Errors: 400 deliverable_required / work_item_required / external_id_required,
+     404 not_found, 409 card_not_done / work_item_mismatch / deliverable_mismatch, 403 (not allowed or feature off), 429 rate_limited.
+  3. Run: POST $HQ/api/agent-social/plans/<planId>/execute   {"external_id":"li-<work item>-v1-run","plan_hash":"<planHash>"}
+     Schedule and publish now run straight away when authorization is allowed. A move or cancel (and anything else with authorization
+     confirmation_required) needs staff approval first. Staff approve in HQ. Poll GET $HQ/api/agent-social/plans/<planId> until
+     approval.status is approved, then send approval.confirmationToken as "confirmation_token" in execute. The token is single use and short lived.
+  4. Status: GET $HQ/api/agent-social/plans/<planId> (outcomes), GET $HQ/api/agent-social/posts?client=<domain>, GET $HQ/api/agent-social/attention.
+  5. Move or cancel a scheduled post: POST $HQ/api/agent-social/posts/<post id>/move-plan {"client","external_id","scheduled_for"} or /cancel-plan,
+     then the same approval and execute. A failed post shows in attention; ask staff before retrying with a token that has expired.
+Limits per agent and client: 20 plans an hour, 10 posts a day, 3 publish-now a day (429 rate_limited). You cannot sweep: name the pieces.
+Alt text is not supported yet; do not promise it.
+
 ## Client Services
 
 You have no agent token. When you review a card, check that its agent searched for skills for the task, cited them in skills_used and gave
