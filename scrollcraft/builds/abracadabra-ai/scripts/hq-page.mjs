@@ -163,14 +163,13 @@ ${pageActions(READINESS, "Take the Readiness Check", "/start/", "Start a project
 
 // SINGLE PLACE TO SWAP THE VIDEO: change the four file paths below (and the duration/summary if the cut
 // changes) and run `npm run build`. The section, the homepage JSON-LD node and the sitemap entry all read from here.
-// The files in assets/video/hq-product-* are the approved v4 cut.
+// The landscape files in assets/video/hq-product-* are the approved v4 cut; the portrait files are the v5 vertical cut.
 export const HQ_VIDEO = {
   landscape: "/assets/video/hq-product-landscape.mp4",
-  // No vertical cut is approved yet (a v5 vertical is in the works), so portrait screens use the landscape cut.
-  // To add it, set both of these to real paths, e.g. "/assets/video/hq-product-portrait.mp4" and ".jpg".
-  portrait: null,
+  // Portrait screens (width <= height) use the v5 vertical cut (1080x1920, silent), which is native 9:16.
+  portrait: "/assets/video/hq-product-portrait.mp4",
   posterLandscape: "/assets/video/hq-product-landscape.jpg",
-  posterPortrait: null,
+  posterPortrait: "/assets/video/hq-product-portrait.jpg",
   title: "HQ product video",
   seconds: 56,
   uploadDate: "2026-10-23",

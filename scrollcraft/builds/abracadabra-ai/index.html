@@ -439,15 +439,15 @@
 </section>
 <script src="/assets/name-reveal.js?v=20261018c" defer></script>
 <!-- HQ-VIDEO -->
-<section id="hq-video" class="hq-video" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" style="--hq-video-poster: url(/assets/video/hq-product-landscape.jpg); --hq-video-poster-portrait: url(/assets/video/hq-product-landscape.jpg)" data-hq-video>
+<section id="hq-video" class="hq-video hq-video--has-portrait" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" style="--hq-video-poster: url(/assets/video/hq-product-landscape.jpg); --hq-video-poster-portrait: url(/assets/video/hq-product-portrait.jpg)" data-hq-video>
   <h2 id="hq-video-title" class="hq-video__sr">HQ product video</h2>
   <p id="hq-video-summary" class="hq-video__sr">A 56-second silent video about HQ. Every request lands as a card on the work board and becomes a written plan before work starts. A team of digital workers, which are AI agents, picks up the work, searches the skill library for each task, uses the skill packs, cites the skills used and reports whether they helped. Client Services reviews before anything reaches you, and finished work lands in your folders and Library. Only client-approved finished work can be scheduled or posted: once a piece is approved and your accounts are connected, it is scheduled into your next open slot, for Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky. HQ runs on Cloudflare. The video ends with the Readiness Check, a five-to-seven-minute questionnaire.</p>
   <div class="hq-video__ambient" aria-hidden="true"></div>
   <picture class="hq-video__poster">
-    
+    <source media="(max-aspect-ratio: 1/1)" srcset="/assets/video/hq-product-portrait.jpg" width="1080" height="1920">
     <img class="hq-video__frame" src="/assets/video/hq-product-landscape.jpg" width="1920" height="1080" alt="" loading="lazy" decoding="async">
   </picture>
-  <video class="hq-video__frame hq-video__media" muted loop playsinline preload="metadata" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" data-src-landscape="/assets/video/hq-product-landscape.mp4" data-src-portrait="/assets/video/hq-product-landscape.mp4" data-poster-landscape="/assets/video/hq-product-landscape.jpg" data-poster-portrait="/assets/video/hq-product-landscape.jpg"></video>
+  <video class="hq-video__frame hq-video__media" muted loop playsinline preload="metadata" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" data-src-landscape="/assets/video/hq-product-landscape.mp4" data-src-portrait="/assets/video/hq-product-portrait.mp4" data-poster-landscape="/assets/video/hq-product-landscape.jpg" data-poster-portrait="/assets/video/hq-product-portrait.jpg"></video>
   <div class="hq-video__scrim" aria-hidden="true"></div>
   <div class="hq-video__bar">
     <nav class="hq-video__links" aria-label="About HQ"><a href="/products/hq/">Meet HQ</a><a href="/blog/how-client-work-flows-through-hq">How client work moves through HQ</a></nav>
