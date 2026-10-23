@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { LibraryArtifact } from "@/lib/library-artifacts";
 import type { LibraryPage } from "@/lib/library-queries";
 import { LibraryGallery } from "./library-gallery";
+import type { BulkConfig } from "./library-bulk-bar";
 import type { ScheduleState } from "./schedule-this-form";
 import { LIBRARY_PLATFORMS, LIBRARY_SORTS, LIBRARY_STATUS_LABEL, LIBRARY_TABS, emptyLibraryCopy, libraryHref, nextLibraryHref } from "./library-view";
 
@@ -49,6 +50,7 @@ export function LibraryBrowser({
   promotionTargets = [],
   projects = [],
   schedule = null,
+  bulk = null,
 }: {
   slug: string;
   page: Pick<LibraryPage, "artifacts" | "nextCursor" | "counts"> | null;
@@ -59,6 +61,7 @@ export function LibraryBrowser({
   promotionTargets?: { id: string; title: string }[];
   projects?: { id: string; name: string }[];
   schedule?: { workspaceId: string; platforms: { value: string; label: string }[]; action: (previous: ScheduleState, formData: FormData) => Promise<ScheduleState> } | null;
+  bulk?: BulkConfig | null;
 }) {
   const activeFilters = ["search", "status", "platform", "from", "to", "project", "needs"]
     .filter((key) => (key === "status" ? Boolean(query.status && query.status !== "all") : Boolean(query[key]))).length;
@@ -146,6 +149,7 @@ export function LibraryBrowser({
         promotionAction={promotionAction}
         promotionTargets={promotionTargets}
         schedule={schedule}
+        bulk={bulk}
       />
       {page?.nextCursor ? <Link className="inline-flex min-h-11 items-center text-sm underline" href={nextLibraryHref(slug, query, page.nextCursor)}>Next</Link> : null}
     </div>
