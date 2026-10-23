@@ -5,6 +5,7 @@ import { fileSchemaPackage } from "../schema-work";
 import { consumeWorkRequest } from "../client-work";
 import { planProjectSpace } from "../project-space";
 import { queueReply } from "../lead-routing";
+import { assignFunctionAgentsToClient } from "@/lib/function-agents";
 
 export type ConsumeResult =
   | { ok: true; duplicate: boolean; filled_email?: boolean; leadOrganizationId?: string; kickoffOrganizationId?: string }
@@ -210,6 +211,7 @@ async function reopenArchivedOrg(
   );
   if (!row) return false;
   await sql.run("UPDATE organizations SET archived_at = NULL, updated_at = ? WHERE id = ?", [input.now, row.id]);
+  await assignFunctionAgentsToClient(sql, row.id, input.now);
   await sql.run(
     `INSERT INTO activities (
        id, organization_id, kind, actor_kind, actor_id, body, data_json, created_at
@@ -911,6 +913,7 @@ async function consumeDealClosed(sql: Sql, payload: unknown, now: number): Promi
         now,
         deal.organization_id,
       ]);
+      await assignFunctionAgentsToClient(sql, deal.organization_id, now);
       await sql.run(
         `INSERT INTO activities (
            id, organization_id, deal_id, kind, actor_kind, actor_id, body, data_json, created_at

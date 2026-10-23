@@ -69,6 +69,16 @@ Staff can grant a pack to an agent or a client, which lists it under GET $HQ/api
 needed for the flow above. Do not wait for one, and do not ask for one.
   GET $HQ/api/agent-skills   (grants and packs attached to your open cards; add ?task_id=<card> to narrow it)
 
+## Client lead agents: choose the function agent for a card
+
+Every client has the same function agents (engineering, SEO, creative, social, and any added later) as hires. Choose by what the card
+needs, the way you choose a skill, then create the card with that agent as its assignee and move it to Doing:
+  GET $HQ/api/agent-agents                 (the function agents on your clients: agent_id, function, description)
+  GET $HQ/api/agent-agents?client=<organization id | domain | space slug>
+  POST $HQ/api/agent-board/tasks   {"title":"...","note":"...","client":{"domain":"..."},"assignee":"<agent_id>","work_request_id":"<Client Services request id>"}
+  POST $HQ/api/agent-board/tasks/<card id>   {"action":"move","to":"doing"}
+Pick from the descriptions. If none fits, keep the card yourself and say so in its note. The function agent then searches the library for its own skills.
+
 ## Client Services
 
 You have no agent token. When you review a card, check that its agent searched for skills for the task, cited them in skills_used and gave

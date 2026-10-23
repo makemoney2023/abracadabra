@@ -9,6 +9,7 @@ import { checkSupersedes, recordFiling, resolveFilingRequest, type FilingReview 
 import { handOverWaitingTasks } from "@/lib/agent-dispatch";
 import { builtWorkByItem, builtWorkMarkdown, builtWorkWrites, parseBuiltWork, type BuiltWorkInput } from "@/lib/built-work";
 import { legacyStartsAllowed } from "@/lib/agent-mode";
+import { functionAgentsForClientWrites, functionAgentToAllClientsWrites } from "@/lib/function-agents";
 import { readyMediaBytes } from "@/lib/agent-media";
 import { inspectVideoDataUrl } from "@/lib/video-files";
 import { namedPosterPairs } from "@/lib/video-posters";
@@ -138,6 +139,10 @@ export async function registerClientAgent(
     projectId?: string | null;
     role?: "lead" | "hire";
     rotate?: boolean;
+    /** function: a specialist every client gets as a hire (src/lib/function-agents.ts). Omitted keeps what the agent already is. */
+    kind?: "client" | "function";
+    functionLabel?: string | null;
+    description?: string | null;
     actor: string;
     now: number;
   },
@@ -147,7 +152,12 @@ export async function registerClientAgent(
   const organizationId = input.organizationId?.trim() || null;
   const workspaceId = input.workspaceId?.trim() || null;
   const projectId = input.projectId?.trim() || null;
-  const role = input.role === "hire" ? "hire" : "lead";
+  const existing = await sql.get<{ id: string; kind: string }>("SELECT id, kind FROM client_agents WHERE id = ?", [agentId]);
+  const kind = input.kind ?? (existing?.kind === "function" ? "function" : "client");
+  if (kind === "function" && organizationId && input.role === "lead") return { ok: false, message: "A function agent is a hire on every client, never a lead." };
+  const role = input.role === "hire" || kind === "function" ? "hire" : "lead";
+  const functionLabel = input.functionLabel === undefined ? undefined : text(input.functionLabel, 80);
+  const description = input.description === undefined ? undefined : text(input.description, 600);
   if (!organizationId && (workspaceId || projectId)) return { ok: false, message: "Name the client for that space or project." };
   if (organizationId) {
     const org = await sql.get<{ id: string }>("SELECT id FROM organizations WHERE id = ? AND archived_at IS NULL", [organizationId]);
@@ -161,18 +171,21 @@ export async function registerClientAgent(
     const project = await sql.get<{ id: string }>("SELECT id FROM projects WHERE id = ? AND organization_id = ?", [projectId, organizationId]);
     if (!project) return { ok: false, message: "That project is not in this client." };
   }
-  const existing = await sql.get<{ id: string }>("SELECT id FROM client_agents WHERE id = ?", [agentId]);
   const label = input.label?.trim().slice(0, 200) || null;
   const writes: Write[] = [];
   let token: string | null = null;
   if (!existing) {
     token = `${TOKEN_PREFIX}${randomHex(32)}`;
     writes.push({
-      statement: "INSERT INTO client_agents (id, label, token_hash, created_by, created_at, updated_at, revoked_at) VALUES (?, ?, ?, ?, ?, ?, NULL)",
-      params: [agentId, label ?? agentId, await sha256Hex(token), input.actor, input.now, input.now],
+      statement: `INSERT INTO client_agents (id, label, token_hash, created_by, created_at, updated_at, revoked_at, kind, function_label, description)
+                  VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)`,
+      params: [agentId, label ?? agentId, await sha256Hex(token), input.actor, input.now, input.now, kind, functionLabel ?? null, description ?? null],
     });
   } else {
     if (label) writes.push({ statement: "UPDATE client_agents SET label = ?, updated_at = ? WHERE id = ?", params: [label, input.now, agentId] });
+    if (input.kind && input.kind !== existing.kind) writes.push({ statement: "UPDATE client_agents SET kind = ?, updated_at = ? WHERE id = ?", params: [kind, input.now, agentId] });
+    if (functionLabel !== undefined) writes.push({ statement: "UPDATE client_agents SET function_label = ?, updated_at = ? WHERE id = ?", params: [functionLabel, input.now, agentId] });
+    if (description !== undefined) writes.push({ statement: "UPDATE client_agents SET description = ?, updated_at = ? WHERE id = ?", params: [description, input.now, agentId] });
     if (input.rotate) {
       token = `${TOKEN_PREFIX}${randomHex(32)}`;
       writes.push({ statement: "UPDATE client_agents SET token_hash = ?, revoked_at = NULL, updated_at = ? WHERE id = ?", params: [await sha256Hex(token), input.now, agentId] });
@@ -201,6 +214,10 @@ export async function registerClientAgent(
       params: [crypto.randomUUID(), organizationId, projectId, workspaceId, input.actor, `Client agent ${agentId} assigned as ${role}.`, JSON.stringify({ agent_id: agentId, role }), input.now],
     });
   }
+  // Every client has every function agent. A function agent reaches all clients it is missing from, and a client agent
+  // placed on a client brings the function agents along. Both are no-ops when nothing is missing.
+  if (kind === "function") writes.push(...functionAgentToAllClientsWrites(agentId, input.now));
+  else if (organizationId) writes.push(...functionAgentsForClientWrites(organizationId, input.now));
   if (writes.length) await sql.batch(writes);
   // AGENT_MODE=agents: a new lead also gets the tasks already waiting in build or run.
   if (organizationId && role === "lead" && !legacyStartsAllowed()) {

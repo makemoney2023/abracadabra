@@ -4,6 +4,7 @@ import { nextColumnPosition } from "@/lib/task-position";
 import { LIMITS } from "@/lib/policy/limits";
 import { planProjectSpace } from "@/lib/project-space";
 import type { Sql } from "./sql";
+import { assignFunctionAgentsToClient } from "@/lib/function-agents";
 
 export type OrgKind = "lead" | "client" | "past_client" | "partner";
 
@@ -471,6 +472,7 @@ export async function createOrganization(
        VALUES (?, ?, 'note', 'staff', ?, ?)`,
       [crypto.randomUUID(), id, actorId, now],
     );
+    await assignFunctionAgentsToClient(sql, id, now);
     await sql.exec("COMMIT");
   } catch (error) {
     await sql.exec("ROLLBACK");
@@ -2138,6 +2140,7 @@ export async function setOrganizationInternal(
       now,
     ],
   );
+  if (!input.internal) await assignFunctionAgentsToClient(sql, input.organizationId, now);
   return { ok: true, value: { internal: input.internal } };
 }
 
@@ -2505,6 +2508,7 @@ export async function moveDealStage(
         now,
         deal.organization_id,
       ]);
+      await assignFunctionAgentsToClient(sql, deal.organization_id, now);
     }
     if (creatingProject && projectId) {
       await sql.run(
