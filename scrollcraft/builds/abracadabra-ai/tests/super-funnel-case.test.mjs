@@ -94,3 +94,9 @@ test("Super Funnel System stays out of /products/ and the nav no longer links Fi
   assert.ok(read("llms.txt").includes("https://abra-ca-dabra.app/films.html"));
   assert.ok(read("sitemap.xml").includes("https://abra-ca-dabra.app/films.html"));
 });
+
+test("the About page links Super Funnel to its case study, not the films page", () => {
+  const about = read("about/index.html");
+  assert.match(about, /<li><a href="\/portfolio\/super-funnel\/">Super Funnel<\/a>: a sales app for independent associates, shown in eight short films\.<\/li>/);
+  assert.equal(about.includes('href="/films.html"'), false);
+});
