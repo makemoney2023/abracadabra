@@ -217,6 +217,38 @@ describe("held agent filings", () => {
     expect(items.every((item) => item.work_item_id === filed.workItemId)).toBe(true);
   });
 
+  it("a revision of one picture keeps the rest of the published set and its captions", async () => {
+    const ctx = await setup();
+    const taskId = await card(ctx);
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    const first = await file(ctx, {
+      external_id: "set-1",
+      task_id: taskId,
+      title: "Social set",
+      summary: "## Schema 1\n\n**Image:** `schema-1.png`\n\n**Caption:**\nCan it read your website?\n",
+      content: null,
+      attachments: [{ name: "schema-1.png", body: png }],
+    });
+    expect((await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 20 })).ok).toBe(true);
+    const second = await file(ctx, {
+      external_id: "set-2",
+      task_id: taskId,
+      title: "Banner fix",
+      summary: "Updated the banner.",
+      content: null,
+      attachments: [{ name: "linkedin-banner.png", body: png }],
+    }, NOW + 30);
+    expect(second.review?.deliverableVersion).toBe(2);
+    expect((await clientServicesReview(sql, { taskId, action: "approve", now: NOW + 40 })).ok).toBe(true);
+    const items = await sql.all<{ title: string; copy_text: string | null }>(
+      "SELECT title, copy_text FROM deliverable_items WHERE deliverable_id = ? AND version = 2",
+      [first.review!.deliverableId],
+    );
+    expect(items.map((item) => item.title)).toEqual(expect.arrayContaining(["schema-1.png", "linkedin-banner.png", "Social set"]));
+    expect(items.find((item) => item.title === "schema-1.png")?.copy_text).toContain("Can it read your website?");
+    expect(await sql.get("SELECT published_version FROM deliverables WHERE id = ?", [first.review!.deliverableId])).toEqual({ published_version: 2 });
+  });
+
   it("two filings on one open card join the same version; after publish the next filing starts a new version", async () => {
     const ctx = await setup();
     const taskId = await card(ctx);

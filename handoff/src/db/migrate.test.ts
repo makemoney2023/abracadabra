@@ -88,6 +88,7 @@ describe("statementsFromMigration", () => {
       expect(settings).toEqual([
         { key: "build_deadline_hours", value: "2" },
         { key: "max_cloud_runs", value: "4" },
+        { key: "shelf_pieces_carried", value: "1" },
         { key: "swarm_runs_backfill", value: "1" },
       ]);
       const scanColumn = db.prepare("PRAGMA table_info(schema_check_sites)").all() as { name: string }[];

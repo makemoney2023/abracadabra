@@ -130,10 +130,22 @@ export async function migrate(sql: Sql): Promise<void> {
   const marked = await sql.get<{ value: string }>(
     "SELECT value FROM agent_settings WHERE key = 'swarm_runs_backfill'",
   );
-  if (marked) return;
-  await backfillSwarmRuns(sql, Date.now());
+  if (!marked) {
+    await backfillSwarmRuns(sql, Date.now());
+    try {
+      await sql.run("INSERT INTO agent_settings (key, value) VALUES ('swarm_runs_backfill', '1')");
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("UNIQUE")) throw error;
+    }
+  }
+  const carried = await sql.get<{ value: string }>(
+    "SELECT value FROM agent_settings WHERE key = 'shelf_pieces_carried'",
+  );
+  if (carried) return;
+  const { restorePublishedShelves } = await import("@/lib/shelf-carry");
+  await restorePublishedShelves(sql);
   try {
-    await sql.run("INSERT INTO agent_settings (key, value) VALUES ('swarm_runs_backfill', '1')");
+    await sql.run("INSERT INTO agent_settings (key, value) VALUES ('shelf_pieces_carried', '1')");
   } catch (error) {
     if (!(error instanceof Error) || !error.message.includes("UNIQUE")) throw error;
   }

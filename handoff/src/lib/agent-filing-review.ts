@@ -1,6 +1,7 @@
 import type { Sql } from "@/db/sql";
 import { assignmentFor, type AgentPrincipal, type WorkPayload } from "@/lib/agent-work-filing";
 import { itemForPath } from "@/lib/artifact-adapter";
+import { captionForImage, carryForwardWrites } from "@/lib/shelf-carry";
 import { DELIVERABLE_KINDS } from "@/lib/deliverable-manifest";
 import { queueProductEvent } from "@/lib/notifications";
 import { nextColumnPosition } from "@/lib/task-position";
@@ -10,7 +11,7 @@ import { nextColumnPosition } from "@/lib/task-position";
  * - A filing is held (batches.held_at): client members can't see it until Client Services approves.
  * - A filing on a card becomes the card's deliverable (created on first filing) as a version. Filings on the same
  *   card join the open version; a new version starts after an approval, after a send back, or when the filing
- *   supersedes earlier ones.
+ *   supersedes earlier ones. A new version keeps every piece from the published round that this filing does not replace.
  * - Filing never closes a card: it goes to Waiting on Client Services; a Done card is reopened into review.
  * - Approve releases the held batches, hides superseded ones, publishes the deliverable version, and posts the client
  *   notice: a suggested update on the Client Services feed (draft mode, default) or the "is ready" email (auto).
@@ -238,6 +239,15 @@ export async function recordFiling(
     );
     const sortBase = await sql.get<{ n: number | null }>("SELECT MAX(sort) AS n FROM deliverable_items WHERE deliverable_id = ? AND version = ?", [deliverableId, version]);
     let sort = Number(sortBase?.n ?? -1) + 1;
+    const sourceVersion = existing && version !== existing.version ? (existing.published_version ?? existing.version) : null;
+    const earlierNotes = sourceVersion == null
+      ? []
+      : await sql.all<{ copy_text: string }>(
+          "SELECT copy_text FROM deliverable_items WHERE deliverable_id = ? AND version = ? AND copy_text IS NOT NULL AND copy_text != ''",
+          [deliverableId, sourceVersion],
+        );
+    const notes = [input.summary, ...earlierNotes.map((row) => row.copy_text)].join("\n");
+    const incomingTitles = [payload.title.slice(0, 200)];
     const item = (title: string, format: string, copy: string | null, media: string, link: string | null): Write => ({
       statement: `INSERT INTO deliverable_items (id, deliverable_id, version, section, format, channel, title, copy_text, media_json, link_url, status, sort, work_item_id)
                   VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, 'pending', ?, ?)`,
@@ -248,10 +258,23 @@ export async function recordFiling(
       const name = file.relative_path.split("/").pop() ?? file.relative_path;
       // The summary is the page item above; its stored file ("summary.md", or "<title> - summary.md" in a named folder) is not a piece.
       if (file.relative_path === input.summaryPath || /^summary( \(\d+\))?\.md$/i.test(name)) continue;
+      incomingTitles.push(name.slice(0, 200));
       const shaped = itemForPath(file.relative_path, file.object_key);
-      writes.push(item(name, shaped.format, null, shaped.mediaJson, null));
+      writes.push(item(name, shaped.format, captionForImage(notes, name), shaped.mediaJson, null));
     }
-    for (const link of payload.links) writes.push(item(link.label, "link", null, "[]", link.url));
+    for (const link of payload.links) {
+      incomingTitles.push(link.label.slice(0, 200));
+      writes.push(item(link.label, "link", null, "[]", link.url));
+    }
+    if (sourceVersion != null && deliverableId) {
+      writes.push(...await carryForwardWrites(sql, {
+        deliverableId,
+        fromVersion: sourceVersion,
+        toVersion: version,
+        incomingTitles,
+        notes,
+      }));
+    }
     writes.push({
       statement: "UPDATE agent_work_items SET deliverable_id = ?, deliverable_version = ? WHERE id = ?",
       params: [deliverableId, version, input.itemId],
