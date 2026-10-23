@@ -137,5 +137,5 @@ test("dateModified and sitemap lastmod are 2026-10-23 for the changed pages, and
   }
   const hub = strip(read("products/index.html")).replace(/\s+/g, " ").replace(/ ([.,])/g, "$1");
   assert.doesNotMatch(hub, /ready-made tools you can try today, schema and super funnel, and hq/i);
-  assert.ok(hub.includes("Schema and Super Funnel are ready-made tools you can try today. HQ is the workspace where we deliver client work. You start with the Readiness Check or Start a project."));
+  assert.ok(hub.includes("Schema is a ready-made tool you can try today, and the LLM Leverage course is open at learn.abra-ca-dabra.app. HQ is the workspace where we deliver client work. You start with the Readiness Check or Start a project."));
 });

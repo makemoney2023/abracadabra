@@ -45,9 +45,8 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 
 ## Products and course
 
-- [Products](https://abra-ca-dabra.app/products/): Schema, Super Funnel and HQ.
+- [Products](https://abra-ca-dabra.app/products/): Schema, the LLM Leverage course and HQ.
 - [Schema](https://abra-ca-dabra.app/products/schema/): See how easily AI search can find your site, and get the fixes to improve it.
-- [Super Funnel](https://abra-ca-dabra.app/products/super-funnel/): A sales app for associates, shown in a 66-second tour of the dashboard, setup and pipeline.
 - [HQ](https://abra-ca-dabra.app/products/hq/): The client workspace where Abracadabra's team and digital workers deliver your work. Review it, approve it, and schedule approved posts to your social networks.
 - [How client work moves through HQ](https://abra-ca-dabra.app/blog/how-client-work-flows-through-hq): How a request becomes a card, agents build, Client Services reviews, and you approve before anything is released.
 - [What is an AI agent?](https://abra-ca-dabra.app/blog/what-is-an-ai-agent): A plain answer for owners, and how digital workers fit in.

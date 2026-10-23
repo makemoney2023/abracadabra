@@ -19,6 +19,7 @@ import {
   placeholders,
   hqProduct,
   products,
+  productCards,
 } from "./site-data.mjs";
 import { pirxChartHtml, pirxChartPicture, writePirxChartImages } from "./pirx-chart.mjs";
 import { READINESS_URL, processIntro, processSteps, salesPages } from "./service-sales.mjs";
@@ -27,6 +28,7 @@ import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from ".
 import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
 import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody, hqVideoNode, hqVideoSection, hqVideoSitemap } from "./hq-page.mjs";
 import { writeHqAssets } from "./hq-assets.mjs";
+import { writeSchemaAssets } from "./schema-assets.mjs";
 
 export const HQ_CSS = "/assets/hq.css?v=20261023d";
 
@@ -989,7 +991,7 @@ ${pageHero({
 })}
 <section class="product-page__experience editorial-split">
 ${sectionHeading("Use the real thing", "Open it. Try it. Decide from the work.")}
-<div class="editorial-split__body"><p>${esc(item.description)}</p><p>What you see here is the shipped interface—not a concept render or a speculative roadmap.</p></div>
+<div class="editorial-split__body"><p>${esc(item.description)}</p><p>${item.illustrative ? "The picture is an illustration of the scanner report with sample content. Open the live scanner to run a scan." : "What you see here is the shipped interface—not a concept render or a speculative roadmap."}</p></div>
 </section>
 <section class="experience-panel" aria-label="${esc(item.name)} product preview">
 <div class="experience-panel__bar"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><strong>${esc(item.name)}</strong></div>
@@ -1051,7 +1053,7 @@ async function renderHq() {
 async function renderProductsHub() {
   const url = `${SITE}/products/`;
   const title = "Products | Abracadabra AI";
-  const description = "Schema and Super Funnel are ready-made tools you can try today. HQ is our client workspace, which you start with the Readiness Check or a project.";
+  const description = "Schema is a ready-made tool you can try today, and the LLM Leverage course is open at learn.abra-ca-dabra.app. HQ is our client workspace, which you start with the Readiness Check or a project.";
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Products", href: "/products/", url },
@@ -1059,19 +1061,17 @@ async function renderProductsHub() {
   const list = {
     "@type": "ItemList",
     name: "Products",
-    numberOfItems: products.length,
-    itemListElement: products.map((item, index) => ({
+    numberOfItems: productCards.length,
+    itemListElement: productCards.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      item: {
-        "@type": "SoftwareApplication",
-        name: item.name,
-        url: `${SITE}/products/${item.slug}/`,
-      },
+      item: item.type === "Course"
+        ? { "@type": "Course", name: item.name, description: item.description, url: item.href, provider: { "@id": ORG_ID } }
+        : { "@type": "SoftwareApplication", name: item.name, url: `${SITE}${item.href}` },
     })),
   };
-  const og = await plateOrPhoto("products", "Products", "Three products, one studio", null);
-  const cards = products.map((item) => `<li><a href="/products/${item.slug}/">${assetMedia(item.image, item.imageAlt, { lazy: true })}<strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
+  const og = await plateOrPhoto("products", "Products", "Products and a course, one studio", null);
+  const cards = productCards.map((item) => `<li><a href="${esc(item.href)}"${item.ariaLabel ? ` aria-label="${esc(item.ariaLabel)}"` : ""}>${assetMedia(item.image, item.imageAlt, { lazy: true })}<strong>${esc(item.name)}</strong><span>${esc(item.description)}</span></a></li>`).join("");
   const html = shell({
     title,
     description,
@@ -1095,9 +1095,9 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Products",
   title: "Software from the studio.",
-  dek: `<p>Schema and Super Funnel are ready-made tools you can try today. HQ is the workspace where we deliver client work. You start with the <a href="${READINESS_URL}">Readiness Check</a> or <a href="/start/">Start a project</a>.</p>`,
+  dek: `<p>Schema is a ready-made tool you can try today, and the LLM Leverage course is open at <a href="${course.sameAs}">learn.abra-ca-dabra.app</a>. HQ is the workspace where we deliver client work. You start with the <a href="${READINESS_URL}">Readiness Check</a> or <a href="/start/">Start a project</a>.</p>`,
 })}
-${collectionIndex([[products.length, "products"], ["Live", "Schema and Super Funnel"], ["HQ", "our client workspace"]])}
+${collectionIndex([[productCards.length, "products and courses"], ["Live", "Schema and LLM Leverage"], ["HQ", "our client workspace"]])}
 <ul class="cards">${cards}</ul>
 </main>`,
   });
@@ -1218,6 +1218,9 @@ function siteRedirects() {
     "/hq/ /products/hq/ 301",
     "/products/showdesk /portfolio/ 301",
     "/products/showdesk/ /portfolio/ 301",
+    // Super Funnel is client work, so it is no longer a product. The work page stays.
+    "/products/super-funnel /portfolio/super-funnel/ 301",
+    "/products/super-funnel/ /portfolio/super-funnel/ 301",
     // Common guessed paths: contact and booking live on /start/, the FAQ on the homepage.
     "/contact /start/ 301",
     "/contact/ /start/ 301",
@@ -1416,6 +1419,7 @@ async function patchLlms() {
 
 export async function buildSitePages() {
   await writeHqAssets();
+  await writeSchemaAssets();
   await writeServiceImages();
   await writePirxChartImages();
   await rm(join(root, "offerings"), { recursive: true, force: true });
