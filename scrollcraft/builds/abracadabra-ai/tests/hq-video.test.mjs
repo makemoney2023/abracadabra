@@ -77,6 +77,8 @@ test("video files exist, stay under 6 MB, and the graph and sitemap read the sam
   const attr = (n) => section.match(new RegExp(`data-src-${n}="([^"]+)"`))[1];
   assert.equal(`https://abra-ca-dabra.app${attr("landscape")}`, video.contentUrl);
   assert.ok(statSync(join(root, attr("portrait").slice(1))).size < 6 * 1024 * 1024);
+  // With no approved vertical cut, portrait screens use the landscape file and cover is not applied to them.
+  if (attr("portrait") === attr("landscape")) assert.equal(section.includes("hq-video--has-portrait"), false);
   const xml = read("sitemap.xml");
   assert.ok(xml.includes(`<video:content_loc>${video.contentUrl}</video:content_loc>`));
   assert.ok(xml.includes("<video:duration>56</video:duration>"));

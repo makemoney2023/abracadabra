@@ -166,9 +166,11 @@ ${pageActions(READINESS, "Take the Readiness Check", "/start/", "Start a project
 // The files in assets/video/hq-product-* are the approved v4 cut.
 export const HQ_VIDEO = {
   landscape: "/assets/video/hq-product-landscape.mp4",
-  portrait: "/assets/video/hq-product-portrait.mp4",
+  // No vertical cut is approved yet (a v5 vertical is in the works), so portrait screens use the landscape cut.
+  // To add it, set both of these to real paths, e.g. "/assets/video/hq-product-portrait.mp4" and ".jpg".
+  portrait: null,
   posterLandscape: "/assets/video/hq-product-landscape.jpg",
-  posterPortrait: "/assets/video/hq-product-portrait.jpg",
+  posterPortrait: null,
   title: "HQ product video",
   seconds: 56,
   uploadDate: "2026-10-23",
@@ -211,17 +213,20 @@ export function hqVideoSitemap(site) {
 
 /** Full-viewport HQ video section, placed right after #name. Behaviour lives in /assets/hq-video.js. */
 export function hqVideoSection() {
+  const portraitSrc = HQ_VIDEO.portrait || HQ_VIDEO.landscape;
+  const portraitPoster = HQ_VIDEO.posterPortrait || HQ_VIDEO.posterLandscape;
+  const hasPortrait = Boolean(HQ_VIDEO.portrait && HQ_VIDEO.posterPortrait);
   const play = '<svg class="hq-video__icon hq-video__icon--play" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
   const pause = '<svg class="hq-video__icon hq-video__icon--pause" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>';
-  return `<section id="hq-video" class="hq-video" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" style="--hq-video-poster: url(${HQ_VIDEO.posterLandscape}); --hq-video-poster-portrait: url(${HQ_VIDEO.posterPortrait})" data-hq-video>
+  return `<section id="hq-video" class="hq-video${hasPortrait ? " hq-video--has-portrait" : ""}" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" style="--hq-video-poster: url(${HQ_VIDEO.posterLandscape}); --hq-video-poster-portrait: url(${portraitPoster})" data-hq-video>
   <h2 id="hq-video-title" class="hq-video__sr">${esc(HQ_VIDEO.title)}</h2>
   <p id="hq-video-summary" class="hq-video__sr">${esc(HQ_VIDEO.summary)}</p>
   <div class="hq-video__ambient" aria-hidden="true"></div>
   <picture class="hq-video__poster">
-    <source media="(max-aspect-ratio: 1/1)" srcset="${HQ_VIDEO.posterPortrait}" width="1080" height="1920">
+    ${hasPortrait ? `<source media="(max-aspect-ratio: 1/1)" srcset="${HQ_VIDEO.posterPortrait}" width="1080" height="1920">` : ""}
     <img class="hq-video__frame" src="${HQ_VIDEO.posterLandscape}" width="1920" height="1080" alt="" loading="lazy" decoding="async">
   </picture>
-  <video class="hq-video__frame hq-video__media" muted loop playsinline preload="metadata" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" data-src-landscape="${HQ_VIDEO.landscape}" data-src-portrait="${HQ_VIDEO.portrait}" data-poster-landscape="${HQ_VIDEO.posterLandscape}" data-poster-portrait="${HQ_VIDEO.posterPortrait}"></video>
+  <video class="hq-video__frame hq-video__media" muted loop playsinline preload="metadata" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" data-src-landscape="${HQ_VIDEO.landscape}" data-src-portrait="${portraitSrc}" data-poster-landscape="${HQ_VIDEO.posterLandscape}" data-poster-portrait="${portraitPoster}"></video>
   <div class="hq-video__scrim" aria-hidden="true"></div>
   <div class="hq-video__bar">
     <nav class="hq-video__links" aria-label="About HQ"><a href="${HQ_PATH}">Meet HQ</a><a href="${HQ_ARTICLE}">How client work moves through HQ</a></nav>

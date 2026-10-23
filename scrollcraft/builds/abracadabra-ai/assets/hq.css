@@ -161,9 +161,9 @@ main.site-page > .hq-section { padding-top: clamp(2.5rem, 6vw, 4.5rem); }
 @media (min-aspect-ratio: 17/10) and (max-aspect-ratio: 37/20) {
   .hq-video__frame { object-fit: cover; }
 }
-/* Portrait close to the 9:16 cut (0.5625): cover crops at most about 3% per side. */
+/* Portrait close to the 9:16 cut (0.5625), only when a vertical cut exists (otherwise the landscape cut is contained): cover crops at most about 3% per side. */
 @media (min-aspect-ratio: 27/50) and (max-aspect-ratio: 3/5) {
-  .hq-video__frame { object-fit: cover; }
+  .hq-video--has-portrait .hq-video__frame { object-fit: cover; }
 }
 @media (max-aspect-ratio: 1/1) {
   .hq-video__ambient { background-image: var(--hq-video-poster-portrait); }

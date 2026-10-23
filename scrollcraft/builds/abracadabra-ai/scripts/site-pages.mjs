@@ -28,7 +28,7 @@ import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
 import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody, hqVideoNode, hqVideoSection, hqVideoSitemap } from "./hq-page.mjs";
 import { writeHqAssets } from "./hq-assets.mjs";
 
-export const HQ_CSS = "/assets/hq.css?v=20261023c";
+export const HQ_CSS = "/assets/hq.css?v=20261023d";
 
 const HOME_OG_ALT = "The abracadabra wordmark with an orange dot, above the headline: Let us bring your ideas to life.";
 
