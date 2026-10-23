@@ -36,7 +36,7 @@
 <link rel="preload" href="assets/fonts/ibm-plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/fonts.css?v=20261019n">
 <link rel="stylesheet" href="assets/site.css?v=20261021b">
-<link rel="stylesheet" href="assets/hq.css?v=20261023a">
+<link rel="stylesheet" href="assets/hq.css?v=20261023c">
 <link rel="stylesheet" href="assets/pirx-shot.css?v=20261019n">
 <link rel="stylesheet" href="assets/restored-motion.css?v=20261019n">
 <script>(function(d){d.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('wm-js');setTimeout(function(){d.classList.add('wm-on','wm-dot-on')},4500)}catch(e){}})(document.documentElement);</script>
@@ -45,6 +45,24 @@
 {
   "@context": "https://schema.org",
   "@graph": [
+    {
+      "@type": "VideoObject",
+      "@id": "https://abra-ca-dabra.app/#video-hq-product",
+      "name": "HQ product video",
+      "description": "A 56-second silent video about HQ: requests land as cards, digital workers pick up the work, Client Services reviews it, you approve it, and approved posts are scheduled to your connected social networks.",
+      "thumbnailUrl": "https://abra-ca-dabra.app/assets/video/hq-product-landscape.jpg",
+      "contentUrl": "https://abra-ca-dabra.app/assets/video/hq-product-landscape.mp4",
+      "embedUrl": "https://abra-ca-dabra.app/#hq-video",
+      "duration": "PT56S",
+      "uploadDate": "2026-10-23",
+      "width": 1920,
+      "height": 1080,
+      "inLanguage": "en",
+      "isFamilyFriendly": true,
+      "publisher": {
+        "@id": "https://abra-ca-dabra.app/#org"
+      }
+    },
     {
       "@type": "VideoObject",
       "@id": "https://abra-ca-dabra.app/#video-superfunnel-getting-started",
@@ -125,6 +143,7 @@
       "dateModified": "2026-10-23",
       "inLanguage": "en",
       "hasPart": { "@id": "https://abra-ca-dabra.app/#work" },
+      "video": { "@id": "https://abra-ca-dabra.app/#video-hq-product" },
       "mainEntity": { "@id": "https://abra-ca-dabra.app/#faq" },
       "mentions": {
         "@type": "SoftwareApplication",
@@ -420,6 +439,24 @@
   </div>
 </section>
 <script src="/assets/name-reveal.js?v=20261018c" defer></script>
+<!-- HQ-VIDEO -->
+<section id="hq-video" class="hq-video" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" style="--hq-video-poster: url(/assets/video/hq-product-landscape.jpg); --hq-video-poster-portrait: url(/assets/video/hq-product-portrait.jpg)" data-hq-video>
+  <h2 id="hq-video-title" class="hq-video__sr">HQ product video</h2>
+  <p id="hq-video-summary" class="hq-video__sr">A 56-second silent video about HQ. Every request lands as a card on the work board. A team of digital workers, which are AI agents, picks up the work and reports its status. Client Services reviews before anything reaches you, then you approve it, ask for a change, or remove it. Once a piece is approved and your accounts are connected, it is scheduled into your next open slot on the social calendar, for Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky. HQ runs on Cloudflare.</p>
+  <div class="hq-video__ambient" aria-hidden="true"></div>
+  <picture class="hq-video__poster">
+    <source media="(max-aspect-ratio: 1/1)" srcset="/assets/video/hq-product-portrait.jpg" width="1080" height="1920">
+    <img class="hq-video__frame" src="/assets/video/hq-product-landscape.jpg" width="1920" height="1080" alt="" loading="lazy" decoding="async">
+  </picture>
+  <video class="hq-video__frame hq-video__media" muted loop playsinline preload="metadata" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" data-src-landscape="/assets/video/hq-product-landscape.mp4" data-src-portrait="/assets/video/hq-product-portrait.mp4" data-poster-landscape="/assets/video/hq-product-landscape.jpg" data-poster-portrait="/assets/video/hq-product-portrait.jpg"></video>
+  <div class="hq-video__scrim" aria-hidden="true"></div>
+  <div class="hq-video__bar">
+    <nav class="hq-video__links" aria-label="About HQ"><a href="/products/hq/">Meet HQ</a><a href="/blog/how-client-work-flows-through-hq">How client work moves through HQ</a></nav>
+    <button type="button" class="hq-video__toggle" data-hq-video-toggle aria-label="Play the HQ product video"><svg class="hq-video__icon hq-video__icon--play" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><svg class="hq-video__icon hq-video__icon--pause" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg><span class="hq-video__toggle-text">Play</span></button>
+  </div>
+</section>
+<!-- /HQ-VIDEO -->
+<script src="/assets/hq-video.js?v=20261023a" defer></script>
 
 <!-- Hidden Oct 18, 2026 at Christopher's request. Remove `hidden` to restore. -->
 <section id="compiler" class="restored restored-pin" aria-labelledby="compiler-heading" hidden>

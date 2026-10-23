@@ -161,6 +161,75 @@ ${pageActions(READINESS, "Take the Readiness Check", "/start/", "Start a project
 </main>`;
 }
 
+// SINGLE PLACE TO SWAP THE VIDEO: change the four file paths below (and the duration/summary if the cut
+// changes) and run `npm run build`. The section, the homepage JSON-LD node and the sitemap entry all read from here.
+// The files currently in assets/video/hq-product-* are placeholder v3 media, pending an approved v4.
+export const HQ_VIDEO = {
+  landscape: "/assets/video/hq-product-landscape.mp4",
+  portrait: "/assets/video/hq-product-portrait.mp4",
+  posterLandscape: "/assets/video/hq-product-landscape.jpg",
+  posterPortrait: "/assets/video/hq-product-portrait.jpg",
+  title: "HQ product video",
+  seconds: 56,
+  uploadDate: "2026-10-23",
+  description: "A 56-second silent video about HQ: requests land as cards, digital workers pick up the work, Client Services reviews it, you approve it, and approved posts are scheduled to your connected social networks.",
+  // Built only from facts already on the HQ page.
+  summary: "A 56-second silent video about HQ. Every request lands as a card on the work board. A team of digital workers, which are AI agents, picks up the work and reports its status. Client Services reviews before anything reaches you, then you approve it, ask for a change, or remove it. Once a piece is approved and your accounts are connected, it is scheduled into your next open slot on the social calendar, for Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky. HQ runs on Cloudflare.",
+};
+
+/** VideoObject node for the homepage graph, generated from HQ_VIDEO. */
+export function hqVideoNode(site, orgId) {
+  return {
+    "@type": "VideoObject",
+    "@id": `${site}/#video-hq-product`,
+    name: HQ_VIDEO.title,
+    description: HQ_VIDEO.description,
+    thumbnailUrl: `${site}${HQ_VIDEO.posterLandscape}`,
+    contentUrl: `${site}${HQ_VIDEO.landscape}`,
+    embedUrl: `${site}/#hq-video`,
+    duration: `PT${HQ_VIDEO.seconds}S`,
+    uploadDate: HQ_VIDEO.uploadDate,
+    width: 1920,
+    height: 1080,
+    inLanguage: "en",
+    isFamilyFriendly: true,
+    publisher: { "@id": orgId },
+  };
+}
+
+/** Sitemap <video:video> entry, generated from HQ_VIDEO. */
+export function hqVideoSitemap(site) {
+  return `    <video:video>
+      <video:thumbnail_loc>${site}${HQ_VIDEO.posterLandscape}</video:thumbnail_loc>
+      <video:title>${esc(HQ_VIDEO.title)}</video:title>
+      <video:description>${esc(HQ_VIDEO.description)}</video:description>
+      <video:content_loc>${site}${HQ_VIDEO.landscape}</video:content_loc>
+      <video:duration>${HQ_VIDEO.seconds}</video:duration>
+      <video:publication_date>${HQ_VIDEO.uploadDate}</video:publication_date>
+    </video:video>`;
+}
+
+/** Full-viewport HQ video section, placed right after #name. Behaviour lives in /assets/hq-video.js. */
+export function hqVideoSection() {
+  const play = '<svg class="hq-video__icon hq-video__icon--play" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+  const pause = '<svg class="hq-video__icon hq-video__icon--pause" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>';
+  return `<section id="hq-video" class="hq-video" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" style="--hq-video-poster: url(${HQ_VIDEO.posterLandscape}); --hq-video-poster-portrait: url(${HQ_VIDEO.posterPortrait})" data-hq-video>
+  <h2 id="hq-video-title" class="hq-video__sr">${esc(HQ_VIDEO.title)}</h2>
+  <p id="hq-video-summary" class="hq-video__sr">${esc(HQ_VIDEO.summary)}</p>
+  <div class="hq-video__ambient" aria-hidden="true"></div>
+  <picture class="hq-video__poster">
+    <source media="(max-aspect-ratio: 1/1)" srcset="${HQ_VIDEO.posterPortrait}" width="1080" height="1920">
+    <img class="hq-video__frame" src="${HQ_VIDEO.posterLandscape}" width="1920" height="1080" alt="" loading="lazy" decoding="async">
+  </picture>
+  <video class="hq-video__frame hq-video__media" muted loop playsinline preload="metadata" aria-labelledby="hq-video-title" aria-describedby="hq-video-summary" data-src-landscape="${HQ_VIDEO.landscape}" data-src-portrait="${HQ_VIDEO.portrait}" data-poster-landscape="${HQ_VIDEO.posterLandscape}" data-poster-portrait="${HQ_VIDEO.posterPortrait}"></video>
+  <div class="hq-video__scrim" aria-hidden="true"></div>
+  <div class="hq-video__bar">
+    <nav class="hq-video__links" aria-label="About HQ"><a href="${HQ_PATH}">Meet HQ</a><a href="${HQ_ARTICLE}">How client work moves through HQ</a></nav>
+    <button type="button" class="hq-video__toggle" data-hq-video-toggle aria-label="Play the HQ product video">${play}${pause}<span class="hq-video__toggle-text">Play</span></button>
+  </div>
+</section>`;
+}
+
 /** Homepage feature section, inserted between #clients and #models-band. */
 export function hqHomeSection() {
   const beat = (name, title, text) => `<li class="hq-home__beat">${figure(name, { id: `hq-home-${name}`, className: "hq-shot--home" })}<h3>${esc(title)}</h3><p>${esc(text)}</p></li>`;

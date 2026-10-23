@@ -25,10 +25,10 @@ import { READINESS_URL, processIntro, processSteps, salesPages } from "./service
 import { writeDiscoveryFiles } from "./llms-discovery.mjs";
 import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from "./service-visuals.mjs";
 import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
-import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody } from "./hq-page.mjs";
+import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody, hqVideoNode, hqVideoSection, hqVideoSitemap } from "./hq-page.mjs";
 import { writeHqAssets } from "./hq-assets.mjs";
 
-export const HQ_CSS = "/assets/hq.css?v=20261023a";
+export const HQ_CSS = "/assets/hq.css?v=20261023c";
 
 const HOME_OG_ALT = "The abracadabra wordmark with an orange dot, above the headline: Let us bring your ideas to life.";
 
@@ -1369,6 +1369,11 @@ async function patchHome() {
   html = fill(html, "<!-- MODELS -->", "<!-- /MODELS -->", modelsHtml());
   html = fill(html, "<!-- OFFERINGS -->", "<!-- /OFFERINGS -->", offeringsHtml());
   html = fill(html, "<!-- CLIENTS -->", "<!-- /CLIENTS -->", clientProofHtml(proof.entries));
+  html = fill(html, "<!-- HQ-VIDEO -->", "<!-- /HQ-VIDEO -->", hqVideoSection());
+  const videoNode = JSON.stringify(hqVideoNode(SITE, ORG_ID), null, 2).replace(/^/gm, "    ");
+  const nodePattern = /    \{\n      "@type": "VideoObject",\n      "@id": "[^"]*#video-hq-product"[\s\S]*?\n    \}(?=,\n)/;
+  if (!nodePattern.test(html)) throw new Error("Missing HQ VideoObject node in index.html");
+  html = html.replace(nodePattern, () => videoNode);
   html = fill(html, "<!-- HQ -->", "<!-- /HQ -->", hqHomeSection());
   html = fill(html, "<!-- AI-SEARCH-TILE -->", "<!-- /AI-SEARCH-TILE -->", "");
   html = fill(html, "<!-- PROOF -->", "<!-- /PROOF -->", homeProofHtml());
@@ -1390,6 +1395,7 @@ async function patchSitemap() {
     /<loc>https:\/\/abra-ca-dabra\.app\/<\/loc>\n    <lastmod>[0-9-]+<\/lastmod>/,
     `<loc>https://abra-ca-dabra.app/</loc>\n    <lastmod>${HQ_MODIFIED}</lastmod>`,
   );
+  xml = fill(xml, "<!-- hq-video -->", "<!-- /hq-video -->", hqVideoSitemap(SITE));
   xml = fill(xml, "<!-- site-urls -->", "<!-- /site-urls -->", siteUrls());
   await writeFile(path, xml);
 }
