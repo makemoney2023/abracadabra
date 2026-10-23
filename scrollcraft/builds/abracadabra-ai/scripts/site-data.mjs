@@ -547,7 +547,7 @@ export const familyLogos = [
  */
 export const SHOW_HOME_WORK = false;
 
-export const LISTED_CASE_SLUGS = ["pirx"];
+export const LISTED_CASE_SLUGS = ["pirx", "super-funnel"];
 
 export const cases = [
   {
@@ -577,15 +577,15 @@ export const cases = [
   },
   {
     slug: "super-funnel",
-    name: "Super Funnel",
+    name: "Super Funnel System",
     kind: "work",
-    sameAs: "https://abra-ca-dabra.app/films.html",
     image: "/assets/superfunnel-getting-started.webp",
-    imageAlt: "Super Funnel Getting started film poster.",
-    summary: "A sales app for associates, shown in a 66-second tour.",
+    imageAlt: "Super Funnel System: the Home dashboard of the associate app, from the Getting started film.",
+    summary: "A field app for SuperPatch associates: one shared link becomes a credited lead, a nine-step pipeline and the exact message to send next. Eight film tours.",
+    services: ["custom-apps", "ai-assistants-and-agents"],
     body: [
-      "Super Funnel is one associate app, shown as a film rather than a separate public URL.",
-      "The homepage carries the Getting started film: the home dashboard, setup, pipeline, and nav, in 66 seconds. The other seven tours are on the films page.",
+      "Super Funnel System takes a stranger from a shared link, through a quiz or a recruiting page, into a nine-step pipeline, then hands the associate the exact message to send next. The associate sends every message themselves.",
+      "It runs as one Cloudflare Worker (Next.js through OpenNext) with Neon Postgres via Hyperdrive, R2 and Cloudflare cron. The case study page carries eight film tours of the app.",
     ],
   },
   {

@@ -525,3 +525,10 @@ Walkthrough legs live in `assets/world/` (desktop `.mp4`, mobile `-m.mp4`, WebP 
 ## Homepage "Work that's already running" is hidden
 
 `SHOW_HOME_WORK` in `scripts/site-data.mjs` is `false`. While it is, the homepage does not render the section (the "Work" kicker, the Sell/Operate/Build/Find/Teach tabs and their films), and it does not emit the JSON-LD that describes it (the "Work you can open" list, the two film VideoObjects, the WebPage `hasPart` link) or the two homepage sitemap video entries for those films. Nothing is hidden-but-crawlable. The markup, JSON-LD and sitemap entries are kept in `scripts/home-work.mjs`. To restore, set the flag to `true` and run `npm run build`; the output is the same as before the hide. The client proof strip ("Work we can name.") is a separate section and stays. `tests/home-work-flag.test.mjs` covers both states.
+
+## Super Funnel System case study, and no Films link in the nav
+
+- `/portfolio/super-funnel/` is a full case study (SuperPatch field app) built from `scripts/super-funnel-case.mjs`: hero, metrics, snapshot, the one-lead flow, eight film tours in four chapters (lazy `<video preload="none">`, poster thumbs, no autoplay), what's inside, the Cloudflare architecture diagram (`assets/super-funnel/*.webp`), the phone section, outcome and next step. Styles are in `assets/sf-case.css`. The page has a VideoObject per film and its URL block in `sitemap.xml` carries the eight `video:video` entries; the films page keeps its own.
+- `LISTED_CASE_SLUGS` is now `["pirx", "super-funnel"]`, so `/portfolio/` lists both.
+- The "Films" link is gone from the header, the mobile menu and the footer (`scripts/site-chrome.mjs`). `films.html` is unchanged and still live, in the sitemap and in `llms.txt`. No redirects.
+- The films themselves have burned-in text (for example "free sample", "Join free"). The films are untouched; our own copy on the page avoids those words, and `tests/super-funnel-case.test.mjs` checks that.

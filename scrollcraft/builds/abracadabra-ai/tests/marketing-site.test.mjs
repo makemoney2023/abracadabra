@@ -360,7 +360,8 @@ test('site nav uses a compact sheet below 900px and a full bar from 1024px', asy
       const rect = link.getBoundingClientRect();
       return { height: rect.height, text: link.textContent.trim(), right: rect.right, viewport: innerWidth };
     }));
-    for (const name of ['Case studies', 'Products', 'Blog', 'Films', 'Start a project']) {
+    assert.equal(opened.some((item) => item.text === 'Films'), false, `${width}px nav no longer links Films`);
+    for (const name of ['Case studies', 'Products', 'Blog', 'Start a project']) {
       const link = opened.find((item) => item.text === name);
       assert.ok(link, `${width}px ${name}`);
       assert.ok(link.right <= link.viewport + 1, `${width}px ${name} is clipped`);
@@ -377,7 +378,8 @@ test('site nav uses a compact sheet below 900px and a full bar from 1024px', asy
     const rect = link.getBoundingClientRect();
     return { right: rect.right, text: link.textContent.trim(), viewport: innerWidth };
   }));
-  for (const name of ['Blog', 'Films']) {
+  assert.equal(serviceLinks.some((item) => item.text === 'Films'), false);
+  for (const name of ['Blog', 'Start a project']) {
     const link = serviceLinks.find((item) => item.text === name);
     assert.ok(link && link.right <= link.viewport + 1, name);
   }
@@ -393,7 +395,8 @@ test('site nav uses a compact sheet below 900px and a full bar from 1024px', asy
       const rect = link.getBoundingClientRect();
       return { height: rect.height, left: rect.left, right: rect.right, text: link.textContent.trim(), viewport: innerWidth };
     }));
-    for (const name of ['Case studies', 'Products', 'Blog', 'Films', 'Start a project']) {
+    assert.equal(bar.some((item) => item.text === 'Films'), false);
+    for (const name of ['Case studies', 'Products', 'Blog', 'Start a project']) {
       const link = bar.find((item) => item.text === name);
       assert.ok(link, `${width}px ${name}`);
       assert.ok(link.left >= -1 && link.right <= link.viewport + 1, `${name} overflows the bar`);

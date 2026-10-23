@@ -131,7 +131,7 @@ function buildLlmsTxt({ posts, updated }) {
     mdEntry("StrongFoam", "https://strongfoam.com/", "Public site with an estimate a visitor can start and a booking"),
     mdEntry("Schema", "https://schema.abra-ca-dabra.app/", "AI visibility score and repair"),
     mdEntry("LLM Leverage", COURSE_URL, "Self-paced course plus a workshop path"),
-    mdEntry("Super Funnel", `${SITE}/films.html`, "Associate app shown as film tours; no separate public app URL"),
+    mdEntry("Super Funnel System", `${SITE}/portfolio/super-funnel/`, "SuperPatch field app: one shared link becomes a credited lead and a nine-step pipeline; case study with eight film tours"),
   ];
   const blogLines = live.length
     ? live.map((post) => mdEntry(post.title, `${SITE}/blog/${post.slug}`, post.description))
