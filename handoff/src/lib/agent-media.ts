@@ -1,6 +1,7 @@
 import type { Sql } from "@/db/sql";
 import type { AgentPrincipal } from "@/lib/agent-work-filing";
 import { mediaModel, listMediaModels, type MediaFit, type MediaKind, type MediaModel } from "@/lib/agent-media-models";
+import { classifyMediaError } from "@/lib/agent-media-errors";
 import { fluxInput } from "@/lib/flux-input";
 import type { ObjectStore } from "@/lib/store/objects";
 
@@ -27,7 +28,7 @@ export type MediaView = {
 
 export type MediaCall =
   | { ok: true; status: number; view: MediaView }
-  | { ok: false; status: number; message: string };
+  | { ok: false; status: number; message: string; reason?: string };
 
 export type MediaAi = {
   run: (model: string, input: unknown) => Promise<unknown>;
@@ -97,8 +98,15 @@ export async function generateAgentMedia(input: {
   try {
     const payload = await runInput(parsed.request, reference.image);
     outcome = interpret(await input.ai.run(parsed.request.model.id, payload), parsed.request.model.kind);
-  } catch {
-    return refuse(502, "The model did not answer.");
+  } catch (error) {
+    const failure = classifyMediaError(error, parsed.request.prompt);
+    console.error("agent-media model failure", {
+      model: parsed.request.model.id,
+      reason: failure.reason,
+      status: failure.upstreamStatus,
+      detail: failure.detail,
+    });
+    return { ok: false, status: failure.status, message: failure.message, reason: failure.reason };
   }
   return finish(input, input.agent, parsed.request, place, outcome);
 }
@@ -121,7 +129,9 @@ export async function readAgentMedia(input: {
   let outcome: Outcome;
   try {
     outcome = interpret(await input.ai.run(row.model, { request_id: row.job_id }), row.kind);
-  } catch {
+  } catch (error) {
+    const failure = classifyMediaError(error);
+    console.error("agent-media poll failure", { model: row.model, reason: failure.reason, status: failure.upstreamStatus, detail: failure.detail });
     return { ok: true, status: 200, view: viewOf(row) };
   }
   if (outcome.kind === "job") return { ok: true, status: 200, view: viewOf(row) };

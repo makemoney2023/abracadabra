@@ -11,6 +11,12 @@ describe("agent media allowlist", () => {
     expect(listMediaModels().some((model) => model.id === DEFAULT_CLIP)).toBe(true);
   });
 
+  it("sends both Workers AI Flux 2 stills as multipart, as Cloudflare documents", () => {
+    expect(mediaModel("@cf/black-forest-labs/flux-2-dev")?.input).toBe("multipart");
+    expect(mediaModel("@cf/black-forest-labs/flux-2-klein-9b")?.input).toBe("multipart");
+    expect(mediaModel("black-forest-labs/flux-2-pro-preview")?.input).toBe("json");
+  });
+
   it("rejects a model that is not on the list", () => {
     expect(mediaModel("google/veo-99")).toBeNull();
     expect(mediaModel("")).toBeNull();

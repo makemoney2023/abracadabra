@@ -22,6 +22,8 @@ async function mediaAi(): Promise<MediaAi | null> {
  * Body: { external_id, model, prompt, task_id?, client?, image_media_id?, aspect_ratio?, duration_seconds? }
  * The agent names the model. HQ does not post the file to social.
  * A clip that is still rendering returns state "running". Poll GET /api/agent-media/:id.
+ * A model failure is 402 `credits_exhausted` when the account is out of partner-model credit, otherwise 502 with a `reason` of
+ * `bad_input`, `rate_limited`, `empty_output` or `model_error`. `error` is always a short safe sentence.
  */
 export async function POST(request: Request) {
   const sql = await openHandoffDb();
@@ -42,6 +44,6 @@ export async function POST(request: Request) {
     ai: agent && agent.assignments.length > 0 ? await mediaAi() : null,
     fetchImpl: fetch,
   });
-  if (!result.ok) return NextResponse.json({ error: result.message }, { status: result.status });
+  if (!result.ok) return NextResponse.json(result.reason ? { error: result.message, reason: result.reason } : { error: result.message }, { status: result.status });
   return NextResponse.json(result.view, { status: result.status });
 }

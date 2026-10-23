@@ -46,6 +46,7 @@ const MODELS: readonly MediaModel[] = [
   model({
     id: "@cf/black-forest-labs/flux-2-dev",
     kind: "image",
+    input: "multipart",
     fits: ["text-to-image"],
     note: "Hosted Flux still from a prompt.",
   }),

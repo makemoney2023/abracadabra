@@ -20,14 +20,14 @@ async function fluxRun(): Promise<((prompt: string) => Promise<{ image?: string 
       AI?: {
         run: (
           model: string,
-          body: { multipart: { body: ArrayBuffer; contentType: string } },
+          body: { multipart: { body: ReadableStream<Uint8Array>; contentType: string } },
         ) => Promise<{ image?: string }>;
       };
     };
     if (!env.AI) return undefined;
     const ai = env.AI;
     return async (prompt) => {
-      const image = await ai.run(VISUAL_MODEL, await fluxInput(prompt));
+      const image = await ai.run(VISUAL_MODEL, fluxInput(prompt));
       return { image: image.image };
     };
   } catch {
