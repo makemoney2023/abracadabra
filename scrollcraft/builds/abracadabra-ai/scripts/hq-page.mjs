@@ -163,7 +163,7 @@ ${pageActions(READINESS, "Take the Readiness Check", "/start/", "Start a project
 
 // SINGLE PLACE TO SWAP THE VIDEO: change the four file paths below (and the duration/summary if the cut
 // changes) and run `npm run build`. The section, the homepage JSON-LD node and the sitemap entry all read from here.
-// The files currently in assets/video/hq-product-* are placeholder v3 media, pending an approved v4.
+// The files in assets/video/hq-product-* are the approved v4 cut.
 export const HQ_VIDEO = {
   landscape: "/assets/video/hq-product-landscape.mp4",
   portrait: "/assets/video/hq-product-portrait.mp4",
@@ -174,7 +174,7 @@ export const HQ_VIDEO = {
   uploadDate: "2026-10-23",
   description: "A 56-second silent video about HQ: requests land as cards, digital workers pick up the work, Client Services reviews it, you approve it, and approved posts are scheduled to your connected social networks.",
   // Built only from facts already on the HQ page.
-  summary: "A 56-second silent video about HQ. Every request lands as a card on the work board. A team of digital workers, which are AI agents, picks up the work and reports its status. Client Services reviews before anything reaches you, then you approve it, ask for a change, or remove it. Once a piece is approved and your accounts are connected, it is scheduled into your next open slot on the social calendar, for Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky. HQ runs on Cloudflare.",
+  summary: "A 56-second silent video about HQ. Every request lands as a card on the work board and becomes a written plan before work starts. A team of digital workers, which are AI agents, picks up the work, searches the skill library for each task, uses the skill packs, cites the skills used and reports whether they helped. Client Services reviews before anything reaches you, and finished work lands in your folders and Library. Only client-approved finished work can be scheduled or posted: once a piece is approved and your accounts are connected, it is scheduled into your next open slot, for Instagram, Facebook, LinkedIn, TikTok, X, YouTube, Threads, Google Business and Bluesky. HQ runs on Cloudflare. The video ends with the Readiness Check, a five-to-seven-minute questionnaire.",
 };
 
 /** VideoObject node for the homepage graph, generated from HQ_VIDEO. */
