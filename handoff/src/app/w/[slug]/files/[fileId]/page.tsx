@@ -98,7 +98,7 @@ export default async function FilePreviewPage({
       {shown?.ok && shown.file.kind === "image" ? (
         // The picture is a same-origin file served only when this caller can see the space.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={`/api/files/${fileId}/preview`} alt={name} className="max-h-[70vh] max-w-full rounded-lg border border-border" />
+        <img src={`/api/files/${fileId}/preview`} alt={name} className="h-auto max-h-[70vh] w-auto max-w-full self-start rounded-lg border border-border object-contain" />
       ) : null}
       {ready && kind === "video" ? (
         <VideoPlayer
