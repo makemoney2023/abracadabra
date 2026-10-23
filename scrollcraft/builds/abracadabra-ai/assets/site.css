@@ -359,6 +359,15 @@ html.wm-sweep .hero__wm .wm-txt { background-position: 0% 0; transition: backgro
 
 .lede { font-size: 1.2rem; color: var(--ink); }
 
+.hero__tagline {
+  margin: 0 0 0.9rem;
+  font-family: var(--display, inherit);
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
 .hero__actions {
   display: flex;
   flex-direction: column;
