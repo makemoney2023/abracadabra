@@ -5,7 +5,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { buildKnowledge, pagePath, sitemapPaths } from "../scripts/build-site-knowledge.mjs";
-import { SITE_KNOWLEDGE, SITE_KNOWLEDGE_VERSION, SITE_PATHS, SITE_PRODUCTS, SITE_WORK, SITE_SERVICES } from "../src/site-knowledge.js";
+import { SITE_KNOWLEDGE, SITE_KNOWLEDGE_VERSION, SITE_PATHS, SITE_PRODUCTS, SITE_WORK, SITE_SERVICES, SITE_GLOSSARY } from "../src/site-knowledge.js";
 import { systemPrompt, MAX_TOKENS } from "../src/model.js";
 import { localReply, namedPage, postCheck, sitePageKnown } from "../src/policy.js";
 import { KEYTERMS, speakable, TTS_CHAR_CAP } from "../src/voice.js";
@@ -29,7 +29,9 @@ test("every page in the published sitemap is in the chat's knowledge", async () 
   assert.ok(sitemap.length >= 50, `${sitemap.length} sitemap pages`);
   for (const path of sitemap) {
     assert.ok(SITE_PATHS.includes(path), `sitemap page ${path} is missing from the chat knowledge (npm run knowledge)`);
-    assert.ok(SITE_KNOWLEDGE.includes(`| ${path}`), `no knowledge line for ${path}`);
+    // Glossary term pages live in SITE_GLOSSARY and reach the prompt only when a question names them.
+    if (/^\/glossary\/[a-z0-9-]+\/$/.test(path)) assert.ok(SITE_GLOSSARY.some((entry) => entry.path === path), `no glossary entry for ${path}`);
+    else assert.ok(SITE_KNOWLEDGE.includes(`| ${path}`), `no knowledge line for ${path}`);
   }
   assert.equal(pagePath("https://abra-ca-dabra.app/blog/what-is-an-ai-agent"), "/blog/what-is-an-ai-agent/");
 });

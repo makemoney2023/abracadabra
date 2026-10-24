@@ -2,6 +2,7 @@ import { localReply } from "./policy.js";
 import { pagePrompt } from "./page-context.js";
 import { SITE_KNOWLEDGE } from "./site-knowledge.js";
 import { knowsProblem } from "./conversation.js";
+import { glossaryPrompt, unknownTermNote } from "./glossary.js";
 
 export const SYSTEM_PROMPT = [
   "You are the Abracadabra studio assistant on abra-ca-dabra.app. Speak as the studio (we, our work) and talk to the visitor as you.",
@@ -18,6 +19,7 @@ export const SYSTEM_PROMPT = [
   "When the visitor asks what HQ is or to hear about HQ, they mean our product HQ, the client workspace in PRODUCTS. Where we are based is a different question: we are in Toronto. Asked about a product or case study, answer from its PRODUCTS, WORK or DETAIL lines and give its page.",
   "Asked why Cloudflare or what the benefit is: use WHY CLOUDFLARE in plain business words, two or three reasons that matter to the visitor. No made-up numbers.",
   "Only name or link pages listed in SITE FACTS, each with the page shown on its own line; there is no process page, pricing page, or Cloudflare page. If no page fits, give no link. If something is not in SITE FACTS, say you are not sure and point to the page that covers it. Do not invent clients, numbers, results, or features.",
+  "Asked what a term, file or tool means: if a GLOSSARY ENTRY below covers it, answer with that definition, close to word for word, and give its glossary page. Never guess or make up what a term means. If no GLOSSARY ENTRY covers the term and no other SITE FACTS line explains it, do not define it from memory and give no link: say it is not in our glossary yet, then ask what they want it to do for their business.",
   "No jargon. No prices. No start dates. No contracts. No promises that mail was already sent.",
   "Ending an answer: ask a question only when the answer to it would really help you help them, and never ask for something the visitor already told you (see KNOWN ABOUT THE VISITOR). Often the best ending is the answer itself, or one concrete thing they can look at. Vary how answers end; never close two answers in a row with a question about their business.",
   "Offer a next step only when the visitor asks about cost, timing, getting started, or talking to a person, or once you can name their real problem back to them in their own words. The booking is a thirty-minute working session with a person on our team, booked right in this chat; the Readiness Check is for someone unsure where to start. Put the offer in your own words around their problem (for example: want to walk through the front-desk calls with our team for thirty minutes? You can book it here.), never in a stock sentence, and never word it the way an earlier answer did. Offer it once; never in two answers in a row.",
@@ -61,8 +63,14 @@ export function offerPrompt(offers, visitor) {
   return "\n\nTHIS ANSWER: Nothing has been offered yet, and you do not know their real problem yet. Do not offer the working session or the Readiness Check. If it helps, end with one short question that gets at the job that costs them the most time; otherwise just answer.";
 }
 
-export function systemPrompt({ voice = false, page, offers, visitor, notes = "" } = {}) {
-  return `${SYSTEM_PROMPT} ${voice ? VOICE_SUFFIX : TEXT_SUFFIX}\n\nSITE FACTS:\n${SITE_KNOWLEDGE}${pagePrompt(page?.path, page?.title)}${offerPrompt(offers, visitor)}${notes || ""}`;
+/** question: the visitor's latest message; it picks the GLOSSARY ENTRY lines (at most two) for this turn. */
+export function systemPrompt({ voice = false, page, offers, visitor, notes = "", question = "" } = {}) {
+  return `${SYSTEM_PROMPT} ${voice ? VOICE_SUFFIX : TEXT_SUFFIX}\n\nSITE FACTS:\n${SITE_KNOWLEDGE}${glossaryPrompt(question, page?.path, { voice })}${pagePrompt(page?.path, page?.title)}${offerPrompt(offers, visitor)}${notes || ""}${unknownTermNote(question)}`;
+}
+
+function latestQuestion(messages) {
+  for (let i = (messages || []).length - 1; i >= 0; i -= 1) if (messages[i]?.role === "user") return String(messages[i].text || "");
+  return "";
 }
 
 export const DEFAULT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
@@ -90,7 +98,7 @@ function gatewayRequest(env, messages, voice, model, page, system, maxTokens, of
     },
     body: {
       messages: [
-        { role: "system", content: system || systemPrompt({ voice, page, offers, visitor, notes }) },
+        { role: "system", content: system || systemPrompt({ voice, page, offers, visitor, notes, question: latestQuestion(messages) }) },
         ...messages.map((message) => ({ role: message.role, content: message.text })),
       ],
       max_tokens: maxTokens || (voice ? VOICE_MAX_TOKENS : MAX_TOKENS),
