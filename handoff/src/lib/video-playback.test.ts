@@ -12,6 +12,7 @@ import { LIMITS } from "@/lib/policy/limits";
 import { agentForToken, fileAgentWork, registerClientAgent, type AgentPrincipal } from "./agent-work-filing";
 import { clientServicesReview } from "./task-review";
 import { dataUrl, fakeClip } from "./test-clips";
+import { listAgentSocialPieces } from "./social-queries";
 
 const NOW = Date.now() - 120_000;
 const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -158,8 +159,54 @@ describe("filing a clip", () => {
     expect(items.map((item) => [item.title, item.format])).toEqual([["Schema video", "page"], ["schema-video.mp4", "file"]]);
     const media = JSON.parse(items[1]!.media_json) as { role: string; content_type: string }[];
     expect(media.map((entry) => [entry.role, entry.content_type])).toEqual([["main", "video/mp4"], ["poster", "image/png"]]);
-    // A clip is a file piece, like a PDF: it never becomes a social piece by itself.
+    // A clip filed as design work is a file piece, like a PDF: it never becomes a social piece by itself.
     expect(await sql.all("SELECT id FROM social_posts")).toEqual([]);
+    const listed = await listAgentSocialPieces(sql, agent, { client: "acme.example" }, NOW);
+    expect(listed).toMatchObject({ ok: true, pieces: [] });
+  });
+});
+
+describe("filing a clip into a social pack", () => {
+  async function pieces() {
+    const listed = await listAgentSocialPieces(sql, agent, { client: "acme.example" }, NOW);
+    if (!listed.ok) throw new Error("list failed");
+    return listed.pieces;
+  }
+
+  it("files the clip as one video piece, with its poster inside it and the caption on it", async () => {
+    const result = await fileClip({
+      kind: "copy",
+      summary: "## schema-video.mp4\n\n**Caption:**\nThe full caption.\n\n**Alt text:** A vertical clip.",
+    });
+    expect(result).toMatchObject({ ok: true, state: "filed", held: true });
+    const items = await sql.all<{ title: string; format: string; status: string; copy_text: string | null; media_json: string }>(
+      "SELECT title, format, status, copy_text, media_json FROM deliverable_items ORDER BY sort",
+    );
+    expect(items.map((item) => [item.title, item.format, item.status])).toEqual([
+      ["Schema video", "page", "pending"],
+      ["schema-video.mp4", "video", "pending"],
+    ]);
+    expect(items[1]!.copy_text).toBe("The full caption.");
+    const media = JSON.parse(items[1]!.media_json) as { role: string; content_type: string }[];
+    expect(media.map((entry) => [entry.role, entry.content_type])).toEqual([["main", "video/mp4"], ["poster", "image/png"]]);
+    // The poster is not a piece of its own, so approving the video cannot post a still picture.
+    expect(items.some((item) => item.format === "static")).toBe(false);
+    const listed = await pieces();
+    expect(listed).toHaveLength(1);
+    expect(listed[0]).toMatchObject({ title: "schema-video.mp4", format: "video", approved: false, postType: "reel", state: "held" });
+    expect(listed[0]!.media).toMatchObject({ count: 1, kinds: ["video"] });
+    // Nothing is approved or scheduled by filing.
+    expect(await sql.all("SELECT id FROM social_posts")).toEqual([]);
+  });
+
+  it("keeps the clip a video piece when the pack is filed again as a new version", async () => {
+    await fileClip({ kind: "copy", external_id: "round-1" });
+    await fileClip({ kind: "design", external_id: "round-2", supersedes: [] });
+    const formats = await sql.all<{ version: number; title: string; format: string }>(
+      "SELECT version, title, format FROM deliverable_items WHERE title = 'schema-video.mp4' ORDER BY version",
+    );
+    expect(formats.length).toBeGreaterThan(0);
+    expect(formats.every((row) => row.format === "video")).toBe(true);
   });
 });
 

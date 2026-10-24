@@ -54,6 +54,21 @@ describe("video files", () => {
     }
   });
 
+  it("shapes a clip filed into a social pack as a video piece, and nothing else", () => {
+    for (const [path, type] of [["a/clip.mp4", "video/mp4"], ["a/clip.WEBM", "video/webm"], ["a/clip.mov", "video/quicktime"]] as const) {
+      const shaped = itemForPath(path, "key-1", { socialPack: true });
+      expect(shaped.format).toBe("video");
+      expect(JSON.parse(shaped.mediaJson)).toEqual([{ r2_key: "key-1", role: "main", content_type: type, size: 0 }]);
+      // Without the social pack flag it is still a file piece.
+      expect(itemForPath(path, "key-1", { socialPack: false }).format).toBe("file");
+    }
+    // Pictures, PDFs and pages are shaped as before, in a social pack too.
+    expect(itemForPath("a/pic.png", "k", { socialPack: true }).format).toBe("static");
+    expect(itemForPath("a/brief.pdf", "k", { socialPack: true }).format).toBe("file");
+    expect(itemForPath("a/caption.txt", "k", { socialPack: true }).format).toBe("page");
+    expect(itemForPath("a/notes.md", null, { socialPack: true })).toEqual({ format: "page", mediaJson: "[]" });
+  });
+
   it("pairs a clip with the picture named <clip>-poster in the same folder only", () => {
     const files = [
       { id: "v", relative_path: "Social/schema-video.mp4" },

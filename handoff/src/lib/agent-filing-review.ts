@@ -218,12 +218,14 @@ export async function recordFiling(
 
   if (task) {
     const existing = task.deliverable_id
-      ? await sql.get<{ id: string; workspace_id: string; version: number; published_version: number | null; status: string }>(
-          "SELECT id, workspace_id, version, published_version, status FROM deliverables WHERE id = ? AND status != 'archived'",
+      ? await sql.get<{ id: string; workspace_id: string; version: number; published_version: number | null; status: string; kind: string }>(
+          "SELECT id, workspace_id, version, published_version, status, kind FROM deliverables WHERE id = ? AND status != 'archived'",
           [task.deliverable_id],
         )
       : undefined;
     const kind = payload.deliverableKind && KINDS.has(payload.deliverableKind) ? payload.deliverableKind : KIND_MAP[payload.kind] ?? "other";
+    // A clip filed into a social pack is a video piece; anywhere else it stays a file. A re-filed pack keeps its own kind.
+    const socialPack = (existing && existing.workspace_id === input.workspaceId ? existing.kind : kind) === "social_pack";
     if (existing && existing.workspace_id === input.workspaceId) {
       deliverableId = existing.id;
       version = await pickVersion(sql, existing, task.id, payload.supersedes);
@@ -282,7 +284,7 @@ export async function recordFiling(
       // A picture named "<clip>-poster.png" belongs to its clip (shown before play). It is not a piece of its own.
       if (isNamedPoster(file, files)) continue;
       incomingTitles.push(name.slice(0, 200));
-      const shaped = itemForPath(file.relative_path, file.object_key);
+      const shaped = itemForPath(file.relative_path, file.object_key, { socialPack });
       writes.push(item(name, shaped.format, captionForImage(notes, name), withPoster(shaped.mediaJson, file), null));
     }
     for (const link of payload.links) {
