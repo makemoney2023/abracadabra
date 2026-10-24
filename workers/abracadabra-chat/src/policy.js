@@ -1,4 +1,5 @@
 import { SITE_PATHS, SITE_PRODUCTS, SITE_WORK } from "./site-knowledge.js";
+import { pickVariant, repeatsRecent } from "./conversation.js";
 
 const COMMIT = /\b(we guarantee|guarantee a|signed contract|binding agreement|we'll start|we’ll start|we will start)\b/i;
 const JARGON = /\b(leverage|synergy|utilize|paradigm|holistic|robust|seamless|cutting-edge|unlock|empower)\b/i;
@@ -7,21 +8,51 @@ const JARGON = /\b(leverage|synergy|utilize|paradigm|holistic|robust|seamless|cu
 const PROPER_NAMES = /\bLLM[\s-]Leverage\b/gi;
 // Our clients by name. A reply may say what we built for them, never that they are like the visitor.
 const CLIENTS = /\b(StrongFoam|pirx(?:\.ca)?|Milrcorr|Renew Implants|SuperPatch)\b/i;
-const LIKE_YOU = /\b(?:similar|the same|comparable)\s+(?:\w+\s+)?(?:fleet|size|setup|set-up|business|team|company|industry|trade|situation|needs?|problems?|challenges?|workflow|process|vans|vehicles|customers)\b|\b(?:businesses|companies|clients|firms|shops|people) like (?:yours|you|StrongFoam|pirx|Milrcorr|Renew Implants|SuperPatch)\b|\b(?:just )?like (?:yours|you do)\b/i;
+const LIKE_YOU = /\b(?:similar|the same|comparable)\s+(?:\w+\s+)?(?:fleet|size|setup|set-up|business|team|company|industry|trade|situation|needs?|problems?|challenges?|workflow|process|vans|vehicles|customers)\b|\b(?:businesses|companies|clients|firms|shops|people) like (?:yours|you|StrongFoam|pirx|Milrcorr|Renew Implants|SuperPatch)\b|\b(?:just )?like (?:yours|you do)\b|\bsimilar (?:custom )?(?:projects?|apps?|work|solutions?|systems?)\b|\b(?:worked with|helped|built for) (?:\w+ ){0,3}(?:companies|businesses|clients|firms|shops)\b[^.!?]{0,20}\blike\b/i;
 // Asking for contact details, which is wrong once the booking calendar is open.
 const CONTACT_ASK = /\b(name and (?:e-?mail|email address)|your (?:e-?mail|email address|phone|phone number|contact (?:details|info\w*))|leave (?:a|your) (?:name|e-?mail|details)|contact (?:details|information))\b/i;
-export const CALENDAR_OPEN = "The booking calendar is open right here in the chat. Pick a thirty-minute time that works for you.";
+// Fixed lines come in a few wordings, so the same sentence does not land twice in one chat.
+// pickVariant() rotates them by seed and skips one the chat said recently. The first is the default.
+export const CALENDAR_OPEN_LINES = [
+  "The booking calendar is open right here in the chat. Pick a thirty-minute time that works for you.",
+  "The calendar is open just below. Pick any thirty-minute slot that suits you.",
+  "I've opened the calendar here in the chat. Choose a thirty-minute time that works for you.",
+];
+export const CALENDAR_OPEN = CALENDAR_OPEN_LINES[0];
+// Used when the visitor asked for a next step but the model's offer copies an earlier one word for word.
+export const OFFER_LINES = [
+  "You can book a thirty-minute working session right here in this chat.",
+  "If it helps, pick a thirty-minute time with our team right here in the chat.",
+  "A thirty-minute working session with our team is the quickest next step, and you can book it here.",
+];
 // Things the model has said that are false for this studio.
 const FALSE_CLAIM = /\b(?:(?:no|don't have any|do not have any|haven't got any)\s+(?:portfolio|examples?|case stud(?:y|ies)|past work|projects to show)|(?:don't|do not) charge|(?:it's|it is|services are|is) free\b|no cost)/i;
 // The cost half of FALSE_CLAIM. Nothing on the site is called free, the Readiness Check included.
 const FREE_CLAIM = /\b(?:(?:don't|do not) charge|(?:it's|it is|services are|is) free\b|no cost|free of charge|for free)\b/i;
-const COST_LINE = "We price each project to the job and quote it after we understand the work. The Readiness Check takes five to seven minutes, and you can take it right here in this chat.";
+export const COST_LINES = [
+  "We price each project to the job and quote it after we understand the work. The Readiness Check takes five to seven minutes, and you can take it right here in this chat.",
+  "Every project is priced to the job, and the quote comes once we understand the work. If you want a starting point, the Readiness Check takes five to seven minutes right here in this chat.",
+  "There is no set price list: we quote each job after we understand the work. An easy first step is the Readiness Check, five to seven minutes right here in this chat.",
+];
 const GROUNDED = "We have real, public work: the StrongFoam CRM and website, pirx.ca, and the Super Funnel System. You can see them on the Case studies page.";
 const ABBREV = /\b(e\.g|i\.e|etc|vs|approx)\.(?=\s)/gi;
 
-const SAFE = "I can help you think it through. A person reviews anything we send after this chat.";
-const PLAIN = "We build tools that fit the work you already do. Tell me the job that takes the most time.";
-const EMPTY = "Tell me the job that takes the most time. I will keep the answer short.";
+export const SAFE_LINES = [
+  "I can help you think it through. A person reviews anything we send after this chat.",
+  "Happy to help you think it through. Anything we send after this chat is reviewed by a person first.",
+];
+export const PLAIN_LINES = [
+  "We build tools that fit the work you already do. Tell me the job that takes the most time.",
+  "We build software around the way you already work. Which job takes the most time each week?",
+  "Our work is custom tools that fit your day as it is. What would you take off your plate first?",
+];
+export const EMPTY_LINES = [
+  "Tell me the job that takes the most time. I will keep the answer short.",
+  "What is the one job that eats most of your week? I'll keep it short.",
+  "Tell me a bit about the work that slows you down, and I'll point you to what fits.",
+];
+// Filler praise that makes every answer sound the same. Taken off the front of a sentence.
+const PRAISE = /^(?:(?:that's|that is|what|such) an? )?(?:(?:really|very) )?(?:good|great|excellent|fantastic|awesome|wonderful|smart|interesting) question\b[,.!:;\s-]*|^(?:i love (?:that|this) question|thanks for (?:asking|the question))\b[,.!:;\s-]*/i;
 
 export function originAllowed(origin, extra = []) {
   if (!origin || typeof origin !== "string") return false;
@@ -58,6 +89,8 @@ export function extraOrigins(env) {
 export const MAX_SENTENCES = 4;
 
 // Links on our own domain must be real pages. The booking and Readiness Check hosts pass as they are.
+const SUBDOMAINS = new Set(["check.abra-ca-dabra.app", "schema.abra-ca-dabra.app", "learn.abra-ca-dabra.app", "hq.abra-ca-dabra.app"]);
+
 export function sitePageKnown(url) {
   let parsed;
   try {
@@ -65,22 +98,32 @@ export function sitePageKnown(url) {
   } catch {
     return false;
   }
-  if (parsed.hostname !== "abra-ca-dabra.app" && parsed.hostname !== "www.abra-ca-dabra.app") return true;
+  if (parsed.hostname !== "abra-ca-dabra.app" && parsed.hostname !== "www.abra-ca-dabra.app") {
+    // Our real subdomains pass; an invented one ("blog.abra-ca-dabra.app") does not.
+    return !/(?:^|\.)abra-ca-dabra\.app$/i.test(parsed.hostname) || SUBDOMAINS.has(parsed.hostname.toLowerCase());
+  }
   let path = parsed.pathname || "/";
   if (path.endsWith("/index.html")) path = path.slice(0, -10);
   return SITE_PATHS.includes(path) || SITE_PATHS.includes(`${path}/`) || /^\/blog\/[a-z0-9-]+\/?$/.test(path);
 }
 
-export function postCheck(text) {
+export function postCheck(text, { seed = 0, recent = [] } = {}) {
   const flags = [];
   let clean = String(text || "").replace(/\s+/g, " ").trim();
+  const line = (variants) => pickVariant(variants, { seed, recent });
+  if (PRAISE.test(clean)) {
+    flags.push("praise");
+    clean = clean.replace(PRAISE, "").trim();
+    clean = clean.replace(/^[a-z]/, (letter) => letter.toUpperCase());
+    if (!clean) return { text: "", flags };
+  }
   if (COMMIT.test(clean)) {
     flags.push("commitment");
-    clean = SAFE;
+    clean = line(SAFE_LINES);
   } else {
     if (/\$\s?\d|\bwe charge\b|\bprice is\b|\bpriced at\b/i.test(clean)) {
       flags.push("price");
-      clean = PLAIN;
+      clean = line(PLAIN_LINES);
     }
     clean = clean.replace(/https?:\/\/[^\s)]+/gi, (url) => {
       const trimmed = url.replace(/[.,;:!?]+$/, "");
@@ -89,6 +132,10 @@ export function postCheck(text) {
       if (allowed.test(trimmed) && sitePageKnown(trimmed)) return trimmed + tail;
       if (allowed.test(trimmed)) {
         flags.push("unknown_page");
+        // A real page on an invented subdomain goes back to the apex.
+        let path = "";
+        try { path = new URL(trimmed).pathname; } catch { /* not a URL */ }
+        if (path && path !== "/" && sitePageKnown(`https://abra-ca-dabra.app${path}`)) return `https://abra-ca-dabra.app${path}${tail}`;
         return `https://abra-ca-dabra.app/${tail}`;
       }
       flags.push("url");
@@ -101,7 +148,7 @@ export function postCheck(text) {
       .replace(/\b(SERVICES|WORK|PRODUCTS|NOTES|OTHER PAGES|PROCESS|SITE FACTS|WHY CLOUDFLARE|NEXT STEPS)\b/g, (word) => word.toLowerCase());
     if (FREE_CLAIM.test(clean)) {
       flags.push("false_claim");
-      clean = COST_LINE;
+      clean = line(COST_LINES);
     } else if (FALSE_CLAIM.test(clean)) {
       flags.push("false_claim");
       clean = GROUNDED;
@@ -109,7 +156,7 @@ export function postCheck(text) {
     // Page links and our own names ("LLM Leverage", /course/llm-leverage/) are not jargon.
     if (JARGON.test(clean.replace(/https?:\/\/\S+/g, "").replace(PROPER_NAMES, ""))) {
       flags.push("jargon");
-      clean = PLAIN;
+      clean = line(PLAIN_LINES);
     }
   }
   // Keep the first four sentences. The answer comes first; a closing offer is not protected.
@@ -124,7 +171,7 @@ export function postCheck(text) {
   if (kept.length > MAX_SENTENCES) flags.push("length");
   clean = kept.slice(0, MAX_SENTENCES).join(" ");
   if (!clean && flags.includes("client_claim")) return { text: "", flags };
-  if (!clean) clean = EMPTY;
+  if (!clean) clean = line(EMPTY_LINES);
   return { text: clean, flags };
 }
 
@@ -146,7 +193,9 @@ export function wantsBooking(userText) {
 
 // A sentence that pitches the working session or the Readiness Check. Plain uses of "book"
 // ("a visitor can start an estimate and book") are not offers.
-export const OFFER_PITCH = /\b(working session|readiness check|book (?:a |an |the |your |some )?(?:thirty|30|time|call|session|slot|meeting|working)|book (?:it|one)\b|book(?:ed)? right here|booking (?:calendar|form|link)|pick a (?:thirty-minute |30-minute )?time|schedule a (?:call|session|time|meeting))/i;
+// Offers phrased around the visitor's problem count too: "walk through it with Christopher for 30 minutes",
+// "a thirty-minute call", "pick any thirty-minute slot".
+export const OFFER_PITCH = /\b(working session|readiness check|book (?:a |an |the |your |some )?(?:thirty|30|time|call|session|slot|meeting|working)|book (?:it|one)\b|book(?:ed)? right here|booking (?:calendar|form|link)|pick (?:a|any) (?:thirty-minute |30-minute )?(?:time|slot)|schedule a (?:call|session|time|meeting)|(?:thirty|30)[- ]minutes? (?:time|slot|session|call|chat|walk-?through)|with Christopher\b[^.?!]{0,40}\b(?:minutes|call|session)|(?:walk|go) through [^.?!]{0,60}\bwith Christopher)/i;
 
 export function hasOffer(text) {
   return OFFER_PITCH.test(String(text || ""));
@@ -219,20 +268,36 @@ export function namedPage(userText) {
   return NAMED.find((item) => item.match.test(text)) || null;
 }
 
-export function localReply(userText) {
+export const LOCAL_LINES = {
+  booking: [
+    "A thirty-minute working session is the fastest way to look at one job. You can pick a time in this chat.",
+    "The quickest way forward is a thirty-minute working session on one real job. You can book it right here in the chat.",
+    "Let's look at one job together in a thirty-minute working session. The booking is right here in this chat.",
+  ],
+  readiness: [
+    "The Readiness Check takes five to seven minutes, and you can take it right here in this chat. It shows where the work slows down.",
+    "A good first step is the Readiness Check. It runs here in the chat for five to seven minutes and points to the spot where your work gets stuck.",
+  ],
+  contact: [
+    "Leave your name and email here. A person reads it before anyone writes back.",
+    "Drop your name and email here, and a person will read it before anyone writes back.",
+  ],
+  general: [
+    "We build custom software and AI tools around the work you already do. You can see real projects on the Case studies page. What job takes the most time each week?",
+    "Custom software and AI tools that fit how you already work, that is what we build. The Case studies page shows real projects. Which job eats most of your week?",
+  ],
+};
+
+/** The studio script, used when the model is not reachable. Wording rotates with seed. */
+export function localReply(userText, { seed = 0, recent = [] } = {}) {
+  const line = (variants) => pickVariant(variants, { seed, recent });
   const action = uiActionFor(userText);
-  if (action === "offer_booking" || action === "open_booking") {
-    return "A thirty-minute working session is the fastest way to look at one job. You can pick a time in this chat.";
-  }
-  if (action === "offer_readiness_check") {
-    return "The Readiness Check takes five to seven minutes, and you can take it right here in this chat. It shows where the work slows down.";
-  }
-  if (action === "request_contact") {
-    return "Leave your name and email here. A person reads it before anyone writes back.";
-  }
+  if (action === "offer_booking" || action === "open_booking") return line(LOCAL_LINES.booking);
+  if (action === "offer_readiness_check") return line(LOCAL_LINES.readiness);
+  if (action === "request_contact") return line(LOCAL_LINES.contact);
   const named = namedPage(userText);
   if (named) return `${named.name}: ${named.line} You can read more at https://abra-ca-dabra.app${named.path}.`;
-  return "We build custom software and AI tools around the work you already do. You can see real projects on the Case studies page. What job takes the most time each week?";
+  return line(LOCAL_LINES.general);
 }
 
 export function rateGate(hits, now, limit, windowMs) {
@@ -300,7 +365,7 @@ function nextSentence(buffer, clause = false) {
  * { replace } when a sentence trips a rule that replaces the whole answer (then stops).
  * Stops after maxSentences.
  */
-export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false, calendarOpen = false } = {}) {
+export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false, calendarOpen = false, recent = [], seed = 0, askedNext = false } = {}) {
   let buffer = "";
   let count = 0;
   // dropOffers: hold back booking or Readiness Check sentences. One is used only if the
@@ -311,8 +376,15 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
   let dropped = false;
   // After a dropped client claim, a sentence that leans on it ("We also built…", "Their…") goes too.
   let orphan = false;
+  // recent: the last few assistant replies. A sentence that is a near copy of one of them is held
+  // back (repeat guard); one is used only if nothing else is left, so a reply is never emptied.
+  let repeat = null;
   const judge = (sentence) => {
-    const out = postCheck(sentence);
+    const out = postCheck(sentence, { seed, recent });
+    if (!out.text && out.flags.includes("praise")) {
+      dropped = true;
+      return null;
+    }
     if (out.flags.includes("client_claim") && !out.text) {
       dropped = true;
       orphan = true;
@@ -331,6 +403,12 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
     // A sentence that is only a link says nothing; skip it.
     if (!out.text.replace(/https?:\/\/\S+/g, "").replace(/[\s.,;:!?]/g, "")) return null;
     if (out.flags.some((flag) => REPLACING.has(flag))) return { replace: out.text, flags: out.flags };
+    if (recent.length && repeatsRecent(out.text, recent)) {
+      // They asked for a next step: keep the offer, in words the chat has not used yet.
+      if (askedNext && hasOffer(out.text)) return { text: pickVariant(OFFER_LINES, { seed, recent }), flags: [...out.flags, "reworded"] };
+      repeat ||= { text: out.text, flags: [...out.flags, "repeat"] };
+      return null;
+    }
     return { text: out.text, flags: out.flags };
   };
   for await (const delta of deltas) {
@@ -359,5 +437,6 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
     count += 1;
   }
   if (!count && held) yield held;
-  else if (!count && dropped) yield { text: calendarOpen ? CALENDAR_OPEN : EMPTY, flags: ["dropped"] };
+  else if (!count && repeat) yield repeat;
+  else if (!count && dropped) yield { text: pickVariant(calendarOpen ? CALENDAR_OPEN_LINES : EMPTY_LINES, { seed, recent }), flags: ["dropped"] };
 }

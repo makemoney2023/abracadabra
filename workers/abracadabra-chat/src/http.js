@@ -9,6 +9,7 @@ import {
   localOrigin,
   originAllowed,
   checkedSentences,
+  hasOffer,
   localReply,
   offerState,
   rateGate,
@@ -19,6 +20,7 @@ import { recentWeeks, recordSession, STATS_MAX_WEEKS, statsCsv, statsStore, week
 import { applyChatEvent, blankSession, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
 import { VoiceCall } from "./realtime.js";
 import { SITE_KNOWLEDGE_VERSION } from "./site-knowledge.js";
+import { conversationNotes, followUps, noteOffer, recentReplies, updateVisitor } from "./conversation.js";
 import { VOICE_CALLS_PER_SESSION, VOICE_TURNS_PER_SESSION, voiceEnabled } from "./voice.js";
 
 const HQ_RETRIES = 5;
@@ -112,13 +114,15 @@ function cookie(id, request) {
   return `abra_chat=${id}; HttpOnly; Path=/; SameSite=Lax; Max-Age=2592000${secure}`;
 }
 
+export const GREETING = "Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.";
+
 function publicConfig(env) {
   return {
     calLink: String(env.CAL_LINK || env.BOOKING_URL || "").trim(),
     readinessCheckUrl: String(env.READINESS_CHECK_URL || "https://check.abra-ca-dabra.app/check").trim(),
     turnstileSiteKey: String(env.TURNSTILE_SITE_KEY || "").trim(),
     voiceEnabled: voiceEnabled(env),
-    greeting: "Ask a plain question. A person reviews anything we follow up on.",
+    greeting: GREETING,
     knowledge: SITE_KNOWLEDGE_VERSION,
   };
 }
@@ -195,15 +199,18 @@ export const TYPED_SENTENCES = 5;
  * A model timeout or error sends "error" with RETRY_TEXT instead of hanging. The exchange is saved
  * only when an answer was given.
  */
-function streamReply({ text, action, history, session, storage, env, deps, now, offers }) {
+function streamReply({ text, action, history, session, storage, env, deps, now, offers, notes }) {
   const encoder = new TextEncoder();
   const body = new ReadableStream({
     async start(controller) {
       const emit = (event, data) => controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       let answer = "";
       let failure = null;
+      // The last three replies feed the repeat guard; the seed rotates the fixed lines per turn.
+      const recent = recentReplies(session, 3);
+      const seed = session.messageCount || 0;
       try {
-        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening) })) {
+        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers, visitor: session.visitor, notes }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening), recent, seed, askedNext: Boolean(offers?.asked) })) {
           if (part.replace) {
             answer = part.replace;
             break;
@@ -214,7 +221,7 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
       } catch (error) {
         failure = error instanceof ChatUnavailable ? error.reason : "error";
       }
-      if (failure === "unconfigured") answer = localReply(text);
+      if (failure === "unconfigured") answer = localReply(text, { seed, recent });
       if (!answer) {
         if (failure && failure !== "unconfigured") console.error(`chat reply: ${failure}`);
         session.replyFailures = (session.replyFailures || 0) + 1;
@@ -225,10 +232,14 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
         return;
       }
       if (action === "offer_booking" || action === "open_booking") session.bookingOffered = true;
+      session.visitor = noteOffer(session.visitor, hasOffer(answer), session.messageCount);
+      const chips = offers?.opening ? [] : followUps(text, answer, session);
       rememberExchange(session, text, answer, now);
       await save(storage, session, deps);
       emit("final", { text: answer });
       if (action) emit("ui_action", { action });
+      // Context-aware follow-up chips; each one just sends its words as the next question.
+      if (chips.length) emit("suggestions", { items: chips });
       emit("done", { ok: true });
       controller.close();
     },
@@ -375,7 +386,10 @@ export async function handleSession(request, storage, env, deps) {
     // A clear ask to book opens the Cal.com calendar in the widget (the two-times form when no link is set).
     const calendarOpen = action === "open_booking" && Boolean(String(env.CAL_LINK || env.BOOKING_URL || "").trim());
     const offers = { ...offerState(session, text), opening: calendarOpen };
-    return streamReply({ text, action, history, session, storage, env, deps, now, offers });
+    // What the visitor has told us so far, plus this turn's notes (openers, goodbye, objection).
+    session.visitor = updateVisitor(session.visitor, text);
+    const notes = conversationNotes(session, text);
+    return streamReply({ text, action, history, session, storage, env, deps, now, offers, notes });
   }
 
   if (url.pathname === "/api/chat/realtime") {

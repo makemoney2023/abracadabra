@@ -123,3 +123,17 @@ test("AI_FALLBACK_MODEL=none turns the fallback off", async () => {
   assert.equal(h.calls.length, 1);
   assert.equal(events[0].event, "error");
 });
+
+test("typed: the visitor record is saved, reaches the prompt, and follow-up chips come after the answer", async () => {
+  const h = harness(() => sse([{ response: "Reminder calls are a good first job for an assistant." }]));
+  const { events, room } = await ask(h, "We're a dental clinic on Dentrix and the front desk spends hours on reminder calls.");
+  const session = await room.get("session");
+  assert.equal(session.visitor.industry, "dental clinic");
+  assert.deepEqual(session.visitor.tools, ["Dentrix"]);
+  assert.match(session.visitor.pain, /reminder calls/);
+  assert.match(h.calls[0].body.messages[0].content, /KNOWN ABOUT THE VISITOR .*works in: dental clinic; uses: Dentrix; problem in their words/);
+  const names = events.map((e) => e.event);
+  assert.deepEqual(names.slice(-3), ["final", "suggestions", "done"]);
+  const chips = events.find((e) => e.event === "suggestions").data.items;
+  assert.ok(chips.length >= 1 && chips.length <= 2);
+});

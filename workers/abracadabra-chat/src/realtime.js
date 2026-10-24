@@ -15,7 +15,8 @@
 // reply is aborted and the browser is told to drop queued audio. Audio is never stored.
 
 import { ChatUnavailable, replyStream } from "./model.js";
-import { checkedSentences, localReply, offerState, uiActionFor } from "./policy.js";
+import { checkedSentences, hasOffer, localReply, offerState, uiActionFor } from "./policy.js";
+import { conversationNotes, noteOffer, recentReplies, updateVisitor } from "./conversation.js";
 import { rememberExchange } from "./session.js";
 import {
   CALL_IDLE_MS,
@@ -324,6 +325,11 @@ export class VoiceCall {
 
     let action = uiActionFor(text);
     const offers = offerState(session, text);
+    // Same visitor memory and turn notes as typed chat, so voice does not re-ask either.
+    const visitor = updateVisitor(session.visitor, text);
+    const notes = conversationNotes({ ...session, visitor }, text, visitor);
+    const recent = recentReplies(session, 3);
+    const seed = session.messageCount || 0;
     const budget = VOICE_TTS_CHARS_PER_SESSION - (session.ttsChars || 0);
     if (budget <= 0) return this.ttsLimit();
     // A clear ask to book: open the calendar now and say so, without waiting on the model.
@@ -358,8 +364,8 @@ export class VoiceCall {
         ? (async function* () { yield booking; })()
         : eager
         ? eager.replay(controller.signal)
-        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers });
-      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true, dropOffers: !booking && offers.dropOffers })) {
+        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers, visitor, notes });
+      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true, dropOffers: !booking && offers.dropOffers, recent: booking ? [] : recent, seed, askedNext: offers.asked })) {
         if (controller.signal.aborted || this.closed) break;
         if (part.replace) {
           // Nothing unsafe is ever spoken. If a sentence already played, stop there.
@@ -380,7 +386,7 @@ export class VoiceCall {
       return;
     }
     if (!answer) {
-      answer = failure === "unconfigured" ? localReply(text) : VOICE_RETRY_TEXT;
+      answer = failure === "unconfigured" ? localReply(text, { seed, recent }) : VOICE_RETRY_TEXT;
       if (failure && failure !== "unconfigured") console.error(`voice reply: ${failure}`);
       queueSpeech(answer);
     }
@@ -389,6 +395,7 @@ export class VoiceCall {
 
     session = (await this.loadSession()) || session;
     session.voiceTurns = (session.voiceTurns || 0) + 1;
+    session.visitor = noteOffer(updateVisitor(session.visitor, text), answer !== VOICE_RETRY_TEXT && hasOffer(answer), session.messageCount);
     if (action === "offer_booking" || booking) session.bookingOffered = true;
     if (answer !== VOICE_RETRY_TEXT) rememberExchange(session, text, answer, this.now(), { voice: true });
     else session.replyFailures = (session.replyFailures || 0) + 1;
@@ -414,7 +421,10 @@ export class VoiceCall {
     // EndOfTurn may have arrived while the session loaded; then this guess is too late.
     if (ticket !== this.eagerTicket || !session || this.closed || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) return;
     const controller = new AbortController();
-    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers: offerState(session, text) });
+    // Same prompt as handleTurn builds for this text, so a reused guess matches the real turn.
+    const visitor = updateVisitor(session.visitor, text);
+    const notes = conversationNotes({ ...session, visitor }, text, visitor);
+    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers: offerState(session, text), visitor, notes });
     this.eager = new Prefetch(sameWords(text), stream, controller, this.now());
     this.eagerStarts = (this.eagerStarts || 0) + 1;
   }

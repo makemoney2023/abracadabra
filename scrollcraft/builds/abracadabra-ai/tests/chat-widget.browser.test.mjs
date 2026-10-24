@@ -113,7 +113,7 @@ test("the chat books in place, offers the check, and takes a consented note", as
   env.CAL_LINK = "abracadabra/working-session";
   const page = await openFixture();
   await page.getByRole("button", { name: "Ask Abracadabra" }).click();
-  await page.getByText("Ask a plain question. A person reviews anything we follow up on.").waitFor();
+  await page.getByText("Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.").waitFor();
   await page.getByRole("button", { name: "Book a 30-min working session" }).click();
   const src = await page.locator("iframe").getAttribute("src");
   const cal = new URL(src);
@@ -513,7 +513,7 @@ test("the Readiness Check runs inside the chat, one question at a time, and link
 test("voice stays hidden when the switch is off", async () => {
   const page = await openFixture(390, 844);
   await page.getByRole("button", { name: "Ask Abracadabra" }).click();
-  await page.getByText("Ask a plain question. A person reviews anything we follow up on.").waitFor();
+  await page.getByText("Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.").waitFor();
   assert.equal(await page.getByRole("button", { name: "Start voice chat" }).count(), 0);
   await page.close();
 });
@@ -585,4 +585,21 @@ test("typed chat shows a working indicator that changes over time, then a retry 
     delete env.CF_ACCOUNT_ID;
     delete deps.fetchImpl;
   }
+});
+
+test("follow-up chips appear under a typed answer, ask their question, and clear on the next send", async () => {
+  const page = await openFixture();
+  await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+  await page.getByRole("textbox", { name: "Message" }).fill("How much does it cost?");
+  await page.getByRole("button", { name: "Send", exact: true }).click();
+  const chip = page.getByRole("button", { name: "What affects the quote?" });
+  await chip.waitFor();
+  await chip.click();
+  await page.locator(".bubble.user", { hasText: "What affects the quote?" }).waitFor();
+  await page.waitForFunction(() => {
+    const root = document.querySelector("abra-chat")?.shadowRoot || document;
+    return [...root.querySelectorAll(".chip")].every((node) => node.textContent !== "What affects the quote?");
+  });
+  assert.deepEqual(page.errors, []);
+  await page.close();
 });
