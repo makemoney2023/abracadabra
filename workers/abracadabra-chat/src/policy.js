@@ -1,4 +1,5 @@
 import { SITE_PATHS, SITE_PRODUCTS, SITE_WORK } from "./site-knowledge.js";
+import { glossaryReply } from "./glossary.js";
 import { pickVariant, repeatsRecent } from "./conversation.js";
 
 const COMMIT = /\b(we guarantee|guarantee a|signed contract|binding agreement|we'll start|we’ll start|we will start)\b/i;
@@ -91,6 +92,24 @@ export const MAX_SENTENCES = 4;
 // Links on our own domain must be real pages. The booking and Readiness Check hosts pass as they are.
 const SUBDOMAINS = new Set(["check.abra-ca-dabra.app", "schema.abra-ca-dabra.app", "learn.abra-ca-dabra.app", "hq.abra-ca-dabra.app"]);
 
+/**
+ * A page path the model got slightly wrong, mapped to the real page: "/blog/what-is-llms.txt" -> "/blog/what-is-llms-txt/",
+ * "/glossary/llms.txt" -> "/glossary/llms-txt/", "/glossary/gradient-boosting" -> "/glossary/gradient-boosting/".
+ * Only an exact match after those fixes, or a single known page with the same last segment, counts. Else null.
+ */
+export function repairPath(rawPath) {
+  let path = String(rawPath || "").split(/[?#]/)[0].toLowerCase().replace(/\/index\.html$/, "/");
+  if (!path.startsWith("/") || path === "/") return null;
+  const candidates = [path, `${path}/`];
+  const dashed = path.replace(/\.(?=[a-z0-9])/g, "-").replace(/_/g, "-");
+  candidates.push(dashed, `${dashed.replace(/\/$/, "")}/`);
+  for (const candidate of candidates) if (SITE_PATHS.includes(candidate)) return candidate;
+  const last = dashed.replace(/\/$/, "").split("/").pop();
+  if (!last) return null;
+  const same = SITE_PATHS.filter((known) => known.replace(/\/$/, "").split("/").pop() === last);
+  return same.length === 1 ? same[0] : null;
+}
+
 export function sitePageKnown(url) {
   let parsed;
   try {
@@ -135,6 +154,8 @@ export function postCheck(text, { seed = 0, recent = [] } = {}) {
         // A real page on an invented subdomain goes back to the apex.
         let path = "";
         try { path = new URL(trimmed).pathname; } catch { /* not a URL */ }
+        const fixed = repairPath(path);
+        if (fixed) return `https://abra-ca-dabra.app${fixed}${tail}`;
         if (path && path !== "/" && sitePageKnown(`https://abra-ca-dabra.app${path}`)) return `https://abra-ca-dabra.app${path}${tail}`;
         return `https://abra-ca-dabra.app/${tail}`;
       }
@@ -291,6 +312,9 @@ export const LOCAL_LINES = {
 /** The studio script, used when the model is not reachable. Wording rotates with seed. */
 export function localReply(userText, { seed = 0, recent = [] } = {}) {
   const line = (variants) => pickVariant(variants, { seed, recent });
+  // "What is AI readiness?" is a definition question, not a request for the Readiness Check.
+  const defined = glossaryReply(userText);
+  if (defined) return defined;
   const action = uiActionFor(userText);
   if (action === "offer_booking" || action === "open_booking") return line(LOCAL_LINES.booking);
   if (action === "offer_readiness_check") return line(LOCAL_LINES.readiness);

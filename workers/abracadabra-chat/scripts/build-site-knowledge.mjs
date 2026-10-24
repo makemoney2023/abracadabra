@@ -49,6 +49,8 @@ const SKIP_PAGES = new Set(["/start/thanks/"]);
 const PAGE_NAMES = { "/": "Home", "/services/": "Services page", "/portfolio/": "Case studies page", "/products/": "Products page", "/blog/": "Notes (the blog)", "/films.html": "Films page", "/walkthrough.html": "Walkthrough" };
 
 const root = new URL("../", site);
+// One glossary entry's definition, at most. The marketing schema caps it at 320 too.
+export const GLOSSARY_SHORT_MAX = 320;
 
 /** "/blog/x" and "/blog/x/" are the same page; the chat always uses the trailing slash. */
 export function pagePath(raw) {
@@ -74,6 +76,27 @@ const decode = (text) => String(text || "")
   .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)));
 
 /** A built page's own title (without the site name) and meta description. */
+/** Published glossary terms from content/glossary.json (no dependencies, so CI can run this without npm install). */
+export async function glossaryEntries(sitemap) {
+  const data = JSON.parse(await readFile(new URL("content/glossary.json", root), "utf8"));
+  const entries = data.terms
+    .filter((term) => term.status === "published")
+    .sort((a, b) => a.term.localeCompare(b.term, "en", { sensitivity: "base" }))
+    .map((term) => {
+      const acronym = (term.term.match(/\(([^)]+)\)/) || [])[1];
+      const base = term.term.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+      const names = [term.term, term.name, base, acronym, ...(term.alternateName || []), ...(term.match || [])]
+        .filter((name) => name && !name.startsWith("/"))
+        .map(one);
+      return { term: term.term, path: `/glossary/${term.slug}/`, short: one(term.short), names: [...new Set(names)], notMatch: term.notMatch || [] };
+    });
+  for (const entry of entries) {
+    if (sitemap && !sitemap.includes(entry.path)) throw new Error(`glossary term ${entry.term} is published but ${entry.path} is not in the sitemap`);
+    if (entry.short.length > GLOSSARY_SHORT_MAX) throw new Error(`glossary term ${entry.term}: short definition over ${GLOSSARY_SHORT_MAX} chars`);
+  }
+  return entries;
+}
+
 async function pageMeta(path) {
   const html = await readFile(pageFile(path), "utf8");
   const title = decode(html.match(/<title>([^<]*)<\/title>/i)?.[1]).replace(/\s*\|\s*Abracadabra AI\s*$/i, "").trim();
@@ -109,10 +132,10 @@ export async function buildKnowledge() {
   const blogPaths = sitemap.filter((path) => /^\/blog\/[a-z0-9-]+\/$/.test(path));
   const blog = [];
   for (const path of blogPaths) blog.push({ name: (await pageMeta(path)).title, path });
-  // Glossary term pages are listed by name only, like blog notes, so the knowledge stays small.
-  const glossaryPaths = sitemap.filter((path) => /^\/glossary\/[a-z0-9-]+\/$/.test(path));
-  const glossary = [];
-  for (const path of glossaryPaths) glossary.push({ name: (await pageMeta(path)).title, path });
+  // Glossary terms do not sit in SITE_KNOWLEDGE. Each published term becomes a SITE_GLOSSARY entry (its checked
+  // short definition and exact page), and src/glossary.js adds only the entries a question names to that turn's
+  // prompt. The standing prompt stays the same size however many terms the glossary publishes.
+  const glossary = await glossaryEntries(sitemap);
   const covered = new Set([...work, ...services, ...products, ...blog, ...glossary].map((item) => item.path));
   const pages = [];
   for (const path of [...sitemap, ...EXTRA_PAGES]) {
@@ -147,7 +170,7 @@ export async function buildKnowledge() {
     ...pages.map((item) => `- ${item.name} | ${item.path} | ${item.line}`),
     "NOTES (blog articles; link one only when the visitor asks about its topic). Format: title | page.",
     ...blog.map((item) => `- ${item.name} | ${item.path}`),
-    ...(glossary.length ? ["GLOSSARY (plain definitions; link one only when the visitor asks what a term means). Format: question | page.", ...glossary.map((item) => `- ${item.name} | ${item.path}`)] : []),
+    "GLOSSARY: checked, plain definitions of AI and search terms live at /glossary/, one page per term. A GLOSSARY ENTRY block below this list, when present, holds the definition and page for a term the visitor named.",
     `PROCESS: ${process.join(" ")}`,
     "COST: Priced to the project. Tell us what you need and we'll quote it. Never give a number.",
     "NEXT STEPS (options, not a closing line: offer one only when the visitor asks about cost, timing, getting started, or talking to a person): a thirty-minute working session, booked right in this chat. Not sure where to start? The Readiness Check takes five to seven minutes, can be taken right here in this chat (or at check.abra-ca-dabra.app), and shows where the work slows down: the data, the workflow, the owner, the decision, and how visible the site is to answer engines.",
@@ -157,19 +180,19 @@ export async function buildKnowledge() {
   const paths = [...new Set([...work, ...products, ...services, ...pages, ...blog, ...glossary].map((item) => item.path))];
   const text = lines.join("\n");
   // Short fingerprint of what the chat knows. GET /api/chat/config returns it, so a deploy can be checked against the repo.
-  const version = createHash("sha256").update(JSON.stringify({ text, paths })).digest("hex").slice(0, 12);
+  const version = createHash("sha256").update(JSON.stringify({ text, paths, glossary })).digest("hex").slice(0, 12);
   return { text, version, work, products, services, pages, blog, glossary, paths };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const { text, version, work, products, services, paths } = await buildKnowledge();
+  const { text, version, work, products, services, paths, glossary } = await buildKnowledge();
   if (process.argv.includes("--check")) {
     const current = await import(new URL("../src/site-knowledge.js", import.meta.url));
-    if (current.SITE_KNOWLEDGE_VERSION !== version || current.SITE_KNOWLEDGE !== text || JSON.stringify(current.SITE_PATHS) !== JSON.stringify(paths)) {
+    if (current.SITE_KNOWLEDGE_VERSION !== version || current.SITE_KNOWLEDGE !== text || JSON.stringify(current.SITE_PATHS) !== JSON.stringify(paths) || JSON.stringify(current.SITE_GLOSSARY) !== JSON.stringify(glossary)) {
       console.error("src/site-knowledge.js is out of date with the marketing site. Run: npm run knowledge");
       process.exit(1);
     }
-    console.log(`site-knowledge.js is current: version ${version}, ${text.length} chars, ${paths.length} pages`);
+    console.log(`site-knowledge.js is current: version ${version}, ${text.length} chars, ${paths.length} pages, ${glossary.length} glossary terms`);
     process.exit(0);
   }
   const body = `// Generated by scripts/build-site-knowledge.mjs from the marketing site source. Do not edit by hand.\n`
@@ -178,7 +201,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     + `export const SITE_WORK = ${JSON.stringify(work, null, 2)};\n\n`
     + `export const SITE_PRODUCTS = ${JSON.stringify(products, null, 2)};\n\n`
     + `export const SITE_SERVICES = ${JSON.stringify(services, null, 2)};\n\n`
-    + `export const SITE_PATHS = ${JSON.stringify(paths, null, 2)};\n`;
+    + `export const SITE_PATHS = ${JSON.stringify(paths, null, 2)};\n\n`
+    + `export const SITE_GLOSSARY = ${JSON.stringify(glossary, null, 2)};\n`;
   await writeFile(out, body);
-  console.log(`site-knowledge.js: version ${version}, ${text.length} chars, ~${Math.round(text.length / 4)} tokens`);
+  console.log(`site-knowledge.js: version ${version}, ${text.length} chars, ~${Math.round(text.length / 4)} tokens, ${glossary.length} glossary terms`);
 }
