@@ -163,11 +163,11 @@ const FIRST_TOKEN_MS = 6000;
  * (error, garbled text, no first word in FIRST_TOKEN_MS), one try on AI_FALLBACK_MODEL
  * (default 8B fast, "none" turns it off) inside the same CHAT_TIMEOUT_MS budget.
  */
-export async function* replyStream({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, now = () => Date.now(), page, offers, visitor, notes }) {
+export async function* replyStream({ env, messages, fetchImpl = fetch, voice = false, signal, timeoutMs = CHAT_TIMEOUT_MS, now = () => Date.now(), page, offers, visitor, notes, system }) {
   const started = now();
   let said = false;
   try {
-    for await (const delta of streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs, firstTokenMs: FIRST_TOKEN_MS, page, offers, visitor, notes })) {
+    for await (const delta of streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs, firstTokenMs: FIRST_TOKEN_MS, page, offers, visitor, notes, system })) {
       said = true;
       yield delta;
     }
@@ -179,7 +179,7 @@ export async function* replyStream({ env, messages, fetchImpl = fetch, voice = f
     const left = timeoutMs - (now() - started);
     if (!fallback || fallback === "none" || fallback === chatModel(env, voice) || left < 2000) throw error;
     console.error(`chat model ${reason}; using ${fallback}`);
-    yield* streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs: left, model: fallback, page, offers, visitor, notes });
+    yield* streamChat({ env, messages, fetchImpl, voice, signal, timeoutMs: left, model: fallback, page, offers, visitor, notes, system });
   }
 }
 

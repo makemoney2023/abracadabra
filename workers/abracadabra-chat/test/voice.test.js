@@ -414,7 +414,7 @@ test("a slow answer gets one cached filler line, and its echo is not a barge-in"
   h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
   await new Promise((resolve) => setTimeout(resolve, 20));
   const filler = browser.json().find((m) => m.type === "filler");
-  assert.deepEqual(filler, { type: "filler", index: 0, turn: 1 });
+  assert.deepEqual(filler, { type: "filler", index: 0, turn: 1, voice: "luna" });
   assert.equal(h.calls.filter((c) => c.url.includes("aura")).length, 0, "filler is not synthesized per call");
   h.flux.emit("message", JSON.stringify({ event: "Update", transcript: "let me check" }));
   assert.equal(call.state, "thinking");
@@ -708,7 +708,7 @@ test("barge-in: three words stop the reply at once; two words only after 400 ms"
   call.end("test");
 });
 
-test("fillers: only built lines, never on two turns in a row, only in the fillers' voice", async () => {
+test("fillers: only built lines, never on two turns in a row, only in the call's own voice", async () => {
   const { FILLER_READY, FILLER_AFTER_MS } = await import("../src/voice.js");
   assert.equal(FILLER_AFTER_MS, 1600);
   const slow = () => sseStream(["", "We build custom apps."], { hold: new Promise((resolve) => setTimeout(resolve, 30)) });
@@ -726,12 +726,25 @@ test("fillers: only built lines, never on two turns in a row, only in the filler
   for (const filler of fillers) assert.ok(FILLER_READY.includes(filler.index));
   assert.notEqual(fillers[0].index, fillers[1].index, "lines rotate");
 
+  // thalia and andromeda have their own built sets (/assets/voice/<voice>/): the filler names the voice.
   const ab = harness({ env: { ...VOICE_ENV, TTS_SPEAKER: "thalia" }, llm: slow });
   ab.deps.fillerAfterMs = 5;
   const other = await connect(ab);
+  assert.equal(other.browser.json()[0].voice, "thalia", "ready names the call's voice");
   ab.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
   await new Promise((resolve) => setTimeout(resolve, 60));
-  assert.equal(other.browser.json().some((m) => m.type === "filler"), false, "luna fillers are not played in another voice");
+  assert.equal(other.browser.json().find((m) => m.type === "filler")?.voice, "thalia");
+
+  // A voice with no built set (asteria) never gets a filler in another voice.
+  const bare = harness({ env: { ...VOICE_ENV, TTS_SPEAKER: "asteria" }, llm: slow });
+  bare.deps.fillerAfterMs = 5;
+  const third = await connect(bare);
+  bare.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert.equal(third.browser.json().some((m) => m.type === "filler"), false, "no filler in a voice without its own lines");
+  const { fillerReady } = await import("../src/voice.js");
+  assert.equal(fillerReady("andromeda").length, 10);
+  assert.equal(fillerReady("asteria").length, 0);
 });
 
 test("voice A/B: TTS_SPEAKER_AB picks luna, thalia or andromeda per chat, logged and used for every sentence", async () => {
@@ -766,4 +779,113 @@ test("voice A/B: TTS_SPEAKER_AB picks luna, thalia or andromeda per chat, logged
   } finally {
     console.log = original;
   }
+});
+
+// ---------- phase 2: receptionist demo and the mini-audit by voice ----------
+
+const DEMO_ENV = { ...VOICE_ENV, RECEPTIONIST_DEMO: "true", CHAT_AUDIT: "true" };
+
+async function connectOn(h, page, ip = "203.0.113.20") {
+  const cookie = await open(h, ip);
+  const passed = await handleRequest(new Request("https://abra-ca-dabra.app/api/chat/voice-pass", {
+    method: "POST",
+    headers: { origin: "http://127.0.0.1:4500", "content-type": "application/json", "cf-connecting-ip": ip, cookie },
+    body: JSON.stringify({ page, title: "Voice agents | Abracadabra" }),
+  }), h.env, h.deps);
+  const { pass } = await passed.json();
+  assert.equal((await dial(h, { cookie, ip, pass })).headers.get("x-test-upgrade"), "1");
+  await flush();
+  return { cookie, browser: h.sockets.at(-1)[1] };
+}
+
+const turn = async (h, transcript, rounds = 80) => {
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript }));
+  await flush(rounds);
+};
+
+test("receptionist demo: labelled, its own prompt and history, no booking/health asks, stop demo ends it with a takeaway", async () => {
+  const bodies = [];
+  const replies = [
+    "Missed lunch calls are a good fit for a voice agent. Want to hear a two-minute demo?",
+    "Thanks for calling! Can I get your date of birth? We have openings most weekdays.",
+    "In the real system I'd book that straight into your calendar. I've booked you in for Tuesday at three.",
+    "We build that for clinics.",
+  ];
+  const h = harness({ env: DEMO_ENV, llm: (body) => { bodies.push(body); return Response.json({ success: true, result: { response: replies[bodies.length - 1] } }); } });
+  const { browser } = await connectOn(h, "/services/voice-and-realtime-agents/");
+  await turn(h, "We're a dental clinic and we miss calls at lunch.");
+  assert.match(bodies[0].messages[0].content, /offer once: a two-minute demo/);
+  await turn(h, "Sure, start the demo");
+  assert.equal(bodies.length, 1, "the opening is a fixed line");
+  const on = browser.json().find((m) => m.type === "demo");
+  assert.deepEqual({ state: on.state, ms: on.ms }, { state: "on", ms: 120000 });
+  const opening = browser.json().filter((m) => m.type === "assistant").at(-1).text;
+  assert.match(opening, /^Okay, demo mode: for two minutes I'm the receptionist at a dental clinic\./);
+
+  await turn(h, "Hi, do you have anything Tuesday? I have a toothache.");
+  assert.equal(bodies.length, 2);
+  assert.match(bodies[1].messages[0].content, /^You are playing the phone receptionist for a dental clinic, in a short demo/);
+  assert.ok(!/SITE FACTS|KNOWN ABOUT THE VISITOR/.test(bodies[1].messages[0].content), "the sales prompt is not mixed in");
+  assert.deepEqual(bodies[1].messages.slice(1).map((m) => m.role), ["user", "assistant", "user"], "only the demo turns as history");
+  let said = browser.json().filter((m) => m.type === "assistant").at(-1);
+  assert.equal(said.text, "Thanks for calling! We have openings most weekdays.", "the date-of-birth ask is never spoken");
+  assert.equal(said.demo, true);
+
+  await turn(h, "Great, book me in for Tuesday then");
+  said = browser.json().filter((m) => m.type === "assistant").at(-1);
+  assert.equal(said.text, "In the real system I'd book that straight into your calendar.");
+  assert.ok(!browser.json().some((m) => m.type === "ui_action" && m.action === "open_booking"), "the demo never opens the real calendar");
+  assert.ok(!h.calls.some((c) => c.url.includes("aura") && /date of birth|booked you/i.test(c.body.text)));
+
+  await turn(h, "OK stop demo");
+  said = browser.json().filter((m) => m.type === "assistant").at(-1);
+  assert.match(said.text, /^That's the end of the demo\. For a dental clinic, the real receptionist would answer from your own records/);
+  assert.equal(browser.json().filter((m) => m.type === "demo").at(-1).state, "off");
+  const s = await storedSession(h);
+  assert.equal(s.demo.active, false);
+  assert.equal(s.demo.done, true);
+  assert.ok(!JSON.stringify(s).match(/toothache|book me in/i), "nothing said in the role is stored");
+  assert.ok(browser.json().filter((m) => m.type === "user" && /toothache/.test(m.text)).every((m) => m.demo === true), "the widget is told it is a demo turn");
+
+  // Back to normal: the role-play is not in the assistant's history.
+  await turn(h, "So what would that cost?");
+  const back = bodies.at(-1);
+  assert.match(back.messages[0].content, /KNOWN ABOUT THE VISITOR/);
+  assert.ok(!back.messages.some((m) => /demo mode|toothache|book me in/i.test(m.content)), "demo turns left out");
+  assert.ok(back.messages.some((m) => /stop demo/i.test(m.content)), "the visitor's stop and the takeaway stay");
+});
+
+test("receptionist demo: two minutes is the limit even when the visitor goes quiet; only on the Voice page; off by flag", async () => {
+  const h = harness({ env: DEMO_ENV, reply: "Thanks for calling." });
+  const { browser } = await connectOn(h, "/services/voice-and-realtime-agents/");
+  await turn(h, "start the demo");
+  h.call.state = "listening";
+  h.clock.now += 120_001;
+  h.call.tick();
+  await flush(80);
+  assert.equal(browser.json().filter((m) => m.type === "demo").at(-1).state, "off");
+  assert.match(browser.json().filter((m) => m.type === "assistant").at(-1).text, /^That's two minutes, so that's the end of the demo\./);
+
+  const other = harness({ env: DEMO_ENV, reply: "We build voice agents." });
+  const o = await connectOn(other, "/services/custom-apps/");
+  await turn(other, "start the demo");
+  assert.ok(!o.browser.json().some((m) => m.type === "demo"));
+  assert.equal(o.browser.json().filter((m) => m.type === "assistant").at(-1).text, "We build voice agents.");
+
+  const off = harness({ env: { ...DEMO_ENV, RECEPTIONIST_DEMO: "false" }, reply: "We build voice agents." });
+  const f = await connectOn(off, "/services/voice-and-realtime-agents/");
+  await turn(off, "start the demo");
+  assert.ok(!f.browser.json().some((m) => m.type === "demo"));
+});
+
+test("mini-audit by voice: a spoken site gets the offer card in the chat; nothing is scanned until the tap", async () => {
+  const scans = [];
+  const h = harness({ env: DEMO_ENV });
+  h.deps.readinessFetch = async (request) => { scans.push(request.url); return Response.json({}); };
+  const { browser } = await connectOn(h, "/services/ai-visibility/");
+  await turn(h, "Can you check acme dot ca?");
+  const said = browser.json().filter((m) => m.type === "assistant").at(-1).text;
+  assert.equal(said, "I can scan acme dot ca for how easily AI search reads it. Tap Run the scan in the chat to start it.");
+  assert.deepEqual(browser.json().find((m) => m.type === "card").card, { kind: "audit_offer", host: "acme.ca" });
+  assert.equal(scans.length, 0);
 });

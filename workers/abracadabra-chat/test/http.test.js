@@ -61,6 +61,7 @@ test("config is public and foreign origins are refused", async () => {
     readinessCheckUrl: "https://check.abra-ca-dabra.app/check",
     turnstileSiteKey: "site",
     voiceEnabled: false,
+    features: { audit: false, demo: false, recap: true, clips: true },
     greeting: "Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.",
     knowledge: SITE_KNOWLEDGE_VERSION,
   });

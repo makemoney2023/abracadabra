@@ -68,6 +68,7 @@ test("a session row keeps counts and flags only", () => {
     topics: { Voice: 1, "AI assistants": 1 }, intents: { pricing: 1, integrations: 1 }, startPage: "other",
     bookingOffered: true, bookingOpened: false, booked: true, contact: true,
     readinessClicked: false, readinessStarted: true, readinessDone: true, readinessBand: "forming", replyFailures: 1,
+    voiceSpeaker: "", auditsStarted: 0, auditsDone: 0, demos: 0, recapCards: 0, clips: 0,
   });
   const text = JSON.stringify(row);
   for (const secret of ["jane", "Jane", "Secret", "203.0.113", "secret-session-id", "rtok", "cal_1", "ServiceTitan", "acme"]) {

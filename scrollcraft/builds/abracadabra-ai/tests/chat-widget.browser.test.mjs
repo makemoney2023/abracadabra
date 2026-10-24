@@ -603,3 +603,108 @@ test("follow-up chips appear under a typed answer, ask their question, and clear
   assert.deepEqual(page.errors, []);
   await page.close();
 });
+
+// ---------- phase 2: mini-audit, recap card, case-study film, demo label ----------
+
+test("mini-audit: the offer card scans only after the tap, then shows two fixes, the report link and a prefilled booking", async () => {
+  env.CAL_LINK = "abracadabra/working-session";
+  env.CHAT_AUDIT = "true";
+  const scans = [];
+  let reads = 0;
+  deps.readinessFetch = async (request) => {
+    const url = new URL(request.url);
+    scans.push(`${request.method} ${url.pathname}`);
+    if (request.method === "POST") return Response.json({ token: "scantok1", status: "queued" }, { status: 201 });
+    reads += 1;
+    if (reads < 2) return Response.json({ domain: "acme.ca", status: "running", progress: { pagesScanned: 4 } });
+    return Response.json({
+      domain: "acme.ca", status: "complete", scoreTotal: 48,
+      findings: [
+        { code: "MISSING_LLMS_TXT", severity: "critical", passed: false, message: "No llms.txt" },
+        { code: "NO_ORG_SCHEMA", severity: "warn", passed: false, message: "No org schema" },
+        { code: "SITEMAP_MISSING", severity: "warn", passed: false, message: "No sitemap" },
+      ],
+    });
+  };
+  try {
+    const page = await openFixture();
+    await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+    await page.locator("abra-chat").evaluate((node) => { node.auditPollMs = 30; });
+    await page.getByRole("textbox", { name: "Message" }).fill("Can you scan acme.ca?");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await page.getByRole("heading", { name: "Scan acme.ca?" }).waitFor();
+    assert.deepEqual(scans, [], "nothing is scanned before the tap");
+    await page.getByRole("button", { name: "Run the scan" }).click();
+    await page.getByText("acme.ca: 48 out of 100 for AI search visibility.").waitFor();
+    await page.getByText("Two fixes to start with:").waitFor();
+    assert.equal(await page.locator("abra-chat").evaluate((node) => node.shadowRoot.querySelectorAll("[data-audit-host] ol li").length), 2);
+    await page.getByText(/Add an llms\.txt file/).waitFor();
+    assert.equal(await page.getByRole("link", { name: "Open the full report" }).getAttribute("href"), "https://schema.abra-ca-dabra.app/scan/scantok1");
+    assert.deepEqual(scans.slice(0, 2), ["POST /api/scans", "GET /api/scans/scantok1"]);
+    await page.getByRole("button", { name: "Book a session about this" }).click();
+    const cal = new URL(await page.locator("iframe").getAttribute("src"));
+    assert.match(cal.searchParams.get("notes"), /^Mini-audit in the chat: acme\.ca: 48 out of 100/);
+    assert.deepEqual(page.errors, []);
+    await page.close();
+  } finally {
+    delete env.CHAT_AUDIT;
+    delete deps.readinessFetch;
+  }
+});
+
+test("recap card: on request it shows what the visitor said and a first build; the button only opens the prefilled calendar", async () => {
+  env.CAL_LINK = "abracadabra/working-session";
+  const page = await openFixture();
+  await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+  const ask = async (text) => {
+    await page.getByRole("textbox", { name: "Message" }).fill(text);
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector("abra-chat").busy);
+  };
+  await ask("We're a dental clinic and honestly we miss calls at lunch.");
+  await ask("Can you recap what you heard?");
+  await page.getByRole("heading", { name: "Here's what I heard" }).waitFor();
+  await page.getByText("You work at a dental clinic.").waitFor();
+  await page.getByText(/Suggested first build:/).waitFor();
+  assert.equal(await page.locator("iframe").count(), 0, "nothing opens or sends on its own");
+  await page.getByRole("button", { name: "Book with this recap" }).click();
+  const cal = new URL(await page.locator("iframe").getAttribute("src"));
+  assert.match(cal.searchParams.get("notes"), /^Recap from the website chat\. Heard: You work at a dental clinic\./);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});
+
+test("film card: lazy thumbnail with alt text, the video loads only on tap, captions and links; demo label shows and hides", async () => {
+  const { clipFor } = await import("../../../../workers/abracadabra-chat/src/clips.js");
+  const page = await openFixture();
+  await page.getByRole("button", { name: "Ask Abracadabra" }).click();
+  const card = clipFor("We built the StrongFoam CRM.");
+  await page.locator("abra-chat").evaluate((node, c) => node.showCard(c), card);
+  const img = page.getByRole("img", { name: "Still from the film: StrongFoam CRM/ERP: lead to closeout" });
+  await img.waitFor();
+  assert.equal(await img.getAttribute("loading"), "lazy");
+  assert.equal(await img.getAttribute("src"), "/assets/films/thumbs/strongfoam-erp-demo.jpg");
+  assert.equal(await page.locator("abra-chat").evaluate((node) => node.shadowRoot.querySelectorAll("video").length), 0, "no video until tapped");
+  await page.getByText(/One job from inbound email to estimate, schedule, field notes, and closeout, in 3 minutes\. Silent screen capture\./).waitFor();
+  assert.equal(await page.getByRole("link", { name: "Read the case study" }).getAttribute("href"), "/portfolio/strongfoam-crm/");
+  assert.equal(await page.getByRole("link", { name: "All films" }).getAttribute("href"), "/films.html");
+  await page.getByRole("button", { name: /^Play the film: StrongFoam CRM\/ERP/ }).click();
+  const video = await page.locator("abra-chat").evaluate((node) => {
+    const v = node.shadowRoot.querySelector(".clip video");
+    return { src: v.getAttribute("src"), muted: v.muted, controls: v.controls, label: v.getAttribute("aria-label") };
+  });
+  assert.equal(video.src, "/assets/films/strongfoam-erp-demo.mp4");
+  assert.equal(video.muted, true);
+  assert.equal(video.controls, true);
+  assert.match(video.label, /^StrongFoam CRM\/ERP: lead to closeout\. One job/);
+  // A card with a foreign URL is refused.
+  await page.locator("abra-chat").evaluate((node) => node.showCard({ kind: "clip", src: "https://evil.example/x.mp4", poster: "/x.jpg", title: "x" }));
+  assert.equal(await page.locator("abra-chat").evaluate((node) => node.shadowRoot.querySelectorAll(".clip").length), 1);
+
+  await page.locator("abra-chat").evaluate((node) => node.setDemo(true));
+  await page.getByText("Demo: role-play receptionist. Nothing is booked or kept. Say “stop demo” to end.").waitFor();
+  await page.locator("abra-chat").evaluate((node) => node.setDemo(false));
+  assert.equal(await page.locator("abra-chat").evaluate((node) => node.shadowRoot.querySelector("[data-demo-badge]").hidden), true);
+  assert.deepEqual(page.errors, []);
+  await page.close();
+});

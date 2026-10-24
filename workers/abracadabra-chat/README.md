@@ -10,10 +10,11 @@ A chat does not email the visitor. A consented contact card, or a booking finish
 
 | Method | Path | What it does |
 |---|---|---|
-| GET | `/api/chat/config` | Public `calLink`, readiness check URL, Turnstile site key, greeting |
+| GET | `/api/chat/config` | Public `calLink`, readiness check URL, Turnstile site key, greeting, `features` (phase-2 switches) |
 | POST | `/api/chat/session` | Checks Turnstile, opens a session, sets an HttpOnly cookie |
 | POST | `/api/chat/message` | Answers in a short server-sent stream and may attach a card |
 | POST | `/api/chat/contact` | Saves name, email, goal, and consent. Consent must be true |
+| POST | `/api/chat/audit` | Mini-audit: `{op:"start", host}` after the visitor's tap, then `{op:"status", token}` until done. See Phase 2 below |
 | POST | `/api/chat/events` | `booking_opened`, `booking_completed`, `readiness_check_clicked` |
 | GET (WebSocket) | `/api/chat/realtime` | Hands-free voice call. Mic PCM in, JSON events and Aura-2 PCM out. See Voice below |
 
@@ -77,8 +78,9 @@ Voice uses the same stream: the first clause and then each sentence go to Aura a
 before the model finishes. If nothing is audible 1.6 s after the turn ends, the browser plays one short cached filler
 (ten context-neutral lines such as "Let me check." or "One sec.") from `/assets/voice/filler-<n>.mp3` (made once with
 `npm run fillers`, Aura-2 luna, trimmed; the script also writes `src/filler-audio.js` and bumps the widget's
-`FILLER_VERSION`), and the answer queues after it. Never on two turns in a row, only lines whose audio is built, and
-not when the call uses a voice other than luna. The filler's echo does not count as a barge-in; talking over it stops it.
+`FILLER_VERSION`), and the answer queues after it. thalia and andromeda (the A/B voices) have their own set in
+`/assets/voice/<voice>/` (`npm run fillers -- --speaker thalia`). Never on two turns in a row, only lines whose audio is
+built, and only in the call's own voice. The filler's echo does not count as a barge-in; talking over it stops it.
 
 ## Site knowledge
 
@@ -145,13 +147,27 @@ The chat can run the real Readiness Check one question at a time (`POST /api/cha
 
 When a consented lead goes to HQ (`project-inquiry`), the message carries a `Recap:` line before the transcript (`src/recap.js`).
 - **Summary:** two sentences from a small model (`AI_RECAP_MODEL`, default `@cf/meta/llama-3.1-8b-instruct-fast`; `none` turns it off). The prompt keeps only what the visitor said. Emails are masked. The call is capped at 4 seconds, and a slow or failed call just leaves the summary out.
-- **Facts from the session:** services asked about, the Readiness Check band and pressures if it was taken in the chat, whether voice was used, the start page, and the number of questions.
+- **Facts from the session:** what the visitor told us (industry, size, role, tools, the problem in their words; never contact details), a mini-audit result if one ran in the chat, whether they tried the receptionist demo (never its words), services asked about, the Readiness Check band and pressures if it was taken in the chat, whether voice was used, the start page, and the number of questions.
 - The recap is only built when a lead is actually posted. It is never shown to the visitor, and no email is sent.
+
+## Phase 2: mini-audit, receptionist demo, recap card, film cards
+
+Plan and status: [docs/conversation-plan.md](docs/conversation-plan.md) (Phase 2). Each has a var in `wrangler.jsonc`:
+
+| Var | Default if unset | In `wrangler.jsonc` | What it does |
+|---|---|---|---|
+| `CHAT_AUDIT` | off | `"true"` | A site named in the chat gets an offer card; a tap runs the Schema scanner through the `READINESS` binding and shows two fixes, the report link (`SCHEMA_ORIGIN`, default `https://schema.abra-ca-dabra.app`) and a prefilled booking button. 2 scans per chat, 6 starts per network per hour, public hostnames only. |
+| `RECEPTIONIST_DEMO` | off | `"true"` | On the Voice agents page, a labelled two-minute receptionist role-play by voice ("start the demo" / "stop demo"). Never books, takes payments or asks for personal or health details; the role-play words are not stored. |
+| `CHAT_RECAP_CARD` | on | `"true"` | "Here's what I heard" + "Suggested first build" at goodbye or on request, with **Book with this recap** (Cal.com notes prefilled). |
+| `CHAT_CLIPS` | on | `"true"` | A film card (thumbnail, caption, links; the video loads on tap) when a reply cites a case study with a film on `/films.html`. |
+
+Live check for the demo role: `AI_GATEWAY_TOKEN=... CF_ACCOUNT_ID=... node scripts/demo-check.mjs [--model 8b] [--out FILE]`
+(20 caller turns pushing for bookings, payments, health details and an emergency).
 
 ## Weekly chat stats (anonymous) and the export
 
 Each chat becomes one anonymous row when it goes quiet (the 15-minute idle alarm). If the visitor comes back, the same row is rewritten, so a chat is never counted twice.
-- **What a row holds:** ISO week (Toronto time), number of questions, voice calls and turns, service topics and intents (pricing, timeline, privacy and security, integrations, about the studio) counted by keyword, the start page (site pages only, otherwise `other`), flags for booking offered, opened and completed, contact left, and Readiness Check started, finished and band, plus reply failures.
+- **What a row holds:** ISO week (Toronto time), number of questions, voice calls and turns, service topics and intents (pricing, timeline, privacy and security, integrations, about the studio) counted by keyword, the start page (site pages only, otherwise `other`), flags for booking offered, opened and completed, contact left, and Readiness Check started, finished and band, plus reply failures, the Aura voice the calls used (`voiceSpeaker`), and counts of mini-audits started and finished, receptionist demos, recap cards and film cards.
 - **What a row never holds:** words, names, emails, IPs, or session or booking ids.
 - **Storage:** rows live in one SQLite Durable Object (`ChatStatsDO`, binding `CHAT_STATS`, migration `v2`). Rows older than 26 weeks are pruned.
 

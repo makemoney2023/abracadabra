@@ -17,6 +17,7 @@ const INTENTS = [
   ["about the studio", /\b(who are you|who is behind|team|founder|where are you|located|canada|toronto)\b/i],
 ];
 
+const SPEAKERS = new Set(["luna", "thalia", "andromeda", "asteria", "orion", "helena", "apollo", "zeus"]);
 const BANDS = new Set(Object.keys(READINESS.bands));
 
 /** Week label for a time, in the studio's zone: ISO week, e.g. "2026-W43". */
@@ -43,7 +44,7 @@ export function recentWeeks(now, count) {
 
 /** One session, reduced to counts and flags. Nothing in it can name or reach the visitor. */
 export function sessionRow(session) {
-  const asked = (session.messages || []).filter((m) => m.role === "user" && !/^I finished the Readiness Check/.test(m.text || ""));
+  const asked = (session.messages || []).filter((m) => m.role === "user" && !m.demo && !/^I (?:finished the Readiness Check|ran the mini-audit)/.test(m.text || ""));
   const topics = {};
   const intents = {};
   for (const m of asked) {
@@ -55,7 +56,14 @@ export function sessionRow(session) {
     week: weekOf(session.createdAt || Date.now()),
     questions: Number(session.messageCount || 0),
     voiceCalls: Number(session.voiceCalls || 0),
-    voiceTurns: asked.filter((m) => m.voice).length,
+    voiceTurns: (session.messages || []).filter((m) => m.role === "user" && m.voice).length,
+    // The Aura voice the chat's calls used (TTS_SPEAKER or the A/B test), so results can be compared.
+    voiceSpeaker: SPEAKERS.has(session.voiceSpeaker) ? session.voiceSpeaker : "",
+    auditsStarted: (session.audits || []).length,
+    auditsDone: (session.audits || []).filter((a) => a.result).length,
+    demos: Number(session.demo?.runs || 0),
+    recapCards: Number(session.recapShown || 0),
+    clips: (session.clipsShown || []).length,
     topics,
     intents,
     startPage: sitePage(session.startPage || session.page) || "unknown",
@@ -82,7 +90,9 @@ export function weekSummary(week, rows) {
     week, chats: rows.length, chatsWithQuestions: 0, questions: 0, voiceChats: 0, voiceTurns: 0,
     bookingOffered: 0, bookingOpened: 0, booked: 0, contacts: 0,
     readinessClicked: 0, readinessStarted: 0, readinessDone: 0, replyFailures: 0,
+    auditsStarted: 0, auditsDone: 0, demos: 0, recapCards: 0, clips: 0,
   };
+  const speakers = {};
   const topics = {};
   const intents = {};
   const pages = {};
@@ -96,6 +106,8 @@ export function weekSummary(week, rows) {
       if (r[key]) s[key === "contact" ? "contacts" : key] += 1;
     }
     s.replyFailures += r.replyFailures || 0;
+    for (const key of ["auditsStarted", "auditsDone", "demos", "recapCards", "clips"]) s[key] += Number(r[key] || 0);
+    if (r.voiceCalls > 0) add(speakers, r.voiceSpeaker || "unknown");
     for (const [k, v] of Object.entries(r.topics || {})) add(topics, k, v);
     for (const [k, v] of Object.entries(r.intents || {})) add(intents, k, v);
     add(pages, r.startPage);
@@ -116,15 +128,17 @@ export function weekSummary(week, rows) {
     intents: top(intents),
     startPages: top(pages, 15),
     readinessBands: top(bands),
+    voiceSpeakers: top(speakers),
   };
 }
 
 export function statsCsv(summaries) {
   const cols = ["week", "chats", "chatsWithQuestions", "questions", "voiceChats", "voiceTurns", "bookingOffered", "bookingOpened",
-    "booked", "contacts", "readinessClicked", "readinessStarted", "readinessDone", "replyFailures"];
+    "booked", "contacts", "readinessClicked", "readinessStarted", "readinessDone", "replyFailures",
+    "auditsStarted", "auditsDone", "demos", "recapCards", "clips"];
   const list = (items) => `"${items.map((i) => `${i.name}:${i.count}`).join("; ").replace(/"/g, "'")}"`;
-  const lines = [[...cols, "topics", "intents", "startPages", "readinessBands"].join(",")];
-  for (const s of summaries) lines.push([...cols.map((c) => s[c]), list(s.topics), list(s.intents), list(s.startPages), list(s.readinessBands)].join(","));
+  const lines = [[...cols, "topics", "intents", "startPages", "readinessBands", "voiceSpeakers"].join(",")];
+  for (const s of summaries) lines.push([...cols.map((c) => s[c] ?? 0), list(s.topics), list(s.intents), list(s.startPages), list(s.readinessBands), list(s.voiceSpeakers || [])].join(","));
   return `${lines.join("\n")}\n`;
 }
 
