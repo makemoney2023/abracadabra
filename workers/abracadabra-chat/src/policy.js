@@ -365,7 +365,7 @@ function nextSentence(buffer, clause = false) {
  * { replace } when a sentence trips a rule that replaces the whole answer (then stops).
  * Stops after maxSentences.
  */
-export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false, calendarOpen = false, recent = [], seed = 0, askedNext = false } = {}) {
+export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, firstClause = false, dropOffers = false, calendarOpen = false, recent = [], seed = 0, askedNext = false, dropAsk = null, emptyLines = null } = {}) {
   let buffer = "";
   let count = 0;
   // dropOffers: hold back booking or Readiness Check sentences. One is used only if the
@@ -397,6 +397,11 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
     // "Our service can also help" reads wrong once the sentence before it is gone.
     if (after && out.text) out.text = out.text.replace(/\b(can|could|will|would|may)\s+also\b/i, "$1");
     if (calendarOpen && out.text && CONTACT_ASK.test(out.text) && !out.flags.some((flag) => REPLACING.has(flag))) {
+      dropped = true;
+      return null;
+    }
+    // dropAsk: a pattern for sentences that must not be said in this mode (the receptionist demo).
+    if (dropAsk && out.text && (dropAsk.test(out.text) || CONTACT_ASK.test(out.text))) {
       dropped = true;
       return null;
     }
@@ -438,5 +443,5 @@ export async function* checkedSentences(deltas, { maxSentences = MAX_SENTENCES, 
   }
   if (!count && held) yield held;
   else if (!count && repeat) yield repeat;
-  else if (!count && dropped) yield { text: pickVariant(calendarOpen ? CALENDAR_OPEN_LINES : EMPTY_LINES, { seed, recent }), flags: ["dropped"] };
+  else if (!count && dropped) yield { text: pickVariant(emptyLines || (calendarOpen ? CALENDAR_OPEN_LINES : EMPTY_LINES), { seed, recent }), flags: ["dropped"] };
 }

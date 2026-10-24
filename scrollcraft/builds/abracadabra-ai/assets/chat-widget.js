@@ -151,6 +151,18 @@ button { cursor: pointer; }
 .card a { color: #8DEBF2; }
 .card a.primary { color: #170804; }
 .card.booked { border-color: rgba(198, 255, 179, 0.45); }
+.card ul, .card ol { margin: 0; padding-left: 18px; color: #F5F0E8; font-size: 14px; line-height: 1.5; display: grid; gap: 4px; }
+.audit-score { color: #F5F0E8 !important; font-size: 15px !important; }
+.clip-play { position: relative; display: block; width: 100%; padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: #070706; cursor: pointer; aspect-ratio: 16 / 9; }
+.clip-play img, .clip video { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.clip-play::after { content: "▶"; position: absolute; inset: auto auto 10px 10px; background: rgba(7, 7, 6, 0.8); color: #F5F0E8; border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+.clip-play:focus-visible { outline: 2px solid #FF4B24; outline-offset: 2px; }
+.clip figure { margin: 0; display: grid; gap: 8px; }
+.clip figcaption { color: #AAA49A; font-size: 13px; line-height: 1.45; }
+.clip figcaption strong { color: #F5F0E8; font-weight: 600; }
+.card-links { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; }
+.demo-badge { margin: 0; padding: 4px 14px; background: #2A1C08; color: #FFD7A8; font-size: 12px; font-weight: 600; }
+.demo-badge[hidden] { display: none; }
 .rc-options { display: grid; gap: 8px; }
 .choice { text-align: left; background: #11110F; color: #F5F0E8; border: 1px solid rgba(245, 240, 232, 0.2); border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.4; min-height: 44px; }
 .choice:hover { border-color: #8DEBF2; }
@@ -256,12 +268,18 @@ export const CALL_LABELS = {
 };
 
 // What the "working" indicator says while an answer is on its way: right away, after ~2s, after ~5s.
-// Pre-generated Aura-2 luna lines in /assets/voice/ (workers/abracadabra-chat npm run fillers). Same order as the worker.
+// Pre-generated Aura-2 lines (workers/abracadabra-chat npm run fillers): luna in /assets/voice/, the other
+// A/B voices in /assets/voice/<voice>/. Same order as the worker; the call names its voice in "ready".
 // Lines without built audio are never sent by the worker (FILLER_READY); their files may 404 until npm run fillers.
 export const FILLER_LINES = ["Let me check.", "One sec.", "Let me see.", "Just a moment.", "Okay, one moment.", "Let me look.", "Bear with me a second.", "Hmm, let me think.", "Okay, checking.", "Give me a second."];
 const FILLER_COUNT = FILLER_LINES.length;
 const FILLER_PATH = "/assets/voice/filler-";
-const FILLER_VERSION = "3";
+const FILLER_VOICES = ["luna", "thalia", "andromeda"];
+export function fillerUrl(voice, index, version = FILLER_VERSION) {
+  const name = FILLER_VOICES.includes(voice) ? voice : "luna";
+  return `${name === "luna" ? FILLER_PATH : `/assets/voice/${name}/filler-`}${index}.mp3?v=${version}`;
+}
+const FILLER_VERSION = "7";
 export const GREETING = "Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.";
 export const RETRY_TEXT = "Sorry, that took longer than it should. Please try again.";
 // The worker marks retryable errors with `retry: true`. Older worker builds sent a longer sentence
@@ -294,7 +312,7 @@ export function companyDomain(email) {
 
 export function bookingNotes(messages) {
   return (messages || [])
-    .filter((message) => message.role === "user")
+    .filter((message) => message.role === "user" && !message.demo)
     .slice(-3)
     .map((message) => message.text)
     .join(" ")
@@ -319,6 +337,22 @@ export function buildCalUrl(input = {}) {
   if (input.utmSource) url.searchParams.set("metadata[utm_source]", input.utmSource);
   if (input.utmCampaign) url.searchParams.set("metadata[utm_campaign]", input.utmCampaign);
   return url.toString();
+}
+
+/** An https link that opens in a new tab, or null for anything else. */
+function safeLink(href, label) {
+  let url;
+  try {
+    url = new URL(String(href || ""));
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:") return null;
+  const link = el("a", "texty", label);
+  link.href = url.toString();
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  return link;
 }
 
 export function readinessUrl(base, sessionId) {
@@ -496,6 +530,7 @@ export class AbraChat extends ElementBase {
         <span class="call-time" data-call-time>0:00</span>
         <button class="call-end" type="button" data-call-end>End</button>
       </div>
+      <p class="demo-badge" data-demo-badge role="status" hidden>Demo: role-play receptionist. Nothing is booked or kept. Say “stop demo” to end.</p>
       <p class="voice-note" data-voice-note hidden><strong>Tap the mic to talk out loud. Just speak; tap End when you're done.</strong> Audio isn't stored. Only the words are kept, like a typed chat.</p>
       <p class="foot">Plain answers. A person reviews any follow-up.</p>
       <div class="sheet" hidden>
@@ -519,6 +554,7 @@ export class AbraChat extends ElementBase {
     this.callState = this.panel.querySelector("[data-call-state]");
     this.callHeard = this.panel.querySelector("[data-call-heard]");
     this.callTime = this.panel.querySelector("[data-call-time]");
+    this.demoBadge = this.panel.querySelector("[data-demo-badge]");
     this.status = this.panel.querySelector("[data-chat-status]");
     this.mic.addEventListener("click", () => this.toggleCall());
     this.panel.querySelector("[data-call-end]").addEventListener("click", () => this.endCall("visitor"));
@@ -758,6 +794,8 @@ export class AbraChat extends ElementBase {
     switch (message.type) {
       case "ready":
         call.rate = message.sampleRate || 24000;
+        // The call's voice (A/B test): its own filler lines, so a filler never switches voices.
+        if (message.voice && message.voice !== "luna" && this.audioCtx) this.loadFillers(this.audioCtx, message.voice);
         break;
       case "state":
         call.serverState = message.state;
@@ -776,18 +814,24 @@ export class AbraChat extends ElementBase {
         this.markVoice("heard");
         call.lastHeard = message.text;
         this.callHeard.textContent = "";
-        this.messages.push({ role: "user", text: message.text });
+        this.messages.push({ role: "user", text: message.text, ...(message.demo ? { demo: true } : {}) });
         this.addBubble("user", message.text);
         break;
       case "assistant":
         call.turn = message.turn;
-        this.messages.push({ role: "assistant", text: message.text });
+        this.messages.push({ role: "assistant", text: message.text, ...(message.demo ? { demo: true } : {}) });
         this.addBubble("assistant", message.text);
         this.markVoice("reply");
         if (message.action) this.action(message.action);
         break;
       case "ui_action":
         this.action(message.action);
+        break;
+      case "card":
+        this.showCard(message.card);
+        break;
+      case "demo":
+        this.setDemo(message.state === "on");
         break;
       case "audio_start":
         call.turn = message.turn;
@@ -840,14 +884,18 @@ export class AbraChat extends ElementBase {
   }
 
   /** Loads the pre-generated filler lines once per page; they are tiny and cached by the browser. */
-  loadFillers(ctx) {
+  loadFillers(ctx, voice = "luna") {
+    const name = FILLER_VOICES.includes(voice) ? voice : "luna";
+    this.fillerSets ||= {};
+    this.fillers = this.fillerSets[name];
     if (this.fillers) return;
-    this.fillers = [];
+    this.fillers = this.fillerSets[name] = [];
+    const set = this.fillers;
     for (let index = 0; index < FILLER_COUNT; index += 1) {
-      fetch(`${FILLER_PATH}${index}.mp3?v=${FILLER_VERSION}`)
+      fetch(fillerUrl(name, index))
         .then((response) => (response.ok ? response.arrayBuffer() : null))
         .then((bytes) => (bytes ? new Promise((resolve, reject) => ctx.decodeAudioData(bytes, resolve, reject)) : null))
-        .then((buffer) => { if (buffer) this.fillers[index] = buffer; })
+        .then((buffer) => { if (buffer) set[index] = buffer; })
         .catch(() => {});
     }
   }
@@ -932,6 +980,7 @@ export class AbraChat extends ElementBase {
     try { call.sink?.disconnect(); } catch { /* gone */ }
     for (const track of call.stream?.getTracks?.() || []) track.stop();
     this.lastCallEnd = reason;
+    this.setDemo(false);
     this.setCallUi("idle");
   }
 
@@ -1088,14 +1137,16 @@ export class AbraChat extends ElementBase {
       embed,
       name: this.contact?.name || "",
       email: this.contact?.email || "",
-      notes: bookingNotes(this.messages),
+      notes: this.bookingNotesOverride || bookingNotes(this.messages),
       sessionId: this.sessionId,
       domain: companyDomain(this.contact?.email),
       ...this.params(),
     };
   }
 
-  async openBooking() {
+  async openBooking({ notes = "" } = {}) {
+    // A recap or mini-audit button passes its own notes; they prefill Cal.com, nothing is sent.
+    this.bookingNotesOverride = String(notes || "").slice(0, 500);
     if (!this.isOpen) await this.openPanel();
     this.savedScroll = this.stream.scrollTop;
     this.panel.classList.add("expanded");
@@ -1485,6 +1536,7 @@ export class AbraChat extends ElementBase {
     let failed = null;
     let retryable = false;
     let followUps = [];
+    const cards = [];
     try {
       const response = await fetch("/api/chat/message", {
         method: "POST",
@@ -1518,6 +1570,7 @@ export class AbraChat extends ElementBase {
           }
           if (event === "ui_action") this.action(data.action);
           if (event === "suggestions" && Array.isArray(data.items)) followUps = data.items;
+          if (event === "card" && data && typeof data === "object") cards.push(data);
         });
         if (!answer && !failed) failed = RETRY_TEXT;
       }
@@ -1535,7 +1588,187 @@ export class AbraChat extends ElementBase {
     }
     this.status.textContent = "Answer ready.";
     this.messages.push({ role: "assistant", text: answer });
+    for (const card of cards) this.showCard(card);
     this.showFollowUps(followUps);
+  }
+
+  /** Inline cards from the worker: the mini-audit offer, the recap, a case-study film. */
+  showCard(card) {
+    if (!card || typeof card !== "object") return;
+    if (card.kind === "audit_offer") this.auditOfferCard(card);
+    else if (card.kind === "recap") this.recapCard(card);
+    else if (card.kind === "clip") this.clipCard(card);
+    this.stream.scrollTop = this.stream.scrollHeight;
+  }
+
+  /** Receptionist demo on a voice call: a visible label while it runs. */
+  setDemo(on) {
+    if (this.demoBadge) this.demoBadge.hidden = !on;
+    if (on) this.status.textContent = "Demo started: role-play receptionist.";
+  }
+
+  /** Mini-audit offer: nothing is scanned until the visitor taps Run the scan. */
+  auditOfferCard({ host }) {
+    const name = String(host || "").slice(0, 253);
+    if (!name || this.stream.querySelector(`[data-audit-host="${CSS.escape(name)}"]`)) return;
+    const card = el("div", "card");
+    card.dataset.auditHost = name;
+    card.append(
+      el("p", "kicker", "Mini-audit · Schema scanner"),
+      el("h3", null, `Scan ${name}?`),
+      el("p", null, "We check how easily AI search can read the site: structured data, llms.txt, robots.txt and the sitemap. It reads public pages only and takes a minute or two."),
+    );
+    const run = el("button", "primary", "Run the scan");
+    run.type = "button";
+    const live = el("p", "fine");
+    live.setAttribute("role", "status");
+    live.setAttribute("aria-live", "polite");
+    run.addEventListener("click", () => {
+      run.disabled = true;
+      void this.runAudit(card, name, live, run);
+    });
+    card.append(run, live);
+    this.stream.append(card);
+  }
+
+  async auditCall(body) {
+    try {
+      const response = await fetch("/api/chat/audit", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return { status: response.status, data: await response.json().catch(() => ({})) };
+    } catch {
+      return { status: 0, data: { error: "The scanner is not answering right now. You can run it on its own page." } };
+    }
+  }
+
+  async runAudit(card, host, live, run) {
+    if (!this.sessionId) await this.ensureSession();
+    live.textContent = `Scanning ${host}…`;
+    const started = await this.auditCall({ op: "start", host });
+    if (started.data.result) return this.auditResult(card, started.data.result, run, live);
+    if (!started.data.token) return this.auditProblem(card, live, run, started.data.error, started.data.fallbackUrl);
+    const wait = this.auditPollMs ?? 5000;
+    for (let i = 0; i < 60; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, wait));
+      const { data } = await this.auditCall({ op: "status", token: started.data.token });
+      if (data.status === "complete" && data.result) return this.auditResult(card, data.result, run, live);
+      if (data.status === "queued" || data.status === "running") {
+        const pages = Number(data.progress?.pagesScanned || data.progress?.pages || 0);
+        live.textContent = pages ? `Scanning ${host}… ${pages} pages read.` : `Scanning ${host}…`;
+        continue;
+      }
+      return this.auditProblem(card, live, run, data.error, data.reportUrl);
+    }
+    return this.auditProblem(card, live, run, "The scan is taking longer than usual.", null);
+  }
+
+  auditProblem(card, live, run, error, href) {
+    live.textContent = "";
+    run.remove();
+    card.append(el("p", "error", error || "The scan did not finish."));
+    const link = safeLink(href, "Open the scanner") || safeLink("https://schema.abra-ca-dabra.app/", "Open the scanner");
+    card.append(link);
+  }
+
+  auditResult(card, result, run, live) {
+    run.remove();
+    live.textContent = "Scan finished.";
+    const score = Number.isFinite(result.score) ? `${result.domain}: ${result.score} out of 100 for AI search visibility.` : `${result.domain}: scan finished.`;
+    card.append(el("p", "audit-score", score));
+    const fixes = (result.fixes || []).slice(0, 2);
+    if (fixes.length) {
+      card.append(el("p", null, fixes.length === 1 ? "The fix to start with:" : "Two fixes to start with:"));
+      const list = el("ol");
+      for (const fix of fixes) list.append(el("li", null, String(fix.text || "").slice(0, 240)));
+      card.append(list);
+    } else card.append(el("p", null, "Nothing big to fix."));
+    const links = el("div", "card-links");
+    const report = safeLink(result.reportUrl, "Open the full report");
+    if (report) links.append(report);
+    const book = el("button", "primary secondary", "Book a session about this");
+    book.type = "button";
+    const notes = `Mini-audit in the chat: ${score} ${fixes.map((f) => f.text).join(" ")}`.slice(0, 500);
+    book.addEventListener("click", () => this.openBooking({ notes }));
+    card.append(links, book);
+    this.messages.push({ role: "assistant", text: score });
+  }
+
+  /** "Here's what I heard" with a suggested first build. The booking button only opens the calendar. */
+  recapCard(card) {
+    this.stream.querySelector("[data-recap-card]")?.remove();
+    const view = el("div", "card");
+    view.dataset.recapCard = "true";
+    view.append(el("p", "kicker", "Recap"), el("h3", null, "Here's what I heard"));
+    const list = el("ul");
+    for (const line of (card.heard || []).slice(0, 5)) list.append(el("li", null, String(line).slice(0, 300)));
+    const build = el("p", null, "");
+    build.append(el("strong", null, "Suggested first build: "), document.createTextNode(String(card.build || "").slice(0, 300)));
+    view.append(list, build);
+    if (/^\/[a-z0-9/-]*$/i.test(card.buildPath || "")) {
+      const more = el("a", "texty", "Read about it");
+      more.href = card.buildPath;
+      view.append(more);
+    }
+    const book = el("button", "primary", "Book with this recap");
+    book.type = "button";
+    book.addEventListener("click", () => this.openBooking({ notes: String(card.notes || "").slice(0, 500) }));
+    view.append(book, el("p", "fine", "Not quite right? Tell me in the chat."));
+    this.stream.append(view);
+  }
+
+  /** A case-study film: a lazy thumbnail; the video loads only when tapped. Silent screen captures. */
+  clipCard(card) {
+    const path = (value) => (/^\/[a-z0-9/._-]*$/i.test(String(value || "")) ? String(value) : "");
+    const src = path(card.src);
+    const poster = path(card.poster);
+    if (!src || !poster) return;
+    const title = String(card.title || "Film").slice(0, 120);
+    const view = el("div", "card clip");
+    view.dataset.clip = String(card.id || "");
+    const figure = document.createElement("figure");
+    const play = el("button", "clip-play");
+    play.type = "button";
+    play.setAttribute("aria-label", `Play the film: ${title}. Silent screen capture.`);
+    const img = document.createElement("img");
+    img.src = poster;
+    img.alt = `Still from the film: ${title}`;
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.width = 640;
+    img.height = 360;
+    play.append(img);
+    play.addEventListener("click", () => {
+      const video = document.createElement("video");
+      video.src = src;
+      video.poster = poster;
+      video.controls = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.setAttribute("aria-label", `${title}. ${String(card.caption || "")} Silent screen capture.`);
+      play.replaceWith(video);
+      video.focus?.();
+      if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) video.play?.().catch(() => {});
+    });
+    const caption = document.createElement("figcaption");
+    caption.append(el("strong", null, title), document.createTextNode(` ${String(card.caption || "").slice(0, 200)} Silent screen capture.`));
+    figure.append(play, caption);
+    const links = el("div", "card-links");
+    const page = path(card.page);
+    if (page) {
+      const a = el("a", null, "Read the case study");
+      a.href = page;
+      links.append(a);
+    }
+    const films = el("a", null, "All films");
+    films.href = path(card.films) || "/films.html";
+    links.append(films);
+    view.append(el("p", "kicker", "Film"), figure, links);
+    this.stream.append(view);
   }
 
   /** Up to two follow-up questions under the answer (from the worker's "suggestions" event). Tapping one asks it. */

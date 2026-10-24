@@ -2,7 +2,11 @@ import { deliverHandoff, handoffEnvelope, handoffSummary, HANDOFF_FROM, mailerCo
 import { ChatUnavailable, replyStream } from "./model.js";
 import { answerLabel, bandView, checkFetch, checkOrigin, cleanAnswer, stepView } from "./readiness.js";
 import { hqConfigured, postLeadToHq } from "./hq.js";
-import { buildRecap } from "./recap.js";
+import { buildRecap, recapCard, recapIntent } from "./recap.js";
+import { auditIntent, auditLine, auditResult, AUDITS_PER_SESSION, AUDIT_POLLS_PER_SESSION, checkHost, readScan, reportUrl, SCHEMA_ORIGIN, startScan } from "./audit.js";
+import { cardsFor, RECAP_REPLY } from "./cards.js";
+import { demoIntent, onDemoPage } from "./demo.js";
+import { flag } from "./flags.js";
 import {
   clientIp,
   extraOrigins,
@@ -17,7 +21,7 @@ import {
   verifyTurnstile,
 } from "./policy.js";
 import { recentWeeks, recordSession, STATS_MAX_WEEKS, statsCsv, statsStore, weekSummary } from "./stats.js";
-import { applyChatEvent, blankSession, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
+import { applyChatEvent, blankSession, chatHistory, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
 import { VoiceCall } from "./realtime.js";
 import { SITE_KNOWLEDGE_VERSION } from "./site-knowledge.js";
 import { conversationNotes, followUps, noteOffer, recentReplies, updateVisitor } from "./conversation.js";
@@ -32,6 +36,10 @@ const SESSION_MESSAGE_LIMIT = 30;
 const IP_CALL_LIMIT = 6;
 const IP_READINESS_LIMIT = 120;
 const IP_STATS_LIMIT = 30;
+// Mini-audit: scans started per network per hour (each chat is also capped at AUDITS_PER_SESSION),
+// and status polls (about one every five seconds while a scan runs).
+const IP_AUDIT_LIMIT = 6;
+const IP_AUDIT_POLL_LIMIT = 240;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isolateLimits = { messages: new Map(), sessions: new Map(), calls: new Map(), passes: new Map() };
 const isolateRooms = new Map();
@@ -87,6 +95,8 @@ function limitsFor(deps) {
   if (!limits.passes) limits.passes = new Map();
   if (!limits.readiness) limits.readiness = new Map();
   if (!limits.stats) limits.stats = new Map();
+  if (!limits.audits) limits.audits = new Map();
+  if (!limits.auditPolls) limits.auditPolls = new Map();
   return limits;
 }
 
@@ -122,6 +132,7 @@ function publicConfig(env) {
     readinessCheckUrl: String(env.READINESS_CHECK_URL || "https://check.abra-ca-dabra.app/check").trim(),
     turnstileSiteKey: String(env.TURNSTILE_SITE_KEY || "").trim(),
     voiceEnabled: voiceEnabled(env),
+    features: { audit: flag(env, "CHAT_AUDIT"), demo: flag(env, "RECEPTIONIST_DEMO"), recap: flag(env, "CHAT_RECAP_CARD"), clips: flag(env, "CHAT_CLIPS") },
     greeting: GREETING,
     knowledge: SITE_KNOWLEDGE_VERSION,
   };
@@ -199,7 +210,7 @@ export const TYPED_SENTENCES = 5;
  * A model timeout or error sends "error" with RETRY_TEXT instead of hanging. The exchange is saved
  * only when an answer was given.
  */
-function streamReply({ text, action, history, session, storage, env, deps, now, offers, notes }) {
+function streamReply({ text, action, history, session, storage, env, deps, now, offers, notes, scripted = "", extraCards = [] }) {
   const encoder = new TextEncoder();
   const body = new ReadableStream({
     async start(controller) {
@@ -210,7 +221,11 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
       const recent = recentReplies(session, 3);
       const seed = session.messageCount || 0;
       try {
-        for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers, visitor: session.visitor, notes }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening), recent, seed, askedNext: Boolean(offers?.asked) })) {
+        // A fixed line (mini-audit offer, recap, demo pointer) needs no model call.
+        if (scripted) {
+          answer = scripted;
+          emit("token", { text: scripted });
+        } else for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers, visitor: session.visitor, notes }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening), recent, seed, askedNext: Boolean(offers?.asked) })) {
           if (part.replace) {
             answer = part.replace;
             break;
@@ -235,9 +250,12 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
       session.visitor = noteOffer(session.visitor, hasOffer(answer), session.messageCount);
       const chips = offers?.opening ? [] : followUps(text, answer, session);
       rememberExchange(session, text, answer, now);
+      const cards = [...extraCards, ...cardsFor(session, env, text, scripted ? "" : answer)];
       await save(storage, session, deps);
       emit("final", { text: answer });
       if (action) emit("ui_action", { action });
+      // Inline cards: the mini-audit offer, the recap, a case-study film. Nothing in them sends anything.
+      for (const card of cards) emit("card", card);
       // Context-aware follow-up chips; each one just sends its words as the next question.
       if (chips.length) emit("suggestions", { items: chips });
       emit("done", { ok: true });
@@ -247,6 +265,87 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
   return new Response(body, {
     headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store" },
   });
+}
+
+/**
+ * Typed turns answered with a fixed line instead of the model: a website to scan (mini-audit offer
+ * card; the scan itself starts only when the visitor taps it), a recap request (the recap card), or
+ * the receptionist demo asked for in text (it runs on a voice call). Null for a normal turn.
+ */
+export function scriptedTurn(session, env, text) {
+  if (flag(env, "CHAT_AUDIT")) {
+    const site = auditIntent(text);
+    if (site) {
+      const checked = checkHost(site);
+      if (!checked.ok) return { text: "I can only scan a public website address, like yourcompany.com." };
+      if ((session.audits || []).length >= AUDITS_PER_SESSION && !(session.audits || []).some((a) => a.host === checked.host)) {
+        return { text: `That's the ${AUDITS_PER_SESSION} scans this chat can run. You can run more on ${SCHEMA_ORIGIN}.` };
+      }
+      return {
+        text: `I can scan ${checked.host} with our Schema scanner. It checks how easily AI search can read the site and takes a minute or two. Tap Run the scan to start.`,
+        cards: [{ kind: "audit_offer", host: checked.host }],
+      };
+    }
+  }
+  if (flag(env, "CHAT_RECAP_CARD") && recapIntent(text) && recapCard(session)) return { text: RECAP_REPLY };
+  if (flag(env, "RECEPTIONIST_DEMO") && onDemoPage(session.page) && demoIntent(text) === "start") {
+    return { text: "The receptionist demo runs on a voice call. Tap the mic, then say start the demo." };
+  }
+  return null;
+}
+
+const AUDIT_DOWN = "The scanner is not answering right now. You can run it on its own page.";
+
+/** The mini-audit: start a scan (after the visitor's tap), then poll it until it finishes. */
+async function auditStep(body, session, storage, env, deps, now) {
+  session.audits ||= [];
+  const fallbackUrl = String(env?.SCHEMA_ORIGIN || SCHEMA_ORIGIN);
+  if (body.op === "start") {
+    const checked = checkHost(body.host);
+    if (!checked.ok) return json({ error: "I can only scan a public website address, like yourcompany.com." }, 400);
+    const same = session.audits.find((a) => a.host === checked.host);
+    if (same) return json({ token: same.token, host: same.host, resumed: true, ...(same.result ? { status: "complete", result: same.result } : {}) }, 200);
+    if (session.audits.length >= AUDITS_PER_SESSION) return json({ error: `That's the ${AUDITS_PER_SESSION} scans this chat can run. The scanner page runs more.`, fallbackUrl }, 429);
+    const started = await startScan(env, deps, checked.host);
+    if (!started.ok) return json({ error: started.error, fallbackUrl }, started.status);
+    session.audits.push({ host: checked.host, token: started.token, startedAt: now, polls: 0 });
+    session.updatedAt = now;
+    await save(storage, session, deps);
+    return json({ token: started.token, host: checked.host }, 200);
+  }
+  if (body.op !== "status") return json({ error: "Unknown step." }, 400);
+  const audit = session.audits.find((a) => a.token === String(body.token || ""));
+  if (!audit) return json({ error: "Start the scan first." }, 404);
+  if (audit.result) return json({ status: "complete", result: audit.result }, 200);
+  if (audit.failed) return json({ status: "failed", error: "The scan could not finish for that site.", reportUrl: reportUrl(env, audit.token) }, 200);
+  audit.polls = (audit.polls || 0) + 1;
+  if (audit.polls > AUDIT_POLLS_PER_SESSION) {
+    await save(storage, session, deps);
+    return json({ status: "slow", error: "The scan is taking longer than usual. The full report will be on its page.", reportUrl: reportUrl(env, audit.token) }, 200);
+  }
+  const read = await readScan(env, deps, audit.token);
+  if (read.status === "error") {
+    await save(storage, session, deps);
+    return json({ status: "error", error: AUDIT_DOWN, reportUrl: reportUrl(env, audit.token) }, 200);
+  }
+  if (read.status === "failed") {
+    audit.failed = true;
+    await save(storage, session, deps);
+    return json({ status: "failed", error: "The scan could not finish for that site.", reportUrl: reportUrl(env, audit.token) }, 200);
+  }
+  if (read.status !== "complete") {
+    await save(storage, session, deps);
+    return json({ status: read.status, progress: read.progress }, 200);
+  }
+  const result = auditResult(env, audit.token, read.payload);
+  if (!result.domain) result.domain = audit.host;
+  audit.result = result;
+  audit.line = auditLine(result);
+  audit.completedAt = now;
+  // The model sees the outcome in the history, so follow-up questions about the fixes make sense.
+  rememberExchange(session, `I ran the mini-audit on ${audit.host} here in the chat.`, audit.line, now);
+  await save(storage, session, deps);
+  return json({ status: "complete", result }, 200);
 }
 
 const CHECK_DOWN = "The check is not answering right now. You can take it on its own page.";
@@ -381,15 +480,24 @@ export async function handleSession(request, storage, env, deps) {
     const text = String(parsed.value?.text || "").trim();
     if (!text || text.length > 2000) return json({ error: "Add a short question." }, 400);
     rememberPage(session, parsed.value);
-    const action = uiActionFor(text);
-    const history = [...session.messages, { role: "user", text }];
+    let action = uiActionFor(text);
+    const history = [...chatHistory(session.messages), { role: "user", text }];
     // A clear ask to book opens the Cal.com calendar in the widget (the two-times form when no link is set).
     const calendarOpen = action === "open_booking" && Boolean(String(env.CAL_LINK || env.BOOKING_URL || "").trim());
     const offers = { ...offerState(session, text), opening: calendarOpen };
     // What the visitor has told us so far, plus this turn's notes (openers, goodbye, objection).
     session.visitor = updateVisitor(session.visitor, text);
     const notes = conversationNotes(session, text);
-    return streamReply({ text, action, history, session, storage, env, deps, now, offers, notes });
+    const fixed = scriptedTurn(session, env, text);
+    if (fixed) action = null;
+    return streamReply({ text, action, history, session, storage, env, deps, now, offers, notes, scripted: fixed?.text || "", extraCards: fixed?.cards || [] });
+  }
+
+  if (url.pathname === "/api/chat/audit") {
+    if (!flag(env, "CHAT_AUDIT")) return json({ error: "The mini-audit is off right now.", fallbackUrl: SCHEMA_ORIGIN }, 404);
+    const parsed = await readJson(request);
+    if (!parsed.ok) return json({ error: parsed.message }, parsed.status);
+    return auditStep(parsed.value || {}, session, storage, env, deps, now);
   }
 
   if (url.pathname === "/api/chat/realtime") {
@@ -645,6 +753,16 @@ export async function handleRequest(request, env = {}, deps = {}) {
     if (!voiceEnabled(env)) return cors(json({ error: "Voice is off right now. Type your question." }, 404), request, env);
     if (!gateHit(limits, "calls", ip, now, IP_CALL_LIMIT)) {
       return cors(json({ error: "Too many voice calls from this network. You can still type." }, 429), request, env);
+    }
+  } else if (url.pathname === "/api/chat/audit") {
+    // Starting a scan has a small allowance per network; polling a running scan a larger one.
+    const peek = await readJson(request.clone());
+    const op = peek.ok ? peek.value?.op : "";
+    if (op === "start" && !gateHit(limits, "audits", ip, now, IP_AUDIT_LIMIT)) {
+      return cors(json({ error: "Too many scans from this network. Try again later.", fallbackUrl: SCHEMA_ORIGIN }, 429), request, env);
+    }
+    if (!gateHit(limits, "auditPolls", ip, now, IP_AUDIT_POLL_LIMIT)) {
+      return cors(json({ error: "Too many checks from this network. Try again later." }, 429), request, env);
     }
   } else if (url.pathname === "/api/chat/readiness") {
     // About twenty answers per check; they get their own allowance so typing is not used up.

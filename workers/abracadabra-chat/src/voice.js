@@ -28,6 +28,12 @@ export const FILLERS = [
 // Only fillers whose built audio says the current words are played (see src/filler-audio.js).
 export const FILLER_READY = FILLERS.map((text, index) => (FILLER_AUDIO.texts[index] === text ? index : -1)).filter((index) => index >= 0);
 export const FILLER_SPEAKER = FILLER_AUDIO.speaker;
+/** The built filler lines for one voice: luna's in /assets/voice/, the other A/B voices' in /assets/voice/<speaker>/. */
+export function fillerReady(speaker) {
+  if (speaker === FILLER_SPEAKER) return FILLER_READY;
+  const texts = FILLER_AUDIO.voices?.[speaker]?.texts || [];
+  return FILLERS.map((text, index) => (texts[index] === text ? index : -1)).filter((index) => index >= 0);
+}
 // A filler plays only when nothing is audible this long after the turn ends (first sentence median ~2.1 s
 // on 70B), and never on two turns in a row.
 export const FILLER_AFTER_MS = 1600;

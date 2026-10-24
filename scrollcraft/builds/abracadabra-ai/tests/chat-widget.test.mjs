@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  bookingNotes,
   buildCalUrl,
+  fillerUrl,
   contactProblems,
   isRetryText,
   launcherShouldHide,
@@ -106,4 +108,17 @@ test("Try again shows for the current and the older worker retry text, not for o
   assert.equal(isRetryText("Sorry, that took longer than it should. Try again, or book a thirty-minute working session right here in this chat."), true);
   assert.equal(isRetryText("This chat is full. Email houdini@abra-ca-dabra.app."), false);
   assert.equal(isRetryText(undefined), false);
+});
+
+test("booking notes leave out receptionist-demo turns; filler audio is fetched in the call's own voice", () => {
+  assert.equal(bookingNotes([
+    { role: "user", text: "We run a dental clinic." },
+    { role: "user", text: "My date of birth is March 3.", demo: true },
+    { role: "assistant", text: "Okay." },
+    { role: "user", text: "We miss calls at lunch." },
+  ]), "We run a dental clinic. We miss calls at lunch.");
+  assert.equal(fillerUrl("luna", 2, "7"), "/assets/voice/filler-2.mp3?v=7");
+  assert.equal(fillerUrl("thalia", 0, "7"), "/assets/voice/thalia/filler-0.mp3?v=7");
+  assert.equal(fillerUrl("andromeda", 9, "7"), "/assets/voice/andromeda/filler-9.mp3?v=7");
+  assert.equal(fillerUrl("../../etc", 1, "7"), "/assets/voice/filler-1.mp3?v=7");
 });

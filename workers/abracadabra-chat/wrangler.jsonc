@@ -14,7 +14,16 @@
     // Voice A/B: a comma list of luna, thalia, andromeda gives each chat one of them (logged). Empty = TTS_SPEAKER only.
     "TTS_SPEAKER_AB": "",
     // Flux end-of-turn confidence (0.5 to 0.9). Lower = snappier turns, higher = fewer cut-offs.
-    "VOICE_EOT_THRESHOLD": "0.6"
+    "VOICE_EOT_THRESHOLD": "0.6",
+    // Phase 2 (docs/conversation-plan.md). Set any of these to "false" and redeploy to turn it off.
+    // Mini-audit: a website named in the chat can be scanned with the Schema scanner (READINESS binding), after a tap.
+    "CHAT_AUDIT": "true",
+    // Receptionist demo: a two-minute voice role-play on the Voice agents page.
+    "RECEPTIONIST_DEMO": "true",
+    // "Here's what I heard" recap card at goodbye or on request, with a prefilled booking button.
+    "CHAT_RECAP_CARD": "true",
+    // Inline case-study film card (thumbnail, caption, links) when a reply cites one.
+    "CHAT_CLIPS": "true"
   },
   "durable_objects": {
     "bindings": [

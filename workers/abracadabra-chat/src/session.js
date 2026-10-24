@@ -28,6 +28,11 @@ export function blankSession({ id, now, ip, page }) {
   };
 }
 
+/** The history the normal assistant sees: receptionist-demo turns are role-play, so they are left out. */
+export function chatHistory(messages) {
+  return (messages || []).filter((m) => !m.demo);
+}
+
 export function isExpired(session, now) {
   return !session || typeof session.expiresAt !== "number" || now > session.expiresAt;
 }
@@ -88,8 +93,9 @@ export function applyChatEvent(session, body, now) {
 }
 
 export function rememberExchange(session, userText, assistantText, now, meta = {}) {
-  session.messages.push({ role: "user", text: userText, at: now, ...(meta.voice ? { voice: true } : {}) });
-  const reply = { role: "assistant", text: assistantText, at: now };
+  const demo = meta.demo ? { demo: true } : {};
+  session.messages.push({ role: "user", text: userText, at: now, ...(meta.voice ? { voice: true } : {}), ...demo });
+  const reply = { role: "assistant", text: assistantText, at: now, ...demo };
   if (meta.replyId) {
     reply.id = meta.replyId;
     reply.voice = true;

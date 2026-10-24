@@ -10,7 +10,7 @@
 //
 // Filler: if nothing is audible FILLER_AFTER_MS after the turn ends, the browser plays one short
 // pre-generated line ("Let me check.") from /assets/voice/, and the answer queues after it. Never on
-// two turns in a row, only lines whose audio is built (FILLER_READY), only in the filler voice.
+// two turns in a row, only lines whose audio is built in the call's own voice (fillerReady).
 //
 // Barge-in: when Flux hears the visitor start a new turn while we think or speak, the current
 // reply is aborted and the browser is told to drop queued audio. Audio is never stored.
@@ -18,7 +18,12 @@
 import { ChatUnavailable, replyStream } from "./model.js";
 import { checkedSentences, hasOffer, localReply, offerState, uiActionFor } from "./policy.js";
 import { conversationNotes, noteOffer, recentReplies, updateVisitor } from "./conversation.js";
-import { rememberExchange } from "./session.js";
+import { chatHistory, rememberExchange } from "./session.js";
+import { auditIntent, AUDITS_PER_SESSION, checkHost } from "./audit.js";
+import { cardsFor, RECAP_REPLY } from "./cards.js";
+import { DEMO_ASK, DEMO_LINES, DEMO_MS, DEMO_TURNS, demoExpired, demoIntent, demoOpening, demoPrompt, demoTakeaway, onDemoPage, DEMO_OFFER_NOTE } from "./demo.js";
+import { flag } from "./flags.js";
+import { recapCard, recapIntent } from "./recap.js";
 import {
   BARGE_IN_HOLD_MS,
   BARGE_IN_SHORT_WORDS,
@@ -26,8 +31,7 @@ import {
   CALL_IDLE_MS,
   callSpeaker,
   FILLER_AFTER_MS,
-  FILLER_READY,
-  FILLER_SPEAKER,
+  fillerReady,
   FILLERS,
   looksLikeEcho,
   MAX_CALL_MS,
@@ -56,6 +60,43 @@ export function bookingLine(env) {
   return String(env?.CAL_LINK || env?.BOOKING_URL || "").trim()
     ? "I've opened the booking calendar right here in the chat. Pick a thirty-minute time that works, and I'm still listening if you have questions."
     : "I've opened a short form in the chat. Leave your email and two times that work, and a person will send the invite.";
+}
+
+/** "acme.ca" read aloud: "acme dot ca". */
+export function spokenHost(host) {
+  return String(host || "").replace(/\./g, " dot ");
+}
+
+/**
+ * A voice turn answered with a fixed line, or a receptionist-demo turn. Returns
+ * { text, cards?, demo?: "on" | "off" | "turn" } or null for a normal turn.
+ */
+export function voiceMode(session, env, text, visitor, now) {
+  const demo = session.demo;
+  if (demo?.active) {
+    const stop = demoIntent(text) === "stop";
+    if (stop || demoExpired(demo, now)) return { text: demoTakeaway(visitor, stop ? "stop" : "time"), demo: "off" };
+    return { demo: "turn" };
+  }
+  if (flag(env, "RECEPTIONIST_DEMO") && onDemoPage(session.page) && demoIntent(text) === "start" && (demo?.runs || 0) < 2) {
+    return { text: demoOpening(visitor), demo: "on" };
+  }
+  if (flag(env, "CHAT_AUDIT")) {
+    const site = auditIntent(text);
+    if (site) {
+      const checked = checkHost(site);
+      if (!checked.ok) return { text: "I can only scan a public website address, like yourcompany dot com." };
+      if ((session.audits || []).length >= AUDITS_PER_SESSION && !(session.audits || []).some((a) => a.host === checked.host)) {
+        return { text: "That's the two scans this chat can run. The Schema scanner page runs more." };
+      }
+      return {
+        text: `I can scan ${spokenHost(checked.host)} for how easily AI search reads it. Tap Run the scan in the chat to start it.`,
+        cards: [{ kind: "audit_offer", host: checked.host }],
+      };
+    }
+  }
+  if (flag(env, "CHAT_RECAP_CARD") && recapIntent(text) && recapCard({ ...session, visitor })) return { text: RECAP_REPLY };
+  return null;
 }
 
 /** Words only, lower case: "What do you build?" and "what do you build" are the same turn. */
@@ -175,7 +216,7 @@ export class VoiceCall {
     this.client.addEventListener("message", (event) => this.onClient(event));
     this.client.addEventListener("close", () => this.end("closed", { quiet: true }));
     this.client.addEventListener("error", () => this.end("error", { quiet: true }));
-    this.send({ type: "ready", sampleRate: TTS_SAMPLE_RATE, micSampleRate: MIC_SAMPLE_RATE, maxMs: MAX_CALL_MS });
+    this.send({ type: "ready", sampleRate: TTS_SAMPLE_RATE, micSampleRate: MIC_SAMPLE_RATE, maxMs: MAX_CALL_MS, voice: this.speaker });
     console.log(`voice call: speaker=${this.speaker}${this.speakerAb ? " (a/b)" : ""}`);
     const open = this.deps.openFlux || openFlux;
     const flux = await open(this.env);
@@ -222,6 +263,11 @@ export class VoiceCall {
     }
     if (this.state === "speaking" && this.playbackDeadline && now >= this.playbackDeadline) {
       this.finishSpeaking();
+    }
+    if (this.demoUntil && now >= this.demoUntil && this.state === "listening") {
+      this.demoUntil = 0;
+      void this.finishDemo();
+      return;
     }
     if (this.state === "listening" && now - this.lastActivity >= CALL_IDLE_MS) {
       this.send({ type: "notice", text: "I ended the call because it went quiet." });
@@ -358,7 +404,8 @@ export class VoiceCall {
     const controller = new AbortController();
     this.controller = controller;
     this.lastActivity = this.now();
-    this.send({ type: "user", text, turn });
+    // Demo turns are role-play: the widget keeps them out of booking notes.
+    this.send({ type: "user", text, turn, ...(this.demoTurns ? { demo: true } : {}) });
     this.setState("thinking");
 
     let session = await this.loadSession();
@@ -371,18 +418,27 @@ export class VoiceCall {
     let action = uiActionFor(text);
     const offers = offerState(session, text);
     // Same visitor memory and turn notes as typed chat, so voice does not re-ask either.
-    const visitor = updateVisitor(session.visitor, text);
-    const notes = conversationNotes({ ...session, visitor }, text, visitor);
+    const visitor = session.demo?.active ? { ...(session.visitor || {}) } : updateVisitor(session.visitor, text);
+    const mode = voiceMode(session, this.env, text, visitor, this.now());
+    const inDemo = mode?.demo === "turn";
+    // The demo never opens the real calendar or the contact card.
+    if (mode) action = null;
+    let notes = conversationNotes({ ...session, visitor }, text, visitor);
+    if (!mode && flag(this.env, "RECEPTIONIST_DEMO") && onDemoPage(session.page) && !session.demo && !session.demoOffered) notes = [notes, DEMO_OFFER_NOTE].filter(Boolean).join("\n");
     const recent = recentReplies(session, 3);
     const seed = session.messageCount || 0;
     const budget = VOICE_TTS_CHARS_PER_SESSION - (session.ttsChars || 0);
     if (budget <= 0) return this.ttsLimit();
     // A clear ask to book: open the calendar now and say so, without waiting on the model.
-    const booking = action === "open_booking" ? bookingLine(this.env) : "";
-    if (booking) {
-      this.dropEager();
-      this.send({ type: "ui_action", action, turn });
-    }
+    const booking = action === "open_booking" ? bookingLine(this.env) : mode?.text || "";
+    if (booking || inDemo) this.dropEager();
+    if (action === "open_booking") this.send({ type: "ui_action", action, turn });
+    if (mode?.demo === "on") this.send({ type: "demo", state: "on", ms: DEMO_MS, turn });
+    if (mode?.demo === "off") this.send({ type: "demo", state: "off", turn });
+    // The receptionist role-play: its own prompt, only the demo turns as history. Those turns live only
+    // in this call's memory (this.demoTurns), never in the session, so nothing the caller says in the
+    // role (a date of birth, a symptom, a card number) is stored, recapped or sent to HQ.
+    const demoHistory = inDemo ? this.demoTurns || [] : null;
     const audio = new Channel();
     this.firstAudioAt = 0;
     this.fillerText = "";
@@ -404,17 +460,24 @@ export class VoiceCall {
     };
     this.speakingText = "";
     try {
-      const eager = booking ? null : this.takeEager(text);
+      const eager = booking || inDemo ? null : this.takeEager(text);
       const deltas = booking
         ? (async function* () { yield booking; })()
         : eager
         ? eager.replay(controller.signal)
-        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers, visitor, notes });
-      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true, dropOffers: !booking && offers.dropOffers, recent: booking ? [] : recent, seed, askedNext: offers.asked })) {
+        : inDemo
+        ? replyStream({ env: this.env, messages: [...demoHistory, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, system: demoPrompt(visitor) })
+        : replyStream({ env: this.env, messages: [...chatHistory(session.messages), { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers, visitor, notes });
+      const rules = inDemo
+        ? { maxSentences: VOICE_SENTENCES + 1, firstClause: true, dropAsk: DEMO_ASK, emptyLines: DEMO_LINES, seed }
+        : { maxSentences: booking ? 8 : VOICE_SENTENCES + 1, firstClause: true, dropOffers: !booking && offers.dropOffers, recent: booking ? [] : recent, seed, askedNext: offers.asked };
+      for await (const part of checkedSentences(deltas, rules)) {
         if (controller.signal.aborted || this.closed) break;
         if (part.replace) {
-          // Nothing unsafe is ever spoken. If a sentence already played, stop there.
+          // Nothing unsafe is ever spoken. If a sentence already played, stop there. In the demo a
+          // replaced answer (a price, a claim) becomes a neutral line in the role.
           if (!answer) {
+            if (inDemo) part.replace = DEMO_LINES[seed % DEMO_LINES.length];
             answer = part.replace;
             queueSpeech(part.replace);
           }
@@ -441,18 +504,53 @@ export class VoiceCall {
     session = (await this.loadSession()) || session;
     session.voiceTurns = (session.voiceTurns || 0) + 1;
     session.voiceSpeaker = this.speaker;
-    session.visitor = noteOffer(updateVisitor(session.visitor, text), answer !== VOICE_RETRY_TEXT && hasOffer(answer), session.messageCount);
-    if (action === "offer_booking" || booking) session.bookingOffered = true;
-    if (answer !== VOICE_RETRY_TEXT) rememberExchange(session, text, answer, this.now(), { voice: true });
+    // Role-play words never update the visitor record.
+    if (!inDemo) session.visitor = noteOffer(updateVisitor(session.visitor, text), answer !== VOICE_RETRY_TEXT && hasOffer(answer), session.messageCount);
+    if (action === "offer_booking" || action === "open_booking") session.bookingOffered = true;
+    // The demo is offered once: after a reply mentions it, the note goes away.
+    if (!mode && /\bdemo\b/i.test(answer)) session.demoOffered = true;
+    const at = this.now();
+    if (mode?.demo === "on") {
+      session.demo = { active: true, startedAt: at, turns: 0, runs: (session.demo?.runs || 0) + 1 };
+      this.demoUntil = at + DEMO_MS;
+      this.demoTurns = [{ role: "user", text }, { role: "assistant", text: answer }];
+    } else if (inDemo) {
+      session.demo = { ...session.demo, turns: (session.demo.turns || 0) + 1 };
+      this.demoTurns = [...(this.demoTurns || []), { role: "user", text }, { role: "assistant", text: answer }].slice(-2 * (DEMO_TURNS + 1));
+    } else if (mode?.demo === "off") {
+      session.demo = { ...session.demo, active: false, done: true, endedAt: at };
+      this.demoUntil = 0;
+      this.demoTurns = null;
+    }
+    const demoTurn = mode?.demo === "on" || inDemo;
+    if (inDemo) {
+      // Counted against the chat's caps, but the words are not kept.
+      session.messageCount += 1;
+      session.updatedAt = at;
+    } else if (answer !== VOICE_RETRY_TEXT) rememberExchange(session, text, answer, at, { voice: true, demo: demoTurn });
     else session.replyFailures = (session.replyFailures || 0) + 1;
+    // Cards (mini-audit offer, recap, case-study film) show in the chat; none during the role-play.
+    const cards = demoTurn ? [] : [...(mode?.cards || []), ...cardsFor(session, this.env, text, mode ? "" : answer)];
     session.ttsChars = (session.ttsChars || 0) + spokenChars;
     await this.saveSession(session);
     if (controller.signal.aborted || this.closed) return;
     // The calendar already opened at the start of this turn.
-    if (booking) action = null;
-    this.send({ type: "assistant", text: answer, action, turn });
+    if (action === "open_booking") action = null;
+    this.send({ type: "assistant", text: answer, action, turn, ...(demoTurn ? { demo: true } : {}) });
+    for (const card of cards) this.send({ type: "card", card, turn });
     if (outOfVoice) return this.ttsLimit();
     await playing;
+  }
+
+  /** The demo's two minutes ran out while the visitor was quiet: close it out loud. */
+  async finishDemo() {
+    const session = await this.loadSession();
+    if (!session || this.closed || !session.demo?.active) return;
+    session.demo = { ...session.demo, active: false, done: true, endedAt: this.now() };
+    this.demoTurns = null;
+    await this.saveSession(session);
+    this.send({ type: "demo", state: "off" });
+    await this.say(demoTakeaway(session.visitor, "time"));
   }
 
   /**
@@ -466,11 +564,14 @@ export class VoiceCall {
     const session = await this.loadSession();
     // EndOfTurn may have arrived while the session loaded; then this guess is too late.
     if (ticket !== this.eagerTicket || !session || this.closed || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) return;
+    // Demo turns, fixed lines and demo starts never use the guess.
+    if (session.demo?.active || voiceMode(session, this.env, text, session.visitor, this.now())) return;
     const controller = new AbortController();
     // Same prompt as handleTurn builds for this text, so a reused guess matches the real turn.
     const visitor = updateVisitor(session.visitor, text);
     const notes = conversationNotes({ ...session, visitor }, text, visitor);
-    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers: offerState(session, text), visitor, notes });
+    const notesFor = !session.demo && !session.demoOffered && flag(this.env, "RECEPTIONIST_DEMO") && onDemoPage(session.page) ? [notes, DEMO_OFFER_NOTE].filter(Boolean).join("\n") : notes;
+    const stream = replyStream({ env: this.env, messages: [...chatHistory(session.messages), { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers: offerState(session, text), visitor, notes: notesFor });
     this.eager = new Prefetch(sameWords(text), stream, controller, this.now());
     this.eagerStarts = (this.eagerStarts || 0) + 1;
   }
@@ -543,13 +644,14 @@ export class VoiceCall {
   /** Tells the browser to play one cached filler line if the answer is not audible yet. */
   playFiller(turn, controller) {
     if (this.closed || controller.signal.aborted || turn !== this.turn || this.firstAudioAt) return;
-    // Never two turns in a row, only built lines, and only when the call uses the fillers' voice.
-    if (this.lastFillerTurn === turn - 1 || !FILLER_READY.length || this.speaker !== FILLER_SPEAKER) return;
+    // Never two turns in a row, and only lines built in this call's own voice.
+    const ready = fillerReady(this.speaker);
+    if (this.lastFillerTurn === turn - 1 || !ready.length) return;
     this.lastFillerTurn = turn;
-    const index = FILLER_READY[this.fillerCount++ % FILLER_READY.length];
+    const index = ready[this.fillerCount++ % ready.length];
     this.fillerText = FILLERS[index];
     this.fillerUntil = this.now() + FILLER_MS;
-    this.send({ type: "filler", index, turn });
+    this.send({ type: "filler", index, turn, voice: this.speaker });
   }
 
   /** Plays Aura bodies in order as they arrive on the channel. */
@@ -661,6 +763,17 @@ export class VoiceCall {
     } catch { /* gone */ }
     try { this.flux?.close(); } catch { /* gone */ }
     try { this.client.close(1000, reason.slice(0, 60)); } catch { /* gone */ }
+    // A demo never outlives its call: the next call starts in normal mode.
+    if (this.demoTurns) {
+      this.demoTurns = null;
+      void (async () => {
+        const session = await this.loadSession();
+        if (session?.demo?.active) {
+          session.demo = { ...session.demo, active: false, done: true, endedAt: this.now() };
+          await this.saveSession(session);
+        }
+      })().catch(() => {});
+    }
     this.deps.onEnd?.(reason);
   }
 }

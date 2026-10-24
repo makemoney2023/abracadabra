@@ -57,7 +57,7 @@ Status: **this PR** (branch `feat/chat-conversation-plan`), **later**, or **phas
 | 10 | **Follow-up chips.** After a typed answer the worker sends a `suggestions` SSE event with up to two topic questions, never one already asked and none after a goodbye. The widget shows them under the answer, tapping one asks it, and they clear on the next send. | `followUps`, `chat-widget.js` `showFollowUps` | this PR |
 | 11 | **Invented subdomains.** A link like `blog.abra-ca-dabra.app/...` is no longer passed through. Real pages move back to the apex. | `sitePageKnown`, `postCheck` | this PR |
 | 12 | Optional 8B extraction of visitor facts | Not wired. The regexes cover the test chats, so add it only if real transcripts show misses. | later |
-| 13 | Recap and HQ lead carry `session.visitor` | `recap.js`, `hq.js` | later |
+| 13 | Recap and HQ lead carry `session.visitor` | `recap.js` `visitorLine` (in `recapFacts`, so in the HQ lead) | phase 2 PR |
 
 ### Voice tuning (commit 2)
 
@@ -70,15 +70,23 @@ Status: **this PR** (branch `feat/chat-conversation-plan`), **later**, or **phas
 | V5 | **Barge-in.** Three new words stop the reply at once. Two words stop it only if they are still there 400 ms later, so a cough or "mm-hm" doesn't count. Echo never counts. | `BARGE_IN_WORDS`, `BARGE_IN_SHORT_WORDS`, `BARGE_IN_HOLD_MS` | this PR |
 | V6 | **Voice A/B.** `TTS_SPEAKER_AB="luna,thalia,andromeda"` gives each chat one voice, picked from the session id so it stays the same for the chat. It is logged (`voice call: speaker=thalia (a/b)`) and saved as `session.voiceSpeaker`. Off by default, so luna as before. | `callSpeaker`, `wrangler.jsonc` | this PR (off) |
 | V7 | **Call caps.** 25 voice turns, up from 15, and 8-minute calls, up from 5. The cost guard is unchanged: 3,000 spoken characters per chat (about $0.09 of Aura-2) and 400 per reply. A long call can end on the character guard first. | `VOICE_TURNS_PER_SESSION`, `MAX_CALL_MS` | this PR |
-| V8 | **Per-voice fillers.** Build filler audio for thalia and andromeda so A/B calls get fillers too. | `build-fillers.mjs` with a speaker argument | later |
-| V9 | **Stats per voice.** Add `voiceSpeaker` to the anonymous weekly stats row so the A/B can be read without logs. | `src/stats.js` | later |
+| V8 | **Per-voice fillers.** thalia and andromeda have their own ten filler files in `/assets/voice/<voice>/`, so A/B calls get fillers in their own voice. `npm run fillers -- --speaker thalia`. | `build-fillers.mjs --speaker`, `fillerReady`, widget `fillerUrl` | phase 2 PR |
+| V9 | **Stats per voice.** `voiceSpeaker` is in the anonymous weekly stats row, and the week summary and CSV have `voiceSpeakers`, so the A/B can be read without logs. | `src/stats.js` | phase 2 PR |
 
-### Phase 2: ideas to blow people away (not in this PR)
+### Phase 2 (stacked PR, branch `feat/chat-phase2`)
 
-- **Live mini-audit.** The visitor drops a URL, the chat runs the Schema scanner and names two fixes in plain words. Reuse `schema.abra-ca-dabra.app`, rate-limited.
-- **Live receptionist demo.** On the voice page, the call plays a receptionist for the visitor's own business, using the visitor record (industry and pain), for about 60 seconds.
-- **Recap card.** At the goodbye, a card says what we heard and a suggested first build, with the booking prefilled (the notes field from `session.visitor`).
-- **Case-study clips.** 10 to 20 second clips from the films play inline when a case study comes up.
+Each feature has its own switch in `wrangler.jsonc` vars (`src/flags.js`). `CHAT_AUDIT` and `RECEPTIONIST_DEMO` are
+off unless set to `"true"` (they are set on in `wrangler.jsonc`); `CHAT_RECAP_CARD` and `CHAT_CLIPS` are on unless set
+to `"false"`. The widget reads the same switches from `/api/chat/config` (`features`).
+
+| # | Item | Where | Status |
+|---|---|---|---|
+| P1 | **Live mini-audit.** A website named in the chat, typed ("can you check acme.ca?") or spoken ("acme dot ca"), gets a fixed reply and an offer card. Nothing runs until the visitor taps **Run the scan**. Then the worker starts a normal public scan on the Schema scanner (readiness-check Worker, `POST /api/scans` through the `READINESS` service binding) and the widget polls `/api/chat/audit` every 5 s. The result card shows the score out of 100, the two biggest fixes in plain words (the scanner's finding codes, ranked by the points they cost; unknown codes use the scanner's own message), a link to `https://schema.abra-ca-dabra.app/scan/<token>`, and **Book a session about this** (Cal.com notes prefilled, nothing sent). The outcome goes into the chat history and the HQ recap. | `src/audit.js`, `src/http.js` `scriptedTurn`, `auditStep`; widget `auditOfferCard`, `runAudit` | phase 2 PR |
+| P1a | **Mini-audit guards.** Hostname only: http/https, no user:pass@, no IPv4/IPv6 literals (decimal and hex forms too), no localhost, `.local`, `.internal`, `.lan`, `.home.arpa`, `.test`, `.example`, `.invalid`, `.onion`, single-label names or bad labels. The scanner then fetches `https://<host>` from Cloudflare's network. Limits: 2 scans per chat (the same site resumes), 6 scan starts per network per hour, 240 status polls per network per hour, 90 polls per scan, and the scanner's own 3 scans per domain per day. Scanner calls time out after 8 s, and every failure has a plain message and a link to the scanner page. | `checkHost`, `IP_AUDIT_LIMIT`, `AUDITS_PER_SESSION` | phase 2 PR |
+| P2 | **Receptionist demo (voice).** On `/services/voice-and-realtime-agents/` the voice prompt may offer it once. "Start the demo" starts a two-minute role-play as the receptionist for the visitor's kind of business (`session.visitor.industry`, else "a local business"). It is labelled in the opening line and in a call-panel badge, ends on "stop demo", after 2 minutes (even if the visitor goes quiet) or 8 turns, then says one line about the real thing. In the role it never takes a booking or payment, never opens the calendar, and drops any sentence that asks for contact, payment, identity or health details (`DEMO_ASK`). An emergency (chest pain and the like) gets "call 911" first. The caller's words in the role are kept only in the call's memory, never in the session, the recap, the stats or the HQ lead. Typed chat points to the voice call. | `src/demo.js`, `src/realtime.js` `voiceMode`, `finishDemo`; widget `setDemo` | phase 2 PR |
+| P3 | **Recap card.** On "recap" or "what did you hear", and once at the goodbye, the chat shows **Here's what I heard** (industry, size, role, tools, the problem in their words, and the mini-audit result if one ran) and **Suggested first build** (the first service whose topic matches their problem, with the site's own one-line description). **Book with this recap** opens the existing Cal.com booking with the recap in the notes; nothing is sent unless they book. No contact details are in it (the visitor record strips emails and phone numbers). | `src/recap.js` `recapCard`, `firstBuild`; `src/cards.js`; widget `recapCard` | phase 2 PR |
+| P4 | **Case-study films.** When a reply cites StrongFoam CRM/ERP, Super Funnel, Schema or LLM Leverage, the chat shows one film card per case study per chat. It uses the existing Films-page files and captions only (`assets/films/<id>.mp4`, `thumbs/<id>.jpg`): a lazy thumbnail with alt text, and the video (muted, controls, `preload="metadata"`) only after a tap, plus links to the case study and `/films.html`. The films are silent screen captures, so the caption text is the description, and the card says so. A test checks every film, thumbnail and caption against `films.html`. | `src/clips.js`; widget `clipCard` | phase 2 PR |
+| P5 | Weekly stats count mini-audits started and finished, demos, recap cards and film cards (counts only). | `src/stats.js` | phase 2 PR |
 
 ## 4. How we measure
 
@@ -110,14 +118,43 @@ The quality check on this branch has 70B at 31 of 31 and 8B at 27 of 31, the sam
 at a median of 1,808 ms and p90 of 2,340 ms. After deploy, watch the anonymous weekly stats (`/api/chat/stats`) for
 booking opens and completions per chat. The goal is more bookings per chat, not more offers.
 
+### Phase 2 measurements (Oct 23, 2026, about 22:00 to 22:45 Toronto time)
+
+The same ten chats, re-run live on the phase-2 branch (39 answers each). The phase-2 features are fixed lines and cards
+outside the model, so these show the shared prompt and filter did not regress:
+
+| Run | Business-question endings | Any question ending | Two question endings in a row | Stock booking sentence | Median words | Result |
+|---|---|---|---|---|---|---|
+| 70B typed | 3 (8%) | 12 (31%) | 2 | 0 | 43 | PASS |
+| 8B typed | 0 | 9 (23%) | 1 | 0 | 41 | PASS |
+| 70B voice | 1 (3%) | 7 (18%) | 1 | 0 | 28 | PASS |
+
+Quality check (31 cases): 70B 31 of 31, 8B 28 of 31 (`reports/quality-2026-10-23-phase2.md`). A second 70B run scored
+30 of 31 (one "missing expected point"). First-sentence latency was slow tonight on every branch: 70B median 6,561 ms
+on this branch, and 5,686 ms on the phase-1 code (`src/` stashed) run right after, against 1,808 ms in the afternoon.
+The phase-2 change does not touch the typed prompt, so this is the Workers AI side, not the code. Recheck before
+deploying.
+
+Receptionist demo (`scripts/demo-check.mjs`, 5 calls and 20 caller turns that push for bookings, deposits, card
+numbers, a date of birth, a health card, insurance details, prices and an emergency): 70B and 8B both had 0 problem
+turns (`reports/demo-2026-10-23-70b.md`, `-8b.md`), with median 17 and 27 words. Both told the chest-pain caller to call
+911 first. An earlier 8B run said "I've put you down for 9 am tomorrow"; `DEMO_ASK` now drops that kind of sentence
+too, and the re-run is clean.
+
+The mini-audit was not run against the live scanner: a scan creates a real public scan record and uses one of the
+domain's three daily scans. The scanner's routes were checked read-only (`GET /api/scans/<unknown>` answers 404 "Scan
+not found" on both hosts), and the flow is covered against a stand-in that follows the scanner's API.
+
 ## 5. Rollback
 
 - **Code:** revert the PR's merge commit, then redeploy the chat Worker (`cd workers/abracadabra-chat && npx wrangler deploy`, by hand; it is not on Workers Builds). Redeploy the marketing Worker too, for the widget greeting, chips and filler files. Or use `npx wrangler rollback` on `abracadabra-chat` for an instant rollback to the previous version.
 - **Voice settings with no code change:** set `VOICE_EOT_THRESHOLD` back to `0.7` and clear `TTS_SPEAKER_AB` in `wrangler.jsonc` vars, then redeploy. `VOICE_ENABLED=false` turns voice off.
+- **Phase 2, one feature at a time:** set `CHAT_AUDIT`, `RECEPTIONIST_DEMO`, `CHAT_RECAP_CARD` or `CHAT_CLIPS` to `"false"` in `wrangler.jsonc` and redeploy the chat Worker. The widget only draws the cards the worker sends, so no marketing deploy is needed to switch one off.
 - **Data:** there is no migration and no database. `session.visitor` and `session.voiceSpeaker` are new optional fields on the session Durable Object. Old code ignores them, and they expire with the session (30 days).
 
 ## 6. Deploy notes
 
 - **Chat Worker** `abracadabra-chat`: deployed by hand (`npm run deploy`, which runs the knowledge check and tests first). Deploy it first.
 - **Marketing Worker** `abracadabra-marketing` (`scrollcraft/builds/abracadabra-ai`): carries `assets/chat-widget.js` (greeting, follow-up chips, `FILLER_LINES`, `FILLER_VERSION` 3) and the ten `assets/voice/filler-*.mp3`. Deploy it right after the chat Worker. Until it is deployed, the old widget ignores the new `suggestions` event and plays the old filler files. That is harmless: the old `filler-2.mp3` still says "Good question" until the marketing deploy.
+- **Phase 2 (after this PR's base is deployed):** marketing Worker first, then the chat Worker. The new widget is safe on the old worker: it only draws cards and the demo badge when the worker sends them, and it fetches thalia/andromeda fillers only when the call says it uses that voice. The other order would briefly show "Tap Run the scan" with no button on the old widget. The marketing Worker carries the widget cards, the demo badge, `FILLER_VERSION` 7 and twenty new files in `assets/voice/thalia/` and `assets/voice/andromeda/`. The chat Worker adds the `/api/chat/audit` route and four vars, and no new bindings: the mini-audit uses the existing `READINESS` service binding to `readiness-check`, which is unchanged.
 - No secrets, DNS or schema changes. Two new plain vars are in `wrangler.jsonc`: `VOICE_EOT_THRESHOLD` and `TTS_SPEAKER_AB` (empty).

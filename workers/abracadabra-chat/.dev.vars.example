@@ -32,3 +32,10 @@ TTS_MODEL=@cf/deepgram/aura-2-en
 AI_RECAP_MODEL=@cf/meta/llama-3.1-8b-instruct-fast
 # Weekly stats export (wrangler secret put CHAT_STATS_TOKEN in production; 24+ chars)
 CHAT_STATS_TOKEN=
+# Phase 2 features ("false" turns one off). CHAT_AUDIT and RECEPTIONIST_DEMO are off unless "true".
+CHAT_AUDIT=true
+RECEPTIONIST_DEMO=true
+CHAT_RECAP_CARD=true
+CHAT_CLIPS=true
+# Optional: where mini-audit report links point (default https://schema.abra-ca-dabra.app).
+SCHEMA_ORIGIN=
