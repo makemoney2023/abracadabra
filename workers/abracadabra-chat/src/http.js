@@ -421,6 +421,7 @@ export async function handleSession(request, storage, env, deps) {
       client: server,
       env,
       deps,
+      sessionId: session.id,
       loadSession: () => load(storage, deps.now ? deps.now() : Date.now()),
       saveSession: (next) => save(storage, next, deps),
     });

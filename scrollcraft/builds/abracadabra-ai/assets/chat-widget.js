@@ -257,10 +257,11 @@ export const CALL_LABELS = {
 
 // What the "working" indicator says while an answer is on its way: right away, after ~2s, after ~5s.
 // Pre-generated Aura-2 luna lines in /assets/voice/ (workers/abracadabra-chat npm run fillers). Same order as the worker.
-export const FILLER_LINES = ["Let me check.", "One sec.", "Good question.", "Just a moment."];
+// Lines without built audio are never sent by the worker (FILLER_READY); their files may 404 until npm run fillers.
+export const FILLER_LINES = ["Let me check.", "One sec.", "Let me see.", "Just a moment.", "Okay, one moment.", "Let me look.", "Bear with me a second.", "Hmm, let me think.", "Okay, checking.", "Give me a second."];
 const FILLER_COUNT = FILLER_LINES.length;
 const FILLER_PATH = "/assets/voice/filler-";
-const FILLER_VERSION = "2";
+const FILLER_VERSION = "3";
 export const GREETING = "Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.";
 export const RETRY_TEXT = "Sorry, that took longer than it should. Please try again.";
 // The worker marks retryable errors with `retry: true`. Older worker builds sent a longer sentence

@@ -29,9 +29,11 @@ export const SYSTEM_PROMPT = [
 ].join(" ");
 
 export const TEXT_SUFFIX = "In typed chat, answer first in two or three short sentences, about 60 words at most. Do not add a list of our services or past work unless they asked for it. Give a page as a full link, like https://abra-ca-dabra.app/portfolio/pirx/. Write sentences, not bullet lists.";
-export const VOICE_SUFFIX = "This answer is read aloud. Use two or three short spoken sentences, under 60 words. Say a page by its name, like the pirx.ca case study or the Services page. Never say a link, a slash, or a web address. No lists, dashes, or symbols.";
+export const VOICE_SUFFIX = "This answer is read aloud. Use one to three short spoken sentences, about 35 words or fewer, and say the most useful thing first. Say a page by its name, like the pirx.ca case study or the Services page. Never say a link, a slash, or a web address. No lists, dashes, or symbols.";
 
 export const MAX_TOKENS = 260;
+// Voice answers are about 35 words; a lower cap ends a long answer sooner (and costs less).
+export const VOICE_MAX_TOKENS = 110;
 
 /**
  * One line about offers for this turn, from offerState(): the model sees what it already offered,
@@ -91,7 +93,7 @@ function gatewayRequest(env, messages, voice, model, page, system, maxTokens, of
         { role: "system", content: system || systemPrompt({ voice, page, offers, visitor, notes }) },
         ...messages.map((message) => ({ role: message.role, content: message.text })),
       ],
-      max_tokens: maxTokens || MAX_TOKENS,
+      max_tokens: maxTokens || (voice ? VOICE_MAX_TOKENS : MAX_TOKENS),
     },
   };
 }

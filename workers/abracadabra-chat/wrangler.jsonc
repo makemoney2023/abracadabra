@@ -10,7 +10,11 @@
   // Realtime voice. Set VOICE_ENABLED to "false" to turn the voice call off without a code change.
   "vars": {
     "VOICE_ENABLED": "true",
-    "TTS_SPEAKER": "luna"
+    "TTS_SPEAKER": "luna",
+    // Voice A/B: a comma list of luna, thalia, andromeda gives each chat one of them (logged). Empty = TTS_SPEAKER only.
+    "TTS_SPEAKER_AB": "",
+    // Flux end-of-turn confidence (0.5 to 0.9). Lower = snappier turns, higher = fewer cut-offs.
+    "VOICE_EOT_THRESHOLD": "0.6"
   },
   "durable_objects": {
     "bindings": [

@@ -48,6 +48,8 @@ Copy `.dev.vars.example` to `.dev.vars` (do not commit it). On the Worker, set t
 | `AI` (binding) | Workers AI binding in `wrangler.jsonc`. Flux speech-to-text runs over its WebSocket. No token |
 | `VOICE_ENABLED` | `"true"` shows the mic (set in `wrangler.jsonc`). `"false"` turns voice off |
 | `TTS_SPEAKER` | Aura-2 voice, default `luna`. Unknown names fall back to `luna` |
+| `TTS_SPEAKER_AB` | Optional voice A/B test, e.g. `luna,thalia,andromeda`: each chat gets one, stable per chat, logged as `voice call: speaker=… (a/b)` and saved as `voiceSpeaker` on the session. Empty = off |
+| `VOICE_EOT_THRESHOLD` | Flux end-of-turn confidence, 0.5 to 0.9, default `0.6` (set in `wrangler.jsonc`). Lower ends turns sooner |
 | `TTS_MODEL` | Optional. Default `@cf/deepgram/aura-2-en` |
 
 ## Leads into HQ
@@ -70,9 +72,11 @@ sends `error` (a short retry line) instead of hanging; the whole reply has 15 s.
 `role="status"` region, and offers "Try again" on failure (client timeout 20 s).
 
 Voice uses the same stream: the first clause and then each sentence go to Aura as soon as they pass, so speech starts
-before the model finishes. If nothing is audible 1.2 s after the turn ends, the browser plays one short cached filler
-("Let me check.") from `/assets/voice/filler-<n>.mp3` (made once with `npm run fillers`, Aura-2 luna, trimmed), and
-the answer queues after it. The filler's echo does not count as a barge-in; talking over it stops it.
+before the model finishes. If nothing is audible 1.6 s after the turn ends, the browser plays one short cached filler
+(ten context-neutral lines such as "Let me check." or "One sec.") from `/assets/voice/filler-<n>.mp3` (made once with
+`npm run fillers`, Aura-2 luna, trimmed; the script also writes `src/filler-audio.js` and bumps the widget's
+`FILLER_VERSION`), and the answer queues after it. Never on two turns in a row, only lines whose audio is built, and
+not when the call uses a voice other than luna. The filler's echo does not count as a barge-in; talking over it stops it.
 
 ## Site knowledge
 
@@ -104,13 +108,13 @@ browser mic ─AudioWorklet, 16 kHz PCM, 40 ms frames─► /api/chat/realtime (
 ```
 
 - Turn taking: Flux decides when the visitor has finished (end-of-turn detection). Keyterms help it hear "Abracadabra".
-- Barge-in: if Flux hears two or more new words while the reply is being made or played, the reply stops on both sides. Words that match the reply itself are treated as speaker echo and ignored. The browser asks for echo cancellation.
+- Barge-in: if Flux hears three new words (or two that are still there after 400 ms) while the reply is being made or played, the reply stops on both sides. Words that match the reply itself are treated as speaker echo and ignored. The browser asks for echo cancellation.
 - The call stays "speaking" until the browser reports its queued audio has played, so barge-in keeps working to the last word.
 - Protocol, server → browser: `ready`, `state` (listening, thinking, speaking), `interim`, `user`, `assistant`, `audio_start`, binary PCM, `audio_end`, `interrupt`, `notice`, `end`. Browser → server: binary PCM, `{type:"played"}`, `{type:"end"}`.
 
-Guardrails: an open, Turnstile-checked session cookie and an allowed Origin before the socket opens; one open call per chat, 3 calls per chat, 6 calls per hour per IP; calls end at 5 minutes or after 45 quiet seconds; mic frames up to 16 KB and no faster than real time; 15 voice turns per chat; at most 400 spoken characters per reply and 3,000 per chat. Gateway cache and logging are off for speech. Audio is never stored. Only the words are kept, like a typed chat.
+Guardrails: an open, Turnstile-checked session cookie and an allowed Origin before the socket opens; one open call per chat, 3 calls per chat, 6 calls per hour per IP; calls end at 8 minutes or after 45 quiet seconds; mic frames up to 16 KB and no faster than real time; 25 voice turns per chat; at most 400 spoken characters per reply and 3,000 per chat. Gateway cache and logging are off for speech. Audio is never stored. Only the words are kept, like a typed chat.
 
-Cost at list price is about $0.026 per minute of call (Flux $0.0077 per minute plus Aura-2 at $0.030 per 1,000 characters), so about $0.13 for a full 5-minute call.
+Cost at list price is about $0.026 per minute of call (Flux $0.0077 per minute plus Aura-2 at $0.030 per 1,000 characters), so about $0.21 for a full 8-minute call at that rate. The 3,000 spoken characters per chat cap Aura-2 at about $0.09 a chat, so a long call often ends on that cost guard before the turn cap; Flux for 8 minutes is about $0.06.
 
 Deploy this Worker before the marketing Worker. The marketing `wrangler.jsonc` binds `CHAT` to the service name `abracadabra-chat`.
 

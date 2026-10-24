@@ -292,7 +292,7 @@ test("barge-in: new speech stops the reply, the assistant's own echo does not", 
   assert.equal(streams[0].wasCancelled(), true);
 });
 
-test("calls end at five minutes, after 45 quiet seconds, or when audio outruns the clock", async () => {
+test("calls end at eight minutes, after 45 quiet seconds, or when audio outruns the clock", async () => {
   const h = harness();
   const { browser, call } = await connect(h);
   h.clock.now += 44_000;
@@ -306,13 +306,17 @@ test("calls end at five minutes, after 45 quiet seconds, or when audio outruns t
 
   const h2 = harness();
   const second = await connect(h2);
-  for (let i = 0; i < 6; i += 1) {
+  for (let i = 0; i < 9; i += 1) {
     h2.clock.now += 50_000;
     h2.flux.emit("message", JSON.stringify({ event: "Update", transcript: "still talking here" }));
     second.call.tick();
   }
+  assert.equal(second.call.closed, false, "still open at seven and a half minutes");
+  h2.clock.now += 50_000;
+  second.call.tick();
   assert.equal(second.call.closed, true);
   assert.equal(second.browser.json().at(-1).reason, "max_length");
+  assert.ok(second.browser.json().some((m) => m.type === "notice" && /That is 8 minutes/.test(m.text)));
 
   const h3 = harness();
   const third = await connect(h3);
@@ -328,7 +332,7 @@ test("voice turn and spoken-character caps end the call with a notice", async ()
   const { call, browser } = await connect(h);
   const [room] = [...h.deps.rooms.values()];
   const session = await room.get("session");
-  session.voiceTurns = 15;
+  session.voiceTurns = 25;
   await room.put("session", session);
   h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "One more question" }));
   await flush(60);
@@ -442,11 +446,16 @@ test("a model error is spoken as a short retry line and not saved as an answer",
 });
 
 test("the widget's filler lines and files match the worker's", async () => {
-  const { FILLERS } = await import("../src/voice.js");
+  const { FILLERS, FILLER_READY } = await import("../src/voice.js");
+  const { FILLER_AUDIO } = await import("../src/filler-audio.js");
   const { readFile, stat } = await import("node:fs/promises");
   const widget = await readFile(new URL("../../../scrollcraft/builds/abracadabra-ai/assets/chat-widget.js", import.meta.url), "utf8");
   assert.ok(widget.includes(`FILLER_LINES = ${JSON.stringify(FILLERS).replace(/","/g, "\", \"")}`));
-  for (const index of FILLERS.keys()) {
+  assert.ok(widget.includes(`const FILLER_VERSION = "${FILLER_AUDIO.version}";`), "widget cache key matches the built audio");
+  assert.ok(FILLERS.length >= 10 && new Set(FILLERS).size === FILLERS.length);
+  assert.equal(FILLERS.some((line) => /good question|great question/i.test(line)), false);
+  assert.ok(FILLER_READY.length >= 1);
+  for (const index of FILLER_READY) {
     const file = await stat(new URL(`../../../scrollcraft/builds/abracadabra-ai/assets/voice/filler-${index}.mp3`, import.meta.url));
     assert.ok(file.size > 1000 && file.size < 20000);
   }
@@ -547,7 +556,18 @@ test("Flux is asked for eager end-of-turn events", async () => {
   const socket = { accept() {} };
   await openFlux({ AI: { run: async (_model, input) => { params = input; return { webSocket: socket }; } } });
   assert.equal(params.eager_eot_threshold, "0.5");
-  assert.equal(params.eot_threshold, "0.7");
+  assert.equal(params.eot_threshold, "0.6");
+  await openFlux({ VOICE_EOT_THRESHOLD: "0.8", AI: { run: async (_model, input) => { params = input; return { webSocket: socket }; } } });
+  assert.equal(params.eot_threshold, "0.8");
+  assert.equal(params.eager_eot_threshold, "0.5");
+});
+
+test("VOICE_EOT_THRESHOLD tunes end of turn within 0.5 to 0.9; eager stays below it", async () => {
+  const { fluxThresholds } = await import("../src/voice.js");
+  assert.deepEqual(fluxThresholds({}), { eot_threshold: "0.6", eager_eot_threshold: "0.5" });
+  assert.deepEqual(fluxThresholds({ VOICE_EOT_THRESHOLD: "0.5" }), { eot_threshold: "0.5", eager_eot_threshold: "0.4" });
+  assert.deepEqual(fluxThresholds({ VOICE_EOT_THRESHOLD: "0.9" }), { eot_threshold: "0.9", eager_eot_threshold: "0.5" });
+  for (const bad of ["0.2", "1.5", "fast", ""]) assert.equal(fluxThresholds({ VOICE_EOT_THRESHOLD: bad }).eot_threshold, "0.6", bad);
 });
 
 test("a clear ask to book opens the calendar at once and says so, without the model", async () => {
@@ -630,4 +650,120 @@ test("voice: a repeat booking pitch is not spoken twice in a row, and the prompt
   const llm = h.calls.filter((c) => !c.url.includes("aura"));
   assert.match(llm.at(-1).body.messages[0].content, /already offered the working session or the Readiness Check in your last answer/);
   assert.equal(h.calls.filter((c) => c.url.includes("aura") && /book/.test(c.body.text)).length, 1, "the pitch is spoken once");
+});
+
+test("voice caps: 25 turns, 8 minutes, and the 3,000 spoken-character cost guard stays", async () => {
+  const voice = await import("../src/voice.js");
+  assert.equal(voice.VOICE_TURNS_PER_SESSION, 25);
+  assert.equal(voice.MAX_CALL_MS, 8 * 60 * 1000);
+  assert.equal(voice.VOICE_TTS_CHARS_PER_SESSION, 3000);
+  assert.equal(voice.TTS_CHAR_CAP, 400);
+});
+
+test("voice answers are short: about 35 words in the prompt and a lower token cap", async () => {
+  const { MAX_TOKENS, VOICE_MAX_TOKENS, VOICE_SUFFIX } = await import("../src/model.js");
+  assert.match(VOICE_SUFFIX, /about 35 words or fewer/);
+  assert.ok(VOICE_MAX_TOKENS < MAX_TOKENS && VOICE_MAX_TOKENS >= 80);
+  const h = harness();
+  await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await flush(60);
+  const llm = h.calls.find((c) => c.url.includes("llama"));
+  assert.equal(llm.body.max_tokens, VOICE_MAX_TOKENS);
+});
+
+test("barge-in: three words stop the reply at once; two words only after 400 ms", async () => {
+  const hold = new Promise(() => {});
+  const make = () => harness({ reply: "We build software around the work you already do.", tts: () => pcmStream([[1, 0], [2, 0]], { hold }) });
+  const h = make();
+  h.deps.bargeHoldMs = 30;
+  const { browser, call } = await connect(h);
+  h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await flush(60);
+  assert.equal(call.state, "speaking");
+  h.flux.emit("message", JSON.stringify({ event: "Update", transcript: "hold on" }));
+  assert.equal(call.state, "speaking", "two words do not stop it yet");
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(call.state, "listening", "two words still there after the hold stop it");
+  assert.ok(browser.json().some((m) => m.type === "interrupt"));
+
+  const h2 = make();
+  const second = await connect(h2);
+  h2.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await flush(60);
+  h2.flux.emit("message", JSON.stringify({ event: "Update", transcript: "wait hold on" }));
+  assert.equal(second.call.state, "listening", "three words stop it at once");
+
+  const h3 = make();
+  h3.deps.bargeHoldMs = 30;
+  const third = await connect(h3);
+  h3.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await flush(60);
+  h3.flux.emit("message", JSON.stringify({ event: "Update", transcript: "mm hm" }));
+  h3.flux.emit("message", JSON.stringify({ event: "Update", transcript: "we build" }));
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(third.call.state, "speaking", "a short sound that turns out to be echo is not a barge-in");
+  third.call.end("test");
+  second.call.end("test");
+  call.end("test");
+});
+
+test("fillers: only built lines, never on two turns in a row, only in the fillers' voice", async () => {
+  const { FILLER_READY, FILLER_AFTER_MS } = await import("../src/voice.js");
+  assert.equal(FILLER_AFTER_MS, 1600);
+  const slow = () => sseStream(["", "We build custom apps."], { hold: new Promise((resolve) => setTimeout(resolve, 30)) });
+  const h = harness({ llm: slow });
+  h.deps.fillerAfterMs = 5;
+  const { browser, call } = await connect(h);
+  for (const [turn, text] of ["What do you build?", "And for clinics?", "How long does it take?"].entries()) {
+    h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: text }));
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    await flush(60);
+    call.finishSpeaking(turn + 1);
+  }
+  const fillers = browser.json().filter((m) => m.type === "filler");
+  assert.deepEqual(fillers.map((m) => m.turn), [1, 3], "turn 2 gets no filler");
+  for (const filler of fillers) assert.ok(FILLER_READY.includes(filler.index));
+  assert.notEqual(fillers[0].index, fillers[1].index, "lines rotate");
+
+  const ab = harness({ env: { ...VOICE_ENV, TTS_SPEAKER: "thalia" }, llm: slow });
+  ab.deps.fillerAfterMs = 5;
+  const other = await connect(ab);
+  ab.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert.equal(other.browser.json().some((m) => m.type === "filler"), false, "luna fillers are not played in another voice");
+});
+
+test("voice A/B: TTS_SPEAKER_AB picks luna, thalia or andromeda per chat, logged and used for every sentence", async () => {
+  const { callSpeaker } = await import("../src/voice.js");
+  assert.deepEqual(callSpeaker({}), { speaker: "luna", ab: false });
+  assert.deepEqual(callSpeaker({ TTS_SPEAKER: "thalia" }), { speaker: "thalia", ab: false });
+  assert.deepEqual(callSpeaker({ TTS_SPEAKER_AB: "luna" }, "x"), { speaker: "luna", ab: false }, "one voice is not a test");
+  assert.deepEqual(callSpeaker({ TTS_SPEAKER_AB: "luna,zeus" }, "x"), { speaker: "luna", ab: false }, "only the A/B voices");
+  const env = { TTS_SPEAKER_AB: "luna, thalia, andromeda" };
+  const picks = new Set();
+  for (let i = 0; i < 40; i += 1) {
+    const pick = callSpeaker(env, `session-${i}`);
+    assert.equal(pick.ab, true);
+    assert.deepEqual(callSpeaker(env, `session-${i}`), pick, "stable for a chat");
+    picks.add(pick.speaker);
+  }
+  assert.deepEqual([...picks].sort(), ["andromeda", "luna", "thalia"]);
+
+  const logs = [];
+  const original = console.log;
+  console.log = (line) => logs.push(String(line));
+  try {
+    const h = harness({ env: { ...VOICE_ENV, TTS_SPEAKER_AB: "thalia,andromeda" } });
+    const { call } = await connect(h);
+    h.flux.emit("message", JSON.stringify({ event: "EndOfTurn", transcript: "What do you build?" }));
+    await flush(60);
+    const spoken = h.calls.filter((c) => c.url.includes("aura")).map((c) => c.body.speaker);
+    assert.ok(spoken.length >= 1);
+    assert.ok(spoken.every((name) => name === call.speaker) && ["thalia", "andromeda"].includes(call.speaker));
+    assert.ok(logs.some((line) => line === `voice call: speaker=${call.speaker} (a/b)`));
+    assert.equal((await storedSession(h)).voiceSpeaker, call.speaker);
+  } finally {
+    console.log = original;
+  }
 });

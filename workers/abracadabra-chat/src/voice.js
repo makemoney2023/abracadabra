@@ -4,6 +4,7 @@
 // Audio is never stored. Only the words are kept, like a typed chat.
 
 import { SITE_PRODUCTS, SITE_WORK } from "./site-knowledge.js";
+import { FILLER_AUDIO } from "./filler-audio.js";
 
 export const STT_MODEL = "@cf/deepgram/flux";
 export const TTS_MODEL = "@cf/deepgram/aura-2-en";
@@ -11,17 +12,36 @@ export const TTS_SPEAKER = "luna";
 export const TTS_SAMPLE_RATE = 24000;
 export const MIC_SAMPLE_RATE = 16000;
 export const TTS_CHAR_CAP = 400;
-export const VOICE_TURNS_PER_SESSION = 15;
+export const VOICE_TURNS_PER_SESSION = 25;
+// The cost guard: at most 3,000 spoken characters per chat (about $0.09 of Aura-2), whatever the turn cap.
 export const VOICE_TTS_CHARS_PER_SESSION = 3000;
 export const VOICE_CALLS_PER_SESSION = 3;
-export const MAX_CALL_MS = 5 * 60 * 1000;
+export const MAX_CALL_MS = 8 * 60 * 1000;
 export const CALL_IDLE_MS = 45 * 1000;
-// Short spoken fillers, played by the browser when the real answer is not audible yet.
-// Pre-generated once with Aura-2 luna (npm run fillers) into the marketing site's /assets/voice/;
-// never synthesized per call. Keep the order: the index is the file name.
-export const FILLERS = ["Let me check.", "One sec.", "Good question.", "Just a moment."];
-export const FILLER_AFTER_MS = 1200;
+// Short spoken fillers, played by the browser when the real answer is not audible yet. Context-neutral
+// (no "Good question"), so they fit any turn. Pre-generated once with Aura-2 luna (npm run fillers) into
+// the marketing site's /assets/voice/; never synthesized per call. Keep the order: the index is the file name.
+export const FILLERS = [
+  "Let me check.", "One sec.", "Let me see.", "Just a moment.", "Okay, one moment.",
+  "Let me look.", "Bear with me a second.", "Hmm, let me think.", "Okay, checking.", "Give me a second.",
+];
+// Only fillers whose built audio says the current words are played (see src/filler-audio.js).
+export const FILLER_READY = FILLERS.map((text, index) => (FILLER_AUDIO.texts[index] === text ? index : -1)).filter((index) => index >= 0);
+export const FILLER_SPEAKER = FILLER_AUDIO.speaker;
+// A filler plays only when nothing is audible this long after the turn ends (first sentence median ~2.1 s
+// on 70B), and never on two turns in a row.
+export const FILLER_AFTER_MS = 1600;
 export const EAGER_EOT_THRESHOLD = "0.5";
+// Flux end-of-turn confidence. Lower ends turns sooner (snappier, more cut-offs); higher waits longer.
+// Tune with the VOICE_EOT_THRESHOLD var (0.5 to 0.9) without a code change.
+export const EOT_THRESHOLD = "0.6";
+export const EOT_TIMEOUT_MS = "3000";
+// Barge-in: three new words stop the reply at once; two words stop it if they are still there after 400 ms.
+export const BARGE_IN_WORDS = 3;
+export const BARGE_IN_SHORT_WORDS = 2;
+export const BARGE_IN_HOLD_MS = 400;
+// Voice A/B: TTS_SPEAKER_AB="luna,thalia,andromeda" gives each chat one of these, stable for the chat.
+export const AB_SPEAKERS = ["luna", "thalia", "andromeda"];
 export const FILLER_PATH = "/assets/voice/filler-";
 // Words speech-to-text should expect: the studio, the next steps, and every product and case study by its spoken name.
 export const KEYTERMS = [...new Set([
@@ -58,6 +78,28 @@ export function ttsSpeaker(env) {
   return AURA_SPEAKERS.has(speaker) ? speaker : TTS_SPEAKER;
 }
 
+/**
+ * The Aura-2 voice for one call. With TTS_SPEAKER_AB set (a comma list from AB_SPEAKERS), each chat
+ * gets one of them, picked from the session id so every call in a chat sounds the same. Otherwise
+ * TTS_SPEAKER (default luna). ab says whether the A/B test chose it, for the log.
+ */
+export function callSpeaker(env, sessionId = "") {
+  const list = String(env?.TTS_SPEAKER_AB || "").split(",").map((name) => name.trim().toLowerCase()).filter((name) => AB_SPEAKERS.includes(name));
+  const choices = [...new Set(list)];
+  if (choices.length < 2) return { speaker: ttsSpeaker(env), ab: false };
+  let hash = 0;
+  for (const char of String(sessionId)) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return { speaker: choices[hash % choices.length], ab: true };
+}
+
+/** Flux end-of-turn settings from env: VOICE_EOT_THRESHOLD (0.5 to 0.9, default 0.6); eager stays below it. */
+export function fluxThresholds(env) {
+  const raw = Number.parseFloat(String(env?.VOICE_EOT_THRESHOLD ?? ""));
+  const eot = Number.isFinite(raw) && raw >= 0.5 && raw <= 0.9 ? raw : Number(EOT_THRESHOLD);
+  const eager = Math.min(Number(EAGER_EOT_THRESHOLD), Math.round((eot - 0.1) * 100) / 100);
+  return { eot_threshold: String(eot), eager_eot_threshold: String(eager) };
+}
+
 /** Turns a checked chat reply into text that sounds right out loud, capped at TTS_CHAR_CAP. */
 export function speakable(text, cap = TTS_CHAR_CAP) {
   let clean = String(text || "")
@@ -87,7 +129,7 @@ export function sentences(text) {
  * Starts Aura-2 for one sentence and returns the streaming body (raw 16-bit PCM, 24 kHz, mono),
  * or null. The body is read chunk by chunk and forwarded; nothing is buffered or kept.
  */
-export async function synthesizePcm({ env, text, signal, fetchImpl = fetch }) {
+export async function synthesizePcm({ env, text, signal, fetchImpl = fetch, speaker }) {
   const config = gatewayConfig(env);
   if (!config || !text) return null;
   const model = String(env.TTS_MODEL || TTS_MODEL).trim();
@@ -103,7 +145,7 @@ export async function synthesizePcm({ env, text, signal, fetchImpl = fetch }) {
       },
       body: JSON.stringify({
         text,
-        speaker: ttsSpeaker(env),
+        speaker: speaker || ttsSpeaker(env),
         encoding: "linear16",
         container: "none",
         sample_rate: TTS_SAMPLE_RATE,
@@ -119,17 +161,18 @@ export async function synthesizePcm({ env, text, signal, fetchImpl = fetch }) {
 
 /** Opens a Flux streaming transcriber through the Workers AI binding. Returns a server WebSocket or null. */
 export async function openFlux(env) {
+  const thresholds = fluxThresholds(env);
   try {
     const response = await env.AI.run(
       STT_MODEL,
       {
         encoding: "linear16",
         sample_rate: String(MIC_SAMPLE_RATE),
-        eot_threshold: "0.7",
-        eot_timeout_ms: "3000",
+        eot_threshold: thresholds.eot_threshold,
+        eot_timeout_ms: EOT_TIMEOUT_MS,
         // EagerEndOfTurn fires earlier on a likely end; the call starts the model then and keeps
         // the result only if the final transcript matches (TurnResumed cancels it).
-        eager_eot_threshold: EAGER_EOT_THRESHOLD,
+        eager_eot_threshold: thresholds.eager_eot_threshold,
         keyterm: KEYTERMS,
       },
       { websocket: true },
