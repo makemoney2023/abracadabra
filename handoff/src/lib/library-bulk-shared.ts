@@ -24,11 +24,14 @@ export type BulkResult = {
   failed: number;
   /** Social pieces Cadence placed on the calendar because of this approval. */
   scheduled: number;
-  /** One line per piece Cadence could not place. */
+  /**
+   * One line per newly approved social piece that did not go on the calendar: Cadence could not place it, Cadence is off
+   * (no posting time), no connected account, or social posting is not set up. The approval itself still stands.
+   */
   scheduleNotes: string[];
 };
 
-export type BulkScheduler = (input: { deliverableId: string; itemIds: string[] }) => Promise<{ scheduled: number; failed: string[] }>;
+export type BulkScheduler = (input: { deliverableId: string; itemIds: string[] }) => Promise<{ scheduled: number; failed: string[]; skipped?: string[] }>;
 
 /** One sentence per outcome group, for the status line under the bar. */
 export function bulkSummary(result: BulkResult): string {
@@ -38,5 +41,6 @@ export function bulkSummary(result: BulkResult): string {
   if (result.skipped > 0) parts.push(`skipped ${result.skipped}`);
   if (result.failed > 0) parts.push(`${result.failed} failed`);
   if (result.scheduled > 0) parts.push(`${result.scheduled} placed on the calendar`);
+  if (result.action === "approve" && result.scheduleNotes.length > 0) parts.push(`${result.scheduleNotes.length} not scheduled`);
   return `${parts.join(", ")}.`;
 }

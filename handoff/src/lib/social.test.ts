@@ -574,7 +574,10 @@ describe("auto-schedule on approval", () => {
     const sql = await database();
     const { zernio, posts } = fakeZernio(ACCOUNTS);
     await syncSocialAccounts(sql, zernio, { id: "org-1", name: "Acme" }, NOW);
-    expect(await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).toEqual({ scheduled: 0, failed: [] });
+    const off = await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW);
+    expect(off).toMatchObject({ scheduled: 0, failed: [] });
+    expect(off.skipped).toHaveLength(2);
+    expect(off.skipped[0]).toContain("Cadence is off");
     expect(
       await saveAutopost(sql, client, "org-1", { enabled: true, accountIds: ["ig"], weekdays: [0, 1, 2, 3, 4, 5, 6], times: ["09:00"], timezone: "UTC" }, NOW),
     ).toMatchObject({ ok: false });
@@ -583,11 +586,11 @@ describe("auto-schedule on approval", () => {
     ).toEqual({ ok: true });
     expect((await getAutopost(sql, "org-1")).accountIds).toEqual(["ig"]);
     const result = await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW);
-    expect(result).toEqual({ scheduled: 2, failed: [] });
+    expect(result).toEqual({ scheduled: 2, failed: [], skipped: [] });
     const times = posts.map((post) => Date.parse(post.scheduledFor ?? ""));
     expect(times[1] - times[0]).toBe(86_400_000);
     expect(new Date(times[0]).getUTCHours()).toBe(9);
-    expect(await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).toEqual({ scheduled: 0, failed: [] });
+    expect(await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).toEqual({ scheduled: 0, failed: [], skipped: [] });
     const activity = await sql.get<{ actor_kind: string }>("SELECT actor_kind FROM activities WHERE kind = 'social.post'");
     expect(activity?.actor_kind).toBe("system");
   });
@@ -607,7 +610,7 @@ describe("auto-schedule skips projects that opted out of the Library", () => {
     expect(
       await saveAutopost(sql, staff, "org-1", { enabled: true, accountIds: ["ig"], weekdays: [0, 1, 2, 3, 4, 5, 6], times: ["09:00"], timezone: "UTC" }, NOW),
     ).toEqual({ ok: true });
-    expect(await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).toEqual({ scheduled: 0, failed: [] });
+    expect(await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).toEqual({ scheduled: 0, failed: [], skipped: [] });
     expect(posts).toHaveLength(0);
     await sql.run("UPDATE projects SET include_in_library = 1 WHERE id = 'p-print'");
     expect((await autoScheduleApproved(sql, zernio, store, { deliverableId: "d-1", itemIds: null }, NOW)).scheduled).toBe(2);
