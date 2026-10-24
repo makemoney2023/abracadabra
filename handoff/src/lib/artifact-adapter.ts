@@ -2,7 +2,7 @@ import { sniffVideoBytes } from "./video-files";
 
 export type ArtifactKind = "markdown" | "json" | "pdf" | "image" | "video";
 
-export type ItemFormat = "page" | "file" | "static";
+export type ItemFormat = "page" | "file" | "static" | "video";
 
 export type AdaptedArtifact = {
   kind: ArtifactKind;
@@ -108,11 +108,30 @@ const CONTENT_TYPES: Record<string, string> = {
   txt: "text/plain",
 };
 
-/** Deliverable row for a stored path. Markdown stays a page. Pictures are static. Other files are files. */
-export function itemForPath(path: string, objectKey: string | null): { format: ItemFormat; mediaJson: string } {
+const CLIP_EXTENSIONS = new Set(["mp4", "webm", "mov"]);
+
+/**
+ * Deliverable row for a stored path. Markdown stays a page. Pictures are static. Other files are files.
+ * A clip is a `file` piece, like a PDF, except in a social pack: there it is a `video` piece, the same format a clip
+ * scheduled from the Library gets, so the Social tab, scheduling, auto-post and chat tools can see it.
+ * Only a social pack opts in (`socialPack`). A clip in a report, design system or website stays a file, so it never
+ * becomes postable by accident.
+ */
+export function itemForPath(
+  path: string,
+  objectKey: string | null,
+  options: { socialPack?: boolean } = {},
+): { format: ItemFormat; mediaJson: string } {
   const extension = path.split(".").pop()?.toLowerCase() ?? "";
   const image = extension === "png" || extension === "jpg" || extension === "jpeg" || extension === "webp" || extension === "gif";
-  const format: ItemFormat = image ? "static" : extension === "pdf" || extension === "json" || extension === "mp4" || extension === "webm" || extension === "mov" ? "file" : "page";
+  const clip = CLIP_EXTENSIONS.has(extension);
+  const format: ItemFormat = image
+    ? "static"
+    : clip && options.socialPack
+      ? "video"
+      : extension === "pdf" || extension === "json" || clip
+        ? "file"
+        : "page";
   if (!objectKey) return { format, mediaJson: "[]" };
   return {
     format,
