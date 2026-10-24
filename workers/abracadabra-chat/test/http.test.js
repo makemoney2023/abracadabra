@@ -61,7 +61,7 @@ test("config is public and foreign origins are refused", async () => {
     readinessCheckUrl: "https://check.abra-ca-dabra.app/check",
     turnstileSiteKey: "site",
     voiceEnabled: false,
-    greeting: "Ask a plain question. A person reviews anything we follow up on.",
+    greeting: "Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.",
     knowledge: SITE_KNOWLEDGE_VERSION,
   });
   const blocked = await call("/api/chat/config", { ...h, method: "GET", origin: "https://evil.example" });

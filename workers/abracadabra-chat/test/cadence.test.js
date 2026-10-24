@@ -56,7 +56,7 @@ test("the prompt is told what was offered, and to offer when asked", () => {
   assert.equal(offerPrompt(undefined), "");
   assert.match(systemPrompt({ offers: offerState(said(OFFER_LINE), "What do you build?") }), /already offered the working session or the Readiness Check in your last answer\. Do not mention booking/);
   assert.match(systemPrompt({ voice: true, offers: offerState(said(OFFER_LINE, "a", "b"), "ok") }), /already offered .* 3 answers ago/);
-  assert.match(systemPrompt({ offers: offerState(said(OFFER_LINE), "how much is it?") }), /asking about cost, timing.*book a thirty-minute working session/);
+  assert.match(systemPrompt({ offers: offerState(said(OFFER_LINE), "how much is it?") }), /asking about cost, timing.*in your own words: a thirty-minute working session/);
   assert.match(systemPrompt({ offers: offerState({ messages: [] }, "What do you do?") }), /Nothing has been offered yet/);
   for (const unsure of ["Where should we start?", "I'm not sure where to start.", "Is there a readiness assessment?"]) {
     assert.equal(offerState({ messages: [] }, unsure).start, true, unsure);
@@ -150,7 +150,11 @@ test("typed chat: no back-to-back offers unless the visitor asks, and the prompt
   assert.equal(await say("Why Cloudflare?"), "We build custom apps.");
   assert.match(calls[2].messages[0].content, /already offered .* 2 answers ago/);
   // Asked about cost: the offer goes through even right after another.
-  assert.equal(await say("How much would it cost?"), pitch);
+  // Same offer sentence as three answers ago: kept (they asked), but in words not used yet.
+  const cost = await say("How much would it cost?");
+  assert.match(cost, /^We build custom apps\. /);
+  assert.equal(hasOffer(cost), true);
+  assert.doesNotMatch(cost, /book a thirty-minute working session right here in this chat/);
   assert.match(calls[3].messages[0].content, /asking about cost, timing/);
 });
 

@@ -9,17 +9,25 @@
 // Browser ◄──PCM 24 kHz── Aura-2 through AI Gateway, streamed chunk by chunk
 //
 // Filler: if nothing is audible FILLER_AFTER_MS after the turn ends, the browser plays one short
-// pre-generated line ("Let me check that.") from /assets/voice/, and the answer queues after it.
+// pre-generated line ("Let me check.") from /assets/voice/, and the answer queues after it. Never on
+// two turns in a row, only lines whose audio is built (FILLER_READY), only in the filler voice.
 //
 // Barge-in: when Flux hears the visitor start a new turn while we think or speak, the current
 // reply is aborted and the browser is told to drop queued audio. Audio is never stored.
 
 import { ChatUnavailable, replyStream } from "./model.js";
-import { checkedSentences, localReply, offerState, uiActionFor } from "./policy.js";
+import { checkedSentences, hasOffer, localReply, offerState, uiActionFor } from "./policy.js";
+import { conversationNotes, noteOffer, recentReplies, updateVisitor } from "./conversation.js";
 import { rememberExchange } from "./session.js";
 import {
+  BARGE_IN_HOLD_MS,
+  BARGE_IN_SHORT_WORDS,
+  BARGE_IN_WORDS,
   CALL_IDLE_MS,
+  callSpeaker,
   FILLER_AFTER_MS,
+  FILLER_READY,
+  FILLER_SPEAKER,
   FILLERS,
   looksLikeEcho,
   MAX_CALL_MS,
@@ -39,7 +47,8 @@ const PENDING_FRAME_CAP = 200;
 const SESSION_MESSAGE_LIMIT = 30;
 const PLAYBACK_GRACE_MS = 1500;
 const FILLER_MS = 1200;
-const VOICE_SENTENCES = 4;
+// Voice answers are about 35 words: three sentences (plus the first clause piece).
+const VOICE_SENTENCES = 3;
 export const VOICE_RETRY_TEXT = "Sorry, I lost that one. Could you say it again?";
 
 /** What the voice says when it opens the calendar (or the two-times form when no Cal.com link is set). */
@@ -134,7 +143,7 @@ export class VoiceCall {
    * @param {(session: object) => Promise<void>} options.saveSession writes it back
    * @param {object} [options.deps] fetchImpl, now, openFlux, timers (tests)
    */
-  constructor({ client, env, loadSession, saveSession, deps = {} }) {
+  constructor({ client, env, loadSession, saveSession, deps = {}, sessionId = "" }) {
     this.client = client;
     this.env = env;
     this.loadSession = loadSession;
@@ -152,6 +161,12 @@ export class VoiceCall {
     this.speakingText = "";
     this.fillerText = "";
     this.fillerCount = 0;
+    this.lastFillerTurn = -1;
+    this.bargeSince = 0;
+    // One Aura-2 voice per chat (TTS_SPEAKER, or the TTS_SPEAKER_AB test). Logged so results can be compared.
+    const voice = callSpeaker(env, sessionId);
+    this.speaker = voice.speaker;
+    this.speakerAb = voice.ab;
     this.closed = false;
   }
 
@@ -161,6 +176,7 @@ export class VoiceCall {
     this.client.addEventListener("close", () => this.end("closed", { quiet: true }));
     this.client.addEventListener("error", () => this.end("error", { quiet: true }));
     this.send({ type: "ready", sampleRate: TTS_SAMPLE_RATE, micSampleRate: MIC_SAMPLE_RATE, maxMs: MAX_CALL_MS });
+    console.log(`voice call: speaker=${this.speaker}${this.speakerAb ? " (a/b)" : ""}`);
     const open = this.deps.openFlux || openFlux;
     const flux = await open(this.env);
     if (this.closed) {
@@ -200,7 +216,7 @@ export class VoiceCall {
   tick() {
     const now = this.now();
     if (now - this.startedAt >= MAX_CALL_MS) {
-      this.send({ type: "notice", text: "That is five minutes. Start again any time, or keep typing." });
+      this.send({ type: "notice", text: `That is ${Math.round(MAX_CALL_MS / 60000)} minutes. Start again any time, or keep typing.` });
       this.end("max_length");
       return;
     }
@@ -286,13 +302,42 @@ export class VoiceCall {
     }
   }
 
+  /**
+   * Barge-in: BARGE_IN_WORDS new words stop the reply at once. BARGE_IN_SHORT_WORDS stop it only if
+   * they are still there BARGE_IN_HOLD_MS later (a cough or "mm-hm" does not). Echo never counts.
+   */
   maybeBargeIn(transcript) {
-    if (this.state !== "speaking" && this.state !== "thinking") return;
+    if (this.state !== "speaking" && this.state !== "thinking") return this.clearBarge();
     const words = transcript.split(/\s+/).filter(Boolean);
-    if (words.length < 2) return;
-    if (this.state === "speaking" && looksLikeEcho(transcript, `${this.fillerText} ${this.speakingText}`)) return;
-    if (this.state === "thinking" && this.fillerText && looksLikeEcho(transcript, this.fillerText)) return;
-    this.interrupt();
+    if (words.length < BARGE_IN_SHORT_WORDS) return this.clearBarge();
+    if (this.state === "speaking" && looksLikeEcho(transcript, `${this.fillerText} ${this.speakingText}`)) return this.clearBarge();
+    if (this.state === "thinking" && this.fillerText && looksLikeEcho(transcript, this.fillerText)) return this.clearBarge();
+    if (words.length >= BARGE_IN_WORDS) {
+      this.clearBarge();
+      return this.interrupt();
+    }
+    const hold = this.deps.bargeHoldMs ?? BARGE_IN_HOLD_MS;
+    if (!this.bargeSince) {
+      this.bargeSince = this.now();
+      const turn = this.turn;
+      clearTimeout(this.bargeTimer);
+      this.bargeTimer = setTimeout(() => {
+        if (this.closed || !this.bargeSince || turn !== this.turn) return;
+        if (this.state !== "speaking" && this.state !== "thinking") return this.clearBarge();
+        this.clearBarge();
+        this.interrupt();
+      }, hold);
+      return;
+    }
+    if (this.now() - this.bargeSince >= hold) {
+      this.clearBarge();
+      this.interrupt();
+    }
+  }
+
+  clearBarge() {
+    this.bargeSince = 0;
+    clearTimeout(this.bargeTimer);
   }
 
   interrupt() {
@@ -307,6 +352,7 @@ export class VoiceCall {
   }
 
   async handleTurn(text) {
+    this.clearBarge();
     if (this.controller) this.interrupt();
     const turn = ++this.turn;
     const controller = new AbortController();
@@ -324,6 +370,11 @@ export class VoiceCall {
 
     let action = uiActionFor(text);
     const offers = offerState(session, text);
+    // Same visitor memory and turn notes as typed chat, so voice does not re-ask either.
+    const visitor = updateVisitor(session.visitor, text);
+    const notes = conversationNotes({ ...session, visitor }, text, visitor);
+    const recent = recentReplies(session, 3);
+    const seed = session.messageCount || 0;
     const budget = VOICE_TTS_CHARS_PER_SESSION - (session.ttsChars || 0);
     if (budget <= 0) return this.ttsLimit();
     // A clear ask to book: open the calendar now and say so, without waiting on the model.
@@ -348,7 +399,7 @@ export class VoiceCall {
       spokenChars += spoken.length;
       this.speakingText = `${this.speakingText} ${spoken}`.trim();
       // Start Aura for this sentence now; the player keeps the order.
-      audio.push(synthesizePcm({ env: this.env, text: spoken, signal: controller.signal, fetchImpl: this.deps.fetchImpl }));
+      audio.push(synthesizePcm({ env: this.env, text: spoken, signal: controller.signal, fetchImpl: this.deps.fetchImpl, speaker: this.speaker }));
       return true;
     };
     this.speakingText = "";
@@ -358,8 +409,8 @@ export class VoiceCall {
         ? (async function* () { yield booking; })()
         : eager
         ? eager.replay(controller.signal)
-        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers });
-      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true, dropOffers: !booking && offers.dropOffers })) {
+        : replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers, visitor, notes });
+      for await (const part of checkedSentences(deltas, { maxSentences: VOICE_SENTENCES + 1, firstClause: true, dropOffers: !booking && offers.dropOffers, recent: booking ? [] : recent, seed, askedNext: offers.asked })) {
         if (controller.signal.aborted || this.closed) break;
         if (part.replace) {
           // Nothing unsafe is ever spoken. If a sentence already played, stop there.
@@ -380,7 +431,7 @@ export class VoiceCall {
       return;
     }
     if (!answer) {
-      answer = failure === "unconfigured" ? localReply(text) : VOICE_RETRY_TEXT;
+      answer = failure === "unconfigured" ? localReply(text, { seed, recent }) : VOICE_RETRY_TEXT;
       if (failure && failure !== "unconfigured") console.error(`voice reply: ${failure}`);
       queueSpeech(answer);
     }
@@ -389,6 +440,8 @@ export class VoiceCall {
 
     session = (await this.loadSession()) || session;
     session.voiceTurns = (session.voiceTurns || 0) + 1;
+    session.voiceSpeaker = this.speaker;
+    session.visitor = noteOffer(updateVisitor(session.visitor, text), answer !== VOICE_RETRY_TEXT && hasOffer(answer), session.messageCount);
     if (action === "offer_booking" || booking) session.bookingOffered = true;
     if (answer !== VOICE_RETRY_TEXT) rememberExchange(session, text, answer, this.now(), { voice: true });
     else session.replyFailures = (session.replyFailures || 0) + 1;
@@ -414,7 +467,10 @@ export class VoiceCall {
     // EndOfTurn may have arrived while the session loaded; then this guess is too late.
     if (ticket !== this.eagerTicket || !session || this.closed || (session.voiceTurns || 0) >= VOICE_TURNS_PER_SESSION) return;
     const controller = new AbortController();
-    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers: offerState(session, text) });
+    // Same prompt as handleTurn builds for this text, so a reused guess matches the real turn.
+    const visitor = updateVisitor(session.visitor, text);
+    const notes = conversationNotes({ ...session, visitor }, text, visitor);
+    const stream = replyStream({ env: this.env, messages: [...session.messages, { role: "user", text }], fetchImpl: this.deps.fetchImpl, voice: true, signal: controller.signal, page: { path: session.page, title: session.pageTitle }, offers: offerState(session, text), visitor, notes });
     this.eager = new Prefetch(sameWords(text), stream, controller, this.now());
     this.eagerStarts = (this.eagerStarts || 0) + 1;
   }
@@ -471,7 +527,7 @@ export class VoiceCall {
     this.fillerText = "";
     this.speakingText = spoken;
     const playing = this.speak(audio, turn, controller);
-    audio.push(synthesizePcm({ env: this.env, text: spoken, signal: controller.signal, fetchImpl: this.deps.fetchImpl }));
+    audio.push(synthesizePcm({ env: this.env, text: spoken, signal: controller.signal, fetchImpl: this.deps.fetchImpl, speaker: this.speaker }));
     audio.close();
     session.ttsChars = (session.ttsChars || 0) + spoken.length;
     await this.saveSession(session);
@@ -487,7 +543,10 @@ export class VoiceCall {
   /** Tells the browser to play one cached filler line if the answer is not audible yet. */
   playFiller(turn, controller) {
     if (this.closed || controller.signal.aborted || turn !== this.turn || this.firstAudioAt) return;
-    const index = this.fillerCount++ % FILLERS.length;
+    // Never two turns in a row, only built lines, and only when the call uses the fillers' voice.
+    if (this.lastFillerTurn === turn - 1 || !FILLER_READY.length || this.speaker !== FILLER_SPEAKER) return;
+    this.lastFillerTurn = turn;
+    const index = FILLER_READY[this.fillerCount++ % FILLER_READY.length];
     this.fillerText = FILLERS[index];
     this.fillerUntil = this.now() + FILLER_MS;
     this.send({ type: "filler", index, turn });
@@ -573,6 +632,7 @@ export class VoiceCall {
 
   finishSpeaking(turn) {
     if (this.closed || this.state !== "speaking" || (turn !== undefined && turn !== this.turn)) return;
+    this.clearBarge();
     this.controller = null;
     this.speakingText = "";
     this.fillerText = "";
@@ -586,6 +646,7 @@ export class VoiceCall {
     this.closed = true;
     clearInterval(this.timer);
     clearTimeout(this.filler);
+    this.clearBarge();
     this.dropEager();
     this.controller?.abort();
     this.controller = null;

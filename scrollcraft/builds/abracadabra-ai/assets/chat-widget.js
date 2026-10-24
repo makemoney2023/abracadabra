@@ -108,6 +108,8 @@ button { cursor: pointer; }
   border: 1px solid rgba(245, 240, 232, 0.12); border-radius: 8px;
   padding: 12px 14px; font-size: 14px; font-weight: 500;
 }
+.chips.follow { flex-direction: row; flex-wrap: wrap; }
+.chips.follow .chip { padding: 8px 12px; font-size: 13px; }
 .chip:hover, .ghost:hover, .icon:hover { border-color: rgba(245, 240, 232, 0.4); }
 .bubble { max-width: 92%; padding: 10px 12px; border-radius: 8px; font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
 .bubble.assistant { background: #11110F; border: 1px solid rgba(245, 240, 232, 0.12); }
@@ -255,10 +257,12 @@ export const CALL_LABELS = {
 
 // What the "working" indicator says while an answer is on its way: right away, after ~2s, after ~5s.
 // Pre-generated Aura-2 luna lines in /assets/voice/ (workers/abracadabra-chat npm run fillers). Same order as the worker.
-export const FILLER_LINES = ["Let me check.", "One sec.", "Good question.", "Just a moment."];
+// Lines without built audio are never sent by the worker (FILLER_READY); their files may 404 until npm run fillers.
+export const FILLER_LINES = ["Let me check.", "One sec.", "Let me see.", "Just a moment.", "Okay, one moment.", "Let me look.", "Bear with me a second.", "Hmm, let me think.", "Okay, checking.", "Give me a second."];
 const FILLER_COUNT = FILLER_LINES.length;
 const FILLER_PATH = "/assets/voice/filler-";
-const FILLER_VERSION = "2";
+const FILLER_VERSION = "3";
+export const GREETING = "Hi, I'm the Abracadabra assistant. Ask me anything about our work, or tell me the job that eats your week.";
 export const RETRY_TEXT = "Sorry, that took longer than it should. Please try again.";
 // The worker marks retryable errors with `retry: true`. Older worker builds sent a longer sentence
 // with the same opening, so match on the stable prefix too rather than one exact string.
@@ -443,7 +447,7 @@ export class AbraChat extends ElementBase {
       calLink: "",
       readinessCheckUrl: READINESS_FALLBACK,
       turnstileSiteKey: "",
-      greeting: "Ask a plain question. A person reviews anything we follow up on.",
+      greeting: GREETING,
     };
     this.messages = [];
     this.contact = null;
@@ -1040,7 +1044,7 @@ export class AbraChat extends ElementBase {
 
   greeting() {
     if (this.stream.childElementCount) return;
-    this.addBubble("assistant", this.config.greeting || "Ask a plain question. A person reviews anything we follow up on.");
+    this.addBubble("assistant", this.config.greeting || GREETING);
     const chips = el("div", "chips");
     const specs = [
       ["Book a 30-min working session", () => this.openBooking()],
@@ -1466,6 +1470,7 @@ export class AbraChat extends ElementBase {
     const question = String(text || "").trim();
     if (!question || !this.ready || this.busy) return;
     this.busy = true;
+    this.clearFollowUps();
     if (!retry) {
       this.input.value = "";
       this.input.style.height = "auto";
@@ -1479,6 +1484,7 @@ export class AbraChat extends ElementBase {
     let answer = "";
     let failed = null;
     let retryable = false;
+    let followUps = [];
     try {
       const response = await fetch("/api/chat/message", {
         method: "POST",
@@ -1511,6 +1517,7 @@ export class AbraChat extends ElementBase {
             if (data.retry === true) retryable = true;
           }
           if (event === "ui_action") this.action(data.action);
+          if (event === "suggestions" && Array.isArray(data.items)) followUps = data.items;
         });
         if (!answer && !failed) failed = RETRY_TEXT;
       }
@@ -1528,6 +1535,27 @@ export class AbraChat extends ElementBase {
     }
     this.status.textContent = "Answer ready.";
     this.messages.push({ role: "assistant", text: answer });
+    this.showFollowUps(followUps);
+  }
+
+  /** Up to two follow-up questions under the answer (from the worker's "suggestions" event). Tapping one asks it. */
+  showFollowUps(items) {
+    const list = (items || []).map((item) => String(item || "").trim().slice(0, 80)).filter(Boolean).slice(0, 2);
+    if (!list.length) return;
+    const chips = el("div", "chips follow");
+    chips.dataset.follow = "true";
+    for (const label of list) {
+      const button = el("button", "chip", label);
+      button.type = "button";
+      button.addEventListener("click", () => this.send(label));
+      chips.append(button);
+    }
+    this.stream.append(chips);
+    this.stream.scrollTop = this.stream.scrollHeight;
+  }
+
+  clearFollowUps() {
+    for (const node of this.stream?.querySelectorAll?.('[data-follow="true"]') || []) node.remove();
   }
 
   /** Animated dots plus a status line that changes if the answer takes longer. Returns a stop function. */
