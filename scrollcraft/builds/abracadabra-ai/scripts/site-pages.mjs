@@ -30,9 +30,11 @@ import { serviceAlt, serviceOgPath, servicePicture, writeServiceImages } from ".
 import { brandedPhotoCard, plateSvg } from "./og-brand.mjs";
 import { HQ_PAGE_DESCRIPTION, HQ_PATH, hqGraphNodes, hqHomeSection, hqPageBody, hqVideoNode, hqVideoSection, hqVideoSitemap } from "./hq-page.mjs";
 import { HOME_WORK_HASPART_LINE, HOME_WORK_HTML, HOME_WORK_LD_IDS, HOME_WORK_LD_TEXT, HOME_WORK_SITEMAP_XML } from "./home-work.mjs";
+import { sfSitemapVideos, sfVideoNodes, superFunnelCaseBody } from "./super-funnel-case.mjs";
 import { writeHqAssets } from "./hq-assets.mjs";
 import { writeSchemaAssets } from "./schema-assets.mjs";
 
+export const SF_CSS = "/assets/sf-case.css?v=20261023b";
 export const HQ_CSS = "/assets/hq.css?v=20261023d";
 
 const HOME_OG_ALT = "The abracadabra wordmark with an orange dot, above the headline: Let us bring your ideas to life.";
@@ -334,7 +336,7 @@ function baseGraph(pageNode, extra) {
 
 /** Pages changed on this date carry it as dateModified and sitemap lastmod. */
 const HQ_MODIFIED = "2026-10-23";
-const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/", "/portfolio/"]);
+const CHANGED_2026_10_23 = new Set(["/", "/products/", "/products/hq/", "/portfolio/", "/portfolio/super-funnel/"]);
 
 function pageNode({ type, id, url, name, description, image, modified = MODIFIED }) {
   const node = {
@@ -848,6 +850,7 @@ ${sectionHeading("Inside the system", "The real interface, in motion.")}
 }
 
 async function renderCase(item) {
+  const isSuperFunnel = item.slug === "super-funnel";
   const path = `/portfolio/${item.slug}/`;
   const url = `${SITE}${path}`;
   const title = pageTitle(item.name);
@@ -880,17 +883,25 @@ async function renderCase(item) {
       name: item.name,
       description: item.summary,
       image: item.image ? `${SITE}${item.image}` : undefined,
-    }), [crumbList(crumbs), caseAbout(item, url)]),
-    body: item.slug === "pirx" ? pirxCaseBody(item, crumbs, relatedHtml) : caseStudyBody(item, crumbs, relatedHtml),
+      modified: isSuperFunnel ? HQ_MODIFIED : MODIFIED,
+    }), [crumbList(crumbs), caseAbout(item, url), ...(isSuperFunnel ? sfVideoNodes(SITE, ORG_ID, url) : [])]),
+    extraHead: isSuperFunnel ? `<link rel="stylesheet" href="${SF_CSS}">\n` : "",
+    body: item.slug === "pirx"
+      ? pirxCaseBody(item, crumbs, relatedHtml)
+      : isSuperFunnel
+        ? superFunnelCaseBody({ esc, pageHero, visibleCrumbs, crumbs, relatedHtml })
+        : caseStudyBody(item, crumbs, relatedHtml),
   });
   await writePage(`portfolio/${item.slug}/index.html`, html);
 }
 
+const HUB_DESCRIPTION = "Two case studies: pirx.ca, the PIRX app, its machine learning and the blogs, and the Super Funnel System, a field app for SuperPatch associates.";
+
 async function renderPortfolioHub() {
   const url = `${SITE}/portfolio/`;
   const title = "Case studies | Abracadabra AI";
-  const listed = cases.filter((item) => LISTED_CASE_SLUGS.includes(item.slug));
-  const description = "A case study of pirx.ca: the PIRX app, its machine learning and the blogs we designed and built.";
+  const listed = LISTED_CASE_SLUGS.map((slug) => cases.find((item) => item.slug === slug)).filter(Boolean);
+  const description = HUB_DESCRIPTION;
   const crumbs = [
     { name: "Home", href: "/", url: `${SITE}/` },
     { name: "Case studies", href: "/portfolio/", url },
@@ -906,7 +917,7 @@ async function renderPortfolioHub() {
       url: `${SITE}/portfolio/${item.slug}/`,
     })),
   };
-  const og = await plateOrPhoto("portfolio", "Case studies", "pirx.ca, open and running", null);
+  const og = await plateOrPhoto("portfolio", "Case studies", "pirx.ca and the Super Funnel System", null);
   const cards = listed.map((item) => {
     const photo = item.cardImage
       ? shotImg(item.cardImage, { lazy: true })
@@ -936,7 +947,7 @@ ${pageHero({
   crumbs: visibleCrumbs(crumbs),
   kicker: "Case studies",
   title: "Case studies.",
-  dek: "<p>A case study of pirx.ca: the PIRX app, its machine learning and the blogs we designed and built.</p>",
+  dek: `<p>${esc(HUB_DESCRIPTION)}</p>`,
 })}
 ${collectionIndex([[listed.length, listed.length === 1 ? "case study" : "case studies"], ["Live", "screens, not mockups"], ["Open", "the work and try it"]])}
 <ul class="cards">${cards}</ul>
@@ -1189,7 +1200,10 @@ function siteUrls() {
     "/start/",
     "/start/thanks/",
   ];
-  return paths.map((path) => `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED}</lastmod>\n  </url>`).join("\n");
+  return paths.map((path) => {
+    const videos = path === "/portfolio/super-funnel/" ? `\n${sfSitemapVideos(SITE)}` : "";
+    return `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED}</lastmod>${videos}\n  </url>`;
+  }).join("\n");
 }
 
 function siteRedirects() {

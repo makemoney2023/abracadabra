@@ -1,4 +1,4 @@
-import { SITE_PATHS } from "./site-knowledge.js";
+import { SITE_PATHS, SITE_PRODUCTS, SITE_WORK } from "./site-knowledge.js";
 
 const COMMIT = /\b(we guarantee|guarantee a|signed contract|binding agreement|we'll start|we’ll start|we will start)\b/i;
 const JARGON = /\b(leverage|synergy|utilize|paradigm|holistic|robust|seamless|cutting-edge|unlock|empower)\b/i;
@@ -13,7 +13,10 @@ const CONTACT_ASK = /\b(name and (?:e-?mail|email address)|your (?:e-?mail|email
 export const CALENDAR_OPEN = "The booking calendar is open right here in the chat. Pick a thirty-minute time that works for you.";
 // Things the model has said that are false for this studio.
 const FALSE_CLAIM = /\b(?:(?:no|don't have any|do not have any|haven't got any)\s+(?:portfolio|examples?|case stud(?:y|ies)|past work|projects to show)|(?:don't|do not) charge|(?:it's|it is|services are|is) free\b|no cost)/i;
-const GROUNDED = "We have real, public work: the StrongFoam CRM and website, pirx.ca, and the Super Funnel sales app. You can see them on the Work page.";
+// The cost half of FALSE_CLAIM. Nothing on the site is called free, the Readiness Check included.
+const FREE_CLAIM = /\b(?:(?:don't|do not) charge|(?:it's|it is|services are|is) free\b|no cost|free of charge|for free)\b/i;
+const COST_LINE = "We price each project to the job and quote it after we understand the work. The Readiness Check takes five to seven minutes, and you can take it right here in this chat.";
+const GROUNDED = "We have real, public work: the StrongFoam CRM and website, pirx.ca, and the Super Funnel System. You can see them on the Case studies page.";
 const ABBREV = /\b(e\.g|i\.e|etc|vs|approx)\.(?=\s)/gi;
 
 const SAFE = "I can help you think it through. A person reviews anything we send after this chat.";
@@ -95,8 +98,11 @@ export function postCheck(text) {
     clean = clean
       .replace(/\s*\((\/[a-z0-9./-]*)\)/gi, (match, path) => (SITE_PATHS.includes(path) ? ` https://abra-ca-dabra.app${path}` : ""))
       .replace(/(^|\s)(\/[a-z0-9-]+\/(?:[a-z0-9-]+\/)?)(?=[\s.,;:!?]|$)/gi, (match, lead, path) => (SITE_PATHS.includes(path) ? `${lead}https://abra-ca-dabra.app${path}` : match))
-      .replace(/\b(SERVICES|WORK|PROCESS|SITE FACTS|WHY CLOUDFLARE|NEXT STEPS)\b/g, (word) => word.toLowerCase());
-    if (FALSE_CLAIM.test(clean)) {
+      .replace(/\b(SERVICES|WORK|PRODUCTS|NOTES|OTHER PAGES|PROCESS|SITE FACTS|WHY CLOUDFLARE|NEXT STEPS)\b/g, (word) => word.toLowerCase());
+    if (FREE_CLAIM.test(clean)) {
+      flags.push("false_claim");
+      clean = COST_LINE;
+    } else if (FALSE_CLAIM.test(clean)) {
       flags.push("false_claim");
       clean = GROUNDED;
     }
@@ -199,6 +205,20 @@ export function uiActionFor(userText) {
   return null;
 }
 
+// Products and case studies by name, for the reply used when the model is down. "Super Funnel System" also answers to
+// "Super Funnel", and "pirx.ca" to "pirx". Products come first, so "Schema" opens the product page.
+const NAMED = [...SITE_PRODUCTS, ...SITE_WORK].map((item) => {
+  const names = [item.name, item.name.replace(/\s+System$/i, ""), item.name.replace(/\.ca$/i, "")];
+  const words = [...new Set(names)].map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[\\s-]?"));
+  return { ...item, match: new RegExp(`\\b(?:${words.join("|")})\\b`, "i") };
+});
+
+/** The product or case study the visitor names, if any. */
+export function namedPage(userText) {
+  const text = String(userText || "");
+  return NAMED.find((item) => item.match.test(text)) || null;
+}
+
 export function localReply(userText) {
   const action = uiActionFor(userText);
   if (action === "offer_booking" || action === "open_booking") {
@@ -210,7 +230,9 @@ export function localReply(userText) {
   if (action === "request_contact") {
     return "Leave your name and email here. A person reads it before anyone writes back.";
   }
-  return "We build custom software and AI tools around the work you already do. You can see real projects on the Work page. What job takes the most time each week?";
+  const named = namedPage(userText);
+  if (named) return `${named.name}: ${named.line} You can read more at https://abra-ca-dabra.app${named.path}.`;
+  return "We build custom software and AI tools around the work you already do. You can see real projects on the Case studies page. What job takes the most time each week?";
 }
 
 export function rateGate(hits, now, limit, windowMs) {

@@ -6,4 +6,6 @@ export const AGENT_SOCIAL_LIMITS = {
   executionsPerDay: 10,
   /** Of those, publish-now. */
   publishNowPerDay: 3,
+  /** Approvals and un-approvals of single pieces in the last hour, counted from the activities log. */
+  approvalsPerHour: 30,
 } as const;

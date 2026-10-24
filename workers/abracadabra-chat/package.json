@@ -5,6 +5,9 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "knowledge": "node scripts/build-site-knowledge.mjs",
+    "knowledge:check": "node scripts/build-site-knowledge.mjs --check",
+    "knowledge:live": "node scripts/check-live-knowledge.mjs",
+    "predeploy": "node scripts/build-site-knowledge.mjs --check && node --test test/*.test.js",
     "fillers": "node scripts/build-fillers.mjs",
     "preview": "wrangler dev",
     "deploy": "wrangler deploy",

@@ -204,7 +204,71 @@
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/portfolio/super-funnel/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <lastmod>2026-10-23</lastmod>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-getting-started.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: Getting started</video:title>
+      <video:description>Associate tour of the home dashboard, setup, pipeline, and nav.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-getting-started.mp4</video:content_loc>
+      <video:duration>66</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-working-a-lead.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: Working a lead</video:title>
+      <video:description>Associate tour from Contacts through Discovery.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-working-a-lead.mp4</video:content_loc>
+      <video:duration>44</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-quiz-lead-samples.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: Quiz lead, samples</video:title>
+      <video:description>A quiz lead who wants samples, through ship and follow-up.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-quiz-lead-samples.mp4</video:content_loc>
+      <video:duration>62</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-quiz-lead-no-samples.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: Quiz lead, no samples</video:title>
+      <video:description>A quiz lead with no samples: Rapport and a prefilled Discovery.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-quiz-lead-no-samples.mp4</video:content_loc>
+      <video:duration>56</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-follow-ups-activity.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: Follow-ups and Activity</video:title>
+      <video:description>Due follow-ups, the calendar, and Activity.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-follow-ups-activity.mp4</video:content_loc>
+      <video:duration>56</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-my-page-card-funnels.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: My Page, card, and funnels</video:title>
+      <video:description>Share card, landing page, public page, and funnels.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-my-page-card-funnels.mp4</video:content_loc>
+      <video:duration>86</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-social.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: Social</video:title>
+      <video:description>Social calendar, inbox, and analytics.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-social.mp4</video:content_loc>
+      <video:duration>70</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
+    <video:video>
+      <video:thumbnail_loc>https://abra-ca-dabra.app/assets/films/thumbs/superfunnel-team-settings.jpg</video:thumbnail_loc>
+      <video:title>Super Funnel: Team and settings</video:title>
+      <video:description>Team, settings, and compliance.</video:description>
+      <video:content_loc>https://abra-ca-dabra.app/assets/films/superfunnel-team-settings.mp4</video:content_loc>
+      <video:duration>64</video:duration>
+      <video:publication_date>2026-10-07</video:publication_date>
+    </video:video>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/portfolio/pirx/</loc>

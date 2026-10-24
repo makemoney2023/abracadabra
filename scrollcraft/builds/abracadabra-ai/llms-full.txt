@@ -109,9 +109,9 @@ A self-paced course for better answers from any model, plus a workshop path. LLM
 
 https://abra-ca-dabra.app/portfolio/llm-leverage/
 
-### Super Funnel
+### Super Funnel System
 
-A sales app for associates, shown in a 66-second tour. Super Funnel is one associate app, shown as a film rather than a separate public URL. The homepage carries the Getting started film: the home dashboard, setup, pipeline, and nav, in 66 seconds. The other seven tours are on the films page.
+A field app for SuperPatch associates: one shared link becomes a credited lead, a nine-step pipeline and the exact message to send next. Eight film tours. Super Funnel System takes a stranger from a shared link, through a quiz or a recruiting page, into a nine-step pipeline, then hands the associate the exact message to send next. The associate sends every message themselves. It runs as one Cloudflare Worker (Next.js through OpenNext) with Neon Postgres via Hyperdrive, R2 and Cloudflare cron. The case study page carries eight film tours of the app.
 
 https://abra-ca-dabra.app/portfolio/super-funnel/
 

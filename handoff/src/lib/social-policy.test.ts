@@ -141,6 +141,19 @@ describe("evaluateSocialPolicy", () => {
   });
 });
 
+describe("approve_piece", () => {
+  it("is held by a lead (not in draft or observe) and by a hire only when granted, and needs no confirmation", () => {
+    expect(evaluateSocialPolicy(lead("managed"), "approve_piece")).toMatchObject({ authorization: "allowed", reasonCode: "allowed" });
+    expect(evaluateSocialPolicy(lead("schedule_approved"), "approve_piece").authorization).toBe("allowed");
+    expect(evaluateSocialPolicy(lead("draft"), "approve_piece").reasonCode).toBe("policy_draft");
+    expect(evaluateSocialPolicy(lead("observe"), "approve_piece").reasonCode).toBe("policy_observe");
+    expect(evaluateSocialPolicy(hire("managed"), "approve_piece").reasonCode).toBe("role_denied");
+    expect(evaluateSocialPolicy(hire("managed", granted("social.approve")), "approve_piece").authorization).toBe("allowed");
+    expect(evaluateSocialPolicy(hire("draft", granted("social.approve")), "approve_piece").reasonCode).toBe("policy_draft");
+    expect(evaluateSocialPolicy(hire("managed", { grant: ["social.approve"], assigned: false }), "approve_piece").reasonCode).toBe("not_assigned");
+  });
+});
+
 describe("assignmentFor", () => {
   it("returns the assignment for the client and nothing for another client", () => {
     const agent: AgentPrincipal = {
