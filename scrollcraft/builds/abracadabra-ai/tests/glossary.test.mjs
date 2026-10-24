@@ -221,7 +221,7 @@ test("sitemap, redirects, llms files and the footer include the glossary", () =>
   for (const path of [GLOSSARY_PATH, ...terms.map(termPath)]) {
     assert.ok(sitemap.includes(`<loc>${SITE}${path}</loc>`), `sitemap has ${path}`);
     assert.ok(redirects.includes(`${path} ${path}index.html 200`), `redirects serve ${path}`);
-    assert.ok(redirects.includes(`${path.replace(/\/$/, "")} ${path}index.html 200`), `redirects serve ${path} without a slash`);
+    assert.ok(redirects.includes(`${path.replace(/\/$/, "")} ${path} 301`), `redirects 301 ${path} without a slash to the canonical`);
     assert.ok(llms.includes(`(${SITE}${path})`), `llms.txt lists ${path}`);
   }
   assert.match(llms, /^## Glossary$/m);
