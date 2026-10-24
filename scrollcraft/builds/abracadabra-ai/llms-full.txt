@@ -2,7 +2,7 @@
 
 > We design, build and run AI-powered tools that fit your business, not the other way around.
 
-Full site text for answer engines. Generated 2026-10-23. Contact houdini@abra-ca-dabra.app.
+Full site text for answer engines. Generated 2026-10-24. Contact houdini@abra-ca-dabra.app.
 
 ## Index
 
@@ -12,6 +12,7 @@ Full site text for answer engines. Generated 2026-10-23. Contact houdini@abra-ca
 - [Portfolio](https://abra-ca-dabra.app/portfolio/): Named shipped systems.
 - [Products](https://abra-ca-dabra.app/products/): Schema, the LLM Leverage course and HQ.
 - [Blog](https://abra-ca-dabra.app/blog): Notes with named sources.
+- [Glossary](https://abra-ca-dabra.app/glossary/): Plain-English AI and search terms with sources.
 
 ## Overview
 
@@ -202,9 +203,113 @@ From near-zero to 398K search impressions and 46.5K AI-feature impressions in 90
 
 Also shipped, named when the client allows: clinical-style assessments (non-diagnostic; they educate and route, they do not diagnose), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, and the pirx.ca Search Console record dated above. The list is a sample of what shipped, not a ceiling on what the studio will take on.
 
+## Glossary
+
+Each definition was checked against primary sources on the date shown on its page.
+
+### Agentic AI
+
+Agentic AI is a broad label for AI systems that can work toward a goal with limited supervision. It usually means one or more AI agents that plan steps and use tools. Sometimes several agents work together.
+
+IBM defines agentic AI as a system that can reach a specific goal with limited supervision, made up of AI agents. In a system with many agents, each one handles part of the job and the work is coordinated. Google's glossary says agentic simply refers to the qualities agents have, such as autonomy.
+
+The label is used loosely. Anthropic uses agentic systems to cover both fixed workflows and true agents. Vendors often use agentic AI for a large program of many agents. On this site we use the plainer phrase AI that takes actions on its own, and we ask which single job it does and who can stop it.
+
+https://abra-ca-dabra.app/glossary/agentic-ai/
+
+### AI agent
+
+An AI agent is a program that uses an AI model to choose its own next step toward a goal, such as checking a calendar or drafting a text. It works inside limits that people set.
+
+The key word is choose. A normal program follows steps that someone wrote in advance. An agent looks at what it just found, then picks the next tool or action itself. Anthropic draws the line this way: in a workflow, the steps are set in code, and in an agent, the model directs its own process and its use of tools.
+
+Google's glossary puts it in similar terms: software that can reason about what a person asks, then plan and carry out actions for them. In practice, the people who set it up still decide which tools it may use, what it may never send, and who can stop it.
+
+https://abra-ca-dabra.app/glossary/ai-agent/
+
+### AI readiness
+
+AI readiness is how prepared a business is to put an AI tool to work and get value from it. It depends on the business more than the tool. That means its data, the way work gets done, its people and who makes decisions.
+
+A business can buy a strong tool and still get little from it. AWS makes the same point in its checklist for smaller firms: readiness is not just a technology choice. It covers your information, your workflows, your people and the rules for how AI is used and checked.
+
+On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to see where you stand.
+
+https://abra-ca-dabra.app/glossary/ai-readiness/
+
+### Answer engine optimization (AEO)
+
+Answer engine optimization (AEO) is the work of getting your pages used and cited when an AI tool answers a question directly. Google says it is still SEO.
+
+An answer engine replies with a written answer instead of only a list of links. AEO is the effort to be one of the sources that answer is built from, with a link back to your page.
+
+Google's guide groups AEO with GEO. It says both terms describe work aimed at being seen in AI search, and that for Google this work is ordinary SEO. It also warns that many AEO and GEO "hacks" sold online do not match how Google Search works.
+
+https://abra-ca-dabra.app/glossary/answer-engine-optimization/
+
+### Generative engine optimization (GEO)
+
+Generative engine optimization (GEO) is the work of shaping web pages so AI tools that write answers are more likely to show and cite them. Examples of these tools are Google's AI Overviews and Perplexity. Google says this work is still SEO.
+
+The name comes from a research paper that called AI answer tools generative engines. These tools search the web, read a few pages, and write one answer with links to their sources. GEO asks how a page can earn a place in that answer.
+
+Google's own guide says that, from its side, optimizing for these AI features is optimizing for search, so it is still SEO. A page must be indexed and allowed to show a snippet before Google's AI features can use it. The paper's authors tested changes such as adding sources, quotes and real numbers, and reported visibility gains of up to 40% in their test setup.
+
+https://abra-ca-dabra.app/glossary/generative-engine-optimization/
+
+### Gradient boosting
+
+Gradient boosting is a machine learning method that builds one strong model out of many weak ones. The weak ones are usually small decision trees. Each new tree learns from the errors the model still makes. It is added in a small step to shrink them.
+
+Google's course explains it with two kinds of model: a weak one, typically a small decision tree, and a strong one made of many weak ones added together. At each step a new weak model is trained to predict the current error, then added to the strong model to reduce it. When the weak models are decision trees, the result is called gradient boosted trees.
+
+A setting called shrinkage scales each new tree down before it is added. Google compares it to a learning rate: smaller steps learn more slowly but help stop the model from fitting noise. Training stops at a set limit, or when results on held back data stop improving.
+
+https://abra-ca-dabra.app/glossary/gradient-boosting/
+
+### Large language model (LLM)
+
+A large language model (LLM) is an AI model trained on a huge amount of text. It writes by predicting the next word, or part of a word, over and over. Google's Gemini and OpenAI's GPT models are examples.
+
+Google's course describes an LLM as a model that predicts a token or a run of tokens, where a token can be a word, part of a word, or a single character. Strung together, those guesses become sentences and whole answers. That is why an LLM can draft a reply, sum up a page or answer a question in plain language.
+
+Most chat tools you have heard of run on an LLM. The model does not look facts up by itself. Google's course notes that LLMs can make up wrong answers, which is why tools that cite their sources, and a person who checks the work, matter.
+
+https://abra-ca-dabra.app/glossary/large-language-model/
+
+### llms.txt
+
+llms.txt is a proposed file, written in Markdown, that gives AI tools a short summary of a website and links to its most useful pages. It usually sits at the site's root, at /llms.txt. Google Search says it does not use the file.
+
+Jeremy Howard published the proposal at llmstxt.org and updated it in August 2026. The file starts with the site's name and a one line summary, then lists links with short notes. AI tools are meant to read it when they need to learn about a site, then follow only the links they need.
+
+The newest version says the file can sit at the root or under a path, such as a docs folder, to cover just that part of the site. Google's guide says Google Search ignores llms.txt, so it neither helps nor hurts your Google rankings. Other tools may still read it.
+
+https://abra-ca-dabra.app/glossary/llms-txt/
+
+### Machine learning
+
+Machine learning is a way to build software that learns patterns from past data. It does not rely only on rules a person wrote. The trained model can then make predictions about new data, such as next month's orders.
+
+Google's glossary defines it as a program or system that trains a model from input data, so the model can make useful predictions from new data. It works best when the new data looks like the data it learned from. If the past is a poor guide to the future, the predictions will be poor too.
+
+Machine learning is a broad field. Large language models are one kind of machine learning model, built for text. Many business uses are smaller and plainer: a forecast of demand, a flag on a record that looks off, or an estimate with a range around it.
+
+https://abra-ca-dabra.app/glossary/machine-learning/
+
+### Schema markup and JSON-LD
+
+Schema markup is code added to a web page that labels what the page is about, such as an article, a product or a business. The labels come from a shared list called schema.org. JSON-LD is the format Google recommends for it. It is a block of code that machines read and visitors do not see.
+
+Google calls this structured data: a standard way to give clear clues about a page and sort its content. Most of it uses the schema.org vocabulary, which names types like Organization, Product and FAQPage and the facts each can carry.
+
+JSON-LD is a W3C standard for writing linked data as JSON. On a web page it sits in its own script block, apart from the text people read, which is why Google calls it the easiest format to set up and maintain. The rule that matters most: the markup must describe what is really on the page.
+
+https://abra-ca-dabra.app/glossary/schema-markup-json-ld/
+
 ## Blog posts
 
-Only posts with datePublished on or before 2026-10-23 are included.
+Only posts with datePublished on or before 2026-10-24 are included.
 
 ## AI Agents for Business: When to Use One
 

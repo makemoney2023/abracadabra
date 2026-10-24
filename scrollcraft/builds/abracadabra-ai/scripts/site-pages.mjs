@@ -33,6 +33,8 @@ import { HOME_WORK_HASPART_LINE, HOME_WORK_HTML, HOME_WORK_LD_IDS, HOME_WORK_LD_
 import { sfSitemapVideos, sfVideoNodes, superFunnelCaseBody } from "./super-funnel-case.mjs";
 import { writeHqAssets } from "./hq-assets.mjs";
 import { writeSchemaAssets } from "./schema-assets.mjs";
+import { glossarySitemapPaths, linkGlossaryMentions, renderGlossary } from "./glossary.mjs";
+import { publishedTerms, termPath } from "./glossary-data.mjs";
 
 export const SF_CSS = "/assets/sf-case.css?v=20261023b";
 export const HQ_CSS = "/assets/hq.css?v=20261023d";
@@ -1200,10 +1202,12 @@ function siteUrls() {
     "/start/",
     "/start/thanks/",
   ];
-  return paths.map((path) => {
+  const site = paths.map((path) => {
     const videos = path === "/portfolio/super-funnel/" ? `\n${sfSitemapVideos(SITE)}` : "";
     return `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${CHANGED_2026_10_23.has(path) ? HQ_MODIFIED : MODIFIED}</lastmod>${videos}\n  </url>`;
-  }).join("\n");
+  });
+  const glossary = glossarySitemapPaths().map(([path, lastmod]) => `  <url>\n    <loc>${SITE}${path}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`);
+  return [...site, ...glossary].join("\n");
 }
 
 function siteRedirects() {
@@ -1217,6 +1221,8 @@ function siteRedirects() {
     "/course/llm-leverage",
     "/start",
     "/start/thanks",
+    "/glossary",
+    ...publishedTerms().map((term) => termPath(term).replace(/\/$/, "")),
   ];
   const rewrites = paths.flatMap((path) => [
     `${path} ${path}/index.html 200`,
@@ -1472,6 +1478,8 @@ export async function buildSitePages() {
   await renderMissing();
   await patchHome();
   await patchFilms();
+  await renderGlossary({ SITE, ORG_ID, WEBSITE_ID, root, shell, writePage, orgNode, websiteNode, pageNode, esc, visibleCrumbs });
+  await linkGlossaryMentions(root);
   await patchSitemap();
   await patchRedirects();
   await patchLlms();

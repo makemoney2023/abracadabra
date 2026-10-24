@@ -1,0 +1,2242 @@
+{
+  "$comment": "Abracadabra glossary data. One entry per term. status: published (rendered at /glossary/<slug>/), backlog (unpublished, unverified draft), needs-client-approval (client-flagged, held back). To publish a term: fill short, explainer, sections, faqs, related, refs, match and verified, set status to published and batch to the batch number, then npm run build. Backlog is ordered High, then Med, then Low.",
+  "set": {
+    "name": "Abracadabra AI glossary",
+    "description": "Plain-English definitions of the AI, search and software terms used on abra-ca-dabra.app, each checked against primary sources."
+  },
+  "terms": [
+    {
+      "term": "AI agent",
+      "name": "AI agent",
+      "slug": "ai-agent",
+      "status": "published",
+      "batch": 1,
+      "order": 1,
+      "question": "What is an AI agent?",
+      "description": "An AI agent is a program that uses an AI model to pick its own next step toward a goal, inside limits people set. Plain-English definition, sources and FAQs.",
+      "category": "AI agents and automation",
+      "priority": "High",
+      "alternateName": [
+        "AI agents"
+      ],
+      "short": "An AI agent is a program that uses an AI model to choose its own next step toward a goal, such as checking a calendar or drafting a text. It works inside limits that people set.",
+      "explainer": [
+        "The key word is choose. A normal program follows steps that someone wrote in advance. An agent looks at what it just found, then picks the next tool or action itself. Anthropic draws the line this way: in a workflow, the steps are set in code, and in an agent, the model directs its own process and its use of tools.",
+        "Google's glossary puts it in similar terms: software that can reason about what a person asks, then plan and carry out actions for them. In practice, the people who set it up still decide which tools it may use, what it may never send, and who can stop it."
+      ],
+      "sections": [
+        {
+          "q": "How is an AI agent different from a workflow?",
+          "a": [
+            "A workflow repeats steps in an order you wrote down. An agent picks the order as it goes, based on what each step turns up. If you already know the steps, a workflow is often enough. Anthropic's own advice is to start with the simplest thing that works and add an agent only when the simple version falls short."
+          ]
+        },
+        {
+          "q": "Does an AI agent work without people?",
+          "a": [
+            "It can act on its own between checkpoints, but it should not run without limits. Anthropic suggests clear stopping rules and points where the agent can pause for a person. On this site we keep a named person who can check the work and stop a send."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is an AI agent in simple terms?",
+          "answer": "An AI agent is a program that uses an AI model to decide its own next step toward a goal, such as looking up a booking or drafting a reply. People set the limits it works inside."
+        },
+        {
+          "question": "Is a chatbot an AI agent?",
+          "answer": "Not always. A chatbot that only answers questions is not choosing actions. It becomes more like an agent when it can pick and use tools, such as a calendar or a search, to finish a task."
+        },
+        {
+          "question": "Do I need an AI agent or a workflow?",
+          "answer": "If you can write the steps down in order and they rarely change, a workflow is usually enough. An agent fits work where the next step depends on what the last step found."
+        }
+      ],
+      "related": [
+        "agentic-ai",
+        "large-language-model",
+        "machine-learning"
+      ],
+      "sources": [
+        "/blog/what-is-an-ai-agent",
+        "/blog/ai-agents-vs-agentic-ai",
+        "/blog/ai-agents-for-business",
+        "/blog/ai-automation-agency-vs-consultant",
+        "/blog/ai-consultant-for-small-business",
+        "/blog/ai-implementation-framework",
+        "/blog/ai-readiness-assessment",
+        "/blog/business-process-automation-ai",
+        "/blog/why-ai-pilots-stall",
+        "/products/hq/"
+      ],
+      "refs": [
+        {
+          "title": "Building effective agents",
+          "publisher": "Anthropic",
+          "url": "https://www.anthropic.com/research/building-effective-agents",
+          "date": "2024-12-19"
+        },
+        {
+          "title": "Machine Learning Glossary",
+          "publisher": "Google for Developers",
+          "url": "https://developers.google.com/machine-learning/glossary"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "AI agent",
+        "AI agents"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "A program that looks at what it just found and then picks its own next step, such as checking a calendar or sending a text.",
+      "changes": "Added that an agent uses an AI model and works toward a goal inside limits people set. The draft alone would also fit a plain rule-based script."
+    },
+    {
+      "term": "Generative engine optimization (GEO)",
+      "name": "Generative engine optimization",
+      "slug": "generative-engine-optimization",
+      "status": "published",
+      "batch": 1,
+      "order": 2,
+      "question": "What is generative engine optimization?",
+      "description": "Generative engine optimization (GEO) means shaping pages so AI answer tools show and cite them. What it is, what Google says, and the research behind it.",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "alternateName": [
+        "GEO"
+      ],
+      "short": "Generative engine optimization (GEO) is the work of shaping web pages so AI tools that write answers are more likely to show and cite them. Examples of these tools are Google's AI Overviews and Perplexity. Google says this work is still SEO.",
+      "explainer": [
+        "The name comes from a research paper that called AI answer tools generative engines. These tools search the web, read a few pages, and write one answer with links to their sources. GEO asks how a page can earn a place in that answer.",
+        "Google's own guide says that, from its side, optimizing for these AI features is optimizing for search, so it is still SEO. A page must be indexed and allowed to show a snippet before Google's AI features can use it. The paper's authors tested changes such as adding sources, quotes and real numbers, and reported visibility gains of up to 40% in their test setup."
+      ],
+      "sections": [
+        {
+          "q": "Is GEO different from SEO?",
+          "a": [
+            "Google says no, at least for Google Search. Its guide calls the AI features part of search and says the usual SEO advice still applies. Other AI tools may work in other ways, so the safe plan is one good page that serves both a list of links and a written answer."
+          ]
+        },
+        {
+          "q": "What does GEO work look like on a page?",
+          "a": [
+            "It looks like good search work: a clear answer near the top, headings that match real questions, named sources, and facts a reader can check. Google lists files like llms.txt and splitting pages into small chunks as things you do not need for Google Search."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What does GEO stand for?",
+          "answer": "GEO stands for generative engine optimization. It means shaping pages so AI tools that write answers are more likely to use and cite them."
+        },
+        {
+          "question": "Does Google treat GEO as separate from SEO?",
+          "answer": "No. Google's guide says optimizing for its generative AI features is still SEO, and that the usual SEO best practices still apply."
+        },
+        {
+          "question": "Where did the term GEO come from?",
+          "answer": "It was named in a research paper by Aggarwal and others, presented at the KDD conference. The paper measured how often a source shows up in answers written by AI search tools."
+        }
+      ],
+      "related": [
+        "answer-engine-optimization",
+        "llms-txt",
+        "schema-markup-json-ld",
+        "large-language-model"
+      ],
+      "sources": [
+        "/blog/generative-engine-optimization-vs-seo",
+        "/blog/answer-engine-optimization"
+      ],
+      "refs": [
+        {
+          "title": "GEO: Generative Engine Optimization",
+          "publisher": "Aggarwal et al., KDD 2024 (arXiv)",
+          "url": "https://arxiv.org/abs/2311.09735",
+          "date": "2024-08-25"
+        },
+        {
+          "title": "Optimizing your website for generative AI features on Google Search",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
+          "date": "2026-05-15"
+        }
+      ],
+      "figures": [
+        "40%"
+      ],
+      "match": [
+        "generative engine optimization",
+        "GEO"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "Shaping pages so AI tools that write answers can quote and credit them. It builds on SEO instead of replacing it.",
+      "changes": "Kept the meaning. Replaced 'builds on SEO instead of replacing it' with what Google actually says (it is still SEO), and named example tools from the sources."
+    },
+    {
+      "term": "Answer engine optimization (AEO)",
+      "name": "Answer engine optimization",
+      "slug": "answer-engine-optimization",
+      "status": "published",
+      "batch": 1,
+      "order": 3,
+      "question": "What is answer engine optimization (AEO)?",
+      "description": "Answer engine optimization (AEO) is getting your pages used and cited in AI answers. A plain definition, how it relates to GEO, and what Google says.",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "alternateName": [
+        "AEO"
+      ],
+      "short": "Answer engine optimization (AEO) is the work of getting your pages used and cited when an AI tool answers a question directly. Google says it is still SEO.",
+      "explainer": [
+        "An answer engine replies with a written answer instead of only a list of links. AEO is the effort to be one of the sources that answer is built from, with a link back to your page.",
+        "Google's guide groups AEO with GEO. It says both terms describe work aimed at being seen in AI search, and that for Google this work is ordinary SEO. It also warns that many AEO and GEO \"hacks\" sold online do not match how Google Search works."
+      ],
+      "sections": [
+        {
+          "q": "How is AEO different from GEO?",
+          "a": [
+            "In everyday use they mean almost the same thing. Google treats both as names for the same goal: being visible in AI search. We use AEO, GEO and SEO as one practice on this site."
+          ]
+        },
+        {
+          "q": "What helps a page get cited in an AI answer?",
+          "a": [
+            "Google's advice is the same as for search: useful, original content, a clear structure, and a page Google can crawl and index with a snippet. A citation is not the same as a click, so it helps to measure both."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What does AEO stand for?",
+          "answer": "AEO stands for answer engine optimization. It is the work of getting your pages used and cited when an AI tool writes an answer."
+        },
+        {
+          "question": "Is AEO the same as SEO?",
+          "answer": "For Google Search, yes. Google says AEO and GEO are still SEO and that the usual best practices apply to its AI features."
+        },
+        {
+          "question": "Do I need a special file or markup for AEO?",
+          "answer": "Not for Google. Google says you do not need new AI text files, special markup or chopped up pages to appear in its AI features."
+        }
+      ],
+      "related": [
+        "generative-engine-optimization",
+        "llms-txt",
+        "schema-markup-json-ld"
+      ],
+      "sources": [
+        "/blog/answer-engine-optimization"
+      ],
+      "refs": [
+        {
+          "title": "Optimizing your website for generative AI features on Google Search",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
+          "date": "2026-05-15"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "answer engine optimization",
+        "AEO"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "The work of getting your page cited when an AI tool writes an answer. Google still treats it as ordinary search work.",
+      "changes": "Draft was accurate. Tightened it and tied the 'still SEO' line to Google's May 2026 guide by name."
+    },
+    {
+      "term": "Large language model (LLM)",
+      "name": "Large language model",
+      "slug": "large-language-model",
+      "status": "published",
+      "batch": 1,
+      "order": 4,
+      "question": "What is a large language model (LLM)?",
+      "description": "A large language model (LLM) is an AI model trained on huge amounts of text that writes by predicting the next word. Plain definition, examples and limits.",
+      "category": "AI and machine learning",
+      "priority": "High",
+      "alternateName": [
+        "LLM",
+        "LLMs",
+        "large language models"
+      ],
+      "short": "A large language model (LLM) is an AI model trained on a huge amount of text. It writes by predicting the next word, or part of a word, over and over. Google's Gemini and OpenAI's GPT models are examples.",
+      "explainer": [
+        "Google's course describes an LLM as a model that predicts a token or a run of tokens, where a token can be a word, part of a word, or a single character. Strung together, those guesses become sentences and whole answers. That is why an LLM can draft a reply, sum up a page or answer a question in plain language.",
+        "Most chat tools you have heard of run on an LLM. The model does not look facts up by itself. Google's course notes that LLMs can make up wrong answers, which is why tools that cite their sources, and a person who checks the work, matter."
+      ],
+      "sections": [
+        {
+          "q": "How does a large language model write?",
+          "a": [
+            "It predicts what comes next, one small piece at a time. Google's course calls LLMs autocomplete that can predict thousands of tokens in a row. Training on a huge amount of text teaches it which words tend to follow which."
+          ]
+        },
+        {
+          "q": "Can a large language model be wrong?",
+          "a": [
+            "Yes. Google lists made up answers, high computing cost and bias among the known problems with LLMs. Grounding the model in real sources and having a person review the output lowers the risk."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What does LLM stand for?",
+          "answer": "LLM stands for large language model. It is an AI model trained on a huge amount of text so it can read and write language."
+        },
+        {
+          "question": "Is ChatGPT a large language model?",
+          "answer": "ChatGPT is a chat product built on OpenAI's GPT models, and those models are large language models. Google's glossary names GPT and Gemini as examples."
+        },
+        {
+          "question": "Why do large language models make mistakes?",
+          "answer": "An LLM writes by predicting likely words, not by checking facts. Google's course says LLMs can hallucinate, which means their answers can contain mistakes."
+        }
+      ],
+      "related": [
+        "ai-agent",
+        "machine-learning",
+        "generative-engine-optimization",
+        "llms-txt"
+      ],
+      "sources": [
+        "/blog/what-is-an-ai-agent"
+      ],
+      "refs": [
+        {
+          "title": "LLMs: What's a large language model?",
+          "publisher": "Google Machine Learning Crash Course",
+          "url": "https://developers.google.com/machine-learning/crash-course/llm/transformers"
+        },
+        {
+          "title": "Machine Learning Glossary",
+          "publisher": "Google for Developers",
+          "url": "https://developers.google.com/machine-learning/glossary"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "large language model",
+        "large language models",
+        "LLM",
+        "LLMs"
+      ],
+      "notMatch": [
+        "^LLM Leverage",
+        "^LLMs? ?\\.txt"
+      ],
+      "verified": "2026-10-24",
+      "draft": "An AI model trained on a huge amount of text so it can read and write language. Tools like ChatGPT and Claude run on LLMs.",
+      "changes": "Added how an LLM works (predicting the next token). Swapped the examples to Gemini and GPT, which the primary source names; the draft's ChatGPT and Claude are products, not model names."
+    },
+    {
+      "term": "llms.txt",
+      "name": "llms.txt",
+      "slug": "llms-txt",
+      "status": "published",
+      "batch": 1,
+      "order": 5,
+      "question": "What is llms.txt?",
+      "description": "llms.txt is a proposed Markdown file that gives AI tools a site summary and key links. What goes in it, where it lives, and why Google Search ignores it.",
+      "category": "Web, schema and crawling",
+      "priority": "High",
+      "alternateName": [
+        "/llms.txt"
+      ],
+      "short": "llms.txt is a proposed file, written in Markdown, that gives AI tools a short summary of a website and links to its most useful pages. It usually sits at the site's root, at /llms.txt. Google Search says it does not use the file.",
+      "explainer": [
+        "Jeremy Howard published the proposal at llmstxt.org and updated it in August 2026. The file starts with the site's name and a one line summary, then lists links with short notes. AI tools are meant to read it when they need to learn about a site, then follow only the links they need.",
+        "The newest version says the file can sit at the root or under a path, such as a docs folder, to cover just that part of the site. Google's guide says Google Search ignores llms.txt, so it neither helps nor hurts your Google rankings. Other tools may still read it."
+      ],
+      "sections": [
+        {
+          "q": "Does Google use llms.txt?",
+          "a": [
+            "No. Google says you do not need AI text files like llms.txt to appear in Google Search or its AI features, because Google Search does not use them. It also says it is fine to keep one for other services that do."
+          ]
+        },
+        {
+          "q": "What goes in an llms.txt file?",
+          "a": [
+            "The proposal asks for a title line, a short summary, and then lists of links, each with an optional note. An Optional section can hold links a tool may skip. This site has its own file at /llms.txt."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is llms.txt used for?",
+          "answer": "It gives AI tools a short, clean guide to a website: a summary plus links to the pages that matter most, so a tool can find what it needs without reading every page."
+        },
+        {
+          "question": "Does llms.txt help my Google ranking?",
+          "answer": "No. Google says Google Search ignores llms.txt, so the file will neither help nor harm your visibility or rankings in Google."
+        },
+        {
+          "question": "Is llms.txt the same as robots.txt?",
+          "answer": "No. robots.txt tells crawlers which pages they may visit. llms.txt is a guide that points AI tools to useful pages when they need information."
+        }
+      ],
+      "related": [
+        "generative-engine-optimization",
+        "answer-engine-optimization",
+        "large-language-model",
+        "schema-markup-json-ld"
+      ],
+      "sources": [
+        "/blog/what-is-llms-txt",
+        "/blog/generative-engine-optimization-vs-seo",
+        "/blog/answer-engine-optimization",
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt"
+      ],
+      "refs": [
+        {
+          "title": "The /llms.txt file, v2",
+          "publisher": "llmstxt.org (Jeremy Howard)",
+          "url": "https://llmstxt.org/",
+          "date": "2026-08-10"
+        },
+        {
+          "title": "Optimizing your website for generative AI features on Google Search",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
+          "date": "2026-05-15"
+        }
+      ],
+      "figures": [
+        "2026"
+      ],
+      "match": [
+        "llms.txt"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "A proposed plain text file at the top of a site that lists the pages an AI model should read. Google says it does not use it.",
+      "changes": "Corrected 'plain text file' to a Markdown file, and 'at the top of a site' to the root or any path (llmstxt.org v2). Added that it carries a summary as well as links. Scoped the Google line to Google Search."
+    },
+    {
+      "term": "AI readiness",
+      "name": "AI readiness",
+      "slug": "ai-readiness",
+      "status": "published",
+      "batch": 1,
+      "order": 6,
+      "question": "What is AI readiness?",
+      "description": "AI readiness is how prepared a business is to put an AI tool to work: its data, processes, people and decisions. A plain definition and how to check it.",
+      "category": "AI readiness and strategy",
+      "priority": "High",
+      "alternateName": [],
+      "short": "AI readiness is how prepared a business is to put an AI tool to work and get value from it. It depends on the business more than the tool. That means its data, the way work gets done, its people and who makes decisions.",
+      "explainer": [
+        "A business can buy a strong tool and still get little from it. AWS makes the same point in its checklist for smaller firms: readiness is not just a technology choice. It covers your information, your workflows, your people and the rules for how AI is used and checked.",
+        "On this site we score readiness in four parts: data, process, people and the decision. The goal is to find the one weak spot to fix first, before anyone pays for a tool. Our Readiness Check is one way to see where you stand."
+      ],
+      "sections": [
+        {
+          "q": "What makes a business ready for AI?",
+          "a": [
+            "The facts a job needs are in one place a system can read, the steps are written down, someone has time to check the output, and one person owns the decision. AWS's checklist names the same areas: data, workflows, people and governance."
+          ]
+        },
+        {
+          "q": "How do you measure AI readiness?",
+          "a": [
+            "With an assessment that scores each area, so the gap is plain. AWS describes an AI readiness assessment as a structured look at data, technology, processes and people. Our Readiness Check gives a band and a few next steps."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is AI readiness in simple terms?",
+          "answer": "AI readiness is how prepared a business is to use an AI tool well. It depends on its data, its processes, its people and who owns the decision, more than on the tool itself."
+        },
+        {
+          "question": "Why does AI readiness matter before buying a tool?",
+          "answer": "A tool cannot fix scattered data or steps nobody wrote down. Checking readiness first shows what to fix so the tool has a real job to do."
+        },
+        {
+          "question": "How can I check my AI readiness?",
+          "answer": "Use an assessment that scores data, process, people and decisions. The Abracadabra Readiness Check takes five to seven minutes and gives you a band and suggestions."
+        }
+      ],
+      "related": [
+        "machine-learning",
+        "ai-agent",
+        "agentic-ai"
+      ],
+      "sources": [
+        "/blog/ai-readiness-assessment",
+        "/blog/ai-readiness-assessment-questionnaire",
+        "/blog/ai-readiness-framework"
+      ],
+      "refs": [
+        {
+          "title": "AI readiness checklist for SMBs: A practical starting point",
+          "publisher": "AWS",
+          "url": "https://aws.amazon.com/smart-business/resources-for-smb/ai-readiness-checklist/",
+          "date": "2025-09-01"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "AI readiness"
+      ],
+      "notMatch": [
+        "^AI readiness (check|index)"
+      ],
+      "verified": "2026-10-24",
+      "draft": "How ready a business is to put AI to work: whether its data, process, people and decisions can carry a tool.",
+      "changes": "Kept the meaning. Removed the colon list, added 'get value from it', and tied the four parts to AWS's data, workflows, people and governance."
+    },
+    {
+      "term": "Machine learning",
+      "name": "Machine learning",
+      "slug": "machine-learning",
+      "status": "published",
+      "batch": 1,
+      "order": 7,
+      "question": "What is machine learning?",
+      "description": "Machine learning is software that learns patterns from past data and predicts on new data. A plain-English definition with Google's wording and examples.",
+      "category": "AI and machine learning",
+      "priority": "High",
+      "alternateName": [
+        "ML"
+      ],
+      "short": "Machine learning is a way to build software that learns patterns from past data. It does not rely only on rules a person wrote. The trained model can then make predictions about new data, such as next month's orders.",
+      "explainer": [
+        "Google's glossary defines it as a program or system that trains a model from input data, so the model can make useful predictions from new data. It works best when the new data looks like the data it learned from. If the past is a poor guide to the future, the predictions will be poor too.",
+        "Machine learning is a broad field. Large language models are one kind of machine learning model, built for text. Many business uses are smaller and plainer: a forecast of demand, a flag on a record that looks off, or an estimate with a range around it."
+      ],
+      "sections": [
+        {
+          "q": "How does machine learning work?",
+          "a": [
+            "You give it many past examples, and training adjusts a model until its guesses match those examples well. Then you use the trained model on new cases. Testing it on data it has not seen tells you if it really learned the pattern."
+          ]
+        },
+        {
+          "q": "When is machine learning worth it for a business?",
+          "a": [
+            "When you have enough history to learn from and a question you ask often, such as how much stock to order. If simple rules already do the job, keep the rules. We only switch to a learned model when it beats them in testing."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is machine learning in simple terms?",
+          "answer": "Machine learning is software that learns patterns from past data, then uses what it learned to make predictions about new data."
+        },
+        {
+          "question": "Is machine learning the same as AI?",
+          "answer": "Machine learning is one part of AI. It covers systems that learn from data, including the large language models behind many chat tools."
+        },
+        {
+          "question": "How much data does machine learning need?",
+          "answer": "There is no single number. It needs enough past examples that look like the cases you will predict, and you test it on data it has not seen to check it learned."
+        }
+      ],
+      "related": [
+        "gradient-boosting",
+        "large-language-model",
+        "ai-readiness"
+      ],
+      "sources": [
+        "/services/machine-learning/",
+        "/portfolio/pirx/",
+        "/"
+      ],
+      "refs": [
+        {
+          "title": "Machine Learning Glossary",
+          "publisher": "Google for Developers",
+          "url": "https://developers.google.com/machine-learning/glossary"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "machine learning"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "Software that learns patterns from past records instead of only following hand-written rules. It can then estimate something new, like a likely race time or next month's orders.",
+      "changes": "Added that the trained model predicts on new data like its training data (Google's definition). Dropped the race time example, which belongs to client PIRX copy."
+    },
+    {
+      "term": "Gradient boosting",
+      "name": "Gradient boosting",
+      "slug": "gradient-boosting",
+      "status": "published",
+      "batch": 1,
+      "order": 8,
+      "question": "What is gradient boosting?",
+      "description": "Gradient boosting builds one strong model from many small decision trees, each one learning from the errors left. A plain definition, sourced to Google.",
+      "category": "AI and machine learning",
+      "priority": "High",
+      "alternateName": [
+        "gradient boosted trees",
+        "gradient boosted decision trees"
+      ],
+      "short": "Gradient boosting is a machine learning method that builds one strong model out of many weak ones. The weak ones are usually small decision trees. Each new tree learns from the errors the model still makes. It is added in a small step to shrink them.",
+      "explainer": [
+        "Google's course explains it with two kinds of model: a weak one, typically a small decision tree, and a strong one made of many weak ones added together. At each step a new weak model is trained to predict the current error, then added to the strong model to reduce it. When the weak models are decision trees, the result is called gradient boosted trees.",
+        "A setting called shrinkage scales each new tree down before it is added. Google compares it to a learning rate: smaller steps learn more slowly but help stop the model from fitting noise. Training stops at a set limit, or when results on held back data stop improving."
+      ],
+      "sections": [
+        {
+          "q": "Why use gradient boosting?",
+          "a": [
+            "Google's course says decision forests, the family gradient boosted trees belong to, work well on table data, such as rows of past orders with a number to predict. Each new tree only has to fix what the model before it got wrong, so the model improves step by step."
+          ]
+        },
+        {
+          "q": "Can gradient boosting overfit?",
+          "a": [
+            "Yes. Google notes that the strong model can begin to overfit, meaning it fits the training data too closely. Shrinkage and stopping when results on a separate check set get worse help prevent that."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is gradient boosting in simple terms?",
+          "answer": "Gradient boosting builds a model from many small decision trees, one after another. Each new tree learns from the mistakes the model still makes."
+        },
+        {
+          "question": "What are gradient boosted trees?",
+          "answer": "Gradient boosted trees are gradient boosting with decision trees as the weak models. Google's course uses this name for the most common form of the method."
+        },
+        {
+          "question": "Is gradient boosting a kind of machine learning?",
+          "answer": "Yes. It is a machine learning method that combines many weak models, usually small decision trees, into one stronger model."
+        }
+      ],
+      "related": [
+        "machine-learning"
+      ],
+      "sources": [
+        "/services/machine-learning/",
+        "/portfolio/pirx/"
+      ],
+      "refs": [
+        {
+          "title": "Gradient Boosted Decision Trees",
+          "publisher": "Google for Developers, Decision Forests course",
+          "url": "https://developers.google.com/machine-learning/decision-forests/intro-to-gbdt"
+        },
+        {
+          "title": "Decision Forests: Introduction",
+          "publisher": "Google for Developers, Decision Forests course",
+          "url": "https://developers.google.com/machine-learning/decision-forests"
+        },
+        {
+          "title": "Machine Learning Glossary",
+          "publisher": "Google for Developers",
+          "url": "https://developers.google.com/machine-learning/glossary"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "gradient boosting",
+        "gradient-boosted",
+        "gradient boosted"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "A machine learning method that builds many small decision trees one after another. Each new tree fixes some of the mistakes the earlier trees made.",
+      "changes": "Draft was close. Made clear that each new tree is trained on the remaining error and added in a small step, and that the weak models are usually, not always, trees."
+    },
+    {
+      "term": "Schema markup and JSON-LD",
+      "name": "Schema markup and JSON-LD",
+      "slug": "schema-markup-json-ld",
+      "status": "published",
+      "batch": 1,
+      "order": 9,
+      "question": "What are schema markup and JSON-LD?",
+      "description": "Schema markup labels what a page is about using schema.org; JSON-LD is the format Google recommends for it. Plain definitions, sources and FAQs.",
+      "category": "Web, schema and crawling",
+      "priority": "High",
+      "alternateName": [
+        "schema markup",
+        "structured data",
+        "JSON-LD"
+      ],
+      "short": "Schema markup is code added to a web page that labels what the page is about, such as an article, a product or a business. The labels come from a shared list called schema.org. JSON-LD is the format Google recommends for it. It is a block of code that machines read and visitors do not see.",
+      "explainer": [
+        "Google calls this structured data: a standard way to give clear clues about a page and sort its content. Most of it uses the schema.org vocabulary, which names types like Organization, Product and FAQPage and the facts each can carry.",
+        "JSON-LD is a W3C standard for writing linked data as JSON. On a web page it sits in its own script block, apart from the text people read, which is why Google calls it the easiest format to set up and maintain. The rule that matters most: the markup must describe what is really on the page."
+      ],
+      "sections": [
+        {
+          "q": "Does schema markup help with AI search?",
+          "a": [
+            "Google says structured data is not required for its generative AI features, and there is no special markup for them. It still recommends structured data as part of normal SEO, because it can make a page eligible for rich results."
+          ]
+        },
+        {
+          "q": "What is the difference between schema markup and JSON-LD?",
+          "a": [
+            "Schema markup is what you say about the page, using schema.org types and properties. JSON-LD is one way to write it down. Microdata and RDFa are the other two formats Google supports."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What is schema markup in simple terms?",
+          "answer": "Schema markup is code that tells search engines what a page is about. It might label an article, a product or a set of questions. The labels come from schema.org."
+        },
+        {
+          "question": "Why does Google recommend JSON-LD?",
+          "answer": "Google says JSON-LD is the easiest format for site owners to set up and keep up at scale. It sits in its own block, so it is not mixed into the text people read."
+        },
+        {
+          "question": "Can schema markup include things not shown on the page?",
+          "answer": "It should not. Google says not to add structured data about information that visitors cannot see, even if it is accurate."
+        }
+      ],
+      "related": [
+        "generative-engine-optimization",
+        "answer-engine-optimization",
+        "llms-txt"
+      ],
+      "sources": [
+        "/blog/ai-ready-data"
+      ],
+      "refs": [
+        {
+          "title": "Introduction to structured data markup in Google Search",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data"
+        },
+        {
+          "title": "Schema.org",
+          "publisher": "Schema.org",
+          "url": "https://schema.org/"
+        },
+        {
+          "title": "JSON-LD 1.1",
+          "publisher": "W3C Recommendation",
+          "url": "https://www.w3.org/TR/json-ld11/",
+          "date": "2020-07-16"
+        },
+        {
+          "title": "Optimizing your website for generative AI features on Google Search",
+          "publisher": "Google Search Central",
+          "url": "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
+          "date": "2026-05-15"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "schema markup",
+        "structured data",
+        "JSON-LD"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "Labels in a page's code that tell search engines what the page is, such as an article, a product or a set of questions. People do not see them. / The format most sites use to add schema markup: a small block of code in the page that machines read and visitors never see.",
+      "changes": "Merged two draft rows. Replaced the unsourced 'the format most sites use' with 'the format Google recommends'. Added the schema.org vocabulary and Google's rule that markup must match what visitors can see.",
+      "merges": [
+        "Schema markup (structured data)",
+        "JSON-LD"
+      ]
+    },
+    {
+      "term": "Agentic AI",
+      "name": "Agentic AI",
+      "slug": "agentic-ai",
+      "status": "published",
+      "batch": 1,
+      "order": 10,
+      "question": "What is agentic AI?",
+      "description": "Agentic AI is a broad label for AI that works toward a goal with limited supervision, often through AI agents. How it differs from an AI agent.",
+      "category": "AI agents and automation",
+      "priority": "High",
+      "alternateName": [],
+      "short": "Agentic AI is a broad label for AI systems that can work toward a goal with limited supervision. It usually means one or more AI agents that plan steps and use tools. Sometimes several agents work together.",
+      "explainer": [
+        "IBM defines agentic AI as a system that can reach a specific goal with limited supervision, made up of AI agents. In a system with many agents, each one handles part of the job and the work is coordinated. Google's glossary says agentic simply refers to the qualities agents have, such as autonomy.",
+        "The label is used loosely. Anthropic uses agentic systems to cover both fixed workflows and true agents. Vendors often use agentic AI for a large program of many agents. On this site we use the plainer phrase AI that takes actions on its own, and we ask which single job it does and who can stop it."
+      ],
+      "sections": [
+        {
+          "q": "What is the difference between AI agents and agentic AI?",
+          "a": [
+            "An AI agent is one system that picks its own next step. Agentic AI is the wider label for AI that acts with limited supervision, which can mean one agent or many working together. Buy for the job, not the label."
+          ]
+        },
+        {
+          "q": "Is agentic AI the same as generative AI?",
+          "a": [
+            "No. IBM explains that generative AI makes content, such as text or images, while agentic AI uses that output to reach a goal, for example by calling outside tools to finish a task."
+          ]
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What does agentic AI mean?",
+          "answer": "Agentic AI means AI systems that can work toward a goal with limited supervision, usually through one or more AI agents that plan steps and use tools."
+        },
+        {
+          "question": "Is agentic AI the same as an AI agent?",
+          "answer": "Not quite. An AI agent is a single system. Agentic AI is the broader label for AI that acts on its own, often built from several agents."
+        },
+        {
+          "question": "Does agentic AI need human oversight?",
+          "answer": "Yes. Its ability to act on its own is the point and the risk. Clear goals, limits and a person who can review or stop the work keep it on track."
+        }
+      ],
+      "related": [
+        "ai-agent",
+        "large-language-model",
+        "ai-readiness"
+      ],
+      "sources": [
+        "/blog/ai-agents-vs-agentic-ai"
+      ],
+      "refs": [
+        {
+          "title": "What is agentic AI?",
+          "publisher": "IBM",
+          "url": "https://www.ibm.com/think/topics/agentic-ai"
+        },
+        {
+          "title": "Building effective agents",
+          "publisher": "Anthropic",
+          "url": "https://www.anthropic.com/research/building-effective-agents",
+          "date": "2024-12-19"
+        },
+        {
+          "title": "Machine Learning Glossary",
+          "publisher": "Google for Developers",
+          "url": "https://developers.google.com/machine-learning/glossary"
+        }
+      ],
+      "figures": [],
+      "match": [
+        "agentic AI",
+        "AI that takes actions on its own"
+      ],
+      "notMatch": [],
+      "verified": "2026-10-24",
+      "draft": "A wider label for AI systems that take actions on their own, often spread across a whole company.",
+      "changes": "Added 'limited supervision' and the link to AI agents (IBM). Dropped 'spread across a whole company' as part of the definition; it describes how vendors use the label, so it moved to the explainer."
+    },
+    {
+      "term": "Readiness Check",
+      "slug": "readiness-check",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "Abracadabra's five-to-seven-minute questionnaire. It scores data, process, people and the decision, gives a band and tips, and offers a thirty-minute working session.",
+      "mentions": 41,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/blog/ai-readiness-assessment",
+        "/products/hq/",
+        "/blog/ai-readiness-checklist",
+        "/blog/ai-for-small-business-2027"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI citation",
+      "slug": "ai-citation",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "When an AI answer names your page as a source and links to it. A citation is not the same as a click.",
+      "mentions": 30,
+      "sources": [
+        "/blog/answer-engine-optimization",
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
+        "/blog/ai-readiness-checklist",
+        "/blog/ai-ready-data",
+        "/services/search-grounded-research/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Business process automation (BPA)",
+      "slug": "business-process-automation",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "Using software to run the repeated steps of a business job, like moving form answers into a report.",
+      "mentions": 16,
+      "sources": [
+        "/blog/ai-automation-for-small-business",
+        "/blog/business-process-automation-ai",
+        "/blog/how-can-ai-help-small-businesses",
+        "/blog/how-to-use-ai-in-your-business",
+        "/blog/ai-automation-agency-vs-consultant"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Custom software",
+      "slug": "custom-software",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "Software built around how one business works, for a job no ready-made product covers.",
+      "mentions": 16,
+      "sources": [
+        "/blog/off-the-shelf-ai-or-custom-software",
+        "/blog/why-we-build-on-cloudflare",
+        "/",
+        "/blog/how-client-work-flows-through-hq",
+        "/portfolio/pirx/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI visibility (AI search visibility)",
+      "slug": "ai-visibility",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "How easily AI search tools can find, trust and quote your site.",
+      "mentions": 15,
+      "sources": [
+        "/",
+        "/blog/why-we-build-on-cloudflare",
+        "/portfolio/pirx/",
+        "/products/schema/",
+        "/blog/answer-engine-optimization"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Generative AI",
+      "slug": "generative-ai",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "AI that makes new content, such as text, images, audio or video, from a request.",
+      "mentions": 11,
+      "sources": [
+        "/blog/how-can-ai-help-small-businesses",
+        "/blog/ai-for-small-business-2027",
+        "/blog/off-the-shelf-ai-or-custom-software",
+        "/blog/ai-strategy-for-small-business",
+        "/blog/ai-automation-agency-vs-consultant"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Workflow",
+      "slug": "workflow",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "A set of steps written in advance and done in the same order every time. Unlike an agent, it does not choose its own path.",
+      "mentions": 9,
+      "sources": [
+        "/blog/what-is-an-ai-agent",
+        "/blog/ai-agents-vs-agentic-ai",
+        "/blog/ai-agents-for-business",
+        "/blog/how-can-ai-help-small-businesses",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Answer engine",
+      "slug": "answer-engine",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "A tool that replies with a written answer instead of a list of links, such as ChatGPT search, Perplexity or Google AI Overviews.",
+      "mentions": 8,
+      "sources": [
+        "/blog/answer-engine-optimization",
+        "/services/ai-visibility/",
+        "/blog/generative-engine-optimization-vs-seo",
+        "/portfolio/pirx/",
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Crawler (bot)",
+      "slug": "crawler",
+      "status": "backlog",
+      "category": "Web, schema and crawling",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "A program that visits web pages and reads them for a search engine or an AI company. Search crawlers and training crawlers are separate switches.",
+      "mentions": 6,
+      "sources": [
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
+        "/services/ai-visibility/",
+        "/blog/why-we-build-on-cloudflare",
+        "/blog/what-is-llms-txt",
+        "/blog/answer-engine-optimization"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "HQ",
+      "slug": "hq",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "Abracadabra's client workspace. Each request becomes a card, digital workers do the work, Client Services reviews it, and you approve it before anything goes out.",
+      "mentions": 5,
+      "sources": [
+        "/blog/how-client-work-flows-through-hq",
+        "/products/hq/",
+        "/blog/why-we-build-on-cloudflare",
+        "/",
+        "/products/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Search engine optimization (SEO)",
+      "slug": "search-engine-optimization",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "The work of making pages easy for search engines like Google and Bing to find, understand and rank.",
+      "mentions": 5,
+      "sources": [
+        "/blog/generative-engine-optimization-vs-seo",
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
+        "/blog/answer-engine-optimization",
+        "/services/ai-visibility/",
+        "/blog/ai-consultant-for-small-business"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI pilot",
+      "slug": "ai-pilot",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "A small trial of an AI tool on one job before it is rolled out more widely. Many pilots stall at the handoff to daily work.",
+      "mentions": 4,
+      "sources": [
+        "/blog/why-ai-pilots-stall",
+        "/blog/is-my-business-ready-for-ai",
+        "/blog/business-process-automation-ai",
+        "/blog/ai-readiness-framework"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Search impressions",
+      "slug": "search-impressions",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "The number of times a page showed up in someone's search results, whether or not they clicked.",
+      "mentions": 4,
+      "sources": [
+        "/portfolio/pirx/",
+        "/",
+        "/services/ai-visibility/",
+        "/portfolio/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI implementation framework",
+      "slug": "ai-implementation-framework",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "The order of work you follow to roll out AI once the job already has a name.",
+      "mentions": 3,
+      "sources": [
+        "/blog/ai-implementation-framework",
+        "/blog/ai-strategy-for-small-business",
+        "/blog/why-ai-pilots-stall"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI readiness framework",
+      "slug": "ai-readiness-framework",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "A way to score the business, not the tool, before you buy anything.",
+      "mentions": 3,
+      "sources": [
+        "/blog/ai-readiness-framework",
+        "/blog/ai-strategy-for-small-business",
+        "/blog/ai-implementation-framework"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI-ready data",
+      "slug": "ai-ready-data",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "One current source of the facts a job needs, kept where a system can read it.",
+      "mentions": 3,
+      "sources": [
+        "/blog/ai-ready-data",
+        "/blog/ai-readiness-framework",
+        "/blog/ai-readiness-checklist"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Model Context Protocol (MCP)",
+      "slug": "model-context-protocol",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "An open standard that lets an AI assistant plug into your business tools through one common connector, instead of a custom link for each AI tool.",
+      "mentions": 3,
+      "sources": [
+        "/services/mcp-connectors/",
+        "/services/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI readiness assessment",
+      "slug": "ai-readiness-assessment",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "A structured look at how ready a business is for AI, scored across a few areas so you can see the weak spot.",
+      "mentions": 2,
+      "sources": [
+        "/blog/ai-readiness-assessment",
+        "/blog/ai-readiness-assessment-questionnaire"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Projected Time",
+      "slug": "projected-time",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "High",
+      "clientFlag": "PIRX term",
+      "draft": "The race time a runner's own training supports today. One odd run cannot swing it.",
+      "mentions": 2,
+      "sources": [
+        "/services/machine-learning/",
+        "/portfolio/pirx/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "robots.txt",
+      "slug": "robots-txt",
+      "status": "backlog",
+      "category": "Web, schema and crawling",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "A plain text file at the root of a site that tells crawlers which pages they may visit and which to skip.",
+      "mentions": 2,
+      "sources": [
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI Overviews",
+      "slug": "ai-overviews",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "High",
+      "clientFlag": null,
+      "draft": "Google's AI-written summaries that can appear at the top of search results, with links to the pages they used.",
+      "mentions": 1,
+      "sources": [
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Off-the-shelf software",
+      "slug": "off-the-shelf-software",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A ready-made product you buy or subscribe to and use as it is. It is the right buy when a product already does the job.",
+      "mentions": 16,
+      "sources": [
+        "/blog/off-the-shelf-ai-or-custom-software",
+        "/services/custom-apps/",
+        "/services/ai-assistants-and-agents/",
+        "/services/web-automation/",
+        "/services/answers-from-your-documents/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Work board (card)",
+      "slug": "work-board",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The board in HQ where each request shows up as a card with a written plan for the work.",
+      "mentions": 12,
+      "sources": [
+        "/blog/how-client-work-flows-through-hq",
+        "/products/hq/",
+        "/portfolio/super-funnel/",
+        "/blog/ai-agents-vs-agentic-ai",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Checker (named owner)",
+      "slug": "checker",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The named person who reviews AI output and can say it is wrong, with time set aside to do it.",
+      "mentions": 11,
+      "sources": [
+        "/blog/ai-implementation-framework",
+        "/blog/ai-automation-agency-vs-consultant",
+        "/blog/ai-agents-vs-agentic-ai",
+        "/blog/off-the-shelf-ai-or-custom-software",
+        "/blog/ai-agents-for-business"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Human in the loop",
+      "slug": "human-in-the-loop",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A setup where a person checks or approves the AI's work before it counts or goes out.",
+      "mentions": 11,
+      "sources": [
+        "/services/web-automation/",
+        "/blog/ai-agents-for-business",
+        "/services/mcp-connectors/",
+        "/blog/ai-for-small-business-2027",
+        "/blog/how-to-use-ai-in-your-business"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Handoff",
+      "slug": "handoff",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The moment work passes from one person or system to the next. Delays and lost details often happen here.",
+      "mentions": 9,
+      "sources": [
+        "/blog/ai-readiness-checklist",
+        "/blog/why-ai-pilots-stall",
+        "/",
+        "/blog/how-can-ai-help-small-businesses",
+        "/services/ai-assistants-and-agents/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Readiness band",
+      "slug": "readiness-band",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The label a readiness score falls in, such as Early, Forming, Ready or Running. It shows where you stand today and is not a grade.",
+      "mentions": 9,
+      "sources": [
+        "/blog/ai-readiness-framework",
+        "/blog/ai-readiness-assessment",
+        "/blog/is-my-business-ready-for-ai",
+        "/blog/ai-readiness-checklist",
+        "/blog/ai-readiness-assessment-questionnaire"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI phone agent (voice agent)",
+      "slug": "ai-phone-agent",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "An AI that answers phone calls from your own records and hands the call to a person, with a short summary, when needed.",
+      "mentions": 8,
+      "sources": [
+        "/services/voice-and-realtime-agents/",
+        "/services/",
+        "/",
+        "/services/custom-apps/",
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Edge network",
+      "slug": "edge-network",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Servers spread around the world, so code runs close to each visitor and pages load quickly.",
+      "mentions": 6,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/",
+        "/products/hq/",
+        "/portfolio/super-funnel/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Schema (Abracadabra product)",
+      "slug": "abracadabra-schema",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Abracadabra's scanner that scores how visible a site is to answer engines and generates the fixes.",
+      "mentions": 6,
+      "sources": [
+        "/films.html",
+        "/portfolio/schema/",
+        "/products/",
+        "/products/schema/",
+        "/about/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Customer relationship management (CRM)",
+      "slug": "customer-relationship-management",
+      "status": "backlog",
+      "category": "Business software",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Software that keeps each customer's details, history and deals in one place.",
+      "mentions": 5,
+      "sources": [
+        "/services/custom-apps/",
+        "/films.html",
+        "/portfolio/strongfoam-crm/",
+        "/portfolio/super-funnel/",
+        "/services/mcp-connectors/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "NIST AI Risk Management Framework",
+      "slug": "nist-ai-risk-management-framework",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A voluntary US guide for building trust into how AI is designed, built and used. It groups the work into Govern, Map, Measure and Manage.",
+      "mentions": 5,
+      "sources": [
+        "/blog/ai-implementation-framework",
+        "/blog/ai-strategy-for-small-business",
+        "/blog/ai-readiness-assessment-questionnaire",
+        "/blog/ai-readiness-framework",
+        "/blog/how-client-work-flows-through-hq"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Search-grounded answer",
+      "slug": "search-grounded-answer",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "An AI answer built from web pages the tool actually opened, with a link for each claim. If the sources are thin, it says so.",
+      "mentions": 5,
+      "sources": [
+        "/services/search-grounded-research/",
+        "/services/answers-from-your-documents/",
+        "/portfolio/pirx/",
+        "/services/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Web automation",
+      "slug": "web-automation",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Software that does repeated website tasks for you, like filling the same form or pulling a weekly file.",
+      "mentions": 5,
+      "sources": [
+        "/services/web-automation/",
+        "/services/",
+        "/",
+        "/portfolio/strongfoam-website/",
+        "/portfolio/milrcorr/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI Gateway",
+      "slug": "ai-gateway",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A layer between an app and the AI models it calls. It logs each call, shows cost, and can switch to a backup model when one fails.",
+      "mentions": 4,
+      "sources": [
+        "/services/any-model-one-bill/",
+        "/blog/why-we-build-on-cloudflare",
+        "/products/hq/",
+        "/services/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "AI-feature impressions",
+      "slug": "ai-feature-impressions",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Times a page showed up inside Google's AI features, such as AI Overviews. Search Console reports them apart from regular search impressions.",
+      "mentions": 4,
+      "sources": [
+        "/",
+        "/portfolio/pirx/",
+        "/services/ai-visibility/",
+        "/portfolio/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Cloudflare Workers",
+      "slug": "cloudflare-workers",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Code that runs on Cloudflare's worldwide network instead of on one server. Abracadabra's site, the Readiness Check and HQ all run on Workers.",
+      "mentions": 4,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/portfolio/super-funnel/",
+        "/products/hq/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Google Search Console",
+      "slug": "google-search-console",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Google's tool that shows site owners how their pages appear in Google Search, including impressions, clicks and errors.",
+      "mentions": 4,
+      "sources": [
+        "/services/ai-visibility/",
+        "/",
+        "/portfolio/pirx/",
+        "/services/search-grounded-research/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Snippet (featured snippet)",
+      "slug": "snippet",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The short piece of text Google shows under a search result, lifted from the page.",
+      "mentions": 4,
+      "sources": [
+        "/blog/answer-engine-optimization",
+        "/blog/generative-engine-optimization-vs-seo",
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
+        "/blog/what-is-llms-txt"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Clicks and average position",
+      "slug": "clicks-and-average-position",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Clicks count visits that came from search results. Average position is where a page usually sits in the results, where 1 is the top.",
+      "mentions": 3,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/ai-visibility/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Connector",
+      "slug": "connector",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The link that lets an AI assistant read from, or act in, one of your tools, such as a CRM or a calendar.",
+      "mentions": 3,
+      "sources": [
+        "/services/mcp-connectors/",
+        "/services/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Digital worker",
+      "slug": "digital-worker",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Abracadabra's name for an AI agent set up for one business with a clear role, such as drafting posts or checking files.",
+      "mentions": 3,
+      "sources": [
+        "/products/hq/",
+        "/",
+        "/products/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Prediction range",
+      "slug": "prediction-range",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The band of likely values around an estimate. When the data is thin or messy, the range gets wider instead of the number pretending to be sure.",
+      "mentions": 3,
+      "sources": [
+        "/services/machine-learning/",
+        "/services/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Sandbox (safe code execution)",
+      "slug": "sandbox",
+      "status": "backlog",
+      "category": "AI agents and automation",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A walled-off space where an AI can run code with set limits on time, memory and files, so it cannot touch anything else.",
+      "mentions": 3,
+      "sources": [
+        "/services/safe-code-execution/",
+        "/services/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Skill library (skill pack)",
+      "slug": "skill-library",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The collection of written how-tos that Abracadabra's digital workers search before each task, and cite when they use one.",
+      "mentions": 3,
+      "sources": [
+        "/",
+        "/blog/how-client-work-flows-through-hq",
+        "/products/hq/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Aerobic Base",
+      "slug": "aerobic-base",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Med",
+      "clientFlag": "PIRX term",
+      "draft": "Draft: a runner's endurance foundation, built mostly by steady, easy running over time. Needs PIRX's own definition.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "AI readiness checklist",
+      "slug": "ai-readiness-checklist",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "The list of questions you answer before you pay for an AI tool, grouped into data, process, people and the decision.",
+      "mentions": 2,
+      "sources": [
+        "/blog/ai-readiness-checklist",
+        "/blog/ai-readiness-assessment"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "DDoS attack",
+      "slug": "ddos-attack",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A flood of fake traffic meant to knock a site offline.",
+      "mentions": 2,
+      "sources": [
+        "/products/hq/",
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Indexing",
+      "slug": "indexing",
+      "status": "backlog",
+      "category": "Search and AEO/GEO",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "When a search engine adds a page to its list of pages it can show in results. A page that is not indexed cannot show up.",
+      "mentions": 2,
+      "sources": [
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt",
+        "/blog/what-is-llms-txt"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Personal model",
+      "slug": "personal-model",
+      "status": "needs-client-approval",
+      "category": "AI and machine learning",
+      "priority": "Med",
+      "clientFlag": "Shared with PIRX copy",
+      "draft": "A model trained on one person's own history instead of everyone's data. It learns that person's patterns as their history grows.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (Shared with PIRX copy). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Running Economy",
+      "slug": "running-economy",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Med",
+      "clientFlag": "PIRX term",
+      "draft": "How much energy a runner uses to hold a given pace. Better economy means less effort for the same speed.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Safe rules (rule-based fallback)",
+      "slug": "safe-rules",
+      "status": "needs-client-approval",
+      "category": "AI and machine learning",
+      "priority": "Med",
+      "clientFlag": "Shared with PIRX copy",
+      "draft": "Simple fixed rules a product uses by default. A learned model only takes over when testing shows it beats these rules.",
+      "mentions": 2,
+      "sources": [
+        "/services/machine-learning/",
+        "/portfolio/pirx/"
+      ],
+      "note": "Held back: client-flagged term (Shared with PIRX copy). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Structural Drivers",
+      "slug": "structural-drivers",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Med",
+      "clientFlag": "PIRX term",
+      "draft": "The five parts PIRX uses to explain a projection: Aerobic Base, Threshold Density, Speed Exposure, Running Economy and Load Consistency. They always add up to the Improvement Since Baseline.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Supported Range",
+      "slug": "supported-range",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Med",
+      "clientFlag": "PIRX term",
+      "draft": "The band around a runner's Projected Time. Thin or messy data makes the band wider, not the number bolder.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "AI strategy",
+      "slug": "ai-strategy",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A short written plan for which jobs AI will help with, who owns each one, and how you will know it is working.",
+      "mentions": 1,
+      "sources": [
+        "/blog/ai-strategy-for-small-business"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Engineered plan",
+      "slug": "engineered-plan",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Abracadabra's single written build plan. You review it before anything is built, and every part of the build follows it.",
+      "mentions": 1,
+      "sources": [
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "OAI-SearchBot, GPTBot and ChatGPT-User",
+      "slug": "openai-crawlers",
+      "status": "backlog",
+      "category": "Web, schema and crawling",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "OpenAI's three crawlers. OAI-SearchBot fetches pages for ChatGPT search, GPTBot collects pages for training, and ChatGPT-User fetches a page when a person asks.",
+      "mentions": 1,
+      "sources": [
+        "/blog/how-to-get-your-business-to-show-up-in-chatgpt"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Race predictor",
+      "slug": "race-predictor",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Med",
+      "clientFlag": "PIRX copy",
+      "draft": "A tool that estimates a race time from a recent result or recent training.",
+      "mentions": 1,
+      "sources": [
+        "/portfolio/pirx/"
+      ],
+      "note": "Held back: client-flagged term (PIRX copy). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Retrieval-augmented generation (RAG)",
+      "slug": "retrieval-augmented-generation",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A way for an AI to first look up passages in your own files, then write its answer from what it found. Cloudflare's AI Search was first called AutoRAG.",
+      "mentions": 1,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "FAQPage schema",
+      "slug": "faqpage-schema",
+      "status": "backlog",
+      "category": "Web, schema and crawling",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "Schema markup that marks a page's questions and answers so search and AI tools can lift them cleanly.",
+      "mentions": 0,
+      "sources": [],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "IndexNow",
+      "slug": "indexnow",
+      "status": "backlog",
+      "category": "Web, schema and crawling",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A way for a site to tell Bing and other search engines right away that a page is new or has changed. Google does not use it.",
+      "mentions": 0,
+      "sources": [],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Sitemap",
+      "slug": "sitemap",
+      "status": "backlog",
+      "category": "Web, schema and crawling",
+      "priority": "Med",
+      "clientFlag": null,
+      "draft": "A file that lists a site's public pages so search engines can find all of them.",
+      "mentions": 0,
+      "sources": [],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Prompt",
+      "slug": "prompt",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "The instruction or question you type to an AI tool.",
+      "mentions": 8,
+      "sources": [
+        "/blog/what-is-an-ai-agent",
+        "/blog/why-ai-pilots-stall",
+        "/services/web-automation/",
+        "/blog/ai-agents-for-business",
+        "/services/any-model-one-bill/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "LLM Leverage",
+      "slug": "llm-leverage",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Abracadabra's self-paced course, plus workshops, for getting real work done with AI.",
+      "mentions": 7,
+      "sources": [
+        "/portfolio/llm-leverage/",
+        "/films.html",
+        "/products/",
+        "/course/llm-leverage/",
+        "/products/hq/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Small and midsize enterprise (SME)",
+      "slug": "small-and-midsize-enterprise",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "A smaller firm, usually counted by number of staff. Surveys from groups like the OECD often report on SMEs apart from large firms.",
+      "mentions": 7,
+      "sources": [
+        "/blog/ai-strategy-for-small-business",
+        "/blog/ai-readiness-assessment-questionnaire",
+        "/blog/is-my-business-ready-for-ai",
+        "/blog/ai-readiness-checklist",
+        "/blog/business-process-automation-ai"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Social calendar",
+      "slug": "social-calendar",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "The HQ calendar where approved posts are scheduled into the next open slot on your connected networks.",
+      "mentions": 6,
+      "sources": [
+        "/products/hq/",
+        "/",
+        "/blog/ai-agents-for-business",
+        "/blog/how-client-work-flows-through-hq",
+        "/portfolio/super-funnel/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Sales funnel (pipeline)",
+      "slug": "sales-funnel",
+      "status": "needs-client-approval",
+      "category": "Business software",
+      "priority": "Low",
+      "clientFlag": "SuperPatch (Super Funnel) copy",
+      "draft": "The steps a lead moves through, from first contact to a sale.",
+      "mentions": 5,
+      "sources": [
+        "/films.html",
+        "/portfolio/super-funnel/",
+        "/portfolio/",
+        "/about/",
+        "/"
+      ],
+      "note": "Held back: client-flagged term (SuperPatch (Super Funnel) copy). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Client Services review",
+      "slug": "client-services-review",
+      "status": "backlog",
+      "category": "Abracadabra products",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "The step in HQ where a reviewer checks finished work before it is released to you.",
+      "mentions": 3,
+      "sources": [
+        "/blog/how-client-work-flows-through-hq",
+        "/products/hq/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Enterprise resource planning (ERP)",
+      "slug": "enterprise-resource-planning",
+      "status": "backlog",
+      "category": "Business software",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Software that runs the back office, such as jobs, stock, orders and money, in one system.",
+      "mentions": 3,
+      "sources": [
+        "/services/custom-apps/",
+        "/films.html",
+        "/portfolio/strongfoam-crm/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "R2",
+      "slug": "r2",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Cloudflare's file storage. It does not charge to send stored files out to the web.",
+      "mentions": 3,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/portfolio/super-funnel/",
+        "/products/hq/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Rate limit",
+      "slug": "rate-limit",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "A cap on how many requests someone can make in a set time, used to stop abuse.",
+      "mentions": 3,
+      "sources": [
+        "/products/hq/",
+        "/blog/why-we-build-on-cloudflare",
+        "/portfolio/super-funnel/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Speech to text (transcript)",
+      "slug": "speech-to-text",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Turning spoken audio into written words. The transcript is a reading copy a person can check before anyone quotes it.",
+      "mentions": 3,
+      "sources": [
+        "/services/ai-media/",
+        "/services/any-model-one-bill/",
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Text analytics",
+      "slug": "text-analytics",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Software that reads and sorts written text, such as tagging emails by topic.",
+      "mentions": 3,
+      "sources": [
+        "/blog/how-to-use-ai-in-your-business",
+        "/blog/how-can-ai-help-small-businesses",
+        "/blog/ai-automation-for-small-business"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Workers AI",
+      "slug": "workers-ai",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Cloudflare's service for running open AI models on its own network, paid for by use.",
+      "mentions": 3,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/products/hq/",
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Agents SDK",
+      "slug": "agents-sdk",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Cloudflare's toolkit for building AI agents that keep their own memory and can keep working on a task over days.",
+      "mentions": 2,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/products/hq/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "D1",
+      "slug": "d1",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "Cloudflare's SQL database for apps that run on Workers.",
+      "mentions": 2,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/products/hq/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Load Consistency",
+      "slug": "load-consistency",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Low",
+      "clientFlag": "PIRX term",
+      "draft": "Draft: how steady a runner's training load is from week to week. Needs PIRX's own definition.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Speed Exposure",
+      "slug": "speed-exposure",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Low",
+      "clientFlag": "PIRX term",
+      "draft": "Draft: how often a runner trains at fast paces. Needs PIRX's own definition.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Threshold Density",
+      "slug": "threshold-density",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Low",
+      "clientFlag": "PIRX term",
+      "draft": "Draft: how much of a runner's training sits near threshold pace, the hardest effort they can hold for a long stretch. Needs PIRX's own definition.",
+      "mentions": 2,
+      "sources": [
+        "/portfolio/pirx/",
+        "/services/machine-learning/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "TLS (SSL)",
+      "slug": "tls",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "The encryption behind the lock in your browser bar. It keeps traffic between a visitor and a site private.",
+      "mentions": 2,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare",
+        "/products/hq/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Athletic estimate",
+      "slug": "athletic-estimate",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Low",
+      "clientFlag": "PIRX copy",
+      "draft": "A fitness estimate for sport and training. It is not medical advice.",
+      "mentions": 1,
+      "sources": [
+        "/portfolio/pirx/"
+      ],
+      "note": "Held back: client-flagged term (PIRX copy). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Durable Objects",
+      "slug": "durable-objects",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "A Cloudflare tool that pairs a bit of code with its own storage, so a chat or an agent keeps its state in one place.",
+      "mentions": 1,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Improvement Since Baseline",
+      "slug": "improvement-since-baseline",
+      "status": "needs-client-approval",
+      "category": "Running and health (PIRX)",
+      "priority": "Low",
+      "clientFlag": "PIRX term",
+      "draft": "Draft: how much a runner's projection has changed since their starting point in the app. Needs PIRX's own definition.",
+      "mentions": 1,
+      "sources": [
+        "/portfolio/pirx/"
+      ],
+      "note": "Held back: client-flagged term (PIRX term). Needs the client's own definition and approval before it can publish."
+    },
+    {
+      "term": "Non-diagnostic assessment",
+      "slug": "non-diagnostic-assessment",
+      "status": "backlog",
+      "category": "AI readiness and strategy",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "A health-style questionnaire that teaches and points a person to a next step, but does not diagnose a condition.",
+      "mentions": 1,
+      "sources": [
+        "/"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Open model",
+      "slug": "open-model",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "An AI model whose weights are published, so others can run it on their own computers or cloud.",
+      "mentions": 1,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Vector database",
+      "slug": "vector-database",
+      "status": "backlog",
+      "category": "AI and machine learning",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "A database that stores the meaning of text or images as numbers, so an app can find close matches by meaning, not exact words.",
+      "mentions": 1,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Web application firewall (WAF)",
+      "slug": "web-application-firewall",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "A filter that checks each request to a site against a set of rules and blocks the bad ones.",
+      "mentions": 1,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    },
+    {
+      "term": "Zero Trust",
+      "slug": "zero-trust",
+      "status": "backlog",
+      "category": "Cloud and security",
+      "priority": "Low",
+      "clientFlag": null,
+      "draft": "A security approach that checks who you are on every request, instead of trusting anyone who is already inside the network.",
+      "mentions": 1,
+      "sources": [
+        "/blog/why-we-build-on-cloudflare"
+      ],
+      "note": "Unverified draft from the term inventory. Verify against the source pages and a primary source before publishing."
+    }
+  ]
+}

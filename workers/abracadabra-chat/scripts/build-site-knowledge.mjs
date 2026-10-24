@@ -109,7 +109,11 @@ export async function buildKnowledge() {
   const blogPaths = sitemap.filter((path) => /^\/blog\/[a-z0-9-]+\/$/.test(path));
   const blog = [];
   for (const path of blogPaths) blog.push({ name: (await pageMeta(path)).title, path });
-  const covered = new Set([...work, ...services, ...products, ...blog].map((item) => item.path));
+  // Glossary term pages are listed by name only, like blog notes, so the knowledge stays small.
+  const glossaryPaths = sitemap.filter((path) => /^\/glossary\/[a-z0-9-]+\/$/.test(path));
+  const glossary = [];
+  for (const path of glossaryPaths) glossary.push({ name: (await pageMeta(path)).title, path });
+  const covered = new Set([...work, ...services, ...products, ...blog, ...glossary].map((item) => item.path));
   const pages = [];
   for (const path of [...sitemap, ...EXTRA_PAGES]) {
     if (covered.has(path) || pages.some((page) => page.path === path)) continue;
@@ -143,17 +147,18 @@ export async function buildKnowledge() {
     ...pages.map((item) => `- ${item.name} | ${item.path} | ${item.line}`),
     "NOTES (blog articles; link one only when the visitor asks about its topic). Format: title | page.",
     ...blog.map((item) => `- ${item.name} | ${item.path}`),
+    ...(glossary.length ? ["GLOSSARY (plain definitions; link one only when the visitor asks what a term means). Format: question | page.", ...glossary.map((item) => `- ${item.name} | ${item.path}`)] : []),
     `PROCESS: ${process.join(" ")}`,
     "COST: Priced to the project. Tell us what you need and we'll quote it. Never give a number.",
     "NEXT STEPS (options, not a closing line: offer one only when the visitor asks about cost, timing, getting started, or talking to a person): a thirty-minute working session, booked right in this chat. Not sure where to start? The Readiness Check takes five to seven minutes, can be taken right here in this chat (or at check.abra-ca-dabra.app), and shows where the work slows down: the data, the workflow, the owner, the decision, and how visible the site is to answer engines.",
     "WHY CLOUDFLARE:",
     ...CLOUDFLARE.map((line) => `- ${line}`),
   ];
-  const paths = [...new Set([...work, ...products, ...services, ...pages, ...blog].map((item) => item.path))];
+  const paths = [...new Set([...work, ...products, ...services, ...pages, ...blog, ...glossary].map((item) => item.path))];
   const text = lines.join("\n");
   // Short fingerprint of what the chat knows. GET /api/chat/config returns it, so a deploy can be checked against the repo.
   const version = createHash("sha256").update(JSON.stringify({ text, paths })).digest("hex").slice(0, 12);
-  return { text, version, work, products, services, pages, blog, paths };
+  return { text, version, work, products, services, pages, blog, glossary, paths };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
