@@ -139,7 +139,7 @@ export function objectionKind(userText) {
 
 const OBJECTION_NOTES = {
   bot: "The visitor asks if they are talking to a bot. Be honest in the first sentence: yes, you are the studio's AI assistant, and a person (Christopher) reviews anything we follow up on and runs the working sessions. Then answer whatever else they asked.",
-  expensive: "The visitor worries about cost. Do not argue or give a number. Say we price to the job, often start with one small piece that pays for itself first, and the quote comes after we understand the work.",
+  expensive: "The visitor worries about cost. Do not argue or give a number. Say we price to the job, can start with one small, well-defined piece first, and the quote comes after we understand the work. Never promise savings or that it pays for itself.",
   not_now: "The visitor is not ready right now. Respect that in one sentence, leave one easy thing they can do later (the Readiness Check takes five to seven minutes), and do not push booking.",
   vendor: "The visitor already has a vendor or team. Do not knock anyone. Say we often work next to an existing team on one specific job, and ask what that team does not get to.",
 };

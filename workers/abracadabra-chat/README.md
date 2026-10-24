@@ -2,6 +2,8 @@
 
 The studio chat for `abra-ca-dabra.app`. The page widget lives in `scrollcraft/builds/abracadabra-ai/assets/chat-widget.js`. This Worker answers `/api/chat/*`. The marketing Worker proxies those paths with a service binding named `CHAT`, so the browser stays on the apex.
 
+How the chat should sound, what changed on Oct 23, 2026 and how repetition is measured: [docs/conversation-plan.md](docs/conversation-plan.md).
+
 A chat does not email the visitor. A consented contact card, or a booking finished inside the panel, is stored on the session Durable Object and mailed to `houdini@abra-ca-dabra.app`. Christopher reviews that note before anyone writes back.
 
 ## Routes
