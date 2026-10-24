@@ -3,12 +3,15 @@ import { workspacesFor } from "@/db/records";
 import type { Sql } from "@/db/sql";
 import type { Caller } from "./authz";
 import { setPieceShelf, SHELF_LIVE } from "./finished-shelf";
+import { agentApprovedItemIds } from "./social-approvals";
 import { BULK_ACTIONS, BULK_LIMIT, type BulkAction, type BulkOutcome, type BulkPiece, type BulkResult, type BulkScheduler } from "./library-bulk-shared";
 
 export { BULK_ACTIONS, BULK_LIMIT, bulkSummary } from "./library-bulk-shared";
 export type { BulkAction, BulkOutcome, BulkPiece, BulkResult, BulkScheduler } from "./library-bulk-shared";
 
 export const BULK_MISSING = "That piece is not in this workspace.";
+export const BULK_AGENT_APPROVED = "Already approved by an agent. It keeps that approval and is not scheduled here. Schedule it from Social or with a plan.";
+export const BULK_NO_SOCIAL = "Social posting is not set up, so nothing was scheduled. The approved pieces wait on Social.";
 
 type Row = {
   id: string;
@@ -43,6 +46,8 @@ export function bulkSkipReason(action: BulkAction, row: Row): string | null {
  * use (`recordFeedback` for approve, `setPieceShelf` for remove and put back), so every existing check still applies.
  * A piece the action does not apply to is skipped with a reason. One piece failing never stops the rest.
  * After approvals, Cadence runs once per deliverable for the pieces just approved, exactly as the single approve does.
+ * Pieces that could not be scheduled (no posting time, no connected account, no open slot) are listed in scheduleNotes;
+ * they stay approved. A piece that is already approved, including one an agent approved, is skipped untouched.
  */
 export async function bulkLibraryAction(
   sql: Sql,
@@ -84,7 +89,9 @@ export async function bulkLibraryAction(
     const outcome = (state: BulkOutcome["state"], note: string | null) => result.outcomes.push({ ...base, title: row.title, state, note });
     const skip = bulkSkipReason(action, row);
     if (skip) {
-      outcome("skipped", skip);
+      // An agent-approved piece (#212) is left exactly as it is: no new approval, feedback, activity or schedule.
+      const byAgent = action === "approve" && row.status === "approved" && (await agentApprovedItemIds(sql, row.deliverable_id, row.version)).has(row.id);
+      outcome("skipped", byAgent ? BULK_AGENT_APPROVED : skip);
       continue;
     }
     try {
@@ -118,12 +125,14 @@ export async function bulkLibraryAction(
     }
   }
 
+  if (action === "approve" && !schedule && approvedByDeliverable.size > 0) result.scheduleNotes.push(BULK_NO_SOCIAL);
   if (action === "approve" && schedule) {
+    // Only the pieces approved by this request. Pieces approved earlier (by an agent, for example) are never swept up.
     for (const [deliverableId, itemIds] of approvedByDeliverable) {
       try {
         const placed = await schedule({ deliverableId, itemIds });
         result.scheduled += placed.scheduled;
-        result.scheduleNotes.push(...placed.failed);
+        result.scheduleNotes.push(...placed.failed, ...(placed.skipped ?? []));
       } catch (error) {
         console.error("bulkLibraryAction: scheduling failed", deliverableId, error);
         result.scheduleNotes.push("Cadence could not place some approved pieces. They are approved and wait on Social.");
