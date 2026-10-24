@@ -233,6 +233,7 @@ export function siteFooter({ band = "full" } = {}) {
     <a href="/products/">Products</a>
     <a href="/course/llm-leverage/">Course</a>
     <a href="/blog">Blog</a>
+    <a href="/glossary/">Glossary</a>
     <a href="/privacy">Privacy</a>
   </nav>
   <p class="site-foot__meta">

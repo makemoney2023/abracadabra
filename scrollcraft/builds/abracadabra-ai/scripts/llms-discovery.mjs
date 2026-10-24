@@ -8,6 +8,18 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { cases, course, offerings, products } from "./site-data.mjs";
 import { salesPages } from "./service-sales.mjs";
+import { publishedTerms, termPath } from "./glossary-data.mjs";
+
+/** Published glossary terms as markdown links, A to Z. */
+export function glossaryLines() {
+  return publishedTerms().map((term) => mdEntry(term.term, `${SITE}${termPath(term)}`, term.short));
+}
+
+function glossaryFullBlocks() {
+  return publishedTerms()
+    .map((term) => `### ${term.term}\n\n${term.short}\n\n${term.explainer.join("\n\n")}\n\n${SITE}${termPath(term)}`)
+    .join("\n\n");
+}
 
 export const SITE = "https://abra-ca-dabra.app";
 
@@ -181,6 +193,11 @@ When a product already on the market does the job, the reply says so and points 
 
 ${pageLines.join("\n")}
 
+## Glossary
+
+${mdEntry("Glossary", `${SITE}/glossary/`, "Plain-English definitions of AI and search terms, each checked against primary sources")}
+${glossaryLines().join("\n")}
+
 ## Blog
 
 ${blogLines.join("\n")}
@@ -236,6 +253,7 @@ ${mdEntry("Services", `${SITE}/services/`, "Service menu")}
 ${mdEntry("Portfolio", `${SITE}/portfolio/`, "Named shipped systems")}
 ${mdEntry("Products", `${SITE}/products/`, "Schema, the LLM Leverage course and HQ")}
 ${mdEntry("Blog", `${SITE}/blog`, "Notes with named sources")}
+${mdEntry("Glossary", `${SITE}/glossary/`, "Plain-English AI and search terms with sources")}
 
 ## Overview
 
@@ -272,6 +290,12 @@ Primary action: Start a project (${CONTACT}). Secondary: See what we've built ($
 ${proofFacts()}
 
 Also shipped, named when the client allows: clinical-style assessments (non-diagnostic; they educate and route, they do not diagnose), direct-sales floors, coaching agents, signed agreements, fraud review on live orders, and the pirx.ca Search Console record dated above. The list is a sample of what shipped, not a ceiling on what the studio will take on.
+
+## Glossary
+
+Each definition was checked against primary sources on the date shown on its page.
+
+${glossaryFullBlocks()}
 
 ## Blog posts
 
