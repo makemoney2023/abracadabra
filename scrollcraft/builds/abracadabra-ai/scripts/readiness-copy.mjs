@@ -1,8 +1,9 @@
-// Client Services' rule for the Readiness Check: the site never promises a score.
-// The approved line is READINESS_NEXT_STEPS. findReadinessScoreClaims() flags a sentence that
-// names the Readiness Check (or "the check" on a page that names it) when it talks about scores,
-// bands or the band names, and also the next sentence when it carries on about the check
-// ("It scores...", "You get a band...").
+// Client Services' rule for the Readiness Check copy on the site. The approved line is READINESS_NEXT_STEPS.
+// Since #227 the check shows its scores in public again, so score wording is allowed (Christopher, Oct 25).
+// What is still banned: calling the Readiness Check "free" (findReadinessFreeClaims) and giving it a fixed
+// tip or step count (findReadinessCountClaims). findReadinessFreeClaims() flags a sentence that names the
+// Readiness Check (or "the check" on a page that names it) and says "free", and also the next sentence when
+// it carries on about the check ("It is free...").
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
@@ -12,6 +13,9 @@ const NAMES_CHECK = /\breadiness check\b|check\.abra-ca-dabra\.app/i;
 const THE_CHECK = /\b(?:the|our) check(?:'s)?\b/i;
 const CARRIES_ON = /^(?:It|Its|You|They|This|That|Then|The (?:check|band|bands|score|scores|report|results?))\b/;
 const SCORE_WORDS = /\b(?:scor(?:e|es|ed|ing)|scorecards?|bands?|four scores|out of 100|0 to 100|0–100)\b|\b(?:Early|Forming|Running)\b/;
+const FREE_WORDS = /\bfree\b|\bno[- ]cost\b|\bat no charge\b|\bfree of charge\b/i;
+// "free" that is not about price.
+const FREE_OK = /\b(?:free[- ]text|free[- ]form|hands[- ]free|error[- ]free|overflow[- ]free|feel free)\b/gi;
 
 // Christopher, Oct 25: no fixed tip count either. The check gives each section as many next steps as fit the answers,
 // so "three suggestions in each section", "three tips for each section" or "up to three next steps" is never said.
@@ -45,7 +49,31 @@ function sentences(text) {
   return text.split(/\n+/).flatMap((line) => line.split(/(?<=[.!?])\s+/)).map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean);
 }
 
-/** Returns the sentences that promise a Readiness Check score, band or band name. */
+/** Sentences naming the Readiness Check (or "the check" on a page that names it), joined with the next one when it carries on. */
+function checkWindows(text, words, allowed = []) {
+  const all = sentences(text);
+  const pageNamesCheck = NAMES_CHECK.test(text);
+  const claims = [];
+  all.forEach((sentence, i) => {
+    if (!NAMES_CHECK.test(sentence) && !(pageNamesCheck && THE_CHECK.test(sentence))) return;
+    const next = all[i + 1] ?? "";
+    const window = CARRIES_ON.test(next) ? `${sentence} ${next}` : sentence;
+    if (!words.test(window.replace(FREE_OK, ""))) return;
+    if (allowed.some((re) => re.test(window))) return;
+    claims.push(window);
+  });
+  return claims;
+}
+
+/** Returns the sentences that call the Readiness Check free. Banned (Christopher). */
+export function findReadinessFreeClaims(text) {
+  return checkWindows(text, FREE_WORDS);
+}
+
+/**
+ * Returns the sentences that talk about a Readiness Check score, band or band name.
+ * No longer a build failure: scores are public again since #227. Kept for audits.
+ */
 export function findReadinessScoreClaims(text) {
   const all = sentences(text);
   const pageNamesCheck = NAMES_CHECK.test(text);
@@ -91,10 +119,13 @@ export function widgetCopy(root) {
   return [[relative(root, path), strings.join("\n")]];
 }
 
-/** Build step: fail when any built page promises a Readiness Check score or a fixed tip count. */
-export function assertNoReadinessScores(root) {
-  const found = builtCopy(root).flatMap(([path, copy]) => findReadinessScoreClaims(copy).map((claim) => `${path}: ${claim}`));
-  if (found.length) throw new Error(`Readiness Check score wording (use "${READINESS_NEXT_STEPS}"):\n${found.slice(0, 20).join("\n")}`);
+/** Build step: fail when any built page, llms file or chat widget string calls the Readiness Check free or gives it a fixed tip count. Score wording is allowed since #227. */
+export function assertReadinessCopy(root) {
+  const free = [...builtCopy(root), ...widgetCopy(root)].flatMap(([path, copy]) => findReadinessFreeClaims(copy).map((claim) => `${path}: ${claim}`));
+  if (free.length) throw new Error(`Readiness Check called free (drop it; use "${READINESS_NEXT_STEPS}"):\n${free.slice(0, 20).join("\n")}`);
   const counts = [...builtCopy(root), ...widgetCopy(root)].flatMap(([path, copy]) => findReadinessCountClaims(copy).map((claim) => `${path}: ${claim}`));
   if (counts.length) throw new Error(`Readiness Check tip count (drop the count; use "${READINESS_NEXT_STEPS}"):\n${counts.slice(0, 20).join("\n")}`);
 }
+
+/** Old name, kept so existing callers keep working. */
+export const assertNoReadinessScores = assertReadinessCopy;

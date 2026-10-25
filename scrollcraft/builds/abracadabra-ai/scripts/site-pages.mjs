@@ -35,7 +35,7 @@ import { writeHqAssets } from "./hq-assets.mjs";
 import { writeSchemaAssets } from "./schema-assets.mjs";
 import { glossarySitemapPaths, linkGlossaryMentions, renderGlossary } from "./glossary.mjs";
 import { publishedTerms, termPath } from "./glossary-data.mjs";
-import { assertNoReadinessScores } from "./readiness-copy.mjs";
+import { assertReadinessCopy } from "./readiness-copy.mjs";
 
 export const SF_CSS = "/assets/sf-case.css?v=20261023b";
 export const HQ_CSS = "/assets/hq.css?v=20261023d";
@@ -1484,7 +1484,7 @@ export async function buildSitePages() {
   await patchSitemap();
   await patchRedirects();
   await patchLlms();
-  assertNoReadinessScores(root);
+  assertReadinessCopy(root);
   console.log(`site pages ${MODIFIED}`);
 }
 

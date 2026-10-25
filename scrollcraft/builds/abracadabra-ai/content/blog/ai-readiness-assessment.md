@@ -84,7 +84,7 @@ Here is a plain comparison of who each tool describes and what you leave with.
 
 - Cisco's index describes companies with more than 500 employees, so you get a comparison with pacesetters and not a score for one small firm.
 - The OECD tool describes the smaller firms in the Group of Seven test, so you get a short self-check that stays in the browser.
-- The AWS checklist describes a small or midsize business, so you get five steps and four stage names.
+- The AWS checklist describes a small or midsize business, so you get a short list of steps and a stage name.
 - The Readiness Check describes the business taking it, so you get next steps for your business.
 
 The Readiness Check is the one built for the firm in the room. It teaches and points the way, but it does not diagnose. We publish the method on [our site](/).

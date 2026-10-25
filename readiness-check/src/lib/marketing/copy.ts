@@ -127,3 +127,7 @@ export const READINESS_META_COPY = {
   description:
     "A five-to-seven-minute check that gives your business scores, a stage name, and next steps for where it is today, plus a thirty-minute working session if you want one.",
 } as const;
+
+/** The /check landing's "What you get" paragraph. Uses Client Services' line, "It gives you next steps for your business."; never "free", never a fixed tip count. */
+export const CHECK_WHAT_YOU_GET =
+  "A score for readiness, growth, and website visibility, a short name for the stage the business is at today, and a thirty-minute working session if you want one. It gives you next steps for your business. Five to seven minutes.";
