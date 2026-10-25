@@ -24,6 +24,7 @@ import { recentWeeks, recordSession, STATS_MAX_WEEKS, statsCsv, statsStore, week
 import { applyChatEvent, blankSession, chatHistory, IDLE_MS, isExpired, parseContact, rememberExchange } from "./session.js";
 import { VoiceCall } from "./realtime.js";
 import { SITE_KNOWLEDGE_VERSION } from "./site-knowledge.js";
+import { glossaryLinkFor } from "./glossary.js";
 import { conversationNotes, followUps, noteOffer, recentReplies, updateVisitor } from "./conversation.js";
 import { VOICE_CALLS_PER_SESSION, VOICE_TURNS_PER_SESSION, voiceEnabled } from "./voice.js";
 
@@ -217,6 +218,7 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
       const emit = (event, data) => controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       let answer = "";
       let failure = null;
+      let replaced = false;
       // The last three replies feed the repeat guard; the seed rotates the fixed lines per turn.
       const recent = recentReplies(session, 3);
       const seed = session.messageCount || 0;
@@ -225,13 +227,20 @@ function streamReply({ text, action, history, session, storage, env, deps, now, 
         if (scripted) {
           answer = scripted;
           emit("token", { text: scripted });
-        } else for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers, visitor: session.visitor, notes }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening), recent, seed, askedNext: Boolean(offers?.asked) })) {
+        } else for await (const part of checkedSentences(replyStream({ env, messages: history, fetchImpl: deps.fetchImpl, page: { path: session.page, title: session.pageTitle }, offers, visitor: session.visitor, notes }), { maxSentences: TYPED_SENTENCES, dropOffers: offers?.dropOffers, calendarOpen: Boolean(offers?.opening), recent, seed, askedNext: Boolean(offers?.asked), keepLinks: true })) {
           if (part.replace) {
             answer = part.replace;
+            replaced = true;
             break;
           }
           emit("token", { text: answer ? ` ${part.text}` : part.text });
           answer = answer ? `${answer} ${part.text}` : part.text;
+        }
+        // "What is X?" for a glossary term always ends with the term's page, even when the model left it off.
+        const link = !scripted && !replaced && answer ? glossaryLinkFor(text, answer) : "";
+        if (link) {
+          emit("token", { text: ` ${link}` });
+          answer = `${answer} ${link}`;
         }
       } catch (error) {
         failure = error instanceof ChatUnavailable ? error.reason : "error";

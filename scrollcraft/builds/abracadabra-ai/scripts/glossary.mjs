@@ -11,7 +11,7 @@ import sharp from "sharp";
 import { plateSvg } from "./og-brand.mjs";
 import { smartQuotes } from "./typography.mjs";
 import { GLOSSARY_PATH, loadGlossary, publishedTerms, termPath } from "./glossary-data.mjs";
-import { linkFirstMention, findMention } from "./glossary-links.mjs";
+import { linkFirstMention, findMention, MAX_GLOSSARY_LINKS_PER_PAGE } from "./glossary-links.mjs";
 
 export const GLOSSARY_CSS = "/assets/glossary.css?v=20261024a";
 export const GLOSSARY_INDEX_TITLE = "AI and Search Glossary";
@@ -333,7 +333,11 @@ export async function linkGlossaryMentions(root) {
       changed.set(file, next);
     }
   }
-  for (const [file, html] of changed) await writeFile(file, html);
+  for (const [file, html] of changed) {
+    const count = (html.match(/class="glossary-link"/g) ?? []).length;
+    if (count > MAX_GLOSSARY_LINKS_PER_PAGE) throw new Error(`Glossary: ${file} would carry ${count} glossary links (cap ${MAX_GLOSSARY_LINKS_PER_PAGE}); drop it from a term's sources`);
+    await writeFile(file, html);
+  }
   return changed.size;
 }
 

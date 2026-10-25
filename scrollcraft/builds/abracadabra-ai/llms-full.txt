@@ -2,7 +2,7 @@
 
 > We design, build and run AI-powered tools that fit your business, not the other way around.
 
-Full site text for answer engines. Generated 2026-10-24. Contact houdini@abra-ca-dabra.app.
+Full site text for answer engines. Generated 2026-10-25. Contact houdini@abra-ca-dabra.app.
 
 ## Index
 
@@ -227,6 +227,16 @@ Google's glossary puts it in similar terms: software that can reason about what 
 
 https://abra-ca-dabra.app/glossary/ai-agent/
 
+### AI citation
+
+An AI citation is a link or source name that an AI tool shows with its answer to back up what it says. Perplexity shows numbered links, and Google's AI Overviews show links to supporting websites. Being cited is not the same as getting a click.
+
+Answer tools such as Perplexity, ChatGPT search and Google's AI features write a reply, then point to the pages they used. Perplexity says each answer includes numbered citations that link to the original sources. Google says AI Overviews and AI Mode show links to supporting websites.
+
+For a business, a citation means an AI tool used your page as a source. But a reader may get what they need from the answer and never click. Pew found that people clicked result links less often when Google showed an AI summary. So we track citations and clicks as two different things.
+
+https://abra-ca-dabra.app/glossary/ai-citation/
+
 ### AI readiness
 
 AI readiness is how prepared a business is to put an AI tool to work and get value from it. It depends on the business more than the tool. That means its data, the way work gets done, its people and who makes decisions.
@@ -237,6 +247,26 @@ On this site we score readiness in four parts: data, process, people and the dec
 
 https://abra-ca-dabra.app/glossary/ai-readiness/
 
+### AI visibility (AI search visibility)
+
+AI visibility is how often a business shows up in answers that AI tools write, and how well. It might be named, quoted or linked. There is no standard way to measure it, so each tool and report counts it in its own way.
+
+The researchers who named generative engine optimization measured a source's visibility by how much of an AI answer drew on it and how early it showed up. Google's guide says terms like AEO and GEO describe work aimed at being visible in AI search, and that for Google this work is still SEO.
+
+A few things shape it. AI and search crawlers must be allowed to read your pages. The pages must answer real questions in plain words. Your business details, such as your Google Business Profile, should be up to date. Our AI visibility service works on these.
+
+https://abra-ca-dabra.app/glossary/ai-visibility/
+
+### Answer engine
+
+An answer engine is a search tool that replies to a question with a written answer, usually with links to its sources, instead of only a list of links. Perplexity calls itself one. Google's AI Overviews and AI Mode work in a similar way.
+
+A classic search engine gives you a ranked list of pages to open. An answer engine reads pages for you and writes a short reply. Perplexity says it searches the web in real time, sums up what it finds and adds numbered citations that link to the original sources.
+
+Google describes AI Overviews and AI Mode as AI-powered responses with links to supporting websites. It says the usual SEO basics apply to them. On this site we use answer engine as the plain name for this kind of tool.
+
+https://abra-ca-dabra.app/glossary/answer-engine/
+
 ### Answer engine optimization (AEO)
 
 Answer engine optimization (AEO) is the work of getting your pages used and cited when an AI tool answers a question directly. Google says it is still SEO.
@@ -246,6 +276,46 @@ An answer engine replies with a written answer instead of only a list of links. 
 Google's guide groups AEO with GEO. It says both terms describe work aimed at being seen in AI search, and that for Google this work is ordinary SEO. It also warns that many AEO and GEO "hacks" sold online do not match how Google Search works.
 
 https://abra-ca-dabra.app/glossary/answer-engine-optimization/
+
+### Business process automation (BPA)
+
+Business process automation (BPA) means using software to do the repeated steps of a business job, like sending a bill to be approved. The aim is less manual work, fewer errors and the same result each time. It can run on simple rules, workflows or AI.
+
+IBM describes a business process as a series of steps toward one goal, such as onboarding a new hire or paying a supplier. BPA hands some or all of those steps to software. It often links several systems, so data moves from one to the next without anyone typing it again.
+
+IBM also warns that automation stalls when the steps were never written down. That is why our note on business process automation with AI starts with a written job: the steps a person already does, who checks the result, and what counts as done.
+
+https://abra-ca-dabra.app/glossary/business-process-automation/
+
+### Crawler (bot)
+
+A crawler is a program that visits web pages on its own and reads them, usually for a search engine or an AI company. It is also called a robot or spider. Sites use a robots.txt file to tell crawlers which pages they may visit.
+
+Google calls crawler a general term for any program that automatically finds and scans websites. Googlebot is the main one Google uses for Search. What crawlers read is how a search engine or an AI tool learns what is on your site.
+
+AI companies run more than one crawler, and each one is a separate switch. OpenAI says OAI-SearchBot is for search, so blocking it keeps a site out of ChatGPT search answers. GPTBot collects pages that may be used to train its models. A site can allow one and block the other.
+
+https://abra-ca-dabra.app/glossary/crawler/
+
+### Custom software
+
+Custom software is software built for one business or group of users, around how they already work. Off-the-shelf software is different: it is made for many buyers and sold as a ready product. Custom software makes sense when no ready product does the job well.
+
+IBM describes custom software development as designing, building, deploying and maintaining software for a specific set of users, functions or organizations. Off-the-shelf software is built for a broad set of needs, so it can be packaged and sold to many buyers.
+
+Neither is better by default. If a product already does the job, buying it is usually faster. Custom software earns its cost when the job is special to how your business works and the gap shows up every week. It also needs someone to look after it once it is built.
+
+https://abra-ca-dabra.app/glossary/custom-software/
+
+### Generative AI
+
+Generative AI is AI that creates new content, such as text, images, audio, video or software code, in response to a request. Large language models, which write text, are the best-known kind.
+
+IBM defines generative AI as AI that can create original content in response to a user's prompt or request. Google's machine learning glossary calls it an emerging field with no formal definition. It says most experts agree these models make content that is complex, coherent and original.
+
+Much of the AI businesses used before was predictive: it sorted, scored or forecast things from past data. Generative AI makes something new, like a draft email or a product photo. A person should still check the output before it goes out, because it can sound sure and still be wrong.
+
+https://abra-ca-dabra.app/glossary/generative-ai/
 
 ### Generative engine optimization (GEO)
 
@@ -266,6 +336,16 @@ Google's course explains it with two kinds of model: a weak one, typically a sma
 A setting called shrinkage scales each new tree down before it is added. Google compares it to a learning rate: smaller steps learn more slowly but help stop the model from fitting noise. Training stops at a set limit, or when results on held back data stop improving.
 
 https://abra-ca-dabra.app/glossary/gradient-boosting/
+
+### HQ
+
+HQ is Abracadabra's client workspace, where our team and a crew of digital workers get your work done. Each request becomes a card with a plan. Nothing reaches your folders or your social networks until it has been reviewed and you have approved it.
+
+A request comes in by email, through the start-a-project form, or as a note on a piece in your space. A card opens on your project board with a plan for what each piece of work must make. Digital workers, which are AI agents set up for your business, build the work and file it to HQ, where it is held.
+
+Client Services checks the work against your request, and a person on our team signs off. Then you approve each piece, ask for a change, or remove it. Finished work sits in named folders, and approved posts can be scheduled to your connected social networks.
+
+https://abra-ca-dabra.app/glossary/hq/
 
 ### Large language model (LLM)
 
@@ -297,6 +377,16 @@ Machine learning is a broad field. Large language models are one kind of machine
 
 https://abra-ca-dabra.app/glossary/machine-learning/
 
+### Readiness Check
+
+The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes and scores four things: pressure, readiness, growth and how well answer engines can read your site. You get a band, four scores and three suggestions in each section.
+
+The check asks one question per screen. Three scores come from your answers. Pressure is the jobs that eat your week. Readiness is whether the data, the workflow, the owner and the decision can support real work. Growth is where new customers come from. The fourth score, visibility, is a live read of your public website.
+
+When you finish, you leave an email and then see your band, your four scores and three suggestions in each section. The four bands are Early, Forming, Ready and Running. You can also book a thirty-minute working session if you want one.
+
+https://abra-ca-dabra.app/glossary/readiness-check/
+
 ### Schema markup and JSON-LD
 
 Schema markup is code added to a web page that labels what the page is about, such as an article, a product or a business. The labels come from a shared list called schema.org. JSON-LD is the format Google recommends for it. It is a block of code that machines read and visitors do not see.
@@ -307,9 +397,19 @@ JSON-LD is a W3C standard for writing linked data as JSON. On a web page it sits
 
 https://abra-ca-dabra.app/glossary/schema-markup-json-ld/
 
+### Workflow
+
+A workflow is the set of steps that takes a piece of work from start to finish, in a set order. In AI, it also means a system where an AI model and tools follow steps written in code ahead of time. That is different from an AI agent, which picks its own next step.
+
+Merriam-Webster defines a workflow as the sequence of steps that moves a working process from beginning to end. IBM describes it as a way to manage repeated tasks that happen in a particular order, like approving an invoice.
+
+Anthropic draws the line that matters for AI. Workflows are systems where AI models and tools run through code paths set in advance. Agents direct their own steps and tool use. Anthropic says to start with the simplest option that works, and that is often a workflow.
+
+https://abra-ca-dabra.app/glossary/workflow/
+
 ## Blog posts
 
-Only posts with datePublished on or before 2026-10-24 are included.
+Only posts with datePublished on or before 2026-10-25 are included.
 
 ## AI Agents for Business: When to Use One
 

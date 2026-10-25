@@ -320,7 +320,7 @@
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/glossary/</loc>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/glossary/agentic-ai/</loc>
@@ -331,12 +331,40 @@
     <lastmod>2026-10-24</lastmod>
   </url>
   <url>
+    <loc>https://abra-ca-dabra.app/glossary/ai-citation/</loc>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+  <url>
     <loc>https://abra-ca-dabra.app/glossary/ai-readiness/</loc>
     <lastmod>2026-10-24</lastmod>
   </url>
   <url>
+    <loc>https://abra-ca-dabra.app/glossary/ai-visibility/</loc>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/glossary/answer-engine/</loc>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+  <url>
     <loc>https://abra-ca-dabra.app/glossary/answer-engine-optimization/</loc>
     <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/glossary/business-process-automation/</loc>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/glossary/crawler/</loc>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/glossary/custom-software/</loc>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/glossary/generative-ai/</loc>
+    <lastmod>2026-10-25</lastmod>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/glossary/generative-engine-optimization/</loc>
@@ -345,6 +373,10 @@
   <url>
     <loc>https://abra-ca-dabra.app/glossary/gradient-boosting/</loc>
     <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/glossary/hq/</loc>
+    <lastmod>2026-10-25</lastmod>
   </url>
   <url>
     <loc>https://abra-ca-dabra.app/glossary/large-language-model/</loc>
@@ -359,8 +391,16 @@
     <lastmod>2026-10-24</lastmod>
   </url>
   <url>
+    <loc>https://abra-ca-dabra.app/glossary/readiness-check/</loc>
+    <lastmod>2026-10-25</lastmod>
+  </url>
+  <url>
     <loc>https://abra-ca-dabra.app/glossary/schema-markup-json-ld/</loc>
     <lastmod>2026-10-24</lastmod>
+  </url>
+  <url>
+    <loc>https://abra-ca-dabra.app/glossary/workflow/</loc>
+    <lastmod>2026-10-25</lastmod>
   </url>
 <!-- /site-urls -->
   <!-- blog-urls -->
