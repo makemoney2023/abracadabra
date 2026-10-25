@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-25
+
+- **What changed** — The Social tab's side rail ("N need a look" and the approved-not-on-the-calendar list) now follows the project's **Add to the Library** box (`projects.include_in_library`), and counts a piece as social only when it is social work: a Library tag of `social` wins, otherwise it needs a network (`deliverable_items.channel`) or a `social_pack` deliverable. The agent API's `GET /api/agent-social/overview` counts (`needsALook`, `approvedNotScheduled`) use the same rule; they already followed the Library box. Christopher: "Lets make sure that siderail abides by the add to library check box on a project".
+- **Why** — Every filed png/jpg becomes a `static` item, so PR screenshots and diagrams filed into document and design deliverables were showing as social pieces that need a look (12 of Abracadabra's 12 waiting pieces before this change were 10 screenshots/diagrams plus the one real LinkedIn post), and the rail ignored the project's Library box.
+- **Code touchpoints** — `handoff/src/lib/social-piece-rule.ts` (new: `socialPieceSql`, `socialRailSql`), `handoff/src/lib/social-review.ts`, `handoff/src/lib/social-queries.ts`, tests in `handoff/src/lib/social-review.test.ts` and `handoff/src/lib/social-queries.test.ts`.
+- **Data-flow impact** — Read-only. No writes, no data changes. The rail's eligibility check is chunked at 90 ids so it stays under D1's 100-parameter limit. The calendar's piece catalog is unchanged.
+- **API / schema impact** — No schema change, no new routes. `overview` counts can go down for clients with images filed outside social packs.
+- **Verification** — `TZ=UTC npm test`, `npm run typecheck:agent`, `eslint` on the touched files.
+
 ## 2026-10-24
 
 - **What changed** — Search Console data in HQ, PR 2 of the [Search Console design](../docs/superpowers/specs/2026-10-24-search-console-optimization-loop-design.md) (Christopher: "Then execute pr2"): the sync pipeline. A daily cron `30 8 * * *` on `handoff` that only enqueues (`scheduled()` now branches on it first through `routeScheduled`, so it never wakes agents); a `search-sync` queue (producer on `handoff` and `handoff-hq`, consumer on `handoff` with batch 5, concurrency 2, 5 retries, DLQ `search-sync-dlq`) with its own `dispatchQueue` branch ahead of the lead-intake default; plan, Search Analytics (one day per request, 25,000-row pages, D-4..D-1 daily, 16-month backfill newest first), sitemaps, URL Inspection (within `inspect_budget`, sitemap and changed URLs first) and retention jobs; a global throttle of 300 Google calls a minute across all properties; R2 raw exports under `search-raw/`; access loss on a confirmed 403; staff **Sync now** and **Load history** buttons (enqueue only) and a one-line sync status on the client's Settings card. Facts go to a new D1 database `handoff-search` with its own migrations folder and runner.

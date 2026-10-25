@@ -11,6 +11,7 @@ import { shelfNote } from "./finished-shelf";
 import { isEligibleSocialPlatform } from "./zernio";
 import type { ItemFormat } from "./deliverable-manifest";
 import { libraryEligibleSql } from "./project-library";
+import { socialPieceSql } from "./social-piece-rule";
 
 const LIVE = ["sending", "scheduled", "published", "partial"];
 
@@ -134,6 +135,8 @@ type ItemRow = {
   media_json: string;
   published_version: number | null;
   removed_at: number | null;
+  /** 1 when the piece is social work (see socialPieceSql). */
+  social: number;
 };
 
 type PostRow = {
@@ -152,7 +155,8 @@ type PostRow = {
 async function currentPieces(sql: Sql, organizationId: string): Promise<ItemRow[]> {
   return sql.all<ItemRow>(
     `SELECT i.id, i.deliverable_id, i.version, i.title, i.format, i.status, i.media_json,
-            d.published_version AS published_version, i.removed_at AS removed_at
+            d.published_version AS published_version, i.removed_at AS removed_at,
+            CASE WHEN ${socialPieceSql("i", "d")} THEN 1 ELSE 0 END AS social
      FROM deliverable_items i
      JOIN deliverables d ON d.id = i.deliverable_id
      WHERE d.organization_id = ? AND i.version = COALESCE(d.published_version, d.version)
@@ -205,7 +209,8 @@ export async function socialOverview(sql: Sql, agent: AgentPrincipal, client: un
   const liveIds = new Set(
     posts.filter((post) => LIVE.includes(post.status)).map((post) => post.item_id),
   );
-  const onShelf = pieces.filter((item) => item.published_version != null && item.removed_at == null);
+  // Counted the same way as the Social rail: on the shelf, social work, and (via currentPieces) in a Library project.
+  const onShelf = pieces.filter((item) => item.published_version != null && item.removed_at == null && item.social === 1);
   const needsALook = onShelf.filter((item) => item.status === "pending" || item.status === "changes_requested").length;
   const approvedNotScheduled = onShelf.filter((item) => item.status === "approved" && !liveIds.has(item.id)).length;
   const readyCount = approvedNotScheduled;
