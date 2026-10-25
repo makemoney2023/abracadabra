@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AccessCheck, SearchProperty } from "@/lib/search/properties";
-import { accessSummary, PROPERTY_STATUS } from "@/lib/search/present";
-import { MapSearchPropertyForm, RemoveSearchPropertyForm } from "./search-console-forms";
+import { accessSummary, PROPERTY_STATUS, syncSummary } from "@/lib/search/present";
+import type { SyncRunSummary } from "@/lib/search/sync-status";
+import { MapSearchPropertyForm, RemoveSearchPropertyForm, SyncSearchPropertyForm } from "./search-console-forms";
 
 /** Staff only (client Settings tab). Maps this client's Search Console property and shows HQ's access to it. */
 export function SearchConsoleCard({
@@ -10,11 +11,13 @@ export function SearchConsoleCard({
   properties,
   access,
   suggestion,
+  runs = {},
 }: {
   organizationId: string;
   properties: SearchProperty[];
   access: AccessCheck | null;
   suggestion: string;
+  runs?: Record<string, SyncRunSummary>;
 }) {
   const summary = accessSummary(access);
   return (
@@ -48,8 +51,21 @@ export function SearchConsoleCard({
                       <Badge variant={status.tone}>{status.label}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">{status.hint}</p>
+                    {property.status === "active" ? (
+                      <p className="text-xs text-muted-foreground">{syncSummary(property, runs[property.id])}</p>
+                    ) : null}
                   </div>
-                  <RemoveSearchPropertyForm organizationId={organizationId} propertyId={property.id} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    {property.status === "active" ? (
+                      <>
+                        <SyncSearchPropertyForm organizationId={organizationId} propertyId={property.id} mode="daily" />
+                        {property.backfill_state !== "running" ? (
+                          <SyncSearchPropertyForm organizationId={organizationId} propertyId={property.id} mode="backfill" />
+                        ) : null}
+                      </>
+                    ) : null}
+                    <RemoveSearchPropertyForm organizationId={organizationId} propertyId={property.id} />
+                  </div>
                 </li>
               );
             })}

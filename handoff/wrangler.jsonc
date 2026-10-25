@@ -42,6 +42,12 @@
       "database_name": "handoff",
       "database_id": "b2be192c-db0d-447f-8d7c-b2c4d39df274",
       "migrations_dir": "migrations"
+    },
+    {
+      "binding": "SEARCH_DB",
+      "database_name": "handoff-search",
+      "database_id": "TODO-create-handoff-search-then-paste-its-database_id",
+      "migrations_dir": "migrations-search"
     }
   ],
   "send_email": [
@@ -65,6 +71,10 @@
       {
         "binding": "SCAN_JOBS",
         "queue": "scan-jobs"
+      },
+      {
+        "binding": "SEARCH_SYNC",
+        "queue": "search-sync"
       }
     ],
     "consumers": [
@@ -81,11 +91,19 @@
         "max_batch_timeout": 5,
         "max_retries": 3,
         "dead_letter_queue": "github-events-dlq"
+      },
+      {
+        "queue": "search-sync",
+        "max_batch_size": 5,
+        "max_batch_timeout": 5,
+        "max_concurrency": 2,
+        "max_retries": 5,
+        "dead_letter_queue": "search-sync-dlq"
       }
     ]
   },
   "triggers": {
-    "crons": ["* * * * *", "0 * * * *"]
+    "crons": ["* * * * *", "0 * * * *", "30 8 * * *"]
   },
   "vars": {
     "HANDOFF_AI_GATEWAY_ID": "default",

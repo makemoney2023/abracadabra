@@ -73,6 +73,8 @@ export function createGscClient(input: {
   sleep?: (ms: number) => Promise<void>;
   maxRetries?: number;
   baseDelayMs?: number;
+  /** Called before every HTTP attempt (the global throttle). Throwing stops the call before it reaches Google. */
+  beforeRequest?: () => Promise<void>;
 }): GscClient {
   const fetchImpl = input.fetchImpl ?? fetch;
   const sleep = input.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
@@ -83,6 +85,7 @@ export function createGscClient(input: {
     let reauthed = false;
     for (let attempt = 0; ; attempt += 1) {
       const token = await input.tokens.token(GSC_READONLY_SCOPE);
+      if (input.beforeRequest) await input.beforeRequest();
       let response: Response;
       try {
         response = await fetchImpl(url, {

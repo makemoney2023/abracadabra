@@ -1,4 +1,5 @@
-import type { AccessCheck, SearchPropertyStatus } from "./properties";
+import type { AccessCheck, SearchProperty, SearchPropertyStatus } from "./properties";
+import type { SyncRunSummary } from "./sync-status";
 
 /** Staff-facing words for the Search Console card on a client's Settings tab. */
 
@@ -25,4 +26,23 @@ export function accessSummary(check: AccessCheck | null): { ok: boolean; text: s
   if (!check) return { ok: false, text: "HQ has not checked Google access yet. The handoff Worker checks every hour." };
   if (check.ok) return { ok: true, text: `HQ's Google account can read ${check.sites?.length ?? 0} Search Console ${check.sites?.length === 1 ? "property" : "properties"}.` };
   return { ok: false, text: REASON[check.reason ?? ""] ?? "The last Google access check failed." };
+}
+
+const BACKFILL: Record<SearchProperty["backfill_state"], string> = {
+  none: "History not loaded yet. The next daily run loads 16 months, or use Load history.",
+  running: "Loading 16 months of history, newest days first.",
+  done: "16 months of history loaded.",
+  failed: "History loaded with gaps. Load history again to retry the missing days.",
+};
+
+/** One line about the data HQ holds for a property: how fresh, history, and the last day's sync runs. */
+export function syncSummary(property: Pick<SearchProperty, "data_through" | "backfill_state">, runs: SyncRunSummary | undefined): string {
+  const parts = [property.data_through ? `Final data through ${property.data_through}.` : "No final day stored yet.", BACKFILL[property.backfill_state]];
+  if (runs && runs.total > 0) {
+    const waiting = runs.queued + runs.running;
+    parts.push(
+      `Last 24 hours: ${runs.done} of ${runs.total} jobs done${waiting ? `, ${waiting} waiting` : ""}${runs.failed ? `, ${runs.failed} failed` : ""}.`,
+    );
+  }
+  return parts.join(" ");
 }
