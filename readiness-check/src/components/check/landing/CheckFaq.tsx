@@ -17,7 +17,7 @@ export const CHECK_FAQ = [
   },
   {
     q: "What happens after I finish?",
-    a: "You leave an email, then see your scores, the stage your business is at, up to three next steps in each section, and a way to book a thirty-minute working session.",
+    a: "You leave an email, then see your scores, the stage your business is at, next steps for your business, and a way to book a thirty-minute working session.",
   },
   {
     q: "Is this a diagnosis?",

@@ -848,7 +848,7 @@
       "short": "The Readiness Check is Abracadabra's online check for a business that wants to put AI to work. It takes five to seven minutes. It asks about the work that slows you down, your data and workflow, where new customers come from, and how well answer engines can read your site. It gives you next steps for your business.",
       "explainer": [
         "The check asks one question per screen. It asks about the jobs that eat your week and whether your data, your workflow, the owner and the decision can support real work. It also asks where new customers come from. Then it does a live read of your public website.",
-        "When you finish, you leave an email. It gives you next steps for your business. You see three suggestions in each section, and you can book a thirty-minute working session if you want one."
+        "When you finish, you leave an email. It gives you next steps for your business. You can also book a thirty-minute working session if you want one."
       ],
       "sections": [
         {
@@ -881,7 +881,7 @@
         },
         {
           "question": "What happens after I finish the Readiness Check?",
-          "answer": "You leave an email. Then you see your next steps, with three suggestions in each section, and a way to book a thirty-minute working session."
+          "answer": "You leave an email. It gives you next steps for your business. You can also book a thirty-minute working session."
         }
       ],
       "related": [
@@ -1941,7 +1941,7 @@
       "category": "AI readiness and strategy",
       "priority": "Med",
       "clientFlag": null,
-      "draft": "The label a readiness score falls in, such as Early, Forming, Ready or Running. It shows where you stand today and is not a grade.",
+      "draft": "The stage name the Readiness Check gives a business, such as Early, Forming, Ready or Running. It shows where you stand today and is not a grade.",
       "mentions": 9,
       "sources": [
         "/blog/ai-readiness-framework",

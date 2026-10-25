@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckMenu } from "@/components/check/CheckMenu";
 import { STUDIO } from "@/lib/brand/studio";
+import { READINESS_META_COPY } from "@/lib/marketing/copy";
 
 export const metadata: Metadata = {
+  description: READINESS_META_COPY.description,
   themeColor: STUDIO.canvas,
 };
 

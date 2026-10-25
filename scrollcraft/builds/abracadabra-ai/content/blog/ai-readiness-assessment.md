@@ -85,7 +85,7 @@ Here is a plain comparison of who each tool describes and what you leave with.
 - Cisco's index describes companies with more than 500 employees, so you get a comparison with pacesetters and not a score for one small firm.
 - The OECD tool describes the smaller firms in the Group of Seven test, so you get a short self-check that stays in the browser.
 - The AWS checklist describes a small or midsize business, so you get five steps and four stage names.
-- The Readiness Check describes the business taking it, so you get next steps for your business and three tips for each section.
+- The Readiness Check describes the business taking it, so you get next steps for your business.
 
 The Readiness Check is the one built for the firm in the room. It teaches and points the way, but it does not diagnose. We publish the method on [our site](/).
 
@@ -104,7 +104,7 @@ The Readiness Check asks about the same four parts as this note.[^check] It give
 
 <!--image:3-->
 
-A next step tells you where to look today, and it is not a grade. The check takes five to seven minutes with one question on each screen. It gives three tips for each section.
+A next step tells you where to look today, and it is not a grade. The check takes five to seven minutes with one question on each screen. It gives you next steps for your business.
 
 When the know-how is still in people's heads, you write one job down and name the owner before you shop. When the writing is only partial, two pieces are often missing. One is a named owner, and the other is one place where the facts live. Without them nobody else can run the job when the usual person is out.
 
@@ -138,7 +138,7 @@ Second, we pull the public tools apart so nobody borrows the wrong group of peop
 
 Third, we score data, process, people, and the decision in words. We use absent, partial, in place, or running. We use the last two only if we can point to proof. The front desk lead, the clinician, and the owner each answer on their own. When they disagree, that is the finding. So we write it down and do not average it into a mood.
 
-Fourth, we take the Readiness Check if they want a second view. It takes five to seven minutes, with one question on each screen and three tips for each section. It gives you next steps for your business. We read those steps as a place to start today, and we do not add a pep talk on top.
+Fourth, we take the Readiness Check if they want a second view. It takes five to seven minutes, with one question on each screen. It gives you next steps for your business. We read those steps as a place to start today, and we do not add a pep talk on top.
 
 Fifth, we pick one next page and not five projects. If the record is the blank, we fix the list that the front desk lead and the clinician will both believe. If the writing is the blank, we write down what happens for the patient who will not book today. The tool demo can wait until that page exists.
 
