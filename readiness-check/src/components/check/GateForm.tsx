@@ -6,11 +6,11 @@ import type { ResultsPayload } from "@/lib/assessment/present";
 
 export function GateForm({
   token,
-  bandLabel,
+  stageLabel,
   onResults,
 }: {
   token: string;
-  bandLabel: string;
+  stageLabel: string;
   onResults: (results: ResultsPayload) => void;
 }) {
   const [email, setEmail] = useState("");
@@ -33,8 +33,8 @@ export function GateForm({
         setError(data.message ?? data.error ?? "Could not send the report. Try again.");
         return;
       }
-      if (!data.results?.scores) {
-        setError("The score did not come back. Try again.");
+      if (!data.results?.stage) {
+        setError("Your results did not come back. Try again.");
         return;
       }
       onResults(data.results);
@@ -52,7 +52,7 @@ export function GateForm({
         <h1 className="font-heading text-4xl">{config.copy.gateHeadline}</h1>
         <p className="text-muted-foreground">{config.copy.gatePrompt}</p>
         <p className="studio-kicker" aria-hidden>
-          {bandLabel}
+          {stageLabel}
         </p>
       </div>
       <div className="space-y-2">

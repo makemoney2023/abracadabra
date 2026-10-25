@@ -82,8 +82,6 @@ function presentAssessment(row: AssessmentRow, scan: ScanRow | null, findings: F
           status: suggestionStatus,
           findings,
           token: scan.public_token,
-          scoreTotal: scan.score_total,
-          breakdown: scan.score_breakdown,
         }
       : null,
     calLink: link,
@@ -253,7 +251,8 @@ export async function completeAssessment(admin: AssessmentAdmin, token: string) 
   const row = await getAssessmentByToken(admin, token);
   if (!row) return { status: 404 as const, body: { error: "Check not found" } };
   if (row.status === "completed" && row.scores) {
-    return { status: 200 as const, body: { ok: true, band: row.scores.overall.band } };
+    // `band` is the stage id (early/forming/ready/running), never a number; the chat worker reads it.
+    return { status: 200 as const, body: { ok: true, band: row.scores.overall.band, stage: row.scores.overall.band } };
   }
   const scan = await loadScan(admin, row.scanId);
   const scores: AssessmentScores = scoreAssessment({
@@ -270,7 +269,7 @@ export async function completeAssessment(admin: AssessmentAdmin, token: string) 
   await addAssessmentEvent(admin, row.id, "completed", { band: scores.overall.band });
   await addAssessmentEvent(admin, row.id, "gate_shown", { band: scores.overall.band });
   await publishCompleted(admin, row.id);
-  return { status: 200 as const, body: { ok: true, band: scores.overall.band } };
+  return { status: 200 as const, body: { ok: true, band: scores.overall.band, stage: scores.overall.band } };
 }
 
 export async function optInAssessment(

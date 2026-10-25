@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
+import { stageRedirects } from "./src/lib/assessment/stage-redirects";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return stageRedirects();
+  },
 };
 
 export default nextConfig;

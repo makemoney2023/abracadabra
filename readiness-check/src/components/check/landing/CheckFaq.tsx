@@ -1,7 +1,7 @@
 export const CHECK_FAQ = [
   {
     q: "How do I know if my business is ready to put AI to work?",
-    a: "Take the Readiness Check. It scores where the work slows down, whether the knowledge and the workflow can support a system, where new customers come from, and how readable the website is to answer engines.",
+    a: "Take the Readiness Check. It looks at where the work slows down, whether the knowledge and the workflow can support a system, where new customers come from, and how readable the website is to answer engines.",
   },
   {
     q: "What does the check measure?",
@@ -13,11 +13,11 @@ export const CHECK_FAQ = [
   },
   {
     q: "Do I need a website?",
-    a: "The last scored question asks for a public website so we can read it. If that read fails, you still get the rest of the report.",
+    a: "The last question asks for a public website so we can read it. If that read fails, you still get the rest of the report.",
   },
   {
     q: "What happens after I finish?",
-    a: "You leave an email, then see the scores, three suggestions in each section, and a way to book a thirty-minute working session.",
+    a: "You leave an email, then see the stage your business is at, up to three next steps in each section, and a way to book a thirty-minute working session.",
   },
   {
     q: "Is this a diagnosis?",

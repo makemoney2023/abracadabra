@@ -12,7 +12,30 @@ function asNumber(value: unknown): number | null {
   return typeof value === "number" ? value : null;
 }
 
-/** A sentence from stored score numbers. Survey answers never enter this text. */
+const STAGE_LABELS: Record<string, string> = { early: "Early", forming: "Forming", ready: "Ready", running: "Running" };
+
+/**
+ * The Readiness Check stage in words, with no number. This is the only part of the check a client or
+ * prospect ever sees (the check shows a stage name and next steps, never a score), so anything an agent
+ * writes for the client uses this line.
+ */
+export function stageSummaryFromScores(scoresJson: string): string {
+  let parsed: unknown = null;
+  try {
+    parsed = JSON.parse(scoresJson);
+  } catch {
+    parsed = null;
+  }
+  const overall = asRecord(asRecord(parsed)?.overall) ?? {};
+  const band = typeof overall.band === "string" ? overall.band : "";
+  const label = STAGE_LABELS[band];
+  return label ? `Readiness Check stage: ${label}.` : "No Readiness Check stage is stored.";
+}
+
+/**
+ * A sentence from stored score numbers, for staff and agents only. Survey answers never enter this text.
+ * Visitors never see these numbers, so it ends with a reminder not to quote them to the client.
+ */
 export function answerSummaryFromScores(scoresJson: string, totalScore: number | null): string {
   let parsed: unknown = null;
   try {
@@ -35,7 +58,9 @@ export function answerSummaryFromScores(scoresJson: string, totalScore: number |
   if (readinessTotal != null) parts.push(`Readiness ${readinessTotal}.`);
   if (growthTotal != null) parts.push(`Growth ${growthTotal}.`);
   if (visibilityTotal != null) parts.push(`Visibility ${visibilityTotal}.`);
-  return parts.length > 0 ? parts.join(" ") : "No scored summary is stored.";
+  if (parts.length === 0) return "No scored summary is stored.";
+  parts.push("Staff only: never quote these numbers to the client; they see the stage name and next steps.");
+  return parts.join(" ");
 }
 
 export async function liveOrganization(sql: Sql, organizationId: string): Promise<boolean> {
@@ -251,6 +276,7 @@ export async function clientContext(sql: Sql, organizationId: string): Promise<R
           totalScore: assessment.total_score,
           scores,
           answerSummary: answerSummaryFromScores(assessment.scores_json, assessment.total_score),
+          stageSummary: stageSummaryFromScores(assessment.scores_json),
         }
       : null,
     project: project
