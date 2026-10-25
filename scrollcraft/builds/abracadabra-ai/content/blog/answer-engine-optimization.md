@@ -2,12 +2,12 @@
 title: "Answer Engine Optimization: What Google Still Requires"
 description: "Google still treats answer-engine work as ordinary SEO. A research paper reports visibility gains. Pew found fewer clicks when a summary appears."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI search visibility"
 cluster: "search"
 primaryQuery: "answer engine optimization"
 author: abracadabra-studio
-cta: "See whether the site can be cited. Run the Readiness Check."
+cta: "A page has to be found before it is cited. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/answer-engine-optimization/01.webp
     file: answer-engine-optimization-01.jpg

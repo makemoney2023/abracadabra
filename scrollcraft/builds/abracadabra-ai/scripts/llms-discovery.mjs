@@ -134,7 +134,7 @@ function buildLlmsTxt({ posts, updated }) {
     mdEntry("About", `${SITE}/about/`, "Who we are and how we work"),
     mdEntry("Privacy", `${SITE}/privacy`, "How we handle information"),
     mdEntry("Start a project", `${SITE}/start/`, `Write houdini@ or use the form; contact ${CONTACT}`),
-    mdEntry("Readiness Check", "https://check.abra-ca-dabra.app/check", "Five-to-seven-minute score of pressure, readiness, growth, and site visibility"),
+    mdEntry("Readiness Check", "https://check.abra-ca-dabra.app/check", "Five-to-seven-minute check of a business. It gives you next steps for your business."),
     mdEntry("Schema", "https://schema.abra-ca-dabra.app/", "Scores how visible a site is to answer engines and generates the repair"),
   ];
   const shippedLines = [

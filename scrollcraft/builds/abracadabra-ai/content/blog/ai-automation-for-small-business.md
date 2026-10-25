@@ -2,12 +2,12 @@
 title: "AI Automation for Small Business: Which Job First"
 description: "Pick the first job by volume, how stable the rules are, whether the data can be read, and what a wrong answer costs. Surveys show which jobs already appear."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI automation"
 cluster: "automation"
 primaryQuery: "ai automation for small business"
 author: abracadabra-studio
-cta: "Surveys measure everyone. The Readiness Check measures the slow job."
+cta: "Surveys count everyone. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/ai-automation-for-small-business/01.webp
     file: ai-automation-for-small-business-01.jpg

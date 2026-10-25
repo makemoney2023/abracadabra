@@ -493,7 +493,7 @@ test("the Readiness Check runs inside the chat, one question at a time, and link
       await page.getByRole("heading", { name: READINESS.questions.Q04.prompt }).waitFor();
       await page.getByRole("button", { name: "Skip" }).click();
       await page.getByRole("heading", { name: "Ready." }).waitFor();
-      const report = await page.getByRole("link", { name: "See your score and plan" }).getAttribute("href");
+      const report = await page.getByRole("link", { name: "See your next steps" }).getAttribute("href");
       assert.equal(report, "https://check.abra-ca-dabra.app/check/chatTok123456789012345678");
       if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/readiness-result-${width}.png` });
       assert.deepEqual(seen[0], ["pressure", ["P05"]]);

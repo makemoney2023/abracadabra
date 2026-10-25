@@ -1,13 +1,13 @@
 ---
 title: "Is My Business Ready for AI? Signs to Read First"
-description: "Ready means the data, the process, the people, and the decision can carry a tool. This note reads the Check bands against a large-firm index."
+description: "Ready means the data, the process, the people, and the decision can carry a tool. This note reads those signs against a large-firm index."
 datePublished: "2026-10-14"
-dateModified: "2026-10-14"
+dateModified: "2026-10-25"
 pillar: "AI readiness"
 cluster: "assessment"
 primaryQuery: "is my business ready for ai"
 author: abracadabra-studio
-cta: "The bands describe a state. See where this business sits."
+cta: "Signs describe a state. The Readiness Check gives you next steps for your business."
 images:
   - src: /blog/media/is-my-business-ready-for-ai/01.webp
     file: is-my-business-ready-for-ai-01.jpg
@@ -25,8 +25,8 @@ images:
 faqs:
   - question: "What does ready for AI mean here?"
     answer: "It means the data, the process, the people, and the decision are in good enough shape for a tool to do one named job. It does not mean you have bought anything."
-  - question: "Is a low score a failure?"
-    answer: "No. Early is 0–39 and Forming is 40–59. Cisco's pacesetters, the firms furthest along in a big-company survey, were about 13% of that sample. A low score just describes where you are today."
+  - question: "Is it a failure if we are not ready yet?"
+    answer: "No. Cisco's pacesetters, the firms furthest along in a big-company survey, were about 13% of that sample. Not being ready just describes where you are today, and it points to the next step."
   - question: "Does the OECD tool publish an adoption rate?"
     answer: "No. The 2026 SME tool is a short self-check for small firms. It keeps no data and it does not say how many firms are ready."
 citations:
@@ -34,7 +34,7 @@ citations:
     title: "Abracadabra Readiness Check"
     url: "https://check.abra-ca-dabra.app/check"
     publisher: "Abracadabra AI"
-    figures: ["0", "39", "40", "59", "60", "79", "80", "100"]
+    figures: []
   - id: cisco
     title: "Cisco AI research: the most AI-ready companies"
     url: "https://newsroom.cisco.com/c/r/newsroom/en/us/a/y2025/m10/cisco-ai-research-the-most-ai-ready-companies-outpace-peers-in-the-race-to-value.html"
@@ -49,15 +49,15 @@ citations:
 ---
 A business is ready for AI when one named job can move to a tool without anyone inventing the process along the way. Ready is not a mood, and it is not a purchase. It describes the data, the process, the people, and the decision around that one job. If any one of those four is still a shrug, then the job is not ready yet.
 
-The [Readiness Check](https://check.abra-ca-dabra.app/check) scores this as four bands. Early is 0–39, Forming is 40–59, Ready is 60–79, and Running is 80–100.[^check] Each sentence on the check describes a state of the business. The check does not diagnose anything, and we like that limit. A diagnosis invites shame, but a state invites the next piece of work. Early is allowed to be the true state. Plenty of good businesses are Early on the job they just tried to automate, and they are fine at the rest of their work.
+The [Readiness Check](https://check.abra-ca-dabra.app/check) asks about these same signs.[^check] It gives you next steps for your business. Each sentence on the check describes a state of the business. The check does not diagnose anything, and we like that limit. A diagnosis invites shame, but a state invites the next piece of work. Not ready yet is allowed to be the true state. Plenty of good businesses are not ready on the job they just tried to automate, and they are fine at the rest of their work.
 
-The [Early band](https://check.abra-ca-dabra.app/check/guide/band/early) and the [Ready band](https://check.abra-ca-dabra.app/check/guide/band/ready) spell out those states in full sentences. The [assessment note](/blog/ai-readiness-assessment) compares the public tools side by side. Read the band pages when you want the exact wording. Read this note when you want to know which signs to trust before a vendor tells you what the signs are.
+The [readiness guide](https://check.abra-ca-dabra.app/check/guide/readiness) spells out those states in full sentences. The [assessment note](/blog/ai-readiness-assessment) compares the public tools side by side. Read the guide when you want the exact wording. Read this note when you want to know which signs to trust before a vendor tells you what the signs are.
 
 ## What a large-firm index is counting
 
-Cisco's 2025 AI Readiness Index surveyed 8,000 senior leaders at organizations with more than 500 employees, across 30 markets and 26 industries.[^cisco] The firms it called pacesetters were near 13% of that sample, and they were 4 times more likely to move a pilot into production. That sample is not a census of small businesses. So a small firm can be Ready on our check and still look nothing like a pacesetter.
+Cisco's 2025 AI Readiness Index surveyed 8,000 senior leaders at organizations with more than 500 employees, across 30 markets and 26 industries.[^cisco] The firms it called pacesetters were near 13% of that sample, and they were 4 times more likely to move a pilot into production. That sample is not a census of small businesses. So a small firm can be ready for one job and still look nothing like a pacesetter.
 
-We say that last part slowly, because owners often miss it. Ready on our check means the named job can carry a tool. A pacesetter in Cisco's index is a large organization in a sample of senior leaders, and the 13% describes those organizations. It is not a report card for a shop, a clinic, or a trades desk. Suppose a salesperson says you should buy now to catch up with the pacesetters. Then they have glued a large-firm statistic to a small-firm fear. The 4 times gap in moving pilots into production is real inside that sample. It does not mean your service writer is late.
+We say that last part slowly, because owners often miss it. Ready, in this note, means the named job can carry a tool. A pacesetter in Cisco's index is a large organization in a sample of senior leaders, and the 13% describes those organizations. It is not a report card for a shop, a clinic, or a trades desk. Suppose a salesperson says you should buy now to catch up with the pacesetters. Then they have glued a large-firm statistic to a small-firm fear. The 4 times gap in moving pilots into production is real inside that sample. It does not mean your service writer is late.
 
 Use the index as a picture of a different size of firm. The useful part is that moving a pilot into production follows a written process. The useless move is to decide you are behind a business that staffs a whole crew for its pilot. You have a bay, a desk, and a person who knows the customers. Readiness is whether that person can hand the job to a tool without the job falling apart.
 
@@ -75,7 +75,7 @@ The bad signs are the same facts turned around. Knowledge in one head feels like
 
 <!--image:3-->
 
-A small firm can show the good signs on one job and the bad signs on another. That is normal, and it is why "is my business ready?" is the wrong question. The honest question is which job. The check's bands describe the state you are in, based on how you answered, and they are not a tattoo on the business. Early and Forming are 0–39 and 40–59, and they are descriptions. Ready and Running are 60–79 and 80–100, and they are descriptions too. None of them means you have bought a product, and none of them means you have failed as an owner.
+A small firm can show the good signs on one job and the bad signs on another. That is normal, and it is why "is my business ready?" is the wrong question. The honest question is which job. The signs describe the state you are in, based on how you answered, and they are not a tattoo on the business. Not ready yet is a description, and so is ready. Neither one means you have bought a product, and neither one means you have failed as an owner.
 
 ## A worked example
 
@@ -91,7 +91,7 @@ Does a person own the output? The vendor's tool would send a text, and the ticke
 
 Can someone stop the experiment? The owner says she could cancel the subscription. That stops the bill, but it does not stop the day's work. A real stop sounds like this: this text does not go out today because it is wrong. The person who sees that may halt it without a meeting. The shop does not have that person yet, and that is the fourth gap.
 
-So the shop is not ready for this job, and that is not an insult. The owner runs a respected bay. The signs say the status text would invent a process that the ticket writer, the lead tech, and the owner do not share today. If we put the same shop on the check, we would not be surprised to see Early or Forming. We would be surprised, and a little suspicious, if the answers came back Ready while the dash paper still beats the ticket.
+So the shop is not ready for this job, and that is not an insult. The owner runs a respected bay. The signs say the status text would invent a process that the ticket writer, the lead tech, and the owner do not share today. If we put the same shop through the check, we would expect a first step and not a big build. We would be surprised, and a little suspicious, if the answers said the shop was ready while the dash paper still beats the ticket.
 
 What would ready look like, without pretending we watched it happen? The ticket writer and the lead tech agree that the ticket is the record. The dash paper becomes a scratch pad that gets typed in before anyone is texted. The no-answer case and the second-problem case are written where the other writer can find them. The ticket writer owns the text. The lead tech can reject a finding that is not what she saw, and the owner can halt a wrong text the same day. Success means the customer hears the finding the lead tech actually made. That is Ready in the ordinary sense, and it does not look like a pacesetter. It looks like a shop that stopped inventing the process inside the tool.
 
@@ -103,7 +103,7 @@ Second, we read the large-firm index for what it counted, and then we say out lo
 
 Third, we walk the four good signs and the four bad signs as pairs. Is the source named, or does it sit in one head? Are the steps written, or are the exceptions loose? Does a person own the output, or is nobody allowed to send? Can someone stop the trial, or does success have no definition? The ticket writer, the lead tech, and the owner each answer, and we write down the conflicts instead of smoothing them over. The lead tech's paper against the ticket writer's ticket is the conflict that matters.
 
-Fourth, we open the band pages if a label will help. Early and Ready are states with sentences, and they are not prizes. If the signs are bad, we expect Early or Forming. We treat a Ready result as a reason to reread the answers, not as a reason to celebrate. The check does not diagnose, and neither do we.
+Fourth, we open the readiness guide if the wording will help. Its states are sentences, and they are not prizes. If the signs are bad, we expect a small first step. We treat a ready result as a reason to reread the answers, not as a reason to celebrate. The check does not diagnose, and neither do we.
 
 Fifth, we use the OECD self-check as a second pass. It takes about five minutes, the answers stay in the browser, and there is no adoption rate to misuse. If it shows a theme we skipped, we add that theme. If someone tries to turn it into "small firms are behind," we stop them, because the tool did not say that.
 
@@ -111,7 +111,7 @@ Sixth, we talk about the vendor only after the signs are honest. If the signs ar
 
 ## Common mistakes
 
-The mistake we see most is hearing "ready" as a personality. The owner is decisive, the lead tech is skilled, and the ticket writer is careful. None of that answers the signs. A careful writer with two records is not ready for a tool that needs one, because character is not a band.
+The mistake we see most is hearing "ready" as a personality. The owner is decisive, the lead tech is skilled, and the ticket writer is careful. None of that answers the signs. A careful writer with two records is not ready for a tool that needs one, because character is not a record.
 
 Another mistake is using Cisco's 13% as a small-business failure rate. It is the share of pacesetters in a sample of large organizations. Quoting it to scare a shop owner mixes up two different kinds of firm. The sample is not a census of bays and storefronts, and we will not nod along when a pitch says otherwise.
 
@@ -123,6 +123,6 @@ The last mistake is treating the OECD tool's missing rate as bad news. It does n
 
 ## What we'd do
 
-We would answer the owner with the signs and not with a pep talk. Most shops that ask "are we ready?" are really asking for permission to buy. The honest answer is often that one job is Forming and the rest of the question is too big. We would rather shrink the question than inflate the readiness.
+We would answer the owner with the signs and not with a pep talk. Most shops that ask "are we ready?" are really asking for permission to buy. The honest answer is often that one job is partly ready and the rest of the question is too big. We would rather shrink the question than inflate the readiness.
 
-If we were the owner, we would make the ticket the only record the lead tech is willing to have texted. We would write the no-answer case where the other writer can see it. We would also give the lead tech a plain way to kill a message that does not match her finding. Then we would take the check and read the band as a state. If it says Ready, we would still start with one job and a person who can stop it. If it says Early, we would believe the dash paper over the demo.
+If we were the owner, we would make the ticket the only record the lead tech is willing to have texted. We would write the no-answer case where the other writer can see it. We would also give the lead tech a plain way to kill a message that does not match her finding. Then we would take the check and follow the next step it gives. If it says the shop is ready, we would still start with one job and a person who can stop it. If it says to start smaller, we would believe the dash paper over the demo.
