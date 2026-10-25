@@ -30,6 +30,7 @@ import { readGithubSecrets } from "@/lib/github/secrets";
 import { presentSchemaLead } from "@/lib/schema-report";
 import { statusToken } from "@/lib/status-token";
 import { connectorGrant } from "@/lib/connector-grants";
+import { listSearchProperties, readAccessCheck } from "@/lib/search/properties";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { listSocialAccounts, listSocialPosts, refreshSocialPosts, syncSocialAccounts } from "@/lib/social";
@@ -296,6 +297,8 @@ export default async function ClientPage({
           githubConnected={Boolean(secrets)}
           githubFailed={Boolean(secrets && visible && !visible.ok)}
           searchConsoleResource={await connectorGrant(sql, client.id, "search-console")}
+          searchProperties={tab === "settings" ? await listSearchProperties(sql, client.id) : []}
+          searchAccess={tab === "settings" ? await readAccessCheck(sql) : null}
           internal={tab === "settings" ? await organizationInternal(sql, caller, client.id) : false}
           updateMode={tab === "settings" ? await organizationUpdateMode(sql, caller, client.id) : "draft"}
           agentWork={agentWork}
