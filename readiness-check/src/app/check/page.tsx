@@ -49,9 +49,9 @@ export default function CheckLandingPage() {
       </section>
       <section className="studio-panel max-w-2xl space-y-3 p-5">
         <p className="studio-kicker">What you get</p>
-        <h2 className="font-heading text-3xl">Your stage, and next steps for your business</h2>
+        <h2 className="font-heading text-3xl">Your scores, your stage, and next steps for your business</h2>
         <p className="text-sm text-muted-foreground">
-          A short name for where the business is today, up to three next steps in each section, and a thirty-minute working session if you want one. Five to seven minutes.
+          A score for readiness, growth, and website visibility, a short name for the stage the business is at today, up to three next steps in each section, and a thirty-minute working session if you want one. Five to seven minutes.
         </p>
       </section>
       <CheckFaq />

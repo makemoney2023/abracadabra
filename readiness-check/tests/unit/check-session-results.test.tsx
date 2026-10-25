@@ -27,8 +27,27 @@ vi.mock("next/link", () => ({
 
 const results: ResultsPayload = {
   domain: "acme.example",
+  scores: {
+    configVersion: "v1",
+    readiness: { total: 64, data: 60, process: 70, people: 50, decision: 76, incomplete: {} },
+    growth: { total: 40 },
+    visibility: {
+      total: 73,
+      breakdown: { structuredData: 21, aiDiscoveryFiles: 11, aiCrawlability: 17, pageCoverage: 13, answerReadiness: 9 },
+      status: "complete",
+    },
+    overall: {
+      total: 55,
+      band: "forming",
+      weights: { readiness: 0.5, visibility: 0.25, growth: 0.25 },
+    },
+    pressures: [{ code: "experts_queue", severity: 2, offerRow: "row-1" }],
+    topPressure: "experts_queue",
+  },
+  bandLabel: "Forming",
+  bandSentence: "The pieces are starting to line up.",
   stage: { id: "forming", label: "Forming", sentence: "The pieces are starting to line up." },
-  topPressureLabel: null,
+  topPressureLabel: "Only one person knows how an important job gets done.",
   pressures: [{ code: "experts_queue", label: "Our experts are the queue", severityLabel: "It costs us time or money every week" }],
   suggestions: {
     readiness: [
@@ -45,7 +64,7 @@ const results: ResultsPayload = {
     visibility: [],
   },
   offers: [],
-  visibility: { status: "unavailable" },
+  visibility: { status: "complete" },
   scan: null,
   booking: {
     calLink: null,
@@ -67,7 +86,7 @@ afterEach(() => {
 });
 
 describe("check results after the lead gate", () => {
-  it("shows the stage name and next steps, with no score, after the gate submits the lead", async () => {
+  it("shows the scores together with the stage name and next steps after the gate submits the lead", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -88,7 +107,7 @@ describe("check results after the lead gate", () => {
             answers: {},
             qualifiers: {},
             gated: true,
-            preview: { stage: "forming", stageLabel: "Forming" },
+            preview: { stage: "forming", stageLabel: "Forming", band: "forming", bandLabel: "Forming" },
           }),
           { status: 200, headers: { "content-type": "application/json" } },
         );
@@ -106,11 +125,24 @@ describe("check results after the lead gate", () => {
     expect(screen.getByText("Start with where the knowledge lives")).toBeTruthy();
     expect(screen.getByText("Our experts are the queue")).toBeTruthy();
     expect(screen.getByRole("link", { name: "What this stage means" })).toHaveAttribute("href", "/check/guide/stage/forming");
-    expect(screen.queryByRole("img", { name: /Readiness/ })).toBeNull();
+    // The scores are back next to the stage: three rings and the pillar meters.
+    expect(screen.getByRole("img", { name: /^Readiness: 64 of 100/ })).toBeTruthy();
+    expect(screen.getByRole("img", { name: /^AI visibility: 73 of 100/ })).toBeTruthy();
+    expect(screen.getByRole("img", { name: /^Growth: 40 of 100/ })).toBeTruthy();
+    for (const name of [/^Data: 60 of 100/, /^Process: 70 of 100/, /^People: 50 of 100/, /^Decision: 76 of 100/, /^Structured data: 21 of 35/]) {
+      expect(screen.getByRole("group", { name })).toBeTruthy();
+    }
+    expect(screen.getByRole("heading", { name: "Readiness" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Website visibility" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Growth" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Next steps for your website" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Next steps for new customers" })).toBeTruthy();
+    // The stage line ends with one period even though the pressure label already has one.
+    const lead = screen.getByText(/The job that costs the most right now/);
+    expect(lead.textContent).toContain("gets done.");
+    expect(lead.textContent).not.toContain("..");
     const text = document.body.textContent ?? "";
-    expect(text).not.toMatch(/\bscore/i);
     expect(text).not.toMatch(/\bband\b/i);
-    expect(text).not.toMatch(/\d+\s*\/\s*100/);
   });
 
   it("keeps the gate and explains when the opt-in response has no results", async () => {
@@ -128,7 +160,7 @@ describe("check results after the lead gate", () => {
             answers: {},
             qualifiers: {},
             gated: true,
-            preview: { stage: "forming", stageLabel: "Forming" },
+            preview: { stage: "forming", stageLabel: "Forming", band: "forming", bandLabel: "Forming" },
           }),
           { status: 200 },
         );

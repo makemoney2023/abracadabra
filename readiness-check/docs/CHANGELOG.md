@@ -1,5 +1,13 @@
 # Changelog
 
+## Readiness Check: scores back on the public results, next to the stage name — 2026-10-25
+
+**Visitors.** Follow-up to the stage change below (#225); Christopher asked to keep the scores. The results page shows the stage name, its sentence and the costliest job at the top, then the score rings and pillar meters again: Readiness (Data, Process, People, Decision), Website visibility (the five scan pillars) and Growth, each with its rating. Every section keeps its "Next steps for …" list under the scores. The PDF report prints the stage, the overall score, each section score and the next steps. The gate still names the stage only; the scores come with the results after the email. The costliest-job line no longer doubles the period when the pressure label already ends with one ("gets done.." is now "gets done.").
+
+**API.** `GET /api/assessments/<token>` and `POST …/opt-in` return `results.scores`, `bandLabel`, `bandSentence` and `scan.scoreTotal` / `scan.breakdown` again (the shape before #225), alongside `results.stage`, `pressures` and `visibility`. The gate preview is `{ stage, stageLabel, band, bandLabel }`. `POST …/complete` still returns `band` and `stage`.
+
+**Unchanged from #225.** Stage guides at `/check/guide/stage/<stage>` and the 308s from the old band URLs. In HQ, the agent context still marks the numbers staff only and client-approved briefs still use the number-free `stageSummary`.
+
 ## Readiness Check: a stage name and next steps, the score stays in HQ — 2026-10-25
 
 **Visitors.** The results page, the gate, the PDF report and the booking email show a stage name (Early, Forming, Ready, Running), its sentence, and next steps for the business. No score ring, no pillar meters, no number. The public API (`GET /api/assessments/<token>`, `POST …/opt-in`) returns `results.stage`, `pressures` (labels), `visibility.status` and `scan` (token and status only); `scores`, `scoreTotal` and `breakdown` are gone. The gate preview is `{ stage, stageLabel }`. `POST …/complete` still returns the stage id as `band` (the chat worker reads it) and now also as `stage`.
