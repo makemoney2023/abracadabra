@@ -32,6 +32,8 @@ import { statusToken } from "@/lib/status-token";
 import { connectorGrant } from "@/lib/connector-grants";
 import { listSearchProperties, readAccessCheck } from "@/lib/search/properties";
 import { recentSyncRuns } from "@/lib/search/sync-status";
+import { loadSearchTab } from "@/lib/search/search-tab";
+import { openSearchDb } from "@/db/open-search";
 import { listUnassignedSwarmRuns } from "@/lib/swarm-runs";
 import { boardSwarmExtras } from "@/lib/board-swarm";
 import { listSocialAccounts, listSocialPosts, refreshSocialPosts, syncSocialAccounts } from "@/lib/social";
@@ -134,7 +136,7 @@ export default async function ClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string; social?: string; sent?: string; piece?: string; post?: string; schedule?: string }>;
+  searchParams: Promise<{ page?: string; merged?: string; tab?: string; project?: string; social?: string; sent?: string; piece?: string; post?: string; schedule?: string; property?: string; range?: string; sort?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -212,6 +214,10 @@ export default async function ClientPage({
   ]);
   const agentWork = tab === "agents" ? await listClientAgentWork(sql, caller, client.id) : undefined;
   const social = tab === "social" ? await loadSocial(sql, caller, client, query.social ?? "", query.sent ?? "", query.piece ?? "", query.post ?? "", query.schedule ?? "") : undefined;
+  const search =
+    tab === "search"
+      ? await loadSearchTab(sql, await openSearchDb(), { organizationId: client.id, property: query.property, range: query.range, sort: query.sort, now: clock() })
+      : undefined;
   const swarm = tab === "work" ? await boardSwarmExtras(sql) : { runningTaskIds: [], packs: [] };
   const secrets = readGithubSecrets();
   const visible = secrets ? await listVisibleRepos({ secrets, fetch, now: clock() }) : null;
@@ -305,6 +311,7 @@ export default async function ClientPage({
           updateMode={tab === "settings" ? await organizationUpdateMode(sql, caller, client.id) : "draft"}
           agentWork={agentWork}
           social={social}
+          search={search}
           librarySummaries={tab === "files" ? await staffLibrarySummaries(sql, caller, linked) : []}
         />
       </PageFrame>
